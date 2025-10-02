@@ -435,9 +435,15 @@ class Dasom_Church_Columns {
             case 'bulletin':
                 if (isset($_POST['bulletin_date']) && !empty($_POST['bulletin_date'])) {
                     $date = sanitize_text_field($_POST['bulletin_date']);
+                    // Debug log
+                    error_log('Bulletin date received: ' . $date);
+                    
                     // Validate date format (YYYY-MM-DD)
                     if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
                         update_post_meta($post_id, 'bulletin_date', $date);
+                        error_log('Bulletin date saved: ' . $date);
+                    } else {
+                        error_log('Invalid bulletin date format: ' . $date);
                     }
                 }
                 break;
@@ -445,9 +451,15 @@ class Dasom_Church_Columns {
             case 'sermon':
                 if (isset($_POST['sermon_date']) && !empty($_POST['sermon_date'])) {
                     $date = sanitize_text_field($_POST['sermon_date']);
+                    // Debug log
+                    error_log('Sermon date received: ' . $date);
+                    
                     // Validate date format (YYYY-MM-DD)
                     if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
                         update_post_meta($post_id, 'sermon_date', $date);
+                        error_log('Sermon date saved: ' . $date);
+                    } else {
+                        error_log('Invalid sermon date format: ' . $date);
                     }
                 }
                 break;
@@ -552,36 +564,18 @@ class Dasom_Church_Columns {
                         
                         // Fill our custom fields
                         if (post_type === 'bulletin' && data.bulletin_date && data.bulletin_date !== '—') {
-                            // Convert date format from YYYY-MM-DD to YYYY-MM-DD for date input
                             var bulletinDate = data.bulletin_date;
+                            // Only set if it's already in YYYY-MM-DD format
                             if (bulletinDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
                                 $('input[name=\"bulletin_date\"]').val(bulletinDate);
-                            } else {
-                                // Try to parse other date formats
-                                var parsedDate = new Date(bulletinDate);
-                                if (!isNaN(parsedDate.getTime())) {
-                                    var formattedDate = parsedDate.getFullYear() + '-' + 
-                                        String(parsedDate.getMonth() + 1).padStart(2, '0') + '-' + 
-                                        String(parsedDate.getDate()).padStart(2, '0');
-                                    $('input[name=\"bulletin_date\"]').val(formattedDate);
-                                }
                             }
                         }
                         
                         if (post_type === 'sermon' && data.sermon_date && data.sermon_date !== '—') {
-                            // Convert date format from YYYY-MM-DD to YYYY-MM-DD for date input
                             var sermonDate = data.sermon_date;
+                            // Only set if it's already in YYYY-MM-DD format
                             if (sermonDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
                                 $('input[name=\"sermon_date\"]').val(sermonDate);
-                            } else {
-                                // Try to parse other date formats
-                                var parsedDate = new Date(sermonDate);
-                                if (!isNaN(parsedDate.getTime())) {
-                                    var formattedDate = parsedDate.getFullYear() + '-' + 
-                                        String(parsedDate.getMonth() + 1).padStart(2, '0') + '-' + 
-                                        String(parsedDate.getDate()).padStart(2, '0');
-                                    $('input[name=\"sermon_date\"]').val(formattedDate);
-                                }
                             }
                         }
                         
@@ -707,17 +701,33 @@ function dasom_church_get_quick_edit_data_callback() {
     switch ($post_type) {
         case 'bulletin':
             $bulletin_date = get_post_meta($post_id, 'bulletin_date', true);
-            if ($bulletin_date) {
-                // Convert to YYYY-MM-DD format for date input
-                $data['bulletin_date'] = date('Y-m-d', strtotime($bulletin_date));
+            if ($bulletin_date && $bulletin_date !== '') {
+                // If already in YYYY-MM-DD format, use as is
+                if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $bulletin_date)) {
+                    $data['bulletin_date'] = $bulletin_date;
+                } else {
+                    // Try to convert other formats
+                    $timestamp = strtotime($bulletin_date);
+                    if ($timestamp !== false && $timestamp > 0) {
+                        $data['bulletin_date'] = date('Y-m-d', $timestamp);
+                    }
+                }
             }
             break;
             
         case 'sermon':
             $sermon_date = get_post_meta($post_id, 'sermon_date', true);
-            if ($sermon_date) {
-                // Convert to YYYY-MM-DD format for date input
-                $data['sermon_date'] = date('Y-m-d', strtotime($sermon_date));
+            if ($sermon_date && $sermon_date !== '') {
+                // If already in YYYY-MM-DD format, use as is
+                if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $sermon_date)) {
+                    $data['sermon_date'] = $sermon_date;
+                } else {
+                    // Try to convert other formats
+                    $timestamp = strtotime($sermon_date);
+                    if ($timestamp !== false && $timestamp > 0) {
+                        $data['sermon_date'] = date('Y-m-d', $timestamp);
+                    }
+                }
             }
             break;
             
