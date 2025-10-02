@@ -349,10 +349,19 @@ class Dasom_Church_Columns {
      */
     public function dasom_church_quick_edit_fields($column_name, $post_type) {
         static $printNonce = true;
+        static $printed_fields = array();
+        
         if ($printNonce) {
             $printNonce = false;
             wp_nonce_field('dasom_church_quick_edit', 'dasom_church_quick_edit_nonce');
         }
+        
+        // Prevent duplicate fields
+        $field_key = $post_type . '_' . $column_name;
+        if (in_array($field_key, $printed_fields)) {
+            return;
+        }
+        $printed_fields[] = $field_key;
         
         // Only add our custom fields for specific columns
         switch ($post_type) {
@@ -424,14 +433,22 @@ class Dasom_Church_Columns {
         
         switch ($post_type) {
             case 'bulletin':
-                if (isset($_POST['bulletin_date'])) {
-                    update_post_meta($post_id, 'bulletin_date', sanitize_text_field($_POST['bulletin_date']));
+                if (isset($_POST['bulletin_date']) && !empty($_POST['bulletin_date'])) {
+                    $date = sanitize_text_field($_POST['bulletin_date']);
+                    // Validate date format (YYYY-MM-DD)
+                    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+                        update_post_meta($post_id, 'bulletin_date', $date);
+                    }
                 }
                 break;
                 
             case 'sermon':
-                if (isset($_POST['sermon_date'])) {
-                    update_post_meta($post_id, 'sermon_date', sanitize_text_field($_POST['sermon_date']));
+                if (isset($_POST['sermon_date']) && !empty($_POST['sermon_date'])) {
+                    $date = sanitize_text_field($_POST['sermon_date']);
+                    // Validate date format (YYYY-MM-DD)
+                    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+                        update_post_meta($post_id, 'sermon_date', $date);
+                    }
                 }
                 break;
                 
@@ -535,11 +552,37 @@ class Dasom_Church_Columns {
                         
                         // Fill our custom fields
                         if (post_type === 'bulletin' && data.bulletin_date && data.bulletin_date !== '—') {
-                            $('input[name=\"bulletin_date\"]').val(data.bulletin_date);
+                            // Convert date format from YYYY-MM-DD to YYYY-MM-DD for date input
+                            var bulletinDate = data.bulletin_date;
+                            if (bulletinDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                                $('input[name=\"bulletin_date\"]').val(bulletinDate);
+                            } else {
+                                // Try to parse other date formats
+                                var parsedDate = new Date(bulletinDate);
+                                if (!isNaN(parsedDate.getTime())) {
+                                    var formattedDate = parsedDate.getFullYear() + '-' + 
+                                        String(parsedDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                                        String(parsedDate.getDate()).padStart(2, '0');
+                                    $('input[name=\"bulletin_date\"]').val(formattedDate);
+                                }
+                            }
                         }
                         
                         if (post_type === 'sermon' && data.sermon_date && data.sermon_date !== '—') {
-                            $('input[name=\"sermon_date\"]').val(data.sermon_date);
+                            // Convert date format from YYYY-MM-DD to YYYY-MM-DD for date input
+                            var sermonDate = data.sermon_date;
+                            if (sermonDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                                $('input[name=\"sermon_date\"]').val(sermonDate);
+                            } else {
+                                // Try to parse other date formats
+                                var parsedDate = new Date(sermonDate);
+                                if (!isNaN(parsedDate.getTime())) {
+                                    var formattedDate = parsedDate.getFullYear() + '-' + 
+                                        String(parsedDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                                        String(parsedDate.getDate()).padStart(2, '0');
+                                    $('input[name=\"sermon_date\"]').val(formattedDate);
+                                }
+                            }
                         }
                         
                         if (post_type === 'column') {
