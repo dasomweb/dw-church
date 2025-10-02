@@ -58,9 +58,9 @@ class Dasom_Church_Columns {
         add_filter('manage_album_posts_columns', array($this, 'dasom_church_album_columns'));
         add_action('manage_album_posts_custom_column', array($this, 'dasom_church_album_column_content'), 10, 2);
         
-        // Quick Edit
-        add_action('quick_edit_custom_box', array($this, 'dasom_church_quick_edit_fields'), 10, 2);
-        add_action('save_post', array($this, 'dasom_church_quick_edit_save'));
+        // Quick Edit - DISABLED to prevent infinite loop
+        // add_action('quick_edit_custom_box', array($this, 'dasom_church_quick_edit_fields'), 10, 2);
+        // add_action('save_post', array($this, 'dasom_church_quick_edit_save'));
         
         // Admin scripts for Quick Edit
         add_action('admin_enqueue_scripts', array($this, 'dasom_church_admin_scripts'));
@@ -409,9 +409,14 @@ class Dasom_Church_Columns {
      * Save Quick Edit
      */
     public function dasom_church_quick_edit_save($post_id) {
-        // Only process Quick Edit saves
+        // Only process Quick Edit saves - check for Quick Edit specific data
         if (!isset($_POST['dasom_church_quick_edit_nonce']) || 
             !wp_verify_nonce($_POST['dasom_church_quick_edit_nonce'], 'dasom_church_quick_edit')) {
+            return;
+        }
+        
+        // Additional check: only process if this is actually a Quick Edit request
+        if (!isset($_POST['action']) || $_POST['action'] !== 'inline-save') {
             return;
         }
         
