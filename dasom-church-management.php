@@ -28,18 +28,23 @@ define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
 
 // Auto-update configuration
 add_filter('auto_update_plugin', function($update, $item) {
-    // Enable auto-update for this plugin
+    // Enable auto-update for this plugin only
     if ($item->plugin === plugin_basename(__FILE__)) {
+        // Optional: Add conditions for auto-update
+        // 예: 특정 사용자만 자동 업데이트
+        // if (current_user_can('manage_options')) {
+        //     return true;
+        // }
         return true;
     }
     return $update;
 }, 10, 2);
 
-// Add update checker (if using GitHub releases)
+// Add update checker for GitHub releases
 add_action('init', function() {
     if (is_admin()) {
-        // Check for updates from GitHub
         add_filter('pre_set_site_transient_update_plugins', 'dasom_church_check_for_updates');
+        add_filter('plugins_api', 'dasom_church_plugin_info', 20, 3);
     }
 });
 
@@ -53,15 +58,20 @@ function dasom_church_check_for_updates($transient) {
     $github_repo = 'dasom-church-management-system';
     
     // Get latest release from GitHub
-    $response = wp_remote_get("https://api.github.com/repos/{$github_username}/{$github_repo}/releases/latest");
+    $response = wp_remote_get("https://api.github.com/repos/{$github_username}/{$github_repo}/releases/latest", array(
+        'timeout' => 15,
+        'headers' => array(
+            'Accept' => 'application/vnd.github.v3+json',
+        )
+    ));
     
-    if (is_wp_error($response)) {
+    if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
         return $transient;
     }
     
     $release = json_decode(wp_remote_retrieve_body($response), true);
     
-    if (isset($release['tag_name'])) {
+    if (isset($release['tag_name']) && isset($release['zipball_url'])) {
         $latest_version = str_replace('v', '', $release['tag_name']);
         $current_version = DASOM_CHURCH_VERSION;
         
@@ -78,11 +88,51 @@ function dasom_church_check_for_updates($transient) {
                 'tested' => '6.4',
                 'requires_php' => '7.4',
                 'compatibility' => new stdClass(),
+                'id' => plugin_basename(__FILE__),
+                'slug' => $plugin_slug,
             );
         }
     }
     
     return $transient;
+}
+
+function dasom_church_plugin_info($result, $action, $args) {
+    if ($action !== 'plugin_information' || $args->slug !== 'dasom-church-management') {
+        return $result;
+    }
+    
+    $github_username = 'dasowmeb';
+    $github_repo = 'dasom-church-management-system';
+    
+    $response = wp_remote_get("https://api.github.com/repos/{$github_username}/{$github_repo}/releases/latest");
+    
+    if (is_wp_error($response)) {
+        return $result;
+    }
+    
+    $release = json_decode(wp_remote_retrieve_body($response), true);
+    
+    if (isset($release['tag_name'])) {
+        $latest_version = str_replace('v', '', $release['tag_name']);
+        
+        $result = new stdClass();
+        $result->name = 'Dasom Church Management System';
+        $result->slug = 'dasom-church-management';
+        $result->version = $latest_version;
+        $result->tested = '6.4';
+        $result->requires = '5.0';
+        $result->requires_php = '7.4';
+        $result->last_updated = $release['published_at'];
+        $result->homepage = $release['html_url'];
+        $result->sections = array(
+            'description' => 'Complete church management system for bulletins, sermons, columns, and albums.',
+            'changelog' => $release['body'] ?: 'No changelog available.'
+        );
+        $result->download_link = $release['zipball_url'];
+    }
+    
+    return $result;
 }
 
 /**
