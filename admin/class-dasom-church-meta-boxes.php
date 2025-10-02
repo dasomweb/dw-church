@@ -46,9 +46,7 @@ class Dasom_Church_Meta_Boxes {
         add_action('save_post', array($this, 'dasom_church_save_meta_boxes'));
         add_action('admin_enqueue_scripts', array($this, 'dasom_church_admin_scripts'));
         
-        // Quick Edit
-        add_action('quick_edit_custom_box', array($this, 'dasom_church_quick_edit_fields'), 10, 2);
-        add_action('save_post', array($this, 'dasom_church_quick_edit_save'));
+        // Quick Edit is handled by Dasom_Church_Columns class
         
         // Admin head styles
         add_action('admin_head', array($this, 'dasom_church_admin_head_styles'));
@@ -548,74 +546,7 @@ class Dasom_Church_Meta_Boxes {
         }
     }
     
-    /**
-     * Quick Edit fields
-     */
-    public function dasom_church_quick_edit_fields($column_name, $post_type) {
-        static $printNonce = true;
-        if ($printNonce) {
-            $printNonce = false;
-            wp_nonce_field('dasom_church_quick_edit', 'dasom_church_quick_edit_nonce');
-        }
-        
-        switch ($post_type) {
-            case 'bulletin':
-                if ($column_name === 'bulletin_date') {
-                    echo '<fieldset class="inline-edit-col-right">';
-                    echo '<div class="inline-edit-col">';
-                    echo '<label>';
-                    echo '<span class="title">' . __('주보 날짜', 'dasom-church') . '</span>';
-                    echo '<input type="date" name="bulletin_date" value="" />';
-                    echo '</label>';
-                    echo '</div>';
-                    echo '</fieldset>';
-                }
-                break;
-                
-            case 'sermon':
-                if ($column_name === 'sermon_date') {
-                    echo '<fieldset class="inline-edit-col-right">';
-                    echo '<div class="inline-edit-col">';
-                    echo '<label>';
-                    echo '<span class="title">' . __('설교 일자', 'dasom-church') . '</span>';
-                    echo '<input type="date" name="sermon_date" value="" />';
-                    echo '</label>';
-                    echo '</div>';
-                    echo '</fieldset>';
-                }
-                break;
-        }
-    }
-    
-    /**
-     * Save Quick Edit
-     */
-    public function dasom_church_quick_edit_save($post_id) {
-        if (!isset($_POST['dasom_church_quick_edit_nonce']) || 
-            !wp_verify_nonce($_POST['dasom_church_quick_edit_nonce'], 'dasom_church_quick_edit')) {
-            return;
-        }
-        
-        if (!current_user_can('edit_post', $post_id)) {
-            return;
-        }
-        
-        $post_type = get_post_type($post_id);
-        
-        switch ($post_type) {
-            case 'bulletin':
-                if (isset($_POST['bulletin_date'])) {
-                    update_post_meta($post_id, 'bulletin_date', sanitize_text_field($_POST['bulletin_date']));
-                }
-                break;
-                
-            case 'sermon':
-                if (isset($_POST['sermon_date'])) {
-                    update_post_meta($post_id, 'sermon_date', sanitize_text_field($_POST['sermon_date']));
-                }
-                break;
-        }
-    }
+    // Quick Edit functionality is handled by Dasom_Church_Columns class
     
     /**
      * Admin scripts

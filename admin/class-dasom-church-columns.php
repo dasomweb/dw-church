@@ -409,8 +409,19 @@ class Dasom_Church_Columns {
      * Save Quick Edit
      */
     public function dasom_church_quick_edit_save($post_id) {
+        // Only process Quick Edit saves
         if (!isset($_POST['dasom_church_quick_edit_nonce']) || 
             !wp_verify_nonce($_POST['dasom_church_quick_edit_nonce'], 'dasom_church_quick_edit')) {
+            return;
+        }
+        
+        // Check if this is an autosave
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+            return;
+        }
+        
+        // Check if this is a revision
+        if (wp_is_post_revision($post_id)) {
             return;
         }
         
@@ -425,14 +436,14 @@ class Dasom_Church_Columns {
                 if (isset($_POST['bulletin_date']) && !empty($_POST['bulletin_date'])) {
                     $date = sanitize_text_field($_POST['bulletin_date']);
                     // Debug log
-                    error_log('Bulletin date received: ' . $date);
+                    error_log('Quick Edit - Bulletin date received: ' . $date);
                     
                     // Validate date format (YYYY-MM-DD)
                     if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
                         update_post_meta($post_id, 'bulletin_date', $date);
-                        error_log('Bulletin date saved: ' . $date);
+                        error_log('Quick Edit - Bulletin date saved: ' . $date);
                     } else {
-                        error_log('Invalid bulletin date format: ' . $date);
+                        error_log('Quick Edit - Invalid bulletin date format: ' . $date);
                     }
                 }
                 break;
@@ -441,14 +452,14 @@ class Dasom_Church_Columns {
                 if (isset($_POST['sermon_date']) && !empty($_POST['sermon_date'])) {
                     $date = sanitize_text_field($_POST['sermon_date']);
                     // Debug log
-                    error_log('Sermon date received: ' . $date);
+                    error_log('Quick Edit - Sermon date received: ' . $date);
                     
                     // Validate date format (YYYY-MM-DD)
                     if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
                         update_post_meta($post_id, 'sermon_date', $date);
-                        error_log('Sermon date saved: ' . $date);
+                        error_log('Quick Edit - Sermon date saved: ' . $date);
                     } else {
-                        error_log('Invalid sermon date format: ' . $date);
+                        error_log('Quick Edit - Invalid sermon date format: ' . $date);
                     }
                 }
                 break;
