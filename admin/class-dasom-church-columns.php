@@ -349,69 +349,58 @@ class Dasom_Church_Columns {
      */
     public function dasom_church_quick_edit_fields($column_name, $post_type) {
         static $printNonce = true;
-        static $printed_fields = array();
+        static $printed_forms = array();
         
         if ($printNonce) {
             $printNonce = false;
             wp_nonce_field('dasom_church_quick_edit', 'dasom_church_quick_edit_nonce');
         }
         
-        // Prevent duplicate fields
-        $field_key = $post_type . '_' . $column_name;
-        if (in_array($field_key, $printed_fields)) {
+        // Only print fields once per post type
+        if (in_array($post_type, $printed_forms)) {
             return;
         }
-        $printed_fields[] = $field_key;
+        $printed_forms[] = $post_type;
         
-        // Only add our custom fields for specific columns
+        // Add all custom fields for this post type at once
         switch ($post_type) {
             case 'bulletin':
-                if ($column_name === 'bulletin_date') {
-                    echo '<fieldset class="inline-edit-col-right">';
-                    echo '<div class="inline-edit-col">';
-                    echo '<label>';
-                    echo '<span class="title">' . __('주보 날짜', 'dasom-church') . '</span>';
-                    echo '<input type="date" name="bulletin_date" value="" />';
-                    echo '</label>';
-                    echo '</div>';
-                    echo '</fieldset>';
-                }
+                echo '<fieldset class="inline-edit-col-right">';
+                echo '<div class="inline-edit-col">';
+                echo '<label>';
+                echo '<span class="title">' . __('주보 날짜', 'dasom-church') . '</span>';
+                echo '<input type="date" name="bulletin_date" value="" />';
+                echo '</label>';
+                echo '</div>';
+                echo '</fieldset>';
                 break;
                 
             case 'sermon':
-                if ($column_name === 'sermon_date') {
-                    echo '<fieldset class="inline-edit-col-right">';
-                    echo '<div class="inline-edit-col">';
-                    echo '<label>';
-                    echo '<span class="title">' . __('설교 일자', 'dasom-church') . '</span>';
-                    echo '<input type="date" name="sermon_date" value="" />';
-                    echo '</label>';
-                    echo '</div>';
-                    echo '</fieldset>';
-                }
+                echo '<fieldset class="inline-edit-col-right">';
+                echo '<div class="inline-edit-col">';
+                echo '<label>';
+                echo '<span class="title">' . __('설교 일자', 'dasom-church') . '</span>';
+                echo '<input type="date" name="sermon_date" value="" />';
+                echo '</label>';
+                echo '</div>';
+                echo '</fieldset>';
                 break;
                 
             case 'column':
-                if ($column_name === 'column_author') {
-                    echo '<fieldset class="inline-edit-col-right">';
-                    echo '<div class="inline-edit-col">';
-                    echo '<label>';
-                    echo '<span class="title">' . __('작성자', 'dasom-church') . '</span>';
-                    echo '<input type="text" name="column_author" value="" />';
-                    echo '</label>';
-                    echo '</div>';
-                    echo '</fieldset>';
-                }
-                if ($column_name === 'column_topic') {
-                    echo '<fieldset class="inline-edit-col-right">';
-                    echo '<div class="inline-edit-col">';
-                    echo '<label>';
-                    echo '<span class="title">' . __('주제', 'dasom-church') . '</span>';
-                    echo '<input type="text" name="column_topic" value="" />';
-                    echo '</label>';
-                    echo '</div>';
-                    echo '</fieldset>';
-                }
+                echo '<fieldset class="inline-edit-col-right">';
+                echo '<div class="inline-edit-col">';
+                echo '<label>';
+                echo '<span class="title">' . __('작성자', 'dasom-church') . '</span>';
+                echo '<input type="text" name="column_author" value="" />';
+                echo '</label>';
+                echo '</div>';
+                echo '<div class="inline-edit-col">';
+                echo '<label>';
+                echo '<span class="title">' . __('주제', 'dasom-church') . '</span>';
+                echo '<input type="text" name="column_topic" value="" />';
+                echo '</label>';
+                echo '</div>';
+                echo '</fieldset>';
                 break;
         }
     }
