@@ -1,0 +1,543 @@
+# Copyright (C) 2024 Dasom Church
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Dasom Church Management System 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/dasom-church/management-system\n"
+"POT-Creation-Date: 2024-01-01 12:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: WordPress\n"
+
+#: includes/class-dasom-church-loader.php:108
+msgid "Church Bulletins"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:109
+msgid "Bulletin"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:110
+msgid "Add New Bulletin"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:111
+msgid "Add New Bulletin"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:112
+msgid "Edit Bulletin"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:113
+msgid "New Bulletin"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:114
+msgid "View Bulletin"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:115
+msgid "Search Bulletins"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:116
+msgid "No bulletins found"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:117
+msgid "No bulletins found in trash"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:140
+msgid "Sermons"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:141
+msgid "Sermon"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:142
+msgid "Add New Sermon"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:143
+msgid "Add New Sermon"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:144
+msgid "Edit Sermon"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:145
+msgid "New Sermon"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:146
+msgid "View Sermon"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:147
+msgid "Search Sermons"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:148
+msgid "No sermons found"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:149
+msgid "No sermons found in trash"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:162
+msgid "Pastoral Columns"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:163
+msgid "Column"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:164
+msgid "Add New Column"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:165
+msgid "Add New Column"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:166
+msgid "Edit Column"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:167
+msgid "New Column"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:168
+msgid "View Column"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:169
+msgid "Search Columns"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:170
+msgid "No columns found"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:171
+msgid "No columns found in trash"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:184
+msgid "Church Albums"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:185
+msgid "Album"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:186
+msgid "Add New Album"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:187
+msgid "Add New Album"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:188
+msgid "Edit Album"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:189
+msgid "New Album"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:190
+msgid "View Album"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:191
+msgid "Search Albums"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:192
+msgid "No albums found"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:193
+msgid "No albums found in trash"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:210
+msgid "Sermon Categories"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:211
+msgid "Sermon Category"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:212
+msgid "Search Categories"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:213
+msgid "All Categories"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:214
+msgid "Parent Category"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:215
+msgid "Parent Category:"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:216
+msgid "Edit Category"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:217
+msgid "Update Category"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:218
+msgid "Add New Category"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:219
+msgid "New Category Name"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:220
+msgid "Categories"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:250
+msgid "Bulletin Information"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:260
+msgid "Sermon Information"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:270
+msgid "Column Information"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:280
+msgid "Album Information"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:290
+msgid "Bulletin Date"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:300
+msgid "Bulletin PDF"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:310
+msgid "Upload PDF"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:320
+msgid "View Current PDF"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:330
+msgid "Bulletin Images"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:340
+msgid "Upload Images"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:350
+msgid "Drag to reorder images."
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:360
+msgid "Sermon Title"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:370
+msgid "Scripture"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:380
+msgid "YouTube URL"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:390
+msgid "Sermon Date"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:400
+msgid "YouTube Thumbnail"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:410
+msgid "Upload Thumbnail"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:420
+msgid "Fetch YouTube Thumbnail"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:430
+msgid "Author"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:440
+msgid "Topic"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:450
+msgid "Album Images"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:460
+msgid "Upload/Select Images"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:470
+msgid "Upload Thumbnail"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:480
+msgid "Fetch YouTube Thumbnail"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:490
+msgid "Church Management"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:500
+msgid "Dashboard"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:510
+msgid "Settings"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:520
+msgid "Church Management Dashboard"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:530
+msgid "Overview of bulletins, sermons, columns, and albums."
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:540
+msgid "📖 Church Bulletins"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:550
+msgid "No bulletins found."
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:560
+msgid "🎤 Sermons"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:570
+msgid "No sermons found."
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:580
+msgid "🖋 Pastoral Columns"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:590
+msgid "No columns found."
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:600
+msgid "📷 Church Albums"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:610
+msgid "No albums found."
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:620
+msgid "YouTube"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:630
+msgid "Church Settings"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:640
+msgid "Church Name"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:650
+msgid "Enter the name of your church."
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:660
+msgid "Church Address"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:670
+msgid "Enter the full address of your church."
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:680
+msgid "Phone Number"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:690
+msgid "Enter the church phone number."
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:700
+msgid "Email Address"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:710
+msgid "Enter the church email address."
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:720
+msgid "Website URL"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:730
+msgid "Enter the church website URL."
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:740
+msgid "Settings saved successfully!"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:750
+msgid "You do not have sufficient permissions to access this page."
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:760
+msgid "Sunday Sermon"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:770
+msgid "Dawn Sermon"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:780
+msgid "Wednesday Sermon"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:790
+msgid "Friday Sermon"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:800
+msgid "Bulletin Date"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:810
+msgid "PDF File"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:820
+msgid "Bulletin Images"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:830
+msgid "View"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:840
+msgid "None"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:850
+msgid "Sermon Date"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:860
+msgid "Title"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:870
+msgid "Scripture"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:880
+msgid "YouTube"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:890
+msgid "Thumbnail"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:900
+msgid "Publication Status"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:910
+msgid "Scheduled: "
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:920
+msgid "Album Title"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:930
+msgid "Thumbnail"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:940
+msgid "Album Images"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:950
+msgid "Created Date"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:960
+msgid "Y년 n월 j일"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:970
+msgid "Church Bulletin"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:980
+msgid "Download PDF"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:990
+msgid "Watch on YouTube"
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:1000
+msgid "By "
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:1010
+msgid "No bulletins found."
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:1020
+msgid "No sermons found."
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:1030
+msgid "No columns found."
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:1040
+msgid "No albums found."
+msgstr ""
+
+#: includes/class-dasom-church-loader.php:1050
+msgid "YouTube"
+msgstr ""
+
