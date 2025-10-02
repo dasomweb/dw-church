@@ -26,6 +26,65 @@ define('DASOM_CHURCH_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
 
+// Auto-update configuration
+add_filter('auto_update_plugin', function($update, $item) {
+    // Enable auto-update for this plugin
+    if ($item->plugin === plugin_basename(__FILE__)) {
+        return true;
+    }
+    return $update;
+}, 10, 2);
+
+// Add update checker (if using GitHub releases)
+add_action('init', function() {
+    if (is_admin()) {
+        // Check for updates from GitHub
+        add_filter('pre_set_site_transient_update_plugins', 'dasom_church_check_for_updates');
+    }
+});
+
+function dasom_church_check_for_updates($transient) {
+    if (empty($transient->checked)) {
+        return $transient;
+    }
+    
+    $plugin_slug = 'dasom-church-management';
+    $github_username = 'dasowmeb';
+    $github_repo = 'dasom-church-management-system';
+    
+    // Get latest release from GitHub
+    $response = wp_remote_get("https://api.github.com/repos/{$github_username}/{$github_repo}/releases/latest");
+    
+    if (is_wp_error($response)) {
+        return $transient;
+    }
+    
+    $release = json_decode(wp_remote_retrieve_body($response), true);
+    
+    if (isset($release['tag_name'])) {
+        $latest_version = str_replace('v', '', $release['tag_name']);
+        $current_version = DASOM_CHURCH_VERSION;
+        
+        if (version_compare($latest_version, $current_version, '>')) {
+            $transient->response[plugin_basename(__FILE__)] = (object) array(
+                'slug' => $plugin_slug,
+                'plugin' => plugin_basename(__FILE__),
+                'new_version' => $latest_version,
+                'url' => $release['html_url'],
+                'package' => $release['zipball_url'],
+                'icons' => array(),
+                'banners' => array(),
+                'banners_rtl' => array(),
+                'tested' => '6.4',
+                'requires_php' => '7.4',
+                'compatibility' => new stdClass(),
+            );
+        }
+    }
+    
+    return $transient;
+}
+
 /**
  * Main plugin class
  */
