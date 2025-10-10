@@ -403,11 +403,17 @@ class Dasom_Church_Meta_Boxes {
             $new_title = date_i18n('Y년 n월 j일', strtotime($date)) . ' ' . __('교회주보', 'dasom-church');
             $post = get_post($post_id);
             if ($post && $post->post_title !== $new_title) {
+                // Remove this action to prevent infinite loop
+                remove_action('save_post', array($this, 'dasom_church_save_meta_boxes'));
+                
                 wp_update_post(array(
                     'ID' => $post_id,
                     'post_title' => $new_title,
                     'post_name' => sanitize_title($new_title)
                 ));
+                
+                // Re-add the action
+                add_action('save_post', array($this, 'dasom_church_save_meta_boxes'));
             }
         }
     }
@@ -426,13 +432,19 @@ class Dasom_Church_Meta_Boxes {
             $title = sanitize_text_field($_POST['sermon_title']);
             update_post_meta($post_id, 'sermon_title', $title);
             
-            // Update post title
+            // Update post title (with infinite loop prevention)
             if ($title) {
+                // Remove this action to prevent infinite loop
+                remove_action('save_post', array($this, 'dasom_church_save_meta_boxes'));
+                
                 wp_update_post(array(
                     'ID' => $post_id,
                     'post_title' => $title,
                     'post_name' => sanitize_title($title)
                 ));
+                
+                // Re-add the action
+                add_action('save_post', array($this, 'dasom_church_save_meta_boxes'));
             }
         }
         
@@ -479,6 +491,14 @@ class Dasom_Church_Meta_Boxes {
             if ($youtube && preg_match('/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([^\&\?\/]+)/', $youtube, $matches)) {
                 $youtube_id = $matches[1];
                 $thumbnail_url = "https://img.youtube.com/vi/{$youtube_id}/maxresdefault.jpg";
+                
+                // Load required files for media_sideload_image
+                if (!function_exists('media_sideload_image')) {
+                    require_once(ABSPATH . 'wp-admin/includes/media.php');
+                    require_once(ABSPATH . 'wp-admin/includes/file.php');
+                    require_once(ABSPATH . 'wp-admin/includes/image.php');
+                }
+                
                 $image_id = media_sideload_image($thumbnail_url, $post_id, get_post_meta($post_id, 'sermon_title', true), 'id');
                 if (!is_wp_error($image_id)) {
                     set_post_thumbnail($post_id, $image_id);
@@ -537,6 +557,14 @@ class Dasom_Church_Meta_Boxes {
             if ($youtube && preg_match('/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([^\&\?\/]+)/', $youtube, $matches)) {
                 $youtube_id = $matches[1];
                 $thumbnail_url = "https://img.youtube.com/vi/{$youtube_id}/maxresdefault.jpg";
+                
+                // Load required files for media_sideload_image
+                if (!function_exists('media_sideload_image')) {
+                    require_once(ABSPATH . 'wp-admin/includes/media.php');
+                    require_once(ABSPATH . 'wp-admin/includes/file.php');
+                    require_once(ABSPATH . 'wp-admin/includes/image.php');
+                }
+                
                 $image_id = media_sideload_image($thumbnail_url, $post_id, '앨범 썸네일', 'id');
                 if (!is_wp_error($image_id)) {
                     set_post_thumbnail($post_id, $image_id);

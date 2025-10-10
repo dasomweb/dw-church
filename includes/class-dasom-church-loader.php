@@ -42,22 +42,8 @@ class Dasom_Church_Loader {
      * Initialize hooks
      */
     private function dasom_church_init_hooks() {
-        add_action('init', array($this, 'dasom_church_register_post_types'));
-        add_action('init', array($this, 'dasom_church_register_taxonomies'));
-        add_action('add_meta_boxes', array($this, 'dasom_church_add_meta_boxes'));
-        add_action('save_post', array($this, 'dasom_church_save_post_meta'));
-        add_action('admin_enqueue_scripts', array($this, 'dasom_church_admin_scripts'));
-        
-        // Custom columns
-        add_filter('manage_dasom_bulletin_posts_columns', array($this, 'dasom_church_bulletin_columns'));
-        add_action('manage_dasom_bulletin_posts_custom_column', array($this, 'dasom_church_bulletin_column_content'), 10, 2);
-        add_filter('manage_dasom_sermon_posts_columns', array($this, 'dasom_church_sermon_columns'));
-        add_action('manage_dasom_sermon_posts_custom_column', array($this, 'dasom_church_sermon_column_content'), 10, 2);
-        add_filter('manage_dasom_album_posts_columns', array($this, 'dasom_church_album_columns'));
-        add_action('manage_dasom_album_posts_custom_column', array($this, 'dasom_church_album_column_content'), 10, 2);
-        
-        // Block editor settings
-        add_filter('use_block_editor_for_post_type', array($this, 'dasom_church_disable_block_editor'), 10, 2);
+        // Loader is now disabled - all functionality moved to admin classes
+        // This prevents duplicate post type registration and save conflicts
     }
     
     /**
