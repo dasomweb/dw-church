@@ -4,6 +4,10 @@
 
 ## Changelog
 
+### Version 1.0.2 (2025-01-10)
+**Bug Fixes:**
+- Fixed `map_meta_cap` warning in WordPress 6.1+ (removed conflicting capabilities settings)
+
 ### Version 1.0.1 (2025-01-10)
 **Bug Fixes:**
 - 설교 저장 시 무한 로딩 문제 수정 (wp_update_post 무한 루프 방지)
