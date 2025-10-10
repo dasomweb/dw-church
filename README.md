@@ -4,6 +4,12 @@
 
 ## Changelog
 
+### Version 1.0.3 (2025-01-10)
+**Bug Fixes:**
+- **CRITICAL**: Completely removed legacy loader class to fix map_meta_cap warnings
+- Fixed function redeclaration errors
+- Removed duplicate save_post hooks causing conflicts
+
 ### Version 1.0.2 (2025-01-10)
 **Bug Fixes:**
 - Fixed `map_meta_cap` warning in WordPress 6.1+ (removed conflicting capabilities settings)

@@ -3,7 +3,7 @@
  * Plugin Name: Dasom Church Management System
  * Plugin URI: https://github.com/dasom-church/management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: Dasom Church
  * Author URI: https://dasom-church.org
  * License: GPL v2 or later
@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '1.0.2');
+define('DASOM_CHURCH_VERSION', '1.0.3');
 define('DASOM_CHURCH_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -168,7 +168,6 @@ class Dasom_Church_Management {
      */
     private function dasom_church_load_dependencies() {
         // Load core files
-        require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/class-dasom-church-loader.php';
         require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/functions-helpers.php';
         
         // Load admin files
@@ -235,8 +234,7 @@ class Dasom_Church_Management {
      * Initialize plugin
      */
     public function dasom_church_init() {
-        // Initialize loader
-        Dasom_Church_Loader::get_instance();
+        // Loader removed - all functionality is in admin classes
     }
 }
 
