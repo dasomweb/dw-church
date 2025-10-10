@@ -4,6 +4,12 @@
 
 ## Changelog
 
+### Version 1.0.4 (2025-01-10)
+**Bug Fixes:**
+- **CRITICAL**: Fixed missing admin menu and post types
+- Admin class now always loads to properly register post types
+- Fixed activation hook to create default categories and preacher
+
 ### Version 1.0.3 (2025-01-10)
 **Bug Fixes:**
 - **CRITICAL**: Completely removed legacy loader class to fix map_meta_cap warnings

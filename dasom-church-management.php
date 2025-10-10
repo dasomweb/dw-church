@@ -3,7 +3,7 @@
  * Plugin Name: Dasom Church Management System
  * Plugin URI: https://github.com/dasom-church/management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 1.0.3
+ * Version: 1.0.4
  * Author: Dasom Church
  * Author URI: https://dasom-church.org
  * License: GPL v2 or later
@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '1.0.3');
+define('DASOM_CHURCH_VERSION', '1.0.4');
 define('DASOM_CHURCH_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -170,12 +170,10 @@ class Dasom_Church_Management {
         // Load core files
         require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/functions-helpers.php';
         
-        // Load admin files
-        if (is_admin()) {
-            require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dasom-church-admin.php';
-            // Initialize admin class
-            Dasom_Church_Admin::get_instance();
-        }
+        // Load admin files - ALWAYS load to register post types
+        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dasom-church-admin.php';
+        // Initialize admin class
+        Dasom_Church_Admin::get_instance();
         
         // Load public files
         if (!is_admin()) {
@@ -206,19 +204,32 @@ class Dasom_Church_Management {
      * Plugin activation
      */
     public function dasom_church_activation() {
+        // Register post types first
+        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dasom-church-admin.php';
+        $admin = Dasom_Church_Admin::get_instance();
+        $admin->dasom_church_register_post_types();
+        $admin->dasom_church_register_taxonomies();
+        
         // Create default sermon categories
         $default_categories = array(
-            __('Sunday Sermon', 'dasom-church'),
-            __('Dawn Sermon', 'dasom-church'),
-            __('Wednesday Sermon', 'dasom-church'),
-            __('Friday Sermon', 'dasom-church')
+            __('주일설교', 'dasom-church'),
+            __('새벽설교', 'dasom-church'),
+            __('수요설교', 'dasom-church'),
+            __('금요설교', 'dasom-church')
         );
         
         foreach ($default_categories as $category) {
-            if (!term_exists($category, 'dasom_sermon_category')) {
-                wp_insert_term($category, 'dasom_sermon_category');
+            if (!term_exists($category, 'sermon_category')) {
+                wp_insert_term($category, 'sermon_category');
             }
         }
+        
+        // Create default preacher
+        $default_preacher = __('담임목사', 'dasom-church');
+        if (!term_exists($default_preacher, 'sermon_preacher')) {
+            wp_insert_term($default_preacher, 'sermon_preacher');
+        }
+        update_option('default_sermon_preacher', $default_preacher);
         
         flush_rewrite_rules();
     }
@@ -240,4 +251,5 @@ class Dasom_Church_Management {
 
 // Initialize the plugin
 Dasom_Church_Management::get_instance();
+
 
