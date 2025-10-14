@@ -13,11 +13,16 @@ if (!defined('ABSPATH')) {
 
 $default_preacher = get_option('default_sermon_preacher', __('담임목사', 'dasom-church'));
 $preachers = get_terms(array(
-    'taxonomy' => 'sermon_preacher',
+    'taxonomy' => 'dw_sermon_preacher',
     'hide_empty' => false,
     'orderby' => 'name',
     'order' => 'ASC'
 ));
+
+// Handle WP_Error
+if (is_wp_error($preachers)) {
+    $preachers = array();
+}
 ?>
 
 <div class="wrap">

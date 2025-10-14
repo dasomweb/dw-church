@@ -341,8 +341,8 @@ class Dasom_Church_Admin {
             case 'add':
                 $name = trim(sanitize_text_field($_POST['preacher_name'] ?? ''));
                 if ($name) {
-                    if (!term_exists($name, 'sermon_preacher')) {
-                        $result = wp_insert_term($name, 'sermon_preacher');
+                    if (!term_exists($name, 'dw_sermon_preacher')) {
+                        $result = wp_insert_term($name, 'dw_sermon_preacher');
                         if (is_wp_error($result)) {
                             error_log('Failed to create preacher: ' . $result->get_error_message());
                         }
@@ -354,21 +354,21 @@ class Dasom_Church_Admin {
                 $term_id = intval($_POST['term_id'] ?? 0);
                 $name = trim(sanitize_text_field($_POST['new_name'] ?? ''));
                 if ($term_id && $name) {
-                    wp_update_term($term_id, 'sermon_preacher', array('name' => $name));
+                    wp_update_term($term_id, 'dw_sermon_preacher', array('name' => $name));
                 }
                 break;
                 
             case 'delete':
                 $term_id = intval($_POST['term_id'] ?? 0);
                 if ($term_id) {
-                    wp_delete_term($term_id, 'sermon_preacher');
+                    wp_delete_term($term_id, 'dw_sermon_preacher');
                 }
                 break;
                 
             case 'set_default':
                 $term_id = intval($_POST['term_id'] ?? 0);
                 if ($term_id) {
-                    $term = get_term($term_id, 'sermon_preacher');
+                    $term = get_term($term_id, 'dw_sermon_preacher');
                     if ($term && !is_wp_error($term)) {
                         update_option('default_sermon_preacher', $term->name);
                     }
@@ -379,8 +379,8 @@ class Dasom_Church_Admin {
                 $name = trim(sanitize_text_field($_POST['default_preacher_name'] ?? ''));
                 if ($name) {
                     update_option('default_sermon_preacher', $name);
-                    if (!term_exists($name, 'sermon_preacher')) {
-                        wp_insert_term($name, 'sermon_preacher');
+                    if (!term_exists($name, 'dw_sermon_preacher')) {
+                        wp_insert_term($name, 'dw_sermon_preacher');
                     }
                 }
                 break;
