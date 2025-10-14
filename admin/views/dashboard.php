@@ -166,7 +166,7 @@ if (is_wp_error($preachers)) {
                 </tr>
                 <tr>
                     <td><?php _e('설교자', 'dasom-church'); ?></td>
-                    <td><code>sermon_preacher</code></td>
+                    <td><code>dw_sermon_preacher</code></td>
                 </tr>
                 <tr>
                     <td rowspan="3">📷 <?php _e('교회앨범 (album)', 'dasom-church'); ?></td>
