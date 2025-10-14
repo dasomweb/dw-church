@@ -3,7 +3,7 @@
  * Plugin Name: DW Church Management System
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 1.3.5
+ * Version: 1.3.6
  * Author: Dasomweb
  * Author URI: https://dasomweb.com
  * License: GPL v2 or later
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '1.3.5');
+define('DASOM_CHURCH_VERSION', '1.3.6');
 define('DASOM_CHURCH_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -240,6 +240,20 @@ add_action('admin_init', function() {
         
         wp_redirect(admin_url('plugins.php'));
         exit;
+    }
+    
+    // Force migration (for debugging)
+    // Usage: Add ?dasom_force_migration=1 to admin URL
+    if (isset($_GET['dasom_force_migration']) && current_user_can('manage_options')) {
+        // Reset migration version to force re-run
+        delete_option('dasom_church_migration_version');
+        
+        // Show notice
+        add_action('admin_notices', function() {
+            echo '<div class="notice notice-success is-dismissible">';
+            echo '<p><strong>DW Church Management System:</strong> 마이그레이션 버전이 초기화되었습니다. 페이지를 새로고침하면 자동으로 마이그레이션이 실행됩니다.</p>';
+            echo '</div>';
+        });
     }
 });
 
