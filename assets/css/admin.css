@@ -123,6 +123,38 @@
     background: #a00;
 }
 
+/* Improved remove button styles */
+.remove-image {
+    position: absolute !important;
+    top: -8px !important;
+    right: -8px !important;
+    background: #dc3545 !important;
+    color: white !important;
+    border: none !important;
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 14px !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+    transition: all 0.2s ease !important;
+    z-index: 10 !important;
+}
+
+.remove-image:hover {
+    background: #c82333 !important;
+    transform: scale(1.1) !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3) !important;
+}
+
+.remove-image:active {
+    transform: scale(0.95) !important;
+}
+
 /* Thumbnail Preview */
 .dasom-thumb-preview {
     margin-top: 10px;

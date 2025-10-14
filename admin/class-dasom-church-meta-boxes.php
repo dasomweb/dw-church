@@ -143,7 +143,7 @@ class Dasom_Church_Meta_Boxes {
                         <?php foreach ($images as $id): ?>
                             <li data-id="<?php echo esc_attr($id); ?>" style="position:relative;">
                                 <img src="<?php echo esc_url(wp_get_attachment_url($id)); ?>" style="width:100px;height:100px;object-fit:cover;" />
-                                <button type="button" class="button-link remove-image" style="position:absolute;top:0;right:0;background:red;color:white;border:none;width:20px;height:20px;border-radius:50%;">×</button>
+                                <button type="button" class="button-link remove-image" style="position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;">×</button>
                             </li>
                         <?php endforeach; ?>
                     </ul>
@@ -315,7 +315,7 @@ class Dasom_Church_Meta_Boxes {
                                         <?php echo esc_html($id); ?>
                                     </div>
                                 <?php endif; ?>
-                                <button type="button" class="button-link remove-image" style="position:absolute;top:0;right:0;background:red;color:white;border:none;width:20px;height:20px;border-radius:50%;">×</button>
+                                <button type="button" class="button-link remove-image" style="position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;">×</button>
                             </li>
                         <?php endforeach; ?>
                     </ul>
@@ -664,7 +664,7 @@ class Dasom_Church_Meta_Boxes {
                         $('#bulletin_images_preview, #album_images_preview').append(
                             '<li data-id=\"' + att.id + '\" style=\"position:relative;\">' +
                             '<img src=\"' + att.url + '\" style=\"width:100px;height:100px;object-fit:cover;\" />' +
-                            '<button type=\"button\" class=\"button-link remove-image\" style=\"position:absolute;top:0;right:0;background:red;color:white;border:none;width:20px;height:20px;border-radius:50%;\">×</button>' +
+                            '<button type=\"button\" class=\"button-link remove-image\" style=\"position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;\">×</button>' +
                             '</li>'
                         );
                     });
