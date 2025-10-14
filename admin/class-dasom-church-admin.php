@@ -560,6 +560,20 @@ class Dasom_Church_Admin {
             update_option('dw_dashboard_fields_visibility', sanitize_text_field($_POST['dw_dashboard_fields_visibility']));
         }
         
+        // Save GitHub access token
+        if (isset($_POST['dw_github_access_token'])) {
+            $token = sanitize_text_field($_POST['dw_github_access_token']);
+            update_option('dw_github_access_token', $token);
+            
+            // Clear update cache when token is updated
+            if (!empty($token)) {
+                $github_username = 'dasomweb';
+                $github_repo = 'dasom-church-management-system';
+                delete_transient('dasom_church_update_' . md5($github_username . $github_repo));
+                delete_transient('dasom_church_plugin_info_' . md5($github_username . $github_repo));
+            }
+        }
+        
         add_action('admin_notices', function() {
             echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Settings saved successfully!', 'dasom-church') . '</p></div>';
         });

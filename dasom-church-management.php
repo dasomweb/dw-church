@@ -52,6 +52,27 @@ add_action('init', function() {
 });
 
 /**
+ * Get GitHub API headers with optional authentication
+ *
+ * @return array Headers for GitHub API request
+ */
+function dasom_church_get_github_headers() {
+    $headers = array(
+        'Accept' => 'application/vnd.github.v3+json',
+        'User-Agent' => 'WordPress/' . get_bloginfo('version') . '; ' . get_bloginfo('url')
+    );
+    
+    // Get GitHub token from settings (for private repositories)
+    $github_token = get_option('dw_github_access_token', '');
+    
+    if (!empty($github_token)) {
+        $headers['Authorization'] = 'token ' . $github_token;
+    }
+    
+    return $headers;
+}
+
+/**
  * Check for plugin updates from GitHub
  *
  * @param object $transient Update transient
@@ -79,10 +100,7 @@ function dasom_church_check_for_updates($transient) {
             "https://api.github.com/repos/{$github_username}/{$github_repo}/releases/latest",
             array(
                 'timeout' => 15,
-                'headers' => array(
-                    'Accept' => 'application/vnd.github.v3+json',
-                    'User-Agent' => 'WordPress/' . get_bloginfo('version') . '; ' . get_bloginfo('url')
-                )
+                'headers' => dasom_church_get_github_headers()
             )
         );
         
@@ -150,10 +168,7 @@ function dasom_church_plugin_info($result, $action, $args) {
         "https://api.github.com/repos/{$github_username}/{$github_repo}/releases/latest",
         array(
             'timeout' => 15,
-            'headers' => array(
-                'Accept' => 'application/vnd.github.v3+json',
-                'User-Agent' => 'WordPress/' . get_bloginfo('version') . '; ' . get_bloginfo('url')
-            )
+            'headers' => dasom_church_get_github_headers()
         )
     );
     

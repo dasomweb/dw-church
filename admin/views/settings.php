@@ -29,6 +29,9 @@ $social_kakaotalk_channel = dasom_church_get_setting('social_kakaotalk_channel',
 
 // Dashboard visibility
 $dashboard_fields_visibility = get_option('dw_dashboard_fields_visibility', 'administrator');
+
+// GitHub settings
+$github_token = get_option('dw_github_access_token', '');
 ?>
 
 <div class="wrap">
@@ -186,6 +189,43 @@ $dashboard_fields_visibility = get_option('dw_dashboard_fields_visibility', 'adm
                         <option value="contributor" <?php selected($dashboard_fields_visibility, 'contributor'); ?>><?php echo esc_html__('Contributor (기여자)', 'dasom-church'); ?></option>
                     </select>
                     <p class="description"><?php echo esc_html__('대시보드에서 "Elementor에서 사용할 커스텀 필드 안내"와 "교회설정 커스텀 필드 안내" 섹션을 볼 수 있는 최소 권한을 설정합니다.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+        </table>
+        
+        <h2><?php echo esc_html__('GitHub 업데이트 설정', 'dasom-church'); ?></h2>
+        <table class="form-table">
+            <tr>
+                <th scope="row">
+                    <label for="dw_github_access_token"><?php echo esc_html__('GitHub Personal Access Token', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <input type="password" id="dw_github_access_token" name="dw_github_access_token" value="<?php echo esc_attr($github_token); ?>" class="regular-text" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
+                    <p class="description">
+                        <?php echo esc_html__('비공개(Private) GitHub 저장소에서 업데이트를 받으려면 Personal Access Token이 필요합니다.', 'dasom-church'); ?><br>
+                        <?php echo esc_html__('공개(Public) 저장소의 경우 이 필드를 비워두세요.', 'dasom-church'); ?><br>
+                        <strong><?php echo esc_html__('토큰 생성 방법:', 'dasom-church'); ?></strong><br>
+                        1. GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)<br>
+                        2. "Generate new token" → "Generate new token (classic)" 클릭<br>
+                        3. Note: "DW Church Plugin Updates" 입력<br>
+                        4. Expiration: 만료 기간 선택 (권장: No expiration 또는 1 year)<br>
+                        5. Scopes: <code>repo</code> 체크 (Full control of private repositories)<br>
+                        6. "Generate token" 클릭 후 토큰 복사하여 여기에 붙여넣기<br>
+                        <a href="https://github.com/settings/tokens/new" target="_blank" rel="noopener"><?php echo esc_html__('→ GitHub Token 생성하기', 'dasom-church'); ?></a>
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <?php echo esc_html__('업데이트 캐시', 'dasom-church'); ?>
+                </th>
+                <td>
+                    <a href="<?php echo esc_url(admin_url('plugins.php?dasom_check_update=1')); ?>" class="button">
+                        <?php echo esc_html__('업데이트 강제 확인', 'dasom-church'); ?>
+                    </a>
+                    <p class="description">
+                        <?php echo esc_html__('GitHub에서 최신 릴리스를 즉시 확인합니다. (캐시 무시)', 'dasom-church'); ?>
+                    </p>
                 </td>
             </tr>
         </table>
