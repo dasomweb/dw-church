@@ -53,8 +53,6 @@ class Dasom_Church_Meta_Boxes {
         
         // Force classic editor for column post type
         add_filter('use_block_editor_for_post_type', array($this, 'dasom_church_disable_gutenberg_for_column'), 10, 2);
-        add_action('admin_head-post.php', array($this, 'dasom_church_column_edit_screen'));
-        add_action('admin_head-post-new.php', array($this, 'dasom_church_column_edit_screen'));
     }
     
     /**
