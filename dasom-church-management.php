@@ -3,7 +3,7 @@
  * Plugin Name: DW Church Management System
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 1.3.3
+ * Version: 1.3.4
  * Author: Dasomweb
  * Author URI: https://dasomweb.com
  * License: GPL v2 or later
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '1.3.3');
+define('DASOM_CHURCH_VERSION', '1.3.4');
 define('DASOM_CHURCH_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -363,7 +363,7 @@ class Dasom_Church_Management {
     public function dasom_church_check_migration() {
         $migration_version = get_option('dasom_church_migration_version', '0');
         
-        // Only run migration once for version 1.2.0
+        // Migration for version 1.2.0
         if (version_compare($migration_version, '1.2.0', '<')) {
             $this->dasom_church_run_migration();
             update_option('dasom_church_migration_version', '1.2.0');
@@ -372,6 +372,19 @@ class Dasom_Church_Management {
             add_action('admin_notices', function() {
                 echo '<div class="notice notice-success is-dismissible">';
                 echo '<p><strong>DW Church Management System:</strong> 데이터 마이그레이션이 완료되었습니다.</p>';
+                echo '</div>';
+            });
+        }
+        
+        // Migration for version 1.3.4 - Fix church settings prefix
+        if (version_compare($migration_version, '1.3.4', '<')) {
+            $this->dasom_church_run_settings_migration();
+            update_option('dasom_church_migration_version', '1.3.4');
+            
+            // Show admin notice
+            add_action('admin_notices', function() {
+                echo '<div class="notice notice-success is-dismissible">';
+                echo '<p><strong>DW Church Management System:</strong> 교회 설정 데이터 마이그레이션이 완료되었습니다.</p>';
                 echo '</div>';
             });
         }
@@ -473,6 +486,42 @@ class Dasom_Church_Management {
             if ($value !== false) {
                 update_option($new_option, $value);
                 delete_option($old_option);
+            }
+        }
+    }
+    
+    /**
+     * Run settings migration for v1.3.4
+     * This ensures church settings are properly migrated
+     */
+    private function dasom_church_run_settings_migration() {
+        // Check if old settings exist and migrate them
+        $old_settings = array(
+            'dasom_church_name',
+            'dasom_church_address',
+            'dasom_church_phone',
+            'dasom_church_email',
+            'dasom_church_website',
+            'dasom_social_youtube',
+            'dasom_social_instagram',
+            'dasom_social_facebook',
+            'dasom_social_linkedin',
+            'dasom_social_tiktok',
+            'dasom_social_kakaotalk',
+            'dasom_social_kakaotalk_channel',
+        );
+        
+        foreach ($old_settings as $old_key) {
+            $value = get_option($old_key, false);
+            if ($value !== false && $value !== '') {
+                // Convert to new key format
+                $new_key = str_replace('dasom_', 'dw_', $old_key);
+                
+                // Only update if new key doesn't exist or is empty
+                $existing_value = get_option($new_key, '');
+                if (empty($existing_value)) {
+                    update_option($new_key, $value);
+                }
             }
         }
     }
