@@ -740,15 +740,21 @@ class Dasom_Church_Meta_Boxes {
                     var attachment = frame.state().get('selection').first().toJSON();
                     var buttonId = $(e.target).attr('id');
                     
-                    if (buttonId === 'column_top_image_button') {
+                    if (buttonId === 'dw_column_top_image_button') {
                         $('#dw_column_top_image').val(attachment.id);
                         $('#dw_column_top_image_preview').html('<img src=\"' + attachment.url + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
-                    } else if (buttonId === 'column_bottom_image_button') {
+                    } else if (buttonId === 'dw_column_bottom_image_button') {
                         $('#dw_column_bottom_image').val(attachment.id);
                         $('#dw_column_bottom_image_preview').html('<img src=\"' + attachment.url + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
-                    } else {
-                        $('#dw_sermon_thumb_id, #dw_album_thumb_id, #dw_column_thumb_id').val(attachment.id);
-                        $('#dw_sermon_thumb_preview, #dw_album_thumb_preview, #dw_column_thumb_preview').html('<img src=\"' + attachment.url + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
+                    } else if (buttonId === 'dw_sermon_thumb_button') {
+                        $('#dw_sermon_thumb_id').val(attachment.id);
+                        $('#dw_sermon_thumb_preview').html('<img src=\"' + attachment.url + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
+                    } else if (buttonId === 'dw_album_thumb_button') {
+                        $('#dw_album_thumb_id').val(attachment.id);
+                        $('#dw_album_thumb_preview').html('<img src=\"' + attachment.url + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
+                    } else if (buttonId === 'dw_column_thumb_button') {
+                        $('#dw_column_thumb_id').val(attachment.id);
+                        $('#dw_column_thumb_preview').html('<img src=\"' + attachment.url + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
                     }
                 });
                 frame.open();
