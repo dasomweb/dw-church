@@ -26,57 +26,76 @@ $social_linkedin = dasom_church_get_setting('social_linkedin', '');
 $social_tiktok = dasom_church_get_setting('social_tiktok', '');
 $social_kakaotalk = dasom_church_get_setting('social_kakaotalk', '');
 $social_kakaotalk_channel = dasom_church_get_setting('social_kakaotalk_channel', '');
+
+// Dashboard visibility
+$dashboard_fields_visibility = get_option('dw_dashboard_fields_visibility', 'administrator');
 ?>
 
 <div class="wrap">
-    <h1><?php echo esc_html__('Church Settings', 'dasom-church'); ?></h1>
+    <h1><?php echo esc_html__('DW 교회관리 설정', 'dasom-church'); ?></h1>
+    
+    <?php
+    $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'church_info';
+    ?>
+    
+    <h2 class="nav-tab-wrapper">
+        <a href="?page=dasom-church-settings&tab=church_info" class="nav-tab <?php echo $active_tab == 'church_info' ? 'nav-tab-active' : ''; ?>">
+            <?php _e('교회 정보', 'dasom-church'); ?>
+        </a>
+        <a href="?page=dasom-church-settings&tab=plugin_settings" class="nav-tab <?php echo $active_tab == 'plugin_settings' ? 'nav-tab-active' : ''; ?>">
+            <?php _e('설정', 'dasom-church'); ?>
+        </a>
+    </h2>
     
     <form method="post" action="">
         <?php wp_nonce_field('dasom_church_settings_action', 'dasom_church_settings_nonce'); ?>
         
+        <?php if ($active_tab == 'church_info'): ?>
+        <!-- 교회 정보 탭 -->
+        <h2><?php _e('기본 정보', 'dasom-church'); ?></h2>
         <table class="form-table">
             <tr>
                 <th scope="row">
-                    <label for="dasom_church_name"><?php echo esc_html__('Church Name', 'dasom-church'); ?></label>
+                    <label for="dw_church_name"><?php echo esc_html__('Church Name', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="text" id="dasom_church_name" name="dasom_church_name" value="<?php echo esc_attr($church_name); ?>" class="regular-text" />
+                    <input type="text" id="dw_church_name" name="dw_church_name" value="<?php echo esc_attr($church_name); ?>" class="regular-text" />
                     <p class="description"><?php echo esc_html__('Enter the name of your church.', 'dasom-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dasom_church_address"><?php echo esc_html__('Church Address', 'dasom-church'); ?></label>
+                    <label for="dw_church_address"><?php echo esc_html__('Church Address', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <textarea id="dasom_church_address" name="dasom_church_address" rows="3" cols="50"><?php echo esc_textarea($church_address); ?></textarea>
+                    <textarea id="dw_church_address" name="dw_church_address" rows="3" cols="50"><?php echo esc_textarea($church_address); ?></textarea>
                     <p class="description"><?php echo esc_html__('Enter the full address of your church.', 'dasom-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dasom_church_phone"><?php echo esc_html__('Phone Number', 'dasom-church'); ?></label>
+                    <label for="dw_church_phone"><?php echo esc_html__('Phone Number', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="text" id="dasom_church_phone" name="dasom_church_phone" value="<?php echo esc_attr($church_phone); ?>" class="regular-text" />
+                    <input type="text" id="dw_church_phone" name="dw_church_phone" value="<?php echo esc_attr($church_phone); ?>" class="regular-text" />
                     <p class="description"><?php echo esc_html__('Enter the church phone number.', 'dasom-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dasom_church_email"><?php echo esc_html__('Email Address', 'dasom-church'); ?></label>
+                    <label for="dw_church_email"><?php echo esc_html__('Email Address', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="email" id="dasom_church_email" name="dasom_church_email" value="<?php echo esc_attr($church_email); ?>" class="regular-text" />
+                    <input type="email" id="dw_church_email" name="dw_church_email" value="<?php echo esc_attr($church_email); ?>" class="regular-text" />
                     <p class="description"><?php echo esc_html__('Enter the church email address.', 'dasom-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dasom_church_website"><?php echo esc_html__('Website URL', 'dasom-church'); ?></label>
+                    <label for="dw_church_website"><?php echo esc_html__('Website URL', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="url" id="dasom_church_website" name="dasom_church_website" value="<?php echo esc_attr($church_website); ?>" class="regular-text" />
+                    <input type="url" id="dw_church_website" name="dw_church_website" value="<?php echo esc_attr($church_website); ?>" class="regular-text" />
                     <p class="description"><?php echo esc_html__('Enter the church website URL.', 'dasom-church'); ?></p>
                 </td>
             </tr>
@@ -88,68 +107,90 @@ $social_kakaotalk_channel = dasom_church_get_setting('social_kakaotalk_channel',
         <table class="form-table">
             <tr>
                 <th scope="row">
-                    <label for="dasom_social_youtube"><?php echo esc_html__('YouTube', 'dasom-church'); ?></label>
+                    <label for="dw_social_youtube"><?php echo esc_html__('YouTube', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="url" id="dasom_social_youtube" name="dasom_social_youtube" value="<?php echo esc_attr($social_youtube); ?>" class="regular-text" placeholder="https://www.youtube.com/channel/..." />
+                    <input type="url" id="dw_social_youtube" name="dw_social_youtube" value="<?php echo esc_attr($social_youtube); ?>" class="regular-text" placeholder="https://www.youtube.com/channel/..." />
                     <p class="description"><?php echo esc_html__('Enter your YouTube channel URL.', 'dasom-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dasom_social_instagram"><?php echo esc_html__('Instagram', 'dasom-church'); ?></label>
+                    <label for="dw_social_instagram"><?php echo esc_html__('Instagram', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="url" id="dasom_social_instagram" name="dasom_social_instagram" value="<?php echo esc_attr($social_instagram); ?>" class="regular-text" placeholder="https://www.instagram.com/..." />
+                    <input type="url" id="dw_social_instagram" name="dw_social_instagram" value="<?php echo esc_attr($social_instagram); ?>" class="regular-text" placeholder="https://www.instagram.com/..." />
                     <p class="description"><?php echo esc_html__('Enter your Instagram profile URL.', 'dasom-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dasom_social_facebook"><?php echo esc_html__('Facebook', 'dasom-church'); ?></label>
+                    <label for="dw_social_facebook"><?php echo esc_html__('Facebook', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="url" id="dasom_social_facebook" name="dasom_social_facebook" value="<?php echo esc_attr($social_facebook); ?>" class="regular-text" placeholder="https://www.facebook.com/..." />
+                    <input type="url" id="dw_social_facebook" name="dw_social_facebook" value="<?php echo esc_attr($social_facebook); ?>" class="regular-text" placeholder="https://www.facebook.com/..." />
                     <p class="description"><?php echo esc_html__('Enter your Facebook page URL.', 'dasom-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dasom_social_linkedin"><?php echo esc_html__('LinkedIn', 'dasom-church'); ?></label>
+                    <label for="dw_social_linkedin"><?php echo esc_html__('LinkedIn', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="url" id="dasom_social_linkedin" name="dasom_social_linkedin" value="<?php echo esc_attr($social_linkedin); ?>" class="regular-text" placeholder="https://www.linkedin.com/company/..." />
+                    <input type="url" id="dw_social_linkedin" name="dw_social_linkedin" value="<?php echo esc_attr($social_linkedin); ?>" class="regular-text" placeholder="https://www.linkedin.com/company/..." />
                     <p class="description"><?php echo esc_html__('Enter your LinkedIn company page URL.', 'dasom-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dasom_social_tiktok"><?php echo esc_html__('TikTok', 'dasom-church'); ?></label>
+                    <label for="dw_social_tiktok"><?php echo esc_html__('TikTok', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="url" id="dasom_social_tiktok" name="dasom_social_tiktok" value="<?php echo esc_attr($social_tiktok); ?>" class="regular-text" placeholder="https://www.tiktok.com/@..." />
+                    <input type="url" id="dw_social_tiktok" name="dw_social_tiktok" value="<?php echo esc_attr($social_tiktok); ?>" class="regular-text" placeholder="https://www.tiktok.com/@..." />
                     <p class="description"><?php echo esc_html__('Enter your TikTok profile URL.', 'dasom-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dasom_social_kakaotalk"><?php echo esc_html__('KakaoTalk', 'dasom-church'); ?></label>
+                    <label for="dw_social_kakaotalk"><?php echo esc_html__('KakaoTalk', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="url" id="dasom_social_kakaotalk" name="dasom_social_kakaotalk" value="<?php echo esc_attr($social_kakaotalk); ?>" class="regular-text" placeholder="https://open.kakao.com/o/..." />
+                    <input type="url" id="dw_social_kakaotalk" name="dw_social_kakaotalk" value="<?php echo esc_attr($social_kakaotalk); ?>" class="regular-text" placeholder="https://open.kakao.com/o/..." />
                     <p class="description"><?php echo esc_html__('Enter your KakaoTalk open chat URL.', 'dasom-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dasom_social_kakaotalk_channel"><?php echo esc_html__('KakaoTalk Channel', 'dasom-church'); ?></label>
+                    <label for="dw_social_kakaotalk_channel"><?php echo esc_html__('KakaoTalk Channel', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="url" id="dasom_social_kakaotalk_channel" name="dasom_social_kakaotalk_channel" value="<?php echo esc_attr($social_kakaotalk_channel); ?>" class="regular-text" placeholder="https://pf.kakao.com/..." />
+                    <input type="url" id="dw_social_kakaotalk_channel" name="dw_social_kakaotalk_channel" value="<?php echo esc_attr($social_kakaotalk_channel); ?>" class="regular-text" placeholder="https://pf.kakao.com/..." />
                     <p class="description"><?php echo esc_html__('Enter your KakaoTalk Channel URL.', 'dasom-church'); ?></p>
                 </td>
             </tr>
         </table>
+        
+        <?php elseif ($active_tab == 'plugin_settings'): ?>
+        <!-- 플러그인 설정 탭 -->
+        <h2><?php echo esc_html__('대시보드 설정', 'dasom-church'); ?></h2>
+        <table class="form-table">
+            <tr>
+                <th scope="row">
+                    <label for="dw_dashboard_fields_visibility"><?php echo esc_html__('커스텀 필드 안내 표시 권한', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <select id="dw_dashboard_fields_visibility" name="dw_dashboard_fields_visibility">
+                        <option value="administrator" <?php selected($dashboard_fields_visibility, 'administrator'); ?>><?php echo esc_html__('Administrator (관리자)', 'dasom-church'); ?></option>
+                        <option value="editor" <?php selected($dashboard_fields_visibility, 'editor'); ?>><?php echo esc_html__('Editor (편집자)', 'dasom-church'); ?></option>
+                        <option value="author" <?php selected($dashboard_fields_visibility, 'author'); ?>><?php echo esc_html__('Author (작성자)', 'dasom-church'); ?></option>
+                        <option value="contributor" <?php selected($dashboard_fields_visibility, 'contributor'); ?>><?php echo esc_html__('Contributor (기여자)', 'dasom-church'); ?></option>
+                    </select>
+                    <p class="description"><?php echo esc_html__('대시보드에서 "Elementor에서 사용할 커스텀 필드 안내"와 "교회설정 커스텀 필드 안내" 섹션을 볼 수 있는 최소 권한을 설정합니다.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+        </table>
+        
+        <?php endif; ?>
         
         <?php submit_button(); ?>
     </form>

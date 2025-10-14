@@ -527,22 +527,27 @@ class Dasom_Church_Admin {
         
         // Sanitize and save settings
         $settings = array(
-            'name' => sanitize_text_field($_POST['dasom_church_name'] ?? ''),
-            'address' => sanitize_textarea_field($_POST['dasom_church_address'] ?? ''),
-            'phone' => sanitize_text_field($_POST['dasom_church_phone'] ?? ''),
-            'email' => sanitize_email($_POST['dasom_church_email'] ?? ''),
-            'website' => esc_url_raw($_POST['dasom_church_website'] ?? ''),
-            'social_youtube' => esc_url_raw($_POST['dasom_social_youtube'] ?? ''),
-            'social_instagram' => esc_url_raw($_POST['dasom_social_instagram'] ?? ''),
-            'social_facebook' => esc_url_raw($_POST['dasom_social_facebook'] ?? ''),
-            'social_linkedin' => esc_url_raw($_POST['dasom_social_linkedin'] ?? ''),
-            'social_tiktok' => esc_url_raw($_POST['dasom_social_tiktok'] ?? ''),
-            'social_kakaotalk' => esc_url_raw($_POST['dasom_social_kakaotalk'] ?? ''),
-            'social_kakaotalk_channel' => esc_url_raw($_POST['dasom_social_kakaotalk_channel'] ?? '')
+            'name' => sanitize_text_field($_POST['dw_church_name'] ?? ''),
+            'address' => sanitize_textarea_field($_POST['dw_church_address'] ?? ''),
+            'phone' => sanitize_text_field($_POST['dw_church_phone'] ?? ''),
+            'email' => sanitize_email($_POST['dw_church_email'] ?? ''),
+            'website' => esc_url_raw($_POST['dw_church_website'] ?? ''),
+            'social_youtube' => esc_url_raw($_POST['dw_social_youtube'] ?? ''),
+            'social_instagram' => esc_url_raw($_POST['dw_social_instagram'] ?? ''),
+            'social_facebook' => esc_url_raw($_POST['dw_social_facebook'] ?? ''),
+            'social_linkedin' => esc_url_raw($_POST['dw_social_linkedin'] ?? ''),
+            'social_tiktok' => esc_url_raw($_POST['dw_social_tiktok'] ?? ''),
+            'social_kakaotalk' => esc_url_raw($_POST['dw_social_kakaotalk'] ?? ''),
+            'social_kakaotalk_channel' => esc_url_raw($_POST['dw_social_kakaotalk_channel'] ?? '')
         );
         
         foreach ($settings as $key => $value) {
             dasom_church_update_setting($key, $value);
+        }
+        
+        // Save dashboard visibility setting
+        if (isset($_POST['dw_dashboard_fields_visibility'])) {
+            update_option('dw_dashboard_fields_visibility', sanitize_text_field($_POST['dw_dashboard_fields_visibility']));
         }
         
         add_action('admin_notices', function() {

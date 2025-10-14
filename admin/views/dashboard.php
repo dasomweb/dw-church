@@ -11,6 +11,32 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// Get dashboard visibility setting
+$dashboard_fields_visibility = get_option('dw_dashboard_fields_visibility', 'administrator');
+
+// Check if current user can view custom fields guide
+function can_view_custom_fields_guide($required_role) {
+    $role_hierarchy = array(
+        'administrator' => 4,
+        'editor' => 3,
+        'author' => 2,
+        'contributor' => 1
+    );
+    
+    $user = wp_get_current_user();
+    $user_level = 0;
+    
+    foreach ($role_hierarchy as $role => $level) {
+        if (in_array($role, $user->roles)) {
+            $user_level = max($user_level, $level);
+        }
+    }
+    
+    $required_level = isset($role_hierarchy[$required_role]) ? $role_hierarchy[$required_role] : 4;
+    
+    return $user_level >= $required_level;
+}
+
 $default_preacher = get_option('default_sermon_preacher', __('담임목사', 'dasom-church'));
 $preachers = get_terms(array(
     'taxonomy' => 'dw_sermon_preacher',
@@ -93,8 +119,8 @@ if (is_wp_error($preachers)) {
         </tbody>
     </table>
     
-    <?php if (current_user_can('administrator')): ?>
-        <!-- Elementor Custom Field 안내 (관리자만 표시) -->
+    <?php if (can_view_custom_fields_guide($dashboard_fields_visibility)): ?>
+        <!-- Elementor Custom Field 안내 -->
         <hr>
         <h2>📌 <?php _e('Elementor에서 사용할 커스텀 필드 안내', 'dasom-church'); ?></h2>
         <p><?php _e('아래 커스텀 필드 키를 Elementor → Dynamic Tags → Post Custom Field → Custom Key 입력칸에 넣어 사용하세요.', 'dasom-church'); ?></p>
@@ -200,52 +226,52 @@ if (is_wp_error($preachers)) {
                 <tr>
                     <td rowspan="5">🏢 <?php _e('기본 정보', 'dasom-church'); ?></td>
                     <td><?php _e('교회명', 'dasom-church'); ?></td>
-                    <td><code>dasom_church_name</code></td>
+                    <td><code>dw_church_name</code></td>
                 </tr>
                 <tr>
                     <td><?php _e('교회 주소', 'dasom-church'); ?></td>
-                    <td><code>dasom_church_address</code></td>
+                    <td><code>dw_church_address</code></td>
                 </tr>
                 <tr>
                     <td><?php _e('전화번호', 'dasom-church'); ?></td>
-                    <td><code>dasom_church_phone</code></td>
+                    <td><code>dw_church_phone</code></td>
                 </tr>
                 <tr>
                     <td><?php _e('이메일', 'dasom-church'); ?></td>
-                    <td><code>dasom_church_email</code></td>
+                    <td><code>dw_church_email</code></td>
                 </tr>
                 <tr>
                     <td><?php _e('웹사이트 URL', 'dasom-church'); ?></td>
-                    <td><code>dasom_church_website</code></td>
+                    <td><code>dw_church_website</code></td>
                 </tr>
                 <tr>
                     <td rowspan="7">📱 <?php _e('소셜미디어', 'dasom-church'); ?></td>
                     <td><?php _e('YouTube 채널', 'dasom-church'); ?></td>
-                    <td><code>dasom_social_youtube</code></td>
+                    <td><code>dw_social_youtube</code></td>
                 </tr>
                 <tr>
                     <td><?php _e('Instagram', 'dasom-church'); ?></td>
-                    <td><code>dasom_social_instagram</code></td>
+                    <td><code>dw_social_instagram</code></td>
                 </tr>
                 <tr>
                     <td><?php _e('Facebook', 'dasom-church'); ?></td>
-                    <td><code>dasom_social_facebook</code></td>
+                    <td><code>dw_social_facebook</code></td>
                 </tr>
                 <tr>
                     <td><?php _e('LinkedIn', 'dasom-church'); ?></td>
-                    <td><code>dasom_social_linkedin</code></td>
+                    <td><code>dw_social_linkedin</code></td>
                 </tr>
                 <tr>
                     <td><?php _e('TikTok', 'dasom-church'); ?></td>
-                    <td><code>dasom_social_tiktok</code></td>
+                    <td><code>dw_social_tiktok</code></td>
                 </tr>
                 <tr>
                     <td><?php _e('KakaoTalk', 'dasom-church'); ?></td>
-                    <td><code>dasom_social_kakaotalk</code></td>
+                    <td><code>dw_social_kakaotalk</code></td>
                 </tr>
                 <tr>
                     <td><?php _e('KakaoTalk Channel', 'dasom-church'); ?></td>
-                    <td><code>dasom_social_kakaotalk_channel</code></td>
+                    <td><code>dw_social_kakaotalk_channel</code></td>
                 </tr>
             </tbody>
         </table>

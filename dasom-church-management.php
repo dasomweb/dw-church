@@ -343,6 +343,30 @@ class Dasom_Church_Management {
                 }
             }
         }
+        
+        // Migrate church settings options
+        $settings_map = array(
+            'dasom_church_name' => 'dw_church_name',
+            'dasom_church_address' => 'dw_church_address',
+            'dasom_church_phone' => 'dw_church_phone',
+            'dasom_church_email' => 'dw_church_email',
+            'dasom_church_website' => 'dw_church_website',
+            'dasom_social_youtube' => 'dw_social_youtube',
+            'dasom_social_instagram' => 'dw_social_instagram',
+            'dasom_social_facebook' => 'dw_social_facebook',
+            'dasom_social_linkedin' => 'dw_social_linkedin',
+            'dasom_social_tiktok' => 'dw_social_tiktok',
+            'dasom_social_kakaotalk' => 'dw_social_kakaotalk',
+            'dasom_social_kakaotalk_channel' => 'dw_social_kakaotalk_channel',
+        );
+        
+        foreach ($settings_map as $old_option => $new_option) {
+            $value = get_option($old_option);
+            if ($value !== false) {
+                update_option($new_option, $value);
+                delete_option($old_option);
+            }
+        }
     }
 }
 

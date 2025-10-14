@@ -244,6 +244,7 @@ class Dasom_Church_Meta_Boxes {
                     <input type="hidden" id="dw_sermon_thumb_id" name="dw_sermon_thumb_id" value="<?php echo esc_attr($thumb_id); ?>" />
                     <button type="button" class="button" id="dw_sermon_thumb_button"><?php _e('썸네일 업로드/선택', 'dasom-church'); ?></button>
                     <button type="button" class="button" id="dw_sermon_thumb_fetch"><?php _e('YouTube 썸네일 불러오기', 'dasom-church'); ?></button>
+                    <button type="button" class="button button-link-delete" id="dw_sermon_thumb_remove" style="color:#b32d2e;"><?php _e('썸네일 삭제', 'dasom-church'); ?></button>
                     <div id="dw_sermon_thumb_preview" style="margin-top:10px;">
                         <?php if ($thumb_id): ?>
                             <img src="<?php echo esc_url(wp_get_attachment_url($thumb_id)); ?>" style="width:160px;height:90px;object-fit:cover;" />
@@ -305,6 +306,7 @@ class Dasom_Church_Meta_Boxes {
                 <input type="hidden" id="dw_column_thumb_id" name="dw_column_thumb_id" value="<?php echo esc_attr($thumb_id); ?>" />
                 <button type="button" class="button" id="dw_column_thumb_button"><?php _e('썸네일 업로드/선택', 'dasom-church'); ?></button>
                 <button type="button" class="button" id="dw_column_thumb_fetch"><?php _e('YouTube 썸네일 불러오기', 'dasom-church'); ?></button>
+                <button type="button" class="button button-link-delete" id="dw_column_thumb_remove" style="color:#b32d2e;"><?php _e('썸네일 삭제', 'dasom-church'); ?></button>
                 <div id="dw_column_thumb_preview" style="margin-top: 10px;">
                     <?php if ($thumb_id): ?>
                         <img src="<?php echo esc_url(wp_get_attachment_url($thumb_id)); ?>" style="width: 160px; height: 90px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px;" />
@@ -373,6 +375,7 @@ class Dasom_Church_Meta_Boxes {
                     <input type="hidden" id="dw_album_thumb_id" name="dw_album_thumb_id" value="<?php echo esc_attr($thumb_id); ?>" />
                     <button type="button" class="button" id="dw_album_thumb_button"><?php _e('썸네일 업로드/선택', 'dasom-church'); ?></button>
                     <button type="button" class="button" id="dw_album_thumb_fetch"><?php _e('YouTube 썸네일 불러오기', 'dasom-church'); ?></button>
+                    <button type="button" class="button button-link-delete" id="dw_album_thumb_remove" style="color:#b32d2e;"><?php _e('썸네일 삭제', 'dasom-church'); ?></button>
                     <div id="dw_album_thumb_preview" style="margin-top:10px;">
                         <?php if ($thumb_id): ?>
                             <img src="<?php echo esc_url(wp_get_attachment_url($thumb_id)); ?>" style="width:160px;height:90px;object-fit:cover;" />
@@ -804,6 +807,25 @@ class Dasom_Church_Meta_Boxes {
                     img.src = max;
                 } else {
                     alert('유효한 YouTube URL이 아닙니다.');
+                }
+            });
+            
+            // YouTube 썸네일 삭제 (설교, 목회컬럼, 교회앨범)
+            $('#dw_sermon_thumb_remove, #dw_column_thumb_remove, #dw_album_thumb_remove').on('click', function(e) {
+                e.preventDefault();
+                var buttonId = $(e.target).attr('id');
+                
+                if (confirm('썸네일을 삭제하시겠습니까?')) {
+                    if (buttonId === 'dw_sermon_thumb_remove') {
+                        $('#dw_sermon_thumb_id').val('');
+                        $('#dw_sermon_thumb_preview').html('');
+                    } else if (buttonId === 'dw_column_thumb_remove') {
+                        $('#dw_column_thumb_id').val('');
+                        $('#dw_column_thumb_preview').html('');
+                    } else if (buttonId === 'dw_album_thumb_remove') {
+                        $('#dw_album_thumb_id').val('');
+                        $('#dw_album_thumb_preview').html('');
+                    }
                 }
             });
         });
