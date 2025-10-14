@@ -13,6 +13,8 @@
  * Requires at least: 5.8
  * Tested up to: 6.8
  * Requires PHP: 7.4
+ * GitHub Plugin URI: dasomweb/dasom-church-management-system
+ * GitHub Branch: main
  */
 
 // Block direct access
@@ -45,95 +47,186 @@ add_action('init', function() {
     if (is_admin()) {
         add_filter('pre_set_site_transient_update_plugins', 'dasom_church_check_for_updates');
         add_filter('plugins_api', 'dasom_church_plugin_info', 20, 3);
+        add_action('upgrader_process_complete', 'dasom_church_clear_update_cache', 10, 2);
     }
 });
 
+/**
+ * Check for plugin updates from GitHub
+ *
+ * @param object $transient Update transient
+ * @return object Modified transient
+ */
 function dasom_church_check_for_updates($transient) {
     if (empty($transient->checked)) {
         return $transient;
     }
     
-    $plugin_slug = 'dasom-church-management';
-    $github_username = 'dasowmeb';
+    // Plugin configuration
+    $plugin_slug = plugin_basename(__FILE__);
+    $github_username = 'dasomweb';
     $github_repo = 'dasom-church-management-system';
     
-    // Get latest release from GitHub
-    $response = wp_remote_get("https://api.github.com/repos/{$github_username}/{$github_repo}/releases/latest", array(
-        'timeout' => 15,
-        'headers' => array(
-            'Accept' => 'application/vnd.github.v3+json',
-        )
-    ));
+    // Check cache first (12 hours)
+    $cache_key = 'dasom_church_update_' . md5($github_username . $github_repo);
+    $cached_data = get_transient($cache_key);
     
-    if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
-        return $transient;
+    if ($cached_data !== false) {
+        $release = $cached_data;
+    } else {
+        // Get latest release from GitHub API
+        $response = wp_remote_get(
+            "https://api.github.com/repos/{$github_username}/{$github_repo}/releases/latest",
+            array(
+                'timeout' => 15,
+                'headers' => array(
+                    'Accept' => 'application/vnd.github.v3+json',
+                    'User-Agent' => 'WordPress/' . get_bloginfo('version') . '; ' . get_bloginfo('url')
+                )
+            )
+        );
+        
+        if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
+            return $transient;
+        }
+        
+        $release = json_decode(wp_remote_retrieve_body($response), true);
+        
+        // Cache for 12 hours
+        set_transient($cache_key, $release, 12 * HOUR_IN_SECONDS);
     }
     
-    $release = json_decode(wp_remote_retrieve_body($response), true);
-    
     if (isset($release['tag_name']) && isset($release['zipball_url'])) {
-        $latest_version = str_replace('v', '', $release['tag_name']);
+        $latest_version = ltrim($release['tag_name'], 'v');
         $current_version = DASOM_CHURCH_VERSION;
         
         if (version_compare($latest_version, $current_version, '>')) {
-            $transient->response[plugin_basename(__FILE__)] = (object) array(
-                'slug' => $plugin_slug,
-                'plugin' => plugin_basename(__FILE__),
+            $plugin_data = array(
+                'slug' => dirname($plugin_slug),
+                'plugin' => $plugin_slug,
                 'new_version' => $latest_version,
-                'url' => $release['html_url'],
+                'url' => "https://github.com/{$github_username}/{$github_repo}",
                 'package' => $release['zipball_url'],
-                'icons' => array(),
-                'banners' => array(),
-                'banners_rtl' => array(),
-                'tested' => '6.4',
+                'tested' => '6.8',
                 'requires_php' => '7.4',
                 'compatibility' => new stdClass(),
-                'id' => plugin_basename(__FILE__),
-                'slug' => $plugin_slug,
             );
+            
+            $transient->response[$plugin_slug] = (object) $plugin_data;
         }
     }
     
     return $transient;
 }
 
+/**
+ * Provide plugin information for update details
+ *
+ * @param false|object|array $result The result object or array
+ * @param string $action The type of information being requested
+ * @param object $args Plugin API arguments
+ * @return false|object|array Modified result
+ */
 function dasom_church_plugin_info($result, $action, $args) {
-    if ($action !== 'plugin_information' || $args->slug !== 'dasom-church-management') {
+    $plugin_slug = dirname(plugin_basename(__FILE__));
+    
+    if ($action !== 'plugin_information' || !isset($args->slug) || $args->slug !== $plugin_slug) {
         return $result;
     }
     
-    $github_username = 'dasowmeb';
+    $github_username = 'dasomweb';
     $github_repo = 'dasom-church-management-system';
     
-    $response = wp_remote_get("https://api.github.com/repos/{$github_username}/{$github_repo}/releases/latest");
+    // Check cache first
+    $cache_key = 'dasom_church_plugin_info_' . md5($github_username . $github_repo);
+    $cached_info = get_transient($cache_key);
     
-    if (is_wp_error($response)) {
+    if ($cached_info !== false) {
+        return $cached_info;
+    }
+    
+    // Get latest release info
+    $response = wp_remote_get(
+        "https://api.github.com/repos/{$github_username}/{$github_repo}/releases/latest",
+        array(
+            'timeout' => 15,
+            'headers' => array(
+                'Accept' => 'application/vnd.github.v3+json',
+                'User-Agent' => 'WordPress/' . get_bloginfo('version') . '; ' . get_bloginfo('url')
+            )
+        )
+    );
+    
+    if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
         return $result;
     }
     
     $release = json_decode(wp_remote_retrieve_body($response), true);
     
     if (isset($release['tag_name'])) {
-        $latest_version = str_replace('v', '', $release['tag_name']);
+        $latest_version = ltrim($release['tag_name'], 'v');
         
-        $result = new stdClass();
-        $result->name = 'Dasom Church Management System';
-        $result->slug = 'dasom-church-management';
-        $result->version = $latest_version;
-        $result->tested = '6.4';
-        $result->requires = '5.0';
-        $result->requires_php = '7.4';
-        $result->last_updated = $release['published_at'];
-        $result->homepage = $release['html_url'];
-        $result->sections = array(
-            'description' => 'Complete church management system for bulletins, sermons, columns, and albums.',
-            'changelog' => $release['body'] ?: 'No changelog available.'
+        $plugin_info = new stdClass();
+        $plugin_info->name = 'DW Church Management System';
+        $plugin_info->slug = $plugin_slug;
+        $plugin_info->version = $latest_version;
+        $plugin_info->author = '<a href="https://dasomweb.com">Dasomweb</a>';
+        $plugin_info->homepage = "https://github.com/{$github_username}/{$github_repo}";
+        $plugin_info->tested = '6.8';
+        $plugin_info->requires = '5.8';
+        $plugin_info->requires_php = '7.4';
+        $plugin_info->last_updated = $release['published_at'];
+        $plugin_info->download_link = $release['zipball_url'];
+        
+        // Sections
+        $plugin_info->sections = array(
+            'description' => 'Complete church management system for bulletins, sermons, pastoral columns, and photo albums with modern security practices.',
+            'installation' => 'Upload the plugin files to the /wp-content/plugins/ directory, or install through the WordPress plugins screen. Activate the plugin and configure settings under DW 교회관리 menu.',
+            'changelog' => !empty($release['body']) ? $release['body'] : 'See full changelog at ' . $release['html_url']
         );
-        $result->download_link = $release['zipball_url'];
+        
+        // Cache for 12 hours
+        set_transient($cache_key, $plugin_info, 12 * HOUR_IN_SECONDS);
+        
+        return $plugin_info;
     }
     
     return $result;
 }
+
+/**
+ * Clear update cache after plugin update
+ *
+ * @param object $upgrader_object Upgrader object
+ * @param array $options Update options
+ */
+function dasom_church_clear_update_cache($upgrader_object, $options) {
+    if ($options['action'] === 'update' && $options['type'] === 'plugin') {
+        $github_username = 'dasomweb';
+        $github_repo = 'dasom-church-management-system';
+        
+        // Clear update cache
+        delete_transient('dasom_church_update_' . md5($github_username . $github_repo));
+        delete_transient('dasom_church_plugin_info_' . md5($github_username . $github_repo));
+    }
+}
+
+/**
+ * Force check for updates (for debugging)
+ * Usage: Add ?dasom_check_update=1 to admin URL
+ */
+add_action('admin_init', function() {
+    if (isset($_GET['dasom_check_update']) && current_user_can('update_plugins')) {
+        $github_username = 'dasomweb';
+        $github_repo = 'dasom-church-management-system';
+        
+        delete_transient('dasom_church_update_' . md5($github_username . $github_repo));
+        delete_transient('dasom_church_plugin_info_' . md5($github_username . $github_repo));
+        
+        wp_redirect(admin_url('plugins.php'));
+        exit;
+    }
+});
 
 /**
  * Main plugin class
