@@ -51,7 +51,8 @@ class Dasom_Church_Meta_Boxes {
         // Admin head styles
         add_action('admin_head', array($this, 'dasom_church_admin_head_styles'));
         
-        // Customize column edit screen
+        // Force classic editor for column post type
+        add_filter('use_block_editor_for_post_type', array($this, 'dasom_church_disable_gutenberg_for_column'), 10, 2);
         add_action('admin_head-post.php', array($this, 'dasom_church_column_edit_screen'));
         add_action('admin_head-post-new.php', array($this, 'dasom_church_column_edit_screen'));
     }
@@ -828,86 +829,13 @@ class Dasom_Church_Meta_Boxes {
     }
     
     /**
-     * Customize column edit screen
+     * Disable Gutenberg for column post type
      */
-    public function dasom_church_column_edit_screen() {
-        global $post_type;
-        
+    public function dasom_church_disable_gutenberg_for_column($current_status, $post_type) {
         if ($post_type === 'column') {
-            ?>
-            <style>
-            /* Hide standard WordPress editor and title */
-            #titlediv,
-            #postdivrich,
-            #post-body-content .postbox:not(#column_meta),
-            #post-body-content .postbox:not(#column_meta) * {
-                display: none !important;
-            }
-            
-            /* Show only our custom meta box */
-            #column_meta {
-                display: block !important;
-            }
-            
-            /* Custom title and content fields */
-            .dasom-column-custom-fields {
-                background: #fff;
-                border: 1px solid #ccd0d4;
-                border-radius: 4px;
-                padding: 20px;
-                margin: 20px 0;
-            }
-            
-            .dasom-column-custom-fields h3 {
-                margin-top: 0;
-                margin-bottom: 15px;
-                font-size: 14px;
-                font-weight: 600;
-            }
-            
-            .dasom-column-custom-fields .form-field {
-                margin-bottom: 15px;
-            }
-            
-            .dasom-column-custom-fields label {
-                display: block;
-                margin-bottom: 5px;
-                font-weight: 600;
-            }
-            
-            .dasom-column-custom-fields input[type="text"],
-            .dasom-column-custom-fields input[type="url"],
-            .dasom-column-custom-fields textarea {
-                width: 100%;
-                max-width: 500px;
-            }
-            
-            .dasom-column-custom-fields textarea {
-                height: 200px;
-                resize: vertical;
-            }
-            </style>
-            
-            <script>
-            jQuery(document).ready(function($) {
-                // Add custom title and content fields
-                var customFields = '<div class="dasom-column-custom-fields">' +
-                    '<h3>목회컬럼 정보</h3>' +
-                    '<div class="form-field">' +
-                        '<label for="dasom_column_title">제목</label>' +
-                        '<input type="text" id="dasom_column_title" name="dasom_column_title" value="<?php echo esc_attr(get_post_meta(get_the_ID(), 'dasom_column_title', true)); ?>" />' +
-                    '</div>' +
-                    '<div class="form-field">' +
-                        '<label for="dasom_column_content">내용</label>' +
-                        '<textarea id="dasom_column_content" name="dasom_column_content"><?php echo esc_textarea(get_post_meta(get_the_ID(), 'dasom_column_content', true)); ?></textarea>' +
-                    '</div>' +
-                '</div>';
-                
-                $('#column_meta').before(customFields);
-            });
-            </script>
-            <?php
+            return false;
         }
+        return $current_status;
     }
 }
 
