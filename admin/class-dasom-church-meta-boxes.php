@@ -107,6 +107,7 @@ class Dasom_Church_Meta_Boxes {
         $pdf = get_post_meta($post->ID, 'bulletin_pdf', true);
         $images = get_post_meta($post->ID, 'bulletin_images', true);
         $images = $images ? json_decode($images, true) : array();
+        $images = is_array($images) ? $images : array();
         ?>
         <table class="form-table">
             <tr>
@@ -290,6 +291,7 @@ class Dasom_Church_Meta_Boxes {
         
         $images = get_post_meta($post->ID, 'album_images', true);
         $images = $images ? json_decode($images, true) : array();
+        $images = is_array($images) ? $images : array();
         $youtube = get_post_meta($post->ID, 'album_youtube', true);
         $thumb_id = get_post_meta($post->ID, 'album_thumb_id', true);
         ?>

@@ -3,7 +3,7 @@
  * Plugin Name: Dasom Church Management System
  * Plugin URI: https://github.com/dasom-church/management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 1.0.4
+ * Version: 1.0.5
  * Author: Dasom Church
  * Author URI: https://dasom-church.org
  * License: GPL v2 or later
