@@ -245,6 +245,8 @@ class Dasom_Church_Columns {
         $new_columns['date'] = __('게시일', 'dasom-church');
         $new_columns['title'] = __('제목', 'dasom-church');
         $new_columns['content'] = __('내용 요약', 'dasom-church');
+        $new_columns['top_image'] = __('상단 이미지', 'dasom-church');
+        $new_columns['youtube'] = __('YouTube', 'dasom-church');
         $new_columns['thumb'] = __('대표 이미지', 'dasom-church');
         
         return $new_columns;
@@ -260,6 +262,24 @@ class Dasom_Church_Columns {
                 if ($content) {
                     $plain = wp_strip_all_tags($content);
                     echo mb_strimwidth($plain, 0, 100, '...', 'UTF-8');
+                } else {
+                    echo '—';
+                }
+                break;
+                
+            case 'top_image':
+                $top_image = get_post_meta($post_id, 'column_top_image', true);
+                if ($top_image) {
+                    echo wp_get_attachment_image($top_image, array(80, 80), false, array('style' => 'object-fit:cover;'));
+                } else {
+                    echo __('이미지 없음', 'dasom-church');
+                }
+                break;
+                
+            case 'youtube':
+                $youtube = get_post_meta($post_id, 'column_youtube', true);
+                if ($youtube) {
+                    echo '<a href="' . esc_url($youtube) . '" target="_blank">' . __('YouTube 보기', 'dasom-church') . '</a>';
                 } else {
                     echo '—';
                 }
