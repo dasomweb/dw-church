@@ -372,11 +372,13 @@ class Dasom_Church_Meta_Boxes {
                 <td>
                     <input type="hidden" id="dw_album_thumb_id" name="dw_album_thumb_id" value="<?php echo esc_attr($thumb_id); ?>" />
                     <button type="button" class="button" id="dw_album_thumb_button"><?php _e('썸네일 업로드/선택', 'dasom-church'); ?></button>
+                    <button type="button" class="button" id="dw_album_thumb_fetch"><?php _e('YouTube 썸네일 불러오기', 'dasom-church'); ?></button>
                     <div id="dw_album_thumb_preview" style="margin-top:10px;">
                         <?php if ($thumb_id): ?>
                             <img src="<?php echo esc_url(wp_get_attachment_url($thumb_id)); ?>" style="width:160px;height:90px;object-fit:cover;" />
                         <?php endif; ?>
                     </div>
+                    <p class="description"><?php _e('미리보기만 표시됩니다. 저장 시 썸네일이 대표 이미지로 등록됩니다.', 'dasom-church'); ?></p>
                 </td>
             </tr>
         </table>
@@ -760,11 +762,20 @@ class Dasom_Church_Meta_Boxes {
                 frame.open();
             });
             
-            // YouTube 썸네일 불러오기 (설교, 목회컬럼)
-            $('#dw_sermon_thumb_fetch, #dw_column_thumb_fetch').on('click', function(e) {
+            // YouTube 썸네일 불러오기 (설교, 목회컬럼, 교회앨범)
+            $('#dw_sermon_thumb_fetch, #dw_column_thumb_fetch, #dw_album_thumb_fetch').on('click', function(e) {
                 e.preventDefault();
                 var buttonId = $(e.target).attr('id');
-                var url = buttonId === 'sermon_thumb_fetch' ? $('#dw_sermon_youtube').val() : $('#dw_column_youtube').val();
+                var url = '';
+                
+                if (buttonId === 'dw_sermon_thumb_fetch') {
+                    url = $('#dw_sermon_youtube').val();
+                } else if (buttonId === 'dw_column_thumb_fetch') {
+                    url = $('#dw_column_youtube').val();
+                } else if (buttonId === 'dw_album_thumb_fetch') {
+                    url = $('#dw_album_youtube').val();
+                }
+                
                 var match = url.match(/(?:youtu\\.be\\/|youtube\\.com\\/(?:watch\\?v=|embed\\/|v\\/))([^\\&\\?\\/]+)/);
                 if (match) {
                     var yid = match[1];
@@ -773,14 +784,22 @@ class Dasom_Church_Meta_Boxes {
                     
                     var img = new Image();
                     img.onload = function() {
-                        if (buttonId === 'sermon_thumb_fetch') {
+                        if (buttonId === 'dw_sermon_thumb_fetch') {
                             $('#dw_sermon_thumb_preview').html('<img src=\"' + max + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
-                        } else {
+                        } else if (buttonId === 'dw_column_thumb_fetch') {
                             $('#dw_column_thumb_preview').html('<img src=\"' + max + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
+                        } else if (buttonId === 'dw_album_thumb_fetch') {
+                            $('#dw_album_thumb_preview').html('<img src=\"' + max + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
                         }
                     };
                     img.onerror = function() {
-                        $('#dw_sermon_thumb_preview, #dw_album_thumb_preview').html('<img src=\"' + hq + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
+                        if (buttonId === 'dw_sermon_thumb_fetch') {
+                            $('#dw_sermon_thumb_preview').html('<img src=\"' + hq + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
+                        } else if (buttonId === 'dw_column_thumb_fetch') {
+                            $('#dw_column_thumb_preview').html('<img src=\"' + hq + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
+                        } else if (buttonId === 'dw_album_thumb_fetch') {
+                            $('#dw_album_thumb_preview').html('<img src=\"' + hq + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
+                        }
                     };
                     img.src = max;
                 } else {
