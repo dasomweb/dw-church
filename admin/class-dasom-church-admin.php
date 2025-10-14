@@ -250,7 +250,7 @@ class Dasom_Church_Admin {
         ));
         
         // 설교자
-        register_taxonomy('sermon_preacher', 'sermon', array(
+        register_taxonomy('dw_sermon_preacher', 'sermon', array(
             'labels' => array(
                 'name' => __('설교자', 'dasom-church'),
                 'singular_name' => __('설교자', 'dasom-church'),

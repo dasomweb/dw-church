@@ -102,9 +102,80 @@ foreach ($meta_key_map as $old_key => $new_key) {
     echo '<hr>';
 }
 
+// Migrate taxonomy: sermon_preacher to dw_sermon_preacher
+echo '<h2>Migrating Taxonomy: sermon_preacher → dw_sermon_preacher</h2>';
+
+// Check if old taxonomy exists
+$old_taxonomy_exists = taxonomy_exists('sermon_preacher');
+$new_taxonomy_exists = taxonomy_exists('dw_sermon_preacher');
+
+if ($old_taxonomy_exists && $new_taxonomy_exists) {
+    // Get all terms from old taxonomy
+    $old_terms = get_terms(array(
+        'taxonomy' => 'sermon_preacher',
+        'hide_empty' => false,
+    ));
+    
+    if (!empty($old_terms) && !is_wp_error($old_terms)) {
+        echo "<p>Found " . count($old_terms) . " term(s) in old taxonomy</p>";
+        
+        foreach ($old_terms as $old_term) {
+            // Check if term already exists in new taxonomy
+            $existing_term = get_term_by('name', $old_term->name, 'dw_sermon_preacher');
+            
+            if (!$existing_term) {
+                // Create term in new taxonomy
+                $new_term = wp_insert_term($old_term->name, 'dw_sermon_preacher', array(
+                    'description' => $old_term->description,
+                    'slug' => $old_term->slug,
+                ));
+                
+                if (!is_wp_error($new_term)) {
+                    echo "<p style='color:green;'>✓ Created term '{$old_term->name}' in new taxonomy</p>";
+                    
+                    // Get all posts with this term
+                    $posts_with_term = get_posts(array(
+                        'post_type' => 'sermon',
+                        'posts_per_page' => -1,
+                        'tax_query' => array(
+                            array(
+                                'taxonomy' => 'sermon_preacher',
+                                'field' => 'term_id',
+                                'terms' => $old_term->term_id,
+                            ),
+                        ),
+                    ));
+                    
+                    // Assign new term to these posts
+                    foreach ($posts_with_term as $post) {
+                        wp_set_post_terms($post->ID, array($new_term['term_id']), 'dw_sermon_preacher', false);
+                        echo "<p style='color:green;'>  ✓ Post ID {$post->ID}: Assigned to new taxonomy</p>";
+                        $total_migrated++;
+                    }
+                } else {
+                    echo "<p style='color:red;'>✗ Failed to create term '{$old_term->name}': " . $new_term->get_error_message() . "</p>";
+                }
+            } else {
+                echo "<p style='color:orange;'>⚠️ Term '{$old_term->name}' already exists in new taxonomy</p>";
+            }
+        }
+    } else {
+        echo "<p style='color:gray;'>No terms found in old taxonomy</p>";
+    }
+} else {
+    if (!$old_taxonomy_exists) {
+        echo "<p style='color:gray;'>Old taxonomy 'sermon_preacher' does not exist</p>";
+    }
+    if (!$new_taxonomy_exists) {
+        echo "<p style='color:red;'>⚠️ New taxonomy 'dw_sermon_preacher' does not exist. Please update the plugin first.</p>";
+    }
+}
+
+echo '<hr>';
+
 // Summary
 echo '<h2>Migration Summary</h2>';
-echo "<p><strong>Total meta entries migrated:</strong> {$total_migrated}</p>";
+echo "<p><strong>Total entries migrated:</strong> {$total_migrated}</p>";
 
 if (!empty($errors)) {
     echo '<h3 style="color:red;">Errors:</h3>';

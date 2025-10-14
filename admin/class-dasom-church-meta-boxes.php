@@ -171,16 +171,16 @@ class Dasom_Church_Meta_Boxes {
         
         // 설교자 드롭다운용 데이터
         $terms = get_terms(array(
-            'taxonomy' => 'sermon_preacher',
+            'taxonomy' => 'dw_sermon_preacher',
             'hide_empty' => false,
         ));
-        $assigned_ids = wp_get_post_terms($post->ID, 'sermon_preacher', array('fields'=>'ids'));
+        $assigned_ids = wp_get_post_terms($post->ID, 'dw_sermon_preacher', array('fields'=>'ids'));
         $selected_preacher_id = $assigned_ids ? $assigned_ids[0] : 0;
         
         if (!$selected_preacher_id) {
             $def_name = get_option('default_sermon_preacher', __('담임목사', 'dasom-church'));
             if ($def_name) {
-                $def_term = get_term_by('name', $def_name, 'sermon_preacher');
+                $def_term = get_term_by('name', $def_name, 'dw_sermon_preacher');
                 if ($def_term) {
                     $selected_preacher_id = (int)$def_term->term_id;
                 }
@@ -510,17 +510,17 @@ class Dasom_Church_Meta_Boxes {
         }
         
         // Save preacher
-        if (isset($_POST['sermon_preacher_term'])) {
-            $preacher_id = intval($_POST['sermon_preacher_term']);
+        if (isset($_POST['dw_sermon_preacher_term'])) {
+            $preacher_id = intval($_POST['dw_sermon_preacher_term']);
             if ($preacher_id > 0) {
-                wp_set_post_terms($post_id, array($preacher_id), 'sermon_preacher', false);
+                wp_set_post_terms($post_id, array($preacher_id), 'dw_sermon_preacher', false);
             } else {
                 // Apply default preacher
                 $def = get_option('default_sermon_preacher', __('담임목사', 'dasom-church'));
                 if ($def) {
-                    $term = get_term_by('name', $def, 'sermon_preacher');
+                    $term = get_term_by('name', $def, 'dw_sermon_preacher');
                     if ($term && !is_wp_error($term)) {
-                        wp_set_post_terms($post_id, array($term->term_id), 'sermon_preacher', false);
+                        wp_set_post_terms($post_id, array($term->term_id), 'dw_sermon_preacher', false);
                     }
                 }
             }

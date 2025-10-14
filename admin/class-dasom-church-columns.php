@@ -77,9 +77,9 @@ class Dasom_Church_Columns {
             $new_columns['cb'] = $columns['cb'];
         }
         
-        $new_columns['dw_bulletin_date'] = __('주보 날짜', 'dasom-church');
-        $new_columns['dw_bulletin_pdf'] = __('PDF 파일', 'dasom-church');
-        $new_columns['dw_bulletin_images'] = __('주보 이미지', 'dasom-church');
+        $new_columns['bulletin_date'] = __('주보 날짜', 'dasom-church');
+        $new_columns['bulletin_pdf'] = __('PDF 파일', 'dasom-church');
+        $new_columns['bulletin_images'] = __('주보 이미지', 'dasom-church');
         $new_columns['date'] = __('게시일', 'dasom-church');
         
         return $new_columns;
@@ -90,7 +90,7 @@ class Dasom_Church_Columns {
      */
     public function dasom_church_bulletin_column_content($column, $post_id) {
         switch ($column) {
-            case 'dw_bulletin_date':
+            case 'bulletin_date':
                 $date = get_post_meta($post_id, 'dw_bulletin_date', true);
                 if ($date) {
                     // Format date for display
@@ -101,7 +101,7 @@ class Dasom_Church_Columns {
                 }
                 break;
                 
-            case 'dw_bulletin_pdf':
+            case 'bulletin_pdf':
                 $pdf = get_post_meta($post_id, 'dw_bulletin_pdf', true);
                 if ($pdf) {
                     $url = wp_get_attachment_url($pdf);
@@ -115,7 +115,7 @@ class Dasom_Church_Columns {
                 }
                 break;
                 
-            case 'dw_bulletin_images':
+            case 'bulletin_images':
                 $images = get_post_meta($post_id, 'dw_bulletin_images', true);
                 $images = $images ? json_decode($images, true) : array();
                 if (!empty($images)) {
@@ -145,11 +145,11 @@ class Dasom_Church_Columns {
             $new_columns['cb'] = $columns['cb'];
         }
         
-        $new_columns['dw_sermon_date'] = __('설교 일자', 'dasom-church');
-        $new_columns['dw_sermon_title'] = __('제목', 'dasom-church');
-        $new_columns['dw_sermon_scripture'] = __('성경구절', 'dasom-church');
+        $new_columns['sermon_date'] = __('설교 일자', 'dasom-church');
+        $new_columns['sermon_title'] = __('제목', 'dasom-church');
+        $new_columns['sermon_scripture'] = __('성경구절', 'dasom-church');
         $new_columns['sermon_preacher'] = __('설교자', 'dasom-church');
-        $new_columns['dw_sermon_youtube'] = __('YouTube', 'dasom-church');
+        $new_columns['sermon_youtube'] = __('YouTube', 'dasom-church');
         $new_columns['sermon_thumb'] = __('썸네일', 'dasom-church');
         $new_columns['date'] = __('게시 상태', 'dasom-church');
         
@@ -161,7 +161,7 @@ class Dasom_Church_Columns {
      */
     public function dasom_church_sermon_column_content($column, $post_id) {
         switch ($column) {
-            case 'dw_sermon_date':
+            case 'sermon_date':
                 $date = get_post_meta($post_id, 'dw_sermon_date', true);
                 if ($date && $date !== '') {
                     // Convert to readable format
@@ -172,7 +172,7 @@ class Dasom_Church_Columns {
                 }
                 break;
                 
-            case 'dw_sermon_title':
+            case 'sermon_title':
                 $title = get_post_meta($post_id, 'dw_sermon_title', true);
                 if ($title) {
                     echo esc_html($title);
@@ -183,7 +183,7 @@ class Dasom_Church_Columns {
                 }
                 break;
                 
-            case 'dw_sermon_scripture':
+            case 'sermon_scripture':
                 $scripture = get_post_meta($post_id, 'dw_sermon_scripture', true);
                 if ($scripture) {
                     echo esc_html($scripture);
@@ -193,7 +193,7 @@ class Dasom_Church_Columns {
                 break;
                 
             case 'sermon_preacher':
-                $preachers = wp_get_post_terms($post_id, 'sermon_preacher', array('fields' => 'names'));
+                $preachers = wp_get_post_terms($post_id, 'dw_sermon_preacher', array('fields' => 'names'));
                 if (!is_wp_error($preachers) && !empty($preachers)) {
                     echo esc_html(implode(', ', $preachers));
                 } else {
@@ -203,7 +203,7 @@ class Dasom_Church_Columns {
                 }
                 break;
                 
-            case 'dw_sermon_youtube':
+            case 'sermon_youtube':
                 $youtube = get_post_meta($post_id, 'dw_sermon_youtube', true);
                 if ($youtube) {
                     echo '<a href="' . esc_url($youtube) . '" target="_blank">' . esc_html($youtube) . '</a>';
@@ -525,9 +525,9 @@ class Dasom_Church_Columns {
                     var columnClass = cell.attr('class');
                     
                     if (columnClass) {
-                        if (columnClass.includes('dw_bulletin_date')) {
+                        if (columnClass.includes('bulletin_date')) {
                             data.dw_bulletin_date = cell.text().trim();
-                        } else if (columnClass.includes('dw_sermon_date')) {
+                        } else if (columnClass.includes('sermon_date')) {
                             data.dw_sermon_date = cell.text().trim();
                         } else if (columnClass.includes('column_author')) {
                             data.column_author = cell.text().trim();
