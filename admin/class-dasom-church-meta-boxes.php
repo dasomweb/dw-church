@@ -802,6 +802,16 @@ class Dasom_Church_Meta_Boxes {
                 }
             </style>';
         }
+        
+        // Hide sermon_preacher taxonomy section for sermon post type
+        if ($post_type === 'sermon') {
+            echo '<style>
+                #dw_sermon_preacherdiv,
+                #tagsdiv-dw_sermon_preacher {
+                    display: none !important;
+                }
+            </style>';
+        }
     }
     
     /**
