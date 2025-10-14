@@ -494,7 +494,7 @@ class Dasom_Church_Meta_Boxes {
             }
         }
         
-        // Set featured image
+        // Set featured image - prioritize manual thumb_id, then YouTube thumbnail
         $thumb_id = get_post_meta($post_id, 'sermon_thumb_id', true);
         if ($thumb_id) {
             set_post_thumbnail($post_id, $thumb_id);
@@ -559,13 +559,15 @@ class Dasom_Church_Meta_Boxes {
         if (isset($_POST['album_images'])) {
             update_post_meta($post_id, 'dasom_album_images', sanitize_text_field($_POST['album_images']));
             
-            // Auto-set first image as featured image
-            $images = json_decode(sanitize_text_field($_POST['album_images']), true);
-            if (is_array($images) && !empty($images)) {
-                $first_image_id = intval($images[0]);
-                if ($first_image_id > 0) {
-                    set_post_thumbnail($post_id, $first_image_id);
-                    update_post_meta($post_id, 'album_thumb_id', $first_image_id);
+            // Auto-set first image as featured image (only if no manual thumb_id is set)
+            $manual_thumb_id = get_post_meta($post_id, 'album_thumb_id', true);
+            if (!$manual_thumb_id) {
+                $images = json_decode(sanitize_text_field($_POST['album_images']), true);
+                if (is_array($images) && !empty($images)) {
+                    $first_image_id = intval($images[0]);
+                    if ($first_image_id > 0) {
+                        set_post_thumbnail($post_id, $first_image_id);
+                    }
                 }
             }
         }
@@ -670,10 +672,13 @@ class Dasom_Church_Meta_Boxes {
                     });
                     $('#bulletin_images, #album_images').val(JSON.stringify(ids));
                     
-                    // 앨범 이미지 추가 시 첫 번째 이미지를 Featured Image로 설정
+                    // 앨범 이미지 추가 시 첫 번째 이미지를 Featured Image로 설정 (YouTube 썸네일이 없을 때만)
                     var isAlbum = $(this).attr('id') === 'album_images_button';
                     if (isAlbum && ids.length > 0) {
-                        $('#album_thumb_id').val(ids[0]);
+                        var currentThumbId = $('#album_thumb_id').val();
+                        if (!currentThumbId || currentThumbId === '') {
+                            $('#album_thumb_id').val(ids[0]);
+                        }
                     }
                 });
                 frame.open();
@@ -688,10 +693,13 @@ class Dasom_Church_Meta_Boxes {
                 });
                 $('#bulletin_images, #album_images').val(JSON.stringify(ids));
                 
-                // 앨범 이미지 제거 시 첫 번째 이미지를 Featured Image로 설정
+                // 앨범 이미지 제거 시 첫 번째 이미지를 Featured Image로 설정 (YouTube 썸네일이 없을 때만)
                 var isAlbum = $(this).closest('#album_images_preview').length > 0;
                 if (isAlbum && ids.length > 0) {
-                    $('#album_thumb_id').val(ids[0]);
+                    var currentThumbId = $('#album_thumb_id').val();
+                    if (!currentThumbId || currentThumbId === '') {
+                        $('#album_thumb_id').val(ids[0]);
+                    }
                 }
             });
             
@@ -704,9 +712,12 @@ class Dasom_Church_Meta_Boxes {
                     });
                     $('#bulletin_images, #album_images').val(JSON.stringify(ids));
                     
-                    // 앨범 이미지 순서 변경 시 Featured Image 업데이트
+                    // 앨범 이미지 순서 변경 시 Featured Image 업데이트 (YouTube 썸네일이 없을 때만)
                     if ($(this).attr('id') === 'album_images_preview' && ids.length > 0) {
-                        $('#album_thumb_id').val(ids[0]);
+                        var currentThumbId = $('#album_thumb_id').val();
+                        if (!currentThumbId || currentThumbId === '') {
+                            $('#album_thumb_id').val(ids[0]);
+                        }
                     }
                 }
             });
