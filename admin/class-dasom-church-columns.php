@@ -244,9 +244,8 @@ class Dasom_Church_Columns {
         
         $new_columns['date'] = __('게시일', 'dasom-church');
         $new_columns['title'] = __('제목', 'dasom-church');
-        $new_columns['content'] = __('내용 요약', 'dasom-church');
-        $new_columns['column_author'] = __('작성자', 'dasom-church');
-        $new_columns['column_topic'] = __('주제', 'dasom-church');
+        $new_columns['column_title'] = __('커스텀 제목', 'dasom-church');
+        $new_columns['content'] = __('본문 요약', 'dasom-church');
         $new_columns['thumb'] = __('대표 이미지', 'dasom-church');
         
         return $new_columns;
@@ -258,19 +257,18 @@ class Dasom_Church_Columns {
     public function dasom_church_column_column_content($column, $post_id) {
         switch ($column) {
             case 'content':
-                $content = get_post_field('post_content', $post_id);
-                $plain = wp_strip_all_tags($content);
-                echo mb_strimwidth($plain, 0, 100, '...', 'UTF-8');
+                $content = get_post_meta($post_id, 'column_content', true);
+                if ($content) {
+                    $plain = wp_strip_all_tags($content);
+                    echo mb_strimwidth($plain, 0, 100, '...', 'UTF-8');
+                } else {
+                    echo '—';
+                }
                 break;
                 
-            case 'column_author':
-                $author = get_post_meta($post_id, 'column_author', true);
-                echo $author ? esc_html($author) : '—';
-                break;
-                
-            case 'column_topic':
-                $topic = get_post_meta($post_id, 'column_topic', true);
-                echo $topic ? esc_html($topic) : '—';
+            case 'column_title':
+                $title = get_post_meta($post_id, 'column_title', true);
+                echo $title ? esc_html($title) : '—';
                 break;
                 
             case 'thumb':

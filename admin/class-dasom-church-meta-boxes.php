@@ -259,24 +259,50 @@ class Dasom_Church_Meta_Boxes {
     public function dasom_church_column_meta_box($post) {
         wp_nonce_field('dasom_church_column_meta', 'dasom_church_column_nonce');
         
-        $author = get_post_meta($post->ID, 'column_author', true);
-        $topic = get_post_meta($post->ID, 'column_topic', true);
+        $column_title = get_post_meta($post->ID, 'column_title', true);
+        $column_content = get_post_meta($post->ID, 'column_content', true);
+        $thumb_id = get_post_meta($post->ID, 'column_thumb_id', true);
         ?>
         <table class="form-table">
             <tr>
                 <th scope="row">
-                    <label for="column_author"><?php _e('작성자', 'dasom-church'); ?></label>
+                    <label for="column_title"><?php _e('제목', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="text" id="column_author" name="column_author" value="<?php echo esc_attr($author); ?>" class="regular-text" />
+                    <input type="text" id="column_title" name="column_title" value="<?php echo esc_attr($column_title); ?>" class="regular-text" />
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="column_topic"><?php _e('주제', 'dasom-church'); ?></label>
+                    <label for="column_content"><?php _e('본문', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="text" id="column_topic" name="column_topic" value="<?php echo esc_attr($topic); ?>" class="regular-text" />
+                    <?php
+                    wp_editor($column_content, 'column_content', array(
+                        'textarea_name' => 'column_content',
+                        'media_buttons' => true,
+                        'textarea_rows' => 10,
+                        'teeny' => false,
+                        'tinymce' => array(
+                            'toolbar1' => 'formatselect,bold,italic,underline,strikethrough,|,bullist,numlist,blockquote,|,link,unlink,|,spellchecker,fullscreen,wp_adv',
+                            'toolbar2' => 'forecolor,backcolor,|,alignleft,aligncenter,alignright,alignjustify,|,outdent,indent,|,undo,redo,wp_help'
+                        )
+                    ));
+                    ?>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="column_thumb_id"><?php _e('대표 이미지', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <input type="hidden" id="column_thumb_id" name="column_thumb_id" value="<?php echo esc_attr($thumb_id); ?>" />
+                    <button type="button" class="button" id="column_thumb_button"><?php _e('이미지 업로드/선택', 'dasom-church'); ?></button>
+                    <div id="column_thumb_preview" style="margin-top:10px;">
+                        <?php if ($thumb_id): ?>
+                            <img src="<?php echo esc_url(wp_get_attachment_url($thumb_id)); ?>" style="width:160px;height:90px;object-fit:cover;" />
+                        <?php endif; ?>
+                    </div>
                 </td>
             </tr>
         </table>
@@ -529,12 +555,22 @@ class Dasom_Church_Meta_Boxes {
             return;
         }
         
-        if (isset($_POST['column_author'])) {
-            update_post_meta($post_id, 'column_author', sanitize_text_field($_POST['column_author']));
+        if (isset($_POST['column_title'])) {
+            update_post_meta($post_id, 'column_title', sanitize_text_field($_POST['column_title']));
         }
         
-        if (isset($_POST['column_topic'])) {
-            update_post_meta($post_id, 'column_topic', sanitize_text_field($_POST['column_topic']));
+        if (isset($_POST['column_content'])) {
+            update_post_meta($post_id, 'column_content', wp_kses_post($_POST['column_content']));
+        }
+        
+        if (isset($_POST['column_thumb_id'])) {
+            update_post_meta($post_id, 'column_thumb_id', intval($_POST['column_thumb_id']));
+            
+            // Set featured image if thumb_id is provided
+            $thumb_id = intval($_POST['column_thumb_id']);
+            if ($thumb_id > 0) {
+                set_post_thumbnail($post_id, $thumb_id);
+            }
         }
     }
     
@@ -680,7 +716,7 @@ class Dasom_Church_Meta_Boxes {
             });
             
             // 썸네일 업로드
-            $('#sermon_thumb_button, #album_thumb_button').on('click', function(e) {
+            $('#sermon_thumb_button, #album_thumb_button, #column_thumb_button').on('click', function(e) {
                 e.preventDefault();
                 var frame = wp.media({
                     title: '썸네일 업로드',
@@ -690,8 +726,8 @@ class Dasom_Church_Meta_Boxes {
                 });
                 frame.on('select', function() {
                     var attachment = frame.state().get('selection').first().toJSON();
-                    $('#sermon_thumb_id, #album_thumb_id').val(attachment.id);
-                    $('#sermon_thumb_preview, #album_thumb_preview').html('<img src=\"' + attachment.url + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
+                    $('#sermon_thumb_id, #album_thumb_id, #column_thumb_id').val(attachment.id);
+                    $('#sermon_thumb_preview, #album_thumb_preview, #column_thumb_preview').html('<img src=\"' + attachment.url + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
                 });
                 frame.open();
             });
