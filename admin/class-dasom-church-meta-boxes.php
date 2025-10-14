@@ -163,11 +163,11 @@ class Dasom_Church_Meta_Boxes {
     public function dasom_church_sermon_meta_box($post) {
         wp_nonce_field('dasom_church_sermon_meta', 'dasom_church_sermon_nonce');
         
-        $title = get_post_meta($post->ID, 'sermon_title', true);
-        $youtube = get_post_meta($post->ID, 'sermon_youtube', true);
-        $scripture = get_post_meta($post->ID, 'sermon_scripture', true);
-        $sermon_date = get_post_meta($post->ID, 'sermon_date', true);
-        $thumb_id = get_post_meta($post->ID, 'sermon_thumb_id', true);
+        $title = get_post_meta($post->ID, 'dw_sermon_title', true);
+        $youtube = get_post_meta($post->ID, 'dw_sermon_youtube', true);
+        $scripture = get_post_meta($post->ID, 'dw_sermon_scripture', true);
+        $sermon_date = get_post_meta($post->ID, 'dw_sermon_date', true);
+        $thumb_id = get_post_meta($post->ID, 'dw_sermon_thumb_id', true);
         
         // 설교자 드롭다운용 데이터
         $terms = get_terms(array(
@@ -473,9 +473,9 @@ class Dasom_Church_Meta_Boxes {
         }
         
         // Save meta fields
-        if (isset($_POST['sermon_title'])) {
-            $title = sanitize_text_field($_POST['sermon_title']);
-            update_post_meta($post_id, 'sermon_title', $title);
+        if (isset($_POST['dw_sermon_title'])) {
+            $title = sanitize_text_field($_POST['dw_sermon_title']);
+            update_post_meta($post_id, 'dw_sermon_title', $title);
             
             // Update post title (with infinite loop prevention)
             if ($title) {
@@ -493,20 +493,20 @@ class Dasom_Church_Meta_Boxes {
             }
         }
         
-        if (isset($_POST['sermon_youtube'])) {
-            update_post_meta($post_id, 'sermon_youtube', esc_url_raw($_POST['sermon_youtube']));
+        if (isset($_POST['dw_sermon_youtube'])) {
+            update_post_meta($post_id, 'dw_sermon_youtube', esc_url_raw($_POST['dw_sermon_youtube']));
         }
         
-        if (isset($_POST['sermon_scripture'])) {
-            update_post_meta($post_id, 'sermon_scripture', sanitize_text_field($_POST['sermon_scripture']));
+        if (isset($_POST['dw_sermon_scripture'])) {
+            update_post_meta($post_id, 'dw_sermon_scripture', sanitize_text_field($_POST['dw_sermon_scripture']));
         }
         
-        if (isset($_POST['sermon_date'])) {
-            update_post_meta($post_id, 'sermon_date', sanitize_text_field($_POST['sermon_date']));
+        if (isset($_POST['dw_sermon_date'])) {
+            update_post_meta($post_id, 'dw_sermon_date', sanitize_text_field($_POST['dw_sermon_date']));
         }
         
-        if (isset($_POST['sermon_thumb_id'])) {
-            update_post_meta($post_id, 'sermon_thumb_id', intval($_POST['sermon_thumb_id']));
+        if (isset($_POST['dw_sermon_thumb_id'])) {
+            update_post_meta($post_id, 'dw_sermon_thumb_id', intval($_POST['dw_sermon_thumb_id']));
         }
         
         // Save preacher
@@ -527,12 +527,12 @@ class Dasom_Church_Meta_Boxes {
         }
         
         // Set featured image - prioritize manual thumb_id, then YouTube thumbnail
-        $thumb_id = get_post_meta($post_id, 'sermon_thumb_id', true);
+        $thumb_id = get_post_meta($post_id, 'dw_sermon_thumb_id', true);
         if ($thumb_id) {
             set_post_thumbnail($post_id, $thumb_id);
         } else {
             // Try to get YouTube thumbnail
-            $youtube = get_post_meta($post_id, 'sermon_youtube', true);
+            $youtube = get_post_meta($post_id, 'dw_sermon_youtube', true);
             if ($youtube && preg_match('/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([^\&\?\/]+)/', $youtube, $matches)) {
                 $youtube_id = $matches[1];
                 $thumbnail_url = "https://img.youtube.com/vi/{$youtube_id}/maxresdefault.jpg";
@@ -544,10 +544,10 @@ class Dasom_Church_Meta_Boxes {
                     require_once(ABSPATH . 'wp-admin/includes/image.php');
                 }
                 
-                $image_id = media_sideload_image($thumbnail_url, $post_id, get_post_meta($post_id, 'sermon_title', true), 'id');
+                $image_id = media_sideload_image($thumbnail_url, $post_id, get_post_meta($post_id, 'dw_sermon_title', true), 'id');
                 if (!is_wp_error($image_id)) {
                     set_post_thumbnail($post_id, $image_id);
-                    update_post_meta($post_id, 'sermon_thumb_id', $image_id);
+                    update_post_meta($post_id, 'dw_sermon_thumb_id', $image_id);
                 }
             }
         }
