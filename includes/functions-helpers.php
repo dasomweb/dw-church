@@ -236,3 +236,64 @@ function dasom_church_log($data, $level = 'info') {
     }
 }
 
+/**
+ * Get all social media URLs
+ *
+ * @return array Array of social media URLs
+ */
+function dasom_church_get_social_urls() {
+    return array(
+        'youtube' => dasom_church_get_setting('social_youtube', ''),
+        'instagram' => dasom_church_get_setting('social_instagram', ''),
+        'facebook' => dasom_church_get_setting('social_facebook', ''),
+        'linkedin' => dasom_church_get_setting('social_linkedin', ''),
+        'tiktok' => dasom_church_get_setting('social_tiktok', ''),
+        'kakaotalk' => dasom_church_get_setting('social_kakaotalk', ''),
+        'kakaotalk_channel' => dasom_church_get_setting('social_kakaotalk_channel', '')
+    );
+}
+
+/**
+ * Get social media icons HTML
+ *
+ * @param array $attributes Additional attributes for the container
+ * @return string HTML output
+ */
+function dasom_church_get_social_icons($attributes = array()) {
+    $social_urls = dasom_church_get_social_urls();
+    $default_attributes = array(
+        'class' => 'dasom-social-icons'
+    );
+    
+    $attributes = wp_parse_args($attributes, $default_attributes);
+    
+    $output = '<div';
+    foreach ($attributes as $key => $value) {
+        $output .= ' ' . esc_attr($key) . '="' . esc_attr($value) . '"';
+    }
+    $output .= '>';
+    
+    $social_platforms = array(
+        'youtube' => array('icon' => '📺', 'name' => 'YouTube'),
+        'instagram' => array('icon' => '📷', 'name' => 'Instagram'),
+        'facebook' => array('icon' => '👥', 'name' => 'Facebook'),
+        'linkedin' => array('icon' => '💼', 'name' => 'LinkedIn'),
+        'tiktok' => array('icon' => '🎵', 'name' => 'TikTok'),
+        'kakaotalk' => array('icon' => '💬', 'name' => 'KakaoTalk'),
+        'kakaotalk_channel' => array('icon' => '📢', 'name' => 'KakaoTalk Channel')
+    );
+    
+    foreach ($social_platforms as $platform => $info) {
+        if (!empty($social_urls[$platform])) {
+            $output .= '<a href="' . esc_url($social_urls[$platform]) . '" target="_blank" rel="noopener" class="dasom-social-link" data-platform="' . esc_attr($platform) . '">';
+            $output .= '<span class="dasom-social-icon">' . $info['icon'] . '</span>';
+            $output .= '<span class="dasom-social-name">' . esc_html($info['name']) . '</span>';
+            $output .= '</a>';
+        }
+    }
+    
+    $output .= '</div>';
+    
+    return $output;
+}
+

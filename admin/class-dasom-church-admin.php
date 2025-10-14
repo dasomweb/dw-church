@@ -531,7 +531,14 @@ class Dasom_Church_Admin {
             'address' => sanitize_textarea_field($_POST['dasom_church_address'] ?? ''),
             'phone' => sanitize_text_field($_POST['dasom_church_phone'] ?? ''),
             'email' => sanitize_email($_POST['dasom_church_email'] ?? ''),
-            'website' => esc_url_raw($_POST['dasom_church_website'] ?? '')
+            'website' => esc_url_raw($_POST['dasom_church_website'] ?? ''),
+            'social_youtube' => esc_url_raw($_POST['dasom_social_youtube'] ?? ''),
+            'social_instagram' => esc_url_raw($_POST['dasom_social_instagram'] ?? ''),
+            'social_facebook' => esc_url_raw($_POST['dasom_social_facebook'] ?? ''),
+            'social_linkedin' => esc_url_raw($_POST['dasom_social_linkedin'] ?? ''),
+            'social_tiktok' => esc_url_raw($_POST['dasom_social_tiktok'] ?? ''),
+            'social_kakaotalk' => esc_url_raw($_POST['dasom_social_kakaotalk'] ?? ''),
+            'social_kakaotalk_channel' => esc_url_raw($_POST['dasom_social_kakaotalk_channel'] ?? '')
         );
         
         foreach ($settings as $key => $value) {

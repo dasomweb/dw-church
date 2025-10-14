@@ -165,108 +165,207 @@ $preachers = get_terms(array(
         <p style="color:#666;">
             <?php _e('※ JSON 배열 형태(album_images)는 Elementor 기본 Custom Field로는 그대로 출력되지 않습니다. Shortcode 또는 ACF Gallery 필드로 변환해서 사용하세요.', 'dasom-church'); ?>
         </p>
+        
+        <!-- 교회설정 커스텀 필드 안내 -->
+        <hr>
+        <h2>🏛️ <?php _e('교회설정 커스텀 필드 안내', 'dasom-church'); ?></h2>
+        <p><?php _e('아래 커스텀 필드 키를 Elementor → Dynamic Tags → Post Custom Field → Custom Key 입력칸에 넣어 사용하세요.', 'dasom-church'); ?></p>
+        
+        <table class="widefat striped" style="max-width:900px;margin:20px 0;">
+            <thead>
+                <tr>
+                    <th style="width:200px;"><?php _e('설정 분류', 'dasom-church'); ?></th>
+                    <th style="width:200px;"><?php _e('필드 설명', 'dasom-church'); ?></th>
+                    <th><?php _e('커스텀 필드 키', 'dasom-church'); ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td rowspan="5">🏢 <?php _e('기본 정보', 'dasom-church'); ?></td>
+                    <td><?php _e('교회명', 'dasom-church'); ?></td>
+                    <td><code>dasom_church_name</code></td>
+                </tr>
+                <tr>
+                    <td><?php _e('교회 주소', 'dasom-church'); ?></td>
+                    <td><code>dasom_church_address</code></td>
+                </tr>
+                <tr>
+                    <td><?php _e('전화번호', 'dasom-church'); ?></td>
+                    <td><code>dasom_church_phone</code></td>
+                </tr>
+                <tr>
+                    <td><?php _e('이메일', 'dasom-church'); ?></td>
+                    <td><code>dasom_church_email</code></td>
+                </tr>
+                <tr>
+                    <td><?php _e('웹사이트 URL', 'dasom-church'); ?></td>
+                    <td><code>dasom_church_website</code></td>
+                </tr>
+                <tr>
+                    <td rowspan="7">📱 <?php _e('소셜미디어', 'dasom-church'); ?></td>
+                    <td><?php _e('YouTube 채널', 'dasom-church'); ?></td>
+                    <td><code>dasom_social_youtube</code></td>
+                </tr>
+                <tr>
+                    <td><?php _e('Instagram', 'dasom-church'); ?></td>
+                    <td><code>dasom_social_instagram</code></td>
+                </tr>
+                <tr>
+                    <td><?php _e('Facebook', 'dasom-church'); ?></td>
+                    <td><code>dasom_social_facebook</code></td>
+                </tr>
+                <tr>
+                    <td><?php _e('LinkedIn', 'dasom-church'); ?></td>
+                    <td><code>dasom_social_linkedin</code></td>
+                </tr>
+                <tr>
+                    <td><?php _e('TikTok', 'dasom-church'); ?></td>
+                    <td><code>dasom_social_tiktok</code></td>
+                </tr>
+                <tr>
+                    <td><?php _e('KakaoTalk', 'dasom-church'); ?></td>
+                    <td><code>dasom_social_kakaotalk</code></td>
+                </tr>
+                <tr>
+                    <td><?php _e('KakaoTalk Channel', 'dasom-church'); ?></td>
+                    <td><code>dasom_social_kakaotalk_channel</code></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <p style="color:#666;">
+            <?php _e('※ 교회설정은 WordPress 옵션으로 저장되며, Elementor에서 Site Settings 또는 Custom Fields로 접근할 수 있습니다.', 'dasom-church'); ?>
+        </p>
     <?php endif; ?>
     
     <hr>
     
     <!-- 최신 현황 카드 -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px;">
+    <div class="dasom-dashboard-grid">
         <!-- 교회주보 -->
-        <div class="card" style="background:#fff;padding:20px;border:1px solid #ccc;">
-            <h2>📖 <?php _e('교회주보', 'dasom-church'); ?></h2>
+        <div class="dasom-dashboard-card">
+            <div class="dasom-card-header">
+                <h2>📖 <?php _e('교회주보', 'dasom-church'); ?></h2>
+                <a href="<?php echo admin_url('edit.php?post_type=bulletin'); ?>" class="dasom-view-all"><?php _e('전체보기', 'dasom-church'); ?></a>
+            </div>
             <?php
             $bulletins = get_posts(array(
                 'post_type' => 'bulletin',
-                'posts_per_page' => 5,
+                'posts_per_page' => 7,
                 'orderby' => 'date',
                 'order' => 'DESC'
             ));
             if ($bulletins) {
-                echo '<ul>';
+                echo '<ul class="dasom-dashboard-list">';
                 foreach ($bulletins as $post) {
                     $date = get_post_meta($post->ID, 'bulletin_date', true);
-                    echo '<li><a href="' . get_edit_post_link($post->ID) . '">' . esc_html(get_the_title($post)) . '</a> ';
-                    echo $date ? '(' . esc_html($date) . ')' : '';
+                    $formatted_date = $date ? date_i18n('Y.m.d', strtotime($date)) : get_the_date('Y.m.d', $post);
+                    echo '<li>';
+                    echo '<a href="' . get_edit_post_link($post->ID) . '">' . esc_html(get_the_title($post)) . '</a>';
+                    echo '<span class="dasom-date">' . esc_html($formatted_date) . '</span>';
                     echo '</li>';
                 }
                 echo '</ul>';
             } else {
-                echo '<p>' . __('주보가 없습니다.', 'dasom-church') . '</p>';
+                echo '<p class="dasom-empty">' . __('주보가 없습니다.', 'dasom-church') . '</p>';
             }
             ?>
         </div>
         
         <!-- 설교 -->
-        <div class="card" style="background:#fff;padding:20px;border:1px solid #ccc;">
-            <h2>🎤 <?php _e('설교', 'dasom-church'); ?></h2>
+        <div class="dasom-dashboard-card">
+            <div class="dasom-card-header">
+                <h2>🎤 <?php _e('설교', 'dasom-church'); ?></h2>
+                <a href="<?php echo admin_url('edit.php?post_type=sermon'); ?>" class="dasom-view-all"><?php _e('전체보기', 'dasom-church'); ?></a>
+            </div>
             <?php
             $sermons = get_posts(array(
                 'post_type' => 'sermon',
-                'posts_per_page' => 5,
+                'posts_per_page' => 7,
                 'orderby' => 'date',
                 'order' => 'DESC'
             ));
             if ($sermons) {
-                echo '<ul>';
+                echo '<ul class="dasom-dashboard-list">';
                 foreach ($sermons as $post) {
                     $scripture = get_post_meta($post->ID, 'sermon_scripture', true);
-                    echo '<li><a href="' . get_edit_post_link($post->ID) . '">' . esc_html(get_the_title($post)) . '</a>';
-                    echo $scripture ? ' - ' . esc_html($scripture) : '';
+                    $date = get_post_meta($post->ID, 'sermon_date', true);
+                    $formatted_date = $date ? date_i18n('Y.m.d', strtotime($date)) : get_the_date('Y.m.d', $post);
+                    echo '<li>';
+                    echo '<a href="' . get_edit_post_link($post->ID) . '">' . esc_html(get_the_title($post)) . '</a>';
+                    if ($scripture) {
+                        echo '<span class="dasom-scripture">' . esc_html($scripture) . '</span>';
+                    }
+                    echo '<span class="dasom-date">' . esc_html($formatted_date) . '</span>';
                     echo '</li>';
                 }
                 echo '</ul>';
             } else {
-                echo '<p>' . __('설교가 없습니다.', 'dasom-church') . '</p>';
+                echo '<p class="dasom-empty">' . __('설교가 없습니다.', 'dasom-church') . '</p>';
             }
             ?>
         </div>
         
         <!-- 목회컬럼 -->
-        <div class="card" style="background:#fff;padding:20px;border:1px solid #ccc;">
-            <h2>🖋 <?php _e('목회컬럼', 'dasom-church'); ?></h2>
+        <div class="dasom-dashboard-card">
+            <div class="dasom-card-header">
+                <h2>🖋 <?php _e('목회컬럼', 'dasom-church'); ?></h2>
+                <a href="<?php echo admin_url('edit.php?post_type=column'); ?>" class="dasom-view-all"><?php _e('전체보기', 'dasom-church'); ?></a>
+            </div>
             <?php
             $columns = get_posts(array(
                 'post_type' => 'column',
-                'posts_per_page' => 5,
+                'posts_per_page' => 7,
                 'orderby' => 'date',
                 'order' => 'DESC'
             ));
             if ($columns) {
-                echo '<ul>';
+                echo '<ul class="dasom-dashboard-list">';
                 foreach ($columns as $post) {
-                    $excerpt = wp_trim_words(strip_tags($post->post_content), 10, '...');
-                    echo '<li><a href="' . get_edit_post_link($post->ID) . '">' . esc_html(get_the_title($post)) . '</a>';
-                    echo $excerpt ? ' - ' . esc_html($excerpt) : '';
+                    $author = get_post_meta($post->ID, 'column_author', true);
+                    echo '<li>';
+                    echo '<a href="' . get_edit_post_link($post->ID) . '">' . esc_html(get_the_title($post)) . '</a>';
+                    if ($author) {
+                        echo '<span class="dasom-author">' . esc_html($author) . '</span>';
+                    }
+                    echo '<span class="dasom-date">' . get_the_date('Y.m.d', $post) . '</span>';
                     echo '</li>';
                 }
                 echo '</ul>';
             } else {
-                echo '<p>' . __('목회컬럼이 없습니다.', 'dasom-church') . '</p>';
+                echo '<p class="dasom-empty">' . __('목회컬럼이 없습니다.', 'dasom-church') . '</p>';
             }
             ?>
         </div>
         
         <!-- 교회앨범 -->
-        <div class="card" style="background:#fff;padding:20px;border:1px solid #ccc;">
-            <h2>📷 <?php _e('교회앨범', 'dasom-church'); ?></h2>
+        <div class="dasom-dashboard-card">
+            <div class="dasom-card-header">
+                <h2>📷 <?php _e('교회앨범', 'dasom-church'); ?></h2>
+                <a href="<?php echo admin_url('edit.php?post_type=album'); ?>" class="dasom-view-all"><?php _e('전체보기', 'dasom-church'); ?></a>
+            </div>
             <?php
             $albums = get_posts(array(
                 'post_type' => 'album',
-                'posts_per_page' => 5,
+                'posts_per_page' => 7,
                 'orderby' => 'date',
                 'order' => 'DESC'
             ));
             if ($albums) {
-                echo '<ul>';
+                echo '<ul class="dasom-dashboard-list">';
                 foreach ($albums as $post) {
                     $youtube = get_post_meta($post->ID, 'album_youtube', true);
-                    echo '<li><a href="' . get_edit_post_link($post->ID) . '">' . esc_html(get_the_title($post)) . '</a>';
-                    echo $youtube ? ' - <a href="' . esc_url($youtube) . '" target="_blank">YouTube</a>' : '';
+                    echo '<li>';
+                    echo '<a href="' . get_edit_post_link($post->ID) . '">' . esc_html(get_the_title($post)) . '</a>';
+                    if ($youtube) {
+                        echo '<span class="dasom-youtube"><a href="' . esc_url($youtube) . '" target="_blank">YouTube</a></span>';
+                    }
+                    echo '<span class="dasom-date">' . get_the_date('Y.m.d', $post) . '</span>';
                     echo '</li>';
                 }
                 echo '</ul>';
             } else {
-                echo '<p>' . __('앨범이 없습니다.', 'dasom-church') . '</p>';
+                echo '<p class="dasom-empty">' . __('앨범이 없습니다.', 'dasom-church') . '</p>';
             }
             ?>
         </div>

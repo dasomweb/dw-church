@@ -8,24 +8,59 @@
 /* Dashboard Grid */
 .dasom-dashboard-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-top: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    margin-top: 32px;
+    width: 100%;
 }
 
 .dasom-dashboard-card {
     background: #fff;
-    padding: 20px;
-    border: 1px solid #ccd0d4;
-    box-shadow: 0 1px 1px rgba(0,0,0,.04);
-    border-radius: 4px;
+    border: 1px solid #e1e5e9;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.dasom-dashboard-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+}
+
+.dasom-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid #f1f3f4;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
 }
 
 .dasom-dashboard-card h2 {
-    margin-top: 0;
-    margin-bottom: 15px;
+    margin: 0;
     font-size: 18px;
-    color: #23282d;
+    font-weight: 600;
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dasom-view-all {
+    color: #0073aa;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.dasom-view-all:hover {
+    background: #0073aa;
+    color: #fff;
+    text-decoration: none;
 }
 
 .dasom-dashboard-list {
@@ -35,9 +70,16 @@
 }
 
 .dasom-dashboard-list li {
-    margin-bottom: 8px;
-    padding: 8px 0;
-    border-bottom: 1px solid #f0f0f1;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 12px 24px;
+    border-bottom: 1px solid #f8f9fa;
+    transition: background-color 0.2s ease;
+}
+
+.dasom-dashboard-list li:hover {
+    background: #f8f9fa;
 }
 
 .dasom-dashboard-list li:last-child {
@@ -46,11 +88,54 @@
 
 .dasom-dashboard-list a {
     text-decoration: none;
-    color: #0073aa;
+    color: #1a1a1a;
+    font-weight: 500;
+    flex: 1;
+    margin-right: 12px;
+    line-height: 1.4;
 }
 
 .dasom-dashboard-list a:hover {
-    color: #005177;
+    color: #0073aa;
+}
+
+.dasom-date {
+    color: #6c757d;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    background: #f1f3f4;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.dasom-scripture {
+    color: #495057;
+    font-size: 12px;
+    font-style: italic;
+    margin: 4px 0;
+    display: block;
+}
+
+.dasom-author {
+    color: #6c757d;
+    font-size: 12px;
+    margin: 4px 0;
+    display: block;
+}
+
+.dasom-youtube a {
+    color: #dc3545;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.dasom-empty {
+    padding: 24px;
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    margin: 0;
 }
 
 /* Meta Box Styles */
@@ -272,9 +357,45 @@
 }
 
 /* Responsive */
+@media (max-width: 1200px) {
+    .dasom-dashboard-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+    }
+}
+
 @media (max-width: 768px) {
     .dasom-dashboard-grid {
         grid-template-columns: 1fr;
+        gap: 16px;
+        margin-top: 24px;
+    }
+    
+    .dasom-dashboard-card {
+        border-radius: 8px;
+    }
+    
+    .dasom-card-header {
+        padding: 16px 20px 12px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .dasom-dashboard-list li {
+        padding: 10px 20px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .dasom-dashboard-list a {
+        margin-right: 0;
+        margin-bottom: 4px;
+    }
+    
+    .dasom-date {
+        align-self: flex-end;
     }
     
     .dasom-meta-field input[type="text"],
@@ -292,6 +413,24 @@
     
     .form-table th {
         padding-bottom: 5px;
+    }
+}
+
+@media (max-width: 480px) {
+    .dasom-dashboard-grid {
+        margin-top: 20px;
+    }
+    
+    .dasom-card-header {
+        padding: 12px 16px 8px;
+    }
+    
+    .dasom-dashboard-list li {
+        padding: 8px 16px;
+    }
+    
+    .dasom-dashboard-card h2 {
+        font-size: 16px;
     }
 }
 
