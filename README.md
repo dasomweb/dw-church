@@ -1,8 +1,34 @@
-# Dasom Church Management System
+# DW Church Management System
 
-다솜교회 관리 시스템 - 주보, 설교, 목회컬럼, 교회앨범 관리를 위한 WordPress 플러그인
+DW Church Management System - 주보, 설교, 목회컬럼, 교회앨범 관리를 위한 WordPress 플러그인
 
 ## Changelog
+
+### Version 1.0.8 (2025-01-10)
+**Plugin Name Change:**
+- Changed plugin name from "Dasom Church Management System" to "DW Church Management System"
+- Updated author information and repository URLs
+- Improved remove button design for image previews
+- Auto-set first album image as featured image
+
+### Version 1.0.7 (2025-01-10)
+**UI Improvements:**
+- Improved remove button design for image previews
+- Fixed X button centering issue
+- Added hover effects and smooth transitions
+- Auto-set first album image as featured image
+
+### Version 1.0.6 (2025-01-10)
+**Bug Fixes:**
+- Fixed album images display issues
+- Fixed meta key inconsistency between meta boxes and column display
+- Added better error handling for missing attachment URLs
+
+### Version 1.0.5 (2025-01-10)
+**Bug Fixes:**
+- Fixed foreach() warning in meta boxes
+- Added null safety checks for images array
+- Improved error handling for empty or invalid image data
 
 ### Version 1.0.4 (2025-01-10)
 **Bug Fixes:**

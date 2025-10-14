@@ -1,11 +1,11 @@
 <?php
 /**
- * Plugin Name: Dasom Church Management System
- * Plugin URI: https://github.com/dasom-church/management-system
+ * Plugin Name: DW Church Management System
+ * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 1.0.5
- * Author: Dasom Church
- * Author URI: https://dasom-church.org
+ * Version: 1.0.8
+ * Author: Dasomweb
+ * Author URI: https://dasomweb.com
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: dasom-church
