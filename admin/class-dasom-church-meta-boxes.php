@@ -572,11 +572,8 @@ class Dasom_Church_Meta_Boxes {
             }
         }
         
-        // Set featured image (only if manual YouTube thumbnail is set)
-        $youtube_thumb_id = get_post_meta($post_id, 'album_thumb_id', true);
-        if ($youtube_thumb_id) {
-            set_post_thumbnail($post_id, $youtube_thumb_id);
-        }
+        // 교회앨범에서는 YouTube 썸네일이 Featured Image를 대체하지 않음
+        // YouTube 썸네일은 별도 필드로만 관리됨
     }
     
     // Quick Edit functionality is handled by Dasom_Church_Columns class
