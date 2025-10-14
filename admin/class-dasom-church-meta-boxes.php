@@ -259,38 +259,9 @@ class Dasom_Church_Meta_Boxes {
     public function dasom_church_column_meta_box($post) {
         wp_nonce_field('dasom_church_column_meta', 'dasom_church_column_nonce');
         
-        $column_title = get_post_meta($post->ID, 'column_title', true);
-        $column_content = get_post_meta($post->ID, 'column_content', true);
         $thumb_id = get_post_meta($post->ID, 'column_thumb_id', true);
         ?>
         <table class="form-table">
-            <tr>
-                <th scope="row">
-                    <label for="column_title"><?php _e('제목', 'dasom-church'); ?></label>
-                </th>
-                <td>
-                    <input type="text" id="column_title" name="column_title" value="<?php echo esc_attr($column_title); ?>" class="regular-text" />
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">
-                    <label for="column_content"><?php _e('본문', 'dasom-church'); ?></label>
-                </th>
-                <td>
-                    <?php
-                    wp_editor($column_content, 'column_content', array(
-                        'textarea_name' => 'column_content',
-                        'media_buttons' => true,
-                        'textarea_rows' => 10,
-                        'teeny' => false,
-                        'tinymce' => array(
-                            'toolbar1' => 'formatselect,bold,italic,underline,strikethrough,|,bullist,numlist,blockquote,|,link,unlink,|,spellchecker,fullscreen,wp_adv',
-                            'toolbar2' => 'forecolor,backcolor,|,alignleft,aligncenter,alignright,alignjustify,|,outdent,indent,|,undo,redo,wp_help'
-                        )
-                    ));
-                    ?>
-                </td>
-            </tr>
             <tr>
                 <th scope="row">
                     <label for="column_thumb_id"><?php _e('대표 이미지', 'dasom-church'); ?></label>
@@ -303,6 +274,7 @@ class Dasom_Church_Meta_Boxes {
                             <img src="<?php echo esc_url(wp_get_attachment_url($thumb_id)); ?>" style="width:160px;height:90px;object-fit:cover;" />
                         <?php endif; ?>
                     </div>
+                    <p class="description"><?php _e('제목과 내용은 위의 포스트 제목과 내용 편집기에서 입력하세요.', 'dasom-church'); ?></p>
                 </td>
             </tr>
         </table>
@@ -553,14 +525,6 @@ class Dasom_Church_Meta_Boxes {
         if (!isset($_POST['dasom_church_column_nonce']) || 
             !wp_verify_nonce($_POST['dasom_church_column_nonce'], 'dasom_church_column_meta')) {
             return;
-        }
-        
-        if (isset($_POST['column_title'])) {
-            update_post_meta($post_id, 'column_title', sanitize_text_field($_POST['column_title']));
-        }
-        
-        if (isset($_POST['column_content'])) {
-            update_post_meta($post_id, 'column_content', wp_kses_post($_POST['column_content']));
         }
         
         if (isset($_POST['column_thumb_id'])) {
