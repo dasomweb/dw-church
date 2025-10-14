@@ -77,11 +77,11 @@ class Dasom_Church_Admin {
         // Main menu - 고유한 슬러그 사용
         add_menu_page(
             __('DW 교회관리', 'dasom-church'),
-            __('✝ DW 교회관리', 'dasom-church'),
+            __('DW 교회관리', 'dasom-church'),
             'manage_options',
             'dasom-church-admin',
             array($this, 'dasom_church_dashboard_page'),
-            'dashicons-church',
+            'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M11 2v6h6v3h-6v7H8v-7H2V8h6V2z"/></svg>'),
             5
         );
         
