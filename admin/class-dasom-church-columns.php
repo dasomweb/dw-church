@@ -258,7 +258,7 @@ class Dasom_Church_Columns {
     public function dasom_church_column_column_content($column, $post_id) {
         switch ($column) {
             case 'content':
-                $content = get_post_field('post_content', $post_id);
+                $content = get_post_meta($post_id, 'column_content', true);
                 if ($content) {
                     $plain = wp_strip_all_tags($content);
                     echo mb_strimwidth($plain, 0, 100, '...', 'UTF-8');

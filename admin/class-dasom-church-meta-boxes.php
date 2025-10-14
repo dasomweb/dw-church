@@ -50,6 +50,10 @@ class Dasom_Church_Meta_Boxes {
         
         // Admin head styles
         add_action('admin_head', array($this, 'dasom_church_admin_head_styles'));
+        
+        // Customize column edit screen
+        add_action('admin_head-post.php', array($this, 'dasom_church_column_edit_screen'));
+        add_action('admin_head-post-new.php', array($this, 'dasom_church_column_edit_screen'));
     }
     
     /**
@@ -259,12 +263,30 @@ class Dasom_Church_Meta_Boxes {
     public function dasom_church_column_meta_box($post) {
         wp_nonce_field('dasom_church_column_meta', 'dasom_church_column_nonce');
         
+        $title = get_post_meta($post->ID, 'column_title', true);
+        $content = get_post_meta($post->ID, 'column_content', true);
         $top_image = get_post_meta($post->ID, 'column_top_image', true);
         $bottom_image = get_post_meta($post->ID, 'column_bottom_image', true);
         $youtube = get_post_meta($post->ID, 'column_youtube', true);
         $thumb_id = get_post_meta($post->ID, 'column_thumb_id', true);
         ?>
         <table class="form-table">
+            <tr>
+                <th scope="row">
+                    <label for="column_title"><?php _e('제목', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <input type="text" id="column_title" name="column_title" value="<?php echo esc_attr($title); ?>" class="regular-text" />
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="column_content"><?php _e('내용', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <textarea id="column_content" name="column_content" rows="10" cols="50" class="large-text"><?php echo esc_textarea($content); ?></textarea>
+                </td>
+            </tr>
             <tr>
                 <th scope="row">
                     <label for="column_top_image"><?php _e('상단 이미지', 'dasom-church'); ?></label>
@@ -568,6 +590,24 @@ class Dasom_Church_Meta_Boxes {
             return;
         }
         
+        if (isset($_POST['column_title'])) {
+            update_post_meta($post_id, 'column_title', sanitize_text_field($_POST['column_title']));
+            // Update post title
+            wp_update_post(array(
+                'ID' => $post_id,
+                'post_title' => sanitize_text_field($_POST['column_title'])
+            ));
+        }
+        
+        if (isset($_POST['column_content'])) {
+            update_post_meta($post_id, 'column_content', wp_kses_post($_POST['column_content']));
+            // Update post content
+            wp_update_post(array(
+                'ID' => $post_id,
+                'post_content' => wp_kses_post($_POST['column_content'])
+            ));
+        }
+        
         if (isset($_POST['column_top_image'])) {
             update_post_meta($post_id, 'column_top_image', intval($_POST['column_top_image']));
             
@@ -801,6 +841,89 @@ class Dasom_Church_Meta_Boxes {
         global $post_type;
         if (in_array($post_type, array('bulletin', 'sermon'))) {
             echo '<style>#titlediv { display: none; }</style>';
+        }
+    }
+    
+    /**
+     * Customize column edit screen
+     */
+    public function dasom_church_column_edit_screen() {
+        global $post_type;
+        
+        if ($post_type === 'column') {
+            ?>
+            <style>
+            /* Hide standard WordPress editor and title */
+            #titlediv,
+            #postdivrich,
+            #post-body-content .postbox:not(#column_meta),
+            #post-body-content .postbox:not(#column_meta) * {
+                display: none !important;
+            }
+            
+            /* Show only our custom meta box */
+            #column_meta {
+                display: block !important;
+            }
+            
+            /* Custom title and content fields */
+            .dasom-column-custom-fields {
+                background: #fff;
+                border: 1px solid #ccd0d4;
+                border-radius: 4px;
+                padding: 20px;
+                margin: 20px 0;
+            }
+            
+            .dasom-column-custom-fields h3 {
+                margin-top: 0;
+                margin-bottom: 15px;
+                font-size: 14px;
+                font-weight: 600;
+            }
+            
+            .dasom-column-custom-fields .form-field {
+                margin-bottom: 15px;
+            }
+            
+            .dasom-column-custom-fields label {
+                display: block;
+                margin-bottom: 5px;
+                font-weight: 600;
+            }
+            
+            .dasom-column-custom-fields input[type="text"],
+            .dasom-column-custom-fields input[type="url"],
+            .dasom-column-custom-fields textarea {
+                width: 100%;
+                max-width: 500px;
+            }
+            
+            .dasom-column-custom-fields textarea {
+                height: 200px;
+                resize: vertical;
+            }
+            </style>
+            
+            <script>
+            jQuery(document).ready(function($) {
+                // Add custom title and content fields
+                var customFields = '<div class="dasom-column-custom-fields">' +
+                    '<h3>목회컬럼 정보</h3>' +
+                    '<div class="form-field">' +
+                        '<label for="dasom_column_title">제목</label>' +
+                        '<input type="text" id="dasom_column_title" name="dasom_column_title" value="<?php echo esc_attr(get_post_meta(get_the_ID(), 'dasom_column_title', true)); ?>" />' +
+                    '</div>' +
+                    '<div class="form-field">' +
+                        '<label for="dasom_column_content">내용</label>' +
+                        '<textarea id="dasom_column_content" name="dasom_column_content"><?php echo esc_textarea(get_post_meta(get_the_ID(), 'dasom_column_content', true)); ?></textarea>' +
+                    '</div>' +
+                '</div>';
+                
+                $('#column_meta').before(customFields);
+            });
+            </script>
+            <?php
         }
     }
 }
