@@ -273,16 +273,6 @@ class Dasom_Church_Meta_Boxes {
             <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 16px; font-weight: 600;"><?php _e('목회컬럼 정보', 'dasom-church'); ?></h3>
             
             <div style="margin-bottom: 20px;">
-                <label for="column_title" style="display: block; margin-bottom: 8px; font-weight: 600;"><?php _e('제목', 'dasom-church'); ?></label>
-                <input type="text" id="column_title" name="column_title" value="<?php echo esc_attr($title); ?>" style="width: 100%; max-width: 500px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" />
-            </div>
-            
-            <div style="margin-bottom: 20px;">
-                <label for="column_content" style="display: block; margin-bottom: 8px; font-weight: 600;"><?php _e('내용', 'dasom-church'); ?></label>
-                <textarea id="column_content" name="column_content" rows="10" style="width: 100%; max-width: 500px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;"><?php echo esc_textarea($content); ?></textarea>
-            </div>
-            
-            <div style="margin-bottom: 20px;">
                 <label for="column_top_image" style="display: block; margin-bottom: 8px; font-weight: 600;"><?php _e('상단 이미지', 'dasom-church'); ?></label>
                 <input type="hidden" id="column_top_image" name="column_top_image" value="<?php echo esc_attr($top_image); ?>" />
                 <button type="button" class="button" id="column_top_image_button"><?php _e('이미지 업로드/선택', 'dasom-church'); ?></button>
@@ -572,23 +562,6 @@ class Dasom_Church_Meta_Boxes {
             return;
         }
         
-        if (isset($_POST['column_title'])) {
-            update_post_meta($post_id, 'column_title', sanitize_text_field($_POST['column_title']));
-            // Update post title
-            wp_update_post(array(
-                'ID' => $post_id,
-                'post_title' => sanitize_text_field($_POST['column_title'])
-            ));
-        }
-        
-        if (isset($_POST['column_content'])) {
-            update_post_meta($post_id, 'column_content', wp_kses_post($_POST['column_content']));
-            // Update post content
-            wp_update_post(array(
-                'ID' => $post_id,
-                'post_content' => wp_kses_post($_POST['column_content'])
-            ));
-        }
         
         if (isset($_POST['column_top_image'])) {
             update_post_meta($post_id, 'column_top_image', intval($_POST['column_top_image']));
