@@ -337,6 +337,16 @@ class Dasom_Church_Admin {
      * Handle preacher management actions
      */
     private function dasom_church_handle_preacher_action($action) {
+        // Verify nonce
+        if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'sermon_preacher_actions')) {
+            wp_die(__('Security check failed', 'dasom-church'));
+        }
+        
+        // Check user permissions
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have sufficient permissions to perform this action.', 'dasom-church'));
+        }
+        
         switch ($action) {
             case 'add':
                 $name = trim(sanitize_text_field($_POST['preacher_name'] ?? ''));

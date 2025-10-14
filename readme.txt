@@ -1,0 +1,165 @@
+=== DW Church Management System ===
+Contributors: dasomweb
+Tags: church, management, sermon, bulletin, worship
+Requires at least: 5.8
+Tested up to: 6.8
+Stable tag: 1.3.1
+Requires PHP: 7.4
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+
+Complete church management system for bulletins, sermons, pastoral columns, and photo albums with modern security practices.
+
+== Description ==
+
+DW Church Management System is a comprehensive WordPress plugin designed specifically for churches to manage their digital content efficiently.
+
+= Features =
+
+* **Church Bulletins** - Manage weekly bulletins with PDF uploads and image galleries
+* **Sermons** - Organize sermons with YouTube integration, scripture references, and dates
+* **Pastoral Columns** - Share pastoral messages with images and YouTube videos
+* **Photo Albums** - Create beautiful photo galleries with YouTube video support
+* **Preacher Management** - Organize sermons by preacher with custom taxonomy
+* **Church Information** - Store and display church contact information and social media links
+* **Dashboard** - Quick overview of recent content and custom field references
+* **Elementor Compatible** - Use custom fields with Elementor's dynamic tags
+* **Permission Management** - Control who can view custom field guides in the dashboard
+* **Multilingual Ready** - Translation-ready with Korean language support included
+
+= Custom Post Types =
+
+* Bulletin (주보)
+* Sermon (설교)
+* Pastoral Column (목회 컬럼)
+* Church Album (교회 앨범)
+
+= Custom Taxonomies =
+
+* Sermon Preacher (설교자)
+
+= Security Features =
+
+* Nonce verification for all form submissions
+* Input sanitization and output escaping
+* User capability checks
+* SQL injection prevention with prepared statements
+
+== Installation ==
+
+1. Upload the plugin files to the `/wp-content/plugins/dasom-church-management-system` directory, or install the plugin through the WordPress plugins screen directly.
+2. Activate the plugin through the 'Plugins' screen in WordPress.
+3. Use the DW 교회관리 menu to configure the plugin settings.
+4. Navigate to 교회 정보 tab to enter your church information.
+5. Navigate to 설정 tab to configure dashboard permissions.
+
+== Frequently Asked Questions ==
+
+= Can I use this plugin with Elementor? =
+
+Yes! The plugin provides custom field keys that can be used with Elementor's Dynamic Tags feature.
+
+= How do I migrate from an older version? =
+
+The plugin automatically migrates your data when you update. The migration runs once when you visit any admin page after updating.
+
+= Can I customize who sees the custom field guides? =
+
+Yes! Go to DW 교회관리 → 설정 → 플러그인 설정 and choose the minimum user role that can view the custom field guides.
+
+= What happens to my data when I uninstall the plugin? =
+
+All plugin data, including custom posts, settings, and meta fields, will be removed when you uninstall the plugin.
+
+== Screenshots ==
+
+1. Dashboard overview with recent content
+2. Church bulletin management
+3. Sermon management with YouTube integration
+4. Pastoral column editor
+5. Church album with photo gallery
+6. Church information settings
+7. Plugin settings and permissions
+
+== Changelog ==
+
+= 1.3.1 =
+* Fix: Added dw_ prefix to sermon_preacher custom field key in dashboard
+
+= 1.3.0 =
+* Feature: Added tabbed settings page (Church Info and Plugin Settings)
+* Feature: Added dashboard custom field guide visibility permissions
+* Feature: Support for Administrator, Editor, Author, and Contributor roles
+* Improvement: Better organization of settings
+
+= 1.2.9 =
+* Feature: Added YouTube thumbnail delete button for all post types
+* Feature: Church settings custom field prefix unified to dw_
+* Feature: Migration script for church settings options
+* Improvement: Automatic migration on plugin update
+
+= 1.2.8 =
+* Feature: Added social media URL fields (YouTube, Instagram, Facebook, LinkedIn, TikTok, KakaoTalk, KakaoTalk Channel)
+* Feature: Dashboard redesign with modern, responsive layout
+* Feature: Display only 7 most recent items per post type
+* Feature: Custom field keys displayed in dashboard
+* Improvement: All custom field prefixes changed to dw_
+
+= 1.2.3 =
+* Feature: Automatic data migration on plugin update
+* Feature: Migration from old meta keys to dw_ prefixed keys
+* Feature: Taxonomy migration (sermon_preacher to dw_sermon_preacher)
+* Improvement: One-time migration process
+
+= 1.2.0 =
+* Feature: Pastoral column redesign with top/bottom images
+* Feature: YouTube thumbnail fetch and management
+* Feature: Featured image automation for albums
+* Improvement: Custom field prefix standardization
+* Fix: Author section hidden in sermon and column additions
+
+= 1.1.0 =
+* Feature: Added church album post type
+* Feature: YouTube thumbnail support
+* Feature: Image gallery with drag-and-drop reordering
+* Improvement: Enhanced meta box UI
+
+= 1.0.4 =
+* Fix: Fixed foreach() warning for null values
+* Improvement: Better error handling for album images
+
+= 1.0.0 =
+* Initial release
+
+== Upgrade Notice ==
+
+= 1.3.1 =
+Minor fix for custom field key display in dashboard.
+
+= 1.3.0 =
+New tabbed settings interface and dashboard permission management. Recommended update for better organization.
+
+= 1.2.9 =
+Important update with church settings prefix unification and YouTube thumbnail delete feature.
+
+= 1.2.8 =
+Major update with social media integration and dashboard redesign. Automatic migration included.
+
+= 1.2.3 =
+Automatic migration feature added. Your data will be migrated automatically on update.
+
+= 1.2.0 =
+Major update with pastoral column redesign and custom field prefix changes. Migration required.
+
+== Support ==
+
+For support, please visit [GitHub Repository](https://github.com/dasomweb/dasom-church-management-system) or contact the author at [Dasomweb](https://dasomweb.com).
+
+== Privacy Policy ==
+
+This plugin does not collect or store any personal data from your website visitors. All data is stored locally in your WordPress database.
+
+== Credits ==
+
+Developed by Dasomweb
+

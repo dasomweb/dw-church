@@ -18,11 +18,24 @@ if (!current_user_can('activate_plugins')) {
 
 // Remove plugin options
 $options_to_remove = array(
-    'dasom_church_name',
-    'dasom_church_address',
-    'dasom_church_phone',
-    'dasom_church_email',
-    'dasom_church_website'
+    // Church info
+    'dw_church_name',
+    'dw_church_address',
+    'dw_church_phone',
+    'dw_church_email',
+    'dw_church_website',
+    // Social media
+    'dw_social_youtube',
+    'dw_social_instagram',
+    'dw_social_facebook',
+    'dw_social_linkedin',
+    'dw_social_tiktok',
+    'dw_social_kakaotalk',
+    'dw_social_kakaotalk_channel',
+    // Plugin settings
+    'dw_dashboard_fields_visibility',
+    'dasom_church_migration_version',
+    'default_sermon_preacher'
 );
 
 foreach ($options_to_remove as $option) {
@@ -30,7 +43,7 @@ foreach ($options_to_remove as $option) {
 }
 
 // Remove custom post types and their meta
-$post_types = array('dasom_bulletin', 'dasom_sermon', 'dasom_column', 'dasom_album');
+$post_types = array('bulletin', 'sermon', 'column', 'album');
 
 foreach ($post_types as $post_type) {
     $posts = get_posts(array(
@@ -45,7 +58,7 @@ foreach ($post_types as $post_type) {
 }
 
 // Remove custom taxonomies
-$taxonomies = array('dasom_sermon_category');
+$taxonomies = array('dw_sermon_preacher');
 
 foreach ($taxonomies as $taxonomy) {
     $terms = get_terms(array(
@@ -64,19 +77,27 @@ foreach ($taxonomies as $taxonomy) {
 global $wpdb;
 
 $meta_keys_to_remove = array(
-    'dasom_bulletin_date',
-    'dasom_bulletin_pdf',
-    'dasom_bulletin_images',
-    'dasom_sermon_title',
-    'dasom_sermon_youtube',
-    'dasom_sermon_scripture',
-    'dasom_sermon_date',
-    'dasom_sermon_thumb_id',
-    'dasom_column_author',
-    'dasom_column_topic',
-    'dasom_album_images',
-    'dasom_album_youtube',
-    'dasom_album_thumb_id'
+    // Bulletin meta
+    'dw_bulletin_date',
+    'dw_bulletin_pdf',
+    'dw_bulletin_images',
+    // Sermon meta
+    'dw_sermon_title',
+    'dw_sermon_youtube',
+    'dw_sermon_scripture',
+    'dw_sermon_date',
+    'dw_sermon_thumb_id',
+    // Column meta
+    'dw_column_title',
+    'dw_column_content',
+    'dw_column_top_image',
+    'dw_column_bottom_image',
+    'dw_column_youtube',
+    'dw_column_thumb_id',
+    // Album meta
+    'dw_album_images',
+    'dw_album_youtube',
+    'dw_album_thumb_id'
 );
 
 foreach ($meta_keys_to_remove as $meta_key) {

@@ -127,7 +127,7 @@ function dasom_church_format_date($date, $format = 'Y-m-d') {
  * @return mixed Setting value
  */
 function dasom_church_get_setting($key, $default = '') {
-    return get_option("dasom_church_{$key}", $default);
+    return get_option("dw_church_{$key}", $default);
 }
 
 /**
@@ -138,7 +138,7 @@ function dasom_church_get_setting($key, $default = '') {
  * @return bool True on success, false on failure
  */
 function dasom_church_update_setting($key, $value) {
-    return update_option("dasom_church_{$key}", $value);
+    return update_option("dw_church_{$key}", $value);
 }
 
 /**
