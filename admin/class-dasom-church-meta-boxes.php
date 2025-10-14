@@ -262,12 +262,12 @@ class Dasom_Church_Meta_Boxes {
     public function dasom_church_column_meta_box($post) {
         wp_nonce_field('dasom_church_column_meta', 'dasom_church_column_nonce');
         
-        $title = get_post_meta($post->ID, 'column_title', true);
-        $content = get_post_meta($post->ID, 'column_content', true);
-        $top_image = get_post_meta($post->ID, 'column_top_image', true);
-        $bottom_image = get_post_meta($post->ID, 'column_bottom_image', true);
-        $youtube = get_post_meta($post->ID, 'column_youtube', true);
-        $thumb_id = get_post_meta($post->ID, 'column_thumb_id', true);
+        $title = get_post_meta($post->ID, 'dw_column_title', true);
+        $content = get_post_meta($post->ID, 'dw_column_content', true);
+        $top_image = get_post_meta($post->ID, 'dw_column_top_image', true);
+        $bottom_image = get_post_meta($post->ID, 'dw_column_bottom_image', true);
+        $youtube = get_post_meta($post->ID, 'dw_column_youtube', true);
+        $thumb_id = get_post_meta($post->ID, 'dw_column_thumb_id', true);
         ?>
         <div style="background: #fff; padding: 20px; border: 1px solid #ccd0d4; border-radius: 4px;">
             <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 16px; font-weight: 600;"><?php _e('목회컬럼 정보', 'dasom-church'); ?></h3>
@@ -322,11 +322,11 @@ class Dasom_Church_Meta_Boxes {
     public function dasom_church_album_meta_box($post) {
         wp_nonce_field('dasom_church_album_meta', 'dasom_church_album_nonce');
         
-        $images = get_post_meta($post->ID, 'dasom_album_images', true);
+        $images = get_post_meta($post->ID, 'dw_album_images', true);
         $images = $images ? json_decode($images, true) : array();
         $images = is_array($images) ? $images : array();
-        $youtube = get_post_meta($post->ID, 'album_youtube', true);
-        $thumb_id = get_post_meta($post->ID, 'album_thumb_id', true);
+        $youtube = get_post_meta($post->ID, 'dw_album_youtube', true);
+        $thumb_id = get_post_meta($post->ID, 'dw_album_thumb_id', true);
         ?>
         <table class="form-table">
             <tr>
@@ -430,20 +430,20 @@ class Dasom_Church_Meta_Boxes {
         }
         
         // Save meta fields
-        if (isset($_POST['bulletin_date'])) {
-            update_post_meta($post_id, 'bulletin_date', sanitize_text_field($_POST['bulletin_date']));
+        if (isset($_POST['dw_bulletin_date'])) {
+            update_post_meta($post_id, 'dw_bulletin_date', sanitize_text_field($_POST['dw_bulletin_date']));
         }
         
-        if (isset($_POST['bulletin_pdf'])) {
-            update_post_meta($post_id, 'bulletin_pdf', intval($_POST['bulletin_pdf']));
+        if (isset($_POST['dw_bulletin_pdf'])) {
+            update_post_meta($post_id, 'dw_bulletin_pdf', intval($_POST['dw_bulletin_pdf']));
         }
         
-        if (isset($_POST['bulletin_images'])) {
-            update_post_meta($post_id, 'bulletin_images', sanitize_text_field($_POST['bulletin_images']));
+        if (isset($_POST['dw_bulletin_images'])) {
+            update_post_meta($post_id, 'dw_bulletin_images', sanitize_text_field($_POST['dw_bulletin_images']));
         }
         
         // Auto-generate title
-        $date = get_post_meta($post_id, 'bulletin_date', true);
+        $date = get_post_meta($post_id, 'dw_bulletin_date', true);
         if ($date) {
             $new_title = date_i18n('Y년 n월 j일', strtotime($date)) . ' ' . __('교회주보', 'dasom-church');
             $post = get_post($post_id);
@@ -563,26 +563,26 @@ class Dasom_Church_Meta_Boxes {
         }
         
         
-        if (isset($_POST['column_top_image'])) {
-            update_post_meta($post_id, 'column_top_image', intval($_POST['column_top_image']));
+        if (isset($_POST['dw_column_top_image'])) {
+            update_post_meta($post_id, 'dw_column_top_image', intval($_POST['dw_column_top_image']));
             
             // Set featured image to top image
-            $top_image_id = intval($_POST['column_top_image']);
+            $top_image_id = intval($_POST['dw_column_top_image']);
             if ($top_image_id > 0) {
                 set_post_thumbnail($post_id, $top_image_id);
             }
         }
         
-        if (isset($_POST['column_bottom_image'])) {
-            update_post_meta($post_id, 'column_bottom_image', intval($_POST['column_bottom_image']));
+        if (isset($_POST['dw_column_bottom_image'])) {
+            update_post_meta($post_id, 'dw_column_bottom_image', intval($_POST['dw_column_bottom_image']));
         }
         
-        if (isset($_POST['column_youtube'])) {
-            update_post_meta($post_id, 'column_youtube', esc_url_raw($_POST['column_youtube']));
+        if (isset($_POST['dw_column_youtube'])) {
+            update_post_meta($post_id, 'dw_column_youtube', esc_url_raw($_POST['dw_column_youtube']));
         }
         
-        if (isset($_POST['column_thumb_id'])) {
-            update_post_meta($post_id, 'column_thumb_id', intval($_POST['column_thumb_id']));
+        if (isset($_POST['dw_column_thumb_id'])) {
+            update_post_meta($post_id, 'dw_column_thumb_id', intval($_POST['dw_column_thumb_id']));
         }
     }
     
@@ -595,21 +595,21 @@ class Dasom_Church_Meta_Boxes {
             return;
         }
         
-        if (isset($_POST['album_youtube'])) {
-            update_post_meta($post_id, 'album_youtube', esc_url_raw($_POST['album_youtube']));
+        if (isset($_POST['dw_album_youtube'])) {
+            update_post_meta($post_id, 'dw_album_youtube', esc_url_raw($_POST['dw_album_youtube']));
         }
         
-        if (isset($_POST['album_thumb_id'])) {
-            update_post_meta($post_id, 'album_thumb_id', intval($_POST['album_thumb_id']));
+        if (isset($_POST['dw_album_thumb_id'])) {
+            update_post_meta($post_id, 'dw_album_thumb_id', intval($_POST['dw_album_thumb_id']));
         }
         
-        if (isset($_POST['album_images'])) {
-            update_post_meta($post_id, 'dasom_album_images', sanitize_text_field($_POST['album_images']));
+        if (isset($_POST['dw_album_images'])) {
+            update_post_meta($post_id, 'dw_album_images', sanitize_text_field($_POST['dw_album_images']));
             
             // Auto-set first image as featured image (only if no manual YouTube thumbnail is set)
-            $manual_youtube_thumb_id = get_post_meta($post_id, 'album_thumb_id', true);
+            $manual_youtube_thumb_id = get_post_meta($post_id, 'dw_album_thumb_id', true);
             if (!$manual_youtube_thumb_id) {
-                $images = json_decode(sanitize_text_field($_POST['album_images']), true);
+                $images = json_decode(sanitize_text_field($_POST['dw_album_images']), true);
                 if (is_array($images) && !empty($images)) {
                     $first_image_id = intval($images[0]);
                     if ($first_image_id > 0) {
