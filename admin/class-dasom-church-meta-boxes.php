@@ -289,7 +289,7 @@ class Dasom_Church_Meta_Boxes {
     public function dasom_church_album_meta_box($post) {
         wp_nonce_field('dasom_church_album_meta', 'dasom_church_album_nonce');
         
-        $images = get_post_meta($post->ID, 'album_images', true);
+        $images = get_post_meta($post->ID, 'dasom_album_images', true);
         $images = $images ? json_decode($images, true) : array();
         $images = is_array($images) ? $images : array();
         $youtube = get_post_meta($post->ID, 'album_youtube', true);
@@ -306,11 +306,22 @@ class Dasom_Church_Meta_Boxes {
                     <ul id="album_images_preview" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:10px;">
                         <?php foreach ($images as $id): ?>
                             <li data-id="<?php echo esc_attr($id); ?>" style="position:relative;">
-                                <img src="<?php echo esc_url(wp_get_attachment_url($id)); ?>" style="width:100px;height:100px;object-fit:cover;" />
+                                <?php 
+                                $attachment_url = wp_get_attachment_url($id);
+                                if ($attachment_url): ?>
+                                    <img src="<?php echo esc_url($attachment_url); ?>" style="width:100px;height:100px;object-fit:cover;" />
+                                <?php else: ?>
+                                    <div style="width:100px;height:100px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <?php echo esc_html($id); ?>
+                                    </div>
+                                <?php endif; ?>
                                 <button type="button" class="button-link remove-image" style="position:absolute;top:0;right:0;background:red;color:white;border:none;width:20px;height:20px;border-radius:50%;">×</button>
                             </li>
                         <?php endforeach; ?>
                     </ul>
+                    <?php if (empty($images)): ?>
+                        <p class="description"><?php _e('이미지가 없습니다. 위의 버튼을 클릭하여 이미지를 업로드하세요.', 'dasom-church'); ?></p>
+                    <?php endif; ?>
                 </td>
             </tr>
             <tr>
@@ -546,7 +557,7 @@ class Dasom_Church_Meta_Boxes {
         }
         
         if (isset($_POST['album_images'])) {
-            update_post_meta($post_id, 'album_images', sanitize_text_field($_POST['album_images']));
+            update_post_meta($post_id, 'dasom_album_images', sanitize_text_field($_POST['album_images']));
         }
         
         // Set featured image

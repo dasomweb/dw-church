@@ -326,7 +326,7 @@ class Dasom_Church_Columns {
                 break;
                 
             case 'images':
-                $images = get_post_meta($post_id, 'album_images', true);
+                $images = get_post_meta($post_id, 'dasom_album_images', true);
                 $images = $images ? json_decode($images, true) : array();
                 if (!empty($images)) {
                     echo '<div style="display:flex; flex-direction:row; gap:5px; flex-wrap:wrap; max-width:600px;">';
