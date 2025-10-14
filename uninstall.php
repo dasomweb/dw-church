@@ -35,7 +35,6 @@ $options_to_remove = array(
     // Plugin settings
     'dw_dashboard_fields_visibility',
     'dw_github_access_token',
-    'dasom_church_migration_version',
     'default_sermon_preacher'
 );
 

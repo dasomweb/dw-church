@@ -3,7 +3,7 @@
  * Plugin Name: DW Church Management System
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 1.3.6
+ * Version: 1.3.7
  * Author: Dasomweb
  * Author URI: https://dasomweb.com
  * License: GPL v2 or later
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '1.3.6');
+define('DASOM_CHURCH_VERSION', '1.3.7');
 define('DASOM_CHURCH_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -241,20 +241,6 @@ add_action('admin_init', function() {
         wp_redirect(admin_url('plugins.php'));
         exit;
     }
-    
-    // Force migration (for debugging)
-    // Usage: Add ?dasom_force_migration=1 to admin URL
-    if (isset($_GET['dasom_force_migration']) && current_user_can('manage_options')) {
-        // Reset migration version to force re-run
-        delete_option('dasom_church_migration_version');
-        
-        // Show notice
-        add_action('admin_notices', function() {
-            echo '<div class="notice notice-success is-dismissible">';
-            echo '<p><strong>DW Church Management System:</strong> 마이그레이션 버전이 초기화되었습니다. 페이지를 새로고침하면 자동으로 마이그레이션이 실행됩니다.</p>';
-            echo '</div>';
-        });
-    }
 });
 
 /**
@@ -367,177 +353,7 @@ class Dasom_Church_Management {
      * Initialize plugin
      */
     public function dasom_church_init() {
-        // Check if migration is needed (one-time for v1.2.0)
-        add_action('admin_init', array($this, 'dasom_church_check_migration'));
-    }
-    
-    /**
-     * Check and run migration if needed
-     */
-    public function dasom_church_check_migration() {
-        $migration_version = get_option('dasom_church_migration_version', '0');
-        
-        // Migration for version 1.2.0
-        if (version_compare($migration_version, '1.2.0', '<')) {
-            $this->dasom_church_run_migration();
-            update_option('dasom_church_migration_version', '1.2.0');
-            
-            // Show admin notice
-            add_action('admin_notices', function() {
-                echo '<div class="notice notice-success is-dismissible">';
-                echo '<p><strong>DW Church Management System:</strong> 데이터 마이그레이션이 완료되었습니다.</p>';
-                echo '</div>';
-            });
-        }
-        
-        // Migration for version 1.3.4 - Fix church settings prefix
-        if (version_compare($migration_version, '1.3.4', '<')) {
-            $this->dasom_church_run_settings_migration();
-            update_option('dasom_church_migration_version', '1.3.4');
-            
-            // Show admin notice
-            add_action('admin_notices', function() {
-                echo '<div class="notice notice-success is-dismissible">';
-                echo '<p><strong>DW Church Management System:</strong> 교회 설정 데이터 마이그레이션이 완료되었습니다.</p>';
-                echo '</div>';
-            });
-        }
-    }
-    
-    /**
-     * Run database migration
-     */
-    private function dasom_church_run_migration() {
-        global $wpdb;
-        
-        // Meta key mappings: old_key => new_key
-        $meta_key_map = array(
-            'bulletin_date' => 'dw_bulletin_date',
-            'bulletin_pdf' => 'dw_bulletin_pdf',
-            'bulletin_images' => 'dw_bulletin_images',
-            'sermon_title' => 'dw_sermon_title',
-            'sermon_youtube' => 'dw_sermon_youtube',
-            'sermon_scripture' => 'dw_sermon_scripture',
-            'sermon_date' => 'dw_sermon_date',
-            'sermon_thumb_id' => 'dw_sermon_thumb_id',
-            'column_title' => 'dw_column_title',
-            'column_content' => 'dw_column_content',
-            'column_top_image' => 'dw_column_top_image',
-            'column_bottom_image' => 'dw_column_bottom_image',
-            'column_youtube' => 'dw_column_youtube',
-            'column_thumb_id' => 'dw_column_thumb_id',
-            'album_images' => 'dw_album_images',
-            'dasom_album_images' => 'dw_album_images',
-            'album_youtube' => 'dw_album_youtube',
-            'album_thumb_id' => 'dw_album_thumb_id',
-        );
-        
-        foreach ($meta_key_map as $old_key => $new_key) {
-            // Update meta keys directly in database
-            $wpdb->query($wpdb->prepare(
-                "UPDATE {$wpdb->postmeta} pm1
-                LEFT JOIN {$wpdb->postmeta} pm2 ON pm1.post_id = pm2.post_id AND pm2.meta_key = %s
-                SET pm1.meta_key = %s
-                WHERE pm1.meta_key = %s AND pm2.meta_id IS NULL",
-                $new_key,
-                $new_key,
-                $old_key
-            ));
-        }
-        
-        // Migrate taxonomy
-        if (taxonomy_exists('sermon_preacher') && taxonomy_exists('dw_sermon_preacher')) {
-            $old_terms = get_terms(array('taxonomy' => 'sermon_preacher', 'hide_empty' => false));
-            
-            if (!empty($old_terms) && !is_wp_error($old_terms)) {
-                foreach ($old_terms as $old_term) {
-                    $existing = get_term_by('name', $old_term->name, 'dw_sermon_preacher');
-                    
-                    if (!$existing) {
-                        $new_term = wp_insert_term($old_term->name, 'dw_sermon_preacher', array(
-                            'description' => $old_term->description,
-                            'slug' => $old_term->slug,
-                        ));
-                        
-                        if (!is_wp_error($new_term)) {
-                            $posts = get_posts(array(
-                                'post_type' => 'sermon',
-                                'posts_per_page' => -1,
-                                'tax_query' => array(array(
-                                    'taxonomy' => 'sermon_preacher',
-                                    'field' => 'term_id',
-                                    'terms' => $old_term->term_id,
-                                )),
-                            ));
-                            
-                            foreach ($posts as $post) {
-                                wp_set_post_terms($post->ID, array($new_term['term_id']), 'dw_sermon_preacher', false);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        // Migrate church settings options
-        $settings_map = array(
-            'dasom_church_name' => 'dw_church_name',
-            'dasom_church_address' => 'dw_church_address',
-            'dasom_church_phone' => 'dw_church_phone',
-            'dasom_church_email' => 'dw_church_email',
-            'dasom_church_website' => 'dw_church_website',
-            'dasom_social_youtube' => 'dw_social_youtube',
-            'dasom_social_instagram' => 'dw_social_instagram',
-            'dasom_social_facebook' => 'dw_social_facebook',
-            'dasom_social_linkedin' => 'dw_social_linkedin',
-            'dasom_social_tiktok' => 'dw_social_tiktok',
-            'dasom_social_kakaotalk' => 'dw_social_kakaotalk',
-            'dasom_social_kakaotalk_channel' => 'dw_social_kakaotalk_channel',
-        );
-        
-        foreach ($settings_map as $old_option => $new_option) {
-            $value = get_option($old_option);
-            if ($value !== false) {
-                update_option($new_option, $value);
-                delete_option($old_option);
-            }
-        }
-    }
-    
-    /**
-     * Run settings migration for v1.3.4
-     * This ensures church settings are properly migrated
-     */
-    private function dasom_church_run_settings_migration() {
-        // Check if old settings exist and migrate them
-        $old_settings = array(
-            'dasom_church_name',
-            'dasom_church_address',
-            'dasom_church_phone',
-            'dasom_church_email',
-            'dasom_church_website',
-            'dasom_social_youtube',
-            'dasom_social_instagram',
-            'dasom_social_facebook',
-            'dasom_social_linkedin',
-            'dasom_social_tiktok',
-            'dasom_social_kakaotalk',
-            'dasom_social_kakaotalk_channel',
-        );
-        
-        foreach ($old_settings as $old_key) {
-            $value = get_option($old_key, false);
-            if ($value !== false && $value !== '') {
-                // Convert to new key format
-                $new_key = str_replace('dasom_', 'dw_', $old_key);
-                
-                // Only update if new key doesn't exist or is empty
-                $existing_value = get_option($new_key, '');
-                if (empty($existing_value)) {
-                    update_option($new_key, $value);
-                }
-            }
-        }
+        // Plugin initialization
     }
 }
 
