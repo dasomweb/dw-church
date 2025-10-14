@@ -1,0 +1,12 @@
+{
+    "php.validate.executablePath": "/Applications/Local.app/Contents/Resources/extraResources/lightning-services/php-8.2.27+1/bin/darwin-arm64/bin/php",
+    "php.suggest.basic": false,
+    "php.validate.enable": true,
+    "php.validate.run": "onSave",
+    "files.associations": {
+        "*.php": "php"
+    },
+    "emmet.includeLanguages": {
+        "php": "html"
+    }
+}

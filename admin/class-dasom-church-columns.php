@@ -77,9 +77,9 @@ class Dasom_Church_Columns {
             $new_columns['cb'] = $columns['cb'];
         }
         
-        $new_columns['bulletin_date'] = __('주보 날짜', 'dasom-church');
-        $new_columns['bulletin_pdf'] = __('PDF 파일', 'dasom-church');
-        $new_columns['bulletin_images'] = __('주보 이미지', 'dasom-church');
+        $new_columns['dw_bulletin_date'] = __('주보 날짜', 'dasom-church');
+        $new_columns['dw_bulletin_pdf'] = __('PDF 파일', 'dasom-church');
+        $new_columns['dw_bulletin_images'] = __('주보 이미지', 'dasom-church');
         $new_columns['date'] = __('게시일', 'dasom-church');
         
         return $new_columns;
@@ -90,8 +90,8 @@ class Dasom_Church_Columns {
      */
     public function dasom_church_bulletin_column_content($column, $post_id) {
         switch ($column) {
-            case 'bulletin_date':
-                $date = get_post_meta($post_id, 'bulletin_date', true);
+            case 'dw_bulletin_date':
+                $date = get_post_meta($post_id, 'dw_bulletin_date', true);
                 if ($date) {
                     // Format date for display
                     $formatted_date = date_i18n('Y-m-d', strtotime($date));
@@ -101,8 +101,8 @@ class Dasom_Church_Columns {
                 }
                 break;
                 
-            case 'bulletin_pdf':
-                $pdf = get_post_meta($post_id, 'bulletin_pdf', true);
+            case 'dw_bulletin_pdf':
+                $pdf = get_post_meta($post_id, 'dw_bulletin_pdf', true);
                 if ($pdf) {
                     $url = wp_get_attachment_url($pdf);
                     if ($url) {
@@ -115,8 +115,8 @@ class Dasom_Church_Columns {
                 }
                 break;
                 
-            case 'bulletin_images':
-                $images = get_post_meta($post_id, 'bulletin_images', true);
+            case 'dw_bulletin_images':
+                $images = get_post_meta($post_id, 'dw_bulletin_images', true);
                 $images = $images ? json_decode($images, true) : array();
                 if (!empty($images)) {
                     echo '<div style="display:flex;gap:5px;flex-wrap:nowrap;overflow-x:auto;max-width:600px;">';
@@ -145,11 +145,11 @@ class Dasom_Church_Columns {
             $new_columns['cb'] = $columns['cb'];
         }
         
-        $new_columns['sermon_date'] = __('설교 일자', 'dasom-church');
-        $new_columns['sermon_title'] = __('제목', 'dasom-church');
-        $new_columns['sermon_scripture'] = __('성경구절', 'dasom-church');
+        $new_columns['dw_sermon_date'] = __('설교 일자', 'dasom-church');
+        $new_columns['dw_sermon_title'] = __('제목', 'dasom-church');
+        $new_columns['dw_sermon_scripture'] = __('성경구절', 'dasom-church');
         $new_columns['sermon_preacher'] = __('설교자', 'dasom-church');
-        $new_columns['sermon_youtube'] = __('YouTube', 'dasom-church');
+        $new_columns['dw_sermon_youtube'] = __('YouTube', 'dasom-church');
         $new_columns['sermon_thumb'] = __('썸네일', 'dasom-church');
         $new_columns['date'] = __('게시 상태', 'dasom-church');
         
@@ -161,8 +161,8 @@ class Dasom_Church_Columns {
      */
     public function dasom_church_sermon_column_content($column, $post_id) {
         switch ($column) {
-            case 'sermon_date':
-                $date = get_post_meta($post_id, 'sermon_date', true);
+            case 'dw_sermon_date':
+                $date = get_post_meta($post_id, 'dw_sermon_date', true);
                 if ($date && $date !== '') {
                     // Convert to readable format
                     $formatted_date = date_i18n('Y-m-d', strtotime($date));
@@ -172,8 +172,8 @@ class Dasom_Church_Columns {
                 }
                 break;
                 
-            case 'sermon_title':
-                $title = get_post_meta($post_id, 'sermon_title', true);
+            case 'dw_sermon_title':
+                $title = get_post_meta($post_id, 'dw_sermon_title', true);
                 if ($title) {
                     echo esc_html($title);
                 } else {
@@ -183,8 +183,8 @@ class Dasom_Church_Columns {
                 }
                 break;
                 
-            case 'sermon_scripture':
-                $scripture = get_post_meta($post_id, 'sermon_scripture', true);
+            case 'dw_sermon_scripture':
+                $scripture = get_post_meta($post_id, 'dw_sermon_scripture', true);
                 if ($scripture) {
                     echo esc_html($scripture);
                 } else {
@@ -203,8 +203,8 @@ class Dasom_Church_Columns {
                 }
                 break;
                 
-            case 'sermon_youtube':
-                $youtube = get_post_meta($post_id, 'sermon_youtube', true);
+            case 'dw_sermon_youtube':
+                $youtube = get_post_meta($post_id, 'dw_sermon_youtube', true);
                 if ($youtube) {
                     echo '<a href="' . esc_url($youtube) . '" target="_blank">' . esc_html($youtube) . '</a>';
                 } else {
@@ -257,7 +257,7 @@ class Dasom_Church_Columns {
     public function dasom_church_column_column_content($column, $post_id) {
         switch ($column) {
             case 'top_image':
-                $top_image = get_post_meta($post_id, 'column_top_image', true);
+                $top_image = get_post_meta($post_id, 'dw_column_top_image', true);
                 if ($top_image) {
                     echo wp_get_attachment_image($top_image, array(80, 80), false, array('style' => 'object-fit:cover;'));
                 } else {
@@ -266,7 +266,7 @@ class Dasom_Church_Columns {
                 break;
                 
             case 'youtube':
-                $youtube = get_post_meta($post_id, 'column_youtube', true);
+                $youtube = get_post_meta($post_id, 'dw_column_youtube', true);
                 if ($youtube) {
                     echo '<a href="' . esc_url($youtube) . '" target="_blank">' . __('YouTube 보기', 'dasom-church') . '</a>';
                 } else {
@@ -310,7 +310,7 @@ class Dasom_Church_Columns {
     public function dasom_church_album_column_content($column, $post_id) {
         switch ($column) {
             case 'youtube':
-                $youtube = get_post_meta($post_id, 'album_youtube', true);
+                $youtube = get_post_meta($post_id, 'dw_album_youtube', true);
                 if ($youtube) {
                     echo '<a href="' . esc_url($youtube) . '" target="_blank">' . esc_html($youtube) . '</a>';
                 } else {
@@ -327,7 +327,7 @@ class Dasom_Church_Columns {
                 break;
                 
             case 'images':
-                $images = get_post_meta($post_id, 'dasom_album_images', true);
+                $images = get_post_meta($post_id, 'dw_album_images', true);
                 $images = $images ? json_decode($images, true) : array();
                 if (!empty($images)) {
                     echo '<div style="display:flex; flex-direction:row; gap:5px; flex-wrap:wrap; max-width:600px;">';
@@ -370,7 +370,7 @@ class Dasom_Church_Columns {
                 echo '<div class="inline-edit-col">';
                 echo '<label>';
                 echo '<span class="title">' . __('주보 날짜', 'dasom-church') . '</span>';
-                echo '<input type="date" name="bulletin_date" value="" />';
+                echo '<input type="date" name="dw_bulletin_date" value="" />';
                 echo '</label>';
                 echo '</div>';
                 echo '</fieldset>';
@@ -381,7 +381,7 @@ class Dasom_Church_Columns {
                 echo '<div class="inline-edit-col">';
                 echo '<label>';
                 echo '<span class="title">' . __('설교 일자', 'dasom-church') . '</span>';
-                echo '<input type="date" name="sermon_date" value="" />';
+                echo '<input type="date" name="dw_sermon_date" value="" />';
                 echo '</label>';
                 echo '</div>';
                 echo '</fieldset>';
@@ -439,14 +439,14 @@ class Dasom_Church_Columns {
         
         switch ($post_type) {
             case 'bulletin':
-                if (isset($_POST['bulletin_date']) && !empty($_POST['bulletin_date'])) {
-                    $date = sanitize_text_field($_POST['bulletin_date']);
+                if (isset($_POST['dw_bulletin_date']) && !empty($_POST['dw_bulletin_date'])) {
+                    $date = sanitize_text_field($_POST['dw_bulletin_date']);
                     // Debug log
                     error_log('Quick Edit - Bulletin date received: ' . $date);
                     
                     // Validate date format (YYYY-MM-DD)
                     if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-                        update_post_meta($post_id, 'bulletin_date', $date);
+                        update_post_meta($post_id, 'dw_bulletin_date', $date);
                         error_log('Quick Edit - Bulletin date saved: ' . $date);
                     } else {
                         error_log('Quick Edit - Invalid bulletin date format: ' . $date);
@@ -455,14 +455,14 @@ class Dasom_Church_Columns {
                 break;
                 
             case 'sermon':
-                if (isset($_POST['sermon_date']) && !empty($_POST['sermon_date'])) {
-                    $date = sanitize_text_field($_POST['sermon_date']);
+                if (isset($_POST['dw_sermon_date']) && !empty($_POST['dw_sermon_date'])) {
+                    $date = sanitize_text_field($_POST['dw_sermon_date']);
                     // Debug log
                     error_log('Quick Edit - Sermon date received: ' . $date);
                     
                     // Validate date format (YYYY-MM-DD)
                     if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-                        update_post_meta($post_id, 'sermon_date', $date);
+                        update_post_meta($post_id, 'dw_sermon_date', $date);
                         error_log('Quick Edit - Sermon date saved: ' . $date);
                     } else {
                         error_log('Quick Edit - Invalid sermon date format: ' . $date);
@@ -525,10 +525,10 @@ class Dasom_Church_Columns {
                     var columnClass = cell.attr('class');
                     
                     if (columnClass) {
-                        if (columnClass.includes('bulletin_date')) {
-                            data.bulletin_date = cell.text().trim();
-                        } else if (columnClass.includes('sermon_date')) {
-                            data.sermon_date = cell.text().trim();
+                        if (columnClass.includes('dw_bulletin_date')) {
+                            data.dw_bulletin_date = cell.text().trim();
+                        } else if (columnClass.includes('dw_sermon_date')) {
+                            data.dw_sermon_date = cell.text().trim();
                         } else if (columnClass.includes('column_author')) {
                             data.column_author = cell.text().trim();
                         } else if (columnClass.includes('column_topic')) {
@@ -569,19 +569,19 @@ class Dasom_Church_Columns {
                         }
                         
                         // Fill our custom fields
-                        if (post_type === 'bulletin' && data.bulletin_date && data.bulletin_date !== '—') {
-                            var bulletinDate = data.bulletin_date;
+                        if (post_type === 'bulletin' && data.dw_bulletin_date && data.dw_bulletin_date !== '—') {
+                            var bulletinDate = data.dw_bulletin_date;
                             // Only set if it's already in YYYY-MM-DD format
                             if (bulletinDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                                $('input[name=\"bulletin_date\"]').val(bulletinDate);
+                                $('input[name=\"dw_bulletin_date\"]').val(bulletinDate);
                             }
                         }
                         
-                        if (post_type === 'sermon' && data.sermon_date && data.sermon_date !== '—') {
-                            var sermonDate = data.sermon_date;
+                        if (post_type === 'sermon' && data.dw_sermon_date && data.dw_sermon_date !== '—') {
+                            var sermonDate = data.dw_sermon_date;
                             // Only set if it's already in YYYY-MM-DD format
                             if (sermonDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                                $('input[name=\"sermon_date\"]').val(sermonDate);
+                                $('input[name=\"dw_sermon_date\"]').val(sermonDate);
                             }
                         }
                         
@@ -626,12 +626,12 @@ class Dasom_Church_Columns {
                                 }
                                 
                                 // Fill our custom fields
-                                if (post_type === 'bulletin' && ajaxData.bulletin_date) {
-                                    $('input[name=\"bulletin_date\"]').val(ajaxData.bulletin_date);
+                                if (post_type === 'bulletin' && ajaxData.dw_bulletin_date) {
+                                    $('input[name=\"dw_bulletin_date\"]').val(ajaxData.dw_bulletin_date);
                                 }
                                 
-                                if (post_type === 'sermon' && ajaxData.sermon_date) {
-                                    $('input[name=\"sermon_date\"]').val(ajaxData.sermon_date);
+                                if (post_type === 'sermon' && ajaxData.dw_sermon_date) {
+                                    $('input[name=\"dw_sermon_date\"]').val(ajaxData.dw_sermon_date);
                                 }
                                 
                                 if (post_type === 'column') {
@@ -706,32 +706,32 @@ function dasom_church_get_quick_edit_data_callback() {
     
     switch ($post_type) {
         case 'bulletin':
-            $bulletin_date = get_post_meta($post_id, 'bulletin_date', true);
+            $bulletin_date = get_post_meta($post_id, 'dw_bulletin_date', true);
             if ($bulletin_date && $bulletin_date !== '') {
                 // If already in YYYY-MM-DD format, use as is
                 if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $bulletin_date)) {
-                    $data['bulletin_date'] = $bulletin_date;
+                    $data['dw_bulletin_date'] = $bulletin_date;
                 } else {
                     // Try to convert other formats
                     $timestamp = strtotime($bulletin_date);
                     if ($timestamp !== false && $timestamp > 0) {
-                        $data['bulletin_date'] = date('Y-m-d', $timestamp);
+                        $data['dw_bulletin_date'] = date('Y-m-d', $timestamp);
                     }
                 }
             }
             break;
             
         case 'sermon':
-            $sermon_date = get_post_meta($post_id, 'sermon_date', true);
+            $sermon_date = get_post_meta($post_id, 'dw_sermon_date', true);
             if ($sermon_date && $sermon_date !== '') {
                 // If already in YYYY-MM-DD format, use as is
                 if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $sermon_date)) {
-                    $data['sermon_date'] = $sermon_date;
+                    $data['dw_sermon_date'] = $sermon_date;
                 } else {
                     // Try to convert other formats
                     $timestamp = strtotime($sermon_date);
                     if ($timestamp !== false && $timestamp > 0) {
-                        $data['sermon_date'] = date('Y-m-d', $timestamp);
+                        $data['dw_sermon_date'] = date('Y-m-d', $timestamp);
                     }
                 }
             }

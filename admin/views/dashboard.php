@@ -106,32 +106,32 @@ $preachers = get_terms(array(
                 <tr>
                     <td rowspan="3">📖 <?php _e('교회주보 (bulletin)', 'dasom-church'); ?></td>
                     <td><?php _e('주보 날짜', 'dasom-church'); ?></td>
-                    <td><code>bulletin_date</code></td>
+                    <td><code>dw_bulletin_date</code></td>
                 </tr>
                 <tr>
                     <td><?php _e('주보 PDF 첨부 ID', 'dasom-church'); ?></td>
-                    <td><code>bulletin_pdf</code></td>
+                    <td><code>dw_bulletin_pdf</code></td>
                 </tr>
                 <tr>
                     <td><?php _e('주보 이미지 (JSON 배열)', 'dasom-church'); ?></td>
-                    <td><code>bulletin_images</code></td>
+                    <td><code>dw_bulletin_images</code></td>
                 </tr>
                 <tr>
                     <td rowspan="5">🎤 <?php _e('설교 (sermon)', 'dasom-church'); ?></td>
                     <td><?php _e('설교 제목', 'dasom-church'); ?></td>
-                    <td><code>sermon_title</code></td>
+                    <td><code>dw_sermon_title</code></td>
                 </tr>
                 <tr>
                     <td><?php _e('성경구절', 'dasom-church'); ?></td>
-                    <td><code>sermon_scripture</code></td>
+                    <td><code>dw_sermon_scripture</code></td>
                 </tr>
                 <tr>
                     <td><?php _e('YouTube URL', 'dasom-church'); ?></td>
-                    <td><code>sermon_youtube</code></td>
+                    <td><code>dw_sermon_youtube</code></td>
                 </tr>
                 <tr>
                     <td><?php _e('설교 일자', 'dasom-church'); ?></td>
-                    <td><code>sermon_date</code></td>
+                    <td><code>dw_sermon_date</code></td>
                 </tr>
                 <tr>
                     <td><?php _e('설교자', 'dasom-church'); ?></td>
@@ -140,24 +140,36 @@ $preachers = get_terms(array(
                 <tr>
                     <td rowspan="3">📷 <?php _e('교회앨범 (album)', 'dasom-church'); ?></td>
                     <td><?php _e('YouTube URL', 'dasom-church'); ?></td>
-                    <td><code>album_youtube</code></td>
+                    <td><code>dw_album_youtube</code></td>
                 </tr>
                 <tr>
                     <td><?php _e('썸네일 이미지 ID', 'dasom-church'); ?></td>
-                    <td><code>album_thumb_id</code></td>
+                    <td><code>dw_album_thumb_id</code></td>
                 </tr>
                 <tr>
                     <td><?php _e('앨범 이미지 (JSON 배열)', 'dasom-church'); ?></td>
-                    <td><code>album_images</code></td>
+                    <td><code>dw_album_images</code></td>
                 </tr>
                 <tr>
-                    <td rowspan="2">🖋 <?php _e('목회컬럼 (column)', 'dasom-church'); ?></td>
-                    <td><?php _e('작성자', 'dasom-church'); ?></td>
-                    <td><code>column_author</code></td>
+                    <td rowspan="5">🖋 <?php _e('목회컬럼 (column)', 'dasom-church'); ?></td>
+                    <td><?php _e('상단 이미지', 'dasom-church'); ?></td>
+                    <td><code>dw_column_top_image</code></td>
                 </tr>
                 <tr>
-                    <td><?php _e('주제', 'dasom-church'); ?></td>
-                    <td><code>column_topic</code></td>
+                    <td><?php _e('하단 이미지', 'dasom-church'); ?></td>
+                    <td><code>dw_column_bottom_image</code></td>
+                </tr>
+                <tr>
+                    <td><?php _e('YouTube URL', 'dasom-church'); ?></td>
+                    <td><code>dw_column_youtube</code></td>
+                </tr>
+                <tr>
+                    <td><?php _e('YouTube 썸네일 ID', 'dasom-church'); ?></td>
+                    <td><code>dw_column_thumb_id</code></td>
+                </tr>
+                <tr>
+                    <td><?php _e('제목', 'dasom-church'); ?></td>
+                    <td><code>dw_column_title</code></td>
                 </tr>
             </tbody>
         </table>
@@ -258,7 +270,7 @@ $preachers = get_terms(array(
             if ($bulletins) {
                 echo '<ul class="dasom-dashboard-list">';
                 foreach ($bulletins as $post) {
-                    $date = get_post_meta($post->ID, 'bulletin_date', true);
+                    $date = get_post_meta($post->ID, 'dw_bulletin_date', true);
                     $formatted_date = $date ? date_i18n('Y.m.d', strtotime($date)) : get_the_date('Y.m.d', $post);
                     echo '<li>';
                     echo '<a href="' . get_edit_post_link($post->ID) . '">' . esc_html(get_the_title($post)) . '</a>';
@@ -288,8 +300,8 @@ $preachers = get_terms(array(
             if ($sermons) {
                 echo '<ul class="dasom-dashboard-list">';
                 foreach ($sermons as $post) {
-                    $scripture = get_post_meta($post->ID, 'sermon_scripture', true);
-                    $date = get_post_meta($post->ID, 'sermon_date', true);
+                    $scripture = get_post_meta($post->ID, 'dw_sermon_scripture', true);
+                    $date = get_post_meta($post->ID, 'dw_sermon_date', true);
                     $formatted_date = $date ? date_i18n('Y.m.d', strtotime($date)) : get_the_date('Y.m.d', $post);
                     echo '<li>';
                     echo '<a href="' . get_edit_post_link($post->ID) . '">' . esc_html(get_the_title($post)) . '</a>';
@@ -322,11 +334,11 @@ $preachers = get_terms(array(
             if ($columns) {
                 echo '<ul class="dasom-dashboard-list">';
                 foreach ($columns as $post) {
-                    $author = get_post_meta($post->ID, 'column_author', true);
+                    $youtube = get_post_meta($post->ID, 'dw_column_youtube', true);
                     echo '<li>';
                     echo '<a href="' . get_edit_post_link($post->ID) . '">' . esc_html(get_the_title($post)) . '</a>';
-                    if ($author) {
-                        echo '<span class="dasom-author">' . esc_html($author) . '</span>';
+                    if ($youtube) {
+                        echo '<span class="dasom-youtube">📺</span>';
                     }
                     echo '<span class="dasom-date">' . get_the_date('Y.m.d', $post) . '</span>';
                     echo '</li>';
@@ -354,7 +366,7 @@ $preachers = get_terms(array(
             if ($albums) {
                 echo '<ul class="dasom-dashboard-list">';
                 foreach ($albums as $post) {
-                    $youtube = get_post_meta($post->ID, 'album_youtube', true);
+                    $youtube = get_post_meta($post->ID, 'dw_album_youtube', true);
                     echo '<li>';
                     echo '<a href="' . get_edit_post_link($post->ID) . '">' . esc_html(get_the_title($post)) . '</a>';
                     if ($youtube) {

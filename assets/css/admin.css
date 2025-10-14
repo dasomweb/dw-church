@@ -327,25 +327,26 @@
 }
 
 /* Admin column styles */
-.wp-list-table .column-bulletin_date,
-.wp-list-table .column-sermon_date,
-.wp-list-table .column-column_author,
-.wp-list-table .column-column_topic {
+.wp-list-table .column-dw_bulletin_date,
+.wp-list-table .column-dw_sermon_date,
+.wp-list-table .column-top_image,
+.wp-list-table .column-youtube {
     width: 120px;
 }
 
-.wp-list-table .column-bulletin_pdf,
-.wp-list-table .column-sermon_youtube,
-.wp-list-table .column-youtube {
+.wp-list-table .column-dw_bulletin_pdf,
+.wp-list-table .column-dw_sermon_youtube,
+.wp-list-table .column-dw_column_youtube,
+.wp-list-table .column-dw_album_youtube {
     width: 100px;
 }
 
-.wp-list-table .column-bulletin_images,
+.wp-list-table .column-dw_bulletin_images,
 .wp-list-table .column-images {
     width: 200px;
 }
 
-.wp-list-table .column-sermon_thumb,
+.wp-list-table .column-dw_sermon_thumb,
 .wp-list-table .column-thumb {
     width: 100px;
 }

@@ -106,28 +106,28 @@ class Dasom_Church_Meta_Boxes {
     public function dasom_church_bulletin_meta_box($post) {
         wp_nonce_field('dasom_church_bulletin_meta', 'dasom_church_bulletin_nonce');
         
-        $date = get_post_meta($post->ID, 'bulletin_date', true);
-        $pdf = get_post_meta($post->ID, 'bulletin_pdf', true);
-        $images = get_post_meta($post->ID, 'bulletin_images', true);
+        $date = get_post_meta($post->ID, 'dw_bulletin_date', true);
+        $pdf = get_post_meta($post->ID, 'dw_bulletin_pdf', true);
+        $images = get_post_meta($post->ID, 'dw_bulletin_images', true);
         $images = $images ? json_decode($images, true) : array();
         $images = is_array($images) ? $images : array();
         ?>
         <table class="form-table">
             <tr>
                 <th scope="row">
-                    <label for="bulletin_date"><?php _e('주보 날짜', 'dasom-church'); ?></label>
+                    <label for="dw_bulletin_date"><?php _e('주보 날짜', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="date" id="bulletin_date" name="bulletin_date" value="<?php echo esc_attr($date); ?>" class="regular-text" />
+                    <input type="date" id="dw_bulletin_date" name="dw_bulletin_date" value="<?php echo esc_attr($date); ?>" class="regular-text" />
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="bulletin_pdf"><?php _e('주보 PDF', 'dasom-church'); ?></label>
+                    <label for="dw_bulletin_pdf"><?php _e('주보 PDF', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="hidden" id="bulletin_pdf" name="bulletin_pdf" value="<?php echo esc_attr($pdf); ?>" />
-                    <button type="button" class="button" id="bulletin_pdf_button"><?php _e('PDF 업로드', 'dasom-church'); ?></button>
+                    <input type="hidden" id="dw_bulletin_pdf" name="dw_bulletin_pdf" value="<?php echo esc_attr($pdf); ?>" />
+                    <button type="button" class="button" id="dw_bulletin_pdf_button"><?php _e('PDF 업로드', 'dasom-church'); ?></button>
                     <div id="bulletin_pdf_preview" style="margin-top:8px;">
                         <?php if ($pdf): ?>
                             <a href="<?php echo esc_url(wp_get_attachment_url($pdf)); ?>" target="_blank"><?php _e('현재 PDF 보기', 'dasom-church'); ?></a>
@@ -140,9 +140,9 @@ class Dasom_Church_Meta_Boxes {
                     <label for="bulletin_images"><?php _e('주보 이미지', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="hidden" id="bulletin_images" name="bulletin_images" value='<?php echo esc_attr(json_encode($images)); ?>' />
-                    <button type="button" class="button" id="bulletin_images_button"><?php _e('이미지 업로드', 'dasom-church'); ?></button>
-                    <ul id="bulletin_images_preview" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
+                    <input type="hidden" id="dw_bulletin_images" name="dw_bulletin_images" value='<?php echo esc_attr(json_encode($images)); ?>' />
+                    <button type="button" class="button" id="dw_bulletin_images_button"><?php _e('이미지 업로드', 'dasom-church'); ?></button>
+                    <ul id="dw_bulletin_images_preview" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
                         <?php foreach ($images as $id): ?>
                             <li data-id="<?php echo esc_attr($id); ?>" style="position:relative;">
                                 <img src="<?php echo esc_url(wp_get_attachment_url($id)); ?>" style="width:100px;height:100px;object-fit:cover;" />
@@ -190,18 +190,18 @@ class Dasom_Church_Meta_Boxes {
         <table class="form-table">
             <tr>
                 <th scope="row">
-                    <label for="sermon_title"><?php _e('설교 제목', 'dasom-church'); ?></label>
+                    <label for="dw_sermon_title"><?php _e('설교 제목', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="text" id="sermon_title" name="sermon_title" value="<?php echo esc_attr($title); ?>" class="regular-text" />
+                    <input type="text" id="dw_sermon_title" name="dw_sermon_title" value="<?php echo esc_attr($title); ?>" class="regular-text" />
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="sermon_scripture"><?php _e('성경구절', 'dasom-church'); ?></label>
+                    <label for="dw_sermon_scripture"><?php _e('성경구절', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="text" id="sermon_scripture" name="sermon_scripture" value="<?php echo esc_attr($scripture); ?>" class="regular-text" />
+                    <input type="text" id="dw_sermon_scripture" name="dw_sermon_scripture" value="<?php echo esc_attr($scripture); ?>" class="regular-text" />
                 </td>
             </tr>
             <tr>
@@ -209,7 +209,7 @@ class Dasom_Church_Meta_Boxes {
                     <label for="sermon_preacher_term"><?php _e('설교자', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <select id="sermon_preacher_term" name="sermon_preacher_term" class="regular-text">
+                    <select id="dw_sermon_preacher_term" name="dw_sermon_preacher_term" class="regular-text">
                         <option value="">— <?php _e('설교자 선택', 'dasom-church'); ?> —</option>
                         <?php foreach ($terms as $t): ?>
                             <option value="<?php echo (int)$t->term_id; ?>" <?php selected($selected_preacher_id, (int)$t->term_id); ?>>
@@ -222,18 +222,18 @@ class Dasom_Church_Meta_Boxes {
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="sermon_youtube"><?php _e('YouTube URL', 'dasom-church'); ?></label>
+                    <label for="dw_sermon_youtube"><?php _e('YouTube URL', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="url" id="sermon_youtube" name="sermon_youtube" value="<?php echo esc_url($youtube); ?>" class="regular-text" />
+                    <input type="url" id="dw_sermon_youtube" name="dw_sermon_youtube" value="<?php echo esc_url($youtube); ?>" class="regular-text" />
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="sermon_date"><?php _e('설교 일자', 'dasom-church'); ?></label>
+                    <label for="dw_sermon_date"><?php _e('설교 일자', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="date" id="sermon_date" name="sermon_date" value="<?php echo esc_attr($sermon_date); ?>" class="regular-text" />
+                    <input type="date" id="dw_sermon_date" name="dw_sermon_date" value="<?php echo esc_attr($sermon_date); ?>" class="regular-text" />
                 </td>
             </tr>
             <tr>
@@ -241,10 +241,10 @@ class Dasom_Church_Meta_Boxes {
                     <label for="sermon_thumb_id"><?php _e('YouTube 썸네일', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="hidden" id="sermon_thumb_id" name="sermon_thumb_id" value="<?php echo esc_attr($thumb_id); ?>" />
-                    <button type="button" class="button" id="sermon_thumb_button"><?php _e('썸네일 업로드/선택', 'dasom-church'); ?></button>
-                    <button type="button" class="button" id="sermon_thumb_fetch"><?php _e('YouTube 썸네일 불러오기', 'dasom-church'); ?></button>
-                    <div id="sermon_thumb_preview" style="margin-top:10px;">
+                    <input type="hidden" id="dw_sermon_thumb_id" name="dw_sermon_thumb_id" value="<?php echo esc_attr($thumb_id); ?>" />
+                    <button type="button" class="button" id="dw_sermon_thumb_button"><?php _e('썸네일 업로드/선택', 'dasom-church'); ?></button>
+                    <button type="button" class="button" id="dw_sermon_thumb_fetch"><?php _e('YouTube 썸네일 불러오기', 'dasom-church'); ?></button>
+                    <div id="dw_sermon_thumb_preview" style="margin-top:10px;">
                         <?php if ($thumb_id): ?>
                             <img src="<?php echo esc_url(wp_get_attachment_url($thumb_id)); ?>" style="width:160px;height:90px;object-fit:cover;" />
                         <?php endif; ?>
@@ -273,10 +273,10 @@ class Dasom_Church_Meta_Boxes {
             <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 16px; font-weight: 600;"><?php _e('목회컬럼 정보', 'dasom-church'); ?></h3>
             
             <div style="margin-bottom: 20px;">
-                <label for="column_top_image" style="display: block; margin-bottom: 8px; font-weight: 600;"><?php _e('상단 이미지', 'dasom-church'); ?></label>
-                <input type="hidden" id="column_top_image" name="column_top_image" value="<?php echo esc_attr($top_image); ?>" />
-                <button type="button" class="button" id="column_top_image_button"><?php _e('이미지 업로드/선택', 'dasom-church'); ?></button>
-                <div id="column_top_image_preview" style="margin-top: 10px;">
+                <label for="dw_column_top_image" style="display: block; margin-bottom: 8px; font-weight: 600;"><?php _e('상단 이미지', 'dasom-church'); ?></label>
+                <input type="hidden" id="dw_column_top_image" name="dw_column_top_image" value="<?php echo esc_attr($top_image); ?>" />
+                <button type="button" class="button" id="dw_column_top_image_button"><?php _e('이미지 업로드/선택', 'dasom-church'); ?></button>
+                <div id="dw_column_top_image_preview" style="margin-top: 10px;">
                     <?php if ($top_image): ?>
                         <img src="<?php echo esc_url(wp_get_attachment_url($top_image)); ?>" style="width: 160px; height: 90px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px;" />
                     <?php endif; ?>
@@ -285,10 +285,10 @@ class Dasom_Church_Meta_Boxes {
             </div>
             
             <div style="margin-bottom: 20px;">
-                <label for="column_bottom_image" style="display: block; margin-bottom: 8px; font-weight: 600;"><?php _e('하단 이미지', 'dasom-church'); ?></label>
-                <input type="hidden" id="column_bottom_image" name="column_bottom_image" value="<?php echo esc_attr($bottom_image); ?>" />
-                <button type="button" class="button" id="column_bottom_image_button"><?php _e('이미지 업로드/선택', 'dasom-church'); ?></button>
-                <div id="column_bottom_image_preview" style="margin-top: 10px;">
+                <label for="dw_column_bottom_image" style="display: block; margin-bottom: 8px; font-weight: 600;"><?php _e('하단 이미지', 'dasom-church'); ?></label>
+                <input type="hidden" id="dw_column_bottom_image" name="dw_column_bottom_image" value="<?php echo esc_attr($bottom_image); ?>" />
+                <button type="button" class="button" id="dw_column_bottom_image_button"><?php _e('이미지 업로드/선택', 'dasom-church'); ?></button>
+                <div id="dw_column_bottom_image_preview" style="margin-top: 10px;">
                     <?php if ($bottom_image): ?>
                         <img src="<?php echo esc_url(wp_get_attachment_url($bottom_image)); ?>" style="width: 160px; height: 90px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px;" />
                     <?php endif; ?>
@@ -296,16 +296,16 @@ class Dasom_Church_Meta_Boxes {
             </div>
             
             <div style="margin-bottom: 20px;">
-                <label for="column_youtube" style="display: block; margin-bottom: 8px; font-weight: 600;"><?php _e('YouTube URL', 'dasom-church'); ?></label>
-                <input type="url" id="column_youtube" name="column_youtube" value="<?php echo esc_url($youtube); ?>" style="width: 100%; max-width: 500px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" />
+                <label for="dw_column_youtube" style="display: block; margin-bottom: 8px; font-weight: 600;"><?php _e('YouTube URL', 'dasom-church'); ?></label>
+                <input type="url" id="dw_column_youtube" name="dw_column_youtube" value="<?php echo esc_url($youtube); ?>" style="width: 100%; max-width: 500px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" />
             </div>
             
             <div style="margin-bottom: 20px;">
                 <label for="column_thumb_id" style="display: block; margin-bottom: 8px; font-weight: 600;"><?php _e('YouTube 썸네일', 'dasom-church'); ?></label>
-                <input type="hidden" id="column_thumb_id" name="column_thumb_id" value="<?php echo esc_attr($thumb_id); ?>" />
-                <button type="button" class="button" id="column_thumb_button"><?php _e('썸네일 업로드/선택', 'dasom-church'); ?></button>
-                <button type="button" class="button" id="column_thumb_fetch"><?php _e('YouTube 썸네일 불러오기', 'dasom-church'); ?></button>
-                <div id="column_thumb_preview" style="margin-top: 10px;">
+                <input type="hidden" id="dw_column_thumb_id" name="dw_column_thumb_id" value="<?php echo esc_attr($thumb_id); ?>" />
+                <button type="button" class="button" id="dw_column_thumb_button"><?php _e('썸네일 업로드/선택', 'dasom-church'); ?></button>
+                <button type="button" class="button" id="dw_column_thumb_fetch"><?php _e('YouTube 썸네일 불러오기', 'dasom-church'); ?></button>
+                <div id="dw_column_thumb_preview" style="margin-top: 10px;">
                     <?php if ($thumb_id): ?>
                         <img src="<?php echo esc_url(wp_get_attachment_url($thumb_id)); ?>" style="width: 160px; height: 90px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px;" />
                     <?php endif; ?>
@@ -334,9 +334,9 @@ class Dasom_Church_Meta_Boxes {
                     <label for="album_images"><?php _e('앨범 이미지', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="hidden" id="album_images" name="album_images" value='<?php echo esc_attr(json_encode($images)); ?>' />
-                    <button type="button" class="button" id="album_images_button"><?php _e('이미지 업로드/선택', 'dasom-church'); ?></button>
-                    <ul id="album_images_preview" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:10px;">
+                    <input type="hidden" id="dw_album_images" name="dw_album_images" value='<?php echo esc_attr(json_encode($images)); ?>' />
+                    <button type="button" class="button" id="dw_album_images_button"><?php _e('이미지 업로드/선택', 'dasom-church'); ?></button>
+                    <ul id="dw_album_images_preview" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:10px;">
                         <?php foreach ($images as $id): ?>
                             <li data-id="<?php echo esc_attr($id); ?>" style="position:relative;">
                                 <?php 
@@ -359,10 +359,10 @@ class Dasom_Church_Meta_Boxes {
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="album_youtube"><?php _e('YouTube URL', 'dasom-church'); ?></label>
+                    <label for="dw_album_youtube"><?php _e('YouTube URL', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="url" id="album_youtube" name="album_youtube" value="<?php echo esc_url($youtube); ?>" class="regular-text" />
+                    <input type="url" id="dw_album_youtube" name="dw_album_youtube" value="<?php echo esc_url($youtube); ?>" class="regular-text" />
                 </td>
             </tr>
             <tr>
@@ -370,9 +370,9 @@ class Dasom_Church_Meta_Boxes {
                     <label for="album_thumb_id"><?php _e('YouTube 썸네일', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="hidden" id="album_thumb_id" name="album_thumb_id" value="<?php echo esc_attr($thumb_id); ?>" />
-                    <button type="button" class="button" id="album_thumb_button"><?php _e('썸네일 업로드/선택', 'dasom-church'); ?></button>
-                    <div id="album_thumb_preview" style="margin-top:10px;">
+                    <input type="hidden" id="dw_album_thumb_id" name="dw_album_thumb_id" value="<?php echo esc_attr($thumb_id); ?>" />
+                    <button type="button" class="button" id="dw_album_thumb_button"><?php _e('썸네일 업로드/선택', 'dasom-church'); ?></button>
+                    <div id="dw_album_thumb_preview" style="margin-top:10px;">
                         <?php if ($thumb_id): ?>
                             <img src="<?php echo esc_url(wp_get_attachment_url($thumb_id)); ?>" style="width:160px;height:90px;object-fit:cover;" />
                         <?php endif; ?>
@@ -654,7 +654,7 @@ class Dasom_Church_Meta_Boxes {
         return "
         jQuery(document).ready(function($) {
             // PDF 업로더
-            $('#bulletin_pdf_button').on('click', function(e) {
+            $('#dw_bulletin_pdf_button').on('click', function(e) {
                 e.preventDefault();
                 var frame = wp.media({
                     title: '주보 PDF 업로드',
@@ -671,7 +671,7 @@ class Dasom_Church_Meta_Boxes {
             });
             
             // 이미지 멀티 업로더
-            $('#bulletin_images_button, #album_images_button').on('click', function(e) {
+            $('#dw_bulletin_images_button, #dw_album_images_button').on('click', function(e) {
                 e.preventDefault();
                 var frame = wp.media({
                     title: '이미지 업로드',
@@ -682,20 +682,20 @@ class Dasom_Church_Meta_Boxes {
                 frame.on('select', function() {
                     var selection = frame.state().get('selection');
                     var ids = [];
-                    $('#bulletin_images_preview li, #album_images_preview li').each(function() {
+                    $('#dw_bulletin_images_preview li, #dw_album_images_preview li').each(function() {
                         ids.push($(this).data('id'));
                     });
                     selection.each(function(attachment) {
                         var att = attachment.toJSON();
                         ids.push(att.id);
-                        $('#bulletin_images_preview, #album_images_preview').append(
+                        $('#dw_bulletin_images_preview, #dw_album_images_preview').append(
                             '<li data-id=\"' + att.id + '\" style=\"position:relative;\">' +
                             '<img src=\"' + att.url + '\" style=\"width:100px;height:100px;object-fit:cover;\" />' +
                             '<button type=\"button\" class=\"button-link remove-image\" style=\"position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;\">×</button>' +
                             '</li>'
                         );
                     });
-                    $('#bulletin_images, #album_images').val(JSON.stringify(ids));
+                    $('#dw_bulletin_images, #dw_album_images').val(JSON.stringify(ids));
                     
                     // 앨범 이미지 추가 시 Featured Image는 PHP에서 처리 (JavaScript에서는 thumb_id 건드리지 않음)
                 });
@@ -706,29 +706,29 @@ class Dasom_Church_Meta_Boxes {
             $(document).on('click', '.remove-image', function() {
                 $(this).parent().remove();
                 var ids = [];
-                $('#bulletin_images_preview li, #album_images_preview li').each(function() {
+                $('#dw_bulletin_images_preview li, #dw_album_images_preview li').each(function() {
                     ids.push($(this).data('id'));
                 });
-                $('#bulletin_images, #album_images').val(JSON.stringify(ids));
+                $('#dw_bulletin_images, #dw_album_images').val(JSON.stringify(ids));
                 
                 // 앨범 이미지 제거 시 Featured Image는 PHP에서 처리 (JavaScript에서는 thumb_id 건드리지 않음)
             });
             
             // 정렬
-            $('#bulletin_images_preview, #album_images_preview').sortable({
+            $('#dw_bulletin_images_preview, #dw_album_images_preview').sortable({
                 update: function() {
                     var ids = [];
                     $(this).find('li').each(function() {
                         ids.push($(this).data('id'));
                     });
-                    $('#bulletin_images, #album_images').val(JSON.stringify(ids));
+                    $('#dw_bulletin_images, #dw_album_images').val(JSON.stringify(ids));
                     
                     // 앨범 이미지 순서 변경 시 Featured Image는 PHP에서 처리 (JavaScript에서는 thumb_id 건드리지 않음)
                 }
             });
             
             // 썸네일 업로드
-            $('#sermon_thumb_button, #album_thumb_button, #column_thumb_button, #column_top_image_button, #column_bottom_image_button').on('click', function(e) {
+            $('#dw_sermon_thumb_button, #dw_album_thumb_button, #dw_column_thumb_button, #dw_column_top_image_button, #dw_column_bottom_image_button').on('click', function(e) {
                 e.preventDefault();
                 var frame = wp.media({
                     title: '이미지 업로드',
@@ -741,24 +741,24 @@ class Dasom_Church_Meta_Boxes {
                     var buttonId = $(e.target).attr('id');
                     
                     if (buttonId === 'column_top_image_button') {
-                        $('#column_top_image').val(attachment.id);
-                        $('#column_top_image_preview').html('<img src=\"' + attachment.url + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
+                        $('#dw_column_top_image').val(attachment.id);
+                        $('#dw_column_top_image_preview').html('<img src=\"' + attachment.url + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
                     } else if (buttonId === 'column_bottom_image_button') {
-                        $('#column_bottom_image').val(attachment.id);
-                        $('#column_bottom_image_preview').html('<img src=\"' + attachment.url + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
+                        $('#dw_column_bottom_image').val(attachment.id);
+                        $('#dw_column_bottom_image_preview').html('<img src=\"' + attachment.url + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
                     } else {
-                        $('#sermon_thumb_id, #album_thumb_id, #column_thumb_id').val(attachment.id);
-                        $('#sermon_thumb_preview, #album_thumb_preview, #column_thumb_preview').html('<img src=\"' + attachment.url + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
+                        $('#dw_sermon_thumb_id, #dw_album_thumb_id, #dw_column_thumb_id').val(attachment.id);
+                        $('#dw_sermon_thumb_preview, #dw_album_thumb_preview, #dw_column_thumb_preview').html('<img src=\"' + attachment.url + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
                     }
                 });
                 frame.open();
             });
             
             // YouTube 썸네일 불러오기 (설교, 목회컬럼)
-            $('#sermon_thumb_fetch, #column_thumb_fetch').on('click', function(e) {
+            $('#dw_sermon_thumb_fetch, #dw_column_thumb_fetch').on('click', function(e) {
                 e.preventDefault();
                 var buttonId = $(e.target).attr('id');
-                var url = buttonId === 'sermon_thumb_fetch' ? $('#sermon_youtube').val() : $('#column_youtube').val();
+                var url = buttonId === 'sermon_thumb_fetch' ? $('#dw_sermon_youtube').val() : $('#dw_column_youtube').val();
                 var match = url.match(/(?:youtu\\.be\\/|youtube\\.com\\/(?:watch\\?v=|embed\\/|v\\/))([^\\&\\?\\/]+)/);
                 if (match) {
                     var yid = match[1];
@@ -768,17 +768,13 @@ class Dasom_Church_Meta_Boxes {
                     var img = new Image();
                     img.onload = function() {
                         if (buttonId === 'sermon_thumb_fetch') {
-                            $('#sermon_thumb_preview').html('<img src=\"' + max + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
+                            $('#dw_sermon_thumb_preview').html('<img src=\"' + max + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
                         } else {
-                            $('#column_thumb_preview').html('<img src=\"' + max + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
+                            $('#dw_column_thumb_preview').html('<img src=\"' + max + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
                         }
                     };
                     img.onerror = function() {
-                        if (buttonId === 'sermon_thumb_fetch') {
-                            $('#sermon_thumb_preview').html('<img src=\"' + hq + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
-                        } else {
-                            $('#column_thumb_preview').html('<img src=\"' + hq + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
-                        }
+                        $('#dw_sermon_thumb_preview, #dw_album_thumb_preview').html('<img src=\"' + hq + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
                     };
                     img.src = max;
                 } else {
