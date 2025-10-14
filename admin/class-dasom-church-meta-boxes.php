@@ -669,7 +669,7 @@ class Dasom_Church_Meta_Boxes {
                 });
                 frame.on('select', function() {
                     var attachment = frame.state().get('selection').first().toJSON();
-                    $('#bulletin_pdf').val(attachment.id);
+                    $('#dw_bulletin_pdf').val(attachment.id);
                     $('#bulletin_pdf_preview').html('<a href=\"' + attachment.url + '\" target=\"_blank\">선택된 PDF 보기</a>');
                 });
                 frame.open();
