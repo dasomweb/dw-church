@@ -270,77 +270,60 @@ class Dasom_Church_Meta_Boxes {
         $youtube = get_post_meta($post->ID, 'column_youtube', true);
         $thumb_id = get_post_meta($post->ID, 'column_thumb_id', true);
         ?>
-        <table class="form-table">
-            <tr>
-                <th scope="row">
-                    <label for="column_title"><?php _e('제목', 'dasom-church'); ?></label>
-                </th>
-                <td>
-                    <input type="text" id="column_title" name="column_title" value="<?php echo esc_attr($title); ?>" class="regular-text" />
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">
-                    <label for="column_content"><?php _e('내용', 'dasom-church'); ?></label>
-                </th>
-                <td>
-                    <textarea id="column_content" name="column_content" rows="10" cols="50" class="large-text"><?php echo esc_textarea($content); ?></textarea>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">
-                    <label for="column_top_image"><?php _e('상단 이미지', 'dasom-church'); ?></label>
-                </th>
-                <td>
-                    <input type="hidden" id="column_top_image" name="column_top_image" value="<?php echo esc_attr($top_image); ?>" />
-                    <button type="button" class="button" id="column_top_image_button"><?php _e('이미지 업로드/선택', 'dasom-church'); ?></button>
-                    <div id="column_top_image_preview" style="margin-top:10px;">
-                        <?php if ($top_image): ?>
-                            <img src="<?php echo esc_url(wp_get_attachment_url($top_image)); ?>" style="width:160px;height:90px;object-fit:cover;" />
-                        <?php endif; ?>
-                    </div>
-                    <p class="description"><?php _e('상단 이미지가 대표 이미지로 설정됩니다.', 'dasom-church'); ?></p>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">
-                    <label for="column_bottom_image"><?php _e('하단 이미지', 'dasom-church'); ?></label>
-                </th>
-                <td>
-                    <input type="hidden" id="column_bottom_image" name="column_bottom_image" value="<?php echo esc_attr($bottom_image); ?>" />
-                    <button type="button" class="button" id="column_bottom_image_button"><?php _e('이미지 업로드/선택', 'dasom-church'); ?></button>
-                    <div id="column_bottom_image_preview" style="margin-top:10px;">
-                        <?php if ($bottom_image): ?>
-                            <img src="<?php echo esc_url(wp_get_attachment_url($bottom_image)); ?>" style="width:160px;height:90px;object-fit:cover;" />
-                        <?php endif; ?>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">
-                    <label for="column_youtube"><?php _e('YouTube URL', 'dasom-church'); ?></label>
-                </th>
-                <td>
-                    <input type="url" id="column_youtube" name="column_youtube" value="<?php echo esc_url($youtube); ?>" class="regular-text" />
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">
-                    <label for="column_thumb_id"><?php _e('YouTube 썸네일', 'dasom-church'); ?></label>
-                </th>
-                <td>
-                    <input type="hidden" id="column_thumb_id" name="column_thumb_id" value="<?php echo esc_attr($thumb_id); ?>" />
-                    <button type="button" class="button" id="column_thumb_button"><?php _e('썸네일 업로드/선택', 'dasom-church'); ?></button>
-                    <button type="button" class="button" id="column_thumb_fetch"><?php _e('YouTube 썸네일 불러오기', 'dasom-church'); ?></button>
-                    <div id="column_thumb_preview" style="margin-top:10px;">
-                        <?php if ($thumb_id): ?>
-                            <img src="<?php echo esc_url(wp_get_attachment_url($thumb_id)); ?>" style="width:160px;height:90px;object-fit:cover;" />
-                        <?php endif; ?>
-                    </div>
-                    <p class="description"><?php _e('미리보기만 표시됩니다. 저장 시 썸네일이 대표 이미지로 등록됩니다.', 'dasom-church'); ?></p>
-                </td>
-            </tr>
-        </table>
+        <div style="background: #fff; padding: 20px; border: 1px solid #ccd0d4; border-radius: 4px;">
+            <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 16px; font-weight: 600;"><?php _e('목회컬럼 정보', 'dasom-church'); ?></h3>
+            
+            <div style="margin-bottom: 20px;">
+                <label for="column_title" style="display: block; margin-bottom: 8px; font-weight: 600;"><?php _e('제목', 'dasom-church'); ?></label>
+                <input type="text" id="column_title" name="column_title" value="<?php echo esc_attr($title); ?>" style="width: 100%; max-width: 500px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" />
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label for="column_content" style="display: block; margin-bottom: 8px; font-weight: 600;"><?php _e('내용', 'dasom-church'); ?></label>
+                <textarea id="column_content" name="column_content" rows="10" style="width: 100%; max-width: 500px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;"><?php echo esc_textarea($content); ?></textarea>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label for="column_top_image" style="display: block; margin-bottom: 8px; font-weight: 600;"><?php _e('상단 이미지', 'dasom-church'); ?></label>
+                <input type="hidden" id="column_top_image" name="column_top_image" value="<?php echo esc_attr($top_image); ?>" />
+                <button type="button" class="button" id="column_top_image_button"><?php _e('이미지 업로드/선택', 'dasom-church'); ?></button>
+                <div id="column_top_image_preview" style="margin-top: 10px;">
+                    <?php if ($top_image): ?>
+                        <img src="<?php echo esc_url(wp_get_attachment_url($top_image)); ?>" style="width: 160px; height: 90px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px;" />
+                    <?php endif; ?>
+                </div>
+                <p style="margin: 5px 0 0 0; color: #666; font-size: 12px;"><?php _e('상단 이미지가 대표 이미지로 설정됩니다.', 'dasom-church'); ?></p>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label for="column_bottom_image" style="display: block; margin-bottom: 8px; font-weight: 600;"><?php _e('하단 이미지', 'dasom-church'); ?></label>
+                <input type="hidden" id="column_bottom_image" name="column_bottom_image" value="<?php echo esc_attr($bottom_image); ?>" />
+                <button type="button" class="button" id="column_bottom_image_button"><?php _e('이미지 업로드/선택', 'dasom-church'); ?></button>
+                <div id="column_bottom_image_preview" style="margin-top: 10px;">
+                    <?php if ($bottom_image): ?>
+                        <img src="<?php echo esc_url(wp_get_attachment_url($bottom_image)); ?>" style="width: 160px; height: 90px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px;" />
+                    <?php endif; ?>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label for="column_youtube" style="display: block; margin-bottom: 8px; font-weight: 600;"><?php _e('YouTube URL', 'dasom-church'); ?></label>
+                <input type="url" id="column_youtube" name="column_youtube" value="<?php echo esc_url($youtube); ?>" style="width: 100%; max-width: 500px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" />
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label for="column_thumb_id" style="display: block; margin-bottom: 8px; font-weight: 600;"><?php _e('YouTube 썸네일', 'dasom-church'); ?></label>
+                <input type="hidden" id="column_thumb_id" name="column_thumb_id" value="<?php echo esc_attr($thumb_id); ?>" />
+                <button type="button" class="button" id="column_thumb_button"><?php _e('썸네일 업로드/선택', 'dasom-church'); ?></button>
+                <button type="button" class="button" id="column_thumb_fetch"><?php _e('YouTube 썸네일 불러오기', 'dasom-church'); ?></button>
+                <div id="column_thumb_preview" style="margin-top: 10px;">
+                    <?php if ($thumb_id): ?>
+                        <img src="<?php echo esc_url(wp_get_attachment_url($thumb_id)); ?>" style="width: 160px; height: 90px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px;" />
+                    <?php endif; ?>
+                </div>
+                <p style="margin: 5px 0 0 0; color: #666; font-size: 12px;"><?php _e('미리보기만 표시됩니다. 저장 시 썸네일이 대표 이미지로 등록됩니다.', 'dasom-church'); ?></p>
+            </div>
+        </div>
         <?php
     }
     
