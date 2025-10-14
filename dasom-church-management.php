@@ -3,7 +3,7 @@
  * Plugin Name: DW Church Management System
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 1.2.0
+ * Version: 1.2.3
  * Author: Dasomweb
  * Author URI: https://dasomweb.com
  * License: GPL v2 or later
@@ -245,7 +245,104 @@ class Dasom_Church_Management {
      * Initialize plugin
      */
     public function dasom_church_init() {
-        // Loader removed - all functionality is in admin classes
+        // Check if migration is needed (one-time for v1.2.0)
+        add_action('admin_init', array($this, 'dasom_church_check_migration'));
+    }
+    
+    /**
+     * Check and run migration if needed
+     */
+    public function dasom_church_check_migration() {
+        $migration_version = get_option('dasom_church_migration_version', '0');
+        
+        // Only run migration once for version 1.2.0
+        if (version_compare($migration_version, '1.2.0', '<')) {
+            $this->dasom_church_run_migration();
+            update_option('dasom_church_migration_version', '1.2.0');
+            
+            // Show admin notice
+            add_action('admin_notices', function() {
+                echo '<div class="notice notice-success is-dismissible">';
+                echo '<p><strong>DW Church Management System:</strong> 데이터 마이그레이션이 완료되었습니다.</p>';
+                echo '</div>';
+            });
+        }
+    }
+    
+    /**
+     * Run database migration
+     */
+    private function dasom_church_run_migration() {
+        global $wpdb;
+        
+        // Meta key mappings: old_key => new_key
+        $meta_key_map = array(
+            'bulletin_date' => 'dw_bulletin_date',
+            'bulletin_pdf' => 'dw_bulletin_pdf',
+            'bulletin_images' => 'dw_bulletin_images',
+            'sermon_title' => 'dw_sermon_title',
+            'sermon_youtube' => 'dw_sermon_youtube',
+            'sermon_scripture' => 'dw_sermon_scripture',
+            'sermon_date' => 'dw_sermon_date',
+            'sermon_thumb_id' => 'dw_sermon_thumb_id',
+            'column_title' => 'dw_column_title',
+            'column_content' => 'dw_column_content',
+            'column_top_image' => 'dw_column_top_image',
+            'column_bottom_image' => 'dw_column_bottom_image',
+            'column_youtube' => 'dw_column_youtube',
+            'column_thumb_id' => 'dw_column_thumb_id',
+            'album_images' => 'dw_album_images',
+            'dasom_album_images' => 'dw_album_images',
+            'album_youtube' => 'dw_album_youtube',
+            'album_thumb_id' => 'dw_album_thumb_id',
+        );
+        
+        foreach ($meta_key_map as $old_key => $new_key) {
+            // Update meta keys directly in database
+            $wpdb->query($wpdb->prepare(
+                "UPDATE {$wpdb->postmeta} pm1
+                LEFT JOIN {$wpdb->postmeta} pm2 ON pm1.post_id = pm2.post_id AND pm2.meta_key = %s
+                SET pm1.meta_key = %s
+                WHERE pm1.meta_key = %s AND pm2.meta_id IS NULL",
+                $new_key,
+                $new_key,
+                $old_key
+            ));
+        }
+        
+        // Migrate taxonomy
+        if (taxonomy_exists('sermon_preacher') && taxonomy_exists('dw_sermon_preacher')) {
+            $old_terms = get_terms(array('taxonomy' => 'sermon_preacher', 'hide_empty' => false));
+            
+            if (!empty($old_terms) && !is_wp_error($old_terms)) {
+                foreach ($old_terms as $old_term) {
+                    $existing = get_term_by('name', $old_term->name, 'dw_sermon_preacher');
+                    
+                    if (!$existing) {
+                        $new_term = wp_insert_term($old_term->name, 'dw_sermon_preacher', array(
+                            'description' => $old_term->description,
+                            'slug' => $old_term->slug,
+                        ));
+                        
+                        if (!is_wp_error($new_term)) {
+                            $posts = get_posts(array(
+                                'post_type' => 'sermon',
+                                'posts_per_page' => -1,
+                                'tax_query' => array(array(
+                                    'taxonomy' => 'sermon_preacher',
+                                    'field' => 'term_id',
+                                    'terms' => $old_term->term_id,
+                                )),
+                            ));
+                            
+                            foreach ($posts as $post) {
+                                wp_set_post_terms($post->ID, array($new_term['term_id']), 'dw_sermon_preacher', false);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
