@@ -339,7 +339,6 @@ class Dasom_Church_Meta_Boxes {
                 <td>
                     <input type="hidden" id="album_thumb_id" name="album_thumb_id" value="<?php echo esc_attr($thumb_id); ?>" />
                     <button type="button" class="button" id="album_thumb_button"><?php _e('썸네일 업로드/선택', 'dasom-church'); ?></button>
-                    <button type="button" class="button" id="album_thumb_fetch"><?php _e('YouTube 썸네일 불러오기', 'dasom-church'); ?></button>
                     <div id="album_thumb_preview" style="margin-top:10px;">
                         <?php if ($thumb_id): ?>
                             <img src="<?php echo esc_url(wp_get_attachment_url($thumb_id)); ?>" style="width:160px;height:90px;object-fit:cover;" />
@@ -567,35 +566,16 @@ class Dasom_Church_Meta_Boxes {
                     $first_image_id = intval($images[0]);
                     if ($first_image_id > 0) {
                         set_post_thumbnail($post_id, $first_image_id);
+                        update_post_meta($post_id, 'album_thumb_id', $first_image_id);
                     }
                 }
             }
         }
         
-        // Set featured image (fallback to manual thumb_id or YouTube)
+        // Set featured image (only manual thumb_id, no YouTube auto-thumbnail)
         $thumb_id = get_post_meta($post_id, 'album_thumb_id', true);
         if ($thumb_id) {
             set_post_thumbnail($post_id, $thumb_id);
-        } elseif (get_post_meta($post_id, 'album_youtube', true)) {
-            // Try to get YouTube thumbnail
-            $youtube = get_post_meta($post_id, 'album_youtube', true);
-            if ($youtube && preg_match('/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([^\&\?\/]+)/', $youtube, $matches)) {
-                $youtube_id = $matches[1];
-                $thumbnail_url = "https://img.youtube.com/vi/{$youtube_id}/maxresdefault.jpg";
-                
-                // Load required files for media_sideload_image
-                if (!function_exists('media_sideload_image')) {
-                    require_once(ABSPATH . 'wp-admin/includes/media.php');
-                    require_once(ABSPATH . 'wp-admin/includes/file.php');
-                    require_once(ABSPATH . 'wp-admin/includes/image.php');
-                }
-                
-                $image_id = media_sideload_image($thumbnail_url, $post_id, '앨범 썸네일', 'id');
-                if (!is_wp_error($image_id)) {
-                    set_post_thumbnail($post_id, $image_id);
-                    update_post_meta($post_id, 'album_thumb_id', $image_id);
-                }
-            }
         }
     }
     
@@ -739,10 +719,10 @@ class Dasom_Church_Meta_Boxes {
                 frame.open();
             });
             
-            // YouTube 썸네일 불러오기
-            $('#sermon_thumb_fetch, #album_thumb_fetch').on('click', function(e) {
+            // YouTube 썸네일 불러오기 (설교만)
+            $('#sermon_thumb_fetch').on('click', function(e) {
                 e.preventDefault();
-                var url = $('#sermon_youtube, #album_youtube').val();
+                var url = $('#sermon_youtube').val();
                 var match = url.match(/(?:youtu\\.be\\/|youtube\\.com\\/(?:watch\\?v=|embed\\/|v\\/))([^\\&\\?\\/]+)/);
                 if (match) {
                     var yid = match[1];
@@ -751,10 +731,10 @@ class Dasom_Church_Meta_Boxes {
                     
                     var img = new Image();
                     img.onload = function() {
-                        $('#sermon_thumb_preview, #album_thumb_preview').html('<img src=\"' + max + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
+                        $('#sermon_thumb_preview').html('<img src=\"' + max + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
                     };
                     img.onerror = function() {
-                        $('#sermon_thumb_preview, #album_thumb_preview').html('<img src=\"' + hq + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
+                        $('#sermon_thumb_preview').html('<img src=\"' + hq + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
                     };
                     img.src = max;
                 } else {
