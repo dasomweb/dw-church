@@ -797,6 +797,15 @@ class Dasom_Church_Meta_Boxes {
         if (in_array($post_type, array('bulletin', 'sermon'))) {
             echo '<style>#titlediv { display: none; }</style>';
         }
+        
+        // Hide Author section for column and sermon post types
+        if (in_array($post_type, array('column', 'sermon'))) {
+            echo '<style>
+                #authordiv {
+                    display: none !important;
+                }
+            </style>';
+        }
     }
     
     /**

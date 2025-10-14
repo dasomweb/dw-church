@@ -76,8 +76,8 @@ class Dasom_Church_Admin {
     public function dasom_church_admin_menu() {
         // Main menu - 고유한 슬러그 사용
         add_menu_page(
-            __('교회관리', 'dasom-church'),
-            __('교회관리', 'dasom-church'),
+            __('DW 교회 관리', 'dasom-church'),
+            __('DW 교회 관리', 'dasom-church'),
             'manage_options',
             'dasom-church-admin',
             array($this, 'dasom_church_dashboard_page'),
