@@ -182,12 +182,12 @@ if (is_wp_error($preachers)) {
                     <td><code>dw_album_images</code></td>
                 </tr>
                 <tr>
-                    <td rowspan="5">🖋 <?php _e('목회컬럼 (column)', 'dasom-church'); ?></td>
-                    <td><?php _e('상단 이미지', 'dasom-church'); ?></td>
+                    <td rowspan="4">🖋 <?php _e('목회컬럼 (column)', 'dasom-church'); ?></td>
+                    <td><?php _e('상단 이미지 ID', 'dasom-church'); ?></td>
                     <td><code>dw_column_top_image</code></td>
                 </tr>
                 <tr>
-                    <td><?php _e('하단 이미지', 'dasom-church'); ?></td>
+                    <td><?php _e('하단 이미지 ID', 'dasom-church'); ?></td>
                     <td><code>dw_column_bottom_image</code></td>
                 </tr>
                 <tr>
@@ -197,10 +197,6 @@ if (is_wp_error($preachers)) {
                 <tr>
                     <td><?php _e('YouTube 썸네일 ID', 'dasom-church'); ?></td>
                     <td><code>dw_column_thumb_id</code></td>
-                </tr>
-                <tr>
-                    <td><?php _e('제목', 'dasom-church'); ?></td>
-                    <td><code>dw_column_title</code></td>
                 </tr>
             </tbody>
         </table>
