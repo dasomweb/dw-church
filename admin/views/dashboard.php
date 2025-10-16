@@ -89,26 +89,22 @@ if (is_wp_error($preachers)) {
                             </form>
                         </td>
                         <td>
+                            <?php $is_default = ($term->name === $default_preacher); ?>
                             <form method="post" style="display:inline;">
                                 <?php wp_nonce_field('sermon_preacher_actions'); ?>
                                 <input type="hidden" name="preacher_action" value="set_default">
                                 <input type="hidden" name="term_id" value="<?php echo (int)$term->term_id; ?>">
-                                <?php 
-                                $is_default = ($term->name === $default_preacher);
-                                submit_button(
-                                    $is_default ? __('기본설교자(현재)', 'dasom-church') : __('기본설교자로 지정', 'dasom-church'),
-                                    $is_default ? 'secondary' : 'primary small',
-                                    '',
-                                    false,
-                                    $is_default ? array('disabled' => 'disabled') : array()
-                                ); 
-                                ?>
+                                <button type="submit" class="button <?php echo $is_default ? 'button-secondary' : 'button-primary'; ?>" <?php echo $is_default ? 'disabled style="cursor:not-allowed;opacity:0.5;"' : ''; ?>>
+                                    <?php echo $is_default ? __('기본 설교자 (현재)', 'dasom-church') : __('기본 설교자로 지정', 'dasom-church'); ?>
+                                </button>
                             </form>
                             <form method="post" style="display:inline;margin-left:8px;" onsubmit="return confirm('<?php _e('삭제하시겠습니까? 이 설교자가 지정된 글의 설교자 값은 비어 있을 수 있습니다.', 'dasom-church'); ?>');">
                                 <?php wp_nonce_field('sermon_preacher_actions'); ?>
                                 <input type="hidden" name="preacher_action" value="delete">
                                 <input type="hidden" name="term_id" value="<?php echo (int)$term->term_id; ?>">
-                                <?php submit_button(__('삭제', 'dasom-church'), 'delete small', '', false); ?>
+                                <button type="submit" class="button button-link-delete" style="color:#b32d2e;">
+                                    <?php _e('삭제', 'dasom-church'); ?>
+                                </button>
                             </form>
                         </td>
                     </tr>
