@@ -109,6 +109,15 @@ class Dasom_Church_Admin {
             'dasom-church-settings',
             array($this, 'dasom_church_settings_page')
         );
+        
+        // Add GitHub Update settings to WordPress Settings menu (독립적)
+        add_options_page(
+            __('DW 설정', 'dasom-church'),
+            __('DW 설정', 'dasom-church'),
+            'manage_options',
+            'dasom-church-github-update',
+            array($this, 'dasom_church_github_update_page')
+        );
     }
     
     /**
@@ -433,6 +442,18 @@ class Dasom_Church_Admin {
         
         // Load settings view
         include DASOM_CHURCH_PLUGIN_PATH . 'admin/views/settings.php';
+    }
+    
+    /**
+     * GitHub Update page (독립적 - WordPress Settings 메뉴)
+     */
+    public function dasom_church_github_update_page() {
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have sufficient permissions to access this page.', 'dasom-church'));
+        }
+        
+        // Load GitHub update view
+        include DASOM_CHURCH_PLUGIN_PATH . 'admin/views/github-update.php';
     }
     
     /**
