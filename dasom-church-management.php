@@ -3,7 +3,7 @@
  * Plugin Name: DW Church Management System
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 1.5.6
+ * Version: 1.5.7
  * Author: Dasomweb
  * Author URI: https://dasomweb.com
  * License: GPL v2 or later
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '1.5.6');
+define('DASOM_CHURCH_VERSION', '1.5.7');
 define('DASOM_CHURCH_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -50,6 +50,11 @@ add_action('init', function() {
         add_action('upgrader_process_complete', 'dasom_church_clear_update_cache', 10, 2);
         add_filter('upgrader_source_selection', 'dasom_church_fix_update_folder', 10, 4);
         add_filter('upgrader_pre_download', 'dasom_church_upgrader_pre_download', 10, 3);
+        
+        // Save active state before update
+        add_filter('upgrader_pre_install', 'dasom_church_save_active_state', 10, 2);
+        // Restore active state after update
+        add_action('upgrader_process_complete', 'dasom_church_restore_active_state', 20, 2);
     }
 });
 
@@ -218,6 +223,45 @@ function dasom_church_plugin_info($result, $action, $args) {
 }
 
 /**
+ * Save plugin active state before update
+ *
+ * @param bool $response
+ * @param array $hook_extra
+ * @return bool
+ */
+function dasom_church_save_active_state($response, $hook_extra) {
+    if (isset($hook_extra['plugin']) && $hook_extra['plugin'] === plugin_basename(__FILE__)) {
+        $active_plugins = get_option('active_plugins', array());
+        if (in_array(plugin_basename(__FILE__), $active_plugins)) {
+            set_transient('dasom_church_was_active', true, 300); // 5 minutes
+        }
+    }
+    return $response;
+}
+
+/**
+ * Restore plugin active state after update
+ *
+ * @param object $upgrader_object Upgrader object
+ * @param array $options Update options
+ */
+function dasom_church_restore_active_state($upgrader_object, $options) {
+    if ($options['action'] === 'update' && $options['type'] === 'plugin') {
+        if (isset($options['plugins'])) {
+            foreach ($options['plugins'] as $plugin) {
+                if ($plugin === plugin_basename(__FILE__)) {
+                    // Check if plugin was active before update
+                    if (get_transient('dasom_church_was_active')) {
+                        delete_transient('dasom_church_was_active');
+                        activate_plugin($plugin, '', false, true);
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
  * Clear update cache after plugin update
  *
  * @param object $upgrader_object Upgrader object
@@ -231,18 +275,6 @@ function dasom_church_clear_update_cache($upgrader_object, $options) {
         // Clear update cache
         delete_transient('dasom_church_update_' . md5($github_username . $github_repo));
         delete_transient('dasom_church_plugin_info_' . md5($github_username . $github_repo));
-        
-        // Auto-activate plugin after update if it was active
-        if (isset($options['plugins'])) {
-            foreach ($options['plugins'] as $plugin) {
-                if ($plugin === plugin_basename(__FILE__)) {
-                    // Plugin was updated, activate it if not already active
-                    if (!is_plugin_active($plugin)) {
-                        activate_plugin($plugin);
-                    }
-                }
-            }
-        }
     }
 }
 
