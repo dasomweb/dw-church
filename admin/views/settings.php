@@ -50,15 +50,6 @@ $github_token = get_option('dw_github_access_token', '');
         </a>
     </h2>
     
-    <div class="notice notice-info inline" style="margin:15px 0;">
-        <p>
-            <strong>💡 <?php _e('GitHub 업데이트 설정:', 'dasom-church'); ?></strong> 
-            <?php _e('플러그인 업데이트에 영향받지 않도록', 'dasom-church'); ?> 
-            <a href="<?php echo esc_url(admin_url('options-general.php?page=dasom-church-github-update')); ?>"><strong><?php _e('WordPress 설정 → DW 설정', 'dasom-church'); ?></strong></a> 
-            <?php _e('으로 이동되었습니다.', 'dasom-church'); ?>
-        </p>
-    </div>
-    
     <form method="post" action="">
         <?php wp_nonce_field('dasom_church_settings_action', 'dasom_church_settings_nonce'); ?>
         
