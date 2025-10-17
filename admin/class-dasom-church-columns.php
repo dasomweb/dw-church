@@ -91,13 +91,8 @@ class Dasom_Church_Columns {
     public function dasom_church_bulletin_column_content($column, $post_id) {
         switch ($column) {
             case 'bulletin_date':
-                // 직접 DB에서 가져오기 (필터 우회)
-                global $wpdb;
-                $date = $wpdb->get_var($wpdb->prepare(
-                    "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'dw_bulletin_date' LIMIT 1",
-                    $post_id
-                ));
-                if ($date && !empty($date)) {
+                $date = get_post_meta($post_id, 'dw_bulletin_date', true);
+                if ($date) {
                     // Format date for display (한글 형식)
                     $timestamp = strtotime($date);
                     if ($timestamp !== false && $timestamp > 0) {
@@ -111,19 +106,13 @@ class Dasom_Church_Columns {
                 break;
                 
             case 'bulletin_pdf':
-                // 직접 DB에서 가져오기 (필터 우회)
-                global $wpdb;
-                $pdf = $wpdb->get_var($wpdb->prepare(
-                    "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'dw_bulletin_pdf' LIMIT 1",
-                    $post_id
-                ));
-                if ($pdf && !empty($pdf)) {
-                    $url = wp_get_attachment_url(intval($pdf));
+                $pdf = get_post_meta($post_id, 'dw_bulletin_pdf', true);
+                if ($pdf) {
+                    $url = wp_get_attachment_url($pdf);
                     if ($url) {
                         echo '<a href="' . esc_url($url) . '" target="_blank">' . __('보기', 'dasom-church') . '</a>';
                     } else {
                         echo '—';
-                        error_log("PDF ID exists but URL not found: Post ID={$post_id}, PDF ID={$pdf}");
                     }
                 } else {
                     echo '—';
@@ -131,17 +120,12 @@ class Dasom_Church_Columns {
                 break;
                 
             case 'bulletin_images':
-                // 직접 DB에서 가져오기 (필터 우회)
-                global $wpdb;
-                $images_json = $wpdb->get_var($wpdb->prepare(
-                    "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'dw_bulletin_images' LIMIT 1",
-                    $post_id
-                ));
-                $images = $images_json ? json_decode($images_json, true) : array();
-                if (!empty($images) && is_array($images)) {
+                $images = get_post_meta($post_id, 'dw_bulletin_images', true);
+                $images = $images ? json_decode($images, true) : array();
+                if (!empty($images)) {
                     echo '<div style="display:flex;gap:5px;flex-wrap:nowrap;overflow-x:auto;max-width:600px;">';
                     foreach ($images as $id) {
-                        $url = wp_get_attachment_url(intval($id));
+                        $url = wp_get_attachment_url($id);
                         if ($url) {
                             echo '<img src="' . esc_url($url) . '" style="width:60px;height:60px;object-fit:cover;" />';
                         }

@@ -106,21 +106,10 @@ class Dasom_Church_Meta_Boxes {
     public function dasom_church_bulletin_meta_box($post) {
         wp_nonce_field('dasom_church_bulletin_meta', 'dasom_church_bulletin_nonce');
         
-        // 직접 DB에서 조회 (Elementor 필터 우회)
-        global $wpdb;
-        $date = $wpdb->get_var($wpdb->prepare(
-            "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'dw_bulletin_date' LIMIT 1",
-            $post->ID
-        ));
-        $pdf = $wpdb->get_var($wpdb->prepare(
-            "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'dw_bulletin_pdf' LIMIT 1",
-            $post->ID
-        ));
-        $images_json = $wpdb->get_var($wpdb->prepare(
-            "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'dw_bulletin_images' LIMIT 1",
-            $post->ID
-        ));
-        $images = $images_json ? json_decode($images_json, true) : array();
+        $date = get_post_meta($post->ID, 'dw_bulletin_date', true);
+        $pdf = get_post_meta($post->ID, 'dw_bulletin_pdf', true);
+        $images = get_post_meta($post->ID, 'dw_bulletin_images', true);
+        $images = $images ? json_decode($images, true) : array();
         $images = is_array($images) ? $images : array();
         ?>
         <table class="form-table">
@@ -174,28 +163,11 @@ class Dasom_Church_Meta_Boxes {
     public function dasom_church_sermon_meta_box($post) {
         wp_nonce_field('dasom_church_sermon_meta', 'dasom_church_sermon_nonce');
         
-        // 직접 DB에서 조회 (Elementor 필터 우회)
-        global $wpdb;
-        $title = $wpdb->get_var($wpdb->prepare(
-            "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'dw_sermon_title' LIMIT 1",
-            $post->ID
-        ));
-        $youtube = $wpdb->get_var($wpdb->prepare(
-            "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'dw_sermon_youtube' LIMIT 1",
-            $post->ID
-        ));
-        $scripture = $wpdb->get_var($wpdb->prepare(
-            "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'dw_sermon_scripture' LIMIT 1",
-            $post->ID
-        ));
-        $sermon_date = $wpdb->get_var($wpdb->prepare(
-            "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'dw_sermon_date' LIMIT 1",
-            $post->ID
-        ));
-        $thumb_id = $wpdb->get_var($wpdb->prepare(
-            "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'dw_sermon_thumb_id' LIMIT 1",
-            $post->ID
-        ));
+        $title = get_post_meta($post->ID, 'dw_sermon_title', true);
+        $youtube = get_post_meta($post->ID, 'dw_sermon_youtube', true);
+        $scripture = get_post_meta($post->ID, 'dw_sermon_scripture', true);
+        $sermon_date = get_post_meta($post->ID, 'dw_sermon_date', true);
+        $thumb_id = get_post_meta($post->ID, 'dw_sermon_thumb_id', true);
         
         // 설교자 드롭다운용 데이터
         $terms = get_terms(array(
@@ -291,32 +263,12 @@ class Dasom_Church_Meta_Boxes {
     public function dasom_church_column_meta_box($post) {
         wp_nonce_field('dasom_church_column_meta', 'dasom_church_column_nonce');
         
-        // 직접 DB에서 조회 (Elementor 필터 우회)
-        global $wpdb;
-        $title = $wpdb->get_var($wpdb->prepare(
-            "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'dw_column_title' LIMIT 1",
-            $post->ID
-        ));
-        $content = $wpdb->get_var($wpdb->prepare(
-            "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'dw_column_content' LIMIT 1",
-            $post->ID
-        ));
-        $top_image = $wpdb->get_var($wpdb->prepare(
-            "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'dw_column_top_image' LIMIT 1",
-            $post->ID
-        ));
-        $bottom_image = $wpdb->get_var($wpdb->prepare(
-            "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'dw_column_bottom_image' LIMIT 1",
-            $post->ID
-        ));
-        $youtube = $wpdb->get_var($wpdb->prepare(
-            "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'dw_column_youtube' LIMIT 1",
-            $post->ID
-        ));
-        $thumb_id = $wpdb->get_var($wpdb->prepare(
-            "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'dw_column_thumb_id' LIMIT 1",
-            $post->ID
-        ));
+        $title = get_post_meta($post->ID, 'dw_column_title', true);
+        $content = get_post_meta($post->ID, 'dw_column_content', true);
+        $top_image = get_post_meta($post->ID, 'dw_column_top_image', true);
+        $bottom_image = get_post_meta($post->ID, 'dw_column_bottom_image', true);
+        $youtube = get_post_meta($post->ID, 'dw_column_youtube', true);
+        $thumb_id = get_post_meta($post->ID, 'dw_column_thumb_id', true);
         ?>
         <div style="background: #fff; padding: 20px; border: 1px solid #ccd0d4; border-radius: 4px;">
             <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 16px; font-weight: 600;"><?php _e('목회컬럼 정보', 'dasom-church'); ?></h3>
@@ -372,22 +324,11 @@ class Dasom_Church_Meta_Boxes {
     public function dasom_church_album_meta_box($post) {
         wp_nonce_field('dasom_church_album_meta', 'dasom_church_album_nonce');
         
-        // 직접 DB에서 조회 (Elementor 필터 우회)
-        global $wpdb;
-        $images_json = $wpdb->get_var($wpdb->prepare(
-            "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'dw_album_images' LIMIT 1",
-            $post->ID
-        ));
-        $images = $images_json ? json_decode($images_json, true) : array();
+        $images = get_post_meta($post->ID, 'dw_album_images', true);
+        $images = $images ? json_decode($images, true) : array();
         $images = is_array($images) ? $images : array();
-        $youtube = $wpdb->get_var($wpdb->prepare(
-            "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'dw_album_youtube' LIMIT 1",
-            $post->ID
-        ));
-        $thumb_id = $wpdb->get_var($wpdb->prepare(
-            "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'dw_album_thumb_id' LIMIT 1",
-            $post->ID
-        ));
+        $youtube = get_post_meta($post->ID, 'dw_album_youtube', true);
+        $thumb_id = get_post_meta($post->ID, 'dw_album_thumb_id', true);
         ?>
         <table class="form-table">
             <tr>

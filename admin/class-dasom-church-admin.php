@@ -457,6 +457,11 @@ class Dasom_Church_Admin {
      * Elementor compatibility - metadata filter
      */
     public function dasom_church_elementor_metadata($value, $post_id, $meta_key, $single) {
+        // 관리자 화면에서는 필터 적용하지 않음 (원본 데이터 사용)
+        if (is_admin()) {
+            return $value;
+        }
+        
         global $wpdb;
         
         // PDF 첨부 ID → URL 변환
