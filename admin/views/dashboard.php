@@ -197,8 +197,15 @@ if (is_wp_error($preachers)) {
             </tbody>
         </table>
         
-        <p style="color:#666;">
-            <?php _e('※ JSON 배열 형태(album_images)는 Elementor 기본 Custom Field로는 그대로 출력되지 않습니다. Shortcode 또는 ACF Gallery 필드로 변환해서 사용하세요.', 'dasom-church'); ?>
+        <p style="margin-top:20px;padding:12px;background:#f0f0f1;border-left:4px solid #2271b1;">
+            <strong><?php _e('💡 Elementor 사용 팁:', 'dasom-church'); ?></strong><br>
+            <?php _e('Dynamic Tags → Post → Post Custom Field에서 위 키를 입력하여 사용하세요.', 'dasom-church'); ?><br><br>
+            <strong><?php _e('📎 이미지/PDF ID를 URL로 변환:', 'dasom-church'); ?></strong><br>
+            • <?php _e('이미지 URL:', 'dasom-church'); ?> <code>wp_get_attachment_image_url( get_post_meta( get_the_ID(), 'dw_column_top_image', true ), 'full' )</code><br>
+            • <?php _e('PDF URL:', 'dasom-church'); ?> <code>wp_get_attachment_url( get_post_meta( get_the_ID(), 'dw_bulletin_pdf', true ) )</code><br>
+            • <?php _e('썸네일 URL:', 'dasom-church'); ?> <code>wp_get_attachment_image_url( get_post_meta( get_the_ID(), 'dw_sermon_thumb_id', true ), 'large' )</code><br><br>
+            <strong><?php _e('⚠️ JSON 배열 데이터:', 'dasom-church'); ?></strong><br>
+            <?php _e('dw_bulletin_images, dw_album_images는 JSON 배열 형태로 저장되어 Elementor 기본 Custom Field로는 그대로 출력되지 않습니다. Shortcode 또는 커스텀 PHP 코드로 처리하세요.', 'dasom-church'); ?>
         </p>
         
         <!-- 교회설정 커스텀 필드 안내 -->
