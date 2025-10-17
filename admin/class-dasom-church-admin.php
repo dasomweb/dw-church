@@ -48,9 +48,6 @@ class Dasom_Church_Admin {
         add_action('admin_enqueue_scripts', array($this, 'dasom_church_admin_scripts'));
         add_action('admin_init', array($this, 'dasom_church_handle_settings_save'));
         
-        // 디버깅: 플러그인이 로드되었는지 확인
-        add_action('admin_notices', array($this, 'dasom_church_debug_notice'));
-        
         // Custom Post Types
         add_action('init', array($this, 'dasom_church_register_post_types'));
         add_action('init', array($this, 'dasom_church_register_taxonomies'));
@@ -531,15 +528,6 @@ class Dasom_Church_Admin {
         global $post_type;
         if (in_array($post_type, array('bulletin', 'sermon'))) {
             echo '<style>#titlediv { display: none; }</style>';
-        }
-    }
-    
-    /**
-     * Debug notice
-     */
-    public function dasom_church_debug_notice() {
-        if (current_user_can('manage_options') && isset($_GET['page']) && strpos($_GET['page'], 'dasom-church') !== false) {
-            echo '<div class="notice notice-info"><p>Dasom Church 플러그인이 정상적으로 로드되었습니다.</p></div>';
         }
     }
     

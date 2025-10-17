@@ -3,7 +3,7 @@
  * Plugin Name: DW Church Management System
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 1.5.5
+ * Version: 1.5.6
  * Author: Dasomweb
  * Author URI: https://dasomweb.com
  * License: GPL v2 or later
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '1.5.5');
+define('DASOM_CHURCH_VERSION', '1.5.6');
 define('DASOM_CHURCH_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -231,6 +231,18 @@ function dasom_church_clear_update_cache($upgrader_object, $options) {
         // Clear update cache
         delete_transient('dasom_church_update_' . md5($github_username . $github_repo));
         delete_transient('dasom_church_plugin_info_' . md5($github_username . $github_repo));
+        
+        // Auto-activate plugin after update if it was active
+        if (isset($options['plugins'])) {
+            foreach ($options['plugins'] as $plugin) {
+                if ($plugin === plugin_basename(__FILE__)) {
+                    // Plugin was updated, activate it if not already active
+                    if (!is_plugin_active($plugin)) {
+                        activate_plugin($plugin);
+                    }
+                }
+            }
+        }
     }
 }
 
