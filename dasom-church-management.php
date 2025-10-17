@@ -3,7 +3,7 @@
  * Plugin Name: DW Church Management System
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 1.4.0
+ * Version: 1.4.1
  * Author: Dasomweb
  * Author URI: https://dasomweb.com
  * License: GPL v2 or later
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '1.4.0');
+define('DASOM_CHURCH_VERSION', '1.4.1');
 define('DASOM_CHURCH_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -114,17 +114,20 @@ function dasom_church_check_for_updates($transient) {
         set_transient($cache_key, $release, 12 * HOUR_IN_SECONDS);
     }
     
-    if (isset($release['tag_name']) && isset($release['zipball_url'])) {
+    if (isset($release['tag_name'])) {
         $latest_version = ltrim($release['tag_name'], 'v');
         $current_version = DASOM_CHURCH_VERSION;
         
         if (version_compare($latest_version, $current_version, '>')) {
+            // Use GitHub archive URL instead of zipball_url for better compatibility
+            $download_url = "https://github.com/{$github_username}/{$github_repo}/archive/refs/tags/{$release['tag_name']}.zip";
+            
             $plugin_data = array(
                 'slug' => dirname($plugin_slug),
                 'plugin' => $plugin_slug,
                 'new_version' => $latest_version,
                 'url' => "https://github.com/{$github_username}/{$github_repo}",
-                'package' => $release['zipball_url'],
+                'package' => $download_url,
                 'tested' => '6.8',
                 'requires_php' => '7.4',
                 'compatibility' => new stdClass(),
@@ -181,6 +184,9 @@ function dasom_church_plugin_info($result, $action, $args) {
     if (isset($release['tag_name'])) {
         $latest_version = ltrim($release['tag_name'], 'v');
         
+        // Use GitHub archive URL instead of zipball_url for better compatibility
+        $download_url = "https://github.com/{$github_username}/{$github_repo}/archive/refs/tags/{$release['tag_name']}.zip";
+        
         $plugin_info = new stdClass();
         $plugin_info->name = 'DW Church Management System';
         $plugin_info->slug = $plugin_slug;
@@ -191,7 +197,7 @@ function dasom_church_plugin_info($result, $action, $args) {
         $plugin_info->requires = '5.8';
         $plugin_info->requires_php = '7.4';
         $plugin_info->last_updated = $release['published_at'];
-        $plugin_info->download_link = $release['zipball_url'];
+        $plugin_info->download_link = $download_url;
         
         // Sections
         $plugin_info->sections = array(
