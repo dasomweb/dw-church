@@ -431,12 +431,17 @@ class Dasom_Church_Meta_Boxes {
     private function dasom_church_save_bulletin_meta($post_id) {
         if (!isset($_POST['dasom_church_bulletin_nonce']) || 
             !wp_verify_nonce($_POST['dasom_church_bulletin_nonce'], 'dasom_church_bulletin_meta')) {
+            error_log('Bulletin meta save: Nonce verification failed');
             return;
         }
         
         // Save meta fields
         if (isset($_POST['dw_bulletin_date'])) {
-            update_post_meta($post_id, 'dw_bulletin_date', sanitize_text_field($_POST['dw_bulletin_date']));
+            $date = sanitize_text_field($_POST['dw_bulletin_date']);
+            update_post_meta($post_id, 'dw_bulletin_date', $date);
+            error_log("Bulletin date saved: Post ID={$post_id}, Date={$date}");
+        } else {
+            error_log("Bulletin date NOT received in POST data");
         }
         
         if (isset($_POST['dw_bulletin_pdf'])) {

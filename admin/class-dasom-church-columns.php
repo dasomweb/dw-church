@@ -98,10 +98,10 @@ class Dasom_Church_Columns {
                     $post_id
                 ));
                 if ($date && !empty($date)) {
-                    // Format date for display (YYYY-MM-DD)
+                    // Format date for display (한글 형식)
                     $timestamp = strtotime($date);
                     if ($timestamp !== false && $timestamp > 0) {
-                        echo esc_html(date('Y-m-d', $timestamp));
+                        echo esc_html(date_i18n('Y년 n월 j일', $timestamp));
                     } else {
                         echo esc_html($date);
                     }
