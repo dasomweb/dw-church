@@ -3,7 +3,7 @@
  * Plugin Name: DW Church Management System
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 1.5.8
+ * Version: 1.5.9
  * Author: Dasomweb
  * Author URI: https://dasomweb.com
  * License: GPL v2 or later
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '1.5.8');
+define('DASOM_CHURCH_VERSION', '1.5.9');
 define('DASOM_CHURCH_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -516,8 +516,8 @@ class Dasom_Church_Management {
         
         // Create default preacher
         $default_preacher = __('담임목사', 'dasom-church');
-        if (!term_exists($default_preacher, 'sermon_preacher')) {
-            wp_insert_term($default_preacher, 'sermon_preacher');
+        if (!term_exists($default_preacher, 'dw_sermon_preacher')) {
+            wp_insert_term($default_preacher, 'dw_sermon_preacher');
         }
         update_option('default_sermon_preacher', $default_preacher);
         

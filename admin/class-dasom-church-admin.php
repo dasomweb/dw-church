@@ -311,8 +311,8 @@ class Dasom_Church_Admin {
         }
         
         $default_preacher = get_option('default_sermon_preacher', __('담임목사', 'dasom-church'));
-        if ($default_preacher && !term_exists($default_preacher, 'sermon_preacher')) {
-            $result = wp_insert_term($default_preacher, 'sermon_preacher');
+        if ($default_preacher && !term_exists($default_preacher, 'dw_sermon_preacher')) {
+            $result = wp_insert_term($default_preacher, 'dw_sermon_preacher');
             if (is_wp_error($result)) {
                 error_log('Failed to create default preacher: ' . $result->get_error_message());
             }
@@ -503,18 +503,18 @@ class Dasom_Church_Admin {
         }
         
         // 설교자 taxonomy → 커스텀필드처럼 노출
-        if ($meta_key === 'sermon_preacher') {
-            $names = wp_get_post_terms($post_id, 'sermon_preacher', array('fields' => 'names'));
+        if ($meta_key === 'sermon_preacher' || $meta_key === 'dw_sermon_preacher') {
+            $names = wp_get_post_terms($post_id, 'dw_sermon_preacher', array('fields' => 'names'));
             return (!is_wp_error($names) && !empty($names)) ? implode(', ', $names) : '';
         }
         
-        if ($meta_key === 'sermon_preacher_ids') {
-            $ids = wp_get_post_terms($post_id, 'sermon_preacher', array('fields' => 'ids'));
+        if ($meta_key === 'sermon_preacher_ids' || $meta_key === 'dw_sermon_preacher_ids') {
+            $ids = wp_get_post_terms($post_id, 'dw_sermon_preacher', array('fields' => 'ids'));
             return (!is_wp_error($ids) && !empty($ids)) ? implode(',', array_map('intval', $ids)) : '';
         }
         
-        if ($meta_key === 'sermon_preacher_slugs') {
-            $slugs = wp_get_post_terms($post_id, 'sermon_preacher', array('fields' => 'slugs'));
+        if ($meta_key === 'sermon_preacher_slugs' || $meta_key === 'dw_sermon_preacher_slugs') {
+            $slugs = wp_get_post_terms($post_id, 'dw_sermon_preacher', array('fields' => 'slugs'));
             return (!is_wp_error($slugs) && !empty($slugs)) ? implode(',', $slugs) : '';
         }
         
