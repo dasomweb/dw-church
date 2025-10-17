@@ -3,7 +3,7 @@
  * Plugin Name: DW Church Management System
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 1.4.2
+ * Version: 1.5.0
  * Author: Dasomweb
  * Author URI: https://dasomweb.com
  * License: GPL v2 or later
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '1.4.2');
+define('DASOM_CHURCH_VERSION', '1.5.0');
 define('DASOM_CHURCH_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -49,6 +49,7 @@ add_action('init', function() {
         add_filter('plugins_api', 'dasom_church_plugin_info', 20, 3);
         add_action('upgrader_process_complete', 'dasom_church_clear_update_cache', 10, 2);
         add_filter('upgrader_source_selection', 'dasom_church_fix_update_folder', 10, 4);
+        add_filter('upgrader_pre_download', 'dasom_church_upgrader_pre_download', 10, 3);
     }
 });
 
@@ -115,13 +116,13 @@ function dasom_church_check_for_updates($transient) {
         set_transient($cache_key, $release, 12 * HOUR_IN_SECONDS);
     }
     
-    if (isset($release['tag_name'])) {
+    if (isset($release['tag_name']) && isset($release['zipball_url'])) {
         $latest_version = ltrim($release['tag_name'], 'v');
         $current_version = DASOM_CHURCH_VERSION;
         
         if (version_compare($latest_version, $current_version, '>')) {
-            // Use GitHub archive URL instead of zipball_url for better compatibility
-            $download_url = "https://github.com/{$github_username}/{$github_repo}/archive/refs/tags/{$release['tag_name']}.zip";
+            // Use GitHub API zipball_url for private repository support
+            $download_url = $release['zipball_url'];
             
             $plugin_data = array(
                 'slug' => dirname($plugin_slug),
@@ -182,11 +183,11 @@ function dasom_church_plugin_info($result, $action, $args) {
     
     $release = json_decode(wp_remote_retrieve_body($response), true);
     
-    if (isset($release['tag_name'])) {
+    if (isset($release['tag_name']) && isset($release['zipball_url'])) {
         $latest_version = ltrim($release['tag_name'], 'v');
         
-        // Use GitHub archive URL instead of zipball_url for better compatibility
-        $download_url = "https://github.com/{$github_username}/{$github_repo}/archive/refs/tags/{$release['tag_name']}.zip";
+        // Use GitHub API zipball_url for private repository support
+        $download_url = $release['zipball_url'];
         
         $plugin_info = new stdClass();
         $plugin_info->name = 'DW Church Management System';
@@ -231,6 +232,69 @@ function dasom_church_clear_update_cache($upgrader_object, $options) {
         delete_transient('dasom_church_update_' . md5($github_username . $github_repo));
         delete_transient('dasom_church_plugin_info_' . md5($github_username . $github_repo));
     }
+}
+
+/**
+ * Add GitHub authentication to download requests for private repositories
+ *
+ * @param bool $reply Whether to bail without returning the package
+ * @param string $package The package file name
+ * @param WP_Upgrader $upgrader The WP_Upgrader instance
+ * @return bool|string False to continue, string path to downloaded package
+ */
+function dasom_church_upgrader_pre_download($reply, $package, $upgrader) {
+    // Check if this is a GitHub API zipball URL
+    if (strpos($package, 'api.github.com') === false || strpos($package, 'zipball') === false) {
+        return $reply;
+    }
+    
+    // Check if this is our plugin
+    if (strpos($package, 'dasomweb/dasom-church-management-system') === false) {
+        return $reply;
+    }
+    
+    // Get GitHub token
+    $github_token = get_option('dw_github_access_token', '');
+    
+    if (empty($github_token)) {
+        return new WP_Error(
+            'no_github_token',
+            __('GitHub Personal Access Token이 필요합니다. DW 교회관리 → 설정에서 토큰을 입력해주세요.', 'dasom-church')
+        );
+    }
+    
+    // Download with authentication using wp_remote_get
+    $response = wp_remote_get($package, array(
+        'timeout' => 300,
+        'headers' => array(
+            'Authorization' => 'token ' . $github_token,
+            'Accept' => 'application/vnd.github.v3+json',
+            'User-Agent' => 'WordPress/' . get_bloginfo('version') . '; ' . get_bloginfo('url')
+        )
+    ));
+    
+    if (is_wp_error($response)) {
+        return $response;
+    }
+    
+    $code = wp_remote_retrieve_response_code($response);
+    if ($code !== 200) {
+        return new WP_Error('download_failed', sprintf(__('다운로드 실패: HTTP %d', 'dasom-church'), $code));
+    }
+    
+    // Save to temporary file
+    $tmpfname = wp_tempnam($package);
+    if (!$tmpfname) {
+        return new WP_Error('temp_file_failed', __('임시 파일 생성 실패', 'dasom-church'));
+    }
+    
+    $body = wp_remote_retrieve_body($response);
+    if (file_put_contents($tmpfname, $body) === false) {
+        @unlink($tmpfname);
+        return new WP_Error('file_write_failed', __('파일 쓰기 실패', 'dasom-church'));
+    }
+    
+    return $tmpfname;
 }
 
 /**
