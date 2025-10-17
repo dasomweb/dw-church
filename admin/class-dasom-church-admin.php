@@ -460,10 +460,12 @@ class Dasom_Church_Admin {
         global $wpdb;
         
         // PDF 첨부 ID → URL 변환
-        if ($meta_key === 'bulletin_pdf') {
+        if ($meta_key === 'bulletin_pdf' || $meta_key === 'dw_bulletin_pdf') {
+            // dw_bulletin_pdf 우선 확인
+            $actual_key = $meta_key === 'bulletin_pdf' ? 'dw_bulletin_pdf' : $meta_key;
             $raw = $wpdb->get_var($wpdb->prepare(
                 "SELECT meta_value FROM $wpdb->postmeta WHERE post_id=%d AND meta_key=%s LIMIT 1",
-                $post_id, $meta_key
+                $post_id, $actual_key
             ));
             if ($raw) {
                 $url = wp_get_attachment_url(intval($raw));
@@ -473,10 +475,11 @@ class Dasom_Church_Admin {
         }
         
         // bulletin_date → YYYY년 M월 D일 형식으로 변환
-        if ($meta_key === 'bulletin_date') {
+        if ($meta_key === 'bulletin_date' || $meta_key === 'dw_bulletin_date') {
+            $actual_key = $meta_key === 'bulletin_date' ? 'dw_bulletin_date' : $meta_key;
             $raw = $wpdb->get_var($wpdb->prepare(
                 "SELECT meta_value FROM $wpdb->postmeta WHERE post_id=%d AND meta_key=%s LIMIT 1",
-                $post_id, $meta_key
+                $post_id, $actual_key
             ));
             if ($raw) {
                 $ts = strtotime($raw);
@@ -488,10 +491,14 @@ class Dasom_Church_Admin {
         }
         
         // JSON 갤러리 → 쉼표 구분 문자열
-        if (in_array($meta_key, array('bulletin_images', 'album_images'), true)) {
+        if (in_array($meta_key, array('bulletin_images', 'album_images', 'dw_bulletin_images', 'dw_album_images'), true)) {
+            $actual_key = $meta_key;
+            if ($meta_key === 'bulletin_images') $actual_key = 'dw_bulletin_images';
+            if ($meta_key === 'album_images') $actual_key = 'dw_album_images';
+            
             $raw = $wpdb->get_var($wpdb->prepare(
                 "SELECT meta_value FROM $wpdb->postmeta WHERE post_id=%d AND meta_key=%s LIMIT 1",
-                $post_id, $meta_key
+                $post_id, $actual_key
             ));
             if ($raw) {
                 $decoded = json_decode($raw, true);
