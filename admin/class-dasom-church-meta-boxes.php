@@ -724,16 +724,43 @@ class Dasom_Church_Meta_Boxes {
                 // 앨범 이미지 제거 시 Featured Image는 PHP에서 처리 (JavaScript에서는 thumb_id 건드리지 않음)
             });
             
-            // 정렬
-            $('#dw_bulletin_images_preview, #dw_album_images_preview').sortable({
+            // 주보 이미지 정렬 (성능 최적화)
+            $('#dw_bulletin_images_preview').sortable({
+                items: 'li',
+                cursor: 'move',
+                opacity: 0.8,
+                placeholder: 'sortable-placeholder',
+                tolerance: 'pointer',
+                distance: 5,
+                delay: 100,
+                forceHelperSize: true,
+                forcePlaceholderSize: true,
                 update: function() {
                     var ids = [];
                     $(this).find('li').each(function() {
                         ids.push($(this).data('id'));
                     });
-                    $('#dw_bulletin_images, #dw_album_images').val(JSON.stringify(ids));
-                    
-                    // 앨범 이미지 순서 변경 시 Featured Image는 PHP에서 처리 (JavaScript에서는 thumb_id 건드리지 않음)
+                    $('#dw_bulletin_images').val(JSON.stringify(ids));
+                }
+            });
+            
+            // 앨범 이미지 정렬 (성능 최적화)
+            $('#dw_album_images_preview').sortable({
+                items: 'li',
+                cursor: 'move',
+                opacity: 0.8,
+                placeholder: 'sortable-placeholder',
+                tolerance: 'pointer',
+                distance: 5,
+                delay: 100,
+                forceHelperSize: true,
+                forcePlaceholderSize: true,
+                update: function() {
+                    var ids = [];
+                    $(this).find('li').each(function() {
+                        ids.push($(this).data('id'));
+                    });
+                    $('#dw_album_images').val(JSON.stringify(ids));
                 }
             });
             
@@ -861,6 +888,37 @@ class Dasom_Church_Meta_Boxes {
                 #dw_sermon_preacherdiv,
                 #tagsdiv-dw_sermon_preacher {
                     display: none !important;
+                }
+            </style>';
+        }
+        
+        // Sortable placeholder styles for smooth drag & drop
+        if (in_array($post_type, array('bulletin', 'album'))) {
+            echo '<style>
+                .sortable-placeholder {
+                    background: #f0f0f1 !important;
+                    border: 2px dashed #8c8f94 !important;
+                    visibility: visible !important;
+                    width: 100px !important;
+                    height: 100px !important;
+                    margin: 0 !important;
+                    display: inline-block !important;
+                }
+                
+                #dw_bulletin_images_preview li,
+                #dw_album_images_preview li {
+                    cursor: move !important;
+                    transition: none !important;
+                }
+                
+                #dw_bulletin_images_preview li:hover,
+                #dw_album_images_preview li:hover {
+                    opacity: 0.8;
+                }
+                
+                .ui-sortable-helper {
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+                    transform: rotate(2deg) !important;
                 }
             </style>';
         }
