@@ -3,7 +3,7 @@
  * Plugin Name: DW Church Management System
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 1.4.1
+ * Version: 1.4.2
  * Author: Dasomweb
  * Author URI: https://dasomweb.com
  * License: GPL v2 or later
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '1.4.1');
+define('DASOM_CHURCH_VERSION', '1.4.2');
 define('DASOM_CHURCH_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -48,6 +48,7 @@ add_action('init', function() {
         add_filter('pre_set_site_transient_update_plugins', 'dasom_church_check_for_updates');
         add_filter('plugins_api', 'dasom_church_plugin_info', 20, 3);
         add_action('upgrader_process_complete', 'dasom_church_clear_update_cache', 10, 2);
+        add_filter('upgrader_source_selection', 'dasom_church_fix_update_folder', 10, 4);
     }
 });
 
@@ -233,6 +234,44 @@ function dasom_church_clear_update_cache($upgrader_object, $options) {
 }
 
 /**
+ * Fix GitHub archive folder name during update
+ *
+ * GitHub archives extract to {repo-name}-{tag}/ but WordPress expects the plugin folder name
+ * This function renames the extracted folder to match the expected plugin folder name
+ *
+ * @param string $source File source location
+ * @param string $remote_source Remote file source location
+ * @param WP_Upgrader $upgrader WP_Upgrader instance
+ * @param array $hook_extra Extra arguments passed to hooked filters
+ * @return string|WP_Error Modified source location or WP_Error on failure
+ */
+function dasom_church_fix_update_folder($source, $remote_source, $upgrader, $hook_extra) {
+    global $wp_filesystem;
+    
+    // Check if this is our plugin
+    $plugin_slug = 'dasom-church-management-system';
+    
+    if (!isset($hook_extra['plugin']) || dirname($hook_extra['plugin']) !== $plugin_slug) {
+        return $source;
+    }
+    
+    // Get the expected folder name
+    $new_source = trailingslashit($remote_source) . $plugin_slug . '/';
+    
+    // If the folder already has the correct name, return it
+    if ($source === $new_source) {
+        return $source;
+    }
+    
+    // Rename the folder
+    if ($wp_filesystem->move($source, $new_source)) {
+        return $new_source;
+    }
+    
+    return new WP_Error('rename_failed', __('Unable to rename the update folder.', 'dasom-church'));
+}
+
+/**
  * Force check for updates (for debugging)
  * Usage: Add ?dasom_check_update=1 to admin URL
  */
@@ -241,8 +280,23 @@ add_action('admin_init', function() {
         $github_username = 'dasomweb';
         $github_repo = 'dasom-church-management-system';
         
+        // Delete our custom transients
         delete_transient('dasom_church_update_' . md5($github_username . $github_repo));
         delete_transient('dasom_church_plugin_info_' . md5($github_username . $github_repo));
+        
+        // Delete WordPress update transients to force refresh
+        delete_site_transient('update_plugins');
+        delete_transient('update_plugins');
+        
+        // Force WordPress to check for updates
+        wp_update_plugins();
+        
+        // Add admin notice
+        add_action('admin_notices', function() {
+            echo '<div class="notice notice-success is-dismissible"><p>';
+            echo esc_html__('업데이트 캐시가 삭제되었습니다. 플러그인 목록을 새로고침하세요.', 'dasom-church');
+            echo '</p></div>';
+        });
         
         wp_redirect(admin_url('plugins.php'));
         exit;
