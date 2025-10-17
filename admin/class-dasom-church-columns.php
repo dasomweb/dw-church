@@ -91,11 +91,20 @@ class Dasom_Church_Columns {
     public function dasom_church_bulletin_column_content($column, $post_id) {
         switch ($column) {
             case 'bulletin_date':
-                $date = get_post_meta($post_id, 'dw_bulletin_date', true);
-                if ($date) {
-                    // Format date for display
-                    $formatted_date = date_i18n('Y-m-d', strtotime($date));
-                    echo esc_html($formatted_date);
+                // 직접 DB에서 가져오기 (필터 우회)
+                global $wpdb;
+                $date = $wpdb->get_var($wpdb->prepare(
+                    "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'dw_bulletin_date' LIMIT 1",
+                    $post_id
+                ));
+                if ($date && !empty($date)) {
+                    // Format date for display (YYYY-MM-DD)
+                    $timestamp = strtotime($date);
+                    if ($timestamp !== false && $timestamp > 0) {
+                        echo esc_html(date('Y-m-d', $timestamp));
+                    } else {
+                        echo esc_html($date);
+                    }
                 } else {
                     echo '—';
                 }

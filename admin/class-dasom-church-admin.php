@@ -474,9 +474,9 @@ class Dasom_Church_Admin {
             return '';
         }
         
-        // bulletin_date → YYYY년 M월 D일 형식으로 변환
-        if ($meta_key === 'bulletin_date' || $meta_key === 'dw_bulletin_date') {
-            $actual_key = $meta_key === 'bulletin_date' ? 'dw_bulletin_date' : $meta_key;
+        // bulletin_date → YYYY년 M월 D일 형식으로 변환 (Elementor용만)
+        if ($meta_key === 'bulletin_date_formatted' || $meta_key === 'dw_bulletin_date_formatted') {
+            $actual_key = 'dw_bulletin_date';
             $raw = $wpdb->get_var($wpdb->prepare(
                 "SELECT meta_value FROM $wpdb->postmeta WHERE post_id=%d AND meta_key=%s LIMIT 1",
                 $post_id, $actual_key

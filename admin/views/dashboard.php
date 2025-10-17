@@ -131,9 +131,13 @@ if (is_wp_error($preachers)) {
             </thead>
             <tbody>
                 <tr>
-                    <td rowspan="3">📖 <?php _e('교회주보 (bulletin)', 'dasom-church'); ?></td>
-                    <td><?php _e('주보 날짜', 'dasom-church'); ?></td>
+                    <td rowspan="4">📖 <?php _e('교회주보 (bulletin)', 'dasom-church'); ?></td>
+                    <td><?php _e('주보 날짜 (YYYY-MM-DD)', 'dasom-church'); ?></td>
                     <td><code>dw_bulletin_date</code></td>
+                </tr>
+                <tr>
+                    <td><?php _e('주보 날짜 (한글)', 'dasom-church'); ?></td>
+                    <td><code>dw_bulletin_date_formatted</code></td>
                 </tr>
                 <tr>
                     <td><?php _e('주보 PDF 첨부 ID', 'dasom-church'); ?></td>
