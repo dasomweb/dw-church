@@ -841,8 +841,8 @@ class Dasom_Church_Meta_Boxes {
             echo '<style>#titlediv { display: none; }</style>';
         }
         
-        // Hide Author section for column and sermon post types
-        if (in_array($post_type, array('column', 'sermon'))) {
+        // Hide Author section for bulletin, column and sermon post types
+        if (in_array($post_type, array('bulletin', 'column', 'sermon'))) {
             echo '<style>
                 #authordiv {
                     display: none !important;
