@@ -3,7 +3,7 @@
  * Plugin Name: DW Church Management System
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 1.5.0
+ * Version: 1.5.2
  * Author: Dasomweb
  * Author URI: https://dasomweb.com
  * License: GPL v2 or later
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '1.5.0');
+define('DASOM_CHURCH_VERSION', '1.5.2');
 define('DASOM_CHURCH_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -259,7 +259,8 @@ function dasom_church_upgrader_pre_download($reply, $package, $upgrader) {
     if (empty($github_token)) {
         return new WP_Error(
             'no_github_token',
-            __('GitHub Personal Access Token이 필요합니다. DW 교회관리 → 설정에서 토큰을 입력해주세요.', 'dasom-church')
+            __('❌ GitHub Personal Access Token이 필요합니다. DW 교회관리 → 설정에서 토큰을 입력해주세요.', 'dasom-church') . '<br>' .
+            sprintf(__('현재 Token 상태: %s', 'dasom-church'), empty($github_token) ? '없음' : '있음')
         );
     }
     
@@ -274,24 +275,37 @@ function dasom_church_upgrader_pre_download($reply, $package, $upgrader) {
     ));
     
     if (is_wp_error($response)) {
-        return $response;
+        return new WP_Error(
+            'download_error',
+            sprintf(__('❌ 다운로드 오류: %s', 'dasom-church'), $response->get_error_message())
+        );
     }
     
     $code = wp_remote_retrieve_response_code($response);
     if ($code !== 200) {
-        return new WP_Error('download_failed', sprintf(__('다운로드 실패: HTTP %d', 'dasom-church'), $code));
+        $error_body = wp_remote_retrieve_body($response);
+        $error_data = json_decode($error_body, true);
+        $error_message = isset($error_data['message']) ? $error_data['message'] : $error_body;
+        
+        return new WP_Error(
+            'download_failed',
+            sprintf(__('❌ 다운로드 실패: HTTP %d', 'dasom-church'), $code) . '<br>' .
+            sprintf(__('URL: %s', 'dasom-church'), esc_url($package)) . '<br>' .
+            sprintf(__('Token: %s...', 'dasom-church'), substr($github_token, 0, 10)) . '<br>' .
+            sprintf(__('오류: %s', 'dasom-church'), esc_html(substr($error_message, 0, 200)))
+        );
     }
     
     // Save to temporary file
     $tmpfname = wp_tempnam($package);
     if (!$tmpfname) {
-        return new WP_Error('temp_file_failed', __('임시 파일 생성 실패', 'dasom-church'));
+        return new WP_Error('temp_file_failed', __('❌ 임시 파일 생성 실패', 'dasom-church'));
     }
     
     $body = wp_remote_retrieve_body($response);
     if (file_put_contents($tmpfname, $body) === false) {
         @unlink($tmpfname);
-        return new WP_Error('file_write_failed', __('파일 쓰기 실패', 'dasom-church'));
+        return new WP_Error('file_write_failed', __('❌ 파일 쓰기 실패', 'dasom-church'));
     }
     
     return $tmpfname;

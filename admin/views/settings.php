@@ -194,23 +194,36 @@ $github_token = get_option('dw_github_access_token', '');
         </table>
         
         <h2><?php echo esc_html__('GitHub 업데이트 설정', 'dasom-church'); ?></h2>
+        
+        <?php if (defined('DW_GITHUB_TOKEN')): ?>
+            <div class="notice notice-success inline" style="margin:15px 0;padding:12px;">
+                <p>
+                    <strong>✅ <?php echo esc_html__('wp-config.php에 GitHub Token이 설정되어 있습니다.', 'dasom-church'); ?></strong><br>
+                    <?php echo esc_html__('아래 필드는 무시되며, wp-config.php의 DW_GITHUB_TOKEN 상수가 사용됩니다.', 'dasom-church'); ?>
+                </p>
+            </div>
+        <?php endif; ?>
+        
         <table class="form-table">
             <tr>
                 <th scope="row">
                     <label for="dw_github_access_token"><?php echo esc_html__('GitHub Personal Access Token', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="password" id="dw_github_access_token" name="dw_github_access_token" value="<?php echo esc_attr($github_token); ?>" class="regular-text" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
+                    <input type="password" id="dw_github_access_token" name="dw_github_access_token" value="<?php echo esc_attr($github_token); ?>" class="regular-text" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" <?php echo defined('DW_GITHUB_TOKEN') ? 'disabled' : ''; ?> />
                     <p class="description">
+                        <strong style="color:#d63638;">⚠️ <?php echo esc_html__('권장: wp-config.php에 상수로 정의', 'dasom-church'); ?></strong><br>
+                        <?php echo esc_html__('플러그인 업데이트 시에도 Token이 유지되도록 wp-config.php에 정의하는 것을 권장합니다:', 'dasom-church'); ?><br>
+                        <code style="background:#f0f0f1;padding:8px;display:inline-block;margin:8px 0;">define('DW_GITHUB_TOKEN', 'ghp_your_token_here');</code><br><br>
                         <?php echo esc_html__('비공개(Private) GitHub 저장소에서 업데이트를 받으려면 Personal Access Token이 필요합니다.', 'dasom-church'); ?><br>
-                        <?php echo esc_html__('공개(Public) 저장소의 경우 이 필드를 비워두세요.', 'dasom-church'); ?><br>
                         <strong><?php echo esc_html__('토큰 생성 방법:', 'dasom-church'); ?></strong><br>
                         1. GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)<br>
                         2. "Generate new token" → "Generate new token (classic)" 클릭<br>
                         3. Note: "DW Church Plugin Updates" 입력<br>
                         4. Expiration: 만료 기간 선택 (권장: No expiration 또는 1 year)<br>
                         5. Scopes: <code>repo</code> 체크 (Full control of private repositories)<br>
-                        6. "Generate token" 클릭 후 토큰 복사하여 여기에 붙여넣기<br>
+                        6. "Generate token" 클릭 후 토큰 복사<br>
+                        7. <strong>wp-config.php</strong>에 추가: <code>define('DW_GITHUB_TOKEN', 'ghp_...');</code><br>
                         <a href="https://github.com/settings/tokens/new" target="_blank" rel="noopener"><?php echo esc_html__('→ GitHub Token 생성하기', 'dasom-church'); ?></a>
                     </p>
                 </td>
