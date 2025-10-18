@@ -504,6 +504,8 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
                     $text_position = $text_position ? $text_position : 'center-center';
                     $text_align = get_post_meta(get_the_ID(), 'dw_banner_text_align', true);
                     $text_align = $text_align ? $text_align : 'center';
+                    $text_width = get_post_meta(get_the_ID(), 'dw_banner_text_width', true);
+                    $text_width = $text_width ? $text_width : '600';
                     
                     list($v_align, $h_align) = explode('-', $text_position);
                     $v_align_style = $v_align === 'top' ? 'flex-start' : ($v_align === 'bottom' ? 'flex-end' : 'center');
@@ -524,7 +526,7 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
                     }
                     
                     echo '<div class="dw-banner-grid-text" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:' . esc_attr($v_align_style) . ';padding:20px;">';
-                    echo '<div class="dw-banner-grid-text-content" style="width:100%;max-width:1200px;' . $container_margin . 'text-align:' . esc_attr($text_alignment) . ';">';
+                    echo '<div class="dw-banner-grid-text-content" style="width:100%;max-width:' . esc_attr($text_width) . 'px;' . $container_margin . 'text-align:' . esc_attr($text_alignment) . ';">';
                     
                     if ($text_subtitle) {
                         echo '<div class="dw-banner-grid-subtitle">' . esc_html($text_subtitle) . '</div>';

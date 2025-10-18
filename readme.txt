@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.19.1
+Stable tag: 1.19.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,13 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.19.2 =
+* Feature: Added text container width setting in banner meta box
+* Feature: Adjustable text width (100-2000px) for flexible line breaking control
+* Enhancement: Users can now control whether text displays in one line or multiple lines
+* UI: New "텍스트 컨테이너 폭" field with helpful description
+* Default: 600px width, recommended range 300-1200px
 
 = 1.19.1 =
 * Fix: Banner text horizontal positioning now uses center-based alignment

@@ -427,6 +427,8 @@ class Dasom_Church_Meta_Boxes {
         $text_position = $text_position ? $text_position : 'center-center';
         $text_align = get_post_meta($post->ID, 'dw_banner_text_align', true);
         $text_align = $text_align ? $text_align : 'center';
+        $text_width = get_post_meta($post->ID, 'dw_banner_text_width', true);
+        $text_width = $text_width ? $text_width : '600';
         $content_padding_top = get_post_meta($post->ID, 'dw_banner_content_padding_top', true);
         $content_padding_top = $content_padding_top ? $content_padding_top : '40';
         $content_padding_right = get_post_meta($post->ID, 'dw_banner_content_padding_right', true);
@@ -581,6 +583,15 @@ class Dasom_Church_Meta_Boxes {
                         <option value="right" <?php selected($text_align, 'right'); ?>><?php _e('오른쪽 정렬', 'dasom-church'); ?></option>
                     </select>
                     <p class="description"><?php _e('텍스트 콘텐츠 내부의 정렬 방식을 선택하세요.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="dw_banner_text_width"><?php _e('텍스트 컨테이너 폭', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <input type="number" id="dw_banner_text_width" name="dw_banner_text_width" value="<?php echo esc_attr($text_width); ?>" class="small-text" min="100" max="2000" step="10" /> px
+                    <p class="description"><?php _e('텍스트가 표시될 영역의 최대 폭을 설정하세요. 좁게 설정하면 여러 줄로, 넓게 설정하면 한 줄로 표시됩니다. (기본값: 600px, 권장: 300~1200px)', 'dasom-church'); ?></p>
                 </td>
             </tr>
             <tr>
@@ -973,6 +984,12 @@ class Dasom_Church_Meta_Boxes {
             $align = sanitize_text_field($_POST['dw_banner_text_align']);
             if (in_array($align, array('left', 'center', 'right'))) {
                 update_post_meta($post_id, 'dw_banner_text_align', $align);
+            }
+        }
+        if (isset($_POST['dw_banner_text_width'])) {
+            $width = absint($_POST['dw_banner_text_width']);
+            if ($width >= 100 && $width <= 2000) {
+                update_post_meta($post_id, 'dw_banner_text_width', $width);
             }
         }
         if (isset($_POST['dw_banner_content_padding_top'])) {
