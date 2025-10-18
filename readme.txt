@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.19.2
+Stable tag: 1.19.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,14 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.19.3 =
+* Feature: Added background image position control in banner meta box
+* Feature: 9 position options (center top/center/bottom, left/right center, corners)
+* Enhancement: Users can control which part of the background image to display
+* UI: New "배경 이미지 위치" dropdown with clear Korean + English labels
+* Applied: Both Banner Slider and Banner Grid widgets
+* Default: Center Center for optimal display
 
 = 1.19.2 =
 * Feature: Added text container width setting in banner meta box

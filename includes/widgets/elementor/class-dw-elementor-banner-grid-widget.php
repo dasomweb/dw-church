@@ -488,6 +488,10 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
             $text_subtitle = get_post_meta(get_the_ID(), 'dw_banner_text_subtitle', true);
             $text_description = get_post_meta(get_the_ID(), 'dw_banner_text_description', true);
             
+            // Get background position
+            $bg_position = get_post_meta(get_the_ID(), 'dw_banner_bg_position', true);
+            $bg_position = $bg_position ? $bg_position : 'center center';
+            
             echo '<div class="dw-banner-grid-item">';
             
             if ($link_url) {
@@ -495,8 +499,7 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
             }
             
             if ($image_url) {
-                echo '<div class="dw-banner-grid-image">';
-                echo '<img src="' . esc_url($image_url) . '" alt="' . esc_attr(get_the_title()) . '">';
+                echo '<div class="dw-banner-grid-image" style="position:relative;background-image:url(' . esc_url($image_url) . ');background-size:cover;background-position:' . esc_attr($bg_position) . ';min-height:300px;width:100%;">';
                 
                 // Text overlay if exists
                 if (!empty($text_title) || !empty($text_subtitle) || !empty($text_description)) {

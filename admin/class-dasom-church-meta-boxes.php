@@ -429,6 +429,8 @@ class Dasom_Church_Meta_Boxes {
         $text_align = $text_align ? $text_align : 'center';
         $text_width = get_post_meta($post->ID, 'dw_banner_text_width', true);
         $text_width = $text_width ? $text_width : '600';
+        $bg_position = get_post_meta($post->ID, 'dw_banner_bg_position', true);
+        $bg_position = $bg_position ? $bg_position : 'center center';
         $content_padding_top = get_post_meta($post->ID, 'dw_banner_content_padding_top', true);
         $content_padding_top = $content_padding_top ? $content_padding_top : '40';
         $content_padding_right = get_post_meta($post->ID, 'dw_banner_content_padding_right', true);
@@ -592,6 +594,25 @@ class Dasom_Church_Meta_Boxes {
                 <td>
                     <input type="number" id="dw_banner_text_width" name="dw_banner_text_width" value="<?php echo esc_attr($text_width); ?>" class="small-text" min="100" max="2000" step="10" /> px
                     <p class="description"><?php _e('텍스트가 표시될 영역의 최대 폭을 설정하세요. 좁게 설정하면 여러 줄로, 넓게 설정하면 한 줄로 표시됩니다. (기본값: 600px, 권장: 300~1200px)', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="dw_banner_bg_position"><?php _e('배경 이미지 위치', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <select id="dw_banner_bg_position" name="dw_banner_bg_position" class="regular-text">
+                        <option value="center top" <?php selected($bg_position, 'center top'); ?>><?php _e('상단 중앙 (Center Top)', 'dasom-church'); ?></option>
+                        <option value="center center" <?php selected($bg_position, 'center center'); ?>><?php _e('정중앙 (Center Center)', 'dasom-church'); ?></option>
+                        <option value="center bottom" <?php selected($bg_position, 'center bottom'); ?>><?php _e('하단 중앙 (Center Bottom)', 'dasom-church'); ?></option>
+                        <option value="left center" <?php selected($bg_position, 'left center'); ?>><?php _e('왼쪽 중앙 (Left Center)', 'dasom-church'); ?></option>
+                        <option value="right center" <?php selected($bg_position, 'right center'); ?>><?php _e('오른쪽 중앙 (Right Center)', 'dasom-church'); ?></option>
+                        <option value="left top" <?php selected($bg_position, 'left top'); ?>><?php _e('왼쪽 상단 (Left Top)', 'dasom-church'); ?></option>
+                        <option value="right top" <?php selected($bg_position, 'right top'); ?>><?php _e('오른쪽 상단 (Right Top)', 'dasom-church'); ?></option>
+                        <option value="left bottom" <?php selected($bg_position, 'left bottom'); ?>><?php _e('왼쪽 하단 (Left Bottom)', 'dasom-church'); ?></option>
+                        <option value="right bottom" <?php selected($bg_position, 'right bottom'); ?>><?php _e('오른쪽 하단 (Right Bottom)', 'dasom-church'); ?></option>
+                    </select>
+                    <p class="description"><?php _e('배경 이미지의 어느 부분을 보여줄지 선택하세요. 이미지가 배너 영역보다 크거나 작을 때 기준이 됩니다. (기본값: 정중앙)', 'dasom-church'); ?></p>
                 </td>
             </tr>
             <tr>
@@ -990,6 +1011,17 @@ class Dasom_Church_Meta_Boxes {
             $width = absint($_POST['dw_banner_text_width']);
             if ($width >= 100 && $width <= 2000) {
                 update_post_meta($post_id, 'dw_banner_text_width', $width);
+            }
+        }
+        if (isset($_POST['dw_banner_bg_position'])) {
+            $position = sanitize_text_field($_POST['dw_banner_bg_position']);
+            $valid_positions = array(
+                'center top', 'center center', 'center bottom',
+                'left center', 'right center',
+                'left top', 'right top', 'left bottom', 'right bottom'
+            );
+            if (in_array($position, $valid_positions)) {
+                update_post_meta($post_id, 'dw_banner_bg_position', $position);
             }
         }
         if (isset($_POST['dw_banner_content_padding_top'])) {
