@@ -514,12 +514,14 @@ class Dasom_Church_Management {
             }
         }
         
-        // Create default preacher
-        $default_preacher = __('담임목사', 'dasom-church');
-        if (!term_exists($default_preacher, 'dw_sermon_preacher')) {
-            wp_insert_term($default_preacher, 'dw_sermon_preacher');
+        // Create default preacher only if not already set
+        if (false === get_option('default_sermon_preacher', false)) {
+            $default_preacher = __('담임목사', 'dasom-church');
+            if (!term_exists($default_preacher, 'dw_sermon_preacher')) {
+                wp_insert_term($default_preacher, 'dw_sermon_preacher');
+            }
+            update_option('default_sermon_preacher', $default_preacher);
         }
-        update_option('default_sermon_preacher', $default_preacher);
         
         flush_rewrite_rules();
     }

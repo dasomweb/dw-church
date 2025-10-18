@@ -335,8 +335,8 @@ class Dasom_Church_Admin {
         }
         
         $default_preacher = get_option('default_sermon_preacher', __('담임목사', 'dasom-church'));
-        if ($default_preacher && !term_exists($default_preacher, 'sermon_preacher')) {
-            $result = wp_insert_term($default_preacher, 'sermon_preacher');
+        if ($default_preacher && !term_exists($default_preacher, 'dw_sermon_preacher')) {
+            $result = wp_insert_term($default_preacher, 'dw_sermon_preacher');
             if (is_wp_error($result)) {
                 error_log('Failed to create default preacher: ' . $result->get_error_message());
             }
