@@ -353,9 +353,9 @@ $enable_banner_slider_widget = get_option('dw_enable_banner_slider_widget', 'yes
         </table>
         
         <div style="background:#f0f7ff;padding:15px;border-left:4px solid #2271b1;margin-top:20px;">
-            <h3 style="margin-top:0;">✨ <?php _e('5개의 위젯 사용 가능!', 'dasom-church'); ?></h3>
+            <h3 style="margin-top:0;">✨ <?php _e('6개의 위젯 사용 가능!', 'dasom-church'); ?></h3>
             <p style="margin-bottom:0;">
-                <?php _e('모든 위젯은 Elementor, 구텐버그, Kadence Block Pro에서 사용할 수 있습니다. 필요에 따라 개별적으로 활성화/비활성화할 수 있습니다.', 'dasom-church'); ?>
+                <?php _e('모든 위젯은 Elementor에서 사용할 수 있습니다. 필요에 따라 개별적으로 활성화/비활성화할 수 있습니다.', 'dasom-church'); ?>
             </p>
         </div>
         
