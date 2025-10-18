@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.17.1
+Stable tag: 1.17.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,11 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.17.2 =
+* Fix: Banner image upload fields now visible when creating new banner
+* Fix: Main banner fields (PC/Mobile images) now show by default for new posts
+* Improved: Better UX - no need to select category before seeing upload buttons
 
 = 1.17.1 =
 * Fix: Removed incorrect semicolon after initBannerAdditionalUploaders function

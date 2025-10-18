@@ -408,6 +408,11 @@ class Dasom_Church_Meta_Boxes {
         $terms = wp_get_post_terms($post->ID, 'banner_category');
         $current_category = !empty($terms) && !is_wp_error($terms) ? $terms[0]->name : '';
         
+        // For new posts (auto-draft), default to showing main banner fields
+        $is_new_post = $post->post_status === 'auto-draft' || empty($current_category);
+        $show_main = $is_new_post || $current_category === '메인 배너' || $current_category === 'Main Banner';
+        $show_sub = !$is_new_post && ($current_category === '서브 배너' || $current_category === 'Sub Banner');
+        
         $pc_image = get_post_meta($post->ID, 'dw_banner_pc_image', true);
         $mobile_image = get_post_meta($post->ID, 'dw_banner_mobile_image', true);
         $sub_image = get_post_meta($post->ID, 'dw_banner_sub_image', true);
@@ -448,7 +453,7 @@ class Dasom_Church_Meta_Boxes {
         
         <table class="form-table">
             <!-- 메인 배너 필드 -->
-            <tr class="banner-field banner-main-field" data-banner-type="main" style="<?php echo ($current_category === '메인 배너' || $current_category === 'Main Banner') ? '' : 'display:none;'; ?>">
+            <tr class="banner-field banner-main-field" data-banner-type="main" style="<?php echo $show_main ? '' : 'display:none;'; ?>">
                 <th scope="row">
                     <label for="dw_banner_pc_image"><?php _e('PC용 배너 이미지 (1920px)', 'dasom-church'); ?></label>
                 </th>
@@ -464,7 +469,7 @@ class Dasom_Church_Meta_Boxes {
                     <p class="description"><?php _e('권장 크기: 가로 1920px', 'dasom-church'); ?></p>
                 </td>
             </tr>
-            <tr class="banner-field banner-main-field" data-banner-type="main" style="<?php echo ($current_category === '메인 배너' || $current_category === 'Main Banner') ? '' : 'display:none;'; ?>">
+            <tr class="banner-field banner-main-field" data-banner-type="main" style="<?php echo $show_main ? '' : 'display:none;'; ?>">
                 <th scope="row">
                     <label for="dw_banner_mobile_image"><?php _e('모바일용 배너 이미지 (720px)', 'dasom-church'); ?></label>
                 </th>
@@ -482,7 +487,7 @@ class Dasom_Church_Meta_Boxes {
             </tr>
             
             <!-- 서브 배너 필드 -->
-            <tr class="banner-field banner-sub-field" data-banner-type="sub" style="<?php echo ($current_category === '서브 배너' || $current_category === 'Sub Banner') ? '' : 'display:none;'; ?>">
+            <tr class="banner-field banner-sub-field" data-banner-type="sub" style="<?php echo $show_sub ? '' : 'display:none;'; ?>">
                 <th scope="row">
                     <label for="dw_banner_sub_ratio"><?php _e('이미지 비율', 'dasom-church'); ?></label>
                 </th>
@@ -495,7 +500,7 @@ class Dasom_Church_Meta_Boxes {
                     <p class="description"><?php _e('서브 배너는 가로 1024px 고정입니다. 비율을 선택하세요.', 'dasom-church'); ?></p>
                 </td>
             </tr>
-            <tr class="banner-field banner-sub-field" data-banner-type="sub" style="<?php echo ($current_category === '서브 배너' || $current_category === 'Sub Banner') ? '' : 'display:none;'; ?>">
+            <tr class="banner-field banner-sub-field" data-banner-type="sub" style="<?php echo $show_sub ? '' : 'display:none;'; ?>">
                 <th scope="row">
                     <label for="dw_banner_sub_image"><?php _e('서브 배너 이미지 (1024px)', 'dasom-church'); ?></label>
                 </th>
