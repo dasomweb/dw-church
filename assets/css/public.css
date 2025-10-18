@@ -270,10 +270,8 @@
     }
 }
 
-/* Modern Banner Slider Navigation */
+/* Modern Banner Slider Navigation - Base styles only */
 .dw-modern-nav {
-    width: 40px !important;
-    height: 40px !important;
     background: rgba(255, 255, 255, 0.9) !important;
     border-radius: 50% !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
@@ -281,7 +279,6 @@
 }
 
 .dw-modern-nav:after {
-    font-size: 14px !important;
     font-weight: 700 !important;
     color: #333 !important;
 }
@@ -294,34 +291,5 @@
 
 .dw-modern-nav:hover:after {
     color: #000 !important;
-}
-
-/* Position adjustments */
-.swiper-button-prev.dw-modern-nav {
-    left: 20px !important;
-}
-
-.swiper-button-next.dw-modern-nav {
-    right: 20px !important;
-}
-
-/* Mobile responsive */
-@media (max-width: 768px) {
-    .dw-modern-nav {
-        width: 32px !important;
-        height: 32px !important;
-    }
-    
-    .dw-modern-nav:after {
-        font-size: 12px !important;
-    }
-    
-    .swiper-button-prev.dw-modern-nav {
-        left: 10px !important;
-    }
-    
-    .swiper-button-next.dw-modern-nav {
-        right: 10px !important;
-    }
 }
 
