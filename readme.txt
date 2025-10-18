@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.10.0
+Stable tag: 1.10.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,13 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.10.1 =
+* Fix: Undefined array key warnings in all Elementor widgets
+* Fix: Add null coalescing operators for safe array access
+* Fix: Gallery widget border_radius warning
+* Fix: All widget settings now have default values
+* Improvement: More stable widget rendering
 
 = 1.10.0 =
 * Feature: DW Recent Sermons Widget (Elementor)
