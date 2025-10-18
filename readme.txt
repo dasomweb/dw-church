@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.16.0
+Stable tag: 1.16.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.16.1 =
+* UI Improvement: Link target option moved next to URL input field with radio buttons
+* UI Improvement: More compact and intuitive layout for link settings
+* Change: Link target changed from dropdown to radio buttons (Current Window / New Window)
+* Enhancement: Better space utilization in banner meta box
 
 = 1.16.0 =
 * New Feature: Text alignment option for banner text content (Left, Center, Right)

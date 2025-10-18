@@ -661,21 +661,22 @@ class Dasom_Church_Meta_Boxes {
                     <label for="dw_banner_link_url"><?php _e('링크 URL', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="url" id="dw_banner_link_url" name="dw_banner_link_url" value="<?php echo esc_url($link_url); ?>" class="regular-text" placeholder="https://" />
+                    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+                        <input type="url" id="dw_banner_link_url" name="dw_banner_link_url" value="<?php echo esc_url($link_url); ?>" class="regular-text" placeholder="https://" style="flex:1;min-width:300px;" />
+                        <fieldset style="margin:0;">
+                            <legend style="font-size:12px;font-weight:600;margin-bottom:5px;"><?php _e('링크 열기 방식:', 'dasom-church'); ?></legend>
+                            <label style="display:inline-block;margin-right:15px;">
+                                <input type="radio" name="dw_banner_link_target" value="_self" <?php checked($link_target, '_self'); ?> />
+                                <?php _e('현재 창', 'dasom-church'); ?>
+                            </label>
+                            <label style="display:inline-block;">
+                                <input type="radio" name="dw_banner_link_target" value="_blank" <?php checked($link_target, '_blank'); ?> />
+                                <?php _e('새 창', 'dasom-church'); ?>
+                            </label>
+                        </fieldset>
+                    </div>
                     <p class="description banner-image-only-desc" style="<?php echo ($display_type === 'image_only') ? '' : 'display:none;'; ?>"><?php _e('배너 클릭 시 이동할 URL을 입력하세요.', 'dasom-church'); ?></p>
                     <p class="description banner-text-desc" style="<?php echo ($display_type === 'image_with_text') ? '' : 'display:none;'; ?>"><?php _e('버튼 클릭 시 이동할 URL을 입력하세요. (이미지만 모드에서는 이미지에 링크가 적용됩니다)', 'dasom-church'); ?></p>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">
-                    <label for="dw_banner_link_target"><?php _e('링크 열기 방식', 'dasom-church'); ?></label>
-                </th>
-                <td>
-                    <select id="dw_banner_link_target" name="dw_banner_link_target" class="regular-text">
-                        <option value="_self" <?php selected($link_target, '_self'); ?>><?php _e('현재 창에서 열기', 'dasom-church'); ?></option>
-                        <option value="_blank" <?php selected($link_target, '_blank'); ?>><?php _e('새 창에서 열기', 'dasom-church'); ?></option>
-                    </select>
-                    <p class="description"><?php _e('링크를 클릭했을 때 어떻게 열릴지 선택하세요.', 'dasom-church'); ?></p>
                 </td>
             </tr>
             <tr>
