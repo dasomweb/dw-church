@@ -5,9 +5,10 @@
  * @since 1.0.0
  */
 
-jQuery(document).ready(function($) {
+(function($) {
     'use strict';
     
+    jQuery(document).ready(function() {
     // Initialize admin functionality
     DasomChurchAdmin.init();
 });
@@ -15,7 +16,7 @@ jQuery(document).ready(function($) {
 /**
  * Admin functionality object
  */
-var DasomChurchAdmin = {
+    window.DasomChurchAdmin = {
     
     /**
      * Initialize admin functionality
@@ -463,8 +464,6 @@ var DasomChurchAdmin = {
                 $('#dw_banner_end_date').val('');
             });
         }
-    }
-};
+    };
 
-
-
+})(jQuery);
