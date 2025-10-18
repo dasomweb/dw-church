@@ -313,6 +313,92 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         );
         
         $this->add_control(
+            'separator_size',
+            [
+                'label' => __('구분자 크기', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em', 'rem'],
+                'range' => [
+                    'px' => [
+                        'min' => 8,
+                        'max' => 48,
+                    ],
+                    'em' => [
+                        'min' => 0.5,
+                        'max' => 3,
+                        'step' => 0.1,
+                    ],
+                    'rem' => [
+                        'min' => 0.5,
+                        'max' => 3,
+                        'step' => 0.1,
+                    ],
+                ],
+                'default' => [
+                    'size' => 16,
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-single-sermon-meta .meta-separator' => 'font-size: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'separator_color',
+            [
+                'label' => __('구분자 색상', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#999',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-single-sermon-meta .meta-separator' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'separator_spacing',
+            [
+                'label' => __('구분자 좌우 간격', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 50,
+                    ],
+                ],
+                'default' => [
+                    'size' => 10,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-single-sermon-meta .meta-separator' => 'margin: 0 {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'separator_opacity',
+            [
+                'label' => __('구분자 투명도', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 1,
+                        'step' => 0.1,
+                    ],
+                ],
+                'default' => [
+                    'size' => 0.5,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-single-sermon-meta .meta-separator' => 'opacity: {{SIZE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
             'meta_spacing',
             [
                 'label' => __('하단 간격', 'dasom-church'),
@@ -510,8 +596,8 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
             }
             
             .dw-single-sermon-meta .meta-separator {
-                margin: 0 10px;
-                opacity: 0.5;
+                display: inline-block;
+                vertical-align: middle;
             }
             
             .dw-single-sermon-video {

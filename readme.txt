@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.12.1
+Stable tag: 1.12.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,15 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.12.2 =
+* Feature: Added separator style controls to DW Sermon Widget
+* Feature: Separator size control (px, em, rem)
+* Feature: Separator color control (independent from meta color)
+* Feature: Separator spacing control (left/right margins)
+* Feature: Separator opacity control (transparency)
+* Improvement: Complete visual customization for meta separators
+* Improvement: Better control over separator appearance
 
 = 1.12.1 =
 * Feature: Added Query Source to DW Sermon Widget
