@@ -114,6 +114,92 @@ class DW_Elementor_Recent_Gallery_Widget extends \Elementor\Widget_Base {
             ]
         );
         
+        $this->add_responsive_control(
+            'image_height',
+            [
+                'label' => __('이미지 높이', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', '%', 'vh'],
+                'range' => [
+                    'px' => [
+                        'min' => 100,
+                        'max' => 800,
+                        'step' => 10,
+                    ],
+                    '%' => [
+                        'min' => 30,
+                        'max' => 200,
+                        'step' => 5,
+                    ],
+                    'vh' => [
+                        'min' => 10,
+                        'max' => 100,
+                        'step' => 1,
+                    ],
+                ],
+                'default' => [
+                    'unit' => '%',
+                    'size' => 66.67,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-gallery-thumbnail' => 'padding-top: {{SIZE}}{{UNIT}};',
+                ],
+                'condition' => [
+                    'show_thumbnail' => 'yes',
+                    'layout' => 'grid',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'image_fit',
+            [
+                'label' => __('이미지 맞춤', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'cover',
+                'options' => [
+                    'cover' => __('Cover (꽉 채움)', 'dasom-church'),
+                    'contain' => __('Contain (전체 보기)', 'dasom-church'),
+                    'fill' => __('Fill (늘림)', 'dasom-church'),
+                    'none' => __('None (원본)', 'dasom-church'),
+                    'scale-down' => __('Scale Down (축소)', 'dasom-church'),
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-gallery-image' => 'object-fit: {{VALUE}};',
+                ],
+                'condition' => [
+                    'show_thumbnail' => 'yes',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'image_position',
+            [
+                'label' => __('이미지 위치', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'center center',
+                'options' => [
+                    'center center' => __('Center Center', 'dasom-church'),
+                    'center top' => __('Center Top', 'dasom-church'),
+                    'center bottom' => __('Center Bottom', 'dasom-church'),
+                    'left center' => __('Left Center', 'dasom-church'),
+                    'left top' => __('Left Top', 'dasom-church'),
+                    'left bottom' => __('Left Bottom', 'dasom-church'),
+                    'right center' => __('Right Center', 'dasom-church'),
+                    'right top' => __('Right Top', 'dasom-church'),
+                    'right bottom' => __('Right Bottom', 'dasom-church'),
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-gallery-image' => 'object-position: {{VALUE}};',
+                ],
+                'condition' => [
+                    'show_thumbnail' => 'yes',
+                    'image_fit!' => 'fill',
+                ],
+            ]
+        );
+        
         $this->add_control(
             'show_date',
             [
@@ -123,6 +209,57 @@ class DW_Elementor_Recent_Gallery_Widget extends \Elementor\Widget_Base {
                 'label_off' => __('No', 'dasom-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
+            ]
+        );
+        
+        $this->end_controls_section();
+        
+        // Style Tab - Image Style
+        $this->start_controls_section(
+            'style_image_section',
+            [
+                'label' => __('Image Style', 'dasom-church'),
+                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+                'condition' => [
+                    'show_thumbnail' => 'yes',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'image_border_radius',
+            [
+                'label' => __('Border Radius', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', '%'],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-gallery-thumbnail' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}; overflow: hidden;',
+                ],
+            ]
+        );
+        
+        $this->add_group_control(
+            \Elementor\Group_Control_Box_Shadow::get_type(),
+            [
+                'name' => 'image_box_shadow',
+                'label' => __('Box Shadow', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-gallery-thumbnail',
+            ]
+        );
+        
+        $this->add_control(
+            'image_hover_effect',
+            [
+                'label' => __('Hover Effect', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'zoom',
+                'options' => [
+                    'none' => __('None', 'dasom-church'),
+                    'zoom' => __('Zoom In', 'dasom-church'),
+                    'zoom-out' => __('Zoom Out', 'dasom-church'),
+                    'brightness' => __('Brightness', 'dasom-church'),
+                    'grayscale' => __('Grayscale to Color', 'dasom-church'),
+                ],
             ]
         );
         
@@ -327,9 +464,10 @@ class DW_Elementor_Recent_Gallery_Widget extends \Elementor\Widget_Base {
         $columns = $settings['columns'] ?? 3;
         $columns_tablet = $settings['columns_tablet'] ?? 2;
         $columns_mobile = $settings['columns_mobile'] ?? 1;
+        $hover_effect = $settings['image_hover_effect'] ?? 'zoom';
         
         ?>
-        <div class="dw-gallery-widget dw-gallery-<?php echo esc_attr($layout); ?>">
+        <div class="dw-gallery-widget dw-gallery-<?php echo esc_attr($layout); ?> dw-hover-<?php echo esc_attr($hover_effect); ?>">
             <?php if ($layout === 'grid'): ?>
                 <style>
                     .dw-gallery-grid {
@@ -405,11 +543,26 @@ class DW_Elementor_Recent_Gallery_Widget extends \Elementor\Widget_Base {
                 left: 0;
                 width: 100%;
                 height: 100%;
-                object-fit: cover;
-                transition: transform 0.3s ease;
+                transition: all 0.3s ease;
             }
-            .dw-gallery-card:hover .dw-gallery-image {
-                transform: scale(1.05);
+            /* Hover Effects */
+            .dw-hover-zoom .dw-gallery-card:hover .dw-gallery-image {
+                transform: scale(1.1);
+            }
+            .dw-hover-zoom-out .dw-gallery-image {
+                transform: scale(1.1);
+            }
+            .dw-hover-zoom-out .dw-gallery-card:hover .dw-gallery-image {
+                transform: scale(1);
+            }
+            .dw-hover-brightness .dw-gallery-card:hover .dw-gallery-image {
+                filter: brightness(1.2);
+            }
+            .dw-hover-grayscale .dw-gallery-image {
+                filter: grayscale(100%);
+            }
+            .dw-hover-grayscale .dw-gallery-card:hover .dw-gallery-image {
+                filter: grayscale(0%);
             }
             .dw-gallery-content {
                 padding: 15px;

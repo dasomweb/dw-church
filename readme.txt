@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.24.0
+Stable tag: 1.24.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,16 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.24.1 =
+* Feature: Responsive image height control (px, %, vh units)
+* Feature: Image fit options (Cover, Contain, Fill, None, Scale-down)
+* Feature: Image position control (9 alignment options)
+* Feature: Image hover effects (Zoom In, Zoom Out, Brightness, Grayscale)
+* Style: Image border radius control
+* Style: Image box shadow control
+* Enhancement: Advanced image display customization
+* UI: Separate "Image Style" section in Style tab
 
 = 1.24.0 =
 * Feature: New "DW Recent Gallery" widget for displaying album posts
