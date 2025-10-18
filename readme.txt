@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.10.2
+Stable tag: 1.10.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.10.3 =
+* Fix: Banner slider now respects start and end dates
+* Fix: Expired banners no longer displayed in slider widget
+* Fix: Scheduled banners only show after start date
+* Improvement: Real-time banner schedule filtering in widget query
 
 = 1.10.2 =
 * Feature: Gallery lightbox with previous/next navigation (GLightbox)

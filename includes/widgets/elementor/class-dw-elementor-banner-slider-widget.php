@@ -131,12 +131,43 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
     protected function render() {
         $settings = $this->get_settings_for_display();
         
+        $current_time = current_time('mysql');
+        
         $args = array(
             'post_type' => 'banner',
             'posts_per_page' => $settings['posts_per_page'] ?? 5,
             'post_status' => 'publish',
             'orderby' => 'date',
             'order' => 'DESC',
+            'meta_query' => array(
+                'relation' => 'AND',
+                array(
+                    'relation' => 'OR',
+                    array(
+                        'key' => 'dw_banner_start_date',
+                        'value' => $current_time,
+                        'compare' => '<=',
+                        'type' => 'DATETIME',
+                    ),
+                    array(
+                        'key' => 'dw_banner_start_date',
+                        'compare' => 'NOT EXISTS',
+                    ),
+                ),
+                array(
+                    'relation' => 'OR',
+                    array(
+                        'key' => 'dw_banner_end_date',
+                        'value' => $current_time,
+                        'compare' => '>',
+                        'type' => 'DATETIME',
+                    ),
+                    array(
+                        'key' => 'dw_banner_end_date',
+                        'compare' => 'NOT EXISTS',
+                    ),
+                ),
+            ),
         );
         
         // Filter by category if selected
