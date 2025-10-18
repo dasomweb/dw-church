@@ -399,6 +399,24 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         );
         
         $this->add_control(
+            'separator_valign',
+            [
+                'label' => __('구분자 수직 정렬', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'middle',
+                'options' => [
+                    'top' => __('Top (상단)', 'dasom-church'),
+                    'middle' => __('Middle (중간)', 'dasom-church'),
+                    'bottom' => __('Bottom (하단)', 'dasom-church'),
+                    'baseline' => __('Baseline (기준선)', 'dasom-church'),
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-single-sermon-meta .meta-separator' => 'vertical-align: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
             'meta_spacing',
             [
                 'label' => __('하단 간격', 'dasom-church'),
