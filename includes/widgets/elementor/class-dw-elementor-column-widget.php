@@ -123,7 +123,7 @@ class DW_Elementor_Column_Widget extends \Elementor\Widget_Base {
         
         $args = array(
             'post_type' => 'column',
-            'posts_per_page' => $settings['posts_per_page'],
+            'posts_per_page' => $settings['posts_per_page'] ?? 6,
             'post_status' => 'publish',
             'orderby' => 'date',
             'order' => 'DESC',
@@ -136,7 +136,7 @@ class DW_Elementor_Column_Widget extends \Elementor\Widget_Base {
             return;
         }
         
-        $columns = intval($settings['columns']);
+        $columns = intval($settings['columns'] ?? 3);
         
         echo '<div class="dw-columns-widget" style="display:grid;grid-template-columns:repeat(' . $columns . ',1fr);gap:20px;">';
         
@@ -145,7 +145,7 @@ class DW_Elementor_Column_Widget extends \Elementor\Widget_Base {
             
             echo '<div class="dw-column-item" style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);transition:transform 0.3s;" onmouseover="this.style.transform=\'translateY(-5px)\'" onmouseout="this.style.transform=\'translateY(0)\'">';
             
-            if ($settings['show_thumbnail'] === 'yes' && has_post_thumbnail()) {
+            if (($settings['show_thumbnail'] ?? 'yes') === 'yes' && has_post_thumbnail()) {
                 echo '<div class="column-thumbnail">';
                 echo '<a href="' . get_permalink() . '">';
                 the_post_thumbnail('medium', array('style' => 'width:100%;height:200px;object-fit:cover;'));
@@ -157,12 +157,12 @@ class DW_Elementor_Column_Widget extends \Elementor\Widget_Base {
             
             echo '<h3 style="margin:0 0 10px 0;font-size:18px;"><a href="' . get_permalink() . '" style="text-decoration:none;color:#333;">' . get_the_title() . '</a></h3>';
             
-            if ($settings['show_date'] === 'yes') {
+            if (($settings['show_date'] ?? 'yes') === 'yes') {
                 echo '<div class="column-date" style="font-size:13px;color:#666;margin-bottom:10px;">📅 ' . get_the_date() . '</div>';
             }
             
-            if ($settings['show_excerpt'] === 'yes') {
-                $excerpt = wp_trim_words(get_the_excerpt(), $settings['excerpt_length']);
+            if (($settings['show_excerpt'] ?? 'yes') === 'yes') {
+                $excerpt = wp_trim_words(get_the_excerpt(), $settings['excerpt_length'] ?? 25);
                 echo '<div class="column-excerpt" style="font-size:14px;color:#555;line-height:1.6;">' . esc_html($excerpt) . '</div>';
             }
             

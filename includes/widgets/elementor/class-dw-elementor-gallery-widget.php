@@ -205,12 +205,12 @@ class DW_Elementor_Gallery_Widget extends \Elementor\Widget_Base {
             return;
         }
         
-        $size = $settings['image_size'];
-        $layout = $settings['layout_type'];
-        $columns = max(1, intval($settings['columns']));
-        $gap = intval($settings['gap']);
-        $border_radius = intval($settings['border_radius']);
-        $hover_effect = $settings['hover_effect'];
+        $size = $settings['image_size'] ?? 'medium';
+        $layout = $settings['layout_type'] ?? 'grid';
+        $columns = max(1, intval($settings['columns'] ?? 3));
+        $gap = intval($settings['gap'] ?? 10);
+        $border_radius = intval($settings['border_radius'] ?? 8);
+        $hover_effect = $settings['hover_effect'] ?? 'zoom';
         
         $col_width = 100 / $columns;
         

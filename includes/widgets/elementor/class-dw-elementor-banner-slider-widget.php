@@ -133,14 +133,14 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         
         $args = array(
             'post_type' => 'banner',
-            'posts_per_page' => $settings['posts_per_page'],
+            'posts_per_page' => $settings['posts_per_page'] ?? 5,
             'post_status' => 'publish',
             'orderby' => 'date',
             'order' => 'DESC',
         );
         
         // Filter by category if selected
-        if (!empty($settings['banner_category'])) {
+        if (!empty($settings['banner_category'] ?? '')) {
             $args['tax_query'] = array(
                 array(
                     'taxonomy' => 'banner_category',
@@ -158,10 +158,10 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         }
         
         $slider_id = 'dw-banner-slider-' . $this->get_id();
-        $autoplay = $settings['autoplay'] === 'yes' ? 'true' : 'false';
-        $autoplay_speed = $settings['autoplay_speed'];
-        $navigation = $settings['navigation'] === 'yes';
-        $pagination = $settings['pagination'] === 'yes';
+        $autoplay = ($settings['autoplay'] ?? 'yes') === 'yes' ? 'true' : 'false';
+        $autoplay_speed = $settings['autoplay_speed'] ?? 5000;
+        $navigation = ($settings['navigation'] ?? 'yes') === 'yes';
+        $pagination = ($settings['pagination'] ?? 'yes') === 'yes';
         
         // Enqueue Swiper
         wp_enqueue_style('swiper', 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css', array(), '11.0.0');

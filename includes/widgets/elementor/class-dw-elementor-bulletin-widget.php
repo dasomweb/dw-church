@@ -87,7 +87,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         
         $args = array(
             'post_type' => 'bulletin',
-            'posts_per_page' => $settings['posts_per_page'],
+            'posts_per_page' => $settings['posts_per_page'] ?? 6,
             'post_status' => 'publish',
             'orderby' => 'meta_value',
             'meta_key' => 'dw_bulletin_date',
@@ -101,7 +101,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
             return;
         }
         
-        $columns = intval($settings['columns']);
+        $columns = intval($settings['columns'] ?? 3);
         
         echo '<div class="dw-bulletins-widget" style="display:grid;grid-template-columns:repeat(' . $columns . ',1fr);gap:20px;">';
         
@@ -127,7 +127,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                 echo '<div class="bulletin-date" style="font-size:14px;color:#666;margin-bottom:15px;">📅 ' . date_i18n('Y년 n월 j일', strtotime($bulletin_date)) . '</div>';
             }
             
-            if ($settings['show_pdf_link'] === 'yes' && $pdf) {
+            if (($settings['show_pdf_link'] ?? 'yes') === 'yes' && $pdf) {
                 $pdf_url = wp_get_attachment_url($pdf);
                 if ($pdf_url) {
                     echo '<a href="' . esc_url($pdf_url) . '" target="_blank" class="bulletin-pdf-link" style="display:inline-block;padding:8px 16px;background:#2271b1;color:#fff;text-decoration:none;border-radius:4px;font-size:13px;">📄 PDF 다운로드</a>';

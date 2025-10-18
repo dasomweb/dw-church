@@ -164,8 +164,8 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             return;
         }
         
-        $layout = $settings['layout'];
-        $columns = $layout === 'grid' ? intval($settings['columns']) : 1;
+        $layout = $settings['layout'] ?? 'grid';
+        $columns = $layout === 'grid' ? intval($settings['columns'] ?? 3) : 1;
         $col_class = $layout === 'grid' ? 'dw-sermon-grid' : 'dw-sermon-list';
         
         echo '<div class="dw-sermons-widget ' . esc_attr($col_class) . '" style="display:grid;grid-template-columns:repeat(' . $columns . ',1fr);gap:20px;">';
@@ -177,7 +177,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             
             echo '<div class="dw-sermon-item" style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);transition:transform 0.3s;" onmouseover="this.style.transform=\'translateY(-5px)\'" onmouseout="this.style.transform=\'translateY(0)\'">';
             
-            if ($settings['show_thumbnail'] === 'yes' && has_post_thumbnail()) {
+            if (($settings['show_thumbnail'] ?? 'yes') === 'yes' && has_post_thumbnail()) {
                 echo '<div class="sermon-thumbnail">';
                 echo '<a href="' . get_permalink() . '">';
                 the_post_thumbnail('medium', array('style' => 'width:100%;height:200px;object-fit:cover;'));
@@ -189,16 +189,16 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             
             echo '<h3 style="margin:0 0 10px 0;font-size:18px;"><a href="' . get_permalink() . '" style="text-decoration:none;color:#333;">' . get_the_title() . '</a></h3>';
             
-            if ($settings['show_date'] === 'yes' && $sermon_date) {
+            if (($settings['show_date'] ?? 'yes') === 'yes' && $sermon_date) {
                 echo '<div class="sermon-date" style="font-size:13px;color:#666;margin-bottom:5px;">📅 ' . date_i18n('Y-m-d', strtotime($sermon_date)) . '</div>';
             }
             
-            if ($settings['show_preacher'] === 'yes' && !empty($preachers)) {
+            if (($settings['show_preacher'] ?? 'yes') === 'yes' && !empty($preachers)) {
                 echo '<div class="sermon-preacher" style="font-size:13px;color:#666;margin-bottom:10px;">👤 ' . esc_html(implode(', ', $preachers)) . '</div>';
             }
             
-            if ($settings['show_excerpt'] === 'yes') {
-                $excerpt = wp_trim_words(get_the_excerpt(), $settings['excerpt_length']);
+            if (($settings['show_excerpt'] ?? 'no') === 'yes') {
+                $excerpt = wp_trim_words(get_the_excerpt(), $settings['excerpt_length'] ?? 20);
                 echo '<div class="sermon-excerpt" style="font-size:14px;color:#555;line-height:1.6;">' . esc_html($excerpt) . '</div>';
             }
             
