@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.14.4
+Stable tag: 1.15.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,19 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.15.0 =
+* New Feature: Banner display type option (Image Only / Background Image + Text)
+* New Feature: Text overlay mode for banners with customizable Title, Subtitle, and Description
+* New Feature: 9-position text alignment (top/center/bottom + left/center/right)
+* New Feature: Customizable button with link for text overlay banners
+* New Feature: Separate background image field for text overlay mode
+* New Feature: Banner slider widget now supports both display modes
+* New Feature: Elementor style controls for text, button (typography, colors, hover effects)
+* New Feature: Automatic overlay background with customizable opacity
+* Improvement: Admin interface updated with display type toggle
+* Improvement: Responsive design for text overlay banners on mobile
+* Improvement: Enhanced banner admin JavaScript for dynamic field visibility
 
 = 1.14.4 =
 * Fix: Video First layout grid ratio improved (2fr 3fr instead of 1fr 2fr)

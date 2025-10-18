@@ -26,6 +26,8 @@ var DasomChurchAdmin = {
         this.initYouTubeThumbnails();
         this.initFormValidation();
         this.initBannerCategoryToggle();
+        this.initBannerDisplayTypeToggle();
+        this.initBannerAdditionalUploaders();
     },
     
     /**
@@ -311,6 +313,139 @@ var DasomChurchAdmin = {
                     $('#banner_categorychecklist input[type="checkbox"]').not(this).prop('checked', false);
                 }
                 toggleBannerFields();
+            });
+        }
+    },
+    
+    /**
+     * Banner display type toggle
+     */
+    initBannerDisplayTypeToggle: function() {
+        if ($('body').hasClass('post-type-banner')) {
+            function toggleBannerDisplayFields() {
+                var displayType = $('input[name="dw_banner_display_type"]:checked').val();
+                
+                if (displayType === 'image_with_text') {
+                    $('.banner-text-field').show();
+                    $('.banner-image-only-desc').hide();
+                    $('.banner-text-desc').show();
+                } else {
+                    $('.banner-text-field').hide();
+                    $('.banner-image-only-desc').show();
+                    $('.banner-text-desc').hide();
+                }
+            }
+            
+            // Initial toggle on page load
+            toggleBannerDisplayFields();
+            
+            // Toggle on display type change
+            $('input[name="dw_banner_display_type"]').on('change', function() {
+                toggleBannerDisplayFields();
+            });
+        }
+    },
+    
+    /**
+     * Banner additional image uploaders
+     */
+    initBannerAdditionalUploaders: function() {
+        var self = this;
+        
+        if ($('body').hasClass('post-type-banner')) {
+            // Banner PC image uploader
+            $('#dw_banner_pc_image_button').on('click', function(e) {
+                e.preventDefault();
+                self.openMediaFrame({
+                    title: 'PC용 배너 이미지 업로드',
+                    button: { text: '선택' },
+                    library: { type: 'image' },
+                    multiple: false,
+                    onSelect: function(attachment) {
+                        $('#dw_banner_pc_image').val(attachment.id);
+                        $('#dw_banner_pc_image_preview').html('<img src="' + attachment.url + '" style="max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;" />');
+                    }
+                });
+            });
+            
+            $('#dw_banner_pc_image_remove').on('click', function(e) {
+                e.preventDefault();
+                $('#dw_banner_pc_image').val('');
+                $('#dw_banner_pc_image_preview').html('');
+            });
+            
+            // Banner mobile image uploader
+            $('#dw_banner_mobile_image_button').on('click', function(e) {
+                e.preventDefault();
+                self.openMediaFrame({
+                    title: '모바일용 배너 이미지 업로드',
+                    button: { text: '선택' },
+                    library: { type: 'image' },
+                    multiple: false,
+                    onSelect: function(attachment) {
+                        $('#dw_banner_mobile_image').val(attachment.id);
+                        $('#dw_banner_mobile_image_preview').html('<img src="' + attachment.url + '" style="max-width:300px;height:auto;object-fit:cover;border:1px solid #ddd;" />');
+                    }
+                });
+            });
+            
+            $('#dw_banner_mobile_image_remove').on('click', function(e) {
+                e.preventDefault();
+                $('#dw_banner_mobile_image').val('');
+                $('#dw_banner_mobile_image_preview').html('');
+            });
+            
+            // Banner sub image uploader
+            $('#dw_banner_sub_image_button').on('click', function(e) {
+                e.preventDefault();
+                self.openMediaFrame({
+                    title: '서브 배너 이미지 업로드',
+                    button: { text: '선택' },
+                    library: { type: 'image' },
+                    multiple: false,
+                    onSelect: function(attachment) {
+                        $('#dw_banner_sub_image').val(attachment.id);
+                        $('#dw_banner_sub_image_preview').html('<img src="' + attachment.url + '" style="max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;" />');
+                    }
+                });
+            });
+            
+            $('#dw_banner_sub_image_remove').on('click', function(e) {
+                e.preventDefault();
+                $('#dw_banner_sub_image').val('');
+                $('#dw_banner_sub_image_preview').html('');
+            });
+            
+            // Banner background image uploader (for text mode)
+            $('#dw_banner_bg_image_button').on('click', function(e) {
+                e.preventDefault();
+                self.openMediaFrame({
+                    title: '배경 이미지 업로드',
+                    button: { text: '선택' },
+                    library: { type: 'image' },
+                    multiple: false,
+                    onSelect: function(attachment) {
+                        $('#dw_banner_bg_image').val(attachment.id);
+                        $('#dw_banner_bg_image_preview').html('<img src="' + attachment.url + '" style="max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;" />');
+                    }
+                });
+            });
+            
+            $('#dw_banner_bg_image_remove').on('click', function(e) {
+                e.preventDefault();
+                $('#dw_banner_bg_image').val('');
+                $('#dw_banner_bg_image_preview').html('');
+            });
+            
+            // Date reset buttons
+            $('#dw_banner_start_date_reset').on('click', function(e) {
+                e.preventDefault();
+                $('#dw_banner_start_date').val('');
+            });
+            
+            $('#dw_banner_end_date_reset').on('click', function(e) {
+                e.preventDefault();
+                $('#dw_banner_end_date').val('');
             });
         }
     }

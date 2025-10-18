@@ -418,6 +418,18 @@ class Dasom_Church_Meta_Boxes {
         $link_target = $link_target ? $link_target : '_self';
         $start_date = get_post_meta($post->ID, 'dw_banner_start_date', true);
         $end_date = get_post_meta($post->ID, 'dw_banner_end_date', true);
+        
+        // Get display type and text content fields
+        $display_type = get_post_meta($post->ID, 'dw_banner_display_type', true);
+        $display_type = $display_type ? $display_type : 'image_only';
+        $bg_image = get_post_meta($post->ID, 'dw_banner_bg_image', true);
+        $text_title = get_post_meta($post->ID, 'dw_banner_text_title', true);
+        $text_subtitle = get_post_meta($post->ID, 'dw_banner_text_subtitle', true);
+        $text_description = get_post_meta($post->ID, 'dw_banner_text_description', true);
+        $text_position = get_post_meta($post->ID, 'dw_banner_text_position', true);
+        $text_position = $text_position ? $text_position : 'center-center';
+        $button_text = get_post_meta($post->ID, 'dw_banner_button_text', true);
+        $button_text = $button_text ? $button_text : __('자세히 보기', 'dasom-church');
         ?>
         <div style="background:#f9f9f9;padding:15px;margin-bottom:20px;border:1px solid #ddd;border-radius:4px;">
             <p style="margin:0;font-size:13px;color:#666;">
@@ -427,6 +439,28 @@ class Dasom_Church_Meta_Boxes {
                 • <strong><?php _e('서브 배너', 'dasom-church'); ?>:</strong> <?php _e('1024px 고정폭, 비율 선택 가능 (16:9, 4:3, 1:1)', 'dasom-church'); ?>
             </p>
         </div>
+        
+        <table class="form-table">
+            <!-- 디스플레이 타입 선택 -->
+            <tr>
+                <th scope="row">
+                    <label><?php _e('배너 표시 방식', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <fieldset>
+                        <label style="display:inline-block;margin-right:20px;">
+                            <input type="radio" name="dw_banner_display_type" value="image_only" <?php checked($display_type, 'image_only'); ?> />
+                            <?php _e('이미지만', 'dasom-church'); ?>
+                        </label>
+                        <label style="display:inline-block;">
+                            <input type="radio" name="dw_banner_display_type" value="image_with_text" <?php checked($display_type, 'image_with_text'); ?> />
+                            <?php _e('배경이미지 + 텍스트', 'dasom-church'); ?>
+                        </label>
+                    </fieldset>
+                    <p class="description"><?php _e('배너 표시 방식을 선택하세요. "배경이미지 + 텍스트"를 선택하면 이미지 위에 텍스트와 버튼이 표시됩니다.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+        </table>
         
         <table class="form-table">
             <!-- 메인 배너 필드 -->
@@ -493,13 +527,94 @@ class Dasom_Church_Meta_Boxes {
                     <p class="description"><?php _e('권장 크기: 가로 1024px, 세로는 선택한 비율에 따라 자동 결정', 'dasom-church'); ?></p>
                 </td>
             </tr>
+            
+            <!-- 배경이미지 + 텍스트 모드 전용 필드 -->
+            <tr class="banner-text-field" style="display:none;">
+                <th scope="row">
+                    <label for="dw_banner_bg_image"><?php _e('배경 이미지', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <input type="hidden" id="dw_banner_bg_image" name="dw_banner_bg_image" value="<?php echo esc_attr($bg_image); ?>" />
+                    <button type="button" class="button" id="dw_banner_bg_image_button"><?php _e('배경 이미지 업로드', 'dasom-church'); ?></button>
+                    <button type="button" class="button button-link-delete" id="dw_banner_bg_image_remove" style="color:#b32d2e;"><?php _e('이미지 삭제', 'dasom-church'); ?></button>
+                    <div id="dw_banner_bg_image_preview" style="margin-top:10px;">
+                        <?php if ($bg_image): ?>
+                            <img src="<?php echo esc_url(wp_get_attachment_url($bg_image)); ?>" style="max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;" />
+                        <?php endif; ?>
+                    </div>
+                    <p class="description"><?php _e('텍스트의 배경이 될 이미지를 업로드하세요.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+            <tr class="banner-text-field" style="display:none;">
+                <th scope="row">
+                    <label for="dw_banner_text_title"><?php _e('제목 (Title)', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <input type="text" id="dw_banner_text_title" name="dw_banner_text_title" value="<?php echo esc_attr($text_title); ?>" class="regular-text" />
+                    <p class="description"><?php _e('배너에 표시될 메인 제목을 입력하세요.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+            <tr class="banner-text-field" style="display:none;">
+                <th scope="row">
+                    <label for="dw_banner_text_subtitle"><?php _e('부제목 (Subtitle)', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <input type="text" id="dw_banner_text_subtitle" name="dw_banner_text_subtitle" value="<?php echo esc_attr($text_subtitle); ?>" class="regular-text" />
+                    <p class="description"><?php _e('배너에 표시될 부제목을 입력하세요.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+            <tr class="banner-text-field" style="display:none;">
+                <th scope="row">
+                    <label for="dw_banner_text_description"><?php _e('설명 (Description)', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <textarea id="dw_banner_text_description" name="dw_banner_text_description" class="large-text" rows="3"><?php echo esc_textarea($text_description); ?></textarea>
+                    <p class="description"><?php _e('배너에 표시될 짧은 설명을 입력하세요.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+            <tr class="banner-text-field" style="display:none;">
+                <th scope="row">
+                    <label for="dw_banner_text_position"><?php _e('텍스트 위치', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <select id="dw_banner_text_position" name="dw_banner_text_position" class="regular-text">
+                        <optgroup label="<?php _e('상단', 'dasom-church'); ?>">
+                            <option value="top-left" <?php selected($text_position, 'top-left'); ?>><?php _e('상단 왼쪽', 'dasom-church'); ?></option>
+                            <option value="top-center" <?php selected($text_position, 'top-center'); ?>><?php _e('상단 중앙', 'dasom-church'); ?></option>
+                            <option value="top-right" <?php selected($text_position, 'top-right'); ?>><?php _e('상단 오른쪽', 'dasom-church'); ?></option>
+                        </optgroup>
+                        <optgroup label="<?php _e('중앙', 'dasom-church'); ?>">
+                            <option value="center-left" <?php selected($text_position, 'center-left'); ?>><?php _e('중앙 왼쪽', 'dasom-church'); ?></option>
+                            <option value="center-center" <?php selected($text_position, 'center-center'); ?>><?php _e('중앙', 'dasom-church'); ?></option>
+                            <option value="center-right" <?php selected($text_position, 'center-right'); ?>><?php _e('중앙 오른쪽', 'dasom-church'); ?></option>
+                        </optgroup>
+                        <optgroup label="<?php _e('하단', 'dasom-church'); ?>">
+                            <option value="bottom-left" <?php selected($text_position, 'bottom-left'); ?>><?php _e('하단 왼쪽', 'dasom-church'); ?></option>
+                            <option value="bottom-center" <?php selected($text_position, 'bottom-center'); ?>><?php _e('하단 중앙', 'dasom-church'); ?></option>
+                            <option value="bottom-right" <?php selected($text_position, 'bottom-right'); ?>><?php _e('하단 오른쪽', 'dasom-church'); ?></option>
+                        </optgroup>
+                    </select>
+                    <p class="description"><?php _e('텍스트가 표시될 위치를 선택하세요.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+            <tr class="banner-text-field" style="display:none;">
+                <th scope="row">
+                    <label for="dw_banner_button_text"><?php _e('버튼 텍스트', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <input type="text" id="dw_banner_button_text" name="dw_banner_button_text" value="<?php echo esc_attr($button_text); ?>" class="regular-text" />
+                    <p class="description"><?php _e('버튼에 표시될 텍스트를 입력하세요. 비워두면 버튼이 표시되지 않습니다.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+            
             <tr>
                 <th scope="row">
                     <label for="dw_banner_link_url"><?php _e('링크 URL', 'dasom-church'); ?></label>
                 </th>
                 <td>
                     <input type="url" id="dw_banner_link_url" name="dw_banner_link_url" value="<?php echo esc_url($link_url); ?>" class="regular-text" placeholder="https://" />
-                    <p class="description"><?php _e('배너 클릭 시 이동할 URL을 입력하세요.', 'dasom-church'); ?></p>
+                    <p class="description banner-image-only-desc"><?php _e('배너 클릭 시 이동할 URL을 입력하세요.', 'dasom-church'); ?></p>
+                    <p class="description banner-text-desc" style="display:none;"><?php _e('버튼 클릭 시 이동할 URL을 입력하세요. (이미지만 모드에서는 이미지에 링크가 적용됩니다)', 'dasom-church'); ?></p>
                 </td>
             </tr>
             <tr>
@@ -838,6 +953,54 @@ class Dasom_Church_Meta_Boxes {
             // Clear main banner fields
             delete_post_meta($post_id, 'dw_banner_pc_image');
             delete_post_meta($post_id, 'dw_banner_mobile_image');
+        }
+        
+        // Save display type
+        if (isset($_POST['dw_banner_display_type'])) {
+            $display_type = sanitize_text_field($_POST['dw_banner_display_type']);
+            if (in_array($display_type, array('image_only', 'image_with_text'))) {
+                update_post_meta($post_id, 'dw_banner_display_type', $display_type);
+                
+                // Save text mode fields if display type is image_with_text
+                if ($display_type === 'image_with_text') {
+                    if (isset($_POST['dw_banner_bg_image'])) {
+                        $bg_image_id = intval($_POST['dw_banner_bg_image']);
+                        update_post_meta($post_id, 'dw_banner_bg_image', $bg_image_id);
+                    }
+                    
+                    if (isset($_POST['dw_banner_text_title'])) {
+                        update_post_meta($post_id, 'dw_banner_text_title', sanitize_text_field($_POST['dw_banner_text_title']));
+                    }
+                    
+                    if (isset($_POST['dw_banner_text_subtitle'])) {
+                        update_post_meta($post_id, 'dw_banner_text_subtitle', sanitize_text_field($_POST['dw_banner_text_subtitle']));
+                    }
+                    
+                    if (isset($_POST['dw_banner_text_description'])) {
+                        update_post_meta($post_id, 'dw_banner_text_description', sanitize_textarea_field($_POST['dw_banner_text_description']));
+                    }
+                    
+                    if (isset($_POST['dw_banner_text_position'])) {
+                        $position = sanitize_text_field($_POST['dw_banner_text_position']);
+                        $valid_positions = array('top-left', 'top-center', 'top-right', 'center-left', 'center-center', 'center-right', 'bottom-left', 'bottom-center', 'bottom-right');
+                        if (in_array($position, $valid_positions)) {
+                            update_post_meta($post_id, 'dw_banner_text_position', $position);
+                        }
+                    }
+                    
+                    if (isset($_POST['dw_banner_button_text'])) {
+                        update_post_meta($post_id, 'dw_banner_button_text', sanitize_text_field($_POST['dw_banner_button_text']));
+                    }
+                } else {
+                    // Clear text mode fields if switching to image only
+                    delete_post_meta($post_id, 'dw_banner_bg_image');
+                    delete_post_meta($post_id, 'dw_banner_text_title');
+                    delete_post_meta($post_id, 'dw_banner_text_subtitle');
+                    delete_post_meta($post_id, 'dw_banner_text_description');
+                    delete_post_meta($post_id, 'dw_banner_text_position');
+                    delete_post_meta($post_id, 'dw_banner_button_text');
+                }
+            }
         }
         
         // Save common fields (link, dates)

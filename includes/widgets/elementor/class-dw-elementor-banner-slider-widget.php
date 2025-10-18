@@ -126,6 +126,253 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         );
         
         $this->end_controls_section();
+        
+        // Style Tab - Text Overlay Settings
+        $this->start_controls_section(
+            'style_text_section',
+            [
+                'label' => __('Text Overlay', 'dasom-church'),
+                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+        
+        $this->add_control(
+            'text_overlay_bg',
+            [
+                'label' => __('Overlay Background', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => 'rgba(0,0,0,0.3)',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-banner-with-text::before' => 'background-color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'title_heading',
+            [
+                'label' => __('Title', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::HEADING,
+                'separator' => 'before',
+            ]
+        );
+        
+        $this->add_group_control(
+            \Elementor\Group_Control_Typography::get_type(),
+            [
+                'name' => 'title_typography',
+                'label' => __('Typography', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-banner-title',
+            ]
+        );
+        
+        $this->add_control(
+            'title_color',
+            [
+                'label' => __('Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#ffffff',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-banner-title' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'subtitle_heading',
+            [
+                'label' => __('Subtitle', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::HEADING,
+                'separator' => 'before',
+            ]
+        );
+        
+        $this->add_group_control(
+            \Elementor\Group_Control_Typography::get_type(),
+            [
+                'name' => 'subtitle_typography',
+                'label' => __('Typography', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-banner-subtitle',
+            ]
+        );
+        
+        $this->add_control(
+            'subtitle_color',
+            [
+                'label' => __('Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#ffffff',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-banner-subtitle' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'description_heading',
+            [
+                'label' => __('Description', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::HEADING,
+                'separator' => 'before',
+            ]
+        );
+        
+        $this->add_group_control(
+            \Elementor\Group_Control_Typography::get_type(),
+            [
+                'name' => 'description_typography',
+                'label' => __('Typography', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-banner-description',
+            ]
+        );
+        
+        $this->add_control(
+            'description_color',
+            [
+                'label' => __('Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#ffffff',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-banner-description' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->end_controls_section();
+        
+        // Style Tab - Button Settings
+        $this->start_controls_section(
+            'style_button_section',
+            [
+                'label' => __('Button', 'dasom-church'),
+                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+        
+        $this->add_group_control(
+            \Elementor\Group_Control_Typography::get_type(),
+            [
+                'name' => 'button_typography',
+                'label' => __('Typography', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-banner-button',
+            ]
+        );
+        
+        $this->start_controls_tabs('button_styles');
+        
+        $this->start_controls_tab(
+            'button_normal',
+            [
+                'label' => __('Normal', 'dasom-church'),
+            ]
+        );
+        
+        $this->add_control(
+            'button_text_color',
+            [
+                'label' => __('Text Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#ffffff',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-banner-button' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'button_bg_color',
+            [
+                'label' => __('Background Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#2271b1',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-banner-button' => 'background-color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->end_controls_tab();
+        
+        $this->start_controls_tab(
+            'button_hover',
+            [
+                'label' => __('Hover', 'dasom-church'),
+            ]
+        );
+        
+        $this->add_control(
+            'button_hover_text_color',
+            [
+                'label' => __('Text Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#ffffff',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-banner-button:hover' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'button_hover_bg_color',
+            [
+                'label' => __('Background Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#135e96',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-banner-button:hover' => 'background-color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->end_controls_tab();
+        
+        $this->end_controls_tabs();
+        
+        $this->add_responsive_control(
+            'button_padding',
+            [
+                'label' => __('Padding', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em', '%'],
+                'separator' => 'before',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-banner-button' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'button_border_radius',
+            [
+                'label' => __('Border Radius', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', '%'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 50,
+                    ],
+                ],
+                'default' => [
+                    'size' => 4,
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-banner-button' => 'border-radius: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_group_control(
+            \Elementor\Group_Control_Box_Shadow::get_type(),
+            [
+                'name' => 'button_box_shadow',
+                'label' => __('Box Shadow', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-banner-button',
+            ]
+        );
+        
+        $this->end_controls_section();
     }
     
     protected function render() {
@@ -209,6 +456,10 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
             $terms = wp_get_post_terms(get_the_ID(), 'banner_category');
             $category = !empty($terms) && !is_wp_error($terms) ? $terms[0]->name : '';
             
+            // Get display type
+            $display_type = get_post_meta(get_the_ID(), 'dw_banner_display_type', true);
+            $display_type = $display_type ? $display_type : 'image_only';
+            
             // Get appropriate image based on category
             $image_url = '';
             if ($category === '메인 배너' || $category === 'Main Banner') {
@@ -223,21 +474,64 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
             $link_target = get_post_meta(get_the_ID(), 'dw_banner_link_target', true);
             $link_target = $link_target === '_blank' ? '_blank' : '_self';
             
-            echo '<div class="swiper-slide">';
+            echo '<div class="swiper-slide dw-banner-slide-' . esc_attr($display_type) . '">';
             
-            if ($link_url) {
-                echo '<a href="' . esc_url($link_url) . '" target="' . esc_attr($link_target) . '" style="display:block;">';
+            if ($display_type === 'image_only') {
+                // Image only mode: image with link
+                if ($link_url) {
+                    echo '<a href="' . esc_url($link_url) . '" target="' . esc_attr($link_target) . '" style="display:block;">';
+                }
+                
+                if ($image_url) {
+                    echo '<img src="' . esc_url($image_url) . '" alt="' . esc_attr(get_the_title()) . '" style="width:100%;height:auto;display:block;">';
+                }
+                
+                if ($link_url) {
+                    echo '</a>';
+                }
+            } else {
+                // Image with text mode: background image + text overlay + button
+                $bg_image_id = get_post_meta(get_the_ID(), 'dw_banner_bg_image', true);
+                $bg_image_url = $bg_image_id ? wp_get_attachment_url($bg_image_id) : $image_url;
+                
+                $text_title = get_post_meta(get_the_ID(), 'dw_banner_text_title', true);
+                $text_subtitle = get_post_meta(get_the_ID(), 'dw_banner_text_subtitle', true);
+                $text_description = get_post_meta(get_the_ID(), 'dw_banner_text_description', true);
+                $text_position = get_post_meta(get_the_ID(), 'dw_banner_text_position', true);
+                $text_position = $text_position ? $text_position : 'center-center';
+                $button_text = get_post_meta(get_the_ID(), 'dw_banner_button_text', true);
+                
+                // Convert position to CSS classes
+                list($v_align, $h_align) = explode('-', $text_position);
+                
+                $v_align_style = $v_align === 'top' ? 'flex-start' : ($v_align === 'bottom' ? 'flex-end' : 'center');
+                $h_align_style = $h_align === 'left' ? 'flex-start' : ($h_align === 'right' ? 'flex-end' : 'center');
+                
+                echo '<div class="dw-banner-with-text dw-banner-align-' . esc_attr($text_position) . '" style="position:relative;width:100%;background-image:url(' . esc_url($bg_image_url) . ');background-size:cover;background-position:center;min-height:500px;display:flex;align-items:' . esc_attr($v_align_style) . ';justify-content:' . esc_attr($h_align_style) . ';">';
+                
+                echo '<div class="dw-banner-text-content" style="padding:40px;max-width:600px;text-align:' . esc_attr($h_align) . ';position:relative;z-index:2;">';
+                
+                if ($text_subtitle) {
+                    echo '<div class="dw-banner-subtitle">' . esc_html($text_subtitle) . '</div>';
+                }
+                
+                if ($text_title) {
+                    echo '<h2 class="dw-banner-title">' . esc_html($text_title) . '</h2>';
+                }
+                
+                if ($text_description) {
+                    echo '<div class="dw-banner-description">' . esc_html($text_description) . '</div>';
+                }
+                
+                if ($button_text && $link_url) {
+                    echo '<a href="' . esc_url($link_url) . '" target="' . esc_attr($link_target) . '" class="dw-banner-button">' . esc_html($button_text) . '</a>';
+                }
+                
+                echo '</div>'; // text-content
+                echo '</div>'; // banner-with-text
             }
             
-            if ($image_url) {
-                echo '<img src="' . esc_url($image_url) . '" alt="' . esc_attr(get_the_title()) . '" style="width:100%;height:auto;display:block;">';
-            }
-            
-            if ($link_url) {
-                echo '</a>';
-            }
-            
-            echo '</div>';
+            echo '</div>'; // swiper-slide
         }
         
         echo '</div>'; // swiper-wrapper
@@ -277,6 +571,71 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
             });
         })(jQuery);
         </script>
+        <style>
+        .dw-banner-with-text {
+            position: relative;
+        }
+        .dw-banner-with-text::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.3);
+            z-index: 1;
+        }
+        .dw-banner-subtitle {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+        .dw-banner-title {
+            font-size: 42px;
+            font-weight: bold;
+            margin: 0 0 15px 0;
+            color: #fff;
+            line-height: 1.2;
+        }
+        .dw-banner-description {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+        .dw-banner-button {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #2271b1;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .dw-banner-button:hover {
+            background-color: #135e96;
+            transform: translateY(-2px);
+        }
+        @media (max-width: 768px) {
+            .dw-banner-with-text {
+                min-height: 350px !important;
+            }
+            .dw-banner-title {
+                font-size: 28px !important;
+            }
+            .dw-banner-subtitle {
+                font-size: 14px !important;
+            }
+            .dw-banner-description {
+                font-size: 14px !important;
+            }
+            .dw-banner-text-content {
+                padding: 20px !important;
+            }
+        }
+        </style>
         <?php
         
         wp_reset_postdata();
