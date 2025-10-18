@@ -202,12 +202,115 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'navigation',
             [
-                'label' => __('Show Navigation', 'dasom-church'),
+                'label' => __('Show Navigation Arrows', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
+                'label_on' => __('Show', 'dasom-church'),
+                'label_off' => __('Hide', 'dasom-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'navigation_size',
+            [
+                'label' => __('Navigation Arrow Size', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => [
+                    'px' => [
+                        'min' => 20,
+                        'max' => 80,
+                        'step' => 2,
+                    ],
+                ],
+                'default' => [
+                    'unit' => 'px',
+                    'size' => 40,
+                ],
+                'tablet_default' => [
+                    'unit' => 'px',
+                    'size' => 36,
+                ],
+                'mobile_default' => [
+                    'unit' => 'px',
+                    'size' => 32,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-modern-nav' => 'width: {{SIZE}}{{UNIT}} !important; height: {{SIZE}}{{UNIT}} !important;',
+                ],
+                'condition' => [
+                    'navigation' => 'yes',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'navigation_icon_size',
+            [
+                'label' => __('Arrow Icon Size', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => [
+                    'px' => [
+                        'min' => 10,
+                        'max' => 40,
+                        'step' => 1,
+                    ],
+                ],
+                'default' => [
+                    'unit' => 'px',
+                    'size' => 14,
+                ],
+                'tablet_default' => [
+                    'unit' => 'px',
+                    'size' => 13,
+                ],
+                'mobile_default' => [
+                    'unit' => 'px',
+                    'size' => 12,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-modern-nav:after' => 'font-size: {{SIZE}}{{UNIT}} !important;',
+                ],
+                'condition' => [
+                    'navigation' => 'yes',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'navigation_position',
+            [
+                'label' => __('Arrow Position (Left/Right)', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 100,
+                        'step' => 5,
+                    ],
+                ],
+                'default' => [
+                    'unit' => 'px',
+                    'size' => 20,
+                ],
+                'tablet_default' => [
+                    'unit' => 'px',
+                    'size' => 15,
+                ],
+                'mobile_default' => [
+                    'unit' => 'px',
+                    'size' => 10,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .swiper-button-prev.dw-modern-nav' => 'left: {{SIZE}}{{UNIT}} !important;',
+                    '{{WRAPPER}} .swiper-button-next.dw-modern-nav' => 'right: {{SIZE}}{{UNIT}} !important;',
+                ],
+                'condition' => [
+                    'navigation' => 'yes',
+                ],
             ]
         );
         
@@ -216,8 +319,8 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
             [
                 'label' => __('Show Pagination', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
+                'label_on' => __('Show', 'dasom-church'),
+                'label_off' => __('Hide', 'dasom-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
             ]

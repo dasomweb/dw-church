@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.22.0
+Stable tag: 1.22.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,15 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.22.1 =
+* Feature: Responsive navigation arrow size control (20-80px range)
+* Feature: Responsive arrow icon size control (10-40px range)
+* Feature: Responsive arrow position control (left/right spacing 0-100px)
+* Enhancement: Device-specific arrow settings (Desktop, Tablet, Mobile)
+* UI: All navigation controls appear when arrows are enabled
+* Defaults: Desktop 40px, Tablet 36px, Mobile 32px arrow size
+* Flexibility: Fine-tune arrow appearance per device
 
 = 1.22.0 =
 * Feature: Responsive slider height control in widget settings
