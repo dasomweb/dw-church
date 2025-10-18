@@ -541,5 +541,96 @@ msgstr ""
 msgid "YouTube"
 msgstr ""
 
+# Banner Post Type
+msgid "배너"
+msgstr ""
+
+msgid "새 배너 추가"
+msgstr ""
+
+msgid "배너 편집"
+msgstr ""
+
+msgid "새 배너"
+msgstr ""
+
+msgid "배너 보기"
+msgstr ""
+
+msgid "배너 검색"
+msgstr ""
+
+msgid "배너를 찾을 수 없습니다"
+msgstr ""
+
+msgid "휴지통에서 배너를 찾을 수 없습니다"
+msgstr ""
+
+# Banner Meta Fields
+msgid "배너 정보"
+msgstr ""
+
+msgid "PC용 배너 이미지 (1920px)"
+msgstr ""
+
+msgid "PC용 이미지 업로드"
+msgstr ""
+
+msgid "이미지 삭제"
+msgstr ""
+
+msgid "권장 크기: 가로 1920px"
+msgstr ""
+
+msgid "모바일용 배너 이미지 (720px)"
+msgstr ""
+
+msgid "모바일용 이미지 업로드"
+msgstr ""
+
+msgid "권장 크기: 가로 720px"
+msgstr ""
+
+msgid "링크 URL"
+msgstr ""
+
+msgid "배너 클릭 시 이동할 URL을 입력하세요."
+msgstr ""
+
+msgid "링크 열기 방식"
+msgstr ""
+
+msgid "현재 창에서 열기"
+msgstr ""
+
+msgid "새 창에서 열기"
+msgstr ""
+
+msgid "링크를 클릭했을 때 어떻게 열릴지 선택하세요."
+msgstr ""
+
+# Banner Columns
+msgid "배너 제목"
+msgstr ""
+
+msgid "PC 이미지"
+msgstr ""
+
+msgid "모바일 이미지"
+msgstr ""
+
+msgid "열기 방식"
+msgstr ""
+
+msgid "새 창"
+msgstr ""
+
+msgid "현재 창"
+msgstr ""
+
+msgid "이미지 없음"
+msgstr ""
+
+
 
 
