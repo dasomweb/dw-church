@@ -660,6 +660,10 @@ class Dasom_Church_Admin {
             }
         }
         
+        // Save data deletion setting
+        $delete_data = isset($_POST['dw_delete_data_on_uninstall']) ? 'yes' : 'no';
+        update_option('dw_delete_data_on_uninstall', $delete_data);
+        
         add_action('admin_notices', function() {
             echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Settings saved successfully!', 'dasom-church') . '</p></div>';
         });

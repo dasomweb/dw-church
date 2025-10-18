@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.7.3
+Stable tag: 1.7.4
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -83,6 +83,13 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 
 == Changelog ==
 
+= 1.7.4 =
+* Feature: Data preservation option on plugin uninstall
+* Feature: User can choose whether to delete data when removing plugin
+* Improvement: Added comprehensive update guide (UPDATE_GUIDE.md)
+* Safety: Data is preserved by default (opt-in data deletion)
+* Settings: New "플러그인 삭제 시 데이터 삭제" option in Plugin Settings tab
+
 = 1.7.3 =
 * Feature: Banner post type for Hero sections (PC/Mobile images)
 * Feature: Banner scheduling (start/end dates)
@@ -141,6 +148,9 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.7.4 =
+Critical safety update! Adds data preservation option. Your data is now safe by default when uninstalling. See UPDATE_GUIDE.md for safe update methods.
 
 = 1.7.3 =
 Major feature update! Adds Banner post type for Hero sections with scheduling capabilities. Built on stable v1.6.6 foundation with all core features preserved. Recommended update for churches needing dynamic banner management.

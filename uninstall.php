@@ -16,6 +16,16 @@ if (!current_user_can('activate_plugins')) {
     return;
 }
 
+// Check if user wants to delete data on uninstall
+$delete_data = get_option('dw_delete_data_on_uninstall', 'no');
+
+// If user doesn't want to delete data, exit early
+if ($delete_data !== 'yes') {
+    // Only delete the uninstall option itself
+    delete_option('dw_delete_data_on_uninstall');
+    return;
+}
+
 // Remove plugin options
 $options_to_remove = array(
     // Church info

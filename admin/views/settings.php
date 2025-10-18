@@ -32,6 +32,9 @@ $dashboard_fields_visibility = get_option('dw_dashboard_fields_visibility', 'adm
 
 // GitHub settings
 $github_token = get_option('dw_github_access_token', '');
+
+// Data deletion setting
+$delete_data_on_uninstall = get_option('dw_delete_data_on_uninstall', 'no');
 ?>
 
 <div class="wrap">
@@ -189,6 +192,33 @@ $github_token = get_option('dw_github_access_token', '');
                         <option value="contributor" <?php selected($dashboard_fields_visibility, 'contributor'); ?>><?php echo esc_html__('Contributor (기여자)', 'dasom-church'); ?></option>
                     </select>
                     <p class="description"><?php echo esc_html__('대시보드에서 "Elementor에서 사용할 커스텀 필드 안내"와 "교회설정 커스텀 필드 안내" 섹션을 볼 수 있는 최소 권한을 설정합니다.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+        </table>
+        
+        <h2><?php echo esc_html__('플러그인 삭제 설정', 'dasom-church'); ?></h2>
+        <table class="form-table">
+            <tr>
+                <th scope="row">
+                    <label for="dw_delete_data_on_uninstall"><?php echo esc_html__('플러그인 삭제 시 데이터 삭제', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <fieldset>
+                        <label>
+                            <input type="checkbox" id="dw_delete_data_on_uninstall" name="dw_delete_data_on_uninstall" value="yes" <?php checked($delete_data_on_uninstall, 'yes'); ?> />
+                            <?php echo esc_html__('플러그인 삭제 시 모든 데이터 삭제', 'dasom-church'); ?>
+                        </label>
+                        <p class="description" style="margin-top:10px;">
+                            <strong style="color:#dc3545;">⚠️ <?php echo esc_html__('주의:', 'dasom-church'); ?></strong><br>
+                            <?php echo esc_html__('이 옵션을 활성화하면 플러그인을 삭제할 때 다음 데이터가 모두 삭제됩니다:', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('모든 포스트 (주보, 설교, 컬럼, 앨범, 배너)', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('모든 커스텀 필드 데이터', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('모든 설정 정보', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('설교자 taxonomy 데이터', 'dasom-church'); ?><br><br>
+                            <strong style="color:#2271b1;">💡 <?php echo esc_html__('권장:', 'dasom-church'); ?></strong><br>
+                            <?php echo esc_html__('데이터를 보존하려면 이 옵션을 비활성화한 채로 두세요. 플러그인을 다시 설치하면 기존 데이터를 그대로 사용할 수 있습니다.', 'dasom-church'); ?>
+                        </p>
+                    </fieldset>
                 </td>
             </tr>
         </table>
