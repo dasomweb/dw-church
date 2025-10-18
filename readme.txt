@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.24.2
+Stable tag: 1.24.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.24.3 =
+* Fix: Add default object-fit: cover to ensure images fill container
+* Fix: Images now crop (not shrink) to fit selected aspect ratio
+* Enhancement: Add default object-position: center center
+* Behavior: Images always fill container completely at any ratio
 
 = 1.24.2 =
 * Feature: Image ratio presets (1:1, 4:3, 3:2, 16:9, 21:9)

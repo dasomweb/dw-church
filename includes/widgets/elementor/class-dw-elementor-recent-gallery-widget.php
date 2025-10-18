@@ -585,6 +585,8 @@ class DW_Elementor_Recent_Gallery_Widget extends \Elementor\Widget_Base {
                 left: 0;
                 width: 100%;
                 height: 100%;
+                object-fit: cover;
+                object-position: center center;
                 transition: all 0.3s ease;
             }
             /* Hover Effects */
