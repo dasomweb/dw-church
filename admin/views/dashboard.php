@@ -198,6 +198,31 @@ if (is_wp_error($preachers)) {
                     <td><?php _e('YouTube 썸네일 ID', 'dasom-church'); ?></td>
                     <td><code>dw_column_thumb_id</code></td>
                 </tr>
+                <tr>
+                    <td rowspan="6">🎯 <?php _e('배너 (banner)', 'dasom-church'); ?></td>
+                    <td><?php _e('PC용 배너 이미지 ID', 'dasom-church'); ?></td>
+                    <td><code>dw_banner_pc_image</code></td>
+                </tr>
+                <tr>
+                    <td><?php _e('모바일용 배너 이미지 ID', 'dasom-church'); ?></td>
+                    <td><code>dw_banner_mobile_image</code></td>
+                </tr>
+                <tr>
+                    <td><?php _e('링크 URL', 'dasom-church'); ?></td>
+                    <td><code>dw_banner_link_url</code></td>
+                </tr>
+                <tr>
+                    <td><?php _e('링크 타겟', 'dasom-church'); ?></td>
+                    <td><code>dw_banner_link_target</code></td>
+                </tr>
+                <tr>
+                    <td><?php _e('시작 날짜', 'dasom-church'); ?></td>
+                    <td><code>dw_banner_start_date</code></td>
+                </tr>
+                <tr>
+                    <td><?php _e('종료 날짜', 'dasom-church'); ?></td>
+                    <td><code>dw_banner_end_date</code></td>
+                </tr>
             </tbody>
         </table>
         
@@ -412,6 +437,53 @@ if (is_wp_error($preachers)) {
                 echo '</ul>';
             } else {
                 echo '<p class="dasom-empty">' . __('앨범이 없습니다.', 'dasom-church') . '</p>';
+            }
+            ?>
+        </div>
+        
+        <!-- 배너 -->
+        <div class="dasom-dashboard-card">
+            <div class="dasom-card-header">
+                <h2>🎯 <?php _e('배너', 'dasom-church'); ?></h2>
+                <a href="<?php echo admin_url('edit.php?post_type=banner'); ?>" class="dasom-view-all"><?php _e('전체보기', 'dasom-church'); ?></a>
+            </div>
+            <?php
+            $banners = get_posts(array(
+                'post_type' => 'banner',
+                'posts_per_page' => 7,
+                'post_status' => array('publish', 'future', 'draft'),
+                'orderby' => 'date',
+                'order' => 'DESC'
+            ));
+            if ($banners) {
+                echo '<ul class="dasom-dashboard-list">';
+                foreach ($banners as $post) {
+                    $link_url = get_post_meta($post->ID, 'dw_banner_link_url', true);
+                    $end_date = get_post_meta($post->ID, 'dw_banner_end_date', true);
+                    $status_label = '';
+                    
+                    if ($post->post_status === 'future') {
+                        $status_label = '<span style="color:#f0ad4e;">⏰ ' . __('예약됨', 'dasom-church') . '</span>';
+                    } elseif ($post->post_status === 'draft') {
+                        $status_label = '<span style="color:#999;">📄 ' . __('Draft', 'dasom-church') . '</span>';
+                    } elseif ($end_date && strtotime($end_date) < current_time('timestamp')) {
+                        $status_label = '<span style="color:#dc3545;">⏱️ ' . __('만료됨', 'dasom-church') . '</span>';
+                    }
+                    
+                    echo '<li>';
+                    echo '<a href="' . get_edit_post_link($post->ID) . '">' . esc_html(get_the_title($post)) . '</a>';
+                    if ($link_url) {
+                        echo '<span class="dasom-youtube">🔗</span>';
+                    }
+                    if ($status_label) {
+                        echo $status_label . ' ';
+                    }
+                    echo '<span class="dasom-date">' . get_the_date('Y.m.d', $post) . '</span>';
+                    echo '</li>';
+                }
+                echo '</ul>';
+            } else {
+                echo '<p class="dasom-empty">' . __('배너가 없습니다.', 'dasom-church') . '</p>';
             }
             ?>
         </div>

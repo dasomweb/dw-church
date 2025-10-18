@@ -662,6 +662,25 @@ msgstr ""
 msgid "무기한"
 msgstr ""
 
+# Dashboard - Banner Fields
+msgid "배너 (banner)"
+msgstr ""
+
+msgid "PC용 배너 이미지 ID"
+msgstr ""
+
+msgid "모바일용 배너 이미지 ID"
+msgstr ""
+
+msgid "링크 타겟"
+msgstr ""
+
+msgid "배너가 없습니다."
+msgstr ""
+
+msgid "Draft"
+msgstr ""
+
 
 
 
