@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.16.3
+Stable tag: 1.16.4
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,11 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.16.4 =
+* Fix: JavaScript syntax error - removed extra semicolon after closing brace
+* Fix: Unexpected token ';' error at line 467 resolved
+* Critical Fix: Admin.js now properly loads without syntax errors
 
 = 1.16.3 =
 * Fix: jQuery noConflict mode compatibility issue resolved
