@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.19.0
+Stable tag: 1.19.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,13 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.19.1 =
+* Fix: Banner text horizontal positioning now uses center-based alignment
+* Fix: Left/Center/Right positions now align based on center point, not screen division
+* Improved: Text container max-width increased to 1200px for better layout
+* Improved: Text alignment automatically matches horizontal position (left→left, center→center, right→right)
+* Enhancement: Removed justify-content, now uses margin-based positioning for clearer alignment
 
 = 1.19.0 =
 * Feature: Added Query Source selection to Banner Slider and Grid widgets

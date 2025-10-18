@@ -507,10 +507,24 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
                     
                     list($v_align, $h_align) = explode('-', $text_position);
                     $v_align_style = $v_align === 'top' ? 'flex-start' : ($v_align === 'bottom' ? 'flex-end' : 'center');
-                    $h_align_style = $h_align === 'left' ? 'flex-start' : ($h_align === 'right' ? 'flex-end' : 'center');
                     
-                    echo '<div class="dw-banner-grid-text" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:' . esc_attr($v_align_style) . ';justify-content:' . esc_attr($h_align_style) . ';padding:20px;text-align:' . esc_attr($text_align) . ';">';
-                    echo '<div class="dw-banner-grid-text-content">';
+                    // Calculate margin based on horizontal alignment (center-based positioning)
+                    $container_margin = '';
+                    $text_alignment = $text_align;
+                    
+                    if ($h_align === 'left') {
+                        $container_margin = 'margin-right:auto;';
+                        $text_alignment = 'left';
+                    } elseif ($h_align === 'right') {
+                        $container_margin = 'margin-left:auto;';
+                        $text_alignment = 'right';
+                    } else {
+                        $container_margin = 'margin-left:auto;margin-right:auto;';
+                        $text_alignment = 'center';
+                    }
+                    
+                    echo '<div class="dw-banner-grid-text" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:' . esc_attr($v_align_style) . ';padding:20px;">';
+                    echo '<div class="dw-banner-grid-text-content" style="width:100%;max-width:1200px;' . $container_margin . 'text-align:' . esc_attr($text_alignment) . ';">';
                     
                     if ($text_subtitle) {
                         echo '<div class="dw-banner-grid-subtitle">' . esc_html($text_subtitle) . '</div>';

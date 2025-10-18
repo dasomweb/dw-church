@@ -483,11 +483,28 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
                 // Convert position to flexbox alignment
                 list($v_align, $h_align) = explode('-', $text_position);
                 $v_align_style = $v_align === 'top' ? 'flex-start' : ($v_align === 'bottom' ? 'flex-end' : 'center');
-                $h_align_style = $h_align === 'left' ? 'flex-start' : ($h_align === 'right' ? 'flex-end' : 'center');
                 
-                echo '<div class="dw-banner-bg" style="position:relative;width:100%;background-image:url(' . esc_url($image_url) . ');background-size:cover;background-position:center;min-height:500px;display:flex;align-items:' . esc_attr($v_align_style) . ';justify-content:' . esc_attr($h_align_style) . ';">';
+                // Calculate margin based on horizontal alignment (center-based positioning)
+                $container_margin = '';
+                $text_alignment = $text_align; // Use user-defined text alignment
                 
-                echo '<div class="dw-banner-text-content" style="padding:' . esc_attr($padding_top) . 'px ' . esc_attr($padding_right) . 'px ' . esc_attr($padding_bottom) . 'px ' . esc_attr($padding_left) . 'px;max-width:600px;text-align:' . esc_attr($text_align) . ';position:relative;z-index:2;">';
+                if ($h_align === 'left') {
+                    // Left: add margin-right to push content to the left
+                    $container_margin = 'margin-right:auto;';
+                    $text_alignment = 'left'; // Override to match position
+                } elseif ($h_align === 'right') {
+                    // Right: add margin-left to push content to the right
+                    $container_margin = 'margin-left:auto;';
+                    $text_alignment = 'right'; // Override to match position
+                } else {
+                    // Center: auto margins on both sides
+                    $container_margin = 'margin-left:auto;margin-right:auto;';
+                    $text_alignment = 'center'; // Override to match position
+                }
+                
+                echo '<div class="dw-banner-bg" style="position:relative;width:100%;background-image:url(' . esc_url($image_url) . ');background-size:cover;background-position:center;min-height:500px;display:flex;align-items:' . esc_attr($v_align_style) . ';">';
+                
+                echo '<div class="dw-banner-text-content" style="padding:' . esc_attr($padding_top) . 'px ' . esc_attr($padding_right) . 'px ' . esc_attr($padding_bottom) . 'px ' . esc_attr($padding_left) . 'px;max-width:1200px;width:100%;' . $container_margin . 'text-align:' . esc_attr($text_alignment) . ';position:relative;z-index:2;">';
                 
                 if ($text_subtitle) {
                     echo '<div class="dw-banner-subtitle">' . esc_html($text_subtitle) . '</div>';
