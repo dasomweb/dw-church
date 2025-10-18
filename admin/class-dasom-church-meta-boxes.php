@@ -472,6 +472,7 @@ class Dasom_Church_Meta_Boxes {
                 </th>
                 <td>
                     <input type="datetime-local" id="dw_banner_start_date" name="dw_banner_start_date" value="<?php echo esc_attr($start_date); ?>" class="regular-text" />
+                    <button type="button" class="button" id="dw_banner_start_date_reset" style="margin-left:5px;"><?php _e('Reset', 'dasom-church'); ?></button>
                     <p class="description"><?php _e('이 날짜부터 배너가 표시됩니다. 비워두면 즉시 표시됩니다.', 'dasom-church'); ?></p>
                 </td>
             </tr>
@@ -481,6 +482,7 @@ class Dasom_Church_Meta_Boxes {
                 </th>
                 <td>
                     <input type="datetime-local" id="dw_banner_end_date" name="dw_banner_end_date" value="<?php echo esc_attr($end_date); ?>" class="regular-text" />
+                    <button type="button" class="button" id="dw_banner_end_date_reset" style="margin-left:5px;"><?php _e('Reset', 'dasom-church'); ?></button>
                     <p class="description"><?php _e('이 날짜 이후 배너가 자동으로 비공개(Draft)로 전환됩니다. 비워두면 무기한 표시됩니다.', 'dasom-church'); ?></p>
                 </td>
             </tr>
@@ -1068,6 +1070,18 @@ class Dasom_Church_Meta_Boxes {
                     $('#dw_banner_mobile_image').val('');
                     $('#dw_banner_mobile_image_preview').html('');
                 }
+            });
+            
+            // 배너 시작 날짜 리셋
+            $('#dw_banner_start_date_reset').on('click', function(e) {
+                e.preventDefault();
+                $('#dw_banner_start_date').val('');
+            });
+            
+            // 배너 종료 날짜 리셋
+            $('#dw_banner_end_date_reset').on('click', function(e) {
+                e.preventDefault();
+                $('#dw_banner_end_date').val('');
             });
         });
         ";
