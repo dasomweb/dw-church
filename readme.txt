@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.11.3
+Stable tag: 1.12.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,18 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.12.0 =
+* Feature: New DW Sermon Widget for single sermon display
+* Feature: YouTube video embed with responsive aspect ratios (16:9, 4:3, 21:9)
+* Feature: Show latest sermon or select specific sermon
+* Feature: Display title, date, scripture, preacher with full style control
+* Feature: Center-aligned design for hero sections
+* Feature: Complete typography controls for title and meta info
+* Feature: Video border radius and shadow controls
+* Feature: Customizable meta separator
+* Feature: Show/hide toggles for all elements
+* Improvement: Perfect for sermon detail pages and hero sections
 
 = 1.11.3 =
 * Change: Reordered sermon widget display elements
