@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.12.4
+Stable tag: 1.13.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,16 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.13.0 =
+* Feature: Mobile-optimized responsive design for DW Sermon Widget
+* Feature: Stack layout option for meta info (vertical alignment)
+* Feature: Automatic font size reduction on mobile devices
+* Feature: Responsive separator spacing for mobile
+* Feature: Meta item spacing control for stack layout
+* Improvement: Better readability on small screens
+* Improvement: Tablet (767px) and mobile (480px) breakpoints
+* Improvement: Flexible layout switching (inline/stack)
 
 = 1.12.4 =
 * Fix: Separator vertical alignment now works correctly with meta typography

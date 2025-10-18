@@ -257,6 +257,19 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         );
         
         $this->add_control(
+            'meta_layout',
+            [
+                'label' => __('레이아웃', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'inline',
+                'options' => [
+                    'inline' => __('Inline (한 줄)', 'dasom-church'),
+                    'stack' => __('Stack (세로 정렬)', 'dasom-church'),
+                ],
+            ]
+        );
+        
+        $this->add_control(
             'meta_alignment',
             [
                 'label' => __('정렬', 'dasom-church'),
@@ -278,6 +291,30 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                 'default' => 'center',
                 'selectors' => [
                     '{{WRAPPER}} .dw-single-sermon-meta' => 'text-align: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'meta_item_spacing',
+            [
+                'label' => __('항목 간격', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 30,
+                    ],
+                ],
+                'default' => [
+                    'size' => 8,
+                ],
+                'condition' => [
+                    'meta_layout' => 'stack',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-single-sermon-meta.meta-stack .meta-item:not(:last-child)' => 'margin-bottom: {{SIZE}}{{UNIT}};',
                 ],
             ]
         );
@@ -565,7 +602,11 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
             <h1 class="dw-single-sermon-title"><?php echo esc_html($title); ?></h1>
             
             <!-- Meta Info -->
-            <div class="dw-single-sermon-meta">
+            <?php
+            $meta_layout = $settings['meta_layout'] ?? 'inline';
+            $meta_class = $meta_layout === 'stack' ? 'dw-single-sermon-meta meta-stack' : 'dw-single-sermon-meta meta-inline';
+            ?>
+            <div class="<?php echo esc_attr($meta_class); ?>">
                 <?php
                 $meta_items = [];
                 
@@ -581,8 +622,16 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     $meta_items[] = '<span class="meta-preacher">' . esc_html(implode(', ', $preachers)) . '</span>';
                 }
                 
-                $separator = $settings['meta_separator'] ?? '||';
-                echo implode(' <span class="meta-separator">' . esc_html($separator) . '</span> ', $meta_items);
+                if ($meta_layout === 'stack') {
+                    // Stack layout: each item on separate line
+                    foreach ($meta_items as $item) {
+                        echo '<div class="meta-item">' . $item . '</div>';
+                    }
+                } else {
+                    // Inline layout: items with separator
+                    $separator = $settings['meta_separator'] ?? '||';
+                    echo implode(' <span class="meta-separator">' . esc_html($separator) . '</span> ', $meta_items);
+                }
                 ?>
             </div>
             
@@ -614,9 +663,51 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                 line-height: 1.8;
             }
             
-            .dw-single-sermon-meta span,
-            .dw-single-sermon-meta .meta-separator {
+            .dw-single-sermon-meta.meta-inline span,
+            .dw-single-sermon-meta.meta-inline .meta-separator {
                 display: inline-block;
+            }
+            
+            .dw-single-sermon-meta.meta-stack {
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .dw-single-sermon-meta.meta-stack .meta-item {
+                display: block;
+            }
+            
+            /* Mobile Optimization */
+            @media (max-width: 767px) {
+                .dw-single-sermon-title {
+                    font-size: 24px !important;
+                    line-height: 1.4 !important;
+                }
+                
+                .dw-single-sermon-meta span {
+                    font-size: 14px !important;
+                }
+                
+                .dw-single-sermon-meta .meta-separator {
+                    margin: 0 6px !important;
+                    font-size: 14px !important;
+                }
+            }
+            
+            @media (max-width: 480px) {
+                .dw-single-sermon-title {
+                    font-size: 20px !important;
+                    line-height: 1.3 !important;
+                }
+                
+                .dw-single-sermon-meta span {
+                    font-size: 13px !important;
+                }
+                
+                .dw-single-sermon-meta .meta-separator {
+                    margin: 0 4px !important;
+                    font-size: 12px !important;
+                }
             }
             
             .dw-single-sermon-video {
