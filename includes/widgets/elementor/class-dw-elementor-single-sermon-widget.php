@@ -748,25 +748,28 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
             .dw-single-sermon-widget.layout-video_first .sermon-content-wrapper {
                 order: 2;
                 display: grid;
-                grid-template-columns: 1fr 2fr;
+                grid-template-columns: 3fr 2fr;
                 gap: 30px;
                 align-items: start;
             }
             
             .dw-single-sermon-widget.layout-video_first .dw-single-sermon-meta {
                 grid-column: 1;
-                text-align: left;
+                text-align: left !important;
+                min-width: 0;
             }
             
             .dw-single-sermon-widget.layout-video_first .dw-single-sermon-meta.meta-inline {
-                text-align: left;
+                text-align: left !important;
+                white-space: nowrap;
+                overflow: visible;
             }
             
             .dw-single-sermon-widget.layout-video_first .dw-single-sermon-title {
                 grid-column: 2;
-                margin: 0;
-                padding: 0;
-                text-align: right;
+                margin: 0 !important;
+                padding: 0 !important;
+                text-align: right !important;
             }
             
             .dw-single-sermon-meta {

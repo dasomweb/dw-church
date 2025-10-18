@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.14.3
+Stable tag: 1.14.4
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,13 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.14.4 =
+* Fix: Video First layout grid ratio improved (2fr 3fr instead of 1fr 2fr)
+* Fix: Meta info area width increased to prevent line breaks
+* Fix: Title right alignment now properly forced with !important
+* Fix: Meta info white-space nowrap to keep in single line
+* Improvement: Better visual balance in Video First layout
 
 = 1.14.3 =
 * Change: Date format changed to Korean style (년 월 일)
