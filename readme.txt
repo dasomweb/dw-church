@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.9.0
+Stable tag: 1.10.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,20 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.10.0 =
+* Feature: DW Recent Sermons Widget (Elementor)
+* Feature: DW Bulletins Widget (Elementor)
+* Feature: DW Pastoral Columns Widget (Elementor)
+* Feature: DW Banner Slider Widget with Swiper.js (Elementor)
+* Feature: Individual widget enable/disable controls
+* Feature: Recent sermons with grid/list layouts
+* Feature: Bulletin list with PDF download links
+* Feature: Column list with thumbnails and excerpts
+* Feature: Banner slider with autoplay and navigation
+* Improvement: Comprehensive widget management system
+* Improvement: 5 widgets total for complete church website
+* UX: Easy widget activation from settings panel
 
 = 1.9.0 =
 * Feature: DW Gallery Widget for Elementor, Gutenberg, and Kadence Block Pro

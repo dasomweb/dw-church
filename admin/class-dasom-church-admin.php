@@ -707,6 +707,18 @@ class Dasom_Church_Admin {
         $enable_gallery_widget = isset($_POST['dw_enable_gallery_widget']) ? 'yes' : 'no';
         update_option('dw_enable_gallery_widget', $enable_gallery_widget);
         
+        $enable_sermon_widget = isset($_POST['dw_enable_sermon_widget']) ? 'yes' : 'no';
+        update_option('dw_enable_sermon_widget', $enable_sermon_widget);
+        
+        $enable_bulletin_widget = isset($_POST['dw_enable_bulletin_widget']) ? 'yes' : 'no';
+        update_option('dw_enable_bulletin_widget', $enable_bulletin_widget);
+        
+        $enable_column_widget = isset($_POST['dw_enable_column_widget']) ? 'yes' : 'no';
+        update_option('dw_enable_column_widget', $enable_column_widget);
+        
+        $enable_banner_slider_widget = isset($_POST['dw_enable_banner_slider_widget']) ? 'yes' : 'no';
+        update_option('dw_enable_banner_slider_widget', $enable_banner_slider_widget);
+        
         add_action('admin_notices', function() {
             echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Settings saved successfully!', 'dasom-church') . '</p></div>';
         });
