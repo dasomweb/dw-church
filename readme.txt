@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.18.1
+Stable tag: 1.18.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,14 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.18.2 =
+* Feature: Added Order and Order By controls to Banner Slider widget
+* Feature: Added Banner Category filter to Banner Grid widget
+* Improved: Banner Slider now supports date/title/random/menu_order sorting
+* Improved: Banner Grid now displays correct images based on category (Main/Sub)
+* Enhancement: Both widgets now have complete query control options
+* Enhancement: Banner Grid supports all categories, not just sub banners
 
 = 1.18.1 =
 * Fix: Banner images now save correctly without requiring category selection

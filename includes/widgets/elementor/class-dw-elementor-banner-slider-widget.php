@@ -78,6 +78,34 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         );
         
         $this->add_control(
+            'order',
+            [
+                'label' => __('Order', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'DESC',
+                'options' => [
+                    'ASC' => __('Ascending', 'dasom-church'),
+                    'DESC' => __('Descending', 'dasom-church'),
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'orderby',
+            [
+                'label' => __('Order By', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'date',
+                'options' => [
+                    'date' => __('Date', 'dasom-church'),
+                    'title' => __('Title', 'dasom-church'),
+                    'rand' => __('Random', 'dasom-church'),
+                    'menu_order' => __('Menu Order', 'dasom-church'),
+                ],
+            ]
+        );
+        
+        $this->add_control(
             'autoplay',
             [
                 'label' => __('Autoplay', 'dasom-church'),
@@ -250,8 +278,8 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
             'post_type' => 'banner',
             'posts_per_page' => $settings['posts_per_page'] ?? 5,
             'post_status' => 'publish',
-            'orderby' => 'date',
-            'order' => 'DESC',
+            'orderby' => $settings['orderby'] ?? 'date',
+            'order' => $settings['order'] ?? 'DESC',
             'meta_query' => array(
                 'relation' => 'AND',
                 array(

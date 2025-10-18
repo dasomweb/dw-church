@@ -44,6 +44,29 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
             ]
         );
         
+        // Get banner categories
+        $categories = get_terms(array(
+            'taxonomy' => 'banner_category',
+            'hide_empty' => false,
+        ));
+        
+        $category_options = array('' => __('All Banners', 'dasom-church'));
+        if (!is_wp_error($categories)) {
+            foreach ($categories as $cat) {
+                $category_options[$cat->slug] = $cat->name;
+            }
+        }
+        
+        $this->add_control(
+            'banner_category',
+            [
+                'label' => __('Banner Category', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'options' => $category_options,
+                'default' => '',
+            ]
+        );
+        
         $this->add_control(
             'posts_per_page',
             [
@@ -304,14 +327,6 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
             'posts_per_page' => $settings['posts_per_page'] ?? 6,
             'order' => $settings['order'] ?? 'DESC',
             'orderby' => $settings['orderby'] ?? 'date',
-            'tax_query' => array(
-                array(
-                    'taxonomy' => 'banner_category',
-                    'field' => 'slug',
-                    'terms' => array('sub-banner', '서브-배너'),
-                    'operator' => 'IN',
-                ),
-            ),
             'meta_query' => array(
                 'relation' => 'AND',
                 array(
@@ -343,6 +358,17 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
             ),
         );
         
+        // Filter by category if selected
+        if (!empty($settings['banner_category'])) {
+            $args['tax_query'] = array(
+                array(
+                    'taxonomy' => 'banner_category',
+                    'field' => 'slug',
+                    'terms' => $settings['banner_category'],
+                ),
+            );
+        }
+        
         $banners = new WP_Query($args);
         
         if (!$banners->have_posts()) {
@@ -356,8 +382,18 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
         while ($banners->have_posts()) {
             $banners->the_post();
             
-            $sub_image = get_post_meta(get_the_ID(), 'dw_banner_sub_image', true);
-            $image_url = $sub_image ? wp_get_attachment_url($sub_image) : '';
+            // Get appropriate image based on category
+            $terms = wp_get_post_terms(get_the_ID(), 'banner_category');
+            $category = !empty($terms) && !is_wp_error($terms) ? $terms[0]->name : '';
+            
+            $image_url = '';
+            if ($category === '메인 배너' || $category === 'Main Banner') {
+                $pc_image = get_post_meta(get_the_ID(), 'dw_banner_pc_image', true);
+                $image_url = $pc_image ? wp_get_attachment_url($pc_image) : '';
+            } else {
+                $sub_image = get_post_meta(get_the_ID(), 'dw_banner_sub_image', true);
+                $image_url = $sub_image ? wp_get_attachment_url($sub_image) : '';
+            }
             
             $link_url = get_post_meta(get_the_ID(), 'dw_banner_link_url', true);
             $link_target = get_post_meta(get_the_ID(), 'dw_banner_link_target', true);
