@@ -115,6 +115,15 @@ class Dasom_Church_Admin {
             'dasom-church-settings',
             array($this, 'dasom_church_settings_page')
         );
+        
+        // Add to WordPress Settings menu for easy access
+        add_options_page(
+            __('DW 교회관리 설정', 'dasom-church'),
+            __('DW 교회관리', 'dasom-church'),
+            'manage_options',
+            'dasom-church-settings',
+            array($this, 'dasom_church_settings_page')
+        );
     }
     
     /**
