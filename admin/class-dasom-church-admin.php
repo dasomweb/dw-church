@@ -48,9 +48,6 @@ class Dasom_Church_Admin {
         add_action('admin_enqueue_scripts', array($this, 'dasom_church_admin_scripts'));
         add_action('admin_init', array($this, 'dasom_church_handle_settings_save'));
         
-        // 디버깅: 플러그인이 로드되었는지 확인
-        add_action('admin_notices', array($this, 'dasom_church_debug_notice'));
-        
         // Custom Post Types
         add_action('init', array($this, 'dasom_church_register_post_types'));
         add_action('init', array($this, 'dasom_church_register_taxonomies'));
@@ -490,13 +487,20 @@ class Dasom_Church_Admin {
      * Elementor compatibility - metadata filter
      */
     public function dasom_church_elementor_metadata($value, $post_id, $meta_key, $single) {
+        // 관리자 화면에서는 필터 적용하지 않음 (원본 데이터 사용)
+        if (is_admin()) {
+            return $value;
+        }
+        
         global $wpdb;
         
         // PDF 첨부 ID → URL 변환
-        if ($meta_key === 'bulletin_pdf') {
+        if ($meta_key === 'bulletin_pdf' || $meta_key === 'dw_bulletin_pdf') {
+            // dw_bulletin_pdf 우선 확인
+            $actual_key = $meta_key === 'bulletin_pdf' ? 'dw_bulletin_pdf' : $meta_key;
             $raw = $wpdb->get_var($wpdb->prepare(
                 "SELECT meta_value FROM $wpdb->postmeta WHERE post_id=%d AND meta_key=%s LIMIT 1",
-                $post_id, $meta_key
+                $post_id, $actual_key
             ));
             if ($raw) {
                 $url = wp_get_attachment_url(intval($raw));
@@ -505,11 +509,12 @@ class Dasom_Church_Admin {
             return '';
         }
         
-        // bulletin_date → YYYY년 M월 D일 형식으로 변환
-        if ($meta_key === 'bulletin_date') {
+        // bulletin_date → YYYY년 M월 D일 형식으로 변환 (Elementor용만)
+        if ($meta_key === 'bulletin_date_formatted' || $meta_key === 'dw_bulletin_date_formatted') {
+            $actual_key = 'dw_bulletin_date';
             $raw = $wpdb->get_var($wpdb->prepare(
                 "SELECT meta_value FROM $wpdb->postmeta WHERE post_id=%d AND meta_key=%s LIMIT 1",
-                $post_id, $meta_key
+                $post_id, $actual_key
             ));
             if ($raw) {
                 $ts = strtotime($raw);
@@ -521,10 +526,14 @@ class Dasom_Church_Admin {
         }
         
         // JSON 갤러리 → 쉼표 구분 문자열
-        if (in_array($meta_key, array('bulletin_images', 'album_images'), true)) {
+        if (in_array($meta_key, array('bulletin_images', 'album_images', 'dw_bulletin_images', 'dw_album_images'), true)) {
+            $actual_key = $meta_key;
+            if ($meta_key === 'bulletin_images') $actual_key = 'dw_bulletin_images';
+            if ($meta_key === 'album_images') $actual_key = 'dw_album_images';
+            
             $raw = $wpdb->get_var($wpdb->prepare(
                 "SELECT meta_value FROM $wpdb->postmeta WHERE post_id=%d AND meta_key=%s LIMIT 1",
-                $post_id, $meta_key
+                $post_id, $actual_key
             ));
             if ($raw) {
                 $decoded = json_decode($raw, true);
@@ -536,18 +545,18 @@ class Dasom_Church_Admin {
         }
         
         // 설교자 taxonomy → 커스텀필드처럼 노출
-        if ($meta_key === 'sermon_preacher') {
-            $names = wp_get_post_terms($post_id, 'sermon_preacher', array('fields' => 'names'));
+        if ($meta_key === 'sermon_preacher' || $meta_key === 'dw_sermon_preacher') {
+            $names = wp_get_post_terms($post_id, 'dw_sermon_preacher', array('fields' => 'names'));
             return (!is_wp_error($names) && !empty($names)) ? implode(', ', $names) : '';
         }
         
-        if ($meta_key === 'sermon_preacher_ids') {
-            $ids = wp_get_post_terms($post_id, 'sermon_preacher', array('fields' => 'ids'));
+        if ($meta_key === 'sermon_preacher_ids' || $meta_key === 'dw_sermon_preacher_ids') {
+            $ids = wp_get_post_terms($post_id, 'dw_sermon_preacher', array('fields' => 'ids'));
             return (!is_wp_error($ids) && !empty($ids)) ? implode(',', array_map('intval', $ids)) : '';
         }
         
-        if ($meta_key === 'sermon_preacher_slugs') {
-            $slugs = wp_get_post_terms($post_id, 'sermon_preacher', array('fields' => 'slugs'));
+        if ($meta_key === 'sermon_preacher_slugs' || $meta_key === 'dw_sermon_preacher_slugs') {
+            $slugs = wp_get_post_terms($post_id, 'dw_sermon_preacher', array('fields' => 'slugs'));
             return (!is_wp_error($slugs) && !empty($slugs)) ? implode(',', $slugs) : '';
         }
         
@@ -561,15 +570,6 @@ class Dasom_Church_Admin {
         global $post_type;
         if (in_array($post_type, array('bulletin', 'sermon'))) {
             echo '<style>#titlediv { display: none; }</style>';
-        }
-    }
-    
-    /**
-     * Debug notice
-     */
-    public function dasom_church_debug_notice() {
-        if (current_user_can('manage_options') && isset($_GET['page']) && strpos($_GET['page'], 'dasom-church') !== false) {
-            echo '<div class="notice notice-info"><p>Dasom Church 플러그인이 정상적으로 로드되었습니다.</p></div>';
         }
     }
     
