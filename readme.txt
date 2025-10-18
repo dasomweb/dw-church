@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.7.4
+Stable tag: 1.7.5
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,11 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.7.5 =
+* Feature: Added Reset buttons for banner start/end date fields
+* Improvement: Easier to clear scheduled dates with one click
+* UX: Better date management workflow
 
 = 1.7.4 =
 * Feature: Data preservation option on plugin uninstall
