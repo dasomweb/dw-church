@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.18.4
+Stable tag: 1.19.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,14 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.19.0 =
+* Feature: Added Query Source selection to Banner Slider and Grid widgets
+* Feature: Latest Posts mode with category filter, order, and orderby controls
+* Feature: Manual Selection mode to choose specific banners
+* Enhancement: Simplified banner widgets to focus on banner post type only
+* UI: Query controls now conditional based on selected source
+* UI: Manual selection uses multi-select dropdown with all available banners
 
 = 1.18.4 =
 * Fix: Changed date filtering to post-query filtering for better reliability

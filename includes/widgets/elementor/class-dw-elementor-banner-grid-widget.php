@@ -34,6 +34,23 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
         return ['banner', 'grid', 'sub banner', 'dasom', 'church'];
     }
     
+    /**
+     * Helper function to get taxonomy options
+     */
+    private function get_taxonomy_options($taxonomy) {
+        $options = array('' => __('All', 'dasom-church'));
+        $terms = get_terms(array(
+            'taxonomy' => $taxonomy,
+            'hide_empty' => false,
+        ));
+        if (!is_wp_error($terms)) {
+            foreach ($terms as $term) {
+                $options[$term->slug] = $term->name;
+            }
+        }
+        return $options;
+    }
+    
     protected function register_controls() {
         // Content Tab - Query Settings
         $this->start_controls_section(
@@ -41,6 +58,47 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
             [
                 'label' => __('Query Settings', 'dasom-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
+            ]
+        );
+        
+        $this->add_control(
+            'query_source',
+            [
+                'label' => __('Query Source', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'latest',
+                'options' => [
+                    'latest' => __('Latest Posts', 'dasom-church'),
+                    'manual' => __('Manual Selection', 'dasom-church'),
+                ],
+            ]
+        );
+        
+        // Get all banners for manual selection
+        $banner_options = array();
+        $all_banners = get_posts(array(
+            'post_type' => 'banner',
+            'posts_per_page' => -1,
+            'post_status' => 'publish',
+            'orderby' => 'title',
+            'order' => 'ASC',
+        ));
+        foreach ($all_banners as $banner) {
+            $banner_options[$banner->ID] = $banner->post_title;
+        }
+        
+        $this->add_control(
+            'manual_selection',
+            [
+                'label' => __('Select Banners', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT2,
+                'multiple' => true,
+                'options' => $banner_options,
+                'label_block' => true,
+                'condition' => [
+                    'query_source' => 'manual',
+                ],
+                'description' => __('Select specific banners to display.', 'dasom-church'),
             ]
         );
         
@@ -64,6 +122,9 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'options' => $category_options,
                 'default' => '',
+                'condition' => [
+                    'query_source' => 'latest',
+                ],
             ]
         );
         
@@ -75,6 +136,9 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
                 'default' => 6,
                 'min' => 1,
                 'max' => 100,
+                'condition' => [
+                    'query_source' => 'latest',
+                ],
             ]
         );
         
@@ -87,6 +151,9 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
                 'options' => [
                     'ASC' => __('Ascending', 'dasom-church'),
                     'DESC' => __('Descending', 'dasom-church'),
+                ],
+                'condition' => [
+                    'query_source' => 'latest',
                 ],
             ]
         );
@@ -102,6 +169,9 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
                     'title' => __('Title', 'dasom-church'),
                     'rand' => __('Random', 'dasom-church'),
                     'menu_order' => __('Menu Order', 'dasom-church'),
+                ],
+                'condition' => [
+                    'query_source' => 'latest',
                 ],
             ]
         );
@@ -319,25 +389,37 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
         
         // Get current time for date filtering
         $current_time = current_time('Y-m-d H:i:s');
+        $query_source = $settings['query_source'] ?? 'latest';
         
-        // Query arguments
-        $args = array(
-            'post_type' => 'banner',
-            'post_status' => 'publish',
-            'posts_per_page' => $settings['posts_per_page'] ?? 6,
-            'order' => $settings['order'] ?? 'DESC',
-            'orderby' => $settings['orderby'] ?? 'date',
-        );
-        
-        // Filter by category if selected
-        if (!empty($settings['banner_category'])) {
-            $args['tax_query'] = array(
-                array(
-                    'taxonomy' => 'banner_category',
-                    'field' => 'slug',
-                    'terms' => $settings['banner_category'],
-                ),
+        // Build query args based on source
+        if ($query_source === 'manual' && !empty($settings['manual_selection'])) {
+            // Manual selection
+            $args = array(
+                'post_type' => 'banner',
+                'post__in' => $settings['manual_selection'],
+                'post_status' => 'publish',
+                'orderby' => 'post__in',
             );
+        } else {
+            // Latest posts
+            $args = array(
+                'post_type' => 'banner',
+                'post_status' => 'publish',
+                'posts_per_page' => $settings['posts_per_page'] ?? 6,
+                'order' => $settings['order'] ?? 'DESC',
+                'orderby' => $settings['orderby'] ?? 'date',
+            );
+            
+            // Filter by category if selected
+            if (!empty($settings['banner_category'])) {
+                $args['tax_query'] = array(
+                    array(
+                        'taxonomy' => 'banner_category',
+                        'field' => 'slug',
+                        'terms' => $settings['banner_category'],
+                    ),
+                );
+            }
         }
         
         $banners = new WP_Query($args);
