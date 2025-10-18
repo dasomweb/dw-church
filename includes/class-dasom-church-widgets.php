@@ -19,6 +19,11 @@ class Dasom_Church_Widgets {
      * Constructor
      */
     public function __construct() {
+        // Only load if WordPress functions are available
+        if (!function_exists('add_action')) {
+            return;
+        }
+        
         // Elementor Widgets
         add_action('elementor/widgets/register', array($this, 'register_elementor_widgets'));
         
@@ -39,40 +44,50 @@ class Dasom_Church_Widgets {
             return;
         }
         
-        // Gallery Widget
-        if (get_option('dw_enable_gallery_widget', 'yes') === 'yes') {
-            require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/widgets/elementor/class-dw-elementor-gallery-widget.php';
-            $widgets_manager->register(new DW_Elementor_Gallery_Widget());
+        // Check if Elementor\Widget_Base class exists
+        if (!class_exists('\Elementor\Widget_Base')) {
+            return;
         }
         
-        // Recent Sermons Widget
-        if (get_option('dw_enable_sermon_widget', 'yes') === 'yes') {
-            require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/widgets/elementor/class-dw-elementor-sermon-widget.php';
-            $widgets_manager->register(new DW_Elementor_Sermon_Widget());
-        }
-        
-        // Single Sermon Widget
-        if (get_option('dw_enable_single_sermon_widget', 'yes') === 'yes') {
-            require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/widgets/elementor/class-dw-elementor-single-sermon-widget.php';
-            $widgets_manager->register(new DW_Elementor_Single_Sermon_Widget());
-        }
-        
-        // Bulletins Widget
-        if (get_option('dw_enable_bulletin_widget', 'yes') === 'yes') {
-            require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/widgets/elementor/class-dw-elementor-bulletin-widget.php';
-            $widgets_manager->register(new DW_Elementor_Bulletin_Widget());
-        }
-        
-        // Columns Widget
-        if (get_option('dw_enable_column_widget', 'yes') === 'yes') {
-            require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/widgets/elementor/class-dw-elementor-column-widget.php';
-            $widgets_manager->register(new DW_Elementor_Column_Widget());
-        }
-        
-        // Banner Slider Widget
-        if (get_option('dw_enable_banner_slider_widget', 'yes') === 'yes') {
-            require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/widgets/elementor/class-dw-elementor-banner-slider-widget.php';
-            $widgets_manager->register(new DW_Elementor_Banner_Slider_Widget());
+        try {
+            // Gallery Widget
+            if (get_option('dw_enable_gallery_widget', 'yes') === 'yes') {
+                require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/widgets/elementor/class-dw-elementor-gallery-widget.php';
+                $widgets_manager->register(new DW_Elementor_Gallery_Widget());
+            }
+            
+            // Recent Sermons Widget
+            if (get_option('dw_enable_sermon_widget', 'yes') === 'yes') {
+                require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/widgets/elementor/class-dw-elementor-sermon-widget.php';
+                $widgets_manager->register(new DW_Elementor_Sermon_Widget());
+            }
+            
+            // Single Sermon Widget
+            if (get_option('dw_enable_single_sermon_widget', 'yes') === 'yes') {
+                require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/widgets/elementor/class-dw-elementor-single-sermon-widget.php';
+                $widgets_manager->register(new DW_Elementor_Single_Sermon_Widget());
+            }
+            
+            // Bulletins Widget
+            if (get_option('dw_enable_bulletin_widget', 'yes') === 'yes') {
+                require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/widgets/elementor/class-dw-elementor-bulletin-widget.php';
+                $widgets_manager->register(new DW_Elementor_Bulletin_Widget());
+            }
+            
+            // Columns Widget
+            if (get_option('dw_enable_column_widget', 'yes') === 'yes') {
+                require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/widgets/elementor/class-dw-elementor-column-widget.php';
+                $widgets_manager->register(new DW_Elementor_Column_Widget());
+            }
+            
+            // Banner Slider Widget
+            if (get_option('dw_enable_banner_slider_widget', 'yes') === 'yes') {
+                require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/widgets/elementor/class-dw-elementor-banner-slider-widget.php';
+                $widgets_manager->register(new DW_Elementor_Banner_Slider_Widget());
+            }
+        } catch (Exception $e) {
+            // Log error but don't break plugin activation
+            error_log('DW Church Management: Widget registration error - ' . $e->getMessage());
         }
     }
     

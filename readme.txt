@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.14.0
+Stable tag: 1.14.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,14 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.14.1 =
+* Fix: Plugin activation issue resolved
+* Fix: Added safety checks for Elementor widget registration
+* Fix: Added try-catch block for widget loading errors
+* Fix: Plugin now activates even if Elementor is not installed
+* Improvement: Better error handling for widget registration
+* Improvement: More robust WordPress environment checks
 
 = 1.14.0 =
 * Feature: Video First layout option for DW Sermon Widget
