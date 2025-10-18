@@ -287,7 +287,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
             [
                 'name' => 'meta_typography',
                 'label' => __('타이포그래피', 'dasom-church'),
-                'selector' => '{{WRAPPER}} .dw-single-sermon-meta span',
+                'selector' => '{{WRAPPER}} .dw-single-sermon-meta span, {{WRAPPER}} .dw-single-sermon-meta .meta-separator',
             ]
         );
         
@@ -411,6 +411,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     'baseline' => __('Baseline (기준선)', 'dasom-church'),
                 ],
                 'selectors' => [
+                    '{{WRAPPER}} .dw-single-sermon-meta span' => 'vertical-align: {{VALUE}};',
                     '{{WRAPPER}} .dw-single-sermon-meta .meta-separator' => 'vertical-align: {{VALUE}};',
                 ],
             ]
@@ -613,9 +614,9 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                 line-height: 1.8;
             }
             
+            .dw-single-sermon-meta span,
             .dw-single-sermon-meta .meta-separator {
                 display: inline-block;
-                vertical-align: middle;
             }
             
             .dw-single-sermon-video {
