@@ -643,7 +643,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                         $meta_items = [];
                         
                         if (($settings['show_date'] ?? 'yes') === 'yes' && $sermon_date) {
-                            $meta_items[] = '<span class="meta-date">' . date_i18n('Y-m-d', strtotime($sermon_date)) . '</span>';
+                            $meta_items[] = '<span class="meta-date">' . date_i18n('Y년 n월 j일', strtotime($sermon_date)) . '</span>';
                         }
                         
                         if (($settings['show_scripture'] ?? 'yes') === 'yes' && $scripture) {
