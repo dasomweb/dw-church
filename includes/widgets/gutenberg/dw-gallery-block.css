@@ -1,0 +1,57 @@
+/**
+ * DW Gallery Block Frontend Styles
+ *
+ * @package Dasom_Church
+ * @since 1.9.0
+ */
+
+.dw-gallery-grid {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.dw-gallery-item {
+    overflow: hidden;
+    position: relative;
+}
+
+.dw-gallery-item a {
+    display: block;
+    text-decoration: none;
+    cursor: zoom-in;
+}
+
+.dw-gallery-item img {
+    display: block;
+    width: 100%;
+    height: auto;
+    transition: all 0.3s ease;
+}
+
+.dw-gallery-item:hover img {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Masonry specific */
+.dw-masonry-grid {
+    position: relative;
+}
+
+.dw-gallery-sizer {
+    visibility: hidden;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .dw-gallery-grid {
+        gap: 8px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .dw-gallery-grid {
+        gap: 5px !important;
+    }
+}
+

@@ -35,6 +35,9 @@ $github_token = get_option('dw_github_access_token', '');
 
 // Data deletion setting
 $delete_data_on_uninstall = get_option('dw_delete_data_on_uninstall', 'no');
+
+// Widget settings
+$enable_gallery_widget = get_option('dw_enable_gallery_widget', 'yes');
 ?>
 
 <div class="wrap">
@@ -47,6 +50,9 @@ $delete_data_on_uninstall = get_option('dw_delete_data_on_uninstall', 'no');
     <h2 class="nav-tab-wrapper">
         <a href="?page=dasom-church-settings&tab=church_info" class="nav-tab <?php echo $active_tab == 'church_info' ? 'nav-tab-active' : ''; ?>">
             <?php _e('교회 정보', 'dasom-church'); ?>
+        </a>
+        <a href="?page=dasom-church-settings&tab=widgets" class="nav-tab <?php echo $active_tab == 'widgets' ? 'nav-tab-active' : ''; ?>">
+            <?php _e('위젯', 'dasom-church'); ?>
         </a>
         <a href="?page=dasom-church-settings&tab=plugin_settings" class="nav-tab <?php echo $active_tab == 'plugin_settings' ? 'nav-tab-active' : ''; ?>">
             <?php _e('설정', 'dasom-church'); ?>
@@ -222,6 +228,48 @@ $delete_data_on_uninstall = get_option('dw_delete_data_on_uninstall', 'no');
                 </td>
             </tr>
         </table>
+        
+        <?php elseif ($active_tab == 'widgets'): ?>
+        <!-- 위젯 설정 탭 -->
+        <h2><?php _e('위젯 관리', 'dasom-church'); ?></h2>
+        <p class="description" style="margin-bottom:20px;">
+            <?php _e('DW 교회관리 시스템에서 제공하는 위젯의 사용 여부를 관리할 수 있습니다. 위젯은 Elementor, 구텐버그, Kadence Block Pro에서 사용 가능합니다.', 'dasom-church'); ?>
+        </p>
+        
+        <table class="form-table">
+            <tr>
+                <th scope="row">
+                    <label for="dw_enable_gallery_widget"><?php echo esc_html__('DW Gallery Widget', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <fieldset>
+                        <label>
+                            <input type="checkbox" id="dw_enable_gallery_widget" name="dw_enable_gallery_widget" value="yes" <?php checked($enable_gallery_widget, 'yes'); ?> />
+                            <?php echo esc_html__('DW Gallery Widget 사용', 'dasom-church'); ?>
+                        </label>
+                        <p class="description" style="margin-top:10px;">
+                            <strong><?php echo esc_html__('기능:', 'dasom-church'); ?></strong><br>
+                            • <?php echo esc_html__('교회앨범 이미지를 갤러리 형태로 표시', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('Grid / Masonry 레이아웃 선택', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('반응형 컬럼 설정 (1-6 컬럼)', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('이미지 크기 선택 (Thumbnail, Medium, Large, Full)', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('Elementor, 구텐버그, Kadence Block Pro 지원', 'dasom-church'); ?><br><br>
+                            <strong style="color:#2271b1;">💡 <?php echo esc_html__('사용 방법:', 'dasom-church'); ?></strong><br>
+                            <?php echo esc_html__('• Elementor: 위젯 패널에서 "DW Gallery" 검색', 'dasom-church'); ?><br>
+                            <?php echo esc_html__('• 구텐버그: 블록 추가에서 "DW Gallery" 검색', 'dasom-church'); ?><br>
+                            <?php echo esc_html__('• Kadence: 자동으로 모든 블록 호환', 'dasom-church'); ?>
+                        </p>
+                    </fieldset>
+                </td>
+            </tr>
+        </table>
+        
+        <div style="background:#f9f9f9;padding:15px;border-left:4px solid #2271b1;margin-top:20px;">
+            <h3 style="margin-top:0;"><?php _e('📦 추가 예정 위젯', 'dasom-church'); ?></h3>
+            <p style="margin-bottom:0;">
+                <?php _e('앞으로 더 많은 위젯이 추가될 예정입니다. 이 탭에서 모든 위젯을 관리할 수 있습니다.', 'dasom-church'); ?>
+            </p>
+        </div>
         
         <?php endif; ?>
         

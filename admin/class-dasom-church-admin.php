@@ -703,6 +703,10 @@ class Dasom_Church_Admin {
         $delete_data = isset($_POST['dw_delete_data_on_uninstall']) ? 'yes' : 'no';
         update_option('dw_delete_data_on_uninstall', $delete_data);
         
+        // Save widget settings
+        $enable_gallery_widget = isset($_POST['dw_enable_gallery_widget']) ? 'yes' : 'no';
+        update_option('dw_enable_gallery_widget', $enable_gallery_widget);
+        
         add_action('admin_notices', function() {
             echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Settings saved successfully!', 'dasom-church') . '</p></div>';
         });

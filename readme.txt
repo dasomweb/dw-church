@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.8.0
+Stable tag: 1.9.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,18 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.9.0 =
+* Feature: DW Gallery Widget for Elementor, Gutenberg, and Kadence Block Pro
+* Feature: Widget management tab in settings (enable/disable widgets)
+* Feature: Album gallery display with Grid and Masonry layouts
+* Feature: Responsive column settings (1-6 columns)
+* Feature: Multiple image size options (Thumbnail to Full)
+* Feature: Customizable gap, border radius, and hover effects
+* Feature: Elementor lightbox integration
+* Improvement: Modular widget architecture for future expansions
+* UX: Easy-to-use widget interface across all page builders
+* Compatibility: Works seamlessly with Elementor, Gutenberg, and Kadence
 
 = 1.8.0 =
 * Feature: Banner categories (Main Banner / Sub Banner)
