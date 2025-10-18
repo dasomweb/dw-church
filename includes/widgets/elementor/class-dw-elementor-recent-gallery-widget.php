@@ -1,0 +1,455 @@
+<?php
+/**
+ * DW Elementor Recent Gallery Widget
+ *
+ * @package Dasom_Church
+ * @since 1.24.0
+ */
+
+// Block direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+class DW_Elementor_Recent_Gallery_Widget extends \Elementor\Widget_Base {
+    
+    public function get_name() {
+        return 'dw_recent_gallery';
+    }
+    
+    public function get_title() {
+        return __('DW Recent Gallery', 'dasom-church');
+    }
+    
+    public function get_icon() {
+        return 'eicon-gallery-grid';
+    }
+    
+    public function get_categories() {
+        return ['general'];
+    }
+    
+    public function get_keywords() {
+        return ['gallery', 'album', 'church', 'photo', 'dw', '갤러리', '앨범'];
+    }
+    
+    protected function register_controls() {
+        
+        $this->start_controls_section(
+            'content_section',
+            [
+                'label' => __('Settings', 'dasom-church'),
+                'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
+            ]
+        );
+        
+        $this->add_control(
+            'posts_per_page',
+            [
+                'label' => __('Number of Albums', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::NUMBER,
+                'default' => 6,
+                'min' => 1,
+                'max' => 50,
+            ]
+        );
+        
+        $this->add_control(
+            'layout',
+            [
+                'label' => __('Layout', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'grid',
+                'options' => [
+                    'grid' => __('Grid', 'dasom-church'),
+                    'list' => __('List', 'dasom-church'),
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'columns',
+            [
+                'label' => __('Columns', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::NUMBER,
+                'default' => 3,
+                'tablet_default' => 2,
+                'mobile_default' => 1,
+                'min' => 1,
+                'max' => 6,
+                'condition' => [
+                    'layout' => 'grid',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'show_thumbnail',
+            [
+                'label' => __('Show Thumbnail', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SWITCHER,
+                'label_on' => __('Yes', 'dasom-church'),
+                'label_off' => __('No', 'dasom-church'),
+                'return_value' => 'yes',
+                'default' => 'yes',
+            ]
+        );
+        
+        $this->add_control(
+            'thumbnail_size',
+            [
+                'label' => __('썸네일 크기', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'medium',
+                'options' => [
+                    'thumbnail' => __('Thumbnail (150x150)', 'dasom-church'),
+                    'medium' => __('Medium (300x300)', 'dasom-church'),
+                    'medium_large' => __('Medium Large (768x768)', 'dasom-church'),
+                    'large' => __('Large (1024x1024)', 'dasom-church'),
+                    'full' => __('Full (원본)', 'dasom-church'),
+                ],
+                'condition' => [
+                    'show_thumbnail' => 'yes',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'show_date',
+            [
+                'label' => __('날짜 표시', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SWITCHER,
+                'label_on' => __('Yes', 'dasom-church'),
+                'label_off' => __('No', 'dasom-church'),
+                'return_value' => 'yes',
+                'default' => 'yes',
+            ]
+        );
+        
+        $this->end_controls_section();
+        
+        // Style Tab - Card Style
+        $this->start_controls_section(
+            'style_card_section',
+            [
+                'label' => __('Card Style', 'dasom-church'),
+                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'card_padding',
+            [
+                'label' => __('Padding', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em', '%'],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-gallery-card' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'card_margin',
+            [
+                'label' => __('Margin', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em', '%'],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-gallery-card' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'card_bg_color',
+            [
+                'label' => __('Background Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#ffffff',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-gallery-card' => 'background-color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_group_control(
+            \Elementor\Group_Control_Border::get_type(),
+            [
+                'name' => 'card_border',
+                'label' => __('Border', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-gallery-card',
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'card_border_radius',
+            [
+                'label' => __('Border Radius', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', '%'],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-gallery-card' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                    '{{WRAPPER}} .dw-gallery-card img' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} 0 0;',
+                ],
+            ]
+        );
+        
+        $this->add_group_control(
+            \Elementor\Group_Control_Box_Shadow::get_type(),
+            [
+                'name' => 'card_box_shadow',
+                'label' => __('Box Shadow', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-gallery-card',
+            ]
+        );
+        
+        $this->end_controls_section();
+        
+        // Style Tab - Title
+        $this->start_controls_section(
+            'style_title_section',
+            [
+                'label' => __('Title', 'dasom-church'),
+                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+        
+        $this->add_group_control(
+            \Elementor\Group_Control_Typography::get_type(),
+            [
+                'name' => 'title_typography',
+                'label' => __('Typography', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-gallery-title',
+            ]
+        );
+        
+        $this->add_control(
+            'title_color',
+            [
+                'label' => __('Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#333333',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-gallery-title' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'title_hover_color',
+            [
+                'label' => __('Hover Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#0073aa',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-gallery-title:hover' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'title_spacing',
+            [
+                'label' => __('Spacing', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 50,
+                    ],
+                ],
+                'default' => [
+                    'size' => 10,
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-gallery-title' => 'margin-bottom: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->end_controls_section();
+        
+        // Style Tab - Date
+        $this->start_controls_section(
+            'style_date_section',
+            [
+                'label' => __('Date', 'dasom-church'),
+                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+        
+        $this->add_group_control(
+            \Elementor\Group_Control_Typography::get_type(),
+            [
+                'name' => 'date_typography',
+                'label' => __('Typography', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-gallery-date',
+            ]
+        );
+        
+        $this->add_control(
+            'date_color',
+            [
+                'label' => __('Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#666666',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-gallery-date' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->end_controls_section();
+    }
+    
+    protected function render() {
+        $settings = $this->get_settings_for_display();
+        
+        $args = array(
+            'post_type' => 'album',
+            'posts_per_page' => $settings['posts_per_page'],
+            'post_status' => 'publish',
+            'orderby' => 'date',
+            'order' => 'DESC',
+        );
+        
+        $query = new WP_Query($args);
+        
+        if (!$query->have_posts()) {
+            echo '<p>' . __('No albums found.', 'dasom-church') . '</p>';
+            return;
+        }
+        
+        $layout = $settings['layout'];
+        $columns = $settings['columns'] ?? 3;
+        $columns_tablet = $settings['columns_tablet'] ?? 2;
+        $columns_mobile = $settings['columns_mobile'] ?? 1;
+        
+        ?>
+        <div class="dw-gallery-widget dw-gallery-<?php echo esc_attr($layout); ?>">
+            <?php if ($layout === 'grid'): ?>
+                <style>
+                    .dw-gallery-grid {
+                        display: grid;
+                        grid-template-columns: repeat(<?php echo esc_attr($columns); ?>, 1fr);
+                        gap: 20px;
+                    }
+                    @media (max-width: 1024px) {
+                        .dw-gallery-grid {
+                            grid-template-columns: repeat(<?php echo esc_attr($columns_tablet); ?>, 1fr);
+                        }
+                    }
+                    @media (max-width: 767px) {
+                        .dw-gallery-grid {
+                            grid-template-columns: repeat(<?php echo esc_attr($columns_mobile); ?>, 1fr);
+                        }
+                    }
+                </style>
+            <?php endif; ?>
+            
+            <?php while ($query->have_posts()): $query->the_post(); ?>
+                <div class="dw-gallery-card">
+                    <a href="<?php the_permalink(); ?>" class="dw-gallery-link">
+                        
+                        <?php if ($settings['show_thumbnail'] === 'yes' && has_post_thumbnail()): ?>
+                            <div class="dw-gallery-thumbnail">
+                                <?php the_post_thumbnail($settings['thumbnail_size'], ['class' => 'dw-gallery-image']); ?>
+                            </div>
+                        <?php endif; ?>
+                        
+                        <div class="dw-gallery-content">
+                            <?php if ($settings['show_date'] === 'yes'): ?>
+                                <div class="dw-gallery-date">
+                                    <?php echo get_the_date(); ?>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <h3 class="dw-gallery-title">
+                                <?php the_title(); ?>
+                            </h3>
+                        </div>
+                    </a>
+                </div>
+            <?php endwhile; ?>
+            <?php wp_reset_postdata(); ?>
+        </div>
+        
+        <style>
+            .dw-gallery-widget {
+                width: 100%;
+            }
+            .dw-gallery-card {
+                overflow: hidden;
+                transition: all 0.3s ease;
+            }
+            .dw-gallery-card:hover {
+                transform: translateY(-5px);
+            }
+            .dw-gallery-link {
+                display: block;
+                text-decoration: none;
+                color: inherit;
+            }
+            .dw-gallery-thumbnail {
+                width: 100%;
+                overflow: hidden;
+                position: relative;
+                padding-top: 66.67%; /* 3:2 aspect ratio */
+            }
+            .dw-gallery-image {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                transition: transform 0.3s ease;
+            }
+            .dw-gallery-card:hover .dw-gallery-image {
+                transform: scale(1.05);
+            }
+            .dw-gallery-content {
+                padding: 15px;
+            }
+            .dw-gallery-date {
+                font-size: 0.875em;
+                margin-bottom: 8px;
+            }
+            .dw-gallery-title {
+                margin: 0;
+                font-weight: 600;
+                transition: color 0.3s ease;
+            }
+            .dw-gallery-list .dw-gallery-card {
+                margin-bottom: 20px;
+            }
+            .dw-gallery-list .dw-gallery-link {
+                display: flex;
+                gap: 20px;
+            }
+            .dw-gallery-list .dw-gallery-thumbnail {
+                flex-shrink: 0;
+                width: 200px;
+                padding-top: 0;
+                height: 150px;
+            }
+            .dw-gallery-list .dw-gallery-image {
+                position: static;
+                width: 100%;
+                height: 100%;
+            }
+            .dw-gallery-list .dw-gallery-content {
+                flex: 1;
+                padding: 0;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+        </style>
+        <?php
+    }
+}
+

@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.23.1
+Stable tag: 1.24.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,17 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.24.0 =
+* Feature: New "DW Recent Gallery" widget for displaying album posts
+* Feature: Grid and List layout options with responsive columns
+* Feature: Show/hide thumbnail, date controls
+* Feature: Customizable thumbnail sizes (thumbnail to full size)
+* Style: Complete card styling with padding, margin, border, shadow controls
+* Style: Title typography, color, hover effects
+* Style: Date typography and color controls
+* Enhancement: Image hover zoom effect with smooth transitions
+* UI: Clean, modern gallery card design
 
 = 1.23.1 =
 * Fix: Disable WP_Query caching for banner widgets to ensure fresh data
