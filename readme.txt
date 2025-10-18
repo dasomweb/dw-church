@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.17.3
+Stable tag: 1.18.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,16 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.18.0 =
+* Feature: New DW Banner Grid Widget - Display sub banners in a responsive grid layout
+* Feature: Grid widget supports text overlay with customizable positioning
+* Feature: Added grid column controls, gap settings, and card styling options
+* Feature: Hover effects and responsive behavior for banner grid items
+* Improved: Banner field UI - Moved sub banner image ratio below image upload
+* Improved: Changed label from "이미지 비율" to "서브 배너 이미지 비율" for clarity
+* Enhancement: Grid widget automatically filters active banners by start/end dates
+* Enhancement: Seamless integration with existing banner text overlay settings
 
 = 1.17.3 =
 * Refactor: Removed category-based field toggling - all banner fields now always visible

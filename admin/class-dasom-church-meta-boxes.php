@@ -483,19 +483,6 @@ class Dasom_Church_Meta_Boxes {
             <!-- 서브 배너 필드 -->
             <tr class="banner-field banner-sub-field" data-banner-type="sub">
                 <th scope="row">
-                    <label for="dw_banner_sub_ratio"><?php _e('이미지 비율', 'dasom-church'); ?></label>
-                </th>
-                <td>
-                    <select id="dw_banner_sub_ratio" name="dw_banner_sub_ratio" class="regular-text">
-                        <option value="16:9" <?php selected($sub_ratio, '16:9'); ?>>16:9 (1024x576px)</option>
-                        <option value="4:3" <?php selected($sub_ratio, '4:3'); ?>>4:3 (1024x768px)</option>
-                        <option value="1:1" <?php selected($sub_ratio, '1:1'); ?>>1:1 (1024x1024px)</option>
-                    </select>
-                    <p class="description"><?php _e('서브 배너는 가로 1024px 고정입니다. 비율을 선택하세요.', 'dasom-church'); ?></p>
-                </td>
-            </tr>
-            <tr class="banner-field banner-sub-field" data-banner-type="sub">
-                <th scope="row">
                     <label for="dw_banner_sub_image"><?php _e('서브 배너 이미지 (1024px)', 'dasom-church'); ?></label>
                 </th>
                 <td>
@@ -508,6 +495,19 @@ class Dasom_Church_Meta_Boxes {
                         <?php endif; ?>
                     </div>
                     <p class="description"><?php _e('권장 크기: 가로 1024px, 세로는 선택한 비율에 따라 자동 결정', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+            <tr class="banner-field banner-sub-field" data-banner-type="sub">
+                <th scope="row">
+                    <label for="dw_banner_sub_ratio"><?php _e('서브 배너 이미지 비율', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <select id="dw_banner_sub_ratio" name="dw_banner_sub_ratio" class="regular-text">
+                        <option value="16:9" <?php selected($sub_ratio, '16:9'); ?>>16:9 (1024x576px)</option>
+                        <option value="4:3" <?php selected($sub_ratio, '4:3'); ?>>4:3 (1024x768px)</option>
+                        <option value="1:1" <?php selected($sub_ratio, '1:1'); ?>>1:1 (1024x1024px)</option>
+                    </select>
+                    <p class="description"><?php _e('서브 배너는 가로 1024px 고정입니다. 비율을 선택하세요.', 'dasom-church'); ?></p>
                 </td>
             </tr>
             

@@ -1,0 +1,487 @@
+<?php
+/**
+ * DW Banner Grid Widget for Elementor
+ * 
+ * Displays sub banners in a grid layout
+ *
+ * @package DasomChurch
+ * @since 1.18.0
+ */
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
+    
+    public function get_name() {
+        return 'dw_banner_grid';
+    }
+    
+    public function get_title() {
+        return __('DW Banner Grid', 'dasom-church');
+    }
+    
+    public function get_icon() {
+        return 'eicon-gallery-grid';
+    }
+    
+    public function get_categories() {
+        return ['general'];
+    }
+    
+    public function get_keywords() {
+        return ['banner', 'grid', 'sub banner', 'dasom', 'church'];
+    }
+    
+    protected function register_controls() {
+        // Content Tab - Query Settings
+        $this->start_controls_section(
+            'query_section',
+            [
+                'label' => __('Query Settings', 'dasom-church'),
+                'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
+            ]
+        );
+        
+        $this->add_control(
+            'posts_per_page',
+            [
+                'label' => __('Number of Banners', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::NUMBER,
+                'default' => 6,
+                'min' => 1,
+                'max' => 100,
+            ]
+        );
+        
+        $this->add_control(
+            'order',
+            [
+                'label' => __('Order', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'DESC',
+                'options' => [
+                    'ASC' => __('Ascending', 'dasom-church'),
+                    'DESC' => __('Descending', 'dasom-church'),
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'orderby',
+            [
+                'label' => __('Order By', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'date',
+                'options' => [
+                    'date' => __('Date', 'dasom-church'),
+                    'title' => __('Title', 'dasom-church'),
+                    'rand' => __('Random', 'dasom-church'),
+                    'menu_order' => __('Menu Order', 'dasom-church'),
+                ],
+            ]
+        );
+        
+        $this->end_controls_section();
+        
+        // Content Tab - Layout Settings
+        $this->start_controls_section(
+            'layout_section',
+            [
+                'label' => __('Layout Settings', 'dasom-church'),
+                'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'columns',
+            [
+                'label' => __('Columns', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => '3',
+                'tablet_default' => '2',
+                'mobile_default' => '1',
+                'options' => [
+                    '1' => '1',
+                    '2' => '2',
+                    '3' => '3',
+                    '4' => '4',
+                    '5' => '5',
+                    '6' => '6',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-banner-grid' => 'grid-template-columns: repeat({{VALUE}}, 1fr);',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'column_gap',
+            [
+                'label' => __('Column Gap', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 100,
+                    ],
+                ],
+                'default' => [
+                    'size' => 20,
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-banner-grid' => 'column-gap: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'row_gap',
+            [
+                'label' => __('Row Gap', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 100,
+                    ],
+                ],
+                'default' => [
+                    'size' => 20,
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-banner-grid' => 'row-gap: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->end_controls_section();
+        
+        // Style Tab - Card Style
+        $this->start_controls_section(
+            'card_style_section',
+            [
+                'label' => __('Card Style', 'dasom-church'),
+                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+        
+        $this->add_control(
+            'card_border_radius',
+            [
+                'label' => __('Border Radius', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', '%'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 50,
+                    ],
+                ],
+                'default' => [
+                    'size' => 8,
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-banner-grid-item' => 'border-radius: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .dw-banner-grid-item img' => 'border-radius: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_group_control(
+            \Elementor\Group_Control_Box_Shadow::get_type(),
+            [
+                'name' => 'card_box_shadow',
+                'label' => __('Box Shadow', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-banner-grid-item',
+            ]
+        );
+        
+        $this->start_controls_tabs('card_hover_tabs');
+        
+        $this->start_controls_tab(
+            'card_normal',
+            [
+                'label' => __('Normal', 'dasom-church'),
+            ]
+        );
+        
+        $this->add_control(
+            'card_opacity',
+            [
+                'label' => __('Opacity', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 1,
+                        'step' => 0.1,
+                    ],
+                ],
+                'default' => [
+                    'size' => 1,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-banner-grid-item' => 'opacity: {{SIZE}};',
+                ],
+            ]
+        );
+        
+        $this->end_controls_tab();
+        
+        $this->start_controls_tab(
+            'card_hover',
+            [
+                'label' => __('Hover', 'dasom-church'),
+            ]
+        );
+        
+        $this->add_control(
+            'card_hover_opacity',
+            [
+                'label' => __('Opacity', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 1,
+                        'step' => 0.1,
+                    ],
+                ],
+                'default' => [
+                    'size' => 0.8,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-banner-grid-item:hover' => 'opacity: {{SIZE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'card_hover_transform',
+            [
+                'label' => __('Scale on Hover', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'range' => [
+                    'px' => [
+                        'min' => 0.8,
+                        'max' => 1.2,
+                        'step' => 0.01,
+                    ],
+                ],
+                'default' => [
+                    'size' => 1.05,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-banner-grid-item:hover img' => 'transform: scale({{SIZE}});',
+                ],
+            ]
+        );
+        
+        $this->end_controls_tab();
+        
+        $this->end_controls_tabs();
+        
+        $this->end_controls_section();
+    }
+    
+    protected function render() {
+        $settings = $this->get_settings_for_display();
+        
+        // Get current time for date filtering
+        $current_time = current_time('Y-m-d H:i:s');
+        
+        // Query arguments
+        $args = array(
+            'post_type' => 'banner',
+            'post_status' => 'publish',
+            'posts_per_page' => $settings['posts_per_page'] ?? 6,
+            'order' => $settings['order'] ?? 'DESC',
+            'orderby' => $settings['orderby'] ?? 'date',
+            'tax_query' => array(
+                array(
+                    'taxonomy' => 'banner_category',
+                    'field' => 'slug',
+                    'terms' => array('sub-banner', '서브-배너'),
+                    'operator' => 'IN',
+                ),
+            ),
+            'meta_query' => array(
+                'relation' => 'AND',
+                array(
+                    'relation' => 'OR',
+                    array(
+                        'key' => 'dw_banner_start_date',
+                        'value' => $current_time,
+                        'compare' => '<=',
+                        'type' => 'DATETIME',
+                    ),
+                    array(
+                        'key' => 'dw_banner_start_date',
+                        'compare' => 'NOT EXISTS',
+                    ),
+                ),
+                array(
+                    'relation' => 'OR',
+                    array(
+                        'key' => 'dw_banner_end_date',
+                        'value' => $current_time,
+                        'compare' => '>',
+                        'type' => 'DATETIME',
+                    ),
+                    array(
+                        'key' => 'dw_banner_end_date',
+                        'compare' => 'NOT EXISTS',
+                    ),
+                ),
+            ),
+        );
+        
+        $banners = new WP_Query($args);
+        
+        if (!$banners->have_posts()) {
+            echo '<p>' . __('No banners found.', 'dasom-church') . '</p>';
+            return;
+        }
+        
+        echo '<div class="dw-banner-grid-wrapper">';
+        echo '<div class="dw-banner-grid">';
+        
+        while ($banners->have_posts()) {
+            $banners->the_post();
+            
+            $sub_image = get_post_meta(get_the_ID(), 'dw_banner_sub_image', true);
+            $image_url = $sub_image ? wp_get_attachment_url($sub_image) : '';
+            
+            $link_url = get_post_meta(get_the_ID(), 'dw_banner_link_url', true);
+            $link_target = get_post_meta(get_the_ID(), 'dw_banner_link_target', true);
+            $link_target = $link_target === '_blank' ? '_blank' : '_self';
+            
+            // Get text overlay fields
+            $text_title = get_post_meta(get_the_ID(), 'dw_banner_text_title', true);
+            $text_subtitle = get_post_meta(get_the_ID(), 'dw_banner_text_subtitle', true);
+            $text_description = get_post_meta(get_the_ID(), 'dw_banner_text_description', true);
+            
+            echo '<div class="dw-banner-grid-item">';
+            
+            if ($link_url) {
+                echo '<a href="' . esc_url($link_url) . '" target="' . esc_attr($link_target) . '" class="dw-banner-grid-link">';
+            }
+            
+            if ($image_url) {
+                echo '<div class="dw-banner-grid-image">';
+                echo '<img src="' . esc_url($image_url) . '" alt="' . esc_attr(get_the_title()) . '">';
+                
+                // Text overlay if exists
+                if (!empty($text_title) || !empty($text_subtitle) || !empty($text_description)) {
+                    $text_position = get_post_meta(get_the_ID(), 'dw_banner_text_position', true);
+                    $text_position = $text_position ? $text_position : 'center-center';
+                    $text_align = get_post_meta(get_the_ID(), 'dw_banner_text_align', true);
+                    $text_align = $text_align ? $text_align : 'center';
+                    
+                    list($v_align, $h_align) = explode('-', $text_position);
+                    $v_align_style = $v_align === 'top' ? 'flex-start' : ($v_align === 'bottom' ? 'flex-end' : 'center');
+                    $h_align_style = $h_align === 'left' ? 'flex-start' : ($h_align === 'right' ? 'flex-end' : 'center');
+                    
+                    echo '<div class="dw-banner-grid-text" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:' . esc_attr($v_align_style) . ';justify-content:' . esc_attr($h_align_style) . ';padding:20px;text-align:' . esc_attr($text_align) . ';">';
+                    echo '<div class="dw-banner-grid-text-content">';
+                    
+                    if ($text_subtitle) {
+                        echo '<div class="dw-banner-grid-subtitle">' . esc_html($text_subtitle) . '</div>';
+                    }
+                    if ($text_title) {
+                        echo '<h3 class="dw-banner-grid-title">' . esc_html($text_title) . '</h3>';
+                    }
+                    if ($text_description) {
+                        echo '<div class="dw-banner-grid-description">' . esc_html($text_description) . '</div>';
+                    }
+                    
+                    echo '</div>';
+                    echo '</div>';
+                }
+                
+                echo '</div>';
+            }
+            
+            if ($link_url) {
+                echo '</a>';
+            }
+            
+            echo '</div>';
+        }
+        
+        echo '</div>'; // .dw-banner-grid
+        echo '</div>'; // .dw-banner-grid-wrapper
+        
+        wp_reset_postdata();
+        
+        // Add inline CSS
+        ?>
+        <style>
+            .dw-banner-grid {
+                display: grid;
+                width: 100%;
+            }
+            .dw-banner-grid-item {
+                position: relative;
+                overflow: hidden;
+                transition: all 0.3s ease;
+            }
+            .dw-banner-grid-link {
+                display: block;
+                text-decoration: none;
+                color: inherit;
+            }
+            .dw-banner-grid-image {
+                position: relative;
+                width: 100%;
+                overflow: hidden;
+            }
+            .dw-banner-grid-image img {
+                width: 100%;
+                height: auto;
+                display: block;
+                transition: transform 0.3s ease;
+            }
+            .dw-banner-grid-text {
+                color: #ffffff;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            }
+            .dw-banner-grid-subtitle {
+                font-size: 0.9em;
+                margin-bottom: 5px;
+                opacity: 0.9;
+            }
+            .dw-banner-grid-title {
+                font-size: 1.4em;
+                font-weight: 700;
+                margin: 0 0 8px 0;
+                line-height: 1.3;
+            }
+            .dw-banner-grid-description {
+                font-size: 0.95em;
+                opacity: 0.95;
+                line-height: 1.5;
+            }
+            
+            /* Responsive adjustments */
+            @media (max-width: 768px) {
+                .dw-banner-grid-title {
+                    font-size: 1.2em;
+                }
+                .dw-banner-grid-subtitle,
+                .dw-banner-grid-description {
+                    font-size: 0.85em;
+                }
+            }
+        </style>
+        <?php
+    }
+}
+

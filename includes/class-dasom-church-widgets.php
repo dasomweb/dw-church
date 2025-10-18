@@ -85,6 +85,12 @@ class Dasom_Church_Widgets {
                 require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/widgets/elementor/class-dw-elementor-banner-slider-widget.php';
                 $widgets_manager->register(new DW_Elementor_Banner_Slider_Widget());
             }
+            
+            // Banner Grid Widget
+            if (get_option('dw_enable_banner_grid_widget', 'yes') === 'yes') {
+                require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/widgets/elementor/class-dw-elementor-banner-grid-widget.php';
+                $widgets_manager->register(new DW_Elementor_Banner_Grid_Widget());
+            }
         } catch (Exception $e) {
             // Log error but don't break plugin activation
             error_log('DW Church Management: Widget registration error - ' . $e->getMessage());
