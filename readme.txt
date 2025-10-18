@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.11.1
+Stable tag: 1.11.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,14 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.11.2 =
+* Breaking: Removed scripture icon feature completely
+* Breaking: Removed all icon features from sermon widget
+* Improvement: Pure text-only design for all metadata (date, preacher, scripture)
+* Improvement: Cleaner, more minimalist appearance
+* Improvement: Maximum readability with no visual distractions
+* Improvement: Fastest rendering - zero icon processing
 
 = 1.11.1 =
 * Breaking: Removed date icon feature completely

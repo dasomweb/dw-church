@@ -150,37 +150,6 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             ]
         );
         
-        $this->add_control(
-            'show_scripture_icon',
-            [
-                'label' => __('성경구절 아이콘 표시', 'dasom-church'),
-                'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
-                'return_value' => 'yes',
-                'default' => 'yes',
-                'condition' => [
-                    'show_scripture' => 'yes',
-                ],
-            ]
-        );
-        
-        $this->add_control(
-            'scripture_icon',
-            [
-                'label' => __('성경구절 아이콘', 'dasom-church'),
-                'type' => \Elementor\Controls_Manager::ICONS,
-                'default' => [
-                    'value' => 'fas fa-book',
-                    'library' => 'fa-solid',
-                ],
-                'condition' => [
-                    'show_scripture' => 'yes',
-                    'show_scripture_icon' => 'yes',
-                ],
-            ]
-        );
-        
         $this->end_controls_section();
         
         // Style Section
@@ -499,37 +468,6 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         );
         
         $this->add_control(
-            'scripture_icon_color',
-            [
-                'label' => __('성경구절 아이콘 색상', 'dasom-church'),
-                'type' => \Elementor\Controls_Manager::COLOR,
-                'selectors' => [
-                    '{{WRAPPER}} .sermon-scripture i' => 'color: {{VALUE}};',
-                    '{{WRAPPER}} .sermon-scripture svg' => 'fill: {{VALUE}};',
-                ],
-            ]
-        );
-        
-        $this->add_control(
-            'scripture_icon_size',
-            [
-                'label' => __('성경구절 아이콘 크기', 'dasom-church'),
-                'type' => \Elementor\Controls_Manager::SLIDER,
-                'size_units' => ['px'],
-                'range' => [
-                    'px' => [
-                        'min' => 8,
-                        'max' => 50,
-                    ],
-                ],
-                'selectors' => [
-                    '{{WRAPPER}} .sermon-scripture i' => 'font-size: {{SIZE}}{{UNIT}};',
-                    '{{WRAPPER}} .sermon-scripture svg' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}};',
-                ],
-            ]
-        );
-        
-        $this->add_control(
             'card_heading',
             [
                 'label' => __('카드 스타일', 'dasom-church'),
@@ -703,17 +641,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             }
             
             if (($settings['show_scripture'] ?? 'yes') === 'yes' && !empty($scripture)) {
-                $scripture_icon = '';
-                if (($settings['show_scripture_icon'] ?? 'yes') === 'yes') {
-                    if (!empty($settings['scripture_icon']['value'])) {
-                        ob_start();
-                        \Elementor\Icons_Manager::render_icon($settings['scripture_icon'], ['aria-hidden' => 'true']);
-                        $scripture_icon = ob_get_clean() . ' ';
-                    } else {
-                        $scripture_icon = '📖 ';
-                    }
-                }
-                echo '<div class="sermon-scripture">' . $scripture_icon . esc_html($scripture) . '</div>';
+                echo '<div class="sermon-scripture">' . esc_html($scripture) . '</div>';
             }
             
             echo '</div>';
