@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.15.0
+Stable tag: 1.15.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.15.1 =
+* Fix: Banner text fields (Title, Subtitle, Description, Position, Button) now properly show when "Background Image + Text" display type is selected
+* Fix: Initial field visibility now correctly reflects the saved display type value
+* Fix: Added timeout to ensure DOM is fully loaded before toggling fields
+* Improvement: Added console logging for debugging display type issues
 
 = 1.15.0 =
 * New Feature: Banner display type option (Image Only / Background Image + Text)

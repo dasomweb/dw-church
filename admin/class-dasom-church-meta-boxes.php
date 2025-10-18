@@ -529,7 +529,7 @@ class Dasom_Church_Meta_Boxes {
             </tr>
             
             <!-- 배경이미지 + 텍스트 모드 전용 필드 -->
-            <tr class="banner-text-field" style="display:none;">
+            <tr class="banner-text-field" style="<?php echo ($display_type === 'image_with_text') ? '' : 'display:none;'; ?>">
                 <th scope="row">
                     <label for="dw_banner_bg_image"><?php _e('배경 이미지', 'dasom-church'); ?></label>
                 </th>
@@ -545,7 +545,7 @@ class Dasom_Church_Meta_Boxes {
                     <p class="description"><?php _e('텍스트의 배경이 될 이미지를 업로드하세요.', 'dasom-church'); ?></p>
                 </td>
             </tr>
-            <tr class="banner-text-field" style="display:none;">
+            <tr class="banner-text-field" style="<?php echo ($display_type === 'image_with_text') ? '' : 'display:none;'; ?>">
                 <th scope="row">
                     <label for="dw_banner_text_title"><?php _e('제목 (Title)', 'dasom-church'); ?></label>
                 </th>
@@ -554,7 +554,7 @@ class Dasom_Church_Meta_Boxes {
                     <p class="description"><?php _e('배너에 표시될 메인 제목을 입력하세요.', 'dasom-church'); ?></p>
                 </td>
             </tr>
-            <tr class="banner-text-field" style="display:none;">
+            <tr class="banner-text-field" style="<?php echo ($display_type === 'image_with_text') ? '' : 'display:none;'; ?>">
                 <th scope="row">
                     <label for="dw_banner_text_subtitle"><?php _e('부제목 (Subtitle)', 'dasom-church'); ?></label>
                 </th>
@@ -563,7 +563,7 @@ class Dasom_Church_Meta_Boxes {
                     <p class="description"><?php _e('배너에 표시될 부제목을 입력하세요.', 'dasom-church'); ?></p>
                 </td>
             </tr>
-            <tr class="banner-text-field" style="display:none;">
+            <tr class="banner-text-field" style="<?php echo ($display_type === 'image_with_text') ? '' : 'display:none;'; ?>">
                 <th scope="row">
                     <label for="dw_banner_text_description"><?php _e('설명 (Description)', 'dasom-church'); ?></label>
                 </th>
@@ -572,7 +572,7 @@ class Dasom_Church_Meta_Boxes {
                     <p class="description"><?php _e('배너에 표시될 짧은 설명을 입력하세요.', 'dasom-church'); ?></p>
                 </td>
             </tr>
-            <tr class="banner-text-field" style="display:none;">
+            <tr class="banner-text-field" style="<?php echo ($display_type === 'image_with_text') ? '' : 'display:none;'; ?>">
                 <th scope="row">
                     <label for="dw_banner_text_position"><?php _e('텍스트 위치', 'dasom-church'); ?></label>
                 </th>
@@ -597,7 +597,7 @@ class Dasom_Church_Meta_Boxes {
                     <p class="description"><?php _e('텍스트가 표시될 위치를 선택하세요.', 'dasom-church'); ?></p>
                 </td>
             </tr>
-            <tr class="banner-text-field" style="display:none;">
+            <tr class="banner-text-field" style="<?php echo ($display_type === 'image_with_text') ? '' : 'display:none;'; ?>">
                 <th scope="row">
                     <label for="dw_banner_button_text"><?php _e('버튼 텍스트', 'dasom-church'); ?></label>
                 </th>
@@ -613,8 +613,8 @@ class Dasom_Church_Meta_Boxes {
                 </th>
                 <td>
                     <input type="url" id="dw_banner_link_url" name="dw_banner_link_url" value="<?php echo esc_url($link_url); ?>" class="regular-text" placeholder="https://" />
-                    <p class="description banner-image-only-desc"><?php _e('배너 클릭 시 이동할 URL을 입력하세요.', 'dasom-church'); ?></p>
-                    <p class="description banner-text-desc" style="display:none;"><?php _e('버튼 클릭 시 이동할 URL을 입력하세요. (이미지만 모드에서는 이미지에 링크가 적용됩니다)', 'dasom-church'); ?></p>
+                    <p class="description banner-image-only-desc" style="<?php echo ($display_type === 'image_only') ? '' : 'display:none;'; ?>"><?php _e('배너 클릭 시 이동할 URL을 입력하세요.', 'dasom-church'); ?></p>
+                    <p class="description banner-text-desc" style="<?php echo ($display_type === 'image_with_text') ? '' : 'display:none;'; ?>"><?php _e('버튼 클릭 시 이동할 URL을 입력하세요. (이미지만 모드에서는 이미지에 링크가 적용됩니다)', 'dasom-church'); ?></p>
                 </td>
             </tr>
             <tr>

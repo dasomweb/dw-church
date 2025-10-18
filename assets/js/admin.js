@@ -325,6 +325,8 @@ var DasomChurchAdmin = {
             function toggleBannerDisplayFields() {
                 var displayType = $('input[name="dw_banner_display_type"]:checked').val();
                 
+                console.log('Display Type:', displayType); // Debug
+                
                 if (displayType === 'image_with_text') {
                     $('.banner-text-field').show();
                     $('.banner-image-only-desc').hide();
@@ -336,13 +338,16 @@ var DasomChurchAdmin = {
                 }
             }
             
-            // Initial toggle on page load
-            toggleBannerDisplayFields();
-            
-            // Toggle on display type change
-            $('input[name="dw_banner_display_type"]').on('change', function() {
+            // Wait for DOM to be fully loaded
+            setTimeout(function() {
+                // Initial toggle on page load
                 toggleBannerDisplayFields();
-            });
+                
+                // Toggle on display type change
+                $('input[name="dw_banner_display_type"]').on('change', function() {
+                    toggleBannerDisplayFields();
+                });
+            }, 100);
         }
     },
     
