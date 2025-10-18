@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.17.0
+Stable tag: 1.17.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,11 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.17.1 =
+* Fix: Removed incorrect semicolon after initBannerAdditionalUploaders function
+* Fix: Banner image upload buttons now work correctly
+* Critical Fix: JavaScript object syntax now valid
 
 = 1.17.0 =
 * Refactor: Simplified banner logic - removed "Display Type" selector

@@ -398,6 +398,6 @@
                 $('#dw_banner_end_date').val('');
             });
         }
-    };
+    }
 
 })(jQuery);
