@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.23.0
+Stable tag: 1.23.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,13 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.23.1 =
+* Fix: Disable WP_Query caching for banner widgets to ensure fresh data
+* Fix: Clear post meta cache before rendering to force fresh meta values
+* Fix: Improve padding value detection (handle 0 values correctly)
+* Tool: Add debug-banner-meta.php script for troubleshooting meta values
+* Enhancement: Ensure banner settings are always current, never cached
 
 = 1.23.0 =
 * Feature: Arrow background color control with default and hover states

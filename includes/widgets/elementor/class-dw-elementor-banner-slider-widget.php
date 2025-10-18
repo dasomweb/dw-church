@@ -651,6 +651,11 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
             }
         }
         
+        // Disable caching for this query to ensure fresh data
+        $args['cache_results'] = false;
+        $args['update_post_meta_cache'] = false;
+        $args['update_post_term_cache'] = false;
+        
         $banners = new WP_Query($args);
         
         // Date filtering: Filter results after query
@@ -783,19 +788,21 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
             // Always use background image
             if ($image_url) {
                 if ($has_text) {
-                    // Get text settings
+                    // Get text settings - bypass cache to ensure fresh data
+                    wp_cache_delete(get_the_ID(), 'post_meta');
+                    
                     $text_position = get_post_meta(get_the_ID(), 'dw_banner_text_position', true);
                     $text_position = $text_position ? $text_position : 'center-center';
                     $text_align = get_post_meta(get_the_ID(), 'dw_banner_text_align', true);
                     $text_align = $text_align ? $text_align : 'center';
                     $padding_top = get_post_meta(get_the_ID(), 'dw_banner_content_padding_top', true);
-                    $padding_top = $padding_top ? $padding_top : '40';
+                    $padding_top = ($padding_top !== '' && $padding_top !== false) ? $padding_top : '40';
                     $padding_right = get_post_meta(get_the_ID(), 'dw_banner_content_padding_right', true);
-                    $padding_right = $padding_right ? $padding_right : '40';
+                    $padding_right = ($padding_right !== '' && $padding_right !== false) ? $padding_right : '40';
                     $padding_bottom = get_post_meta(get_the_ID(), 'dw_banner_content_padding_bottom', true);
-                    $padding_bottom = $padding_bottom ? $padding_bottom : '40';
+                    $padding_bottom = ($padding_bottom !== '' && $padding_bottom !== false) ? $padding_bottom : '40';
                     $padding_left = get_post_meta(get_the_ID(), 'dw_banner_content_padding_left', true);
-                    $padding_left = $padding_left ? $padding_left : '40';
+                    $padding_left = ($padding_left !== '' && $padding_left !== false) ? $padding_left : '40';
                     
                     // Convert position to flexbox alignment
                     list($v_align, $h_align) = explode('-', $text_position);
