@@ -630,18 +630,22 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             
             echo '<div class="sermon-content">';
             
-            echo '<h3><a href="' . get_permalink() . '">' . get_the_title() . '</a></h3>';
-            
+            // 1. 설교일자
             if (($settings['show_date'] ?? 'yes') === 'yes' && $sermon_date) {
                 echo '<div class="sermon-date">' . date_i18n('Y-m-d', strtotime($sermon_date)) . '</div>';
             }
             
-            if (($settings['show_preacher'] ?? 'yes') === 'yes' && !empty($preachers)) {
-                echo '<div class="sermon-preacher">' . esc_html(implode(', ', $preachers)) . '</div>';
-            }
+            // 2. 제목
+            echo '<h3><a href="' . get_permalink() . '">' . get_the_title() . '</a></h3>';
             
+            // 3. 성경구절
             if (($settings['show_scripture'] ?? 'yes') === 'yes' && !empty($scripture)) {
                 echo '<div class="sermon-scripture">' . esc_html($scripture) . '</div>';
+            }
+            
+            // 4. 설교자
+            if (($settings['show_preacher'] ?? 'yes') === 'yes' && !empty($preachers)) {
+                echo '<div class="sermon-preacher">' . esc_html(implode(', ', $preachers)) . '</div>';
             }
             
             echo '</div>';
