@@ -1132,6 +1132,31 @@ class Dasom_Church_Meta_Boxes {
         wp_enqueue_media();
         wp_enqueue_script('jquery-ui-sortable');
         
+        // Enqueue admin.js file
+        wp_enqueue_script(
+            'dasom-church-admin',
+            DASOM_CHURCH_PLUGIN_URL . 'assets/js/admin.js',
+            array('jquery', 'jquery-ui-sortable'),
+            DASOM_CHURCH_VERSION,
+            true
+        );
+        
+        // Localize script for translations
+        wp_localize_script('dasom-church-admin', 'dasomChurchAdmin', array(
+            'strings' => array(
+                'uploadPdf' => __('주보 PDF 업로드', 'dasom-church'),
+                'select' => __('선택', 'dasom-church'),
+                'add' => __('추가', 'dasom-church'),
+                'uploadImages' => __('이미지 업로드', 'dasom-church'),
+                'uploadThumbnail' => __('썸네일 업로드', 'dasom-church'),
+                'uploadAlbumImages' => __('앨범 이미지 업로드', 'dasom-church'),
+                'enterYoutubeUrl' => __('먼저 YouTube URL을 입력하세요.', 'dasom-church'),
+                'invalidUrl' => __('유효하지 않은 YouTube URL입니다.', 'dasom-church'),
+                'validationError' => __('오류를 수정한 후 다시 시도하세요.', 'dasom-church'),
+                'viewPdf' => __('선택된 PDF 보기', 'dasom-church'),
+            )
+        ));
+        
         wp_add_inline_script('jquery', $this->dasom_church_get_admin_script());
     }
     

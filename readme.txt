@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.16.1
+Stable tag: 1.16.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,13 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.16.2 =
+* Fix: Admin JavaScript file (admin.js) now properly loads on banner edit screen
+* Fix: Banner display type toggle now works correctly
+* Fix: Added proper script enqueue with dependencies
+* Fix: Added script localization for translations
+* Critical Fix: JavaScript functionality restored for banner meta box
 
 = 1.16.1 =
 * UI Improvement: Link target option moved next to URL input field with radio buttons
