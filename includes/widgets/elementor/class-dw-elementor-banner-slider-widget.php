@@ -239,140 +239,6 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         );
         
         $this->end_controls_section();
-        
-        // Style Tab - Button Settings
-        $this->start_controls_section(
-            'style_button_section',
-            [
-                'label' => __('Button', 'dasom-church'),
-                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
-            ]
-        );
-        
-        $this->add_group_control(
-            \Elementor\Group_Control_Typography::get_type(),
-            [
-                'name' => 'button_typography',
-                'label' => __('Typography', 'dasom-church'),
-                'selector' => '{{WRAPPER}} .dw-banner-button',
-            ]
-        );
-        
-        $this->start_controls_tabs('button_styles');
-        
-        $this->start_controls_tab(
-            'button_normal',
-            [
-                'label' => __('Normal', 'dasom-church'),
-            ]
-        );
-        
-        $this->add_control(
-            'button_text_color',
-            [
-                'label' => __('Text Color', 'dasom-church'),
-                'type' => \Elementor\Controls_Manager::COLOR,
-                'default' => '#ffffff',
-                'selectors' => [
-                    '{{WRAPPER}} .dw-banner-button' => 'color: {{VALUE}};',
-                ],
-            ]
-        );
-        
-        $this->add_control(
-            'button_bg_color',
-            [
-                'label' => __('Background Color', 'dasom-church'),
-                'type' => \Elementor\Controls_Manager::COLOR,
-                'default' => '#2271b1',
-                'selectors' => [
-                    '{{WRAPPER}} .dw-banner-button' => 'background-color: {{VALUE}};',
-                ],
-            ]
-        );
-        
-        $this->end_controls_tab();
-        
-        $this->start_controls_tab(
-            'button_hover',
-            [
-                'label' => __('Hover', 'dasom-church'),
-            ]
-        );
-        
-        $this->add_control(
-            'button_hover_text_color',
-            [
-                'label' => __('Text Color', 'dasom-church'),
-                'type' => \Elementor\Controls_Manager::COLOR,
-                'default' => '#ffffff',
-                'selectors' => [
-                    '{{WRAPPER}} .dw-banner-button:hover' => 'color: {{VALUE}};',
-                ],
-            ]
-        );
-        
-        $this->add_control(
-            'button_hover_bg_color',
-            [
-                'label' => __('Background Color', 'dasom-church'),
-                'type' => \Elementor\Controls_Manager::COLOR,
-                'default' => '#135e96',
-                'selectors' => [
-                    '{{WRAPPER}} .dw-banner-button:hover' => 'background-color: {{VALUE}};',
-                ],
-            ]
-        );
-        
-        $this->end_controls_tab();
-        
-        $this->end_controls_tabs();
-        
-        $this->add_responsive_control(
-            'button_padding',
-            [
-                'label' => __('Padding', 'dasom-church'),
-                'type' => \Elementor\Controls_Manager::DIMENSIONS,
-                'size_units' => ['px', 'em', '%'],
-                'separator' => 'before',
-                'selectors' => [
-                    '{{WRAPPER}} .dw-banner-button' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                ],
-            ]
-        );
-        
-        $this->add_control(
-            'button_border_radius',
-            [
-                'label' => __('Border Radius', 'dasom-church'),
-                'type' => \Elementor\Controls_Manager::SLIDER,
-                'size_units' => ['px', '%'],
-                'range' => [
-                    'px' => [
-                        'min' => 0,
-                        'max' => 50,
-                    ],
-                ],
-                'default' => [
-                    'size' => 4,
-                    'unit' => 'px',
-                ],
-                'selectors' => [
-                    '{{WRAPPER}} .dw-banner-button' => 'border-radius: {{SIZE}}{{UNIT}};',
-                ],
-            ]
-        );
-        
-        $this->add_group_control(
-            \Elementor\Group_Control_Box_Shadow::get_type(),
-            [
-                'name' => 'button_box_shadow',
-                'label' => __('Box Shadow', 'dasom-church'),
-                'selector' => '{{WRAPPER}} .dw-banner-button',
-            ]
-        );
-        
-        $this->end_controls_section();
     }
     
     protected function render() {
@@ -456,10 +322,6 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
             $terms = wp_get_post_terms(get_the_ID(), 'banner_category');
             $category = !empty($terms) && !is_wp_error($terms) ? $terms[0]->name : '';
             
-            // Get display type
-            $display_type = get_post_meta(get_the_ID(), 'dw_banner_display_type', true);
-            $display_type = $display_type ? $display_type : 'image_only';
-            
             // Get appropriate image based on category
             $image_url = '';
             if ($category === '메인 배너' || $category === 'Main Banner') {
@@ -470,33 +332,28 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
                 $image_url = $sub_image ? wp_get_attachment_url($sub_image) : '';
             }
             
+            // Get link info
             $link_url = get_post_meta(get_the_ID(), 'dw_banner_link_url', true);
             $link_target = get_post_meta(get_the_ID(), 'dw_banner_link_target', true);
             $link_target = $link_target === '_blank' ? '_blank' : '_self';
             
-            echo '<div class="swiper-slide dw-banner-slide-' . esc_attr($display_type) . '">';
+            // Get text overlay fields
+            $text_title = get_post_meta(get_the_ID(), 'dw_banner_text_title', true);
+            $text_subtitle = get_post_meta(get_the_ID(), 'dw_banner_text_subtitle', true);
+            $text_description = get_post_meta(get_the_ID(), 'dw_banner_text_description', true);
             
-            if ($display_type === 'image_only') {
-                // Image only mode: image with link
-                if ($link_url) {
-                    echo '<a href="' . esc_url($link_url) . '" target="' . esc_attr($link_target) . '" style="display:block;">';
-                }
-                
-                if ($image_url) {
-                    echo '<img src="' . esc_url($image_url) . '" alt="' . esc_attr(get_the_title()) . '" style="width:100%;height:auto;display:block;">';
-                }
-                
-                if ($link_url) {
-                    echo '</a>';
-                }
-            } else {
-                // Image with text mode: background image + text overlay + button
-                $bg_image_id = get_post_meta(get_the_ID(), 'dw_banner_bg_image', true);
-                $bg_image_url = $bg_image_id ? wp_get_attachment_url($bg_image_id) : $image_url;
-                
-                $text_title = get_post_meta(get_the_ID(), 'dw_banner_text_title', true);
-                $text_subtitle = get_post_meta(get_the_ID(), 'dw_banner_text_subtitle', true);
-                $text_description = get_post_meta(get_the_ID(), 'dw_banner_text_description', true);
+            // Check if any text content exists
+            $has_text = !empty($text_title) || !empty($text_subtitle) || !empty($text_description);
+            
+            echo '<div class="swiper-slide dw-banner-slide' . ($has_text ? ' dw-banner-with-text' : '') . '">';
+            
+            // Wrap entire slide in link if URL exists
+            if ($link_url) {
+                echo '<a href="' . esc_url($link_url) . '" target="' . esc_attr($link_target) . '" class="dw-banner-link" style="display:block;position:relative;text-decoration:none;color:inherit;">';
+            }
+            
+            if ($has_text) {
+                // Banner with text overlay
                 $text_position = get_post_meta(get_the_ID(), 'dw_banner_text_position', true);
                 $text_position = $text_position ? $text_position : 'center-center';
                 $text_align = get_post_meta(get_the_ID(), 'dw_banner_text_align', true);
@@ -509,36 +366,37 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
                 $padding_bottom = $padding_bottom ? $padding_bottom : '40';
                 $padding_left = get_post_meta(get_the_ID(), 'dw_banner_content_padding_left', true);
                 $padding_left = $padding_left ? $padding_left : '40';
-                $button_text = get_post_meta(get_the_ID(), 'dw_banner_button_text', true);
                 
-                // Convert position to CSS classes
+                // Convert position to flexbox alignment
                 list($v_align, $h_align) = explode('-', $text_position);
-                
                 $v_align_style = $v_align === 'top' ? 'flex-start' : ($v_align === 'bottom' ? 'flex-end' : 'center');
                 $h_align_style = $h_align === 'left' ? 'flex-start' : ($h_align === 'right' ? 'flex-end' : 'center');
                 
-                echo '<div class="dw-banner-with-text dw-banner-align-' . esc_attr($text_position) . '" style="position:relative;width:100%;background-image:url(' . esc_url($bg_image_url) . ');background-size:cover;background-position:center;min-height:500px;display:flex;align-items:' . esc_attr($v_align_style) . ';justify-content:' . esc_attr($h_align_style) . ';">';
+                echo '<div class="dw-banner-bg" style="position:relative;width:100%;background-image:url(' . esc_url($image_url) . ');background-size:cover;background-position:center;min-height:500px;display:flex;align-items:' . esc_attr($v_align_style) . ';justify-content:' . esc_attr($h_align_style) . ';">';
                 
                 echo '<div class="dw-banner-text-content" style="padding:' . esc_attr($padding_top) . 'px ' . esc_attr($padding_right) . 'px ' . esc_attr($padding_bottom) . 'px ' . esc_attr($padding_left) . 'px;max-width:600px;text-align:' . esc_attr($text_align) . ';position:relative;z-index:2;">';
                 
                 if ($text_subtitle) {
                     echo '<div class="dw-banner-subtitle">' . esc_html($text_subtitle) . '</div>';
                 }
-                
                 if ($text_title) {
                     echo '<h2 class="dw-banner-title">' . esc_html($text_title) . '</h2>';
                 }
-                
                 if ($text_description) {
                     echo '<div class="dw-banner-description">' . esc_html($text_description) . '</div>';
                 }
                 
-                if ($button_text && $link_url) {
-                    echo '<a href="' . esc_url($link_url) . '" target="' . esc_attr($link_target) . '" class="dw-banner-button">' . esc_html($button_text) . '</a>';
-                }
-                
                 echo '</div>'; // text-content
-                echo '</div>'; // banner-with-text
+                echo '</div>'; // banner-bg
+            } else {
+                // Image only (no text)
+                if ($image_url) {
+                    echo '<img src="' . esc_url($image_url) . '" alt="' . esc_attr(get_the_title()) . '" style="width:100%;height:auto;display:block;">';
+                }
+            }
+            
+            if ($link_url) {
+                echo '</a>'; // banner-link
             }
             
             echo '</div>'; // swiper-slide

@@ -24,11 +24,10 @@
     init: function() {
         this.initMediaUploaders();
         this.initImageSorting();
-        this.initYouTubeThumbnails();
-        this.initFormValidation();
-        this.initBannerCategoryToggle();
-        this.initBannerDisplayTypeToggle();
-        this.initBannerAdditionalUploaders();
+                this.initYouTubeThumbnails();
+                this.initFormValidation();
+                this.initBannerCategoryToggle();
+                this.initBannerAdditionalUploaders();
     },
     
     /**
@@ -319,50 +318,6 @@
     },
     
     /**
-     * Banner display type toggle
-     */
-    initBannerDisplayTypeToggle: function() {
-        if ($('body').hasClass('post-type-banner')) {
-            var self = this;
-            
-            function toggleBannerDisplayFields() {
-                var displayType = $('input[name="dw_banner_display_type"]:checked').val();
-                
-                console.log('Display Type Selected:', displayType);
-                console.log('Text Fields Found:', $('.banner-text-field').length);
-                
-                if (displayType === 'image_with_text') {
-                    $('.banner-text-field').show();
-                    $('.banner-image-only-desc').hide();
-                    $('.banner-text-desc').show();
-                    console.log('Showing text fields');
-                } else {
-                    $('.banner-text-field').hide();
-                    $('.banner-image-only-desc').show();
-                    $('.banner-text-desc').hide();
-                    console.log('Hiding text fields');
-                }
-            }
-            
-            // Wait for DOM to be fully loaded
-            setTimeout(function() {
-                console.log('Initializing banner display type toggle');
-                
-                // Initial toggle on page load
-                toggleBannerDisplayFields();
-                
-                // Toggle on display type change
-                $('input[name="dw_banner_display_type"]').on('change', function() {
-                    console.log('Display type changed to:', $(this).val());
-                    toggleBannerDisplayFields();
-                });
-                
-                console.log('Banner display type toggle initialized');
-            }, 200);
-        }
-    },
-    
-    /**
      * Banner additional image uploaders
      */
     initBannerAdditionalUploaders: function() {
@@ -430,27 +385,6 @@
                 e.preventDefault();
                 $('#dw_banner_sub_image').val('');
                 $('#dw_banner_sub_image_preview').html('');
-            });
-            
-            // Banner background image uploader (for text mode)
-            $('#dw_banner_bg_image_button').on('click', function(e) {
-                e.preventDefault();
-                self.openMediaFrame({
-                    title: '배경 이미지 업로드',
-                    button: { text: '선택' },
-                    library: { type: 'image' },
-                    multiple: false,
-                    onSelect: function(attachment) {
-                        $('#dw_banner_bg_image').val(attachment.id);
-                        $('#dw_banner_bg_image_preview').html('<img src="' + attachment.url + '" style="max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;" />');
-                    }
-                });
-            });
-            
-            $('#dw_banner_bg_image_remove').on('click', function(e) {
-                e.preventDefault();
-                $('#dw_banner_bg_image').val('');
-                $('#dw_banner_bg_image_preview').html('');
             });
             
             // Date reset buttons

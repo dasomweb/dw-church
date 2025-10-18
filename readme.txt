@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.16.5
+Stable tag: 1.17.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,16 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.17.0 =
+* Refactor: Simplified banner logic - removed "Display Type" selector
+* Feature: Banner images now always serve as backgrounds with optional text overlay
+* Feature: Text fields (title, subtitle, description) are now optional - show when filled, hide when empty
+* Feature: Entire banner slide is now clickable as a single link (instead of button-only)
+* Removed: Button text field and button-specific styling controls
+* Removed: Background image field (PC/Mobile images now serve as backgrounds)
+* Improved: More intuitive banner creation workflow
+* Code Quality: Removed unnecessary JavaScript toggle logic and simplified widget rendering
 
 = 1.16.5 =
 * Fix: Added missing semicolon after closing brace of DasomChurchAdmin object
