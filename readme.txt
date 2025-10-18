@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.7.0
+Stable tag: 1.7.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -83,6 +83,16 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 
 == Changelog ==
 
+= 1.7.1 =
+* Feature: Banner scheduling with start/end dates
+* Feature: Automatic banner status management (draft conversion on expiry)
+* Feature: Hourly cron job for expired banners
+* Feature: Banner custom fields guide in dashboard
+* Feature: Banner status card in dashboard (with scheduled/expired indicators)
+* Fix: Sermon preacher management bug (duplicate "담임목사" issue)
+* Fix: Plugin reactivation no longer overrides default preacher setting
+* Improvement: Banner list columns show start/end dates with status
+
 = 1.7.0 =
 * Feature: Added Banner post type for Hero sections
 * Feature: PC image support (recommended 1920px width)
@@ -140,6 +150,9 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.7.1 =
+Important update with banner scheduling, bug fixes, and dashboard improvements. Recommended update for better banner management.
 
 = 1.7.0 =
 Major feature update with Banner post type for Hero sections. Recommended update for new banner management capabilities.
