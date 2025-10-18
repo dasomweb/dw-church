@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.22.2
+Stable tag: 1.23.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,15 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.23.0 =
+* Feature: Arrow background color control with default and hover states
+* Feature: Arrow icon color control with default and hover states
+* Feature: Pagination bullet color control (normal and active states)
+* Feature: Pagination bullet size control (5-20px range)
+* Enhancement: New "Navigation & Pagination Colors" style section
+* UI: Complete color customization for all navigation elements
+* Defaults: White arrows with dark icons, semi-transparent pagination bullets
 
 = 1.22.2 =
 * Fix: Remove hardcoded arrow sizes and positions from CSS

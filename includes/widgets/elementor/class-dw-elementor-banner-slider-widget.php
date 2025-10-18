@@ -361,6 +361,145 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         
         $this->end_controls_section();
         
+        // Style Tab - Navigation Colors
+        $this->start_controls_section(
+            'style_navigation_section',
+            [
+                'label' => __('Navigation & Pagination Colors', 'dasom-church'),
+                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+        
+        $this->add_control(
+            'arrow_bg_color',
+            [
+                'label' => __('Arrow Background Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => 'rgba(255, 255, 255, 0.9)',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-modern-nav' => 'background: {{VALUE}} !important;',
+                ],
+                'condition' => [
+                    'navigation' => 'yes',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'arrow_icon_color',
+            [
+                'label' => __('Arrow Icon Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#333333',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-modern-nav:after' => 'color: {{VALUE}} !important;',
+                ],
+                'condition' => [
+                    'navigation' => 'yes',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'arrow_bg_hover_color',
+            [
+                'label' => __('Arrow Background Hover Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => 'rgba(255, 255, 255, 1)',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-modern-nav:hover' => 'background: {{VALUE}} !important;',
+                ],
+                'condition' => [
+                    'navigation' => 'yes',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'arrow_icon_hover_color',
+            [
+                'label' => __('Arrow Icon Hover Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#000000',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-modern-nav:hover:after' => 'color: {{VALUE}} !important;',
+                ],
+                'condition' => [
+                    'navigation' => 'yes',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'pagination_heading',
+            [
+                'label' => __('Pagination', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::HEADING,
+                'separator' => 'before',
+                'condition' => [
+                    'pagination' => 'yes',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'pagination_bullet_color',
+            [
+                'label' => __('Pagination Bullet Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => 'rgba(255, 255, 255, 0.5)',
+                'selectors' => [
+                    '{{WRAPPER}} .swiper-pagination-bullet' => 'background: {{VALUE}};',
+                ],
+                'condition' => [
+                    'pagination' => 'yes',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'pagination_bullet_active_color',
+            [
+                'label' => __('Pagination Active Bullet Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#ffffff',
+                'selectors' => [
+                    '{{WRAPPER}} .swiper-pagination-bullet-active' => 'background: {{VALUE}};',
+                ],
+                'condition' => [
+                    'pagination' => 'yes',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'pagination_bullet_size',
+            [
+                'label' => __('Pagination Bullet Size', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => [
+                    'px' => [
+                        'min' => 5,
+                        'max' => 20,
+                        'step' => 1,
+                    ],
+                ],
+                'default' => [
+                    'unit' => 'px',
+                    'size' => 8,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .swiper-pagination-bullet' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}};',
+                ],
+                'condition' => [
+                    'pagination' => 'yes',
+                ],
+            ]
+        );
+        
+        $this->end_controls_section();
+        
         // Style Tab - Text Overlay Settings
         $this->start_controls_section(
             'style_text_section',
