@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.24.1
+Stable tag: 1.24.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,13 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.24.2 =
+* Feature: Image ratio presets (1:1, 4:3, 3:2, 16:9, 21:9)
+* Feature: Custom ratio option for manual height control
+* Enhancement: Automatic aspect ratio calculation
+* UI: Easy-to-use ratio selector dropdown
+* Fix: Images now fill container properly at selected ratios
 
 = 1.24.1 =
 * Feature: Responsive image height control (px, %, vh units)

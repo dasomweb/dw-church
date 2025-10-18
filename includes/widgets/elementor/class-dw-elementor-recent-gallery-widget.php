@@ -114,6 +114,27 @@ class DW_Elementor_Recent_Gallery_Widget extends \Elementor\Widget_Base {
             ]
         );
         
+        $this->add_control(
+            'image_ratio',
+            [
+                'label' => __('이미지 비율', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => '3-2',
+                'options' => [
+                    '1-1' => __('1:1 (정사각형)', 'dasom-church'),
+                    '4-3' => __('4:3 (표준)', 'dasom-church'),
+                    '3-2' => __('3:2 (클래식)', 'dasom-church'),
+                    '16-9' => __('16:9 (와이드)', 'dasom-church'),
+                    '21-9' => __('21:9 (시네마)', 'dasom-church'),
+                    'custom' => __('Custom (직접 설정)', 'dasom-church'),
+                ],
+                'condition' => [
+                    'show_thumbnail' => 'yes',
+                    'layout' => 'grid',
+                ],
+            ]
+        );
+        
         $this->add_responsive_control(
             'image_height',
             [
@@ -147,6 +168,7 @@ class DW_Elementor_Recent_Gallery_Widget extends \Elementor\Widget_Base {
                 'condition' => [
                     'show_thumbnail' => 'yes',
                     'layout' => 'grid',
+                    'image_ratio' => 'custom',
                 ],
             ]
         );
@@ -465,6 +487,18 @@ class DW_Elementor_Recent_Gallery_Widget extends \Elementor\Widget_Base {
         $columns_tablet = $settings['columns_tablet'] ?? 2;
         $columns_mobile = $settings['columns_mobile'] ?? 1;
         $hover_effect = $settings['image_hover_effect'] ?? 'zoom';
+        $image_ratio = $settings['image_ratio'] ?? '3-2';
+        
+        // Calculate padding-top based on ratio
+        $ratio_map = array(
+            '1-1' => '100',      // 1:1
+            '4-3' => '75',       // 4:3
+            '3-2' => '66.67',    // 3:2
+            '16-9' => '56.25',   // 16:9
+            '21-9' => '42.86',   // 21:9
+        );
+        
+        $ratio_padding = isset($ratio_map[$image_ratio]) ? $ratio_map[$image_ratio] : '66.67';
         
         ?>
         <div class="dw-gallery-widget dw-gallery-<?php echo esc_attr($layout); ?> dw-hover-<?php echo esc_attr($hover_effect); ?>">
@@ -484,6 +518,14 @@ class DW_Elementor_Recent_Gallery_Widget extends \Elementor\Widget_Base {
                         .dw-gallery-grid {
                             grid-template-columns: repeat(<?php echo esc_attr($columns_mobile); ?>, 1fr);
                         }
+                    }
+                </style>
+            <?php endif; ?>
+            
+            <?php if ($layout === 'grid' && $image_ratio !== 'custom'): ?>
+                <style>
+                    .dw-gallery-widget .dw-gallery-thumbnail {
+                        padding-top: <?php echo esc_attr($ratio_padding); ?>% !important;
                     }
                 </style>
             <?php endif; ?>
