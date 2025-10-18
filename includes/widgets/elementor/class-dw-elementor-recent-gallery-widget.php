@@ -574,19 +574,19 @@ class DW_Elementor_Recent_Gallery_Widget extends \Elementor\Widget_Base {
                 color: inherit;
             }
             .dw-gallery-thumbnail {
-                width: 100%;
-                overflow: hidden;
-                position: relative;
+                width: 100% !important;
+                overflow: hidden !important;
+                position: relative !important;
                 padding-top: 66.67%; /* 3:2 aspect ratio */
             }
             .dw-gallery-image {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                object-position: center center;
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: cover !important;
+                object-position: center center !important;
                 transition: all 0.3s ease;
             }
             /* Hover Effects */

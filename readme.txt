@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.24.3
+Stable tag: 1.24.4
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.24.4 =
+* Fix: Add !important to CSS rules to ensure proper application
+* Fix: Force object-fit: cover with higher CSS specificity
+* Fix: Ensure all aspect ratios apply correctly
+* Enhancement: Override any conflicting Elementor default styles
 
 = 1.24.3 =
 * Fix: Add default object-fit: cover to ensure images fill container
