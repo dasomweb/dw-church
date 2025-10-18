@@ -631,6 +631,37 @@ msgstr ""
 msgid "이미지 없음"
 msgstr ""
 
+# Banner Schedule
+msgid "배너 시작 날짜"
+msgstr ""
+
+msgid "이 날짜부터 배너가 표시됩니다. 비워두면 즉시 표시됩니다."
+msgstr ""
+
+msgid "배너 종료 날짜"
+msgstr ""
+
+msgid "이 날짜 이후 배너가 자동으로 비공개(Draft)로 전환됩니다. 비워두면 무기한 표시됩니다."
+msgstr ""
+
+msgid "시작 날짜"
+msgstr ""
+
+msgid "종료 날짜"
+msgstr ""
+
+msgid "(예약됨)"
+msgstr ""
+
+msgid "(만료됨)"
+msgstr ""
+
+msgid "즉시"
+msgstr ""
+
+msgid "무기한"
+msgstr ""
+
 
 
 

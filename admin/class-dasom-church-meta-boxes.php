@@ -409,6 +409,8 @@ class Dasom_Church_Meta_Boxes {
         $link_url = get_post_meta($post->ID, 'dw_banner_link_url', true);
         $link_target = get_post_meta($post->ID, 'dw_banner_link_target', true);
         $link_target = $link_target ? $link_target : '_self';
+        $start_date = get_post_meta($post->ID, 'dw_banner_start_date', true);
+        $end_date = get_post_meta($post->ID, 'dw_banner_end_date', true);
         ?>
         <table class="form-table">
             <tr>
@@ -462,6 +464,24 @@ class Dasom_Church_Meta_Boxes {
                         <option value="_blank" <?php selected($link_target, '_blank'); ?>><?php _e('새 창에서 열기', 'dasom-church'); ?></option>
                     </select>
                     <p class="description"><?php _e('링크를 클릭했을 때 어떻게 열릴지 선택하세요.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="dw_banner_start_date"><?php _e('배너 시작 날짜', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <input type="datetime-local" id="dw_banner_start_date" name="dw_banner_start_date" value="<?php echo esc_attr($start_date); ?>" class="regular-text" />
+                    <p class="description"><?php _e('이 날짜부터 배너가 표시됩니다. 비워두면 즉시 표시됩니다.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="dw_banner_end_date"><?php _e('배너 종료 날짜', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <input type="datetime-local" id="dw_banner_end_date" name="dw_banner_end_date" value="<?php echo esc_attr($end_date); ?>" class="regular-text" />
+                    <p class="description"><?php _e('이 날짜 이후 배너가 자동으로 비공개(Draft)로 전환됩니다. 비워두면 무기한 표시됩니다.', 'dasom-church'); ?></p>
                 </td>
             </tr>
         </table>
@@ -749,6 +769,28 @@ class Dasom_Church_Meta_Boxes {
             if (in_array($target, array('_self', '_blank'))) {
                 update_post_meta($post_id, 'dw_banner_link_target', $target);
             }
+        }
+        
+        if (isset($_POST['dw_banner_start_date'])) {
+            $start_date = sanitize_text_field($_POST['dw_banner_start_date']);
+            update_post_meta($post_id, 'dw_banner_start_date', $start_date);
+            
+            // If start date is in the future, set post status to future
+            if (!empty($start_date) && strtotime($start_date) > current_time('timestamp')) {
+                remove_action('save_post', array($this, 'dasom_church_save_meta_boxes'));
+                wp_update_post(array(
+                    'ID' => $post_id,
+                    'post_status' => 'future',
+                    'post_date' => date('Y-m-d H:i:s', strtotime($start_date)),
+                    'post_date_gmt' => get_gmt_from_date(date('Y-m-d H:i:s', strtotime($start_date)))
+                ));
+                add_action('save_post', array($this, 'dasom_church_save_meta_boxes'));
+            }
+        }
+        
+        if (isset($_POST['dw_banner_end_date'])) {
+            $end_date = sanitize_text_field($_POST['dw_banner_end_date']);
+            update_post_meta($post_id, 'dw_banner_end_date', $end_date);
         }
     }
     

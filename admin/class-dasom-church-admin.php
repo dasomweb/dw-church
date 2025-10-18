@@ -68,6 +68,12 @@ class Dasom_Church_Admin {
         
         // Admin head styles
         add_action('admin_head', array($this, 'dasom_church_admin_head_styles'));
+        
+        // Banner schedule check
+        add_action('dasom_church_check_banner_schedule', array($this, 'dasom_church_check_expired_banners'));
+        if (!wp_next_scheduled('dasom_church_check_banner_schedule')) {
+            wp_schedule_event(time(), 'hourly', 'dasom_church_check_banner_schedule');
+        }
     }
     
     /**
@@ -625,6 +631,45 @@ class Dasom_Church_Admin {
                 'invalidUrl' => __('Invalid URL format.', 'dasom-church')
             )
         ));
+    }
+    
+    /**
+     * Check and update expired banners
+     */
+    public function dasom_church_check_expired_banners() {
+        $args = array(
+            'post_type' => 'banner',
+            'post_status' => 'publish',
+            'posts_per_page' => -1,
+            'meta_query' => array(
+                array(
+                    'key' => 'dw_banner_end_date',
+                    'value' => '',
+                    'compare' => '!='
+                )
+            )
+        );
+        
+        $banners = get_posts($args);
+        $current_time = current_time('timestamp');
+        
+        foreach ($banners as $banner) {
+            $end_date = get_post_meta($banner->ID, 'dw_banner_end_date', true);
+            
+            if (!empty($end_date)) {
+                $end_timestamp = strtotime($end_date);
+                
+                // If end date has passed, change to draft
+                if ($end_timestamp && $end_timestamp < $current_time) {
+                    wp_update_post(array(
+                        'ID' => $banner->ID,
+                        'post_status' => 'draft'
+                    ));
+                    
+                    error_log('Banner ID ' . $banner->ID . ' expired and set to draft');
+                }
+            }
+        }
     }
 }
 

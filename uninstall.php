@@ -102,7 +102,9 @@ $meta_keys_to_remove = array(
     'dw_banner_pc_image',
     'dw_banner_mobile_image',
     'dw_banner_link_url',
-    'dw_banner_link_target'
+    'dw_banner_link_target',
+    'dw_banner_start_date',
+    'dw_banner_end_date'
 );
 
 foreach ($meta_keys_to_remove as $meta_key) {

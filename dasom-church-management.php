@@ -529,6 +529,13 @@ class Dasom_Church_Management {
      */
     public function dasom_church_deactivation() {
         flush_rewrite_rules();
+        
+        // Clear scheduled cron events
+        $timestamp = wp_next_scheduled('dasom_church_check_banner_schedule');
+        if ($timestamp) {
+            wp_unschedule_event($timestamp, 'dasom_church_check_banner_schedule');
+        }
+        wp_clear_scheduled_hook('dasom_church_check_banner_schedule');
     }
     
     /**

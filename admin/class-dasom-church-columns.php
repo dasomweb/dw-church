@@ -368,6 +368,8 @@ class Dasom_Church_Columns {
         $new_columns['pc_image'] = __('PC 이미지', 'dasom-church');
         $new_columns['mobile_image'] = __('모바일 이미지', 'dasom-church');
         $new_columns['link_url'] = __('링크 URL', 'dasom-church');
+        $new_columns['start_date'] = __('시작 날짜', 'dasom-church');
+        $new_columns['end_date'] = __('종료 날짜', 'dasom-church');
         $new_columns['link_target'] = __('열기 방식', 'dasom-church');
         $new_columns['date'] = __('작성일', 'dasom-church');
         
@@ -413,6 +415,40 @@ class Dasom_Church_Columns {
                     echo '<a href="' . esc_url($link_url) . '" target="_blank" style="word-break:break-all;">' . esc_html($link_url) . '</a>';
                 } else {
                     echo '—';
+                }
+                break;
+                
+            case 'start_date':
+                $start_date = get_post_meta($post_id, 'dw_banner_start_date', true);
+                if ($start_date) {
+                    $timestamp = strtotime($start_date);
+                    if ($timestamp !== false && $timestamp > 0) {
+                        echo esc_html(date_i18n('Y-m-d H:i', $timestamp));
+                        if ($timestamp > current_time('timestamp')) {
+                            echo '<br><span style="color:#f0ad4e;">' . __('(예약됨)', 'dasom-church') . '</span>';
+                        }
+                    } else {
+                        echo '—';
+                    }
+                } else {
+                    echo __('즉시', 'dasom-church');
+                }
+                break;
+                
+            case 'end_date':
+                $end_date = get_post_meta($post_id, 'dw_banner_end_date', true);
+                if ($end_date) {
+                    $timestamp = strtotime($end_date);
+                    if ($timestamp !== false && $timestamp > 0) {
+                        echo esc_html(date_i18n('Y-m-d H:i', $timestamp));
+                        if ($timestamp < current_time('timestamp')) {
+                            echo '<br><span style="color:#dc3545;">' . __('(만료됨)', 'dasom-church') . '</span>';
+                        }
+                    } else {
+                        echo '—';
+                    }
+                } else {
+                    echo __('무기한', 'dasom-church');
                 }
                 break;
                 
