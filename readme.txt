@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.18.0
+Stable tag: 1.18.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.18.1 =
+* Fix: Banner images now save correctly without requiring category selection
+* Fix: Removed category-based save logic that was preventing image uploads from saving
+* Improved: All banner image fields (PC, Mobile, Sub) now save independently
+* Enhancement: Featured image automatically set based on upload priority (PC > Sub > Mobile)
 
 = 1.18.0 =
 * Feature: New DW Banner Grid Widget - Display sub banners in a responsive grid layout

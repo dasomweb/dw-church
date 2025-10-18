@@ -914,48 +914,42 @@ class Dasom_Church_Meta_Boxes {
             return;
         }
         
-        // Get banner category to determine which fields to save
-        $terms = wp_get_post_terms($post_id, 'banner_category');
-        $category = !empty($terms) && !is_wp_error($terms) ? $terms[0]->name : '';
-        
-        // Save main banner fields
-        if ($category === '메인 배너' || $category === 'Main Banner') {
-            if (isset($_POST['dw_banner_pc_image'])) {
-                $pc_image_id = intval($_POST['dw_banner_pc_image']);
-                update_post_meta($post_id, 'dw_banner_pc_image', $pc_image_id);
-                if ($pc_image_id > 0) {
-                    set_post_thumbnail($post_id, $pc_image_id);
-                }
-            }
-            
-            if (isset($_POST['dw_banner_mobile_image'])) {
-                update_post_meta($post_id, 'dw_banner_mobile_image', intval($_POST['dw_banner_mobile_image']));
-            }
-            
-            // Clear sub banner fields
-            delete_post_meta($post_id, 'dw_banner_sub_image');
-            delete_post_meta($post_id, 'dw_banner_sub_ratio');
+        // Save all banner image fields (no category restriction)
+        // Main banner fields
+        if (isset($_POST['dw_banner_pc_image'])) {
+            $pc_image_id = intval($_POST['dw_banner_pc_image']);
+            update_post_meta($post_id, 'dw_banner_pc_image', $pc_image_id);
         }
-        // Save sub banner fields
-        elseif ($category === '서브 배너' || $category === 'Sub Banner') {
-            if (isset($_POST['dw_banner_sub_ratio'])) {
-                $ratio = sanitize_text_field($_POST['dw_banner_sub_ratio']);
-                if (in_array($ratio, array('16:9', '4:3', '1:1'))) {
-                    update_post_meta($post_id, 'dw_banner_sub_ratio', $ratio);
-                }
+        
+        if (isset($_POST['dw_banner_mobile_image'])) {
+            update_post_meta($post_id, 'dw_banner_mobile_image', intval($_POST['dw_banner_mobile_image']));
+        }
+        
+        // Sub banner fields
+        if (isset($_POST['dw_banner_sub_ratio'])) {
+            $ratio = sanitize_text_field($_POST['dw_banner_sub_ratio']);
+            if (in_array($ratio, array('16:9', '4:3', '1:1'))) {
+                update_post_meta($post_id, 'dw_banner_sub_ratio', $ratio);
             }
-            
-            if (isset($_POST['dw_banner_sub_image'])) {
-                $sub_image_id = intval($_POST['dw_banner_sub_image']);
-                update_post_meta($post_id, 'dw_banner_sub_image', $sub_image_id);
-                if ($sub_image_id > 0) {
-                    set_post_thumbnail($post_id, $sub_image_id);
-                }
-            }
-            
-            // Clear main banner fields
-            delete_post_meta($post_id, 'dw_banner_pc_image');
-            delete_post_meta($post_id, 'dw_banner_mobile_image');
+        }
+        
+        if (isset($_POST['dw_banner_sub_image'])) {
+            $sub_image_id = intval($_POST['dw_banner_sub_image']);
+            update_post_meta($post_id, 'dw_banner_sub_image', $sub_image_id);
+        }
+        
+        // Set featured image based on which image is uploaded
+        // Priority: PC image > Sub image > Mobile image
+        $pc_image_id = isset($_POST['dw_banner_pc_image']) ? intval($_POST['dw_banner_pc_image']) : 0;
+        $sub_image_id = isset($_POST['dw_banner_sub_image']) ? intval($_POST['dw_banner_sub_image']) : 0;
+        $mobile_image_id = isset($_POST['dw_banner_mobile_image']) ? intval($_POST['dw_banner_mobile_image']) : 0;
+        
+        if ($pc_image_id > 0) {
+            set_post_thumbnail($post_id, $pc_image_id);
+        } elseif ($sub_image_id > 0) {
+            set_post_thumbnail($post_id, $sub_image_id);
+        } elseif ($mobile_image_id > 0) {
+            set_post_thumbnail($post_id, $mobile_image_id);
         }
         
         // Save text overlay fields (all optional)
