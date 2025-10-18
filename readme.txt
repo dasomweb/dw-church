@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.7.5
+Stable tag: 1.8.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,17 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.8.0 =
+* Feature: Banner categories (Main Banner / Sub Banner)
+* Feature: Sub banner with customizable aspect ratios (16:9, 4:3, 1:1)
+* Feature: Dynamic meta box fields based on banner category
+* Feature: Main banner uses PC (1920px) + Mobile (720px) images
+* Feature: Sub banner uses single image with 1024px width and selectable ratio
+* Improvement: Enhanced banner admin columns with category display
+* Improvement: Visual category badges with color coding
+* UX: Automatic field toggle based on category selection
+* UX: Informative banner type guide in meta box
 
 = 1.7.5 =
 * Feature: Added Reset buttons for banner start/end date fields

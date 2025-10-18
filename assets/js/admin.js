@@ -25,6 +25,7 @@ var DasomChurchAdmin = {
         this.initImageSorting();
         this.initYouTubeThumbnails();
         this.initFormValidation();
+        this.initBannerCategoryToggle();
     },
     
     /**
@@ -264,6 +265,53 @@ var DasomChurchAdmin = {
             return true;
         } catch (e) {
             return false;
+        }
+    },
+    
+    /**
+     * Banner category field toggle
+     */
+    initBannerCategoryToggle: function() {
+        if ($('body').hasClass('post-type-banner')) {
+            // Function to toggle banner fields based on category
+            function toggleBannerFields() {
+                var selectedCategory = '';
+                
+                // Get selected category from taxonomy checkboxes
+                $('#banner_categorychecklist input[type="checkbox"]:checked').each(function() {
+                    var label = $(this).closest('label').text().trim();
+                    if (label === '메인 배너' || label === 'Main Banner') {
+                        selectedCategory = 'main';
+                    } else if (label === '서브 배너' || label === 'Sub Banner') {
+                        selectedCategory = 'sub';
+                    }
+                });
+                
+                // Toggle fields
+                if (selectedCategory === 'main') {
+                    $('.banner-main-field').show();
+                    $('.banner-sub-field').hide();
+                } else if (selectedCategory === 'sub') {
+                    $('.banner-main-field').hide();
+                    $('.banner-sub-field').show();
+                } else {
+                    // No category selected, hide all
+                    $('.banner-main-field').hide();
+                    $('.banner-sub-field').hide();
+                }
+            }
+            
+            // Initial toggle on page load
+            toggleBannerFields();
+            
+            // Toggle on category change
+            $(document).on('change', '#banner_categorychecklist input[type="checkbox"]', function() {
+                // Uncheck other checkboxes (only one category allowed)
+                if ($(this).prop('checked')) {
+                    $('#banner_categorychecklist input[type="checkbox"]').not(this).prop('checked', false);
+                }
+                toggleBannerFields();
+            });
         }
     }
 };

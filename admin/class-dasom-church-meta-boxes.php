@@ -404,16 +404,33 @@ class Dasom_Church_Meta_Boxes {
     public function dasom_church_banner_meta_box($post) {
         wp_nonce_field('dasom_church_banner_meta', 'dasom_church_banner_nonce');
         
+        // Get current banner category
+        $terms = wp_get_post_terms($post->ID, 'banner_category');
+        $current_category = !empty($terms) && !is_wp_error($terms) ? $terms[0]->name : '';
+        
         $pc_image = get_post_meta($post->ID, 'dw_banner_pc_image', true);
         $mobile_image = get_post_meta($post->ID, 'dw_banner_mobile_image', true);
+        $sub_image = get_post_meta($post->ID, 'dw_banner_sub_image', true);
+        $sub_ratio = get_post_meta($post->ID, 'dw_banner_sub_ratio', true);
+        $sub_ratio = $sub_ratio ? $sub_ratio : '16:9';
         $link_url = get_post_meta($post->ID, 'dw_banner_link_url', true);
         $link_target = get_post_meta($post->ID, 'dw_banner_link_target', true);
         $link_target = $link_target ? $link_target : '_self';
         $start_date = get_post_meta($post->ID, 'dw_banner_start_date', true);
         $end_date = get_post_meta($post->ID, 'dw_banner_end_date', true);
         ?>
+        <div style="background:#f9f9f9;padding:15px;margin-bottom:20px;border:1px solid #ddd;border-radius:4px;">
+            <p style="margin:0;font-size:13px;color:#666;">
+                <strong><?php _e('배너 종류:', 'dasom-church'); ?></strong> 
+                <?php _e('오른쪽 사이드바에서 배너 카테고리를 선택하면 해당하는 필드가 표시됩니다.', 'dasom-church'); ?><br>
+                • <strong><?php _e('메인 배너', 'dasom-church'); ?>:</strong> <?php _e('PC (1920px) + 모바일 (720px) 이미지', 'dasom-church'); ?><br>
+                • <strong><?php _e('서브 배너', 'dasom-church'); ?>:</strong> <?php _e('1024px 고정폭, 비율 선택 가능 (16:9, 4:3, 1:1)', 'dasom-church'); ?>
+            </p>
+        </div>
+        
         <table class="form-table">
-            <tr>
+            <!-- 메인 배너 필드 -->
+            <tr class="banner-field banner-main-field" data-banner-type="main" style="<?php echo ($current_category === '메인 배너' || $current_category === 'Main Banner') ? '' : 'display:none;'; ?>">
                 <th scope="row">
                     <label for="dw_banner_pc_image"><?php _e('PC용 배너 이미지 (1920px)', 'dasom-church'); ?></label>
                 </th>
@@ -429,7 +446,7 @@ class Dasom_Church_Meta_Boxes {
                     <p class="description"><?php _e('권장 크기: 가로 1920px', 'dasom-church'); ?></p>
                 </td>
             </tr>
-            <tr>
+            <tr class="banner-field banner-main-field" data-banner-type="main" style="<?php echo ($current_category === '메인 배너' || $current_category === 'Main Banner') ? '' : 'display:none;'; ?>">
                 <th scope="row">
                     <label for="dw_banner_mobile_image"><?php _e('모바일용 배너 이미지 (720px)', 'dasom-church'); ?></label>
                 </th>
@@ -443,6 +460,37 @@ class Dasom_Church_Meta_Boxes {
                         <?php endif; ?>
                     </div>
                     <p class="description"><?php _e('권장 크기: 가로 720px', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+            
+            <!-- 서브 배너 필드 -->
+            <tr class="banner-field banner-sub-field" data-banner-type="sub" style="<?php echo ($current_category === '서브 배너' || $current_category === 'Sub Banner') ? '' : 'display:none;'; ?>">
+                <th scope="row">
+                    <label for="dw_banner_sub_ratio"><?php _e('이미지 비율', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <select id="dw_banner_sub_ratio" name="dw_banner_sub_ratio" class="regular-text">
+                        <option value="16:9" <?php selected($sub_ratio, '16:9'); ?>>16:9 (1024x576px)</option>
+                        <option value="4:3" <?php selected($sub_ratio, '4:3'); ?>>4:3 (1024x768px)</option>
+                        <option value="1:1" <?php selected($sub_ratio, '1:1'); ?>>1:1 (1024x1024px)</option>
+                    </select>
+                    <p class="description"><?php _e('서브 배너는 가로 1024px 고정입니다. 비율을 선택하세요.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+            <tr class="banner-field banner-sub-field" data-banner-type="sub" style="<?php echo ($current_category === '서브 배너' || $current_category === 'Sub Banner') ? '' : 'display:none;'; ?>">
+                <th scope="row">
+                    <label for="dw_banner_sub_image"><?php _e('서브 배너 이미지 (1024px)', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <input type="hidden" id="dw_banner_sub_image" name="dw_banner_sub_image" value="<?php echo esc_attr($sub_image); ?>" />
+                    <button type="button" class="button" id="dw_banner_sub_image_button"><?php _e('이미지 업로드', 'dasom-church'); ?></button>
+                    <button type="button" class="button button-link-delete" id="dw_banner_sub_image_remove" style="color:#b32d2e;"><?php _e('이미지 삭제', 'dasom-church'); ?></button>
+                    <div id="dw_banner_sub_image_preview" style="margin-top:10px;">
+                        <?php if ($sub_image): ?>
+                            <img src="<?php echo esc_url(wp_get_attachment_url($sub_image)); ?>" style="max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;" />
+                        <?php endif; ?>
+                    </div>
+                    <p class="description"><?php _e('권장 크기: 가로 1024px, 세로는 선택한 비율에 따라 자동 결정', 'dasom-church'); ?></p>
                 </td>
             </tr>
             <tr>
@@ -748,18 +796,51 @@ class Dasom_Church_Meta_Boxes {
             return;
         }
         
-        if (isset($_POST['dw_banner_pc_image'])) {
-            $pc_image_id = intval($_POST['dw_banner_pc_image']);
-            update_post_meta($post_id, 'dw_banner_pc_image', $pc_image_id);
-            if ($pc_image_id > 0) {
-                set_post_thumbnail($post_id, $pc_image_id);
+        // Get banner category to determine which fields to save
+        $terms = wp_get_post_terms($post_id, 'banner_category');
+        $category = !empty($terms) && !is_wp_error($terms) ? $terms[0]->name : '';
+        
+        // Save main banner fields
+        if ($category === '메인 배너' || $category === 'Main Banner') {
+            if (isset($_POST['dw_banner_pc_image'])) {
+                $pc_image_id = intval($_POST['dw_banner_pc_image']);
+                update_post_meta($post_id, 'dw_banner_pc_image', $pc_image_id);
+                if ($pc_image_id > 0) {
+                    set_post_thumbnail($post_id, $pc_image_id);
+                }
             }
+            
+            if (isset($_POST['dw_banner_mobile_image'])) {
+                update_post_meta($post_id, 'dw_banner_mobile_image', intval($_POST['dw_banner_mobile_image']));
+            }
+            
+            // Clear sub banner fields
+            delete_post_meta($post_id, 'dw_banner_sub_image');
+            delete_post_meta($post_id, 'dw_banner_sub_ratio');
+        }
+        // Save sub banner fields
+        elseif ($category === '서브 배너' || $category === 'Sub Banner') {
+            if (isset($_POST['dw_banner_sub_ratio'])) {
+                $ratio = sanitize_text_field($_POST['dw_banner_sub_ratio']);
+                if (in_array($ratio, array('16:9', '4:3', '1:1'))) {
+                    update_post_meta($post_id, 'dw_banner_sub_ratio', $ratio);
+                }
+            }
+            
+            if (isset($_POST['dw_banner_sub_image'])) {
+                $sub_image_id = intval($_POST['dw_banner_sub_image']);
+                update_post_meta($post_id, 'dw_banner_sub_image', $sub_image_id);
+                if ($sub_image_id > 0) {
+                    set_post_thumbnail($post_id, $sub_image_id);
+                }
+            }
+            
+            // Clear main banner fields
+            delete_post_meta($post_id, 'dw_banner_pc_image');
+            delete_post_meta($post_id, 'dw_banner_mobile_image');
         }
         
-        if (isset($_POST['dw_banner_mobile_image'])) {
-            update_post_meta($post_id, 'dw_banner_mobile_image', intval($_POST['dw_banner_mobile_image']));
-        }
-        
+        // Save common fields (link, dates)
         if (isset($_POST['dw_banner_link_url'])) {
             update_post_meta($post_id, 'dw_banner_link_url', esc_url_raw($_POST['dw_banner_link_url']));
         }
@@ -1069,6 +1150,32 @@ class Dasom_Church_Meta_Boxes {
                 if (confirm('모바일용 이미지를 삭제하시겠습니까?')) {
                     $('#dw_banner_mobile_image').val('');
                     $('#dw_banner_mobile_image_preview').html('');
+                }
+            });
+            
+            // 배너 서브 이미지 업로드
+            $('#dw_banner_sub_image_button').on('click', function(e) {
+                e.preventDefault();
+                var frame = wp.media({
+                    title: '서브 배너 이미지 업로드',
+                    button: {text: '선택'},
+                    library: {type: 'image'},
+                    multiple: false
+                });
+                frame.on('select', function() {
+                    var attachment = frame.state().get('selection').first().toJSON();
+                    $('#dw_banner_sub_image').val(attachment.id);
+                    $('#dw_banner_sub_image_preview').html('<img src=\"' + attachment.url + '\" style=\"max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;\" />');
+                });
+                frame.open();
+            });
+            
+            // 배너 서브 이미지 삭제
+            $('#dw_banner_sub_image_remove').on('click', function(e) {
+                e.preventDefault();
+                if (confirm('서브 배너 이미지를 삭제하시겠습니까?')) {
+                    $('#dw_banner_sub_image').val('');
+                    $('#dw_banner_sub_image_preview').html('');
                 }
             });
             

@@ -310,6 +310,30 @@ class Dasom_Church_Admin {
             ),
         ));
         
+        // 배너 카테고리
+        register_taxonomy('banner_category', 'banner', array(
+            'labels' => array(
+                'name' => __('배너 카테고리', 'dasom-church'),
+                'singular_name' => __('배너 카테고리', 'dasom-church'),
+                'menu_name' => __('배너 카테고리', 'dasom-church'),
+                'add_new_item' => __('새 카테고리 추가', 'dasom-church'),
+                'edit_item' => __('카테고리 편집', 'dasom-church'),
+                'update_item' => __('카테고리 업데이트', 'dasom-church'),
+                'search_items' => __('카테고리 검색', 'dasom-church'),
+                'not_found' => __('카테고리를 찾을 수 없습니다', 'dasom-church'),
+            ),
+            'hierarchical' => true,
+            'show_admin_column' => true,
+            'rewrite' => array('slug' => 'banner-category'),
+            'show_in_rest' => true,
+            'capabilities' => array(
+                'manage_terms' => 'manage_categories',
+                'edit_terms' => 'manage_categories',
+                'delete_terms' => 'manage_categories',
+                'assign_terms' => 'edit_posts',
+            ),
+        ));
+        
         // 기본 카테고리 및 설교자 생성
         $this->dasom_church_create_default_terms();
     }
@@ -331,6 +355,21 @@ class Dasom_Church_Admin {
                 $result = wp_insert_term($category, 'sermon_category');
                 if (is_wp_error($result)) {
                     error_log('Failed to create sermon category: ' . $result->get_error_message());
+                }
+            }
+        }
+        
+        // 기본 배너 카테고리 생성
+        $default_banner_categories = array(
+            __('메인 배너', 'dasom-church'),
+            __('서브 배너', 'dasom-church')
+        );
+        
+        foreach ($default_banner_categories as $category) {
+            if (!term_exists($category, 'banner_category')) {
+                $result = wp_insert_term($category, 'banner_category');
+                if (is_wp_error($result)) {
+                    error_log('Failed to create banner category: ' . $result->get_error_message());
                 }
             }
         }

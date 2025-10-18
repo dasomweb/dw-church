@@ -365,8 +365,8 @@ class Dasom_Church_Columns {
         }
         
         $new_columns['title'] = __('배너 제목', 'dasom-church');
-        $new_columns['pc_image'] = __('PC 이미지', 'dasom-church');
-        $new_columns['mobile_image'] = __('모바일 이미지', 'dasom-church');
+        $new_columns['banner_category'] = __('카테고리', 'dasom-church');
+        $new_columns['banner_image'] = __('배너 이미지', 'dasom-church');
         $new_columns['link_url'] = __('링크 URL', 'dasom-church');
         $new_columns['start_date'] = __('시작 날짜', 'dasom-church');
         $new_columns['end_date'] = __('종료 날짜', 'dasom-church');
@@ -381,26 +381,55 @@ class Dasom_Church_Columns {
      */
     public function dasom_church_banner_column_content($column, $post_id) {
         switch ($column) {
-            case 'pc_image':
-                $pc_image = get_post_meta($post_id, 'dw_banner_pc_image', true);
-                if ($pc_image) {
-                    $url = wp_get_attachment_url($pc_image);
-                    if ($url) {
-                        echo '<img src="' . esc_url($url) . '" style="width:150px;height:auto;max-height:50px;object-fit:cover;" />';
-                    } else {
-                        echo '—';
-                    }
+            case 'banner_category':
+                $terms = wp_get_post_terms($post_id, 'banner_category');
+                if (!empty($terms) && !is_wp_error($terms)) {
+                    $category_name = $terms[0]->name;
+                    $color = ($category_name === '메인 배너' || $category_name === 'Main Banner') ? '#2271b1' : '#50b83c';
+                    echo '<span style="display:inline-block;padding:3px 8px;background:' . $color . ';color:#fff;border-radius:3px;font-size:11px;">' . esc_html($category_name) . '</span>';
                 } else {
-                    echo '—';
+                    echo '<span style="color:#999;">' . __('미분류', 'dasom-church') . '</span>';
                 }
                 break;
                 
-            case 'mobile_image':
-                $mobile_image = get_post_meta($post_id, 'dw_banner_mobile_image', true);
-                if ($mobile_image) {
-                    $url = wp_get_attachment_url($mobile_image);
-                    if ($url) {
-                        echo '<img src="' . esc_url($url) . '" style="width:80px;height:auto;max-height:50px;object-fit:cover;" />';
+            case 'banner_image':
+                // Get category to determine which image to show
+                $terms = wp_get_post_terms($post_id, 'banner_category');
+                $category = !empty($terms) && !is_wp_error($terms) ? $terms[0]->name : '';
+                
+                if ($category === '메인 배너' || $category === 'Main Banner') {
+                    $pc_image = get_post_meta($post_id, 'dw_banner_pc_image', true);
+                    $mobile_image = get_post_meta($post_id, 'dw_banner_mobile_image', true);
+                    
+                    if ($pc_image) {
+                        $url = wp_get_attachment_url($pc_image);
+                        if ($url) {
+                            echo '<div style="margin-bottom:5px;"><small>PC:</small><br><img src="' . esc_url($url) . '" style="width:150px;height:auto;max-height:40px;object-fit:cover;border:1px solid #ddd;" /></div>';
+                        }
+                    }
+                    if ($mobile_image) {
+                        $url = wp_get_attachment_url($mobile_image);
+                        if ($url) {
+                            echo '<div><small>Mobile:</small><br><img src="' . esc_url($url) . '" style="width:80px;height:auto;max-height:40px;object-fit:cover;border:1px solid #ddd;" /></div>';
+                        }
+                    }
+                    if (!$pc_image && !$mobile_image) {
+                        echo '—';
+                    }
+                } elseif ($category === '서브 배너' || $category === 'Sub Banner') {
+                    $sub_image = get_post_meta($post_id, 'dw_banner_sub_image', true);
+                    $sub_ratio = get_post_meta($post_id, 'dw_banner_sub_ratio', true);
+                    
+                    if ($sub_image) {
+                        $url = wp_get_attachment_url($sub_image);
+                        if ($url) {
+                            echo '<img src="' . esc_url($url) . '" style="width:120px;height:auto;max-height:50px;object-fit:cover;border:1px solid #ddd;" />';
+                            if ($sub_ratio) {
+                                echo '<br><small style="color:#666;">' . esc_html($sub_ratio) . '</small>';
+                            }
+                        } else {
+                            echo '—';
+                        }
                     } else {
                         echo '—';
                     }
