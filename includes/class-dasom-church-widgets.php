@@ -176,10 +176,12 @@ class Dasom_Church_Widgets {
             $url = wp_get_attachment_image_url($img_id, $size);
             $full = wp_get_attachment_image_url($img_id, 'full');
             $alt = get_post_meta($img_id, '_wp_attachment_image_alt', true);
+            $caption = wp_get_attachment_caption($img_id);
+            $description = $caption ? $caption : $alt;
             
             if ($url) {
                 $output .= '<div class="dw-gallery-item" style="flex:0 0 calc(' . $col_width . '% - ' . $gap . 'px);box-sizing:border-box;">';
-                $output .= '<a href="' . esc_url($full) . '" data-lightbox="dw-gallery" data-title="' . esc_attr($alt) . '">';
+                $output .= '<a href="' . esc_url($full) . '" class="glightbox" data-gallery="dw-gallery" data-title="' . esc_attr($alt) . '" data-description="' . esc_attr($description) . '">';
                 $output .= '<img src="' . esc_url($url) . '" alt="' . esc_attr($alt) . '" 
                     style="width:100%;height:auto;display:block;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);transition:transform 0.3s ease;"
                     onmouseover="this.style.transform=\'scale(1.05)\'" 
@@ -201,9 +203,40 @@ class Dasom_Church_Widgets {
         // ImagesLoaded for Masonry
         wp_enqueue_script('imagesloaded');
         
-        // Lightbox CSS (Simple lightbox effect)
+        // GLightbox for gallery lightbox
+        wp_enqueue_style(
+            'glightbox',
+            'https://cdn.jsdelivr.net/npm/glightbox@3.2.0/dist/css/glightbox.min.css',
+            array(),
+            '3.2.0'
+        );
+        
+        wp_enqueue_script(
+            'glightbox',
+            'https://cdn.jsdelivr.net/npm/glightbox@3.2.0/dist/js/glightbox.min.js',
+            array(),
+            '3.2.0',
+            true
+        );
+        
+        // Initialize GLightbox
+        wp_add_inline_script('glightbox', '
+            document.addEventListener("DOMContentLoaded", function() {
+                if (typeof GLightbox !== "undefined") {
+                    GLightbox({
+                        touchNavigation: true,
+                        loop: true,
+                        autoplayVideos: true,
+                        closeButton: true,
+                        closeOnOutsideClick: true
+                    });
+                }
+            });
+        ');
+        
+        // Gallery styles
         wp_add_inline_style('wp-block-library', '
-            [data-lightbox] {
+            .glightbox {
                 cursor: zoom-in;
             }
             .dw-gallery-item img {

@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.10.1
+Stable tag: 1.10.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,15 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.10.2 =
+* Feature: Gallery lightbox with previous/next navigation (GLightbox)
+* Feature: View all album images in slideshow mode
+* Feature: Touch navigation support for mobile devices
+* Feature: Image captions in lightbox
+* Feature: Loop through gallery images seamlessly
+* Improvement: Better user experience for viewing church album photos
+* Compatibility: Elementor uses native lightbox, Gutenberg uses GLightbox
 
 = 1.10.1 =
 * Fix: Undefined array key warnings in all Elementor widgets
