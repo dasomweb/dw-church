@@ -340,47 +340,38 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
             );
         }
         
-        // Optional date filtering
-        $start_dates = array();
-        $end_dates = array();
+        $banners = new WP_Query($args);
         
-        // Add date meta query only if dates are set
-        $temp_query = new WP_Query(array(
-            'post_type' => 'banner',
-            'post_status' => 'publish',
-            'posts_per_page' => -1,
-            'fields' => 'ids',
-        ));
-        
-        if ($temp_query->have_posts()) {
-            foreach ($temp_query->posts as $banner_id) {
+        // Date filtering: Filter results after query
+        if ($banners->have_posts()) {
+            $filtered_posts = array();
+            while ($banners->have_posts()) {
+                $banners->the_post();
+                $banner_id = get_the_ID();
+                
                 $start_date = get_post_meta($banner_id, 'dw_banner_start_date', true);
                 $end_date = get_post_meta($banner_id, 'dw_banner_end_date', true);
                 
-                // Skip banners with invalid date range
+                // Check if banner should be displayed
+                $show_banner = true;
+                
                 if (!empty($start_date) && strtotime($start_date) > strtotime($current_time)) {
-                    continue; // Not started yet
+                    $show_banner = false; // Not started yet
                 }
                 if (!empty($end_date) && strtotime($end_date) <= strtotime($current_time)) {
-                    continue; // Already ended
+                    $show_banner = false; // Already ended
                 }
                 
-                // This banner is valid
-                if (!isset($args['post__in'])) {
-                    $args['post__in'] = array();
+                if ($show_banner) {
+                    $filtered_posts[] = get_post();
                 }
-                $args['post__in'][] = $banner_id;
             }
+            wp_reset_postdata();
             
-            // If no valid banners found but dates are set, ensure empty result
-            if (isset($args['post__in']) && empty($args['post__in'])) {
-                $args['post__in'] = array(0); // Force no results
-            }
+            // Replace posts with filtered ones
+            $banners->posts = $filtered_posts;
+            $banners->post_count = count($filtered_posts);
         }
-        
-        wp_reset_postdata();
-        
-        $banners = new WP_Query($args);
         
         if (!$banners->have_posts()) {
             echo '<p>' . __('No banners found.', 'dasom-church') . '</p>';

@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.18.3
+Stable tag: 1.18.4
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.18.4 =
+* Fix: Changed date filtering to post-query filtering for better reliability
+* Fix: Now correctly displays all published banners regardless of date fields
+* Fix: Resolved post__in array issues that prevented banners from showing
+* Enhancement: Simplified query logic for better performance
 
 = 1.18.3 =
 * Fix: Resolved "No banners found" issue in Banner Slider and Grid widgets
