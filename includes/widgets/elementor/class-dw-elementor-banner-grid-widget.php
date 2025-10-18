@@ -488,9 +488,25 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
             $text_subtitle = get_post_meta(get_the_ID(), 'dw_banner_text_subtitle', true);
             $text_description = get_post_meta(get_the_ID(), 'dw_banner_text_description', true);
             
-            // Get background position
-            $bg_position = get_post_meta(get_the_ID(), 'dw_banner_bg_position', true);
-            $bg_position = $bg_position ? $bg_position : 'center center';
+            // Get background position (responsive)
+            $bg_position_pc = get_post_meta(get_the_ID(), 'dw_banner_bg_position_pc', true);
+            $bg_position_pc = $bg_position_pc ? $bg_position_pc : 'center center';
+            $bg_position_laptop = get_post_meta(get_the_ID(), 'dw_banner_bg_position_laptop', true);
+            $bg_position_laptop = $bg_position_laptop ? $bg_position_laptop : 'center center';
+            $bg_position_tablet = get_post_meta(get_the_ID(), 'dw_banner_bg_position_tablet', true);
+            $bg_position_tablet = $bg_position_tablet ? $bg_position_tablet : 'center center';
+            $bg_position_mobile = get_post_meta(get_the_ID(), 'dw_banner_bg_position_mobile', true);
+            $bg_position_mobile = $bg_position_mobile ? $bg_position_mobile : 'center center';
+            
+            $banner_grid_id = 'dw-banner-grid-' . get_the_ID();
+            
+            // Generate responsive CSS for background position
+            echo '<style>';
+            echo '.' . $banner_grid_id . ' { background-position: ' . esc_attr($bg_position_pc) . '; }';
+            echo '@media (max-width: 1919px) { .' . $banner_grid_id . ' { background-position: ' . esc_attr($bg_position_laptop) . '; } }';
+            echo '@media (max-width: 1023px) { .' . $banner_grid_id . ' { background-position: ' . esc_attr($bg_position_tablet) . '; } }';
+            echo '@media (max-width: 767px) { .' . $banner_grid_id . ' { background-position: ' . esc_attr($bg_position_mobile) . '; } }';
+            echo '</style>';
             
             echo '<div class="dw-banner-grid-item">';
             
@@ -499,7 +515,7 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
             }
             
             if ($image_url) {
-                echo '<div class="dw-banner-grid-image" style="position:relative;background-image:url(' . esc_url($image_url) . ');background-size:cover;background-position:' . esc_attr($bg_position) . ';min-height:300px;width:100%;">';
+                echo '<div class="dw-banner-grid-image ' . esc_attr($banner_grid_id) . '" style="position:relative;background-image:url(' . esc_url($image_url) . ');background-size:cover;min-height:300px;width:100%;">';
                 
                 // Text overlay if exists
                 if (!empty($text_title) || !empty($text_subtitle) || !empty($text_description)) {

@@ -427,10 +427,22 @@ class Dasom_Church_Meta_Boxes {
         $text_position = $text_position ? $text_position : 'center-center';
         $text_align = get_post_meta($post->ID, 'dw_banner_text_align', true);
         $text_align = $text_align ? $text_align : 'center';
-        $text_width = get_post_meta($post->ID, 'dw_banner_text_width', true);
-        $text_width = $text_width ? $text_width : '600';
-        $bg_position = get_post_meta($post->ID, 'dw_banner_bg_position', true);
-        $bg_position = $bg_position ? $bg_position : 'center center';
+        $text_width_pc = get_post_meta($post->ID, 'dw_banner_text_width_pc', true);
+        $text_width_pc = $text_width_pc ? $text_width_pc : '600';
+        $text_width_laptop = get_post_meta($post->ID, 'dw_banner_text_width_laptop', true);
+        $text_width_laptop = $text_width_laptop ? $text_width_laptop : '600';
+        $text_width_tablet = get_post_meta($post->ID, 'dw_banner_text_width_tablet', true);
+        $text_width_tablet = $text_width_tablet ? $text_width_tablet : '500';
+        $text_width_mobile = get_post_meta($post->ID, 'dw_banner_text_width_mobile', true);
+        $text_width_mobile = $text_width_mobile ? $text_width_mobile : '300';
+        $bg_position_pc = get_post_meta($post->ID, 'dw_banner_bg_position_pc', true);
+        $bg_position_pc = $bg_position_pc ? $bg_position_pc : 'center center';
+        $bg_position_laptop = get_post_meta($post->ID, 'dw_banner_bg_position_laptop', true);
+        $bg_position_laptop = $bg_position_laptop ? $bg_position_laptop : 'center center';
+        $bg_position_tablet = get_post_meta($post->ID, 'dw_banner_bg_position_tablet', true);
+        $bg_position_tablet = $bg_position_tablet ? $bg_position_tablet : 'center center';
+        $bg_position_mobile = get_post_meta($post->ID, 'dw_banner_bg_position_mobile', true);
+        $bg_position_mobile = $bg_position_mobile ? $bg_position_mobile : 'center center';
         $content_padding_top = get_post_meta($post->ID, 'dw_banner_content_padding_top', true);
         $content_padding_top = $content_padding_top ? $content_padding_top : '40';
         $content_padding_right = get_post_meta($post->ID, 'dw_banner_content_padding_right', true);
@@ -589,30 +601,94 @@ class Dasom_Church_Meta_Boxes {
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_banner_text_width"><?php _e('텍스트 컨테이너 폭', 'dasom-church'); ?></label>
+                    <label><?php _e('텍스트 컨테이너 폭 (반응형)', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="number" id="dw_banner_text_width" name="dw_banner_text_width" value="<?php echo esc_attr($text_width); ?>" class="small-text" min="100" max="2000" step="10" /> px
-                    <p class="description"><?php _e('텍스트가 표시될 영역의 최대 폭을 설정하세요. 좁게 설정하면 여러 줄로, 넓게 설정하면 한 줄로 표시됩니다. (기본값: 600px, 권장: 300~1200px)', 'dasom-church'); ?></p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;max-width:600px;">
+                        <div>
+                            <label for="dw_banner_text_width_pc" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('🖥️ PC', 'dasom-church'); ?></label>
+                            <input type="number" id="dw_banner_text_width_pc" name="dw_banner_text_width_pc" value="<?php echo esc_attr($text_width_pc); ?>" class="small-text" min="100" max="2000" step="10" /> px
+                        </div>
+                        <div>
+                            <label for="dw_banner_text_width_laptop" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('💻 Laptop', 'dasom-church'); ?></label>
+                            <input type="number" id="dw_banner_text_width_laptop" name="dw_banner_text_width_laptop" value="<?php echo esc_attr($text_width_laptop); ?>" class="small-text" min="100" max="2000" step="10" /> px
+                        </div>
+                        <div>
+                            <label for="dw_banner_text_width_tablet" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('📱 Tablet', 'dasom-church'); ?></label>
+                            <input type="number" id="dw_banner_text_width_tablet" name="dw_banner_text_width_tablet" value="<?php echo esc_attr($text_width_tablet); ?>" class="small-text" min="100" max="2000" step="10" /> px
+                        </div>
+                        <div>
+                            <label for="dw_banner_text_width_mobile" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('📱 Mobile', 'dasom-church'); ?></label>
+                            <input type="number" id="dw_banner_text_width_mobile" name="dw_banner_text_width_mobile" value="<?php echo esc_attr($text_width_mobile); ?>" class="small-text" min="100" max="2000" step="10" /> px
+                        </div>
+                    </div>
+                    <p class="description" style="margin-top:10px;"><?php _e('각 디바이스별로 텍스트 컨테이너의 최대 폭을 설정하세요. 좁게 설정하면 여러 줄로, 넓게 설정하면 한 줄로 표시됩니다. (기본값 - PC: 600px, Laptop: 600px, Tablet: 500px, Mobile: 300px)', 'dasom-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_banner_bg_position"><?php _e('배경 이미지 위치', 'dasom-church'); ?></label>
+                    <label><?php _e('배경 이미지 위치 (반응형)', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <select id="dw_banner_bg_position" name="dw_banner_bg_position" class="regular-text">
-                        <option value="center top" <?php selected($bg_position, 'center top'); ?>><?php _e('상단 중앙 (Center Top)', 'dasom-church'); ?></option>
-                        <option value="center center" <?php selected($bg_position, 'center center'); ?>><?php _e('정중앙 (Center Center)', 'dasom-church'); ?></option>
-                        <option value="center bottom" <?php selected($bg_position, 'center bottom'); ?>><?php _e('하단 중앙 (Center Bottom)', 'dasom-church'); ?></option>
-                        <option value="left center" <?php selected($bg_position, 'left center'); ?>><?php _e('왼쪽 중앙 (Left Center)', 'dasom-church'); ?></option>
-                        <option value="right center" <?php selected($bg_position, 'right center'); ?>><?php _e('오른쪽 중앙 (Right Center)', 'dasom-church'); ?></option>
-                        <option value="left top" <?php selected($bg_position, 'left top'); ?>><?php _e('왼쪽 상단 (Left Top)', 'dasom-church'); ?></option>
-                        <option value="right top" <?php selected($bg_position, 'right top'); ?>><?php _e('오른쪽 상단 (Right Top)', 'dasom-church'); ?></option>
-                        <option value="left bottom" <?php selected($bg_position, 'left bottom'); ?>><?php _e('왼쪽 하단 (Left Bottom)', 'dasom-church'); ?></option>
-                        <option value="right bottom" <?php selected($bg_position, 'right bottom'); ?>><?php _e('오른쪽 하단 (Right Bottom)', 'dasom-church'); ?></option>
-                    </select>
-                    <p class="description"><?php _e('배경 이미지의 어느 부분을 보여줄지 선택하세요. 이미지가 배너 영역보다 크거나 작을 때 기준이 됩니다. (기본값: 정중앙)', 'dasom-church'); ?></p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;max-width:800px;">
+                        <div>
+                            <label for="dw_banner_bg_position_pc" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('🖥️ PC (1920px+)', 'dasom-church'); ?></label>
+                            <select id="dw_banner_bg_position_pc" name="dw_banner_bg_position_pc" class="regular-text">
+                                <option value="center top" <?php selected($bg_position_pc, 'center top'); ?>><?php _e('상단 중앙', 'dasom-church'); ?></option>
+                                <option value="center center" <?php selected($bg_position_pc, 'center center'); ?>><?php _e('정중앙', 'dasom-church'); ?></option>
+                                <option value="center bottom" <?php selected($bg_position_pc, 'center bottom'); ?>><?php _e('하단 중앙', 'dasom-church'); ?></option>
+                                <option value="left center" <?php selected($bg_position_pc, 'left center'); ?>><?php _e('왼쪽 중앙', 'dasom-church'); ?></option>
+                                <option value="right center" <?php selected($bg_position_pc, 'right center'); ?>><?php _e('오른쪽 중앙', 'dasom-church'); ?></option>
+                                <option value="left top" <?php selected($bg_position_pc, 'left top'); ?>><?php _e('왼쪽 상단', 'dasom-church'); ?></option>
+                                <option value="right top" <?php selected($bg_position_pc, 'right top'); ?>><?php _e('오른쪽 상단', 'dasom-church'); ?></option>
+                                <option value="left bottom" <?php selected($bg_position_pc, 'left bottom'); ?>><?php _e('왼쪽 하단', 'dasom-church'); ?></option>
+                                <option value="right bottom" <?php selected($bg_position_pc, 'right bottom'); ?>><?php _e('오른쪽 하단', 'dasom-church'); ?></option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="dw_banner_bg_position_laptop" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('💻 Laptop (1024px~1919px)', 'dasom-church'); ?></label>
+                            <select id="dw_banner_bg_position_laptop" name="dw_banner_bg_position_laptop" class="regular-text">
+                                <option value="center top" <?php selected($bg_position_laptop, 'center top'); ?>><?php _e('상단 중앙', 'dasom-church'); ?></option>
+                                <option value="center center" <?php selected($bg_position_laptop, 'center center'); ?>><?php _e('정중앙', 'dasom-church'); ?></option>
+                                <option value="center bottom" <?php selected($bg_position_laptop, 'center bottom'); ?>><?php _e('하단 중앙', 'dasom-church'); ?></option>
+                                <option value="left center" <?php selected($bg_position_laptop, 'left center'); ?>><?php _e('왼쪽 중앙', 'dasom-church'); ?></option>
+                                <option value="right center" <?php selected($bg_position_laptop, 'right center'); ?>><?php _e('오른쪽 중앙', 'dasom-church'); ?></option>
+                                <option value="left top" <?php selected($bg_position_laptop, 'left top'); ?>><?php _e('왼쪽 상단', 'dasom-church'); ?></option>
+                                <option value="right top" <?php selected($bg_position_laptop, 'right top'); ?>><?php _e('오른쪽 상단', 'dasom-church'); ?></option>
+                                <option value="left bottom" <?php selected($bg_position_laptop, 'left bottom'); ?>><?php _e('왼쪽 하단', 'dasom-church'); ?></option>
+                                <option value="right bottom" <?php selected($bg_position_laptop, 'right bottom'); ?>><?php _e('오른쪽 하단', 'dasom-church'); ?></option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="dw_banner_bg_position_tablet" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('📱 Tablet (768px~1023px)', 'dasom-church'); ?></label>
+                            <select id="dw_banner_bg_position_tablet" name="dw_banner_bg_position_tablet" class="regular-text">
+                                <option value="center top" <?php selected($bg_position_tablet, 'center top'); ?>><?php _e('상단 중앙', 'dasom-church'); ?></option>
+                                <option value="center center" <?php selected($bg_position_tablet, 'center center'); ?>><?php _e('정중앙', 'dasom-church'); ?></option>
+                                <option value="center bottom" <?php selected($bg_position_tablet, 'center bottom'); ?>><?php _e('하단 중앙', 'dasom-church'); ?></option>
+                                <option value="left center" <?php selected($bg_position_tablet, 'left center'); ?>><?php _e('왼쪽 중앙', 'dasom-church'); ?></option>
+                                <option value="right center" <?php selected($bg_position_tablet, 'right center'); ?>><?php _e('오른쪽 중앙', 'dasom-church'); ?></option>
+                                <option value="left top" <?php selected($bg_position_tablet, 'left top'); ?>><?php _e('왼쪽 상단', 'dasom-church'); ?></option>
+                                <option value="right top" <?php selected($bg_position_tablet, 'right top'); ?>><?php _e('오른쪽 상단', 'dasom-church'); ?></option>
+                                <option value="left bottom" <?php selected($bg_position_tablet, 'left bottom'); ?>><?php _e('왼쪽 하단', 'dasom-church'); ?></option>
+                                <option value="right bottom" <?php selected($bg_position_tablet, 'right bottom'); ?>><?php _e('오른쪽 하단', 'dasom-church'); ?></option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="dw_banner_bg_position_mobile" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('📱 Mobile (~767px)', 'dasom-church'); ?></label>
+                            <select id="dw_banner_bg_position_mobile" name="dw_banner_bg_position_mobile" class="regular-text">
+                                <option value="center top" <?php selected($bg_position_mobile, 'center top'); ?>><?php _e('상단 중앙', 'dasom-church'); ?></option>
+                                <option value="center center" <?php selected($bg_position_mobile, 'center center'); ?>><?php _e('정중앙', 'dasom-church'); ?></option>
+                                <option value="center bottom" <?php selected($bg_position_mobile, 'center bottom'); ?>><?php _e('하단 중앙', 'dasom-church'); ?></option>
+                                <option value="left center" <?php selected($bg_position_mobile, 'left center'); ?>><?php _e('왼쪽 중앙', 'dasom-church'); ?></option>
+                                <option value="right center" <?php selected($bg_position_mobile, 'right center'); ?>><?php _e('오른쪽 중앙', 'dasom-church'); ?></option>
+                                <option value="left top" <?php selected($bg_position_mobile, 'left top'); ?>><?php _e('왼쪽 상단', 'dasom-church'); ?></option>
+                                <option value="right top" <?php selected($bg_position_mobile, 'right top'); ?>><?php _e('오른쪽 상단', 'dasom-church'); ?></option>
+                                <option value="left bottom" <?php selected($bg_position_mobile, 'left bottom'); ?>><?php _e('왼쪽 하단', 'dasom-church'); ?></option>
+                                <option value="right bottom" <?php selected($bg_position_mobile, 'right bottom'); ?>><?php _e('오른쪽 하단', 'dasom-church'); ?></option>
+                            </select>
+                        </div>
+                    </div>
+                    <p class="description" style="margin-top:10px;"><?php _e('각 디바이스별로 배경 이미지의 표시 위치를 개별 설정할 수 있습니다. 모바일에서는 인물의 얼굴이 잘리지 않도록 상단 중앙을, PC에서는 정중앙을 선택하는 등 디바이스별 최적화가 가능합니다.', 'dasom-church'); ?></p>
                 </td>
             </tr>
             <tr>
@@ -1007,21 +1083,60 @@ class Dasom_Church_Meta_Boxes {
                 update_post_meta($post_id, 'dw_banner_text_align', $align);
             }
         }
-        if (isset($_POST['dw_banner_text_width'])) {
-            $width = absint($_POST['dw_banner_text_width']);
+        // Save responsive text width
+        if (isset($_POST['dw_banner_text_width_pc'])) {
+            $width = absint($_POST['dw_banner_text_width_pc']);
             if ($width >= 100 && $width <= 2000) {
-                update_post_meta($post_id, 'dw_banner_text_width', $width);
+                update_post_meta($post_id, 'dw_banner_text_width_pc', $width);
             }
         }
-        if (isset($_POST['dw_banner_bg_position'])) {
-            $position = sanitize_text_field($_POST['dw_banner_bg_position']);
-            $valid_positions = array(
-                'center top', 'center center', 'center bottom',
-                'left center', 'right center',
-                'left top', 'right top', 'left bottom', 'right bottom'
-            );
+        if (isset($_POST['dw_banner_text_width_laptop'])) {
+            $width = absint($_POST['dw_banner_text_width_laptop']);
+            if ($width >= 100 && $width <= 2000) {
+                update_post_meta($post_id, 'dw_banner_text_width_laptop', $width);
+            }
+        }
+        if (isset($_POST['dw_banner_text_width_tablet'])) {
+            $width = absint($_POST['dw_banner_text_width_tablet']);
+            if ($width >= 100 && $width <= 2000) {
+                update_post_meta($post_id, 'dw_banner_text_width_tablet', $width);
+            }
+        }
+        if (isset($_POST['dw_banner_text_width_mobile'])) {
+            $width = absint($_POST['dw_banner_text_width_mobile']);
+            if ($width >= 100 && $width <= 2000) {
+                update_post_meta($post_id, 'dw_banner_text_width_mobile', $width);
+            }
+        }
+        
+        $valid_positions = array(
+            'center top', 'center center', 'center bottom',
+            'left center', 'right center',
+            'left top', 'right top', 'left bottom', 'right bottom'
+        );
+        
+        if (isset($_POST['dw_banner_bg_position_pc'])) {
+            $position = sanitize_text_field($_POST['dw_banner_bg_position_pc']);
             if (in_array($position, $valid_positions)) {
-                update_post_meta($post_id, 'dw_banner_bg_position', $position);
+                update_post_meta($post_id, 'dw_banner_bg_position_pc', $position);
+            }
+        }
+        if (isset($_POST['dw_banner_bg_position_laptop'])) {
+            $position = sanitize_text_field($_POST['dw_banner_bg_position_laptop']);
+            if (in_array($position, $valid_positions)) {
+                update_post_meta($post_id, 'dw_banner_bg_position_laptop', $position);
+            }
+        }
+        if (isset($_POST['dw_banner_bg_position_tablet'])) {
+            $position = sanitize_text_field($_POST['dw_banner_bg_position_tablet']);
+            if (in_array($position, $valid_positions)) {
+                update_post_meta($post_id, 'dw_banner_bg_position_tablet', $position);
+            }
+        }
+        if (isset($_POST['dw_banner_bg_position_mobile'])) {
+            $position = sanitize_text_field($_POST['dw_banner_bg_position_mobile']);
+            if (in_array($position, $valid_positions)) {
+                update_post_meta($post_id, 'dw_banner_bg_position_mobile', $position);
             }
         }
         if (isset($_POST['dw_banner_content_padding_top'])) {

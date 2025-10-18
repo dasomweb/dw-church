@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.19.3
+Stable tag: 1.21.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,26 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.21.0 =
+* Feature: Responsive text container width - separate settings for PC, Laptop, Tablet, Mobile
+* Feature: Device-specific text box sizing (PC/Laptop: 600px, Tablet: 500px, Mobile: 300px defaults)
+* Enhancement: Control text wrapping (single vs multi-line) per device type
+* Enhancement: Dynamic CSS generation for responsive max-width
+* UI: 4-column grid layout for text width settings
+* Design: Modern slider navigation - compact circular arrows (40px PC, 32px mobile)
+* Design: Semi-transparent white background with smooth hover effects
+* Design: Shadow and scale animations for better UX
+* Applied: Banner Slider widget text containers and navigation controls
+
+= 1.20.0 =
+* Feature: Responsive background position - separate settings for PC, Laptop, Tablet, Mobile
+* Feature: Device-specific image positioning (PC: 1920px+, Laptop: 1024-1919px, Tablet: 768-1023px, Mobile: ~767px)
+* Enhancement: Optimize background image display for each device type
+* Enhancement: Dynamic CSS generation for responsive background-position
+* UI: 4-column grid layout for device-specific settings with clear labels
+* Example: Portrait images can show face on mobile (top center) and full body on PC (center)
+* Applied: Both Banner Slider and Banner Grid widgets
 
 = 1.19.3 =
 * Feature: Added background image position control in banner meta box

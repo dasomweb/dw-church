@@ -471,10 +471,22 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
                 $text_position = $text_position ? $text_position : 'center-center';
                 $text_align = get_post_meta(get_the_ID(), 'dw_banner_text_align', true);
                 $text_align = $text_align ? $text_align : 'center';
-                $text_width = get_post_meta(get_the_ID(), 'dw_banner_text_width', true);
-                $text_width = $text_width ? $text_width : '600';
-                $bg_position = get_post_meta(get_the_ID(), 'dw_banner_bg_position', true);
-                $bg_position = $bg_position ? $bg_position : 'center center';
+                $text_width_pc = get_post_meta(get_the_ID(), 'dw_banner_text_width_pc', true);
+                $text_width_pc = $text_width_pc ? $text_width_pc : '600';
+                $text_width_laptop = get_post_meta(get_the_ID(), 'dw_banner_text_width_laptop', true);
+                $text_width_laptop = $text_width_laptop ? $text_width_laptop : '600';
+                $text_width_tablet = get_post_meta(get_the_ID(), 'dw_banner_text_width_tablet', true);
+                $text_width_tablet = $text_width_tablet ? $text_width_tablet : '500';
+                $text_width_mobile = get_post_meta(get_the_ID(), 'dw_banner_text_width_mobile', true);
+                $text_width_mobile = $text_width_mobile ? $text_width_mobile : '300';
+                $bg_position_pc = get_post_meta(get_the_ID(), 'dw_banner_bg_position_pc', true);
+                $bg_position_pc = $bg_position_pc ? $bg_position_pc : 'center center';
+                $bg_position_laptop = get_post_meta(get_the_ID(), 'dw_banner_bg_position_laptop', true);
+                $bg_position_laptop = $bg_position_laptop ? $bg_position_laptop : 'center center';
+                $bg_position_tablet = get_post_meta(get_the_ID(), 'dw_banner_bg_position_tablet', true);
+                $bg_position_tablet = $bg_position_tablet ? $bg_position_tablet : 'center center';
+                $bg_position_mobile = get_post_meta(get_the_ID(), 'dw_banner_bg_position_mobile', true);
+                $bg_position_mobile = $bg_position_mobile ? $bg_position_mobile : 'center center';
                 $padding_top = get_post_meta(get_the_ID(), 'dw_banner_content_padding_top', true);
                 $padding_top = $padding_top ? $padding_top : '40';
                 $padding_right = get_post_meta(get_the_ID(), 'dw_banner_content_padding_right', true);
@@ -506,9 +518,25 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
                     $text_alignment = 'center'; // Override to match position
                 }
                 
-                echo '<div class="dw-banner-bg" style="position:relative;width:100%;background-image:url(' . esc_url($image_url) . ');background-size:cover;background-position:' . esc_attr($bg_position) . ';min-height:500px;display:flex;align-items:' . esc_attr($v_align_style) . ';">';
+                $banner_id = 'dw-banner-' . get_the_ID();
+                $text_content_id = 'dw-banner-text-' . get_the_ID();
                 
-                echo '<div class="dw-banner-text-content" style="padding:' . esc_attr($padding_top) . 'px ' . esc_attr($padding_right) . 'px ' . esc_attr($padding_bottom) . 'px ' . esc_attr($padding_left) . 'px;max-width:' . esc_attr($text_width) . 'px;width:100%;' . $container_margin . 'text-align:' . esc_attr($text_alignment) . ';position:relative;z-index:2;">';
+                // Generate responsive CSS for background position and text width
+                echo '<style>';
+                echo '.' . $banner_id . ' { background-position: ' . esc_attr($bg_position_pc) . '; }';
+                echo '@media (max-width: 1919px) { .' . $banner_id . ' { background-position: ' . esc_attr($bg_position_laptop) . '; } }';
+                echo '@media (max-width: 1023px) { .' . $banner_id . ' { background-position: ' . esc_attr($bg_position_tablet) . '; } }';
+                echo '@media (max-width: 767px) { .' . $banner_id . ' { background-position: ' . esc_attr($bg_position_mobile) . '; } }';
+                
+                echo '.' . $text_content_id . ' { max-width: ' . esc_attr($text_width_pc) . 'px; }';
+                echo '@media (max-width: 1919px) { .' . $text_content_id . ' { max-width: ' . esc_attr($text_width_laptop) . 'px; } }';
+                echo '@media (max-width: 1023px) { .' . $text_content_id . ' { max-width: ' . esc_attr($text_width_tablet) . 'px; } }';
+                echo '@media (max-width: 767px) { .' . $text_content_id . ' { max-width: ' . esc_attr($text_width_mobile) . 'px; } }';
+                echo '</style>';
+                
+                echo '<div class="dw-banner-bg ' . esc_attr($banner_id) . '" style="position:relative;width:100%;background-image:url(' . esc_url($image_url) . ');background-size:cover;min-height:500px;display:flex;align-items:' . esc_attr($v_align_style) . ';">';
+                
+                echo '<div class="dw-banner-text-content ' . esc_attr($text_content_id) . '" style="padding:' . esc_attr($padding_top) . 'px ' . esc_attr($padding_right) . 'px ' . esc_attr($padding_bottom) . 'px ' . esc_attr($padding_left) . 'px;width:100%;' . $container_margin . 'text-align:' . esc_attr($text_alignment) . ';position:relative;z-index:2;">';
                 
                 if ($text_subtitle) {
                     echo '<div class="dw-banner-subtitle">' . esc_html($text_subtitle) . '</div>';
@@ -539,8 +567,8 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         echo '</div>'; // swiper-wrapper
         
         if ($navigation) {
-            echo '<div class="swiper-button-next"></div>';
-            echo '<div class="swiper-button-prev"></div>';
+            echo '<div class="swiper-button-next dw-modern-nav"></div>';
+            echo '<div class="swiper-button-prev dw-modern-nav"></div>';
         }
         
         if ($pagination) {
