@@ -40,6 +40,20 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         );
         
         $this->add_control(
+            'widget_layout',
+            [
+                'label' => __('위젯 레이아웃', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'classic',
+                'options' => [
+                    'classic' => __('Classic (제목 → 메타 → 비디오)', 'dasom-church'),
+                    'video_first' => __('Video First (비디오 → 메타/제목)', 'dasom-church'),
+                ],
+                'description' => __('위젯의 전체 레이아웃을 선택하세요.', 'dasom-church'),
+            ]
+        );
+        
+        $this->add_control(
             'query_source',
             [
                 'label' => __('Query Source', 'dasom-church'),
@@ -595,56 +609,116 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         // Aspect ratio class
         $aspect_class = 'aspect-' . ($settings['video_aspect_ratio'] ?? '16-9');
         
+        // Widget layout
+        $widget_layout = $settings['widget_layout'] ?? 'classic';
+        $widget_class = 'dw-single-sermon-widget layout-' . $widget_layout;
+        
         ?>
-        <div class="dw-single-sermon-widget">
+        <div class="<?php echo esc_attr($widget_class); ?>">
             
-            <!-- Title -->
-            <h1 class="dw-single-sermon-title"><?php echo esc_html($title); ?></h1>
-            
-            <!-- Meta Info -->
-            <?php
-            $meta_layout = $settings['meta_layout'] ?? 'inline';
-            $meta_class = $meta_layout === 'stack' ? 'dw-single-sermon-meta meta-stack' : 'dw-single-sermon-meta meta-inline';
-            ?>
-            <div class="<?php echo esc_attr($meta_class); ?>">
-                <?php
-                $meta_items = [];
+            <?php if ($widget_layout === 'video_first'): ?>
+                <!-- Video First Layout -->
                 
-                if (($settings['show_date'] ?? 'yes') === 'yes' && $sermon_date) {
-                    $meta_items[] = '<span class="meta-date">' . date_i18n('Y-m-d', strtotime($sermon_date)) . '</span>';
-                }
+                <!-- YouTube Video -->
+                <?php if (($settings['show_video'] ?? 'yes') === 'yes' && $youtube_id): ?>
+                    <div class="dw-single-sermon-video <?php echo esc_attr($aspect_class); ?>">
+                        <iframe 
+                            src="https://www.youtube.com/embed/<?php echo esc_attr($youtube_id); ?>" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                <?php endif; ?>
                 
-                if (($settings['show_scripture'] ?? 'yes') === 'yes' && $scripture) {
-                    $meta_items[] = '<span class="meta-scripture">' . esc_html($scripture) . '</span>';
-                }
-                
-                if (($settings['show_preacher'] ?? 'yes') === 'yes' && !empty($preachers)) {
-                    $meta_items[] = '<span class="meta-preacher">' . esc_html(implode(', ', $preachers)) . '</span>';
-                }
-                
-                if ($meta_layout === 'stack') {
-                    // Stack layout: each item on separate line
-                    foreach ($meta_items as $item) {
-                        echo '<div class="meta-item">' . $item . '</div>';
-                    }
-                } else {
-                    // Inline layout: items with separator
-                    $separator = $settings['meta_separator'] ?? '||';
-                    echo implode(' <span class="meta-separator">' . esc_html($separator) . '</span> ', $meta_items);
-                }
-                ?>
-            </div>
-            
-            <!-- YouTube Video -->
-            <?php if (($settings['show_video'] ?? 'yes') === 'yes' && $youtube_id): ?>
-                <div class="dw-single-sermon-video <?php echo esc_attr($aspect_class); ?>">
-                    <iframe 
-                        src="https://www.youtube.com/embed/<?php echo esc_attr($youtube_id); ?>" 
-                        frameborder="0" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        allowfullscreen>
-                    </iframe>
+                <!-- Content Below Video -->
+                <div class="sermon-content-wrapper">
+                    <!-- Meta Info (Left Side) -->
+                    <?php
+                    $meta_layout = $settings['meta_layout'] ?? 'inline';
+                    $meta_class = $meta_layout === 'stack' ? 'dw-single-sermon-meta meta-stack' : 'dw-single-sermon-meta meta-inline';
+                    ?>
+                    <div class="<?php echo esc_attr($meta_class); ?>">
+                        <?php
+                        $meta_items = [];
+                        
+                        if (($settings['show_date'] ?? 'yes') === 'yes' && $sermon_date) {
+                            $meta_items[] = '<span class="meta-date">' . date_i18n('Y-m-d', strtotime($sermon_date)) . '</span>';
+                        }
+                        
+                        if (($settings['show_scripture'] ?? 'yes') === 'yes' && $scripture) {
+                            $meta_items[] = '<span class="meta-scripture">' . esc_html($scripture) . '</span>';
+                        }
+                        
+                        if (($settings['show_preacher'] ?? 'yes') === 'yes' && !empty($preachers)) {
+                            $meta_items[] = '<span class="meta-preacher">' . esc_html(implode(', ', $preachers)) . '</span>';
+                        }
+                        
+                        if ($meta_layout === 'stack') {
+                            foreach ($meta_items as $item) {
+                                echo '<div class="meta-item">' . $item . '</div>';
+                            }
+                        } else {
+                            $separator = $settings['meta_separator'] ?? '||';
+                            echo implode(' <span class="meta-separator">' . esc_html($separator) . '</span> ', $meta_items);
+                        }
+                        ?>
+                    </div>
+                    
+                    <!-- Title (Right Side) -->
+                    <h1 class="dw-single-sermon-title"><?php echo esc_html($title); ?></h1>
                 </div>
+                
+            <?php else: ?>
+                <!-- Classic Layout -->
+                
+                <!-- Title -->
+                <h1 class="dw-single-sermon-title"><?php echo esc_html($title); ?></h1>
+                
+                <!-- Meta Info -->
+                <?php
+                $meta_layout = $settings['meta_layout'] ?? 'inline';
+                $meta_class = $meta_layout === 'stack' ? 'dw-single-sermon-meta meta-stack' : 'dw-single-sermon-meta meta-inline';
+                ?>
+                <div class="<?php echo esc_attr($meta_class); ?>">
+                    <?php
+                    $meta_items = [];
+                    
+                    if (($settings['show_date'] ?? 'yes') === 'yes' && $sermon_date) {
+                        $meta_items[] = '<span class="meta-date">' . date_i18n('Y-m-d', strtotime($sermon_date)) . '</span>';
+                    }
+                    
+                    if (($settings['show_scripture'] ?? 'yes') === 'yes' && $scripture) {
+                        $meta_items[] = '<span class="meta-scripture">' . esc_html($scripture) . '</span>';
+                    }
+                    
+                    if (($settings['show_preacher'] ?? 'yes') === 'yes' && !empty($preachers)) {
+                        $meta_items[] = '<span class="meta-preacher">' . esc_html(implode(', ', $preachers)) . '</span>';
+                    }
+                    
+                    if ($meta_layout === 'stack') {
+                        foreach ($meta_items as $item) {
+                            echo '<div class="meta-item">' . $item . '</div>';
+                        }
+                    } else {
+                        $separator = $settings['meta_separator'] ?? '||';
+                        echo implode(' <span class="meta-separator">' . esc_html($separator) . '</span> ', $meta_items);
+                    }
+                    ?>
+                </div>
+                
+                <!-- YouTube Video -->
+                <?php if (($settings['show_video'] ?? 'yes') === 'yes' && $youtube_id): ?>
+                    <div class="dw-single-sermon-video <?php echo esc_attr($aspect_class); ?>">
+                        <iframe 
+                            src="https://www.youtube.com/embed/<?php echo esc_attr($youtube_id); ?>" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                <?php endif; ?>
+                
             <?php endif; ?>
             
         </div>
@@ -654,9 +728,40 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                 max-width: 100%;
             }
             
-            .dw-single-sermon-title {
+            /* Classic Layout */
+            .dw-single-sermon-widget.layout-classic .dw-single-sermon-title {
                 margin: 0;
                 padding: 0;
+            }
+            
+            /* Video First Layout */
+            .dw-single-sermon-widget.layout-video_first {
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .dw-single-sermon-widget.layout-video_first .dw-single-sermon-video {
+                order: 1;
+                margin-bottom: 30px;
+            }
+            
+            .dw-single-sermon-widget.layout-video_first .sermon-content-wrapper {
+                order: 2;
+                display: grid;
+                grid-template-columns: 1fr 2fr;
+                gap: 30px;
+                align-items: start;
+            }
+            
+            .dw-single-sermon-widget.layout-video_first .dw-single-sermon-meta {
+                grid-column: 1;
+            }
+            
+            .dw-single-sermon-widget.layout-video_first .dw-single-sermon-title {
+                grid-column: 2;
+                margin: 0;
+                padding: 0;
+                text-align: right;
             }
             
             .dw-single-sermon-meta {
@@ -691,6 +796,16 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                 .dw-single-sermon-meta .meta-separator {
                     margin: 0 6px !important;
                     font-size: 14px !important;
+                }
+                
+                /* Video First Layout - Stack on tablet */
+                .dw-single-sermon-widget.layout-video_first .sermon-content-wrapper {
+                    grid-template-columns: 1fr;
+                    gap: 20px;
+                }
+                
+                .dw-single-sermon-widget.layout-video_first .dw-single-sermon-title {
+                    text-align: left;
                 }
             }
             

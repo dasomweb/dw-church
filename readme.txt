@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.13.0
+Stable tag: 1.14.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,16 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.14.0 =
+* Feature: Video First layout option for DW Sermon Widget
+* Feature: Classic layout (Title → Meta → Video)
+* Feature: Video First layout (Video → Meta/Title side-by-side)
+* Feature: Grid layout for Video First with meta on left, title on right
+* Feature: Responsive layout adaptation for mobile/tablet
+* Improvement: YouTube video prominently displayed at top
+* Improvement: Side-by-side meta and title below video
+* Improvement: Automatic stacking on mobile devices
 
 = 1.13.0 =
 * Feature: Mobile-optimized responsive design for DW Sermon Widget
