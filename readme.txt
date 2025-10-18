@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.14.1
+Stable tag: 1.14.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.14.2 =
+* Fix: Video First layout meta alignment set to left
+* Fix: Video First layout title alignment remains right
+* Improvement: Better visual balance in Video First inline layout
+* Improvement: Meta info left-aligned, title right-aligned
 
 = 1.14.1 =
 * Fix: Plugin activation issue resolved

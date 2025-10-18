@@ -755,6 +755,11 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
             
             .dw-single-sermon-widget.layout-video_first .dw-single-sermon-meta {
                 grid-column: 1;
+                text-align: left;
+            }
+            
+            .dw-single-sermon-widget.layout-video_first .dw-single-sermon-meta.meta-inline {
+                text-align: left;
             }
             
             .dw-single-sermon-widget.layout-video_first .dw-single-sermon-title {
