@@ -361,8 +361,26 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
                         'max' => 50,
                     ],
                 ],
+                'default' => [
+                    'size' => 10,
+                ],
                 'selectors' => [
-                    '{{WRAPPER}} .dw-sermon-item h3' => 'margin-bottom: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .dw-sermon-item h3' => 'margin: 0 0 {{SIZE}}{{UNIT}} 0;',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'title_link_decoration',
+            [
+                'label' => __('링크 밑줄 제거', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SWITCHER,
+                'label_on' => __('Yes', 'dasom-church'),
+                'label_off' => __('No', 'dasom-church'),
+                'return_value' => 'yes',
+                'default' => 'yes',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-sermon-item h3 a' => 'text-decoration: none;',
                 ],
             ]
         );
@@ -391,8 +409,30 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             [
                 'label' => __('날짜 색상', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#666',
                 'selectors' => [
                     '{{WRAPPER}} .sermon-date' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'date_spacing',
+            [
+                'label' => __('날짜 간격', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 30,
+                    ],
+                ],
+                'default' => [
+                    'size' => 5,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .sermon-date' => 'margin-bottom: {{SIZE}}{{UNIT}};',
                 ],
             ]
         );
@@ -452,8 +492,30 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             [
                 'label' => __('설교자 색상', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#666',
                 'selectors' => [
                     '{{WRAPPER}} .sermon-preacher' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'preacher_spacing',
+            [
+                'label' => __('설교자 간격', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 30,
+                    ],
+                ],
+                'default' => [
+                    'size' => 10,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .sermon-preacher' => 'margin-bottom: {{SIZE}}{{UNIT}};',
                 ],
             ]
         );
@@ -513,6 +575,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             [
                 'label' => __('발췌문 색상', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#555',
                 'selectors' => [
                     '{{WRAPPER}} .sermon-excerpt' => 'color: {{VALUE}};',
                 ],
@@ -533,6 +596,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             [
                 'label' => __('배경 색상', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#ffffff',
                 'selectors' => [
                     '{{WRAPPER}} .dw-sermon-item' => 'background-color: {{VALUE}};',
                 ],
@@ -551,8 +615,30 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
                         'max' => 50,
                     ],
                 ],
+                'default' => [
+                    'size' => 8,
+                ],
                 'selectors' => [
                     '{{WRAPPER}} .dw-sermon-item' => 'border-radius: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'card_padding',
+            [
+                'label' => __('카드 안쪽 여백', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em', '%'],
+                'default' => [
+                    'top' => '20',
+                    'right' => '20',
+                    'bottom' => '20',
+                    'left' => '20',
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .sermon-content' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
                 ],
             ]
         );
@@ -563,6 +649,33 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
                 'name' => 'card_box_shadow',
                 'label' => __('그림자', 'dasom-church'),
                 'selector' => '{{WRAPPER}} .dw-sermon-item',
+                'fields_options' => [
+                    'box_shadow_type' => [
+                        'default' => 'yes',
+                    ],
+                    'box_shadow' => [
+                        'default' => [
+                            'horizontal' => 0,
+                            'vertical' => 2,
+                            'blur' => 8,
+                            'spread' => 0,
+                            'color' => 'rgba(0,0,0,0.1)',
+                        ],
+                    ],
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'card_hover_transform',
+            [
+                'label' => __('호버 효과', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SWITCHER,
+                'label_on' => __('On', 'dasom-church'),
+                'label_off' => __('Off', 'dasom-church'),
+                'return_value' => 'yes',
+                'default' => 'yes',
+                'prefix_class' => 'sermon-hover-',
             ]
         );
         
@@ -591,6 +704,17 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $columns = $layout === 'grid' ? intval($settings['columns'] ?? 3) : 1;
         $col_class = $layout === 'grid' ? 'dw-sermon-grid' : 'dw-sermon-list';
         
+        ?>
+        <style>
+            .sermon-hover-yes .dw-sermon-item {
+                transition: transform 0.3s ease;
+            }
+            .sermon-hover-yes .dw-sermon-item:hover {
+                transform: translateY(-5px);
+            }
+        </style>
+        <?php
+        
         echo '<div class="dw-sermons-widget ' . esc_attr($col_class) . '" style="display:grid;grid-template-columns:repeat(' . $columns . ',1fr);gap:20px;">';
         
         while ($sermons->have_posts()) {
@@ -598,7 +722,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             $sermon_date = get_post_meta(get_the_ID(), 'dw_sermon_date', true);
             $preachers = wp_get_post_terms(get_the_ID(), 'dw_sermon_preacher', array('fields' => 'names'));
             
-            echo '<div class="dw-sermon-item" style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);transition:transform 0.3s;" onmouseover="this.style.transform=\'translateY(-5px)\'" onmouseout="this.style.transform=\'translateY(0)\'">';
+            echo '<div class="dw-sermon-item" style="overflow:hidden;">';
             
             if (($settings['show_thumbnail'] ?? 'yes') === 'yes' && has_post_thumbnail()) {
                 $thumbnail_size = $settings['thumbnail_size'] ?? 'medium';
@@ -609,9 +733,9 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
                 echo '</div>';
             }
             
-            echo '<div class="sermon-content" style="padding:20px;">';
+            echo '<div class="sermon-content">';
             
-            echo '<h3 style="margin:0 0 10px 0;font-size:18px;"><a href="' . get_permalink() . '" style="text-decoration:none;color:#333;">' . get_the_title() . '</a></h3>';
+            echo '<h3><a href="' . get_permalink() . '">' . get_the_title() . '</a></h3>';
             
             if (($settings['show_date'] ?? 'yes') === 'yes' && $sermon_date) {
                 $date_icon = '';
@@ -624,7 +748,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
                         $date_icon = '📅 ';
                     }
                 }
-                echo '<div class="sermon-date" style="font-size:13px;color:#666;margin-bottom:5px;">' . $date_icon . date_i18n('Y-m-d', strtotime($sermon_date)) . '</div>';
+                echo '<div class="sermon-date">' . $date_icon . date_i18n('Y-m-d', strtotime($sermon_date)) . '</div>';
             }
             
             if (($settings['show_preacher'] ?? 'yes') === 'yes' && !empty($preachers)) {
@@ -638,12 +762,12 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
                         $preacher_icon = '👤 ';
                     }
                 }
-                echo '<div class="sermon-preacher" style="font-size:13px;color:#666;margin-bottom:10px;">' . $preacher_icon . esc_html(implode(', ', $preachers)) . '</div>';
+                echo '<div class="sermon-preacher">' . $preacher_icon . esc_html(implode(', ', $preachers)) . '</div>';
             }
             
             if (($settings['show_excerpt'] ?? 'no') === 'yes') {
                 $excerpt = wp_trim_words(get_the_excerpt(), $settings['excerpt_length'] ?? 20);
-                echo '<div class="sermon-excerpt" style="font-size:14px;color:#555;line-height:1.6;">' . esc_html($excerpt) . '</div>';
+                echo '<div class="sermon-excerpt">' . esc_html($excerpt) . '</div>';
             }
             
             echo '</div>';

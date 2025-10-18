@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.10.5
+Stable tag: 1.10.6
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,18 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.10.6 =
+* Fix: Typography controls now work properly - removed inline styles
+* Fix: Font size, weight, line-height, letter-spacing now applied correctly
+* Feature: Date spacing control
+* Feature: Preacher spacing control
+* Feature: Card padding control with dimensions
+* Feature: Hover effect toggle
+* Feature: Link text-decoration control
+* Improvement: Default color values for all elements
+* Improvement: Better CSS selector specificity
+* Improvement: Cleaner HTML output without hardcoded styles
 
 = 1.10.5 =
 * Feature: Selectable thumbnail image size for sermon widget
