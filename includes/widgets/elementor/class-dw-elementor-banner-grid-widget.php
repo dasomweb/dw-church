@@ -327,35 +327,6 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
             'posts_per_page' => $settings['posts_per_page'] ?? 6,
             'order' => $settings['order'] ?? 'DESC',
             'orderby' => $settings['orderby'] ?? 'date',
-            'meta_query' => array(
-                'relation' => 'AND',
-                array(
-                    'relation' => 'OR',
-                    array(
-                        'key' => 'dw_banner_start_date',
-                        'value' => $current_time,
-                        'compare' => '<=',
-                        'type' => 'DATETIME',
-                    ),
-                    array(
-                        'key' => 'dw_banner_start_date',
-                        'compare' => 'NOT EXISTS',
-                    ),
-                ),
-                array(
-                    'relation' => 'OR',
-                    array(
-                        'key' => 'dw_banner_end_date',
-                        'value' => $current_time,
-                        'compare' => '>',
-                        'type' => 'DATETIME',
-                    ),
-                    array(
-                        'key' => 'dw_banner_end_date',
-                        'compare' => 'NOT EXISTS',
-                    ),
-                ),
-            ),
         );
         
         // Filter by category if selected
@@ -368,6 +339,46 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
                 ),
             );
         }
+        
+        // Optional date filtering
+        $start_dates = array();
+        $end_dates = array();
+        
+        // Add date meta query only if dates are set
+        $temp_query = new WP_Query(array(
+            'post_type' => 'banner',
+            'post_status' => 'publish',
+            'posts_per_page' => -1,
+            'fields' => 'ids',
+        ));
+        
+        if ($temp_query->have_posts()) {
+            foreach ($temp_query->posts as $banner_id) {
+                $start_date = get_post_meta($banner_id, 'dw_banner_start_date', true);
+                $end_date = get_post_meta($banner_id, 'dw_banner_end_date', true);
+                
+                // Skip banners with invalid date range
+                if (!empty($start_date) && strtotime($start_date) > strtotime($current_time)) {
+                    continue; // Not started yet
+                }
+                if (!empty($end_date) && strtotime($end_date) <= strtotime($current_time)) {
+                    continue; // Already ended
+                }
+                
+                // This banner is valid
+                if (!isset($args['post__in'])) {
+                    $args['post__in'] = array();
+                }
+                $args['post__in'][] = $banner_id;
+            }
+            
+            // If no valid banners found but dates are set, ensure empty result
+            if (isset($args['post__in']) && empty($args['post__in'])) {
+                $args['post__in'] = array(0); // Force no results
+            }
+        }
+        
+        wp_reset_postdata();
         
         $banners = new WP_Query($args);
         
