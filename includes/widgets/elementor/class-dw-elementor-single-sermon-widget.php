@@ -40,15 +40,17 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         );
         
         $this->add_control(
-            'sermon_select',
+            'query_source',
             [
-                'label' => __('설교 선택 방식', 'dasom-church'),
+                'label' => __('Query Source', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'latest',
                 'options' => [
-                    'latest' => __('최신 설교', 'dasom-church'),
-                    'specific' => __('특정 설교 선택', 'dasom-church'),
+                    'current' => __('Current Post (현재 포스트)', 'dasom-church'),
+                    'latest' => __('Latest Post (최신 설교)', 'dasom-church'),
+                    'manual' => __('Manual Selection (수동 선택)', 'dasom-church'),
                 ],
+                'description' => __('설교 데이터를 불러올 소스를 선택하세요.', 'dasom-church'),
             ]
         );
         
@@ -77,8 +79,25 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'options' => $sermon_options,
                 'condition' => [
-                    'sermon_select' => 'specific',
+                    'query_source' => 'manual',
                 ],
+                'description' => __('표시할 설교를 선택하세요.', 'dasom-church'),
+            ]
+        );
+        
+        $this->add_control(
+            'fallback_to_latest',
+            [
+                'label' => __('Fallback to Latest', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SWITCHER,
+                'label_on' => __('Yes', 'dasom-church'),
+                'label_off' => __('No', 'dasom-church'),
+                'return_value' => 'yes',
+                'default' => 'yes',
+                'condition' => [
+                    'query_source' => 'current',
+                ],
+                'description' => __('현재 포스트가 설교가 아닐 경우 최신 설교를 표시합니다.', 'dasom-church'),
             ]
         );
         
@@ -361,11 +380,35 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
     protected function render() {
         $settings = $this->get_settings_for_display();
         
-        // Get sermon
-        if ($settings['sermon_select'] === 'specific' && !empty($settings['sermon_id'])) {
+        $sermon_id = null;
+        $query_source = $settings['query_source'] ?? 'latest';
+        
+        // Query Source: Current Post
+        if ($query_source === 'current') {
+            global $post;
+            
+            // Check if we're in a sermon post
+            if ($post && get_post_type($post->ID) === 'sermon') {
+                $sermon_id = $post->ID;
+            } 
+            // Fallback to latest if enabled
+            else if (($settings['fallback_to_latest'] ?? 'yes') === 'yes') {
+                $query_source = 'latest'; // Fall through to latest logic
+            } else {
+                echo '<div class="dw-sermon-notice" style="padding:20px;background:#f0f0f0;border-left:4px solid #2271b1;color:#333;">';
+                echo '<p style="margin:0;">' . __('⚠️ 현재 페이지는 설교 포스트가 아닙니다. 설교 상세 페이지에서 이 위젯을 사용하세요.', 'dasom-church') . '</p>';
+                echo '</div>';
+                return;
+            }
+        }
+        
+        // Query Source: Manual Selection
+        if ($query_source === 'manual' && !empty($settings['sermon_id'])) {
             $sermon_id = intval($settings['sermon_id']);
-        } else {
-            // Get latest sermon
+        }
+        
+        // Query Source: Latest Post (or fallback)
+        if ($query_source === 'latest' || !$sermon_id) {
             $latest_sermon = new \WP_Query([
                 'post_type' => 'sermon',
                 'posts_per_page' => 1,
@@ -375,13 +418,23 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
             ]);
             
             if (!$latest_sermon->have_posts()) {
-                echo '<p>' . __('설교가 없습니다.', 'dasom-church') . '</p>';
+                echo '<div class="dw-sermon-notice" style="padding:20px;background:#fff3cd;border-left:4px solid #ffc107;color:#856404;">';
+                echo '<p style="margin:0;">' . __('⚠️ 설교가 없습니다.', 'dasom-church') . '</p>';
+                echo '</div>';
                 return;
             }
             
             $latest_sermon->the_post();
             $sermon_id = get_the_ID();
             wp_reset_postdata();
+        }
+        
+        // Validate sermon_id
+        if (!$sermon_id || get_post_type($sermon_id) !== 'sermon') {
+            echo '<div class="dw-sermon-notice" style="padding:20px;background:#f8d7da;border-left:4px solid #dc3545;color:#721c24;">';
+            echo '<p style="margin:0;">' . __('⚠️ 유효한 설교를 찾을 수 없습니다.', 'dasom-church') . '</p>';
+            echo '</div>';
+            return;
         }
         
         // Get sermon data
