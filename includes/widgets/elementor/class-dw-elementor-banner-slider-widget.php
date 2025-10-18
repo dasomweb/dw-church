@@ -499,6 +499,16 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
                 $text_description = get_post_meta(get_the_ID(), 'dw_banner_text_description', true);
                 $text_position = get_post_meta(get_the_ID(), 'dw_banner_text_position', true);
                 $text_position = $text_position ? $text_position : 'center-center';
+                $text_align = get_post_meta(get_the_ID(), 'dw_banner_text_align', true);
+                $text_align = $text_align ? $text_align : 'center';
+                $padding_top = get_post_meta(get_the_ID(), 'dw_banner_content_padding_top', true);
+                $padding_top = $padding_top ? $padding_top : '40';
+                $padding_right = get_post_meta(get_the_ID(), 'dw_banner_content_padding_right', true);
+                $padding_right = $padding_right ? $padding_right : '40';
+                $padding_bottom = get_post_meta(get_the_ID(), 'dw_banner_content_padding_bottom', true);
+                $padding_bottom = $padding_bottom ? $padding_bottom : '40';
+                $padding_left = get_post_meta(get_the_ID(), 'dw_banner_content_padding_left', true);
+                $padding_left = $padding_left ? $padding_left : '40';
                 $button_text = get_post_meta(get_the_ID(), 'dw_banner_button_text', true);
                 
                 // Convert position to CSS classes
@@ -509,7 +519,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
                 
                 echo '<div class="dw-banner-with-text dw-banner-align-' . esc_attr($text_position) . '" style="position:relative;width:100%;background-image:url(' . esc_url($bg_image_url) . ');background-size:cover;background-position:center;min-height:500px;display:flex;align-items:' . esc_attr($v_align_style) . ';justify-content:' . esc_attr($h_align_style) . ';">';
                 
-                echo '<div class="dw-banner-text-content" style="padding:40px;max-width:600px;text-align:' . esc_attr($h_align) . ';position:relative;z-index:2;">';
+                echo '<div class="dw-banner-text-content" style="padding:' . esc_attr($padding_top) . 'px ' . esc_attr($padding_right) . 'px ' . esc_attr($padding_bottom) . 'px ' . esc_attr($padding_left) . 'px;max-width:600px;text-align:' . esc_attr($text_align) . ';position:relative;z-index:2;">';
                 
                 if ($text_subtitle) {
                     echo '<div class="dw-banner-subtitle">' . esc_html($text_subtitle) . '</div>';

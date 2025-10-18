@@ -428,6 +428,16 @@ class Dasom_Church_Meta_Boxes {
         $text_description = get_post_meta($post->ID, 'dw_banner_text_description', true);
         $text_position = get_post_meta($post->ID, 'dw_banner_text_position', true);
         $text_position = $text_position ? $text_position : 'center-center';
+        $text_align = get_post_meta($post->ID, 'dw_banner_text_align', true);
+        $text_align = $text_align ? $text_align : 'center';
+        $content_padding_top = get_post_meta($post->ID, 'dw_banner_content_padding_top', true);
+        $content_padding_top = $content_padding_top ? $content_padding_top : '40';
+        $content_padding_right = get_post_meta($post->ID, 'dw_banner_content_padding_right', true);
+        $content_padding_right = $content_padding_right ? $content_padding_right : '40';
+        $content_padding_bottom = get_post_meta($post->ID, 'dw_banner_content_padding_bottom', true);
+        $content_padding_bottom = $content_padding_bottom ? $content_padding_bottom : '40';
+        $content_padding_left = get_post_meta($post->ID, 'dw_banner_content_padding_left', true);
+        $content_padding_left = $content_padding_left ? $content_padding_left : '40';
         $button_text = get_post_meta($post->ID, 'dw_banner_button_text', true);
         $button_text = $button_text ? $button_text : __('자세히 보기', 'dasom-church');
         ?>
@@ -595,6 +605,45 @@ class Dasom_Church_Meta_Boxes {
                         </optgroup>
                     </select>
                     <p class="description"><?php _e('텍스트가 표시될 위치를 선택하세요.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+            <tr class="banner-text-field" style="<?php echo ($display_type === 'image_with_text') ? '' : 'display:none;'; ?>">
+                <th scope="row">
+                    <label for="dw_banner_text_align"><?php _e('텍스트 정렬', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <select id="dw_banner_text_align" name="dw_banner_text_align" class="regular-text">
+                        <option value="left" <?php selected($text_align, 'left'); ?>><?php _e('왼쪽 정렬', 'dasom-church'); ?></option>
+                        <option value="center" <?php selected($text_align, 'center'); ?>><?php _e('중앙 정렬', 'dasom-church'); ?></option>
+                        <option value="right" <?php selected($text_align, 'right'); ?>><?php _e('오른쪽 정렬', 'dasom-church'); ?></option>
+                    </select>
+                    <p class="description"><?php _e('텍스트 콘텐츠 내부의 정렬 방식을 선택하세요.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+            <tr class="banner-text-field" style="<?php echo ($display_type === 'image_with_text') ? '' : 'display:none;'; ?>">
+                <th scope="row">
+                    <label><?php _e('콘텐츠 여백 (Padding)', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:400px;">
+                        <div>
+                            <label for="dw_banner_content_padding_top" style="display:block;margin-bottom:5px;"><?php _e('위쪽 (px)', 'dasom-church'); ?></label>
+                            <input type="number" id="dw_banner_content_padding_top" name="dw_banner_content_padding_top" value="<?php echo esc_attr($content_padding_top); ?>" class="small-text" min="0" step="5" />
+                        </div>
+                        <div>
+                            <label for="dw_banner_content_padding_right" style="display:block;margin-bottom:5px;"><?php _e('오른쪽 (px)', 'dasom-church'); ?></label>
+                            <input type="number" id="dw_banner_content_padding_right" name="dw_banner_content_padding_right" value="<?php echo esc_attr($content_padding_right); ?>" class="small-text" min="0" step="5" />
+                        </div>
+                        <div>
+                            <label for="dw_banner_content_padding_bottom" style="display:block;margin-bottom:5px;"><?php _e('아래쪽 (px)', 'dasom-church'); ?></label>
+                            <input type="number" id="dw_banner_content_padding_bottom" name="dw_banner_content_padding_bottom" value="<?php echo esc_attr($content_padding_bottom); ?>" class="small-text" min="0" step="5" />
+                        </div>
+                        <div>
+                            <label for="dw_banner_content_padding_left" style="display:block;margin-bottom:5px;"><?php _e('왼쪽 (px)', 'dasom-church'); ?></label>
+                            <input type="number" id="dw_banner_content_padding_left" name="dw_banner_content_padding_left" value="<?php echo esc_attr($content_padding_left); ?>" class="small-text" min="0" step="5" />
+                        </div>
+                    </div>
+                    <p class="description" style="margin-top:10px;"><?php _e('텍스트 콘텐츠의 여백을 픽셀 단위로 설정하세요. 기본값: 40px', 'dasom-church'); ?></p>
                 </td>
             </tr>
             <tr class="banner-text-field" style="<?php echo ($display_type === 'image_with_text') ? '' : 'display:none;'; ?>">
@@ -991,6 +1040,26 @@ class Dasom_Church_Meta_Boxes {
                     if (isset($_POST['dw_banner_button_text'])) {
                         update_post_meta($post_id, 'dw_banner_button_text', sanitize_text_field($_POST['dw_banner_button_text']));
                     }
+                    
+                    if (isset($_POST['dw_banner_text_align'])) {
+                        $align = sanitize_text_field($_POST['dw_banner_text_align']);
+                        if (in_array($align, array('left', 'center', 'right'))) {
+                            update_post_meta($post_id, 'dw_banner_text_align', $align);
+                        }
+                    }
+                    
+                    if (isset($_POST['dw_banner_content_padding_top'])) {
+                        update_post_meta($post_id, 'dw_banner_content_padding_top', absint($_POST['dw_banner_content_padding_top']));
+                    }
+                    if (isset($_POST['dw_banner_content_padding_right'])) {
+                        update_post_meta($post_id, 'dw_banner_content_padding_right', absint($_POST['dw_banner_content_padding_right']));
+                    }
+                    if (isset($_POST['dw_banner_content_padding_bottom'])) {
+                        update_post_meta($post_id, 'dw_banner_content_padding_bottom', absint($_POST['dw_banner_content_padding_bottom']));
+                    }
+                    if (isset($_POST['dw_banner_content_padding_left'])) {
+                        update_post_meta($post_id, 'dw_banner_content_padding_left', absint($_POST['dw_banner_content_padding_left']));
+                    }
                 } else {
                     // Clear text mode fields if switching to image only
                     delete_post_meta($post_id, 'dw_banner_bg_image');
@@ -998,6 +1067,11 @@ class Dasom_Church_Meta_Boxes {
                     delete_post_meta($post_id, 'dw_banner_text_subtitle');
                     delete_post_meta($post_id, 'dw_banner_text_description');
                     delete_post_meta($post_id, 'dw_banner_text_position');
+                    delete_post_meta($post_id, 'dw_banner_text_align');
+                    delete_post_meta($post_id, 'dw_banner_content_padding_top');
+                    delete_post_meta($post_id, 'dw_banner_content_padding_right');
+                    delete_post_meta($post_id, 'dw_banner_content_padding_bottom');
+                    delete_post_meta($post_id, 'dw_banner_content_padding_left');
                     delete_post_meta($post_id, 'dw_banner_button_text');
                 }
             }

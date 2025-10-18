@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.15.1
+Stable tag: 1.16.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,14 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.16.0 =
+* New Feature: Text alignment option for banner text content (Left, Center, Right)
+* New Feature: Custom padding controls for banner text content (Top, Right, Bottom, Left)
+* Improvement: Fine-grained control over banner text positioning with individual padding values
+* Improvement: Text alignment is now independent of position alignment for maximum flexibility
+* Improvement: Padding values adjustable in 5px increments with minimum value of 0
+* Enhancement: Better control over banner text layout and spacing
 
 = 1.15.1 =
 * Fix: Banner text fields (Title, Subtitle, Description, Position, Button) now properly show when "Background Image + Text" display type is selected
