@@ -108,6 +108,37 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         );
         
         $this->add_control(
+            'show_date_icon',
+            [
+                'label' => __('날짜 아이콘 표시', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SWITCHER,
+                'label_on' => __('Yes', 'dasom-church'),
+                'label_off' => __('No', 'dasom-church'),
+                'return_value' => 'yes',
+                'default' => 'yes',
+                'condition' => [
+                    'show_date' => 'yes',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'date_icon',
+            [
+                'label' => __('날짜 아이콘', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::ICONS,
+                'default' => [
+                    'value' => 'fas fa-calendar-alt',
+                    'library' => 'fa-solid',
+                ],
+                'condition' => [
+                    'show_date' => 'yes',
+                    'show_date_icon' => 'yes',
+                ],
+            ]
+        );
+        
+        $this->add_control(
             'show_preacher',
             [
                 'label' => __('Show Preacher', 'dasom-church'),
@@ -116,6 +147,37 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
                 'label_off' => __('No', 'dasom-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
+            ]
+        );
+        
+        $this->add_control(
+            'show_preacher_icon',
+            [
+                'label' => __('설교자 아이콘 표시', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SWITCHER,
+                'label_on' => __('Yes', 'dasom-church'),
+                'label_off' => __('No', 'dasom-church'),
+                'return_value' => 'yes',
+                'default' => 'yes',
+                'condition' => [
+                    'show_preacher' => 'yes',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'preacher_icon',
+            [
+                'label' => __('설교자 아이콘', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::ICONS,
+                'default' => [
+                    'value' => 'fas fa-user',
+                    'library' => 'fa-solid',
+                ],
+                'condition' => [
+                    'show_preacher' => 'yes',
+                    'show_preacher_icon' => 'yes',
+                ],
             ]
         );
         
@@ -140,6 +202,267 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
                 'condition' => [
                     'show_excerpt' => 'yes',
                 ],
+            ]
+        );
+        
+        $this->end_controls_section();
+        
+        // Style Section
+        $this->start_controls_section(
+            'style_section',
+            [
+                'label' => __('스타일', 'dasom-church'),
+                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+        
+        // Title Typography
+        $this->add_group_control(
+            \Elementor\Group_Control_Typography::get_type(),
+            [
+                'name' => 'title_typography',
+                'label' => __('타이틀 타이포그래피', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-sermon-item h3',
+            ]
+        );
+        
+        $this->add_control(
+            'title_color',
+            [
+                'label' => __('타이틀 색상', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .dw-sermon-item h3' => 'color: {{VALUE}};',
+                    '{{WRAPPER}} .dw-sermon-item h3 a' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'title_hover_color',
+            [
+                'label' => __('타이틀 호버 색상', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .dw-sermon-item h3 a:hover' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'title_spacing',
+            [
+                'label' => __('타이틀 간격', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 50,
+                    ],
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-sermon-item h3' => 'margin-bottom: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'date_heading',
+            [
+                'label' => __('날짜 스타일', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::HEADING,
+                'separator' => 'before',
+            ]
+        );
+        
+        // Date Typography
+        $this->add_group_control(
+            \Elementor\Group_Control_Typography::get_type(),
+            [
+                'name' => 'date_typography',
+                'label' => __('날짜 타이포그래피', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .sermon-date',
+            ]
+        );
+        
+        $this->add_control(
+            'date_color',
+            [
+                'label' => __('날짜 색상', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .sermon-date' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'date_icon_color',
+            [
+                'label' => __('날짜 아이콘 색상', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .sermon-date i' => 'color: {{VALUE}};',
+                    '{{WRAPPER}} .sermon-date svg' => 'fill: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'date_icon_size',
+            [
+                'label' => __('날짜 아이콘 크기', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => [
+                    'px' => [
+                        'min' => 8,
+                        'max' => 50,
+                    ],
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .sermon-date i' => 'font-size: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .sermon-date svg' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'preacher_heading',
+            [
+                'label' => __('설교자 스타일', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::HEADING,
+                'separator' => 'before',
+            ]
+        );
+        
+        // Preacher Typography
+        $this->add_group_control(
+            \Elementor\Group_Control_Typography::get_type(),
+            [
+                'name' => 'preacher_typography',
+                'label' => __('설교자 타이포그래피', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .sermon-preacher',
+            ]
+        );
+        
+        $this->add_control(
+            'preacher_color',
+            [
+                'label' => __('설교자 색상', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .sermon-preacher' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'preacher_icon_color',
+            [
+                'label' => __('설교자 아이콘 색상', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .sermon-preacher i' => 'color: {{VALUE}};',
+                    '{{WRAPPER}} .sermon-preacher svg' => 'fill: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'preacher_icon_size',
+            [
+                'label' => __('설교자 아이콘 크기', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => [
+                    'px' => [
+                        'min' => 8,
+                        'max' => 50,
+                    ],
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .sermon-preacher i' => 'font-size: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .sermon-preacher svg' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'excerpt_heading',
+            [
+                'label' => __('발췌문 스타일', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::HEADING,
+                'separator' => 'before',
+            ]
+        );
+        
+        // Excerpt Typography
+        $this->add_group_control(
+            \Elementor\Group_Control_Typography::get_type(),
+            [
+                'name' => 'excerpt_typography',
+                'label' => __('발췌문 타이포그래피', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .sermon-excerpt',
+            ]
+        );
+        
+        $this->add_control(
+            'excerpt_color',
+            [
+                'label' => __('발췌문 색상', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .sermon-excerpt' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'card_heading',
+            [
+                'label' => __('카드 스타일', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::HEADING,
+                'separator' => 'before',
+            ]
+        );
+        
+        $this->add_control(
+            'card_bg_color',
+            [
+                'label' => __('배경 색상', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .dw-sermon-item' => 'background-color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'card_border_radius',
+            [
+                'label' => __('모서리 둥글기', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 50,
+                    ],
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-sermon-item' => 'border-radius: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_group_control(
+            \Elementor\Group_Control_Box_Shadow::get_type(),
+            [
+                'name' => 'card_box_shadow',
+                'label' => __('그림자', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-sermon-item',
             ]
         );
         
@@ -190,11 +513,31 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             echo '<h3 style="margin:0 0 10px 0;font-size:18px;"><a href="' . get_permalink() . '" style="text-decoration:none;color:#333;">' . get_the_title() . '</a></h3>';
             
             if (($settings['show_date'] ?? 'yes') === 'yes' && $sermon_date) {
-                echo '<div class="sermon-date" style="font-size:13px;color:#666;margin-bottom:5px;">📅 ' . date_i18n('Y-m-d', strtotime($sermon_date)) . '</div>';
+                $date_icon = '';
+                if (($settings['show_date_icon'] ?? 'yes') === 'yes') {
+                    if (!empty($settings['date_icon']['value'])) {
+                        ob_start();
+                        \Elementor\Icons_Manager::render_icon($settings['date_icon'], ['aria-hidden' => 'true']);
+                        $date_icon = ob_get_clean() . ' ';
+                    } else {
+                        $date_icon = '📅 ';
+                    }
+                }
+                echo '<div class="sermon-date" style="font-size:13px;color:#666;margin-bottom:5px;">' . $date_icon . date_i18n('Y-m-d', strtotime($sermon_date)) . '</div>';
             }
             
             if (($settings['show_preacher'] ?? 'yes') === 'yes' && !empty($preachers)) {
-                echo '<div class="sermon-preacher" style="font-size:13px;color:#666;margin-bottom:10px;">👤 ' . esc_html(implode(', ', $preachers)) . '</div>';
+                $preacher_icon = '';
+                if (($settings['show_preacher_icon'] ?? 'yes') === 'yes') {
+                    if (!empty($settings['preacher_icon']['value'])) {
+                        ob_start();
+                        \Elementor\Icons_Manager::render_icon($settings['preacher_icon'], ['aria-hidden' => 'true']);
+                        $preacher_icon = ob_get_clean() . ' ';
+                    } else {
+                        $preacher_icon = '👤 ';
+                    }
+                }
+                echo '<div class="sermon-preacher" style="font-size:13px;color:#666;margin-bottom:10px;">' . $preacher_icon . esc_html(implode(', ', $preachers)) . '</div>';
             }
             
             if (($settings['show_excerpt'] ?? 'no') === 'yes') {

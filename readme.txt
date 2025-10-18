@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.10.3
+Stable tag: 1.10.4
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,17 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.10.4 =
+* Feature: Advanced typography controls for sermon widget
+* Feature: Customizable date and preacher icons
+* Feature: Icon show/hide toggle for date and preacher
+* Feature: Independent icon color and size controls
+* Feature: Google Fonts support with font weight, letter-spacing, line-height
+* Feature: Title hover color customization
+* Feature: Card background, border radius, and shadow controls
+* Improvement: Full design control over sermon widget elements
+* Improvement: Font Awesome icon library integration
 
 = 1.10.3 =
 * Fix: Banner slider now respects start and end dates
