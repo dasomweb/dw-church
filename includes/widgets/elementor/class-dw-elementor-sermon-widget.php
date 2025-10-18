@@ -96,6 +96,25 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         );
         
         $this->add_control(
+            'thumbnail_size',
+            [
+                'label' => __('썸네일 크기', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'medium',
+                'options' => [
+                    'thumbnail' => __('Thumbnail (150x150)', 'dasom-church'),
+                    'medium' => __('Medium (300x300)', 'dasom-church'),
+                    'medium_large' => __('Medium Large (768x768)', 'dasom-church'),
+                    'large' => __('Large (1024x1024)', 'dasom-church'),
+                    'full' => __('Full (원본)', 'dasom-church'),
+                ],
+                'condition' => [
+                    'show_thumbnail' => 'yes',
+                ],
+            ]
+        );
+        
+        $this->add_control(
             'show_date',
             [
                 'label' => __('Show Date', 'dasom-church'),
@@ -213,6 +232,87 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             [
                 'label' => __('스타일', 'dasom-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+        
+        // Thumbnail Style
+        $this->add_control(
+            'thumbnail_heading',
+            [
+                'label' => __('썸네일 스타일', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::HEADING,
+                'separator' => 'before',
+            ]
+        );
+        
+        $this->add_control(
+            'thumbnail_height',
+            [
+                'label' => __('썸네일 높이', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => [
+                    'px' => [
+                        'min' => 100,
+                        'max' => 500,
+                    ],
+                ],
+                'default' => [
+                    'size' => 200,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .sermon-thumbnail img' => 'height: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'thumbnail_object_fit',
+            [
+                'label' => __('이미지 맞춤', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'cover',
+                'options' => [
+                    'cover' => __('커버 (Cover)', 'dasom-church'),
+                    'contain' => __('포함 (Contain)', 'dasom-church'),
+                    'fill' => __('채우기 (Fill)', 'dasom-church'),
+                    'none' => __('원본 (None)', 'dasom-church'),
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .sermon-thumbnail img' => 'object-fit: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'thumbnail_border_radius',
+            [
+                'label' => __('썸네일 모서리 둥글기', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', '%'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 50,
+                    ],
+                    '%' => [
+                        'min' => 0,
+                        'max' => 50,
+                    ],
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .sermon-thumbnail' => 'border-radius: {{SIZE}}{{UNIT}}; overflow: hidden;',
+                    '{{WRAPPER}} .sermon-thumbnail img' => 'border-radius: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'title_heading',
+            [
+                'label' => __('타이틀 스타일', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::HEADING,
+                'separator' => 'before',
             ]
         );
         
@@ -501,9 +601,10 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             echo '<div class="dw-sermon-item" style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);transition:transform 0.3s;" onmouseover="this.style.transform=\'translateY(-5px)\'" onmouseout="this.style.transform=\'translateY(0)\'">';
             
             if (($settings['show_thumbnail'] ?? 'yes') === 'yes' && has_post_thumbnail()) {
+                $thumbnail_size = $settings['thumbnail_size'] ?? 'medium';
                 echo '<div class="sermon-thumbnail">';
                 echo '<a href="' . get_permalink() . '">';
-                the_post_thumbnail('medium', array('style' => 'width:100%;height:200px;object-fit:cover;'));
+                the_post_thumbnail($thumbnail_size, array('style' => 'width:100%;'));
                 echo '</a>';
                 echo '</div>';
             }

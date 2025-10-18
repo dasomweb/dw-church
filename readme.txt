@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.10.4
+Stable tag: 1.10.5
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,14 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.10.5 =
+* Feature: Selectable thumbnail image size for sermon widget
+* Feature: Thumbnail height control with slider
+* Feature: Thumbnail object-fit options (Cover, Contain, Fill, None)
+* Feature: Thumbnail border radius control
+* Improvement: Better thumbnail display control
+* Improvement: Flexible image sizing for different layouts
 
 = 1.10.4 =
 * Feature: Advanced typography controls for sermon widget
