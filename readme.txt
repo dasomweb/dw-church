@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.21.0
+Stable tag: 1.21.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.21.1 =
+* Fix: All banner images now display as background (not img tag)
+* Fix: Consistent background-image rendering regardless of text presence
+* Enhancement: Background position controls apply to all banners uniformly
+* Optimization: Reduced CSS generation for banners without text
 
 = 1.21.0 =
 * Feature: Responsive text container width - separate settings for PC, Laptop, Tablet, Mobile

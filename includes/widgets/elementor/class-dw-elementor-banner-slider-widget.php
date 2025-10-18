@@ -458,6 +458,18 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
             // Check if any text content exists
             $has_text = !empty($text_title) || !empty($text_subtitle) || !empty($text_description);
             
+            // Always get background position settings (needed for all banners)
+            $bg_position_pc = get_post_meta(get_the_ID(), 'dw_banner_bg_position_pc', true);
+            $bg_position_pc = $bg_position_pc ? $bg_position_pc : 'center center';
+            $bg_position_laptop = get_post_meta(get_the_ID(), 'dw_banner_bg_position_laptop', true);
+            $bg_position_laptop = $bg_position_laptop ? $bg_position_laptop : 'center center';
+            $bg_position_tablet = get_post_meta(get_the_ID(), 'dw_banner_bg_position_tablet', true);
+            $bg_position_tablet = $bg_position_tablet ? $bg_position_tablet : 'center center';
+            $bg_position_mobile = get_post_meta(get_the_ID(), 'dw_banner_bg_position_mobile', true);
+            $bg_position_mobile = $bg_position_mobile ? $bg_position_mobile : 'center center';
+            
+            $banner_id = 'dw-banner-' . get_the_ID();
+            
             echo '<div class="swiper-slide dw-banner-slide' . ($has_text ? ' dw-banner-with-text' : '') . '">';
             
             // Wrap entire slide in link if URL exists
@@ -465,12 +477,15 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
                 echo '<a href="' . esc_url($link_url) . '" target="' . esc_attr($link_target) . '" class="dw-banner-link" style="display:block;position:relative;text-decoration:none;color:inherit;">';
             }
             
+            // Generate responsive CSS for background position (for all banners)
+            echo '<style>';
+            echo '.' . $banner_id . ' { background-position: ' . esc_attr($bg_position_pc) . '; }';
+            echo '@media (max-width: 1919px) { .' . $banner_id . ' { background-position: ' . esc_attr($bg_position_laptop) . '; } }';
+            echo '@media (max-width: 1023px) { .' . $banner_id . ' { background-position: ' . esc_attr($bg_position_tablet) . '; } }';
+            echo '@media (max-width: 767px) { .' . $banner_id . ' { background-position: ' . esc_attr($bg_position_mobile) . '; } }';
+            
             if ($has_text) {
-                // Banner with text overlay
-                $text_position = get_post_meta(get_the_ID(), 'dw_banner_text_position', true);
-                $text_position = $text_position ? $text_position : 'center-center';
-                $text_align = get_post_meta(get_the_ID(), 'dw_banner_text_align', true);
-                $text_align = $text_align ? $text_align : 'center';
+                // Banner with text overlay - also need text width responsive CSS
                 $text_width_pc = get_post_meta(get_the_ID(), 'dw_banner_text_width_pc', true);
                 $text_width_pc = $text_width_pc ? $text_width_pc : '600';
                 $text_width_laptop = get_post_meta(get_the_ID(), 'dw_banner_text_width_laptop', true);
@@ -479,81 +494,73 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
                 $text_width_tablet = $text_width_tablet ? $text_width_tablet : '500';
                 $text_width_mobile = get_post_meta(get_the_ID(), 'dw_banner_text_width_mobile', true);
                 $text_width_mobile = $text_width_mobile ? $text_width_mobile : '300';
-                $bg_position_pc = get_post_meta(get_the_ID(), 'dw_banner_bg_position_pc', true);
-                $bg_position_pc = $bg_position_pc ? $bg_position_pc : 'center center';
-                $bg_position_laptop = get_post_meta(get_the_ID(), 'dw_banner_bg_position_laptop', true);
-                $bg_position_laptop = $bg_position_laptop ? $bg_position_laptop : 'center center';
-                $bg_position_tablet = get_post_meta(get_the_ID(), 'dw_banner_bg_position_tablet', true);
-                $bg_position_tablet = $bg_position_tablet ? $bg_position_tablet : 'center center';
-                $bg_position_mobile = get_post_meta(get_the_ID(), 'dw_banner_bg_position_mobile', true);
-                $bg_position_mobile = $bg_position_mobile ? $bg_position_mobile : 'center center';
-                $padding_top = get_post_meta(get_the_ID(), 'dw_banner_content_padding_top', true);
-                $padding_top = $padding_top ? $padding_top : '40';
-                $padding_right = get_post_meta(get_the_ID(), 'dw_banner_content_padding_right', true);
-                $padding_right = $padding_right ? $padding_right : '40';
-                $padding_bottom = get_post_meta(get_the_ID(), 'dw_banner_content_padding_bottom', true);
-                $padding_bottom = $padding_bottom ? $padding_bottom : '40';
-                $padding_left = get_post_meta(get_the_ID(), 'dw_banner_content_padding_left', true);
-                $padding_left = $padding_left ? $padding_left : '40';
                 
-                // Convert position to flexbox alignment
-                list($v_align, $h_align) = explode('-', $text_position);
-                $v_align_style = $v_align === 'top' ? 'flex-start' : ($v_align === 'bottom' ? 'flex-end' : 'center');
-                
-                // Calculate margin based on horizontal alignment (center-based positioning)
-                $container_margin = '';
-                $text_alignment = $text_align; // Use user-defined text alignment
-                
-                if ($h_align === 'left') {
-                    // Left: add margin-right to push content to the left
-                    $container_margin = 'margin-right:auto;';
-                    $text_alignment = 'left'; // Override to match position
-                } elseif ($h_align === 'right') {
-                    // Right: add margin-left to push content to the right
-                    $container_margin = 'margin-left:auto;';
-                    $text_alignment = 'right'; // Override to match position
-                } else {
-                    // Center: auto margins on both sides
-                    $container_margin = 'margin-left:auto;margin-right:auto;';
-                    $text_alignment = 'center'; // Override to match position
-                }
-                
-                $banner_id = 'dw-banner-' . get_the_ID();
                 $text_content_id = 'dw-banner-text-' . get_the_ID();
-                
-                // Generate responsive CSS for background position and text width
-                echo '<style>';
-                echo '.' . $banner_id . ' { background-position: ' . esc_attr($bg_position_pc) . '; }';
-                echo '@media (max-width: 1919px) { .' . $banner_id . ' { background-position: ' . esc_attr($bg_position_laptop) . '; } }';
-                echo '@media (max-width: 1023px) { .' . $banner_id . ' { background-position: ' . esc_attr($bg_position_tablet) . '; } }';
-                echo '@media (max-width: 767px) { .' . $banner_id . ' { background-position: ' . esc_attr($bg_position_mobile) . '; } }';
                 
                 echo '.' . $text_content_id . ' { max-width: ' . esc_attr($text_width_pc) . 'px; }';
                 echo '@media (max-width: 1919px) { .' . $text_content_id . ' { max-width: ' . esc_attr($text_width_laptop) . 'px; } }';
                 echo '@media (max-width: 1023px) { .' . $text_content_id . ' { max-width: ' . esc_attr($text_width_tablet) . 'px; } }';
                 echo '@media (max-width: 767px) { .' . $text_content_id . ' { max-width: ' . esc_attr($text_width_mobile) . 'px; } }';
-                echo '</style>';
-                
-                echo '<div class="dw-banner-bg ' . esc_attr($banner_id) . '" style="position:relative;width:100%;background-image:url(' . esc_url($image_url) . ');background-size:cover;min-height:500px;display:flex;align-items:' . esc_attr($v_align_style) . ';">';
-                
-                echo '<div class="dw-banner-text-content ' . esc_attr($text_content_id) . '" style="padding:' . esc_attr($padding_top) . 'px ' . esc_attr($padding_right) . 'px ' . esc_attr($padding_bottom) . 'px ' . esc_attr($padding_left) . 'px;width:100%;' . $container_margin . 'text-align:' . esc_attr($text_alignment) . ';position:relative;z-index:2;">';
-                
-                if ($text_subtitle) {
-                    echo '<div class="dw-banner-subtitle">' . esc_html($text_subtitle) . '</div>';
-                }
-                if ($text_title) {
-                    echo '<h2 class="dw-banner-title">' . esc_html($text_title) . '</h2>';
-                }
-                if ($text_description) {
-                    echo '<div class="dw-banner-description">' . esc_html($text_description) . '</div>';
-                }
-                
-                echo '</div>'; // text-content
-                echo '</div>'; // banner-bg
-            } else {
-                // Image only (no text)
-                if ($image_url) {
-                    echo '<img src="' . esc_url($image_url) . '" alt="' . esc_attr(get_the_title()) . '" style="width:100%;height:auto;display:block;">';
+            }
+            
+            echo '</style>';
+            
+            // Always use background image
+            if ($image_url) {
+                if ($has_text) {
+                    // Get text settings
+                    $text_position = get_post_meta(get_the_ID(), 'dw_banner_text_position', true);
+                    $text_position = $text_position ? $text_position : 'center-center';
+                    $text_align = get_post_meta(get_the_ID(), 'dw_banner_text_align', true);
+                    $text_align = $text_align ? $text_align : 'center';
+                    $padding_top = get_post_meta(get_the_ID(), 'dw_banner_content_padding_top', true);
+                    $padding_top = $padding_top ? $padding_top : '40';
+                    $padding_right = get_post_meta(get_the_ID(), 'dw_banner_content_padding_right', true);
+                    $padding_right = $padding_right ? $padding_right : '40';
+                    $padding_bottom = get_post_meta(get_the_ID(), 'dw_banner_content_padding_bottom', true);
+                    $padding_bottom = $padding_bottom ? $padding_bottom : '40';
+                    $padding_left = get_post_meta(get_the_ID(), 'dw_banner_content_padding_left', true);
+                    $padding_left = $padding_left ? $padding_left : '40';
+                    
+                    // Convert position to flexbox alignment
+                    list($v_align, $h_align) = explode('-', $text_position);
+                    $v_align_style = $v_align === 'top' ? 'flex-start' : ($v_align === 'bottom' ? 'flex-end' : 'center');
+                    
+                    // Calculate margin based on horizontal alignment
+                    $container_margin = '';
+                    $text_alignment = $text_align;
+                    
+                    if ($h_align === 'left') {
+                        $container_margin = 'margin-right:auto;';
+                        $text_alignment = 'left';
+                    } elseif ($h_align === 'right') {
+                        $container_margin = 'margin-left:auto;';
+                        $text_alignment = 'right';
+                    } else {
+                        $container_margin = 'margin-left:auto;margin-right:auto;';
+                        $text_alignment = 'center';
+                    }
+                    
+                    // Background with text overlay
+                    echo '<div class="dw-banner-bg ' . esc_attr($banner_id) . '" style="position:relative;width:100%;background-image:url(' . esc_url($image_url) . ');background-size:cover;min-height:500px;display:flex;align-items:' . esc_attr($v_align_style) . ';">';
+                    
+                    echo '<div class="dw-banner-text-content ' . esc_attr($text_content_id) . '" style="padding:' . esc_attr($padding_top) . 'px ' . esc_attr($padding_right) . 'px ' . esc_attr($padding_bottom) . 'px ' . esc_attr($padding_left) . 'px;width:100%;' . $container_margin . 'text-align:' . esc_attr($text_alignment) . ';position:relative;z-index:2;">';
+                    
+                    if ($text_subtitle) {
+                        echo '<div class="dw-banner-subtitle">' . esc_html($text_subtitle) . '</div>';
+                    }
+                    if ($text_title) {
+                        echo '<h2 class="dw-banner-title">' . esc_html($text_title) . '</h2>';
+                    }
+                    if ($text_description) {
+                        echo '<div class="dw-banner-description">' . esc_html($text_description) . '</div>';
+                    }
+                    
+                    echo '</div>'; // text-content
+                    echo '</div>'; // banner-bg
+                } else {
+                    // Background image only (no text overlay)
+                    echo '<div class="dw-banner-bg ' . esc_attr($banner_id) . '" style="position:relative;width:100%;background-image:url(' . esc_url($image_url) . ');background-size:cover;min-height:500px;"></div>';
                 }
             }
             
