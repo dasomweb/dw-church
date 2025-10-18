@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.3.1
+Stable tag: 1.7.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -83,6 +83,14 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 
 == Changelog ==
 
+= 1.7.0 =
+* Feature: Added Banner post type for Hero sections
+* Feature: PC image support (recommended 1920px width)
+* Feature: Mobile image support (recommended 720px width)
+* Feature: Link URL configuration with target settings (_self/_blank)
+* Feature: Banner admin columns with image previews
+* Improvement: Enhanced media library integration for banners
+
 = 1.3.1 =
 * Fix: Added dw_ prefix to sermon_preacher custom field key in dashboard
 
@@ -132,6 +140,9 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.7.0 =
+Major feature update with Banner post type for Hero sections. Recommended update for new banner management capabilities.
 
 = 1.3.1 =
 Minor fix for custom field key display in dashboard.
