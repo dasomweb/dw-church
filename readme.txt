@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.10.7
+Stable tag: 1.11.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,17 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.11.0 =
+* Breaking: Removed excerpt feature from sermon widget
+* Feature: Added scripture (Bible verse) display
+* Feature: Scripture show/hide toggle
+* Feature: Scripture icon customization (default: book icon)
+* Feature: Scripture typography and color controls
+* Feature: Scripture icon color and size controls
+* Feature: Date, Preacher, Scripture all independently toggleable
+* Improvement: More relevant information for sermon listings
+* Improvement: Better visual hierarchy with scripture
 
 = 1.10.7 =
 * Feature: Card border control (type, width, color)
