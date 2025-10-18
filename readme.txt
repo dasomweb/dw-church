@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.7.1
+Stable tag: 1.7.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -83,6 +83,14 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 
 == Changelog ==
 
+= 1.7.2 =
+* Fix: Restored v1.6.6 WordPress Settings DW menu (GitHub update page)
+* Fix: Restored v1.6.6 Elementor compatibility filter completely
+* Fix: Restored dw_ prefix support for all custom fields
+* Fix: Restored is_admin() check in metadata filter
+* Fix: Removed unnecessary debug notice
+* Critical: All v1.6.6 features fully restored
+
 = 1.7.1 =
 * Feature: Banner scheduling with start/end dates
 * Feature: Automatic banner status management (draft conversion on expiry)
@@ -150,6 +158,9 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.7.2 =
+Critical update! Restores all v1.6.6 features that were accidentally removed. Required update for Elementor users.
 
 = 1.7.1 =
 Important update with banner scheduling, bug fixes, and dashboard improvements. Recommended update for better banner management.
