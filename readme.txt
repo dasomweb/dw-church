@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.10.6
+Stable tag: 1.10.7
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,13 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.10.7 =
+* Feature: Card border control (type, width, color)
+* Feature: Border style options (Solid, Dashed, Dotted, Double)
+* Feature: Individual border width control for each side
+* Feature: Border radius works seamlessly with border
+* Improvement: Complete card design customization
 
 = 1.10.6 =
 * Fix: Typography controls now work properly - removed inline styles

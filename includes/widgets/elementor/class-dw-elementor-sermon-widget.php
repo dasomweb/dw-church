@@ -644,6 +644,15 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         );
         
         $this->add_group_control(
+            \Elementor\Group_Control_Border::get_type(),
+            [
+                'name' => 'card_border',
+                'label' => __('테두리', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-sermon-item',
+            ]
+        );
+        
+        $this->add_group_control(
             \Elementor\Group_Control_Box_Shadow::get_type(),
             [
                 'name' => 'card_box_shadow',
