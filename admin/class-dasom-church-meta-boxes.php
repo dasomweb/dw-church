@@ -98,6 +98,16 @@ class Dasom_Church_Meta_Boxes {
             'normal',
             'default'
         );
+        
+        // 배너 메타박스
+        add_meta_box(
+            'banner_meta',
+            __('배너 정보', 'dasom-church'),
+            array($this, 'dasom_church_banner_meta_box'),
+            'banner',
+            'normal',
+            'default'
+        );
     }
     
     /**
@@ -389,6 +399,96 @@ class Dasom_Church_Meta_Boxes {
     }
     
     /**
+     * 배너 메타박스
+     */
+    public function dasom_church_banner_meta_box($post) {
+        wp_nonce_field('dasom_church_banner_meta', 'dasom_church_banner_nonce');
+        
+        $pc_image = get_post_meta($post->ID, 'dw_banner_pc_image', true);
+        $mobile_image = get_post_meta($post->ID, 'dw_banner_mobile_image', true);
+        $link_url = get_post_meta($post->ID, 'dw_banner_link_url', true);
+        $link_target = get_post_meta($post->ID, 'dw_banner_link_target', true);
+        $link_target = $link_target ? $link_target : '_self';
+        $start_date = get_post_meta($post->ID, 'dw_banner_start_date', true);
+        $end_date = get_post_meta($post->ID, 'dw_banner_end_date', true);
+        ?>
+        <table class="form-table">
+            <tr>
+                <th scope="row">
+                    <label for="dw_banner_pc_image"><?php _e('PC용 배너 이미지 (1920px)', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <input type="hidden" id="dw_banner_pc_image" name="dw_banner_pc_image" value="<?php echo esc_attr($pc_image); ?>" />
+                    <button type="button" class="button" id="dw_banner_pc_image_button"><?php _e('PC용 이미지 업로드', 'dasom-church'); ?></button>
+                    <button type="button" class="button button-link-delete" id="dw_banner_pc_image_remove" style="color:#b32d2e;"><?php _e('이미지 삭제', 'dasom-church'); ?></button>
+                    <div id="dw_banner_pc_image_preview" style="margin-top:10px;">
+                        <?php if ($pc_image): ?>
+                            <img src="<?php echo esc_url(wp_get_attachment_url($pc_image)); ?>" style="max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;" />
+                        <?php endif; ?>
+                    </div>
+                    <p class="description"><?php _e('권장 크기: 가로 1920px', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="dw_banner_mobile_image"><?php _e('모바일용 배너 이미지 (720px)', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <input type="hidden" id="dw_banner_mobile_image" name="dw_banner_mobile_image" value="<?php echo esc_attr($mobile_image); ?>" />
+                    <button type="button" class="button" id="dw_banner_mobile_image_button"><?php _e('모바일용 이미지 업로드', 'dasom-church'); ?></button>
+                    <button type="button" class="button button-link-delete" id="dw_banner_mobile_image_remove" style="color:#b32d2e;"><?php _e('이미지 삭제', 'dasom-church'); ?></button>
+                    <div id="dw_banner_mobile_image_preview" style="margin-top:10px;">
+                        <?php if ($mobile_image): ?>
+                            <img src="<?php echo esc_url(wp_get_attachment_url($mobile_image)); ?>" style="max-width:300px;height:auto;object-fit:cover;border:1px solid #ddd;" />
+                        <?php endif; ?>
+                    </div>
+                    <p class="description"><?php _e('권장 크기: 가로 720px', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="dw_banner_link_url"><?php _e('링크 URL', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <input type="url" id="dw_banner_link_url" name="dw_banner_link_url" value="<?php echo esc_url($link_url); ?>" class="regular-text" placeholder="https://" />
+                    <p class="description"><?php _e('배너 클릭 시 이동할 URL을 입력하세요.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="dw_banner_link_target"><?php _e('링크 열기 방식', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <select id="dw_banner_link_target" name="dw_banner_link_target" class="regular-text">
+                        <option value="_self" <?php selected($link_target, '_self'); ?>><?php _e('현재 창에서 열기', 'dasom-church'); ?></option>
+                        <option value="_blank" <?php selected($link_target, '_blank'); ?>><?php _e('새 창에서 열기', 'dasom-church'); ?></option>
+                    </select>
+                    <p class="description"><?php _e('링크를 클릭했을 때 어떻게 열릴지 선택하세요.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="dw_banner_start_date"><?php _e('배너 시작 날짜', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <input type="datetime-local" id="dw_banner_start_date" name="dw_banner_start_date" value="<?php echo esc_attr($start_date); ?>" class="regular-text" />
+                    <p class="description"><?php _e('이 날짜부터 배너가 표시됩니다. 비워두면 즉시 표시됩니다.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="dw_banner_end_date"><?php _e('배너 종료 날짜', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <input type="datetime-local" id="dw_banner_end_date" name="dw_banner_end_date" value="<?php echo esc_attr($end_date); ?>" class="regular-text" />
+                    <p class="description"><?php _e('이 날짜 이후 배너가 자동으로 비공개(Draft)로 전환됩니다. 비워두면 무기한 표시됩니다.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+        </table>
+        <?php
+    }
+    
+    /**
      * Save meta boxes
      */
     public function dasom_church_save_meta_boxes($post_id) {
@@ -421,6 +521,9 @@ class Dasom_Church_Meta_Boxes {
                 break;
             case 'album':
                 $this->dasom_church_save_album_meta($post_id);
+                break;
+            case 'banner':
+                $this->dasom_church_save_banner_meta($post_id);
                 break;
         }
     }
@@ -634,6 +737,60 @@ class Dasom_Church_Meta_Boxes {
         // YouTube 썸네일은 별도 필드로만 관리됨
     }
     
+    /**
+     * Save banner meta
+     */
+    private function dasom_church_save_banner_meta($post_id) {
+        if (!isset($_POST['dasom_church_banner_nonce']) || 
+            !wp_verify_nonce($_POST['dasom_church_banner_nonce'], 'dasom_church_banner_meta')) {
+            return;
+        }
+        
+        if (isset($_POST['dw_banner_pc_image'])) {
+            $pc_image_id = intval($_POST['dw_banner_pc_image']);
+            update_post_meta($post_id, 'dw_banner_pc_image', $pc_image_id);
+            if ($pc_image_id > 0) {
+                set_post_thumbnail($post_id, $pc_image_id);
+            }
+        }
+        
+        if (isset($_POST['dw_banner_mobile_image'])) {
+            update_post_meta($post_id, 'dw_banner_mobile_image', intval($_POST['dw_banner_mobile_image']));
+        }
+        
+        if (isset($_POST['dw_banner_link_url'])) {
+            update_post_meta($post_id, 'dw_banner_link_url', esc_url_raw($_POST['dw_banner_link_url']));
+        }
+        
+        if (isset($_POST['dw_banner_link_target'])) {
+            $target = sanitize_text_field($_POST['dw_banner_link_target']);
+            if (in_array($target, array('_self', '_blank'))) {
+                update_post_meta($post_id, 'dw_banner_link_target', $target);
+            }
+        }
+        
+        if (isset($_POST['dw_banner_start_date'])) {
+            $start_date = sanitize_text_field($_POST['dw_banner_start_date']);
+            update_post_meta($post_id, 'dw_banner_start_date', $start_date);
+            
+            if (!empty($start_date) && strtotime($start_date) > current_time('timestamp')) {
+                remove_action('save_post', array($this, 'dasom_church_save_meta_boxes'));
+                wp_update_post(array(
+                    'ID' => $post_id,
+                    'post_status' => 'future',
+                    'post_date' => date('Y-m-d H:i:s', strtotime($start_date)),
+                    'post_date_gmt' => get_gmt_from_date(date('Y-m-d H:i:s', strtotime($start_date)))
+                ));
+                add_action('save_post', array($this, 'dasom_church_save_meta_boxes'));
+            }
+        }
+        
+        if (isset($_POST['dw_banner_end_date'])) {
+            $end_date = sanitize_text_field($_POST['dw_banner_end_date']);
+            update_post_meta($post_id, 'dw_banner_end_date', $end_date);
+        }
+    }
+    
     // Quick Edit functionality is handled by Dasom_Church_Columns class
     
     /**
@@ -647,7 +804,7 @@ class Dasom_Church_Meta_Boxes {
             return;
         }
         
-        if (!isset($post->post_type) || !in_array($post->post_type, array('bulletin', 'sermon', 'column', 'album'))) {
+        if (!isset($post->post_type) || !in_array($post->post_type, array('bulletin', 'sermon', 'column', 'album', 'banner'))) {
             return;
         }
         
@@ -858,6 +1015,58 @@ class Dasom_Church_Meta_Boxes {
                         $('#dw_album_thumb_id').val('');
                         $('#dw_album_thumb_preview').html('');
                     }
+                }
+            });
+            
+            // 배너 PC 이미지 업로드
+            $('#dw_banner_pc_image_button').on('click', function(e) {
+                e.preventDefault();
+                var frame = wp.media({
+                    title: 'PC용 배너 이미지 업로드',
+                    button: {text: '선택'},
+                    library: {type: 'image'},
+                    multiple: false
+                });
+                frame.on('select', function() {
+                    var attachment = frame.state().get('selection').first().toJSON();
+                    $('#dw_banner_pc_image').val(attachment.id);
+                    $('#dw_banner_pc_image_preview').html('<img src=\"' + attachment.url + '\" style=\"max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;\" />');
+                });
+                frame.open();
+            });
+            
+            // 배너 PC 이미지 삭제
+            $('#dw_banner_pc_image_remove').on('click', function(e) {
+                e.preventDefault();
+                if (confirm('PC용 이미지를 삭제하시겠습니까?')) {
+                    $('#dw_banner_pc_image').val('');
+                    $('#dw_banner_pc_image_preview').html('');
+                }
+            });
+            
+            // 배너 모바일 이미지 업로드
+            $('#dw_banner_mobile_image_button').on('click', function(e) {
+                e.preventDefault();
+                var frame = wp.media({
+                    title: '모바일용 배너 이미지 업로드',
+                    button: {text: '선택'},
+                    library: {type: 'image'},
+                    multiple: false
+                });
+                frame.on('select', function() {
+                    var attachment = frame.state().get('selection').first().toJSON();
+                    $('#dw_banner_mobile_image').val(attachment.id);
+                    $('#dw_banner_mobile_image_preview').html('<img src=\"' + attachment.url + '\" style=\"max-width:300px;height:auto;object-fit:cover;border:1px solid #ddd;\" />');
+                });
+                frame.open();
+            });
+            
+            // 배너 모바일 이미지 삭제
+            $('#dw_banner_mobile_image_remove').on('click', function(e) {
+                e.preventDefault();
+                if (confirm('모바일용 이미지를 삭제하시겠습니까?')) {
+                    $('#dw_banner_mobile_image').val('');
+                    $('#dw_banner_mobile_image_preview').html('');
                 }
             });
         });

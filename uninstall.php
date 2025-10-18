@@ -43,7 +43,7 @@ foreach ($options_to_remove as $option) {
 }
 
 // Remove custom post types and their meta
-$post_types = array('bulletin', 'sermon', 'column', 'album');
+$post_types = array('bulletin', 'sermon', 'column', 'album', 'banner');
 
 foreach ($post_types as $post_type) {
     $posts = get_posts(array(
@@ -97,7 +97,14 @@ $meta_keys_to_remove = array(
     // Album meta
     'dw_album_images',
     'dw_album_youtube',
-    'dw_album_thumb_id'
+    'dw_album_thumb_id',
+    // Banner meta
+    'dw_banner_pc_image',
+    'dw_banner_mobile_image',
+    'dw_banner_link_url',
+    'dw_banner_link_target',
+    'dw_banner_start_date',
+    'dw_banner_end_date'
 );
 
 foreach ($meta_keys_to_remove as $meta_key) {
@@ -114,7 +121,8 @@ $capabilities_to_remove = array(
     'edit_dasom_bulletins',
     'edit_dasom_sermons',
     'edit_dasom_columns',
-    'edit_dasom_albums'
+    'edit_dasom_albums',
+    'edit_dasom_banners'
 );
 
 $roles = array('administrator', 'editor', 'author', 'contributor', 'subscriber');

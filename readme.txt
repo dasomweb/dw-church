@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.3.1
+Stable tag: 1.7.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -83,6 +83,15 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 
 == Changelog ==
 
+= 1.7.3 =
+* Feature: Banner post type for Hero sections (PC/Mobile images)
+* Feature: Banner scheduling (start/end dates)
+* Feature: Automatic banner expiration (converts to draft)
+* Feature: Banner dashboard card with status indicators
+* Feature: Banner custom fields in dashboard guide
+* Feature: Hourly cron job for banner schedule management
+* Built on stable v1.6.6 foundation with all features preserved
+
 = 1.3.1 =
 * Fix: Added dw_ prefix to sermon_preacher custom field key in dashboard
 
@@ -132,6 +141,9 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.7.3 =
+Major feature update! Adds Banner post type for Hero sections with scheduling capabilities. Built on stable v1.6.6 foundation with all core features preserved. Recommended update for churches needing dynamic banner management.
 
 = 1.3.1 =
 Minor fix for custom field key display in dashboard.

@@ -58,6 +58,10 @@ class Dasom_Church_Columns {
         add_filter('manage_album_posts_columns', array($this, 'dasom_church_album_columns'));
         add_action('manage_album_posts_custom_column', array($this, 'dasom_church_album_column_content'), 10, 2);
         
+        // Banner columns
+        add_filter('manage_banner_posts_columns', array($this, 'dasom_church_banner_columns'));
+        add_action('manage_banner_posts_custom_column', array($this, 'dasom_church_banner_column_content'), 10, 2);
+        
         // Quick Edit - DISABLED to prevent infinite loop
         // add_action('quick_edit_custom_box', array($this, 'dasom_church_quick_edit_fields'), 10, 2);
         // add_action('save_post', array($this, 'dasom_church_quick_edit_save'));
@@ -344,6 +348,116 @@ class Dasom_Church_Columns {
                     echo '</div>';
                 } else {
                     echo '—';
+                }
+                break;
+        }
+    }
+    
+    /**
+     * Banner columns
+     */
+    public function dasom_church_banner_columns($columns) {
+        $new_columns = array();
+        
+        // Keep checkbox
+        if (isset($columns['cb'])) {
+            $new_columns['cb'] = $columns['cb'];
+        }
+        
+        $new_columns['title'] = __('배너 제목', 'dasom-church');
+        $new_columns['pc_image'] = __('PC 이미지', 'dasom-church');
+        $new_columns['mobile_image'] = __('모바일 이미지', 'dasom-church');
+        $new_columns['link_url'] = __('링크 URL', 'dasom-church');
+        $new_columns['start_date'] = __('시작 날짜', 'dasom-church');
+        $new_columns['end_date'] = __('종료 날짜', 'dasom-church');
+        $new_columns['link_target'] = __('열기 방식', 'dasom-church');
+        $new_columns['date'] = __('작성일', 'dasom-church');
+        
+        return $new_columns;
+    }
+    
+    /**
+     * Banner column content
+     */
+    public function dasom_church_banner_column_content($column, $post_id) {
+        switch ($column) {
+            case 'pc_image':
+                $pc_image = get_post_meta($post_id, 'dw_banner_pc_image', true);
+                if ($pc_image) {
+                    $url = wp_get_attachment_url($pc_image);
+                    if ($url) {
+                        echo '<img src="' . esc_url($url) . '" style="width:150px;height:auto;max-height:50px;object-fit:cover;" />';
+                    } else {
+                        echo '—';
+                    }
+                } else {
+                    echo '—';
+                }
+                break;
+                
+            case 'mobile_image':
+                $mobile_image = get_post_meta($post_id, 'dw_banner_mobile_image', true);
+                if ($mobile_image) {
+                    $url = wp_get_attachment_url($mobile_image);
+                    if ($url) {
+                        echo '<img src="' . esc_url($url) . '" style="width:80px;height:auto;max-height:50px;object-fit:cover;" />';
+                    } else {
+                        echo '—';
+                    }
+                } else {
+                    echo '—';
+                }
+                break;
+                
+            case 'link_url':
+                $link_url = get_post_meta($post_id, 'dw_banner_link_url', true);
+                if ($link_url) {
+                    echo '<a href="' . esc_url($link_url) . '" target="_blank" style="word-break:break-all;">' . esc_html($link_url) . '</a>';
+                } else {
+                    echo '—';
+                }
+                break;
+                
+            case 'start_date':
+                $start_date = get_post_meta($post_id, 'dw_banner_start_date', true);
+                if ($start_date) {
+                    $timestamp = strtotime($start_date);
+                    if ($timestamp !== false && $timestamp > 0) {
+                        echo esc_html(date_i18n('Y-m-d H:i', $timestamp));
+                        if ($timestamp > current_time('timestamp')) {
+                            echo '<br><span style="color:#f0ad4e;">' . __('(예약됨)', 'dasom-church') . '</span>';
+                        }
+                    } else {
+                        echo '—';
+                    }
+                } else {
+                    echo __('즉시', 'dasom-church');
+                }
+                break;
+                
+            case 'end_date':
+                $end_date = get_post_meta($post_id, 'dw_banner_end_date', true);
+                if ($end_date) {
+                    $timestamp = strtotime($end_date);
+                    if ($timestamp !== false && $timestamp > 0) {
+                        echo esc_html(date_i18n('Y-m-d H:i', $timestamp));
+                        if ($timestamp < current_time('timestamp')) {
+                            echo '<br><span style="color:#dc3545;">' . __('(만료됨)', 'dasom-church') . '</span>';
+                        }
+                    } else {
+                        echo '—';
+                    }
+                } else {
+                    echo __('무기한', 'dasom-church');
+                }
+                break;
+                
+            case 'link_target':
+                $link_target = get_post_meta($post_id, 'dw_banner_link_target', true);
+                if ($link_target === '_blank') {
+                    echo __('새 창', 'dasom-church');
+                } else {
+                    echo __('현재 창', 'dasom-church');
                 }
                 break;
         }

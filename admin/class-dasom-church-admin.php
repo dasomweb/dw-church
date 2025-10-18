@@ -65,6 +65,12 @@ class Dasom_Church_Admin {
         
         // Admin head styles
         add_action('admin_head', array($this, 'dasom_church_admin_head_styles'));
+        
+        // Banner scheduling cron
+        add_action('dasom_church_check_banner_schedule', array($this, 'dasom_church_check_expired_banners'));
+        if (!wp_next_scheduled('dasom_church_check_banner_schedule')) {
+            wp_schedule_event(time(), 'hourly', 'dasom_church_check_banner_schedule');
+        }
     }
     
     /**
@@ -221,6 +227,30 @@ class Dasom_Church_Admin {
             'show_in_menu' => 'dasom-church-admin',
             'menu_position' => 4,
             'supports' => array('title', 'thumbnail'),
+            'show_in_rest' => false,
+            'capability_type' => 'post',
+            'map_meta_cap' => true,
+        ));
+        
+        // 배너
+        register_post_type('banner', array(
+            'labels' => array(
+                'name' => __('배너', 'dasom-church'),
+                'singular_name' => __('배너', 'dasom-church'),
+                'menu_name' => __('배너', 'dasom-church'),
+                'add_new' => __('새 배너 추가', 'dasom-church'),
+                'add_new_item' => __('새 배너 추가', 'dasom-church'),
+                'edit_item' => __('배너 편집', 'dasom-church'),
+                'new_item' => __('새 배너', 'dasom-church'),
+                'view_item' => __('배너 보기', 'dasom-church'),
+                'search_items' => __('배너 검색', 'dasom-church'),
+                'not_found' => __('배너를 찾을 수 없습니다', 'dasom-church'),
+                'not_found_in_trash' => __('휴지통에서 배너를 찾을 수 없습니다', 'dasom-church'),
+            ),
+            'public' => true,
+            'show_in_menu' => 'dasom-church-admin',
+            'menu_position' => 5,
+            'supports' => array('title'),
             'show_in_rest' => false,
             'capability_type' => 'post',
             'map_meta_cap' => true,
@@ -540,6 +570,41 @@ class Dasom_Church_Admin {
         global $post_type;
         if (in_array($post_type, array('bulletin', 'sermon'))) {
             echo '<style>#titlediv { display: none; }</style>';
+        }
+    }
+    
+    /**
+     * Check and update expired banners
+     */
+    public function dasom_church_check_expired_banners() {
+        $args = array(
+            'post_type' => 'banner',
+            'post_status' => 'publish',
+            'posts_per_page' => -1,
+            'meta_query' => array(
+                array(
+                    'key' => 'dw_banner_end_date',
+                    'value' => '',
+                    'compare' => '!='
+                )
+            )
+        );
+        
+        $banners = get_posts($args);
+        $current_time = current_time('timestamp');
+        
+        foreach ($banners as $banner) {
+            $end_date = get_post_meta($banner->ID, 'dw_banner_end_date', true);
+            if (!empty($end_date)) {
+                $end_timestamp = strtotime($end_date);
+                if ($end_timestamp && $end_timestamp < $current_time) {
+                    wp_update_post(array(
+                        'ID' => $banner->ID,
+                        'post_status' => 'draft'
+                    ));
+                    error_log('Banner ID ' . $banner->ID . ' expired and set to draft');
+                }
+            }
         }
     }
     
