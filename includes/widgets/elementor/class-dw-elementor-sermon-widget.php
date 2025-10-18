@@ -117,86 +117,24 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'show_date',
             [
-                'label' => __('Show Date', 'dasom-church'),
+                'label' => __('날짜 표시', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
                 'label_on' => __('Yes', 'dasom-church'),
                 'label_off' => __('No', 'dasom-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
-            ]
-        );
-        
-        $this->add_control(
-            'show_date_icon',
-            [
-                'label' => __('날짜 아이콘 표시', 'dasom-church'),
-                'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
-                'return_value' => 'yes',
-                'default' => 'yes',
-                'condition' => [
-                    'show_date' => 'yes',
-                ],
-            ]
-        );
-        
-        $this->add_control(
-            'date_icon',
-            [
-                'label' => __('날짜 아이콘', 'dasom-church'),
-                'type' => \Elementor\Controls_Manager::ICONS,
-                'default' => [
-                    'value' => 'fas fa-calendar-alt',
-                    'library' => 'fa-solid',
-                ],
-                'condition' => [
-                    'show_date' => 'yes',
-                    'show_date_icon' => 'yes',
-                ],
             ]
         );
         
         $this->add_control(
             'show_preacher',
             [
-                'label' => __('Show Preacher', 'dasom-church'),
+                'label' => __('설교자 표시', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
                 'label_on' => __('Yes', 'dasom-church'),
                 'label_off' => __('No', 'dasom-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
-            ]
-        );
-        
-        $this->add_control(
-            'show_preacher_icon',
-            [
-                'label' => __('설교자 아이콘 표시', 'dasom-church'),
-                'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
-                'return_value' => 'yes',
-                'default' => 'yes',
-                'condition' => [
-                    'show_preacher' => 'yes',
-                ],
-            ]
-        );
-        
-        $this->add_control(
-            'preacher_icon',
-            [
-                'label' => __('설교자 아이콘', 'dasom-church'),
-                'type' => \Elementor\Controls_Manager::ICONS,
-                'default' => [
-                    'value' => 'fas fa-user',
-                    'library' => 'fa-solid',
-                ],
-                'condition' => [
-                    'show_preacher' => 'yes',
-                    'show_preacher_icon' => 'yes',
-                ],
             ]
         );
         
@@ -457,37 +395,6 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         );
         
         $this->add_control(
-            'date_icon_color',
-            [
-                'label' => __('날짜 아이콘 색상', 'dasom-church'),
-                'type' => \Elementor\Controls_Manager::COLOR,
-                'selectors' => [
-                    '{{WRAPPER}} .sermon-date i' => 'color: {{VALUE}};',
-                    '{{WRAPPER}} .sermon-date svg' => 'fill: {{VALUE}};',
-                ],
-            ]
-        );
-        
-        $this->add_control(
-            'date_icon_size',
-            [
-                'label' => __('날짜 아이콘 크기', 'dasom-church'),
-                'type' => \Elementor\Controls_Manager::SLIDER,
-                'size_units' => ['px'],
-                'range' => [
-                    'px' => [
-                        'min' => 8,
-                        'max' => 50,
-                    ],
-                ],
-                'selectors' => [
-                    '{{WRAPPER}} .sermon-date i' => 'font-size: {{SIZE}}{{UNIT}};',
-                    '{{WRAPPER}} .sermon-date svg' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}};',
-                ],
-            ]
-        );
-        
-        $this->add_control(
             'preacher_heading',
             [
                 'label' => __('설교자 스타일', 'dasom-church'),
@@ -535,37 +442,6 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
                 ],
                 'selectors' => [
                     '{{WRAPPER}} .sermon-preacher' => 'margin-bottom: {{SIZE}}{{UNIT}};',
-                ],
-            ]
-        );
-        
-        $this->add_control(
-            'preacher_icon_color',
-            [
-                'label' => __('설교자 아이콘 색상', 'dasom-church'),
-                'type' => \Elementor\Controls_Manager::COLOR,
-                'selectors' => [
-                    '{{WRAPPER}} .sermon-preacher i' => 'color: {{VALUE}};',
-                    '{{WRAPPER}} .sermon-preacher svg' => 'fill: {{VALUE}};',
-                ],
-            ]
-        );
-        
-        $this->add_control(
-            'preacher_icon_size',
-            [
-                'label' => __('설교자 아이콘 크기', 'dasom-church'),
-                'type' => \Elementor\Controls_Manager::SLIDER,
-                'size_units' => ['px'],
-                'range' => [
-                    'px' => [
-                        'min' => 8,
-                        'max' => 50,
-                    ],
-                ],
-                'selectors' => [
-                    '{{WRAPPER}} .sermon-preacher i' => 'font-size: {{SIZE}}{{UNIT}};',
-                    '{{WRAPPER}} .sermon-preacher svg' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}};',
                 ],
             ]
         );
@@ -819,31 +695,11 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             echo '<h3><a href="' . get_permalink() . '">' . get_the_title() . '</a></h3>';
             
             if (($settings['show_date'] ?? 'yes') === 'yes' && $sermon_date) {
-                $date_icon = '';
-                if (($settings['show_date_icon'] ?? 'yes') === 'yes') {
-                    if (!empty($settings['date_icon']['value'])) {
-                        ob_start();
-                        \Elementor\Icons_Manager::render_icon($settings['date_icon'], ['aria-hidden' => 'true']);
-                        $date_icon = ob_get_clean() . ' ';
-                    } else {
-                        $date_icon = '📅 ';
-                    }
-                }
-                echo '<div class="sermon-date">' . $date_icon . date_i18n('Y-m-d', strtotime($sermon_date)) . '</div>';
+                echo '<div class="sermon-date">' . date_i18n('Y-m-d', strtotime($sermon_date)) . '</div>';
             }
             
             if (($settings['show_preacher'] ?? 'yes') === 'yes' && !empty($preachers)) {
-                $preacher_icon = '';
-                if (($settings['show_preacher_icon'] ?? 'yes') === 'yes') {
-                    if (!empty($settings['preacher_icon']['value'])) {
-                        ob_start();
-                        \Elementor\Icons_Manager::render_icon($settings['preacher_icon'], ['aria-hidden' => 'true']);
-                        $preacher_icon = ob_get_clean() . ' ';
-                    } else {
-                        $preacher_icon = '👤 ';
-                    }
-                }
-                echo '<div class="sermon-preacher">' . $preacher_icon . esc_html(implode(', ', $preachers)) . '</div>';
+                echo '<div class="sermon-preacher">' . esc_html(implode(', ', $preachers)) . '</div>';
             }
             
             if (($settings['show_scripture'] ?? 'yes') === 'yes' && !empty($scripture)) {
