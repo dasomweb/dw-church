@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.21.1
+Stable tag: 1.22.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,14 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.22.0 =
+* Feature: Responsive slider height control in widget settings
+* Feature: Multiple units support (px, vh, %) for height adjustment
+* Feature: Device-specific height settings (Desktop, Tablet, Mobile)
+* Enhancement: Removed hardcoded 500px min-height constraint
+* UI: Slider control with range 200-1000px, 10-100vh, 10-100%
+* Flexibility: Users can now set custom heights per device
 
 = 1.21.1 =
 * Fix: All banner images now display as background (not img tag)

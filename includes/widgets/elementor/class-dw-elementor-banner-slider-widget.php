@@ -223,6 +223,39 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
             ]
         );
         
+        $this->add_responsive_control(
+            'slider_height',
+            [
+                'label' => __('Slider Height', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', 'vh', '%'],
+                'range' => [
+                    'px' => [
+                        'min' => 200,
+                        'max' => 1000,
+                        'step' => 10,
+                    ],
+                    'vh' => [
+                        'min' => 10,
+                        'max' => 100,
+                        'step' => 1,
+                    ],
+                    '%' => [
+                        'min' => 10,
+                        'max' => 100,
+                        'step' => 1,
+                    ],
+                ],
+                'default' => [
+                    'unit' => 'px',
+                    'size' => 500,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-banner-bg' => 'min-height: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
         $this->end_controls_section();
         
         // Style Tab - Text Overlay Settings
@@ -542,7 +575,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
                     }
                     
                     // Background with text overlay
-                    echo '<div class="dw-banner-bg ' . esc_attr($banner_id) . '" style="position:relative;width:100%;background-image:url(' . esc_url($image_url) . ');background-size:cover;min-height:500px;display:flex;align-items:' . esc_attr($v_align_style) . ';">';
+                    echo '<div class="dw-banner-bg ' . esc_attr($banner_id) . '" style="position:relative;width:100%;background-image:url(' . esc_url($image_url) . ');background-size:cover;display:flex;align-items:' . esc_attr($v_align_style) . ';">';
                     
                     echo '<div class="dw-banner-text-content ' . esc_attr($text_content_id) . '" style="padding:' . esc_attr($padding_top) . 'px ' . esc_attr($padding_right) . 'px ' . esc_attr($padding_bottom) . 'px ' . esc_attr($padding_left) . 'px;width:100%;' . $container_margin . 'text-align:' . esc_attr($text_alignment) . ';position:relative;z-index:2;">';
                     
@@ -560,7 +593,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
                     echo '</div>'; // banner-bg
                 } else {
                     // Background image only (no text overlay)
-                    echo '<div class="dw-banner-bg ' . esc_attr($banner_id) . '" style="position:relative;width:100%;background-image:url(' . esc_url($image_url) . ');background-size:cover;min-height:500px;"></div>';
+                    echo '<div class="dw-banner-bg ' . esc_attr($banner_id) . '" style="position:relative;width:100%;background-image:url(' . esc_url($image_url) . ');background-size:cover;"></div>';
                 }
             }
             
