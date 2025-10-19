@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.24.4
+Stable tag: 1.25.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,16 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.25.0 =
+* Feature: Add Event custom post type
+* Feature: Add Event meta boxes (background image, date/time, URL, description, YouTube)
+* Feature: Add DW Event Grid widget for Elementor
+* Feature: Event text positioning (9 positions) and alignment options
+* Feature: Event content padding controls
+* Feature: YouTube thumbnail fetch functionality
+* Enhancement: Event grid with responsive layout controls
+* Enhancement: Customizable button style and text for events
 
 = 1.24.4 =
 * Fix: Add !important to CSS rules to ensure proper application

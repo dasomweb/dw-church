@@ -255,6 +255,30 @@ class Dasom_Church_Admin {
             'capability_type' => 'post',
             'map_meta_cap' => true,
         ));
+        
+        // 이벤트
+        register_post_type('event', array(
+            'labels' => array(
+                'name' => __('이벤트', 'dasom-church'),
+                'singular_name' => __('이벤트', 'dasom-church'),
+                'menu_name' => __('이벤트', 'dasom-church'),
+                'add_new' => __('새 이벤트 추가', 'dasom-church'),
+                'add_new_item' => __('새 이벤트 추가', 'dasom-church'),
+                'edit_item' => __('이벤트 편집', 'dasom-church'),
+                'new_item' => __('새 이벤트', 'dasom-church'),
+                'view_item' => __('이벤트 보기', 'dasom-church'),
+                'search_items' => __('이벤트 검색', 'dasom-church'),
+                'not_found' => __('이벤트를 찾을 수 없습니다', 'dasom-church'),
+                'not_found_in_trash' => __('휴지통에서 이벤트를 찾을 수 없습니다', 'dasom-church'),
+            ),
+            'public' => true,
+            'show_in_menu' => 'dasom-church-admin',
+            'menu_position' => 6,
+            'supports' => array('title', 'editor', 'thumbnail'),
+            'show_in_rest' => true,
+            'capability_type' => 'post',
+            'map_meta_cap' => true,
+        ));
     }
     
     /**
