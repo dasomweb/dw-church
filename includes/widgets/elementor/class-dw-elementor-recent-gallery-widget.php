@@ -234,6 +234,18 @@ class DW_Elementor_Recent_Gallery_Widget extends \Elementor\Widget_Base {
             ]
         );
         
+        $this->add_control(
+            'enable_pagination',
+            [
+                'label' => __('Enable Pagination', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SWITCHER,
+                'label_on' => __('Yes', 'dasom-church'),
+                'label_off' => __('No', 'dasom-church'),
+                'return_value' => 'yes',
+                'default' => 'no',
+            ]
+        );
+        
         $this->end_controls_section();
         
         // Style Tab - Image Style
@@ -462,10 +474,118 @@ class DW_Elementor_Recent_Gallery_Widget extends \Elementor\Widget_Base {
         );
         
         $this->end_controls_section();
+        
+        // Style Tab - Pagination Style
+        $this->start_controls_section(
+            'pagination_style_section',
+            [
+                'label' => __('Pagination Style', 'dasom-church'),
+                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+                'condition' => [
+                    'enable_pagination' => 'yes',
+                ],
+            ]
+        );
+        
+        $this->add_group_control(
+            \Elementor\Group_Control_Typography::get_type(),
+            [
+                'name' => 'pagination_typography',
+                'label' => __('Typography', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-pagination a, {{WRAPPER}} .dw-pagination span',
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'pagination_spacing',
+            [
+                'label' => __('Spacing', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 100,
+                    ],
+                ],
+                'default' => [
+                    'size' => 30,
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-pagination' => 'margin-top: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'pagination_color',
+            [
+                'label' => __('Text Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#333333',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-pagination a' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'pagination_bg_color',
+            [
+                'label' => __('Background Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#ffffff',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-pagination a' => 'background-color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'pagination_border_color',
+            [
+                'label' => __('Border Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#e0e0e0',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-pagination a' => 'border-color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'pagination_active_color',
+            [
+                'label' => __('Active Text Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#ffffff',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-pagination .current' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'pagination_active_bg_color',
+            [
+                'label' => __('Active Background Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#000000',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-pagination .current' => 'background-color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->end_controls_section();
     }
     
     protected function render() {
         $settings = $this->get_settings_for_display();
+        
+        $enable_pagination = $settings['enable_pagination'] ?? 'no';
+        $paged = (get_query_var('paged')) ? get_query_var('paged') : 1;
         
         $args = array(
             'post_type' => 'album',
@@ -474,6 +594,11 @@ class DW_Elementor_Recent_Gallery_Widget extends \Elementor\Widget_Base {
             'orderby' => 'date',
             'order' => 'DESC',
         );
+        
+        // Add pagination if enabled
+        if ($enable_pagination === 'yes') {
+            $args['paged'] = $paged;
+        }
         
         $query = new WP_Query($args);
         
@@ -644,6 +769,105 @@ class DW_Elementor_Recent_Gallery_Widget extends \Elementor\Widget_Base {
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
+            }
+        </style>
+        <?php
+        
+        // Display pagination if enabled
+        if ($enable_pagination === 'yes') {
+            $this->render_pagination($query);
+        }
+    }
+    
+    /**
+     * Render pagination HTML
+     */
+    private function render_pagination($query) {
+        if ($query->max_num_pages <= 1) {
+            return;
+        }
+        
+        $paged = max(1, get_query_var('paged'));
+        $max_pages = $query->max_num_pages;
+        
+        echo '<div class="dw-pagination">';
+        
+        // First page
+        if ($paged > 1) {
+            echo '<a href="' . esc_url(get_pagenum_link(1)) . '" class="dw-pagination-link">처음</a>';
+        }
+        
+        // Previous page
+        if ($paged > 1) {
+            echo '<a href="' . esc_url(get_pagenum_link($paged - 1)) . '" class="dw-pagination-link dw-pagination-prev">‹</a>';
+        }
+        
+        // Page numbers
+        $range = 2;
+        for ($i = 1; $i <= $max_pages; $i++) {
+            if ($i == 1 || $i == $max_pages || ($i >= $paged - $range && $i <= $paged + $range)) {
+                if ($i == $paged) {
+                    echo '<span class="dw-pagination-link current">' . $i . '</span>';
+                } else {
+                    echo '<a href="' . esc_url(get_pagenum_link($i)) . '" class="dw-pagination-link">' . $i . '</a>';
+                }
+            } elseif ($i == $paged - $range - 1 || $i == $paged + $range + 1) {
+                echo '<span class="dw-pagination-dots">...</span>';
+            }
+        }
+        
+        // Next page
+        if ($paged < $max_pages) {
+            echo '<a href="' . esc_url(get_pagenum_link($paged + 1)) . '" class="dw-pagination-link dw-pagination-next">›</a>';
+        }
+        
+        // Last page
+        if ($paged < $max_pages) {
+            echo '<a href="' . esc_url(get_pagenum_link($max_pages)) . '" class="dw-pagination-link">마지막</a>';
+        }
+        
+        echo '</div>';
+        
+        // Pagination CSS
+        ?>
+        <style>
+            .dw-pagination {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+            .dw-pagination-link {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 40px;
+                height: 40px;
+                padding: 0 12px;
+                border: 1px solid #e0e0e0;
+                border-radius: 50%;
+                text-decoration: none;
+                font-size: 14px;
+                transition: all 0.3s ease;
+            }
+            .dw-pagination-link:hover {
+                background-color: #f5f5f5;
+            }
+            .dw-pagination-link.current {
+                border-color: transparent;
+            }
+            .dw-pagination-link.dw-pagination-prev,
+            .dw-pagination-link.dw-pagination-next {
+                font-size: 18px;
+            }
+            .dw-pagination-dots {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 40px;
+                height: 40px;
+                color: #999;
             }
         </style>
         <?php

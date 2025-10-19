@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.28.0
+Stable tag: 1.29.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,16 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.29.0 =
+* Feature: Add pagination to DW Recent Gallery widget
+* Feature: Add pagination to DW Recent Sermons widget
+* Feature: All three widgets (Event Grid, Recent Gallery, Recent Sermons) now support pagination
+* Feature: Consistent pagination design across all widgets
+* Feature: Enable Pagination toggle for each widget
+* Feature: Complete pagination style controls (typography, colors, spacing)
+* Enhancement: Beautiful circular pagination buttons with hover effects
+* Enhancement: Support for large content lists with page navigation
 
 = 1.28.0 =
 * Feature: Add pagination to DW Event Grid widget
