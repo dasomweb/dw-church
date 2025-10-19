@@ -629,6 +629,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             $bg_image_id = get_post_meta(get_the_ID(), 'dw_event_bg_image', true);
             $image_url = $bg_image_id ? wp_get_attachment_url($bg_image_id) : '';
             
+            $event_department = get_post_meta(get_the_ID(), 'dw_event_department', true);
             $event_datetime = get_post_meta(get_the_ID(), 'dw_event_datetime', true);
             $event_url = get_post_meta(get_the_ID(), 'dw_event_url', true);
             $event_url_target = get_post_meta(get_the_ID(), 'dw_event_url_target', true);
@@ -644,12 +645,20 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 echo '<div class="dw-event-grid-text" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:' . esc_attr($v_align_style) . ';justify-content:' . esc_attr($h_align_style) . ';">';
                 echo '<div class="dw-event-grid-text-content" style="z-index:1;">';
                 
-                if ($event_datetime) {
-                    echo '<div class="dw-event-grid-datetime" style="margin-bottom:10px;">' . esc_html($event_datetime) . '</div>';
+                // Department
+                if ($event_department) {
+                    echo '<div class="dw-event-grid-department" style="margin-bottom:8px;">' . esc_html($event_department) . '</div>';
                 }
                 
-                echo '<h3 class="dw-event-grid-title" style="margin:0 0 15px 0;">' . esc_html(get_the_title()) . '</h3>';
+                // Title
+                echo '<h3 class="dw-event-grid-title" style="margin:0 0 10px 0;">' . esc_html(get_the_title()) . '</h3>';
                 
+                // Date/Time
+                if ($event_datetime) {
+                    echo '<div class="dw-event-grid-datetime" style="margin-bottom:15px;">' . esc_html($event_datetime) . '</div>';
+                }
+                
+                // Read More button
                 if ($event_url) {
                     echo '<a href="' . esc_url($event_url) . '" target="' . esc_attr($event_url_target) . '" class="dw-event-grid-button" style="display:inline-block;text-decoration:none;transition:all 0.3s ease;">' . esc_html($button_text) . '</a>';
                 }

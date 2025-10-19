@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.25.5
+Stable tag: 1.26.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.26.0 =
+* Feature: Add Department field to Event post type
+* Change: Update Event Grid widget display order (Department → Title → Date/Time)
+* Enhancement: Display event department information in grid layout
+* Improvement: Better event information organization
 
 = 1.25.5 =
 * Change: Update Event description label (remove "간단한")

@@ -773,6 +773,7 @@ class Dasom_Church_Meta_Boxes {
         wp_nonce_field('dasom_church_event_meta', 'dasom_church_event_nonce');
         
         $bg_image = get_post_meta($post->ID, 'dw_event_bg_image', true);
+        $event_department = get_post_meta($post->ID, 'dw_event_department', true);
         $event_datetime = get_post_meta($post->ID, 'dw_event_datetime', true);
         $event_url = get_post_meta($post->ID, 'dw_event_url', true);
         $event_url_target = get_post_meta($post->ID, 'dw_event_url_target', true);
@@ -802,6 +803,15 @@ class Dasom_Church_Meta_Boxes {
                             <img src="<?php echo esc_url(wp_get_attachment_url($bg_image)); ?>" style="max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;" />
                         <?php endif; ?>
                     </div>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="dw_event_department"><?php _e('부서', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <input type="text" id="dw_event_department" name="dw_event_department" value="<?php echo esc_attr($event_department); ?>" class="regular-text" placeholder="예: 청년부, 유년부" />
+                    <p class="description"><?php _e('이벤트를 주관하는 부서를 입력하세요.', 'dasom-church'); ?></p>
                 </td>
             </tr>
             <tr>
@@ -1307,6 +1317,11 @@ class Dasom_Church_Meta_Boxes {
             if ($bg_image_id > 0) {
                 set_post_thumbnail($post_id, $bg_image_id);
             }
+        }
+        
+        // Save event department
+        if (isset($_POST['dw_event_department'])) {
+            update_post_meta($post_id, 'dw_event_department', sanitize_text_field($_POST['dw_event_department']));
         }
         
         // Save event datetime (free text)
