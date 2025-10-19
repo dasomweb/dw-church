@@ -210,16 +210,31 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             ]
         );
         
-        $this->add_responsive_control(
-            'min_height',
+        $this->add_control(
+            'height_ratio',
             [
-                'label' => __('Minimum Height', 'dasom-church'),
+                'label' => __('Height Ratio', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => '16:9',
+                'options' => [
+                    '4:3' => __('4:3', 'dasom-church'),
+                    '16:9' => __('16:9', 'dasom-church'),
+                    '9:16' => __('9:16', 'dasom-church'),
+                    'custom' => __('Custom', 'dasom-church'),
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'custom_height',
+            [
+                'label' => __('Custom Height', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px', 'vh'],
                 'range' => [
                     'px' => [
                         'min' => 200,
-                        'max' => 800,
+                        'max' => 1000,
                     ],
                     'vh' => [
                         'min' => 20,
@@ -230,8 +245,8 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     'size' => 400,
                     'unit' => 'px',
                 ],
-                'selectors' => [
-                    '{{WRAPPER}} .dw-event-grid-image' => 'min-height: {{SIZE}}{{UNIT}};',
+                'condition' => [
+                    'height_ratio' => 'custom',
                 ],
             ]
         );
@@ -620,6 +635,25 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $v_align_style = $v_align === 'top' ? 'flex-start' : ($v_align === 'bottom' ? 'flex-end' : 'center');
         $h_align_style = $h_align === 'left' ? 'flex-start' : ($h_align === 'right' ? 'flex-end' : 'center');
         
+        // Calculate height style based on ratio
+        $height_ratio = $settings['height_ratio'] ?? '16:9';
+        $height_style = '';
+        
+        if ($height_ratio === 'custom') {
+            $custom_height = $settings['custom_height']['size'] ?? 400;
+            $custom_unit = $settings['custom_height']['unit'] ?? 'px';
+            $height_style = 'height:' . $custom_height . $custom_unit . ';';
+        } else {
+            // Use padding-top for aspect ratio
+            $ratio_map = [
+                '4:3' => '75%',      // 3/4 * 100
+                '16:9' => '56.25%',  // 9/16 * 100
+                '9:16' => '177.78%', // 16/9 * 100
+            ];
+            $padding = $ratio_map[$height_ratio] ?? '56.25%';
+            $height_style = 'padding-top:' . $padding . ';';
+        }
+        
         echo '<div class="dw-event-grid-wrapper">';
         echo '<div class="dw-event-grid">';
         
@@ -638,7 +672,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             echo '<div class="dw-event-grid-item">';
             
             if ($image_url) {
-                echo '<div class="dw-event-grid-image" style="position:relative;background-image:url(' . esc_url($image_url) . ');background-size:cover;background-position:center center;width:100%;">';
+                echo '<div class="dw-event-grid-image" style="position:relative;background-image:url(' . esc_url($image_url) . ');background-size:cover;background-position:center center;width:100%;' . esc_attr($height_style) . '">';
                 
                 echo '<div class="dw-event-grid-overlay" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);"></div>';
                 
