@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.26.3
+Stable tag: 1.27.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,17 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.27.0 =
+* Feature: Add new DW Event widget for single event display
+* Feature: Desktop layout - Image (40%) left, content (60%) right
+* Feature: Mobile layout - Vertical stacking (Image → Content)
+* Feature: Adjustable image ratio (1:1, 4:3, 16:9, 21:9, Custom)
+* Feature: Responsive image width control
+* Feature: Query options (Current Post, Latest Post, Manual Selection)
+* Feature: Typography and color controls for all text elements
+* Feature: Clickable title with event URL support
+* Enhancement: Display format - Title, Date/Time | Department, Description
 
 = 1.26.3 =
 * Enhancement: Make event title clickable with event URL

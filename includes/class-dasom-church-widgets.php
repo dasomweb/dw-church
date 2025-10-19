@@ -103,6 +103,12 @@ class Dasom_Church_Widgets {
                 require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/widgets/elementor/class-dw-elementor-event-grid-widget.php';
                 $widgets_manager->register(new DW_Elementor_Event_Grid_Widget());
             }
+            
+            // Event Widget
+            if (get_option('dw_enable_event_widget', 'yes') === 'yes') {
+                require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/widgets/elementor/class-dw-elementor-event-widget.php';
+                $widgets_manager->register(new DW_Elementor_Event_Widget());
+            }
         } catch (Exception $e) {
             // Log error but don't break plugin activation
             error_log('DW Church Management: Widget registration error - ' . $e->getMessage());
