@@ -217,6 +217,48 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
             ]
         );
         
+        $this->add_control(
+            'image_object_fit',
+            [
+                'label' => __('Object Fit', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'cover',
+                'options' => [
+                    'fill' => __('Fill', 'dasom-church'),
+                    'contain' => __('Contain', 'dasom-church'),
+                    'cover' => __('Cover', 'dasom-church'),
+                    'none' => __('None', 'dasom-church'),
+                    'scale-down' => __('Scale Down', 'dasom-church'),
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-image' => 'background-size: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'image_object_position',
+            [
+                'label' => __('Object Position', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'center center',
+                'options' => [
+                    'center center' => __('Center Center', 'dasom-church'),
+                    'center top' => __('Center Top', 'dasom-church'),
+                    'center bottom' => __('Center Bottom', 'dasom-church'),
+                    'left center' => __('Left Center', 'dasom-church'),
+                    'left top' => __('Left Top', 'dasom-church'),
+                    'left bottom' => __('Left Bottom', 'dasom-church'),
+                    'right center' => __('Right Center', 'dasom-church'),
+                    'right top' => __('Right Top', 'dasom-church'),
+                    'right bottom' => __('Right Bottom', 'dasom-church'),
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-image' => 'background-position: {{VALUE}};',
+                ],
+            ]
+        );
+        
         $this->end_controls_section();
         
         // Style Section - Department
