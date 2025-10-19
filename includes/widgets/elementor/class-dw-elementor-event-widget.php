@@ -348,11 +348,11 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
         
         $this->end_controls_section();
         
-        // Style Section - Meta (Date/Time)
+        // Style Section - Meta (Date/Time | Department)
         $this->start_controls_section(
             'meta_style_section',
             [
-                'label' => __('Meta (Date/Department)', 'dasom-church'),
+                'label' => __('Meta (Date/Time | Department)', 'dasom-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
