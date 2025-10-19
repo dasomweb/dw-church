@@ -348,11 +348,11 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
         
         $this->end_controls_section();
         
-        // Style Section - Meta (Date/Time | Department)
+        // Style Section - Department
         $this->start_controls_section(
-            'meta_style_section',
+            'department_style_section',
             [
-                'label' => __('Meta (Date/Time | Department)', 'dasom-church'),
+                'label' => __('Department', 'dasom-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
@@ -360,26 +360,26 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
         $this->add_group_control(
             \Elementor\Group_Control_Typography::get_type(),
             [
-                'name' => 'meta_typography',
+                'name' => 'department_typography',
                 'label' => __('Typography', 'dasom-church'),
-                'selector' => '{{WRAPPER}} .dw-event-meta',
+                'selector' => '{{WRAPPER}} .dw-event-department',
             ]
         );
         
         $this->add_control(
-            'meta_color',
+            'department_color',
             [
                 'label' => __('Color', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
-                'default' => '#999999',
+                'default' => '#666666',
                 'selectors' => [
-                    '{{WRAPPER}} .dw-event-meta' => 'color: {{VALUE}};',
+                    '{{WRAPPER}} .dw-event-department' => 'color: {{VALUE}};',
                 ],
             ]
         );
         
         $this->add_responsive_control(
-            'meta_spacing',
+            'department_spacing',
             [
                 'label' => __('Spacing', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
@@ -391,11 +391,65 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
                     ],
                 ],
                 'default' => [
-                    'size' => 20,
+                    'size' => 10,
                     'unit' => 'px',
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .dw-event-meta' => 'margin-bottom: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .dw-event-department' => 'margin-bottom: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->end_controls_section();
+        
+        // Style Section - DateTime
+        $this->start_controls_section(
+            'datetime_style_section',
+            [
+                'label' => __('Date/Time', 'dasom-church'),
+                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+        
+        $this->add_group_control(
+            \Elementor\Group_Control_Typography::get_type(),
+            [
+                'name' => 'datetime_typography',
+                'label' => __('Typography', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-event-datetime',
+            ]
+        );
+        
+        $this->add_control(
+            'datetime_color',
+            [
+                'label' => __('Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#888888',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-datetime' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'datetime_spacing',
+            [
+                'label' => __('Spacing', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 50,
+                    ],
+                ],
+                'default' => [
+                    'size' => 15,
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-datetime' => 'margin-bottom: {{SIZE}}{{UNIT}};',
                 ],
             ]
         );
@@ -428,6 +482,140 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
                 'default' => '#666666',
                 'selectors' => [
                     '{{WRAPPER}} .dw-event-description' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->end_controls_section();
+        
+        // Style Section - Button
+        $this->start_controls_section(
+            'button_style_section',
+            [
+                'label' => __('Button', 'dasom-church'),
+                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+        
+        $this->add_group_control(
+            \Elementor\Group_Control_Typography::get_type(),
+            [
+                'name' => 'button_typography',
+                'label' => __('Typography', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-event-button',
+            ]
+        );
+        
+        $this->start_controls_tabs('button_tabs');
+        
+        // Normal tab
+        $this->start_controls_tab(
+            'button_normal_tab',
+            [
+                'label' => __('Normal', 'dasom-church'),
+            ]
+        );
+        
+        $this->add_control(
+            'button_text_color',
+            [
+                'label' => __('Text Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#ffffff',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-button' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'button_bg_color',
+            [
+                'label' => __('Background Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#000000',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-button' => 'background-color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->end_controls_tab();
+        
+        // Hover tab
+        $this->start_controls_tab(
+            'button_hover_tab',
+            [
+                'label' => __('Hover', 'dasom-church'),
+            ]
+        );
+        
+        $this->add_control(
+            'button_hover_text_color',
+            [
+                'label' => __('Text Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#ffffff',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-button:hover' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'button_hover_bg_color',
+            [
+                'label' => __('Background Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#333333',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-button:hover' => 'background-color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->end_controls_tab();
+        
+        $this->end_controls_tabs();
+        
+        $this->add_responsive_control(
+            'button_padding',
+            [
+                'label' => __('Padding', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em'],
+                'default' => [
+                    'top' => 12,
+                    'right' => 30,
+                    'bottom' => 12,
+                    'left' => 30,
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-button' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+                'separator' => 'before',
+            ]
+        );
+        
+        $this->add_control(
+            'button_border_radius',
+            [
+                'label' => __('Border Radius', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', '%'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 50,
+                    ],
+                ],
+                'default' => [
+                    'size' => 4,
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-button' => 'border-radius: {{SIZE}}{{UNIT}};',
                 ],
             ]
         );
@@ -520,28 +708,24 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
                 <?php endif; ?>
                 
                 <div class="dw-event-content">
-                    <?php if ($event_url): ?>
-                    <h2 class="dw-event-title"><a href="<?php echo esc_url($event_url); ?>" target="<?php echo esc_attr($event_url_target); ?>" style="text-decoration:none;color:inherit;"><?php echo esc_html($title); ?></a></h2>
-                    <?php else: ?>
-                    <h2 class="dw-event-title"><?php echo esc_html($title); ?></h2>
+                    <?php if ($department): ?>
+                    <div class="dw-event-department"><?php echo esc_html($department); ?></div>
                     <?php endif; ?>
                     
-                    <div class="dw-event-meta">
-                        <?php if ($datetime): ?>
-                        <span class="dw-event-datetime"><?php echo esc_html($datetime); ?></span>
-                        <?php endif; ?>
-                        
-                        <?php if ($datetime && $department): ?>
-                        <span class="dw-event-separator"> | </span>
-                        <?php endif; ?>
-                        
-                        <?php if ($department): ?>
-                        <span class="dw-event-department"><?php echo esc_html($department); ?></span>
-                        <?php endif; ?>
-                    </div>
+                    <h2 class="dw-event-title"><?php echo esc_html($title); ?></h2>
+                    
+                    <?php if ($datetime): ?>
+                    <div class="dw-event-datetime"><?php echo esc_html($datetime); ?></div>
+                    <?php endif; ?>
                     
                     <?php if ($description): ?>
                     <div class="dw-event-description"><?php echo nl2br(esc_html($description)); ?></div>
+                    <?php endif; ?>
+                    
+                    <?php if ($event_url): ?>
+                    <div class="dw-event-button-wrapper">
+                        <a href="<?php echo esc_url($event_url); ?>" target="<?php echo esc_attr($event_url_target); ?>" class="dw-event-button">자세히 보기</a>
+                    </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -568,19 +752,44 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
                 min-width: 0;
             }
             
-            .dw-event-title {
-                margin: 0;
+            .dw-event-department {
+                margin-bottom: 10px;
+                font-size: 14px;
+                color: #666;
             }
             
-            .dw-event-meta {
-                display: flex;
-                flex-wrap: wrap;
-                align-items: center;
-                gap: 5px;
+            .dw-event-title {
+                margin: 0 0 10px 0;
+            }
+            
+            .dw-event-datetime {
+                margin-bottom: 15px;
+                font-size: 14px;
+                color: #888;
             }
             
             .dw-event-description {
+                margin-bottom: 20px;
                 line-height: 1.6;
+            }
+            
+            .dw-event-button-wrapper {
+                margin-top: 20px;
+            }
+            
+            .dw-event-button {
+                display: inline-block;
+                padding: 12px 30px;
+                background-color: #000;
+                color: #fff;
+                text-decoration: none;
+                border-radius: 4px;
+                transition: all 0.3s ease;
+            }
+            
+            .dw-event-button:hover {
+                background-color: #333;
+                transform: translateY(-2px);
             }
             
             /* Tablet */

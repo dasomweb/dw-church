@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.29.2
+Stable tag: 1.30.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,16 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.30.0 =
+* Feature: Reorganize DW Event widget content structure
+* Feature: New content order - Department → Title → Date/Time → Description → Button
+* Feature: Add "Read More" button (자세히 보기) when URL is provided
+* Feature: Split Meta section into separate Department and DateTime style controls
+* Feature: Add comprehensive Button style controls (Typography, Colors, Padding, Border Radius)
+* Feature: Independent styling for Department and Date/Time elements
+* Enhancement: Remove title link, add dedicated button instead
+* Enhancement: Better visual hierarchy and content organization
 
 = 1.29.2 =
 * Enhancement: Add light gray background (#f5f5f5) to pagination buttons
