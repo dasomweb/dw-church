@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.27.4
+Stable tag: 1.28.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,15 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.28.0 =
+* Feature: Add pagination to DW Event Grid widget
+* Feature: Pagination on/off toggle (Enable Pagination switch)
+* Feature: Beautiful pagination design matching provided screenshot
+* Feature: Pagination style controls (colors, typography, spacing)
+* Enhancement: Support for large event lists with page navigation
+* Note: Pagination only available for Latest Posts query (not Manual Selection)
+* Note: DW Recent Gallery and DW Recent Sermons pagination coming in next update
 
 = 1.27.4 =
 * Fix: Correct Meta section label to "Meta (Date/Time | Department)" in DW Event widget
