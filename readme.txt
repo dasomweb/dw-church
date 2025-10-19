@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.30.0
+Stable tag: 1.30.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.30.1 =
+* Fix: Resolve Elementor control name conflict between DW Event and DW Event Grid widgets
+* Fix: Rename all DW Event widget controls to unique names (event_single_* prefix)
+* Fix: Prevent "Cannot redeclare control" error when both widgets are on same page
+* Technical: All style section IDs now use event_single_ prefix for uniqueness
 
 = 1.30.0 =
 * Feature: Reorganize DW Event widget content structure

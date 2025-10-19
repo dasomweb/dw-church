@@ -350,7 +350,7 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
         
         // Style Section - Department
         $this->start_controls_section(
-            'department_style_section',
+            'event_single_department_style_section',
             [
                 'label' => __('Department', 'dasom-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
@@ -360,14 +360,14 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
         $this->add_group_control(
             \Elementor\Group_Control_Typography::get_type(),
             [
-                'name' => 'department_typography',
+                'name' => 'event_single_department_typography',
                 'label' => __('Typography', 'dasom-church'),
                 'selector' => '{{WRAPPER}} .dw-event-department',
             ]
         );
         
         $this->add_control(
-            'department_color',
+            'event_single_department_color',
             [
                 'label' => __('Color', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
@@ -379,7 +379,7 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
         );
         
         $this->add_responsive_control(
-            'department_spacing',
+            'event_single_department_spacing',
             [
                 'label' => __('Spacing', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
@@ -404,7 +404,7 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
         
         // Style Section - DateTime
         $this->start_controls_section(
-            'datetime_style_section',
+            'event_single_datetime_style_section',
             [
                 'label' => __('Date/Time', 'dasom-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
@@ -414,14 +414,14 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
         $this->add_group_control(
             \Elementor\Group_Control_Typography::get_type(),
             [
-                'name' => 'datetime_typography',
+                'name' => 'event_single_datetime_typography',
                 'label' => __('Typography', 'dasom-church'),
                 'selector' => '{{WRAPPER}} .dw-event-datetime',
             ]
         );
         
         $this->add_control(
-            'datetime_color',
+            'event_single_datetime_color',
             [
                 'label' => __('Color', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
@@ -433,7 +433,7 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
         );
         
         $this->add_responsive_control(
-            'datetime_spacing',
+            'event_single_datetime_spacing',
             [
                 'label' => __('Spacing', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
@@ -458,7 +458,7 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
         
         // Style Section - Description
         $this->start_controls_section(
-            'description_style_section',
+            'event_single_description_style_section',
             [
                 'label' => __('Description', 'dasom-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
@@ -468,14 +468,14 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
         $this->add_group_control(
             \Elementor\Group_Control_Typography::get_type(),
             [
-                'name' => 'description_typography',
+                'name' => 'event_single_description_typography',
                 'label' => __('Typography', 'dasom-church'),
                 'selector' => '{{WRAPPER}} .dw-event-description',
             ]
         );
         
         $this->add_control(
-            'description_color',
+            'event_single_description_color',
             [
                 'label' => __('Color', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
@@ -490,7 +490,7 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
         
         // Style Section - Button
         $this->start_controls_section(
-            'button_style_section',
+            'event_single_button_style_section',
             [
                 'label' => __('Button', 'dasom-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
@@ -500,24 +500,24 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
         $this->add_group_control(
             \Elementor\Group_Control_Typography::get_type(),
             [
-                'name' => 'button_typography',
+                'name' => 'event_single_button_typography',
                 'label' => __('Typography', 'dasom-church'),
                 'selector' => '{{WRAPPER}} .dw-event-button',
             ]
         );
         
-        $this->start_controls_tabs('button_tabs');
+        $this->start_controls_tabs('event_single_button_tabs');
         
         // Normal tab
         $this->start_controls_tab(
-            'button_normal_tab',
+            'event_single_button_normal_tab',
             [
                 'label' => __('Normal', 'dasom-church'),
             ]
         );
         
         $this->add_control(
-            'button_text_color',
+            'event_single_button_text_color',
             [
                 'label' => __('Text Color', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
@@ -529,7 +529,7 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
         );
         
         $this->add_control(
-            'button_bg_color',
+            'event_single_button_bg_color',
             [
                 'label' => __('Background Color', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
@@ -544,14 +544,14 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
         
         // Hover tab
         $this->start_controls_tab(
-            'button_hover_tab',
+            'event_single_button_hover_tab',
             [
                 'label' => __('Hover', 'dasom-church'),
             ]
         );
         
         $this->add_control(
-            'button_hover_text_color',
+            'event_single_button_hover_text_color',
             [
                 'label' => __('Text Color', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
@@ -563,7 +563,7 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
         );
         
         $this->add_control(
-            'button_hover_bg_color',
+            'event_single_button_hover_bg_color',
             [
                 'label' => __('Background Color', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
@@ -579,7 +579,7 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
         $this->end_controls_tabs();
         
         $this->add_responsive_control(
-            'button_padding',
+            'event_single_button_padding',
             [
                 'label' => __('Padding', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::DIMENSIONS,
@@ -599,7 +599,7 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
         );
         
         $this->add_control(
-            'button_border_radius',
+            'event_single_button_border_radius',
             [
                 'label' => __('Border Radius', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
