@@ -631,6 +631,8 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             
             $event_datetime = get_post_meta(get_the_ID(), 'dw_event_datetime', true);
             $event_url = get_post_meta(get_the_ID(), 'dw_event_url', true);
+            $event_url_target = get_post_meta(get_the_ID(), 'dw_event_url_target', true);
+            $event_url_target = $event_url_target === '_blank' ? '_blank' : '_self';
             
             echo '<div class="dw-event-grid-item">';
             
@@ -649,7 +651,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 echo '<h3 class="dw-event-grid-title" style="margin:0 0 15px 0;">' . esc_html(get_the_title()) . '</h3>';
                 
                 if ($event_url) {
-                    echo '<a href="' . esc_url($event_url) . '" class="dw-event-grid-button" style="display:inline-block;text-decoration:none;transition:all 0.3s ease;">' . esc_html($button_text) . '</a>';
+                    echo '<a href="' . esc_url($event_url) . '" target="' . esc_attr($event_url_target) . '" class="dw-event-grid-button" style="display:inline-block;text-decoration:none;transition:all 0.3s ease;">' . esc_html($button_text) . '</a>';
                 }
                 
                 echo '</div>';

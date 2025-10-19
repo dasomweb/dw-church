@@ -27,7 +27,6 @@
                 this.initYouTubeThumbnails();
                 this.initFormValidation();
                 this.initBannerAdditionalUploaders();
-                this.initEventUploaders();
     },
     
     /**
@@ -349,36 +348,6 @@
             $('#dw_banner_end_date_reset').on('click', function(e) {
                 e.preventDefault();
                 $('#dw_banner_end_date').val('');
-            });
-        }
-    },
-    
-    /**
-     * Initialize Event uploaders
-     */
-    initEventUploaders: function() {
-        var self = this;
-        
-        if ($('body').hasClass('post-type-event')) {
-            // Event background image uploader
-            $('#dw_event_bg_image_button').on('click', function(e) {
-                e.preventDefault();
-                self.openMediaFrame({
-                    title: '배경 이미지 업로드',
-                    button: { text: '선택' },
-                    library: { type: 'image' },
-                    multiple: false,
-                    onSelect: function(attachment) {
-                        $('#dw_event_bg_image').val(attachment.id);
-                        $('#dw_event_bg_image_preview').html('<img src="' + attachment.url + '" style="max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;" />');
-                    }
-                });
-            });
-            
-            $('#dw_event_bg_image_remove').on('click', function(e) {
-                e.preventDefault();
-                $('#dw_event_bg_image').val('');
-                $('#dw_event_bg_image_preview').html('');
             });
         }
     }

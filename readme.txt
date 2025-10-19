@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.25.2
+Stable tag: 1.25.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,14 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.25.3 =
+* Fix: Add Event background image upload functionality to inline JavaScript
+* Change: Remove redundant hint messages and recommended size text
+* Feature: Add "Open in new window" checkbox for Event URL
+* Enhancement: Apply URL target setting in Event Grid widget
+* Fix: Resolve media uploader button issue in Event meta box
+* Improvement: Simplified Event meta box interface
 
 = 1.25.2 =
 * Change: Move text position/alignment/padding controls from Event meta box to DW Event Grid widget

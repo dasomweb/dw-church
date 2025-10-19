@@ -783,6 +783,7 @@ class Dasom_Church_Meta_Boxes {
         $bg_image = get_post_meta($post->ID, 'dw_event_bg_image', true);
         $event_datetime = get_post_meta($post->ID, 'dw_event_datetime', true);
         $event_url = get_post_meta($post->ID, 'dw_event_url', true);
+        $event_url_target = get_post_meta($post->ID, 'dw_event_url_target', true);
         $event_description = get_post_meta($post->ID, 'dw_event_description', true);
         $youtube_url = get_post_meta($post->ID, 'dw_event_youtube_url', true);
         $thumb_id = get_post_meta($post->ID, 'dw_event_thumb_id', true);
@@ -809,7 +810,6 @@ class Dasom_Church_Meta_Boxes {
                             <img src="<?php echo esc_url(wp_get_attachment_url($bg_image)); ?>" style="max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;" />
                         <?php endif; ?>
                     </div>
-                    <p class="description"><?php _e('권장 크기: 가로 1920px', 'dasom-church'); ?></p>
                 </td>
             </tr>
             <tr>
@@ -826,7 +826,11 @@ class Dasom_Church_Meta_Boxes {
                     <label for="dw_event_url"><?php _e('이벤트 URL', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="url" id="dw_event_url" name="dw_event_url" value="<?php echo esc_url($event_url); ?>" class="regular-text" placeholder="https://example.com" />
+                    <input type="url" id="dw_event_url" name="dw_event_url" value="<?php echo esc_url($event_url); ?>" class="regular-text" placeholder="https://example.com" style="width:70%;" />
+                    <label style="margin-left:15px;">
+                        <input type="checkbox" id="dw_event_url_target" name="dw_event_url_target" value="_blank" <?php checked($event_url_target, '_blank'); ?> />
+                        <?php _e('새창으로 열기', 'dasom-church'); ?>
+                    </label>
                     <p class="description"><?php _e('이벤트 상세 페이지 또는 외부 링크 URL을 입력하세요.', 'dasom-church'); ?></p>
                 </td>
             </tr>
@@ -866,9 +870,6 @@ class Dasom_Church_Meta_Boxes {
                 </td>
             </tr>
         </table>
-        <p class="description" style="margin:15px 0;padding:15px;background:#fff3cd;border-left:4px solid #ffc107;">
-            <strong>💡 <?php _e('안내:', 'dasom-church'); ?></strong> <?php _e('텍스트 위치, 정렬, 여백 설정은 DW Event Grid 위젯의 스타일 설정에서 조정할 수 있습니다.', 'dasom-church'); ?>
-        </p>
         <?php
     }
     
@@ -1327,6 +1328,13 @@ class Dasom_Church_Meta_Boxes {
             update_post_meta($post_id, 'dw_event_url', esc_url_raw($_POST['dw_event_url']));
         }
         
+        // Save event URL target
+        if (isset($_POST['dw_event_url_target'])) {
+            update_post_meta($post_id, 'dw_event_url_target', '_blank');
+        } else {
+            update_post_meta($post_id, 'dw_event_url_target', '_self');
+        }
+        
         // Save event description
         if (isset($_POST['dw_event_description'])) {
             update_post_meta($post_id, 'dw_event_description', sanitize_textarea_field($_POST['dw_event_description']));
@@ -1698,6 +1706,32 @@ class Dasom_Church_Meta_Boxes {
             $('#dw_banner_end_date_reset').on('click', function(e) {
                 e.preventDefault();
                 $('#dw_banner_end_date').val('');
+            });
+            
+            // Event 배경 이미지 업로드
+            $('#dw_event_bg_image_button').on('click', function(e) {
+                e.preventDefault();
+                var frame = wp.media({
+                    title: '배경 이미지 업로드',
+                    button: {text: '선택'},
+                    library: {type: 'image'},
+                    multiple: false
+                });
+                frame.on('select', function() {
+                    var attachment = frame.state().get('selection').first().toJSON();
+                    $('#dw_event_bg_image').val(attachment.id);
+                    $('#dw_event_bg_image_preview').html('<img src=\"' + attachment.url + '\" style=\"max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;\" />');
+                });
+                frame.open();
+            });
+            
+            // Event 배경 이미지 삭제
+            $('#dw_event_bg_image_remove').on('click', function(e) {
+                e.preventDefault();
+                if (confirm('이미지를 삭제하시겠습니까?')) {
+                    $('#dw_event_bg_image').val('');
+                    $('#dw_event_bg_image_preview').html('');
+                }
             });
         });
         ";
