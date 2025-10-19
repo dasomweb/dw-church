@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.26.1
+Stable tag: 1.26.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,14 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.26.2 =
+* Feature: Add Department typography and color controls to Event Grid widget
+* Feature: Add spacing controls for Department, Title, and Date/Time
+* Enhancement: Separate style controls for Department, Title, and Date/Time
+* Enhancement: Responsive spacing adjustments for text elements
+* Improvement: Better visual customization for event grid text elements
+* Fix: Remove hardcoded margins in favor of Elementor controls
 
 = 1.26.1 =
 * Feature: Add height ratio options to Event Grid widget (4:3, 16:9, 9:16, Custom)

@@ -305,6 +305,58 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             ]
         );
         
+        // Department Style
+        $this->add_group_control(
+            \Elementor\Group_Control_Typography::get_type(),
+            [
+                'name' => 'department_typography',
+                'label' => __('Department Typography', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-event-grid-department',
+            ]
+        );
+        
+        $this->add_control(
+            'department_color',
+            [
+                'label' => __('Department Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#ffffff',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-department' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'department_spacing',
+            [
+                'label' => __('Department Spacing', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 50,
+                    ],
+                ],
+                'default' => [
+                    'size' => 8,
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-department' => 'margin-bottom: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'department_divider',
+            [
+                'type' => \Elementor\Controls_Manager::DIVIDER,
+            ]
+        );
+        
+        // Title Style
         $this->add_group_control(
             \Elementor\Group_Control_Typography::get_type(),
             [
@@ -326,6 +378,35 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             ]
         );
         
+        $this->add_responsive_control(
+            'title_spacing',
+            [
+                'label' => __('Title Spacing', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 50,
+                    ],
+                ],
+                'default' => [
+                    'size' => 10,
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-title' => 'margin-bottom: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'title_divider',
+            [
+                'type' => \Elementor\Controls_Manager::DIVIDER,
+            ]
+        );
+        
         $this->add_group_control(
             \Elementor\Group_Control_Typography::get_type(),
             [
@@ -343,6 +424,28 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 'default' => '#ffffff',
                 'selectors' => [
                     '{{WRAPPER}} .dw-event-grid-datetime' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'datetime_spacing',
+            [
+                'label' => __('Date/Time Spacing', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 50,
+                    ],
+                ],
+                'default' => [
+                    'size' => 15,
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-datetime' => 'margin-bottom: {{SIZE}}{{UNIT}};',
                 ],
             ]
         );
@@ -681,15 +784,15 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 
                 // Department
                 if ($event_department) {
-                    echo '<div class="dw-event-grid-department" style="margin-bottom:8px;">' . esc_html($event_department) . '</div>';
+                    echo '<div class="dw-event-grid-department">' . esc_html($event_department) . '</div>';
                 }
                 
                 // Title
-                echo '<h3 class="dw-event-grid-title" style="margin:0 0 10px 0;">' . esc_html(get_the_title()) . '</h3>';
+                echo '<h3 class="dw-event-grid-title">' . esc_html(get_the_title()) . '</h3>';
                 
                 // Date/Time
                 if ($event_datetime) {
-                    echo '<div class="dw-event-grid-datetime" style="margin-bottom:15px;">' . esc_html($event_datetime) . '</div>';
+                    echo '<div class="dw-event-grid-datetime">' . esc_html($event_datetime) . '</div>';
                 }
                 
                 // Read More button
