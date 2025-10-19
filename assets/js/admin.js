@@ -380,76 +380,7 @@
                 $('#dw_event_bg_image').val('');
                 $('#dw_event_bg_image_preview').html('');
             });
-            
-            // YouTube thumbnail uploader
-            $('#dw_event_youtube_thumbnail_button').on('click', function(e) {
-                e.preventDefault();
-                self.openMediaFrame({
-                    title: 'YouTube 썸네일 업로드',
-                    button: { text: '선택' },
-                    library: { type: 'image' },
-                    multiple: false,
-                    onSelect: function(attachment) {
-                        $('#dw_event_youtube_thumbnail').val(attachment.id);
-                        $('#dw_event_youtube_thumbnail_preview').html('<img src="' + attachment.url + '" style="max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;" />');
-                    }
-                });
-            });
-            
-            $('#dw_event_youtube_thumbnail_remove').on('click', function(e) {
-                e.preventDefault();
-                $('#dw_event_youtube_thumbnail').val('');
-                $('#dw_event_youtube_thumbnail_preview').html('');
-            });
-            
-            // YouTube thumbnail fetch button
-            $('#dw_event_youtube_fetch').on('click', function(e) {
-                e.preventDefault();
-                var youtubeUrl = $('#dw_event_youtube_url').val();
-                
-                if (!youtubeUrl) {
-                    alert('YouTube URL을 먼저 입력하세요.');
-                    return;
-                }
-                
-                // Extract video ID from YouTube URL
-                var videoId = self.extractYouTubeVideoId(youtubeUrl);
-                
-                if (!videoId) {
-                    alert('올바른 YouTube URL이 아닙니다.');
-                    return;
-                }
-                
-                // Get thumbnail URL (high quality)
-                var thumbnailUrl = 'https://img.youtube.com/vi/' + videoId + '/maxresdefault.jpg';
-                
-                // Download and set as featured image via AJAX
-                jQuery.post(ajaxurl, {
-                    action: 'dw_fetch_youtube_thumbnail',
-                    video_id: videoId,
-                    post_id: $('#post_ID').val()
-                }, function(response) {
-                    if (response.success) {
-                        $('#dw_event_youtube_thumbnail').val(response.data.attachment_id);
-                        $('#dw_event_youtube_thumbnail_preview').html('<img src="' + response.data.url + '" style="max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;" />');
-                        alert('YouTube 썸네일을 성공적으로 가져왔습니다.');
-                    } else {
-                        // Fallback: Just show the thumbnail URL
-                        $('#dw_event_youtube_thumbnail_preview').html('<img src="' + thumbnailUrl + '" style="max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;" />');
-                        alert('썸네일을 가져왔지만 미디어 라이브러리에 저장하지 못했습니다. 직접 업로드를 사용하세요.');
-                    }
-                });
-            });
         }
-    },
-    
-    /**
-     * Extract YouTube video ID from URL
-     */
-    extractYouTubeVideoId: function(url) {
-        var regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
-        var match = url.match(regExp);
-        return (match && match[7].length == 11) ? match[7] : false;
     }
 
 })(jQuery);

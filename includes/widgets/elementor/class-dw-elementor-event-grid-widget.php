@@ -332,6 +332,72 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             ]
         );
         
+        $this->add_control(
+            'text_position',
+            [
+                'label' => __('Text Position', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'center-center',
+                'options' => [
+                    'top-left' => __('상단 왼쪽', 'dasom-church'),
+                    'top-center' => __('상단 중앙', 'dasom-church'),
+                    'top-right' => __('상단 오른쪽', 'dasom-church'),
+                    'center-left' => __('중앙 왼쪽', 'dasom-church'),
+                    'center-center' => __('중앙', 'dasom-church'),
+                    'center-right' => __('중앙 오른쪽', 'dasom-church'),
+                    'bottom-left' => __('하단 왼쪽', 'dasom-church'),
+                    'bottom-center' => __('하단 중앙', 'dasom-church'),
+                    'bottom-right' => __('하단 오른쪽', 'dasom-church'),
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'text_align',
+            [
+                'label' => __('Text Alignment', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::CHOOSE,
+                'options' => [
+                    'left' => [
+                        'title' => __('Left', 'dasom-church'),
+                        'icon' => 'eicon-text-align-left',
+                    ],
+                    'center' => [
+                        'title' => __('Center', 'dasom-church'),
+                        'icon' => 'eicon-text-align-center',
+                    ],
+                    'right' => [
+                        'title' => __('Right', 'dasom-church'),
+                        'icon' => 'eicon-text-align-right',
+                    ],
+                ],
+                'default' => 'center',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-text-content' => 'text-align: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'content_padding',
+            [
+                'label' => __('Content Padding', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em', '%'],
+                'default' => [
+                    'top' => '40',
+                    'right' => '40',
+                    'bottom' => '40',
+                    'left' => '40',
+                    'unit' => 'px',
+                    'isLinked' => false,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-text' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+        
         $this->end_controls_section();
         
         // Style Tab - Button Style
@@ -548,6 +614,11 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         }
         
         $button_text = $settings['button_text'] ?? __('Read More', 'dasom-church');
+        $text_position = $settings['text_position'] ?? 'center-center';
+        
+        list($v_align, $h_align) = explode('-', $text_position);
+        $v_align_style = $v_align === 'top' ? 'flex-start' : ($v_align === 'bottom' ? 'flex-end' : 'center');
+        $h_align_style = $h_align === 'left' ? 'flex-start' : ($h_align === 'right' ? 'flex-end' : 'center');
         
         echo '<div class="dw-event-grid-wrapper">';
         echo '<div class="dw-event-grid">';
@@ -561,26 +632,6 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             $event_datetime = get_post_meta(get_the_ID(), 'dw_event_datetime', true);
             $event_url = get_post_meta(get_the_ID(), 'dw_event_url', true);
             
-            // Get text position and alignment
-            $text_position = get_post_meta(get_the_ID(), 'dw_event_text_position', true);
-            $text_position = $text_position ? $text_position : 'center-center';
-            $text_align = get_post_meta(get_the_ID(), 'dw_event_text_align', true);
-            $text_align = $text_align ? $text_align : 'center';
-            
-            // Get content padding
-            $padding_top = get_post_meta(get_the_ID(), 'dw_event_content_padding_top', true);
-            $padding_top = $padding_top ? $padding_top : '40';
-            $padding_right = get_post_meta(get_the_ID(), 'dw_event_content_padding_right', true);
-            $padding_right = $padding_right ? $padding_right : '40';
-            $padding_bottom = get_post_meta(get_the_ID(), 'dw_event_content_padding_bottom', true);
-            $padding_bottom = $padding_bottom ? $padding_bottom : '40';
-            $padding_left = get_post_meta(get_the_ID(), 'dw_event_content_padding_left', true);
-            $padding_left = $padding_left ? $padding_left : '40';
-            
-            list($v_align, $h_align) = explode('-', $text_position);
-            $v_align_style = $v_align === 'top' ? 'flex-start' : ($v_align === 'bottom' ? 'flex-end' : 'center');
-            $h_align_style = $h_align === 'left' ? 'flex-start' : ($h_align === 'right' ? 'flex-end' : 'center');
-            
             echo '<div class="dw-event-grid-item">';
             
             if ($image_url) {
@@ -588,8 +639,8 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 
                 echo '<div class="dw-event-grid-overlay" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);"></div>';
                 
-                echo '<div class="dw-event-grid-text" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:' . esc_attr($v_align_style) . ';justify-content:' . esc_attr($h_align_style) . ';padding:' . esc_attr($padding_top) . 'px ' . esc_attr($padding_right) . 'px ' . esc_attr($padding_bottom) . 'px ' . esc_attr($padding_left) . 'px;">';
-                echo '<div class="dw-event-grid-text-content" style="text-align:' . esc_attr($text_align) . ';z-index:1;">';
+                echo '<div class="dw-event-grid-text" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:' . esc_attr($v_align_style) . ';justify-content:' . esc_attr($h_align_style) . ';">';
+                echo '<div class="dw-event-grid-text-content" style="z-index:1;">';
                 
                 if ($event_datetime) {
                     echo '<div class="dw-event-grid-datetime" style="margin-bottom:10px;">' . esc_html($event_datetime) . '</div>';

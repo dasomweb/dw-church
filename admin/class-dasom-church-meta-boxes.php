@@ -785,19 +785,7 @@ class Dasom_Church_Meta_Boxes {
         $event_url = get_post_meta($post->ID, 'dw_event_url', true);
         $event_description = get_post_meta($post->ID, 'dw_event_description', true);
         $youtube_url = get_post_meta($post->ID, 'dw_event_youtube_url', true);
-        $youtube_thumbnail = get_post_meta($post->ID, 'dw_event_youtube_thumbnail', true);
-        $text_position = get_post_meta($post->ID, 'dw_event_text_position', true);
-        $text_position = $text_position ? $text_position : 'center-center';
-        $text_align = get_post_meta($post->ID, 'dw_event_text_align', true);
-        $text_align = $text_align ? $text_align : 'center';
-        $content_padding_top = get_post_meta($post->ID, 'dw_event_content_padding_top', true);
-        $content_padding_top = $content_padding_top ? $content_padding_top : '40';
-        $content_padding_right = get_post_meta($post->ID, 'dw_event_content_padding_right', true);
-        $content_padding_right = $content_padding_right ? $content_padding_right : '40';
-        $content_padding_bottom = get_post_meta($post->ID, 'dw_event_content_padding_bottom', true);
-        $content_padding_bottom = $content_padding_bottom ? $content_padding_bottom : '40';
-        $content_padding_left = get_post_meta($post->ID, 'dw_event_content_padding_left', true);
-        $content_padding_left = $content_padding_left ? $content_padding_left : '40';
+        $thumb_id = get_post_meta($post->ID, 'dw_event_thumb_id', true);
         ?>
         <div style="background:#f9f9f9;padding:15px;margin-bottom:20px;border:1px solid #ddd;border-radius:4px;">
             <p style="margin:0;font-size:13px;color:#666;">
@@ -853,103 +841,34 @@ class Dasom_Church_Meta_Boxes {
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_event_youtube_url"><?php _e('YouTube 링크', 'dasom-church'); ?></label>
+                    <label for="dw_event_youtube_url"><?php _e('YouTube URL', 'dasom-church'); ?></label>
                 </th>
                 <td>
                     <input type="url" id="dw_event_youtube_url" name="dw_event_youtube_url" value="<?php echo esc_url($youtube_url); ?>" class="regular-text" placeholder="https://www.youtube.com/watch?v=..." />
-                    <button type="button" class="button" id="dw_event_youtube_fetch"><?php _e('썸네일 가져오기', 'dasom-church'); ?></button>
-                    <p class="description"><?php _e('YouTube 비디오 링크를 입력하고 "썸네일 가져오기"를 클릭하세요.', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('YouTube 비디오 링크를 입력하세요.', 'dasom-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_event_youtube_thumbnail"><?php _e('YouTube 썸네일', 'dasom-church'); ?></label>
+                    <label for="dw_event_thumb_id"><?php _e('YouTube 썸네일', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <input type="hidden" id="dw_event_youtube_thumbnail" name="dw_event_youtube_thumbnail" value="<?php echo esc_attr($youtube_thumbnail); ?>" />
-                    <button type="button" class="button" id="dw_event_youtube_thumbnail_button"><?php _e('썸네일 직접 업로드', 'dasom-church'); ?></button>
-                    <button type="button" class="button button-link-delete" id="dw_event_youtube_thumbnail_remove" style="color:#b32d2e;"><?php _e('썸네일 삭제', 'dasom-church'); ?></button>
-                    <div id="dw_event_youtube_thumbnail_preview" style="margin-top:10px;">
-                        <?php if ($youtube_thumbnail): ?>
-                            <img src="<?php echo esc_url(wp_get_attachment_url($youtube_thumbnail)); ?>" style="max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;" />
+                    <input type="hidden" id="dw_event_thumb_id" name="dw_event_thumb_id" value="<?php echo esc_attr($thumb_id); ?>" />
+                    <button type="button" class="button" id="dw_event_thumb_button"><?php _e('썸네일 업로드/선택', 'dasom-church'); ?></button>
+                    <button type="button" class="button" id="dw_event_thumb_fetch"><?php _e('YouTube 썸네일 불러오기', 'dasom-church'); ?></button>
+                    <button type="button" class="button button-link-delete" id="dw_event_thumb_remove" style="color:#b32d2e;"><?php _e('썸네일 삭제', 'dasom-church'); ?></button>
+                    <div id="dw_event_thumb_preview" style="margin-top:10px;">
+                        <?php if ($thumb_id): ?>
+                            <img src="<?php echo esc_url(wp_get_attachment_url($thumb_id)); ?>" style="width:160px;height:90px;object-fit:cover;" />
                         <?php endif; ?>
                     </div>
-                    <p class="description"><?php _e('YouTube에서 가져오거나 직접 업로드하세요.', 'dasom-church'); ?></p>
-                </td>
-            </tr>
-            
-            <!-- 텍스트 위치 및 정렬 설정 -->
-            <tr>
-                <th scope="row" colspan="2" style="background:#e7f3ff;padding:15px;">
-                    <h3 style="margin:0;color:#135e96;">📝 <?php _e('텍스트 표시 설정', 'dasom-church'); ?></h3>
-                    <p style="margin:5px 0 0 0;font-weight:normal;font-size:13px;color:#666;"><?php _e('배경 이미지 위에 표시될 제목, 날짜/시간, 버튼의 위치와 정렬을 설정하세요.', 'dasom-church'); ?></p>
-                </th>
-            </tr>
-            <tr>
-                <th scope="row">
-                    <label for="dw_event_text_position"><?php _e('텍스트 위치', 'dasom-church'); ?></label>
-                </th>
-                <td>
-                    <select id="dw_event_text_position" name="dw_event_text_position" class="regular-text">
-                        <optgroup label="<?php _e('상단', 'dasom-church'); ?>">
-                            <option value="top-left" <?php selected($text_position, 'top-left'); ?>><?php _e('상단 왼쪽', 'dasom-church'); ?></option>
-                            <option value="top-center" <?php selected($text_position, 'top-center'); ?>><?php _e('상단 중앙', 'dasom-church'); ?></option>
-                            <option value="top-right" <?php selected($text_position, 'top-right'); ?>><?php _e('상단 오른쪽', 'dasom-church'); ?></option>
-                        </optgroup>
-                        <optgroup label="<?php _e('중앙', 'dasom-church'); ?>">
-                            <option value="center-left" <?php selected($text_position, 'center-left'); ?>><?php _e('중앙 왼쪽', 'dasom-church'); ?></option>
-                            <option value="center-center" <?php selected($text_position, 'center-center'); ?>><?php _e('중앙', 'dasom-church'); ?></option>
-                            <option value="center-right" <?php selected($text_position, 'center-right'); ?>><?php _e('중앙 오른쪽', 'dasom-church'); ?></option>
-                        </optgroup>
-                        <optgroup label="<?php _e('하단', 'dasom-church'); ?>">
-                            <option value="bottom-left" <?php selected($text_position, 'bottom-left'); ?>><?php _e('하단 왼쪽', 'dasom-church'); ?></option>
-                            <option value="bottom-center" <?php selected($text_position, 'bottom-center'); ?>><?php _e('하단 중앙', 'dasom-church'); ?></option>
-                            <option value="bottom-right" <?php selected($text_position, 'bottom-right'); ?>><?php _e('하단 오른쪽', 'dasom-church'); ?></option>
-                        </optgroup>
-                    </select>
-                    <p class="description"><?php _e('텍스트가 표시될 위치를 선택하세요.', 'dasom-church'); ?></p>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">
-                    <label for="dw_event_text_align"><?php _e('텍스트 정렬', 'dasom-church'); ?></label>
-                </th>
-                <td>
-                    <select id="dw_event_text_align" name="dw_event_text_align" class="regular-text">
-                        <option value="left" <?php selected($text_align, 'left'); ?>><?php _e('왼쪽 정렬', 'dasom-church'); ?></option>
-                        <option value="center" <?php selected($text_align, 'center'); ?>><?php _e('중앙 정렬', 'dasom-church'); ?></option>
-                        <option value="right" <?php selected($text_align, 'right'); ?>><?php _e('오른쪽 정렬', 'dasom-church'); ?></option>
-                    </select>
-                    <p class="description"><?php _e('텍스트 콘텐츠 내부의 정렬 방식을 선택하세요.', 'dasom-church'); ?></p>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">
-                    <label><?php _e('콘텐츠 여백 (Padding)', 'dasom-church'); ?></label>
-                </th>
-                <td>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;max-width:600px;">
-                        <div>
-                            <label for="dw_event_content_padding_top" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('상단', 'dasom-church'); ?></label>
-                            <input type="number" id="dw_event_content_padding_top" name="dw_event_content_padding_top" value="<?php echo esc_attr($content_padding_top); ?>" class="small-text" min="0" max="500" step="5" /> px
-                        </div>
-                        <div>
-                            <label for="dw_event_content_padding_right" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('우측', 'dasom-church'); ?></label>
-                            <input type="number" id="dw_event_content_padding_right" name="dw_event_content_padding_right" value="<?php echo esc_attr($content_padding_right); ?>" class="small-text" min="0" max="500" step="5" /> px
-                        </div>
-                        <div>
-                            <label for="dw_event_content_padding_bottom" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('하단', 'dasom-church'); ?></label>
-                            <input type="number" id="dw_event_content_padding_bottom" name="dw_event_content_padding_bottom" value="<?php echo esc_attr($content_padding_bottom); ?>" class="small-text" min="0" max="500" step="5" /> px
-                        </div>
-                        <div>
-                            <label for="dw_event_content_padding_left" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('좌측', 'dasom-church'); ?></label>
-                            <input type="number" id="dw_event_content_padding_left" name="dw_event_content_padding_left" value="<?php echo esc_attr($content_padding_left); ?>" class="small-text" min="0" max="500" step="5" /> px
-                        </div>
-                    </div>
-                    <p class="description" style="margin-top:10px;"><?php _e('텍스트 콘텐츠 주변의 여백을 설정하세요.', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('미리보기만 표시됩니다. 저장 시 썸네일이 대표 이미지로 등록됩니다.', 'dasom-church'); ?></p>
                 </td>
             </tr>
         </table>
+        <p class="description" style="margin:15px 0;padding:15px;background:#fff3cd;border-left:4px solid #ffc107;">
+            <strong>💡 <?php _e('안내:', 'dasom-church'); ?></strong> <?php _e('텍스트 위치, 정렬, 여백 설정은 DW Event Grid 위젯의 스타일 설정에서 조정할 수 있습니다.', 'dasom-church'); ?>
+        </p>
         <?php
     }
     
@@ -1418,40 +1337,15 @@ class Dasom_Church_Meta_Boxes {
             update_post_meta($post_id, 'dw_event_youtube_url', esc_url_raw($_POST['dw_event_youtube_url']));
         }
         
-        // Save YouTube thumbnail
-        if (isset($_POST['dw_event_youtube_thumbnail'])) {
-            update_post_meta($post_id, 'dw_event_youtube_thumbnail', intval($_POST['dw_event_youtube_thumbnail']));
+        // Save YouTube thumbnail ID
+        if (isset($_POST['dw_event_thumb_id'])) {
+            update_post_meta($post_id, 'dw_event_thumb_id', intval($_POST['dw_event_thumb_id']));
         }
         
-        // Save text position
-        if (isset($_POST['dw_event_text_position'])) {
-            $position = sanitize_text_field($_POST['dw_event_text_position']);
-            $valid_positions = array('top-left', 'top-center', 'top-right', 'center-left', 'center-center', 'center-right', 'bottom-left', 'bottom-center', 'bottom-right');
-            if (in_array($position, $valid_positions)) {
-                update_post_meta($post_id, 'dw_event_text_position', $position);
-            }
-        }
-        
-        // Save text alignment
-        if (isset($_POST['dw_event_text_align'])) {
-            $align = sanitize_text_field($_POST['dw_event_text_align']);
-            if (in_array($align, array('left', 'center', 'right'))) {
-                update_post_meta($post_id, 'dw_event_text_align', $align);
-            }
-        }
-        
-        // Save content padding
-        if (isset($_POST['dw_event_content_padding_top'])) {
-            update_post_meta($post_id, 'dw_event_content_padding_top', absint($_POST['dw_event_content_padding_top']));
-        }
-        if (isset($_POST['dw_event_content_padding_right'])) {
-            update_post_meta($post_id, 'dw_event_content_padding_right', absint($_POST['dw_event_content_padding_right']));
-        }
-        if (isset($_POST['dw_event_content_padding_bottom'])) {
-            update_post_meta($post_id, 'dw_event_content_padding_bottom', absint($_POST['dw_event_content_padding_bottom']));
-        }
-        if (isset($_POST['dw_event_content_padding_left'])) {
-            update_post_meta($post_id, 'dw_event_content_padding_left', absint($_POST['dw_event_content_padding_left']));
+        // Set featured image - prioritize manual thumb_id
+        $thumb_id = get_post_meta($post_id, 'dw_event_thumb_id', true);
+        if ($thumb_id) {
+            set_post_thumbnail($post_id, $thumb_id);
         }
     }
     
@@ -1643,8 +1537,8 @@ class Dasom_Church_Meta_Boxes {
                 frame.open();
             });
             
-            // YouTube 썸네일 불러오기 (설교, 목회컬럼, 교회앨범)
-            $('#dw_sermon_thumb_fetch, #dw_column_thumb_fetch, #dw_album_thumb_fetch').on('click', function(e) {
+            // YouTube 썸네일 불러오기 (설교, 목회컬럼, 교회앨범, 이벤트)
+            $('#dw_sermon_thumb_fetch, #dw_column_thumb_fetch, #dw_album_thumb_fetch, #dw_event_thumb_fetch').on('click', function(e) {
                 e.preventDefault();
                 var buttonId = $(e.target).attr('id');
                 var url = '';
@@ -1655,6 +1549,8 @@ class Dasom_Church_Meta_Boxes {
                     url = $('#dw_column_youtube').val();
                 } else if (buttonId === 'dw_album_thumb_fetch') {
                     url = $('#dw_album_youtube').val();
+                } else if (buttonId === 'dw_event_thumb_fetch') {
+                    url = $('#dw_event_youtube_url').val();
                 }
                 
                 var match = url.match(/(?:youtu\\.be\\/|youtube\\.com\\/(?:watch\\?v=|embed\\/|v\\/))([^\\&\\?\\/]+)/);
@@ -1671,6 +1567,8 @@ class Dasom_Church_Meta_Boxes {
                             $('#dw_column_thumb_preview').html('<img src=\"' + max + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
                         } else if (buttonId === 'dw_album_thumb_fetch') {
                             $('#dw_album_thumb_preview').html('<img src=\"' + max + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
+                        } else if (buttonId === 'dw_event_thumb_fetch') {
+                            $('#dw_event_thumb_preview').html('<img src=\"' + max + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
                         }
                     };
                     img.onerror = function() {
@@ -1680,6 +1578,8 @@ class Dasom_Church_Meta_Boxes {
                             $('#dw_column_thumb_preview').html('<img src=\"' + hq + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
                         } else if (buttonId === 'dw_album_thumb_fetch') {
                             $('#dw_album_thumb_preview').html('<img src=\"' + hq + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
+                        } else if (buttonId === 'dw_event_thumb_fetch') {
+                            $('#dw_event_thumb_preview').html('<img src=\"' + hq + '\" style=\"width:160px;height:90px;object-fit:cover;\" />');
                         }
                     };
                     img.src = max;
@@ -1688,8 +1588,8 @@ class Dasom_Church_Meta_Boxes {
                 }
             });
             
-            // YouTube 썸네일 삭제 (설교, 목회컬럼, 교회앨범)
-            $('#dw_sermon_thumb_remove, #dw_column_thumb_remove, #dw_album_thumb_remove').on('click', function(e) {
+            // YouTube 썸네일 삭제 (설교, 목회컬럼, 교회앨범, 이벤트)
+            $('#dw_sermon_thumb_remove, #dw_column_thumb_remove, #dw_album_thumb_remove, #dw_event_thumb_remove').on('click', function(e) {
                 e.preventDefault();
                 var buttonId = $(e.target).attr('id');
                 
@@ -1703,6 +1603,9 @@ class Dasom_Church_Meta_Boxes {
                     } else if (buttonId === 'dw_album_thumb_remove') {
                         $('#dw_album_thumb_id').val('');
                         $('#dw_album_thumb_preview').html('');
+                    } else if (buttonId === 'dw_event_thumb_remove') {
+                        $('#dw_event_thumb_id').val('');
+                        $('#dw_event_thumb_preview').html('');
                     }
                 }
             });

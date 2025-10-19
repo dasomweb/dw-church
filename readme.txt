@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.25.1
+Stable tag: 1.25.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,14 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.25.2 =
+* Change: Move text position/alignment/padding controls from Event meta box to DW Event Grid widget
+* Feature: Add YouTube thumbnail fetch functionality for Event (same as Sermon/Column/Album)
+* Fix: Update Event to use standard thumbnail field (dw_event_thumb_id) instead of custom field
+* Enhancement: Unified YouTube thumbnail handling across all post types
+* Improvement: Simplified Event meta box UI
+* Change: Remove Gutenberg editor support for Event post type
 
 = 1.25.1 =
 * Fix: Disable Gutenberg editor for Event post type
