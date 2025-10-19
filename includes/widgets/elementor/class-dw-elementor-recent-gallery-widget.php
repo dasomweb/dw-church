@@ -792,17 +792,17 @@ class DW_Elementor_Recent_Gallery_Widget extends \Elementor\Widget_Base {
         
         echo '<div class="dw-pagination">';
         
-        // First page
+        // First page (text only)
         if ($paged > 1) {
-            echo '<a href="' . esc_url(get_pagenum_link(1)) . '" class="dw-pagination-link">처음</a>';
+            echo '<a href="' . esc_url(get_pagenum_link(1)) . '" class="dw-pagination-text">처음</a>';
         }
         
-        // Previous page
+        // Previous page (circular button)
         if ($paged > 1) {
             echo '<a href="' . esc_url(get_pagenum_link($paged - 1)) . '" class="dw-pagination-link dw-pagination-prev">‹</a>';
         }
         
-        // Page numbers
+        // Page numbers (circular buttons)
         $range = 2;
         for ($i = 1; $i <= $max_pages; $i++) {
             if ($i == 1 || $i == $max_pages || ($i >= $paged - $range && $i <= $paged + $range)) {
@@ -816,14 +816,14 @@ class DW_Elementor_Recent_Gallery_Widget extends \Elementor\Widget_Base {
             }
         }
         
-        // Next page
+        // Next page (circular button)
         if ($paged < $max_pages) {
             echo '<a href="' . esc_url(get_pagenum_link($paged + 1)) . '" class="dw-pagination-link dw-pagination-next">›</a>';
         }
         
-        // Last page
+        // Last page (text only)
         if ($paged < $max_pages) {
-            echo '<a href="' . esc_url(get_pagenum_link($max_pages)) . '" class="dw-pagination-link">마지막</a>';
+            echo '<a href="' . esc_url(get_pagenum_link($max_pages)) . '" class="dw-pagination-text">마지막</a>';
         }
         
         echo '</div>';
@@ -838,17 +838,29 @@ class DW_Elementor_Recent_Gallery_Widget extends \Elementor\Widget_Base {
                 gap: 8px;
                 flex-wrap: wrap;
             }
+            .dw-pagination-text {
+                display: inline-flex;
+                align-items: center;
+                padding: 0 8px;
+                text-decoration: none;
+                font-size: 14px;
+                color: #666;
+                transition: color 0.3s ease;
+            }
+            .dw-pagination-text:hover {
+                color: #000;
+            }
             .dw-pagination-link {
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                min-width: 40px;
-                height: 40px;
-                padding: 0 12px;
+                min-width: 32px;
+                height: 32px;
+                padding: 0;
                 border: 1px solid #e0e0e0;
                 border-radius: 50%;
                 text-decoration: none;
-                font-size: 14px;
+                font-size: 13px;
                 transition: all 0.3s ease;
             }
             .dw-pagination-link:hover {
@@ -859,14 +871,14 @@ class DW_Elementor_Recent_Gallery_Widget extends \Elementor\Widget_Base {
             }
             .dw-pagination-link.dw-pagination-prev,
             .dw-pagination-link.dw-pagination-next {
-                font-size: 18px;
+                font-size: 16px;
             }
             .dw-pagination-dots {
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                min-width: 40px;
-                height: 40px;
+                min-width: 32px;
+                height: 32px;
                 color: #999;
             }
         </style>

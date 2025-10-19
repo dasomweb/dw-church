@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.29.0
+Stable tag: 1.29.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,14 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.29.1 =
+* Fix: Pagination design refinement to match screenshot
+* Fix: "처음"/"마지막" now display as text only (no circular background)
+* Fix: Reduce circular button size from 40px to 32px for better aesthetics
+* Fix: Only page numbers and arrows (‹ ›) have circular buttons
+* Fix: Add hover effect for text-only links (처음/마지막)
+* Enhancement: More compact and elegant pagination design
 
 = 1.29.0 =
 * Feature: Add pagination to DW Recent Gallery widget
