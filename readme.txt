@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.25.0
+Stable tag: 1.25.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,11 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.25.1 =
+* Fix: Disable Gutenberg editor for Event post type
+* Fix: Remove editor and thumbnail from Event supports
+* Change: Event post type now uses classic editor interface like Banner
 
 = 1.25.0 =
 * Feature: Add Event custom post type

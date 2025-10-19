@@ -274,8 +274,8 @@ class Dasom_Church_Admin {
             'public' => true,
             'show_in_menu' => 'dasom-church-admin',
             'menu_position' => 6,
-            'supports' => array('title', 'editor', 'thumbnail'),
-            'show_in_rest' => true,
+            'supports' => array('title'),
+            'show_in_rest' => false,
             'capability_type' => 'post',
             'map_meta_cap' => true,
         ));
