@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.26.2
+Stable tag: 1.26.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,11 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.26.3 =
+* Enhancement: Make event title clickable with event URL
+* Improvement: Title inherits color and text decoration styles
+* Enhancement: Better user experience with linked titles
 
 = 1.26.2 =
 * Feature: Add Department typography and color controls to Event Grid widget
