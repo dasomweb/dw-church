@@ -187,6 +187,38 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
         
         $this->end_controls_section();
         
+        // Style Section - Image
+        $this->start_controls_section(
+            'image_style_section',
+            [
+                'label' => __('Image', 'dasom-church'),
+                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+        
+        $this->add_group_control(
+            \Elementor\Group_Control_Border::get_type(),
+            [
+                'name' => 'image_border',
+                'label' => __('Border', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-event-image',
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'image_border_radius',
+            [
+                'label' => __('Border Radius', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', '%', 'em'],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-image' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};overflow:hidden;',
+                ],
+            ]
+        );
+        
+        $this->end_controls_section();
+        
         // Style Section - Department
         $this->start_controls_section(
             'department_style_section',

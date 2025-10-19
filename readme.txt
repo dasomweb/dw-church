@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.27.1
+Stable tag: 1.27.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,11 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.27.2 =
+* Feature: Add image border control to DW Event widget
+* Feature: Add image border radius control to DW Event widget
+* Enhancement: Better image styling options
 
 = 1.27.1 =
 * Change: Event Grid title now links to event post instead of custom URL
