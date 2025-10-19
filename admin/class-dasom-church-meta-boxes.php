@@ -734,20 +734,11 @@ class Dasom_Church_Meta_Boxes {
                     <label for="dw_banner_link_url"><?php _e('링크 URL', 'dasom-church'); ?></label>
                 </th>
                 <td>
-                    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
-                        <input type="url" id="dw_banner_link_url" name="dw_banner_link_url" value="<?php echo esc_url($link_url); ?>" class="regular-text" placeholder="https://" style="flex:1;min-width:300px;" />
-                        <fieldset style="margin:0;">
-                            <legend style="font-size:12px;font-weight:600;margin-bottom:5px;"><?php _e('링크 열기 방식:', 'dasom-church'); ?></legend>
-                            <label style="display:inline-block;margin-right:15px;">
-                                <input type="radio" name="dw_banner_link_target" value="_self" <?php checked($link_target, '_self'); ?> />
-                                <?php _e('현재 창', 'dasom-church'); ?>
-                            </label>
-                            <label style="display:inline-block;">
-                                <input type="radio" name="dw_banner_link_target" value="_blank" <?php checked($link_target, '_blank'); ?> />
-                                <?php _e('새 창', 'dasom-church'); ?>
-                            </label>
-                        </fieldset>
-                    </div>
+                    <input type="url" id="dw_banner_link_url" name="dw_banner_link_url" value="<?php echo esc_url($link_url); ?>" class="regular-text" placeholder="https://" style="width:70%;" />
+                    <label style="margin-left:15px;">
+                        <input type="checkbox" id="dw_banner_link_target" name="dw_banner_link_target" value="_blank" <?php checked($link_target, '_blank'); ?> />
+                        <?php _e('새창으로 열기', 'dasom-church'); ?>
+                    </label>
                     <p class="description"><?php _e('배너 전체 영역 클릭 시 이동할 URL을 입력하세요.', 'dasom-church'); ?></p>
                 </td>
             </tr>
@@ -841,7 +832,7 @@ class Dasom_Church_Meta_Boxes {
                 </th>
                 <td>
                     <textarea id="dw_event_description" name="dw_event_description" class="large-text" rows="4"><?php echo esc_textarea($event_description); ?></textarea>
-                    <p class="description"><?php _e('이벤트에 대한 간단한 설명을 입력하세요.', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('이벤트에 대한 설명을 입력하세요.', 'dasom-church'); ?></p>
                 </td>
             </tr>
             <tr>
@@ -1271,10 +1262,9 @@ class Dasom_Church_Meta_Boxes {
         }
         
         if (isset($_POST['dw_banner_link_target'])) {
-            $target = sanitize_text_field($_POST['dw_banner_link_target']);
-            if (in_array($target, array('_self', '_blank'))) {
-                update_post_meta($post_id, 'dw_banner_link_target', $target);
-            }
+            update_post_meta($post_id, 'dw_banner_link_target', '_blank');
+        } else {
+            update_post_meta($post_id, 'dw_banner_link_target', '_self');
         }
         
         if (isset($_POST['dw_banner_start_date'])) {

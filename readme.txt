@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.25.4
+Stable tag: 1.25.5
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,11 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.25.5 =
+* Change: Update Event description label (remove "간단한")
+* Change: Convert Banner link target from radio buttons to checkbox (same as Event)
+* Enhancement: Unified UI for link target selection across Event and Banner
 
 = 1.25.4 =
 * Fix: Change inline script loading method from wp_add_inline_script to admin_footer
