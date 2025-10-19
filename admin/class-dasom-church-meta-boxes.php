@@ -45,6 +45,7 @@ class Dasom_Church_Meta_Boxes {
         add_action('add_meta_boxes', array($this, 'dasom_church_add_meta_boxes'));
         add_action('save_post', array($this, 'dasom_church_save_meta_boxes'));
         add_action('admin_enqueue_scripts', array($this, 'dasom_church_admin_scripts'));
+        add_action('admin_footer', array($this, 'dasom_church_admin_footer_scripts'));
         
         // Quick Edit is handled by Dasom_Church_Columns class
         
@@ -1401,8 +1402,27 @@ class Dasom_Church_Meta_Boxes {
                 'viewPdf' => __('선택된 PDF 보기', 'dasom-church'),
             )
         ));
+    }
+    
+    /**
+     * Admin footer scripts
+     */
+    public function dasom_church_admin_footer_scripts() {
+        global $post;
         
-        wp_add_inline_script('jquery', $this->dasom_church_get_admin_script());
+        // Only load on post edit screens
+        $screen = get_current_screen();
+        if (!$screen || !in_array($screen->id, array('bulletin', 'sermon', 'column', 'album', 'banner', 'event'))) {
+            return;
+        }
+        
+        if (!isset($post->post_type) || !in_array($post->post_type, array('bulletin', 'sermon', 'column', 'album', 'banner', 'event'))) {
+            return;
+        }
+        
+        echo '<script type="text/javascript">';
+        echo $this->dasom_church_get_admin_script();
+        echo '</script>';
     }
     
     /**

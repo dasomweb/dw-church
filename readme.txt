@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.25.3
+Stable tag: 1.25.4
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,11 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.25.4 =
+* Fix: Change inline script loading method from wp_add_inline_script to admin_footer
+* Fix: Ensure Event media upload buttons work by outputting JavaScript directly
+* Enhancement: More reliable JavaScript execution for meta box buttons
 
 = 1.25.3 =
 * Fix: Add Event background image upload functionality to inline JavaScript
