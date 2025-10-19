@@ -861,12 +861,14 @@ class DW_Elementor_Recent_Gallery_Widget extends \Elementor\Widget_Base {
                 border-radius: 50%;
                 text-decoration: none;
                 font-size: 13px;
+                background-color: #f5f5f5;
                 transition: all 0.3s ease;
             }
             .dw-pagination-link:hover {
-                background-color: #f5f5f5;
+                background-color: #e0e0e0;
             }
             .dw-pagination-link.current {
+                background-color: #000000;
                 border-color: transparent;
             }
             .dw-pagination-link.dw-pagination-prev,
