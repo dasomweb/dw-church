@@ -787,12 +787,8 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     echo '<div class="dw-event-grid-department">' . esc_html($event_department) . '</div>';
                 }
                 
-                // Title (with link if URL exists)
-                if ($event_url) {
-                    echo '<h3 class="dw-event-grid-title"><a href="' . esc_url($event_url) . '" target="' . esc_attr($event_url_target) . '" style="color:inherit;text-decoration:none;">' . esc_html(get_the_title()) . '</a></h3>';
-                } else {
-                    echo '<h3 class="dw-event-grid-title">' . esc_html(get_the_title()) . '</h3>';
-                }
+                // Title (linked to post)
+                echo '<h3 class="dw-event-grid-title"><a href="' . esc_url(get_permalink()) . '" style="color:inherit;text-decoration:none;">' . esc_html(get_the_title()) . '</a></h3>';
                 
                 // Date/Time
                 if ($event_datetime) {
