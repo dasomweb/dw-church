@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.32.0
+Stable tag: 1.32.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.32.1 =
+* Fix: Fix unit tests for sermon meta fields and plugin activation
+* Fix: Optimize GitHub Actions workflow to reduce build time
+* Fix: Add Subversion installation step for WordPress test suite
+* Fix: Auto-confirm database reinstall in CI environment
 
 = 1.32.0 =
 * Feature: Add DW Pastoral Column Widget - Display single pastoral column with top image, title, date, content, bottom image, and YouTube
