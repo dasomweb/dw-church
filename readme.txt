@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.30.1
+Stable tag: 1.31.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,18 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.31.0 =
+* Feature: Add comprehensive PHPUnit testing framework
+* Feature: Add test coverage for custom post types (Bulletin, Sermon, Column, Album, Banner, Event)
+* Feature: Add meta box save/retrieve tests
+* Feature: Add widget registration tests
+* Feature: Add helper function tests
+* Feature: Add GitHub Actions CI/CD workflow for automated testing
+* Feature: Test matrix includes PHP 7.4-8.2 and WordPress 6.3-latest
+* Documentation: Add detailed testing guide (README-TESTING.md)
+* Development: Add composer.json with PHPUnit dependencies
+* Development: Add test installation script (bin/install-wp-tests.sh)
 
 = 1.30.1 =
 * Fix: Resolve Elementor control name conflict between DW Event and DW Event Grid widgets
