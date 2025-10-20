@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.32.1
+Stable tag: 1.33.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,15 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.33.0 =
+* Feature: Add advanced image controls to DW Pastoral Column Widget (width, height, object-fit, object-position)
+* Feature: Add width options for images (Full Size, Box Size, Custom)
+* Feature: Add text alignment controls for Title and Published Date (left, center, right)
+* Feature: Add Title & Date display order option (Title → Date or Date → Title)
+* Enhancement: Image controls support responsive settings for all devices
+* Enhancement: Object-fit options include Cover, Contain, Fill, None, Scale Down
+* Enhancement: Object-position with 9-point alignment grid
 
 = 1.32.1 =
 * Fix: Fix unit tests for sermon meta fields and plugin activation
