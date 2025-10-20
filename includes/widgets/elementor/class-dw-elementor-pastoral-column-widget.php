@@ -153,6 +153,19 @@ class DW_Elementor_Pastoral_Column_Widget extends \Elementor\Widget_Base {
             ]
         );
 
+        $this->add_control(
+            'title_date_order',
+            [
+                'label' => __('Title & Date Order', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'title_first',
+                'options' => [
+                    'title_first' => __('Title → Date', 'dasom-church'),
+                    'date_first' => __('Date → Title', 'dasom-church'),
+                ],
+            ]
+        );
+
         $this->end_controls_section();
 
         // Style Tab - Container
@@ -197,6 +210,120 @@ class DW_Elementor_Pastoral_Column_Widget extends \Elementor\Widget_Base {
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
                 'condition' => [
                     'show_top_image' => 'yes',
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'top_image_width_type',
+            [
+                'label' => __('Width', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'full',
+                'options' => [
+                    'full' => __('Full Size', 'dasom-church'),
+                    'box' => __('Box Size', 'dasom-church'),
+                    'custom' => __('Custom', 'dasom-church'),
+                ],
+            ]
+        );
+
+        $this->add_responsive_control(
+            'top_image_width_custom',
+            [
+                'label' => __('Custom Width', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', '%', 'vw'],
+                'range' => [
+                    'px' => [
+                        'min' => 100,
+                        'max' => 2000,
+                    ],
+                    '%' => [
+                        'min' => 10,
+                        'max' => 100,
+                    ],
+                    'vw' => [
+                        'min' => 10,
+                        'max' => 100,
+                    ],
+                ],
+                'default' => [
+                    'size' => 100,
+                    'unit' => '%',
+                ],
+                'condition' => [
+                    'top_image_width_type' => 'custom',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-pastoral-column-top-image img' => 'width: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+
+        $this->add_responsive_control(
+            'top_image_height',
+            [
+                'label' => __('Height', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', 'vh'],
+                'range' => [
+                    'px' => [
+                        'min' => 100,
+                        'max' => 1000,
+                    ],
+                    'vh' => [
+                        'min' => 10,
+                        'max' => 100,
+                    ],
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-pastoral-column-top-image img' => 'height: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'top_image_object_fit',
+            [
+                'label' => __('Object Fit', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'cover',
+                'options' => [
+                    'cover' => __('Cover', 'dasom-church'),
+                    'contain' => __('Contain', 'dasom-church'),
+                    'fill' => __('Fill', 'dasom-church'),
+                    'none' => __('None', 'dasom-church'),
+                    'scale-down' => __('Scale Down', 'dasom-church'),
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-pastoral-column-top-image img' => 'object-fit: {{VALUE}};',
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'top_image_object_position',
+            [
+                'label' => __('Object Position', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'center center',
+                'options' => [
+                    'center center' => __('Center Center', 'dasom-church'),
+                    'center top' => __('Center Top', 'dasom-church'),
+                    'center bottom' => __('Center Bottom', 'dasom-church'),
+                    'left top' => __('Left Top', 'dasom-church'),
+                    'left center' => __('Left Center', 'dasom-church'),
+                    'left bottom' => __('Left Bottom', 'dasom-church'),
+                    'right top' => __('Right Top', 'dasom-church'),
+                    'right center' => __('Right Center', 'dasom-church'),
+                    'right bottom' => __('Right Bottom', 'dasom-church'),
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-pastoral-column-top-image img' => 'object-position: {{VALUE}};',
+                ],
+                'condition' => [
+                    'top_image_object_fit!' => 'fill',
                 ],
             ]
         );
@@ -278,6 +405,32 @@ class DW_Elementor_Pastoral_Column_Widget extends \Elementor\Widget_Base {
         );
 
         $this->add_responsive_control(
+            'title_align',
+            [
+                'label' => __('Alignment', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::CHOOSE,
+                'options' => [
+                    'left' => [
+                        'title' => __('Left', 'dasom-church'),
+                        'icon' => 'eicon-text-align-left',
+                    ],
+                    'center' => [
+                        'title' => __('Center', 'dasom-church'),
+                        'icon' => 'eicon-text-align-center',
+                    ],
+                    'right' => [
+                        'title' => __('Right', 'dasom-church'),
+                        'icon' => 'eicon-text-align-right',
+                    ],
+                ],
+                'default' => 'left',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-pastoral-column-title' => 'text-align: {{VALUE}};',
+                ],
+            ]
+        );
+
+        $this->add_responsive_control(
             'title_spacing',
             [
                 'label' => __('Spacing', 'dasom-church'),
@@ -329,6 +482,32 @@ class DW_Elementor_Pastoral_Column_Widget extends \Elementor\Widget_Base {
                 'default' => '#888888',
                 'selectors' => [
                     '{{WRAPPER}} .dw-pastoral-column-date' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+
+        $this->add_responsive_control(
+            'date_align',
+            [
+                'label' => __('Alignment', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::CHOOSE,
+                'options' => [
+                    'left' => [
+                        'title' => __('Left', 'dasom-church'),
+                        'icon' => 'eicon-text-align-left',
+                    ],
+                    'center' => [
+                        'title' => __('Center', 'dasom-church'),
+                        'icon' => 'eicon-text-align-center',
+                    ],
+                    'right' => [
+                        'title' => __('Right', 'dasom-church'),
+                        'icon' => 'eicon-text-align-right',
+                    ],
+                ],
+                'default' => 'left',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-pastoral-column-date' => 'text-align: {{VALUE}};',
                 ],
             ]
         );
@@ -421,6 +600,120 @@ class DW_Elementor_Pastoral_Column_Widget extends \Elementor\Widget_Base {
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
                 'condition' => [
                     'show_bottom_image' => 'yes',
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'bottom_image_width_type',
+            [
+                'label' => __('Width', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'full',
+                'options' => [
+                    'full' => __('Full Size', 'dasom-church'),
+                    'box' => __('Box Size', 'dasom-church'),
+                    'custom' => __('Custom', 'dasom-church'),
+                ],
+            ]
+        );
+
+        $this->add_responsive_control(
+            'bottom_image_width_custom',
+            [
+                'label' => __('Custom Width', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', '%', 'vw'],
+                'range' => [
+                    'px' => [
+                        'min' => 100,
+                        'max' => 2000,
+                    ],
+                    '%' => [
+                        'min' => 10,
+                        'max' => 100,
+                    ],
+                    'vw' => [
+                        'min' => 10,
+                        'max' => 100,
+                    ],
+                ],
+                'default' => [
+                    'size' => 100,
+                    'unit' => '%',
+                ],
+                'condition' => [
+                    'bottom_image_width_type' => 'custom',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-pastoral-column-bottom-image img' => 'width: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+
+        $this->add_responsive_control(
+            'bottom_image_height',
+            [
+                'label' => __('Height', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', 'vh'],
+                'range' => [
+                    'px' => [
+                        'min' => 100,
+                        'max' => 1000,
+                    ],
+                    'vh' => [
+                        'min' => 10,
+                        'max' => 100,
+                    ],
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-pastoral-column-bottom-image img' => 'height: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'bottom_image_object_fit',
+            [
+                'label' => __('Object Fit', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'cover',
+                'options' => [
+                    'cover' => __('Cover', 'dasom-church'),
+                    'contain' => __('Contain', 'dasom-church'),
+                    'fill' => __('Fill', 'dasom-church'),
+                    'none' => __('None', 'dasom-church'),
+                    'scale-down' => __('Scale Down', 'dasom-church'),
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-pastoral-column-bottom-image img' => 'object-fit: {{VALUE}};',
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'bottom_image_object_position',
+            [
+                'label' => __('Object Position', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'center center',
+                'options' => [
+                    'center center' => __('Center Center', 'dasom-church'),
+                    'center top' => __('Center Top', 'dasom-church'),
+                    'center bottom' => __('Center Bottom', 'dasom-church'),
+                    'left top' => __('Left Top', 'dasom-church'),
+                    'left center' => __('Left Center', 'dasom-church'),
+                    'left bottom' => __('Left Bottom', 'dasom-church'),
+                    'right top' => __('Right Top', 'dasom-church'),
+                    'right center' => __('Right Center', 'dasom-church'),
+                    'right bottom' => __('Right Bottom', 'dasom-church'),
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-pastoral-column-bottom-image img' => 'object-position: {{VALUE}};',
+                ],
+                'condition' => [
+                    'bottom_image_object_fit!' => 'fill',
                 ],
             ]
         );
@@ -591,21 +884,52 @@ class DW_Elementor_Pastoral_Column_Widget extends \Elementor\Widget_Base {
         ];
         $padding_top = $aspect_map[$aspect_ratio] ?? '56.25%';
 
+        // Image width styles
+        $top_width_type = $settings['top_image_width_type'] ?? 'full';
+        $top_width_style = '';
+        if ($top_width_type === 'full') {
+            $top_width_style = 'width:100%;';
+        } elseif ($top_width_type === 'box') {
+            $top_width_style = 'max-width:1140px;margin-left:auto;margin-right:auto;width:100%;';
+        }
+        // Custom width is handled by Elementor controls
+
+        $bottom_width_type = $settings['bottom_image_width_type'] ?? 'full';
+        $bottom_width_style = '';
+        if ($bottom_width_type === 'full') {
+            $bottom_width_style = 'width:100%;';
+        } elseif ($bottom_width_type === 'box') {
+            $bottom_width_style = 'max-width:1140px;margin-left:auto;margin-right:auto;width:100%;';
+        }
+
         ?>
         <div class="dw-pastoral-column-wrapper">
             <div class="dw-pastoral-column-container">
                 <?php if (($settings['show_top_image'] ?? 'yes') === 'yes' && $top_image_url): ?>
                 <div class="dw-pastoral-column-top-image">
-                    <img src="<?php echo esc_url($top_image_url); ?>" alt="<?php echo esc_attr($title); ?>" style="width:100%;height:auto;display:block;" />
+                    <img src="<?php echo esc_url($top_image_url); ?>" alt="<?php echo esc_attr($title); ?>" style="<?php echo esc_attr($top_width_style); ?>display:block;" />
                 </div>
                 <?php endif; ?>
 
-                <?php if (($settings['show_title'] ?? 'yes') === 'yes'): ?>
-                <h2 class="dw-pastoral-column-title"><?php echo esc_html($title); ?></h2>
-                <?php endif; ?>
-
-                <?php if (($settings['show_date'] ?? 'yes') === 'yes'): ?>
-                <div class="dw-pastoral-column-date"><?php echo esc_html($date); ?></div>
+                <?php 
+                $title_date_order = $settings['title_date_order'] ?? 'title_first';
+                if ($title_date_order === 'date_first'): 
+                ?>
+                    <?php if (($settings['show_date'] ?? 'yes') === 'yes'): ?>
+                    <div class="dw-pastoral-column-date"><?php echo esc_html($date); ?></div>
+                    <?php endif; ?>
+                    
+                    <?php if (($settings['show_title'] ?? 'yes') === 'yes'): ?>
+                    <h2 class="dw-pastoral-column-title"><?php echo esc_html($title); ?></h2>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <?php if (($settings['show_title'] ?? 'yes') === 'yes'): ?>
+                    <h2 class="dw-pastoral-column-title"><?php echo esc_html($title); ?></h2>
+                    <?php endif; ?>
+                    
+                    <?php if (($settings['show_date'] ?? 'yes') === 'yes'): ?>
+                    <div class="dw-pastoral-column-date"><?php echo esc_html($date); ?></div>
+                    <?php endif; ?>
                 <?php endif; ?>
 
                 <?php if (($settings['show_content'] ?? 'yes') === 'yes' && $content): ?>
@@ -614,7 +938,7 @@ class DW_Elementor_Pastoral_Column_Widget extends \Elementor\Widget_Base {
 
                 <?php if (($settings['show_bottom_image'] ?? 'yes') === 'yes' && $bottom_image_url): ?>
                 <div class="dw-pastoral-column-bottom-image">
-                    <img src="<?php echo esc_url($bottom_image_url); ?>" alt="" style="width:100%;height:auto;display:block;" />
+                    <img src="<?php echo esc_url($bottom_image_url); ?>" alt="" style="<?php echo esc_attr($bottom_width_style); ?>display:block;" />
                 </div>
                 <?php endif; ?>
 
