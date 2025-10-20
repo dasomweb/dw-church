@@ -32,7 +32,8 @@ class Test_Plugin extends WP_UnitTestCase {
      * Test plugin activation
      */
     public function test_plugin_activated() {
-        $this->assertTrue(function_exists('activate_dasom_church'));
+        // Test that main plugin class exists
+        $this->assertTrue(class_exists('Dasom_Church_Admin'));
     }
 }
 

@@ -45,16 +45,16 @@ class Test_Meta_Boxes extends WP_UnitTestCase {
 
         // Save meta
         update_post_meta($post_id, 'dw_sermon_date', '2025-10-20');
-        update_post_meta($post_id, 'dw_sermon_preacher', 'John Doe');
+        update_post_meta($post_id, 'dw_sermon_title', 'Test Sermon Title');
         update_post_meta($post_id, 'dw_sermon_scripture', 'John 3:16');
 
         // Retrieve meta
         $date = get_post_meta($post_id, 'dw_sermon_date', true);
-        $preacher = get_post_meta($post_id, 'dw_sermon_preacher', true);
+        $title = get_post_meta($post_id, 'dw_sermon_title', true);
         $scripture = get_post_meta($post_id, 'dw_sermon_scripture', true);
 
         $this->assertEquals('2025-10-20', $date);
-        $this->assertEquals('John Doe', $preacher);
+        $this->assertEquals('Test Sermon Title', $title);
         $this->assertEquals('John 3:16', $scripture);
 
         // Clean up
