@@ -746,6 +746,12 @@ class Dasom_Church_Admin {
         $enable_banner_slider_widget = isset($_POST['dw_enable_banner_slider_widget']) ? 'yes' : 'no';
         update_option('dw_enable_banner_slider_widget', $enable_banner_slider_widget);
         
+        $enable_pastoral_column_widget = isset($_POST['dw_enable_pastoral_column_widget']) ? 'yes' : 'no';
+        update_option('dw_enable_pastoral_column_widget', $enable_pastoral_column_widget);
+        
+        $enable_pastoral_columns_grid_widget = isset($_POST['dw_enable_pastoral_columns_grid_widget']) ? 'yes' : 'no';
+        update_option('dw_enable_pastoral_columns_grid_widget', $enable_pastoral_columns_grid_widget);
+        
         add_action('admin_notices', function() {
             echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Settings saved successfully!', 'dasom-church') . '</p></div>';
         });

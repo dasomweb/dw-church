@@ -109,6 +109,18 @@ class Dasom_Church_Widgets {
                 require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/widgets/elementor/class-dw-elementor-event-widget.php';
                 $widgets_manager->register(new DW_Elementor_Event_Widget());
             }
+            
+            // Pastoral Column Widget
+            if (get_option('dw_enable_pastoral_column_widget', 'yes') === 'yes') {
+                require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/widgets/elementor/class-dw-elementor-pastoral-column-widget.php';
+                $widgets_manager->register(new DW_Elementor_Pastoral_Column_Widget());
+            }
+            
+            // Pastoral Columns Grid Widget
+            if (get_option('dw_enable_pastoral_columns_grid_widget', 'yes') === 'yes') {
+                require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/widgets/elementor/class-dw-elementor-pastoral-columns-grid-widget.php';
+                $widgets_manager->register(new DW_Elementor_Pastoral_Columns_Grid_Widget());
+            }
         } catch (Exception $e) {
             // Log error but don't break plugin activation
             error_log('DW Church Management: Widget registration error - ' . $e->getMessage());

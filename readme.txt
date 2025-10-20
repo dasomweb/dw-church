@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.31.0
+Stable tag: 1.32.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,15 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.32.0 =
+* Feature: Add DW Pastoral Column Widget - Display single pastoral column with top image, title, date, content, bottom image, and YouTube
+* Feature: Add DW Pastoral Columns Recent Grid Widget - Display recent pastoral columns in grid/list layout with pagination support
+* Feature: Query options for Pastoral Column Widget (Current Post, Latest Post, Manual Selection)
+* Feature: Thumbnail, date, excerpt controls for Pastoral Columns Grid Widget
+* Enhancement: Widget count increased from 6 to 8
+* Enhancement: Consistent styling with existing DW widgets
+* Documentation: Updated widget settings page with new widget descriptions
 
 = 1.31.0 =
 * Feature: Add comprehensive PHPUnit testing framework
