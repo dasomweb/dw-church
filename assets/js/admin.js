@@ -5,9 +5,10 @@
  * @since 1.0.0
  */
 
-jQuery(document).ready(function($) {
+(function($) {
     'use strict';
     
+    jQuery(document).ready(function() {
     // Initialize admin functionality
     DasomChurchAdmin.init();
 });
@@ -15,7 +16,7 @@ jQuery(document).ready(function($) {
 /**
  * Admin functionality object
  */
-var DasomChurchAdmin = {
+    window.DasomChurchAdmin = {
     
     /**
      * Initialize admin functionality
@@ -23,8 +24,9 @@ var DasomChurchAdmin = {
     init: function() {
         this.initMediaUploaders();
         this.initImageSorting();
-        this.initYouTubeThumbnails();
-        this.initFormValidation();
+                this.initYouTubeThumbnails();
+                this.initFormValidation();
+                this.initBannerAdditionalUploaders();
     },
     
     /**
@@ -265,8 +267,89 @@ var DasomChurchAdmin = {
         } catch (e) {
             return false;
         }
+    },
+    
+    /**
+     * Banner additional image uploaders
+     */
+    initBannerAdditionalUploaders: function() {
+        var self = this;
+        
+        if ($('body').hasClass('post-type-banner')) {
+            // Banner PC image uploader
+            $('#dw_banner_pc_image_button').on('click', function(e) {
+                e.preventDefault();
+                self.openMediaFrame({
+                    title: 'PC용 배너 이미지 업로드',
+                    button: { text: '선택' },
+                    library: { type: 'image' },
+                    multiple: false,
+                    onSelect: function(attachment) {
+                        $('#dw_banner_pc_image').val(attachment.id);
+                        $('#dw_banner_pc_image_preview').html('<img src="' + attachment.url + '" style="max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;" />');
+                    }
+                });
+            });
+            
+            $('#dw_banner_pc_image_remove').on('click', function(e) {
+                e.preventDefault();
+                $('#dw_banner_pc_image').val('');
+                $('#dw_banner_pc_image_preview').html('');
+            });
+            
+            // Banner mobile image uploader
+            $('#dw_banner_mobile_image_button').on('click', function(e) {
+                e.preventDefault();
+                self.openMediaFrame({
+                    title: '모바일용 배너 이미지 업로드',
+                    button: { text: '선택' },
+                    library: { type: 'image' },
+                    multiple: false,
+                    onSelect: function(attachment) {
+                        $('#dw_banner_mobile_image').val(attachment.id);
+                        $('#dw_banner_mobile_image_preview').html('<img src="' + attachment.url + '" style="max-width:300px;height:auto;object-fit:cover;border:1px solid #ddd;" />');
+                    }
+                });
+            });
+            
+            $('#dw_banner_mobile_image_remove').on('click', function(e) {
+                e.preventDefault();
+                $('#dw_banner_mobile_image').val('');
+                $('#dw_banner_mobile_image_preview').html('');
+            });
+            
+            // Banner sub image uploader
+            $('#dw_banner_sub_image_button').on('click', function(e) {
+                e.preventDefault();
+                self.openMediaFrame({
+                    title: '서브 배너 이미지 업로드',
+                    button: { text: '선택' },
+                    library: { type: 'image' },
+                    multiple: false,
+                    onSelect: function(attachment) {
+                        $('#dw_banner_sub_image').val(attachment.id);
+                        $('#dw_banner_sub_image_preview').html('<img src="' + attachment.url + '" style="max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;" />');
+                    }
+                });
+            });
+            
+            $('#dw_banner_sub_image_remove').on('click', function(e) {
+                e.preventDefault();
+                $('#dw_banner_sub_image').val('');
+                $('#dw_banner_sub_image_preview').html('');
+            });
+            
+            // Date reset buttons
+            $('#dw_banner_start_date_reset').on('click', function(e) {
+                e.preventDefault();
+                $('#dw_banner_start_date').val('');
+            });
+            
+            $('#dw_banner_end_date_reset').on('click', function(e) {
+                e.preventDefault();
+                $('#dw_banner_end_date').val('');
+            });
+        }
     }
-};
 
-
-
+})(jQuery);

@@ -32,6 +32,18 @@ $dashboard_fields_visibility = get_option('dw_dashboard_fields_visibility', 'adm
 
 // GitHub settings
 $github_token = get_option('dw_github_access_token', '');
+
+// Data deletion setting
+$delete_data_on_uninstall = get_option('dw_delete_data_on_uninstall', 'no');
+
+// Widget settings
+$enable_gallery_widget = get_option('dw_enable_gallery_widget', 'yes');
+$enable_sermon_widget = get_option('dw_enable_sermon_widget', 'yes');
+$enable_bulletin_widget = get_option('dw_enable_bulletin_widget', 'yes');
+$enable_column_widget = get_option('dw_enable_column_widget', 'yes');
+$enable_banner_slider_widget = get_option('dw_enable_banner_slider_widget', 'yes');
+$enable_pastoral_column_widget = get_option('dw_enable_pastoral_column_widget', 'yes');
+$enable_pastoral_columns_grid_widget = get_option('dw_enable_pastoral_columns_grid_widget', 'yes');
 ?>
 
 <div class="wrap">
@@ -44,6 +56,9 @@ $github_token = get_option('dw_github_access_token', '');
     <h2 class="nav-tab-wrapper">
         <a href="?page=dasom-church-settings&tab=church_info" class="nav-tab <?php echo $active_tab == 'church_info' ? 'nav-tab-active' : ''; ?>">
             <?php _e('교회 정보', 'dasom-church'); ?>
+        </a>
+        <a href="?page=dasom-church-settings&tab=widgets" class="nav-tab <?php echo $active_tab == 'widgets' ? 'nav-tab-active' : ''; ?>">
+            <?php _e('위젯', 'dasom-church'); ?>
         </a>
         <a href="?page=dasom-church-settings&tab=plugin_settings" class="nav-tab <?php echo $active_tab == 'plugin_settings' ? 'nav-tab-active' : ''; ?>">
             <?php _e('설정', 'dasom-church'); ?>
@@ -192,6 +207,199 @@ $github_token = get_option('dw_github_access_token', '');
                 </td>
             </tr>
         </table>
+        
+        <h2><?php echo esc_html__('플러그인 삭제 설정', 'dasom-church'); ?></h2>
+        <table class="form-table">
+            <tr>
+                <th scope="row">
+                    <label for="dw_delete_data_on_uninstall"><?php echo esc_html__('플러그인 삭제 시 데이터 삭제', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <fieldset>
+                        <label>
+                            <input type="checkbox" id="dw_delete_data_on_uninstall" name="dw_delete_data_on_uninstall" value="yes" <?php checked($delete_data_on_uninstall, 'yes'); ?> />
+                            <?php echo esc_html__('플러그인 삭제 시 모든 데이터 삭제', 'dasom-church'); ?>
+                        </label>
+                        <p class="description" style="margin-top:10px;">
+                            <strong style="color:#dc3545;">⚠️ <?php echo esc_html__('주의:', 'dasom-church'); ?></strong><br>
+                            <?php echo esc_html__('이 옵션을 활성화하면 플러그인을 삭제할 때 다음 데이터가 모두 삭제됩니다:', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('모든 포스트 (주보, 설교, 컬럼, 앨범, 배너)', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('모든 커스텀 필드 데이터', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('모든 설정 정보', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('설교자 taxonomy 데이터', 'dasom-church'); ?><br><br>
+                            <strong style="color:#2271b1;">💡 <?php echo esc_html__('권장:', 'dasom-church'); ?></strong><br>
+                            <?php echo esc_html__('데이터를 보존하려면 이 옵션을 비활성화한 채로 두세요. 플러그인을 다시 설치하면 기존 데이터를 그대로 사용할 수 있습니다.', 'dasom-church'); ?>
+                        </p>
+                    </fieldset>
+                </td>
+            </tr>
+        </table>
+        
+        <?php elseif ($active_tab == 'widgets'): ?>
+        <!-- 위젯 설정 탭 -->
+        <h2><?php _e('위젯 관리', 'dasom-church'); ?></h2>
+        <p class="description" style="margin-bottom:20px;">
+            <?php _e('DW 교회관리 시스템에서 제공하는 위젯의 사용 여부를 관리할 수 있습니다. 위젯은 Elementor, 구텐버그, Kadence Block Pro에서 사용 가능합니다.', 'dasom-church'); ?>
+        </p>
+        
+        <table class="form-table">
+            <tr>
+                <th scope="row">
+                    <label for="dw_enable_gallery_widget"><?php echo esc_html__('DW Gallery Widget', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <fieldset>
+                        <label>
+                            <input type="checkbox" id="dw_enable_gallery_widget" name="dw_enable_gallery_widget" value="yes" <?php checked($enable_gallery_widget, 'yes'); ?> />
+                            <?php echo esc_html__('DW Gallery Widget 사용', 'dasom-church'); ?>
+                        </label>
+                        <p class="description" style="margin-top:10px;">
+                            <strong><?php echo esc_html__('기능:', 'dasom-church'); ?></strong><br>
+                            • <?php echo esc_html__('교회앨범 이미지를 갤러리 형태로 표시', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('Grid / Masonry 레이아웃 선택', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('반응형 컬럼 설정 (1-6 컬럼)', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('이미지 크기 선택 (Thumbnail, Medium, Large, Full)', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('Elementor, 구텐버그, Kadence Block Pro 지원', 'dasom-church'); ?><br><br>
+                            <strong style="color:#2271b1;">💡 <?php echo esc_html__('사용 방법:', 'dasom-church'); ?></strong><br>
+                            <?php echo esc_html__('• Elementor: 위젯 패널에서 "DW Gallery" 검색', 'dasom-church'); ?><br>
+                            <?php echo esc_html__('• 구텐버그: 블록 추가에서 "DW Gallery" 검색', 'dasom-church'); ?><br>
+                            <?php echo esc_html__('• Kadence: 자동으로 모든 블록 호환', 'dasom-church'); ?>
+                        </p>
+                    </fieldset>
+                </td>
+            </tr>
+            
+            <tr>
+                <th scope="row">
+                    <label for="dw_enable_sermon_widget"><?php echo esc_html__('DW Recent Sermons Widget', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <fieldset>
+                        <label>
+                            <input type="checkbox" id="dw_enable_sermon_widget" name="dw_enable_sermon_widget" value="yes" <?php checked($enable_sermon_widget, 'yes'); ?> />
+                            <?php echo esc_html__('DW Recent Sermons Widget 사용', 'dasom-church'); ?>
+                        </label>
+                        <p class="description" style="margin-top:10px;">
+                            <strong><?php echo esc_html__('기능:', 'dasom-church'); ?></strong><br>
+                            • <?php echo esc_html__('최근 설교 목록 표시', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('Grid / List 레이아웃 선택', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('설교일, 설교자, 썸네일 표시', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('반응형 컬럼 설정', 'dasom-church'); ?>
+                        </p>
+                    </fieldset>
+                </td>
+            </tr>
+            
+            <tr>
+                <th scope="row">
+                    <label for="dw_enable_bulletin_widget"><?php echo esc_html__('DW Bulletins Widget', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <fieldset>
+                        <label>
+                            <input type="checkbox" id="dw_enable_bulletin_widget" name="dw_enable_bulletin_widget" value="yes" <?php checked($enable_bulletin_widget, 'yes'); ?> />
+                            <?php echo esc_html__('DW Bulletins Widget 사용', 'dasom-church'); ?>
+                        </label>
+                        <p class="description" style="margin-top:10px;">
+                            <strong><?php echo esc_html__('기능:', 'dasom-church'); ?></strong><br>
+                            • <?php echo esc_html__('최근 주보 목록 표시', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('PDF 다운로드 링크', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('주보 이미지 썸네일', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('날짜순 정렬', 'dasom-church'); ?>
+                        </p>
+                    </fieldset>
+                </td>
+            </tr>
+            
+            <tr>
+                <th scope="row">
+                    <label for="dw_enable_column_widget"><?php echo esc_html__('DW Pastoral Columns Widget', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <fieldset>
+                        <label>
+                            <input type="checkbox" id="dw_enable_column_widget" name="dw_enable_column_widget" value="yes" <?php checked($enable_column_widget, 'yes'); ?> />
+                            <?php echo esc_html__('DW Pastoral Columns Widget 사용', 'dasom-church'); ?>
+                        </label>
+                        <p class="description" style="margin-top:10px;">
+                            <strong><?php echo esc_html__('기능:', 'dasom-church'); ?></strong><br>
+                            • <?php echo esc_html__('최근 목회컬럼 목록 표시', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('컬럼 썸네일 및 발췌문', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('Grid 레이아웃', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('반응형 컬럼 설정', 'dasom-church'); ?>
+                        </p>
+                    </fieldset>
+                </td>
+            </tr>
+            
+            <tr>
+                <th scope="row">
+                    <label for="dw_enable_banner_slider_widget"><?php echo esc_html__('DW Banner Slider Widget', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <fieldset>
+                        <label>
+                            <input type="checkbox" id="dw_enable_banner_slider_widget" name="dw_enable_banner_slider_widget" value="yes" <?php checked($enable_banner_slider_widget, 'yes'); ?> />
+                            <?php echo esc_html__('DW Banner Slider Widget 사용', 'dasom-church'); ?>
+                        </label>
+                        <p class="description" style="margin-top:10px;">
+                            <strong><?php echo esc_html__('기능:', 'dasom-church'); ?></strong><br>
+                            • <?php echo esc_html__('배너 슬라이더 (Swiper.js)', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('카테고리별 필터링 (메인/서브)', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('자동재생, 네비게이션, 페이지네이션', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('배너 링크 및 타겟 설정', 'dasom-church'); ?>
+                        </p>
+                    </fieldset>
+                </td>
+            </tr>
+            
+            <tr>
+                <th scope="row">
+                    <label for="dw_enable_pastoral_column_widget"><?php echo esc_html__('DW Pastoral Column Widget', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <fieldset>
+                        <label>
+                            <input type="checkbox" id="dw_enable_pastoral_column_widget" name="dw_enable_pastoral_column_widget" value="yes" <?php checked($enable_pastoral_column_widget, 'yes'); ?> />
+                            <?php echo esc_html__('DW Pastoral Column Widget 사용', 'dasom-church'); ?>
+                        </label>
+                        <p class="description" style="margin-top:10px;">
+                            <strong><?php echo esc_html__('기능:', 'dasom-church'); ?></strong><br>
+                            • <?php echo esc_html__('단일 목회 컬럼 표시', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('상단 이미지, 제목, 날짜, 내용, 하단 이미지, YouTube', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('Query: Current Post, Latest Post, Manual Selection', 'dasom-church'); ?>
+                        </p>
+                    </fieldset>
+                </td>
+            </tr>
+            
+            <tr>
+                <th scope="row">
+                    <label for="dw_enable_pastoral_columns_grid_widget"><?php echo esc_html__('DW Pastoral Columns Recent Grid Widget', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <fieldset>
+                        <label>
+                            <input type="checkbox" id="dw_enable_pastoral_columns_grid_widget" name="dw_enable_pastoral_columns_grid_widget" value="yes" <?php checked($enable_pastoral_columns_grid_widget, 'yes'); ?> />
+                            <?php echo esc_html__('DW Pastoral Columns Recent Grid Widget 사용', 'dasom-church'); ?>
+                        </label>
+                        <p class="description" style="margin-top:10px;">
+                            <strong><?php echo esc_html__('기능:', 'dasom-church'); ?></strong><br>
+                            • <?php echo esc_html__('최근 목회 컬럼 그리드 표시', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('썸네일, 제목, 날짜, 발췌문 표시', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('그리드/리스트 레이아웃, Pagination 지원', 'dasom-church'); ?>
+                        </p>
+                    </fieldset>
+                </td>
+            </tr>
+        </table>
+        
+        <div style="background:#f0f7ff;padding:15px;border-left:4px solid #2271b1;margin-top:20px;">
+            <h3 style="margin-top:0;">✨ <?php _e('8개의 위젯 사용 가능!', 'dasom-church'); ?></h3>
+            <p style="margin-bottom:0;">
+                <?php _e('모든 위젯은 Elementor에서 사용할 수 있습니다. 필요에 따라 개별적으로 활성화/비활성화할 수 있습니다.', 'dasom-church'); ?>
+            </p>
+        </div>
         
         <?php endif; ?>
         

@@ -65,6 +65,12 @@ class Dasom_Church_Admin {
         
         // Admin head styles
         add_action('admin_head', array($this, 'dasom_church_admin_head_styles'));
+        
+        // Banner scheduling cron
+        add_action('dasom_church_check_banner_schedule', array($this, 'dasom_church_check_expired_banners'));
+        if (!wp_next_scheduled('dasom_church_check_banner_schedule')) {
+            wp_schedule_event(time(), 'hourly', 'dasom_church_check_banner_schedule');
+        }
     }
     
     /**
@@ -225,6 +231,54 @@ class Dasom_Church_Admin {
             'capability_type' => 'post',
             'map_meta_cap' => true,
         ));
+        
+        // 배너
+        register_post_type('banner', array(
+            'labels' => array(
+                'name' => __('배너', 'dasom-church'),
+                'singular_name' => __('배너', 'dasom-church'),
+                'menu_name' => __('배너', 'dasom-church'),
+                'add_new' => __('새 배너 추가', 'dasom-church'),
+                'add_new_item' => __('새 배너 추가', 'dasom-church'),
+                'edit_item' => __('배너 편집', 'dasom-church'),
+                'new_item' => __('새 배너', 'dasom-church'),
+                'view_item' => __('배너 보기', 'dasom-church'),
+                'search_items' => __('배너 검색', 'dasom-church'),
+                'not_found' => __('배너를 찾을 수 없습니다', 'dasom-church'),
+                'not_found_in_trash' => __('휴지통에서 배너를 찾을 수 없습니다', 'dasom-church'),
+            ),
+            'public' => true,
+            'show_in_menu' => 'dasom-church-admin',
+            'menu_position' => 5,
+            'supports' => array('title'),
+            'show_in_rest' => false,
+            'capability_type' => 'post',
+            'map_meta_cap' => true,
+        ));
+        
+        // 이벤트
+        register_post_type('event', array(
+            'labels' => array(
+                'name' => __('이벤트', 'dasom-church'),
+                'singular_name' => __('이벤트', 'dasom-church'),
+                'menu_name' => __('이벤트', 'dasom-church'),
+                'add_new' => __('새 이벤트 추가', 'dasom-church'),
+                'add_new_item' => __('새 이벤트 추가', 'dasom-church'),
+                'edit_item' => __('이벤트 편집', 'dasom-church'),
+                'new_item' => __('새 이벤트', 'dasom-church'),
+                'view_item' => __('이벤트 보기', 'dasom-church'),
+                'search_items' => __('이벤트 검색', 'dasom-church'),
+                'not_found' => __('이벤트를 찾을 수 없습니다', 'dasom-church'),
+                'not_found_in_trash' => __('휴지통에서 이벤트를 찾을 수 없습니다', 'dasom-church'),
+            ),
+            'public' => true,
+            'show_in_menu' => 'dasom-church-admin',
+            'menu_position' => 6,
+            'supports' => array('title'),
+            'show_in_rest' => false,
+            'capability_type' => 'post',
+            'map_meta_cap' => true,
+        ));
     }
     
     /**
@@ -280,6 +334,30 @@ class Dasom_Church_Admin {
             ),
         ));
         
+        // 배너 카테고리
+        register_taxonomy('banner_category', 'banner', array(
+            'labels' => array(
+                'name' => __('배너 카테고리', 'dasom-church'),
+                'singular_name' => __('배너 카테고리', 'dasom-church'),
+                'menu_name' => __('배너 카테고리', 'dasom-church'),
+                'add_new_item' => __('새 카테고리 추가', 'dasom-church'),
+                'edit_item' => __('카테고리 편집', 'dasom-church'),
+                'update_item' => __('카테고리 업데이트', 'dasom-church'),
+                'search_items' => __('카테고리 검색', 'dasom-church'),
+                'not_found' => __('카테고리를 찾을 수 없습니다', 'dasom-church'),
+            ),
+            'hierarchical' => true,
+            'show_admin_column' => true,
+            'rewrite' => array('slug' => 'banner-category'),
+            'show_in_rest' => true,
+            'capabilities' => array(
+                'manage_terms' => 'manage_categories',
+                'edit_terms' => 'manage_categories',
+                'delete_terms' => 'manage_categories',
+                'assign_terms' => 'edit_posts',
+            ),
+        ));
+        
         // 기본 카테고리 및 설교자 생성
         $this->dasom_church_create_default_terms();
     }
@@ -301,6 +379,21 @@ class Dasom_Church_Admin {
                 $result = wp_insert_term($category, 'sermon_category');
                 if (is_wp_error($result)) {
                     error_log('Failed to create sermon category: ' . $result->get_error_message());
+                }
+            }
+        }
+        
+        // 기본 배너 카테고리 생성
+        $default_banner_categories = array(
+            __('메인 배너', 'dasom-church'),
+            __('서브 배너', 'dasom-church')
+        );
+        
+        foreach ($default_banner_categories as $category) {
+            if (!term_exists($category, 'banner_category')) {
+                $result = wp_insert_term($category, 'banner_category');
+                if (is_wp_error($result)) {
+                    error_log('Failed to create banner category: ' . $result->get_error_message());
                 }
             }
         }
@@ -544,6 +637,41 @@ class Dasom_Church_Admin {
     }
     
     /**
+     * Check and update expired banners
+     */
+    public function dasom_church_check_expired_banners() {
+        $args = array(
+            'post_type' => 'banner',
+            'post_status' => 'publish',
+            'posts_per_page' => -1,
+            'meta_query' => array(
+                array(
+                    'key' => 'dw_banner_end_date',
+                    'value' => '',
+                    'compare' => '!='
+                )
+            )
+        );
+        
+        $banners = get_posts($args);
+        $current_time = current_time('timestamp');
+        
+        foreach ($banners as $banner) {
+            $end_date = get_post_meta($banner->ID, 'dw_banner_end_date', true);
+            if (!empty($end_date)) {
+                $end_timestamp = strtotime($end_date);
+                if ($end_timestamp && $end_timestamp < $current_time) {
+                    wp_update_post(array(
+                        'ID' => $banner->ID,
+                        'post_status' => 'draft'
+                    ));
+                    error_log('Banner ID ' . $banner->ID . ' expired and set to draft');
+                }
+            }
+        }
+    }
+    
+    /**
      * Handle settings form submission
      */
     public function dasom_church_handle_settings_save() {
@@ -594,6 +722,35 @@ class Dasom_Church_Admin {
                 delete_transient('dasom_church_plugin_info_' . md5($github_username . $github_repo));
             }
         }
+        
+        // Save data deletion setting
+        $delete_data = isset($_POST['dw_delete_data_on_uninstall']) ? 'yes' : 'no';
+        update_option('dw_delete_data_on_uninstall', $delete_data);
+        
+        // Save widget settings
+        $enable_gallery_widget = isset($_POST['dw_enable_gallery_widget']) ? 'yes' : 'no';
+        update_option('dw_enable_gallery_widget', $enable_gallery_widget);
+        
+        $enable_sermon_widget = isset($_POST['dw_enable_sermon_widget']) ? 'yes' : 'no';
+        update_option('dw_enable_sermon_widget', $enable_sermon_widget);
+        
+        $enable_single_sermon_widget = isset($_POST['dw_enable_single_sermon_widget']) ? 'yes' : 'no';
+        update_option('dw_enable_single_sermon_widget', $enable_single_sermon_widget);
+        
+        $enable_bulletin_widget = isset($_POST['dw_enable_bulletin_widget']) ? 'yes' : 'no';
+        update_option('dw_enable_bulletin_widget', $enable_bulletin_widget);
+        
+        $enable_column_widget = isset($_POST['dw_enable_column_widget']) ? 'yes' : 'no';
+        update_option('dw_enable_column_widget', $enable_column_widget);
+        
+        $enable_banner_slider_widget = isset($_POST['dw_enable_banner_slider_widget']) ? 'yes' : 'no';
+        update_option('dw_enable_banner_slider_widget', $enable_banner_slider_widget);
+        
+        $enable_pastoral_column_widget = isset($_POST['dw_enable_pastoral_column_widget']) ? 'yes' : 'no';
+        update_option('dw_enable_pastoral_column_widget', $enable_pastoral_column_widget);
+        
+        $enable_pastoral_columns_grid_widget = isset($_POST['dw_enable_pastoral_columns_grid_widget']) ? 'yes' : 'no';
+        update_option('dw_enable_pastoral_columns_grid_widget', $enable_pastoral_columns_grid_widget);
         
         add_action('admin_notices', function() {
             echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Settings saved successfully!', 'dasom-church') . '</p></div>';

@@ -1,0 +1,34 @@
+{
+    "name": "dasomweb/dasom-church-management-system",
+    "description": "Complete church management system for bulletins, sermons, columns, and albums with modern security practices",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Dasomweb",
+            "email": "support@dasomweb.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5",
+        "yoast/phpunit-polyfills": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Dasom_Church\\": "includes/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Dasom_Church\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test:coverage": "phpunit --coverage-html coverage"
+    }
+}
+
