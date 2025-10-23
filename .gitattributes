@@ -1,0 +1,55 @@
+# .gitattributes
+# git archive 시 자동 제외할 파일/폴더 (배포용 ZIP에 포함하지 않음)
+
+# Git 관련
+.git* export-ignore
+.github/ export-ignore
+
+# IDE
+.vscode/ export-ignore
+.idea/ export-ignore
+
+# 테스트
+tests/ export-ignore
+bin/ export-ignore
+phpunit.xml export-ignore
+phpunit.xml.dist export-ignore
+.phpunit.result.cache export-ignore
+
+# 의존성
+node_modules/ export-ignore
+vendor/ export-ignore
+composer.json export-ignore
+composer.lock export-ignore
+package.json export-ignore
+package-lock.json export-ignore
+
+# 개발 도구
+docker-compose.yml export-ignore
+build.sh export-ignore
+build.ps1 export-ignore
+*.ps1 export-ignore
+
+# 개발 문서 (사용자에게 불필요)
+README.md export-ignore
+CONTRIBUTING.md export-ignore
+SETUP-DEVELOPMENT.md export-ignore
+README-TESTING.md export-ignore
+WORDPRESS-URL-FIX.md export-ignore
+ELEMENTOR-CACHE-CLEAR-GUIDE.md export-ignore
+MIGRATION-GUIDE.md export-ignore
+WORDPRESS-PLUGIN-AUTO-UPDATE-GUIDE.md export-ignore
+
+# 디버그/테스트 스크립트
+check-github-status.ps1 export-ignore
+check-widget-version.php export-ignore
+clear-elementor-cache.php export-ignore
+debug-banner-meta.php export-ignore
+force-reload-widgets.php export-ignore
+run-tests.ps1 export-ignore
+verify-tests.ps1 export-ignore
+
+# OS 파일
+.DS_Store export-ignore
+Thumbs.db export-ignore
+
