@@ -147,7 +147,8 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                     'layout_type' => 'grid',
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .dw-bulletin-grid' => 'grid-template-columns: repeat({{VALUE}}, 1fr);',
+                    '{{WRAPPER}} .dw-bulletin-image-grid' => 'grid-template-columns: repeat({{VALUE}}, 1fr);',
+                    '{{WRAPPER}} .dw-bulletin-button-grid' => 'grid-template-columns: repeat({{VALUE}}, 1fr);',
                 ],
             ]
         );
