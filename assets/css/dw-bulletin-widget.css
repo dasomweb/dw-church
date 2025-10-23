@@ -153,6 +153,12 @@
     font-weight: bold;
 }
 
+.dw-bulletin-download-container {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
 .dw-bulletin-download {
     background: #007cba;
     color: #fff;
@@ -191,6 +197,9 @@
     background: #fff;
     transition: all 0.3s ease;
     cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .dw-bulletin-item:hover {
