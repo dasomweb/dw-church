@@ -5,6 +5,17 @@ All notable changes to the DW Church Management System project will be documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.34.5] - 2025-01-27
+
+### Fixed
+- **Featured Image Support**: Enabled featured image support for bulletin post type
+- **Post Type Name**: Corrected post type name from 'bulletin' to 'dasom_bulletin' in widget
+- **Widget Compatibility**: Fixed bulletin widget to work with correct post type
+
+### Enhanced
+- **Post Type Registration**: Added thumbnail support to bulletin post type registration
+- **Widget Functionality**: Ensured bulletin widget works with correct post type
+
 ## [1.34.4] - 2025-01-27
 
 ### Fixed

@@ -67,7 +67,7 @@ class Dasom_Church_Loader {
             'public' => true,
             'show_in_menu' => 'dasom-church-admin',
             'menu_position' => 1,
-            'supports' => array(),
+            'supports' => array('title', 'thumbnail'),
             'show_in_rest' => false,
             'capability_type' => 'post',
             'capabilities' => array(

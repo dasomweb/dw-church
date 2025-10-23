@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.34.4
+Stable tag: 1.34.5
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.34.5 =
+* Fix: Enable featured image support for bulletin post type
+* Fix: Correct post type name from 'bulletin' to 'dasom_bulletin' in widget
+* Enhancement: Add thumbnail support to bulletin post type registration
+* Improvement: Ensure bulletin widget works with correct post type
 
 = 1.34.4 =
 * Fix: Update DASOM_CHURCH_VERSION constant to match plugin header
