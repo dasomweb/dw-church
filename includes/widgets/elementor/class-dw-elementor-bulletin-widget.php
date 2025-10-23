@@ -986,7 +986,16 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                 $pdf_url = get_post_meta($post->ID, 'dw_bulletin_pdf', true);
                 $featured_image = get_the_post_thumbnail_url($post->ID, 'medium');
                 $bulletin_date = get_post_meta($post->ID, 'dw_bulletin_date', true);
-                $post_date = $bulletin_date ? date_i18n('Y년 m월 d일', strtotime($bulletin_date)) : get_the_date('Y년 m월 d일', $post->ID);
+                $bulletin_date_formatted = get_post_meta($post->ID, 'dw_bulletin_date_formatted', true);
+                
+                // Use formatted date if available, otherwise format the date
+                if ($bulletin_date_formatted) {
+                    $post_date = $bulletin_date_formatted;
+                } elseif ($bulletin_date) {
+                    $post_date = date_i18n('Y년 m월 d일', strtotime($bulletin_date));
+                } else {
+                    $post_date = get_the_date('Y년 m월 d일', $post->ID);
+                }
             ?>
                 <div class="<?php echo esc_attr($item_class); ?>" data-hover="<?php echo esc_attr($hover_effect); ?>" data-shadow-color="<?php echo esc_attr($shadow_color); ?>">
                     <?php if ($featured_image): ?>
@@ -1026,7 +1035,16 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
             <?php foreach ($posts as $post): 
                 $pdf_url = get_post_meta($post->ID, 'dw_bulletin_pdf', true);
                 $bulletin_date = get_post_meta($post->ID, 'dw_bulletin_date', true);
-                $post_date = $bulletin_date ? date_i18n('Y년 m월 d일', strtotime($bulletin_date)) : get_the_date('Y년 m월 d일', $post->ID);
+                $bulletin_date_formatted = get_post_meta($post->ID, 'dw_bulletin_date_formatted', true);
+                
+                // Use formatted date if available, otherwise format the date
+                if ($bulletin_date_formatted) {
+                    $post_date = $bulletin_date_formatted;
+                } elseif ($bulletin_date) {
+                    $post_date = date_i18n('Y년 m월 d일', strtotime($bulletin_date));
+                } else {
+                    $post_date = get_the_date('Y년 m월 d일', $post->ID);
+                }
                 
                 // Create title with date
                 $title_with_date = $post_date . ' ' . $post->post_title;
