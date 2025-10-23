@@ -146,7 +146,7 @@ class Dasom_Church_Admin {
             'show_ui' => true,
             'show_in_menu' => 'dasom-church-admin',
             'menu_position' => 1,
-            'supports' => array('title', 'author'),
+            'supports' => array('title', 'author', 'thumbnail'),
             'show_in_rest' => true,
             'has_archive' => true,
             'rewrite' => array('slug' => 'bulletin'),

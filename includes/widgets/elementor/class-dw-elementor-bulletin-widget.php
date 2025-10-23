@@ -815,7 +815,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
      */
     private function get_bulletin_posts() {
         $posts = get_posts([
-            'post_type' => 'dasom_bulletin',
+            'post_type' => 'bulletin',
             'posts_per_page' => -1,
             'post_status' => 'publish',
         ]);
@@ -838,7 +838,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         if ($settings['query_source'] === 'current') {
             // Current post
             $current_post = get_post();
-            if ($current_post && $current_post->post_type === 'dasom_bulletin') {
+            if ($current_post && $current_post->post_type === 'bulletin') {
                 $posts = [$current_post];
             } else {
                 $posts = [];
@@ -846,7 +846,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         } elseif ($settings['query_source'] === 'manual' && !empty($settings['bulletin_posts'])) {
             // Manual selection
             $posts = get_posts([
-                'post_type' => 'dasom_bulletin',
+                'post_type' => 'bulletin',
                 'post__in' => $settings['bulletin_posts'],
                 'posts_per_page' => -1,
                 'post_status' => 'publish',
@@ -855,7 +855,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         } else {
             // Latest posts
             $posts = get_posts([
-                'post_type' => 'dasom_bulletin',
+            'post_type' => 'bulletin',
                 'posts_per_page' => $settings['posts_per_page'],
             'post_status' => 'publish',
                 'orderby' => 'date',

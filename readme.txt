@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.35.0
+Stable tag: 1.35.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.35.1 =
+* Fix: Add thumbnail support to bulletin post type for Featured Image display
+* Fix: Update bulletin widget to use correct 'bulletin' post type
+* Enhancement: Ensure bulletin post editing shows Featured Image meta box
+* Improvement: Align bulletin widget with correct post type and meta fields
 
 = 1.35.0 =
 * Revert: Restore sermon widgets to v1.33.0 working configuration

@@ -51,7 +51,7 @@ class Dasom_Church_Loader {
      */
     public function dasom_church_register_post_types() {
         // Church Bulletin
-        register_post_type('dasom_bulletin', array(
+        register_post_type('bulletin', array(
             'labels' => array(
                 'name' => __('Church Bulletins', 'dasom-church'),
                 'singular_name' => __('Bulletin', 'dasom-church'),
@@ -184,7 +184,7 @@ class Dasom_Church_Loader {
      * Disable block editor for specific post types
      */
     public function dasom_church_disable_block_editor($use, $post_type) {
-        if (in_array($post_type, array('dasom_bulletin', 'dasom_sermon'))) {
+        if (in_array($post_type, array('bulletin', 'dasom_sermon'))) {
             return false;
         }
         return $use;
@@ -198,7 +198,7 @@ class Dasom_Church_Loader {
             'dasom_bulletin_meta',
             __('Bulletin Information', 'dasom-church'),
             array($this, 'dasom_church_bulletin_meta_box'),
-            'dasom_bulletin',
+            'bulletin',
             'normal',
             'default'
         );
