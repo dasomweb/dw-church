@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.34.1
+Stable tag: 1.34.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.34.2 =
+* Feature: Add automatic featured image setting for bulletin posts
+* Enhancement: First uploaded image automatically becomes featured image
+* Enhancement: Consistent behavior with church album functionality
+* Improvement: Better visual representation in DW Bulletin Widget
 
 = 1.34.1 =
 * Fix: Add announcement icon to DW Bulletin Widget

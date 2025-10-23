@@ -5,6 +5,17 @@ All notable changes to the DW Church Management System project will be documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.34.2] - 2025-01-27
+
+### Added
+- Automatic featured image setting for bulletin posts
+- First uploaded image automatically becomes featured image
+
+### Enhanced
+- Consistent behavior with church album functionality
+- Better visual representation in DW Bulletin Widget
+- Improved bulletin post management workflow
+
 ## [1.34.1] - 2025-01-27
 
 ### Fixed
