@@ -700,7 +700,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $paged = (get_query_var('paged')) ? get_query_var('paged') : 1;
         
         $args = array(
-            'post_type' => 'sermon',
+            'post_type' => 'dasom_sermon',
             'posts_per_page' => $settings['posts_per_page'],
             'post_status' => 'publish',
             'orderby' => 'date',
