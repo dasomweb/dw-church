@@ -5,6 +5,19 @@ All notable changes to the DW Church Management System project will be documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.35.2] - 2025-01-27
+
+### Fixed
+- **Bulletin Widget Layout**: Updated display templates for proper layout structure
+- **Image Template**: Now shows image + date | download button (removed title)
+- **Button Template**: Shows title + date | download button
+- **Date Display**: Uses dw_bulletin_date meta field for accurate date formatting
+
+### Enhanced
+- **Template Structure**: Aligned templates with user requirements
+- **Date Source**: Prioritizes dw_bulletin_date meta field over post date
+- **Layout Consistency**: Both templates now follow the specified format
+
 ## [1.35.1] - 2025-01-27
 
 ### Fixed

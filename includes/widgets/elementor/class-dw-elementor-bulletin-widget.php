@@ -892,7 +892,8 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
             <?php foreach ($posts as $post): 
                 $pdf_url = get_post_meta($post->ID, 'dw_bulletin_pdf', true);
                 $featured_image = get_the_post_thumbnail_url($post->ID, 'medium');
-                $post_date = get_the_date('Y년 m월 d일', $post->ID);
+                $bulletin_date = get_post_meta($post->ID, 'dw_bulletin_date', true);
+                $post_date = $bulletin_date ? date_i18n('Y년 m월 d일', strtotime($bulletin_date)) : get_the_date('Y년 m월 d일', $post->ID);
             ?>
                 <div class="dw-bulletin-image-item" data-hover="<?php echo esc_attr($hover_effect); ?>" data-shadow-color="<?php echo esc_attr($shadow_color); ?>">
                     <?php if ($featured_image): ?>
@@ -902,7 +903,6 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                     <?php endif; ?>
                     
                     <div class="dw-bulletin-content">
-                        <div class="dw-bulletin-title"><?php echo esc_html($post->post_title); ?></div>
                         <div class="dw-bulletin-meta">
                             <span class="dw-bulletin-date"><?php echo esc_html($post_date); ?></span>
                             <?php if ($pdf_url): ?>
@@ -932,7 +932,8 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         <div class="<?php echo esc_attr($container_class); ?>">
             <?php foreach ($posts as $post): 
                 $pdf_url = get_post_meta($post->ID, 'dw_bulletin_pdf', true);
-                $post_date = get_the_date('Y년 m월 d일', $post->ID);
+                $bulletin_date = get_post_meta($post->ID, 'dw_bulletin_date', true);
+                $post_date = $bulletin_date ? date_i18n('Y년 m월 d일', strtotime($bulletin_date)) : get_the_date('Y년 m월 d일', $post->ID);
             ?>
                 <div class="dw-bulletin-item" data-hover="<?php echo esc_attr($hover_effect); ?>" data-shadow-color="<?php echo esc_attr($shadow_color); ?>">
                     <div class="dw-bulletin-title"><?php echo esc_html($post->post_title); ?></div>
