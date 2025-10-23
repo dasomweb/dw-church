@@ -70,7 +70,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         
         // Get all sermons for dropdown
         $sermons_query = new \WP_Query([
-            'post_type' => 'dasom_sermon',
+            'post_type' => 'sermon',
             'posts_per_page' => -1,
             'post_status' => 'publish',
             'orderby' => 'date',
@@ -544,7 +544,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
             global $post;
             
             // Check if we're in a sermon post
-            if ($post && get_post_type($post->ID) === 'dasom_sermon') {
+            if ($post && get_post_type($post->ID) === 'sermon') {
                 $sermon_id = $post->ID;
             } 
             // Fallback to latest if enabled
@@ -566,7 +566,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         // Query Source: Latest Post (or fallback)
         if ($query_source === 'latest' || !$sermon_id) {
             $latest_sermon = new \WP_Query([
-                'post_type' => 'dasom_sermon',
+                'post_type' => 'sermon',
                 'posts_per_page' => 1,
                 'post_status' => 'publish',
                 'orderby' => 'date',
@@ -586,7 +586,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         }
         
         // Validate sermon_id
-        if (!$sermon_id || get_post_type($sermon_id) !== 'dasom_sermon') {
+        if (!$sermon_id || get_post_type($sermon_id) !== 'sermon') {
             echo '<div class="dw-sermon-notice" style="padding:20px;background:#f8d7da;border-left:4px solid #dc3545;color:#721c24;">';
             echo '<p style="margin:0;">' . __('⚠️ 유효한 설교를 찾을 수 없습니다.', 'dasom-church') . '</p>';
             echo '</div>';
@@ -595,9 +595,9 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         
         // Get sermon data
         $title = get_the_title($sermon_id);
-        $sermon_date = get_post_meta($sermon_id, 'dasom_sermon_date', true);
-        $scripture = get_post_meta($sermon_id, 'dasom_sermon_scripture', true);
-        $youtube_url = get_post_meta($sermon_id, 'dasom_sermon_youtube', true);
+        $sermon_date = get_post_meta($sermon_id, 'dw_sermon_date', true);
+        $scripture = get_post_meta($sermon_id, 'dw_sermon_scripture', true);
+        $youtube_url = get_post_meta($sermon_id, 'dw_sermon_youtube', true);
         $preachers = wp_get_post_terms($sermon_id, 'dw_sermon_preacher', ['fields' => 'names']);
         
         // Get YouTube video ID
