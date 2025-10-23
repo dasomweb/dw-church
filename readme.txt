@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.35.2
+Stable tag: 1.35.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,14 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.35.3 =
+* Enhancement: Add image size and position controls to bulletin widget
+* Feature: Image size type selection (aspect ratio or custom)
+* Feature: Image position selection (left or top)
+* Feature: Multiple aspect ratio options (16:9, 4:3, 3:2, 1:1, 2:3, 3:4, 9:16)
+* Improvement: Left-aligned date and download button for better layout
+* Enhancement: Responsive design for mobile devices
 
 = 1.35.2 =
 * Fix: Update bulletin widget display templates for proper layout

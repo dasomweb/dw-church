@@ -200,6 +200,69 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
             ]
         );
         
+        $this->add_control(
+            'image_size_type',
+            [
+                'label' => __('Image Size Type', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'aspect_ratio',
+                'options' => [
+                    'aspect_ratio' => __('Aspect Ratio', 'dasom-church'),
+                    'custom' => __('Custom Size', 'dasom-church'),
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'image_aspect_ratio',
+            [
+                'label' => __('Aspect Ratio', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => '16-9',
+                'options' => [
+                    '16-9' => '16:9',
+                    '4-3' => '4:3',
+                    '3-2' => '3:2',
+                    '1-1' => '1:1',
+                    '2-3' => '2:3',
+                    '3-4' => '3:4',
+                    '9-16' => '9:16',
+                ],
+                'condition' => [
+                    'image_size_type' => 'aspect_ratio',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'image_width',
+            [
+                'label' => __('Image Width', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', '%'],
+                'range' => [
+                    'px' => [
+                        'min' => 100,
+                        'max' => 800,
+                    ],
+                    '%' => [
+                        'min' => 10,
+                        'max' => 100,
+                    ],
+                ],
+                'default' => [
+                    'unit' => 'px',
+                    'size' => 300,
+                ],
+                'condition' => [
+                    'image_size_type' => 'custom',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-bulletin-image' => 'width: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
         $this->add_responsive_control(
             'image_height',
             [
@@ -224,8 +287,24 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                     'unit' => 'px',
                     'size' => 200,
                 ],
+                'condition' => [
+                    'image_size_type' => 'custom',
+                ],
                 'selectors' => [
                     '{{WRAPPER}} .dw-bulletin-image' => 'height: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'image_position',
+            [
+                'label' => __('Image Position', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'left',
+                'options' => [
+                    'left' => __('Left', 'dasom-church'),
+                    'top' => __('Top', 'dasom-church'),
                 ],
             ]
         );
@@ -885,8 +964,22 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $settings = $this->get_settings_for_display();
         $hover_effect = isset($settings['card_hover_effect']) ? $settings['card_hover_effect'] : 'lift';
         $shadow_color = isset($settings['card_hover_shadow_color']) ? $settings['card_hover_shadow_color'] : 'rgba(0, 0, 0, 0.2)';
+        $image_position = isset($settings['image_position']) ? $settings['image_position'] : 'left';
+        $image_size_type = isset($settings['image_size_type']) ? $settings['image_size_type'] : 'aspect_ratio';
+        $image_aspect_ratio = isset($settings['image_aspect_ratio']) ? $settings['image_aspect_ratio'] : '16-9';
         
         $container_class = $layout_type === 'grid' ? 'dw-bulletin-image-grid' : 'dw-bulletin-image-list';
+        $item_class = 'dw-bulletin-image-item';
+        
+        if ($image_position === 'top') {
+            $item_class .= ' image-top';
+        } else {
+            $item_class .= ' image-left';
+        }
+        
+        if ($image_size_type === 'aspect_ratio') {
+            $item_class .= ' aspect-' . $image_aspect_ratio;
+        }
         ?>
         <div class="<?php echo esc_attr($container_class); ?>">
             <?php foreach ($posts as $post): 
@@ -895,7 +988,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                 $bulletin_date = get_post_meta($post->ID, 'dw_bulletin_date', true);
                 $post_date = $bulletin_date ? date_i18n('Y년 m월 d일', strtotime($bulletin_date)) : get_the_date('Y년 m월 d일', $post->ID);
             ?>
-                <div class="dw-bulletin-image-item" data-hover="<?php echo esc_attr($hover_effect); ?>" data-shadow-color="<?php echo esc_attr($shadow_color); ?>">
+                <div class="<?php echo esc_attr($item_class); ?>" data-hover="<?php echo esc_attr($hover_effect); ?>" data-shadow-color="<?php echo esc_attr($shadow_color); ?>">
                     <?php if ($featured_image): ?>
                         <div class="dw-bulletin-image">
                             <img src="<?php echo esc_url($featured_image); ?>" alt="<?php echo esc_attr($post->post_title); ?>" />

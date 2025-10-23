@@ -5,6 +5,28 @@ All notable changes to the DW Church Management System project will be documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.35.3] - 2025-01-27
+
+### Enhanced
+- **Image Size Controls**: Added image size type selection (aspect ratio or custom)
+- **Image Position**: Added image position selection (left or top)
+- **Aspect Ratios**: Multiple aspect ratio options (16:9, 4:3, 3:2, 1:1, 2:3, 3:4, 9:16)
+- **Layout Alignment**: Left-aligned date and download button for better layout
+- **Responsive Design**: Mobile-optimized layout with forced top positioning
+
+### Features
+- **Image Size Type**: Choose between aspect ratio or custom size
+- **Image Position**: Select left or top positioning for images
+- **Aspect Ratio Options**: 7 different aspect ratios for flexible layouts
+- **Custom Sizing**: Width and height controls for custom image sizes
+- **Mobile Optimization**: Automatic layout adjustment for mobile devices
+
+### Technical Improvements
+- Enhanced CSS with aspect ratio support
+- Flexible layout system for different image positions
+- Responsive design with mobile-first approach
+- Improved content alignment and spacing
+
 ## [1.35.2] - 2025-01-27
 
 ### Fixed
