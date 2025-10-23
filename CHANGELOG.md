@@ -5,6 +5,17 @@ All notable changes to the DW Church Management System project will be documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.34.6] - 2025-01-27
+
+### Enhanced
+- **Query Source Options**: Added 'Current Post' option to bulletin widget query source
+- **Query Handling**: Improved query source handling for better flexibility
+- **Current Post Detection**: Enhanced current post detection for bulletin posts
+
+### Fixed
+- **Widget Functionality**: Ensured current post detection works correctly for bulletins
+- **Query Logic**: Fixed query logic to handle all three source types properly
+
 ## [1.34.5] - 2025-01-27
 
 ### Fixed

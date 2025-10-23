@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.34.5
+Stable tag: 1.34.6
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,11 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.34.6 =
+* Enhancement: Add 'Current Post' option to bulletin widget query source
+* Improvement: Better query source handling for bulletin widget
+* Fix: Ensure current post detection works correctly for bulletins
 
 = 1.34.5 =
 * Fix: Enable featured image support for bulletin post type

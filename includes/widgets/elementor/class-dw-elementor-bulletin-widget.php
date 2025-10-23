@@ -70,6 +70,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                 'default' => 'latest',
                 'options' => [
                     'latest' => __('Latest Posts', 'dasom-church'),
+                    'current' => __('Current Post', 'dasom-church'),
                     'manual' => __('Manual Selection', 'dasom-church'),
                 ],
             ]
@@ -834,7 +835,16 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $settings = $this->get_settings_for_display();
         
         // Get posts based on query source
-        if ($settings['query_source'] === 'manual' && !empty($settings['bulletin_posts'])) {
+        if ($settings['query_source'] === 'current') {
+            // Current post
+            $current_post = get_post();
+            if ($current_post && $current_post->post_type === 'dasom_bulletin') {
+                $posts = [$current_post];
+            } else {
+                $posts = [];
+            }
+        } elseif ($settings['query_source'] === 'manual' && !empty($settings['bulletin_posts'])) {
+            // Manual selection
             $posts = get_posts([
                 'post_type' => 'dasom_bulletin',
                 'post__in' => $settings['bulletin_posts'],
@@ -843,8 +853,9 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                 'orderby' => 'post__in',
             ]);
         } else {
+            // Latest posts
             $posts = get_posts([
-            'post_type' => 'dasom_bulletin',
+                'post_type' => 'dasom_bulletin',
                 'posts_per_page' => $settings['posts_per_page'],
             'post_status' => 'publish',
                 'orderby' => 'date',
