@@ -260,6 +260,14 @@ class Dasom_Church_Widgets {
         // ImagesLoaded for Masonry
         wp_enqueue_script('imagesloaded');
         
+        // DW Bulletin Widget CSS
+        wp_enqueue_style(
+            'dw-bulletin-widget',
+            DASOM_CHURCH_PLUGIN_URL . 'assets/css/dw-bulletin-widget.css',
+            array(),
+            '1.34.0'
+        );
+        
         // GLightbox for gallery lightbox
         wp_enqueue_style(
             'glightbox',
