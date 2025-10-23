@@ -154,9 +154,9 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         );
         
         $this->add_responsive_control(
-            'grid_gap',
+            'grid_gap_horizontal',
             [
-                'label' => __('Grid Gap', 'dasom-church'),
+                'label' => __('Grid Gap (Horizontal)', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px', 'em'],
                 'range' => [
@@ -173,7 +173,34 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                     'layout_type' => 'grid',
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .dw-bulletin-grid' => 'gap: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .dw-bulletin-image-grid' => 'column-gap: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .dw-bulletin-button-grid' => 'column-gap: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'grid_gap_vertical',
+            [
+                'label' => __('Grid Gap (Vertical)', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 100,
+                    ],
+                ],
+                'default' => [
+                    'unit' => 'px',
+                    'size' => 20,
+                ],
+                'condition' => [
+                    'layout_type' => 'grid',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-bulletin-image-grid' => 'row-gap: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .dw-bulletin-button-grid' => 'row-gap: {{SIZE}}{{UNIT}};',
                 ],
             ]
         );
