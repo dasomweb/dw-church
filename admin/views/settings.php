@@ -39,6 +39,7 @@ $delete_data_on_uninstall = get_option('dw_delete_data_on_uninstall', 'no');
 // Widget settings
 $enable_gallery_widget = get_option('dw_enable_gallery_widget', 'yes');
 $enable_sermon_widget = get_option('dw_enable_sermon_widget', 'yes');
+$enable_single_sermon_widget = get_option('dw_enable_single_sermon_widget', 'yes');
 $enable_bulletin_widget = get_option('dw_enable_bulletin_widget', 'yes');
 $enable_column_widget = get_option('dw_enable_column_widget', 'yes');
 $enable_banner_slider_widget = get_option('dw_enable_banner_slider_widget', 'yes');
@@ -292,6 +293,27 @@ $enable_pastoral_columns_grid_widget = get_option('dw_enable_pastoral_columns_gr
             
             <tr>
                 <th scope="row">
+                    <label for="dw_enable_single_sermon_widget"><?php echo esc_html__('DW Sermon Widget', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <fieldset>
+                        <label>
+                            <input type="checkbox" id="dw_enable_single_sermon_widget" name="dw_enable_single_sermon_widget" value="yes" <?php checked($enable_single_sermon_widget, 'yes'); ?> />
+                            <?php echo esc_html__('DW Sermon Widget 사용', 'dasom-church'); ?>
+                        </label>
+                        <p class="description" style="margin-top:10px;">
+                            <strong><?php echo esc_html__('기능:', 'dasom-church'); ?></strong><br>
+                            • <?php echo esc_html__('단일 설교 상세 정보 표시', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('설교 제목, 설교자, 성경구절', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('설교 썸네일 및 메타 정보', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('현재 포스트 / 최신 포스트 / 수동 선택', 'dasom-church'); ?>
+                        </p>
+                    </fieldset>
+                </td>
+            </tr>
+            
+            <tr>
+                <th scope="row">
                     <label for="dw_enable_bulletin_widget"><?php echo esc_html__('DW Bulletins Widget', 'dasom-church'); ?></label>
                 </th>
                 <td>
@@ -395,7 +417,7 @@ $enable_pastoral_columns_grid_widget = get_option('dw_enable_pastoral_columns_gr
         </table>
         
         <div style="background:#f0f7ff;padding:15px;border-left:4px solid #2271b1;margin-top:20px;">
-            <h3 style="margin-top:0;">✨ <?php _e('8개의 위젯 사용 가능!', 'dasom-church'); ?></h3>
+            <h3 style="margin-top:0;">✨ <?php _e('9개의 위젯 사용 가능!', 'dasom-church'); ?></h3>
             <p style="margin-bottom:0;">
                 <?php _e('모든 위젯은 Elementor에서 사용할 수 있습니다. 필요에 따라 개별적으로 활성화/비활성화할 수 있습니다.', 'dasom-church'); ?>
             </p>

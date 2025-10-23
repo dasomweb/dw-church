@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.34.7
+Stable tag: 1.34.8
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,11 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.34.8 =
+* Enhancement: Add DW Single Sermon Widget settings to admin page
+* Fix: Include missing widget configuration in settings interface
+* Improvement: Update widget count from 8 to 9 widgets
 
 = 1.34.7 =
 * Fix: Correct sermon widget post type from 'sermon' to 'dasom_sermon'
