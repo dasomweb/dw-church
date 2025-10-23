@@ -117,6 +117,19 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         );
         
         $this->add_control(
+            'show_bulletin_text',
+            [
+                'label' => __('Show "교회주보" Text', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SWITCHER,
+                'label_on' => __('Show', 'dasom-church'),
+                'label_off' => __('Hide', 'dasom-church'),
+                'return_value' => 'yes',
+                'default' => 'no',
+                'description' => __('Add "교회주보" text after the date', 'dasom-church'),
+            ]
+        );
+        
+        $this->add_control(
             'layout_type',
             [
                 'label' => __('Layout Type', 'dasom-church'),
@@ -1024,6 +1037,11 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                 } else {
                     $post_date = get_the_date('Y년 m월 d일', $post->ID);
                 }
+                
+                // Add "교회주보" text if enabled
+                if (isset($settings['show_bulletin_text']) && $settings['show_bulletin_text'] === 'yes') {
+                    $post_date .= ' 교회주보';
+                }
             ?>
                 <div class="<?php echo esc_attr($item_class); ?>" data-hover="<?php echo esc_attr($hover_effect); ?>" data-shadow-color="<?php echo esc_attr($shadow_color); ?>">
                     <?php if ($featured_image): ?>
@@ -1072,6 +1090,11 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                     $display_text = $bulletin_date;
                 } else {
                     $display_text = get_the_date('Y년 m월 d일', $post->ID);
+                }
+                
+                // Add "교회주보" text if enabled
+                if (isset($settings['show_bulletin_text']) && $settings['show_bulletin_text'] === 'yes') {
+                    $display_text .= ' 교회주보';
                 }
             ?>
                 <div class="dw-bulletin-item" data-hover="<?php echo esc_attr($hover_effect); ?>" data-shadow-color="<?php echo esc_attr($shadow_color); ?>">
