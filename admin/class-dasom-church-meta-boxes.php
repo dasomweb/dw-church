@@ -943,6 +943,16 @@ class Dasom_Church_Meta_Boxes {
         
         if (isset($_POST['dw_bulletin_images'])) {
             update_post_meta($post_id, 'dw_bulletin_images', sanitize_text_field($_POST['dw_bulletin_images']));
+            
+            // Auto-set first image as featured image
+            $images = json_decode(sanitize_text_field($_POST['dw_bulletin_images']), true);
+            if (is_array($images) && !empty($images)) {
+                $first_image_id = intval($images[0]);
+                if ($first_image_id > 0) {
+                    set_post_thumbnail($post_id, $first_image_id);
+                    error_log("Bulletin featured image set: Post ID={$post_id}, Image ID={$first_image_id}");
+                }
+            }
         }
         
         // Auto-generate title
