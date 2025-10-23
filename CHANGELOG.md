@@ -5,6 +5,19 @@ All notable changes to the DW Church Management System project will be documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.34.9] - 2025-01-27
+
+### Fixed
+- **Sermon Widget Meta Fields**: Corrected meta field names from 'dw_sermon_' to 'dasom_sermon_'
+- **Sermon Post Type Support**: Added thumbnail support to sermon post type
+- **Widget Data Display**: Fixed sermon widgets to display data correctly
+- **Meta Field Consistency**: Aligned widget meta field names with actual stored fields
+
+### Enhanced
+- **Sermon Widget Functionality**: Improved sermon widget data retrieval
+- **Post Type Features**: Added thumbnail support to sermon post type
+- **Widget Reliability**: Enhanced widget data consistency
+
 ## [1.34.7] - 2025-01-27
 
 ### Fixed

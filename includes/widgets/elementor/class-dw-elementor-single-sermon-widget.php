@@ -595,9 +595,9 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         
         // Get sermon data
         $title = get_the_title($sermon_id);
-        $sermon_date = get_post_meta($sermon_id, 'dw_sermon_date', true);
-        $scripture = get_post_meta($sermon_id, 'dw_sermon_scripture', true);
-        $youtube_url = get_post_meta($sermon_id, 'dw_sermon_youtube', true);
+        $sermon_date = get_post_meta($sermon_id, 'dasom_sermon_date', true);
+        $scripture = get_post_meta($sermon_id, 'dasom_sermon_scripture', true);
+        $youtube_url = get_post_meta($sermon_id, 'dasom_sermon_youtube', true);
         $preachers = wp_get_post_terms($sermon_id, 'dw_sermon_preacher', ['fields' => 'names']);
         
         // Get YouTube video ID

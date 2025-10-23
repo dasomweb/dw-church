@@ -738,9 +738,9 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         
         while ($sermons->have_posts()) {
             $sermons->the_post();
-            $sermon_date = get_post_meta(get_the_ID(), 'dw_sermon_date', true);
+            $sermon_date = get_post_meta(get_the_ID(), 'dasom_sermon_date', true);
             $preachers = wp_get_post_terms(get_the_ID(), 'dw_sermon_preacher', array('fields' => 'names'));
-            $scripture = get_post_meta(get_the_ID(), 'dw_sermon_scripture', true);
+            $scripture = get_post_meta(get_the_ID(), 'dasom_sermon_scripture', true);
             
             echo '<div class="dw-sermon-item" style="overflow:hidden;">';
             
