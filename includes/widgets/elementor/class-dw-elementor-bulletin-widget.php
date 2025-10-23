@@ -1038,20 +1038,17 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                 $bulletin_date = get_post_meta($post->ID, 'dw_bulletin_date', true);
                 $bulletin_date_formatted = get_post_meta($post->ID, 'dw_bulletin_date_formatted', true);
                 
-                // Use formatted date if available, otherwise format the date
+                // Use formatted date if available, otherwise use raw date
                 if ($bulletin_date_formatted) {
-                    $post_date = $bulletin_date_formatted;
+                    $display_text = $bulletin_date_formatted;
                 } elseif ($bulletin_date) {
-                    $post_date = date_i18n('Y년 m월 d일', strtotime($bulletin_date));
+                    $display_text = $bulletin_date;
                 } else {
-                    $post_date = get_the_date('Y년 m월 d일', $post->ID);
+                    $display_text = get_the_date('Y년 m월 d일', $post->ID);
                 }
-                
-                // Create title with date
-                $title_with_date = $post_date . ' ' . $post->post_title;
             ?>
                 <div class="dw-bulletin-item" data-hover="<?php echo esc_attr($hover_effect); ?>" data-shadow-color="<?php echo esc_attr($shadow_color); ?>">
-                    <div class="dw-bulletin-title"><?php echo esc_html($title_with_date); ?></div>
+                    <div class="dw-bulletin-title"><?php echo esc_html($display_text); ?></div>
                     <?php if ($pdf_url): ?>
                         <div class="dw-bulletin-download-container">
                             <a href="<?php echo esc_url($pdf_url); ?>" target="_blank" class="dw-bulletin-download">
