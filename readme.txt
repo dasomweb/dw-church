@@ -3,7 +3,7 @@ Contributors: dasomweb
 Tags: church, management, sermon, bulletin, worship
 Requires at least: 5.8
 Tested up to: 6.8
-Stable tag: 1.33.0
+Stable tag: 1.34.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,16 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 1.34.0 =
+* Feature: Add DW Bulletin Widget for Elementor with two display templates
+* Feature: Image template with featured image, title, date, and download button
+* Feature: Button template matching modern design concept with hover effects
+* Feature: PDF download functionality with new window target
+* Feature: Support for both latest posts and manual selection query sources
+* Feature: Comprehensive responsive design for mobile, tablet, and desktop
+* Enhancement: Complete styling controls for buttons, titles, and download buttons
+* Enhancement: Seamless integration with existing widget registration system
 
 = 1.33.0 =
 * Feature: Add advanced image controls to DW Pastoral Column Widget (width, height, object-fit, object-position)
