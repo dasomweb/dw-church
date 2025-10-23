@@ -115,21 +115,329 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
             ]
         );
         
+        $this->add_control(
+            'layout_type',
+            [
+                'label' => __('Layout Type', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'list',
+                'options' => [
+                    'list' => __('List Layout', 'dasom-church'),
+                    'grid' => __('Grid Layout', 'dasom-church'),
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'grid_columns',
+            [
+                'label' => __('Columns', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => '3',
+                'options' => [
+                    '1' => __('1 Column', 'dasom-church'),
+                    '2' => __('2 Columns', 'dasom-church'),
+                    '3' => __('3 Columns', 'dasom-church'),
+                    '4' => __('4 Columns', 'dasom-church'),
+                    '5' => __('5 Columns', 'dasom-church'),
+                    '6' => __('6 Columns', 'dasom-church'),
+                ],
+                'condition' => [
+                    'layout_type' => 'grid',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-bulletin-grid' => 'grid-template-columns: repeat({{VALUE}}, 1fr);',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'grid_gap',
+            [
+                'label' => __('Grid Gap', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 100,
+                    ],
+                ],
+                'default' => [
+                    'unit' => 'px',
+                    'size' => 20,
+                ],
+                'condition' => [
+                    'layout_type' => 'grid',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-bulletin-grid' => 'gap: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
         $this->end_controls_section();
         
-        // Style Section
+        // Image Template Style Section
         $this->start_controls_section(
-            'dw_bulletin_style_section',
+            'dw_bulletin_image_style_section',
             [
-                'label' => __('Style', 'dasom-church'),
+                'label' => __('Image Template Style', 'dasom-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+                'condition' => [
+                    'display_type' => 'image',
+                ],
             ]
         );
         
         $this->add_control(
-            'button_style',
+            'image_style_heading',
             [
-                'label' => __('Button Style', 'dasom-church'),
+                'label' => __('Image Settings', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::HEADING,
+                'separator' => 'before',
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'image_height',
+            [
+                'label' => __('Image Height', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', 'vh', '%'],
+                'range' => [
+                    'px' => [
+                        'min' => 100,
+                        'max' => 500,
+                    ],
+                    'vh' => [
+                        'min' => 10,
+                        'max' => 50,
+                    ],
+                    '%' => [
+                        'min' => 10,
+                        'max' => 100,
+                    ],
+                ],
+                'default' => [
+                    'unit' => 'px',
+                    'size' => 200,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-bulletin-image' => 'height: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'image_border_radius',
+            [
+                'label' => __('Image Border Radius', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 50,
+                    ],
+                ],
+                'default' => [
+                    'unit' => 'px',
+                    'size' => 8,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-bulletin-image' => 'border-radius: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_group_control(
+            \Elementor\Group_Control_Border::get_type(),
+            [
+                'name' => 'image_border',
+                'label' => __('Image Border', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-bulletin-image',
+            ]
+        );
+        
+        $this->add_control(
+            'image_overlay',
+            [
+                'label' => __('Image Overlay', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-bulletin-image::after' => 'content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: {{VALUE}}; z-index: 1;',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'image_overlay_opacity',
+            [
+                'label' => __('Overlay Opacity', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 1,
+                        'step' => 0.1,
+                    ],
+                ],
+                'default' => [
+                    'size' => 0.3,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-bulletin-image::after' => 'opacity: {{SIZE}};',
+                ],
+                'condition' => [
+                    'image_overlay!' => '',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'content_style_heading',
+            [
+                'label' => __('Content Settings', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::HEADING,
+                'separator' => 'before',
+            ]
+        );
+        
+        $this->add_group_control(
+            \Elementor\Group_Control_Typography::get_type(),
+            [
+                'name' => 'title_typography',
+                'label' => __('Title Typography', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-bulletin-title',
+            ]
+        );
+        
+        $this->add_control(
+            'title_color',
+            [
+                'label' => __('Title Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#333333',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-bulletin-title' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_group_control(
+            \Elementor\Group_Control_Typography::get_type(),
+            [
+                'name' => 'date_typography',
+                'label' => __('Date Typography', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-bulletin-date',
+            ]
+        );
+        
+        $this->add_control(
+            'date_color',
+            [
+                'label' => __('Date Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#666666',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-bulletin-date' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'download_button_style_heading',
+            [
+                'label' => __('Download Button Style', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::HEADING,
+                'separator' => 'before',
+            ]
+        );
+        
+        $this->add_control(
+            'download_button_background',
+            [
+                'label' => __('Button Background', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#007cba',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-bulletin-download' => 'background-color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'download_button_text_color',
+            [
+                'label' => __('Button Text Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#ffffff',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-bulletin-download' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'download_button_border_radius',
+            [
+                'label' => __('Button Border Radius', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 50,
+                    ],
+                ],
+                'default' => [
+                    'unit' => 'px',
+                    'size' => 4,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-bulletin-download' => 'border-radius: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'download_button_padding',
+            [
+                'label' => __('Button Padding', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em'],
+                'default' => [
+                    'top' => 8,
+                    'right' => 16,
+                    'bottom' => 8,
+                    'left' => 16,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-bulletin-download' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->end_controls_section();
+        
+        // Button Template Style Section
+        $this->start_controls_section(
+            'dw_bulletin_button_style_section',
+            [
+                'label' => __('Button Template Style', 'dasom-church'),
+                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+                'condition' => [
+                    'display_type' => 'button',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'button_item_style_heading',
+            [
+                'label' => __('Button Item Style', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::HEADING,
                 'separator' => 'before',
             ]
@@ -218,7 +526,22 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         );
         
         $this->add_control(
-            'title_style',
+            'button_hover_effect',
+            [
+                'label' => __('Hover Effect', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'lift',
+                'options' => [
+                    'none' => __('None', 'dasom-church'),
+                    'lift' => __('Lift', 'dasom-church'),
+                    'shadow' => __('Shadow', 'dasom-church'),
+                    'scale' => __('Scale', 'dasom-church'),
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'button_title_style_heading',
             [
                 'label' => __('Title Style', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::HEADING,
@@ -229,61 +552,82 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_group_control(
             \Elementor\Group_Control_Typography::get_type(),
             [
-                'name' => 'title_typography',
+                'name' => 'button_title_typography',
                 'label' => __('Typography', 'dasom-church'),
-                'selector' => '{{WRAPPER}} .dw-bulletin-title',
+                'selector' => '{{WRAPPER}} .dw-bulletin-item .dw-bulletin-title',
             ]
         );
         
         $this->add_control(
-            'title_color',
+            'button_title_color',
             [
                 'label' => __('Color', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#333333',
                 'selectors' => [
-                    '{{WRAPPER}} .dw-bulletin-title' => 'color: {{VALUE}};',
+                    '{{WRAPPER}} .dw-bulletin-item .dw-bulletin-title' => 'color: {{VALUE}};',
                 ],
             ]
         );
         
         $this->add_control(
-            'download_button_style',
+            'button_meta_style_heading',
             [
-                'label' => __('Download Button Style', 'dasom-church'),
+                'label' => __('Date & Download Style', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::HEADING,
                 'separator' => 'before',
             ]
         );
         
-        $this->add_control(
-            'download_button_background',
+        $this->add_group_control(
+            \Elementor\Group_Control_Typography::get_type(),
             [
-                'label' => __('Background Color', 'dasom-church'),
+                'name' => 'button_date_typography',
+                'label' => __('Date Typography', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-bulletin-item .dw-bulletin-date',
+            ]
+        );
+        
+        $this->add_control(
+            'button_date_color',
+            [
+                'label' => __('Date Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#666666',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-bulletin-item .dw-bulletin-date' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'button_download_background',
+            [
+                'label' => __('Download Button Background', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#007cba',
                 'selectors' => [
-                    '{{WRAPPER}} .dw-bulletin-download' => 'background-color: {{VALUE}};',
+                    '{{WRAPPER}} .dw-bulletin-item .dw-bulletin-download' => 'background-color: {{VALUE}};',
                 ],
             ]
         );
         
         $this->add_control(
-            'download_button_text_color',
+            'button_download_text_color',
             [
-                'label' => __('Text Color', 'dasom-church'),
+                'label' => __('Download Button Text Color', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#ffffff',
                 'selectors' => [
-                    '{{WRAPPER}} .dw-bulletin-download' => 'color: {{VALUE}};',
+                    '{{WRAPPER}} .dw-bulletin-item .dw-bulletin-download' => 'color: {{VALUE}};',
                 ],
             ]
         );
         
         $this->add_control(
-            'download_button_border_radius',
+            'button_download_border_radius',
             [
-                'label' => __('Border Radius', 'dasom-church'),
+                'label' => __('Download Button Border Radius', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -297,26 +641,168 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                     'size' => 4,
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .dw-bulletin-download' => 'border-radius: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .dw-bulletin-item .dw-bulletin-download' => 'border-radius: {{SIZE}}{{UNIT}};',
                 ],
             ]
         );
         
         $this->add_control(
-            'download_button_padding',
+            'button_download_padding',
             [
-                'label' => __('Padding', 'dasom-church'),
+                'label' => __('Download Button Padding', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', 'em'],
                 'default' => [
-                    'top' => 8,
-                    'right' => 16,
-                    'bottom' => 8,
-                    'left' => 16,
+                    'top' => 4,
+                    'right' => 12,
+                    'bottom' => 4,
+                    'left' => 12,
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .dw-bulletin-download' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                    '{{WRAPPER}} .dw-bulletin-item .dw-bulletin-download' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
                 ],
+            ]
+        );
+        
+        $this->end_controls_section();
+        
+        // Card Style Section
+        $this->start_controls_section(
+            'dw_bulletin_card_style_section',
+            [
+                'label' => __('Card Style', 'dasom-church'),
+                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+        
+        $this->add_control(
+            'card_background_color',
+            [
+                'label' => __('Card Background Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => '#ffffff',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-bulletin-image-item' => 'background-color: {{VALUE}};',
+                    '{{WRAPPER}} .dw-bulletin-item' => 'background-color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_group_control(
+            \Elementor\Group_Control_Border::get_type(),
+            [
+                'name' => 'card_border',
+                'label' => __('Card Border', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-bulletin-image-item, {{WRAPPER}} .dw-bulletin-item',
+            ]
+        );
+        
+        $this->add_control(
+            'card_border_radius',
+            [
+                'label' => __('Card Border Radius', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 50,
+                    ],
+                ],
+                'default' => [
+                    'unit' => 'px',
+                    'size' => 8,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-bulletin-image-item' => 'border-radius: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .dw-bulletin-item' => 'border-radius: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_group_control(
+            \Elementor\Group_Control_Box_Shadow::get_type(),
+            [
+                'name' => 'card_shadow',
+                'label' => __('Card Shadow', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-bulletin-image-item, {{WRAPPER}} .dw-bulletin-item',
+            ]
+        );
+        
+        $this->add_control(
+            'card_padding',
+            [
+                'label' => __('Card Padding', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em', '%'],
+                'default' => [
+                    'top' => 0,
+                    'right' => 0,
+                    'bottom' => 0,
+                    'left' => 0,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-bulletin-image-item' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                    '{{WRAPPER}} .dw-bulletin-item' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'card_margin',
+            [
+                'label' => __('Card Margin', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em', '%'],
+                'default' => [
+                    'top' => 0,
+                    'right' => 0,
+                    'bottom' => 20,
+                    'left' => 0,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-bulletin-image-item' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                    '{{WRAPPER}} .dw-bulletin-item' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'card_hover_effect',
+            [
+                'label' => __('Card Hover Effect', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'lift',
+                'options' => [
+                    'none' => __('None', 'dasom-church'),
+                    'lift' => __('Lift', 'dasom-church'),
+                    'shadow' => __('Shadow', 'dasom-church'),
+                    'scale' => __('Scale', 'dasom-church'),
+                    'glow' => __('Glow', 'dasom-church'),
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'card_hover_shadow_color',
+            [
+                'label' => __('Hover Shadow Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => 'rgba(0, 0, 0, 0.2)',
+                'condition' => [
+                    'card_hover_effect' => ['lift', 'shadow', 'glow'],
+                ],
+            ]
+        );
+        
+        $this->end_controls_section();
+        
+        // General Style Section
+        $this->start_controls_section(
+            'dw_bulletin_general_style_section',
+            [
+                'label' => __('General Style', 'dasom-church'),
+                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
         
@@ -358,11 +844,11 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
             ]);
         } else {
             $posts = get_posts([
-                'post_type' => 'bulletin',
+            'post_type' => 'bulletin',
                 'posts_per_page' => $settings['posts_per_page'],
-                'post_status' => 'publish',
+            'post_status' => 'publish',
                 'orderby' => 'date',
-                'order' => 'DESC',
+            'order' => 'DESC',
             ]);
         }
         
@@ -372,26 +858,32 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         }
         
         $display_type = $settings['display_type'];
+        $layout_type = isset($settings['layout_type']) ? $settings['layout_type'] : 'list';
         
         if ($display_type === 'image') {
-            $this->render_image_template($posts);
+            $this->render_image_template($posts, $layout_type);
         } else {
-            $this->render_button_template($posts);
+            $this->render_button_template($posts, $layout_type);
         }
     }
     
     /**
      * Render image template
      */
-    private function render_image_template($posts) {
+    private function render_image_template($posts, $layout_type = 'list') {
+        $settings = $this->get_settings_for_display();
+        $hover_effect = isset($settings['card_hover_effect']) ? $settings['card_hover_effect'] : 'lift';
+        $shadow_color = isset($settings['card_hover_shadow_color']) ? $settings['card_hover_shadow_color'] : 'rgba(0, 0, 0, 0.2)';
+        
+        $container_class = $layout_type === 'grid' ? 'dw-bulletin-image-grid' : 'dw-bulletin-image-list';
         ?>
-        <div class="dw-bulletin-image-list">
+        <div class="<?php echo esc_attr($container_class); ?>">
             <?php foreach ($posts as $post): 
                 $pdf_url = get_post_meta($post->ID, 'dw_bulletin_pdf', true);
                 $featured_image = get_the_post_thumbnail_url($post->ID, 'medium');
                 $post_date = get_the_date('Y년 m월 d일', $post->ID);
             ?>
-                <div class="dw-bulletin-image-item">
+                <div class="dw-bulletin-image-item" data-hover="<?php echo esc_attr($hover_effect); ?>" data-shadow-color="<?php echo esc_attr($shadow_color); ?>">
                     <?php if ($featured_image): ?>
                         <div class="dw-bulletin-image">
                             <img src="<?php echo esc_url($featured_image); ?>" alt="<?php echo esc_attr($post->post_title); ?>" />
@@ -419,14 +911,19 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
     /**
      * Render button template
      */
-    private function render_button_template($posts) {
+    private function render_button_template($posts, $layout_type = 'list') {
+        $settings = $this->get_settings_for_display();
+        $hover_effect = isset($settings['card_hover_effect']) ? $settings['card_hover_effect'] : 'lift';
+        $shadow_color = isset($settings['card_hover_shadow_color']) ? $settings['card_hover_shadow_color'] : 'rgba(0, 0, 0, 0.2)';
+        
+        $container_class = $layout_type === 'grid' ? 'dw-bulletin-button-grid' : 'dw-bulletin-button-list';
         ?>
-        <div class="dw-bulletin-button-list">
+        <div class="<?php echo esc_attr($container_class); ?>">
             <?php foreach ($posts as $post): 
                 $pdf_url = get_post_meta($post->ID, 'dw_bulletin_pdf', true);
                 $post_date = get_the_date('Y년 m월 d일', $post->ID);
             ?>
-                <div class="dw-bulletin-item">
+                <div class="dw-bulletin-item" data-hover="<?php echo esc_attr($hover_effect); ?>" data-shadow-color="<?php echo esc_attr($shadow_color); ?>">
                     <div class="dw-bulletin-title"><?php echo esc_html($post->post_title); ?></div>
                     <div class="dw-bulletin-meta">
                         <span class="dw-bulletin-date"><?php echo esc_html($post_date); ?></span>

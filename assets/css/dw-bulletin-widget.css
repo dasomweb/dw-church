@@ -12,6 +12,12 @@
     gap: 20px;
 }
 
+.dw-bulletin-image-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
 .dw-bulletin-image-item {
     border: 1px solid #e0e0e0;
     border-radius: 8px;
@@ -37,6 +43,18 @@
     height: 100%;
     object-fit: cover;
     object-position: center;
+}
+
+/* Image overlay support */
+.dw-bulletin-image::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    pointer-events: none;
 }
 
 .dw-bulletin-content {
@@ -93,6 +111,12 @@
     gap: 10px;
 }
 
+.dw-bulletin-button-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
 .dw-bulletin-item {
     border: 1px solid #e0e0e0;
     border-radius: 8px;
@@ -106,6 +130,42 @@
     border-color: #007cba;
     box-shadow: 0 2px 8px rgba(0, 124, 186, 0.15);
     transform: translateY(-1px);
+}
+
+/* Hover effects for button template */
+.dw-bulletin-item[data-hover="lift"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.dw-bulletin-item[data-hover="shadow"]:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.dw-bulletin-item[data-hover="scale"]:hover {
+    transform: scale(1.02);
+}
+
+/* Card hover effects for both templates */
+.dw-bulletin-image-item[data-hover="lift"]:hover,
+.dw-bulletin-item[data-hover="lift"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.dw-bulletin-image-item[data-hover="shadow"]:hover,
+.dw-bulletin-item[data-hover="shadow"]:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.dw-bulletin-image-item[data-hover="scale"]:hover,
+.dw-bulletin-item[data-hover="scale"]:hover {
+    transform: scale(1.02);
+}
+
+.dw-bulletin-image-item[data-hover="glow"]:hover,
+.dw-bulletin-item[data-hover="glow"]:hover {
+    box-shadow: 0 0 20px rgba(0, 124, 186, 0.3);
 }
 
 .dw-bulletin-item .dw-bulletin-title {
@@ -157,6 +217,11 @@
         gap: 15px;
     }
     
+    .dw-bulletin-image-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    
     .dw-bulletin-image-item {
         border-radius: 6px;
     }
@@ -183,6 +248,11 @@
         gap: 8px;
     }
     
+    .dw-bulletin-button-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
     .dw-bulletin-item {
         padding: 12px 15px;
         border-radius: 6px;
@@ -200,6 +270,16 @@
 }
 
 @media (max-width: 480px) {
+    .dw-bulletin-image-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .dw-bulletin-button-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
     .dw-bulletin-image {
         height: 120px;
     }
