@@ -202,6 +202,84 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
             ]
         );
         
+        $this->add_control(
+            'card_border_radius',
+            [
+                'label' => __('Card Border Radius', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', '%'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 50,
+                    ],
+                ],
+                'default' => [
+                    'unit' => 'px',
+                    'size' => 12,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-single-bulletin-image-item' => 'border-radius: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'card_padding',
+            [
+                'label' => __('Card Padding', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em', '%'],
+                'default' => [
+                    'top' => '15',
+                    'right' => '15',
+                    'bottom' => '15',
+                    'left' => '15',
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-single-bulletin-image-item' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_group_control(
+            \Elementor\Group_Control_Border::get_type(),
+            [
+                'name' => 'card_border',
+                'label' => __('Card Border', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-single-bulletin-image-item',
+            ]
+        );
+        
+        $this->add_group_control(
+            \Elementor\Group_Control_Box_Shadow::get_type(),
+            [
+                'name' => 'card_shadow',
+                'label' => __('Card Shadow', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-single-bulletin-image-item',
+            ]
+        );
+        
+        $this->add_control(
+            'hover_effect',
+            [
+                'label' => __('Hover Effect', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'lift',
+                'options' => [
+                    'none' => __('None', 'dasom-church'),
+                    'lift' => __('Lift', 'dasom-church'),
+                    'shadow' => __('Shadow', 'dasom-church'),
+                    'scale' => __('Scale', 'dasom-church'),
+                    'glow' => __('Glow', 'dasom-church'),
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-single-bulletin-image-item' => 'transition: all 0.3s ease;',
+                ],
+            ]
+        );
+        
         $this->end_controls_section();
     }
     
@@ -259,6 +337,9 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
         $pdf_url = get_post_meta($post_id, 'dw_bulletin_pdf', true);
         $bulletin_images = get_post_meta($post_id, 'dw_bulletin_images', true);
         
+        // Get hover effect
+        $hover_effect = isset($settings['hover_effect']) ? $settings['hover_effect'] : 'lift';
+        
         ?>
         <div class="dw-single-bulletin-container">
             <?php if ($settings['show_date'] === 'yes'): ?>
@@ -294,7 +375,7 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
                             $image_url = wp_get_attachment_image_url($image_id, 'full');
                             if ($image_url) {
                                 ?>
-                                <div class="dw-single-bulletin-image-item">
+                                <div class="dw-single-bulletin-image-item" data-hover="<?php echo esc_attr($hover_effect); ?>">
                                     <img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr(get_the_title($post_id)); ?>" class="dw-single-bulletin-image" />
                                 </div>
                                 <?php

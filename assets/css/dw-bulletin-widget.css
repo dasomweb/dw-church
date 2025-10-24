@@ -589,6 +589,29 @@
     transform: scale(1.02);
 }
 
+/* Single Bulletin Hover Effects */
+.dw-single-bulletin-image-item[data-hover="lift"]:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.dw-single-bulletin-image-item[data-hover="shadow"]:hover {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.dw-single-bulletin-image-item[data-hover="scale"]:hover {
+    transform: scale(1.05);
+}
+
+.dw-single-bulletin-image-item[data-hover="glow"]:hover {
+    box-shadow: 0 0 20px rgba(0, 124, 186, 0.4);
+}
+
+.dw-single-bulletin-image-item[data-hover="none"]:hover {
+    transform: none;
+    box-shadow: inherit;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .dw-single-bulletin-date {
