@@ -993,24 +993,40 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 
                 .dw-event-grid {
                     position: relative;
-                    z-index: 10;
-                    margin-bottom: 30px;
+                    z-index: 999;
+                    margin-bottom: 50px;
                     background: transparent;
+                    padding-bottom: 20px;
                 }
                 
                 .dw-event-grid-item {
                     position: relative;
-                    z-index: 10;
+                    z-index: 999;
                     background: #fff;
-                    border-radius: 8px;
+                    border-radius: 12px;
                     overflow: hidden;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                    margin-bottom: 20px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    margin-bottom: 25px;
+                    transform: translateZ(0);
+                    -webkit-transform: translateZ(0);
                 }
                 
                 .dw-event-grid-overlay {
                     position: relative;
-                    z-index: 10;
+                    z-index: 999;
+                    background: rgba(0,0,0,0.3);
+                }
+                
+                .dw-event-grid-image {
+                    position: relative;
+                    z-index: 999;
+                }
+                
+                .dw-event-grid-content {
+                    position: relative;
+                    z-index: 999;
+                    background: rgba(0,0,0,0.7);
+                    padding: 20px;
                 }
             }
         </style>
