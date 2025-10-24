@@ -3,7 +3,7 @@
  * Plugin Name: DW Church Management System
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 1.37.7
+ * Version: 1.37.8
  * Author: Dasomweb
  * Author URI: https://dasomweb.com
  * License: GPL v2 or later
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '1.37.7');
+define('DASOM_CHURCH_VERSION', '1.37.8');
 define('DASOM_CHURCH_PLUGIN_URL', str_replace('http://', 'https://', plugin_dir_url(__FILE__)));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -245,6 +245,22 @@ add_filter('admin_url', function($url) {
 add_filter('login_url', function($url) {
     return str_replace('http://', 'https://', $url);
 });
+
+// Clear Elementor cache when plugin is updated
+add_action('upgrader_process_complete', function($upgrader_object, $options) {
+    if ($options['action'] === 'update' && $options['type'] === 'plugin') {
+        if (isset($options['plugins']) && in_array(plugin_basename(__FILE__), $options['plugins'])) {
+            // Clear Elementor cache
+            if (class_exists('\Elementor\Plugin')) {
+                \Elementor\Plugin::$instance->files_manager->clear_cache();
+            }
+            // Clear WordPress cache
+            if (function_exists('wp_cache_flush')) {
+                wp_cache_flush();
+            }
+        }
+    }
+}, 10, 2);
 
 // Add update checker for GitHub releases
 add_action('init', function() {

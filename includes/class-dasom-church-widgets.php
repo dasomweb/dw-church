@@ -82,8 +82,18 @@ class Dasom_Church_Widgets {
             
             // Single Bulletin Widget
             if (get_option('dw_enable_single_bulletin_widget', 'yes') === 'yes') {
-                require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/widgets/elementor/class-dw-elementor-single-bulletin-widget.php';
-                $widgets_manager->register(new DW_Elementor_Single_Bulletin_Widget());
+                $single_bulletin_widget_file = DASOM_CHURCH_PLUGIN_PATH . 'includes/widgets/elementor/class-dw-elementor-single-bulletin-widget.php';
+                if (file_exists($single_bulletin_widget_file)) {
+                    require_once $single_bulletin_widget_file;
+                    if (class_exists('DW_Elementor_Single_Bulletin_Widget')) {
+                        $widgets_manager->register(new DW_Elementor_Single_Bulletin_Widget());
+                        error_log('DW Church Management: DW_Elementor_Single_Bulletin_Widget registered successfully');
+                    } else {
+                        error_log('DW Church Management: DW_Elementor_Single_Bulletin_Widget class not found');
+                    }
+                } else {
+                    error_log('DW Church Management: Single Bulletin widget file not found: ' . $single_bulletin_widget_file);
+                }
             }
             
             // Columns Widget

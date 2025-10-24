@@ -49,6 +49,20 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
     }
     
     /**
+     * Get widget dependencies
+     */
+    public function get_script_depends() {
+        return [];
+    }
+    
+    /**
+     * Get widget style dependencies
+     */
+    public function get_style_depends() {
+        return ['dw-bulletin-widget'];
+    }
+    
+    /**
      * Register widget controls
      */
     protected function register_controls() {
@@ -309,17 +323,24 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
     protected function render() {
         $settings = $this->get_settings_for_display();
         
+        // Debug: Log widget rendering
+        error_log('DW Single Bulletin Widget: Starting render');
+        error_log('DW Single Bulletin Widget Settings: ' . print_r($settings, true));
+        
         // Get post based on query source
         if ($settings['query_source'] === 'current') {
             $post = get_post();
             if (!$post || $post->post_type !== 'bulletin') {
                 echo '<p>' . __('Current post is not a bulletin.', 'dasom-church') . '</p>';
+                error_log('DW Single Bulletin Widget: Current post is not a bulletin');
                 return;
             }
             $post_id = $post->ID;
+            error_log('DW Single Bulletin Widget: Using current post ID: ' . $post_id);
         } else {
             if (empty($settings['bulletin_post'])) {
                 echo '<p>' . __('Please select a bulletin to display.', 'dasom-church') . '</p>';
+                error_log('DW Single Bulletin Widget: No bulletin selected');
                 return;
             }
             $post_id = $settings['bulletin_post'];
@@ -327,8 +348,10 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
             
             if (!$post || $post->post_type !== 'bulletin') {
                 echo '<p>' . __('Selected bulletin not found.', 'dasom-church') . '</p>';
+                error_log('DW Single Bulletin Widget: Selected bulletin not found');
                 return;
             }
+            error_log('DW Single Bulletin Widget: Using selected post ID: ' . $post_id);
         }
         
         // Get bulletin data
@@ -336,6 +359,9 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
         $bulletin_date_formatted = get_post_meta($post_id, 'dw_bulletin_date_formatted', true);
         $pdf_url = get_post_meta($post_id, 'dw_bulletin_pdf', true);
         $bulletin_images = get_post_meta($post_id, 'dw_bulletin_images', true);
+        
+        // Debug: Log bulletin data
+        error_log('DW Single Bulletin Widget: Bulletin data - Date: ' . $bulletin_date . ', Date Formatted: ' . $bulletin_date_formatted . ', PDF: ' . $pdf_url . ', Images: ' . $bulletin_images);
         
         // Get hover effect
         $hover_effect = isset($settings['hover_effect']) ? $settings['hover_effect'] : 'lift';
@@ -370,22 +396,36 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
                 <div class="dw-single-bulletin-images">
                     <?php
                     $images = json_decode($bulletin_images, true);
+                    error_log('DW Single Bulletin Widget: Decoded images: ' . print_r($images, true));
+                    
                     if (is_array($images) && !empty($images)) {
+                        error_log('DW Single Bulletin Widget: Found ' . count($images) . ' images');
                         foreach ($images as $image_id) {
                             $image_url = wp_get_attachment_image_url($image_id, 'full');
+                            error_log('DW Single Bulletin Widget: Image ID ' . $image_id . ' URL: ' . $image_url);
+                            
                             if ($image_url) {
                                 // Force HTTPS for image URLs - same as gallery widget
                                 $image_url = str_replace('http://', 'https://', $image_url);
+                                error_log('DW Single Bulletin Widget: Final image URL: ' . $image_url);
                                 ?>
                                 <div class="dw-single-bulletin-image-item" data-hover="<?php echo esc_attr($hover_effect); ?>">
                                     <img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr(get_the_title($post_id)); ?>" class="dw-single-bulletin-image" />
                                 </div>
                                 <?php
+                            } else {
+                                error_log('DW Single Bulletin Widget: No image URL for ID ' . $image_id);
                             }
                         }
+                    } else {
+                        error_log('DW Single Bulletin Widget: No images found or invalid format');
                     }
                     ?>
                 </div>
+            <?php else: ?>
+                <?php 
+                error_log('DW Single Bulletin Widget: Images not shown - show_images: ' . $settings['show_images'] . ', bulletin_images: ' . $bulletin_images);
+                ?>
             <?php endif; ?>
         </div>
         <?php
