@@ -360,8 +360,12 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
         $pdf_url = get_post_meta($post_id, 'dw_bulletin_pdf', true);
         $bulletin_images = get_post_meta($post_id, 'dw_bulletin_images', true);
         
-        // Debug: Log bulletin data
-        error_log('DW Single Bulletin Widget: Bulletin data - Date: ' . $bulletin_date . ', Date Formatted: ' . $bulletin_date_formatted . ', PDF: ' . $pdf_url . ', Images: ' . $bulletin_images);
+        // DEBUG: Log everything to find the issue
+        error_log('=== DW SINGLE BULLETIN DEBUG START ===');
+        error_log('Post ID: ' . $post_id);
+        error_log('Settings: ' . print_r($settings, true));
+        error_log('Bulletin Images Raw: ' . $bulletin_images);
+        error_log('Show Images Setting: ' . ($settings['show_images'] ?? 'NOT SET'));
         
         // Get hover effect
         $hover_effect = isset($settings['hover_effect']) ? $settings['hover_effect'] : 'lift';
@@ -392,34 +396,57 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
                 </div>
             <?php endif; ?>
             
+            <?php 
+            // DEBUG: Check conditions
+            error_log('=== IMAGE DISPLAY CONDITIONS ===');
+            error_log('Show Images Setting: ' . ($settings['show_images'] ?? 'NOT SET'));
+            error_log('Bulletin Images: ' . ($bulletin_images ? 'EXISTS' : 'EMPTY'));
+            error_log('Show Images === yes: ' . ($settings['show_images'] === 'yes' ? 'TRUE' : 'FALSE'));
+            error_log('Bulletin Images exists: ' . ($bulletin_images ? 'TRUE' : 'FALSE'));
+            error_log('Combined condition: ' . (($settings['show_images'] === 'yes' && $bulletin_images) ? 'TRUE' : 'FALSE'));
+            ?>
+            
             <?php if ($settings['show_images'] === 'yes' && $bulletin_images): ?>
                 <div class="dw-single-bulletin-images">
                     <?php
                     $images = json_decode($bulletin_images, true);
-                    error_log('DW Single Bulletin Widget: Decoded images: ' . print_r($images, true));
+                    error_log('Decoded images: ' . print_r($images, true));
+                    error_log('Is array: ' . (is_array($images) ? 'TRUE' : 'FALSE'));
+                    error_log('Is empty: ' . (empty($images) ? 'TRUE' : 'FALSE'));
                     
                     if (is_array($images) && !empty($images)) {
-                        error_log('DW Single Bulletin Widget: Found ' . count($images) . ' images');
-                        foreach ($images as $image_id) {
+                        error_log('Processing ' . count($images) . ' images');
+                        foreach ($images as $index => $image_id) {
+                            error_log("Image $index: ID = $image_id");
                             $image_url = wp_get_attachment_url($image_id);
+                            error_log("Image $index: URL = $image_url");
                             
                             if ($image_url) {
+                                error_log("Rendering image $index");
                                 ?>
                                 <div class="dw-single-bulletin-image-item" data-hover="<?php echo esc_attr($hover_effect); ?>">
                                     <img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr(get_the_title($post_id)); ?>" class="dw-single-bulletin-image" />
                                 </div>
                                 <?php
+                            } else {
+                                error_log("No URL for image $index (ID: $image_id)");
                             }
                         }
                     } else {
-                        error_log('DW Single Bulletin Widget: No images found or invalid format');
+                        error_log('No valid images array or empty array');
                     }
                     ?>
                 </div>
             <?php else: ?>
                 <?php 
-                error_log('DW Single Bulletin Widget: Images not shown - show_images: ' . $settings['show_images'] . ', bulletin_images: ' . $bulletin_images);
+                error_log('=== IMAGES NOT SHOWN ===');
+                error_log('Show images setting: ' . ($settings['show_images'] ?? 'NOT SET'));
+                error_log('Bulletin images: ' . ($bulletin_images ? 'EXISTS' : 'EMPTY'));
                 ?>
+                <div style="background: red; color: white; padding: 10px; margin: 10px;">
+                    DEBUG: Images not shown - show_images: <?php echo $settings['show_images'] ?? 'NOT SET'; ?>, 
+                    bulletin_images: <?php echo $bulletin_images ? 'EXISTS' : 'EMPTY'; ?>
+                </div>
             <?php endif; ?>
         </div>
         <?php
