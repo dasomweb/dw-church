@@ -274,17 +274,17 @@ class Dasom_Church_Widgets {
             '1.34.0'
         );
         
-        // GLightbox for gallery lightbox
+        // GLightbox for gallery lightbox - Use protocol-relative URLs for HTTPS compatibility
         wp_enqueue_style(
             'glightbox',
-            'https://cdn.jsdelivr.net/npm/glightbox@3.2.0/dist/css/glightbox.min.css',
+            '//cdn.jsdelivr.net/npm/glightbox@3.2.0/dist/css/glightbox.min.css',
             array(),
             '3.2.0'
         );
         
         wp_enqueue_script(
             'glightbox',
-            'https://cdn.jsdelivr.net/npm/glightbox@3.2.0/dist/js/glightbox.min.js',
+            '//cdn.jsdelivr.net/npm/glightbox@3.2.0/dist/js/glightbox.min.js',
             array(),
             '3.2.0',
             true

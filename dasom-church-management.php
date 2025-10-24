@@ -3,7 +3,7 @@
  * Plugin Name: DW Church Management System
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 1.37.2
+ * Version: 1.37.3
  * Author: Dasomweb
  * Author URI: https://dasomweb.com
  * License: GPL v2 or later
@@ -23,10 +23,42 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '1.37.2');
-define('DASOM_CHURCH_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('DASOM_CHURCH_VERSION', '1.37.3');
+define('DASOM_CHURCH_PLUGIN_URL', str_replace('http://', 'https://', plugin_dir_url(__FILE__)));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
+
+// Force HTTPS for plugin assets
+add_filter('script_loader_src', function($src, $handle) {
+    if (strpos($src, DASOM_CHURCH_PLUGIN_URL) !== false) {
+        return str_replace('http://', 'https://', $src);
+    }
+    return $src;
+}, 10, 2);
+
+add_filter('style_loader_src', function($src, $handle) {
+    if (strpos($src, DASOM_CHURCH_PLUGIN_URL) !== false) {
+        return str_replace('http://', 'https://', $src);
+    }
+    return $src;
+}, 10, 2);
+
+// Force HTTPS for all external resources
+add_filter('script_loader_src', function($src, $handle) {
+    // Force HTTPS for common CDN resources
+    if (strpos($src, '//cdn.jsdelivr.net') !== false) {
+        return str_replace('http://', 'https://', $src);
+    }
+    return $src;
+}, 10, 2);
+
+add_filter('style_loader_src', function($src, $handle) {
+    // Force HTTPS for common CDN resources
+    if (strpos($src, '//cdn.jsdelivr.net') !== false) {
+        return str_replace('http://', 'https://', $src);
+    }
+    return $src;
+}, 10, 2);
 
 // Auto-update configuration
 add_filter('auto_update_plugin', function($update, $item) {
@@ -41,6 +73,17 @@ add_filter('auto_update_plugin', function($update, $item) {
     }
     return $update;
 }, 10, 2);
+
+// Force HTTPS for WordPress
+add_action('init', function() {
+    if (is_ssl()) {
+        // Force HTTPS for WordPress admin
+        if (is_admin() && !is_ssl()) {
+            wp_redirect('https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'], 301);
+            exit;
+        }
+    }
+});
 
 // Add update checker for GitHub releases
 add_action('init', function() {
