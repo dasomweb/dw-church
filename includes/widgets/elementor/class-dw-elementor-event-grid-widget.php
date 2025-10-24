@@ -949,8 +949,9 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             .dw-event-grid {
                 display: grid;
                 width: 100%;
-                position: static;
-                z-index: auto;
+                position: relative;
+                z-index: 1;
+                clear: both;
             }
             .dw-event-grid-item {
                 position: relative;
@@ -994,30 +995,33 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 }
                 
                 .dw-event-grid {
-                    position: static !important;
-                    z-index: auto !important;
-                    margin-bottom: 50px;
+                    position: relative;
+                    z-index: 1;
+                    margin-bottom: 30px;
                     background: transparent;
                     padding-bottom: 20px;
-                    display: block;
                     clear: both;
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 20px;
                 }
                 
                 .dw-event-grid-item {
-                    position: static !important;
-                    z-index: auto !important;
+                    position: relative;
+                    z-index: 1;
                     background: #fff;
                     border-radius: 12px;
                     overflow: hidden;
                     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                    margin-bottom: 30px;
-                    display: block;
-                    width: 100%;
                     clear: both;
                 }
                 
                 .dw-event-grid-overlay {
                     position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
                     z-index: 1;
                     background: rgba(0,0,0,0.3);
                 }
@@ -1037,14 +1041,12 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     padding: 20px;
                 }
                 
-                /* Force normal document flow */
-                .dw-event-grid * {
-                    position: static !important;
-                }
-                
-                .dw-event-grid-overlay,
-                .dw-event-grid-content {
-                    position: absolute !important;
+                /* Ensure content flows properly after widget */
+                .dw-event-grid::after {
+                    content: "";
+                    display: block;
+                    clear: both;
+                    height: 0;
                 }
             }
         </style>
