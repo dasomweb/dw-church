@@ -311,6 +311,107 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         
         $this->end_controls_section();
         
+        // Style Tab - Overlay Style
+        $this->start_controls_section(
+            'overlay_style_section',
+            [
+                'label' => __('Overlay Style', 'dasom-church'),
+                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+        
+        $this->add_control(
+            'overlay_enable',
+            [
+                'label' => __('Enable Overlay', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SWITCHER,
+                'label_on' => __('Yes', 'dasom-church'),
+                'label_off' => __('No', 'dasom-church'),
+                'return_value' => 'yes',
+                'default' => 'yes',
+            ]
+        );
+        
+        $this->add_control(
+            'overlay_color',
+            [
+                'label' => __('Overlay Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => 'rgba(0,0,0,0.3)',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-overlay' => 'background-color: {{VALUE}};',
+                ],
+                'condition' => [
+                    'overlay_enable' => 'yes',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'overlay_opacity',
+            [
+                'label' => __('Overlay Opacity', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 1,
+                        'step' => 0.1,
+                    ],
+                ],
+                'default' => [
+                    'size' => 0.3,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-overlay' => 'opacity: {{SIZE}};',
+                ],
+                'condition' => [
+                    'overlay_enable' => 'yes',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'overlay_hover_color',
+            [
+                'label' => __('Overlay Hover Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => 'rgba(0,0,0,0.5)',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-item:hover .dw-event-grid-overlay' => 'background-color: {{VALUE}};',
+                ],
+                'condition' => [
+                    'overlay_enable' => 'yes',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'overlay_hover_opacity',
+            [
+                'label' => __('Overlay Hover Opacity', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 1,
+                        'step' => 0.1,
+                    ],
+                ],
+                'default' => [
+                    'size' => 0.5,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-item:hover .dw-event-grid-overlay' => 'opacity: {{SIZE}};',
+                ],
+                'condition' => [
+                    'overlay_enable' => 'yes',
+                ],
+            ]
+        );
+        
+        $this->end_controls_section();
+        
         // Style Tab - Text Style
         $this->start_controls_section(
             'text_style_section',
@@ -906,7 +1007,11 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             if ($image_url) {
                 echo '<div class="dw-event-grid-image" style="position:relative;background-image:url(' . esc_url($image_url) . ');background-size:cover;background-position:center center;width:100%;' . esc_attr($height_style) . '">';
                 
-                echo '<div class="dw-event-grid-overlay" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);"></div>';
+                // Overlay rendering based on settings
+                $overlay_enable = $settings['overlay_enable'] ?? 'yes';
+                if ($overlay_enable === 'yes') {
+                    echo '<div class="dw-event-grid-overlay" style="position:absolute;top:0;left:0;right:0;bottom:0;"></div>';
+                }
                 
                 echo '<div class="dw-event-grid-text" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:' . esc_attr($v_align_style) . ';justify-content:' . esc_attr($h_align_style) . ';">';
                 echo '<div class="dw-event-grid-text-content" style="z-index:1;">';
@@ -1016,15 +1121,14 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     clear: both;
                 }
                 
-                .dw-event-grid-overlay {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    z-index: 1;
-                    background: rgba(0,0,0,0.3);
-                }
+            .dw-event-grid-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 1;
+            }
                 
                 .dw-event-grid-image {
                     position: relative;
