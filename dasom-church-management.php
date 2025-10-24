@@ -3,7 +3,7 @@
  * Plugin Name: DW Church Management System
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 1.37.3
+ * Version: 1.37.4
  * Author: Dasomweb
  * Author URI: https://dasomweb.com
  * License: GPL v2 or later
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '1.37.3');
+define('DASOM_CHURCH_VERSION', '1.37.4');
 define('DASOM_CHURCH_PLUGIN_URL', str_replace('http://', 'https://', plugin_dir_url(__FILE__)));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -46,7 +46,10 @@ add_filter('style_loader_src', function($src, $handle) {
 // Force HTTPS for all external resources
 add_filter('script_loader_src', function($src, $handle) {
     // Force HTTPS for common CDN resources
-    if (strpos($src, '//cdn.jsdelivr.net') !== false) {
+    if (strpos($src, '//cdn.jsdelivr.net') !== false || 
+        strpos($src, '//fonts.googleapis.com') !== false ||
+        strpos($src, '//fonts.gstatic.com') !== false ||
+        strpos($src, '//ajax.googleapis.com') !== false) {
         return str_replace('http://', 'https://', $src);
     }
     return $src;
@@ -54,7 +57,27 @@ add_filter('script_loader_src', function($src, $handle) {
 
 add_filter('style_loader_src', function($src, $handle) {
     // Force HTTPS for common CDN resources
-    if (strpos($src, '//cdn.jsdelivr.net') !== false) {
+    if (strpos($src, '//cdn.jsdelivr.net') !== false || 
+        strpos($src, '//fonts.googleapis.com') !== false ||
+        strpos($src, '//fonts.gstatic.com') !== false ||
+        strpos($src, '//ajax.googleapis.com') !== false) {
+        return str_replace('http://', 'https://', $src);
+    }
+    return $src;
+}, 10, 2);
+
+// Force HTTPS for all WordPress assets
+add_filter('script_loader_src', function($src, $handle) {
+    // Force HTTPS for WordPress core and plugin assets
+    if (strpos($src, home_url()) !== false) {
+        return str_replace('http://', 'https://', $src);
+    }
+    return $src;
+}, 10, 2);
+
+add_filter('style_loader_src', function($src, $handle) {
+    // Force HTTPS for WordPress core and plugin assets
+    if (strpos($src, home_url()) !== false) {
         return str_replace('http://', 'https://', $src);
     }
     return $src;
@@ -83,6 +106,72 @@ add_action('init', function() {
             exit;
         }
     }
+});
+
+// Force HTTPS for WordPress content
+add_filter('content_url', function($url) {
+    return str_replace('http://', 'https://', $url);
+});
+
+add_filter('plugins_url', function($url) {
+    return str_replace('http://', 'https://', $url);
+});
+
+add_filter('theme_root_uri', function($url) {
+    return str_replace('http://', 'https://', $url);
+});
+
+// Force HTTPS for WordPress uploads
+add_filter('upload_dir', function($uploads) {
+    $uploads['url'] = str_replace('http://', 'https://', $uploads['url']);
+    $uploads['baseurl'] = str_replace('http://', 'https://', $uploads['baseurl']);
+    return $uploads;
+});
+
+// Force HTTPS for Elementor assets
+add_action('elementor/frontend/after_enqueue_styles', function() {
+    // Force HTTPS for Elementor Google Fonts
+    add_filter('elementor/frontend/print_google_fonts', function($google_fonts) {
+        if (is_array($google_fonts)) {
+            foreach ($google_fonts as $key => $font) {
+                if (isset($font['font_url'])) {
+                    $google_fonts[$key]['font_url'] = str_replace('http://', 'https://', $font['font_url']);
+                }
+            }
+        }
+        return $google_fonts;
+    });
+});
+
+// Force HTTPS for all WordPress URLs
+add_filter('wp_get_attachment_url', function($url) {
+    return str_replace('http://', 'https://', $url);
+});
+
+add_filter('wp_get_attachment_image_src', function($image) {
+    if (is_array($image) && isset($image[0])) {
+        $image[0] = str_replace('http://', 'https://', $image[0]);
+    }
+    return $image;
+});
+
+// Force HTTPS for WordPress site URL
+add_filter('option_siteurl', function($url) {
+    return str_replace('http://', 'https://', $url);
+});
+
+add_filter('option_home', function($url) {
+    return str_replace('http://', 'https://', $url);
+});
+
+// Force HTTPS for WordPress admin
+add_filter('admin_url', function($url) {
+    return str_replace('http://', 'https://', $url);
+});
+
+// Force HTTPS for WordPress login
+add_filter('login_url', function($url) {
+    return str_replace('http://', 'https://', $url);
 });
 
 // Add update checker for GitHub releases
