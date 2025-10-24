@@ -539,11 +539,11 @@
     display: inline-block;
     background-color: #007cba;
     color: #ffffff;
-    padding: 12px 24px;
-    border-radius: 6px;
+    padding: 8px 16px;
+    border-radius: 4px;
     text-decoration: none;
     font-weight: 500;
-    font-size: 16px;
+    font-size: 14px;
     transition: all 0.3s ease;
     border: none;
     cursor: pointer;
@@ -560,22 +560,29 @@
 .dw-single-bulletin-images {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 15px;
     align-items: center;
+    margin-top: 20px;
 }
 
 .dw-single-bulletin-image-item {
     width: 100%;
-    max-width: 800px;
+    max-width: 900px;
     text-align: center;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
 }
 
 .dw-single-bulletin-image {
     width: 100%;
     height: auto;
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    object-fit: contain;
 }
 
 .dw-single-bulletin-image:hover {
@@ -617,6 +624,28 @@
     .dw-single-bulletin-images {
         gap: 12px;
     }
+}
+
+/* Bulletin View Button Styles */
+.dw-bulletin-view {
+    background-color: #28a745;
+    color: #ffffff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-right: 8px;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.dw-bulletin-view:hover {
+    background-color: #218838;
+    color: #ffffff;
+    text-decoration: none;
 }
 
 /* Print Styles */

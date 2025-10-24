@@ -1080,6 +1080,10 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                     <div class="dw-bulletin-content">
                         <div class="dw-bulletin-meta">
                             <span class="dw-bulletin-date"><?php echo esc_html($post_date); ?></span>
+                            <span class="dw-bulletin-separator">|</span>
+                            <a href="<?php echo esc_url(get_permalink($post->ID)); ?>" class="dw-bulletin-view">
+                                <?php _e('주보보기', 'dasom-church'); ?>
+                            </a>
                             <?php if ($pdf_url): ?>
                                 <span class="dw-bulletin-separator">|</span>
                                 <a href="<?php echo esc_url($pdf_url); ?>" target="_blank" class="dw-bulletin-download">
@@ -1126,13 +1130,16 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
             ?>
                 <div class="dw-bulletin-item" data-hover="<?php echo esc_attr($hover_effect); ?>" data-shadow-color="<?php echo esc_attr($shadow_color); ?>">
                     <div class="dw-bulletin-title"><?php echo esc_html($display_text); ?></div>
-                    <?php if ($pdf_url): ?>
-                        <div class="dw-bulletin-download-container">
+                    <div class="dw-bulletin-download-container">
+                        <a href="<?php echo esc_url(get_permalink($post->ID)); ?>" class="dw-bulletin-view">
+                            <?php _e('주보보기', 'dasom-church'); ?>
+                        </a>
+                        <?php if ($pdf_url): ?>
                             <a href="<?php echo esc_url($pdf_url); ?>" target="_blank" class="dw-bulletin-download">
                                 <?php _e('주보 다운로드', 'dasom-church'); ?>
                             </a>
-                        </div>
-                    <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
                 </div>
             <?php endforeach; ?>
         </div>

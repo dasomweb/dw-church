@@ -63,12 +63,28 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
         );
         
         $this->add_control(
+            'query_source',
+            [
+                'label' => __('Query Source', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'current',
+                'options' => [
+                    'current' => __('Current Post', 'dasom-church'),
+                    'manual' => __('Manual Selection', 'dasom-church'),
+                ],
+            ]
+        );
+        
+        $this->add_control(
             'bulletin_post',
             [
                 'label' => __('Select Bulletin', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::SELECT2,
                 'options' => $this->get_bulletin_posts(),
                 'description' => __('Choose a specific bulletin to display', 'dasom-church'),
+                'condition' => [
+                    'query_source' => 'manual',
+                ],
             ]
         );
         
@@ -215,17 +231,26 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
     protected function render() {
         $settings = $this->get_settings_for_display();
         
-        if (empty($settings['bulletin_post'])) {
-            echo '<p>' . __('Please select a bulletin to display.', 'dasom-church') . '</p>';
-            return;
-        }
-        
-        $post_id = $settings['bulletin_post'];
-        $post = get_post($post_id);
-        
-        if (!$post || $post->post_type !== 'bulletin') {
-            echo '<p>' . __('Selected bulletin not found.', 'dasom-church') . '</p>';
-            return;
+        // Get post based on query source
+        if ($settings['query_source'] === 'current') {
+            $post = get_post();
+            if (!$post || $post->post_type !== 'bulletin') {
+                echo '<p>' . __('Current post is not a bulletin.', 'dasom-church') . '</p>';
+                return;
+            }
+            $post_id = $post->ID;
+        } else {
+            if (empty($settings['bulletin_post'])) {
+                echo '<p>' . __('Please select a bulletin to display.', 'dasom-church') . '</p>';
+                return;
+            }
+            $post_id = $settings['bulletin_post'];
+            $post = get_post($post_id);
+            
+            if (!$post || $post->post_type !== 'bulletin') {
+                echo '<p>' . __('Selected bulletin not found.', 'dasom-church') . '</p>';
+                return;
+            }
         }
         
         // Get bulletin data
@@ -242,7 +267,9 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
                     if ($bulletin_date_formatted) {
                         echo esc_html($bulletin_date_formatted);
                     } elseif ($bulletin_date) {
-                        echo esc_html($bulletin_date);
+                        // Format the date to Korean format
+                        $formatted_date = date_i18n('Y년 m월 d일', strtotime($bulletin_date));
+                        echo esc_html($formatted_date);
                     } else {
                         echo get_the_date('Y년 m월 d일', $post_id);
                     }
