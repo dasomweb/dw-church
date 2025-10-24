@@ -807,13 +807,32 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
                 
                 .dw-event-wrapper {
                     position: relative;
-                    z-index: 1;
-                    margin-bottom: 20px;
+                    z-index: 10;
+                    margin-bottom: 30px;
+                    background: #fff;
+                    border-radius: 8px;
+                    overflow: hidden;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
                 }
                 
                 .dw-event-container {
                     position: relative;
-                    z-index: 1;
+                    z-index: 10;
+                    background: #fff;
+                }
+                
+                .dw-event-content {
+                    position: relative;
+                    z-index: 10;
+                    background: #fff;
+                    padding: 15px;
+                }
+                
+                .dw-event-button-wrapper {
+                    position: relative;
+                    z-index: 10;
+                    background: #fff;
+                    padding: 0 15px 15px 15px;
                 }
             }
         </style>
