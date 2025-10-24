@@ -11,8 +11,11 @@
     pointer-events: auto;
 }
 
-.dw-bulletin-widget img,
-.dw-single-bulletin-container img {
+/* Only disable pointer events for images in bulletin view buttons, not all images */
+.dw-bulletin-widget .dw-bulletin-view img,
+.dw-bulletin-widget .dw-bulletin-link img,
+.dw-single-bulletin-container .dw-bulletin-view img,
+.dw-single-bulletin-container .dw-bulletin-link img {
     pointer-events: none;
 }
 
