@@ -410,6 +410,115 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             ]
         );
         
+        $this->add_control(
+            'hover_effect',
+            [
+                'label' => __('Hover Effect', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'overlay',
+                'options' => [
+                    'none' => __('None', 'dasom-church'),
+                    'overlay' => __('Overlay Only', 'dasom-church'),
+                    'scale' => __('Scale + Overlay', 'dasom-church'),
+                    'lift' => __('Lift + Overlay', 'dasom-church'),
+                    'glow' => __('Glow + Overlay', 'dasom-church'),
+                ],
+                'condition' => [
+                    'overlay_enable' => 'yes',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'hover_scale',
+            [
+                'label' => __('Hover Scale', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'range' => [
+                    'px' => [
+                        'min' => 1,
+                        'max' => 1.2,
+                        'step' => 0.01,
+                    ],
+                ],
+                'default' => [
+                    'size' => 1.05,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-item:hover' => 'transform: scale({{SIZE}});',
+                ],
+                'condition' => [
+                    'overlay_enable' => 'yes',
+                    'hover_effect' => 'scale',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'hover_lift',
+            [
+                'label' => __('Hover Lift (px)', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 20,
+                        'step' => 1,
+                    ],
+                ],
+                'default' => [
+                    'size' => 5,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-item:hover' => 'transform: translateY(-{{SIZE}}px);',
+                ],
+                'condition' => [
+                    'overlay_enable' => 'yes',
+                    'hover_effect' => 'lift',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'hover_glow_color',
+            [
+                'label' => __('Hover Glow Color', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'default' => 'rgba(0,0,0,0.2)',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-item:hover' => 'box-shadow: 0 8px 25px {{VALUE}};',
+                ],
+                'condition' => [
+                    'overlay_enable' => 'yes',
+                    'hover_effect' => 'glow',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'hover_transition',
+            [
+                'label' => __('Hover Transition Duration', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 1,
+                        'step' => 0.1,
+                    ],
+                ],
+                'default' => [
+                    'size' => 0.3,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-item' => 'transition: all {{SIZE}}s ease;',
+                ],
+                'condition' => [
+                    'overlay_enable' => 'yes',
+                ],
+            ]
+        );
+        
         $this->end_controls_section();
         
         // Style Tab - Text Style
@@ -1084,10 +1193,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 cursor: pointer;
             }
             .dw-event-grid-item:hover {
-                transform: translateY(-4px);
-            }
-            .dw-event-grid-item:hover .dw-event-grid-overlay {
-                background: rgba(0,0,0,0.5);
+                /* Hover effects are now controlled by Elementor settings */
             }
             
             /* Responsive adjustments */
