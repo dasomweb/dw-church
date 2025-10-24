@@ -949,6 +949,8 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             .dw-event-grid {
                 display: grid;
                 width: 100%;
+                position: static;
+                z-index: auto;
             }
             .dw-event-grid-item {
                 position: relative;
@@ -992,27 +994,30 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 }
                 
                 .dw-event-grid {
-                    position: relative;
-                    z-index: 1;
-                    margin-bottom: 100px;
+                    position: static !important;
+                    z-index: auto !important;
+                    margin-bottom: 50px;
                     background: transparent;
-                    padding-bottom: 60px;
+                    padding-bottom: 20px;
+                    display: block;
                     clear: both;
                 }
                 
                 .dw-event-grid-item {
-                    position: relative;
-                    z-index: 1;
+                    position: static !important;
+                    z-index: auto !important;
                     background: #fff;
                     border-radius: 12px;
                     overflow: hidden;
                     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
                     margin-bottom: 30px;
+                    display: block;
+                    width: 100%;
                     clear: both;
                 }
                 
                 .dw-event-grid-overlay {
-                    position: relative;
+                    position: absolute;
                     z-index: 1;
                     background: rgba(0,0,0,0.3);
                 }
@@ -1023,18 +1028,23 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 }
                 
                 .dw-event-grid-content {
-                    position: relative;
-                    z-index: 1;
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    right: 0;
+                    z-index: 2;
                     background: rgba(0,0,0,0.7);
                     padding: 20px;
                 }
                 
-                /* Ensure footer stays below */
-                .dw-event-grid::after {
-                    content: "";
-                    display: block;
-                    clear: both;
-                    height: 50px;
+                /* Force normal document flow */
+                .dw-event-grid * {
+                    position: static !important;
+                }
+                
+                .dw-event-grid-overlay,
+                .dw-event-grid-content {
+                    position: absolute !important;
                 }
             }
         </style>
