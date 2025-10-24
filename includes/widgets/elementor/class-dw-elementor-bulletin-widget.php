@@ -1053,6 +1053,10 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
             <?php foreach ($posts as $post): 
                 $pdf_url = get_post_meta($post->ID, 'dw_bulletin_pdf', true);
                 $featured_image = get_the_post_thumbnail_url($post->ID, 'medium');
+                // Force HTTPS for featured image URLs
+                if ($featured_image) {
+                    $featured_image = str_replace('http://', 'https://', $featured_image);
+                }
                 $bulletin_date = get_post_meta($post->ID, 'dw_bulletin_date', true);
                 $bulletin_date_formatted = get_post_meta($post->ID, 'dw_bulletin_date_formatted', true);
                 

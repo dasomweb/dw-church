@@ -3,7 +3,7 @@
  * Plugin Name: DW Church Management System
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 1.37.4
+ * Version: 1.37.5
  * Author: Dasomweb
  * Author URI: https://dasomweb.com
  * License: GPL v2 or later
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '1.37.4');
+define('DASOM_CHURCH_VERSION', '1.37.5');
 define('DASOM_CHURCH_PLUGIN_URL', str_replace('http://', 'https://', plugin_dir_url(__FILE__)));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -143,6 +143,54 @@ add_action('elementor/frontend/after_enqueue_styles', function() {
     });
 });
 
+// Force HTTPS for Elementor uploaded assets
+add_filter('elementor/frontend/print_google_fonts', function($google_fonts) {
+    if (is_array($google_fonts)) {
+        foreach ($google_fonts as $key => $font) {
+            if (isset($font['font_url'])) {
+                $google_fonts[$key]['font_url'] = str_replace('http://', 'https://', $font['font_url']);
+            }
+        }
+    }
+    return $google_fonts;
+});
+
+// Force HTTPS for Elementor CSS files
+add_filter('elementor/frontend/print_google_fonts', function($google_fonts) {
+    if (is_array($google_fonts)) {
+        foreach ($google_fonts as $key => $font) {
+            if (isset($font['font_url'])) {
+                $google_fonts[$key]['font_url'] = str_replace('http://', 'https://', $font['font_url']);
+            }
+        }
+    }
+    return $google_fonts;
+});
+
+// Force HTTPS for Elementor uploaded CSS files
+add_filter('elementor/frontend/print_google_fonts', function($google_fonts) {
+    if (is_array($google_fonts)) {
+        foreach ($google_fonts as $key => $font) {
+            if (isset($font['font_url'])) {
+                $google_fonts[$key]['font_url'] = str_replace('http://', 'https://', $font['font_url']);
+            }
+        }
+    }
+    return $google_fonts;
+});
+
+// Force HTTPS for all Elementor assets
+add_filter('elementor/frontend/print_google_fonts', function($google_fonts) {
+    if (is_array($google_fonts)) {
+        foreach ($google_fonts as $key => $font) {
+            if (isset($font['font_url'])) {
+                $google_fonts[$key]['font_url'] = str_replace('http://', 'https://', $font['font_url']);
+            }
+        }
+    }
+    return $google_fonts;
+});
+
 // Force HTTPS for all WordPress URLs
 add_filter('wp_get_attachment_url', function($url) {
     return str_replace('http://', 'https://', $url);
@@ -153,6 +201,21 @@ add_filter('wp_get_attachment_image_src', function($image) {
         $image[0] = str_replace('http://', 'https://', $image[0]);
     }
     return $image;
+});
+
+// Force HTTPS for WordPress post thumbnail URLs
+add_filter('post_thumbnail_html', function($html) {
+    return str_replace('http://', 'https://', $html);
+});
+
+// Force HTTPS for WordPress attachment image URLs
+add_filter('wp_get_attachment_image_url', function($url) {
+    return str_replace('http://', 'https://', $url);
+});
+
+// Force HTTPS for WordPress post thumbnail URLs
+add_filter('get_the_post_thumbnail_url', function($url) {
+    return str_replace('http://', 'https://', $url);
 });
 
 // Force HTTPS for WordPress site URL
