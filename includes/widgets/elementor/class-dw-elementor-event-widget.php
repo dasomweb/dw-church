@@ -804,6 +804,17 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
                 .dw-event-image {
                     flex: 0 0 <?php echo esc_attr($settings['image_width_mobile']['size'] ?? 100); ?>%;
                 }
+                
+                .dw-event-wrapper {
+                    position: relative;
+                    z-index: 1;
+                    margin-bottom: 20px;
+                }
+                
+                .dw-event-container {
+                    position: relative;
+                    z-index: 1;
+                }
             }
         </style>
         <?php

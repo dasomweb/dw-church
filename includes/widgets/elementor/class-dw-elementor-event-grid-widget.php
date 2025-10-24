@@ -990,6 +990,17 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 .dw-event-grid-datetime {
                     font-size: 0.9em;
                 }
+                
+                .dw-event-grid {
+                    position: relative;
+                    z-index: 1;
+                    margin-bottom: 20px;
+                }
+                
+                .dw-event-grid-item {
+                    position: relative;
+                    z-index: 1;
+                }
             }
         </style>
         <?php
