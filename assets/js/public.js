@@ -45,6 +45,10 @@ var DasomChurchPublic = {
                     if ($(this).attr('data-no-lightbox') === 'true') {
                         return;
                     }
+                    // Don't open lightbox if inside bulletin widget
+                    if ($(this).closest('.dw-bulletin-widget, .dw-single-bulletin-container').length > 0) {
+                        return;
+                    }
                     DasomChurchPublic.openLightbox($(this).attr('src'), images);
                 });
             }

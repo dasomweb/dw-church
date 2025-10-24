@@ -5,6 +5,23 @@
  * @since 1.34.0
  */
 
+/* Disable lightbox for bulletin widgets */
+.dw-bulletin-widget,
+.dw-single-bulletin-container {
+    pointer-events: auto;
+}
+
+.dw-bulletin-widget img,
+.dw-single-bulletin-container img {
+    pointer-events: none;
+}
+
+.dw-bulletin-view,
+.dw-bulletin-link {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
 /* Bulletin Image Template */
 .dw-bulletin-image-list {
     display: flex;
