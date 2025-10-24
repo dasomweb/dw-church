@@ -409,7 +409,14 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
             <?php if ($settings['show_images'] === 'yes' && $bulletin_images): ?>
                 <div class="dw-single-bulletin-images">
                     <?php
-                    $images = json_decode($bulletin_images, true);
+                    // Handle both JSON array and comma-separated string formats
+                    if (strpos($bulletin_images, '[') === 0) {
+                        // JSON array format: [2526,2527]
+                        $images = json_decode($bulletin_images, true);
+                    } else {
+                        // Comma-separated string format: 2526,2527
+                        $images = array_filter(array_map('intval', explode(',', $bulletin_images)));
+                    }
                     error_log('Decoded images: ' . print_r($images, true));
                     error_log('Is array: ' . (is_array($images) ? 'TRUE' : 'FALSE'));
                     error_log('Is empty: ' . (empty($images) ? 'TRUE' : 'FALSE'));
