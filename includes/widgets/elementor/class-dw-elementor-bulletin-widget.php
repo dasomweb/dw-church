@@ -89,19 +89,6 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
             ]
         );
         
-        $this->add_control(
-            'posts_per_page',
-            [
-                'label' => __('Number of Posts', 'dasom-church'),
-                'type' => \Elementor\Controls_Manager::NUMBER,
-                'default' => 10,
-                'min' => 1,
-                'max' => 50,
-                'condition' => [
-                    'query_source' => 'latest',
-                ],
-            ]
-        );
         
         $this->add_control(
             'display_type',
@@ -126,6 +113,34 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                 'return_value' => 'yes',
                 'default' => 'no',
                 'description' => __('Add "교회주보" text after the date', 'dasom-church'),
+            ]
+        );
+        
+        $this->add_control(
+            'enable_pagination',
+            [
+                'label' => __('Enable Pagination', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SWITCHER,
+                'label_on' => __('Enable', 'dasom-church'),
+                'label_off' => __('Disable', 'dasom-church'),
+                'return_value' => 'yes',
+                'default' => 'no',
+                'description' => __('Show pagination controls for bulletin posts', 'dasom-church'),
+            ]
+        );
+        
+        $this->add_control(
+            'posts_per_page',
+            [
+                'label' => __('Posts Per Page', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::NUMBER,
+                'default' => 6,
+                'min' => 1,
+                'max' => 50,
+                'condition' => [
+                    'enable_pagination' => 'yes',
+                ],
+                'description' => __('Number of posts to show per page', 'dasom-church'),
             ]
         );
         
@@ -954,6 +969,12 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
     protected function render() {
         $settings = $this->get_settings_for_display();
         
+        // Pagination setup
+        $paged = get_query_var('paged') ? get_query_var('paged') : 1;
+        $posts_per_page = isset($settings['enable_pagination']) && $settings['enable_pagination'] === 'yes' 
+            ? $settings['posts_per_page'] 
+            : (isset($settings['posts_per_page']) ? $settings['posts_per_page'] : 10);
+        
         // Get posts based on query source
         if ($settings['query_source'] === 'current') {
             // Current post
@@ -973,13 +994,14 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                 'orderby' => 'post__in',
             ]);
         } else {
-            // Latest posts
+            // Latest posts with pagination
             $posts = get_posts([
-            'post_type' => 'bulletin',
-                'posts_per_page' => $settings['posts_per_page'],
-            'post_status' => 'publish',
+                'post_type' => 'bulletin',
+                'posts_per_page' => $posts_per_page,
+                'post_status' => 'publish',
                 'orderby' => 'date',
-            'order' => 'DESC',
+                'order' => 'DESC',
+                'paged' => $paged,
             ]);
         }
         
@@ -995,6 +1017,11 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
             $this->render_image_template($posts, $layout_type);
         } else {
             $this->render_button_template($posts, $layout_type);
+        }
+        
+        // Render pagination if enabled
+        if (isset($settings['enable_pagination']) && $settings['enable_pagination'] === 'yes' && $settings['query_source'] === 'latest') {
+            $this->render_pagination($posts_per_page, $paged);
         }
     }
     
@@ -1129,6 +1156,73 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                         <?php _e('주보 다운로드', 'dasom-church'); ?>
                     </a>
                 </div>
+            </div>
+        </div>
+        <?php
+    }
+    
+    /**
+     * Render pagination
+     */
+    private function render_pagination($posts_per_page, $current_page) {
+        // Get total number of bulletin posts
+        $total_posts = wp_count_posts('bulletin');
+        $total_posts = $total_posts->publish;
+        
+        if ($total_posts <= $posts_per_page) {
+            return; // No pagination needed
+        }
+        
+        $total_pages = ceil($total_posts / $posts_per_page);
+        
+        if ($total_pages <= 1) {
+            return; // No pagination needed
+        }
+        
+        $current_url = get_permalink();
+        $current_url = remove_query_arg('paged', $current_url);
+        
+        ?>
+        <div class="dw-bulletin-pagination">
+            <div class="dw-pagination-wrapper">
+                <?php if ($current_page > 1): ?>
+                    <a href="<?php echo esc_url(add_query_arg('paged', $current_page - 1, $current_url)); ?>" class="dw-pagination-prev">
+                        <?php _e('이전', 'dasom-church'); ?>
+                    </a>
+                <?php endif; ?>
+                
+                <div class="dw-pagination-numbers">
+                    <?php
+                    $start_page = max(1, $current_page - 2);
+                    $end_page = min($total_pages, $current_page + 2);
+                    
+                    if ($start_page > 1) {
+                        echo '<a href="' . esc_url(add_query_arg('paged', 1, $current_url)) . '" class="dw-pagination-number">1</a>';
+                        if ($start_page > 2) {
+                            echo '<span class="dw-pagination-dots">...</span>';
+                        }
+                    }
+                    
+                    for ($i = $start_page; $i <= $end_page; $i++) {
+                        $class = ($i == $current_page) ? 'dw-pagination-number current' : 'dw-pagination-number';
+                        $url = ($i == $current_page) ? '#' : add_query_arg('paged', $i, $current_url);
+                        echo '<a href="' . esc_url($url) . '" class="' . esc_attr($class) . '">' . $i . '</a>';
+                    }
+                    
+                    if ($end_page < $total_pages) {
+                        if ($end_page < $total_pages - 1) {
+                            echo '<span class="dw-pagination-dots">...</span>';
+                        }
+                        echo '<a href="' . esc_url(add_query_arg('paged', $total_pages, $current_url)) . '" class="dw-pagination-number">' . $total_pages . '</a>';
+                    }
+                    ?>
+                </div>
+                
+                <?php if ($current_page < $total_pages): ?>
+                    <a href="<?php echo esc_url(add_query_arg('paged', $current_page + 1, $current_url)); ?>" class="dw-pagination-next">
+                        <?php _e('다음', 'dasom-church'); ?>
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
         <?php
