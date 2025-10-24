@@ -993,40 +993,51 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 
                 .dw-event-grid {
                     position: relative;
-                    z-index: 999;
-                    margin-bottom: 50px;
+                    z-index: 9999 !important;
+                    margin-bottom: 80px;
                     background: transparent;
-                    padding-bottom: 20px;
+                    padding-bottom: 40px;
+                    margin-top: 20px;
                 }
                 
                 .dw-event-grid-item {
                     position: relative;
-                    z-index: 999;
+                    z-index: 9999 !important;
                     background: #fff;
                     border-radius: 12px;
                     overflow: hidden;
                     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                    margin-bottom: 25px;
+                    margin-bottom: 30px;
                     transform: translateZ(0);
                     -webkit-transform: translateZ(0);
+                    isolation: isolate;
                 }
                 
                 .dw-event-grid-overlay {
                     position: relative;
-                    z-index: 999;
+                    z-index: 9999 !important;
                     background: rgba(0,0,0,0.3);
+                    isolation: isolate;
                 }
                 
                 .dw-event-grid-image {
                     position: relative;
-                    z-index: 999;
+                    z-index: 9999 !important;
+                    isolation: isolate;
                 }
                 
                 .dw-event-grid-content {
                     position: relative;
-                    z-index: 999;
+                    z-index: 9999 !important;
                     background: rgba(0,0,0,0.7);
                     padding: 20px;
+                    isolation: isolate;
+                }
+                
+                /* Force stacking context */
+                .dw-event-grid * {
+                    position: relative;
+                    z-index: 9999 !important;
                 }
             }
         </style>
