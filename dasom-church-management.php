@@ -3,7 +3,7 @@
  * Plugin Name: DW Church Management System
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 1.37.5
+ * Version: 1.37.6
  * Author: Dasomweb
  * Author URI: https://dasomweb.com
  * License: GPL v2 or later
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '1.37.5');
+define('DASOM_CHURCH_VERSION', '1.37.6');
 define('DASOM_CHURCH_PLUGIN_URL', str_replace('http://', 'https://', plugin_dir_url(__FILE__)));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -142,6 +142,58 @@ add_action('elementor/frontend/after_enqueue_styles', function() {
         return $google_fonts;
     });
 });
+
+// Force HTTPS for Elementor Google Fonts CSS files
+add_filter('style_loader_src', function($src, $handle) {
+    // Check if it's an Elementor Google Font CSS file
+    if (strpos($handle, 'elementor-gf-local-') === 0) {
+        return str_replace('http://', 'https://', $src);
+    }
+    return $src;
+}, 10, 2);
+
+// Force HTTPS for Elementor uploaded CSS files
+add_filter('style_loader_src', function($src, $handle) {
+    // Check if it's an Elementor CSS file
+    if (strpos($src, '/wp-content/uploads/elementor/') !== false) {
+        return str_replace('http://', 'https://', $src);
+    }
+    return $src;
+}, 10, 2);
+
+// Force HTTPS for all Elementor Google Fonts
+add_filter('style_loader_src', function($src, $handle) {
+    // Check for specific Elementor Google Font handles
+    $elementor_font_handles = [
+        'elementor-gf-local-roboto-css',
+        'elementor-gf-local-robotoslab-css',
+        'elementor-gf-local-notosanskr-css',
+        'elementor-gf-local-poppins-css'
+    ];
+    
+    if (in_array($handle, $elementor_font_handles)) {
+        return str_replace('http://', 'https://', $src);
+    }
+    return $src;
+}, 10, 2);
+
+// Force HTTPS for Elementor Google Fonts directory
+add_filter('style_loader_src', function($src, $handle) {
+    // Check if it's an Elementor Google Font CSS file in the uploads directory
+    if (strpos($src, '/wp-content/uploads/elementor/google-fonts/css/') !== false) {
+        return str_replace('http://', 'https://', $src);
+    }
+    return $src;
+}, 10, 2);
+
+// Force HTTPS for all Elementor uploads
+add_filter('style_loader_src', function($src, $handle) {
+    // Check if it's any Elementor file in uploads
+    if (strpos($src, '/wp-content/uploads/elementor/') !== false) {
+        return str_replace('http://', 'https://', $src);
+    }
+    return $src;
+}, 10, 2);
 
 // Force HTTPS for Elementor uploaded assets
 add_filter('elementor/frontend/print_google_fonts', function($google_fonts) {
