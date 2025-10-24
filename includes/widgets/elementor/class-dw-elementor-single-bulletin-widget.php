@@ -450,10 +450,6 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
                 error_log('Show images setting: ' . ($settings['show_images'] ?? 'NOT SET'));
                 error_log('Bulletin images: ' . ($bulletin_images ? 'EXISTS' : 'EMPTY'));
                 ?>
-                <div style="background: red; color: white; padding: 10px; margin: 10px;">
-                    DEBUG: Images not shown - show_images: <?php echo $settings['show_images'] ?? 'NOT SET'; ?>, 
-                    bulletin_images: <?php echo $bulletin_images ? 'EXISTS' : 'EMPTY'; ?>
-                </div>
             <?php endif; ?>
         </div>
         <?php
