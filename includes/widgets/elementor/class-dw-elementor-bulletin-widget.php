@@ -1082,7 +1082,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                         <div class="dw-bulletin-meta">
                             <span class="dw-bulletin-date"><?php echo esc_html($post_date); ?></span>
                             <span class="dw-bulletin-separator">|</span>
-                            <a href="<?php echo esc_url(get_permalink($post->ID)); ?>" class="dw-bulletin-view">
+                            <a href="<?php echo esc_url(get_permalink($post->ID)); ?>" class="dw-bulletin-view dw-bulletin-link" data-no-lightbox="true">
                                 <?php _e('주보보기', 'dasom-church'); ?>
                             </a>
                             <?php if ($pdf_url): ?>

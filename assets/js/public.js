@@ -36,7 +36,15 @@ var DasomChurchPublic = {
             
             if (images.length > 0) {
                 // Add click handlers for image lightbox
-                images.on('click', function() {
+                images.on('click', function(e) {
+                    // Don't open lightbox if clicking on bulletin links or buttons
+                    if ($(e.target).closest('.dw-bulletin-link, .dw-bulletin-view, .dw-bulletin-download').length > 0) {
+                        return;
+                    }
+                    // Don't open lightbox if element has data-no-lightbox attribute
+                    if ($(this).attr('data-no-lightbox') === 'true') {
+                        return;
+                    }
                     DasomChurchPublic.openLightbox($(this).attr('src'), images);
                 });
             }
