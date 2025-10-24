@@ -740,6 +740,9 @@ class Dasom_Church_Admin {
         $enable_bulletin_widget = isset($_POST['dw_enable_bulletin_widget']) ? 'yes' : 'no';
         update_option('dw_enable_bulletin_widget', $enable_bulletin_widget);
         
+        $enable_single_bulletin_widget = isset($_POST['dw_enable_single_bulletin_widget']) ? 'yes' : 'no';
+        update_option('dw_enable_single_bulletin_widget', $enable_single_bulletin_widget);
+        
         $enable_column_widget = isset($_POST['dw_enable_column_widget']) ? 'yes' : 'no';
         update_option('dw_enable_column_widget', $enable_column_widget);
         

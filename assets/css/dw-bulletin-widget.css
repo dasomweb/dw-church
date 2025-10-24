@@ -516,6 +516,109 @@
     }
 }
 
+/* DW Single Bulletin Widget Styles */
+.dw-single-bulletin-container {
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.dw-single-bulletin-date {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333333;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.dw-single-bulletin-pdf-container {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.dw-single-bulletin-pdf {
+    display: inline-block;
+    background-color: #007cba;
+    color: #ffffff;
+    padding: 12px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.dw-single-bulletin-pdf:hover {
+    background-color: #005a87;
+    color: #ffffff;
+    text-decoration: none;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 124, 186, 0.3);
+}
+
+.dw-single-bulletin-images {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+}
+
+.dw-single-bulletin-image-item {
+    width: 100%;
+    max-width: 800px;
+    text-align: center;
+}
+
+.dw-single-bulletin-image {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.dw-single-bulletin-image:hover {
+    transform: scale(1.02);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dw-single-bulletin-date {
+        font-size: 16px;
+        margin-bottom: 15px;
+    }
+    
+    .dw-single-bulletin-pdf {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+    
+    .dw-single-bulletin-images {
+        gap: 15px;
+    }
+    
+    .dw-single-bulletin-image-item {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .dw-single-bulletin-date {
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+    
+    .dw-single-bulletin-pdf {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+    
+    .dw-single-bulletin-images {
+        gap: 12px;
+    }
+}
+
 /* Print Styles */
 @media print {
     .dw-bulletin-download {
@@ -528,6 +631,10 @@
     }
     
     .dw-bulletin-pagination {
+        display: none;
+    }
+    
+    .dw-single-bulletin-pdf {
         display: none;
     }
 }

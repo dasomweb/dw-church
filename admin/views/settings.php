@@ -41,6 +41,7 @@ $enable_gallery_widget = get_option('dw_enable_gallery_widget', 'yes');
 $enable_sermon_widget = get_option('dw_enable_sermon_widget', 'yes');
 $enable_single_sermon_widget = get_option('dw_enable_single_sermon_widget', 'yes');
 $enable_bulletin_widget = get_option('dw_enable_bulletin_widget', 'yes');
+$enable_single_bulletin_widget = get_option('dw_enable_single_bulletin_widget', 'yes');
 $enable_column_widget = get_option('dw_enable_column_widget', 'yes');
 $enable_banner_slider_widget = get_option('dw_enable_banner_slider_widget', 'yes');
 $enable_pastoral_column_widget = get_option('dw_enable_pastoral_column_widget', 'yes');
@@ -314,13 +315,13 @@ $enable_pastoral_columns_grid_widget = get_option('dw_enable_pastoral_columns_gr
             
             <tr>
                 <th scope="row">
-                    <label for="dw_enable_bulletin_widget"><?php echo esc_html__('DW Bulletins Widget', 'dasom-church'); ?></label>
+                    <label for="dw_enable_bulletin_widget"><?php echo esc_html__('DW Recent Bulletin Widget', 'dasom-church'); ?></label>
                 </th>
                 <td>
                     <fieldset>
                         <label>
                             <input type="checkbox" id="dw_enable_bulletin_widget" name="dw_enable_bulletin_widget" value="yes" <?php checked($enable_bulletin_widget, 'yes'); ?> />
-                            <?php echo esc_html__('DW Bulletins Widget 사용', 'dasom-church'); ?>
+                            <?php echo esc_html__('DW Recent Bulletin Widget 사용', 'dasom-church'); ?>
                         </label>
                         <p class="description" style="margin-top:10px;">
                             <strong><?php echo esc_html__('기능:', 'dasom-church'); ?></strong><br>
@@ -328,6 +329,27 @@ $enable_pastoral_columns_grid_widget = get_option('dw_enable_pastoral_columns_gr
                             • <?php echo esc_html__('PDF 다운로드 링크', 'dasom-church'); ?><br>
                             • <?php echo esc_html__('주보 이미지 썸네일', 'dasom-church'); ?><br>
                             • <?php echo esc_html__('날짜순 정렬', 'dasom-church'); ?>
+                        </p>
+                    </fieldset>
+                </td>
+            </tr>
+            
+            <tr>
+                <th scope="row">
+                    <label for="dw_enable_single_bulletin_widget"><?php echo esc_html__('DW Single Bulletin Widget', 'dasom-church'); ?></label>
+                </th>
+                <td>
+                    <fieldset>
+                        <label>
+                            <input type="checkbox" id="dw_enable_single_bulletin_widget" name="dw_enable_single_bulletin_widget" value="yes" <?php checked($enable_single_bulletin_widget, 'yes'); ?> />
+                            <?php echo esc_html__('DW Single Bulletin Widget 사용', 'dasom-church'); ?>
+                        </label>
+                        <p class="description" style="margin-top:10px;">
+                            <strong><?php echo esc_html__('기능:', 'dasom-church'); ?></strong><br>
+                            • <?php echo esc_html__('특정 주보 선택 표시', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('주보 날짜 표시', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('PDF 다운로드 버튼', 'dasom-church'); ?><br>
+                            • <?php echo esc_html__('주보 이미지 전체 크기로 순서대로 표시', 'dasom-church'); ?>
                         </p>
                     </fieldset>
                 </td>

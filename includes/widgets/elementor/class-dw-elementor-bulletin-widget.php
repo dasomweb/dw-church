@@ -24,7 +24,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
      * Get widget title
      */
     public function get_title() {
-        return __('DW Bulletin', 'dasom-church');
+        return __('DW Recent Bulletin', 'dasom-church');
     }
     
     /**

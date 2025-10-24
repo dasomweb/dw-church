@@ -74,10 +74,16 @@ class Dasom_Church_Widgets {
                 $widgets_manager->register(new DW_Elementor_Single_Sermon_Widget());
             }
             
-            // Bulletins Widget
+            // Recent Bulletins Widget
             if (get_option('dw_enable_bulletin_widget', 'yes') === 'yes') {
                 require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/widgets/elementor/class-dw-elementor-bulletin-widget.php';
                 $widgets_manager->register(new DW_Elementor_Bulletin_Widget());
+            }
+            
+            // Single Bulletin Widget
+            if (get_option('dw_enable_single_bulletin_widget', 'yes') === 'yes') {
+                require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/widgets/elementor/class-dw-elementor-single-bulletin-widget.php';
+                $widgets_manager->register(new DW_Elementor_Single_Bulletin_Widget());
             }
             
             // Columns Widget
