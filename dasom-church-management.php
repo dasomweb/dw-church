@@ -3,7 +3,7 @@
  * Plugin Name: DW Church Management System
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 1.37.8
+ * Version: 1.37.10
  * Author: Dasomweb
  * Author URI: https://dasomweb.com
  * License: GPL v2 or later
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '1.37.8');
+define('DASOM_CHURCH_VERSION', '1.37.10');
 define('DASOM_CHURCH_PLUGIN_URL', str_replace('http://', 'https://', plugin_dir_url(__FILE__)));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -143,11 +143,14 @@ add_action('elementor/frontend/after_enqueue_styles', function() {
     });
 });
 
-// Force HTTPS for Elementor Google Fonts CSS files - simple approach like gallery widget
+// Smart HTTPS enforcement - only when SSL is detected and needed
 add_filter('style_loader_src', function($src, $handle) {
-    // Check if it's an Elementor Google Font CSS file
-    if (strpos($handle, 'elementor-gf-local-') === 0 || strpos($src, '/wp-content/uploads/elementor/') !== false) {
-        return str_replace('http://', 'https://', $src);
+    // Only enforce HTTPS if SSL is actually detected and URL is HTTP
+    if (is_ssl() && strpos($src, 'http://') === 0) {
+        // Check if it's an Elementor Google Font CSS file
+        if (strpos($handle, 'elementor-gf-local-') === 0 || strpos($src, '/wp-content/uploads/elementor/') !== false) {
+            return str_replace('http://', 'https://', $src);
+        }
     }
     return $src;
 }, 10, 2);
@@ -261,6 +264,61 @@ add_action('upgrader_process_complete', function($upgrader_object, $options) {
         }
     }
 }, 10, 2);
+
+// Alternative approach: Use protocol-relative URLs for fonts
+add_filter('elementor/frontend/print_google_fonts', function($google_fonts) {
+    if (is_array($google_fonts)) {
+        foreach ($google_fonts as $key => $font) {
+            if (isset($font['font_url']) && strpos($font['font_url'], 'http://') === 0) {
+                // Convert to protocol-relative URL
+                $google_fonts[$key]['font_url'] = str_replace('http://', '//', $font['font_url']);
+            }
+        }
+    }
+    return $google_fonts;
+});
+
+// Force WordPress to use HTTPS for content URLs when SSL is detected
+add_filter('content_url', function($url) {
+    if (is_ssl() && strpos($url, 'http://') === 0) {
+        return str_replace('http://', 'https://', $url);
+    }
+    return $url;
+});
+
+// Alternative approach: Set WordPress to force SSL for admin and login
+add_action('init', function() {
+    if (is_ssl()) {
+        // Force SSL for admin
+        if (is_admin() && !is_ssl()) {
+            wp_redirect('https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'], 301);
+            exit();
+        }
+    }
+});
+
+// Smart URL handling - use protocol-relative URLs when possible
+add_filter('wp_get_attachment_url', function($url) {
+    if (is_ssl() && strpos($url, 'http://') === 0) {
+        return str_replace('http://', 'https://', $url);
+    }
+    return $url;
+});
+
+// Handle Elementor font URLs more intelligently
+add_filter('elementor/frontend/print_google_fonts', function($google_fonts) {
+    if (is_array($google_fonts)) {
+        foreach ($google_fonts as $key => $font) {
+            if (isset($font['font_url'])) {
+                // Use protocol-relative URL for better compatibility
+                if (strpos($font['font_url'], 'http://') === 0) {
+                    $google_fonts[$key]['font_url'] = str_replace('http://', '//', $font['font_url']);
+                }
+            }
+        }
+    }
+    return $google_fonts;
+});
 
 // Add update checker for GitHub releases
 add_action('init', function() {

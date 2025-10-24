@@ -401,12 +401,11 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
                     if (is_array($images) && !empty($images)) {
                         error_log('DW Single Bulletin Widget: Found ' . count($images) . ' images');
                         foreach ($images as $image_id) {
-                            $image_url = wp_get_attachment_image_url($image_id, 'full');
+                            $image_url = wp_get_attachment_url($image_id);
                             error_log('DW Single Bulletin Widget: Image ID ' . $image_id . ' URL: ' . $image_url);
                             
                             if ($image_url) {
-                                // Force HTTPS for image URLs - same as gallery widget
-                                $image_url = str_replace('http://', 'https://', $image_url);
+                                // Use the same approach as gallery widget - no forced HTTPS
                                 error_log('DW Single Bulletin Widget: Final image URL: ' . $image_url);
                                 ?>
                                 <div class="dw-single-bulletin-image-item" data-hover="<?php echo esc_attr($hover_effect); ?>">
