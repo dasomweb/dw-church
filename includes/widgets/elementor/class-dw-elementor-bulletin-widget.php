@@ -1053,7 +1053,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
             <?php foreach ($posts as $post): 
                 $pdf_url = get_post_meta($post->ID, 'dw_bulletin_pdf', true);
                 $featured_image = get_the_post_thumbnail_url($post->ID, 'medium');
-                // Force HTTPS for featured image URLs
+                // Force HTTPS for featured image URLs - same as gallery widget
                 if ($featured_image) {
                     $featured_image = str_replace('http://', 'https://', $featured_image);
                 }

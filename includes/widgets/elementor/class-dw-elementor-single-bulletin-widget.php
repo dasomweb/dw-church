@@ -374,7 +374,7 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
                         foreach ($images as $image_id) {
                             $image_url = wp_get_attachment_image_url($image_id, 'full');
                             if ($image_url) {
-                                // Force HTTPS for image URLs
+                                // Force HTTPS for image URLs - same as gallery widget
                                 $image_url = str_replace('http://', 'https://', $image_url);
                                 ?>
                                 <div class="dw-single-bulletin-image-item" data-hover="<?php echo esc_attr($hover_effect); ?>">
