@@ -284,9 +284,12 @@ class Dasom_Church_Admin {
         }
         
         // Main menu - 고유한 슬러그 사용
+        $church_name = get_option('dw_church_name', '');
+        $menu_title = $church_name ? $church_name . ' - ' . __('DW 교회관리', 'dasom-church') : __('DW 교회관리', 'dasom-church');
+        
         add_menu_page(
-            __('DW 교회관리', 'dasom-church'),
-            __('DW 교회관리', 'dasom-church'),
+            $menu_title,
+            $menu_title,
             'edit_posts', // Allow Author/Editor access
             'dasom-church-admin',
             array($this, 'dasom_church_dashboard_page'),
@@ -928,6 +931,11 @@ class Dasom_Church_Admin {
         foreach ($settings as $key => $value) {
             dasom_church_update_setting($key, $value);
         }
+        
+        // Add success message
+        add_action('admin_notices', function() {
+            echo '<div class="notice notice-success is-dismissible"><p>' . __('설정이 성공적으로 저장되었습니다.', 'dasom-church') . '</p></div>';
+        });
         
         // Save dashboard visibility setting
         if (isset($_POST['dw_dashboard_fields_visibility'])) {
