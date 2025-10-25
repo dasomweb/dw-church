@@ -43,7 +43,14 @@ class Dasom_Church_Admin_Customization {
      * Initialize admin customization
      */
     public function init_admin_customization() {
+        // Only apply customizations to Author and Editor roles
+        $current_user = wp_get_current_user();
+        if (!in_array('author', $current_user->roles) && !in_array('editor', $current_user->roles)) {
+            return; // Don't apply customizations to Administrator
+        }
+        
         // Hide admin bar for both frontend and backend if enabled
+        // Default: show admin bar (admin_bar_hide = 'no')
         $admin_bar_hide = get_option('dw_admin_bar_hide', 'no');
         if ($admin_bar_hide === 'yes') {
             add_filter('show_admin_bar', '__return_false');
@@ -54,6 +61,12 @@ class Dasom_Church_Admin_Customization {
      * Add admin bar hide CSS
      */
     public function add_admin_bar_hide_css() {
+        // Only apply to Author and Editor roles
+        $current_user = wp_get_current_user();
+        if (!in_array('author', $current_user->roles) && !in_array('editor', $current_user->roles)) {
+            return; // Don't apply to Administrator
+        }
+        
         $admin_bar_hide = get_option('dw_admin_bar_hide', 'no');
         if ($admin_bar_hide === 'yes') {
             echo '<style type="text/css">
@@ -70,6 +83,12 @@ class Dasom_Church_Admin_Customization {
      * Add admin menu styles
      */
     public function add_admin_menu_styles() {
+        // Only apply to Author and Editor roles
+        $current_user = wp_get_current_user();
+        if (!in_array('author', $current_user->roles) && !in_array('editor', $current_user->roles)) {
+            return; // Don't apply to Administrator
+        }
+        
         $admin_menu_bg_color = get_option('dw_admin_menu_bg_color', '#1d2327');
         $admin_menu_font_color = get_option('dw_admin_menu_font_color', '#ffffff');
         
@@ -110,6 +129,33 @@ class Dasom_Church_Admin_Customization {
             #adminmenu .wp-submenu-head:after {
                 color: ' . esc_attr($admin_menu_font_color) . ' !important;
             }
+            
+            /* Hide Collapse Menu Button */
+            #adminmenu .wp-menu-separator:last-child,
+            #adminmenu .wp-menu-separator:last-of-type,
+            #adminmenu .wp-menu-separator[aria-label*="Collapse"],
+            #adminmenu .wp-menu-separator[aria-label*="collapse"],
+            #adminmenu .wp-menu-separator[aria-label*="Collapse Menu"],
+            #adminmenu .wp-menu-separator[aria-label*="collapse menu"],
+            #adminmenu .wp-menu-separator[title*="Collapse"],
+            #adminmenu .wp-menu-separator[title*="collapse"],
+            #adminmenu .wp-menu-separator[title*="Collapse Menu"],
+            #adminmenu .wp-menu-separator[title*="collapse menu"] {
+                display: none !important;
+            }
+            
+            /* Hide Collapse Menu Button by text content */
+            #adminmenu .wp-menu-separator:has-text("Collapse"),
+            #adminmenu .wp-menu-separator:has-text("collapse"),
+            #adminmenu .wp-menu-separator:has-text("Collapse Menu"),
+            #adminmenu .wp-menu-separator:has-text("collapse menu") {
+                display: none !important;
+            }
+            
+            /* Alternative method to hide last separator (usually collapse button) */
+            #adminmenu li:last-child.wp-menu-separator {
+                display: none !important;
+            }
         </style>';
     }
     
@@ -117,6 +163,12 @@ class Dasom_Church_Admin_Customization {
      * Add custom title to admin bar
      */
     public function add_admin_bar_title($wp_admin_bar) {
+        // Only apply to Author and Editor roles
+        $current_user = wp_get_current_user();
+        if (!in_array('author', $current_user->roles) && !in_array('editor', $current_user->roles)) {
+            return; // Don't apply to Administrator
+        }
+        
         $admin_bar_title = get_option('dw_admin_bar_title', 'DW 교회관리');
         
         if (!empty($admin_bar_title)) {

@@ -725,11 +725,11 @@ $github_token = get_option('dw_github_access_token', '');
     <?php elseif ($active_tab == 'admin_customization'): ?>
     <!-- 관리자 커스터마이징 탭 -->
     <h2>🎨 <?php _e('관리자 커스터마이징', 'dasom-church'); ?></h2>
-    <p><?php _e('관리자 바 숨김, 메뉴 스타일링, 관리자 바 제목 설정을 관리할 수 있습니다.', 'dasom-church'); ?></p>
+    <p><?php _e('Author와 Editor 역할의 사용자에게만 적용되는 관리자 바 숨김, 메뉴 스타일링, 관리자 바 제목 설정을 관리할 수 있습니다.', 'dasom-church'); ?></p>
     
     <?php
     // Get current settings
-    $admin_bar_hide = get_option('dw_admin_bar_hide', 'no');
+    $admin_bar_hide = get_option('dw_admin_bar_hide', 'no'); // Default: show admin bar
     $admin_menu_bg_color = get_option('dw_admin_menu_bg_color', '#1d2327');
     $admin_menu_font_color = get_option('dw_admin_menu_font_color', '#ffffff');
     $admin_bar_title = get_option('dw_admin_bar_title', 'DW 교회관리');
@@ -761,7 +761,7 @@ $github_token = get_option('dw_github_access_token', '');
                         <input type="checkbox" name="admin_bar_hide" value="yes" <?php checked($admin_bar_hide, 'yes'); ?> />
                         <?php _e('관리자 바를 숨깁니다 (프론트엔드 및 백엔드에서)', 'dasom-church'); ?>
                     </label>
-                    <p class="description"><?php _e('체크하면 프론트엔드와 백엔드(관리자 영역) 모두에서 관리자 바가 숨겨집니다.', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('기본적으로 관리자 바는 표시됩니다. 체크하면 Author/Editor 역할의 사용자에게만 프론트엔드와 백엔드(관리자 영역) 모두에서 관리자 바가 숨겨집니다.', 'dasom-church'); ?></p>
                 </td>
             </tr>
             
@@ -769,7 +769,7 @@ $github_token = get_option('dw_github_access_token', '');
                 <th scope="row"><?php _e('관리자 메뉴 배경색', 'dasom-church'); ?></th>
                 <td>
                     <input type="color" name="admin_menu_bg_color" value="<?php echo esc_attr($admin_menu_bg_color); ?>" />
-                    <p class="description"><?php _e('관리자 메뉴의 배경색을 설정합니다.', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('Author/Editor 역할의 사용자에게만 적용되는 관리자 메뉴의 배경색을 설정합니다.', 'dasom-church'); ?></p>
                 </td>
             </tr>
             
@@ -777,7 +777,7 @@ $github_token = get_option('dw_github_access_token', '');
                 <th scope="row"><?php _e('관리자 메뉴 폰트색', 'dasom-church'); ?></th>
                 <td>
                     <input type="color" name="admin_menu_font_color" value="<?php echo esc_attr($admin_menu_font_color); ?>" />
-                    <p class="description"><?php _e('관리자 메뉴의 폰트색을 설정합니다.', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('Author/Editor 역할의 사용자에게만 적용되는 관리자 메뉴의 폰트색을 설정합니다.', 'dasom-church'); ?></p>
                 </td>
             </tr>
             
@@ -785,7 +785,7 @@ $github_token = get_option('dw_github_access_token', '');
                 <th scope="row"><?php _e('관리자 바 제목', 'dasom-church'); ?></th>
                 <td>
                     <input type="text" name="admin_bar_title" value="<?php echo esc_attr($admin_bar_title); ?>" class="regular-text" />
-                    <p class="description"><?php _e('관리자 바 상단에 표시될 제목을 설정합니다.', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('Author/Editor 역할의 사용자에게만 적용되는 관리자 바 상단에 표시될 제목을 설정합니다.', 'dasom-church'); ?></p>
                 </td>
             </tr>
         </table>
@@ -793,9 +793,10 @@ $github_token = get_option('dw_github_access_token', '');
         <div style="background:#f0f7ff;padding:15px;border-left:4px solid #2271b1;margin:20px 0;">
             <h3 style="margin-top:0;">💡 <?php _e('사용 방법:', 'dasom-church'); ?></h3>
             <ul style="margin-bottom:0;">
-                <li><?php _e('관리자 바 숨김: 프론트엔드와 백엔드(관리자 영역) 모두에서 관리자 바를 완전히 숨깁니다.', 'dasom-church'); ?></li>
-                <li><?php _e('메뉴 스타일링: 관리자 메뉴의 배경색과 폰트색을 커스터마이징할 수 있습니다.', 'dasom-church'); ?></li>
-                <li><?php _e('관리자 바 제목: 관리자 바 상단에 표시될 브랜드명을 설정할 수 있습니다.', 'dasom-church'); ?></li>
+                <li><?php _e('관리자 바 숨김: Author/Editor 역할의 사용자에게만 적용됩니다. 기본적으로 관리자 바는 표시되며, 필요시 프론트엔드와 백엔드(관리자 영역) 모두에서 관리자 바를 완전히 숨길 수 있습니다.', 'dasom-church'); ?></li>
+                <li><?php _e('메뉴 스타일링: Author/Editor 역할의 사용자에게만 적용되는 관리자 메뉴의 배경색과 폰트색을 커스터마이징할 수 있습니다.', 'dasom-church'); ?></li>
+                <li><?php _e('관리자 바 제목: Author/Editor 역할의 사용자에게만 적용되는 관리자 바 상단에 표시될 브랜드명을 설정할 수 있습니다.', 'dasom-church'); ?></li>
+                <li><?php _e('Collapse Menu 숨김: Author/Editor 역할의 사용자에게만 적용되는 Collapse Menu 버튼을 숨깁니다.', 'dasom-church'); ?></li>
             </ul>
         </div>
         
