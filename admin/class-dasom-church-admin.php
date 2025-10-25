@@ -287,7 +287,7 @@ class Dasom_Church_Admin {
         add_menu_page(
             __('DW 교회관리', 'dasom-church'),
             __('DW 교회관리', 'dasom-church'),
-            'edit_posts', // Allow Author/Editor access
+            'read', // Allow all logged-in users
             'dasom-church-admin',
             array($this, 'dasom_church_dashboard_page'),
             'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M11 2v6h6v3h-6v7H8v-7H2V8h6V2z"/></svg>'),
@@ -705,9 +705,9 @@ class Dasom_Church_Admin {
      * Dashboard page
      */
     public function dasom_church_dashboard_page() {
-        // Allow access for Administrator, Editor, and Author
-        if (!current_user_can('edit_posts')) {
-            wp_die(__('You do not have sufficient permissions to access this page.', 'dasom-church'));
+        // Allow access for all logged-in users
+        if (!is_user_logged_in()) {
+            wp_die(__('You must be logged in to access this page.', 'dasom-church'));
         }
         
         // 설교자 관리 액션 처리
