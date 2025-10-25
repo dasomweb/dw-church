@@ -43,6 +43,9 @@ class Dasom_Church_Admin {
      * Initialize hooks
      */
     private function dasom_church_init_hooks() {
+        // Set default widget settings on plugin activation
+        add_action('admin_init', array($this, 'dasom_church_set_default_widget_settings'));
+        
         // Admin menu
         add_action('admin_menu', array($this, 'dasom_church_admin_menu'));
         add_action('admin_enqueue_scripts', array($this, 'dasom_church_admin_scripts'));
@@ -186,6 +189,29 @@ class Dasom_Church_Admin {
     public function redirect_to_banner() {
         wp_redirect(admin_url('edit.php?post_type=banner'));
         exit;
+    }
+    
+    /**
+     * Set default widget settings
+     */
+    public function dasom_church_set_default_widget_settings() {
+        // Force all widget settings to 'yes' regardless of current values
+        $widget_settings = array(
+            'dw_enable_gallery_widget' => 'yes',
+            'dw_enable_sermon_widget' => 'yes',
+            'dw_enable_single_sermon_widget' => 'yes',
+            'dw_enable_bulletin_widget' => 'yes',
+            'dw_enable_single_bulletin_widget' => 'yes',
+            'dw_enable_column_widget' => 'yes',
+            'dw_enable_banner_slider_widget' => 'yes',
+            'dw_enable_pastoral_column_widget' => 'yes',
+            'dw_enable_pastoral_columns_grid_widget' => 'yes',
+        );
+        
+        // Force update all widget settings to 'yes'
+        foreach ($widget_settings as $option_name => $value) {
+            update_option($option_name, $value);
+        }
     }
     
     /**
