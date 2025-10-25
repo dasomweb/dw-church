@@ -732,6 +732,7 @@ $github_token = get_option('dw_github_access_token', '');
     $admin_bar_hide = get_option('dw_admin_bar_hide', 'yes'); // Default: hide admin bar for non-Administrator
     $admin_menu_bg_color = get_option('dw_admin_menu_bg_color', '#1d2327');
     $admin_menu_font_color = get_option('dw_admin_menu_font_color', '#ffffff');
+    $admin_menu_font_size = get_option('dw_admin_menu_font_size', '14');
     $admin_bar_title = get_option('dw_admin_bar_title', 'DW 교회관리');
     
     // Handle form submission
@@ -739,11 +740,13 @@ $github_token = get_option('dw_github_access_token', '');
         $admin_bar_hide = sanitize_text_field($_POST['admin_bar_hide']);
         $admin_menu_bg_color = sanitize_hex_color($_POST['admin_menu_bg_color']);
         $admin_menu_font_color = sanitize_hex_color($_POST['admin_menu_font_color']);
+        $admin_menu_font_size = sanitize_text_field($_POST['admin_menu_font_size']);
         $admin_bar_title = sanitize_text_field($_POST['admin_bar_title']);
         
         update_option('dw_admin_bar_hide', $admin_bar_hide);
         update_option('dw_admin_menu_bg_color', $admin_menu_bg_color);
         update_option('dw_admin_menu_font_color', $admin_menu_font_color);
+        update_option('dw_admin_menu_font_size', $admin_menu_font_size);
         update_option('dw_admin_bar_title', $admin_bar_title);
         
         echo '<div class="notice notice-success"><p>' . __('설정이 저장되었습니다.', 'dasom-church') . '</p></div>';
@@ -778,6 +781,14 @@ $github_token = get_option('dw_github_access_token', '');
                 <td>
                     <input type="color" name="admin_menu_font_color" value="<?php echo esc_attr($admin_menu_font_color); ?>" />
                     <p class="description"><?php _e('Administrator를 제외한 모든 역할의 사용자에게 적용되는 관리자 메뉴의 폰트색을 설정합니다.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+            
+            <tr>
+                <th scope="row"><?php _e('관리자 메뉴 폰트 사이즈', 'dasom-church'); ?></th>
+                <td>
+                    <input type="number" name="admin_menu_font_size" value="<?php echo esc_attr($admin_menu_font_size); ?>" min="10" max="24" step="1" style="width:80px;" /> px
+                    <p class="description"><?php _e('관리자 메뉴의 폰트 사이즈를 설정합니다. (10px ~ 24px)', 'dasom-church'); ?></p>
                 </td>
             </tr>
             

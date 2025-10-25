@@ -95,8 +95,24 @@ class Dasom_Church_Admin_Customization {
         // Apply to all roles including Administrator
         $admin_menu_bg_color = get_option('dw_admin_menu_bg_color', '#1d2327');
         $admin_menu_font_color = get_option('dw_admin_menu_font_color', '#ffffff');
+        $admin_menu_font_size = get_option('dw_admin_menu_font_size', '14');
+        $church_name = get_option('dw_church_name', '');
         
         echo '<style type="text/css">
+            /* Church Name Display Above Menu */
+            #adminmenu::before {
+                content: "' . esc_attr($church_name) . '";
+                display: block;
+                background-color: ' . esc_attr($admin_menu_bg_color) . ';
+                color: ' . esc_attr($admin_menu_font_color) . ';
+                padding: 15px 20px;
+                font-size: 16px;
+                font-weight: bold;
+                text-align: center;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                margin-bottom: 0;
+            }
+            
             /* Admin Menu Background - More specific selectors */
             #adminmenu, 
             #adminmenu .wp-submenu, 
@@ -112,9 +128,10 @@ class Dasom_Church_Admin_Customization {
                 background-color: ' . esc_attr($admin_menu_bg_color) . ' !important;
             }
             
-            /* Admin Menu Font Color */
+            /* Admin Menu Font Color and Size */
             #adminmenu a, #adminmenu .wp-submenu a, #adminmenu .wp-submenu-head {
                 color: ' . esc_attr($admin_menu_font_color) . ' !important;
+                font-size: ' . esc_attr($admin_menu_font_size) . 'px !important;
             }
             
             /* Admin Menu Hover Effects */
