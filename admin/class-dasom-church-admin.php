@@ -301,6 +301,26 @@ class Dasom_Church_Admin {
             );
         }
         
+        // User Profile submenu
+        add_submenu_page(
+            'dasom-church-admin',
+            __('사용자 프로필', 'dasom-church'),
+            __('사용자 프로필', 'dasom-church'),
+            'edit_posts',
+            'dasom-church-profile',
+            array($this, 'dasom_church_profile_page')
+        );
+        
+        // Logout submenu
+        add_submenu_page(
+            'dasom-church-admin',
+            __('로그아웃', 'dasom-church'),
+            __('로그아웃', 'dasom-church'),
+            'edit_posts',
+            'dasom-church-logout',
+            array($this, 'dasom_church_logout_page')
+        );
+        
         // Add GitHub Update settings to WordPress Settings menu (독립적)
         add_options_page(
             __('DW 설정', 'dasom-church'),
@@ -988,6 +1008,189 @@ class Dasom_Church_Admin {
                 'invalidUrl' => __('Invalid URL format.', 'dasom-church')
             )
         ));
+    }
+    
+    /**
+     * User Profile page
+     */
+    public function dasom_church_profile_page() {
+        if (!current_user_can('edit_posts')) {
+            wp_die(__('You do not have sufficient permissions to access this page.', 'dasom-church'));
+        }
+        
+        // Handle profile update
+        if (isset($_POST['dasom_church_profile_nonce']) && wp_verify_nonce($_POST['dasom_church_profile_nonce'], 'dasom_church_profile_action')) {
+            $this->dasom_church_handle_profile_update();
+        }
+        
+        $current_user = wp_get_current_user();
+        ?>
+        <div class="wrap">
+            <h1><?php _e('사용자 프로필', 'dasom-church'); ?></h1>
+            
+            <form method="post" action="">
+                <?php wp_nonce_field('dasom_church_profile_action', 'dasom_church_profile_nonce'); ?>
+                
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">
+                            <label for="user_login"><?php _e('사용자명', 'dasom-church'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="user_login" name="user_login" value="<?php echo esc_attr($current_user->user_login); ?>" class="regular-text" readonly />
+                            <p class="description"><?php _e('사용자명은 변경할 수 없습니다.', 'dasom-church'); ?></p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="first_name"><?php _e('이름', 'dasom-church'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="first_name" name="first_name" value="<?php echo esc_attr($current_user->first_name); ?>" class="regular-text" />
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="last_name"><?php _e('성', 'dasom-church'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="last_name" name="last_name" value="<?php echo esc_attr($current_user->last_name); ?>" class="regular-text" />
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="nickname"><?php _e('닉네임', 'dasom-church'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="nickname" name="nickname" value="<?php echo esc_attr($current_user->nickname); ?>" class="regular-text" />
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="user_email"><?php _e('이메일', 'dasom-church'); ?></label>
+                        </th>
+                        <td>
+                            <input type="email" id="user_email" name="user_email" value="<?php echo esc_attr($current_user->user_email); ?>" class="regular-text" />
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="user_url"><?php _e('웹사이트', 'dasom-church'); ?></label>
+                        </th>
+                        <td>
+                            <input type="url" id="user_url" name="user_url" value="<?php echo esc_attr($current_user->user_url); ?>" class="regular-text" />
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="description"><?php _e('자기소개', 'dasom-church'); ?></label>
+                        </th>
+                        <td>
+                            <textarea id="description" name="description" rows="5" cols="30" class="large-text"><?php echo esc_textarea($current_user->description); ?></textarea>
+                        </td>
+                    </tr>
+                </table>
+                
+                <h2><?php _e('비밀번호 변경', 'dasom-church'); ?></h2>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">
+                            <label for="current_pass"><?php _e('현재 비밀번호', 'dasom-church'); ?></label>
+                        </th>
+                        <td>
+                            <input type="password" id="current_pass" name="current_pass" class="regular-text" />
+                            <p class="description"><?php _e('비밀번호를 변경하려면 현재 비밀번호를 입력하세요.', 'dasom-church'); ?></p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="pass1"><?php _e('새 비밀번호', 'dasom-church'); ?></label>
+                        </th>
+                        <td>
+                            <input type="password" id="pass1" name="pass1" class="regular-text" />
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="pass2"><?php _e('새 비밀번호 확인', 'dasom-church'); ?></label>
+                        </th>
+                        <td>
+                            <input type="password" id="pass2" name="pass2" class="regular-text" />
+                        </td>
+                    </tr>
+                </table>
+                
+                <?php submit_button(__('프로필 업데이트', 'dasom-church')); ?>
+            </form>
+        </div>
+        <?php
+    }
+    
+    /**
+     * Handle profile update
+     */
+    private function dasom_church_handle_profile_update() {
+        $current_user = wp_get_current_user();
+        $user_id = $current_user->ID;
+        
+        // Update basic profile fields
+        $user_data = array(
+            'ID' => $user_id,
+            'first_name' => sanitize_text_field($_POST['first_name'] ?? ''),
+            'last_name' => sanitize_text_field($_POST['last_name'] ?? ''),
+            'nickname' => sanitize_text_field($_POST['nickname'] ?? ''),
+            'user_email' => sanitize_email($_POST['user_email'] ?? ''),
+            'user_url' => esc_url_raw($_POST['user_url'] ?? ''),
+            'description' => sanitize_textarea_field($_POST['description'] ?? '')
+        );
+        
+        $result = wp_update_user($user_data);
+        
+        if (is_wp_error($result)) {
+            add_action('admin_notices', function() use ($result) {
+                echo '<div class="notice notice-error"><p>' . $result->get_error_message() . '</p></div>';
+            });
+        } else {
+            // Handle password change
+            if (!empty($_POST['current_pass']) && !empty($_POST['pass1'])) {
+                if (wp_check_password($_POST['current_pass'], $current_user->user_pass, $user_id)) {
+                    if ($_POST['pass1'] === $_POST['pass2']) {
+                        wp_set_password($_POST['pass1'], $user_id);
+                        add_action('admin_notices', function() {
+                            echo '<div class="notice notice-success"><p>' . __('비밀번호가 성공적으로 변경되었습니다.', 'dasom-church') . '</p></div>';
+                        });
+                    } else {
+                        add_action('admin_notices', function() {
+                            echo '<div class="notice notice-error"><p>' . __('새 비밀번호가 일치하지 않습니다.', 'dasom-church') . '</p></div>';
+                        });
+                    }
+                } else {
+                    add_action('admin_notices', function() {
+                        echo '<div class="notice notice-error"><p>' . __('현재 비밀번호가 올바르지 않습니다.', 'dasom-church') . '</p></div>';
+                    });
+                }
+            }
+            
+            add_action('admin_notices', function() {
+                echo '<div class="notice notice-success"><p>' . __('프로필이 성공적으로 업데이트되었습니다.', 'dasom-church') . '</p></div>';
+            });
+        }
+    }
+    
+    /**
+     * Logout page
+     */
+    public function dasom_church_logout_page() {
+        wp_redirect(wp_logout_url());
+        exit;
     }
 }
 
