@@ -55,65 +55,6 @@ if (is_wp_error($preachers)) {
     <h1><?php _e('교회 관리 대시보드', 'dasom-church'); ?></h1>
     <p><?php _e('교회주보, 설교, 목회컬럼, 교회앨범, 배너의 최신 현황을 한눈에 확인할 수 있습니다.', 'dasom-church'); ?></p>
     
-    <!-- 설교자 관리 -->
-    <hr>
-    <h2>🧑‍💼 <?php _e('설교자 관리', 'dasom-church'); ?></h2>
-    
-    <form method="post" style="margin-bottom:20px;">
-        <?php wp_nonce_field('sermon_preacher_actions'); ?>
-        <input type="hidden" name="preacher_action" value="add">
-        <input type="text" name="preacher_name" class="regular-text" placeholder="<?php _e('설교자 이름 추가', 'dasom-church'); ?>">
-        <?php submit_button(__('추가', 'dasom-church'), 'secondary', '', false); ?>
-    </form>
-    
-    <table class="widefat striped" style="max-width:900px;">
-        <thead>
-            <tr>
-                <th style="width:40px;"><?php _e('ID', 'dasom-church'); ?></th>
-                <th><?php _e('이름', 'dasom-church'); ?></th>
-                <th style="width:200px;"><?php _e('동작', 'dasom-church'); ?></th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if ($preachers): ?>
-                <?php foreach($preachers as $term): ?>
-                    <tr>
-                        <td><?php echo (int)$term->term_id; ?></td>
-                        <td>
-                            <form method="post" style="display:flex;gap:8px;align-items:center;">
-                                <?php wp_nonce_field('sermon_preacher_actions'); ?>
-                                <input type="hidden" name="preacher_action" value="rename">
-                                <input type="hidden" name="term_id" value="<?php echo (int)$term->term_id; ?>">
-                                <input type="text" name="new_name" value="<?php echo esc_attr($term->name); ?>" class="regular-text" style="max-width:300px;">
-                                <?php submit_button(__('이름 변경', 'dasom-church'), 'small', '', false); ?>
-                            </form>
-                        </td>
-                        <td>
-                            <?php $is_default = ($term->name === $default_preacher); ?>
-                            <form method="post" style="display:inline;">
-                                <?php wp_nonce_field('sermon_preacher_actions'); ?>
-                                <input type="hidden" name="preacher_action" value="set_default">
-                                <input type="hidden" name="term_id" value="<?php echo (int)$term->term_id; ?>">
-                                <button type="submit" class="button <?php echo $is_default ? 'button-secondary' : 'button-primary'; ?>" <?php echo $is_default ? 'disabled style="cursor:not-allowed;opacity:0.5;"' : ''; ?>>
-                                    <?php echo $is_default ? __('기본 설교자 (현재)', 'dasom-church') : __('기본 설교자로 지정', 'dasom-church'); ?>
-                                </button>
-                            </form>
-                            <form method="post" style="display:inline;margin-left:8px;" onsubmit="return confirm('<?php _e('삭제하시겠습니까? 이 설교자가 지정된 글의 설교자 값은 비어 있을 수 있습니다.', 'dasom-church'); ?>');">
-                                <?php wp_nonce_field('sermon_preacher_actions'); ?>
-                                <input type="hidden" name="preacher_action" value="delete">
-                                <input type="hidden" name="term_id" value="<?php echo (int)$term->term_id; ?>">
-                                <button type="submit" class="button button-link-delete" style="color:#b32d2e;">
-                                    <?php _e('삭제', 'dasom-church'); ?>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <tr><td colspan="3"><?php _e('등록된 설교자가 없습니다.', 'dasom-church'); ?></td></tr>
-            <?php endif; ?>
-        </tbody>
-    </table>
     
     <?php if (can_view_custom_fields_guide($dashboard_fields_visibility)): ?>
         <!-- Elementor Custom Field 안내 -->
