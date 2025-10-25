@@ -3,7 +3,7 @@
  * Plugin Name: DW Church Management System
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 1.37.31
+ * Version: 1.37.32
  * Author: Dasomweb
  * Author URI: https://dasomweb.com
  * License: GPL v2 or later
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '1.37.31');
+define('DASOM_CHURCH_VERSION', '1.37.32');
 define('DASOM_CHURCH_PLUGIN_URL', str_replace('http://', 'https://', plugin_dir_url(__FILE__)));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -738,7 +738,9 @@ class Dasom_Church_Management {
         // Load core files
         require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/functions-helpers.php';
         
-        // Load admin files - ALWAYS load to register post types
+        // Load admin files in correct order - ALWAYS load to register post types
+        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dasom-church-menu-visibility.php';
+        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dasom-church-admin-customization.php';
         require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dasom-church-admin.php';
         // Initialize admin class
         Dasom_Church_Admin::get_instance();
@@ -773,8 +775,10 @@ class Dasom_Church_Management {
      */
     public function dasom_church_activation() {
         // Register post types first
-        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dasom-church-admin.php';
+        // Load classes in correct order
         require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dasom-church-menu-visibility.php';
+        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dasom-church-admin-customization.php';
+        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dasom-church-admin.php';
         $admin = Dasom_Church_Admin::get_instance();
         $admin->dasom_church_register_post_types();
         $admin->dasom_church_register_taxonomies();

@@ -39,6 +39,9 @@ $github_token = get_option('dw_github_access_token', '');
         <a href="?page=dasom-church-github-update&tab=plugin_settings" class="nav-tab <?php echo $active_tab == 'plugin_settings' ? 'nav-tab-active' : ''; ?>">
             <?php _e('플러그인 설정', 'dasom-church'); ?>
         </a>
+        <a href="?page=dasom-church-github-update&tab=admin_customization" class="nav-tab <?php echo $active_tab == 'admin_customization' ? 'nav-tab-active' : ''; ?>">
+            <?php _e('관리자 커스터마이징', 'dasom-church'); ?>
+        </a>
     </h2>
     
     <?php if ($active_tab == 'custom_fields'): ?>
@@ -717,6 +720,87 @@ $github_token = get_option('dw_github_access_token', '');
         </div>
         
         <?php submit_button(); ?>
+    </form>
+    
+    <?php elseif ($active_tab == 'admin_customization'): ?>
+    <!-- 관리자 커스터마이징 탭 -->
+    <h2>🎨 <?php _e('관리자 커스터마이징', 'dasom-church'); ?></h2>
+    <p><?php _e('관리자 바 숨김, 메뉴 스타일링, 관리자 바 제목 설정을 관리할 수 있습니다.', 'dasom-church'); ?></p>
+    
+    <?php
+    // Get current settings
+    $admin_bar_hide = get_option('dw_admin_bar_hide', 'no');
+    $admin_menu_bg_color = get_option('dw_admin_menu_bg_color', '#1d2327');
+    $admin_menu_font_color = get_option('dw_admin_menu_font_color', '#ffffff');
+    $admin_bar_title = get_option('dw_admin_bar_title', 'DW 교회관리');
+    
+    // Handle form submission
+    if (isset($_POST['save_admin_customization']) && wp_verify_nonce($_POST['admin_customization_nonce'], 'save_admin_customization')) {
+        $admin_bar_hide = sanitize_text_field($_POST['admin_bar_hide']);
+        $admin_menu_bg_color = sanitize_hex_color($_POST['admin_menu_bg_color']);
+        $admin_menu_font_color = sanitize_hex_color($_POST['admin_menu_font_color']);
+        $admin_bar_title = sanitize_text_field($_POST['admin_bar_title']);
+        
+        update_option('dw_admin_bar_hide', $admin_bar_hide);
+        update_option('dw_admin_menu_bg_color', $admin_menu_bg_color);
+        update_option('dw_admin_menu_font_color', $admin_menu_font_color);
+        update_option('dw_admin_bar_title', $admin_bar_title);
+        
+        echo '<div class="notice notice-success"><p>' . __('설정이 저장되었습니다.', 'dasom-church') . '</p></div>';
+    }
+    ?>
+    
+    <form method="post" action="">
+        <?php wp_nonce_field('save_admin_customization', 'admin_customization_nonce'); ?>
+        
+        <table class="form-table">
+            <tr>
+                <th scope="row"><?php _e('관리자 바 숨김', 'dasom-church'); ?></th>
+                <td>
+                    <label>
+                        <input type="checkbox" name="admin_bar_hide" value="yes" <?php checked($admin_bar_hide, 'yes'); ?> />
+                        <?php _e('관리자 바를 숨깁니다 (프론트엔드에서)', 'dasom-church'); ?>
+                    </label>
+                    <p class="description"><?php _e('체크하면 프론트엔드에서 관리자 바가 숨겨집니다.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+            
+            <tr>
+                <th scope="row"><?php _e('관리자 메뉴 배경색', 'dasom-church'); ?></th>
+                <td>
+                    <input type="color" name="admin_menu_bg_color" value="<?php echo esc_attr($admin_menu_bg_color); ?>" />
+                    <p class="description"><?php _e('관리자 메뉴의 배경색을 설정합니다.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+            
+            <tr>
+                <th scope="row"><?php _e('관리자 메뉴 폰트색', 'dasom-church'); ?></th>
+                <td>
+                    <input type="color" name="admin_menu_font_color" value="<?php echo esc_attr($admin_menu_font_color); ?>" />
+                    <p class="description"><?php _e('관리자 메뉴의 폰트색을 설정합니다.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+            
+            <tr>
+                <th scope="row"><?php _e('관리자 바 제목', 'dasom-church'); ?></th>
+                <td>
+                    <input type="text" name="admin_bar_title" value="<?php echo esc_attr($admin_bar_title); ?>" class="regular-text" />
+                    <p class="description"><?php _e('관리자 바 상단에 표시될 제목을 설정합니다.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+        </table>
+        
+        <div style="background:#f0f7ff;padding:15px;border-left:4px solid #2271b1;margin:20px 0;">
+            <h3 style="margin-top:0;">💡 <?php _e('사용 방법:', 'dasom-church'); ?></h3>
+            <ul style="margin-bottom:0;">
+                <li><?php _e('관리자 바 숨김: 프론트엔드에서 관리자 바를 완전히 숨깁니다.', 'dasom-church'); ?></li>
+                <li><?php _e('메뉴 스타일링: 관리자 메뉴의 배경색과 폰트색을 커스터마이징할 수 있습니다.', 'dasom-church'); ?></li>
+                <li><?php _e('관리자 바 제목: 관리자 바 상단에 표시될 브랜드명을 설정할 수 있습니다.', 'dasom-church'); ?></li>
+            </ul>
+        </div>
+        
+        <input type="hidden" name="save_admin_customization" value="1" />
+        <?php submit_button(__('설정 저장', 'dasom-church')); ?>
     </form>
     
     <?php elseif ($active_tab == 'plugin_settings'): ?>

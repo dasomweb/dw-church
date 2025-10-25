@@ -87,8 +87,15 @@ class Dasom_Church_Admin {
         // Check for Author/Editor roles
         if (in_array('author', $current_user->roles) || in_array('editor', $current_user->roles)) {
             $user_role = in_array('author', $current_user->roles) ? 'author' : 'editor';
-            $menu_visibility = Dasom_Church_Menu_Visibility::get_instance();
-            return $menu_visibility->user_can_access_menu('dasom-church-' . $menu_key, $user_role);
+            
+            // Check if class exists before using it
+            if (class_exists('Dasom_Church_Menu_Visibility')) {
+                $menu_visibility = Dasom_Church_Menu_Visibility::get_instance();
+                return $menu_visibility->user_can_access_menu('dasom-church-' . $menu_key, $user_role);
+            } else {
+                // Fallback: allow access if class not loaded
+                return true;
+            }
         }
         
         return false;
@@ -104,8 +111,15 @@ class Dasom_Church_Admin {
         
         if (in_array('author', $current_user->roles) || in_array('editor', $current_user->roles)) {
             $user_role = in_array('author', $current_user->roles) ? 'author' : 'editor';
-            $menu_visibility = Dasom_Church_Menu_Visibility::get_instance();
-            $can_access = $menu_visibility->user_can_access_menu('dasom-church-admin', $user_role);
+            
+            // Check if class exists before using it
+            if (class_exists('Dasom_Church_Menu_Visibility')) {
+                $menu_visibility = Dasom_Church_Menu_Visibility::get_instance();
+                $can_access = $menu_visibility->user_can_access_menu('dasom-church-admin', $user_role);
+            } else {
+                // Fallback: allow access if class not loaded
+                $can_access = true;
+            }
         }
         
         if (!$can_access) {
