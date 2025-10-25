@@ -138,7 +138,7 @@ class Dasom_Church_Admin_Customization {
                 color: ' . esc_attr($admin_menu_font_color) . ' !important;
             }
             
-            /* Hide Collapse Menu Button */
+            /* Hide Collapse Menu Button - Enhanced */
             #adminmenu .wp-menu-separator:last-child,
             #adminmenu .wp-menu-separator:last-of-type,
             #adminmenu .wp-menu-separator[aria-label*="Collapse"],
@@ -148,20 +148,18 @@ class Dasom_Church_Admin_Customization {
             #adminmenu .wp-menu-separator[title*="Collapse"],
             #adminmenu .wp-menu-separator[title*="collapse"],
             #adminmenu .wp-menu-separator[title*="Collapse Menu"],
-            #adminmenu .wp-menu-separator[title*="collapse menu"] {
+            #adminmenu .wp-menu-separator[title*="collapse menu"],
+            #adminmenu li:last-child.wp-menu-separator,
+            #adminmenu li.wp-menu-separator:last-child,
+            #adminmenu .wp-menu-separator {
                 display: none !important;
             }
             
-            /* Hide Collapse Menu Button by text content */
-            #adminmenu .wp-menu-separator:has-text("Collapse"),
-            #adminmenu .wp-menu-separator:has-text("collapse"),
-            #adminmenu .wp-menu-separator:has-text("Collapse Menu"),
-            #adminmenu .wp-menu-separator:has-text("collapse menu") {
-                display: none !important;
-            }
-            
-            /* Alternative method to hide last separator (usually collapse button) */
-            #adminmenu li:last-child.wp-menu-separator {
+            /* Hide any collapse menu related elements */
+            #adminmenu [aria-label*="Collapse"],
+            #adminmenu [title*="Collapse"],
+            #adminmenu [aria-label*="collapse"],
+            #adminmenu [title*="collapse"] {
                 display: none !important;
             }
         </style>';
