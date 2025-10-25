@@ -147,7 +147,8 @@ class Dasom_Church_Admin_Customization {
             }
             
             #adminmenu .wp-submenu {
-                left: ' . esc_attr($sidebar_width) . 'px !important;
+                left: 100% !important;
+                z-index: 9999 !important;
             }
             
             #wpcontent, #wpfooter {
