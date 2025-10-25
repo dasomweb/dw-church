@@ -74,9 +74,44 @@ class Dasom_Church_Admin {
     }
     
     /**
+     * Check if user can access submenu
+     */
+    private function can_access_submenu($menu_key) {
+        $current_user = wp_get_current_user();
+        
+        // Administrator can access everything
+        if (current_user_can('manage_options')) {
+            return true;
+        }
+        
+        // Check for Author/Editor roles
+        if (in_array('author', $current_user->roles) || in_array('editor', $current_user->roles)) {
+            $user_role = in_array('author', $current_user->roles) ? 'author' : 'editor';
+            $menu_visibility = Dasom_Church_Menu_Visibility::get_instance();
+            return $menu_visibility->user_can_access_menu('dasom-church-' . $menu_key, $user_role);
+        }
+        
+        return false;
+    }
+    
+    /**
      * Add admin menu
      */
     public function dasom_church_admin_menu() {
+        // Check menu visibility for Author/Editor
+        $current_user = wp_get_current_user();
+        $can_access = true;
+        
+        if (in_array('author', $current_user->roles) || in_array('editor', $current_user->roles)) {
+            $user_role = in_array('author', $current_user->roles) ? 'author' : 'editor';
+            $menu_visibility = Dasom_Church_Menu_Visibility::get_instance();
+            $can_access = $menu_visibility->user_can_access_menu('dasom-church-admin', $user_role);
+        }
+        
+        if (!$can_access) {
+            return;
+        }
+        
         // Main menu - 고유한 슬러그 사용
         add_menu_page(
             __('DW 교회관리', 'dasom-church'),
@@ -94,24 +129,28 @@ class Dasom_Church_Admin {
         }
         
         // Dashboard submenu
-        add_submenu_page(
-            'dasom-church-admin',
-            __('대시보드', 'dasom-church'),
-            __('대시보드', 'dasom-church'),
-            'manage_options',
-            'dasom-church-dashboard',
-            array($this, 'dasom_church_dashboard_page')
-        );
+        if ($this->can_access_submenu('dashboard')) {
+            add_submenu_page(
+                'dasom-church-admin',
+                __('대시보드', 'dasom-church'),
+                __('대시보드', 'dasom-church'),
+                'manage_options',
+                'dasom-church-dashboard',
+                array($this, 'dasom_church_dashboard_page')
+            );
+        }
         
         // Settings submenu
-        add_submenu_page(
-            'dasom-church-admin',
-            __('설정', 'dasom-church'),
-            __('설정', 'dasom-church'),
-            'manage_options',
-            'dasom-church-settings',
-            array($this, 'dasom_church_settings_page')
-        );
+        if ($this->can_access_submenu('settings')) {
+            add_submenu_page(
+                'dasom-church-admin',
+                __('설정', 'dasom-church'),
+                __('설정', 'dasom-church'),
+                'manage_options',
+                'dasom-church-settings',
+                array($this, 'dasom_church_settings_page')
+            );
+        }
         
         // Add GitHub Update settings to WordPress Settings menu (독립적)
         add_options_page(

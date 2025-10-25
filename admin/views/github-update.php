@@ -27,6 +27,9 @@ $github_token = get_option('dw_github_access_token', '');
         <a href="?page=dasom-church-github-update&tab=custom_fields" class="nav-tab <?php echo $active_tab == 'custom_fields' ? 'nav-tab-active' : ''; ?>">
             <?php _e('커스텀 필드 안내', 'dasom-church'); ?>
         </a>
+        <a href="?page=dasom-church-github-update&tab=user_role_control" class="nav-tab <?php echo $active_tab == 'user_role_control' ? 'nav-tab-active' : ''; ?>">
+            <?php _e('사용자 권한 관리', 'dasom-church'); ?>
+        </a>
         <a href="?page=dasom-church-github-update&tab=github_update" class="nav-tab <?php echo $active_tab == 'github_update' ? 'nav-tab-active' : ''; ?>">
             <?php _e('GitHub 업데이트', 'dasom-church'); ?>
         </a>
@@ -250,6 +253,157 @@ $github_token = get_option('dw_github_access_token', '');
     <p style="color:#666;">
         <?php _e('※ 교회설정은 WordPress 옵션으로 저장되며, Elementor에서 Site Settings 또는 Custom Fields로 접근할 수 있습니다.', 'dasom-church'); ?>
     </p>
+    
+    <?php elseif ($active_tab == 'user_role_control'): ?>
+    <!-- 사용자 권한 관리 탭 -->
+    <h2>👥 <?php _e('사용자 권한 관리', 'dasom-church'); ?></h2>
+    <p><?php _e('Author와 Editor 역할의 사용자가 볼 수 있는 메뉴를 관리할 수 있습니다.', 'dasom-church'); ?></p>
+    
+    <?php
+    // Get current settings
+    $menu_visibility_settings = get_option('dw_menu_visibility_settings', array());
+    
+    // Default menu items for Author/Editor
+    $default_menus = array(
+        'dashboard' => array('name' => '대시보드', 'default_author' => true, 'default_editor' => true),
+        'sermon' => array('name' => '설교', 'default_author' => true, 'default_editor' => true),
+        'column' => array('name' => '목회컬럼', 'default_author' => true, 'default_editor' => true),
+        'bulletin' => array('name' => '교회주보', 'default_author' => true, 'default_editor' => true),
+        'album' => array('name' => '교회앨범', 'default_author' => true, 'default_editor' => true),
+        'event' => array('name' => '이벤트', 'default_author' => true, 'default_editor' => true),
+        'banner' => array('name' => '배너', 'default_author' => true, 'default_editor' => true),
+        'settings' => array('name' => '설정', 'default_author' => true, 'default_editor' => true),
+        'posts' => array('name' => 'Posts', 'default_author' => true, 'default_editor' => true),
+        'pages' => array('name' => 'Pages', 'default_author' => true, 'default_editor' => true),
+        'media' => array('name' => 'Media', 'default_author' => true, 'default_editor' => true),
+        'users' => array('name' => 'Users', 'default_author' => true, 'default_editor' => true),
+        'profile' => array('name' => '프로필', 'default_author' => true, 'default_editor' => true),
+        'logout' => array('name' => '로그아웃', 'default_author' => true, 'default_editor' => true),
+    );
+    
+    // Handle form submission
+    if (isset($_POST['save_menu_visibility']) && wp_verify_nonce($_POST['menu_visibility_nonce'], 'save_menu_visibility')) {
+        $new_settings = array();
+        
+        foreach ($default_menus as $menu_key => $menu_data) {
+            $new_settings[$menu_key] = array(
+                'author' => isset($_POST['menu_visibility'][$menu_key]['author']) ? true : false,
+                'editor' => isset($_POST['menu_visibility'][$menu_key]['editor']) ? true : false,
+            );
+        }
+        
+        update_option('dw_menu_visibility_settings', $new_settings);
+        echo '<div class="notice notice-success"><p>' . __('설정이 저장되었습니다.', 'dasom-church') . '</p></div>';
+        
+        // Refresh settings
+        $menu_visibility_settings = $new_settings;
+    }
+    ?>
+    
+    <form method="post" action="">
+        <?php wp_nonce_field('save_menu_visibility', 'menu_visibility_nonce'); ?>
+        
+        <table class="widefat striped" style="max-width:800px;">
+            <thead>
+                <tr>
+                    <th style="width:200px;"><?php _e('메뉴 항목', 'dasom-church'); ?></th>
+                    <th style="width:100px;text-align:center;"><?php _e('Author', 'dasom-church'); ?></th>
+                    <th style="width:100px;text-align:center;"><?php _e('Editor', 'dasom-church'); ?></th>
+                    <th><?php _e('설명', 'dasom-church'); ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($default_menus as $menu_key => $menu_data): ?>
+                    <?php
+                    $author_visible = isset($menu_visibility_settings[$menu_key]['author']) 
+                        ? $menu_visibility_settings[$menu_key]['author'] 
+                        : $menu_data['default_author'];
+                    $editor_visible = isset($menu_visibility_settings[$menu_key]['editor']) 
+                        ? $menu_visibility_settings[$menu_key]['editor'] 
+                        : $menu_data['default_editor'];
+                    ?>
+                    <tr>
+                        <td><strong><?php echo esc_html($menu_data['name']); ?></strong></td>
+                        <td style="text-align:center;">
+                            <input type="checkbox" 
+                                   name="menu_visibility[<?php echo esc_attr($menu_key); ?>][author]" 
+                                   value="1" 
+                                   <?php checked($author_visible, true); ?> />
+                        </td>
+                        <td style="text-align:center;">
+                            <input type="checkbox" 
+                                   name="menu_visibility[<?php echo esc_attr($menu_key); ?>][editor]" 
+                                   value="1" 
+                                   <?php checked($editor_visible, true); ?> />
+                        </td>
+                        <td>
+                            <?php
+                            switch($menu_key) {
+                                case 'dashboard':
+                                    echo __('DW 교회관리 대시보드', 'dasom-church');
+                                    break;
+                                case 'sermon':
+                                    echo __('설교 관리', 'dasom-church');
+                                    break;
+                                case 'column':
+                                    echo __('목회컬럼 관리', 'dasom-church');
+                                    break;
+                                case 'bulletin':
+                                    echo __('교회주보 관리', 'dasom-church');
+                                    break;
+                                case 'album':
+                                    echo __('교회앨범 관리', 'dasom-church');
+                                    break;
+                                case 'event':
+                                    echo __('이벤트 관리', 'dasom-church');
+                                    break;
+                                case 'banner':
+                                    echo __('배너 관리', 'dasom-church');
+                                    break;
+                                case 'settings':
+                                    echo __('DW 교회관리 설정', 'dasom-church');
+                                    break;
+                                case 'posts':
+                                    echo __('WordPress Posts 관리', 'dasom-church');
+                                    break;
+                                case 'pages':
+                                    echo __('WordPress Pages 관리', 'dasom-church');
+                                    break;
+                                case 'media':
+                                    echo __('미디어 라이브러리', 'dasom-church');
+                                    break;
+                                case 'users':
+                                    echo __('사용자 관리', 'dasom-church');
+                                    break;
+                                case 'profile':
+                                    echo __('프로필 (관리자 바 숨김 시에만 표시)', 'dasom-church');
+                                    break;
+                                case 'logout':
+                                    echo __('로그아웃 (관리자 바 숨김 시에만 표시)', 'dasom-church');
+                                    break;
+                                default:
+                                    echo __('기타 메뉴', 'dasom-church');
+                            }
+                            ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+        
+        <div style="background:#f0f7ff;padding:15px;border-left:4px solid #2271b1;margin:20px 0;">
+            <h3 style="margin-top:0;">💡 <?php _e('사용 방법:', 'dasom-church'); ?></h3>
+            <ul style="margin-bottom:0;">
+                <li><?php _e('체크된 메뉴는 해당 역할의 사용자가 볼 수 있습니다.', 'dasom-church'); ?></li>
+                <li><?php _e('체크 해제된 메뉴는 해당 역할의 사용자에게 숨겨집니다.', 'dasom-church'); ?></li>
+                <li><?php _e('새로 추가된 플러그인 메뉴는 기본적으로 숨겨집니다.', 'dasom-church'); ?></li>
+                <li><?php _e('Administrator는 모든 메뉴에 접근할 수 있습니다.', 'dasom-church'); ?></li>
+            </ul>
+        </div>
+        
+        <input type="hidden" name="save_menu_visibility" value="1" />
+        <?php submit_button(__('설정 저장', 'dasom-church')); ?>
+    </form>
     
     <?php elseif ($active_tab == 'github_update'): ?>
     <p class="description" style="font-size:14px;margin-top:10px;">
