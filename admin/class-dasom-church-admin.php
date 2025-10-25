@@ -302,6 +302,18 @@ class Dasom_Church_Admin {
         // Remove default submenu
         remove_submenu_page('dasom-church-admin', 'dasom-church-admin');
         
+        // Settings submenu
+        if ($this->can_access_submenu('settings')) {
+            add_submenu_page(
+                'dasom-church-admin',
+                __('설정', 'dasom-church'),
+                __('설정', 'dasom-church'),
+                'edit_posts',
+                'dasom-church-settings',
+                array($this, 'dasom_church_settings_page')
+            );
+        }
+        
         // Add GitHub Update settings to WordPress Settings menu (독립적)
         add_options_page(
             __('DW 설정', 'dasom-church'),
