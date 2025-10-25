@@ -46,6 +46,20 @@ $enable_column_widget = get_option('dw_enable_column_widget', 'yes');
 $enable_banner_slider_widget = get_option('dw_enable_banner_slider_widget', 'yes');
 $enable_pastoral_column_widget = get_option('dw_enable_pastoral_column_widget', 'yes');
 $enable_pastoral_columns_grid_widget = get_option('dw_enable_pastoral_columns_grid_widget', 'yes');
+
+// Speaker management variables (from original dashboard)
+$default_preacher = get_option('default_sermon_preacher', __('담임목사', 'dasom-church'));
+$preachers = get_terms(array(
+    'taxonomy' => 'dw_sermon_preacher',
+    'hide_empty' => false,
+    'orderby' => 'name',
+    'order' => 'ASC'
+));
+
+// Handle WP_Error
+if (is_wp_error($preachers)) {
+    $preachers = array();
+}
 ?>
 
 <div class="wrap">
@@ -189,8 +203,8 @@ $enable_pastoral_columns_grid_widget = get_option('dw_enable_pastoral_columns_gr
         
         <?php elseif ($active_tab == 'speaker_management'): ?>
         <!-- 설교자 관리 탭 -->
+        <hr>
         <h2>🧑‍💼 <?php _e('설교자 관리', 'dasom-church'); ?></h2>
-        <p><?php _e('설교자 목록을 관리하고 기본 설교자를 설정할 수 있습니다.', 'dasom-church'); ?></p>
         
         <form method="post" style="margin-bottom:20px;">
             <?php wp_nonce_field('sermon_preacher_actions'); ?>
