@@ -41,32 +41,27 @@ class Dasom_Church_Admin_Customization {
     }
     
     /**
-     * Hide admin bar for Author/Editor roles
+     * Hide admin bar for all roles except Administrator
      */
     public function hide_admin_bar_for_roles() {
-        // Only apply to Author and Editor roles
-        $current_user = wp_get_current_user();
-        if (!in_array('author', $current_user->roles) && !in_array('editor', $current_user->roles)) {
-            return; // Don't apply to Administrator
+        // Hide admin bar for all roles except Administrator
+        if (!current_user_can('administrator')) {
+            show_admin_bar(false);
         }
-        
-        // Hide admin bar for Author/Editor by default
-        show_admin_bar(false);
     }
     
     /**
      * Initialize admin customization
      */
     public function init_admin_customization() {
-        // Only apply customizations to Author and Editor roles
-        $current_user = wp_get_current_user();
-        if (!in_array('author', $current_user->roles) && !in_array('editor', $current_user->roles)) {
+        // Only apply customizations to non-Administrator roles
+        if (current_user_can('administrator')) {
             return; // Don't apply customizations to Administrator
         }
         
         // Hide admin bar for both frontend and backend if enabled
-        // Default: show admin bar (admin_bar_hide = 'no')
-        $admin_bar_hide = get_option('dw_admin_bar_hide', 'no');
+        // Default: hide admin bar for all non-Administrator roles
+        $admin_bar_hide = get_option('dw_admin_bar_hide', 'yes'); // Changed default to 'yes'
         if ($admin_bar_hide === 'yes') {
             add_filter('show_admin_bar', '__return_false');
         }
@@ -76,13 +71,12 @@ class Dasom_Church_Admin_Customization {
      * Add admin bar hide CSS
      */
     public function add_admin_bar_hide_css() {
-        // Only apply to Author and Editor roles
-        $current_user = wp_get_current_user();
-        if (!in_array('author', $current_user->roles) && !in_array('editor', $current_user->roles)) {
+        // Only apply to non-Administrator roles
+        if (current_user_can('administrator')) {
             return; // Don't apply to Administrator
         }
         
-        $admin_bar_hide = get_option('dw_admin_bar_hide', 'no');
+        $admin_bar_hide = get_option('dw_admin_bar_hide', 'yes'); // Changed default to 'yes'
         if ($admin_bar_hide === 'yes') {
             echo '<style type="text/css">
                 #wpadminbar { display: none !important; }
@@ -98,9 +92,8 @@ class Dasom_Church_Admin_Customization {
      * Add admin menu styles
      */
     public function add_admin_menu_styles() {
-        // Only apply to Author and Editor roles
-        $current_user = wp_get_current_user();
-        if (!in_array('author', $current_user->roles) && !in_array('editor', $current_user->roles)) {
+        // Only apply to non-Administrator roles
+        if (current_user_can('administrator')) {
             return; // Don't apply to Administrator
         }
         
@@ -178,9 +171,8 @@ class Dasom_Church_Admin_Customization {
      * Add custom title to admin bar
      */
     public function add_admin_bar_title($wp_admin_bar) {
-        // Only apply to Author and Editor roles
-        $current_user = wp_get_current_user();
-        if (!in_array('author', $current_user->roles) && !in_array('editor', $current_user->roles)) {
+        // Only apply to non-Administrator roles
+        if (current_user_can('administrator')) {
             return; // Don't apply to Administrator
         }
         
