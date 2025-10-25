@@ -105,7 +105,6 @@ class Dasom_Church_Admin_Customization {
         $admin_menu_font_weight = get_option('dw_admin_menu_font_weight', '400');
         $church_name = get_option('dw_admin_menu_church_name', '');
         $top_image = get_option('dw_admin_menu_top_image', '');
-        $sidebar_width = get_option('dw_admin_sidebar_width', '160');
         
         echo '<style type="text/css">
             /* Custom Top Content Display Above Menu */
@@ -139,32 +138,6 @@ class Dasom_Church_Admin_Customization {
             body.admin-bar #adminmenu {
                 margin-top: 0 !important;
                 padding-top: 0 !important;
-            }
-            
-            /* Admin Sidebar Width */
-            #adminmenu {
-                width: ' . esc_attr($sidebar_width) . 'px !important;
-            }
-            
-            #adminmenu .wp-submenu {
-                left: 100% !important;
-                z-index: 9999 !important;
-            }
-            
-            #wpcontent, #wpfooter {
-                margin-left: ' . esc_attr($sidebar_width) . 'px !important;
-            }
-            
-            .folded #adminmenu {
-                width: 36px !important;
-            }
-            
-            .folded #adminmenu .wp-submenu {
-                left: 36px !important;
-            }
-            
-            .folded #wpcontent, .folded #wpfooter {
-                margin-left: 36px !important;
             }
             
             /* Admin Menu Background - More specific selectors */
