@@ -84,6 +84,12 @@ class Dasom_Church_Admin_Customization {
                 body.admin-bar { padding-top: 0 !important; }
                 .admin-bar #wpbody { padding-top: 0 !important; }
                 .admin-bar #wpcontent { padding-top: 0 !important; }
+                body { padding-top: 0 !important; }
+                #wpbody { padding-top: 0 !important; }
+                #wpcontent { padding-top: 0 !important; }
+                .wp-admin #wpbody { padding-top: 0 !important; }
+                .wp-admin #wpcontent { padding-top: 0 !important; }
+                .wp-admin body { padding-top: 0 !important; }
             </style>';
         }
     }
@@ -99,6 +105,7 @@ class Dasom_Church_Admin_Customization {
         $admin_menu_font_weight = get_option('dw_admin_menu_font_weight', '400');
         $church_name = get_option('dw_admin_menu_church_name', '');
         $top_image = get_option('dw_admin_menu_top_image', '');
+        $sidebar_width = get_option('dw_admin_sidebar_width', '160');
         
         echo '<style type="text/css">
             /* Custom Top Content Display Above Menu */
@@ -126,6 +133,37 @@ class Dasom_Church_Admin_Customization {
                 height: 60px;
                 background-color: ' . esc_attr($admin_menu_bg_color) . ';
                 border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            /* Remove top spacing when admin bar is hidden */
+            body.admin-bar #adminmenu {
+                margin-top: 0 !important;
+                padding-top: 0 !important;
+            }
+            
+            /* Admin Sidebar Width */
+            #adminmenu {
+                width: ' . esc_attr($sidebar_width) . 'px !important;
+            }
+            
+            #adminmenu .wp-submenu {
+                left: ' . esc_attr($sidebar_width) . 'px !important;
+            }
+            
+            #wpcontent, #wpfooter {
+                margin-left: ' . esc_attr($sidebar_width) . 'px !important;
+            }
+            
+            .folded #adminmenu {
+                width: 36px !important;
+            }
+            
+            .folded #adminmenu .wp-submenu {
+                left: 36px !important;
+            }
+            
+            .folded #wpcontent, .folded #wpfooter {
+                margin-left: 36px !important;
             }
             
             /* Admin Menu Background - More specific selectors */
