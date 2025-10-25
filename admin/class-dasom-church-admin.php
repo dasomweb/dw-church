@@ -1189,7 +1189,18 @@ class Dasom_Church_Admin {
      * Logout page
      */
     public function dasom_church_logout_page() {
-        wp_redirect(wp_logout_url());
+        // Check if headers already sent
+        if (headers_sent()) {
+            // If headers already sent, use JavaScript redirect
+            echo '<script>window.location.href = "' . esc_url(wp_logout_url()) . '";</script>';
+            echo '<noscript><meta http-equiv="refresh" content="0;url=' . esc_url(wp_logout_url()) . '"></noscript>';
+            echo '<p>' . __('로그아웃 중입니다...', 'dasom-church') . '</p>';
+            echo '<p><a href="' . esc_url(wp_logout_url()) . '">' . __('여기를 클릭하여 로그아웃하세요.', 'dasom-church') . '</a></p>';
+            return;
+        }
+        
+        // Safe redirect
+        wp_safe_redirect(wp_logout_url());
         exit;
     }
 }
