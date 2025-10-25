@@ -187,25 +187,41 @@ class Dasom_Church_Admin {
     private function can_access_submenu($menu_key) {
         $current_user = wp_get_current_user();
         
+        // DEBUG: Log current user info
+        error_log('=== CAN_ACCESS_SUBMENU DEBUG ===');
+        error_log('Menu Key: ' . $menu_key);
+        error_log('User Roles: ' . print_r($current_user->roles, true));
+        error_log('Can manage_options: ' . (current_user_can('manage_options') ? 'YES' : 'NO'));
+        error_log('Can edit_posts: ' . (current_user_can('edit_posts') ? 'YES' : 'NO'));
+        
         // Administrator can access everything
         if (current_user_can('manage_options')) {
+            error_log('Administrator access granted');
             return true;
         }
         
         // Check for Author/Editor roles
         if (in_array('author', $current_user->roles) || in_array('editor', $current_user->roles)) {
             $user_role = in_array('author', $current_user->roles) ? 'author' : 'editor';
+            error_log('User role: ' . $user_role);
             
             // Check if class exists before using it
             if (class_exists('Dasom_Church_Menu_Visibility')) {
                 $menu_visibility = Dasom_Church_Menu_Visibility::get_instance();
-                return $menu_visibility->user_can_access_menu('dasom-church-' . $menu_key, $user_role);
+                $menu_slug = 'dasom-church-' . $menu_key;
+                error_log('Checking menu slug: ' . $menu_slug);
+                
+                $can_access = $menu_visibility->user_can_access_menu($menu_slug, $user_role);
+                error_log('Can access result: ' . ($can_access ? 'YES' : 'NO'));
+                return $can_access;
             } else {
                 // Fallback: allow access if class not loaded
+                error_log('Menu visibility class not loaded, allowing access');
                 return true;
             }
         }
         
+        error_log('No matching role, access denied');
         return false;
     }
     

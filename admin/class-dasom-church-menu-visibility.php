@@ -238,6 +238,11 @@ class Dasom_Church_Menu_Visibility {
      * Check if user can access specific menu
      */
     public function user_can_access_menu($menu_slug, $user_role = null) {
+        // DEBUG: Log menu access check
+        error_log('=== USER_CAN_ACCESS_MENU DEBUG ===');
+        error_log('Menu Slug: ' . $menu_slug);
+        error_log('User Role: ' . ($user_role ?: 'NULL'));
+        
         if (!$user_role) {
             $current_user = wp_get_current_user();
             if (in_array('author', $current_user->roles)) {
@@ -245,15 +250,18 @@ class Dasom_Church_Menu_Visibility {
             } elseif (in_array('editor', $current_user->roles)) {
                 $user_role = 'editor';
             } else {
+                error_log('No specific role, allowing access');
                 return true; // Administrator or other roles
             }
         }
         
         $menu_visibility_settings = get_option('dw_menu_visibility_settings', array());
+        error_log('Menu visibility settings: ' . print_r($menu_visibility_settings, true));
         
         // Map menu slugs to settings keys
         $menu_mapping = array(
             'dasom-church-admin' => 'dashboard',
+            'dasom-church-dashboard' => 'dashboard', // Add dashboard mapping
             'dasom-church-sermon' => 'sermon',
             'dasom-church-column' => 'column',
             'dasom-church-bulletin' => 'bulletin',
@@ -268,12 +276,21 @@ class Dasom_Church_Menu_Visibility {
         );
         
         $setting_key = isset($menu_mapping[$menu_slug]) ? $menu_mapping[$menu_slug] : null;
+        error_log('Setting key: ' . ($setting_key ?: 'NULL'));
         
-        if (!$setting_key || !isset($menu_visibility_settings[$setting_key][$user_role])) {
+        if (!$setting_key) {
+            error_log('No setting key found for menu slug: ' . $menu_slug);
             return false;
         }
         
-        return $menu_visibility_settings[$setting_key][$user_role];
+        if (!isset($menu_visibility_settings[$setting_key][$user_role])) {
+            error_log('No setting found for key: ' . $setting_key . ', role: ' . $user_role);
+            return false;
+        }
+        
+        $result = $menu_visibility_settings[$setting_key][$user_role];
+        error_log('Final result: ' . ($result ? 'ALLOW' : 'DENY'));
+        return $result;
     }
 }
 
