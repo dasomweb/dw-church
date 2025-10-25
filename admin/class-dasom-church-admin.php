@@ -215,6 +215,39 @@ class Dasom_Church_Admin {
         }
     }
     
+    /**
+     * Check if user can access submenu
+     */
+    private function can_access_submenu($menu_key) {
+        $current_user = wp_get_current_user();
+        
+        // Administrator can access everything
+        if (current_user_can('manage_options')) {
+            return true;
+        }
+        
+        // Dashboard is ALWAYS accessible for Author/Editor roles
+        if ($menu_key === 'dashboard') {
+            return true;
+        }
+        
+        // Check for Author/Editor roles
+        if (in_array('author', $current_user->roles) || in_array('editor', $current_user->roles)) {
+            $user_role = in_array('author', $current_user->roles) ? 'author' : 'editor';
+            
+            // Check if class exists before using it
+            if (class_exists('Dasom_Church_Menu_Visibility')) {
+                $menu_visibility = Dasom_Church_Menu_Visibility::get_instance();
+                $menu_slug = 'dasom-church-' . $menu_key;
+                return $menu_visibility->user_can_access_menu($menu_slug, $user_role);
+            } else {
+                // Fallback: allow access if class not loaded
+                return true;
+            }
+        }
+        
+        return false;
+    }
     
     /**
      * Add admin menu
@@ -244,15 +277,29 @@ class Dasom_Church_Admin {
         // Remove default submenu
         remove_submenu_page('dasom-church-admin', 'dasom-church-admin');
         
+        // Dashboard submenu - ALWAYS accessible
+        if ($this->can_access_submenu('dashboard')) {
+            add_submenu_page(
+                'dasom-church-admin',
+                __('대시보드', 'dasom-church'),
+                __('대시보드', 'dasom-church'),
+                'edit_posts',
+                'dasom-church-dashboard',
+                array($this, 'dasom_church_dashboard_page')
+            );
+        }
+        
         // Settings submenu
-        add_submenu_page(
-            'dasom-church-admin',
-            __('설정', 'dasom-church'),
-            __('설정', 'dasom-church'),
-            'edit_posts', // Back to edit_posts for Author/Editor
-            'dasom-church-settings',
-            array($this, 'dasom_church_settings_page')
-        );
+        if ($this->can_access_submenu('settings')) {
+            add_submenu_page(
+                'dasom-church-admin',
+                __('설정', 'dasom-church'),
+                __('설정', 'dasom-church'),
+                'edit_posts',
+                'dasom-church-settings',
+                array($this, 'dasom_church_settings_page')
+            );
+        }
         
         // Add GitHub Update settings to WordPress Settings menu (독립적)
         add_options_page(
@@ -646,37 +693,17 @@ class Dasom_Church_Admin {
      * Dashboard page
      */
     public function dasom_church_dashboard_page() {
-        // DEBUG: 상세한 디버그 로그 추가
-        error_log('=== DASHBOARD PAGE DEBUG ===');
-        error_log('Current User ID: ' . get_current_user_id());
-        error_log('Current User: ' . print_r(wp_get_current_user(), true));
-        error_log('User Roles: ' . implode(', ', wp_get_current_user()->roles));
-        error_log('Can edit_posts: ' . (current_user_can('edit_posts') ? 'YES' : 'NO'));
-        error_log('Can read: ' . (current_user_can('read') ? 'YES' : 'NO'));
-        error_log('Can manage_options: ' . (current_user_can('manage_options') ? 'YES' : 'NO'));
-        error_log('Is user logged in: ' . (is_user_logged_in() ? 'YES' : 'NO'));
-        error_log('Current screen: ' . print_r(get_current_screen(), true));
-        error_log('REQUEST_URI: ' . $_SERVER['REQUEST_URI']);
-        error_log('HTTP_REFERER: ' . (isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'NOT SET'));
-        
-        // FORCE ACCESS - WordPress 권한 시스템 우회
-        if (!is_user_logged_in()) {
-            error_log('User not logged in - redirecting to login');
-            wp_redirect(wp_login_url(admin_url('admin.php?page=dasom-church-dashboard')));
-            exit;
-        }
-        
-        // 임시로 모든 권한 부여 (디버깅용)
-        $current_user = wp_get_current_user();
-        if (!empty($current_user->roles)) {
-            error_log('User has roles: ' . implode(', ', $current_user->roles));
-            // 권한 체크 없이 바로 진행
-        } else {
-            error_log('User has no roles - this is the problem!');
+        // Allow access for Administrator, Editor, and Author
+        if (!current_user_can('edit_posts')) {
+            wp_die(__('You do not have sufficient permissions to access this page.', 'dasom-church'));
         }
         
         // 설교자 관리 액션 처리
         if (isset($_POST['preacher_action']) && check_admin_referer('sermon_preacher_actions')) {
+            if (!current_user_can('edit_posts')) {
+                wp_die(__('권한이 없습니다.', 'dasom-church'));
+            }
+            
             $action = sanitize_text_field($_POST['preacher_action']);
             $this->dasom_church_handle_preacher_action($action);
         }
@@ -689,8 +716,17 @@ class Dasom_Church_Admin {
      * Settings page
      */
     public function dasom_church_settings_page() {
+        // Allow access for Administrator, Editor, and Author
+        if (!current_user_can('edit_posts')) {
+            wp_die(__('You do not have sufficient permissions to access this page.', 'dasom-church'));
+        }
+        
         // 설교자 관리 액션 처리
         if (isset($_POST['preacher_action']) && check_admin_referer('sermon_preacher_actions')) {
+            if (!current_user_can('edit_posts')) {
+                wp_die(__('권한이 없습니다.', 'dasom-church'));
+            }
+            
             $action = sanitize_text_field($_POST['preacher_action']);
             $this->dasom_church_handle_preacher_action($action);
         }
