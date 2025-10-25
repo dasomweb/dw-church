@@ -11,44 +11,6 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Get dashboard visibility setting
-$dashboard_fields_visibility = get_option('dw_dashboard_fields_visibility', 'administrator');
-
-// Check if current user can view custom fields guide
-function can_view_custom_fields_guide($required_role) {
-    $role_hierarchy = array(
-        'administrator' => 4,
-        'editor' => 3,
-        'author' => 2,
-        'contributor' => 1
-    );
-    
-    $user = wp_get_current_user();
-    $user_level = 0;
-    
-    foreach ($role_hierarchy as $role => $level) {
-        if (in_array($role, $user->roles)) {
-            $user_level = max($user_level, $level);
-        }
-    }
-    
-    $required_level = isset($role_hierarchy[$required_role]) ? $role_hierarchy[$required_role] : 4;
-    
-    return $user_level >= $required_level;
-}
-
-$default_preacher = get_option('default_sermon_preacher', __('담임목사', 'dasom-church'));
-$preachers = get_terms(array(
-    'taxonomy' => 'dw_sermon_preacher',
-    'hide_empty' => false,
-    'orderby' => 'name',
-    'order' => 'ASC'
-));
-
-// Handle WP_Error
-if (is_wp_error($preachers)) {
-    $preachers = array();
-}
 ?>
 
 <div class="wrap">
