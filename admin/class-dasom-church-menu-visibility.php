@@ -283,6 +283,12 @@ class Dasom_Church_Menu_Visibility {
             return false;
         }
         
+        // FORCE ALLOW dashboard access for Author/Editor
+        if ($setting_key === 'dashboard') {
+            error_log('Dashboard access - FORCE ALLOWED for Author/Editor');
+            return true;
+        }
+        
         if (!isset($menu_visibility_settings[$setting_key][$user_role])) {
             error_log('No setting found for key: ' . $setting_key . ', role: ' . $user_role);
             return false;

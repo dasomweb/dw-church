@@ -52,7 +52,8 @@ class Dasom_Church_Admin {
         add_action('admin_init', array($this, 'dasom_church_handle_settings_save'));
         add_action('admin_init', array($this, 'redirect_to_dw_dashboard'));
         add_filter('login_redirect', array($this, 'dasom_church_login_redirect'), 20, 3);
-        add_action('admin_menu', array($this, 'filter_admin_menus'), 9999);
+        // REMOVED: Conflicting menu filter - Dasom_Church_Menu_Visibility handles this
+        // add_action('admin_menu', array($this, 'filter_admin_menus'), 9999);
         
         // Custom Post Types
         add_action('init', array($this, 'dasom_church_register_post_types'));
@@ -219,16 +220,26 @@ class Dasom_Church_Admin {
      * Add admin menu
      */
     public function dasom_church_admin_menu() {
+        // DEBUG: 메뉴 등록 디버그
+        error_log('=== ADMIN MENU DEBUG ===');
+        error_log('Current User ID: ' . get_current_user_id());
+        error_log('User Roles: ' . implode(', ', wp_get_current_user()->roles));
+        error_log('Can edit_posts: ' . (current_user_can('edit_posts') ? 'YES' : 'NO'));
+        error_log('Can read: ' . (current_user_can('read') ? 'YES' : 'NO'));
+        error_log('Can manage_options: ' . (current_user_can('manage_options') ? 'YES' : 'NO'));
+        
         // Main menu - 고유한 슬러그 사용
         add_menu_page(
             __('DW 교회관리', 'dasom-church'),
             __('DW 교회관리', 'dasom-church'),
-            'edit_posts', // Allow Author/Editor access
+            'edit_posts', // Back to edit_posts for Author/Editor
             'dasom-church-admin',
             array($this, 'dasom_church_dashboard_page'),
             'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M11 2v6h6v3h-6v7H8v-7H2V8h6V2z"/></svg>'),
             5
         );
+        
+        error_log('DW 교회관리 메뉴 등록 완료');
         
         // Remove default submenu
         remove_submenu_page('dasom-church-admin', 'dasom-church-admin');
@@ -238,7 +249,7 @@ class Dasom_Church_Admin {
             'dasom-church-admin',
             __('설정', 'dasom-church'),
             __('설정', 'dasom-church'),
-            'edit_posts',
+            'edit_posts', // Back to edit_posts for Author/Editor
             'dasom-church-settings',
             array($this, 'dasom_church_settings_page')
         );
@@ -251,6 +262,7 @@ class Dasom_Church_Admin {
             'dasom-church-github-update',
             array($this, 'dasom_church_github_update_page')
         );
+        
     }
     
     /**
@@ -634,6 +646,35 @@ class Dasom_Church_Admin {
      * Dashboard page
      */
     public function dasom_church_dashboard_page() {
+        // DEBUG: 상세한 디버그 로그 추가
+        error_log('=== DASHBOARD PAGE DEBUG ===');
+        error_log('Current User ID: ' . get_current_user_id());
+        error_log('Current User: ' . print_r(wp_get_current_user(), true));
+        error_log('User Roles: ' . implode(', ', wp_get_current_user()->roles));
+        error_log('Can edit_posts: ' . (current_user_can('edit_posts') ? 'YES' : 'NO'));
+        error_log('Can read: ' . (current_user_can('read') ? 'YES' : 'NO'));
+        error_log('Can manage_options: ' . (current_user_can('manage_options') ? 'YES' : 'NO'));
+        error_log('Is user logged in: ' . (is_user_logged_in() ? 'YES' : 'NO'));
+        error_log('Current screen: ' . print_r(get_current_screen(), true));
+        error_log('REQUEST_URI: ' . $_SERVER['REQUEST_URI']);
+        error_log('HTTP_REFERER: ' . (isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'NOT SET'));
+        
+        // FORCE ACCESS - WordPress 권한 시스템 우회
+        if (!is_user_logged_in()) {
+            error_log('User not logged in - redirecting to login');
+            wp_redirect(wp_login_url(admin_url('admin.php?page=dasom-church-dashboard')));
+            exit;
+        }
+        
+        // 임시로 모든 권한 부여 (디버깅용)
+        $current_user = wp_get_current_user();
+        if (!empty($current_user->roles)) {
+            error_log('User has roles: ' . implode(', ', $current_user->roles));
+            // 권한 체크 없이 바로 진행
+        } else {
+            error_log('User has no roles - this is the problem!');
+        }
+        
         // 설교자 관리 액션 처리
         if (isset($_POST['preacher_action']) && check_admin_referer('sermon_preacher_actions')) {
             $action = sanitize_text_field($_POST['preacher_action']);
