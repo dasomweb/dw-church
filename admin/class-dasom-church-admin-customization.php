@@ -34,6 +34,7 @@ class Dasom_Church_Admin_Customization {
     private function __construct() {
         add_action('init', array($this, 'init_admin_customization'));
         add_action('wp_head', array($this, 'add_admin_bar_hide_css'));
+        add_action('admin_head', array($this, 'add_admin_bar_hide_css'));
         add_action('admin_head', array($this, 'add_admin_menu_styles'));
         add_action('admin_bar_menu', array($this, 'add_admin_bar_title'), 1);
     }
@@ -42,12 +43,10 @@ class Dasom_Church_Admin_Customization {
      * Initialize admin customization
      */
     public function init_admin_customization() {
-        // Hide admin bar for frontend if enabled
+        // Hide admin bar for both frontend and backend if enabled
         $admin_bar_hide = get_option('dw_admin_bar_hide', 'no');
         if ($admin_bar_hide === 'yes') {
-            if (!is_admin()) {
-                add_filter('show_admin_bar', '__return_false');
-            }
+            add_filter('show_admin_bar', '__return_false');
         }
     }
     
@@ -61,6 +60,8 @@ class Dasom_Church_Admin_Customization {
                 #wpadminbar { display: none !important; }
                 html { margin-top: 0 !important; }
                 body.admin-bar { padding-top: 0 !important; }
+                .admin-bar #wpbody { padding-top: 0 !important; }
+                .admin-bar #wpcontent { padding-top: 0 !important; }
             </style>';
         }
     }

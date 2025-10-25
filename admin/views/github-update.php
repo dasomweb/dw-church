@@ -759,9 +759,9 @@ $github_token = get_option('dw_github_access_token', '');
                 <td>
                     <label>
                         <input type="checkbox" name="admin_bar_hide" value="yes" <?php checked($admin_bar_hide, 'yes'); ?> />
-                        <?php _e('관리자 바를 숨깁니다 (프론트엔드에서)', 'dasom-church'); ?>
+                        <?php _e('관리자 바를 숨깁니다 (프론트엔드 및 백엔드에서)', 'dasom-church'); ?>
                     </label>
-                    <p class="description"><?php _e('체크하면 프론트엔드에서 관리자 바가 숨겨집니다.', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('체크하면 프론트엔드와 백엔드(관리자 영역) 모두에서 관리자 바가 숨겨집니다.', 'dasom-church'); ?></p>
                 </td>
             </tr>
             
@@ -793,7 +793,7 @@ $github_token = get_option('dw_github_access_token', '');
         <div style="background:#f0f7ff;padding:15px;border-left:4px solid #2271b1;margin:20px 0;">
             <h3 style="margin-top:0;">💡 <?php _e('사용 방법:', 'dasom-church'); ?></h3>
             <ul style="margin-bottom:0;">
-                <li><?php _e('관리자 바 숨김: 프론트엔드에서 관리자 바를 완전히 숨깁니다.', 'dasom-church'); ?></li>
+                <li><?php _e('관리자 바 숨김: 프론트엔드와 백엔드(관리자 영역) 모두에서 관리자 바를 완전히 숨깁니다.', 'dasom-church'); ?></li>
                 <li><?php _e('메뉴 스타일링: 관리자 메뉴의 배경색과 폰트색을 커스터마이징할 수 있습니다.', 'dasom-church'); ?></li>
                 <li><?php _e('관리자 바 제목: 관리자 바 상단에 표시될 브랜드명을 설정할 수 있습니다.', 'dasom-church'); ?></li>
             </ul>
