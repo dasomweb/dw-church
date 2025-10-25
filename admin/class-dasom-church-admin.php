@@ -92,6 +92,11 @@ class Dasom_Church_Admin {
      * Redirect to DW dashboard when accessing WordPress dashboard
      */
     public function redirect_to_dw_dashboard() {
+        // Don't redirect Administrator
+        if (current_user_can('administrator')) {
+            return;
+        }
+        
         // Don't redirect if already on DW dashboard
         if (isset($_GET['page']) && $_GET['page'] === 'dasom-church-admin') {
             return;
@@ -102,9 +107,9 @@ class Dasom_Church_Admin {
             return;
         }
         
-        // Check if user has access to DW dashboard
-        if (current_user_can('edit_posts')) {
-            // Redirect to DW dashboard for all users with edit_posts capability
+        // Only redirect Author/Editor roles
+        if (current_user_can('edit_posts') && !current_user_can('manage_options')) {
+            // Redirect to DW dashboard for Author/Editor only
             wp_redirect(admin_url('admin.php?page=dasom-church-dashboard'));
             exit;
         }
