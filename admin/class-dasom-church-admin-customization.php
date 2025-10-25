@@ -118,6 +118,7 @@ class Dasom_Church_Admin_Customization {
                 background-color: ' . esc_attr($admin_menu_bg_color) . ';
                 height: 60px;
                 padding-top: 20px;
+                padding-bottom: 10px;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             }
             
