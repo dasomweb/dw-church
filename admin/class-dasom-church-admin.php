@@ -233,6 +233,12 @@ class Dasom_Church_Admin {
             return true;
         }
         
+        // Dashboard is ALWAYS accessible for Author/Editor roles
+        if ($menu_key === 'dashboard') {
+            error_log('Dashboard access - ALWAYS ALLOWED for Author/Editor');
+            return true;
+        }
+        
         // Check for Author/Editor roles
         if (in_array('author', $current_user->roles) || in_array('editor', $current_user->roles)) {
             $user_role = in_array('author', $current_user->roles) ? 'author' : 'editor';
@@ -301,6 +307,16 @@ class Dasom_Church_Admin {
         
         // Remove default submenu
         remove_submenu_page('dasom-church-admin', 'dasom-church-admin');
+        
+        // Dashboard submenu - ALWAYS visible for Author/Editor
+        add_submenu_page(
+            'dasom-church-admin',
+            __('대시보드', 'dasom-church'),
+            __('대시보드', 'dasom-church'),
+            'edit_posts',
+            'dasom-church-dashboard',
+            array($this, 'dasom_church_dashboard_page')
+        );
         
         // Settings submenu
         if ($this->can_access_submenu('settings')) {
@@ -711,10 +727,7 @@ class Dasom_Church_Admin {
         error_log('DW Dashboard Access - Can edit_posts: ' . (current_user_can('edit_posts') ? 'YES' : 'NO'));
         error_log('DW Dashboard Access - Can read: ' . (current_user_can('read') ? 'YES' : 'NO'));
         
-        // Allow access for Author/Editor roles
-        if (!current_user_can('edit_posts')) {
-            wp_die(__('You do not have sufficient permissions to access this page.', 'dasom-church'));
-        }
+        // No permission check - allow all logged-in users
         
         // 설교자 관리 액션 처리
         if (isset($_POST['preacher_action']) && check_admin_referer('sermon_preacher_actions')) {
