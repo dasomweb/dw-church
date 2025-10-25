@@ -120,6 +120,11 @@ class Dasom_Church_Admin_Customization {
                 padding-top: 20px;
                 padding-bottom: 10px;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 1000;
             }
             
             /* Custom Top Title Display Above Menu */
@@ -134,6 +139,16 @@ class Dasom_Church_Admin_Customization {
                 text-align: center;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.1);
                 margin-bottom: 0;
+                position: absolute;
+                top: ' . ($top_image ? '60px' : '0') . ';
+                left: 0;
+                right: 0;
+                z-index: 1000;
+            }
+            
+            /* Adjust admin menu to account for custom top content */
+            #adminmenu {
+                padding-top: ' . (($top_image ? '60px' : '0') + ($church_name ? '60px' : '0')) . ' !important;
             }
             
             /* Remove top spacing when admin bar is hidden */
