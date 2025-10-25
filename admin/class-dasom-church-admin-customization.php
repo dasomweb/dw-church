@@ -138,16 +138,19 @@ class Dasom_Church_Admin_Customization {
                 text-align: center;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.1);
                 margin-bottom: 0;
-                position: absolute;
-                top: ' . ($top_image ? '60px' : '0') . ';
-                left: 0;
-                right: 0;
-                z-index: 1000;
+                position: relative;
+                z-index: 1;
             }
             
             /* Adjust admin menu to account for custom top content */
             #adminmenu {
                 padding-top: ' . (($top_image ? 60 : 0) + ($church_name ? 60 : 0)) . 'px !important;
+            }
+            
+            /* Ensure menu items are not covered by custom content */
+            #adminmenu li {
+                position: relative;
+                z-index: 2;
             }
             
             /* Remove top spacing when admin bar is hidden */
