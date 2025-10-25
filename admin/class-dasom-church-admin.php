@@ -301,6 +301,26 @@ class Dasom_Church_Admin {
             );
         }
         
+        // User Profile submenu
+        add_submenu_page(
+            'dasom-church-admin',
+            __('사용자 프로필', 'dasom-church'),
+            __('사용자 프로필', 'dasom-church'),
+            'edit_posts',
+            'dasom-church-profile',
+            array($this, 'dasom_church_profile_page')
+        );
+        
+        // Logout submenu
+        add_submenu_page(
+            'dasom-church-admin',
+            __('로그아웃', 'dasom-church'),
+            __('로그아웃', 'dasom-church'),
+            'edit_posts',
+            'dasom-church-logout',
+            array($this, 'dasom_church_logout_page')
+        );
+        
         // Add GitHub Update settings to WordPress Settings menu (독립적)
         add_options_page(
             __('DW 설정', 'dasom-church'),
@@ -733,6 +753,29 @@ class Dasom_Church_Admin {
         
         // Load settings view
         include DASOM_CHURCH_PLUGIN_PATH . 'admin/views/settings.php';
+    }
+    
+    /**
+     * User Profile page
+     */
+    public function dasom_church_profile_page() {
+        // Allow access for Administrator, Editor, and Author
+        if (!current_user_can('edit_posts')) {
+            wp_die(__('You do not have sufficient permissions to access this page.', 'dasom-church'));
+        }
+        
+        // Redirect to WordPress profile page
+        wp_redirect(admin_url('profile.php'));
+        exit;
+    }
+    
+    /**
+     * Logout page
+     */
+    public function dasom_church_logout_page() {
+        // Simple logout - just redirect to WordPress logout
+        wp_redirect(wp_logout_url());
+        exit;
     }
     
     /**
