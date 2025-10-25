@@ -308,16 +308,6 @@ class Dasom_Church_Admin {
         // Remove default submenu
         remove_submenu_page('dasom-church-admin', 'dasom-church-admin');
         
-        // Dashboard submenu - ALWAYS visible for Author/Editor
-        add_submenu_page(
-            'dasom-church-admin',
-            __('대시보드', 'dasom-church'),
-            __('대시보드', 'dasom-church'),
-            'edit_posts',
-            'dasom-church-dashboard',
-            array($this, 'dasom_church_dashboard_page')
-        );
-        
         // Settings submenu
         if ($this->can_access_submenu('settings')) {
             add_submenu_page(
