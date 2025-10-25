@@ -107,10 +107,23 @@ class Dasom_Church_Admin_Customization {
         $top_image = get_option('dw_admin_menu_top_image', '');
         
         echo '<style type="text/css">
-            /* Custom Top Content Display Above Menu */
+            /* Custom Top Image Display Above Menu */
             #adminmenu::before {
+                content: "";
+                display: ' . ($top_image ? 'block' : 'none') . ';
+                background-image: url(' . esc_attr($top_image) . ');
+                background-size: contain;
+                background-repeat: no-repeat;
+                background-position: center;
+                background-color: ' . esc_attr($admin_menu_bg_color) . ';
+                height: 60px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            /* Custom Top Title Display Above Menu */
+            #adminmenu::after {
                 content: "' . esc_attr($church_name) . '";
-                display: block;
+                display: ' . ($church_name ? 'block' : 'none') . ';
                 background-color: ' . esc_attr($admin_menu_bg_color) . ';
                 color: ' . esc_attr($admin_menu_font_color) . ';
                 padding: 15px 20px;
@@ -119,11 +132,6 @@ class Dasom_Church_Admin_Customization {
                 text-align: center;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.1);
                 margin-bottom: 0;
-                background-image: ' . ($top_image ? 'url(' . esc_attr($top_image) . ')' : 'none') . ';
-                background-size: contain;
-                background-repeat: no-repeat;
-                background-position: center;
-                height: ' . ($top_image ? '60px' : 'auto') . ';
             }
             
             /* Remove top spacing when admin bar is hidden */
