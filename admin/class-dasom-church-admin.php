@@ -47,7 +47,7 @@ class Dasom_Church_Admin {
         add_action('admin_menu', array($this, 'dasom_church_admin_menu'));
         add_action('admin_enqueue_scripts', array($this, 'dasom_church_admin_scripts'));
         add_action('admin_init', array($this, 'dasom_church_handle_settings_save'));
-        add_action('admin_init', array($this, 'redirect_to_dw_dashboard'));
+        add_action('admin_menu', array($this, 'redirect_to_dw_dashboard'), 1);
         
         // Custom Post Types
         add_action('init', array($this, 'dasom_church_register_post_types'));
@@ -78,21 +78,45 @@ class Dasom_Church_Admin {
      * Redirect to DW dashboard when accessing WordPress dashboard
      */
     public function redirect_to_dw_dashboard() {
-        // Only redirect if accessing the main dashboard
+        // Don't redirect if already on DW dashboard
         if (isset($_GET['page']) && $_GET['page'] === 'dasom-church-admin') {
-            return; // Don't redirect if already on DW dashboard
+            return;
         }
         
-        // Check if user is accessing WordPress dashboard
-        $current_screen = get_current_screen();
-        if ($current_screen && $current_screen->id === 'dashboard') {
-            // Check if user has access to DW dashboard
-            if (current_user_can('edit_posts')) {
-                // Redirect to DW dashboard
-                wp_redirect(admin_url('admin.php?page=dasom-church-admin'));
-                exit;
-            }
+        // Don't redirect if accessing other specific pages
+        if (isset($_GET['page']) && $_GET['page'] !== '') {
+            return;
         }
+        
+        // Check if user has access to DW dashboard
+        if (current_user_can('edit_posts')) {
+            // Redirect to DW dashboard for all users with edit_posts capability
+            wp_redirect(admin_url('admin.php?page=dasom-church-admin'));
+            exit;
+        }
+    }
+    
+    /**
+     * Redirect methods for Author/Editor main menu items
+     */
+    public function redirect_to_album() {
+        wp_redirect(admin_url('edit.php?post_type=album'));
+        exit;
+    }
+    
+    public function redirect_to_bulletin() {
+        wp_redirect(admin_url('edit.php?post_type=bulletin'));
+        exit;
+    }
+    
+    public function redirect_to_event() {
+        wp_redirect(admin_url('edit.php?post_type=event'));
+        exit;
+    }
+    
+    public function redirect_to_banner() {
+        wp_redirect(admin_url('edit.php?post_type=banner'));
+        exit;
     }
     
     /**
