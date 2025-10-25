@@ -112,13 +112,12 @@ class Dasom_Church_Admin_Customization {
                 content: "";
                 display: ' . ($top_image ? 'block' : 'none') . ';
                 background-image: url(' . esc_attr($top_image) . ');
-                background-size: 85%;
+                background-size: contain;
                 background-repeat: no-repeat;
                 background-position: center;
                 background-color: ' . esc_attr($admin_menu_bg_color) . ';
                 height: 60px;
-                padding-top: 20px;
-                padding-bottom: 10px;
+                padding: 40px;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.1);
                 position: absolute;
                 top: 0;
