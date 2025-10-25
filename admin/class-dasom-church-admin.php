@@ -97,21 +97,20 @@ class Dasom_Church_Admin {
             return;
         }
         
+        // Don't redirect if accessing any specific page
+        if (isset($_GET['page']) && $_GET['page'] !== '') {
+            return;
+        }
+        
         // Only redirect when accessing the main WordPress dashboard
         $current_url = $_SERVER['REQUEST_URI'] ?? '';
         $is_main_dashboard = (
             $current_url === '/wp-admin/' || 
             $current_url === '/wp-admin/index.php' ||
-            $current_url === '/wp-admin' ||
-            (strpos($current_url, '/wp-admin/') === 0 && !isset($_GET['page']))
+            $current_url === '/wp-admin'
         );
         
         if (!$is_main_dashboard) {
-            return;
-        }
-        
-        // Don't redirect if already on DW dashboard
-        if (isset($_GET['page']) && $_GET['page'] === 'dasom-church-dashboard') {
             return;
         }
         
