@@ -47,6 +47,7 @@ class Dasom_Church_Admin {
         add_action('admin_menu', array($this, 'dasom_church_admin_menu'));
         add_action('admin_enqueue_scripts', array($this, 'dasom_church_admin_scripts'));
         add_action('admin_init', array($this, 'dasom_church_handle_settings_save'));
+        add_action('admin_init', array($this, 'redirect_to_dw_dashboard'));
         
         // Custom Post Types
         add_action('init', array($this, 'dasom_church_register_post_types'));
@@ -70,6 +71,27 @@ class Dasom_Church_Admin {
         add_action('dasom_church_check_banner_schedule', array($this, 'dasom_church_check_expired_banners'));
         if (!wp_next_scheduled('dasom_church_check_banner_schedule')) {
             wp_schedule_event(time(), 'hourly', 'dasom_church_check_banner_schedule');
+        }
+    }
+    
+    /**
+     * Redirect to DW dashboard when accessing WordPress dashboard
+     */
+    public function redirect_to_dw_dashboard() {
+        // Only redirect if accessing the main dashboard
+        if (isset($_GET['page']) && $_GET['page'] === 'dasom-church-admin') {
+            return; // Don't redirect if already on DW dashboard
+        }
+        
+        // Check if user is accessing WordPress dashboard
+        $current_screen = get_current_screen();
+        if ($current_screen && $current_screen->id === 'dashboard') {
+            // Check if user has access to DW dashboard
+            if (current_user_can('edit_posts')) {
+                // Redirect to DW dashboard
+                wp_redirect(admin_url('admin.php?page=dasom-church-admin'));
+                exit;
+            }
         }
     }
     
@@ -130,7 +152,7 @@ class Dasom_Church_Admin {
         add_menu_page(
             __('DW 교회관리', 'dasom-church'),
             __('DW 교회관리', 'dasom-church'),
-            'manage_options',
+            'edit_posts', // Changed from manage_options to edit_posts for Author/Editor access
             'dasom-church-admin',
             array($this, 'dasom_church_dashboard_page'),
             'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M11 2v6h6v3h-6v7H8v-7H2V8h6V2z"/></svg>'),
@@ -148,7 +170,7 @@ class Dasom_Church_Admin {
                 'dasom-church-admin',
                 __('대시보드', 'dasom-church'),
                 __('대시보드', 'dasom-church'),
-                'manage_options',
+                'edit_posts', // Changed from manage_options to edit_posts
                 'dasom-church-dashboard',
                 array($this, 'dasom_church_dashboard_page')
             );
@@ -160,7 +182,7 @@ class Dasom_Church_Admin {
                 'dasom-church-admin',
                 __('설정', 'dasom-church'),
                 __('설정', 'dasom-church'),
-                'manage_options',
+                'edit_posts', // Changed from manage_options to edit_posts
                 'dasom-church-settings',
                 array($this, 'dasom_church_settings_page')
             );
@@ -557,7 +579,7 @@ class Dasom_Church_Admin {
      * Dashboard page
      */
     public function dasom_church_dashboard_page() {
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('edit_posts')) {
             wp_die(__('You do not have sufficient permissions to access this page.', 'dasom-church'));
         }
         
@@ -579,7 +601,7 @@ class Dasom_Church_Admin {
      * Settings page
      */
     public function dasom_church_settings_page() {
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('edit_posts')) {
             wp_die(__('You do not have sufficient permissions to access this page.', 'dasom-church'));
         }
         
