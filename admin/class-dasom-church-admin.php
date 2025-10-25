@@ -299,6 +299,9 @@ class Dasom_Church_Admin {
             error_log('Dasom Church Admin Menu Registered');
         }
         
+        // Remove default submenu and reorder
+        remove_submenu_page('dasom-church-admin', 'dasom-church-admin');
+        
         // Dashboard submenu (1st)
         if ($this->can_access_submenu('dashboard')) {
             add_submenu_page(

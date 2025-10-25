@@ -119,19 +119,11 @@ class Dasom_Church_Admin_Customization {
                 text-align: center;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.1);
                 margin-bottom: 0;
-            }
-            
-            /* Custom Top Image Display */
-            #adminmenu::after {
-                content: "";
-                display: ' . ($top_image ? 'block' : 'none') . ';
-                background-image: url(' . esc_attr($top_image) . ');
+                background-image: ' . ($top_image ? 'url(' . esc_attr($top_image) . ')' : 'none') . ';
                 background-size: contain;
                 background-repeat: no-repeat;
                 background-position: center;
-                height: 60px;
-                background-color: ' . esc_attr($admin_menu_bg_color) . ';
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                height: ' . ($top_image ? '60px' : 'auto') . ';
             }
             
             /* Remove top spacing when admin bar is hidden */
