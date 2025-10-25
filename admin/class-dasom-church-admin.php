@@ -48,6 +48,8 @@ class Dasom_Church_Admin {
         add_action('admin_enqueue_scripts', array($this, 'dasom_church_admin_scripts'));
         add_action('admin_init', array($this, 'dasom_church_handle_settings_save'));
         add_action('admin_menu', array($this, 'redirect_to_dw_dashboard'), 1);
+        add_filter('login_redirect', array($this, 'dasom_church_login_redirect'), 20, 3);
+        add_action('admin_menu', array($this, 'filter_admin_menus'), 9999);
         
         // Custom Post Types
         add_action('init', array($this, 'dasom_church_register_post_types'));
@@ -75,6 +77,18 @@ class Dasom_Church_Admin {
     }
     
     /**
+     * Login redirect for Author/Editor to DW dashboard
+     */
+    public function dasom_church_login_redirect($redirect_to, $requested, $user) {
+        if ($user instanceof WP_User) {
+            if (in_array('author', (array)$user->roles, true) || in_array('editor', (array)$user->roles, true)) {
+                return admin_url('admin.php?page=dasom-church-dashboard');
+            }
+        }
+        return $redirect_to;
+    }
+    
+    /**
      * Redirect to DW dashboard when accessing WordPress dashboard
      */
     public function redirect_to_dw_dashboard() {
@@ -91,8 +105,51 @@ class Dasom_Church_Admin {
         // Check if user has access to DW dashboard
         if (current_user_can('edit_posts')) {
             // Redirect to DW dashboard for all users with edit_posts capability
-            wp_redirect(admin_url('admin.php?page=dasom-church-admin'));
+            wp_redirect(admin_url('admin.php?page=dasom-church-dashboard'));
             exit;
+        }
+    }
+    
+    /**
+     * Filter admin menus for Author/Editor roles
+     */
+    public function filter_admin_menus() {
+        if (current_user_can('administrator')) return;
+        if (!current_user_can('editor') && !current_user_can('author')) return;
+
+        global $menu, $submenu;
+        $allowed_slugs = array(
+            'dasom-church-admin',
+            'dasom-church-dashboard',
+            'dasom-church-sermon',
+            'dasom-church-column',
+            'dasom-church-bulletin',
+            'dasom-church-album',
+            'dasom-church-event',
+            'dasom-church-banner',
+            'dasom-church-settings',
+            'edit.php?post_type=bulletin',
+            'edit.php?post_type=sermon',
+            'edit.php?post_type=column',
+            'edit.php?post_type=album',
+            'edit.php?post_type=banner',
+            'edit.php?post_type=event',
+            'edit.php',
+            'edit.php?post_type=page',
+            'upload.php',
+            'users.php'
+        );
+
+        foreach ($menu as $index => $item) {
+            if (!in_array($item[2] ?? '', $allowed_slugs, true)) {
+                unset($menu[$index]);
+            }
+        }
+        
+        foreach ((array)$submenu as $parent_slug => $items) {
+            if (!in_array($parent_slug, $allowed_slugs, true)) {
+                unset($submenu[$parent_slug]);
+            }
         }
     }
     

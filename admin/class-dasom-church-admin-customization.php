@@ -33,10 +33,25 @@ class Dasom_Church_Admin_Customization {
      */
     private function __construct() {
         add_action('init', array($this, 'init_admin_customization'));
+        add_action('after_setup_theme', array($this, 'hide_admin_bar_for_roles'));
         add_action('wp_head', array($this, 'add_admin_bar_hide_css'));
         add_action('admin_head', array($this, 'add_admin_bar_hide_css'));
         add_action('admin_head', array($this, 'add_admin_menu_styles'));
         add_action('admin_bar_menu', array($this, 'add_admin_bar_title'), 1);
+    }
+    
+    /**
+     * Hide admin bar for Author/Editor roles
+     */
+    public function hide_admin_bar_for_roles() {
+        // Only apply to Author and Editor roles
+        $current_user = wp_get_current_user();
+        if (!in_array('author', $current_user->roles) && !in_array('editor', $current_user->roles)) {
+            return; // Don't apply to Administrator
+        }
+        
+        // Hide admin bar for Author/Editor by default
+        show_admin_bar(false);
     }
     
     /**
