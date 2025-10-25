@@ -106,24 +106,39 @@ class Dasom_Church_Admin_Customization {
         $church_name = get_option('dw_admin_menu_church_name', '');
         $top_image = get_option('dw_admin_menu_top_image', '');
         
+        // Add HTML for top content
+        if ($top_image || $church_name) {
+            echo '<div id="adminmenu-top-content">';
+            if ($top_image) {
+                echo '<div id="adminmenu-top-image"></div>';
+            }
+            if ($church_name) {
+                echo '<div id="adminmenu-top-title">' . esc_html($church_name) . '</div>';
+            }
+            echo '</div>';
+        }
+        
                 echo '<style type="text/css">
-                    /* Custom Top Image Display Above Menu */
-                    #adminmenu::before {
-                        content: "";
+                    /* Custom Top Content Container */
+                    #adminmenu-top-content {
+                        background-color: ' . esc_attr($admin_menu_bg_color) . ';
+                        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                    }
+                    
+                    /* Custom Top Image Display */
+                    #adminmenu-top-image {
                         display: ' . ($top_image ? 'block' : 'none') . ';
                         background-image: url(' . esc_attr($top_image) . ');
                         background-size: contain;
                         background-repeat: no-repeat;
                         background-position: center;
-                        background-color: ' . esc_attr($admin_menu_bg_color) . ';
                         height: 60px;
                         padding: 40px;
                         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
                     }
                     
-                    /* Custom Top Title Display Above Menu */
-                    #adminmenu::after {
-                        content: "' . esc_attr($church_name) . '";
+                    /* Custom Top Title Display */
+                    #adminmenu-top-title {
                         display: ' . ($church_name ? 'block' : 'none') . ';
                         background-color: ' . esc_attr($admin_menu_bg_color) . ';
                         color: ' . esc_attr($admin_menu_font_color) . ';
