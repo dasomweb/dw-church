@@ -214,81 +214,11 @@ class Dasom_Church_Admin {
         }
     }
     
-    /**
-     * Check if user can access submenu
-     */
-    private function can_access_submenu($menu_key) {
-        $current_user = wp_get_current_user();
-        
-        // DEBUG: Log current user info
-        error_log('=== CAN_ACCESS_SUBMENU DEBUG ===');
-        error_log('Menu Key: ' . $menu_key);
-        error_log('User Roles: ' . print_r($current_user->roles, true));
-        error_log('Can manage_options: ' . (current_user_can('manage_options') ? 'YES' : 'NO'));
-        error_log('Can edit_posts: ' . (current_user_can('edit_posts') ? 'YES' : 'NO'));
-        
-        // Administrator can access everything
-        if (current_user_can('manage_options')) {
-            error_log('Administrator access granted');
-            return true;
-        }
-        
-        // Dashboard is ALWAYS accessible for Author/Editor roles
-        if ($menu_key === 'dashboard') {
-            error_log('Dashboard access - ALWAYS ALLOWED for Author/Editor');
-            return true;
-        }
-        
-        // Check for Author/Editor roles
-        if (in_array('author', $current_user->roles) || in_array('editor', $current_user->roles)) {
-            $user_role = in_array('author', $current_user->roles) ? 'author' : 'editor';
-            error_log('User role: ' . $user_role);
-            
-            // Check if class exists before using it
-            if (class_exists('Dasom_Church_Menu_Visibility')) {
-                $menu_visibility = Dasom_Church_Menu_Visibility::get_instance();
-                $menu_slug = 'dasom-church-' . $menu_key;
-                error_log('Checking menu slug: ' . $menu_slug);
-                
-                $can_access = $menu_visibility->user_can_access_menu($menu_slug, $user_role);
-                error_log('Can access result: ' . ($can_access ? 'YES' : 'NO'));
-                return $can_access;
-            } else {
-                // Fallback: allow access if class not loaded
-                error_log('Menu visibility class not loaded, allowing access');
-                return true;
-            }
-        }
-        
-        error_log('No matching role, access denied');
-        return false;
-    }
     
     /**
      * Add admin menu
      */
     public function dasom_church_admin_menu() {
-        // Check menu visibility for Author/Editor
-        $current_user = wp_get_current_user();
-        $can_access = true;
-        
-        if (in_array('author', $current_user->roles) || in_array('editor', $current_user->roles)) {
-            $user_role = in_array('author', $current_user->roles) ? 'author' : 'editor';
-            
-            // Check if class exists before using it
-            if (class_exists('Dasom_Church_Menu_Visibility')) {
-                $menu_visibility = Dasom_Church_Menu_Visibility::get_instance();
-                $can_access = $menu_visibility->user_can_access_menu('dasom-church-admin', $user_role);
-            } else {
-                // Fallback: allow access if class not loaded
-                $can_access = true;
-            }
-        }
-        
-        if (!$can_access) {
-            return;
-        }
-        
         // Main menu - 고유한 슬러그 사용
         add_menu_page(
             __('DW 교회관리', 'dasom-church'),
@@ -300,25 +230,18 @@ class Dasom_Church_Admin {
             5
         );
         
-        // 디버깅: 메뉴가 등록되었는지 확인
-        if (current_user_can('manage_options')) {
-            error_log('Dasom Church Admin Menu Registered');
-        }
-        
         // Remove default submenu
         remove_submenu_page('dasom-church-admin', 'dasom-church-admin');
         
         // Settings submenu
-        if ($this->can_access_submenu('settings')) {
-            add_submenu_page(
-                'dasom-church-admin',
-                __('설정', 'dasom-church'),
-                __('설정', 'dasom-church'),
-                'edit_posts',
-                'dasom-church-settings',
-                array($this, 'dasom_church_settings_page')
-            );
-        }
+        add_submenu_page(
+            'dasom-church-admin',
+            __('설정', 'dasom-church'),
+            __('설정', 'dasom-church'),
+            'edit_posts',
+            'dasom-church-settings',
+            array($this, 'dasom_church_settings_page')
+        );
         
         // Add GitHub Update settings to WordPress Settings menu (독립적)
         add_options_page(
@@ -711,20 +634,8 @@ class Dasom_Church_Admin {
      * Dashboard page
      */
     public function dasom_church_dashboard_page() {
-        // Debug logging
-        error_log('DW Dashboard Access - User ID: ' . get_current_user_id());
-        error_log('DW Dashboard Access - User Roles: ' . implode(', ', wp_get_current_user()->roles));
-        error_log('DW Dashboard Access - Can edit_posts: ' . (current_user_can('edit_posts') ? 'YES' : 'NO'));
-        error_log('DW Dashboard Access - Can read: ' . (current_user_can('read') ? 'YES' : 'NO'));
-        
-        // No permission check - allow all logged-in users
-        
         // 설교자 관리 액션 처리
         if (isset($_POST['preacher_action']) && check_admin_referer('sermon_preacher_actions')) {
-            if (!current_user_can('edit_posts')) {
-                wp_die(__('권한이 없습니다.', 'dasom-church'));
-            }
-            
             $action = sanitize_text_field($_POST['preacher_action']);
             $this->dasom_church_handle_preacher_action($action);
         }
@@ -737,17 +648,8 @@ class Dasom_Church_Admin {
      * Settings page
      */
     public function dasom_church_settings_page() {
-        // Allow access for Administrator, Editor, and Author
-        if (!current_user_can('edit_posts')) {
-            wp_die(__('You do not have sufficient permissions to access this page.', 'dasom-church'));
-        }
-        
         // 설교자 관리 액션 처리
         if (isset($_POST['preacher_action']) && check_admin_referer('sermon_preacher_actions')) {
-            if (!current_user_can('edit_posts')) {
-                wp_die(__('권한이 없습니다.', 'dasom-church'));
-            }
-            
             $action = sanitize_text_field($_POST['preacher_action']);
             $this->dasom_church_handle_preacher_action($action);
         }
