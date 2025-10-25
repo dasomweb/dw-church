@@ -97,7 +97,7 @@ class Dasom_Church_Admin_Customization {
         $admin_menu_font_color = get_option('dw_admin_menu_font_color', '#ffffff');
         $admin_menu_font_size = get_option('dw_admin_menu_font_size', '14');
         $admin_menu_font_weight = get_option('dw_admin_menu_font_weight', '400');
-        $church_name = get_option('dw_church_name', '');
+        $church_name = get_option('dw_admin_menu_church_name', '');
         
         echo '<style type="text/css">
             /* Church Name Display Above Menu */

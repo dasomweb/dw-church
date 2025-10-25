@@ -735,6 +735,7 @@ $github_token = get_option('dw_github_access_token', '');
     $admin_menu_font_size = get_option('dw_admin_menu_font_size', '14');
     $admin_menu_font_weight = get_option('dw_admin_menu_font_weight', '400');
     $admin_bar_title = get_option('dw_admin_bar_title', 'DW 교회관리');
+    $admin_menu_church_name = get_option('dw_admin_menu_church_name', '');
     
     // Handle form submission
     if (isset($_POST['save_admin_customization']) && wp_verify_nonce($_POST['admin_customization_nonce'], 'save_admin_customization')) {
@@ -744,6 +745,7 @@ $github_token = get_option('dw_github_access_token', '');
         $admin_menu_font_size = sanitize_text_field($_POST['admin_menu_font_size']);
         $admin_menu_font_weight = sanitize_text_field($_POST['admin_menu_font_weight']);
         $admin_bar_title = sanitize_text_field($_POST['admin_bar_title']);
+        $admin_menu_church_name = sanitize_text_field($_POST['admin_menu_church_name']);
         
         update_option('dw_admin_bar_hide', $admin_bar_hide);
         update_option('dw_admin_menu_bg_color', $admin_menu_bg_color);
@@ -751,6 +753,7 @@ $github_token = get_option('dw_github_access_token', '');
         update_option('dw_admin_menu_font_size', $admin_menu_font_size);
         update_option('dw_admin_menu_font_weight', $admin_menu_font_weight);
         update_option('dw_admin_bar_title', $admin_bar_title);
+        update_option('dw_admin_menu_church_name', $admin_menu_church_name);
         
         echo '<div class="notice notice-success"><p>' . __('설정이 저장되었습니다.', 'dasom-church') . '</p></div>';
     }
@@ -815,6 +818,14 @@ $github_token = get_option('dw_github_access_token', '');
                 <td>
                     <input type="text" name="admin_bar_title" value="<?php echo esc_attr($admin_bar_title); ?>" class="regular-text" />
                     <p class="description"><?php _e('Administrator를 제외한 모든 역할의 사용자에게 적용되는 관리자 바 상단에 표시될 제목을 설정합니다.', 'dasom-church'); ?></p>
+                </td>
+            </tr>
+            
+            <tr>
+                <th scope="row"><?php _e('메뉴 상단 교회 이름', 'dasom-church'); ?></th>
+                <td>
+                    <input type="text" name="admin_menu_church_name" value="<?php echo esc_attr($admin_menu_church_name); ?>" class="regular-text" />
+                    <p class="description"><?php _e('관리자 메뉴 상단에 표시될 교회 이름을 설정합니다. 비워두면 표시되지 않습니다.', 'dasom-church'); ?></p>
                 </td>
             </tr>
         </table>
