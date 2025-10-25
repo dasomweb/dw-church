@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 
 <div class="wrap">
     <h1><?php _e('교회 관리 대시보드', 'dasom-church'); ?></h1>
-    <p><?php _e('교회주보, 설교, 목회컬럼, 교회앨범, 배너의 최신 현황을 한눈에 확인할 수 있습니다.', 'dasom-church'); ?></p>
+    <p><?php _e('교회주보, 설교, 목회컬럼, 교회앨범, 이벤트, 배너의 최신 현황을 한눈에 확인할 수 있습니다.', 'dasom-church'); ?></p>
     
     
     
@@ -147,6 +147,58 @@ if (!defined('ABSPATH')) {
                 echo '</ul>';
             } else {
                 echo '<p class="dasom-empty">' . __('앨범이 없습니다.', 'dasom-church') . '</p>';
+            }
+            ?>
+        </div>
+        
+        <!-- 이벤트 -->
+        <div class="dasom-dashboard-card">
+            <div class="dasom-card-header">
+                <h2>🎉 <?php _e('이벤트', 'dasom-church'); ?></h2>
+                <a href="<?php echo admin_url('edit.php?post_type=event'); ?>" class="dasom-view-all"><?php _e('전체보기', 'dasom-church'); ?></a>
+            </div>
+            <?php
+            $events = get_posts(array(
+                'post_type' => 'event',
+                'posts_per_page' => 7,
+                'post_status' => array('publish', 'future', 'draft'),
+                'orderby' => 'date',
+                'order' => 'DESC'
+            ));
+            if ($events) {
+                echo '<ul class="dasom-dashboard-list">';
+                foreach ($events as $post) {
+                    $event_date = get_post_meta($post->ID, 'dw_event_date', true);
+                    $event_time = get_post_meta($post->ID, 'dw_event_time', true);
+                    $status_label = '';
+                    
+                    if ($post->post_status === 'future') {
+                        $status_label = '<span style="color:#f0ad4e;">⏰ ' . __('예약됨', 'dasom-church') . '</span>';
+                    } elseif ($post->post_status === 'draft') {
+                        $status_label = '<span style="color:#999;">📄 ' . __('Draft', 'dasom-church') . '</span>';
+                    } elseif ($event_date && strtotime($event_date) < current_time('timestamp')) {
+                        $status_label = '<span style="color:#dc3545;">⏱️ ' . __('종료됨', 'dasom-church') . '</span>';
+                    }
+                    
+                    echo '<li>';
+                    echo '<a href="' . get_edit_post_link($post->ID) . '">' . esc_html(get_the_title($post)) . '</a>';
+                    if ($event_date) {
+                        $formatted_date = date_i18n('Y.m.d', strtotime($event_date));
+                        if ($event_time) {
+                            $formatted_date .= ' ' . esc_html($event_time);
+                        }
+                        echo '<span class="dasom-date">' . esc_html($formatted_date) . '</span>';
+                    } else {
+                        echo '<span class="dasom-date">' . get_the_date('Y.m.d', $post) . '</span>';
+                    }
+                    if ($status_label) {
+                        echo ' ' . $status_label;
+                    }
+                    echo '</li>';
+                }
+                echo '</ul>';
+            } else {
+                echo '<p class="dasom-empty">' . __('이벤트가 없습니다.', 'dasom-church') . '</p>';
             }
             ?>
         </div>

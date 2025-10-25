@@ -96,6 +96,7 @@ class Dasom_Church_Admin_Customization {
         $admin_menu_bg_color = get_option('dw_admin_menu_bg_color', '#1d2327');
         $admin_menu_font_color = get_option('dw_admin_menu_font_color', '#ffffff');
         $admin_menu_font_size = get_option('dw_admin_menu_font_size', '14');
+        $admin_menu_font_weight = get_option('dw_admin_menu_font_weight', '400');
         $church_name = get_option('dw_church_name', '');
         
         echo '<style type="text/css">
@@ -128,10 +129,17 @@ class Dasom_Church_Admin_Customization {
                 background-color: ' . esc_attr($admin_menu_bg_color) . ' !important;
             }
             
-            /* Admin Menu Font Color and Size */
+            /* Admin Menu Font Family, Color, Size and Weight */
             #adminmenu a, #adminmenu .wp-submenu a, #adminmenu .wp-submenu-head {
+                font-family: "Noto Sans KR", sans-serif !important;
                 color: ' . esc_attr($admin_menu_font_color) . ' !important;
                 font-size: ' . esc_attr($admin_menu_font_size) . 'px !important;
+                font-weight: ' . esc_attr($admin_menu_font_weight) . ' !important;
+            }
+            
+            /* DW 교회관리 메뉴 특별 스타일 */
+            #adminmenu a[href*="dasom-church-admin"] {
+                font-weight: 700 !important;
             }
             
             /* Admin Menu Hover Effects */
