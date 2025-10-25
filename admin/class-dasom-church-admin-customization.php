@@ -121,7 +121,7 @@ class Dasom_Church_Admin_Customization {
                         imageDiv.id = "adminmenu-top-image";
                         imageDiv.style.display = "' . ($top_image ? 'block' : 'none') . '";
                         imageDiv.style.backgroundImage = "url(' . esc_attr($top_image) . ')";
-                        imageDiv.style.backgroundSize = "contain";
+                        imageDiv.style.backgroundSize = "75%";
                         imageDiv.style.backgroundRepeat = "no-repeat";
                         imageDiv.style.backgroundPosition = "center";
                         imageDiv.style.height = "60px";
