@@ -47,7 +47,7 @@ class Dasom_Church_Admin {
         add_action('admin_menu', array($this, 'dasom_church_admin_menu'));
         add_action('admin_enqueue_scripts', array($this, 'dasom_church_admin_scripts'));
         add_action('admin_init', array($this, 'dasom_church_handle_settings_save'));
-        add_action('admin_menu', array($this, 'redirect_to_dw_dashboard'), 1);
+        add_action('admin_init', array($this, 'redirect_to_dw_dashboard'));
         add_filter('login_redirect', array($this, 'dasom_church_login_redirect'), 20, 3);
         add_action('admin_menu', array($this, 'filter_admin_menus'), 9999);
         
@@ -97,13 +97,21 @@ class Dasom_Church_Admin {
             return;
         }
         
-        // Don't redirect if already on DW dashboard
-        if (isset($_GET['page']) && $_GET['page'] === 'dasom-church-admin') {
+        // Only redirect when accessing the main WordPress dashboard
+        $current_url = $_SERVER['REQUEST_URI'] ?? '';
+        $is_main_dashboard = (
+            $current_url === '/wp-admin/' || 
+            $current_url === '/wp-admin/index.php' ||
+            $current_url === '/wp-admin' ||
+            (strpos($current_url, '/wp-admin/') === 0 && !isset($_GET['page']))
+        );
+        
+        if (!$is_main_dashboard) {
             return;
         }
         
-        // Don't redirect if accessing other specific pages
-        if (isset($_GET['page']) && $_GET['page'] !== '') {
+        // Don't redirect if already on DW dashboard
+        if (isset($_GET['page']) && $_GET['page'] === 'dasom-church-dashboard') {
             return;
         }
         
