@@ -106,16 +106,52 @@ class Dasom_Church_Admin_Customization {
         $church_name = get_option('dw_admin_menu_church_name', '');
         $top_image = get_option('dw_admin_menu_top_image', '');
         
-        // Add HTML for top content
+        // Add HTML for top content using JavaScript to insert into adminmenu
         if ($top_image || $church_name) {
-            echo '<div id="adminmenu-top-content">';
-            if ($top_image) {
-                echo '<div id="adminmenu-top-image"></div>';
-            }
-            if ($church_name) {
-                echo '<div id="adminmenu-top-title">' . esc_html($church_name) . '</div>';
-            }
-            echo '</div>';
+            echo '<script type="text/javascript">
+                document.addEventListener("DOMContentLoaded", function() {
+                    var adminmenu = document.getElementById("adminmenu");
+                    if (adminmenu) {
+                        var topContent = document.createElement("div");
+                        topContent.id = "adminmenu-top-content";
+                        topContent.style.backgroundColor = "' . esc_attr($admin_menu_bg_color) . '";
+                        topContent.style.borderBottom = "1px solid rgba(255, 255, 255, 0.1)";
+                        
+                        var imageDiv = document.createElement("div");
+                        imageDiv.id = "adminmenu-top-image";
+                        imageDiv.style.display = "' . ($top_image ? 'block' : 'none') . '";
+                        imageDiv.style.backgroundImage = "url(' . esc_attr($top_image) . ')";
+                        imageDiv.style.backgroundSize = "contain";
+                        imageDiv.style.backgroundRepeat = "no-repeat";
+                        imageDiv.style.backgroundPosition = "center";
+                        imageDiv.style.height = "60px";
+                        imageDiv.style.padding = "40px";
+                        imageDiv.style.borderBottom = "1px solid rgba(255, 255, 255, 0.1)";
+                        
+                        var titleDiv = document.createElement("div");
+                        titleDiv.id = "adminmenu-top-title";
+                        titleDiv.style.display = "' . ($church_name ? 'block' : 'none') . '";
+                        titleDiv.style.backgroundColor = "' . esc_attr($admin_menu_bg_color) . '";
+                        titleDiv.style.color = "' . esc_attr($admin_menu_font_color) . '";
+                        titleDiv.style.padding = "15px 20px";
+                        titleDiv.style.fontSize = "16px";
+                        titleDiv.style.fontWeight = "bold";
+                        titleDiv.style.textAlign = "center";
+                        titleDiv.style.borderBottom = "1px solid rgba(255, 255, 255, 0.1)";
+                        titleDiv.style.marginBottom = "0";
+                        titleDiv.textContent = "' . esc_js($church_name) . '";
+                        
+                        if (' . ($top_image ? 'true' : 'false') . ') {
+                            topContent.appendChild(imageDiv);
+                        }
+                        if (' . ($church_name ? 'true' : 'false') . ') {
+                            topContent.appendChild(titleDiv);
+                        }
+                        
+                        adminmenu.insertBefore(topContent, adminmenu.firstChild);
+                    }
+                });
+            </script>';
         }
         
                 echo '<style type="text/css">
