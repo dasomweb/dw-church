@@ -3,7 +3,7 @@
  * Plugin Name: DW Church Management System
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 1.37.51
+ * Version: 1.37.52
  * Author: Dasomweb
  * Author URI: https://dasomweb.com
  * License: GPL v2 or later

@@ -92,17 +92,23 @@ class Dasom_Church_Admin_Customization {
      * Add admin menu styles
      */
     public function add_admin_menu_styles() {
-        // Only apply to non-Administrator roles
-        if (current_user_can('administrator')) {
-            return; // Don't apply to Administrator
-        }
-        
+        // Apply to all roles including Administrator
         $admin_menu_bg_color = get_option('dw_admin_menu_bg_color', '#1d2327');
         $admin_menu_font_color = get_option('dw_admin_menu_font_color', '#ffffff');
         
         echo '<style type="text/css">
-            /* Admin Menu Background */
-            #adminmenu, #adminmenu .wp-submenu, #adminmenu .wp-submenu-head {
+            /* Admin Menu Background - More specific selectors */
+            #adminmenu, 
+            #adminmenu .wp-submenu, 
+            #adminmenu .wp-submenu-head,
+            #adminmenu .wp-menu-separator,
+            #adminmenu .wp-menu-separator:last-child,
+            #adminmenu li,
+            #adminmenu li a,
+            #adminmenu li.wp-has-current-submenu,
+            #adminmenu li.wp-has-current-submenu a,
+            #adminmenu li.current,
+            #adminmenu li.current a {
                 background-color: ' . esc_attr($admin_menu_bg_color) . ' !important;
             }
             
