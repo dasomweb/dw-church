@@ -628,8 +628,8 @@ class Dasom_Church_Admin {
             wp_die(__('Security check failed', 'dasom-church'));
         }
         
-        // Check user permissions
-        if (!current_user_can('manage_options')) {
+        // Check user permissions - Allow Author/Editor to manage preachers
+        if (!current_user_can('edit_posts')) {
             wp_die(__('You do not have sufficient permissions to perform this action.', 'dasom-church'));
         }
         
@@ -698,7 +698,7 @@ class Dasom_Church_Admin {
         
         // 설교자 관리 액션 처리
         if (isset($_POST['preacher_action']) && check_admin_referer('sermon_preacher_actions')) {
-            if (!current_user_can('manage_options')) {
+            if (!current_user_can('edit_posts')) {
                 wp_die(__('권한이 없습니다.', 'dasom-church'));
             }
             
@@ -721,7 +721,7 @@ class Dasom_Church_Admin {
         
         // 설교자 관리 액션 처리
         if (isset($_POST['preacher_action']) && check_admin_referer('sermon_preacher_actions')) {
-            if (!current_user_can('manage_options')) {
+            if (!current_user_can('edit_posts')) {
                 wp_die(__('권한이 없습니다.', 'dasom-church'));
             }
             
