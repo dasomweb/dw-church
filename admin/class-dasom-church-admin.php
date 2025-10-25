@@ -299,28 +299,97 @@ class Dasom_Church_Admin {
             error_log('Dasom Church Admin Menu Registered');
         }
         
-        // Dashboard submenu
+        // Dashboard submenu (1st)
         if ($this->can_access_submenu('dashboard')) {
             add_submenu_page(
                 'dasom-church-admin',
                 __('대시보드', 'dasom-church'),
                 __('대시보드', 'dasom-church'),
-                'edit_posts', // Changed from manage_options to edit_posts
+                'edit_posts',
                 'dasom-church-dashboard',
                 array($this, 'dasom_church_dashboard_page')
             );
         }
         
-        // Removed: Add main menu items for Author/Editor roles
-        // Author/Editor will only see the main DW 교회관리 menu with submenus
+        // 설교 submenu (2nd)
+        if ($this->can_access_submenu('sermon')) {
+            add_submenu_page(
+                'dasom-church-admin',
+                __('설교', 'dasom-church'),
+                __('설교', 'dasom-church'),
+                'edit_posts',
+                'edit.php?post_type=sermon',
+                null
+            );
+        }
         
-        // Settings submenu
+        // 목회컬럼 submenu (3rd)
+        if ($this->can_access_submenu('column')) {
+            add_submenu_page(
+                'dasom-church-admin',
+                __('목회컬럼', 'dasom-church'),
+                __('목회컬럼', 'dasom-church'),
+                'edit_posts',
+                'edit.php?post_type=column',
+                null
+            );
+        }
+        
+        // 교회주보 submenu (4th)
+        if ($this->can_access_submenu('bulletin')) {
+            add_submenu_page(
+                'dasom-church-admin',
+                __('교회주보', 'dasom-church'),
+                __('교회주보', 'dasom-church'),
+                'edit_posts',
+                'edit.php?post_type=bulletin',
+                null
+            );
+        }
+        
+        // 교회앨범 submenu (5th)
+        if ($this->can_access_submenu('album')) {
+            add_submenu_page(
+                'dasom-church-admin',
+                __('교회앨범', 'dasom-church'),
+                __('교회앨범', 'dasom-church'),
+                'edit_posts',
+                'edit.php?post_type=album',
+                null
+            );
+        }
+        
+        // 이벤트 submenu (6th)
+        if ($this->can_access_submenu('event')) {
+            add_submenu_page(
+                'dasom-church-admin',
+                __('이벤트', 'dasom-church'),
+                __('이벤트', 'dasom-church'),
+                'edit_posts',
+                'edit.php?post_type=event',
+                null
+            );
+        }
+        
+        // 배너 submenu (7th)
+        if ($this->can_access_submenu('banner')) {
+            add_submenu_page(
+                'dasom-church-admin',
+                __('배너', 'dasom-church'),
+                __('배너', 'dasom-church'),
+                'edit_posts',
+                'edit.php?post_type=banner',
+                null
+            );
+        }
+        
+        // 설정 submenu (8th)
         if ($this->can_access_submenu('settings')) {
             add_submenu_page(
                 'dasom-church-admin',
                 __('설정', 'dasom-church'),
                 __('설정', 'dasom-church'),
-                'edit_posts', // Changed from manage_options to edit_posts
+                'edit_posts',
                 'dasom-church-settings',
                 array($this, 'dasom_church_settings_page')
             );
