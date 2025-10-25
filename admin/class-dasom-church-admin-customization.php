@@ -98,9 +98,10 @@ class Dasom_Church_Admin_Customization {
         $admin_menu_font_size = get_option('dw_admin_menu_font_size', '14');
         $admin_menu_font_weight = get_option('dw_admin_menu_font_weight', '400');
         $church_name = get_option('dw_admin_menu_church_name', '');
+        $top_image = get_option('dw_admin_menu_top_image', '');
         
         echo '<style type="text/css">
-            /* Church Name Display Above Menu */
+            /* Custom Top Content Display Above Menu */
             #adminmenu::before {
                 content: "' . esc_attr($church_name) . '";
                 display: block;
@@ -112,6 +113,19 @@ class Dasom_Church_Admin_Customization {
                 text-align: center;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.1);
                 margin-bottom: 0;
+            }
+            
+            /* Custom Top Image Display */
+            #adminmenu::after {
+                content: "";
+                display: ' . ($top_image ? 'block' : 'none') . ';
+                background-image: url(' . esc_attr($top_image) . ');
+                background-size: contain;
+                background-repeat: no-repeat;
+                background-position: center;
+                height: 60px;
+                background-color: ' . esc_attr($admin_menu_bg_color) . ';
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             }
             
             /* Admin Menu Background - More specific selectors */
