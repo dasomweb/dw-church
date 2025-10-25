@@ -774,11 +774,7 @@ class Dasom_Church_Management {
      * Plugin activation
      */
     public function dasom_church_activation() {
-        // Register post types first
-        // Load classes in correct order
-        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dasom-church-menu-visibility.php';
-        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dasom-church-admin-customization.php';
-        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dasom-church-admin.php';
+        // Classes are already loaded in dasom_church_init()
         $admin = Dasom_Church_Admin::get_instance();
         $admin->dasom_church_register_post_types();
         $admin->dasom_church_register_taxonomies();
