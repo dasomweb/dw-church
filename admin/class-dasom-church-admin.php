@@ -277,6 +277,60 @@ class Dasom_Church_Admin {
         // Remove default submenu
         remove_submenu_page('dasom-church-admin', 'dasom-church-admin');
         
+        // Add post type menus in correct order using add_submenu_page
+        add_submenu_page(
+            'dasom-church-admin',
+            __('설교', 'dasom-church'),
+            __('설교', 'dasom-church'),
+            'edit_posts',
+            'edit.php?post_type=sermon',
+            null
+        );
+        
+        add_submenu_page(
+            'dasom-church-admin',
+            __('목회컬럼', 'dasom-church'),
+            __('목회컬럼', 'dasom-church'),
+            'edit_posts',
+            'edit.php?post_type=column',
+            null
+        );
+        
+        add_submenu_page(
+            'dasom-church-admin',
+            __('교회주보', 'dasom-church'),
+            __('교회주보', 'dasom-church'),
+            'edit_posts',
+            'edit.php?post_type=bulletin',
+            null
+        );
+        
+        add_submenu_page(
+            'dasom-church-admin',
+            __('교회앨범', 'dasom-church'),
+            __('교회앨범', 'dasom-church'),
+            'edit_posts',
+            'edit.php?post_type=album',
+            null
+        );
+        
+        add_submenu_page(
+            'dasom-church-admin',
+            __('이벤트', 'dasom-church'),
+            __('이벤트', 'dasom-church'),
+            'edit_posts',
+            'edit.php?post_type=event',
+            null
+        );
+        
+        add_submenu_page(
+            'dasom-church-admin',
+            __('배너', 'dasom-church'),
+            __('배너', 'dasom-church'),
+            'edit_posts',
+            'edit.php?post_type=banner',
+            null
+        );
         
         // Settings submenu
         if ($this->can_access_submenu('settings')) {
@@ -342,7 +396,7 @@ class Dasom_Church_Admin {
             ),
             'public' => true,
             'show_ui' => true,
-            'show_in_menu' => 'dasom-church-admin',
+            'show_in_menu' => false,
             'menu_position' => 3,
             'supports' => array('title', 'author', 'thumbnail'),
             'show_in_rest' => true,
@@ -369,7 +423,7 @@ class Dasom_Church_Admin {
             ),
             'public' => true,
             'show_ui' => true,
-            'show_in_menu' => 'dasom-church-admin',
+            'show_in_menu' => false,
             'menu_position' => 1,
             'supports' => array('title', 'author'),
             'show_in_rest' => true,
@@ -396,7 +450,7 @@ class Dasom_Church_Admin {
             ),
             'public' => true,
             'show_ui' => true,
-            'show_in_menu' => 'dasom-church-admin',
+            'show_in_menu' => false,
             'menu_position' => 2,
             'supports' => array('title', 'editor', 'author', 'thumbnail'),
             'show_in_rest' => true,
@@ -422,7 +476,7 @@ class Dasom_Church_Admin {
                 'not_found_in_trash' => __('휴지통에서 앨범을 찾을 수 없습니다', 'dasom-church'),
             ),
             'public' => true,
-            'show_in_menu' => 'dasom-church-admin',
+            'show_in_menu' => false,
             'menu_position' => 4,
             'supports' => array('title', 'thumbnail'),
             'show_in_rest' => false,
@@ -446,7 +500,7 @@ class Dasom_Church_Admin {
                 'not_found_in_trash' => __('휴지통에서 배너를 찾을 수 없습니다', 'dasom-church'),
             ),
             'public' => true,
-            'show_in_menu' => 'dasom-church-admin',
+            'show_in_menu' => false,
             'menu_position' => 6,
             'supports' => array('title'),
             'show_in_rest' => false,
@@ -470,7 +524,7 @@ class Dasom_Church_Admin {
                 'not_found_in_trash' => __('휴지통에서 이벤트를 찾을 수 없습니다', 'dasom-church'),
             ),
             'public' => true,
-            'show_in_menu' => 'dasom-church-admin',
+            'show_in_menu' => false,
             'menu_position' => 5,
             'supports' => array('title'),
             'show_in_rest' => false,
