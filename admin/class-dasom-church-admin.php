@@ -233,7 +233,7 @@ class Dasom_Church_Admin {
         add_menu_page(
             __('DW 교회관리', 'dasom-church'),
             __('DW 교회관리', 'dasom-church'),
-            'edit_posts', // Changed from manage_options to edit_posts for Author/Editor access
+            'edit_posts', // Allow Author/Editor access
             'dasom-church-admin',
             array($this, 'dasom_church_dashboard_page'),
             'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M11 2v6h6v3h-6v7H8v-7H2V8h6V2z"/></svg>'),
@@ -749,6 +749,7 @@ class Dasom_Church_Admin {
      * Dashboard page
      */
     public function dasom_church_dashboard_page() {
+        // Allow access for Administrator, Editor, and Author
         if (!current_user_can('edit_posts')) {
             wp_die(__('You do not have sufficient permissions to access this page.', 'dasom-church'));
         }
@@ -771,6 +772,7 @@ class Dasom_Church_Admin {
      * Settings page
      */
     public function dasom_church_settings_page() {
+        // Allow access for Administrator, Editor, and Author
         if (!current_user_can('edit_posts')) {
             wp_die(__('You do not have sufficient permissions to access this page.', 'dasom-church'));
         }
