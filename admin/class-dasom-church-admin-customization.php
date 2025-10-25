@@ -139,7 +139,7 @@ class Dasom_Church_Admin_Customization {
                         titleDiv.style.textAlign = "center";
                         titleDiv.style.borderBottom = "1px solid rgba(255, 255, 255, 0.1)";
                         titleDiv.style.marginBottom = "0";
-                        titleDiv.textContent = "' . esc_js($church_name) . '";
+                        titleDiv.innerHTML = "' . esc_js($church_name) . '";
                         
                         if (' . ($top_image ? 'true' : 'false') . ') {
                             topContent.appendChild(imageDiv);
