@@ -147,7 +147,7 @@ class Dasom_Church_Admin_Customization {
             
             /* Adjust admin menu to account for custom top content */
             #adminmenu {
-                padding-top: ' . (($top_image ? '60px' : '0') + ($church_name ? '60px' : '0')) . ' !important;
+                padding-top: ' . (($top_image ? 60 : 0) + ($church_name ? 60 : 0)) . 'px !important;
             }
             
             /* Remove top spacing when admin bar is hidden */
