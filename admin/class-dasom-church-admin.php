@@ -879,7 +879,7 @@ class Dasom_Church_Admin {
             return;
         }
         
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('edit_posts')) {
             return;
         }
         
