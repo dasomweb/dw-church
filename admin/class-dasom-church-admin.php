@@ -284,12 +284,9 @@ class Dasom_Church_Admin {
         }
         
         // Main menu - 고유한 슬러그 사용
-        $church_name = get_option('dw_church_name', '');
-        $menu_title = $church_name ? $church_name . ' - ' . __('DW 교회관리', 'dasom-church') : __('DW 교회관리', 'dasom-church');
-        
         add_menu_page(
-            $menu_title,
-            $menu_title,
+            __('DW 교회관리', 'dasom-church'),
+            __('DW 교회관리', 'dasom-church'),
             'edit_posts', // Allow Author/Editor access
             'dasom-church-admin',
             array($this, 'dasom_church_dashboard_page'),
