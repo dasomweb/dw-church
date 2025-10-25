@@ -20,10 +20,13 @@ $github_token = get_option('dw_github_access_token', '');
     <h1><?php echo esc_html__('DW 설정', 'dasom-church'); ?></h1>
     
     <?php
-    $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'github_update';
+    $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'custom_fields';
     ?>
     
     <h2 class="nav-tab-wrapper">
+        <a href="?page=dasom-church-github-update&tab=custom_fields" class="nav-tab <?php echo $active_tab == 'custom_fields' ? 'nav-tab-active' : ''; ?>">
+            <?php _e('커스텀 필드 안내', 'dasom-church'); ?>
+        </a>
         <a href="?page=dasom-church-github-update&tab=github_update" class="nav-tab <?php echo $active_tab == 'github_update' ? 'nav-tab-active' : ''; ?>">
             <?php _e('GitHub 업데이트', 'dasom-church'); ?>
         </a>
@@ -35,7 +38,220 @@ $github_token = get_option('dw_github_access_token', '');
         </a>
     </h2>
     
-    <?php if ($active_tab == 'github_update'): ?>
+    <?php if ($active_tab == 'custom_fields'): ?>
+    <!-- 커스텀 필드 안내 탭 -->
+    <h2>📌 <?php _e('Elementor에서 사용할 커스텀 필드 안내', 'dasom-church'); ?></h2>
+    <p><?php _e('아래 커스텀 필드 키를 Elementor → Dynamic Tags → Post Custom Field → Custom Key 입력칸에 넣어 사용하세요.', 'dasom-church'); ?></p>
+    
+    <table class="widefat striped" style="max-width:900px;margin:20px 0;">
+        <thead>
+            <tr>
+                <th style="width:180px;"><?php _e('포스트 타입', 'dasom-church'); ?></th>
+                <th style="width:200px;"><?php _e('필드 설명', 'dasom-church'); ?></th>
+                <th><?php _e('커스텀 필드 키', 'dasom-church'); ?></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td rowspan="4">📖 <?php _e('교회주보 (bulletin)', 'dasom-church'); ?></td>
+                <td><?php _e('주보 날짜 (YYYY-MM-DD)', 'dasom-church'); ?></td>
+                <td><code>dw_bulletin_date</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('주보 날짜 (한글)', 'dasom-church'); ?></td>
+                <td><code>dw_bulletin_date_formatted</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('주보 PDF 첨부 ID', 'dasom-church'); ?></td>
+                <td><code>dw_bulletin_pdf</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('주보 이미지 (JSON 배열)', 'dasom-church'); ?></td>
+                <td><code>dw_bulletin_images</code></td>
+            </tr>
+            <tr>
+                <td rowspan="5">🎤 <?php _e('설교 (sermon)', 'dasom-church'); ?></td>
+                <td><?php _e('설교 제목', 'dasom-church'); ?></td>
+                <td><code>dw_sermon_title</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('성경구절', 'dasom-church'); ?></td>
+                <td><code>dw_sermon_scripture</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('YouTube URL', 'dasom-church'); ?></td>
+                <td><code>dw_sermon_youtube</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('설교 일자', 'dasom-church'); ?></td>
+                <td><code>dw_sermon_date</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('설교자', 'dasom-church'); ?></td>
+                <td><code>dw_sermon_preacher</code></td>
+            </tr>
+            <tr>
+                <td rowspan="3">📷 <?php _e('교회앨범 (album)', 'dasom-church'); ?></td>
+                <td><?php _e('YouTube URL', 'dasom-church'); ?></td>
+                <td><code>dw_album_youtube</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('썸네일 이미지 ID', 'dasom-church'); ?></td>
+                <td><code>dw_album_thumb_id</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('앨범 이미지 (JSON 배열)', 'dasom-church'); ?></td>
+                <td><code>dw_album_images</code></td>
+            </tr>
+            <tr>
+                <td rowspan="6">🎯 <?php _e('배너 (banner)', 'dasom-church'); ?></td>
+                <td><?php _e('PC용 배너 이미지 ID', 'dasom-church'); ?></td>
+                <td><code>dw_banner_pc_image</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('모바일용 배너 이미지 ID', 'dasom-church'); ?></td>
+                <td><code>dw_banner_mobile_image</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('링크 URL', 'dasom-church'); ?></td>
+                <td><code>dw_banner_link_url</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('링크 타겟', 'dasom-church'); ?></td>
+                <td><code>dw_banner_link_target</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('시작 날짜', 'dasom-church'); ?></td>
+                <td><code>dw_banner_start_date</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('종료 날짜', 'dasom-church'); ?></td>
+                <td><code>dw_banner_end_date</code></td>
+            </tr>
+            <tr>
+                <td rowspan="4">🖋 <?php _e('목회컬럼 (column)', 'dasom-church'); ?></td>
+                <td><?php _e('상단 이미지 ID', 'dasom-church'); ?></td>
+                <td><code>dw_column_top_image</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('하단 이미지 ID', 'dasom-church'); ?></td>
+                <td><code>dw_column_bottom_image</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('YouTube URL', 'dasom-church'); ?></td>
+                <td><code>dw_column_youtube</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('YouTube 썸네일 ID', 'dasom-church'); ?></td>
+                <td><code>dw_column_thumb_id</code></td>
+            </tr>
+            <tr>
+                <td rowspan="5">🎉 <?php _e('이벤트 (event)', 'dasom-church'); ?></td>
+                <td><?php _e('이벤트 시작 날짜', 'dasom-church'); ?></td>
+                <td><code>dw_event_start_date</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('이벤트 종료 날짜', 'dasom-church'); ?></td>
+                <td><code>dw_event_end_date</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('이벤트 시간', 'dasom-church'); ?></td>
+                <td><code>dw_event_time</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('이벤트 장소', 'dasom-church'); ?></td>
+                <td><code>dw_event_location</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('이벤트 썸네일 이미지 ID', 'dasom-church'); ?></td>
+                <td><code>dw_event_thumbnail</code></td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <p style="margin-top:20px;padding:12px;background:#f0f0f1;border-left:4px solid #2271b1;">
+        <strong><?php _e('💡 Elementor 사용 팁:', 'dasom-church'); ?></strong><br>
+        <?php _e('Dynamic Tags → Post → Post Custom Field에서 위 키를 입력하여 사용하세요.', 'dasom-church'); ?><br><br>
+        <strong><?php _e('📎 이미지/PDF ID를 URL로 변환:', 'dasom-church'); ?></strong><br>
+        • <?php _e('이미지 URL:', 'dasom-church'); ?> <code>wp_get_attachment_image_url( get_post_meta( get_the_ID(), 'dw_column_top_image', true ), 'full' )</code><br>
+        • <?php _e('PDF URL:', 'dasom-church'); ?> <code>wp_get_attachment_url( get_post_meta( get_the_ID(), 'dw_bulletin_pdf', true ) )</code><br>
+        • <?php _e('썸네일 URL:', 'dasom-church'); ?> <code>wp_get_attachment_image_url( get_post_meta( get_the_ID(), 'dw_sermon_thumb_id', true ), 'large' )</code><br><br>
+        <strong><?php _e('⚠️ JSON 배열 데이터:', 'dasom-church'); ?></strong><br>
+        <?php _e('dw_bulletin_images, dw_album_images는 JSON 배열 형태로 저장되어 Elementor 기본 Custom Field로는 그대로 출력되지 않습니다. Shortcode 또는 커스텀 PHP 코드로 처리하세요.', 'dasom-church'); ?>
+    </p>
+    
+    <!-- 교회설정 커스텀 필드 안내 -->
+    <hr>
+    <h2>🏛️ <?php _e('교회설정 커스텀 필드 안내', 'dasom-church'); ?></h2>
+    <p><?php _e('아래 커스텀 필드 키를 Elementor → Dynamic Tags → Post Custom Field → Custom Key 입력칸에 넣어 사용하세요.', 'dasom-church'); ?></p>
+    
+    <table class="widefat striped" style="max-width:900px;margin:20px 0;">
+        <thead>
+            <tr>
+                <th style="width:200px;"><?php _e('설정 분류', 'dasom-church'); ?></th>
+                <th style="width:200px;"><?php _e('필드 설명', 'dasom-church'); ?></th>
+                <th><?php _e('커스텀 필드 키', 'dasom-church'); ?></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td rowspan="5">🏢 <?php _e('기본 정보', 'dasom-church'); ?></td>
+                <td><?php _e('교회명', 'dasom-church'); ?></td>
+                <td><code>dw_church_name</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('교회 주소', 'dasom-church'); ?></td>
+                <td><code>dw_church_address</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('전화번호', 'dasom-church'); ?></td>
+                <td><code>dw_church_phone</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('이메일', 'dasom-church'); ?></td>
+                <td><code>dw_church_email</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('웹사이트 URL', 'dasom-church'); ?></td>
+                <td><code>dw_church_website</code></td>
+            </tr>
+            <tr>
+                <td rowspan="7">📱 <?php _e('소셜미디어', 'dasom-church'); ?></td>
+                <td><?php _e('YouTube 채널', 'dasom-church'); ?></td>
+                <td><code>dw_social_youtube</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('Instagram', 'dasom-church'); ?></td>
+                <td><code>dw_social_instagram</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('Facebook', 'dasom-church'); ?></td>
+                <td><code>dw_social_facebook</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('LinkedIn', 'dasom-church'); ?></td>
+                <td><code>dw_social_linkedin</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('TikTok', 'dasom-church'); ?></td>
+                <td><code>dw_social_tiktok</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('KakaoTalk', 'dasom-church'); ?></td>
+                <td><code>dw_social_kakaotalk</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('KakaoTalk Channel', 'dasom-church'); ?></td>
+                <td><code>dw_social_kakaotalk_channel</code></td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <p style="color:#666;">
+        <?php _e('※ 교회설정은 WordPress 옵션으로 저장되며, Elementor에서 Site Settings 또는 Custom Fields로 접근할 수 있습니다.', 'dasom-church'); ?>
+    </p>
+    
+    <?php elseif ($active_tab == 'github_update'): ?>
     <p class="description" style="font-size:14px;margin-top:10px;">
         <?php echo esc_html__('이 설정은 WordPress Settings 메뉴에 있어 플러그인 업데이트에 영향받지 않습니다.', 'dasom-church'); ?>
     </p>
