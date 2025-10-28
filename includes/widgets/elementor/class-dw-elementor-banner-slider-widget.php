@@ -536,6 +536,32 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
                 'name' => 'title_typography',
                 'label' => __('Typography', 'dasom-church'),
                 'selector' => '{{WRAPPER}} .dw-banner-title',
+                'fields_options' => [
+                    'font_family' => [
+                        'default' => 'Arial',
+                    ],
+                    'font_size' => [
+                        'default' => [
+                            'unit' => 'px',
+                            'size' => 42,
+                        ],
+                    ],
+                    'font_weight' => [
+                        'default' => '700',
+                    ],
+                    'line_height' => [
+                        'default' => [
+                            'unit' => 'em',
+                            'size' => 1.2,
+                        ],
+                    ],
+                    'letter_spacing' => [
+                        'default' => [
+                            'unit' => 'px',
+                            'size' => 0,
+                        ],
+                    ],
+                ],
             ]
         );
         
@@ -547,6 +573,44 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
                 'default' => '#ffffff',
                 'selectors' => [
                     '{{WRAPPER}} .dw-banner-title' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'title_margin',
+            [
+                'label' => __('Margin', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em', '%'],
+                'default' => [
+                    'top' => '0',
+                    'right' => '0',
+                    'bottom' => '15',
+                    'left' => '0',
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-banner-title' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'title_padding',
+            [
+                'label' => __('Padding', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em', '%'],
+                'default' => [
+                    'top' => '0',
+                    'right' => '0',
+                    'bottom' => '0',
+                    'left' => '0',
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-banner-title' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
                 ],
             ]
         );
@@ -566,6 +630,32 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
                 'name' => 'subtitle_typography',
                 'label' => __('Typography', 'dasom-church'),
                 'selector' => '{{WRAPPER}} .dw-banner-subtitle',
+                'fields_options' => [
+                    'font_family' => [
+                        'default' => 'Arial',
+                    ],
+                    'font_size' => [
+                        'default' => [
+                            'unit' => 'px',
+                            'size' => 18,
+                        ],
+                    ],
+                    'font_weight' => [
+                        'default' => '400',
+                    ],
+                    'line_height' => [
+                        'default' => [
+                            'unit' => 'em',
+                            'size' => 1.4,
+                        ],
+                    ],
+                    'letter_spacing' => [
+                        'default' => [
+                            'unit' => 'px',
+                            'size' => 0,
+                        ],
+                    ],
+                ],
             ]
         );
         
@@ -577,6 +667,44 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
                 'default' => '#ffffff',
                 'selectors' => [
                     '{{WRAPPER}} .dw-banner-subtitle' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'subtitle_margin',
+            [
+                'label' => __('Margin', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em', '%'],
+                'default' => [
+                    'top' => '0',
+                    'right' => '0',
+                    'bottom' => '10',
+                    'left' => '0',
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-banner-subtitle' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'subtitle_padding',
+            [
+                'label' => __('Padding', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em', '%'],
+                'default' => [
+                    'top' => '0',
+                    'right' => '0',
+                    'bottom' => '0',
+                    'left' => '0',
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-banner-subtitle' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
                 ],
             ]
         );
@@ -596,6 +724,32 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
                 'name' => 'description_typography',
                 'label' => __('Typography', 'dasom-church'),
                 'selector' => '{{WRAPPER}} .dw-banner-description',
+                'fields_options' => [
+                    'font_family' => [
+                        'default' => 'Arial',
+                    ],
+                    'font_size' => [
+                        'default' => [
+                            'unit' => 'px',
+                            'size' => 16,
+                        ],
+                    ],
+                    'font_weight' => [
+                        'default' => '400',
+                    ],
+                    'line_height' => [
+                        'default' => [
+                            'unit' => 'em',
+                            'size' => 1.6,
+                        ],
+                    ],
+                    'letter_spacing' => [
+                        'default' => [
+                            'unit' => 'px',
+                            'size' => 0,
+                        ],
+                    ],
+                ],
             ]
         );
         
@@ -607,6 +761,44 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
                 'default' => '#ffffff',
                 'selectors' => [
                     '{{WRAPPER}} .dw-banner-description' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'description_margin',
+            [
+                'label' => __('Margin', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em', '%'],
+                'default' => [
+                    'top' => '0',
+                    'right' => '0',
+                    'bottom' => '20',
+                    'left' => '0',
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-banner-description' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'description_padding',
+            [
+                'label' => __('Padding', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em', '%'],
+                'default' => [
+                    'top' => '0',
+                    'right' => '0',
+                    'bottom' => '0',
+                    'left' => '0',
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-banner-description' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
                 ],
             ]
         );
