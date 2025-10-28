@@ -702,7 +702,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 'type' => \Elementor\Controls_Manager::FONT,
                 'default' => '',
                 'selectors' => [
-                    '{{WRAPPER}} .dw-event-grid-text-content' => 'font-family: {{VALUE}} !important;',
+                    '{{WRAPPER}} .dw-event-grid-text-content' => 'font-family: {{VALUE}};',
                 ],
             ]
         );
@@ -732,7 +732,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     'unit' => 'px',
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .dw-event-grid-text-content' => 'font-size: {{SIZE}}{{UNIT}} !important;',
+                    '{{WRAPPER}} .dw-event-grid-text-content' => 'font-size: {{SIZE}}{{UNIT}};',
                 ],
             ]
         );
@@ -755,7 +755,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     '900' => __('900 - Black', 'dasom-church'),
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .dw-event-grid-text-content' => 'font-weight: {{VALUE}} !important;',
+                    '{{WRAPPER}} .dw-event-grid-text-content' => 'font-weight: {{VALUE}};',
                 ],
             ]
         );
@@ -772,7 +772,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     'oblique' => __('Oblique', 'dasom-church'),
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .dw-event-grid-text-content' => 'font-style: {{VALUE}} !important;',
+                    '{{WRAPPER}} .dw-event-grid-text-content' => 'font-style: {{VALUE}};',
                 ],
             ]
         );
@@ -798,7 +798,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     'unit' => 'em',
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .dw-event-grid-text-content' => 'line-height: {{SIZE}}{{UNIT}} !important;',
+                    '{{WRAPPER}} .dw-event-grid-text-content' => 'line-height: {{SIZE}}{{UNIT}};',
                 ],
             ]
         );
@@ -824,7 +824,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     'unit' => 'px',
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .dw-event-grid-text-content' => 'letter-spacing: {{SIZE}}{{UNIT}} !important;',
+                    '{{WRAPPER}} .dw-event-grid-text-content' => 'letter-spacing: {{SIZE}}{{UNIT}};',
                 ],
             ]
         );
@@ -850,7 +850,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 ],
                 'default' => 'center',
                 'selectors' => [
-                    '{{WRAPPER}} .dw-event-grid-text-content' => 'text-align: {{VALUE}} !important;',
+                    '{{WRAPPER}} .dw-event-grid-text-content' => 'text-align: {{VALUE}};',
                 ],
             ]
         );
@@ -868,7 +868,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     'left' => 20,
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .dw-event-grid-text-content' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
+                    '{{WRAPPER}} .dw-event-grid-text-content' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
                 ],
             ]
         );
@@ -1350,7 +1350,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             
             /* Responsive adjustments */
             @media (max-width: 768px) {
-                .dw-event-grid {
+                {{WRAPPER}} .dw-event-grid {
                     position: relative !important;
                     z-index: 1 !important;
                     margin-bottom: 30px !important;
@@ -1362,7 +1362,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     gap: 20px !important;
                 }
                 
-                .dw-event-grid-item {
+                {{WRAPPER}} .dw-event-grid-item {
                     position: relative !important;
                     z-index: 1 !important;
                     background: #fff !important;
@@ -1372,7 +1372,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     clear: both !important;
                 }
                 
-                .dw-event-grid-overlay {
+                {{WRAPPER}} .dw-event-grid-overlay {
                     position: absolute !important;
                     top: 0 !important;
                     left: 0 !important;
@@ -1381,13 +1381,13 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     z-index: 1 !important;
                 }
                 
-                .dw-event-grid-image {
+                {{WRAPPER}} .dw-event-grid-image {
                     position: relative !important;
                     z-index: 1 !important;
                 }
                 
                 /* Fix mobile text positioning and padding consistency */
-                .dw-event-grid-text {
+                {{WRAPPER}} .dw-event-grid-text {
                     position: absolute !important;
                     top: 0 !important;
                     left: 0 !important;
@@ -1397,12 +1397,12 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     z-index: 2 !important;
                 }
                 
-                .dw-event-grid-text-content {
+                {{WRAPPER}} .dw-event-grid-text-content {
                     width: 100% !important;
                 }
                 
                 /* Ensure content flows properly after widget */
-                .dw-event-grid::after {
+                {{WRAPPER}} .dw-event-grid::after {
                     content: "" !important;
                     display: block !important;
                     clear: both !important;
