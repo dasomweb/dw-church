@@ -1198,7 +1198,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             
             /* Responsive adjustments */
             @media (max-width: 768px) {
-                .dw-event-grid {
+                {{WRAPPER}} .dw-event-grid {
                     position: relative;
                     z-index: 1;
                     margin-bottom: 30px;
@@ -1210,7 +1210,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     gap: 20px;
                 }
                 
-                .dw-event-grid-item {
+                {{WRAPPER}} .dw-event-grid-item {
                     position: relative;
                     z-index: 1;
                     background: #fff;
@@ -1220,7 +1220,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     clear: both;
                 }
                 
-                .dw-event-grid-overlay {
+                {{WRAPPER}} .dw-event-grid-overlay {
                     position: absolute;
                     top: 0;
                     left: 0;
@@ -1229,13 +1229,13 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     z-index: 1;
                 }
                 
-                .dw-event-grid-image {
+                {{WRAPPER}} .dw-event-grid-image {
                     position: relative;
                     z-index: 1;
                 }
                 
                 /* Fix mobile text positioning and padding consistency */
-                .dw-event-grid-text {
+                {{WRAPPER}} .dw-event-grid-text {
                     position: absolute;
                     top: 0;
                     left: 0;
@@ -1245,13 +1245,13 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     z-index: 2;
                 }
                 
-                .dw-event-grid-text-content {
+                {{WRAPPER}} .dw-event-grid-text-content {
                     width: 100%;
                     padding: 20px;
                 }
                 
                 /* Ensure content flows properly after widget */
-                .dw-event-grid::after {
+                {{WRAPPER}} .dw-event-grid::after {
                     content: "";
                     display: block;
                     clear: both;
