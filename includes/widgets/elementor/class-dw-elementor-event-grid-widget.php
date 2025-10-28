@@ -1236,18 +1236,18 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 
                 /* Fix mobile text positioning and padding consistency */
                 .dw-event-grid-text {
-                    position: absolute !important;
-                    top: 0 !important;
-                    left: 0 !important;
-                    right: 0 !important;
-                    bottom: 0 !important;
-                    display: flex !important;
-                    z-index: 2 !important;
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    display: flex;
+                    z-index: 2;
                 }
                 
                 .dw-event-grid-text-content {
-                    width: 100% !important;
-                    padding: 20px !important;
+                    width: 100%;
+                    padding: 20px;
                 }
                 
                 /* Ensure content flows properly after widget */
