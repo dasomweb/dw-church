@@ -3,7 +3,7 @@
  * Plugin Name: DW Church Management System
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 1.48
+ * Version: 1.49
  * Author: Dasomweb
  * Author URI: https://dasomweb.com
  * License: GPL v2 or later
@@ -23,23 +23,10 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '1.48');
+define('DASOM_CHURCH_VERSION', '1.49');
 define('DASOM_CHURCH_PLUGIN_URL', str_replace('http://', 'https://', plugin_dir_url(__FILE__)));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
-
-// Disable WordPress.org API calls to prevent connection errors
-add_filter('pre_http_request', function($preempt, $parsed_args, $url) {
-    // Block WordPress.org API calls that might cause connection errors
-    if (strpos($url, 'api.wordpress.org') !== false) {
-        return new WP_Error('wordpress_org_blocked', 'WordPress.org API calls disabled');
-    }
-    return $preempt;
-}, 10, 3);
-
-// Disable automatic plugin updates from WordPress.org
-add_filter('auto_update_plugin', '__return_false');
-add_filter('auto_update_theme', '__return_false');
 
 // Force HTTPS for plugin assets
 add_filter('script_loader_src', function($src, $handle) {
