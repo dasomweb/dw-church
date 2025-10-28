@@ -531,12 +531,123 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         );
         
         // Department Style
-        $this->add_group_control(
-            \Elementor\Group_Control_Typography::get_type(),
+        $this->add_responsive_control(
+            'department_font_size',
             [
-                'name' => 'department_typography',
-                'label' => __('Department Typography', 'dasom-church'),
-                'selector' => '{{WRAPPER}} .dw-event-grid-department',
+                'label' => __('Department Font Size', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em', 'rem'],
+                'range' => [
+                    'px' => [
+                        'min' => 8,
+                        'max' => 50,
+                        'step' => 1,
+                    ],
+                    'em' => [
+                        'min' => 0.5,
+                        'max' => 3,
+                        'step' => 0.1,
+                    ],
+                    'rem' => [
+                        'min' => 0.5,
+                        'max' => 3,
+                        'step' => 0.1,
+                    ],
+                ],
+                'default' => [
+                    'size' => 14,
+                    'unit' => 'px',
+                ],
+                'tablet_default' => [
+                    'size' => 13,
+                    'unit' => 'px',
+                ],
+                'mobile_default' => [
+                    'size' => 12,
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-department' => 'font-size: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'department_font_weight',
+            [
+                'label' => __('Department Font Weight', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => '400',
+                'options' => [
+                    '100' => '100',
+                    '200' => '200',
+                    '300' => '300',
+                    '400' => '400',
+                    '500' => '500',
+                    '600' => '600',
+                    '700' => '700',
+                    '800' => '800',
+                    '900' => '900',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-department' => 'font-weight: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'department_line_height',
+            [
+                'label' => __('Department Line Height', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em'],
+                'range' => [
+                    'px' => [
+                        'min' => 10,
+                        'max' => 50,
+                        'step' => 1,
+                    ],
+                    'em' => [
+                        'min' => 0.5,
+                        'max' => 3,
+                        'step' => 0.1,
+                    ],
+                ],
+                'default' => [
+                    'size' => 1.4,
+                    'unit' => 'em',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-department' => 'line-height: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'department_letter_spacing',
+            [
+                'label' => __('Department Letter Spacing', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em'],
+                'range' => [
+                    'px' => [
+                        'min' => -5,
+                        'max' => 10,
+                        'step' => 0.1,
+                    ],
+                    'em' => [
+                        'min' => -0.5,
+                        'max' => 1,
+                        'step' => 0.01,
+                    ],
+                ],
+                'default' => [
+                    'size' => 0,
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-department' => 'letter-spacing: {{SIZE}}{{UNIT}};',
+                ],
             ]
         );
         
@@ -582,12 +693,123 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         );
         
         // Title Style
-        $this->add_group_control(
-            \Elementor\Group_Control_Typography::get_type(),
+        $this->add_responsive_control(
+            'title_font_size',
             [
-                'name' => 'title_typography',
-                'label' => __('Title Typography', 'dasom-church'),
-                'selector' => '{{WRAPPER}} .dw-event-grid-title',
+                'label' => __('Title Font Size', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em', 'rem'],
+                'range' => [
+                    'px' => [
+                        'min' => 12,
+                        'max' => 80,
+                        'step' => 1,
+                    ],
+                    'em' => [
+                        'min' => 0.8,
+                        'max' => 5,
+                        'step' => 0.1,
+                    ],
+                    'rem' => [
+                        'min' => 0.8,
+                        'max' => 5,
+                        'step' => 0.1,
+                    ],
+                ],
+                'default' => [
+                    'size' => 24,
+                    'unit' => 'px',
+                ],
+                'tablet_default' => [
+                    'size' => 20,
+                    'unit' => 'px',
+                ],
+                'mobile_default' => [
+                    'size' => 18,
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-title' => 'font-size: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'title_font_weight',
+            [
+                'label' => __('Title Font Weight', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => '700',
+                'options' => [
+                    '100' => '100',
+                    '200' => '200',
+                    '300' => '300',
+                    '400' => '400',
+                    '500' => '500',
+                    '600' => '600',
+                    '700' => '700',
+                    '800' => '800',
+                    '900' => '900',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-title' => 'font-weight: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'title_line_height',
+            [
+                'label' => __('Title Line Height', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em'],
+                'range' => [
+                    'px' => [
+                        'min' => 15,
+                        'max' => 100,
+                        'step' => 1,
+                    ],
+                    'em' => [
+                        'min' => 0.8,
+                        'max' => 3,
+                        'step' => 0.1,
+                    ],
+                ],
+                'default' => [
+                    'size' => 1.3,
+                    'unit' => 'em',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-title' => 'line-height: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'title_letter_spacing',
+            [
+                'label' => __('Title Letter Spacing', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em'],
+                'range' => [
+                    'px' => [
+                        'min' => -2,
+                        'max' => 10,
+                        'step' => 0.1,
+                    ],
+                    'em' => [
+                        'min' => -0.2,
+                        'max' => 1,
+                        'step' => 0.01,
+                    ],
+                ],
+                'default' => [
+                    'size' => 0,
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-title' => 'letter-spacing: {{SIZE}}{{UNIT}};',
+                ],
             ]
         );
         
@@ -632,12 +854,123 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             ]
         );
         
-        $this->add_group_control(
-            \Elementor\Group_Control_Typography::get_type(),
+        $this->add_responsive_control(
+            'datetime_font_size',
             [
-                'name' => 'datetime_typography',
-                'label' => __('Date/Time Typography', 'dasom-church'),
-                'selector' => '{{WRAPPER}} .dw-event-grid-datetime',
+                'label' => __('Date/Time Font Size', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em', 'rem'],
+                'range' => [
+                    'px' => [
+                        'min' => 8,
+                        'max' => 40,
+                        'step' => 1,
+                    ],
+                    'em' => [
+                        'min' => 0.5,
+                        'max' => 2.5,
+                        'step' => 0.1,
+                    ],
+                    'rem' => [
+                        'min' => 0.5,
+                        'max' => 2.5,
+                        'step' => 0.1,
+                    ],
+                ],
+                'default' => [
+                    'size' => 14,
+                    'unit' => 'px',
+                ],
+                'tablet_default' => [
+                    'size' => 13,
+                    'unit' => 'px',
+                ],
+                'mobile_default' => [
+                    'size' => 12,
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-datetime' => 'font-size: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'datetime_font_weight',
+            [
+                'label' => __('Date/Time Font Weight', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => '400',
+                'options' => [
+                    '100' => '100',
+                    '200' => '200',
+                    '300' => '300',
+                    '400' => '400',
+                    '500' => '500',
+                    '600' => '600',
+                    '700' => '700',
+                    '800' => '800',
+                    '900' => '900',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-datetime' => 'font-weight: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'datetime_line_height',
+            [
+                'label' => __('Date/Time Line Height', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em'],
+                'range' => [
+                    'px' => [
+                        'min' => 10,
+                        'max' => 50,
+                        'step' => 1,
+                    ],
+                    'em' => [
+                        'min' => 0.8,
+                        'max' => 3,
+                        'step' => 0.1,
+                    ],
+                ],
+                'default' => [
+                    'size' => 1.4,
+                    'unit' => 'em',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-datetime' => 'line-height: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'datetime_letter_spacing',
+            [
+                'label' => __('Date/Time Letter Spacing', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em'],
+                'range' => [
+                    'px' => [
+                        'min' => -2,
+                        'max' => 5,
+                        'step' => 0.1,
+                    ],
+                    'em' => [
+                        'min' => -0.2,
+                        'max' => 0.5,
+                        'step' => 0.01,
+                    ],
+                ],
+                'default' => [
+                    'size' => 0,
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-datetime' => 'letter-spacing: {{SIZE}}{{UNIT}};',
+                ],
             ]
         );
         
@@ -761,12 +1094,67 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             ]
         );
         
-        $this->add_group_control(
-            \Elementor\Group_Control_Typography::get_type(),
+        $this->add_responsive_control(
+            'button_font_size',
             [
-                'name' => 'button_typography',
-                'label' => __('Typography', 'dasom-church'),
-                'selector' => '{{WRAPPER}} .dw-event-grid-button',
+                'label' => __('Button Font Size', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em', 'rem'],
+                'range' => [
+                    'px' => [
+                        'min' => 8,
+                        'max' => 30,
+                        'step' => 1,
+                    ],
+                    'em' => [
+                        'min' => 0.5,
+                        'max' => 2,
+                        'step' => 0.1,
+                    ],
+                    'rem' => [
+                        'min' => 0.5,
+                        'max' => 2,
+                        'step' => 0.1,
+                    ],
+                ],
+                'default' => [
+                    'size' => 14,
+                    'unit' => 'px',
+                ],
+                'tablet_default' => [
+                    'size' => 13,
+                    'unit' => 'px',
+                ],
+                'mobile_default' => [
+                    'size' => 12,
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-button' => 'font-size: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'button_font_weight',
+            [
+                'label' => __('Button Font Weight', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => '600',
+                'options' => [
+                    '100' => '100',
+                    '200' => '200',
+                    '300' => '300',
+                    '400' => '400',
+                    '500' => '500',
+                    '600' => '600',
+                    '700' => '700',
+                    '800' => '800',
+                    '900' => '900',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-button' => 'font-weight: {{VALUE}};',
+                ],
             ]
         );
         
@@ -1198,13 +1586,6 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             
             /* Responsive adjustments */
             @media (max-width: 768px) {
-                .dw-event-grid-title {
-                    font-size: 1.2em;
-                }
-                .dw-event-grid-datetime {
-                    font-size: 0.9em;
-                }
-                
                 .dw-event-grid {
                     position: relative;
                     z-index: 1;
