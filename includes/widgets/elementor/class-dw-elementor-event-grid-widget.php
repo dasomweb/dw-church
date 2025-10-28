@@ -682,9 +682,149 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'center-center',
                 'options' => [
+                    'top-left' => __('상단 왼쪽', 'dasom-church'),
+                    'top-center' => __('상단 중앙', 'dasom-church'),
+                    'top-right' => __('상단 오른쪽', 'dasom-church'),
                     'center-left' => __('중앙 왼쪽', 'dasom-church'),
                     'center-center' => __('중앙', 'dasom-church'),
                     'center-right' => __('중앙 오른쪽', 'dasom-church'),
+                    'bottom-left' => __('하단 왼쪽', 'dasom-church'),
+                    'bottom-center' => __('하단 중앙', 'dasom-church'),
+                    'bottom-right' => __('하단 오른쪽', 'dasom-church'),
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'text_font_family',
+            [
+                'label' => __('Font Family', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::FONT,
+                'default' => '',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-text-content' => 'font-family: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'text_font_size',
+            [
+                'label' => __('Font Size', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em', 'rem'],
+                'range' => [
+                    'px' => [
+                        'min' => 8,
+                        'max' => 100,
+                    ],
+                    'em' => [
+                        'min' => 0.5,
+                        'max' => 5,
+                    ],
+                    'rem' => [
+                        'min' => 0.5,
+                        'max' => 5,
+                    ],
+                ],
+                'default' => [
+                    'size' => 16,
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-text-content' => 'font-size: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'text_font_weight',
+            [
+                'label' => __('Font Weight', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => '400',
+                'options' => [
+                    '100' => __('100 - Thin', 'dasom-church'),
+                    '200' => __('200 - Extra Light', 'dasom-church'),
+                    '300' => __('300 - Light', 'dasom-church'),
+                    '400' => __('400 - Normal', 'dasom-church'),
+                    '500' => __('500 - Medium', 'dasom-church'),
+                    '600' => __('600 - Semi Bold', 'dasom-church'),
+                    '700' => __('700 - Bold', 'dasom-church'),
+                    '800' => __('800 - Extra Bold', 'dasom-church'),
+                    '900' => __('900 - Black', 'dasom-church'),
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-text-content' => 'font-weight: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'text_font_style',
+            [
+                'label' => __('Font Style', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'normal',
+                'options' => [
+                    'normal' => __('Normal', 'dasom-church'),
+                    'italic' => __('Italic', 'dasom-church'),
+                    'oblique' => __('Oblique', 'dasom-church'),
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-text-content' => 'font-style: {{VALUE}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'text_line_height',
+            [
+                'label' => __('Line Height', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em'],
+                'range' => [
+                    'px' => [
+                        'min' => 10,
+                        'max' => 100,
+                    ],
+                    'em' => [
+                        'min' => 0.5,
+                        'max' => 5,
+                    ],
+                ],
+                'default' => [
+                    'size' => 1.5,
+                    'unit' => 'em',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-text-content' => 'line-height: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'text_letter_spacing',
+            [
+                'label' => __('Letter Spacing', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em'],
+                'range' => [
+                    'px' => [
+                        'min' => -5,
+                        'max' => 20,
+                    ],
+                    'em' => [
+                        'min' => -0.1,
+                        'max' => 1,
+                    ],
+                ],
+                'default' => [
+                    'size' => 0,
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-text-content' => 'letter-spacing: {{SIZE}}{{UNIT}};',
                 ],
             ]
         );
@@ -1059,8 +1199,9 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $button_text = $settings['button_text'] ?? __('Read More', 'dasom-church');
         $text_position = $settings['text_position'] ?? 'center-center';
         
-        // Only horizontal alignment is adjustable, vertical is always center
-        $h_align_style = $text_position === 'center-left' ? 'flex-start' : ($text_position === 'center-right' ? 'flex-end' : 'center');
+        list($v_align, $h_align) = explode('-', $text_position);
+        $v_align_style = $v_align === 'top' ? 'flex-start' : ($v_align === 'bottom' ? 'flex-end' : 'center');
+        $h_align_style = $h_align === 'left' ? 'flex-start' : ($h_align === 'right' ? 'flex-end' : 'center');
         
         // Calculate height style based on ratio
         $height_ratio = $settings['height_ratio'] ?? '16:9';
@@ -1107,7 +1248,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     echo '<div class="dw-event-grid-overlay" style="position:absolute;top:0;left:0;right:0;bottom:0;"></div>';
                 }
                 
-                echo '<div class="dw-event-grid-text" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:' . esc_attr($h_align_style) . ';">';
+                echo '<div class="dw-event-grid-text" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:' . esc_attr($v_align_style) . ';justify-content:' . esc_attr($h_align_style) . ';">';
                 echo '<div class="dw-event-grid-text-content" style="z-index:1;">';
                 
                 // Department
