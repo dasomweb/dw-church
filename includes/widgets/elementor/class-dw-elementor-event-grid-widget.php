@@ -1257,7 +1257,6 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 .dw-event-grid-text-content {
                     width: 100% !important;
                     padding: 20px !important;
-                    background: linear-gradient(transparent, rgba(0,0,0,0.7)) !important;
                     text-align: center !important;
                 }
                 
