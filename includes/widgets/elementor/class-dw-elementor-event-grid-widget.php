@@ -682,41 +682,27 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'center-center',
                 'options' => [
-                    'top-left' => __('상단 왼쪽', 'dasom-church'),
-                    'top-center' => __('상단 중앙', 'dasom-church'),
-                    'top-right' => __('상단 오른쪽', 'dasom-church'),
                     'center-left' => __('중앙 왼쪽', 'dasom-church'),
                     'center-center' => __('중앙', 'dasom-church'),
                     'center-right' => __('중앙 오른쪽', 'dasom-church'),
-                    'bottom-left' => __('하단 왼쪽', 'dasom-church'),
-                    'bottom-center' => __('하단 중앙', 'dasom-church'),
-                    'bottom-right' => __('하단 오른쪽', 'dasom-church'),
                 ],
             ]
         );
         
-        $this->add_control(
-            'text_align',
+        $this->add_responsive_control(
+            'text_padding',
             [
-                'label' => __('Text Alignment', 'dasom-church'),
-                'type' => \Elementor\Controls_Manager::CHOOSE,
-                'options' => [
-                    'left' => [
-                        'title' => __('Left', 'dasom-church'),
-                        'icon' => 'eicon-text-align-left',
-                    ],
-                    'center' => [
-                        'title' => __('Center', 'dasom-church'),
-                        'icon' => 'eicon-text-align-center',
-                    ],
-                    'right' => [
-                        'title' => __('Right', 'dasom-church'),
-                        'icon' => 'eicon-text-align-right',
-                    ],
+                'label' => __('Text Padding', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em', '%'],
+                'default' => [
+                    'top' => 20,
+                    'right' => 20,
+                    'bottom' => 20,
+                    'left' => 20,
                 ],
-                'default' => 'center',
                 'selectors' => [
-                    '{{WRAPPER}} .dw-event-grid-text-content' => 'text-align: {{VALUE}};',
+                    '{{WRAPPER}} .dw-event-grid-text-content' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
                 ],
             ]
         );
@@ -1073,9 +1059,8 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $button_text = $settings['button_text'] ?? __('Read More', 'dasom-church');
         $text_position = $settings['text_position'] ?? 'center-center';
         
-        list($v_align, $h_align) = explode('-', $text_position);
-        $v_align_style = $v_align === 'top' ? 'flex-start' : ($v_align === 'bottom' ? 'flex-end' : 'center');
-        $h_align_style = $h_align === 'left' ? 'flex-start' : ($h_align === 'right' ? 'flex-end' : 'center');
+        // Only horizontal alignment is adjustable, vertical is always center
+        $h_align_style = $text_position === 'center-left' ? 'flex-start' : ($text_position === 'center-right' ? 'flex-end' : 'center');
         
         // Calculate height style based on ratio
         $height_ratio = $settings['height_ratio'] ?? '16:9';
@@ -1122,7 +1107,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     echo '<div class="dw-event-grid-overlay" style="position:absolute;top:0;left:0;right:0;bottom:0;"></div>';
                 }
                 
-                echo '<div class="dw-event-grid-text" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:' . esc_attr($v_align_style) . ';justify-content:' . esc_attr($h_align_style) . ';">';
+                echo '<div class="dw-event-grid-text" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:' . esc_attr($h_align_style) . ';">';
                 echo '<div class="dw-event-grid-text-content" style="z-index:1;">';
                 
                 // Department
@@ -1247,7 +1232,6 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 
                 .dw-event-grid-text-content {
                     width: 100% !important;
-                    padding: 20px !important;
                 }
                 
                 /* Ensure content flows properly after widget */
