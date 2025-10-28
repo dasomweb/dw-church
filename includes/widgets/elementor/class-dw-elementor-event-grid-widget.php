@@ -702,7 +702,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 'type' => \Elementor\Controls_Manager::FONT,
                 'default' => '',
                 'selectors' => [
-                    '{{WRAPPER}} .dw-event-grid-text-content' => 'font-family: {{VALUE}};',
+                    '{{WRAPPER}} .dw-event-grid-text-content' => 'font-family: {{VALUE}} !important;',
                 ],
             ]
         );
@@ -732,7 +732,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     'unit' => 'px',
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .dw-event-grid-text-content' => 'font-size: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .dw-event-grid-text-content' => 'font-size: {{SIZE}}{{UNIT}} !important;',
                 ],
             ]
         );
@@ -755,7 +755,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     '900' => __('900 - Black', 'dasom-church'),
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .dw-event-grid-text-content' => 'font-weight: {{VALUE}};',
+                    '{{WRAPPER}} .dw-event-grid-text-content' => 'font-weight: {{VALUE}} !important;',
                 ],
             ]
         );
@@ -772,7 +772,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     'oblique' => __('Oblique', 'dasom-church'),
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .dw-event-grid-text-content' => 'font-style: {{VALUE}};',
+                    '{{WRAPPER}} .dw-event-grid-text-content' => 'font-style: {{VALUE}} !important;',
                 ],
             ]
         );
@@ -798,7 +798,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     'unit' => 'em',
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .dw-event-grid-text-content' => 'line-height: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .dw-event-grid-text-content' => 'line-height: {{SIZE}}{{UNIT}} !important;',
                 ],
             ]
         );
@@ -824,7 +824,33 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     'unit' => 'px',
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .dw-event-grid-text-content' => 'letter-spacing: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .dw-event-grid-text-content' => 'letter-spacing: {{SIZE}}{{UNIT}} !important;',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'text_align',
+            [
+                'label' => __('Text Alignment', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::CHOOSE,
+                'options' => [
+                    'left' => [
+                        'title' => __('Left', 'dasom-church'),
+                        'icon' => 'eicon-text-align-left',
+                    ],
+                    'center' => [
+                        'title' => __('Center', 'dasom-church'),
+                        'icon' => 'eicon-text-align-center',
+                    ],
+                    'right' => [
+                        'title' => __('Right', 'dasom-church'),
+                        'icon' => 'eicon-text-align-right',
+                    ],
+                ],
+                'default' => 'center',
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid-text-content' => 'text-align: {{VALUE}} !important;',
                 ],
             ]
         );
@@ -842,7 +868,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     'left' => 20,
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .dw-event-grid-text-content' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                    '{{WRAPPER}} .dw-event-grid-text-content' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
                 ],
             ]
         );
