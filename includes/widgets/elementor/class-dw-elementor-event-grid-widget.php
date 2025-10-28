@@ -1249,15 +1249,12 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     right: 0 !important;
                     bottom: 0 !important;
                     display: flex !important;
-                    align-items: flex-end !important;
-                    justify-content: center !important;
                     z-index: 2 !important;
                 }
                 
                 .dw-event-grid-text-content {
                     width: 100% !important;
                     padding: 20px !important;
-                    text-align: center !important;
                 }
                 
                 /* Ensure content flows properly after widget */
