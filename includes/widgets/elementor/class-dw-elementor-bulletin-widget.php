@@ -545,10 +545,10 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                 'type' => \Elementor\Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', 'em'],
                 'default' => [
-                    'top' => 8,
-                    'right' => 16,
-                    'bottom' => 8,
-                    'left' => 16,
+                    'top' => 15,
+                    'right' => 20,
+                    'bottom' => 15,
+                    'left' => 20,
                 ],
                 'selectors' => [
                     '{{WRAPPER}} .dw-bulletin-download' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
