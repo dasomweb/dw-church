@@ -1227,28 +1227,38 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     clear: both;
                 }
                 
-            .dw-event-grid-overlay {
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                z-index: 1;
-            }
+                .dw-event-grid-overlay {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    z-index: 1;
+                }
                 
                 .dw-event-grid-image {
                     position: relative;
                     z-index: 1;
                 }
                 
-                .dw-event-grid-content {
-                    position: absolute;
-                    bottom: 0;
-                    left: 0;
-                    right: 0;
-                    z-index: 2;
-                    background: rgba(0,0,0,0.7);
-                    padding: 20px;
+                /* Fix mobile text positioning and padding consistency */
+                .dw-event-grid-text {
+                    position: absolute !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    bottom: 0 !important;
+                    display: flex !important;
+                    align-items: flex-end !important;
+                    justify-content: center !important;
+                    z-index: 2 !important;
+                }
+                
+                .dw-event-grid-text-content {
+                    width: 100% !important;
+                    padding: 20px !important;
+                    background: linear-gradient(transparent, rgba(0,0,0,0.7)) !important;
+                    text-align: center !important;
                 }
                 
                 /* Ensure content flows properly after widget */
