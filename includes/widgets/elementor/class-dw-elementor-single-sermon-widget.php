@@ -958,21 +958,24 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     word-wrap: break-word !important;
                 }
                 
-                /* Break meta container and make individual items visible */
+                /* Meta container as flex column for proper ordering */
                 .dw-single-sermon-meta {
-                    display: contents !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                    order: 3 !important;
+                    width: 100% !important;
                 }
                 
                 .dw-single-sermon-meta * {
                     display: block !important;
                 }
                 
-                /* Scripture: order 3, right align */
+                /* Scripture: order 1 in meta container, right align */
                 .dw-single-sermon-meta .meta-scripture,
                 .meta-scripture,
                 .dw-single-sermon-meta span.meta-scripture,
                 .dw-single-sermon-meta .meta-item .meta-scripture {
-                    order: 3 !important;
+                    order: 1 !important;
                     font-size: 14px !important;
                     margin-bottom: 5px !important;
                     display: block !important;
@@ -983,12 +986,12 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     word-wrap: break-word !important;
                 }
                 
-                /* Date: order 4, right align */
+                /* Date: order 2 in meta container, right align */
                 .dw-single-sermon-meta .meta-date,
                 .meta-date,
                 .dw-single-sermon-meta span.meta-date,
                 .dw-single-sermon-meta .meta-item .meta-date {
-                    order: 4 !important;
+                    order: 2 !important;
                     font-size: 14px !important;
                     margin-bottom: 5px !important;
                     display: block !important;
@@ -999,12 +1002,12 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     word-wrap: break-word !important;
                 }
                 
-                /* Preacher: order 5, right align */
+                /* Preacher: order 3 in meta container, right align */
                 .dw-single-sermon-meta .meta-preacher,
                 .meta-preacher,
                 .dw-single-sermon-meta span.meta-preacher,
                 .dw-single-sermon-meta .meta-item .meta-preacher {
-                    order: 5 !important;
+                    order: 3 !important;
                     font-size: 14px !important;
                     margin-bottom: 5px !important;
                     display: block !important;
@@ -1032,11 +1035,6 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                 }
                 
                 /* Force all meta spans to block */
-                .dw-single-sermon-meta.meta-inline,
-                .dw-single-sermon-meta.meta-stack {
-                    display: contents !important;
-                }
-                
                 .dw-single-sermon-meta.meta-inline span,
                 .dw-single-sermon-meta.meta-stack span,
                 .dw-single-sermon-meta span {
@@ -1044,24 +1042,28 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     margin-bottom: 5px !important;
                 }
                 
-                /* Video First Layout - completely restructure on mobile */
+                /* Video First Layout - restructure on mobile */
                 .dw-single-sermon-widget.layout-video_first .sermon-content-wrapper {
-                    display: contents !important;
-                    grid-template-columns: none !important;
-                    gap: 0 !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                    order: 3 !important;
                     width: 100% !important;
                     max-width: 100% !important;
                     overflow: hidden !important;
+                    gap: 0 !important;
                 }
                 
                 .dw-single-sermon-widget.layout-video_first .dw-single-sermon-title {
                     text-align: right !important;
-                    order: 2 !important;
+                    order: 1 !important;
                 }
                 
                 .dw-single-sermon-widget.layout-video_first .dw-single-sermon-meta {
-                    display: contents !important;
+                    display: flex !important;
+                    flex-direction: column !important;
                     text-align: right !important;
+                    order: 2 !important;
+                    width: 100% !important;
                 }
             }
             
