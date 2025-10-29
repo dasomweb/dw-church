@@ -555,10 +555,10 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     'unit' => 'px',
                 ],
                 'mobile_default' => [
-                    'top' => '15',
-                    'right' => '15',
-                    'bottom' => '15',
-                    'left' => '15',
+                    'top' => '0',
+                    'right' => '0',
+                    'bottom' => '0',
+                    'left' => '0',
                     'unit' => 'px',
                 ],
                 'selectors' => [
@@ -908,8 +908,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     width: 100% !important;
                     max-width: 100% !important;
                     box-sizing: border-box !important;
-                    padding-left: 15px !important;
-                    padding-right: 15px !important;
+                    /* padding removed - use Elementor responsive padding control instead */
                 }
                 
                 /* Ensure all child elements respect container width */
@@ -920,7 +919,8 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     overflow-wrap: break-word !important;
                 }
                 
-                /* Show video on mobile (like PC) */
+                /* Show video on mobile (like PC) - order 1 for both layouts */
+                .dw-single-sermon-widget.layout-classic .dw-single-sermon-video,
                 .dw-single-sermon-video {
                     order: 1 !important;
                     margin-bottom: 20px !important;
@@ -944,10 +944,25 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     object-fit: cover !important;
                 }
                 
-                /* Title: order 2, right align */
+                /* Video First Layout - reorder content wrapper */
+                .dw-single-sermon-widget.layout-video_first .sermon-content-wrapper {
+                    order: 2 !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                    width: 100% !important;
+                }
+                
+                /* Title: order varies by layout */
+                /* Video First: order 1 in content wrapper | Classic: order 2 in widget */
+                .dw-single-sermon-widget.layout-video_first .sermon-content-wrapper .dw-single-sermon-title {
+                    order: 1 !important;
+                }
+                .dw-single-sermon-widget.layout-classic .dw-single-sermon-title,
                 .dw-single-sermon-title {
                     order: 2 !important;
-                    font-size: 18px !important;
+                }
+                .dw-single-sermon-title {
+                    /* font-size removed - use Elementor responsive typography control */
                     line-height: 1.4 !important;
                     margin-bottom: 8px !important;
                     display: block !important;
@@ -958,7 +973,12 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     word-wrap: break-word !important;
                 }
                 
-                /* Meta container as flex column for proper ordering */
+                /* Meta container: order varies by layout */
+                /* Video First: order 2 in content wrapper | Classic: order 3 in widget */
+                .dw-single-sermon-widget.layout-video_first .sermon-content-wrapper .dw-single-sermon-meta {
+                    order: 2 !important;
+                }
+                .dw-single-sermon-widget.layout-classic .dw-single-sermon-meta,
                 .dw-single-sermon-meta {
                     display: flex !important;
                     flex-direction: column !important;
@@ -976,7 +996,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                 .dw-single-sermon-meta span.meta-scripture,
                 .dw-single-sermon-meta .meta-item .meta-scripture {
                     order: 1 !important;
-                    font-size: 14px !important;
+                    /* font-size removed - use Elementor responsive typography control */
                     margin-bottom: 5px !important;
                     display: block !important;
                     text-align: right !important;
@@ -992,7 +1012,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                 .dw-single-sermon-meta span.meta-date,
                 .dw-single-sermon-meta .meta-item .meta-date {
                     order: 2 !important;
-                    font-size: 14px !important;
+                    /* font-size removed - use Elementor responsive typography control */
                     margin-bottom: 5px !important;
                     display: block !important;
                     text-align: right !important;
@@ -1008,7 +1028,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                 .dw-single-sermon-meta span.meta-preacher,
                 .dw-single-sermon-meta .meta-item .meta-preacher {
                     order: 3 !important;
-                    font-size: 14px !important;
+                    /* font-size removed - use Elementor responsive typography control */
                     margin-bottom: 5px !important;
                     display: block !important;
                     text-align: right !important;
@@ -1042,44 +1062,21 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     margin-bottom: 5px !important;
                 }
                 
-                /* Video First Layout - restructure on mobile */
-                .dw-single-sermon-widget.layout-video_first .sermon-content-wrapper {
-                    display: flex !important;
-                    flex-direction: column !important;
-                    order: 3 !important;
-                    width: 100% !important;
-                    max-width: 100% !important;
-                    overflow: hidden !important;
-                    gap: 0 !important;
-                }
-                
-                .dw-single-sermon-widget.layout-video_first .dw-single-sermon-title {
-                    text-align: right !important;
-                    order: 1 !important;
-                }
-                
-                .dw-single-sermon-widget.layout-video_first .dw-single-sermon-meta {
-                    display: flex !important;
-                    flex-direction: column !important;
-                    text-align: right !important;
-                    order: 2 !important;
-                    width: 100% !important;
-                }
             }
             
             @media (max-width: 480px) {
                 .dw-single-sermon-title {
-                    font-size: 20px !important;
+                    /* font-size removed - use Elementor responsive typography control */
                     line-height: 1.3 !important;
                 }
                 
                 .dw-single-sermon-meta span {
-                    font-size: 13px !important;
+                    /* font-size removed - use Elementor responsive typography control */
                 }
                 
                 .dw-single-sermon-meta .meta-separator {
                     margin: 0 4px !important;
-                    font-size: 12px !important;
+                    /* font-size removed - separator is hidden on mobile anyway */
                 }
             }
             
