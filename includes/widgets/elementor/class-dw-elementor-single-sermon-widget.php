@@ -900,16 +900,33 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
             
             /* Mobile Optimization - DW Recent Sermons Style */
             @media (max-width: 767px) {
-                /* Force flexbox layout for ordering */
+                /* Force flexbox layout for ordering and prevent overflow */
                 .dw-single-sermon-widget {
                     display: flex !important;
                     flex-direction: column !important;
+                    overflow: hidden !important;
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    box-sizing: border-box !important;
+                    padding-left: 15px !important;
+                    padding-right: 15px !important;
+                }
+                
+                /* Ensure all child elements respect container width */
+                .dw-single-sermon-widget * {
+                    max-width: 100% !important;
+                    box-sizing: border-box !important;
+                    word-wrap: break-word !important;
+                    overflow-wrap: break-word !important;
                 }
                 
                 /* Show video on mobile (like PC) */
                 .dw-single-sermon-video {
                     order: 1 !important;
                     margin-bottom: 20px !important;
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    overflow: hidden !important;
                 }
                 
                 /* Show thumbnail on mobile only if video doesn't exist */
@@ -935,6 +952,10 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     margin-bottom: 8px !important;
                     display: block !important;
                     text-align: right !important;
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    overflow: hidden !important;
+                    word-wrap: break-word !important;
                 }
                 
                 /* Break meta container and make individual items visible */
@@ -956,6 +977,10 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     margin-bottom: 5px !important;
                     display: block !important;
                     text-align: right !important;
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    overflow: hidden !important;
+                    word-wrap: break-word !important;
                 }
                 
                 /* Date: order 4, right align */
@@ -968,6 +993,10 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     margin-bottom: 5px !important;
                     display: block !important;
                     text-align: right !important;
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    overflow: hidden !important;
+                    word-wrap: break-word !important;
                 }
                 
                 /* Preacher: order 5, right align */
@@ -980,6 +1009,10 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     margin-bottom: 5px !important;
                     display: block !important;
                     text-align: right !important;
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    overflow: hidden !important;
+                    word-wrap: break-word !important;
                 }
                 
                 /* Hide ALL separators on mobile */
@@ -1016,6 +1049,9 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     display: contents !important;
                     grid-template-columns: none !important;
                     gap: 0 !important;
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    overflow: hidden !important;
                 }
                 
                 .dw-single-sermon-widget.layout-video_first .dw-single-sermon-title {
