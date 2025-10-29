@@ -721,6 +721,8 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         
         $layout = $settings['layout'] ?? 'grid';
         $columns = $layout === 'grid' ? intval($settings['columns'] ?? 3) : 1;
+        $columns_tablet = $layout === 'grid' ? intval($settings['columns_tablet'] ?? 2) : 1;
+        $columns_mobile = $layout === 'grid' ? intval($settings['columns_mobile'] ?? 1) : 1;
         $col_class = $layout === 'grid' ? 'dw-sermon-grid' : 'dw-sermon-list';
         
         ?>
@@ -731,10 +733,51 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             .sermon-hover-yes .dw-sermon-item:hover {
                 transform: translateY(-5px);
             }
+            
+            .dw-sermons-widget {
+                display: grid;
+                grid-template-columns: repeat(<?php echo esc_attr($columns); ?>, 1fr);
+                gap: 20px;
+            }
+            
+            @media (max-width: 1024px) {
+                .dw-sermons-widget {
+                    grid-template-columns: repeat(<?php echo esc_attr($columns_tablet); ?>, 1fr);
+                }
+            }
+            
+            @media (max-width: 767px) {
+                .dw-sermons-widget {
+                    grid-template-columns: repeat(<?php echo esc_attr($columns_mobile); ?>, 1fr);
+                    gap: 15px;
+                }
+                
+                .dw-sermon-item {
+                    margin-bottom: 15px;
+                }
+                
+                .sermon-content h3 {
+                    font-size: 18px !important;
+                    line-height: 1.4 !important;
+                    margin-bottom: 8px !important;
+                }
+                
+                .sermon-date,
+                .sermon-scripture,
+                .sermon-preacher {
+                    font-size: 14px !important;
+                    margin-bottom: 5px !important;
+                }
+                
+                .sermon-thumbnail img {
+                    height: 200px !important;
+                    object-fit: cover !important;
+                }
+            }
         </style>
         <?php
         
-        echo '<div class="dw-sermons-widget ' . esc_attr($col_class) . '" style="display:grid;grid-template-columns:repeat(' . $columns . ',1fr);gap:20px;">';
+        echo '<div class="dw-sermons-widget ' . esc_attr($col_class) . '">';
         
         while ($sermons->have_posts()) {
             $sermons->the_post();
