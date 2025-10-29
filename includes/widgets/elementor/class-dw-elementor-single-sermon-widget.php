@@ -801,9 +801,9 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     font-size: 14px !important;
                 }
                 
+                /* 구분자 완전히 숨기기 */
                 .dw-single-sermon-meta .meta-separator {
-                    margin: 0 6px !important;
-                    font-size: 14px !important;
+                    display: none !important;
                 }
                 
                 /* Mobile Layout: 날짜 → 설교제목 → 성경구절 → 설교자 (오른쪽 정렬, 구분자 없음) */
@@ -829,6 +829,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                 .dw-single-sermon-title {
                     order: 3 !important;
                     text-align: right !important;
+                    margin-bottom: 10px !important;
                 }
                 
                 /* 성경구절을 네 번째로 */
@@ -858,7 +859,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                 }
                 
                 .dw-single-sermon-widget.layout-video_first .dw-single-sermon-title {
-                    text-align: left;
+                    text-align: right !important;
                 }
             }
             
@@ -872,9 +873,9 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     font-size: 13px !important;
                 }
                 
+                /* 구분자 완전히 숨기기 */
                 .dw-single-sermon-meta .meta-separator {
-                    margin: 0 4px !important;
-                    font-size: 12px !important;
+                    display: none !important;
                 }
             }
             
