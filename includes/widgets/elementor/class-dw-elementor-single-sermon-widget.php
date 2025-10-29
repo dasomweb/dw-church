@@ -633,59 +633,49 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                 
                 <!-- Content Below Video -->
                 <div class="sermon-content-wrapper">
-                    <!-- Meta Info (Left Side) -->
-                    <?php
-                    $meta_layout = $settings['meta_layout'] ?? 'inline';
-                    $meta_class = $meta_layout === 'stack' ? 'dw-single-sermon-meta meta-stack' : 'dw-single-sermon-meta meta-inline';
-                    ?>
-                    <div class="<?php echo esc_attr($meta_class); ?>">
-                        <?php
-                        // 모바일에서 각각 별도 div로 분리
-                        if (($settings['show_date'] ?? 'yes') === 'yes' && $sermon_date) {
-                            echo '<div class="meta-date">' . date_i18n('Y년 n월 j일', strtotime($sermon_date)) . '</div>';
-                        }
-                        
-                        if (($settings['show_scripture'] ?? 'yes') === 'yes' && $scripture) {
-                            echo '<div class="meta-scripture">' . esc_html($scripture) . '</div>';
-                        }
-                        
-                        if (($settings['show_preacher'] ?? 'yes') === 'yes' && !empty($preachers)) {
-                            echo '<div class="meta-preacher">' . esc_html(implode(', ', $preachers)) . '</div>';
-                        }
-                        ?>
-                    </div>
+                    <!-- 모바일에서 원하는 순서: 날짜 → 설교제목 → 성경구절 → 설교자 -->
                     
-                    <!-- Title (Right Side) -->
+                    <!-- 날짜 -->
+                    <?php if (($settings['show_date'] ?? 'yes') === 'yes' && $sermon_date): ?>
+                        <div class="meta-date"><?php echo date_i18n('Y년 n월 j일', strtotime($sermon_date)); ?></div>
+                    <?php endif; ?>
+                    
+                    <!-- 설교제목 -->
                     <h1 class="dw-single-sermon-title"><?php echo esc_html($title); ?></h1>
+                    
+                    <!-- 성경구절 -->
+                    <?php if (($settings['show_scripture'] ?? 'yes') === 'yes' && $scripture): ?>
+                        <div class="meta-scripture"><?php echo esc_html($scripture); ?></div>
+                    <?php endif; ?>
+                    
+                    <!-- 설교자 -->
+                    <?php if (($settings['show_preacher'] ?? 'yes') === 'yes' && !empty($preachers)): ?>
+                        <div class="meta-preacher"><?php echo esc_html(implode(', ', $preachers)); ?></div>
+                    <?php endif; ?>
                 </div>
                 
             <?php else: ?>
                 <!-- Classic Layout -->
                 
-                <!-- Title -->
+                <!-- 모바일에서 원하는 순서: 날짜 → 설교제목 → 성경구절 → 설교자 -->
+                
+                <!-- 날짜 -->
+                <?php if (($settings['show_date'] ?? 'yes') === 'yes' && $sermon_date): ?>
+                    <div class="meta-date"><?php echo date_i18n('Y년 n월 j일', strtotime($sermon_date)); ?></div>
+                <?php endif; ?>
+                
+                <!-- 설교제목 -->
                 <h1 class="dw-single-sermon-title"><?php echo esc_html($title); ?></h1>
                 
-                <!-- Meta Info -->
-                <?php
-                $meta_layout = $settings['meta_layout'] ?? 'inline';
-                $meta_class = $meta_layout === 'stack' ? 'dw-single-sermon-meta meta-stack' : 'dw-single-sermon-meta meta-inline';
-                ?>
-                <div class="<?php echo esc_attr($meta_class); ?>">
-                    <?php
-                    // 모바일에서 각각 별도 div로 분리
-                    if (($settings['show_date'] ?? 'yes') === 'yes' && $sermon_date) {
-                        echo '<div class="meta-date">' . date_i18n('Y년 n월 j일', strtotime($sermon_date)) . '</div>';
-                    }
-                    
-                    if (($settings['show_scripture'] ?? 'yes') === 'yes' && $scripture) {
-                        echo '<div class="meta-scripture">' . esc_html($scripture) . '</div>';
-                    }
-                    
-                    if (($settings['show_preacher'] ?? 'yes') === 'yes' && !empty($preachers)) {
-                        echo '<div class="meta-preacher">' . esc_html(implode(', ', $preachers)) . '</div>';
-                    }
-                    ?>
-                </div>
+                <!-- 성경구절 -->
+                <?php if (($settings['show_scripture'] ?? 'yes') === 'yes' && $scripture): ?>
+                    <div class="meta-scripture"><?php echo esc_html($scripture); ?></div>
+                <?php endif; ?>
+                
+                <!-- 설교자 -->
+                <?php if (($settings['show_preacher'] ?? 'yes') === 'yes' && !empty($preachers)): ?>
+                    <div class="meta-preacher"><?php echo esc_html(implode(', ', $preachers)); ?></div>
+                <?php endif; ?>
                 
                 <!-- YouTube Video -->
                 <?php if (($settings['show_video'] ?? 'yes') === 'yes' && $youtube_id): ?>
@@ -786,30 +776,56 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     display: none !important;
                 }
                 
-                /* Mobile Layout: 날짜 → 설교제목 → 성경구절 → 설교자 (오른쪽 정렬, 구분자 없음) */
+                /* Mobile Layout: 영상 → 설교제목 → 성경본문 → 년월일 || 설교자 (DW Recent Sermons와 동일) */
                 .dw-single-sermon-widget {
                     display: flex !important;
                     flex-direction: column !important;
                 }
                 
-                /* 각 메타 정보를 별도 div로 분리했으므로 자연스럽게 순서대로 배치 */
-                .dw-single-sermon-meta .meta-date,
-                .dw-single-sermon-meta .meta-scripture,
-                .dw-single-sermon-meta .meta-preacher {
-                    display: block !important;
-                    margin-bottom: 10px !important;
-                    text-align: right !important;
+                /* 영상을 맨 위로 */
+                .dw-single-sermon-video {
+                    order: 1 !important;
                 }
                 
-                /* 제목도 오른쪽 정렬 */
+                /* 설교제목을 두 번째로 */
                 .dw-single-sermon-title {
-                    text-align: right !important;
-                    margin-bottom: 10px !important;
+                    order: 2 !important;
+                    font-size: 18px !important;
+                    line-height: 1.4 !important;
+                    margin-bottom: 8px !important;
+                    text-align: left !important;
                 }
                 
-                /* 메타 정보 컨테이너도 오른쪽 정렬 */
-                .dw-single-sermon-meta {
-                    text-align: right !important;
+                /* 성경구절을 세 번째로 */
+                .meta-scripture {
+                    order: 3 !important;
+                    font-size: 14px !important;
+                    margin-bottom: 8px !important;
+                    text-align: left !important;
+                }
+                
+                /* 날짜를 네 번째로 */
+                .meta-date {
+                    order: 4 !important;
+                    font-size: 14px !important;
+                    margin-bottom: 0 !important;
+                    display: inline-block !important;
+                    text-align: left !important;
+                }
+                
+                /* 설교자를 다섯 번째로 */
+                .meta-preacher {
+                    order: 5 !important;
+                    font-size: 14px !important;
+                    margin-bottom: 0 !important;
+                    display: inline-block !important;
+                    text-align: left !important;
+                }
+                
+                /* 년월일 || 설교자 같은 줄에 표시 */
+                .meta-date::after {
+                    content: " || " !important;
+                    margin: 0 5px !important;
                 }
                 
                 /* Video First Layout - Stack on tablet */
@@ -868,4 +884,5 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         <?php
     }
 }
+
 
