@@ -35,6 +35,9 @@ jobs:
         # Create fresh DW Church directory
         mkdir -p "DW Church"
         
+        # Remove all ZIP files from the source directory first
+        find . -name "*.zip" -type f -delete
+        
         # Copy files directly to DW Church folder (not into subfolder)
         rsync -av --exclude='.git' \
                   --exclude='.github' \
@@ -79,11 +82,7 @@ jobs:
                   --exclude='verify-tests.ps1' \
                   --exclude='DW Church' \
                   --exclude='dasomweb-dasom-church-management-system' \
-                  --exclude='*.zip' \
                   --exclude='temp-extract' \
-                  --exclude='DW-Church-Management-System-*.zip' \
-                  --exclude='dasom-church-*.zip' \
-                  --exclude='dasom-church-management-system-*.zip' \
                   . "DW Church/"
                   
     - name: Create ZIP file
