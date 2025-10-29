@@ -531,6 +531,95 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         );
         
         $this->end_controls_section();
+        
+        // Style Section - Mobile Padding
+        $this->start_controls_section(
+            'style_mobile_padding',
+            [
+                'label' => __('모바일 패딩', 'dasom-church'),
+                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'mobile_content_padding',
+            [
+                'label' => __('콘텐츠 패딩', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em', '%'],
+                'default' => [
+                    'top' => '0',
+                    'right' => '0',
+                    'bottom' => '0',
+                    'left' => '0',
+                    'unit' => 'px',
+                ],
+                'mobile_default' => [
+                    'top' => '15',
+                    'right' => '15',
+                    'bottom' => '15',
+                    'left' => '15',
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-single-sermon-widget' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'mobile_title_padding',
+            [
+                'label' => __('제목 패딩', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em', '%'],
+                'default' => [
+                    'top' => '0',
+                    'right' => '0',
+                    'bottom' => '0',
+                    'left' => '0',
+                    'unit' => 'px',
+                ],
+                'mobile_default' => [
+                    'top' => '0',
+                    'right' => '0',
+                    'bottom' => '8',
+                    'left' => '0',
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-single-sermon-title' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->add_responsive_control(
+            'mobile_meta_padding',
+            [
+                'label' => __('메타 정보 패딩', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em', '%'],
+                'default' => [
+                    'top' => '0',
+                    'right' => '0',
+                    'bottom' => '0',
+                    'left' => '0',
+                    'unit' => 'px',
+                ],
+                'mobile_default' => [
+                    'top' => '0',
+                    'right' => '0',
+                    'bottom' => '5',
+                    'left' => '0',
+                    'unit' => 'px',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-single-sermon-meta span' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+        
+        $this->end_controls_section();
     }
 
     protected function render() {
@@ -817,8 +906,17 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     flex-direction: column !important;
                 }
                 
-                /* Show thumbnail on mobile */
+                /* Show video on mobile (like PC) */
+                .dw-single-sermon-video {
+                    order: 1 !important;
+                    margin-bottom: 20px !important;
+                }
+                
+                /* Show thumbnail on mobile only if video doesn't exist */
                 .dw-single-sermon-thumbnail {
+                    display: none !important;
+                }
+                .dw-single-sermon-widget:not(:has(.dw-single-sermon-video)) .dw-single-sermon-thumbnail {
                     display: block !important;
                     margin-bottom: 15px !important;
                     order: 1 !important;
@@ -829,23 +927,14 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     object-fit: cover !important;
                 }
                 
-                /* Hide video completely on mobile */
-                .dw-single-sermon-video {
-                    display: none !important;
-                    visibility: hidden !important;
-                    height: 0 !important;
-                    margin: 0 !important;
-                    padding: 0 !important;
-                    overflow: hidden !important;
-                }
-                
-                /* Title: order 2 */
+                /* Title: order 2, right align */
                 .dw-single-sermon-title {
                     order: 2 !important;
                     font-size: 18px !important;
                     line-height: 1.4 !important;
                     margin-bottom: 8px !important;
                     display: block !important;
+                    text-align: right !important;
                 }
                 
                 /* Break meta container and make individual items visible */
@@ -857,7 +946,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     display: block !important;
                 }
                 
-                /* Scripture: order 3 */
+                /* Scripture: order 3, right align */
                 .dw-single-sermon-meta .meta-scripture,
                 .meta-scripture,
                 .dw-single-sermon-meta span.meta-scripture,
@@ -866,9 +955,10 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     font-size: 14px !important;
                     margin-bottom: 5px !important;
                     display: block !important;
+                    text-align: right !important;
                 }
                 
-                /* Date: order 4 */
+                /* Date: order 4, right align */
                 .dw-single-sermon-meta .meta-date,
                 .meta-date,
                 .dw-single-sermon-meta span.meta-date,
@@ -877,9 +967,10 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     font-size: 14px !important;
                     margin-bottom: 5px !important;
                     display: block !important;
+                    text-align: right !important;
                 }
                 
-                /* Preacher: order 5 */
+                /* Preacher: order 5, right align */
                 .dw-single-sermon-meta .meta-preacher,
                 .meta-preacher,
                 .dw-single-sermon-meta span.meta-preacher,
@@ -888,6 +979,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     font-size: 14px !important;
                     margin-bottom: 5px !important;
                     display: block !important;
+                    text-align: right !important;
                 }
                 
                 /* Hide ALL separators on mobile */
@@ -927,13 +1019,13 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                 }
                 
                 .dw-single-sermon-widget.layout-video_first .dw-single-sermon-title {
-                    text-align: left !important;
+                    text-align: right !important;
                     order: 2 !important;
                 }
                 
                 .dw-single-sermon-widget.layout-video_first .dw-single-sermon-meta {
                     display: contents !important;
-                    text-align: left !important;
+                    text-align: right !important;
                 }
             }
             
