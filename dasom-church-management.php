@@ -3,7 +3,7 @@
  * Plugin Name: DW Church Management System
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 1.65
+ * Version: 1.66
  * Author: Dasomweb
  * Author URI: https://dasomweb.com
  * License: GPL v2 or later
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '1.65');
+define('DASOM_CHURCH_VERSION', '1.66');
 define('DASOM_CHURCH_PLUGIN_URL', str_replace('http://', 'https://', plugin_dir_url(__FILE__)));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -756,8 +756,6 @@ class Dasom_Church_Management {
      */
     private function dasom_church_init_hooks() {
         add_action('plugins_loaded', array($this, 'dasom_church_load_textdomain'));
-        register_activation_hook(__FILE__, array($this, 'dasom_church_activation'));
-        register_deactivation_hook(__FILE__, array($this, 'dasom_church_deactivation'));
         
         // Initialize loader
         add_action('init', array($this, 'dasom_church_init'));
@@ -770,45 +768,6 @@ class Dasom_Church_Management {
         load_plugin_textdomain('dasom-church', false, dirname(plugin_basename(__FILE__)) . '/languages');
     }
     
-    /**
-     * Plugin activation
-     */
-    public function dasom_church_activation() {
-        // Classes are already loaded in dasom_church_init()
-        $admin = Dasom_Church_Admin::get_instance();
-        $admin->dasom_church_register_post_types();
-        $admin->dasom_church_register_taxonomies();
-        
-        // Create default sermon categories
-        $default_categories = array(
-            __('주일설교', 'dasom-church'),
-            __('새벽설교', 'dasom-church'),
-            __('수요설교', 'dasom-church'),
-            __('금요설교', 'dasom-church')
-        );
-        
-        foreach ($default_categories as $category) {
-            if (!term_exists($category, 'sermon_category')) {
-                wp_insert_term($category, 'sermon_category');
-            }
-        }
-        
-        // Create default preacher
-        $default_preacher = __('담임목사', 'dasom-church');
-        if (!term_exists($default_preacher, 'dw_sermon_preacher')) {
-            wp_insert_term($default_preacher, 'dw_sermon_preacher');
-        }
-        update_option('default_sermon_preacher', $default_preacher);
-        
-        flush_rewrite_rules();
-    }
-    
-    /**
-     * Plugin deactivation
-     */
-    public function dasom_church_deactivation() {
-        flush_rewrite_rules();
-    }
     
     /**
      * Initialize plugin
@@ -823,5 +782,49 @@ Dasom_Church_Management::get_instance();
 
 // Load widgets
 require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/class-dasom-church-widgets.php';
+
+/**
+ * Plugin activation hook
+ */
+function dasom_church_activation() {
+    // Classes are already loaded in dasom_church_init()
+    $admin = Dasom_Church_Admin::get_instance();
+    $admin->dasom_church_register_post_types();
+    $admin->dasom_church_register_taxonomies();
+    
+    // Create default sermon categories
+    $default_categories = array(
+        __('주일설교', 'dasom-church'),
+        __('새벽설교', 'dasom-church'),
+        __('수요설교', 'dasom-church'),
+        __('금요설교', 'dasom-church')
+    );
+    
+    foreach ($default_categories as $category) {
+        if (!term_exists($category, 'sermon_category')) {
+            wp_insert_term($category, 'sermon_category');
+        }
+    }
+    
+    // Create default preacher
+    $default_preacher = __('담임목사', 'dasom-church');
+    if (!term_exists($default_preacher, 'dw_sermon_preacher')) {
+        wp_insert_term($default_preacher, 'dw_sermon_preacher');
+    }
+    update_option('default_sermon_preacher', $default_preacher);
+    
+    flush_rewrite_rules();
+}
+
+/**
+ * Plugin deactivation hook
+ */
+function dasom_church_deactivation() {
+    flush_rewrite_rules();
+}
+
+// Register activation and deactivation hooks
+register_activation_hook(__FILE__, 'dasom_church_activation');
+register_deactivation_hook(__FILE__, 'dasom_church_deactivation');
 
 
