@@ -1,9 +1,9 @@
 # build.ps1 - DW Church Management System 배포용 ZIP 생성 스크립트
 
-$PluginSlug = "dasom-church-management-system"
-$Version = (Select-String -Path "$PluginSlug.php" -Pattern "Version:\s*(.+)").Matches.Groups[1].Value.Trim()
+$PluginSlug = "DW Church"
+$Version = (Select-String -Path "dasom-church-management.php" -Pattern "Version:\s*(.+)").Matches.Groups[1].Value.Trim()
 $BuildDir = "build"
-$ZipName = "$PluginSlug-$Version.zip"
+$ZipName = "DW-Church-Management-System-$Version.zip"
 
 Write-Host "🚀 Building $PluginSlug v$Version..." -ForegroundColor Green
 
