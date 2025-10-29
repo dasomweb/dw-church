@@ -796,10 +796,19 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
                     display: inline-block !important;
                 }
                 
-                /* 년월일 || 설교자 같은 줄에 표시 */
-                .dw-sermon-item .sermon-date::after {
-                    content: " || " !important;
-                    margin: 0 5px !important;
+                /* 년월일과 설교자를 별도 줄에 표시 (구분자 없음) */
+                .dw-sermon-item .sermon-date {
+                    order: 3 !important;
+                    font-size: 14px !important;
+                    margin-bottom: 5px !important;
+                    display: block !important;
+                }
+                
+                .dw-sermon-item .sermon-preacher {
+                    order: 4 !important;
+                    font-size: 14px !important;
+                    margin-bottom: 0 !important;
+                    display: block !important;
                 }
                 
                 .sermon-thumbnail img {
