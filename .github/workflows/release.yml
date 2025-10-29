@@ -83,9 +83,10 @@ jobs:
         unzip -l "DW-Church-Management-System-${{ steps.version.outputs.version }}.zip"
         echo ""
         echo "Folder name verification:"
+        rm -rf "DW Church" || true
         unzip -q "DW-Church-Management-System-${{ steps.version.outputs.version }}.zip"
         ls -la
-        rm -rf "DW Church"
+        echo "Folder name: $(ls -1 | head -1)"
         
     - name: Upload ZIP to release
       uses: actions/upload-release-asset@v1
