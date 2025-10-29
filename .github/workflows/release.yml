@@ -29,7 +29,13 @@ jobs:
         
     - name: Copy plugin files
       run: |
-        # Copy all files except excluded ones
+        # Clean up any existing DW Church folder
+        rm -rf "DW Church" || true
+        
+        # Create fresh DW Church directory
+        mkdir -p "DW Church"
+        
+        # Copy files directly to DW Church folder (not into subfolder)
         rsync -av --exclude='.git' \
                   --exclude='.github' \
                   --exclude='.gitignore' \
@@ -74,7 +80,8 @@ jobs:
                   --exclude='DW Church' \
                   --exclude='dasomweb-dasom-church-management-system' \
                   --exclude='*.zip' \
-                  ./ "DW Church/"
+                  --exclude='temp-extract' \
+                  . "DW Church/"
                   
     - name: Create ZIP file
       run: |
