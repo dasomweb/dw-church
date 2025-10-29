@@ -1,0 +1,95 @@
+name: Create Release with Correct Folder Name
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Extract version from plugin file
+      id: version
+      run: |
+        VERSION=$(grep "Version:" dasom-church-management.php | sed 's/.*Version: *//' | tr -d ' ')
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Extracted version: $VERSION"
+        
+    - name: Create plugin directory
+      run: |
+        mkdir -p "DW Church"
+        
+    - name: Copy plugin files
+      run: |
+        # Copy all files except excluded ones
+        rsync -av --exclude='.git' \
+                  --exclude='.github' \
+                  --exclude='.gitignore' \
+                  --exclude='.gitattributes' \
+                  --exclude='.vscode' \
+                  --exclude='.idea' \
+                  --exclude='.DS_Store' \
+                  --exclude='node_modules' \
+                  --exclude='vendor' \
+                  --exclude='tests' \
+                  --exclude='tmp' \
+                  --exclude='build' \
+                  --exclude='dist' \
+                  --exclude='bin' \
+                  --exclude='composer.json' \
+                  --exclude='composer.lock' \
+                  --exclude='package.json' \
+                  --exclude='package-lock.json' \
+                  --exclude='phpunit.xml' \
+                  --exclude='phpunit.xml.dist' \
+                  --exclude='.phpunit.result.cache' \
+                  --exclude='docker-compose.yml' \
+                  --exclude='build.sh' \
+                  --exclude='build.ps1' \
+                  --exclude='*.ps1' \
+                  --exclude='*.log' \
+                  --exclude='README.md' \
+                  --exclude='CONTRIBUTING.md' \
+                  --exclude='SETUP-DEVELOPMENT.md' \
+                  --exclude='README-TESTING.md' \
+                  --exclude='WORDPRESS-URL-FIX.md' \
+                  --exclude='ELEMENTOR-CACHE-CLEAR-GUIDE.md' \
+                  --exclude='MIGRATION-GUIDE.md' \
+                  --exclude='WORDPRESS-PLUGIN-AUTO-UPDATE-GUIDE.md' \
+                  --exclude='check-github-status.ps1' \
+                  --exclude='check-widget-version.php' \
+                  --exclude='clear-elementor-cache.php' \
+                  --exclude='debug-banner-meta.php' \
+                  --exclude='force-reload-widgets.php' \
+                  --exclude='run-tests.ps1' \
+                  --exclude='verify-tests.ps1' \
+                  ./ "DW Church/"
+                  
+    - name: Create ZIP file
+      run: |
+        zip -r "DW-Church-Management-System-${{ steps.version.outputs.version }}.zip" "DW Church/"
+        
+    - name: Verify ZIP contents
+      run: |
+        echo "ZIP file contents:"
+        unzip -l "DW-Church-Management-System-${{ steps.version.outputs.version }}.zip"
+        echo ""
+        echo "Folder name verification:"
+        unzip -q "DW-Church-Management-System-${{ steps.version.outputs.version }}.zip"
+        ls -la
+        rm -rf "DW Church"
+        
+    - name: Upload ZIP to release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./DW-Church-Management-System-${{ steps.version.outputs.version }}.zip
+        asset_name: DW-Church-Management-System-${{ steps.version.outputs.version }}.zip
+        asset_content_type: application/zip
