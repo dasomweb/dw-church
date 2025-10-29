@@ -640,27 +640,17 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     ?>
                     <div class="<?php echo esc_attr($meta_class); ?>">
                         <?php
-                        $meta_items = [];
-                        
+                        // 모바일에서 각각 별도 div로 분리
                         if (($settings['show_date'] ?? 'yes') === 'yes' && $sermon_date) {
-                            $meta_items[] = '<span class="meta-date">' . date_i18n('Y년 n월 j일', strtotime($sermon_date)) . '</span>';
+                            echo '<div class="meta-date">' . date_i18n('Y년 n월 j일', strtotime($sermon_date)) . '</div>';
                         }
                         
                         if (($settings['show_scripture'] ?? 'yes') === 'yes' && $scripture) {
-                            $meta_items[] = '<span class="meta-scripture">' . esc_html($scripture) . '</span>';
+                            echo '<div class="meta-scripture">' . esc_html($scripture) . '</div>';
                         }
                         
                         if (($settings['show_preacher'] ?? 'yes') === 'yes' && !empty($preachers)) {
-                            $meta_items[] = '<span class="meta-preacher">' . esc_html(implode(', ', $preachers)) . '</span>';
-                        }
-                        
-                        if ($meta_layout === 'stack') {
-                            foreach ($meta_items as $item) {
-                                echo '<div class="meta-item">' . $item . '</div>';
-                            }
-                        } else {
-                            $separator = $settings['meta_separator'] ?? '||';
-                            echo implode(' <span class="meta-separator">' . esc_html($separator) . '</span> ', $meta_items);
+                            echo '<div class="meta-preacher">' . esc_html(implode(', ', $preachers)) . '</div>';
                         }
                         ?>
                     </div>
@@ -682,27 +672,17 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                 ?>
                 <div class="<?php echo esc_attr($meta_class); ?>">
                     <?php
-                    $meta_items = [];
-                    
+                    // 모바일에서 각각 별도 div로 분리
                     if (($settings['show_date'] ?? 'yes') === 'yes' && $sermon_date) {
-                        $meta_items[] = '<span class="meta-date">' . date_i18n('Y-m-d', strtotime($sermon_date)) . '</span>';
+                        echo '<div class="meta-date">' . date_i18n('Y년 n월 j일', strtotime($sermon_date)) . '</div>';
                     }
                     
                     if (($settings['show_scripture'] ?? 'yes') === 'yes' && $scripture) {
-                        $meta_items[] = '<span class="meta-scripture">' . esc_html($scripture) . '</span>';
+                        echo '<div class="meta-scripture">' . esc_html($scripture) . '</div>';
                     }
                     
                     if (($settings['show_preacher'] ?? 'yes') === 'yes' && !empty($preachers)) {
-                        $meta_items[] = '<span class="meta-preacher">' . esc_html(implode(', ', $preachers)) . '</span>';
-                    }
-                    
-                    if ($meta_layout === 'stack') {
-                        foreach ($meta_items as $item) {
-                            echo '<div class="meta-item">' . $item . '</div>';
-                        }
-                    } else {
-                        $separator = $settings['meta_separator'] ?? '||';
-                        echo implode(' <span class="meta-separator">' . esc_html($separator) . '</span> ', $meta_items);
+                        echo '<div class="meta-preacher">' . esc_html(implode(', ', $preachers)) . '</div>';
                     }
                     ?>
                 </div>
@@ -812,39 +792,19 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     flex-direction: column !important;
                 }
                 
-                /* 영상을 맨 위로 */
-                .dw-single-sermon-video {
-                    order: 1 !important;
-                }
-                
-                /* 날짜를 두 번째로 */
-                .dw-single-sermon-meta .meta-date {
-                    order: 2 !important;
-                    display: block !important;
-                    margin-bottom: 10px !important;
-                    text-align: right !important;
-                }
-                
-                /* 제목을 세 번째로 */
-                .dw-single-sermon-title {
-                    order: 3 !important;
-                    text-align: right !important;
-                    margin-bottom: 10px !important;
-                }
-                
-                /* 성경구절을 네 번째로 */
-                .dw-single-sermon-meta .meta-scripture {
-                    order: 4 !important;
-                    display: block !important;
-                    margin-bottom: 10px !important;
-                    text-align: right !important;
-                }
-                
-                /* 설교자를 다섯 번째로 */
+                /* 각 메타 정보를 별도 div로 분리했으므로 자연스럽게 순서대로 배치 */
+                .dw-single-sermon-meta .meta-date,
+                .dw-single-sermon-meta .meta-scripture,
                 .dw-single-sermon-meta .meta-preacher {
-                    order: 5 !important;
                     display: block !important;
+                    margin-bottom: 10px !important;
                     text-align: right !important;
+                }
+                
+                /* 제목도 오른쪽 정렬 */
+                .dw-single-sermon-title {
+                    text-align: right !important;
+                    margin-bottom: 10px !important;
                 }
                 
                 /* 메타 정보 컨테이너도 오른쪽 정렬 */
