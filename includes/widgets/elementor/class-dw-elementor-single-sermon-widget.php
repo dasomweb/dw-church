@@ -880,6 +880,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     display: flex !important;
                     flex-direction: column !important;
                     width: 100% !important;
+                    gap: 0 !important;
                 }
                 
                 /* Title: order varies by layout */
@@ -914,6 +915,8 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     flex-direction: column !important;
                     order: 3 !important;
                     width: 100% !important;
+                    margin-top: 0 !important;
+                    gap: 0 !important;
                 }
                 
                 .dw-single-sermon-meta * {
@@ -927,6 +930,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                 .dw-single-sermon-meta .meta-item .meta-scripture {
                     order: 1 !important;
                     /* font-size removed - use Elementor responsive typography control */
+                    margin-top: 0 !important;
                     margin-bottom: 5px !important;
                     display: block !important;
                     text-align: right !important;
@@ -959,13 +963,20 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                 .dw-single-sermon-meta .meta-item .meta-preacher {
                     order: 3 !important;
                     /* font-size removed - use Elementor responsive typography control */
-                    margin-bottom: 5px !important;
+                    margin-bottom: 0 !important;
                     display: block !important;
                     text-align: right !important;
                     width: 100% !important;
                     max-width: 100% !important;
                     overflow: hidden !important;
                     word-wrap: break-word !important;
+                }
+                
+                /* Last meta item should not have margin-bottom to avoid extra space */
+                .dw-single-sermon-meta > *:last-child,
+                .dw-single-sermon-meta .meta-preacher:last-child,
+                .dw-single-sermon-meta span:last-of-type {
+                    margin-bottom: 0 !important;
                 }
                 
                 /* Hide ALL separators on mobile */
