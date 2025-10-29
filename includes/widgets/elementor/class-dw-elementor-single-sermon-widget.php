@@ -238,7 +238,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
             ]
         );
         
-        $this->add_control(
+        $this->add_responsive_control(
             'title_spacing',
             [
                 'label' => __('하단 간격', 'dasom-church'),
@@ -252,6 +252,12 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                 ],
                 'default' => [
                     'size' => 20,
+                ],
+                'tablet_default' => [
+                    'size' => 20,
+                ],
+                'mobile_default' => [
+                    'size' => 8,
                 ],
                 'selectors' => [
                     '{{WRAPPER}} .dw-single-sermon-title' => 'margin-bottom: {{SIZE}}{{UNIT}};',
@@ -283,7 +289,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
             ]
         );
         
-        $this->add_control(
+        $this->add_responsive_control(
             'meta_alignment',
             [
                 'label' => __('정렬', 'dasom-church'),
@@ -303,6 +309,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     ],
                 ],
                 'default' => 'center',
+                'mobile_default' => 'right',
                 'selectors' => [
                     '{{WRAPPER}} .dw-single-sermon-meta' => 'text-align: {{VALUE}};',
                 ],
@@ -468,7 +475,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
             ]
         );
         
-        $this->add_control(
+        $this->add_responsive_control(
             'meta_spacing',
             [
                 'label' => __('하단 간격', 'dasom-church'),
@@ -482,6 +489,12 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                 ],
                 'default' => [
                     'size' => 30,
+                ],
+                'tablet_default' => [
+                    'size' => 30,
+                ],
+                'mobile_default' => [
+                    'size' => 15,
                 ],
                 'selectors' => [
                     '{{WRAPPER}} .dw-single-sermon-meta' => 'margin-bottom: {{SIZE}}{{UNIT}};',
