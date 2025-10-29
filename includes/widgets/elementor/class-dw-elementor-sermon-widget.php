@@ -754,19 +754,52 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
                 
                 .dw-sermon-item {
                     margin-bottom: 15px;
+                    display: flex !important;
+                    flex-direction: column !important;
                 }
                 
-                .sermon-content h3 {
+                /* Mobile Layout: 영상 → 설교제목 → 성경본문 → 년월일 || 설교자 */
+                .dw-sermon-item .sermon-thumbnail {
+                    order: 1 !important;
+                }
+                
+                .dw-sermon-item .sermon-content {
+                    order: 2 !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                }
+                
+                .dw-sermon-item .sermon-content h3 {
+                    order: 1 !important;
                     font-size: 18px !important;
                     line-height: 1.4 !important;
                     margin-bottom: 8px !important;
                 }
                 
-                .sermon-date,
-                .sermon-scripture,
-                .sermon-preacher {
+                .dw-sermon-item .sermon-scripture {
+                    order: 2 !important;
                     font-size: 14px !important;
-                    margin-bottom: 5px !important;
+                    margin-bottom: 8px !important;
+                }
+                
+                .dw-sermon-item .sermon-date {
+                    order: 3 !important;
+                    font-size: 14px !important;
+                    margin-bottom: 0 !important;
+                    display: inline-block !important;
+                }
+                
+                .dw-sermon-item .sermon-preacher {
+                    order: 4 !important;
+                    font-size: 14px !important;
+                    margin-bottom: 0 !important;
+                    display: inline-block !important;
+                }
+                
+                /* 년월일 || 설교자 같은 줄에 표시 */
+                .dw-sermon-item .sermon-date::after {
+                    content: " || " !important;
+                    margin: 0 5px !important;
                 }
                 
                 .sermon-thumbnail img {
