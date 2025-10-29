@@ -806,7 +806,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     font-size: 14px !important;
                 }
                 
-                /* Mobile Layout: 날짜 → 설교제목 → 성경구절 → 설교자 (오른쪽 정렬) */
+                /* Mobile Layout: 날짜 → 설교제목 → 성경구절 → 설교자 (오른쪽 정렬, 구분자 없음) */
                 .dw-single-sermon-widget {
                     display: flex !important;
                     flex-direction: column !important;
@@ -817,15 +817,9 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     order: 1 !important;
                 }
                 
-                /* 메타 정보를 두 번째로 */
-                .dw-single-sermon-meta {
-                    order: 2 !important;
-                    text-align: right !important;
-                }
-                
-                /* 날짜를 먼저 표시 */
+                /* 날짜를 두 번째로 */
                 .dw-single-sermon-meta .meta-date {
-                    order: 1 !important;
+                    order: 2 !important;
                     display: block !important;
                     margin-bottom: 10px !important;
                     text-align: right !important;
@@ -849,6 +843,11 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                 .dw-single-sermon-meta .meta-preacher {
                     order: 5 !important;
                     display: block !important;
+                    text-align: right !important;
+                }
+                
+                /* 메타 정보 컨테이너도 오른쪽 정렬 */
+                .dw-single-sermon-meta {
                     text-align: right !important;
                 }
                 

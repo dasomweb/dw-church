@@ -7,8 +7,11 @@ $ZipName = "DW-Church-Management-System-$Version.zip"
 
 Write-Host "🚀 Building $PluginSlug v$Version..." -ForegroundColor Green
 
-# 빌드 디렉토리 생성
+# 기존 파일들 정리
 if (Test-Path $BuildDir) { Remove-Item -Recurse -Force $BuildDir }
+if (Test-Path $ZipName) { Remove-Item -Force $ZipName }
+
+# 빌드 디렉토리 생성
 New-Item -ItemType Directory -Path "$BuildDir\$PluginSlug" | Out-Null
 
 # 제외할 항목
