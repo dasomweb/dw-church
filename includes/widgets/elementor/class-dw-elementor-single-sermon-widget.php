@@ -811,88 +811,124 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
             
             /* Mobile Optimization - DW Recent Sermons Style */
             @media (max-width: 767px) {
-                /* Hide thumbnail on desktop, show on mobile */
+                /* Force flexbox layout for ordering */
+                .dw-single-sermon-widget {
+                    display: flex !important;
+                    flex-direction: column !important;
+                }
+                
+                /* Show thumbnail on mobile */
                 .dw-single-sermon-thumbnail {
-                    display: block;
-                    margin-bottom: 15px;
-                    order: 1;
+                    display: block !important;
+                    margin-bottom: 15px !important;
+                    order: 1 !important;
                 }
                 .dw-single-sermon-thumbnail img {
-                    width: 100%;
-                    height: 200px;
-                    object-fit: cover;
+                    width: 100% !important;
+                    height: 200px !important;
+                    object-fit: cover !important;
                 }
                 
-                /* Hide video on mobile to match DW Recent Sermons */
+                /* Hide video completely on mobile */
                 .dw-single-sermon-video {
                     display: none !important;
+                    visibility: hidden !important;
+                    height: 0 !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    overflow: hidden !important;
                 }
                 
-                /* Reorder elements like DW Recent Sermons: Thumbnail → Date → Title → Scripture → Preacher */
-                .dw-single-sermon-widget {
-                    display: flex;
-                    flex-direction: column;
-                }
-                
-                /* Thumbnail: order 1 */
-                .dw-single-sermon-thumbnail {
-                    order: 1;
-                }
-                
-                /* Date: order 2 */
-                .dw-single-sermon-meta .meta-date {
-                    order: 2;
-                    display: block !important;
-                    font-size: 14px !important;
-                    margin-bottom: 5px !important;
-                }
-                
-                /* Title: order 3 */
+                /* Title: order 2 */
                 .dw-single-sermon-title {
-                    order: 3;
+                    order: 2 !important;
                     font-size: 18px !important;
                     line-height: 1.4 !important;
                     margin-bottom: 8px !important;
-                }
-                
-                /* Scripture: order 4 */
-                .dw-single-sermon-meta .meta-scripture {
-                    order: 4;
                     display: block !important;
-                    font-size: 14px !important;
-                    margin-bottom: 5px !important;
                 }
                 
-                /* Preacher: order 5 */
-                .dw-single-sermon-meta .meta-preacher {
-                    order: 5;
-                    display: block !important;
-                    font-size: 14px !important;
-                    margin-bottom: 5px !important;
-                }
-                
-                /* Hide separator on mobile */
-                .dw-single-sermon-meta .meta-separator {
-                    display: none !important;
-                }
-                
-                /* Make meta container transparent for ordering */
+                /* Break meta container and make individual items visible */
                 .dw-single-sermon-meta {
                     display: contents !important;
                 }
                 
-                .dw-single-sermon-meta.meta-inline span {
+                .dw-single-sermon-meta * {
                     display: block !important;
                 }
                 
-                /* Video First Layout - Stack on mobile */
-                .dw-single-sermon-widget.layout-video_first .sermon-content-wrapper {
+                /* Scripture: order 3 */
+                .dw-single-sermon-meta .meta-scripture,
+                .meta-scripture,
+                .dw-single-sermon-meta span.meta-scripture,
+                .dw-single-sermon-meta .meta-item .meta-scripture {
+                    order: 3 !important;
+                    font-size: 14px !important;
+                    margin-bottom: 5px !important;
+                    display: block !important;
+                }
+                
+                /* Date: order 4 */
+                .dw-single-sermon-meta .meta-date,
+                .meta-date,
+                .dw-single-sermon-meta span.meta-date,
+                .dw-single-sermon-meta .meta-item .meta-date {
+                    order: 4 !important;
+                    font-size: 14px !important;
+                    margin-bottom: 5px !important;
+                    display: block !important;
+                }
+                
+                /* Preacher: order 5 */
+                .dw-single-sermon-meta .meta-preacher,
+                .meta-preacher,
+                .dw-single-sermon-meta span.meta-preacher,
+                .dw-single-sermon-meta .meta-item .meta-preacher {
+                    order: 5 !important;
+                    font-size: 14px !important;
+                    margin-bottom: 5px !important;
+                    display: block !important;
+                }
+                
+                /* Hide ALL separators on mobile */
+                .dw-single-sermon-meta .meta-separator,
+                .meta-separator,
+                .dw-single-sermon-meta span::after,
+                .dw-single-sermon-meta::before,
+                .dw-single-sermon-meta::after {
+                    display: none !important;
+                    content: none !important;
+                    visibility: hidden !important;
+                    opacity: 0 !important;
+                    width: 0 !important;
+                    height: 0 !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                }
+                
+                /* Force all meta spans to block */
+                .dw-single-sermon-meta.meta-inline,
+                .dw-single-sermon-meta.meta-stack {
                     display: contents !important;
                 }
                 
+                .dw-single-sermon-meta.meta-inline span,
+                .dw-single-sermon-meta.meta-stack span,
+                .dw-single-sermon-meta span {
+                    display: block !important;
+                    margin-bottom: 5px !important;
+                }
+                
+                /* Video First Layout - completely restructure on mobile */
+                .dw-single-sermon-widget.layout-video_first .sermon-content-wrapper {
+                    display: contents !important;
+                    grid-template-columns: none !important;
+                    gap: 0 !important;
+                }
+                
                 .dw-single-sermon-widget.layout-video_first .dw-single-sermon-title {
-                    text-align: left;
-                    order: 3;
+                    text-align: left !important;
+                    order: 2 !important;
                 }
                 
                 .dw-single-sermon-widget.layout-video_first .dw-single-sermon-meta {
