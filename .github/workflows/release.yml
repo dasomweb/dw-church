@@ -68,6 +68,9 @@ jobs:
                   --exclude='force-reload-widgets.php' \
                   --exclude='run-tests.ps1' \
                   --exclude='verify-tests.ps1' \
+                  --exclude='DW Church' \
+                  --exclude='dasomweb-dasom-church-management-system' \
+                  --exclude='*.zip' \
                   ./ "DW Church/"
                   
     - name: Create ZIP file
