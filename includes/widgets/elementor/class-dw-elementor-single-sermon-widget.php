@@ -888,7 +888,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                 .dw-single-sermon-title {
                     /* font-size removed - use Elementor responsive typography control */
                     line-height: 1.4 !important;
-                    margin-bottom: 8px !important;
+                    /* margin-bottom removed - use Elementor responsive spacing control */
                     display: block !important;
                     text-align: right !important;
                     width: 100% !important;
