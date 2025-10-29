@@ -757,7 +757,10 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
             
             /* Classic Layout */
             .dw-single-sermon-widget.layout-classic .dw-single-sermon-title {
-                margin: 0;
+                margin-top: 0;
+                margin-left: 0;
+                margin-right: 0;
+                /* margin-bottom controlled by Elementor spacing control */
                 padding: 0;
             }
             
@@ -794,7 +797,10 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
             
             .dw-single-sermon-widget.layout-video_first .dw-single-sermon-title {
                 grid-column: 2;
-                margin: 0 !important;
+                margin-top: 0 !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+                /* margin-bottom controlled by Elementor spacing control */
                 padding: 0 !important;
                 text-align: right !important;
             }
