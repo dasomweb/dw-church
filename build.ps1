@@ -28,7 +28,11 @@ $Exclude = @(
     "WORDPRESS-PLUGIN-AUTO-UPDATE-GUIDE.md",
     "check-github-status.ps1", "check-widget-version.php", "clear-elementor-cache.php",
     "debug-banner-meta.php", "force-reload-widgets.php",
-    "run-tests.ps1", "verify-tests.ps1"
+    "run-tests.ps1", "verify-tests.ps1",
+    "DW-Church-Management-System-*.zip",
+    "dasom-church-*.zip",
+    "dasom-church-management-system-*.zip",
+    "temp-extract"
 )
 
 # 파일 복사

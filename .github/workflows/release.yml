@@ -81,6 +81,9 @@ jobs:
                   --exclude='dasomweb-dasom-church-management-system' \
                   --exclude='*.zip' \
                   --exclude='temp-extract' \
+                  --exclude='DW-Church-Management-System-*.zip' \
+                  --exclude='dasom-church-*.zip' \
+                  --exclude='dasom-church-management-system-*.zip' \
                   . "DW Church/"
                   
     - name: Create ZIP file
