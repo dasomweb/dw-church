@@ -806,7 +806,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     font-size: 14px !important;
                 }
                 
-                /* Mobile Layout: 영상 → 설교제목 → 성경본문 → 년월일 || 설교자 */
+                /* Mobile Layout: 날짜 → 설교제목 → 성경구절 → 설교자 (오른쪽 정렬) */
                 .dw-single-sermon-widget {
                     display: flex !important;
                     flex-direction: column !important;
@@ -817,35 +817,39 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     order: 1 !important;
                 }
                 
-                /* 제목을 두 번째로 */
-                .dw-single-sermon-title {
-                    order: 2 !important;
-                    text-align: left !important;
-                }
-                
-                /* 메타 정보를 세 번째로 */
+                /* 메타 정보를 두 번째로 */
                 .dw-single-sermon-meta {
-                    order: 3 !important;
+                    order: 2 !important;
+                    text-align: right !important;
                 }
                 
-                /* 성경구절만 먼저 표시 */
-                .dw-single-sermon-meta .meta-scripture {
+                /* 날짜를 먼저 표시 */
+                .dw-single-sermon-meta .meta-date {
                     order: 1 !important;
                     display: block !important;
                     margin-bottom: 10px !important;
+                    text-align: right !important;
                 }
                 
-                /* 날짜와 설교자를 같은 줄에 표시 */
-                .dw-single-sermon-meta .meta-date,
+                /* 제목을 세 번째로 */
+                .dw-single-sermon-title {
+                    order: 3 !important;
+                    text-align: right !important;
+                }
+                
+                /* 성경구절을 네 번째로 */
+                .dw-single-sermon-meta .meta-scripture {
+                    order: 4 !important;
+                    display: block !important;
+                    margin-bottom: 10px !important;
+                    text-align: right !important;
+                }
+                
+                /* 설교자를 다섯 번째로 */
                 .dw-single-sermon-meta .meta-preacher {
-                    order: 2 !important;
-                    display: inline-block !important;
-                }
-                
-                /* 날짜와 설교자 사이에 || 추가 */
-                .dw-single-sermon-meta .meta-date::after {
-                    content: " || " !important;
-                    margin: 0 5px !important;
+                    order: 5 !important;
+                    display: block !important;
+                    text-align: right !important;
                 }
                 
                 /* Video First Layout - Stack on tablet */
