@@ -1147,10 +1147,10 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 // Overlay rendering based on settings
                 $overlay_enable = $settings['overlay_enable'] ?? 'yes';
                 if ($overlay_enable === 'yes') {
-                    echo '<div class="dw-event-grid-overlay" style="position:absolute;top:0;left:0;right:0;bottom:0;"></div>';
+                    echo '<div class="dw-event-grid-overlay"></div>';
                 }
                 
-                echo '<div class="dw-event-grid-text" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:' . esc_attr($v_align_style) . ';justify-content:' . esc_attr($h_align_style) . ';">';
+                echo '<div class="dw-event-grid-text" style="align-items:' . esc_attr($v_align_style) . ';justify-content:' . esc_attr($h_align_style) . ';">';
                 echo '<div class="dw-event-grid-text-content" style="z-index:1;">';
                 
                 // Department
@@ -1198,7 +1198,9 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 overflow: hidden;
                 box-sizing: border-box;
                 isolation: isolate;
-                contain: layout;
+                contain: layout style paint;
+                margin: 0;
+                padding: 0;
             }
             .dw-event-grid-item {
                 position: relative;
@@ -1282,17 +1284,29 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             
             /* Ensure no content escapes the widget boundaries */
             .elementor-widget-dw_event_grid {
-                overflow: hidden;
-                position: relative;
-                z-index: 1;
-                isolation: isolate;
-                contain: layout;
+                overflow: hidden !important;
+                position: relative !important;
+                z-index: 1 !important;
+                isolation: isolate !important;
+                contain: layout style paint !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }
             
             /* Prevent any child elements from overflowing */
             .elementor-widget-dw_event_grid * {
-                max-width: 100%;
-                box-sizing: border-box;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            
+            /* Force containment for all grid items */
+            .elementor-widget-dw_event_grid .dw-event-grid-item {
+                contain: layout style paint !important;
+                isolation: isolate !important;
+                overflow: hidden !important;
             }
         </style>
         <?php
