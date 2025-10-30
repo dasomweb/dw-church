@@ -56,7 +56,7 @@ class Dasom_Church_Update_Manager {
         
         if (version_compare(DASOM_CHURCH_VERSION, $remote_version, '<')) {
             $update = new stdClass();
-            $update->slug = 'dasom-church-management-system';
+            $update->slug = 'dw-church';
             $update->plugin = DASOM_CHURCH_PLUGIN_BASENAME;
             $update->new_version = $remote_version;
             $update->url = $this->update_uri;
@@ -76,7 +76,7 @@ class Dasom_Church_Update_Manager {
      * Get plugin information for update screen
      */
     public function get_plugin_info($result, $action, $args) {
-        if ($action !== 'plugin_information' || $args->slug !== 'dasom-church-management-system') {
+        if ($action !== 'plugin_information' || $args->slug !== 'dw-church') {
             return $result;
         }
         
@@ -86,8 +86,8 @@ class Dasom_Church_Update_Manager {
         }
         
         $result = new stdClass();
-        $result->name = 'DW Church Management System';
-        $result->slug = 'dasom-church-management-system';
+        $result->name = 'DW Church';
+        $result->slug = 'dw-church';
         $result->version = $remote_info['version'];
         $result->tested = '6.8';
         $result->requires = '6.0';
@@ -96,7 +96,7 @@ class Dasom_Church_Update_Manager {
         $result->homepage = $this->update_uri;
         $result->download_link = $this->get_download_url($remote_info['version']);
         $result->sections = array(
-            'description' => 'Complete church management system for bulletins, sermons, columns, and albums with modern security practices.',
+            'description' => 'DW Church Management System - Complete church management system for bulletins, sermons, columns, and albums with modern security practices.',
             'changelog' => $this->get_changelog($remote_info['version'])
         );
         

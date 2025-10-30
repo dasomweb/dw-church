@@ -1,112 +1,110 @@
-name: Release Plugin
+name: Build & Release DW Church Plugin
 
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"   # 예: v1.0.0
 
 permissions:
   contents: write
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.0'
-        
-    - name: Install dependencies
-      run: |
-        composer install --no-dev --optimize-autoloader
-        
-    - name: Create plugin directory
-      run: |
-        mkdir -p "DW Church"
-        
-    - name: Copy plugin files
-      run: |
-        # Copy all files except excluded ones
-        rsync -av --exclude='.git' \
-          --exclude='.github' \
-          --exclude='node_modules' \
-          --exclude='*.zip' \
-          --exclude='*.log' \
-          --exclude='composer.json' \
-          --exclude='composer.lock' \
-          --exclude='package.json' \
-          --exclude='package-lock.json' \
-          --exclude='.gitignore' \
-          --exclude='README.md' \
-          --exclude='CHANGELOG.md' \
-          --exclude='test-*' \
-          --exclude='temp-*' \
-          --exclude='build.ps1' \
-          --exclude='.DS_Store' \
-          --exclude='Thumbs.db' \
-          . "DW Church/"
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0'
           
-    - name: Clean up ZIP files
-      run: |
-        find "DW Church" -name "*.zip" -type f -delete
-        
-    - name: Verify directory structure
-      run: |
-        echo "Plugin directory contents:"
-        ls -la "DW Church/"
-        echo "Main plugin file:"
-        ls -la "DW Church/dasom-church-management.php"
-        
-    - name: Create ZIP package
-      run: |
-        cd "DW Church"
-        zip -r "../DW-Church-Management-System.zip" .
-        cd ..
-        
-    - name: Verify ZIP contents
-      run: |
-        unzip -l DW-Church-Management-System.zip | head -20
-        echo "ZIP file size: $(du -h DW-Church-Management-System.zip)"
-        
-    - name: Extract version from tag
-      run: |
-        VERSION=${GITHUB_REF#refs/tags/v}
-        echo "VERSION=$VERSION" >> $GITHUB_ENV
-        echo "Release version: $VERSION"
-        
-    - name: Create GitHub Release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: DW-Church-Management-System.zip
-        name: Release v${{ env.VERSION }}
-        tag_name: ${{ github.ref_name }}
-        body: |
-          ## DW Church Management System v${{ env.VERSION }}
+      - name: Install dependencies
+        run: |
+          composer install --no-dev --optimize-autoloader
+
+      - name: Prepare Build Folder (Fix Folder Name)
+        run: |
+          mkdir -p build
+          # 해시 없이 항상 고정 폴더명 "DW Church" 생성
+          rsync -av --exclude='.git*' \
+            --exclude='.github' \
+            --exclude='build' \
+            --exclude='node_modules' \
+            --exclude='*.zip' \
+            --exclude='*.log' \
+            --exclude='composer.json' \
+            --exclude='composer.lock' \
+            --exclude='package.json' \
+            --exclude='package-lock.json' \
+            --exclude='.gitignore' \
+            --exclude='README.md' \
+            --exclude='CHANGELOG.md' \
+            --exclude='test-*' \
+            --exclude='temp-*' \
+            --exclude='build.ps1' \
+            --exclude='.DS_Store' \
+            --exclude='Thumbs.db' \
+            ./ build/DW\ Church/
           
-          ### Features
-          - Complete church management system
-          - Bulletins, sermons, columns, and photo albums
-          - Modern security practices
-          - Elementor widget support
-          - Auto-update support
+      - name: Clean up ZIP files in build
+        run: |
+          find build/DW\ Church -name "*.zip" -type f -delete
           
-          ### Installation
-          1. Download the ZIP file
-          2. Upload to WordPress admin > Plugins > Add New > Upload Plugin
-          3. Activate the plugin
+      - name: Verify directory structure
+        run: |
+          echo "Plugin directory contents:"
+          ls -la build/DW\ Church/
+          echo "Main plugin file:"
+          ls -la build/DW\ Church/dw-church.php
           
-          ### Requirements
-          - WordPress 6.0 or higher
-          - PHP 8.0 or higher
+      - name: Create ZIP package
+        run: |
+          cd build
+          zip -r DW-Church.zip "DW Church"
           
-          ### Changelog
-          See the [changelog](https://github.com/dasomweb/dasom-church-management-system/blob/main/CHANGELOG.md) for detailed changes.
-        draft: false
-        prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify ZIP contents
+        run: |
+          unzip -l build/DW-Church.zip | head -20
+          echo "ZIP file size: $(du -h build/DW-Church.zip)"
+          
+      - name: Extract version from tag
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Release version: $VERSION"
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/DW-Church.zip
+          name: Release v${{ env.VERSION }}
+          tag_name: ${{ github.ref_name }}
+          body: |
+            ## DW Church Management System v${{ env.VERSION }}
+            
+            ### Features
+            - Complete church management system
+            - Bulletins, sermons, columns, and photo albums
+            - Modern security practices
+            - Elementor widget support
+            - Auto-update support
+            - Fixed folder name for consistent updates
+            
+            ### Installation
+            1. Download the ZIP file
+            2. Upload to WordPress admin > Plugins > Add New > Upload Plugin
+            3. Activate the plugin
+            
+            ### Requirements
+            - WordPress 6.0 or higher
+            - PHP 8.0 or higher
+            
+            ### Changelog
+            See the [changelog](https://github.com/dasomweb/dasom-church-management-system/blob/main/CHANGELOG.md) for detailed changes.
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,11 +1,11 @@
 <?php
 /**
- * Plugin Name: DW Church Management System
+ * Plugin Name: DW Church
+ * Description: DW Church Management System
+ * Version: 2.24
+ * Author: DasomWeb
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
- * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 2.23
- * Author: Dasomweb
- * Author URI: https://dasomweb.com
+ * Update URI: dw-church
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: dasom-church
@@ -13,7 +13,6 @@
  * Requires at least: 6.0
  * Tested up to: 6.8
  * Requires PHP: 8.0
- * Update URI: https://github.com/dasomweb/dasom-church-management-system
  * Network: false
  */
 
@@ -23,7 +22,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '2.23');
+define('DASOM_CHURCH_VERSION', '2.24');
 define('DASOM_CHURCH_PLUGIN_URL', str_replace('http://', 'https://', plugin_dir_url(__FILE__)));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -830,8 +829,8 @@ require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/class-dasom-church-update-mana
 
 // Auto-update support
 add_filter('auto_update_plugin', function($update, $item) {
-    if (isset($item->plugin) && $item->plugin === DASOM_CHURCH_PLUGIN_BASENAME) {
-        return true; // 기본적으로 자동업데이트 허용
+    if (isset($item->slug) && $item->slug === 'dw-church') {
+        return true; // DW Church는 항상 자동 업데이트 허용
     }
     return $update;
 }, 10, 2);
@@ -841,9 +840,26 @@ register_activation_hook(__FILE__, function() {
     add_option('dasom_church_version', DASOM_CHURCH_VERSION);
     add_option('dasom_church_installed', current_time('mysql'));
     
+    // Fix folder name if needed
+    dw_church_fix_folder_name();
+    
     // Flush rewrite rules
     flush_rewrite_rules();
 });
+
+// Fix folder name function
+function dw_church_fix_folder_name() {
+    $plugin_dir = WP_PLUGIN_DIR;
+    $dirs = glob($plugin_dir . '/dasomweb-dasom-church-management-system-*', GLOB_ONLYDIR);
+
+    if ($dirs) {
+        $target = $plugin_dir . '/DW Church';
+        if (!file_exists($target)) {
+            rename($dirs[0], $target);
+            error_log('DW Church: Fixed folder name from ' . basename($dirs[0]) . ' to DW Church');
+        }
+    }
+}
 
 // Plugin deactivation hook
 register_deactivation_hook(__FILE__, function() {
