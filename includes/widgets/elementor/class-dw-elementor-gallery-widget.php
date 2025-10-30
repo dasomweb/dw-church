@@ -281,7 +281,7 @@ class DW_Elementor_Gallery_Widget extends \Elementor\Widget_Base {
             z-index: 9999 !important;
             width: 60px !important;
             height: 60px !important;
-            background: rgba(255, 255, 255, 0.9) !important;
+            background: transparent !important;
             border: none !important;
             border-radius: 50% !important;
             cursor: pointer !important;
@@ -289,17 +289,16 @@ class DW_Elementor_Gallery_Widget extends \Elementor\Widget_Base {
             align-items: center !important;
             justify-content: center !important;
             transition: all 0.3s ease !important;
-            backdrop-filter: blur(10px) !important;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
-            font-size: 24px !important;
+            font-size: 32px !important;
             font-weight: bold !important;
-            color: #333 !important;
+            color: rgba(255, 255, 255, 0.9) !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
         }
         
         .dw-lightbox-nav:hover {
-            background: rgba(255, 255, 255, 1) !important;
-            transform: translateY(-50%) scale(1.1) !important;
-            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2) !important;
+            color: rgba(255, 255, 255, 1) !important;
+            transform: translateY(-50%) scale(1.2) !important;
+            text-shadow: 0 3px 6px rgba(0, 0, 0, 0.7) !important;
         }
         
         .dw-lightbox-nav--prev {
@@ -387,61 +386,103 @@ class DW_Elementor_Gallery_Widget extends \Elementor\Widget_Base {
                     $container.append($nextBtn);
                     $container.append($counter);
                     
-                    // Navigation click handlers
-                    $prevBtn.on('click', function(e) {
+                    // Navigation click handlers with multiple approaches
+                    $prevBtn.on('click mousedown', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
+                        e.stopImmediatePropagation();
                         
-                        // Try Swiper first
+                        console.log('DW Gallery: Previous button clicked');
+                        
+                        // Method 1: Try Swiper API
+                        var swiperInstance = null;
                         if ($container[0] && $container[0].swiper) {
-                            $container[0].swiper.slidePrev();
+                            swiperInstance = $container[0].swiper;
                         } else if (window.Swiper && $container.find('.swiper-container')[0] && $container.find('.swiper-container')[0].swiper) {
-                            $container.find('.swiper-container')[0].swiper.slidePrev();
+                            swiperInstance = $container.find('.swiper-container')[0].swiper;
+                        }
+                        
+                        if (swiperInstance && swiperInstance.slidePrev) {
+                            console.log('DW Gallery: Using Swiper slidePrev');
+                            swiperInstance.slidePrev();
                         } else {
-                            // Try Elementor methods
+                            // Method 2: Try Elementor lightbox
                             if (window.elementorFrontend && window.elementorFrontend.lightbox) {
                                 var lightbox = window.elementorFrontend.lightbox;
                                 if (lightbox.previous) {
+                                    console.log('DW Gallery: Using Elementor lightbox previous');
                                     lightbox.previous();
                                 }
                             }
                             
-                            // Alternative method
-                            var $prevLink = $lightbox.find('.elementor-lightbox-slideshow__prev, .elementor-lightbox__prev, .swiper-button-prev');
+                            // Method 3: Try clicking existing navigation
+                            var $prevLink = $lightbox.find('.elementor-lightbox-slideshow__prev, .elementor-lightbox__prev, .swiper-button-prev, .swiper-button-prev:not(.swiper-button-disabled)');
                             if ($prevLink.length) {
+                                console.log('DW Gallery: Clicking existing prev button');
                                 $prevLink[0].click();
                             }
+                            
+                            // Method 4: Try keyboard events
+                            var prevEvent = new KeyboardEvent('keydown', {
+                                key: 'ArrowLeft',
+                                code: 'ArrowLeft',
+                                keyCode: 37,
+                                which: 37,
+                                bubbles: true
+                            });
+                            document.dispatchEvent(prevEvent);
                         }
                         
-                        setTimeout(updateCounter, 100);
+                        setTimeout(updateCounter, 200);
                     });
                     
-                    $nextBtn.on('click', function(e) {
+                    $nextBtn.on('click mousedown', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
+                        e.stopImmediatePropagation();
                         
-                        // Try Swiper first
+                        console.log('DW Gallery: Next button clicked');
+                        
+                        // Method 1: Try Swiper API
+                        var swiperInstance = null;
                         if ($container[0] && $container[0].swiper) {
-                            $container[0].swiper.slideNext();
+                            swiperInstance = $container[0].swiper;
                         } else if (window.Swiper && $container.find('.swiper-container')[0] && $container.find('.swiper-container')[0].swiper) {
-                            $container.find('.swiper-container')[0].swiper.slideNext();
+                            swiperInstance = $container.find('.swiper-container')[0].swiper;
+                        }
+                        
+                        if (swiperInstance && swiperInstance.slideNext) {
+                            console.log('DW Gallery: Using Swiper slideNext');
+                            swiperInstance.slideNext();
                         } else {
-                            // Try Elementor methods
+                            // Method 2: Try Elementor lightbox
                             if (window.elementorFrontend && window.elementorFrontend.lightbox) {
                                 var lightbox = window.elementorFrontend.lightbox;
                                 if (lightbox.next) {
+                                    console.log('DW Gallery: Using Elementor lightbox next');
                                     lightbox.next();
                                 }
                             }
                             
-                            // Alternative method
-                            var $nextLink = $lightbox.find('.elementor-lightbox-slideshow__next, .elementor-lightbox__next, .swiper-button-next');
+                            // Method 3: Try clicking existing navigation
+                            var $nextLink = $lightbox.find('.elementor-lightbox-slideshow__next, .elementor-lightbox__next, .swiper-button-next, .swiper-button-next:not(.swiper-button-disabled)');
                             if ($nextLink.length) {
+                                console.log('DW Gallery: Clicking existing next button');
                                 $nextLink[0].click();
                             }
+                            
+                            // Method 4: Try keyboard events
+                            var nextEvent = new KeyboardEvent('keydown', {
+                                key: 'ArrowRight',
+                                code: 'ArrowRight',
+                                keyCode: 39,
+                                which: 39,
+                                bubbles: true
+                            });
+                            document.dispatchEvent(nextEvent);
                         }
                         
-                        setTimeout(updateCounter, 100);
+                        setTimeout(updateCounter, 200);
                     });
                     
                     updateCounter();
