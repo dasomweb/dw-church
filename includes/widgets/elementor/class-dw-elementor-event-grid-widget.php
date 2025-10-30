@@ -1303,7 +1303,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 .dw-event-grid {
                     position: relative !important;
                     z-index: 1 !important;
-                    margin-bottom: 30px !important;
+                    margin-bottom: 50px !important;
                     background: transparent !important;
                     padding-bottom: 20px !important;
                     clear: both !important;
@@ -1314,6 +1314,18 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     width: 100% !important;
                     max-width: 100% !important;
                     box-sizing: border-box !important;
+                }
+                
+                /* Ensure footer appears after DW Event Grid on mobile */
+                .dw-event-grid-wrapper {
+                    clear: both !important;
+                    margin-bottom: 50px !important;
+                }
+                
+                /* Force footer to appear below DW Event Grid */
+                .elementor-widget-dw_event_grid + * {
+                    clear: both !important;
+                    margin-top: 20px !important;
                 }
                 
                 .dw-event-grid-item {
