@@ -2,7 +2,7 @@
 /**
  * Plugin Name: DW Church
  * Description: DW Church Management System
- * Version: 2.29
+ * Version: 2.30
  * Author: DasomWeb
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Update URI: dw-church
@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '2.29');
+define('DASOM_CHURCH_VERSION', '2.30');
 define('DASOM_CHURCH_PLUGIN_URL', str_replace('http://', 'https://', plugin_dir_url(__FILE__)));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -840,15 +840,17 @@ register_activation_hook(__FILE__, function() {
     add_option('dasom_church_version', DASOM_CHURCH_VERSION);
     add_option('dasom_church_installed', current_time('mysql'));
     
-    // Fix folder name if needed (fallback for wrong ZIP downloads)
-    dw_church_fix_folder_name();
-    
     // Flush rewrite rules
     flush_rewrite_rules();
 });
 
 // Fix folder name function (fallback for wrong ZIP downloads)
 function dw_church_fix_folder_name() {
+    // Only run if we're not in the middle of a request that could cause headers already sent
+    if (headers_sent()) {
+        return;
+    }
+    
     $plugin_dir = WP_PLUGIN_DIR;
     
     // Look for hash-based folder patterns
@@ -890,6 +892,15 @@ function dw_church_fix_folder_name() {
         }
     }
 }
+
+// Schedule folder name fix to run after headers are sent
+add_action('init', function() {
+    // Only run once per session to avoid repeated execution
+    if (!get_transient('dw_church_folder_fix_done')) {
+        dw_church_fix_folder_name();
+        set_transient('dw_church_folder_fix_done', true, HOUR_IN_SECONDS);
+    }
+}, 1);
 
 
 // Plugin deactivation hook
