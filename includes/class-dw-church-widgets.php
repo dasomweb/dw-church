@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class Dasom_Church_Widgets {
+class DW_Church_Widgets {
     
     /**
      * Constructor
@@ -190,20 +190,20 @@ class Dasom_Church_Widgets {
         global $post;
         
         if (!$post) {
-            return '<p>' . __('No post context available.', 'dasom-church') . '</p>';
+            return '<p>' . __('No post context available.', 'dw-church') . '</p>';
         }
         
         $meta_key = isset($attributes['metaKey']) ? $attributes['metaKey'] : 'dw_album_images';
         $raw = get_post_meta($post->ID, $meta_key, true);
         
         if (empty($raw)) {
-            return '<p>' . __('No images found.', 'dasom-church') . '</p>';
+            return '<p>' . __('No images found.', 'dw-church') . '</p>';
         }
         
         // Parse image IDs
         $ids = array_filter(array_map('intval', explode(',', $raw)));
         if (empty($ids)) {
-            return '<p>' . __('No valid image IDs.', 'dasom-church') . '</p>';
+            return '<p>' . __('No valid image IDs.', 'dw-church') . '</p>';
         }
         
         $size = isset($attributes['imageSize']) ? $attributes['imageSize'] : 'medium';

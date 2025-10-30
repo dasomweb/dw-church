@@ -9,7 +9,7 @@
  * Update URI: dw-church
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: dasom-church
+ * Text Domain: dw-church
  * Domain Path: /languages
  * Requires at least: 6.0
  * Tested up to: 6.8
@@ -741,14 +741,14 @@ class Dasom_Church_Management {
         
         // Load admin files in correct order - ALWAYS load to register post types
         require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dasom-church-menu-visibility.php';
-        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dasom-church-admin-customization.php';
-        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dasom-church-admin.php';
+        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dw-church-admin-customization.php';
+        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dw-church-admin.php';
         // Initialize admin class
-        Dasom_Church_Admin::get_instance();
+        DW_Church_Admin::get_instance();
         
         // Load public files
         if (!is_admin()) {
-            require_once DASOM_CHURCH_PLUGIN_PATH . 'public/class-dasom-church-public.php';
+            require_once DASOM_CHURCH_PLUGIN_PATH . 'public/class-dw-church-public.php';
         }
     }
     
@@ -776,7 +776,7 @@ class Dasom_Church_Management {
      */
     public function dasom_church_activation() {
         // Classes are already loaded in dasom_church_init()
-        $admin = Dasom_Church_Admin::get_instance();
+        $admin = DW_Church_Admin::get_instance();
         $admin->dasom_church_register_post_types();
         $admin->dasom_church_register_taxonomies();
         
@@ -820,13 +820,13 @@ class Dasom_Church_Management {
 }
 
 // Initialize the plugin
-Dasom_Church_Management::get_instance();
+DW_Church_Management::get_instance();
 
 // Load widgets
-require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/class-dasom-church-widgets.php';
+require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/class-dw-church-widgets.php';
 
 // Load update manager
-require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/class-dasom-church-update-manager.php';
+require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/class-dw-church-update-manager.php';
 
 // Auto-update support
 add_filter('auto_update_plugin', function($update, $item) {

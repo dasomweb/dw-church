@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 /**
  * Public class
  */
-class Dasom_Church_Public {
+class DW_Church_Public {
     
     /**
      * Single instance of the class
@@ -90,7 +90,7 @@ class Dasom_Church_Public {
         ));
         
         if (empty($bulletins)) {
-            return '<p>' . esc_html__('No bulletins found.', 'dasom-church') . '</p>';
+            return '<p>' . esc_html__('No bulletins found.', 'dw-church') . '</p>';
         }
         
         $output = '<div class="dasom-bulletins-list">';
@@ -109,7 +109,7 @@ class Dasom_Church_Public {
             if ($atts['show_pdf'] === 'true') {
                 $pdf = get_post_meta($bulletin->ID, 'dasom_bulletin_pdf', true);
                 if ($pdf) {
-                    $output .= '<p><a href="' . esc_url(wp_get_attachment_url($pdf)) . '" target="_blank" class="dasom-pdf-link">' . esc_html__('Download PDF', 'dasom-church') . '</a></p>';
+                    $output .= '<p><a href="' . esc_url(wp_get_attachment_url($pdf)) . '" target="_blank" class="dasom-pdf-link">' . esc_html__('Download PDF', 'dw-church') . '</a></p>';
                 }
             }
             
@@ -152,7 +152,7 @@ class Dasom_Church_Public {
         $sermons = get_posts($args);
         
         if (empty($sermons)) {
-            return '<p>' . esc_html__('No sermons found.', 'dasom-church') . '</p>';
+            return '<p>' . esc_html__('No sermons found.', 'dw-church') . '</p>';
         }
         
         $output = '<div class="dasom-sermons-list">';
@@ -171,7 +171,7 @@ class Dasom_Church_Public {
             if ($atts['show_youtube'] === 'true') {
                 $youtube = get_post_meta($sermon->ID, 'dasom_sermon_youtube', true);
                 if ($youtube) {
-                    $output .= '<p><a href="' . esc_url($youtube) . '" target="_blank" class="dasom-youtube-link">' . esc_html__('Watch on YouTube', 'dasom-church') . '</a></p>';
+                    $output .= '<p><a href="' . esc_url($youtube) . '" target="_blank" class="dasom-youtube-link">' . esc_html__('Watch on YouTube', 'dw-church') . '</a></p>';
                 }
             }
             
@@ -201,7 +201,7 @@ class Dasom_Church_Public {
         ));
         
         if (empty($columns)) {
-            return '<p>' . esc_html__('No columns found.', 'dasom-church') . '</p>';
+            return '<p>' . esc_html__('No columns found.', 'dw-church') . '</p>';
         }
         
         $output = '<div class="dasom-columns-list">';
@@ -213,7 +213,7 @@ class Dasom_Church_Public {
             if ($atts['show_author'] === 'true') {
                 $author = get_post_meta($column->ID, 'dasom_column_author', true);
                 if ($author) {
-                    $output .= '<p class="dasom-column-author">' . esc_html__('By ', 'dasom-church') . esc_html($author) . '</p>';
+                    $output .= '<p class="dasom-column-author">' . esc_html__('By ', 'dw-church') . esc_html($author) . '</p>';
                 }
             }
             
@@ -250,7 +250,7 @@ class Dasom_Church_Public {
         ));
         
         if (empty($albums)) {
-            return '<p>' . esc_html__('No albums found.', 'dasom-church') . '</p>';
+            return '<p>' . esc_html__('No albums found.', 'dw-church') . '</p>';
         }
         
         $output = '<div class="dasom-albums-list">';
@@ -277,7 +277,7 @@ class Dasom_Church_Public {
             if ($atts['show_youtube'] === 'true') {
                 $youtube = get_post_meta($album->ID, 'dasom_album_youtube', true);
                 if ($youtube) {
-                    $output .= '<p><a href="' . esc_url($youtube) . '" target="_blank" class="dasom-youtube-link">' . esc_html__('Watch on YouTube', 'dasom-church') . '</a></p>';
+                    $output .= '<p><a href="' . esc_url($youtube) . '" target="_blank" class="dasom-youtube-link">' . esc_html__('Watch on YouTube', 'dw-church') . '</a></p>';
                 }
             }
             

@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class Dasom_Church_Admin_Customization {
+class DW_Church_Admin_Customization {
     
     /**
      * Singleton instance

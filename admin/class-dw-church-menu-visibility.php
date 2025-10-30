@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class Dasom_Church_Menu_Visibility {
+class DW_Church_Menu_Visibility {
     
     /**
      * Singleton instance

@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 /**
  * Admin columns class
  */
-class Dasom_Church_Columns {
+class DW_Church_Columns {
     
     /**
      * Single instance of the class
@@ -81,10 +81,10 @@ class Dasom_Church_Columns {
             $new_columns['cb'] = $columns['cb'];
         }
         
-        $new_columns['bulletin_date'] = __('주보 날짜', 'dasom-church');
-        $new_columns['bulletin_pdf'] = __('PDF 파일', 'dasom-church');
-        $new_columns['bulletin_images'] = __('주보 이미지', 'dasom-church');
-        $new_columns['date'] = __('게시일', 'dasom-church');
+        $new_columns['bulletin_date'] = __('주보 날짜', 'dw-church');
+        $new_columns['bulletin_pdf'] = __('PDF 파일', 'dw-church');
+        $new_columns['bulletin_images'] = __('주보 이미지', 'dw-church');
+        $new_columns['date'] = __('게시일', 'dw-church');
         
         return $new_columns;
     }
@@ -114,7 +114,7 @@ class Dasom_Church_Columns {
                 if ($pdf) {
                     $url = wp_get_attachment_url($pdf);
                     if ($url) {
-                        echo '<a href="' . esc_url($url) . '" target="_blank">' . __('보기', 'dasom-church') . '</a>';
+                        echo '<a href="' . esc_url($url) . '" target="_blank">' . __('보기', 'dw-church') . '</a>';
                     } else {
                         echo '—';
                     }
@@ -153,13 +153,13 @@ class Dasom_Church_Columns {
             $new_columns['cb'] = $columns['cb'];
         }
         
-        $new_columns['sermon_date'] = __('설교 일자', 'dasom-church');
-        $new_columns['sermon_title'] = __('제목', 'dasom-church');
-        $new_columns['sermon_scripture'] = __('성경구절', 'dasom-church');
-        $new_columns['sermon_preacher'] = __('설교자', 'dasom-church');
-        $new_columns['sermon_youtube'] = __('YouTube', 'dasom-church');
-        $new_columns['sermon_thumb'] = __('썸네일', 'dasom-church');
-        $new_columns['date'] = __('게시 상태', 'dasom-church');
+        $new_columns['sermon_date'] = __('설교 일자', 'dw-church');
+        $new_columns['sermon_title'] = __('제목', 'dw-church');
+        $new_columns['sermon_scripture'] = __('성경구절', 'dw-church');
+        $new_columns['sermon_preacher'] = __('설교자', 'dw-church');
+        $new_columns['sermon_youtube'] = __('YouTube', 'dw-church');
+        $new_columns['sermon_thumb'] = __('썸네일', 'dw-church');
+        $new_columns['date'] = __('게시 상태', 'dw-church');
         
         return $new_columns;
     }
@@ -206,7 +206,7 @@ class Dasom_Church_Columns {
                     echo esc_html(implode(', ', $preachers));
                 } else {
                     // Try to get default preacher
-                    $default_preacher = get_option('default_sermon_preacher', __('담임목사', 'dasom-church'));
+                    $default_preacher = get_option('default_sermon_preacher', __('담임목사', 'dw-church'));
                     echo esc_html($default_preacher);
                 }
                 break;
@@ -250,11 +250,11 @@ class Dasom_Church_Columns {
             $new_columns['cb'] = $columns['cb'];
         }
         
-        $new_columns['date'] = __('게시일', 'dasom-church');
-        $new_columns['title'] = __('제목', 'dasom-church');
-        $new_columns['top_image'] = __('상단 이미지', 'dasom-church');
-        $new_columns['youtube'] = __('YouTube', 'dasom-church');
-        $new_columns['thumb'] = __('대표 이미지', 'dasom-church');
+        $new_columns['date'] = __('게시일', 'dw-church');
+        $new_columns['title'] = __('제목', 'dw-church');
+        $new_columns['top_image'] = __('상단 이미지', 'dw-church');
+        $new_columns['youtube'] = __('YouTube', 'dw-church');
+        $new_columns['thumb'] = __('대표 이미지', 'dw-church');
         
         return $new_columns;
     }
@@ -269,14 +269,14 @@ class Dasom_Church_Columns {
                 if ($top_image) {
                     echo wp_get_attachment_image($top_image, array(80, 80), false, array('style' => 'object-fit:cover;'));
                 } else {
-                    echo __('이미지 없음', 'dasom-church');
+                    echo __('이미지 없음', 'dw-church');
                 }
                 break;
                 
             case 'youtube':
                 $youtube = get_post_meta($post_id, 'dw_column_youtube', true);
                 if ($youtube) {
-                    echo '<a href="' . esc_url($youtube) . '" target="_blank">' . __('YouTube 보기', 'dasom-church') . '</a>';
+                    echo '<a href="' . esc_url($youtube) . '" target="_blank">' . __('YouTube 보기', 'dw-church') . '</a>';
                 } else {
                     echo '—';
                 }
@@ -286,7 +286,7 @@ class Dasom_Church_Columns {
                 if (has_post_thumbnail($post_id)) {
                     echo get_the_post_thumbnail($post_id, array(80, 80), array('style' => 'object-fit:cover;'));
                 } else {
-                    echo __('이미지 없음', 'dasom-church');
+                    echo __('이미지 없음', 'dw-church');
                 }
                 break;
         }
@@ -303,11 +303,11 @@ class Dasom_Church_Columns {
             $new_columns['cb'] = $columns['cb'];
         }
         
-        $new_columns['title'] = __('앨범 제목', 'dasom-church');
-        $new_columns['youtube'] = __('YouTube', 'dasom-church');
-        $new_columns['thumb'] = __('썸네일', 'dasom-church');
-        $new_columns['images'] = __('앨범 이미지', 'dasom-church');
-        $new_columns['date'] = __('작성일', 'dasom-church');
+        $new_columns['title'] = __('앨범 제목', 'dw-church');
+        $new_columns['youtube'] = __('YouTube', 'dw-church');
+        $new_columns['thumb'] = __('썸네일', 'dw-church');
+        $new_columns['images'] = __('앨범 이미지', 'dw-church');
+        $new_columns['date'] = __('작성일', 'dw-church');
         
         return $new_columns;
     }
@@ -364,14 +364,14 @@ class Dasom_Church_Columns {
             $new_columns['cb'] = $columns['cb'];
         }
         
-        $new_columns['title'] = __('배너 제목', 'dasom-church');
-        $new_columns['banner_category'] = __('카테고리', 'dasom-church');
-        $new_columns['banner_image'] = __('배너 이미지', 'dasom-church');
-        $new_columns['link_url'] = __('링크 URL', 'dasom-church');
-        $new_columns['start_date'] = __('시작 날짜', 'dasom-church');
-        $new_columns['end_date'] = __('종료 날짜', 'dasom-church');
-        $new_columns['link_target'] = __('열기 방식', 'dasom-church');
-        $new_columns['date'] = __('작성일', 'dasom-church');
+        $new_columns['title'] = __('배너 제목', 'dw-church');
+        $new_columns['banner_category'] = __('카테고리', 'dw-church');
+        $new_columns['banner_image'] = __('배너 이미지', 'dw-church');
+        $new_columns['link_url'] = __('링크 URL', 'dw-church');
+        $new_columns['start_date'] = __('시작 날짜', 'dw-church');
+        $new_columns['end_date'] = __('종료 날짜', 'dw-church');
+        $new_columns['link_target'] = __('열기 방식', 'dw-church');
+        $new_columns['date'] = __('작성일', 'dw-church');
         
         return $new_columns;
     }
@@ -388,7 +388,7 @@ class Dasom_Church_Columns {
                     $color = ($category_name === '메인 배너' || $category_name === 'Main Banner') ? '#2271b1' : '#50b83c';
                     echo '<span style="display:inline-block;padding:3px 8px;background:' . $color . ';color:#fff;border-radius:3px;font-size:11px;">' . esc_html($category_name) . '</span>';
                 } else {
-                    echo '<span style="color:#999;">' . __('미분류', 'dasom-church') . '</span>';
+                    echo '<span style="color:#999;">' . __('미분류', 'dw-church') . '</span>';
                 }
                 break;
                 
@@ -454,13 +454,13 @@ class Dasom_Church_Columns {
                     if ($timestamp !== false && $timestamp > 0) {
                         echo esc_html(date_i18n('Y-m-d H:i', $timestamp));
                         if ($timestamp > current_time('timestamp')) {
-                            echo '<br><span style="color:#f0ad4e;">' . __('(예약됨)', 'dasom-church') . '</span>';
+                            echo '<br><span style="color:#f0ad4e;">' . __('(예약됨)', 'dw-church') . '</span>';
                         }
                     } else {
                         echo '—';
                     }
                 } else {
-                    echo __('즉시', 'dasom-church');
+                    echo __('즉시', 'dw-church');
                 }
                 break;
                 
@@ -471,22 +471,22 @@ class Dasom_Church_Columns {
                     if ($timestamp !== false && $timestamp > 0) {
                         echo esc_html(date_i18n('Y-m-d H:i', $timestamp));
                         if ($timestamp < current_time('timestamp')) {
-                            echo '<br><span style="color:#dc3545;">' . __('(만료됨)', 'dasom-church') . '</span>';
+                            echo '<br><span style="color:#dc3545;">' . __('(만료됨)', 'dw-church') . '</span>';
                         }
                     } else {
                         echo '—';
                     }
                 } else {
-                    echo __('무기한', 'dasom-church');
+                    echo __('무기한', 'dw-church');
                 }
                 break;
                 
             case 'link_target':
                 $link_target = get_post_meta($post_id, 'dw_banner_link_target', true);
                 if ($link_target === '_blank') {
-                    echo __('새 창', 'dasom-church');
+                    echo __('새 창', 'dw-church');
                 } else {
-                    echo __('현재 창', 'dasom-church');
+                    echo __('현재 창', 'dw-church');
                 }
                 break;
         }
@@ -516,7 +516,7 @@ class Dasom_Church_Columns {
                 echo '<fieldset class="inline-edit-col-right">';
                 echo '<div class="inline-edit-col">';
                 echo '<label>';
-                echo '<span class="title">' . __('주보 날짜', 'dasom-church') . '</span>';
+                echo '<span class="title">' . __('주보 날짜', 'dw-church') . '</span>';
                 echo '<input type="date" name="dw_bulletin_date" value="" />';
                 echo '</label>';
                 echo '</div>';
@@ -527,7 +527,7 @@ class Dasom_Church_Columns {
                 echo '<fieldset class="inline-edit-col-right">';
                 echo '<div class="inline-edit-col">';
                 echo '<label>';
-                echo '<span class="title">' . __('설교 일자', 'dasom-church') . '</span>';
+                echo '<span class="title">' . __('설교 일자', 'dw-church') . '</span>';
                 echo '<input type="date" name="dw_sermon_date" value="" />';
                 echo '</label>';
                 echo '</div>';
@@ -538,13 +538,13 @@ class Dasom_Church_Columns {
                 echo '<fieldset class="inline-edit-col-right">';
                 echo '<div class="inline-edit-col">';
                 echo '<label>';
-                echo '<span class="title">' . __('작성자', 'dasom-church') . '</span>';
+                echo '<span class="title">' . __('작성자', 'dw-church') . '</span>';
                 echo '<input type="text" name="column_author" value="" />';
                 echo '</label>';
                 echo '</div>';
                 echo '<div class="inline-edit-col">';
                 echo '<label>';
-                echo '<span class="title">' . __('주제', 'dasom-church') . '</span>';
+                echo '<span class="title">' . __('주제', 'dw-church') . '</span>';
                 echo '<input type="text" name="column_topic" value="" />';
                 echo '</label>';
                 echo '</div>';

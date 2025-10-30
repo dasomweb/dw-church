@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 /**
  * Plugin loader class
  */
-class Dasom_Church_Loader {
+class DW_Church_Loader {
     
     /**
      * Single instance of the class
@@ -53,16 +53,16 @@ class Dasom_Church_Loader {
         // Church Bulletin
         register_post_type('bulletin', array(
             'labels' => array(
-                'name' => __('Church Bulletins', 'dasom-church'),
-                'singular_name' => __('Bulletin', 'dasom-church'),
-                'add_new' => __('Add New Bulletin', 'dasom-church'),
-                'add_new_item' => __('Add New Bulletin', 'dasom-church'),
-                'edit_item' => __('Edit Bulletin', 'dasom-church'),
-                'new_item' => __('New Bulletin', 'dasom-church'),
-                'view_item' => __('View Bulletin', 'dasom-church'),
-                'search_items' => __('Search Bulletins', 'dasom-church'),
-                'not_found' => __('No bulletins found', 'dasom-church'),
-                'not_found_in_trash' => __('No bulletins found in trash', 'dasom-church')
+                'name' => __('Church Bulletins', 'dw-church'),
+                'singular_name' => __('Bulletin', 'dw-church'),
+                'add_new' => __('Add New Bulletin', 'dw-church'),
+                'add_new_item' => __('Add New Bulletin', 'dw-church'),
+                'edit_item' => __('Edit Bulletin', 'dw-church'),
+                'new_item' => __('New Bulletin', 'dw-church'),
+                'view_item' => __('View Bulletin', 'dw-church'),
+                'search_items' => __('Search Bulletins', 'dw-church'),
+                'not_found' => __('No bulletins found', 'dw-church'),
+                'not_found_in_trash' => __('No bulletins found in trash', 'dw-church')
             ),
             'public' => true,
             'show_in_menu' => 'dasom-church-admin',
@@ -85,16 +85,16 @@ class Dasom_Church_Loader {
         // Sermons
         register_post_type('dasom_sermon', array(
             'labels' => array(
-                'name' => __('Sermons', 'dasom-church'),
-                'singular_name' => __('Sermon', 'dasom-church'),
-                'add_new' => __('Add New Sermon', 'dasom-church'),
-                'add_new_item' => __('Add New Sermon', 'dasom-church'),
-                'edit_item' => __('Edit Sermon', 'dasom-church'),
-                'new_item' => __('New Sermon', 'dasom-church'),
-                'view_item' => __('View Sermon', 'dasom-church'),
-                'search_items' => __('Search Sermons', 'dasom-church'),
-                'not_found' => __('No sermons found', 'dasom-church'),
-                'not_found_in_trash' => __('No sermons found in trash', 'dasom-church')
+                'name' => __('Sermons', 'dw-church'),
+                'singular_name' => __('Sermon', 'dw-church'),
+                'add_new' => __('Add New Sermon', 'dw-church'),
+                'add_new_item' => __('Add New Sermon', 'dw-church'),
+                'edit_item' => __('Edit Sermon', 'dw-church'),
+                'new_item' => __('New Sermon', 'dw-church'),
+                'view_item' => __('View Sermon', 'dw-church'),
+                'search_items' => __('Search Sermons', 'dw-church'),
+                'not_found' => __('No sermons found', 'dw-church'),
+                'not_found_in_trash' => __('No sermons found in trash', 'dw-church')
             ),
             'public' => true,
             'show_in_menu' => 'dasom-church-admin',
@@ -107,16 +107,16 @@ class Dasom_Church_Loader {
         // Pastoral Columns
         register_post_type('dasom_column', array(
             'labels' => array(
-                'name' => __('Pastoral Columns', 'dasom-church'),
-                'singular_name' => __('Column', 'dasom-church'),
-                'add_new' => __('Add New Column', 'dasom-church'),
-                'add_new_item' => __('Add New Column', 'dasom-church'),
-                'edit_item' => __('Edit Column', 'dasom-church'),
-                'new_item' => __('New Column', 'dasom-church'),
-                'view_item' => __('View Column', 'dasom-church'),
-                'search_items' => __('Search Columns', 'dasom-church'),
-                'not_found' => __('No columns found', 'dasom-church'),
-                'not_found_in_trash' => __('No columns found in trash', 'dasom-church')
+                'name' => __('Pastoral Columns', 'dw-church'),
+                'singular_name' => __('Column', 'dw-church'),
+                'add_new' => __('Add New Column', 'dw-church'),
+                'add_new_item' => __('Add New Column', 'dw-church'),
+                'edit_item' => __('Edit Column', 'dw-church'),
+                'new_item' => __('New Column', 'dw-church'),
+                'view_item' => __('View Column', 'dw-church'),
+                'search_items' => __('Search Columns', 'dw-church'),
+                'not_found' => __('No columns found', 'dw-church'),
+                'not_found_in_trash' => __('No columns found in trash', 'dw-church')
             ),
             'public' => true,
             'show_in_menu' => 'dasom-church-admin',
@@ -129,16 +129,16 @@ class Dasom_Church_Loader {
         // Church Albums
         register_post_type('dasom_album', array(
             'labels' => array(
-                'name' => __('Church Albums', 'dasom-church'),
-                'singular_name' => __('Album', 'dasom-church'),
-                'add_new' => __('Add New Album', 'dasom-church'),
-                'add_new_item' => __('Add New Album', 'dasom-church'),
-                'edit_item' => __('Edit Album', 'dasom-church'),
-                'new_item' => __('New Album', 'dasom-church'),
-                'view_item' => __('View Album', 'dasom-church'),
-                'search_items' => __('Search Albums', 'dasom-church'),
-                'not_found' => __('No albums found', 'dasom-church'),
-                'not_found_in_trash' => __('No albums found in trash', 'dasom-church')
+                'name' => __('Church Albums', 'dw-church'),
+                'singular_name' => __('Album', 'dw-church'),
+                'add_new' => __('Add New Album', 'dw-church'),
+                'add_new_item' => __('Add New Album', 'dw-church'),
+                'edit_item' => __('Edit Album', 'dw-church'),
+                'new_item' => __('New Album', 'dw-church'),
+                'view_item' => __('View Album', 'dw-church'),
+                'search_items' => __('Search Albums', 'dw-church'),
+                'not_found' => __('No albums found', 'dw-church'),
+                'not_found_in_trash' => __('No albums found in trash', 'dw-church')
             ),
             'public' => true,
             'show_in_menu' => 'dasom-church-admin',
@@ -155,17 +155,17 @@ class Dasom_Church_Loader {
     public function dasom_church_register_taxonomies() {
         register_taxonomy('dasom_sermon_category', 'dasom_sermon', array(
             'labels' => array(
-                'name' => __('Sermon Categories', 'dasom-church'),
-                'singular_name' => __('Sermon Category', 'dasom-church'),
-                'search_items' => __('Search Categories', 'dasom-church'),
-                'all_items' => __('All Categories', 'dasom-church'),
-                'parent_item' => __('Parent Category', 'dasom-church'),
-                'parent_item_colon' => __('Parent Category:', 'dasom-church'),
-                'edit_item' => __('Edit Category', 'dasom-church'),
-                'update_item' => __('Update Category', 'dasom-church'),
-                'add_new_item' => __('Add New Category', 'dasom-church'),
-                'new_item_name' => __('New Category Name', 'dasom-church'),
-                'menu_name' => __('Categories', 'dasom-church')
+                'name' => __('Sermon Categories', 'dw-church'),
+                'singular_name' => __('Sermon Category', 'dw-church'),
+                'search_items' => __('Search Categories', 'dw-church'),
+                'all_items' => __('All Categories', 'dw-church'),
+                'parent_item' => __('Parent Category', 'dw-church'),
+                'parent_item_colon' => __('Parent Category:', 'dw-church'),
+                'edit_item' => __('Edit Category', 'dw-church'),
+                'update_item' => __('Update Category', 'dw-church'),
+                'add_new_item' => __('Add New Category', 'dw-church'),
+                'new_item_name' => __('New Category Name', 'dw-church'),
+                'menu_name' => __('Categories', 'dw-church')
             ),
             'hierarchical' => true,
             'show_admin_column' => true,
@@ -196,7 +196,7 @@ class Dasom_Church_Loader {
     public function dasom_church_add_meta_boxes() {
         add_meta_box(
             'dasom_bulletin_meta',
-            __('Bulletin Information', 'dasom-church'),
+            __('Bulletin Information', 'dw-church'),
             array($this, 'dasom_church_bulletin_meta_box'),
             'bulletin',
             'normal',
@@ -205,7 +205,7 @@ class Dasom_Church_Loader {
         
         add_meta_box(
             'dasom_sermon_meta',
-            __('Sermon Information', 'dasom-church'),
+            __('Sermon Information', 'dw-church'),
             array($this, 'dasom_church_sermon_meta_box'),
             'dasom_sermon',
             'normal',
@@ -214,7 +214,7 @@ class Dasom_Church_Loader {
         
         add_meta_box(
             'dasom_column_meta',
-            __('Column Information', 'dasom-church'),
+            __('Column Information', 'dw-church'),
             array($this, 'dasom_church_column_meta_box'),
             'dasom_column',
             'normal',
@@ -223,7 +223,7 @@ class Dasom_Church_Loader {
         
         add_meta_box(
             'dasom_album_meta',
-            __('Album Information', 'dasom-church'),
+            __('Album Information', 'dw-church'),
             array($this, 'dasom_church_album_meta_box'),
             'dasom_album',
             'normal',
@@ -244,25 +244,25 @@ class Dasom_Church_Loader {
         
         ?>
         <p>
-            <label for="dasom_bulletin_date"><?php echo esc_html__('Bulletin Date', 'dasom-church'); ?></label><br>
+            <label for="dasom_bulletin_date"><?php echo esc_html__('Bulletin Date', 'dw-church'); ?></label><br>
             <input type="date" id="dasom_bulletin_date" name="dasom_bulletin_date" value="<?php echo esc_attr($date); ?>" />
         </p>
         
         <p>
-            <label><?php echo esc_html__('Bulletin PDF', 'dasom-church'); ?></label><br>
+            <label><?php echo esc_html__('Bulletin PDF', 'dw-church'); ?></label><br>
             <input type="hidden" id="dasom_bulletin_pdf" name="dasom_bulletin_pdf" value="<?php echo esc_attr($pdf); ?>" />
-            <button type="button" class="button" id="dasom_bulletin_pdf_button"><?php echo esc_html__('Upload PDF', 'dasom-church'); ?></button>
+            <button type="button" class="button" id="dasom_bulletin_pdf_button"><?php echo esc_html__('Upload PDF', 'dw-church'); ?></button>
             <div id="dasom_bulletin_pdf_preview" style="margin-top:8px;">
                 <?php if ($pdf): ?>
-                    <a href="<?php echo esc_url(wp_get_attachment_url($pdf)); ?>" target="_blank"><?php echo esc_html__('View Current PDF', 'dasom-church'); ?></a>
+                    <a href="<?php echo esc_url(wp_get_attachment_url($pdf)); ?>" target="_blank"><?php echo esc_html__('View Current PDF', 'dw-church'); ?></a>
                 <?php endif; ?>
             </div>
         </p>
         
         <p>
-            <label><?php echo esc_html__('Bulletin Images', 'dasom-church'); ?></label><br>
+            <label><?php echo esc_html__('Bulletin Images', 'dw-church'); ?></label><br>
             <input type="hidden" id="dasom_bulletin_images" name="dasom_bulletin_images" value="<?php echo esc_attr(wp_json_encode($images)); ?>" />
-            <button type="button" class="button" id="dasom_bulletin_images_button"><?php echo esc_html__('Upload Images', 'dasom-church'); ?></button>
+            <button type="button" class="button" id="dasom_bulletin_images_button"><?php echo esc_html__('Upload Images', 'dw-church'); ?></button>
             <ul id="dasom_bulletin_images_preview" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
                 <?php foreach ($images as $id): ?>
                     <li data-id="<?php echo esc_attr($id); ?>">
@@ -270,7 +270,7 @@ class Dasom_Church_Loader {
                     </li>
                 <?php endforeach; ?>
             </ul>
-            <p style="color:#666;margin-top:6px;"><?php echo esc_html__('Drag to reorder images.', 'dasom-church'); ?></p>
+            <p style="color:#666;margin-top:6px;"><?php echo esc_html__('Drag to reorder images.', 'dw-church'); ?></p>
         </p>
         <?php
     }
@@ -289,30 +289,30 @@ class Dasom_Church_Loader {
         
         ?>
         <p>
-            <label for="dasom_sermon_title"><?php echo esc_html__('Sermon Title', 'dasom-church'); ?></label><br>
+            <label for="dasom_sermon_title"><?php echo esc_html__('Sermon Title', 'dw-church'); ?></label><br>
             <input type="text" id="dasom_sermon_title" name="dasom_sermon_title" value="<?php echo esc_attr($title); ?>" style="width:100%;" />
         </p>
         
         <p>
-            <label for="dasom_sermon_scripture"><?php echo esc_html__('Scripture', 'dasom-church'); ?></label><br>
+            <label for="dasom_sermon_scripture"><?php echo esc_html__('Scripture', 'dw-church'); ?></label><br>
             <input type="text" id="dasom_sermon_scripture" name="dasom_sermon_scripture" value="<?php echo esc_attr($scripture); ?>" style="width:100%;" />
         </p>
         
         <p>
-            <label for="dasom_sermon_youtube"><?php echo esc_html__('YouTube URL', 'dasom-church'); ?></label><br>
+            <label for="dasom_sermon_youtube"><?php echo esc_html__('YouTube URL', 'dw-church'); ?></label><br>
             <input type="url" id="dasom_sermon_youtube" name="dasom_sermon_youtube" value="<?php echo esc_url($youtube); ?>" style="width:100%;" />
         </p>
         
         <p>
-            <label for="dasom_sermon_date"><?php echo esc_html__('Sermon Date', 'dasom-church'); ?></label><br>
+            <label for="dasom_sermon_date"><?php echo esc_html__('Sermon Date', 'dw-church'); ?></label><br>
             <input type="date" id="dasom_sermon_date" name="dasom_sermon_date" value="<?php echo esc_attr($sermon_date); ?>" />
         </p>
         
         <p>
-            <label><?php echo esc_html__('YouTube Thumbnail', 'dasom-church'); ?></label><br>
+            <label><?php echo esc_html__('YouTube Thumbnail', 'dw-church'); ?></label><br>
             <input type="hidden" id="dasom_sermon_thumb_id" name="dasom_sermon_thumb_id" value="<?php echo esc_attr($thumb_id); ?>" />
-            <button type="button" class="button" id="dasom_sermon_thumb_button"><?php echo esc_html__('Upload Thumbnail', 'dasom-church'); ?></button>
-            <button type="button" class="button" id="dasom_sermon_thumb_fetch"><?php echo esc_html__('Fetch YouTube Thumbnail', 'dasom-church'); ?></button>
+            <button type="button" class="button" id="dasom_sermon_thumb_button"><?php echo esc_html__('Upload Thumbnail', 'dw-church'); ?></button>
+            <button type="button" class="button" id="dasom_sermon_thumb_fetch"><?php echo esc_html__('Fetch YouTube Thumbnail', 'dw-church'); ?></button>
             <div id="dasom_sermon_thumb_preview" style="margin-top:10px;">
                 <?php if ($thumb_id): ?>
                     <img src="<?php echo esc_url(wp_get_attachment_url($thumb_id)); ?>" style="width:160px;height:90px;object-fit:cover;" />
@@ -333,12 +333,12 @@ class Dasom_Church_Loader {
         
         ?>
         <p>
-            <label for="dasom_column_author"><?php echo esc_html__('Author', 'dasom-church'); ?></label><br>
+            <label for="dasom_column_author"><?php echo esc_html__('Author', 'dw-church'); ?></label><br>
             <input type="text" id="dasom_column_author" name="dasom_column_author" value="<?php echo esc_attr($author); ?>" style="width:100%;" />
         </p>
         
         <p>
-            <label for="dasom_column_topic"><?php echo esc_html__('Topic', 'dasom-church'); ?></label><br>
+            <label for="dasom_column_topic"><?php echo esc_html__('Topic', 'dw-church'); ?></label><br>
             <input type="text" id="dasom_column_topic" name="dasom_column_topic" value="<?php echo esc_attr($topic); ?>" style="width:100%;" />
         </p>
         <?php
@@ -357,9 +357,9 @@ class Dasom_Church_Loader {
         
         ?>
         <p>
-            <label><?php echo esc_html__('Album Images', 'dasom-church'); ?></label><br>
+            <label><?php echo esc_html__('Album Images', 'dw-church'); ?></label><br>
             <input type="hidden" id="dasom_album_images" name="dasom_album_images" value="<?php echo esc_attr(wp_json_encode($images)); ?>" />
-            <button type="button" class="button" id="dasom_album_images_button"><?php echo esc_html__('Upload/Select Images', 'dasom-church'); ?></button>
+            <button type="button" class="button" id="dasom_album_images_button"><?php echo esc_html__('Upload/Select Images', 'dw-church'); ?></button>
             <ul id="dasom_album_images_preview" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:10px;">
                 <?php foreach ($images as $id): ?>
                     <li data-id="<?php echo esc_attr($id); ?>">
@@ -370,15 +370,15 @@ class Dasom_Church_Loader {
         </p>
         
         <p>
-            <label for="dasom_album_youtube"><?php echo esc_html__('YouTube URL', 'dasom-church'); ?></label><br>
+            <label for="dasom_album_youtube"><?php echo esc_html__('YouTube URL', 'dw-church'); ?></label><br>
             <input type="url" id="dasom_album_youtube" name="dasom_album_youtube" value="<?php echo esc_url($youtube); ?>" style="width:100%;" />
         </p>
         
         <p>
-            <label><?php echo esc_html__('YouTube Thumbnail', 'dasom-church'); ?></label><br>
+            <label><?php echo esc_html__('YouTube Thumbnail', 'dw-church'); ?></label><br>
             <input type="hidden" id="dasom_album_thumb_id" name="dasom_album_thumb_id" value="<?php echo esc_attr($thumb_id); ?>" />
-            <button type="button" class="button" id="dasom_album_thumb_button"><?php echo esc_html__('Upload Thumbnail', 'dasom-church'); ?></button>
-            <button type="button" class="button" id="dasom_album_thumb_fetch"><?php echo esc_html__('Fetch YouTube Thumbnail', 'dasom-church'); ?></button>
+            <button type="button" class="button" id="dasom_album_thumb_button"><?php echo esc_html__('Upload Thumbnail', 'dw-church'); ?></button>
+            <button type="button" class="button" id="dasom_album_thumb_fetch"><?php echo esc_html__('Fetch YouTube Thumbnail', 'dw-church'); ?></button>
             <div id="dasom_album_thumb_preview" style="margin-top:10px;">
                 <?php if ($thumb_id): ?>
                     <img src="<?php echo esc_url(wp_get_attachment_url($thumb_id)); ?>" style="width:160px;height:90px;object-fit:cover;" />
@@ -424,7 +424,7 @@ class Dasom_Church_Loader {
             // Auto-generate title from date
             $date = get_post_meta($post_id, 'dasom_bulletin_date', true);
             if ($date) {
-                $new_title = date_i18n(__('Y년 n월 j일', 'dasom-church'), strtotime($date)) . ' ' . __('Church Bulletin', 'dasom-church');
+                $new_title = date_i18n(__('Y년 n월 j일', 'dw-church'), strtotime($date)) . ' ' . __('Church Bulletin', 'dw-church');
                 $post = get_post($post_id);
                 if ($post && $post->post_title !== $new_title) {
                     wp_update_post(array(
@@ -492,7 +492,7 @@ class Dasom_Church_Loader {
             }
             
             // Set default category
-            $default = get_term_by('name', __('Sunday Sermon', 'dasom-church'), 'dasom_sermon_category');
+            $default = get_term_by('name', __('Sunday Sermon', 'dw-church'), 'dasom_sermon_category');
             if ($default && !wp_get_post_terms($post_id, 'dasom_sermon_category')) {
                 wp_set_post_terms($post_id, array($default->term_id), 'dasom_sermon_category', false);
             }
@@ -584,9 +584,9 @@ class Dasom_Church_Loader {
     public function dasom_church_bulletin_columns($columns) {
         return array(
             'cb' => $columns['cb'],
-            'bulletin_date' => __('Bulletin Date', 'dasom-church'),
-            'bulletin_pdf' => __('PDF File', 'dasom-church'),
-            'bulletin_images' => __('Bulletin Images', 'dasom-church')
+            'bulletin_date' => __('Bulletin Date', 'dw-church'),
+            'bulletin_pdf' => __('PDF File', 'dw-church'),
+            'bulletin_images' => __('Bulletin Images', 'dw-church')
         );
     }
     
@@ -601,9 +601,9 @@ class Dasom_Church_Loader {
             case 'bulletin_pdf':
                 $pdf = get_post_meta($post_id, 'dasom_bulletin_pdf', true);
                 if ($pdf) {
-                    echo '<a href="' . esc_url(wp_get_attachment_url($pdf)) . '" target="_blank">' . esc_html__('View', 'dasom-church') . '</a>';
+                    echo '<a href="' . esc_url(wp_get_attachment_url($pdf)) . '" target="_blank">' . esc_html__('View', 'dw-church') . '</a>';
                 } else {
-                    echo esc_html__('None', 'dasom-church');
+                    echo esc_html__('None', 'dw-church');
                 }
                 break;
             case 'bulletin_images':
@@ -619,7 +619,7 @@ class Dasom_Church_Loader {
                     }
                     echo '</div>';
                 } else {
-                    echo esc_html__('None', 'dasom-church');
+                    echo esc_html__('None', 'dw-church');
                 }
                 break;
         }
@@ -631,12 +631,12 @@ class Dasom_Church_Loader {
     public function dasom_church_sermon_columns($columns) {
         return array(
             'cb' => $columns['cb'],
-            'sermon_date' => __('Sermon Date', 'dasom-church'),
-            'sermon_title' => __('Title', 'dasom-church'),
-            'sermon_scripture' => __('Scripture', 'dasom-church'),
-            'sermon_youtube' => __('YouTube', 'dasom-church'),
-            'sermon_thumb' => __('Thumbnail', 'dasom-church'),
-            'date' => __('Publication Status', 'dasom-church')
+            'sermon_date' => __('Sermon Date', 'dw-church'),
+            'sermon_title' => __('Title', 'dw-church'),
+            'sermon_scripture' => __('Scripture', 'dw-church'),
+            'sermon_youtube' => __('YouTube', 'dw-church'),
+            'sermon_thumb' => __('Thumbnail', 'dw-church'),
+            'date' => __('Publication Status', 'dw-church')
         );
     }
     
@@ -660,20 +660,20 @@ class Dasom_Church_Loader {
                 if ($youtube) {
                     echo '<a href="' . esc_url($youtube) . '" target="_blank">' . esc_html($youtube) . '</a>';
                 } else {
-                    echo esc_html__('None', 'dasom-church');
+                    echo esc_html__('None', 'dw-church');
                 }
                 break;
             case 'sermon_thumb':
                 if (has_post_thumbnail($post_id)) {
                     echo get_the_post_thumbnail($post_id, array(100, 56), array('style' => 'width:100px;height:56px;object-fit:cover;'));
                 } else {
-                    echo esc_html__('None', 'dasom-church');
+                    echo esc_html__('None', 'dw-church');
                 }
                 break;
             case 'date':
                 $post = get_post($post_id);
                 if ($post->post_status === 'future') {
-                    echo '<span style="color:orange;">' . esc_html__('Scheduled: ', 'dasom-church') . esc_html(date_i18n('Y-m-d H:i', strtotime($post->post_date))) . '</span>';
+                    echo '<span style="color:orange;">' . esc_html__('Scheduled: ', 'dw-church') . esc_html(date_i18n('Y-m-d H:i', strtotime($post->post_date))) . '</span>';
                 } else {
                     echo esc_html(date_i18n('Y-m-d H:i', strtotime($post->post_date)));
                 }
@@ -687,11 +687,11 @@ class Dasom_Church_Loader {
     public function dasom_church_album_columns($columns) {
         return array(
             'cb' => $columns['cb'],
-            'title' => __('Album Title', 'dasom-church'),
-            'youtube' => __('YouTube', 'dasom-church'),
-            'thumb' => __('Thumbnail', 'dasom-church'),
-            'images' => __('Album Images', 'dasom-church'),
-            'date' => __('Created Date', 'dasom-church')
+            'title' => __('Album Title', 'dw-church'),
+            'youtube' => __('YouTube', 'dw-church'),
+            'thumb' => __('Thumbnail', 'dw-church'),
+            'images' => __('Album Images', 'dw-church'),
+            'date' => __('Created Date', 'dw-church')
         );
     }
     
@@ -705,14 +705,14 @@ class Dasom_Church_Loader {
                 if ($youtube) {
                     echo '<a href="' . esc_url($youtube) . '" target="_blank">' . esc_html($youtube) . '</a>';
                 } else {
-                    echo esc_html__('None', 'dasom-church');
+                    echo esc_html__('None', 'dw-church');
                 }
                 break;
             case 'thumb':
                 if (has_post_thumbnail($post_id)) {
                     echo get_the_post_thumbnail($post_id, array(100, 56), array('style' => 'width:100px;height:56px;object-fit:cover;'));
                 } else {
-                    echo esc_html__('None', 'dasom-church');
+                    echo esc_html__('None', 'dw-church');
                 }
                 break;
             case 'images':
@@ -728,7 +728,7 @@ class Dasom_Church_Loader {
                     }
                     echo '</div>';
                 } else {
-                    echo esc_html__('None', 'dasom-church');
+                    echo esc_html__('None', 'dw-church');
                 }
                 break;
         }
