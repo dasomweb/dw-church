@@ -289,7 +289,7 @@ class DW_Elementor_Gallery_Widget extends \Elementor\Widget_Base {
             align-items: center !important;
             justify-content: center !important;
             transition: all 0.3s ease !important;
-            font-size: 32px !important;
+            font-size: 40px !important;
             font-weight: bold !important;
             color: rgba(255, 255, 255, 0.9) !important;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
