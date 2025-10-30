@@ -47,6 +47,7 @@ jobs:
             --exclude='build.ps1' \
             --exclude='.DS_Store' \
             --exclude='Thumbs.db' \
+            --exclude='dasomweb-dasom-church-management-system' \
             ./ build/dw-church/
           
       - name: Clean up ZIP files in build
