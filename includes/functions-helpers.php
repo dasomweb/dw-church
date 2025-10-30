@@ -178,7 +178,7 @@ function dasom_church_generate_bulletin_title($date) {
         return '';
     }
     
-    $formatted_date = date_i18n(__('Y??n??j??, 'dw-church'), strtotime($date));
+    $formatted_date = date_i18n(__('Yë…„ nì›” jì¼', 'dw-church'), strtotime($date));
     return $formatted_date . ' ' . __('Church Bulletin', 'dw-church');
 }
 
@@ -274,13 +274,13 @@ function dasom_church_get_social_icons($attributes = array()) {
     $output .= '>';
     
     $social_platforms = array(
-        'youtube' => array('icon' => '?“º', 'name' => 'YouTube'),
-        'instagram' => array('icon' => '?“·', 'name' => 'Instagram'),
-        'facebook' => array('icon' => '?‘¥', 'name' => 'Facebook'),
-        'linkedin' => array('icon' => '?’¼', 'name' => 'LinkedIn'),
-        'tiktok' => array('icon' => '?Žµ', 'name' => 'TikTok'),
-        'kakaotalk' => array('icon' => '?’¬', 'name' => 'KakaoTalk'),
-        'kakaotalk_channel' => array('icon' => '?“¢', 'name' => 'KakaoTalk Channel')
+        'youtube' => array('icon' => '?ï¿½ï¿½', 'name' => 'YouTube'),
+        'instagram' => array('icon' => '?ï¿½ï¿½', 'name' => 'Instagram'),
+        'facebook' => array('icon' => '?ï¿½ï¿½', 'name' => 'Facebook'),
+        'linkedin' => array('icon' => '?ï¿½ï¿½', 'name' => 'LinkedIn'),
+        'tiktok' => array('icon' => '?ï¿½ï¿½', 'name' => 'TikTok'),
+        'kakaotalk' => array('icon' => '?ï¿½ï¿½', 'name' => 'KakaoTalk'),
+        'kakaotalk_channel' => array('icon' => '?ï¿½ï¿½', 'name' => 'KakaoTalk Channel')
     );
     
     foreach ($social_platforms as $platform => $info) {
