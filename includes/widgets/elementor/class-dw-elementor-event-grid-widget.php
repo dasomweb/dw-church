@@ -1282,138 +1282,111 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 /* Hover effects are now controlled by Elementor settings */
             }
             
-            /* Responsive adjustments */
+            /* Mobile Responsive CSS - Clean and Organized */
             @media (max-width: 768px) {
+                /* Main wrapper - prevent overflow and ensure proper clearing */
                 .dw-event-grid-wrapper {
-                    overflow: hidden !important;
-                    width: 100% !important;
-                    max-width: 100% !important;
-                    box-sizing: border-box !important;
+                    overflow: hidden;
+                    width: 100%;
+                    max-width: 100%;
+                    box-sizing: border-box;
+                    clear: both;
+                    margin-bottom: 30px;
+                    position: relative;
+                }
+                
+                /* Grid container - mobile layout */
+                .dw-event-grid {
+                    display: grid;
+                    grid-template-columns: repeat(<?php echo esc_attr($columns_mobile); ?>, 1fr);
+                    gap: 15px;
+                    width: 100%;
+                    max-width: 100%;
+                    box-sizing: border-box;
+                    clear: both;
+                    margin-bottom: 20px;
+                }
+                
+                /* Grid items - prevent overflow */
+                .dw-event-grid-item {
+                    position: relative;
+                    background: #fff;
+                    border-radius: 12px;
+                    overflow: hidden;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    width: 100%;
+                    max-width: 100%;
+                    box-sizing: border-box;
+                }
+                
+                /* Images - responsive and contained */
+                .dw-event-grid-image {
+                    position: relative;
+                    width: 100%;
+                    max-width: 100%;
+                    height: auto;
+                    display: block;
+                    overflow: hidden;
+                }
+                
+                .dw-event-grid-image img {
+                    width: 100%;
+                    height: auto;
+                    display: block;
+                    max-width: 100%;
+                }
+                
+                /* Overlay - positioned correctly */
+                .dw-event-grid-overlay {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    z-index: 1;
+                    pointer-events: none;
+                }
+                
+                /* Text container - positioned over image */
+                .dw-event-grid-text {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    display: flex;
+                    z-index: 2;
+                    overflow: hidden;
+                    pointer-events: none;
+                }
+                
+                /* Text content - responsive padding */
+                .dw-event-grid-text-content {
+                    width: 100%;
+                    max-width: 100%;
+                    box-sizing: border-box;
+                    overflow: hidden;
+                    word-wrap: break-word;
+                    overflow-wrap: break-word;
+                    padding: 15px;
                 }
                 
                 /* Ensure all child elements respect container width */
                 .dw-event-grid-wrapper *,
                 .dw-event-grid * {
-                    max-width: 100% !important;
-                    box-sizing: border-box !important;
-                    word-wrap: break-word !important;
-                    overflow-wrap: break-word !important;
+                    max-width: 100%;
+                    box-sizing: border-box;
                 }
                 
-                .dw-event-grid {
-                    position: relative !important;
-                    z-index: 1 !important;
-                    margin-bottom: 50px !important;
-                    background: transparent !important;
-                    padding-bottom: 20px !important;
-                    clear: both !important;
-                    display: grid !important;
-                    grid-template-columns: repeat(<?php echo esc_attr($columns_mobile); ?>, 1fr) !important;
-                    gap: 20px !important;
-                    overflow: hidden !important;
-                    width: 100% !important;
-                    max-width: 100% !important;
-                    box-sizing: border-box !important;
-                }
-                
-                /* Ensure all content appears after DW Event Grid on mobile */
-                .dw-event-grid-wrapper {
-                    clear: both !important;
-                    margin-bottom: 50px !important;
-                    overflow: hidden !important;
-                    position: relative !important;
-                    z-index: 1 !important;
-                }
-                
-                /* Force all elements after DW Event Grid to clear properly */
+                /* Clear content after widget */
                 .elementor-widget-dw_event_grid {
-                    clear: both !important;
-                    overflow: hidden !important;
-                    position: relative !important;
-                    z-index: 1 !important;
+                    clear: both;
+                    overflow: hidden;
                 }
                 
-                /* Only clear the immediate next element, not all subsequent elements */
                 .elementor-widget-dw_event_grid + .elementor-widget {
-                    clear: both !important;
-                    margin-top: 20px !important;
-                }
-                
-                /* Only affect DW Event Grid widget, not other widgets */
-                .elementor-widget-dw_event_grid {
-                    isolation: isolate !important;
-                    contain: layout !important;
-                }
-                
-                .dw-event-grid-item {
-                    position: relative !important;
-                    z-index: 1 !important;
-                    background: #fff !important;
-                    border-radius: 12px !important;
-                    overflow: hidden !important;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
-                    clear: both !important;
-                    width: 100% !important;
-                    max-width: 100% !important;
-                    box-sizing: border-box !important;
-                }
-                
-                .dw-event-grid-overlay {
-                    position: absolute !important;
-                    top: 0 !important;
-                    left: 0 !important;
-                    right: 0 !important;
-                    bottom: 0 !important;
-                    z-index: 1 !important;
-                }
-                
-                .dw-event-grid-image {
-                    position: relative !important;
-                    z-index: 1 !important;
-                }
-                
-                /* Fix mobile text positioning and padding consistency */
-                .dw-event-grid-text {
-                    position: absolute !important;
-                    top: 0 !important;
-                    left: 0 !important;
-                    right: 0 !important;
-                    bottom: 0 !important;
-                    display: flex !important;
-                    z-index: 2 !important;
-                    overflow: hidden !important;
-                    width: 100% !important;
-                    max-width: 100% !important;
-                    box-sizing: border-box !important;
-                    margin: 0 !important;
-                    padding: 0 !important;
-                }
-                
-                .dw-event-grid-text-content {
-                    width: 100% !important;
-                    max-width: 100% !important;
-                    box-sizing: border-box !important;
-                    overflow: hidden !important;
-                    word-wrap: break-word !important;
-                    overflow-wrap: break-word !important;
-                    margin: 0 !important;
-                }
-                
-                /* Ensure images don't overflow */
-                .dw-event-grid-image {
-                    width: 100% !important;
-                    max-width: 100% !important;
-                    height: auto !important;
-                    display: block !important;
-                    overflow: hidden !important;
-                }
-                
-                /* Ensure content flows properly after widget */
-                .dw-event-grid::after {
-                    content: "" !important;
-                    display: block !important;
-                    clear: both !important;
-                    height: 0 !important;
+                    clear: both;
+                    margin-top: 20px;
                 }
             }
         </style>
