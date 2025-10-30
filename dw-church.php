@@ -2,7 +2,7 @@
 /**
  * Plugin Name: DW Church
  * Description: DW Church Management System
- * Version: 2.27
+ * Version: 2.28
  * Author: DasomWeb
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Update URI: dw-church
@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '2.27');
+define('DASOM_CHURCH_VERSION', '2.28');
 define('DASOM_CHURCH_PLUGIN_URL', str_replace('http://', 'https://', plugin_dir_url(__FILE__)));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -840,83 +840,10 @@ register_activation_hook(__FILE__, function() {
     add_option('dasom_church_version', DASOM_CHURCH_VERSION);
     add_option('dasom_church_installed', current_time('mysql'));
     
-    // Fix folder name if needed
-    dw_church_fix_folder_name();
-    
     // Flush rewrite rules
     flush_rewrite_rules();
 });
 
-// Additional hook to fix folder name on admin init
-add_action('admin_init', function() {
-    // Only run if we're in admin and the current plugin path contains hash
-    $current_plugin = plugin_basename(__FILE__);
-    if (strpos($current_plugin, 'dasomweb-dasom-church-management-system-') !== false) {
-        dw_church_fix_folder_name();
-    }
-});
-
-// Fix folder name function
-function dw_church_fix_folder_name() {
-    $plugin_dir = WP_PLUGIN_DIR;
-    
-    // Look for various hash-based folder patterns
-    $patterns = [
-        '/dasomweb-dasom-church-management-system-*',
-        '/dasom-church-management-system-*',
-        '/dw-church-management-system-*'
-    ];
-    
-    $found_dirs = [];
-    foreach ($patterns as $pattern) {
-        $dirs = glob($plugin_dir . $pattern, GLOB_ONLYDIR);
-        if ($dirs) {
-            $found_dirs = array_merge($found_dirs, $dirs);
-        }
-    }
-    
-    if ($found_dirs) {
-        $target = $plugin_dir . '/dw-church';
-        
-        // If target doesn't exist, rename the first found directory
-        if (!file_exists($target)) {
-            $source = $found_dirs[0];
-            if (rename($source, $target)) {
-                error_log('DW Church: Successfully renamed folder from ' . basename($source) . ' to dw-church');
-                
-                // Update active_plugins option to reflect new path
-                $active_plugins = get_option('active_plugins', []);
-                $old_plugin_file = basename($source) . '/dw-church.php';
-                $new_plugin_file = 'dw-church/dw-church.php';
-                
-                $key = array_search($old_plugin_file, $active_plugins);
-                if ($key !== false) {
-                    $active_plugins[$key] = $new_plugin_file;
-                    update_option('active_plugins', $active_plugins);
-                    error_log('DW Church: Updated active_plugins option from ' . $old_plugin_file . ' to ' . $new_plugin_file);
-                }
-                
-                // Also check for multisite network plugins
-                if (is_multisite()) {
-                    $network_plugins = get_site_option('active_sitewide_plugins', []);
-                    foreach ($network_plugins as $plugin_file => $timestamp) {
-                        if (strpos($plugin_file, basename($source)) !== false) {
-                            unset($network_plugins[$plugin_file]);
-                            $network_plugins[$new_plugin_file] = $timestamp;
-                            update_site_option('active_sitewide_plugins', $network_plugins);
-                            error_log('DW Church: Updated network plugins option');
-                            break;
-                        }
-                    }
-                }
-            } else {
-                error_log('DW Church: Failed to rename folder from ' . basename($source) . ' to dw-church');
-            }
-        } else {
-            error_log('DW Church: Target folder dw-church already exists');
-        }
-    }
-}
 
 // Plugin deactivation hook
 register_deactivation_hook(__FILE__, function() {
