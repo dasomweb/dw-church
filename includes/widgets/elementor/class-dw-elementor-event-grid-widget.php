@@ -1104,9 +1104,10 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         
         // Get columns settings for responsive layout
         // Handle both string and number values from Elementor SELECT control
-        $columns_raw = $settings['columns'] ?? '3';
-        $columns_tablet_raw = $settings['columns_tablet'] ?? '2';
-        $columns_mobile_raw = $settings['columns_mobile'] ?? '1';
+        // Elementor responsive control may store values differently
+        $columns_raw = isset($settings['columns']) ? $settings['columns'] : (isset($settings['columns']['size']) ? $settings['columns']['size'] : '3');
+        $columns_tablet_raw = isset($settings['columns_tablet']) ? $settings['columns_tablet'] : (isset($settings['columns']['tablet']) ? $settings['columns']['tablet'] : '2');
+        $columns_mobile_raw = isset($settings['columns_mobile']) ? $settings['columns_mobile'] : (isset($settings['columns']['mobile']) ? $settings['columns']['mobile'] : '1');
         
         $columns = intval($columns_raw ?: '3');
         $columns_tablet = intval($columns_tablet_raw ?: '2');
@@ -1210,9 +1211,9 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 overflow: visible;
             }
             
-            @media (max-width: 1024px) {
+            @media (min-width: 769px) and (max-width: 1024px) {
                 .dw-event-grid {
-                    grid-template-columns: repeat(<?php echo esc_attr($columns_tablet); ?>, 1fr);
+                    grid-template-columns: repeat(<?php echo esc_attr($columns_tablet); ?>, 1fr) !important;
                 }
             }
             .dw-event-grid-item {
@@ -1307,7 +1308,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     padding-bottom: 20px !important;
                     clear: both !important;
                     display: grid !important;
-                    grid-template-columns: repeat(<?php echo esc_attr($columns_mobile); ?>, 1fr);
+                    grid-template-columns: repeat(<?php echo esc_attr($columns_mobile); ?>, 1fr) !important;
                     gap: 20px !important;
                     overflow: hidden !important;
                     width: 100% !important;
