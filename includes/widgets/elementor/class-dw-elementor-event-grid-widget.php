@@ -1125,7 +1125,6 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             $height_style = 'padding-top:' . $padding . ';';
         }
         
-        echo '<div class="dw-event-grid-wrapper">';
         echo '<div class="dw-event-grid">';
         
         while ($events->have_posts()) {
@@ -1182,23 +1181,13 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         }
         
         echo '</div>'; // .dw-event-grid
-        echo '</div>'; // .dw-event-grid-wrapper
         
         wp_reset_postdata();
         
         // Add inline CSS
         ?>
         <style>
-            /* DW Event Grid - Completely Isolated */
-            .dw-event-grid-wrapper {
-                overflow: hidden;
-                position: relative;
-                width: 100%;
-                max-width: 100%;
-                box-sizing: border-box;
-                isolation: isolate;
-                contain: layout;
-            }
+            /* DW Event Grid - Direct Grid Layout */
             .dw-event-grid {
                 display: grid;
                 width: 100%;
@@ -1208,6 +1197,8 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 clear: both;
                 overflow: hidden;
                 box-sizing: border-box;
+                isolation: isolate;
+                contain: layout;
             }
             .dw-event-grid-item {
                 position: relative;
