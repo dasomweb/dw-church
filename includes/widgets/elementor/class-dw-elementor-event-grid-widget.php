@@ -1316,16 +1316,49 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     box-sizing: border-box !important;
                 }
                 
-                /* Ensure footer appears after DW Event Grid on mobile */
+                /* Ensure all content appears after DW Event Grid on mobile */
                 .dw-event-grid-wrapper {
                     clear: both !important;
                     margin-bottom: 50px !important;
+                    overflow: hidden !important;
+                    position: relative !important;
+                    z-index: 1 !important;
                 }
                 
-                /* Force footer to appear below DW Event Grid */
-                .elementor-widget-dw_event_grid + * {
+                /* Force all elements after DW Event Grid to clear properly */
+                .elementor-widget-dw_event_grid {
+                    clear: both !important;
+                    overflow: hidden !important;
+                    position: relative !important;
+                    z-index: 1 !important;
+                }
+                
+                /* Force all subsequent containers and widgets to clear */
+                .elementor-widget-dw_event_grid + *,
+                .elementor-widget-dw_event_grid ~ * {
                     clear: both !important;
                     margin-top: 20px !important;
+                    position: relative !important;
+                    z-index: 2 !important;
+                }
+                
+                /* Prevent any floating elements from interfering - broader approach */
+                .elementor-section {
+                    clear: both !important;
+                    overflow: hidden !important;
+                }
+                
+                /* Force clear on all sections after any section containing DW Event Grid */
+                .elementor-section + .elementor-section {
+                    clear: both !important;
+                    margin-top: 30px !important;
+                }
+                
+                /* Additional safety for any container after DW Event Grid */
+                .elementor-container:after {
+                    content: "" !important;
+                    display: table !important;
+                    clear: both !important;
                 }
                 
                 .dw-event-grid-item {
