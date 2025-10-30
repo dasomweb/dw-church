@@ -1246,7 +1246,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 height: 100%;
                 display: flex;
                 z-index: 2;
-                pointer-events: none;
+                pointer-events: auto;
                 overflow: hidden;
                 box-sizing: border-box;
             }
@@ -1267,6 +1267,18 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 line-height: 1.3;
                 margin: 0;
                 padding: 0;
+            }
+            .dw-event-grid-title a {
+                color: inherit;
+                text-decoration: none;
+                display: block;
+                width: 100%;
+                height: 100%;
+                cursor: pointer;
+                transition: opacity 0.3s ease;
+            }
+            .dw-event-grid-title a:hover {
+                opacity: 0.8;
             }
             .dw-event-grid-datetime {
                 color: #ffffff;
