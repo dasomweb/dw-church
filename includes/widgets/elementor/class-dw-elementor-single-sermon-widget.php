@@ -286,7 +286,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     'unit' => 'px',
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .dw-single-sermon-title' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                    '{{WRAPPER}} .dw-single-sermon-title' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
                 ],
             ]
         );
@@ -813,7 +813,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                 margin-left: 0;
                 margin-right: 0;
                 /* margin-bottom controlled by Elementor spacing control */
-                padding: 0;
+                /* padding controlled by Elementor padding control */
             }
             
             /* Video First Layout */
@@ -853,7 +853,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                 margin-left: 0 !important;
                 margin-right: 0 !important;
                 /* margin-bottom controlled by Elementor spacing control */
-                padding: 0 !important;
+                /* padding controlled by Elementor padding control */
                 text-align: right !important;
             }
             
