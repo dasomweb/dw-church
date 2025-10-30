@@ -60,6 +60,9 @@ class DW_Church_Meta_Boxes {
      * Add meta boxes
      */
     public function dasom_church_add_meta_boxes() {
+        // Debug: Log meta box registration
+        error_log('DW Church Meta Boxes - Registering meta boxes');
+        
         // 주보 메타박스
         add_meta_box(
             'bulletin_meta',
@@ -101,6 +104,7 @@ class DW_Church_Meta_Boxes {
         );
         
         // 배너 메타박스
+        error_log('DW Church Meta Boxes - Registering banner meta box');
         add_meta_box(
             'banner_meta',
             __('배너 정보', 'dw-church'),
@@ -413,10 +417,14 @@ class DW_Church_Meta_Boxes {
      * 배너 메타박스
      */
     public function dasom_church_banner_meta_box($post) {
+        error_log('DW Church Banner Meta Box - Function called for post ID: ' . $post->ID);
+        
         wp_nonce_field('dasom_church_banner_meta', 'dasom_church_banner_nonce');
         
         // Debug: Log post ID and meta data
         error_log('DW Church Banner Meta Box - Post ID: ' . $post->ID);
+        error_log('DW Church Banner Meta Box - Post type: ' . $post->post_type);
+        error_log('DW Church Banner Meta Box - Post status: ' . $post->post_status);
         
         // Get current banner category (for reference only, all fields always visible)
         $terms = wp_get_post_terms($post->ID, 'banner_category');
@@ -473,6 +481,13 @@ class DW_Church_Meta_Boxes {
         $content_padding_left = get_post_meta($post->ID, 'dw_banner_content_padding_left', true);
         $content_padding_left = $content_padding_left ? $content_padding_left : '40';
         ?>
+        <!-- Debug: Meta box is rendering -->
+        <div style="background:#e7f3ff;padding:10px;margin-bottom:15px;border:2px solid #135e96;border-radius:4px;">
+            <p style="margin:0;font-weight:bold;color:#135e96;">
+                🔍 DEBUG: 배너 메타박스가 로드되었습니다! Post ID: <?php echo $post->ID; ?>
+            </p>
+        </div>
+        
         <div style="background:#f9f9f9;padding:15px;margin-bottom:20px;border:1px solid #ddd;border-radius:4px;">
             <p style="margin:0;font-size:13px;color:#666;">
                 <strong><?php _e('배너 이미지:', 'dw-church'); ?></strong><br>
