@@ -2,8 +2,9 @@
 /**
  * Plugin Name: DW Church
  * Description: DW Church Management System
- * Version: 2.30
+ * Version: 2.31
  * Author: DasomWeb
+ * Author URI: https://dasomweb.com
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Update URI: dw-church
  * License: GPL v2 or later
@@ -22,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '2.30');
+define('DASOM_CHURCH_VERSION', '2.31');
 define('DASOM_CHURCH_PLUGIN_URL', str_replace('http://', 'https://', plugin_dir_url(__FILE__)));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -886,7 +887,21 @@ function dw_church_fix_folder_name() {
                 if ($key !== false) {
                     $active_plugins[$key] = $new_plugin_file;
                     update_option('active_plugins', $active_plugins);
-                    error_log('DW Church: Updated active_plugins option');
+                    error_log('DW Church: Updated active_plugins option from ' . $old_plugin_file . ' to ' . $new_plugin_file);
+                }
+                
+                // Also update multisite network plugins if applicable
+                if (is_multisite()) {
+                    $network_plugins = get_site_option('active_sitewide_plugins', []);
+                    foreach ($network_plugins as $plugin_file => $timestamp) {
+                        if (strpos($plugin_file, basename($source)) !== false) {
+                            unset($network_plugins[$plugin_file]);
+                            $network_plugins[$new_plugin_file] = $timestamp;
+                            update_site_option('active_sitewide_plugins', $network_plugins);
+                            error_log('DW Church: Updated network plugins option');
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -899,6 +914,30 @@ add_action('init', function() {
     if (!get_transient('dw_church_folder_fix_done')) {
         dw_church_fix_folder_name();
         set_transient('dw_church_folder_fix_done', true, HOUR_IN_SECONDS);
+    }
+}, 1);
+
+// Auto-reactivate plugin after updates to prevent deactivation
+add_action('upgrader_process_complete', function($upgrader_object, $options) {
+    if ($options['type'] === 'plugin' && $options['action'] === 'update') {
+        $plugin = 'dw-church/dw-church.php';
+        if (!is_plugin_active($plugin)) {
+            activate_plugin($plugin);
+            error_log('DW Church: Auto-reactivated plugin after update');
+        }
+    }
+}, 10, 2);
+
+// Additional safety: Check and reactivate on admin_init if needed
+add_action('admin_init', function() {
+    $plugin = 'dw-church/dw-church.php';
+    if (!is_plugin_active($plugin) && current_user_can('activate_plugins')) {
+        // Only auto-reactivate if this is our plugin and it should be active
+        $current_plugin = plugin_basename(__FILE__);
+        if ($current_plugin === $plugin) {
+            activate_plugin($plugin);
+            error_log('DW Church: Emergency reactivation on admin_init');
+        }
     }
 }, 1);
 
