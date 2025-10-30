@@ -824,77 +824,6 @@ register_activation_hook(__FILE__, function() {
     flush_rewrite_rules();
 });
 
-// Fix folder name function (fallback for wrong ZIP downloads)
-function dw_church_fix_folder_name() {
-    // Only run if we're not in the middle of a request that could cause headers already sent
-    if (headers_sent()) {
-        return;
-    }
-    
-    $plugin_dir = WP_PLUGIN_DIR;
-    
-    // Look for hash-based folder patterns
-    $patterns = [
-        '/dasomweb-dasom-church-management-system-*',
-        '/dasom-church-management-system-*',
-        '/dw-church-management-system-*'
-    ];
-    
-    $found_dirs = [];
-    foreach ($patterns as $pattern) {
-        $dirs = glob($plugin_dir . $pattern, GLOB_ONLYDIR);
-        if ($dirs) {
-            $found_dirs = array_merge($found_dirs, $dirs);
-        }
-    }
-    
-    if ($found_dirs) {
-        $target = $plugin_dir . '/dw-church';
-        
-        // If target doesn't exist, rename the first found directory
-        if (!file_exists($target)) {
-            $source = $found_dirs[0];
-            if (rename($source, $target)) {
-                error_log('DW Church: Fixed folder name from ' . basename($source) . ' to dw-church');
-                
-                // Update active_plugins option
-                $active_plugins = get_option('active_plugins', []);
-                $old_plugin_file = basename($source) . '/dw-church.php';
-                $new_plugin_file = 'dw-church/dw-church.php';
-                
-                $key = array_search($old_plugin_file, $active_plugins);
-                if ($key !== false) {
-                    $active_plugins[$key] = $new_plugin_file;
-                    update_option('active_plugins', $active_plugins);
-                    error_log('DW Church: Updated active_plugins option from ' . $old_plugin_file . ' to ' . $new_plugin_file);
-                }
-                
-                // Also update multisite network plugins if applicable
-                if (is_multisite()) {
-                    $network_plugins = get_site_option('active_sitewide_plugins', []);
-                    foreach ($network_plugins as $plugin_file => $timestamp) {
-                        if (strpos($plugin_file, basename($source)) !== false) {
-                            unset($network_plugins[$plugin_file]);
-                            $network_plugins[$new_plugin_file] = $timestamp;
-                            update_site_option('active_sitewide_plugins', $network_plugins);
-                            error_log('DW Church: Updated network plugins option');
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-// Schedule folder name fix to run after headers are sent
-add_action('init', function() {
-    // Only run once per session to avoid repeated execution
-    if (!get_transient('dw_church_folder_fix_done')) {
-        dw_church_fix_folder_name();
-        set_transient('dw_church_folder_fix_done', true, HOUR_IN_SECONDS);
-    }
-}, 1);
 
 // Auto-reactivate plugin after updates to prevent deactivation
 add_action('upgrader_process_complete', function($upgrader_object, $options) {
@@ -959,4 +888,76 @@ function dw_church_migrate_data($old_version, $new_version) {
     // 로그 기록
     error_log("DW Church: Migrated from {$old_version} to {$new_version}");
 }
+
+/**
+ * Fix folder name if installed with hash suffix
+ * This handles cases where the plugin was installed with a hash-based folder name
+ */
+function dw_church_fix_folder_name() {
+    $plugin_dir = WP_PLUGIN_DIR;
+    $target_dir = $plugin_dir . '/dw-church';
+    
+    // Check if target directory already exists
+    if (file_exists($target_dir)) {
+        return;
+    }
+    
+    // Look for hash-based folder names
+    $hash_folders = glob($plugin_dir . '/dasomweb-dasom-church-management-system-*', GLOB_ONLYDIR);
+    
+    if (!empty($hash_folders)) {
+        $source_dir = $hash_folders[0];
+        
+        // Check if the source directory contains our plugin files
+        if (file_exists($source_dir . '/dw-church.php')) {
+            // Rename the folder
+            if (rename($source_dir, $target_dir)) {
+                error_log('DW Church: Renamed folder from ' . basename($source_dir) . ' to dw-church');
+                
+                // Update active plugins option
+                $active_plugins = get_option('active_plugins', array());
+                $old_plugin_path = 'dasomweb-dasom-church-management-system-' . basename($source_dir) . '/dw-church.php';
+                $new_plugin_path = 'dw-church/dw-church.php';
+                
+                $key = array_search($old_plugin_path, $active_plugins);
+                if ($key !== false) {
+                    $active_plugins[$key] = $new_plugin_path;
+                    update_option('active_plugins', $active_plugins);
+                }
+                
+                // Update sitewide active plugins for multisite
+                if (is_multisite()) {
+                    $sitewide_plugins = get_site_option('active_sitewide_plugins', array());
+                    if (isset($sitewide_plugins[$old_plugin_path])) {
+                        unset($sitewide_plugins[$old_plugin_path]);
+                        $sitewide_plugins[$new_plugin_path] = time();
+                        update_site_option('active_sitewide_plugins', $sitewide_plugins);
+                    }
+                }
+                
+                // Clear rewrite rules
+                flush_rewrite_rules();
+            }
+        }
+    }
+}
+
+// Run folder name fix on init with transient to prevent repeated execution
+add_action('init', function() {
+    $transient_key = 'dw_church_folder_fix_run';
+    if (!get_transient($transient_key)) {
+        dw_church_fix_folder_name();
+        set_transient($transient_key, true, HOUR_IN_SECONDS);
+    }
+});
+
+/**
+ * Enable auto-update for DW Church plugin
+ */
+add_filter('auto_update_plugin', function($update, $item) {
+    if (isset($item->slug) && $item->slug === 'dw-church') {
+        return true; // Always allow auto-update for DW Church
+    }
+    return $update;
+}, 10, 2);
 
