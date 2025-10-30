@@ -3,18 +3,18 @@
  * Plugin Name: DW Church Management System
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Description: Complete church management system for bulletins, sermons, columns, and albums with modern security practices.
- * Version: 2.22
+ * Version: 2.23
  * Author: Dasomweb
  * Author URI: https://dasomweb.com
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: dasom-church
  * Domain Path: /languages
- * Requires at least: 5.8
+ * Requires at least: 6.0
  * Tested up to: 6.8
- * Requires PHP: 7.4
- * GitHub Plugin URI: dasomweb/dasom-church-management-system
- * GitHub Branch: main
+ * Requires PHP: 8.0
+ * Update URI: https://github.com/dasomweb/dasom-church-management-system
+ * Network: false
  */
 
 // Block direct access
@@ -23,10 +23,11 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '2.22');
+define('DASOM_CHURCH_VERSION', '2.23');
 define('DASOM_CHURCH_PLUGIN_URL', str_replace('http://', 'https://', plugin_dir_url(__FILE__)));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
+define('DASOM_CHURCH_PLUGIN_BASENAME', plugin_basename(__FILE__));
 
 // Force HTTPS for plugin assets
 add_filter('script_loader_src', function($src, $handle) {
@@ -824,4 +825,62 @@ Dasom_Church_Management::get_instance();
 // Load widgets
 require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/class-dasom-church-widgets.php';
 
+// Load update manager
+require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/class-dasom-church-update-manager.php';
+
+// Auto-update support
+add_filter('auto_update_plugin', function($update, $item) {
+    if (isset($item->plugin) && $item->plugin === DASOM_CHURCH_PLUGIN_BASENAME) {
+        return true; // 기본적으로 자동업데이트 허용
+    }
+    return $update;
+}, 10, 2);
+
+// Plugin activation hook
+register_activation_hook(__FILE__, function() {
+    add_option('dasom_church_version', DASOM_CHURCH_VERSION);
+    add_option('dasom_church_installed', current_time('mysql'));
+    
+    // Flush rewrite rules
+    flush_rewrite_rules();
+});
+
+// Plugin deactivation hook
+register_deactivation_hook(__FILE__, function() {
+    // Flush rewrite rules
+    flush_rewrite_rules();
+});
+
+// Data migration on update
+add_action('upgrader_process_complete', function($upgrader, $hook_extra) {
+    if (($hook_extra['type'] ?? '') === 'plugin' && ($hook_extra['action'] ?? '') === 'update') {
+        if (in_array(DASOM_CHURCH_PLUGIN_BASENAME, (array)($hook_extra['plugins'] ?? []), true)) {
+            $old_version = get_option('dasom_church_version', '1.0.0');
+            $new_version = DASOM_CHURCH_VERSION;
+            
+            if (version_compare($old_version, $new_version, '<')) {
+                // 데이터 마이그레이션 수행
+                dasom_church_migrate_data($old_version, $new_version);
+                update_option('dasom_church_version', $new_version);
+            }
+        }
+    }
+}, 10, 2);
+
+// Data migration function
+function dasom_church_migrate_data($old_version, $new_version) {
+    // 버전별 마이그레이션 로직
+    if (version_compare($old_version, '2.0.0', '<')) {
+        // 2.0.0 이전 버전에서 마이그레이션
+        // 예: 옵션명 변경, 데이터 구조 변경 등
+    }
+    
+    if (version_compare($old_version, '2.20.0', '<')) {
+        // 2.20.0 이전 버전에서 마이그레이션
+        // 예: 새로운 설정 옵션 추가
+    }
+    
+    // 로그 기록
+    error_log("DW Church: Migrated from {$old_version} to {$new_version}");
+}
 
