@@ -324,16 +324,16 @@ add_filter('elementor/frontend/print_google_fonts', function($google_fonts) {
 // Add update checker for GitHub releases
 add_action('init', function() {
     if (is_admin()) {
-        add_filter('pre_set_site_transient_update_plugins', 'dasom_church_check_for_updates');
-        add_filter('plugins_api', 'dasom_church_plugin_info', 20, 3);
-        add_action('upgrader_process_complete', 'dasom_church_clear_update_cache', 10, 2);
-        add_filter('upgrader_source_selection', 'dasom_church_fix_update_folder', 10, 4);
-        add_filter('upgrader_pre_download', 'dasom_church_upgrader_pre_download', 10, 3);
+        add_filter('pre_set_site_transient_update_plugins', 'dw_church_check_for_updates');
+        add_filter('plugins_api', 'dw_church_plugin_info', 20, 3);
+        add_action('upgrader_process_complete', 'dw_church_clear_update_cache', 10, 2);
+        add_filter('upgrader_source_selection', 'dw_church_fix_update_folder', 10, 4);
+        add_filter('upgrader_pre_download', 'dw_church_upgrader_pre_download', 10, 3);
         
         // Save active state before update
-        add_filter('upgrader_pre_install', 'dasom_church_save_active_state', 10, 2);
+        add_filter('upgrader_pre_install', 'dw_church_save_active_state', 10, 2);
         // Restore active state after update
-        add_action('upgrader_process_complete', 'dasom_church_restore_active_state', 20, 2);
+        add_action('upgrader_process_complete', 'dw_church_restore_active_state', 20, 2);
     }
 });
 
@@ -342,7 +342,7 @@ add_action('init', function() {
  *
  * @return array Headers for GitHub API request
  */
-function dasom_church_get_github_headers() {
+function dw_church_get_github_headers() {
     $headers = array(
         'Accept' => 'application/vnd.github.v3+json',
         'User-Agent' => 'WordPress/' . get_bloginfo('version') . '; ' . get_bloginfo('url')
@@ -364,7 +364,7 @@ function dasom_church_get_github_headers() {
  * @param object $transient Update transient
  * @return object Modified transient
  */
-function dasom_church_check_for_updates($transient) {
+function dw_church_check_for_updates($transient) {
     if (empty($transient->checked)) {
         return $transient;
     }
@@ -375,7 +375,7 @@ function dasom_church_check_for_updates($transient) {
     $github_repo = 'dasom-church-management-system';
     
     // Check cache first (12 hours)
-    $cache_key = 'dasom_church_update_' . md5($github_username . $github_repo);
+    $cache_key = 'dw_church_update_' . md5($github_username . $github_repo);
     $cached_data = get_transient($cache_key);
     
     if ($cached_data !== false) {
@@ -386,7 +386,7 @@ function dasom_church_check_for_updates($transient) {
             "https://api.github.com/repos/{$github_username}/{$github_repo}/releases/latest",
             array(
                 'timeout' => 15,
-                'headers' => dasom_church_get_github_headers()
+                'headers' => dw_church_get_github_headers()
             )
         );
         
@@ -434,7 +434,7 @@ function dasom_church_check_for_updates($transient) {
  * @param object $args Plugin API arguments
  * @return false|object|array Modified result
  */
-function dasom_church_plugin_info($result, $action, $args) {
+function dw_church_plugin_info($result, $action, $args) {
     $plugin_slug = dirname(plugin_basename(__FILE__));
     
     if ($action !== 'plugin_information' || !isset($args->slug) || $args->slug !== $plugin_slug) {
@@ -445,7 +445,7 @@ function dasom_church_plugin_info($result, $action, $args) {
     $github_repo = 'dasom-church-management-system';
     
     // Check cache first
-    $cache_key = 'dasom_church_plugin_info_' . md5($github_username . $github_repo);
+    $cache_key = 'dw_church_plugin_info_' . md5($github_username . $github_repo);
     $cached_info = get_transient($cache_key);
     
     if ($cached_info !== false) {
@@ -457,7 +457,7 @@ function dasom_church_plugin_info($result, $action, $args) {
         "https://api.github.com/repos/{$github_username}/{$github_repo}/releases/latest",
         array(
             'timeout' => 15,
-            'headers' => dasom_church_get_github_headers()
+            'headers' => dw_church_get_github_headers()
         )
     );
     
@@ -508,11 +508,11 @@ function dasom_church_plugin_info($result, $action, $args) {
  * @param array $hook_extra
  * @return bool
  */
-function dasom_church_save_active_state($response, $hook_extra) {
+function dw_church_save_active_state($response, $hook_extra) {
     if (isset($hook_extra['plugin']) && $hook_extra['plugin'] === plugin_basename(__FILE__)) {
         $active_plugins = get_option('active_plugins', array());
         if (in_array(plugin_basename(__FILE__), $active_plugins)) {
-            set_transient('dasom_church_was_active', true, 300); // 5 minutes
+            set_transient('dw_church_was_active', true, 300); // 5 minutes
         }
     }
     return $response;
@@ -524,14 +524,14 @@ function dasom_church_save_active_state($response, $hook_extra) {
  * @param object $upgrader_object Upgrader object
  * @param array $options Update options
  */
-function dasom_church_restore_active_state($upgrader_object, $options) {
+function dw_church_restore_active_state($upgrader_object, $options) {
     if ($options['action'] === 'update' && $options['type'] === 'plugin') {
         if (isset($options['plugins'])) {
             foreach ($options['plugins'] as $plugin) {
                 if ($plugin === plugin_basename(__FILE__)) {
                     // Check if plugin was active before update
-                    if (get_transient('dasom_church_was_active')) {
-                        delete_transient('dasom_church_was_active');
+                    if (get_transient('dw_church_was_active')) {
+                        delete_transient('dw_church_was_active');
                         activate_plugin($plugin, '', false, true);
                     }
                 }
@@ -546,14 +546,14 @@ function dasom_church_restore_active_state($upgrader_object, $options) {
  * @param object $upgrader_object Upgrader object
  * @param array $options Update options
  */
-function dasom_church_clear_update_cache($upgrader_object, $options) {
+function dw_church_clear_update_cache($upgrader_object, $options) {
     if ($options['action'] === 'update' && $options['type'] === 'plugin') {
         $github_username = 'dasomweb';
         $github_repo = 'dasom-church-management-system';
         
         // Clear update cache
-        delete_transient('dasom_church_update_' . md5($github_username . $github_repo));
-        delete_transient('dasom_church_plugin_info_' . md5($github_username . $github_repo));
+        delete_transient('dw_church_update_' . md5($github_username . $github_repo));
+        delete_transient('dw_church_plugin_info_' . md5($github_username . $github_repo));
     }
 }
 
@@ -565,7 +565,7 @@ function dasom_church_clear_update_cache($upgrader_object, $options) {
  * @param WP_Upgrader $upgrader The WP_Upgrader instance
  * @return bool|string False to continue, string path to downloaded package
  */
-function dasom_church_upgrader_pre_download($reply, $package, $upgrader) {
+function dw_church_upgrader_pre_download($reply, $package, $upgrader) {
     // Check if this is a GitHub API zipball URL
     if (strpos($package, 'api.github.com') === false || strpos($package, 'zipball') === false) {
         return $reply;
@@ -646,7 +646,7 @@ function dasom_church_upgrader_pre_download($reply, $package, $upgrader) {
  * @param array $hook_extra Extra arguments passed to hooked filters
  * @return string|WP_Error Modified source location or WP_Error on failure
  */
-function dasom_church_fix_update_folder($source, $remote_source, $upgrader, $hook_extra) {
+function dw_church_fix_update_folder($source, $remote_source, $upgrader, $hook_extra) {
     global $wp_filesystem;
     
     // Check if this is our plugin
@@ -682,8 +682,8 @@ add_action('admin_init', function() {
         $github_repo = 'dasom-church-management-system';
         
         // Delete our custom transients
-        delete_transient('dasom_church_update_' . md5($github_username . $github_repo));
-        delete_transient('dasom_church_plugin_info_' . md5($github_username . $github_repo));
+        delete_transient('dw_church_update_' . md5($github_username . $github_repo));
+        delete_transient('dw_church_plugin_info_' . md5($github_username . $github_repo));
         
         // Delete WordPress update transients to force refresh
         delete_site_transient('update_plugins');
@@ -707,7 +707,7 @@ add_action('admin_init', function() {
 /**
  * Main plugin class
  */
-class Dasom_Church_Management {
+class DW_Church_Management {
     
     /**
      * Single instance of the class
@@ -728,14 +728,14 @@ class Dasom_Church_Management {
      * Constructor
      */
     private function __construct() {
-        $this->dasom_church_load_dependencies();
-        $this->dasom_church_init_hooks();
+        $this->dw_church_load_dependencies();
+        $this->dw_church_init_hooks();
     }
     
     /**
      * Load plugin dependencies
      */
-    private function dasom_church_load_dependencies() {
+    private function dw_church_load_dependencies() {
         // Load core files
         require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/functions-helpers.php';
         
@@ -755,30 +755,30 @@ class Dasom_Church_Management {
     /**
      * Initialize hooks
      */
-    private function dasom_church_init_hooks() {
-        add_action('plugins_loaded', array($this, 'dasom_church_load_textdomain'));
-        register_activation_hook(__FILE__, array($this, 'dasom_church_activation'));
-        register_deactivation_hook(__FILE__, array($this, 'dasom_church_deactivation'));
+    private function dw_church_init_hooks() {
+        add_action('plugins_loaded', array($this, 'dw_church_load_textdomain'));
+        register_activation_hook(__FILE__, array($this, 'dw_church_activation'));
+        register_deactivation_hook(__FILE__, array($this, 'dw_church_deactivation'));
         
         // Initialize loader
-        add_action('init', array($this, 'dasom_church_init'));
+        add_action('init', array($this, 'dw_church_init'));
     }
     
     /**
      * Load text domain for internationalization
      */
-    public function dasom_church_load_textdomain() {
+    public function dw_church_load_textdomain() {
         load_plugin_textdomain('dasom-church', false, dirname(plugin_basename(__FILE__)) . '/languages');
     }
     
     /**
      * Plugin activation
      */
-    public function dasom_church_activation() {
-        // Classes are already loaded in dasom_church_init()
+    public function dw_church_activation() {
+        // Classes are already loaded in dw_church_init()
         $admin = DW_Church_Admin::get_instance();
-        $admin->dasom_church_register_post_types();
-        $admin->dasom_church_register_taxonomies();
+        $admin->dw_church_register_post_types();
+        $admin->dw_church_register_taxonomies();
         
         // Create default sermon categories
         $default_categories = array(
@@ -807,14 +807,14 @@ class Dasom_Church_Management {
     /**
      * Plugin deactivation
      */
-    public function dasom_church_deactivation() {
+    public function dw_church_deactivation() {
         flush_rewrite_rules();
     }
     
     /**
      * Initialize plugin
      */
-    public function dasom_church_init() {
+    public function dw_church_init() {
         // Plugin initialization
     }
 }
@@ -927,8 +927,8 @@ add_filter('auto_update_plugin', function($update, $item) {
 
 // Plugin activation hook
 register_activation_hook(__FILE__, function() {
-    add_option('dasom_church_version', DASOM_CHURCH_VERSION);
-    add_option('dasom_church_installed', current_time('mysql'));
+    add_option('dw_church_version', DASOM_CHURCH_VERSION);
+    add_option('dw_church_installed', current_time('mysql'));
     
     // Flush rewrite rules
     flush_rewrite_rules();
@@ -1041,20 +1041,20 @@ register_deactivation_hook(__FILE__, function() {
 add_action('upgrader_process_complete', function($upgrader, $hook_extra) {
     if (($hook_extra['type'] ?? '') === 'plugin' && ($hook_extra['action'] ?? '') === 'update') {
         if (in_array(DASOM_CHURCH_PLUGIN_BASENAME, (array)($hook_extra['plugins'] ?? []), true)) {
-            $old_version = get_option('dasom_church_version', '1.0.0');
+            $old_version = get_option('dw_church_version', '1.0.0');
             $new_version = DASOM_CHURCH_VERSION;
             
             if (version_compare($old_version, $new_version, '<')) {
                 // 데이터 마이그레이션 수행
-                dasom_church_migrate_data($old_version, $new_version);
-                update_option('dasom_church_version', $new_version);
+                dw_church_migrate_data($old_version, $new_version);
+                update_option('dw_church_version', $new_version);
             }
         }
     }
 }, 10, 2);
 
 // Data migration function
-function dasom_church_migrate_data($old_version, $new_version) {
+function dw_church_migrate_data($old_version, $new_version) {
     // 버전별 마이그레이션 로직
     if (version_compare($old_version, '2.0.0', '<')) {
         // 2.0.0 이전 버전에서 마이그레이션

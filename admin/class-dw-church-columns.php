@@ -826,7 +826,7 @@ class DW_Church_Columns {
 }
 
 // Initialize the columns
-Dasom_Church_Columns::get_instance();
+DW_Church_Columns::get_instance();
 
 // AJAX handler for Quick Edit data
 add_action('wp_ajax_dasom_church_get_quick_edit_data', 'dasom_church_get_quick_edit_data_callback');

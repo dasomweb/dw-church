@@ -333,4 +333,4 @@ class DW_Church_Admin_Customization {
 }
 
 // Initialize the class
-Dasom_Church_Admin_Customization::get_instance();
+DW_Church_Admin_Customization::get_instance();

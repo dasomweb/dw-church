@@ -1844,4 +1844,4 @@ class DW_Church_Meta_Boxes {
 }
 
 // Initialize the meta boxes
-Dasom_Church_Meta_Boxes::get_instance();
+DW_Church_Meta_Boxes::get_instance();

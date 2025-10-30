@@ -236,4 +236,4 @@ class DW_Church_Update_Manager {
 }
 
 // Initialize update manager
-Dasom_Church_Update_Manager::get_instance();
+DW_Church_Update_Manager::get_instance();

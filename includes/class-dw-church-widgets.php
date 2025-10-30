@@ -361,5 +361,5 @@ class DW_Church_Widgets {
 }
 
 // Initialize
-new Dasom_Church_Widgets();
+new DW_Church_Widgets();
 

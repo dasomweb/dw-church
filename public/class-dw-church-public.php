@@ -35,47 +35,47 @@ class DW_Church_Public {
      * Constructor
      */
     private function __construct() {
-        $this->dasom_church_init_hooks();
+        $this->dw_church_init_hooks();
     }
     
     /**
      * Initialize hooks
      */
-    private function dasom_church_init_hooks() {
-        add_action('wp_enqueue_scripts', array($this, 'dasom_church_enqueue_scripts'));
-        add_action('wp_enqueue_scripts', array($this, 'dasom_church_enqueue_styles'));
+    private function dw_church_init_hooks() {
+        add_action('wp_enqueue_scripts', array($this, 'dw_church_enqueue_scripts'));
+        add_action('wp_enqueue_scripts', array($this, 'dw_church_enqueue_styles'));
         
         // Add shortcodes
-        add_shortcode('dasom_bulletins', array($this, 'dasom_church_bulletins_shortcode'));
-        add_shortcode('dasom_sermons', array($this, 'dasom_church_sermons_shortcode'));
-        add_shortcode('dasom_columns', array($this, 'dasom_church_columns_shortcode'));
-        add_shortcode('dasom_albums', array($this, 'dasom_church_albums_shortcode'));
+        add_shortcode('dasom_bulletins', array($this, 'dw_church_bulletins_shortcode'));
+        add_shortcode('dasom_sermons', array($this, 'dw_church_sermons_shortcode'));
+        add_shortcode('dasom_columns', array($this, 'dw_church_columns_shortcode'));
+        add_shortcode('dasom_albums', array($this, 'dw_church_albums_shortcode'));
     }
     
     /**
      * Enqueue public scripts
      */
-    public function dasom_church_enqueue_scripts() {
+    public function dw_church_enqueue_scripts() {
         wp_enqueue_script('dasom-church-public', DASOM_CHURCH_PLUGIN_URL . 'assets/js/public.js', array('jquery'), DASOM_CHURCH_VERSION, true);
         
         // Localize script
         wp_localize_script('dasom-church-public', 'dasomChurchPublic', array(
             'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('dasom_church_public_nonce')
+            'nonce' => wp_create_nonce('dw_church_public_nonce')
         ));
     }
     
     /**
      * Enqueue public styles
      */
-    public function dasom_church_enqueue_styles() {
+    public function dw_church_enqueue_styles() {
         wp_enqueue_style('dasom-church-public', DASOM_CHURCH_PLUGIN_URL . 'assets/css/public.css', array(), DASOM_CHURCH_VERSION);
     }
     
     /**
      * Bulletins shortcode
      */
-    public function dasom_church_bulletins_shortcode($atts) {
+    public function dw_church_bulletins_shortcode($atts) {
         $atts = shortcode_atts(array(
             'limit' => 5,
             'show_date' => 'true',
@@ -124,7 +124,7 @@ class DW_Church_Public {
     /**
      * Sermons shortcode
      */
-    public function dasom_church_sermons_shortcode($atts) {
+    public function dw_church_sermons_shortcode($atts) {
         $atts = shortcode_atts(array(
             'limit' => 5,
             'category' => '',
@@ -186,7 +186,7 @@ class DW_Church_Public {
     /**
      * Columns shortcode
      */
-    public function dasom_church_columns_shortcode($atts) {
+    public function dw_church_columns_shortcode($atts) {
         $atts = shortcode_atts(array(
             'limit' => 5,
             'show_author' => 'true',
@@ -235,7 +235,7 @@ class DW_Church_Public {
     /**
      * Albums shortcode
      */
-    public function dasom_church_albums_shortcode($atts) {
+    public function dw_church_albums_shortcode($atts) {
         $atts = shortcode_atts(array(
             'limit' => 5,
             'show_images' => 'true',

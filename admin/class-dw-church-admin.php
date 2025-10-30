@@ -36,54 +36,54 @@ class DW_Church_Admin {
      * Constructor
      */
     private function __construct() {
-        $this->dasom_church_init_hooks();
+        $this->dw_church_init_hooks();
     }
     
     /**
      * Initialize hooks
      */
-    private function dasom_church_init_hooks() {
+    private function dw_church_init_hooks() {
         // Set default widget settings on plugin activation
-        add_action('admin_init', array($this, 'dasom_church_set_default_widget_settings'));
+        add_action('admin_init', array($this, 'dw_church_set_default_widget_settings'));
         
         // Admin menu
-        add_action('admin_menu', array($this, 'dasom_church_admin_menu'));
-        add_action('admin_enqueue_scripts', array($this, 'dasom_church_admin_scripts'));
-        add_action('admin_init', array($this, 'dasom_church_handle_settings_save'));
+        add_action('admin_menu', array($this, 'dw_church_admin_menu'));
+        add_action('admin_enqueue_scripts', array($this, 'dw_church_admin_scripts'));
+        add_action('admin_init', array($this, 'dw_church_handle_settings_save'));
         add_action('admin_init', array($this, 'redirect_to_dw_dashboard'));
-        add_filter('login_redirect', array($this, 'dasom_church_login_redirect'), 20, 3);
+        add_filter('login_redirect', array($this, 'dw_church_login_redirect'), 20, 3);
         // REMOVED: Conflicting menu filter - Dasom_Church_Menu_Visibility handles this
         // add_action('admin_menu', array($this, 'filter_admin_menus'), 9999);
         
         // Custom Post Types
-        add_action('init', array($this, 'dasom_church_register_post_types'));
-        add_action('init', array($this, 'dasom_church_register_taxonomies'));
+        add_action('init', array($this, 'dw_church_register_post_types'));
+        add_action('init', array($this, 'dw_church_register_taxonomies'));
         
         // Load meta boxes and columns classes
         require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dasom-church-meta-boxes.php';
         require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dasom-church-columns.php';
         
         // Remove default editor support
-        add_action('admin_init', array($this, 'dasom_church_remove_editor_support'));
-        add_filter('use_block_editor_for_post_type', array($this, 'dasom_church_disable_block_editor'), 10, 2);
+        add_action('admin_init', array($this, 'dw_church_remove_editor_support'));
+        add_filter('use_block_editor_for_post_type', array($this, 'dw_church_disable_block_editor'), 10, 2);
         
         // Elementor compatibility
-        add_filter('get_post_metadata', array($this, 'dasom_church_elementor_metadata'), 9, 4);
+        add_filter('get_post_metadata', array($this, 'dw_church_elementor_metadata'), 9, 4);
         
         // Admin head styles
-        add_action('admin_head', array($this, 'dasom_church_admin_head_styles'));
+        add_action('admin_head', array($this, 'dw_church_admin_head_styles'));
         
         // Banner scheduling cron
-        add_action('dasom_church_check_banner_schedule', array($this, 'dasom_church_check_expired_banners'));
-        if (!wp_next_scheduled('dasom_church_check_banner_schedule')) {
-            wp_schedule_event(time(), 'hourly', 'dasom_church_check_banner_schedule');
+        add_action('dw_church_check_banner_schedule', array($this, 'dw_church_check_expired_banners'));
+        if (!wp_next_scheduled('dw_church_check_banner_schedule')) {
+            wp_schedule_event(time(), 'hourly', 'dw_church_check_banner_schedule');
         }
     }
     
     /**
      * Login redirect for Author/Editor to DW dashboard
      */
-    public function dasom_church_login_redirect($redirect_to, $requested, $user) {
+    public function dw_church_login_redirect($redirect_to, $requested, $user) {
         if ($user instanceof WP_User) {
             if (in_array('author', (array)$user->roles, true) || in_array('editor', (array)$user->roles, true)) {
                 return admin_url('admin.php?page=dasom-church-dashboard');
@@ -195,7 +195,7 @@ class DW_Church_Admin {
     /**
      * Set default widget settings
      */
-    public function dasom_church_set_default_widget_settings() {
+    public function dw_church_set_default_widget_settings() {
         // Force all widget settings to 'yes' regardless of current values
         $widget_settings = array(
             'dw_enable_gallery_widget' => 'yes',
@@ -236,8 +236,8 @@ class DW_Church_Admin {
             $user_role = in_array('author', $current_user->roles) ? 'author' : 'editor';
             
             // Check if class exists before using it
-            if (class_exists('Dasom_Church_Menu_Visibility')) {
-                $menu_visibility = Dasom_Church_Menu_Visibility::get_instance();
+            if (class_exists('DW_Church_Menu_Visibility')) {
+                $menu_visibility = DW_Church_Menu_Visibility::get_instance();
                 $menu_slug = 'dasom-church-' . $menu_key;
                 return $menu_visibility->user_can_access_menu($menu_slug, $user_role);
             } else {
@@ -252,7 +252,7 @@ class DW_Church_Admin {
     /**
      * Add admin menu
      */
-    public function dasom_church_admin_menu() {
+    public function dw_church_admin_menu() {
         // DEBUG: 메뉴 등록 디버그
         error_log('=== ADMIN MENU DEBUG ===');
         error_log('Current User ID: ' . get_current_user_id());
@@ -267,7 +267,7 @@ class DW_Church_Admin {
             __('DW 교회관리', 'dw-church'),
             'edit_posts', // Back to edit_posts for Author/Editor
             'dasom-church-admin',
-            array($this, 'dasom_church_dashboard_page'),
+            array($this, 'dw_church_dashboard_page'),
             'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M11 2v6h6v3h-6v7H8v-7H2V8h6V2z"/></svg>'),
             5
         );
@@ -284,7 +284,7 @@ class DW_Church_Admin {
             __('대시보드', 'dw-church'),
             'edit_posts',
             'dasom-church-dashboard',
-            array($this, 'dasom_church_dashboard_page')
+            array($this, 'dw_church_dashboard_page')
         );
         
         // Settings submenu
@@ -295,7 +295,7 @@ class DW_Church_Admin {
                 __('설정', 'dw-church'),
                 'edit_posts',
                 'dasom-church-settings',
-                array($this, 'dasom_church_settings_page')
+                array($this, 'dw_church_settings_page')
             );
         }
         
@@ -306,7 +306,7 @@ class DW_Church_Admin {
             __('사용자 프로필', 'dw-church'),
             'edit_posts',
             'dasom-church-profile',
-            array($this, 'dasom_church_profile_page')
+            array($this, 'dw_church_profile_page')
         );
         
         // Logout submenu
@@ -316,7 +316,7 @@ class DW_Church_Admin {
             __('로그아웃', 'dw-church'),
             'edit_posts',
             'dasom-church-logout',
-            array($this, 'dasom_church_logout_page')
+            array($this, 'dw_church_logout_page')
         );
         
         // Add GitHub Update settings to WordPress Settings menu (독립적)
@@ -325,7 +325,7 @@ class DW_Church_Admin {
             __('DW 설정', 'dw-church'),
             'manage_options',
             'dasom-church-github-update',
-            array($this, 'dasom_church_github_update_page')
+            array($this, 'dw_church_github_update_page')
         );
         
     }
@@ -333,7 +333,7 @@ class DW_Church_Admin {
     /**
      * Register Custom Post Types
      */
-    public function dasom_church_register_post_types() {
+    public function dw_church_register_post_types() {
         // 교회주보
         register_post_type('bulletin', array(
             'labels' => array(
@@ -491,7 +491,7 @@ class DW_Church_Admin {
     /**
      * Register Taxonomies
      */
-    public function dasom_church_register_taxonomies() {
+    public function dw_church_register_taxonomies() {
         // 설교 카테고리
         register_taxonomy('sermon_category', 'sermon', array(
             'labels' => array(
@@ -566,13 +566,13 @@ class DW_Church_Admin {
         ));
         
         // 기본 카테고리 및 설교자 생성
-        $this->dasom_church_create_default_terms();
+        $this->dw_church_create_default_terms();
     }
     
     /**
      * Create default terms
      */
-    private function dasom_church_create_default_terms() {
+    private function dw_church_create_default_terms() {
         // 기본 설교 카테고리 생성
         $default_categories = array(
             __('주일설교', 'dw-church'),
@@ -622,7 +622,7 @@ class DW_Church_Admin {
     /**
      * Remove editor support
      */
-    public function dasom_church_remove_editor_support() {
+    public function dw_church_remove_editor_support() {
         remove_post_type_support('bulletin', 'title');
         remove_post_type_support('bulletin', 'editor');
         remove_post_type_support('sermon', 'title');
@@ -632,7 +632,7 @@ class DW_Church_Admin {
     /**
      * Disable block editor
      */
-    public function dasom_church_disable_block_editor($use, $post_type) {
+    public function dw_church_disable_block_editor($use, $post_type) {
         if (in_array($post_type, array('bulletin', 'sermon'))) {
             return false;
         }
@@ -642,7 +642,7 @@ class DW_Church_Admin {
     /**
      * Handle preacher management actions
      */
-    private function dasom_church_handle_preacher_action($action) {
+    private function dw_church_handle_preacher_action($action) {
         // Verify nonce
         if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'sermon_preacher_actions')) {
             wp_die(__('Security check failed', 'dw-church'));
@@ -710,7 +710,7 @@ class DW_Church_Admin {
     /**
      * Dashboard page
      */
-    public function dasom_church_dashboard_page() {
+    public function dw_church_dashboard_page() {
         // Allow access for Administrator, Editor, and Author
         if (!current_user_can('edit_posts')) {
             wp_die(__('You do not have sufficient permissions to access this page.', 'dw-church'));
@@ -723,7 +723,7 @@ class DW_Church_Admin {
             }
             
             $action = sanitize_text_field($_POST['preacher_action']);
-            $this->dasom_church_handle_preacher_action($action);
+            $this->dw_church_handle_preacher_action($action);
         }
         
         // Load dashboard view
@@ -733,7 +733,7 @@ class DW_Church_Admin {
     /**
      * Settings page
      */
-    public function dasom_church_settings_page() {
+    public function dw_church_settings_page() {
         // Allow access for Administrator, Editor, and Author
         if (!current_user_can('edit_posts')) {
             wp_die(__('You do not have sufficient permissions to access this page.', 'dw-church'));
@@ -746,7 +746,7 @@ class DW_Church_Admin {
             }
             
             $action = sanitize_text_field($_POST['preacher_action']);
-            $this->dasom_church_handle_preacher_action($action);
+            $this->dw_church_handle_preacher_action($action);
         }
         
         // Load settings view
@@ -756,7 +756,7 @@ class DW_Church_Admin {
     /**
      * GitHub Update page (독립적 - WordPress Settings 메뉴)
      */
-    public function dasom_church_github_update_page() {
+    public function dw_church_github_update_page() {
         if (!current_user_can('manage_options')) {
             wp_die(__('You do not have sufficient permissions to access this page.', 'dw-church'));
         }
@@ -768,7 +768,7 @@ class DW_Church_Admin {
     /**
      * Elementor compatibility - metadata filter
      */
-    public function dasom_church_elementor_metadata($value, $post_id, $meta_key, $single) {
+    public function dw_church_elementor_metadata($value, $post_id, $meta_key, $single) {
         // 관리자 화면에서는 필터 적용하지 않음 (원본 데이터 사용)
         if (is_admin()) {
             return $value;
@@ -848,7 +848,7 @@ class DW_Church_Admin {
     /**
      * Admin head styles
      */
-    public function dasom_church_admin_head_styles() {
+    public function dw_church_admin_head_styles() {
         global $post_type;
         if (in_array($post_type, array('bulletin', 'sermon'))) {
             echo '<style>#titlediv { display: none; }</style>';
@@ -858,7 +858,7 @@ class DW_Church_Admin {
     /**
      * Check and update expired banners
      */
-    public function dasom_church_check_expired_banners() {
+    public function dw_church_check_expired_banners() {
         $args = array(
             'post_type' => 'banner',
             'post_status' => 'publish',
@@ -893,9 +893,9 @@ class DW_Church_Admin {
     /**
      * Handle settings form submission
      */
-    public function dasom_church_handle_settings_save() {
-        if (!isset($_POST['dasom_church_settings_nonce']) || 
-            !wp_verify_nonce($_POST['dasom_church_settings_nonce'], 'dasom_church_settings_action')) {
+    public function dw_church_handle_settings_save() {
+        if (!isset($_POST['dw_church_settings_nonce']) || 
+            !wp_verify_nonce($_POST['dw_church_settings_nonce'], 'dw_church_settings_action')) {
             return;
         }
         
@@ -920,7 +920,7 @@ class DW_Church_Admin {
         );
         
         foreach ($settings as $key => $value) {
-            dasom_church_update_setting($key, $value);
+            dw_church_update_setting($key, $value);
         }
         
         // Add success message
@@ -942,8 +942,8 @@ class DW_Church_Admin {
             if (!empty($token)) {
                 $github_username = 'dasomweb';
                 $github_repo = 'dasom-church-management-system';
-                delete_transient('dasom_church_update_' . md5($github_username . $github_repo));
-                delete_transient('dasom_church_plugin_info_' . md5($github_username . $github_repo));
+                delete_transient('dw_church_update_' . md5($github_username . $github_repo));
+                delete_transient('dw_church_plugin_info_' . md5($github_username . $github_repo));
             }
         }
         
@@ -987,7 +987,7 @@ class DW_Church_Admin {
     /**
      * Enqueue admin scripts and styles
      */
-    public function dasom_church_admin_scripts($hook) {
+    public function dw_church_admin_scripts($hook) {
         // Only load on our admin pages
         if (strpos($hook, 'dw-church') === false) {
             return;
@@ -999,7 +999,7 @@ class DW_Church_Admin {
         // Localize script
         wp_localize_script('dasom-church-admin', 'dasomChurchAdmin', array(
             'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('dasom_church_admin_nonce'),
+            'nonce' => wp_create_nonce('dw_church_admin_nonce'),
             'strings' => array(
                 'confirmDelete' => __('Are you sure you want to delete this item?', 'dw-church'),
                 'uploadError' => __('Upload failed. Please try again.', 'dw-church'),
@@ -1011,14 +1011,14 @@ class DW_Church_Admin {
     /**
      * User Profile page
      */
-    public function dasom_church_profile_page() {
+    public function dw_church_profile_page() {
         if (!current_user_can('edit_posts')) {
             wp_die(__('You do not have sufficient permissions to access this page.', 'dw-church'));
         }
         
         // Handle profile update
-        if (isset($_POST['dasom_church_profile_nonce']) && wp_verify_nonce($_POST['dasom_church_profile_nonce'], 'dasom_church_profile_action')) {
-            $this->dasom_church_handle_profile_update();
+        if (isset($_POST['dw_church_profile_nonce']) && wp_verify_nonce($_POST['dw_church_profile_nonce'], 'dw_church_profile_action')) {
+            $this->dw_church_handle_profile_update();
         }
         
         $current_user = wp_get_current_user();
@@ -1027,7 +1027,7 @@ class DW_Church_Admin {
             <h1><?php _e('사용자 프로필', 'dw-church'); ?></h1>
             
             <form method="post" action="">
-                <?php wp_nonce_field('dasom_church_profile_action', 'dasom_church_profile_nonce'); ?>
+                <?php wp_nonce_field('dw_church_profile_action', 'dw_church_profile_nonce'); ?>
                 
                 <table class="form-table">
                     <tr>
@@ -1135,7 +1135,7 @@ class DW_Church_Admin {
     /**
      * Handle profile update
      */
-    private function dasom_church_handle_profile_update() {
+    private function dw_church_handle_profile_update() {
         $current_user = wp_get_current_user();
         $user_id = $current_user->ID;
         
@@ -1186,7 +1186,7 @@ class DW_Church_Admin {
     /**
      * Logout page
      */
-    public function dasom_church_logout_page() {
+    public function dw_church_logout_page() {
         // Check if headers already sent
         if (headers_sent()) {
             // If headers already sent, use JavaScript redirect
