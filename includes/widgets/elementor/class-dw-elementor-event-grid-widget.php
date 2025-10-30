@@ -1333,32 +1333,16 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     z-index: 1 !important;
                 }
                 
-                /* Force all subsequent containers and widgets to clear */
-                .elementor-widget-dw_event_grid + *,
-                .elementor-widget-dw_event_grid ~ * {
+                /* Only clear the immediate next element, not all subsequent elements */
+                .elementor-widget-dw_event_grid + .elementor-widget {
                     clear: both !important;
                     margin-top: 20px !important;
-                    position: relative !important;
-                    z-index: 2 !important;
                 }
                 
-                /* Prevent any floating elements from interfering - broader approach */
-                .elementor-section {
-                    clear: both !important;
-                    overflow: hidden !important;
-                }
-                
-                /* Force clear on all sections after any section containing DW Event Grid */
-                .elementor-section + .elementor-section {
-                    clear: both !important;
-                    margin-top: 30px !important;
-                }
-                
-                /* Additional safety for any container after DW Event Grid */
-                .elementor-container:after {
-                    content: "" !important;
-                    display: table !important;
-                    clear: both !important;
+                /* Only affect DW Event Grid widget, not other widgets */
+                .elementor-widget-dw_event_grid {
+                    isolation: isolate !important;
+                    contain: layout !important;
                 }
                 
                 .dw-event-grid-item {
