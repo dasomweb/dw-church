@@ -53,21 +53,21 @@ if (is_wp_error($author_id)) {
     echo "  - manage_options: " . (current_user_can('manage_options') ? 'YES' : 'NO') . "\n";
     
     // Test menu visibility
-    if (class_exists('Dasom_Church_Menu_Visibility')) {
-        $menu_visibility = Dasom_Church_Menu_Visibility::get_instance();
+    if (class_exists('DW_Church_Menu_Visibility')) {
+        $menu_visibility = DW_Church_Menu_Visibility::get_instance();
         $can_access = $menu_visibility->user_can_access_menu('dasom-church-admin', 'author');
         echo "Author can access dasom-church-admin: " . ($can_access ? 'YES' : 'NO') . "\n";
     }
     
     // Test dashboard page function
-    if (class_exists('Dasom_Church_Admin')) {
-        $admin = Dasom_Church_Admin::get_instance();
+    if (class_exists('DW_Church_Admin')) {
+        $admin = DW_Church_Admin::get_instance();
         echo "Testing dashboard page function...\n";
         
         // Capture output
         ob_start();
         try {
-            $admin->dasom_church_dashboard_page();
+            $admin->DW_Church_dashboard_page();
             $output = ob_get_clean();
             echo "Dashboard page executed successfully\n";
             echo "Output length: " . strlen($output) . " characters\n";
@@ -81,7 +81,7 @@ if (is_wp_error($author_id)) {
             echo "ERROR: Dashboard page failed - " . $e->getMessage() . "\n";
         }
     } else {
-        echo "ERROR: Dasom_Church_Admin class not found\n";
+        echo "ERROR: DW_Church_Admin class not found\n";
     }
 }
 
@@ -110,21 +110,21 @@ if (is_wp_error($editor_id)) {
     echo "  - manage_options: " . (current_user_can('manage_options') ? 'YES' : 'NO') . "\n";
     
     // Test menu visibility
-    if (class_exists('Dasom_Church_Menu_Visibility')) {
-        $menu_visibility = Dasom_Church_Menu_Visibility::get_instance();
+    if (class_exists('DW_Church_Menu_Visibility')) {
+        $menu_visibility = DW_Church_Menu_Visibility::get_instance();
         $can_access = $menu_visibility->user_can_access_menu('dasom-church-admin', 'editor');
         echo "Editor can access dasom-church-admin: " . ($can_access ? 'YES' : 'NO') . "\n";
     }
     
     // Test dashboard page function
-    if (class_exists('Dasom_Church_Admin')) {
-        $admin = Dasom_Church_Admin::get_instance();
+    if (class_exists('DW_Church_Admin')) {
+        $admin = DW_Church_Admin::get_instance();
         echo "Testing dashboard page function...\n";
         
         // Capture output
         ob_start();
         try {
-            $admin->dasom_church_dashboard_page();
+            $admin->DW_Church_dashboard_page();
             $output = ob_get_clean();
             echo "Dashboard page executed successfully\n";
             echo "Output length: " . strlen($output) . " characters\n";
@@ -138,7 +138,7 @@ if (is_wp_error($editor_id)) {
             echo "ERROR: Dashboard page failed - " . $e->getMessage() . "\n";
         }
     } else {
-        echo "ERROR: Dasom_Church_Admin class not found\n";
+        echo "ERROR: DW_Church_Admin class not found\n";
     }
 }
 

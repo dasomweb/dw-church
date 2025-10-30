@@ -19,7 +19,7 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
     }
     
     public function get_title() {
-        return __('DW Banner Grid', 'dasom-church');
+        return __('DW Banner Grid', 'dw-church');
     }
     
     public function get_icon() {
@@ -38,7 +38,7 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
      * Helper function to get taxonomy options
      */
     private function get_taxonomy_options($taxonomy) {
-        $options = array('' => __('All', 'dasom-church'));
+        $options = array('' => __('All', 'dw-church'));
         $terms = get_terms(array(
             'taxonomy' => $taxonomy,
             'hide_empty' => false,
@@ -56,7 +56,7 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'query_section',
             [
-                'label' => __('Query Settings', 'dasom-church'),
+                'label' => __('Query Settings', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
             ]
         );
@@ -64,12 +64,12 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'query_source',
             [
-                'label' => __('Query Source', 'dasom-church'),
+                'label' => __('Query Source', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'latest',
                 'options' => [
-                    'latest' => __('Latest Posts', 'dasom-church'),
-                    'manual' => __('Manual Selection', 'dasom-church'),
+                    'latest' => __('Latest Posts', 'dw-church'),
+                    'manual' => __('Manual Selection', 'dw-church'),
                 ],
             ]
         );
@@ -90,7 +90,7 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'manual_selection',
             [
-                'label' => __('Select Banners', 'dasom-church'),
+                'label' => __('Select Banners', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT2,
                 'multiple' => true,
                 'options' => $banner_options,
@@ -98,7 +98,7 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
                 'condition' => [
                     'query_source' => 'manual',
                 ],
-                'description' => __('Select specific banners to display.', 'dasom-church'),
+                'description' => __('Select specific banners to display.', 'dw-church'),
             ]
         );
         
@@ -108,7 +108,7 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
             'hide_empty' => false,
         ));
         
-        $category_options = array('' => __('All Banners', 'dasom-church'));
+        $category_options = array('' => __('All Banners', 'dw-church'));
         if (!is_wp_error($categories)) {
             foreach ($categories as $cat) {
                 $category_options[$cat->slug] = $cat->name;
@@ -118,7 +118,7 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'banner_category',
             [
-                'label' => __('Banner Category', 'dasom-church'),
+                'label' => __('Banner Category', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'options' => $category_options,
                 'default' => '',
@@ -131,7 +131,7 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'posts_per_page',
             [
-                'label' => __('Number of Banners', 'dasom-church'),
+                'label' => __('Number of Banners', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::NUMBER,
                 'default' => 6,
                 'min' => 1,
@@ -145,12 +145,12 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'order',
             [
-                'label' => __('Order', 'dasom-church'),
+                'label' => __('Order', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'DESC',
                 'options' => [
-                    'ASC' => __('Ascending', 'dasom-church'),
-                    'DESC' => __('Descending', 'dasom-church'),
+                    'ASC' => __('Ascending', 'dw-church'),
+                    'DESC' => __('Descending', 'dw-church'),
                 ],
                 'condition' => [
                     'query_source' => 'latest',
@@ -161,14 +161,14 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'orderby',
             [
-                'label' => __('Order By', 'dasom-church'),
+                'label' => __('Order By', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'date',
                 'options' => [
-                    'date' => __('Date', 'dasom-church'),
-                    'title' => __('Title', 'dasom-church'),
-                    'rand' => __('Random', 'dasom-church'),
-                    'menu_order' => __('Menu Order', 'dasom-church'),
+                    'date' => __('Date', 'dw-church'),
+                    'title' => __('Title', 'dw-church'),
+                    'rand' => __('Random', 'dw-church'),
+                    'menu_order' => __('Menu Order', 'dw-church'),
                 ],
                 'condition' => [
                     'query_source' => 'latest',
@@ -182,7 +182,7 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'layout_section',
             [
-                'label' => __('Layout Settings', 'dasom-church'),
+                'label' => __('Layout Settings', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
             ]
         );
@@ -190,7 +190,7 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'columns',
             [
-                'label' => __('Columns', 'dasom-church'),
+                'label' => __('Columns', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => '3',
                 'tablet_default' => '2',
@@ -212,7 +212,7 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'column_gap',
             [
-                'label' => __('Column Gap', 'dasom-church'),
+                'label' => __('Column Gap', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px', 'em'],
                 'range' => [
@@ -234,7 +234,7 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'row_gap',
             [
-                'label' => __('Row Gap', 'dasom-church'),
+                'label' => __('Row Gap', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px', 'em'],
                 'range' => [
@@ -259,7 +259,7 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'card_style_section',
             [
-                'label' => __('Card Style', 'dasom-church'),
+                'label' => __('Card Style', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
@@ -267,7 +267,7 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'card_border_radius',
             [
-                'label' => __('Border Radius', 'dasom-church'),
+                'label' => __('Border Radius', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px', '%'],
                 'range' => [
@@ -291,7 +291,7 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Box_Shadow::get_type(),
             [
                 'name' => 'card_box_shadow',
-                'label' => __('Box Shadow', 'dasom-church'),
+                'label' => __('Box Shadow', 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-banner-grid-item',
             ]
         );
@@ -301,14 +301,14 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
         $this->start_controls_tab(
             'card_normal',
             [
-                'label' => __('Normal', 'dasom-church'),
+                'label' => __('Normal', 'dw-church'),
             ]
         );
         
         $this->add_control(
             'card_opacity',
             [
-                'label' => __('Opacity', 'dasom-church'),
+                'label' => __('Opacity', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'range' => [
                     'px' => [
@@ -331,14 +331,14 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
         $this->start_controls_tab(
             'card_hover',
             [
-                'label' => __('Hover', 'dasom-church'),
+                'label' => __('Hover', 'dw-church'),
             ]
         );
         
         $this->add_control(
             'card_hover_opacity',
             [
-                'label' => __('Opacity', 'dasom-church'),
+                'label' => __('Opacity', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'range' => [
                     'px' => [
@@ -359,7 +359,7 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'card_hover_transform',
             [
-                'label' => __('Scale on Hover', 'dasom-church'),
+                'label' => __('Scale on Hover', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'range' => [
                     'px' => [
@@ -456,7 +456,7 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
         }
         
         if (!$banners->have_posts()) {
-            echo '<p>' . __('No banners found.', 'dasom-church') . '</p>';
+            echo '<p>' . __('No banners found.', 'dw-church') . '</p>';
             return;
         }
         

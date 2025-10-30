@@ -2,7 +2,7 @@
 /**
  * DW Elementor Recent Sermons Widget
  *
- * @package Dasom_Church
+ * @package DW_Church
  * @since 1.10.0
  */
 
@@ -18,7 +18,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
     }
     
     public function get_title() {
-        return __('DW Recent Sermons', 'dasom-church');
+        return __('DW Recent Sermons', 'dw-church');
     }
     
     public function get_icon() {
@@ -30,7 +30,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
     }
     
     public function get_keywords() {
-        return ['sermon', 'church', 'preaching', 'dw', '설교'];
+        return ['sermon', 'church', 'preaching', 'dw', '?�교'];
     }
     
     protected function register_controls() {
@@ -38,7 +38,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'content_section',
             [
-                'label' => __('Settings', 'dasom-church'),
+                'label' => __('Settings', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
             ]
         );
@@ -46,7 +46,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'posts_per_page',
             [
-                'label' => __('Number of Sermons', 'dasom-church'),
+                'label' => __('Number of Sermons', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::NUMBER,
                 'default' => 6,
                 'min' => 1,
@@ -57,12 +57,12 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'layout',
             [
-                'label' => __('Layout', 'dasom-church'),
+                'label' => __('Layout', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'grid',
                 'options' => [
-                    'grid' => __('Grid', 'dasom-church'),
-                    'list' => __('List', 'dasom-church'),
+                    'grid' => __('Grid', 'dw-church'),
+                    'list' => __('List', 'dw-church'),
                 ],
             ]
         );
@@ -70,7 +70,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'columns',
             [
-                'label' => __('Columns', 'dasom-church'),
+                'label' => __('Columns', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::NUMBER,
                 'default' => 3,
                 'tablet_default' => 2,
@@ -86,10 +86,10 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'show_thumbnail',
             [
-                'label' => __('Show Thumbnail', 'dasom-church'),
+                'label' => __('Show Thumbnail', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
+                'label_on' => __('Yes', 'dw-church'),
+                'label_off' => __('No', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
             ]
@@ -98,15 +98,15 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'thumbnail_size',
             [
-                'label' => __('썸네일 크기', 'dasom-church'),
+                'label' => __('?�네???�기', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'medium',
                 'options' => [
-                    'thumbnail' => __('Thumbnail (150x150)', 'dasom-church'),
-                    'medium' => __('Medium (300x300)', 'dasom-church'),
-                    'medium_large' => __('Medium Large (768x768)', 'dasom-church'),
-                    'large' => __('Large (1024x1024)', 'dasom-church'),
-                    'full' => __('Full (원본)', 'dasom-church'),
+                    'thumbnail' => __('Thumbnail (150x150)', 'dw-church'),
+                    'medium' => __('Medium (300x300)', 'dw-church'),
+                    'medium_large' => __('Medium Large (768x768)', 'dw-church'),
+                    'large' => __('Large (1024x1024)', 'dw-church'),
+                    'full' => __('Full (?�본)', 'dw-church'),
                 ],
                 'condition' => [
                     'show_thumbnail' => 'yes',
@@ -117,10 +117,10 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'show_date',
             [
-                'label' => __('날짜 표시', 'dasom-church'),
+                'label' => __('?�짜 ?�시', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
+                'label_on' => __('Yes', 'dw-church'),
+                'label_off' => __('No', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
             ]
@@ -129,10 +129,10 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'show_preacher',
             [
-                'label' => __('설교자 표시', 'dasom-church'),
+                'label' => __('?�교???�시', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
+                'label_on' => __('Yes', 'dw-church'),
+                'label_off' => __('No', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
             ]
@@ -141,10 +141,10 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'show_scripture',
             [
-                'label' => __('성경구절 표시', 'dasom-church'),
+                'label' => __('?�경구절 ?�시', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
+                'label_on' => __('Yes', 'dw-church'),
+                'label_off' => __('No', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
             ]
@@ -153,10 +153,10 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'enable_pagination',
             [
-                'label' => __('Enable Pagination', 'dasom-church'),
+                'label' => __('Enable Pagination', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
+                'label_on' => __('Yes', 'dw-church'),
+                'label_off' => __('No', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'no',
             ]
@@ -168,7 +168,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'style_section',
             [
-                'label' => __('스타일', 'dasom-church'),
+                'label' => __('?��???, 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
@@ -177,7 +177,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'thumbnail_heading',
             [
-                'label' => __('썸네일 스타일', 'dasom-church'),
+                'label' => __('?�네???��???, 'dw-church'),
                 'type' => \Elementor\Controls_Manager::HEADING,
                 'separator' => 'before',
             ]
@@ -186,7 +186,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'thumbnail_height',
             [
-                'label' => __('썸네일 높이', 'dasom-church'),
+                'label' => __('?�네???�이', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -207,14 +207,14 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'thumbnail_object_fit',
             [
-                'label' => __('이미지 맞춤', 'dasom-church'),
+                'label' => __('?��?지 맞춤', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'cover',
                 'options' => [
-                    'cover' => __('커버 (Cover)', 'dasom-church'),
-                    'contain' => __('포함 (Contain)', 'dasom-church'),
-                    'fill' => __('채우기 (Fill)', 'dasom-church'),
-                    'none' => __('원본 (None)', 'dasom-church'),
+                    'cover' => __('커버 (Cover)', 'dw-church'),
+                    'contain' => __('?�함 (Contain)', 'dw-church'),
+                    'fill' => __('채우�?(Fill)', 'dw-church'),
+                    'none' => __('?�본 (None)', 'dw-church'),
                 ],
                 'selectors' => [
                     '{{WRAPPER}} .sermon-thumbnail img' => 'object-fit: {{VALUE}};',
@@ -225,7 +225,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'thumbnail_border_radius',
             [
-                'label' => __('썸네일 모서리 둥글기', 'dasom-church'),
+                'label' => __('?�네??모서�??��?�?, 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px', '%'],
                 'range' => [
@@ -248,7 +248,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'title_heading',
             [
-                'label' => __('타이틀 스타일', 'dasom-church'),
+                'label' => __('?�?��? ?��???, 'dw-church'),
                 'type' => \Elementor\Controls_Manager::HEADING,
                 'separator' => 'before',
             ]
@@ -259,7 +259,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Typography::get_type(),
             [
                 'name' => 'title_typography',
-                'label' => __('타이틀 타이포그래피', 'dasom-church'),
+                'label' => __('?�?��? ?�?�포그래??, 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-sermon-item h3',
             ]
         );
@@ -267,7 +267,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'title_color',
             [
-                'label' => __('타이틀 색상', 'dasom-church'),
+                'label' => __('?�?��? ?�상', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'selectors' => [
                     '{{WRAPPER}} .dw-sermon-item h3' => 'color: {{VALUE}};',
@@ -279,7 +279,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'title_hover_color',
             [
-                'label' => __('타이틀 호버 색상', 'dasom-church'),
+                'label' => __('?�?��? ?�버 ?�상', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'selectors' => [
                     '{{WRAPPER}} .dw-sermon-item h3 a:hover' => 'color: {{VALUE}};',
@@ -290,7 +290,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'title_spacing',
             [
-                'label' => __('타이틀 간격', 'dasom-church'),
+                'label' => __('?�?��? 간격', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -311,10 +311,10 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'title_link_decoration',
             [
-                'label' => __('링크 밑줄 제거', 'dasom-church'),
+                'label' => __('링크 밑줄 ?�거', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
+                'label_on' => __('Yes', 'dw-church'),
+                'label_off' => __('No', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
                 'selectors' => [
@@ -326,7 +326,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'date_heading',
             [
-                'label' => __('날짜 스타일', 'dasom-church'),
+                'label' => __('?�짜 ?��???, 'dw-church'),
                 'type' => \Elementor\Controls_Manager::HEADING,
                 'separator' => 'before',
             ]
@@ -337,7 +337,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Typography::get_type(),
             [
                 'name' => 'date_typography',
-                'label' => __('날짜 타이포그래피', 'dasom-church'),
+                'label' => __('?�짜 ?�?�포그래??, 'dw-church'),
                 'selector' => '{{WRAPPER}} .sermon-date',
             ]
         );
@@ -345,7 +345,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'date_color',
             [
-                'label' => __('날짜 색상', 'dasom-church'),
+                'label' => __('?�짜 ?�상', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#666',
                 'selectors' => [
@@ -357,7 +357,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'date_spacing',
             [
-                'label' => __('날짜 간격', 'dasom-church'),
+                'label' => __('?�짜 간격', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -378,7 +378,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'preacher_heading',
             [
-                'label' => __('설교자 스타일', 'dasom-church'),
+                'label' => __('?�교???��???, 'dw-church'),
                 'type' => \Elementor\Controls_Manager::HEADING,
                 'separator' => 'before',
             ]
@@ -389,7 +389,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Typography::get_type(),
             [
                 'name' => 'preacher_typography',
-                'label' => __('설교자 타이포그래피', 'dasom-church'),
+                'label' => __('?�교???�?�포그래??, 'dw-church'),
                 'selector' => '{{WRAPPER}} .sermon-preacher',
             ]
         );
@@ -397,7 +397,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'preacher_color',
             [
-                'label' => __('설교자 색상', 'dasom-church'),
+                'label' => __('?�교???�상', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#666',
                 'selectors' => [
@@ -409,7 +409,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'preacher_spacing',
             [
-                'label' => __('설교자 간격', 'dasom-church'),
+                'label' => __('?�교??간격', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -430,7 +430,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'scripture_heading',
             [
-                'label' => __('성경구절 스타일', 'dasom-church'),
+                'label' => __('?�경구절 ?��???, 'dw-church'),
                 'type' => \Elementor\Controls_Manager::HEADING,
                 'separator' => 'before',
             ]
@@ -441,7 +441,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Typography::get_type(),
             [
                 'name' => 'scripture_typography',
-                'label' => __('성경구절 타이포그래피', 'dasom-church'),
+                'label' => __('?�경구절 ?�?�포그래??, 'dw-church'),
                 'selector' => '{{WRAPPER}} .sermon-scripture',
             ]
         );
@@ -449,7 +449,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'scripture_color',
             [
-                'label' => __('성경구절 색상', 'dasom-church'),
+                'label' => __('?�경구절 ?�상', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#2271b1',
                 'selectors' => [
@@ -461,7 +461,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'scripture_spacing',
             [
-                'label' => __('성경구절 간격', 'dasom-church'),
+                'label' => __('?�경구절 간격', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -482,7 +482,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'card_heading',
             [
-                'label' => __('카드 스타일', 'dasom-church'),
+                'label' => __('카드 ?��???, 'dw-church'),
                 'type' => \Elementor\Controls_Manager::HEADING,
                 'separator' => 'before',
             ]
@@ -491,7 +491,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'card_bg_color',
             [
-                'label' => __('배경 색상', 'dasom-church'),
+                'label' => __('배경 ?�상', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#ffffff',
                 'selectors' => [
@@ -503,7 +503,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'card_border_radius',
             [
-                'label' => __('모서리 둥글기', 'dasom-church'),
+                'label' => __('모서�??��?�?, 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -524,7 +524,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'card_padding',
             [
-                'label' => __('카드 안쪽 여백', 'dasom-church'),
+                'label' => __('카드 ?�쪽 ?�백', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', 'em', '%'],
                 'default' => [
@@ -544,7 +544,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Border::get_type(),
             [
                 'name' => 'card_border',
-                'label' => __('테두리', 'dasom-church'),
+                'label' => __('?�두�?, 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-sermon-item',
             ]
         );
@@ -553,7 +553,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Box_Shadow::get_type(),
             [
                 'name' => 'card_box_shadow',
-                'label' => __('그림자', 'dasom-church'),
+                'label' => __('그림??, 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-sermon-item',
                 'fields_options' => [
                     'box_shadow_type' => [
@@ -575,10 +575,10 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'card_hover_transform',
             [
-                'label' => __('호버 효과', 'dasom-church'),
+                'label' => __('?�버 ?�과', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('On', 'dasom-church'),
-                'label_off' => __('Off', 'dasom-church'),
+                'label_on' => __('On', 'dw-church'),
+                'label_off' => __('Off', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
                 'prefix_class' => 'sermon-hover-',
@@ -591,7 +591,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'pagination_style_section',
             [
-                'label' => __('Pagination Style', 'dasom-church'),
+                'label' => __('Pagination Style', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
                 'condition' => [
                     'enable_pagination' => 'yes',
@@ -603,7 +603,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Typography::get_type(),
             [
                 'name' => 'pagination_typography',
-                'label' => __('Typography', 'dasom-church'),
+                'label' => __('Typography', 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-pagination a, {{WRAPPER}} .dw-pagination span',
             ]
         );
@@ -611,7 +611,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'pagination_spacing',
             [
-                'label' => __('Spacing', 'dasom-church'),
+                'label' => __('Spacing', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -633,7 +633,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'pagination_color',
             [
-                'label' => __('Text Color', 'dasom-church'),
+                'label' => __('Text Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#333333',
                 'selectors' => [
@@ -645,7 +645,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'pagination_bg_color',
             [
-                'label' => __('Background Color', 'dasom-church'),
+                'label' => __('Background Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#ffffff',
                 'selectors' => [
@@ -657,7 +657,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'pagination_border_color',
             [
-                'label' => __('Border Color', 'dasom-church'),
+                'label' => __('Border Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#e0e0e0',
                 'selectors' => [
@@ -669,7 +669,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'pagination_active_color',
             [
-                'label' => __('Active Text Color', 'dasom-church'),
+                'label' => __('Active Text Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#ffffff',
                 'selectors' => [
@@ -681,7 +681,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'pagination_active_bg_color',
             [
-                'label' => __('Active Background Color', 'dasom-church'),
+                'label' => __('Active Background Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#000000',
                 'selectors' => [
@@ -715,7 +715,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         $sermons = new WP_Query($args);
         
         if (!$sermons->have_posts()) {
-            echo '<p>' . __('No sermons found.', 'dasom-church') . '</p>';
+            echo '<p>' . __('No sermons found.', 'dw-church') . '</p>';
             return;
         }
         
@@ -798,20 +798,20 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             
             echo '<div class="sermon-content">';
             
-            // 1. 설교일자
+            // 1. ?�교?�자
             if (($settings['show_date'] ?? 'yes') === 'yes' && $sermon_date) {
                 echo '<div class="sermon-date">' . date_i18n('Y-m-d', strtotime($sermon_date)) . '</div>';
             }
             
-            // 2. 제목
+            // 2. ?�목
             echo '<h3><a href="' . get_permalink() . '">' . get_the_title() . '</a></h3>';
             
-            // 3. 성경구절
+            // 3. ?�경구절
             if (($settings['show_scripture'] ?? 'yes') === 'yes' && !empty($scripture)) {
                 echo '<div class="sermon-scripture">' . esc_html($scripture) . '</div>';
             }
             
-            // 4. 설교자
+            // 4. ?�교??
             if (($settings['show_preacher'] ?? 'yes') === 'yes' && !empty($preachers)) {
                 echo '<div class="sermon-preacher">' . esc_html(implode(', ', $preachers)) . '</div>';
             }
@@ -850,7 +850,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         
         // Previous page (circular button)
         if ($paged > 1) {
-            echo '<a href="' . esc_url(get_pagenum_link($paged - 1)) . '" class="dw-pagination-link dw-pagination-prev">‹</a>';
+            echo '<a href="' . esc_url(get_pagenum_link($paged - 1)) . '" class="dw-pagination-link dw-pagination-prev">??/a>';
         }
         
         // Page numbers (circular buttons)
@@ -869,12 +869,12 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
         
         // Next page (circular button)
         if ($paged < $max_pages) {
-            echo '<a href="' . esc_url(get_pagenum_link($paged + 1)) . '" class="dw-pagination-link dw-pagination-next">›</a>';
+            echo '<a href="' . esc_url(get_pagenum_link($paged + 1)) . '" class="dw-pagination-link dw-pagination-next">??/a>';
         }
         
         // Last page (text only)
         if ($paged < $max_pages) {
-            echo '<a href="' . esc_url(get_pagenum_link($max_pages)) . '" class="dw-pagination-text">마지막</a>';
+            echo '<a href="' . esc_url(get_pagenum_link($max_pages)) . '" class="dw-pagination-text">마�?�?/a>';
         }
         
         echo '</div>';

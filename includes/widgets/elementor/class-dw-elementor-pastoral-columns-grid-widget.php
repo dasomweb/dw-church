@@ -2,7 +2,7 @@
 /**
  * DW Elementor Pastoral Columns Recent Grid Widget
  *
- * @package Dasom_Church
+ * @package DW_Church
  * @since 1.32.0
  */
 
@@ -18,7 +18,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
     }
 
     public function get_title() {
-        return __('DW Pastoral Columns Recent Grid', 'dasom-church');
+        return __('DW Pastoral Columns Recent Grid', 'dw-church');
     }
 
     public function get_icon() {
@@ -39,7 +39,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'content_section',
             [
-                'label' => __('Settings', 'dasom-church'),
+                'label' => __('Settings', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
             ]
         );
@@ -47,7 +47,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'posts_per_page',
             [
-                'label' => __('Number of Columns', 'dasom-church'),
+                'label' => __('Number of Columns', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::NUMBER,
                 'default' => 6,
                 'min' => 1,
@@ -58,12 +58,12 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'layout',
             [
-                'label' => __('Layout', 'dasom-church'),
+                'label' => __('Layout', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'grid',
                 'options' => [
-                    'grid' => __('Grid', 'dasom-church'),
-                    'list' => __('List', 'dasom-church'),
+                    'grid' => __('Grid', 'dw-church'),
+                    'list' => __('List', 'dw-church'),
                 ],
             ]
         );
@@ -71,7 +71,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'columns',
             [
-                'label' => __('Columns', 'dasom-church'),
+                'label' => __('Columns', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::NUMBER,
                 'default' => 3,
                 'tablet_default' => 2,
@@ -87,10 +87,10 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'show_thumbnail',
             [
-                'label' => __('Show Thumbnail', 'dasom-church'),
+                'label' => __('Show Thumbnail', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
+                'label_on' => __('Yes', 'dw-church'),
+                'label_off' => __('No', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
             ]
@@ -99,15 +99,15 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'thumbnail_size',
             [
-                'label' => __('Thumbnail Size', 'dasom-church'),
+                'label' => __('Thumbnail Size', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'medium',
                 'options' => [
-                    'thumbnail' => __('Thumbnail (150x150)', 'dasom-church'),
-                    'medium' => __('Medium (300x300)', 'dasom-church'),
-                    'medium_large' => __('Medium Large (768x768)', 'dasom-church'),
-                    'large' => __('Large (1024x1024)', 'dasom-church'),
-                    'full' => __('Full', 'dasom-church'),
+                    'thumbnail' => __('Thumbnail (150x150)', 'dw-church'),
+                    'medium' => __('Medium (300x300)', 'dw-church'),
+                    'medium_large' => __('Medium Large (768x768)', 'dw-church'),
+                    'large' => __('Large (1024x1024)', 'dw-church'),
+                    'full' => __('Full', 'dw-church'),
                 ],
                 'condition' => [
                     'show_thumbnail' => 'yes',
@@ -118,10 +118,10 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'show_date',
             [
-                'label' => __('Show Date', 'dasom-church'),
+                'label' => __('Show Date', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
+                'label_on' => __('Yes', 'dw-church'),
+                'label_off' => __('No', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
             ]
@@ -130,10 +130,10 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'show_excerpt',
             [
-                'label' => __('Show Excerpt', 'dasom-church'),
+                'label' => __('Show Excerpt', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
+                'label_on' => __('Yes', 'dw-church'),
+                'label_off' => __('No', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'no',
             ]
@@ -142,7 +142,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'excerpt_length',
             [
-                'label' => __('Excerpt Length', 'dasom-church'),
+                'label' => __('Excerpt Length', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::NUMBER,
                 'default' => 20,
                 'min' => 5,
@@ -156,10 +156,10 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'enable_pagination',
             [
-                'label' => __('Enable Pagination', 'dasom-church'),
+                'label' => __('Enable Pagination', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
+                'label_on' => __('Yes', 'dw-church'),
+                'label_off' => __('No', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'no',
             ]
@@ -171,7 +171,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'card_style_section',
             [
-                'label' => __('Card Style', 'dasom-church'),
+                'label' => __('Card Style', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
@@ -179,7 +179,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'card_padding',
             [
-                'label' => __('Padding', 'dasom-church'),
+                'label' => __('Padding', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', 'em', '%'],
                 'default' => [
@@ -198,7 +198,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'card_bg_color',
             [
-                'label' => __('Background Color', 'dasom-church'),
+                'label' => __('Background Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#ffffff',
                 'selectors' => [
@@ -218,7 +218,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'card_border_radius',
             [
-                'label' => __('Border Radius', 'dasom-church'),
+                'label' => __('Border Radius', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', '%'],
                 'selectors' => [
@@ -241,7 +241,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'thumbnail_style_section',
             [
-                'label' => __('Thumbnail', 'dasom-church'),
+                'label' => __('Thumbnail', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
                 'condition' => [
                     'show_thumbnail' => 'yes',
@@ -252,7 +252,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'thumbnail_height',
             [
-                'label' => __('Height', 'dasom-church'),
+                'label' => __('Height', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -274,14 +274,14 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'thumbnail_object_fit',
             [
-                'label' => __('Object Fit', 'dasom-church'),
+                'label' => __('Object Fit', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'cover',
                 'options' => [
-                    'cover' => __('Cover', 'dasom-church'),
-                    'contain' => __('Contain', 'dasom-church'),
-                    'fill' => __('Fill', 'dasom-church'),
-                    'none' => __('None', 'dasom-church'),
+                    'cover' => __('Cover', 'dw-church'),
+                    'contain' => __('Contain', 'dw-church'),
+                    'fill' => __('Fill', 'dw-church'),
+                    'none' => __('None', 'dw-church'),
                 ],
                 'selectors' => [
                     '{{WRAPPER}} .pastoral-column-thumbnail img' => 'object-fit: {{VALUE}};',
@@ -292,7 +292,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'thumbnail_border_radius',
             [
-                'label' => __('Border Radius', 'dasom-church'),
+                'label' => __('Border Radius', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', '%'],
                 'selectors' => [
@@ -304,7 +304,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'thumbnail_spacing',
             [
-                'label' => __('Spacing', 'dasom-church'),
+                'label' => __('Spacing', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -329,7 +329,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'title_style_section',
             [
-                'label' => __('Title', 'dasom-church'),
+                'label' => __('Title', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
@@ -345,7 +345,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'title_color',
             [
-                'label' => __('Color', 'dasom-church'),
+                'label' => __('Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#000000',
                 'selectors' => [
@@ -358,7 +358,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'title_hover_color',
             [
-                'label' => __('Hover Color', 'dasom-church'),
+                'label' => __('Hover Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'selectors' => [
                     '{{WRAPPER}} .pastoral-column-title a:hover' => 'color: {{VALUE}};',
@@ -369,7 +369,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'title_spacing',
             [
-                'label' => __('Spacing', 'dasom-church'),
+                'label' => __('Spacing', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -394,7 +394,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'date_style_section',
             [
-                'label' => __('Date', 'dasom-church'),
+                'label' => __('Date', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
                 'condition' => [
                     'show_date' => 'yes',
@@ -413,7 +413,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'date_color',
             [
-                'label' => __('Color', 'dasom-church'),
+                'label' => __('Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#888888',
                 'selectors' => [
@@ -425,7 +425,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'date_spacing',
             [
-                'label' => __('Spacing', 'dasom-church'),
+                'label' => __('Spacing', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -450,7 +450,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'excerpt_style_section',
             [
-                'label' => __('Excerpt', 'dasom-church'),
+                'label' => __('Excerpt', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
                 'condition' => [
                     'show_excerpt' => 'yes',
@@ -469,7 +469,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'excerpt_color',
             [
-                'label' => __('Color', 'dasom-church'),
+                'label' => __('Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#666666',
                 'selectors' => [
@@ -484,7 +484,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'pagination_style_section',
             [
-                'label' => __('Pagination Style', 'dasom-church'),
+                'label' => __('Pagination Style', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
                 'condition' => [
                     'enable_pagination' => 'yes',
@@ -496,7 +496,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Typography::get_type(),
             [
                 'name' => 'pagination_typography',
-                'label' => __('Typography', 'dasom-church'),
+                'label' => __('Typography', 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-pagination a, {{WRAPPER}} .dw-pagination span',
             ]
         );
@@ -504,7 +504,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'pagination_spacing',
             [
-                'label' => __('Spacing', 'dasom-church'),
+                'label' => __('Spacing', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -526,7 +526,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'pagination_color',
             [
-                'label' => __('Text Color', 'dasom-church'),
+                'label' => __('Text Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#333333',
                 'selectors' => [
@@ -538,7 +538,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'pagination_bg_color',
             [
-                'label' => __('Background Color', 'dasom-church'),
+                'label' => __('Background Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#f5f5f5',
                 'selectors' => [
@@ -550,7 +550,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'pagination_border_color',
             [
-                'label' => __('Border Color', 'dasom-church'),
+                'label' => __('Border Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#e0e0e0',
                 'selectors' => [
@@ -562,7 +562,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'pagination_active_color',
             [
-                'label' => __('Active Text Color', 'dasom-church'),
+                'label' => __('Active Text Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#ffffff',
                 'selectors' => [
@@ -574,7 +574,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'pagination_active_bg_color',
             [
-                'label' => __('Active Background Color', 'dasom-church'),
+                'label' => __('Active Background Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#000000',
                 'selectors' => [
@@ -608,7 +608,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
         $columns = new WP_Query($args);
 
         if (!$columns->have_posts()) {
-            echo '<p>' . __('No columns found.', 'dasom-church') . '</p>';
+            echo '<p>' . __('No columns found.', 'dw-church') . '</p>';
             return;
         }
 
@@ -653,7 +653,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
 
                     <?php if (($settings['show_date'] ?? 'yes') === 'yes'): ?>
                     <div class="pastoral-column-date">
-                        <?php echo get_the_date('Y년 n월 j일'); ?>
+                        <?php echo get_the_date('Y??n??j??); ?>
                     </div>
                     <?php endif; ?>
 
@@ -739,7 +739,7 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
 
         // Previous page (circular button)
         if ($paged > 1) {
-            echo '<a href="' . esc_url(get_pagenum_link($paged - 1)) . '" class="dw-pagination-link dw-pagination-prev">‹</a>';
+            echo '<a href="' . esc_url(get_pagenum_link($paged - 1)) . '" class="dw-pagination-link dw-pagination-prev">??/a>';
         }
 
         // Page numbers (circular buttons)
@@ -758,12 +758,12 @@ class DW_Elementor_Pastoral_Columns_Grid_Widget extends \Elementor\Widget_Base {
 
         // Next page (circular button)
         if ($paged < $max_pages) {
-            echo '<a href="' . esc_url(get_pagenum_link($paged + 1)) . '" class="dw-pagination-link dw-pagination-next">›</a>';
+            echo '<a href="' . esc_url(get_pagenum_link($paged + 1)) . '" class="dw-pagination-link dw-pagination-next">??/a>';
         }
 
         // Last page (text only)
         if ($paged < $max_pages) {
-            echo '<a href="' . esc_url(get_pagenum_link($max_pages)) . '" class="dw-pagination-text">마지막</a>';
+            echo '<a href="' . esc_url(get_pagenum_link($max_pages)) . '" class="dw-pagination-text">마�?�?/a>';
         }
 
         echo '</div>';

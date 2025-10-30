@@ -19,7 +19,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
     }
     
     public function get_title() {
-        return __('DW Event Grid', 'dasom-church');
+        return __('DW Event Grid', 'dw-church');
     }
     
     public function get_icon() {
@@ -39,7 +39,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'query_section',
             [
-                'label' => __('Query Settings', 'dasom-church'),
+                'label' => __('Query Settings', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
             ]
         );
@@ -47,12 +47,12 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'query_source',
             [
-                'label' => __('Query Source', 'dasom-church'),
+                'label' => __('Query Source', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'latest',
                 'options' => [
-                    'latest' => __('Latest Posts', 'dasom-church'),
-                    'manual' => __('Manual Selection', 'dasom-church'),
+                    'latest' => __('Latest Posts', 'dw-church'),
+                    'manual' => __('Manual Selection', 'dw-church'),
                 ],
             ]
         );
@@ -73,7 +73,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'manual_selection',
             [
-                'label' => __('Select Events', 'dasom-church'),
+                'label' => __('Select Events', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT2,
                 'multiple' => true,
                 'options' => $event_options,
@@ -81,14 +81,14 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 'condition' => [
                     'query_source' => 'manual',
                 ],
-                'description' => __('Select specific events to display.', 'dasom-church'),
+                'description' => __('Select specific events to display.', 'dw-church'),
             ]
         );
         
         $this->add_control(
             'posts_per_page',
             [
-                'label' => __('Number of Events', 'dasom-church'),
+                'label' => __('Number of Events', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::NUMBER,
                 'default' => 6,
                 'min' => 1,
@@ -102,12 +102,12 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'order',
             [
-                'label' => __('Order', 'dasom-church'),
+                'label' => __('Order', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'DESC',
                 'options' => [
-                    'ASC' => __('Ascending', 'dasom-church'),
-                    'DESC' => __('Descending', 'dasom-church'),
+                    'ASC' => __('Ascending', 'dw-church'),
+                    'DESC' => __('Descending', 'dw-church'),
                 ],
                 'condition' => [
                     'query_source' => 'latest',
@@ -118,14 +118,14 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'orderby',
             [
-                'label' => __('Order By', 'dasom-church'),
+                'label' => __('Order By', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'date',
                 'options' => [
-                    'date' => __('Date', 'dasom-church'),
-                    'title' => __('Title', 'dasom-church'),
-                    'rand' => __('Random', 'dasom-church'),
-                    'menu_order' => __('Menu Order', 'dasom-church'),
+                    'date' => __('Date', 'dw-church'),
+                    'title' => __('Title', 'dw-church'),
+                    'rand' => __('Random', 'dw-church'),
+                    'menu_order' => __('Menu Order', 'dw-church'),
                 ],
                 'condition' => [
                     'query_source' => 'latest',
@@ -136,10 +136,10 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'enable_pagination',
             [
-                'label' => __('Enable Pagination', 'dasom-church'),
+                'label' => __('Enable Pagination', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
+                'label_on' => __('Yes', 'dw-church'),
+                'label_off' => __('No', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'no',
                 'condition' => [
@@ -154,7 +154,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'layout_section',
             [
-                'label' => __('Layout Settings', 'dasom-church'),
+                'label' => __('Layout Settings', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
             ]
         );
@@ -162,7 +162,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'columns',
             [
-                'label' => __('Columns', 'dasom-church'),
+                'label' => __('Columns', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => '3',
                 'tablet_default' => '2',
@@ -184,7 +184,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'column_gap',
             [
-                'label' => __('Column Gap', 'dasom-church'),
+                'label' => __('Column Gap', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px', 'em'],
                 'range' => [
@@ -206,7 +206,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'row_gap',
             [
-                'label' => __('Row Gap', 'dasom-church'),
+                'label' => __('Row Gap', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px', 'em'],
                 'range' => [
@@ -228,14 +228,14 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'height_ratio',
             [
-                'label' => __('Height Ratio', 'dasom-church'),
+                'label' => __('Height Ratio', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => '16:9',
                 'options' => [
-                    '4:3' => __('4:3', 'dasom-church'),
-                    '16:9' => __('16:9', 'dasom-church'),
-                    '9:16' => __('9:16', 'dasom-church'),
-                    'custom' => __('Custom', 'dasom-church'),
+                    '4:3' => __('4:3', 'dw-church'),
+                    '16:9' => __('16:9', 'dw-church'),
+                    '9:16' => __('9:16', 'dw-church'),
+                    'custom' => __('Custom', 'dw-church'),
                 ],
             ]
         );
@@ -243,7 +243,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'custom_height',
             [
-                'label' => __('Custom Height', 'dasom-church'),
+                'label' => __('Custom Height', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px', 'vh'],
                 'range' => [
@@ -272,7 +272,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'card_style_section',
             [
-                'label' => __('Card Style', 'dasom-church'),
+                'label' => __('Card Style', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
@@ -280,7 +280,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'card_border_radius',
             [
-                'label' => __('Border Radius', 'dasom-church'),
+                'label' => __('Border Radius', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px', '%'],
                 'range' => [
@@ -304,7 +304,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Box_Shadow::get_type(),
             [
                 'name' => 'card_box_shadow',
-                'label' => __('Box Shadow', 'dasom-church'),
+                'label' => __('Box Shadow', 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-event-grid-item',
             ]
         );
@@ -315,7 +315,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'overlay_style_section',
             [
-                'label' => __('Overlay Style', 'dasom-church'),
+                'label' => __('Overlay Style', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
@@ -323,10 +323,10 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'overlay_enable',
             [
-                'label' => __('Enable Overlay', 'dasom-church'),
+                'label' => __('Enable Overlay', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
+                'label_on' => __('Yes', 'dw-church'),
+                'label_off' => __('No', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
             ]
@@ -335,7 +335,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'overlay_color',
             [
-                'label' => __('Overlay Color', 'dasom-church'),
+                'label' => __('Overlay Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => 'rgba(0,0,0,0.3)',
                 'selectors' => [
@@ -350,7 +350,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'overlay_opacity',
             [
-                'label' => __('Overlay Opacity', 'dasom-church'),
+                'label' => __('Overlay Opacity', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'range' => [
                     'px' => [
@@ -374,7 +374,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'overlay_hover_color',
             [
-                'label' => __('Overlay Hover Color', 'dasom-church'),
+                'label' => __('Overlay Hover Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => 'rgba(0,0,0,0.5)',
                 'selectors' => [
@@ -389,7 +389,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'overlay_hover_opacity',
             [
-                'label' => __('Overlay Hover Opacity', 'dasom-church'),
+                'label' => __('Overlay Hover Opacity', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'range' => [
                     'px' => [
@@ -413,15 +413,15 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'hover_effect',
             [
-                'label' => __('Hover Effect', 'dasom-church'),
+                'label' => __('Hover Effect', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'overlay',
                 'options' => [
-                    'none' => __('None', 'dasom-church'),
-                    'overlay' => __('Overlay Only', 'dasom-church'),
-                    'scale' => __('Scale + Overlay', 'dasom-church'),
-                    'lift' => __('Lift + Overlay', 'dasom-church'),
-                    'glow' => __('Glow + Overlay', 'dasom-church'),
+                    'none' => __('None', 'dw-church'),
+                    'overlay' => __('Overlay Only', 'dw-church'),
+                    'scale' => __('Scale + Overlay', 'dw-church'),
+                    'lift' => __('Lift + Overlay', 'dw-church'),
+                    'glow' => __('Glow + Overlay', 'dw-church'),
                 ],
                 'condition' => [
                     'overlay_enable' => 'yes',
@@ -432,7 +432,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'hover_scale',
             [
-                'label' => __('Hover Scale', 'dasom-church'),
+                'label' => __('Hover Scale', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'range' => [
                     'px' => [
@@ -457,7 +457,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'hover_lift',
             [
-                'label' => __('Hover Lift (px)', 'dasom-church'),
+                'label' => __('Hover Lift (px)', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'range' => [
                     'px' => [
@@ -482,7 +482,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'hover_glow_color',
             [
-                'label' => __('Hover Glow Color', 'dasom-church'),
+                'label' => __('Hover Glow Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => 'rgba(0,0,0,0.2)',
                 'selectors' => [
@@ -498,7 +498,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'hover_transition',
             [
-                'label' => __('Hover Transition Duration', 'dasom-church'),
+                'label' => __('Hover Transition Duration', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'range' => [
                     'px' => [
@@ -525,7 +525,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'text_style_section',
             [
-                'label' => __('Text Style', 'dasom-church'),
+                'label' => __('Text Style', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
@@ -535,7 +535,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Typography::get_type(),
             [
                 'name' => 'department_typography',
-                'label' => __('Department Typography', 'dasom-church'),
+                'label' => __('Department Typography', 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-event-grid-department',
             ]
         );
@@ -543,7 +543,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'department_color',
             [
-                'label' => __('Department Color', 'dasom-church'),
+                'label' => __('Department Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#ffffff',
                 'selectors' => [
@@ -555,7 +555,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'department_spacing',
             [
-                'label' => __('Department Spacing', 'dasom-church'),
+                'label' => __('Department Spacing', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -586,7 +586,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Typography::get_type(),
             [
                 'name' => 'title_typography',
-                'label' => __('Title Typography', 'dasom-church'),
+                'label' => __('Title Typography', 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-event-grid-title',
             ]
         );
@@ -594,7 +594,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'title_color',
             [
-                'label' => __('Title Color', 'dasom-church'),
+                'label' => __('Title Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#ffffff',
                 'selectors' => [
@@ -606,7 +606,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'title_spacing',
             [
-                'label' => __('Title Spacing', 'dasom-church'),
+                'label' => __('Title Spacing', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -636,7 +636,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Typography::get_type(),
             [
                 'name' => 'datetime_typography',
-                'label' => __('Date/Time Typography', 'dasom-church'),
+                'label' => __('Date/Time Typography', 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-event-grid-datetime',
             ]
         );
@@ -644,7 +644,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'datetime_color',
             [
-                'label' => __('Date/Time Color', 'dasom-church'),
+                'label' => __('Date/Time Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#ffffff',
                 'selectors' => [
@@ -656,7 +656,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'datetime_spacing',
             [
-                'label' => __('Date/Time Spacing', 'dasom-church'),
+                'label' => __('Date/Time Spacing', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -678,19 +678,19 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'text_position',
             [
-                'label' => __('Text Position', 'dasom-church'),
+                'label' => __('Text Position', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'center-center',
                 'options' => [
-                    'top-left' => __('상단 왼쪽', 'dasom-church'),
-                    'top-center' => __('상단 중앙', 'dasom-church'),
-                    'top-right' => __('상단 오른쪽', 'dasom-church'),
-                    'center-left' => __('중앙 왼쪽', 'dasom-church'),
-                    'center-center' => __('중앙', 'dasom-church'),
-                    'center-right' => __('중앙 오른쪽', 'dasom-church'),
-                    'bottom-left' => __('하단 왼쪽', 'dasom-church'),
-                    'bottom-center' => __('하단 중앙', 'dasom-church'),
-                    'bottom-right' => __('하단 오른쪽', 'dasom-church'),
+                    'top-left' => __('?�단 ?�쪽', 'dw-church'),
+                    'top-center' => __('?�단 중앙', 'dw-church'),
+                    'top-right' => __('?�단 ?�른�?, 'dw-church'),
+                    'center-left' => __('중앙 ?�쪽', 'dw-church'),
+                    'center-center' => __('중앙', 'dw-church'),
+                    'center-right' => __('중앙 ?�른�?, 'dw-church'),
+                    'bottom-left' => __('?�단 ?�쪽', 'dw-church'),
+                    'bottom-center' => __('?�단 중앙', 'dw-church'),
+                    'bottom-right' => __('?�단 ?�른�?, 'dw-church'),
                 ],
             ]
         );
@@ -699,7 +699,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Typography::get_type(),
             [
                 'name' => 'text_typography',
-                'label' => __('Text Typography', 'dasom-church'),
+                'label' => __('Text Typography', 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-event-grid-text-content',
             ]
         );
@@ -707,19 +707,19 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'text_align',
             [
-                'label' => __('Text Alignment', 'dasom-church'),
+                'label' => __('Text Alignment', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::CHOOSE,
                 'options' => [
                     'left' => [
-                        'title' => __('Left', 'dasom-church'),
+                        'title' => __('Left', 'dw-church'),
                         'icon' => 'eicon-text-align-left',
                     ],
                     'center' => [
-                        'title' => __('Center', 'dasom-church'),
+                        'title' => __('Center', 'dw-church'),
                         'icon' => 'eicon-text-align-center',
                     ],
                     'right' => [
-                        'title' => __('Right', 'dasom-church'),
+                        'title' => __('Right', 'dw-church'),
                         'icon' => 'eicon-text-align-right',
                     ],
                 ],
@@ -733,7 +733,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'text_padding',
             [
-                'label' => __('Text Padding', 'dasom-church'),
+                'label' => __('Text Padding', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', 'em', '%'],
                 'default' => [
@@ -751,7 +751,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'content_padding',
             [
-                'label' => __('Content Padding', 'dasom-church'),
+                'label' => __('Content Padding', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', 'em', '%'],
                 'default' => [
@@ -774,7 +774,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'button_style_section',
             [
-                'label' => __('Button Style', 'dasom-church'),
+                'label' => __('Button Style', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
@@ -782,9 +782,9 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'button_text',
             [
-                'label' => __('Button Text', 'dasom-church'),
+                'label' => __('Button Text', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::TEXT,
-                'default' => __('Read More', 'dasom-church'),
+                'default' => __('Read More', 'dw-church'),
             ]
         );
         
@@ -792,7 +792,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Typography::get_type(),
             [
                 'name' => 'button_typography',
-                'label' => __('Typography', 'dasom-church'),
+                'label' => __('Typography', 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-event-grid-button',
             ]
         );
@@ -802,14 +802,14 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->start_controls_tab(
             'button_normal',
             [
-                'label' => __('Normal', 'dasom-church'),
+                'label' => __('Normal', 'dw-church'),
             ]
         );
         
         $this->add_control(
             'button_color',
             [
-                'label' => __('Text Color', 'dasom-church'),
+                'label' => __('Text Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#ffffff',
                 'selectors' => [
@@ -821,7 +821,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'button_bg_color',
             [
-                'label' => __('Background Color', 'dasom-church'),
+                'label' => __('Background Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => 'rgba(255, 255, 255, 0)',
                 'selectors' => [
@@ -834,7 +834,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Border::get_type(),
             [
                 'name' => 'button_border',
-                'label' => __('Border', 'dasom-church'),
+                'label' => __('Border', 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-event-grid-button',
                 'fields_options' => [
                     'border' => [
@@ -861,14 +861,14 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->start_controls_tab(
             'button_hover',
             [
-                'label' => __('Hover', 'dasom-church'),
+                'label' => __('Hover', 'dw-church'),
             ]
         );
         
         $this->add_control(
             'button_hover_color',
             [
-                'label' => __('Text Color', 'dasom-church'),
+                'label' => __('Text Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#333333',
                 'selectors' => [
@@ -880,7 +880,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'button_hover_bg_color',
             [
-                'label' => __('Background Color', 'dasom-church'),
+                'label' => __('Background Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#ffffff',
                 'selectors' => [
@@ -892,7 +892,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'button_hover_border_color',
             [
-                'label' => __('Border Color', 'dasom-church'),
+                'label' => __('Border Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#ffffff',
                 'selectors' => [
@@ -908,7 +908,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'button_border_radius',
             [
-                'label' => __('Border Radius', 'dasom-church'),
+                'label' => __('Border Radius', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px', '%'],
                 'range' => [
@@ -931,7 +931,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'button_padding',
             [
-                'label' => __('Padding', 'dasom-church'),
+                'label' => __('Padding', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', 'em', '%'],
                 'default' => [
@@ -954,7 +954,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'pagination_style_section',
             [
-                'label' => __('Pagination Style', 'dasom-church'),
+                'label' => __('Pagination Style', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
                 'condition' => [
                     'enable_pagination' => 'yes',
@@ -966,7 +966,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Typography::get_type(),
             [
                 'name' => 'pagination_typography',
-                'label' => __('Typography', 'dasom-church'),
+                'label' => __('Typography', 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-pagination a, {{WRAPPER}} .dw-pagination span',
             ]
         );
@@ -974,7 +974,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'pagination_spacing',
             [
-                'label' => __('Spacing', 'dasom-church'),
+                'label' => __('Spacing', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -996,7 +996,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'pagination_color',
             [
-                'label' => __('Text Color', 'dasom-church'),
+                'label' => __('Text Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#333333',
                 'selectors' => [
@@ -1008,7 +1008,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'pagination_bg_color',
             [
-                'label' => __('Background Color', 'dasom-church'),
+                'label' => __('Background Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#ffffff',
                 'selectors' => [
@@ -1020,7 +1020,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'pagination_border_color',
             [
-                'label' => __('Border Color', 'dasom-church'),
+                'label' => __('Border Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#e0e0e0',
                 'selectors' => [
@@ -1032,7 +1032,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'pagination_active_color',
             [
-                'label' => __('Active Text Color', 'dasom-church'),
+                'label' => __('Active Text Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#ffffff',
                 'selectors' => [
@@ -1044,7 +1044,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'pagination_active_bg_color',
             [
-                'label' => __('Active Background Color', 'dasom-church'),
+                'label' => __('Active Background Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#000000',
                 'selectors' => [
@@ -1093,11 +1093,11 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $events = new WP_Query($args);
         
         if (!$events->have_posts()) {
-            echo '<p>' . __('No events found.', 'dasom-church') . '</p>';
+            echo '<p>' . __('No events found.', 'dw-church') . '</p>';
             return;
         }
         
-        $button_text = $settings['button_text'] ?? __('Read More', 'dasom-church');
+        $button_text = $settings['button_text'] ?? __('Read More', 'dw-church');
         $text_position = $settings['text_position'] ?? 'center-center';
         
         list($v_align, $h_align) = explode('-', $text_position);
@@ -1349,7 +1349,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         
         // Previous page (circular button)
         if ($paged > 1) {
-            echo '<a href="' . esc_url(get_pagenum_link($paged - 1)) . '" class="dw-pagination-link dw-pagination-prev">‹</a>';
+            echo '<a href="' . esc_url(get_pagenum_link($paged - 1)) . '" class="dw-pagination-link dw-pagination-prev">??/a>';
         }
         
         // Page numbers (circular buttons)
@@ -1368,12 +1368,12 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         
         // Next page (circular button)
         if ($paged < $max_pages) {
-            echo '<a href="' . esc_url(get_pagenum_link($paged + 1)) . '" class="dw-pagination-link dw-pagination-next">›</a>';
+            echo '<a href="' . esc_url(get_pagenum_link($paged + 1)) . '" class="dw-pagination-link dw-pagination-next">??/a>';
         }
         
         // Last page (text only)
         if ($paged < $max_pages) {
-            echo '<a href="' . esc_url(get_pagenum_link($max_pages)) . '" class="dw-pagination-text">마지막</a>';
+            echo '<a href="' . esc_url(get_pagenum_link($max_pages)) . '" class="dw-pagination-text">마�?�?/a>';
         }
         
         echo '</div>';

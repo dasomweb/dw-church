@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class Dasom_Church_Admin_Customization {
+class DW_Church_Admin_Customization {
     
     /**
      * Singleton instance
@@ -215,7 +215,7 @@ class Dasom_Church_Admin_Customization {
                 font-weight: ' . esc_attr($admin_menu_font_weight) . ' !important;
             }
             
-            /* DW 교회관리 메뉴 특별 스타일 */
+            /* DW 교회관�?메뉴 ?�별 ?��???*/
             #adminmenu a[href*="dasom-church-admin"] {
                 font-weight: 700 !important;
             }
@@ -283,7 +283,7 @@ class Dasom_Church_Admin_Customization {
             return; // Don't apply to Administrator
         }
         
-        $admin_bar_title = get_option('dw_admin_bar_title', 'DW 교회관리');
+        $admin_bar_title = get_option('dw_admin_bar_title', 'DW 교회관�?);
         
         if (!empty($admin_bar_title)) {
             $wp_admin_bar->add_node(array(
@@ -306,7 +306,7 @@ class Dasom_Church_Admin_Customization {
             'admin_bar_hide' => get_option('dw_admin_bar_hide', 'no'),
             'admin_menu_bg_color' => get_option('dw_admin_menu_bg_color', '#1d2327'),
             'admin_menu_font_color' => get_option('dw_admin_menu_font_color', '#ffffff'),
-            'admin_bar_title' => get_option('dw_admin_bar_title', 'DW 교회관리')
+            'admin_bar_title' => get_option('dw_admin_bar_title', 'DW 교회관�?)
         );
     }
     
@@ -333,4 +333,4 @@ class Dasom_Church_Admin_Customization {
 }
 
 // Initialize the class
-Dasom_Church_Admin_Customization::get_instance();
+DW_Church_Admin_Customization::get_instance();

@@ -1,9 +1,9 @@
 <?php
 /**
- * Church Admin – Bulletins, Sermons, Columns, Albums
+ * Church Admin ??Bulletins, Sermons, Columns, Albums
  * Complete integrated version with security improvements and Quick Edit support
  *
- * @package Dasom_Church
+ * @package DW_Church
  * @since 1.0.0
  */
 
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 /**
  * Admin class
  */
-class Dasom_Church_Admin {
+class DW_Church_Admin {
     
     /**
      * Single instance of the class
@@ -52,7 +52,7 @@ class Dasom_Church_Admin {
         add_action('admin_init', array($this, 'dasom_church_handle_settings_save'));
         add_action('admin_init', array($this, 'redirect_to_dw_dashboard'));
         add_filter('login_redirect', array($this, 'dasom_church_login_redirect'), 20, 3);
-        // REMOVED: Conflicting menu filter - Dasom_Church_Menu_Visibility handles this
+        // REMOVED: Conflicting menu filter - DW_Church_Menu_Visibility handles this
         // add_action('admin_menu', array($this, 'filter_admin_menus'), 9999);
         
         // Custom Post Types
@@ -60,8 +60,8 @@ class Dasom_Church_Admin {
         add_action('init', array($this, 'dasom_church_register_taxonomies'));
         
         // Load meta boxes and columns classes
-        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dasom-church-meta-boxes.php';
-        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dasom-church-columns.php';
+        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dw-church-meta-boxes.php';
+        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dw-church-columns.php';
         
         // Remove default editor support
         add_action('admin_init', array($this, 'dasom_church_remove_editor_support'));
@@ -236,8 +236,8 @@ class Dasom_Church_Admin {
             $user_role = in_array('author', $current_user->roles) ? 'author' : 'editor';
             
             // Check if class exists before using it
-            if (class_exists('Dasom_Church_Menu_Visibility')) {
-                $menu_visibility = Dasom_Church_Menu_Visibility::get_instance();
+            if (class_exists('DW_Church_Menu_Visibility')) {
+                $menu_visibility = DW_Church_Menu_Visibility::get_instance();
                 $menu_slug = 'dasom-church-' . $menu_key;
                 return $menu_visibility->user_can_access_menu($menu_slug, $user_role);
             } else {
@@ -253,7 +253,7 @@ class Dasom_Church_Admin {
      * Add admin menu
      */
     public function dasom_church_admin_menu() {
-        // DEBUG: 메뉴 등록 디버그
+        // DEBUG: 메뉴 ?�록 ?�버�?
         error_log('=== ADMIN MENU DEBUG ===');
         error_log('Current User ID: ' . get_current_user_id());
         error_log('User Roles: ' . implode(', ', wp_get_current_user()->roles));
@@ -261,10 +261,10 @@ class Dasom_Church_Admin {
         error_log('Can read: ' . (current_user_can('read') ? 'YES' : 'NO'));
         error_log('Can manage_options: ' . (current_user_can('manage_options') ? 'YES' : 'NO'));
         
-        // Main menu - 고유한 슬러그 사용
+        // Main menu - 고유???�러�??�용
         add_menu_page(
-            __('DW 교회관리', 'dasom-church'),
-            __('DW 교회관리', 'dasom-church'),
+            __('DW 교회관�?, 'dw-church'),
+            __('DW 교회관�?, 'dw-church'),
             'edit_posts', // Back to edit_posts for Author/Editor
             'dasom-church-admin',
             array($this, 'dasom_church_dashboard_page'),
@@ -272,7 +272,7 @@ class Dasom_Church_Admin {
             5
         );
         
-        error_log('DW 교회관리 메뉴 등록 완료');
+        error_log('DW 교회관�?메뉴 ?�록 ?�료');
         
         // Remove default submenu
         remove_submenu_page('dasom-church-admin', 'dasom-church-admin');
@@ -280,8 +280,8 @@ class Dasom_Church_Admin {
         // Dashboard submenu - ALWAYS accessible
         add_submenu_page(
             'dasom-church-admin',
-            __('대시보드', 'dasom-church'),
-            __('대시보드', 'dasom-church'),
+            __('?�?�보??, 'dw-church'),
+            __('?�?�보??, 'dw-church'),
             'edit_posts',
             'dasom-church-dashboard',
             array($this, 'dasom_church_dashboard_page')
@@ -291,8 +291,8 @@ class Dasom_Church_Admin {
         if ($this->can_access_submenu('settings')) {
             add_submenu_page(
                 'dasom-church-admin',
-                __('설정', 'dasom-church'),
-                __('설정', 'dasom-church'),
+                __('?�정', 'dw-church'),
+                __('?�정', 'dw-church'),
                 'edit_posts',
                 'dasom-church-settings',
                 array($this, 'dasom_church_settings_page')
@@ -302,8 +302,8 @@ class Dasom_Church_Admin {
         // User Profile submenu
         add_submenu_page(
             'dasom-church-admin',
-            __('사용자 프로필', 'dasom-church'),
-            __('사용자 프로필', 'dasom-church'),
+            __('?�용???�로??, 'dw-church'),
+            __('?�용???�로??, 'dw-church'),
             'edit_posts',
             'dasom-church-profile',
             array($this, 'dasom_church_profile_page')
@@ -312,17 +312,17 @@ class Dasom_Church_Admin {
         // Logout submenu
         add_submenu_page(
             'dasom-church-admin',
-            __('로그아웃', 'dasom-church'),
-            __('로그아웃', 'dasom-church'),
+            __('로그?�웃', 'dw-church'),
+            __('로그?�웃', 'dw-church'),
             'edit_posts',
             'dasom-church-logout',
             array($this, 'dasom_church_logout_page')
         );
         
-        // Add GitHub Update settings to WordPress Settings menu (독립적)
+        // Add GitHub Update settings to WordPress Settings menu (?�립??
         add_options_page(
-            __('DW 설정', 'dasom-church'),
-            __('DW 설정', 'dasom-church'),
+            __('DW ?�정', 'dw-church'),
+            __('DW ?�정', 'dw-church'),
             'manage_options',
             'dasom-church-github-update',
             array($this, 'dasom_church_github_update_page')
@@ -337,17 +337,17 @@ class Dasom_Church_Admin {
         // 교회주보
         register_post_type('bulletin', array(
             'labels' => array(
-                'name' => __('교회주보', 'dasom-church'),
-                'singular_name' => __('주보', 'dasom-church'),
-                'menu_name' => __('교회주보', 'dasom-church'),
-                'add_new' => __('새 주보 추가', 'dasom-church'),
-                'add_new_item' => __('새 주보 추가', 'dasom-church'),
-                'edit_item' => __('주보 편집', 'dasom-church'),
-                'new_item' => __('새 주보', 'dasom-church'),
-                'view_item' => __('주보 보기', 'dasom-church'),
-                'search_items' => __('주보 검색', 'dasom-church'),
-                'not_found' => __('주보를 찾을 수 없습니다', 'dasom-church'),
-                'not_found_in_trash' => __('휴지통에서 주보를 찾을 수 없습니다', 'dasom-church'),
+                'name' => __('교회주보', 'dw-church'),
+                'singular_name' => __('주보', 'dw-church'),
+                'menu_name' => __('교회주보', 'dw-church'),
+                'add_new' => __('??주보 추�?', 'dw-church'),
+                'add_new_item' => __('??주보 추�?', 'dw-church'),
+                'edit_item' => __('주보 ?�집', 'dw-church'),
+                'new_item' => __('??주보', 'dw-church'),
+                'view_item' => __('주보 보기', 'dw-church'),
+                'search_items' => __('주보 검??, 'dw-church'),
+                'not_found' => __('주보�?찾을 ???�습?�다', 'dw-church'),
+                'not_found_in_trash' => __('?��??�에??주보�?찾을 ???�습?�다', 'dw-church'),
             ),
             'public' => true,
             'show_ui' => true,
@@ -361,20 +361,20 @@ class Dasom_Church_Admin {
             'map_meta_cap' => true,
         ));
         
-        // 설교
+        // ?�교
         register_post_type('sermon', array(
             'labels' => array(
-                'name' => __('설교', 'dasom-church'),
-                'singular_name' => __('설교', 'dasom-church'),
-                'menu_name' => __('설교', 'dasom-church'),
-                'add_new' => __('새 설교 추가', 'dasom-church'),
-                'add_new_item' => __('새 설교 추가', 'dasom-church'),
-                'edit_item' => __('설교 편집', 'dasom-church'),
-                'new_item' => __('새 설교', 'dasom-church'),
-                'view_item' => __('설교 보기', 'dasom-church'),
-                'search_items' => __('설교 검색', 'dasom-church'),
-                'not_found' => __('설교를 찾을 수 없습니다', 'dasom-church'),
-                'not_found_in_trash' => __('휴지통에서 설교를 찾을 수 없습니다', 'dasom-church'),
+                'name' => __('?�교', 'dw-church'),
+                'singular_name' => __('?�교', 'dw-church'),
+                'menu_name' => __('?�교', 'dw-church'),
+                'add_new' => __('???�교 추�?', 'dw-church'),
+                'add_new_item' => __('???�교 추�?', 'dw-church'),
+                'edit_item' => __('?�교 ?�집', 'dw-church'),
+                'new_item' => __('???�교', 'dw-church'),
+                'view_item' => __('?�교 보기', 'dw-church'),
+                'search_items' => __('?�교 검??, 'dw-church'),
+                'not_found' => __('?�교�?찾을 ???�습?�다', 'dw-church'),
+                'not_found_in_trash' => __('?��??�에???�교�?찾을 ???�습?�다', 'dw-church'),
             ),
             'public' => true,
             'show_ui' => true,
@@ -391,17 +391,17 @@ class Dasom_Church_Admin {
         // 목회컬럼
         register_post_type('column', array(
             'labels' => array(
-                'name' => __('목회컬럼', 'dasom-church'),
-                'singular_name' => __('컬럼', 'dasom-church'),
-                'menu_name' => __('목회컬럼', 'dasom-church'),
-                'add_new' => __('새 컬럼 추가', 'dasom-church'),
-                'add_new_item' => __('새 컬럼 추가', 'dasom-church'),
-                'edit_item' => __('컬럼 편집', 'dasom-church'),
-                'new_item' => __('새 컬럼', 'dasom-church'),
-                'view_item' => __('컬럼 보기', 'dasom-church'),
-                'search_items' => __('컬럼 검색', 'dasom-church'),
-                'not_found' => __('컬럼을 찾을 수 없습니다', 'dasom-church'),
-                'not_found_in_trash' => __('휴지통에서 컬럼을 찾을 수 없습니다', 'dasom-church'),
+                'name' => __('목회컬럼', 'dw-church'),
+                'singular_name' => __('컬럼', 'dw-church'),
+                'menu_name' => __('목회컬럼', 'dw-church'),
+                'add_new' => __('??컬럼 추�?', 'dw-church'),
+                'add_new_item' => __('??컬럼 추�?', 'dw-church'),
+                'edit_item' => __('컬럼 ?�집', 'dw-church'),
+                'new_item' => __('??컬럼', 'dw-church'),
+                'view_item' => __('컬럼 보기', 'dw-church'),
+                'search_items' => __('컬럼 검??, 'dw-church'),
+                'not_found' => __('컬럼??찾을 ???�습?�다', 'dw-church'),
+                'not_found_in_trash' => __('?��??�에??컬럼??찾을 ???�습?�다', 'dw-church'),
             ),
             'public' => true,
             'show_ui' => true,
@@ -415,20 +415,20 @@ class Dasom_Church_Admin {
             'map_meta_cap' => true,
         ));
         
-        // 교회앨범
+        // 교회?�범
         register_post_type('album', array(
             'labels' => array(
-                'name' => __('교회앨범', 'dasom-church'),
-                'singular_name' => __('앨범', 'dasom-church'),
-                'menu_name' => __('교회앨범', 'dasom-church'),
-                'add_new' => __('새 앨범 추가', 'dasom-church'),
-                'add_new_item' => __('새 앨범 추가', 'dasom-church'),
-                'edit_item' => __('앨범 편집', 'dasom-church'),
-                'new_item' => __('새 앨범', 'dasom-church'),
-                'view_item' => __('앨범 보기', 'dasom-church'),
-                'search_items' => __('앨범 검색', 'dasom-church'),
-                'not_found' => __('앨범을 찾을 수 없습니다', 'dasom-church'),
-                'not_found_in_trash' => __('휴지통에서 앨범을 찾을 수 없습니다', 'dasom-church'),
+                'name' => __('교회?�범', 'dw-church'),
+                'singular_name' => __('?�범', 'dw-church'),
+                'menu_name' => __('교회?�범', 'dw-church'),
+                'add_new' => __('???�범 추�?', 'dw-church'),
+                'add_new_item' => __('???�범 추�?', 'dw-church'),
+                'edit_item' => __('?�범 ?�집', 'dw-church'),
+                'new_item' => __('???�범', 'dw-church'),
+                'view_item' => __('?�범 보기', 'dw-church'),
+                'search_items' => __('?�범 검??, 'dw-church'),
+                'not_found' => __('?�범??찾을 ???�습?�다', 'dw-church'),
+                'not_found_in_trash' => __('?��??�에???�범??찾을 ???�습?�다', 'dw-church'),
             ),
             'public' => true,
             'show_in_menu' => 'dasom-church-admin',
@@ -442,17 +442,17 @@ class Dasom_Church_Admin {
         // 배너
         register_post_type('banner', array(
             'labels' => array(
-                'name' => __('배너', 'dasom-church'),
-                'singular_name' => __('배너', 'dasom-church'),
-                'menu_name' => __('배너', 'dasom-church'),
-                'add_new' => __('새 배너 추가', 'dasom-church'),
-                'add_new_item' => __('새 배너 추가', 'dasom-church'),
-                'edit_item' => __('배너 편집', 'dasom-church'),
-                'new_item' => __('새 배너', 'dasom-church'),
-                'view_item' => __('배너 보기', 'dasom-church'),
-                'search_items' => __('배너 검색', 'dasom-church'),
-                'not_found' => __('배너를 찾을 수 없습니다', 'dasom-church'),
-                'not_found_in_trash' => __('휴지통에서 배너를 찾을 수 없습니다', 'dasom-church'),
+                'name' => __('배너', 'dw-church'),
+                'singular_name' => __('배너', 'dw-church'),
+                'menu_name' => __('배너', 'dw-church'),
+                'add_new' => __('??배너 추�?', 'dw-church'),
+                'add_new_item' => __('??배너 추�?', 'dw-church'),
+                'edit_item' => __('배너 ?�집', 'dw-church'),
+                'new_item' => __('??배너', 'dw-church'),
+                'view_item' => __('배너 보기', 'dw-church'),
+                'search_items' => __('배너 검??, 'dw-church'),
+                'not_found' => __('배너�?찾을 ???�습?�다', 'dw-church'),
+                'not_found_in_trash' => __('?��??�에??배너�?찾을 ???�습?�다', 'dw-church'),
             ),
             'public' => true,
             'show_in_menu' => 'dasom-church-admin',
@@ -463,20 +463,20 @@ class Dasom_Church_Admin {
             'map_meta_cap' => true,
         ));
         
-        // 이벤트
+        // ?�벤??
         register_post_type('event', array(
             'labels' => array(
-                'name' => __('이벤트', 'dasom-church'),
-                'singular_name' => __('이벤트', 'dasom-church'),
-                'menu_name' => __('이벤트', 'dasom-church'),
-                'add_new' => __('새 이벤트 추가', 'dasom-church'),
-                'add_new_item' => __('새 이벤트 추가', 'dasom-church'),
-                'edit_item' => __('이벤트 편집', 'dasom-church'),
-                'new_item' => __('새 이벤트', 'dasom-church'),
-                'view_item' => __('이벤트 보기', 'dasom-church'),
-                'search_items' => __('이벤트 검색', 'dasom-church'),
-                'not_found' => __('이벤트를 찾을 수 없습니다', 'dasom-church'),
-                'not_found_in_trash' => __('휴지통에서 이벤트를 찾을 수 없습니다', 'dasom-church'),
+                'name' => __('?�벤??, 'dw-church'),
+                'singular_name' => __('?�벤??, 'dw-church'),
+                'menu_name' => __('?�벤??, 'dw-church'),
+                'add_new' => __('???�벤??추�?', 'dw-church'),
+                'add_new_item' => __('???�벤??추�?', 'dw-church'),
+                'edit_item' => __('?�벤???�집', 'dw-church'),
+                'new_item' => __('???�벤??, 'dw-church'),
+                'view_item' => __('?�벤??보기', 'dw-church'),
+                'search_items' => __('?�벤??검??, 'dw-church'),
+                'not_found' => __('?�벤?��? 찾을 ???�습?�다', 'dw-church'),
+                'not_found_in_trash' => __('?��??�에???�벤?��? 찾을 ???�습?�다', 'dw-church'),
             ),
             'public' => true,
             'show_in_menu' => 'dasom-church-admin',
@@ -492,17 +492,17 @@ class Dasom_Church_Admin {
      * Register Taxonomies
      */
     public function dasom_church_register_taxonomies() {
-        // 설교 카테고리
+        // ?�교 카테고리
         register_taxonomy('sermon_category', 'sermon', array(
             'labels' => array(
-                'name' => __('설교 카테고리', 'dasom-church'),
-                'singular_name' => __('설교 카테고리', 'dasom-church'),
-                'menu_name' => __('설교 카테고리', 'dasom-church'),
-                'add_new_item' => __('새 카테고리 추가', 'dasom-church'),
-                'edit_item' => __('카테고리 편집', 'dasom-church'),
-                'update_item' => __('카테고리 업데이트', 'dasom-church'),
-                'search_items' => __('카테고리 검색', 'dasom-church'),
-                'not_found' => __('카테고리를 찾을 수 없습니다', 'dasom-church'),
+                'name' => __('?�교 카테고리', 'dw-church'),
+                'singular_name' => __('?�교 카테고리', 'dw-church'),
+                'menu_name' => __('?�교 카테고리', 'dw-church'),
+                'add_new_item' => __('??카테고리 추�?', 'dw-church'),
+                'edit_item' => __('카테고리 ?�집', 'dw-church'),
+                'update_item' => __('카테고리 ?�데?�트', 'dw-church'),
+                'search_items' => __('카테고리 검??, 'dw-church'),
+                'not_found' => __('카테고리�?찾을 ???�습?�다', 'dw-church'),
             ),
             'hierarchical' => true,
             'show_admin_column' => true,
@@ -516,17 +516,17 @@ class Dasom_Church_Admin {
             ),
         ));
         
-        // 설교자
+        // ?�교??
         register_taxonomy('dw_sermon_preacher', 'sermon', array(
             'labels' => array(
-                'name' => __('설교자', 'dasom-church'),
-                'singular_name' => __('설교자', 'dasom-church'),
-                'menu_name' => __('설교자 관리', 'dasom-church'),
-                'add_new_item' => __('새 설교자 추가', 'dasom-church'),
-                'edit_item' => __('설교자 편집', 'dasom-church'),
-                'update_item' => __('설교자 업데이트', 'dasom-church'),
-                'search_items' => __('설교자 검색', 'dasom-church'),
-                'not_found' => __('설교자를 찾을 수 없습니다', 'dasom-church'),
+                'name' => __('?�교??, 'dw-church'),
+                'singular_name' => __('?�교??, 'dw-church'),
+                'menu_name' => __('?�교??관�?, 'dw-church'),
+                'add_new_item' => __('???�교??추�?', 'dw-church'),
+                'edit_item' => __('?�교???�집', 'dw-church'),
+                'update_item' => __('?�교???�데?�트', 'dw-church'),
+                'search_items' => __('?�교??검??, 'dw-church'),
+                'not_found' => __('?�교?��? 찾을 ???�습?�다', 'dw-church'),
             ),
             'public' => false,
             'show_ui' => true,
@@ -544,14 +544,14 @@ class Dasom_Church_Admin {
         // 배너 카테고리
         register_taxonomy('banner_category', 'banner', array(
             'labels' => array(
-                'name' => __('배너 카테고리', 'dasom-church'),
-                'singular_name' => __('배너 카테고리', 'dasom-church'),
-                'menu_name' => __('배너 카테고리', 'dasom-church'),
-                'add_new_item' => __('새 카테고리 추가', 'dasom-church'),
-                'edit_item' => __('카테고리 편집', 'dasom-church'),
-                'update_item' => __('카테고리 업데이트', 'dasom-church'),
-                'search_items' => __('카테고리 검색', 'dasom-church'),
-                'not_found' => __('카테고리를 찾을 수 없습니다', 'dasom-church'),
+                'name' => __('배너 카테고리', 'dw-church'),
+                'singular_name' => __('배너 카테고리', 'dw-church'),
+                'menu_name' => __('배너 카테고리', 'dw-church'),
+                'add_new_item' => __('??카테고리 추�?', 'dw-church'),
+                'edit_item' => __('카테고리 ?�집', 'dw-church'),
+                'update_item' => __('카테고리 ?�데?�트', 'dw-church'),
+                'search_items' => __('카테고리 검??, 'dw-church'),
+                'not_found' => __('카테고리�?찾을 ???�습?�다', 'dw-church'),
             ),
             'hierarchical' => true,
             'show_admin_column' => true,
@@ -565,7 +565,7 @@ class Dasom_Church_Admin {
             ),
         ));
         
-        // 기본 카테고리 및 설교자 생성
+        // 기본 카테고리 �??�교???�성
         $this->dasom_church_create_default_terms();
     }
     
@@ -573,12 +573,12 @@ class Dasom_Church_Admin {
      * Create default terms
      */
     private function dasom_church_create_default_terms() {
-        // 기본 설교 카테고리 생성
+        // 기본 ?�교 카테고리 ?�성
         $default_categories = array(
-            __('주일설교', 'dasom-church'),
-            __('새벽설교', 'dasom-church'),
-            __('수요설교', 'dasom-church'),
-            __('금요설교', 'dasom-church')
+            __('주일?�교', 'dw-church'),
+            __('?�벽?�교', 'dw-church'),
+            __('?�요?�교', 'dw-church'),
+            __('금요?�교', 'dw-church')
         );
         
         foreach ($default_categories as $category) {
@@ -590,10 +590,10 @@ class Dasom_Church_Admin {
             }
         }
         
-        // 기본 배너 카테고리 생성
+        // 기본 배너 카테고리 ?�성
         $default_banner_categories = array(
-            __('메인 배너', 'dasom-church'),
-            __('서브 배너', 'dasom-church')
+            __('메인 배너', 'dw-church'),
+            __('?�브 배너', 'dw-church')
         );
         
         foreach ($default_banner_categories as $category) {
@@ -605,12 +605,12 @@ class Dasom_Church_Admin {
             }
         }
         
-        // 기본 설교자 설정
+        // 기본 ?�교???�정
         if (false === get_option('default_sermon_preacher', false)) {
-            update_option('default_sermon_preacher', __('담임목사', 'dasom-church'));
+            update_option('default_sermon_preacher', __('?�임목사', 'dw-church'));
         }
         
-        $default_preacher = get_option('default_sermon_preacher', __('담임목사', 'dasom-church'));
+        $default_preacher = get_option('default_sermon_preacher', __('?�임목사', 'dw-church'));
         if ($default_preacher && !term_exists($default_preacher, 'dw_sermon_preacher')) {
             $result = wp_insert_term($default_preacher, 'dw_sermon_preacher');
             if (is_wp_error($result)) {
@@ -645,12 +645,12 @@ class Dasom_Church_Admin {
     private function dasom_church_handle_preacher_action($action) {
         // Verify nonce
         if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'sermon_preacher_actions')) {
-            wp_die(__('Security check failed', 'dasom-church'));
+            wp_die(__('Security check failed', 'dw-church'));
         }
         
         // Check user permissions - Allow Author/Editor to manage preachers
         if (!current_user_can('edit_posts')) {
-            wp_die(__('You do not have sufficient permissions to perform this action.', 'dasom-church'));
+            wp_die(__('You do not have sufficient permissions to perform this action.', 'dw-church'));
         }
         
         switch ($action) {
@@ -703,7 +703,7 @@ class Dasom_Church_Admin {
         }
         
         add_action('admin_notices', function() {
-            echo '<div class="updated"><p>' . __('설정이 저장되었습니다.', 'dasom-church') . '</p></div>';
+            echo '<div class="updated"><p>' . __('?�정???�?�되?�습?�다.', 'dw-church') . '</p></div>';
         });
     }
     
@@ -713,13 +713,13 @@ class Dasom_Church_Admin {
     public function dasom_church_dashboard_page() {
         // Allow access for Administrator, Editor, and Author
         if (!current_user_can('edit_posts')) {
-            wp_die(__('You do not have sufficient permissions to access this page.', 'dasom-church'));
+            wp_die(__('You do not have sufficient permissions to access this page.', 'dw-church'));
         }
         
-        // 설교자 관리 액션 처리
+        // ?�교??관�??�션 처리
         if (isset($_POST['preacher_action']) && check_admin_referer('sermon_preacher_actions')) {
             if (!current_user_can('edit_posts')) {
-                wp_die(__('권한이 없습니다.', 'dasom-church'));
+                wp_die(__('권한???�습?�다.', 'dw-church'));
             }
             
             $action = sanitize_text_field($_POST['preacher_action']);
@@ -736,13 +736,13 @@ class Dasom_Church_Admin {
     public function dasom_church_settings_page() {
         // Allow access for Administrator, Editor, and Author
         if (!current_user_can('edit_posts')) {
-            wp_die(__('You do not have sufficient permissions to access this page.', 'dasom-church'));
+            wp_die(__('You do not have sufficient permissions to access this page.', 'dw-church'));
         }
         
-        // 설교자 관리 액션 처리
+        // ?�교??관�??�션 처리
         if (isset($_POST['preacher_action']) && check_admin_referer('sermon_preacher_actions')) {
             if (!current_user_can('edit_posts')) {
-                wp_die(__('권한이 없습니다.', 'dasom-church'));
+                wp_die(__('권한???�습?�다.', 'dw-church'));
             }
             
             $action = sanitize_text_field($_POST['preacher_action']);
@@ -754,11 +754,11 @@ class Dasom_Church_Admin {
     }
     
     /**
-     * GitHub Update page (독립적 - WordPress Settings 메뉴)
+     * GitHub Update page (?�립??- WordPress Settings 메뉴)
      */
     public function dasom_church_github_update_page() {
         if (!current_user_can('manage_options')) {
-            wp_die(__('You do not have sufficient permissions to access this page.', 'dasom-church'));
+            wp_die(__('You do not have sufficient permissions to access this page.', 'dw-church'));
         }
         
         // Load GitHub update view
@@ -769,16 +769,16 @@ class Dasom_Church_Admin {
      * Elementor compatibility - metadata filter
      */
     public function dasom_church_elementor_metadata($value, $post_id, $meta_key, $single) {
-        // 관리자 화면에서는 필터 적용하지 않음 (원본 데이터 사용)
+        // 관리자 ?�면?�서???�터 ?�용?��? ?�음 (?�본 ?�이???�용)
         if (is_admin()) {
             return $value;
         }
         
         global $wpdb;
         
-        // PDF 첨부 ID → URL 변환
+        // PDF 첨�? ID ??URL 변??
         if ($meta_key === 'bulletin_pdf' || $meta_key === 'dw_bulletin_pdf') {
-            // dw_bulletin_pdf 우선 확인
+            // dw_bulletin_pdf ?�선 ?�인
             $actual_key = $meta_key === 'bulletin_pdf' ? 'dw_bulletin_pdf' : $meta_key;
             $raw = $wpdb->get_var($wpdb->prepare(
                 "SELECT meta_value FROM $wpdb->postmeta WHERE post_id=%d AND meta_key=%s LIMIT 1",
@@ -791,7 +791,7 @@ class Dasom_Church_Admin {
             return '';
         }
         
-        // bulletin_date → YYYY년 M월 D일 형식으로 변환 (Elementor용만)
+        // bulletin_date ??YYYY??M??D???�식?�로 변??(Elementor?�만)
         if ($meta_key === 'bulletin_date_formatted' || $meta_key === 'dw_bulletin_date_formatted') {
             $actual_key = 'dw_bulletin_date';
             $raw = $wpdb->get_var($wpdb->prepare(
@@ -801,13 +801,13 @@ class Dasom_Church_Admin {
             if ($raw) {
                 $ts = strtotime($raw);
                 if ($ts) {
-                    return date_i18n('Y년 n월 j일', $ts);
+                    return date_i18n('Y??n??j??, $ts);
                 }
             }
             return '';
         }
         
-        // JSON 갤러리 → 쉼표 구분 문자열
+        // JSON 갤러�????�표 구분 문자??
         if (in_array($meta_key, array('bulletin_images', 'album_images', 'dw_bulletin_images', 'dw_album_images'), true)) {
             $actual_key = $meta_key;
             if ($meta_key === 'bulletin_images') $actual_key = 'dw_bulletin_images';
@@ -826,7 +826,7 @@ class Dasom_Church_Admin {
             return '';
         }
         
-        // 설교자 taxonomy → 커스텀필드처럼 노출
+        // ?�교??taxonomy ??커스?�?�드처럼 ?�출
         if ($meta_key === 'sermon_preacher' || $meta_key === 'dw_sermon_preacher') {
             $names = wp_get_post_terms($post_id, 'dw_sermon_preacher', array('fields' => 'names'));
             return (!is_wp_error($names) && !empty($names)) ? implode(', ', $names) : '';
@@ -925,7 +925,7 @@ class Dasom_Church_Admin {
         
         // Add success message
         add_action('admin_notices', function() {
-            echo '<div class="notice notice-success is-dismissible"><p>' . __('설정이 성공적으로 저장되었습니다.', 'dasom-church') . '</p></div>';
+            echo '<div class="notice notice-success is-dismissible"><p>' . __('?�정???�공?�으�??�?�되?�습?�다.', 'dw-church') . '</p></div>';
         });
         
         // Save dashboard visibility setting
@@ -980,7 +980,7 @@ class Dasom_Church_Admin {
         update_option('dw_enable_pastoral_columns_grid_widget', $enable_pastoral_columns_grid_widget);
         
         add_action('admin_notices', function() {
-            echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Settings saved successfully!', 'dasom-church') . '</p></div>';
+            echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Settings saved successfully!', 'dw-church') . '</p></div>';
         });
     }
     
@@ -989,21 +989,21 @@ class Dasom_Church_Admin {
      */
     public function dasom_church_admin_scripts($hook) {
         // Only load on our admin pages
-        if (strpos($hook, 'dasom-church') === false) {
+        if (strpos($hook, 'dw-church') === false) {
             return;
         }
         
-        wp_enqueue_style('dasom-church-admin', DASOM_CHURCH_PLUGIN_URL . 'assets/css/admin.css', array(), DASOM_CHURCH_VERSION);
-        wp_enqueue_script('dasom-church-admin', DASOM_CHURCH_PLUGIN_URL . 'assets/js/admin.js', array('jquery'), DASOM_CHURCH_VERSION, true);
+        wp_enqueue_style('dw-church-admin', DASOM_CHURCH_PLUGIN_URL . 'assets/css/admin.css', array(), DASOM_CHURCH_VERSION);
+        wp_enqueue_script('dw-church-admin', DASOM_CHURCH_PLUGIN_URL . 'assets/js/admin.js', array('jquery'), DASOM_CHURCH_VERSION, true);
         
         // Localize script
-        wp_localize_script('dasom-church-admin', 'dasomChurchAdmin', array(
+        wp_localize_script('dw-church-admin', 'dwChurchAdmin', array(
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('dasom_church_admin_nonce'),
             'strings' => array(
-                'confirmDelete' => __('Are you sure you want to delete this item?', 'dasom-church'),
-                'uploadError' => __('Upload failed. Please try again.', 'dasom-church'),
-                'invalidUrl' => __('Invalid URL format.', 'dasom-church')
+                'confirmDelete' => __('Are you sure you want to delete this item?', 'dw-church'),
+                'uploadError' => __('Upload failed. Please try again.', 'dw-church'),
+                'invalidUrl' => __('Invalid URL format.', 'dw-church')
             )
         ));
     }
@@ -1013,7 +1013,7 @@ class Dasom_Church_Admin {
      */
     public function dasom_church_profile_page() {
         if (!current_user_can('edit_posts')) {
-            wp_die(__('You do not have sufficient permissions to access this page.', 'dasom-church'));
+            wp_die(__('You do not have sufficient permissions to access this page.', 'dw-church'));
         }
         
         // Handle profile update
@@ -1024,7 +1024,7 @@ class Dasom_Church_Admin {
         $current_user = wp_get_current_user();
         ?>
         <div class="wrap">
-            <h1><?php _e('사용자 프로필', 'dasom-church'); ?></h1>
+            <h1><?php _e('?�용???�로??, 'dw-church'); ?></h1>
             
             <form method="post" action="">
                 <?php wp_nonce_field('dasom_church_profile_action', 'dasom_church_profile_nonce'); ?>
@@ -1032,17 +1032,17 @@ class Dasom_Church_Admin {
                 <table class="form-table">
                     <tr>
                         <th scope="row">
-                            <label for="user_login"><?php _e('사용자명', 'dasom-church'); ?></label>
+                            <label for="user_login"><?php _e('?�용?�명', 'dw-church'); ?></label>
                         </th>
                         <td>
                             <input type="text" id="user_login" name="user_login" value="<?php echo esc_attr($current_user->user_login); ?>" class="regular-text" readonly />
-                            <p class="description"><?php _e('사용자명은 변경할 수 없습니다.', 'dasom-church'); ?></p>
+                            <p class="description"><?php _e('?�용?�명?�?변경할 ???�습?�다.', 'dw-church'); ?></p>
                         </td>
                     </tr>
                     
                     <tr>
                         <th scope="row">
-                            <label for="first_name"><?php _e('이름', 'dasom-church'); ?></label>
+                            <label for="first_name"><?php _e('?�름', 'dw-church'); ?></label>
                         </th>
                         <td>
                             <input type="text" id="first_name" name="first_name" value="<?php echo esc_attr($current_user->first_name); ?>" class="regular-text" />
@@ -1051,7 +1051,7 @@ class Dasom_Church_Admin {
                     
                     <tr>
                         <th scope="row">
-                            <label for="last_name"><?php _e('성', 'dasom-church'); ?></label>
+                            <label for="last_name"><?php _e('??, 'dw-church'); ?></label>
                         </th>
                         <td>
                             <input type="text" id="last_name" name="last_name" value="<?php echo esc_attr($current_user->last_name); ?>" class="regular-text" />
@@ -1060,7 +1060,7 @@ class Dasom_Church_Admin {
                     
                     <tr>
                         <th scope="row">
-                            <label for="nickname"><?php _e('닉네임', 'dasom-church'); ?></label>
+                            <label for="nickname"><?php _e('?�네??, 'dw-church'); ?></label>
                         </th>
                         <td>
                             <input type="text" id="nickname" name="nickname" value="<?php echo esc_attr($current_user->nickname); ?>" class="regular-text" />
@@ -1069,7 +1069,7 @@ class Dasom_Church_Admin {
                     
                     <tr>
                         <th scope="row">
-                            <label for="user_email"><?php _e('이메일', 'dasom-church'); ?></label>
+                            <label for="user_email"><?php _e('?�메??, 'dw-church'); ?></label>
                         </th>
                         <td>
                             <input type="email" id="user_email" name="user_email" value="<?php echo esc_attr($current_user->user_email); ?>" class="regular-text" />
@@ -1078,7 +1078,7 @@ class Dasom_Church_Admin {
                     
                     <tr>
                         <th scope="row">
-                            <label for="user_url"><?php _e('웹사이트', 'dasom-church'); ?></label>
+                            <label for="user_url"><?php _e('?�사?�트', 'dw-church'); ?></label>
                         </th>
                         <td>
                             <input type="url" id="user_url" name="user_url" value="<?php echo esc_attr($current_user->user_url); ?>" class="regular-text" />
@@ -1087,7 +1087,7 @@ class Dasom_Church_Admin {
                     
                     <tr>
                         <th scope="row">
-                            <label for="description"><?php _e('자기소개', 'dasom-church'); ?></label>
+                            <label for="description"><?php _e('?�기?�개', 'dw-church'); ?></label>
                         </th>
                         <td>
                             <textarea id="description" name="description" rows="5" cols="30" class="large-text"><?php echo esc_textarea($current_user->description); ?></textarea>
@@ -1095,21 +1095,21 @@ class Dasom_Church_Admin {
                     </tr>
                 </table>
                 
-                <h2><?php _e('비밀번호 변경', 'dasom-church'); ?></h2>
+                <h2><?php _e('비�?번호 변�?, 'dw-church'); ?></h2>
                 <table class="form-table">
                     <tr>
                         <th scope="row">
-                            <label for="current_pass"><?php _e('현재 비밀번호', 'dasom-church'); ?></label>
+                            <label for="current_pass"><?php _e('?�재 비�?번호', 'dw-church'); ?></label>
                         </th>
                         <td>
                             <input type="password" id="current_pass" name="current_pass" class="regular-text" />
-                            <p class="description"><?php _e('비밀번호를 변경하려면 현재 비밀번호를 입력하세요.', 'dasom-church'); ?></p>
+                            <p class="description"><?php _e('비�?번호�?변경하?�면 ?�재 비�?번호�??�력?�세??', 'dw-church'); ?></p>
                         </td>
                     </tr>
                     
                     <tr>
                         <th scope="row">
-                            <label for="pass1"><?php _e('새 비밀번호', 'dasom-church'); ?></label>
+                            <label for="pass1"><?php _e('??비�?번호', 'dw-church'); ?></label>
                         </th>
                         <td>
                             <input type="password" id="pass1" name="pass1" class="regular-text" />
@@ -1118,7 +1118,7 @@ class Dasom_Church_Admin {
                     
                     <tr>
                         <th scope="row">
-                            <label for="pass2"><?php _e('새 비밀번호 확인', 'dasom-church'); ?></label>
+                            <label for="pass2"><?php _e('??비�?번호 ?�인', 'dw-church'); ?></label>
                         </th>
                         <td>
                             <input type="password" id="pass2" name="pass2" class="regular-text" />
@@ -1126,7 +1126,7 @@ class Dasom_Church_Admin {
                     </tr>
                 </table>
                 
-                <?php submit_button(__('프로필 업데이트', 'dasom-church')); ?>
+                <?php submit_button(__('?�로???�데?�트', 'dw-church')); ?>
             </form>
         </div>
         <?php
@@ -1163,22 +1163,22 @@ class Dasom_Church_Admin {
                     if ($_POST['pass1'] === $_POST['pass2']) {
                         wp_set_password($_POST['pass1'], $user_id);
                         add_action('admin_notices', function() {
-                            echo '<div class="notice notice-success"><p>' . __('비밀번호가 성공적으로 변경되었습니다.', 'dasom-church') . '</p></div>';
+                            echo '<div class="notice notice-success"><p>' . __('비�?번호가 ?�공?�으�?변경되?�습?�다.', 'dw-church') . '</p></div>';
                         });
                     } else {
                         add_action('admin_notices', function() {
-                            echo '<div class="notice notice-error"><p>' . __('새 비밀번호가 일치하지 않습니다.', 'dasom-church') . '</p></div>';
+                            echo '<div class="notice notice-error"><p>' . __('??비�?번호가 ?�치?��? ?�습?�다.', 'dw-church') . '</p></div>';
                         });
                     }
                 } else {
                     add_action('admin_notices', function() {
-                        echo '<div class="notice notice-error"><p>' . __('현재 비밀번호가 올바르지 않습니다.', 'dasom-church') . '</p></div>';
+                        echo '<div class="notice notice-error"><p>' . __('?�재 비�?번호가 ?�바르�? ?�습?�다.', 'dw-church') . '</p></div>';
                     });
                 }
             }
             
             add_action('admin_notices', function() {
-                echo '<div class="notice notice-success"><p>' . __('프로필이 성공적으로 업데이트되었습니다.', 'dasom-church') . '</p></div>';
+                echo '<div class="notice notice-success"><p>' . __('?�로?�이 ?�공?�으�??�데?�트?�었?�니??', 'dw-church') . '</p></div>';
             });
         }
     }
@@ -1192,8 +1192,8 @@ class Dasom_Church_Admin {
             // If headers already sent, use JavaScript redirect
             echo '<script>window.location.href = "' . esc_url(wp_logout_url()) . '";</script>';
             echo '<noscript><meta http-equiv="refresh" content="0;url=' . esc_url(wp_logout_url()) . '"></noscript>';
-            echo '<p>' . __('로그아웃 중입니다...', 'dasom-church') . '</p>';
-            echo '<p><a href="' . esc_url(wp_logout_url()) . '">' . __('여기를 클릭하여 로그아웃하세요.', 'dasom-church') . '</a></p>';
+            echo '<p>' . __('로그?�웃 중입?�다...', 'dw-church') . '</p>';
+            echo '<p><a href="' . esc_url(wp_logout_url()) . '">' . __('?�기�??�릭?�여 로그?�웃?�세??', 'dw-church') . '</a></p>';
             return;
         }
         

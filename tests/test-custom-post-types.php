@@ -2,7 +2,7 @@
 /**
  * Class Test_Custom_Post_Types
  *
- * @package Dasom_Church
+ * @package DW_Church
  */
 
 /**

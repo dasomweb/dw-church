@@ -2,7 +2,7 @@
 /**
  * PHPUnit bootstrap file for DW Church Management System
  *
- * @package Dasom_Church
+ * @package DW_Church
  */
 
 $_tests_dir = getenv('WP_TESTS_DIR');

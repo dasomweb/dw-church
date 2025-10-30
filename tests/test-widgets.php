@@ -2,7 +2,7 @@
 /**
  * Class Test_Widgets
  *
- * @package Dasom_Church
+ * @package DW_Church
  */
 
 /**
@@ -40,7 +40,7 @@ class Test_Widgets extends WP_UnitTestCase {
         ];
 
         foreach ($widget_files as $file) {
-            $path = DASOM_CHURCH_PLUGIN_PATH . 'includes/widgets/elementor/' . $file;
+            $path = DW_Church_PLUGIN_PATH . 'includes/widgets/elementor/' . $file;
             $this->assertFileExists($path, "Widget file {$file} does not exist");
         }
     }
@@ -49,7 +49,7 @@ class Test_Widgets extends WP_UnitTestCase {
      * Test widgets class exists
      */
     public function test_widgets_class_exists() {
-        $this->assertTrue(class_exists('Dasom_Church_Widgets'));
+        $this->assertTrue(class_exists('DW_Church_Widgets'));
     }
 }
 

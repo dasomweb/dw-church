@@ -55,7 +55,7 @@ $total_migrated = 0;
 $errors = array();
 
 foreach ($meta_key_map as $old_key => $new_key) {
-    echo "<h3>Migrating: {$old_key} → {$new_key}</h3>";
+    echo "<h3>Migrating: {$old_key} ??{$new_key}</h3>";
     
     // Find all posts with this meta key
     global $wpdb;
@@ -80,7 +80,7 @@ foreach ($meta_key_map as $old_key => $new_key) {
         $existing_new_value = get_post_meta($post_id, $new_key, true);
         
         if ($existing_new_value !== '' && $existing_new_value !== false) {
-            echo "<p style='color:orange;'>⚠️ Post ID {$post_id}: New key '{$new_key}' already exists, skipping...</p>";
+            echo "<p style='color:orange;'>?�️ Post ID {$post_id}: New key '{$new_key}' already exists, skipping...</p>";
             continue;
         }
         
@@ -90,12 +90,12 @@ foreach ($meta_key_map as $old_key => $new_key) {
         if ($updated) {
             // Delete old meta key only if new one was successfully created
             delete_post_meta($post_id, $old_key);
-            echo "<p style='color:green;'>✓ Post ID {$post_id}: Migrated successfully</p>";
+            echo "<p style='color:green;'>??Post ID {$post_id}: Migrated successfully</p>";
             $total_migrated++;
         } else {
             $error_msg = "Failed to migrate post ID {$post_id}";
             $errors[] = $error_msg;
-            echo "<p style='color:red;'>✗ {$error_msg}</p>";
+            echo "<p style='color:red;'>??{$error_msg}</p>";
         }
     }
     
@@ -103,7 +103,7 @@ foreach ($meta_key_map as $old_key => $new_key) {
 }
 
 // Migrate taxonomy: sermon_preacher to dw_sermon_preacher
-echo '<h2>Migrating Taxonomy: sermon_preacher → dw_sermon_preacher</h2>';
+echo '<h2>Migrating Taxonomy: sermon_preacher ??dw_sermon_preacher</h2>';
 
 // Check if old taxonomy exists
 $old_taxonomy_exists = taxonomy_exists('sermon_preacher');
@@ -131,7 +131,7 @@ if ($old_taxonomy_exists && $new_taxonomy_exists) {
                 ));
                 
                 if (!is_wp_error($new_term)) {
-                    echo "<p style='color:green;'>✓ Created term '{$old_term->name}' in new taxonomy</p>";
+                    echo "<p style='color:green;'>??Created term '{$old_term->name}' in new taxonomy</p>";
                     
                     // Get all posts with this term
                     $posts_with_term = get_posts(array(
@@ -149,14 +149,14 @@ if ($old_taxonomy_exists && $new_taxonomy_exists) {
                     // Assign new term to these posts
                     foreach ($posts_with_term as $post) {
                         wp_set_post_terms($post->ID, array($new_term['term_id']), 'dw_sermon_preacher', false);
-                        echo "<p style='color:green;'>  ✓ Post ID {$post->ID}: Assigned to new taxonomy</p>";
+                        echo "<p style='color:green;'>  ??Post ID {$post->ID}: Assigned to new taxonomy</p>";
                         $total_migrated++;
                     }
                 } else {
-                    echo "<p style='color:red;'>✗ Failed to create term '{$old_term->name}': " . $new_term->get_error_message() . "</p>";
+                    echo "<p style='color:red;'>??Failed to create term '{$old_term->name}': " . $new_term->get_error_message() . "</p>";
                 }
             } else {
-                echo "<p style='color:orange;'>⚠️ Term '{$old_term->name}' already exists in new taxonomy</p>";
+                echo "<p style='color:orange;'>?�️ Term '{$old_term->name}' already exists in new taxonomy</p>";
             }
         }
     } else {
@@ -167,7 +167,7 @@ if ($old_taxonomy_exists && $new_taxonomy_exists) {
         echo "<p style='color:gray;'>Old taxonomy 'sermon_preacher' does not exist</p>";
     }
     if (!$new_taxonomy_exists) {
-        echo "<p style='color:red;'>⚠️ New taxonomy 'dw_sermon_preacher' does not exist. Please update the plugin first.</p>";
+        echo "<p style='color:red;'>?�️ New taxonomy 'dw_sermon_preacher' does not exist. Please update the plugin first.</p>";
     }
 }
 
@@ -185,7 +185,7 @@ if (!empty($errors)) {
     }
     echo '</ul>';
 } else {
-    echo '<p style="color:green;"><strong>✓ Migration completed successfully with no errors!</strong></p>';
+    echo '<p style="color:green;"><strong>??Migration completed successfully with no errors!</strong></p>';
 }
 
 echo '<hr>';

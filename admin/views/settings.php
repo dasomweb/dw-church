@@ -2,7 +2,7 @@
 /**
  * Settings view
  *
- * @package Dasom_Church
+ * @package DW_Church
  * @since 1.0.0
  */
 
@@ -48,7 +48,7 @@ $enable_pastoral_column_widget = get_option('dw_enable_pastoral_column_widget', 
 $enable_pastoral_columns_grid_widget = get_option('dw_enable_pastoral_columns_grid_widget', 'yes');
 
 // Speaker management variables (from original dashboard)
-$default_preacher = get_option('default_sermon_preacher', __('담임목사', 'dasom-church'));
+$default_preacher = get_option('default_sermon_preacher', __('?�임목사', 'dw-church'));
 $preachers = get_terms(array(
     'taxonomy' => 'dw_sermon_preacher',
     'hide_empty' => false,
@@ -63,7 +63,7 @@ if (is_wp_error($preachers)) {
 ?>
 
 <div class="wrap">
-    <h1><?php echo esc_html__('DW 교회관리 설정', 'dasom-church'); ?></h1>
+    <h1><?php echo esc_html__('DW 교회관�??�정', 'dw-church'); ?></h1>
     
     <?php
     $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'church_info';
@@ -71,10 +71,10 @@ if (is_wp_error($preachers)) {
     
     <h2 class="nav-tab-wrapper">
         <a href="?page=dasom-church-settings&tab=church_info" class="nav-tab <?php echo $active_tab == 'church_info' ? 'nav-tab-active' : ''; ?>">
-            <?php _e('교회 정보', 'dasom-church'); ?>
+            <?php _e('교회 ?�보', 'dw-church'); ?>
         </a>
         <a href="?page=dasom-church-settings&tab=speaker_management" class="nav-tab <?php echo $active_tab == 'speaker_management' ? 'nav-tab-active' : ''; ?>">
-            <?php _e('설교자 관리', 'dasom-church'); ?>
+            <?php _e('?�교??관�?, 'dw-church'); ?>
         </a>
     </h2>
     
@@ -82,143 +82,143 @@ if (is_wp_error($preachers)) {
         <?php wp_nonce_field('dasom_church_settings_action', 'dasom_church_settings_nonce'); ?>
         
         <?php if ($active_tab == 'church_info'): ?>
-        <!-- 교회 정보 탭 -->
-        <h2><?php _e('기본 정보', 'dasom-church'); ?></h2>
+        <!-- 교회 ?�보 ??-->
+        <h2><?php _e('기본 ?�보', 'dw-church'); ?></h2>
         <table class="form-table">
             <tr>
                 <th scope="row">
-                    <label for="dw_church_name"><?php echo esc_html__('Church Name', 'dasom-church'); ?></label>
+                    <label for="dw_church_name"><?php echo esc_html__('Church Name', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="text" id="dw_church_name" name="dw_church_name" value="<?php echo esc_attr($church_name); ?>" class="regular-text" />
-                    <p class="description"><?php echo esc_html__('Enter the name of your church.', 'dasom-church'); ?></p>
+                    <p class="description"><?php echo esc_html__('Enter the name of your church.', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_church_address"><?php echo esc_html__('Church Address', 'dasom-church'); ?></label>
+                    <label for="dw_church_address"><?php echo esc_html__('Church Address', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <textarea id="dw_church_address" name="dw_church_address" rows="3" cols="50"><?php echo esc_textarea($church_address); ?></textarea>
-                    <p class="description"><?php echo esc_html__('Enter the full address of your church.', 'dasom-church'); ?></p>
+                    <p class="description"><?php echo esc_html__('Enter the full address of your church.', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_church_phone"><?php echo esc_html__('Phone Number', 'dasom-church'); ?></label>
+                    <label for="dw_church_phone"><?php echo esc_html__('Phone Number', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="text" id="dw_church_phone" name="dw_church_phone" value="<?php echo esc_attr($church_phone); ?>" class="regular-text" />
-                    <p class="description"><?php echo esc_html__('Enter the church phone number.', 'dasom-church'); ?></p>
+                    <p class="description"><?php echo esc_html__('Enter the church phone number.', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_church_email"><?php echo esc_html__('Email Address', 'dasom-church'); ?></label>
+                    <label for="dw_church_email"><?php echo esc_html__('Email Address', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="email" id="dw_church_email" name="dw_church_email" value="<?php echo esc_attr($church_email); ?>" class="regular-text" />
-                    <p class="description"><?php echo esc_html__('Enter the church email address.', 'dasom-church'); ?></p>
+                    <p class="description"><?php echo esc_html__('Enter the church email address.', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_church_website"><?php echo esc_html__('Website URL', 'dasom-church'); ?></label>
+                    <label for="dw_church_website"><?php echo esc_html__('Website URL', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="url" id="dw_church_website" name="dw_church_website" value="<?php echo esc_attr($church_website); ?>" class="regular-text" />
-                    <p class="description"><?php echo esc_html__('Enter the church website URL.', 'dasom-church'); ?></p>
+                    <p class="description"><?php echo esc_html__('Enter the church website URL.', 'dw-church'); ?></p>
                 </td>
             </tr>
         </table>
         
-        <h2><?php echo esc_html__('Social Media URLs', 'dasom-church'); ?></h2>
-        <p><?php echo esc_html__('Enter your church social media URLs below. Leave empty if not applicable.', 'dasom-church'); ?></p>
+        <h2><?php echo esc_html__('Social Media URLs', 'dw-church'); ?></h2>
+        <p><?php echo esc_html__('Enter your church social media URLs below. Leave empty if not applicable.', 'dw-church'); ?></p>
         
         <table class="form-table">
             <tr>
                 <th scope="row">
-                    <label for="dw_social_youtube"><?php echo esc_html__('YouTube', 'dasom-church'); ?></label>
+                    <label for="dw_social_youtube"><?php echo esc_html__('YouTube', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="url" id="dw_social_youtube" name="dw_social_youtube" value="<?php echo esc_attr($social_youtube); ?>" class="regular-text" placeholder="https://www.youtube.com/channel/..." />
-                    <p class="description"><?php echo esc_html__('Enter your YouTube channel URL.', 'dasom-church'); ?></p>
+                    <p class="description"><?php echo esc_html__('Enter your YouTube channel URL.', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_social_instagram"><?php echo esc_html__('Instagram', 'dasom-church'); ?></label>
+                    <label for="dw_social_instagram"><?php echo esc_html__('Instagram', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="url" id="dw_social_instagram" name="dw_social_instagram" value="<?php echo esc_attr($social_instagram); ?>" class="regular-text" placeholder="https://www.instagram.com/..." />
-                    <p class="description"><?php echo esc_html__('Enter your Instagram profile URL.', 'dasom-church'); ?></p>
+                    <p class="description"><?php echo esc_html__('Enter your Instagram profile URL.', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_social_facebook"><?php echo esc_html__('Facebook', 'dasom-church'); ?></label>
+                    <label for="dw_social_facebook"><?php echo esc_html__('Facebook', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="url" id="dw_social_facebook" name="dw_social_facebook" value="<?php echo esc_attr($social_facebook); ?>" class="regular-text" placeholder="https://www.facebook.com/..." />
-                    <p class="description"><?php echo esc_html__('Enter your Facebook page URL.', 'dasom-church'); ?></p>
+                    <p class="description"><?php echo esc_html__('Enter your Facebook page URL.', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_social_linkedin"><?php echo esc_html__('LinkedIn', 'dasom-church'); ?></label>
+                    <label for="dw_social_linkedin"><?php echo esc_html__('LinkedIn', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="url" id="dw_social_linkedin" name="dw_social_linkedin" value="<?php echo esc_attr($social_linkedin); ?>" class="regular-text" placeholder="https://www.linkedin.com/company/..." />
-                    <p class="description"><?php echo esc_html__('Enter your LinkedIn company page URL.', 'dasom-church'); ?></p>
+                    <p class="description"><?php echo esc_html__('Enter your LinkedIn company page URL.', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_social_tiktok"><?php echo esc_html__('TikTok', 'dasom-church'); ?></label>
+                    <label for="dw_social_tiktok"><?php echo esc_html__('TikTok', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="url" id="dw_social_tiktok" name="dw_social_tiktok" value="<?php echo esc_attr($social_tiktok); ?>" class="regular-text" placeholder="https://www.tiktok.com/@..." />
-                    <p class="description"><?php echo esc_html__('Enter your TikTok profile URL.', 'dasom-church'); ?></p>
+                    <p class="description"><?php echo esc_html__('Enter your TikTok profile URL.', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_social_kakaotalk"><?php echo esc_html__('KakaoTalk', 'dasom-church'); ?></label>
+                    <label for="dw_social_kakaotalk"><?php echo esc_html__('KakaoTalk', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="url" id="dw_social_kakaotalk" name="dw_social_kakaotalk" value="<?php echo esc_attr($social_kakaotalk); ?>" class="regular-text" placeholder="https://open.kakao.com/o/..." />
-                    <p class="description"><?php echo esc_html__('Enter your KakaoTalk open chat URL.', 'dasom-church'); ?></p>
+                    <p class="description"><?php echo esc_html__('Enter your KakaoTalk open chat URL.', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_social_kakaotalk_channel"><?php echo esc_html__('KakaoTalk Channel', 'dasom-church'); ?></label>
+                    <label for="dw_social_kakaotalk_channel"><?php echo esc_html__('KakaoTalk Channel', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="url" id="dw_social_kakaotalk_channel" name="dw_social_kakaotalk_channel" value="<?php echo esc_attr($social_kakaotalk_channel); ?>" class="regular-text" placeholder="https://pf.kakao.com/..." />
-                    <p class="description"><?php echo esc_html__('Enter your KakaoTalk Channel URL.', 'dasom-church'); ?></p>
+                    <p class="description"><?php echo esc_html__('Enter your KakaoTalk Channel URL.', 'dw-church'); ?></p>
                 </td>
             </tr>
         </table>
         
         <?php elseif ($active_tab == 'speaker_management'): ?>
-        <!-- 설교자 관리 탭 -->
+        <!-- ?�교??관�???-->
         <hr>
-        <h2>🧑‍💼 <?php _e('설교자 관리', 'dasom-church'); ?></h2>
+        <h2>?��?��?<?php _e('?�교??관�?, 'dw-church'); ?></h2>
         
         <form method="post" style="margin-bottom:20px;">
             <?php wp_nonce_field('sermon_preacher_actions'); ?>
             <input type="hidden" name="preacher_action" value="add">
-            <input type="text" name="preacher_name" class="regular-text" placeholder="<?php _e('설교자 이름 추가', 'dasom-church'); ?>">
-            <?php submit_button(__('추가', 'dasom-church'), 'secondary', '', false); ?>
+            <input type="text" name="preacher_name" class="regular-text" placeholder="<?php _e('?�교???�름 추�?', 'dw-church'); ?>">
+            <?php submit_button(__('추�?', 'dw-church'), 'secondary', '', false); ?>
         </form>
         
         <table class="widefat striped" style="max-width:900px;">
             <thead>
                 <tr>
-                    <th style="width:40px;"><?php _e('ID', 'dasom-church'); ?></th>
-                    <th><?php _e('이름', 'dasom-church'); ?></th>
-                    <th style="width:200px;"><?php _e('동작', 'dasom-church'); ?></th>
+                    <th style="width:40px;"><?php _e('ID', 'dw-church'); ?></th>
+                    <th><?php _e('?�름', 'dw-church'); ?></th>
+                    <th style="width:200px;"><?php _e('?�작', 'dw-church'); ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -232,7 +232,7 @@ if (is_wp_error($preachers)) {
                                     <input type="hidden" name="preacher_action" value="rename">
                                     <input type="hidden" name="term_id" value="<?php echo (int)$term->term_id; ?>">
                                     <input type="text" name="new_name" value="<?php echo esc_attr($term->name); ?>" class="regular-text" style="max-width:300px;">
-                                    <?php submit_button(__('이름 변경', 'dasom-church'), 'small', '', false); ?>
+                                    <?php submit_button(__('?�름 변�?, 'dw-church'), 'small', '', false); ?>
                                 </form>
                             </td>
                             <td>
@@ -242,22 +242,22 @@ if (is_wp_error($preachers)) {
                                     <input type="hidden" name="preacher_action" value="set_default">
                                     <input type="hidden" name="term_id" value="<?php echo (int)$term->term_id; ?>">
                                     <button type="submit" class="button <?php echo $is_default ? 'button-secondary' : 'button-primary'; ?>" <?php echo $is_default ? 'disabled style="cursor:not-allowed;opacity:0.5;"' : ''; ?>>
-                                        <?php echo $is_default ? __('기본 설교자 (현재)', 'dasom-church') : __('기본 설교자로 지정', 'dasom-church'); ?>
+                                        <?php echo $is_default ? __('기본 ?�교??(?�재)', 'dw-church') : __('기본 ?�교?�로 지??, 'dw-church'); ?>
                                     </button>
                                 </form>
-                                <form method="post" style="display:inline;margin-left:8px;" onsubmit="return confirm('<?php _e('삭제하시겠습니까? 이 설교자가 지정된 글의 설교자 값은 비어 있을 수 있습니다.', 'dasom-church'); ?>');">
+                                <form method="post" style="display:inline;margin-left:8px;" onsubmit="return confirm('<?php _e('??��?�시겠습?�까? ???�교?��? 지?�된 글???�교??값�? 비어 ?�을 ???�습?�다.', 'dw-church'); ?>');">
                                     <?php wp_nonce_field('sermon_preacher_actions'); ?>
                                     <input type="hidden" name="preacher_action" value="delete">
                                     <input type="hidden" name="term_id" value="<?php echo (int)$term->term_id; ?>">
                                     <button type="submit" class="button button-link-delete" style="color:#b32d2e;">
-                                        <?php _e('삭제', 'dasom-church'); ?>
+                                        <?php _e('??��', 'dw-church'); ?>
                                     </button>
                                 </form>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <tr><td colspan="3"><?php _e('등록된 설교자가 없습니다.', 'dasom-church'); ?></td></tr>
+                    <tr><td colspan="3"><?php _e('?�록???�교?��? ?�습?�다.', 'dw-church'); ?></td></tr>
                 <?php endif; ?>
             </tbody>
         </table>

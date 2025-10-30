@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class Dasom_Church_Update_Manager {
+class DW_Church_Update_Manager {
     
     private static $instance = null;
     private $update_uri = 'https://github.com/dasomweb/dasom-church-management-system';
@@ -236,4 +236,4 @@ class Dasom_Church_Update_Manager {
 }
 
 // Initialize update manager
-Dasom_Church_Update_Manager::get_instance();
+DW_Church_Update_Manager::get_instance();

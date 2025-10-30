@@ -2,7 +2,7 @@
 /**
  * DW Elementor Columns Widget
  *
- * @package Dasom_Church
+ * @package DW_Church
  * @since 1.10.0
  */
 
@@ -18,7 +18,7 @@ class DW_Elementor_Column_Widget extends \Elementor\Widget_Base {
     }
     
     public function get_title() {
-        return __('DW Pastoral Columns', 'dasom-church');
+        return __('DW Pastoral Columns', 'dw-church');
     }
     
     public function get_icon() {
@@ -38,7 +38,7 @@ class DW_Elementor_Column_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'content_section',
             [
-                'label' => __('Settings', 'dasom-church'),
+                'label' => __('Settings', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
             ]
         );
@@ -46,7 +46,7 @@ class DW_Elementor_Column_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'posts_per_page',
             [
-                'label' => __('Number of Columns', 'dasom-church'),
+                'label' => __('Number of Columns', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::NUMBER,
                 'default' => 6,
                 'min' => 1,
@@ -57,7 +57,7 @@ class DW_Elementor_Column_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'columns',
             [
-                'label' => __('Columns', 'dasom-church'),
+                'label' => __('Columns', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::NUMBER,
                 'default' => 3,
                 'tablet_default' => 2,
@@ -70,10 +70,10 @@ class DW_Elementor_Column_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'show_thumbnail',
             [
-                'label' => __('Show Thumbnail', 'dasom-church'),
+                'label' => __('Show Thumbnail', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
+                'label_on' => __('Yes', 'dw-church'),
+                'label_off' => __('No', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
             ]
@@ -82,10 +82,10 @@ class DW_Elementor_Column_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'show_date',
             [
-                'label' => __('Show Date', 'dasom-church'),
+                'label' => __('Show Date', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
+                'label_on' => __('Yes', 'dw-church'),
+                'label_off' => __('No', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
             ]
@@ -94,10 +94,10 @@ class DW_Elementor_Column_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'show_excerpt',
             [
-                'label' => __('Show Excerpt', 'dasom-church'),
+                'label' => __('Show Excerpt', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
+                'label_on' => __('Yes', 'dw-church'),
+                'label_off' => __('No', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
             ]
@@ -106,7 +106,7 @@ class DW_Elementor_Column_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'excerpt_length',
             [
-                'label' => __('Excerpt Length', 'dasom-church'),
+                'label' => __('Excerpt Length', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::NUMBER,
                 'default' => 25,
                 'condition' => [
@@ -132,7 +132,7 @@ class DW_Elementor_Column_Widget extends \Elementor\Widget_Base {
         $columns_query = new WP_Query($args);
         
         if (!$columns_query->have_posts()) {
-            echo '<p>' . __('No columns found.', 'dasom-church') . '</p>';
+            echo '<p>' . __('No columns found.', 'dw-church') . '</p>';
             return;
         }
         
@@ -158,7 +158,7 @@ class DW_Elementor_Column_Widget extends \Elementor\Widget_Base {
             echo '<h3 style="margin:0 0 10px 0;font-size:18px;"><a href="' . get_permalink() . '" style="text-decoration:none;color:#333;">' . get_the_title() . '</a></h3>';
             
             if (($settings['show_date'] ?? 'yes') === 'yes') {
-                echo '<div class="column-date" style="font-size:13px;color:#666;margin-bottom:10px;">ðŸ“… ' . get_the_date() . '</div>';
+                echo '<div class="column-date" style="font-size:13px;color:#666;margin-bottom:10px;">?“… ' . get_the_date() . '</div>';
             }
             
             if (($settings['show_excerpt'] ?? 'yes') === 'yes') {

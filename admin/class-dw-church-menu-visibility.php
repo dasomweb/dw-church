@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class Dasom_Church_Menu_Visibility {
+class DW_Church_Menu_Visibility {
     
     /**
      * Singleton instance
@@ -301,4 +301,4 @@ class Dasom_Church_Menu_Visibility {
 }
 
 // Initialize the class
-Dasom_Church_Menu_Visibility::get_instance();
+DW_Church_Menu_Visibility::get_instance();

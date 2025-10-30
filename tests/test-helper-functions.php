@@ -2,7 +2,7 @@
 /**
  * Class Test_Helper_Functions
  *
- * @package Dasom_Church
+ * @package DW_Church
  */
 
 /**
@@ -14,7 +14,7 @@ class Test_Helper_Functions extends WP_UnitTestCase {
      * Test helper functions file exists
      */
     public function test_helper_functions_file_exists() {
-        $file = DASOM_CHURCH_PLUGIN_PATH . 'includes/functions-helpers.php';
+        $file = DW_Church_PLUGIN_PATH . 'includes/functions-helpers.php';
         $this->assertFileExists($file);
     }
 

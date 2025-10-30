@@ -49,12 +49,12 @@ if (!$post || $post->post_type !== 'banner') {
     </style>
 </head>
 <body>
-    <h1>ğŸ” Banner Meta Debugging</h1>
+    <h1>?” Banner Meta Debugging</h1>
     <p><strong>Banner ID:</strong> <?php echo $banner_id; ?></p>
     <p><strong>Title:</strong> <?php echo get_the_title($banner_id); ?></p>
     <p><strong>Status:</strong> <?php echo get_post_status($banner_id); ?></p>
 
-    <h2>ğŸ“ Text Content</h2>
+    <h2>?“ Text Content</h2>
     <table>
         <tr>
             <th>Meta Key</th>
@@ -83,7 +83,7 @@ if (!$post || $post->post_type !== 'banner') {
         </tr>
     </table>
 
-    <h2>ğŸ“ Text Position & Alignment</h2>
+    <h2>?“ Text Position & Alignment</h2>
     <table>
         <tr>
             <th>Meta Key</th>
@@ -105,35 +105,35 @@ if (!$post || $post->post_type !== 'banner') {
         </tr>
     </table>
 
-    <h2>ğŸ“ Text Container Width (Responsive)</h2>
+    <h2>?“ Text Container Width (Responsive)</h2>
     <table>
         <tr>
             <th>Device</th>
             <th>Width (px)</th>
         </tr>
         <tr>
-            <td>ğŸ–¥ï¸ PC <code>(dw_banner_text_width_pc)</code></td>
+            <td>?–¥ï¸?PC <code>(dw_banner_text_width_pc)</code></td>
             <td><strong class="success"><?php 
                 $value = get_post_meta($banner_id, 'dw_banner_text_width_pc', true);
                 echo $value ? $value . 'px' : '<span class="warning">NOT SET (default: 600px)</span>';
             ?></strong></td>
         </tr>
         <tr>
-            <td>ğŸ’» Laptop <code>(dw_banner_text_width_laptop)</code></td>
+            <td>?’» Laptop <code>(dw_banner_text_width_laptop)</code></td>
             <td><strong class="success"><?php 
                 $value = get_post_meta($banner_id, 'dw_banner_text_width_laptop', true);
                 echo $value ? $value . 'px' : '<span class="warning">NOT SET (default: 600px)</span>';
             ?></strong></td>
         </tr>
         <tr>
-            <td>ğŸ“± Tablet <code>(dw_banner_text_width_tablet)</code></td>
+            <td>?“± Tablet <code>(dw_banner_text_width_tablet)</code></td>
             <td><strong class="success"><?php 
                 $value = get_post_meta($banner_id, 'dw_banner_text_width_tablet', true);
                 echo $value ? $value . 'px' : '<span class="warning">NOT SET (default: 500px)</span>';
             ?></strong></td>
         </tr>
         <tr>
-            <td>ğŸ“± Mobile <code>(dw_banner_text_width_mobile)</code></td>
+            <td>?“± Mobile <code>(dw_banner_text_width_mobile)</code></td>
             <td><strong class="success"><?php 
                 $value = get_post_meta($banner_id, 'dw_banner_text_width_mobile', true);
                 echo $value ? $value . 'px' : '<span class="warning">NOT SET (default: 300px)</span>';
@@ -141,35 +141,35 @@ if (!$post || $post->post_type !== 'banner') {
         </tr>
     </table>
 
-    <h2>ğŸ–¼ï¸ Background Image Position (Responsive)</h2>
+    <h2>?–¼ï¸?Background Image Position (Responsive)</h2>
     <table>
         <tr>
             <th>Device</th>
             <th>Position</th>
         </tr>
         <tr>
-            <td>ğŸ–¥ï¸ PC <code>(dw_banner_bg_position_pc)</code></td>
+            <td>?–¥ï¸?PC <code>(dw_banner_bg_position_pc)</code></td>
             <td><strong class="success"><?php 
                 $value = get_post_meta($banner_id, 'dw_banner_bg_position_pc', true);
                 echo $value ? $value : '<span class="warning">NOT SET (default: center center)</span>';
             ?></strong></td>
         </tr>
         <tr>
-            <td>ğŸ’» Laptop <code>(dw_banner_bg_position_laptop)</code></td>
+            <td>?’» Laptop <code>(dw_banner_bg_position_laptop)</code></td>
             <td><strong class="success"><?php 
                 $value = get_post_meta($banner_id, 'dw_banner_bg_position_laptop', true);
                 echo $value ? $value : '<span class="warning">NOT SET (default: center center)</span>';
             ?></strong></td>
         </tr>
         <tr>
-            <td>ğŸ“± Tablet <code>(dw_banner_bg_position_tablet)</code></td>
+            <td>?“± Tablet <code>(dw_banner_bg_position_tablet)</code></td>
             <td><strong class="success"><?php 
                 $value = get_post_meta($banner_id, 'dw_banner_bg_position_tablet', true);
                 echo $value ? $value : '<span class="warning">NOT SET (default: center center)</span>';
             ?></strong></td>
         </tr>
         <tr>
-            <td>ğŸ“± Mobile <code>(dw_banner_bg_position_mobile)</code></td>
+            <td>?“± Mobile <code>(dw_banner_bg_position_mobile)</code></td>
             <td><strong class="success"><?php 
                 $value = get_post_meta($banner_id, 'dw_banner_bg_position_mobile', true);
                 echo $value ? $value : '<span class="warning">NOT SET (default: center center)</span>';
@@ -177,7 +177,7 @@ if (!$post || $post->post_type !== 'banner') {
         </tr>
     </table>
 
-    <h2>ğŸ“¦ Content Padding</h2>
+    <h2>?“¦ Content Padding</h2>
     <table>
         <tr>
             <th>Side</th>
@@ -191,7 +191,7 @@ if (!$post || $post->post_type !== 'banner') {
             ?></strong></td>
         </tr>
         <tr>
-            <td>â¡ï¸ Right <code>(dw_banner_content_padding_right)</code></td>
+            <td>?¡ï¸ Right <code>(dw_banner_content_padding_right)</code></td>
             <td><strong class="success"><?php 
                 $value = get_post_meta($banner_id, 'dw_banner_content_padding_right', true);
                 echo $value !== '' ? $value . 'px' : '<span class="warning">NOT SET (default: 40px)</span>';
@@ -213,7 +213,7 @@ if (!$post || $post->post_type !== 'banner') {
         </tr>
     </table>
 
-    <h2>ğŸ”— Link Settings</h2>
+    <h2>?”— Link Settings</h2>
     <table>
         <tr>
             <th>Meta Key</th>
@@ -235,11 +235,11 @@ if (!$post || $post->post_type !== 'banner') {
         </tr>
     </table>
 
-    <h2>ğŸ’¡ Troubleshooting Tips</h2>
+    <h2>?’¡ Troubleshooting Tips</h2>
     <ul>
         <li><strong>If values show correctly here but not on the frontend:</strong>
             <ul>
-                <li>Clear Elementor cache: <code>Elementor â†’ Tools â†’ Regenerate CSS & Data</code></li>
+                <li>Clear Elementor cache: <code>Elementor ??Tools ??Regenerate CSS & Data</code></li>
                 <li>Clear browser cache (Ctrl + F5)</li>
                 <li>Check if you're viewing the correct banner ID</li>
             </ul>
@@ -260,7 +260,7 @@ if (!$post || $post->post_type !== 'banner') {
     </ul>
 
     <p style="margin-top: 40px; padding: 15px; background: #f0f8ff; border-left: 4px solid #0073aa;">
-        <strong>ğŸ’¾ Delete this file after debugging</strong> for security reasons!
+        <strong>?’¾ Delete this file after debugging</strong> for security reasons!
     </p>
 </body>
 </html>

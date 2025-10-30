@@ -2,7 +2,7 @@
 /**
  * Class Test_Meta_Boxes
  *
- * @package Dasom_Church
+ * @package DW_Church
  */
 
 /**
@@ -71,8 +71,8 @@ class Test_Meta_Boxes extends WP_UnitTestCase {
         ]);
 
         // Save meta
-        update_post_meta($post_id, 'dw_event_department', '청년부');
-        update_post_meta($post_id, 'dw_event_datetime', '2025년 10월 20일 오후 3시');
+        update_post_meta($post_id, 'dw_event_department', '�?��부');
+        update_post_meta($post_id, 'dw_event_datetime', '2025??10??20???�후 3??);
         update_post_meta($post_id, 'dw_event_url', 'https://example.com');
 
         // Retrieve meta
@@ -80,8 +80,8 @@ class Test_Meta_Boxes extends WP_UnitTestCase {
         $datetime = get_post_meta($post_id, 'dw_event_datetime', true);
         $url = get_post_meta($post_id, 'dw_event_url', true);
 
-        $this->assertEquals('청년부', $department);
-        $this->assertEquals('2025년 10월 20일 오후 3시', $datetime);
+        $this->assertEquals('�?��부', $department);
+        $this->assertEquals('2025??10??20???�후 3??, $datetime);
         $this->assertEquals('https://example.com', $url);
 
         // Clean up

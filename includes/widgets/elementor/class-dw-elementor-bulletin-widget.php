@@ -2,7 +2,7 @@
 /**
  * DW Elementor Bulletin Widget
  *
- * @package Dasom_Church
+ * @package DW_Church
  * @since 1.34.0
  */
 
@@ -24,7 +24,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
      * Get widget title
      */
     public function get_title() {
-        return __('DW Recent Bulletin', 'dasom-church');
+        return __('DW Recent Bulletin', 'dw-church');
     }
     
     /**
@@ -57,7 +57,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'dw_bulletin_section',
             [
-                'label' => __('Bulletin Settings', 'dasom-church'),
+                'label' => __('Bulletin Settings', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
             ]
         );
@@ -65,13 +65,13 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'query_source',
             [
-                'label' => __('Query Source', 'dasom-church'),
+                'label' => __('Query Source', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'latest',
                 'options' => [
-                    'latest' => __('Latest Posts', 'dasom-church'),
-                    'current' => __('Current Post', 'dasom-church'),
-                    'manual' => __('Manual Selection', 'dasom-church'),
+                    'latest' => __('Latest Posts', 'dw-church'),
+                    'current' => __('Current Post', 'dw-church'),
+                    'manual' => __('Manual Selection', 'dw-church'),
                 ],
             ]
         );
@@ -79,7 +79,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'bulletin_posts',
             [
-                'label' => __('Select Bulletins', 'dasom-church'),
+                'label' => __('Select Bulletins', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT2,
                 'multiple' => true,
                 'options' => $this->get_bulletin_posts(),
@@ -93,12 +93,12 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'display_type',
             [
-                'label' => __('Display Type', 'dasom-church'),
+                'label' => __('Display Type', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'image',
                 'options' => [
-                    'image' => __('Image Template', 'dasom-church'),
-                    'button' => __('Button Template', 'dasom-church'),
+                    'image' => __('Image Template', 'dw-church'),
+                    'button' => __('Button Template', 'dw-church'),
                 ],
             ]
         );
@@ -106,33 +106,33 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'show_bulletin_text',
             [
-                'label' => __('Show "교회주보" Text', 'dasom-church'),
+                'label' => __('Show "교회주보" Text', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Show', 'dasom-church'),
-                'label_off' => __('Hide', 'dasom-church'),
+                'label_on' => __('Show', 'dw-church'),
+                'label_off' => __('Hide', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'no',
-                'description' => __('Add "교회주보" text after the date', 'dasom-church'),
+                'description' => __('Add "교회주보" text after the date', 'dw-church'),
             ]
         );
         
         $this->add_control(
             'enable_pagination',
             [
-                'label' => __('Enable Pagination', 'dasom-church'),
+                'label' => __('Enable Pagination', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Enable', 'dasom-church'),
-                'label_off' => __('Disable', 'dasom-church'),
+                'label_on' => __('Enable', 'dw-church'),
+                'label_off' => __('Disable', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'no',
-                'description' => __('Show pagination controls for bulletin posts', 'dasom-church'),
+                'description' => __('Show pagination controls for bulletin posts', 'dw-church'),
             ]
         );
         
         $this->add_control(
             'posts_per_page',
             [
-                'label' => __('Posts Per Page', 'dasom-church'),
+                'label' => __('Posts Per Page', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::NUMBER,
                 'default' => 6,
                 'min' => 1,
@@ -140,19 +140,19 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                 'condition' => [
                     'enable_pagination' => 'yes',
                 ],
-                'description' => __('Number of posts to show per page', 'dasom-church'),
+                'description' => __('Number of posts to show per page', 'dw-church'),
             ]
         );
         
         $this->add_control(
             'layout_type',
             [
-                'label' => __('Layout Type', 'dasom-church'),
+                'label' => __('Layout Type', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'list',
                 'options' => [
-                    'list' => __('List Layout', 'dasom-church'),
-                    'grid' => __('Grid Layout', 'dasom-church'),
+                    'list' => __('List Layout', 'dw-church'),
+                    'grid' => __('Grid Layout', 'dw-church'),
                 ],
             ]
         );
@@ -160,16 +160,16 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'grid_columns',
             [
-                'label' => __('Columns', 'dasom-church'),
+                'label' => __('Columns', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => '3',
                 'options' => [
-                    '1' => __('1 Column', 'dasom-church'),
-                    '2' => __('2 Columns', 'dasom-church'),
-                    '3' => __('3 Columns', 'dasom-church'),
-                    '4' => __('4 Columns', 'dasom-church'),
-                    '5' => __('5 Columns', 'dasom-church'),
-                    '6' => __('6 Columns', 'dasom-church'),
+                    '1' => __('1 Column', 'dw-church'),
+                    '2' => __('2 Columns', 'dw-church'),
+                    '3' => __('3 Columns', 'dw-church'),
+                    '4' => __('4 Columns', 'dw-church'),
+                    '5' => __('5 Columns', 'dw-church'),
+                    '6' => __('6 Columns', 'dw-church'),
                 ],
                 'condition' => [
                     'layout_type' => 'grid',
@@ -184,7 +184,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'grid_gap_horizontal',
             [
-                'label' => __('Grid Gap (Horizontal)', 'dasom-church'),
+                'label' => __('Grid Gap (Horizontal)', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px', 'em'],
                 'range' => [
@@ -210,7 +210,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'grid_gap_vertical',
             [
-                'label' => __('Grid Gap (Vertical)', 'dasom-church'),
+                'label' => __('Grid Gap (Vertical)', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px', 'em'],
                 'range' => [
@@ -239,7 +239,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'dw_bulletin_image_style_section',
             [
-                'label' => __('Image Template Style', 'dasom-church'),
+                'label' => __('Image Template Style', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
                 'condition' => [
                     'display_type' => 'image',
@@ -250,7 +250,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'image_style_heading',
             [
-                'label' => __('Image Settings', 'dasom-church'),
+                'label' => __('Image Settings', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::HEADING,
                 'separator' => 'before',
             ]
@@ -259,12 +259,12 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'image_size_type',
             [
-                'label' => __('Image Size Type', 'dasom-church'),
+                'label' => __('Image Size Type', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'aspect_ratio',
                 'options' => [
-                    'aspect_ratio' => __('Aspect Ratio', 'dasom-church'),
-                    'custom' => __('Custom Size', 'dasom-church'),
+                    'aspect_ratio' => __('Aspect Ratio', 'dw-church'),
+                    'custom' => __('Custom Size', 'dw-church'),
                 ],
             ]
         );
@@ -272,7 +272,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'image_aspect_ratio',
             [
-                'label' => __('Aspect Ratio', 'dasom-church'),
+                'label' => __('Aspect Ratio', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => '16-9',
                 'options' => [
@@ -293,7 +293,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'image_width',
             [
-                'label' => __('Image Width', 'dasom-church'),
+                'label' => __('Image Width', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px', '%'],
                 'range' => [
@@ -322,7 +322,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'image_height',
             [
-                'label' => __('Image Height', 'dasom-church'),
+                'label' => __('Image Height', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px', 'vh', '%'],
                 'range' => [
@@ -355,12 +355,12 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'image_position',
             [
-                'label' => __('Image Position', 'dasom-church'),
+                'label' => __('Image Position', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'left',
                 'options' => [
-                    'left' => __('Left', 'dasom-church'),
-                    'top' => __('Top', 'dasom-church'),
+                    'left' => __('Left', 'dw-church'),
+                    'top' => __('Top', 'dw-church'),
                 ],
             ]
         );
@@ -368,7 +368,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'image_border_radius',
             [
-                'label' => __('Image Border Radius', 'dasom-church'),
+                'label' => __('Image Border Radius', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -391,7 +391,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Border::get_type(),
             [
                 'name' => 'image_border',
-                'label' => __('Image Border', 'dasom-church'),
+                'label' => __('Image Border', 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-bulletin-image',
             ]
         );
@@ -399,7 +399,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'image_overlay',
             [
-                'label' => __('Image Overlay', 'dasom-church'),
+                'label' => __('Image Overlay', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '',
                 'selectors' => [
@@ -411,7 +411,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'image_overlay_opacity',
             [
-                'label' => __('Overlay Opacity', 'dasom-church'),
+                'label' => __('Overlay Opacity', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'range' => [
                     'px' => [
@@ -435,7 +435,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'content_style_heading',
             [
-                'label' => __('Content Settings', 'dasom-church'),
+                'label' => __('Content Settings', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::HEADING,
                 'separator' => 'before',
             ]
@@ -445,7 +445,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Typography::get_type(),
             [
                 'name' => 'title_typography',
-                'label' => __('Title Typography', 'dasom-church'),
+                'label' => __('Title Typography', 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-bulletin-title',
             ]
         );
@@ -453,7 +453,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'title_color',
             [
-                'label' => __('Title Color', 'dasom-church'),
+                'label' => __('Title Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#333333',
                 'selectors' => [
@@ -466,7 +466,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Typography::get_type(),
             [
                 'name' => 'date_typography',
-                'label' => __('Date Typography', 'dasom-church'),
+                'label' => __('Date Typography', 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-bulletin-date',
             ]
         );
@@ -474,7 +474,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'date_color',
             [
-                'label' => __('Date Color', 'dasom-church'),
+                'label' => __('Date Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#666666',
                 'selectors' => [
@@ -486,7 +486,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'download_button_style_heading',
             [
-                'label' => __('Download Button Style', 'dasom-church'),
+                'label' => __('Download Button Style', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::HEADING,
                 'separator' => 'before',
             ]
@@ -495,7 +495,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'download_button_background',
             [
-                'label' => __('Button Background', 'dasom-church'),
+                'label' => __('Button Background', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#007cba',
                 'selectors' => [
@@ -507,7 +507,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'download_button_text_color',
             [
-                'label' => __('Button Text Color', 'dasom-church'),
+                'label' => __('Button Text Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#ffffff',
                 'selectors' => [
@@ -519,7 +519,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'download_button_border_radius',
             [
-                'label' => __('Button Border Radius', 'dasom-church'),
+                'label' => __('Button Border Radius', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -541,7 +541,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'download_button_padding',
             [
-                'label' => __('Button Padding', 'dasom-church'),
+                'label' => __('Button Padding', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', 'em'],
                 'default' => [
@@ -562,7 +562,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'dw_bulletin_button_style_section',
             [
-                'label' => __('Button Template Style', 'dasom-church'),
+                'label' => __('Button Template Style', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
                 'condition' => [
                     'display_type' => 'button',
@@ -573,7 +573,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'button_item_style_heading',
             [
-                'label' => __('Button Item Style', 'dasom-church'),
+                'label' => __('Button Item Style', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::HEADING,
                 'separator' => 'before',
             ]
@@ -582,7 +582,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'button_background_color',
             [
-                'label' => __('Background Color', 'dasom-church'),
+                'label' => __('Background Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#ffffff',
                 'selectors' => [
@@ -594,7 +594,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'button_border_color',
             [
-                'label' => __('Border Color', 'dasom-church'),
+                'label' => __('Border Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#e0e0e0',
                 'selectors' => [
@@ -606,7 +606,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'button_border_radius',
             [
-                'label' => __('Border Radius', 'dasom-church'),
+                'label' => __('Border Radius', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -628,7 +628,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'button_padding',
             [
-                'label' => __('Padding', 'dasom-church'),
+                'label' => __('Padding', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', 'em', '%'],
                 'default' => [
@@ -646,7 +646,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'button_margin',
             [
-                'label' => __('Margin', 'dasom-church'),
+                'label' => __('Margin', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', 'em', '%'],
                 'default' => [
@@ -664,14 +664,14 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'button_hover_effect',
             [
-                'label' => __('Hover Effect', 'dasom-church'),
+                'label' => __('Hover Effect', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'lift',
                 'options' => [
-                    'none' => __('None', 'dasom-church'),
-                    'lift' => __('Lift', 'dasom-church'),
-                    'shadow' => __('Shadow', 'dasom-church'),
-                    'scale' => __('Scale', 'dasom-church'),
+                    'none' => __('None', 'dw-church'),
+                    'lift' => __('Lift', 'dw-church'),
+                    'shadow' => __('Shadow', 'dw-church'),
+                    'scale' => __('Scale', 'dw-church'),
                 ],
             ]
         );
@@ -679,7 +679,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'button_title_style_heading',
             [
-                'label' => __('Title Style', 'dasom-church'),
+                'label' => __('Title Style', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::HEADING,
                 'separator' => 'before',
             ]
@@ -689,7 +689,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Typography::get_type(),
             [
                 'name' => 'button_title_typography',
-                'label' => __('Typography', 'dasom-church'),
+                'label' => __('Typography', 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-bulletin-item .dw-bulletin-title',
             ]
         );
@@ -697,7 +697,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'button_title_color',
             [
-                'label' => __('Color', 'dasom-church'),
+                'label' => __('Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#333333',
                 'selectors' => [
@@ -709,7 +709,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'button_meta_style_heading',
             [
-                'label' => __('Date & Download Style', 'dasom-church'),
+                'label' => __('Date & Download Style', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::HEADING,
                 'separator' => 'before',
             ]
@@ -719,7 +719,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Typography::get_type(),
             [
                 'name' => 'button_date_typography',
-                'label' => __('Date Typography', 'dasom-church'),
+                'label' => __('Date Typography', 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-bulletin-item .dw-bulletin-date',
             ]
         );
@@ -727,7 +727,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'button_date_color',
             [
-                'label' => __('Date Color', 'dasom-church'),
+                'label' => __('Date Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#666666',
                 'selectors' => [
@@ -739,7 +739,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'button_download_background',
             [
-                'label' => __('Download Button Background', 'dasom-church'),
+                'label' => __('Download Button Background', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#007cba',
                 'selectors' => [
@@ -751,7 +751,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'button_download_text_color',
             [
-                'label' => __('Download Button Text Color', 'dasom-church'),
+                'label' => __('Download Button Text Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#ffffff',
                 'selectors' => [
@@ -763,7 +763,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'button_download_border_radius',
             [
-                'label' => __('Download Button Border Radius', 'dasom-church'),
+                'label' => __('Download Button Border Radius', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -785,7 +785,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'button_download_padding',
             [
-                'label' => __('Download Button Padding', 'dasom-church'),
+                'label' => __('Download Button Padding', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', 'em'],
                 'default' => [
@@ -806,7 +806,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'dw_bulletin_card_style_section',
             [
-                'label' => __('Card Style', 'dasom-church'),
+                'label' => __('Card Style', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
@@ -814,7 +814,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'card_background_color',
             [
-                'label' => __('Card Background Color', 'dasom-church'),
+                'label' => __('Card Background Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#ffffff',
                 'selectors' => [
@@ -828,7 +828,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Border::get_type(),
             [
                 'name' => 'card_border',
-                'label' => __('Card Border', 'dasom-church'),
+                'label' => __('Card Border', 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-bulletin-image-item, {{WRAPPER}} .dw-bulletin-item',
             ]
         );
@@ -836,7 +836,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'card_border_radius',
             [
-                'label' => __('Card Border Radius', 'dasom-church'),
+                'label' => __('Card Border Radius', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -860,7 +860,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Box_Shadow::get_type(),
             [
                 'name' => 'card_shadow',
-                'label' => __('Card Shadow', 'dasom-church'),
+                'label' => __('Card Shadow', 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-bulletin-image-item, {{WRAPPER}} .dw-bulletin-item',
             ]
         );
@@ -868,7 +868,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'card_padding',
             [
-                'label' => __('Card Padding', 'dasom-church'),
+                'label' => __('Card Padding', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', 'em', '%'],
                 'default' => [
@@ -887,7 +887,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'card_margin',
             [
-                'label' => __('Card Margin', 'dasom-church'),
+                'label' => __('Card Margin', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', 'em', '%'],
                 'default' => [
@@ -906,15 +906,15 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'card_hover_effect',
             [
-                'label' => __('Card Hover Effect', 'dasom-church'),
+                'label' => __('Card Hover Effect', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'lift',
                 'options' => [
-                    'none' => __('None', 'dasom-church'),
-                    'lift' => __('Lift', 'dasom-church'),
-                    'shadow' => __('Shadow', 'dasom-church'),
-                    'scale' => __('Scale', 'dasom-church'),
-                    'glow' => __('Glow', 'dasom-church'),
+                    'none' => __('None', 'dw-church'),
+                    'lift' => __('Lift', 'dw-church'),
+                    'shadow' => __('Shadow', 'dw-church'),
+                    'scale' => __('Scale', 'dw-church'),
+                    'glow' => __('Glow', 'dw-church'),
                 ],
             ]
         );
@@ -922,7 +922,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'card_hover_shadow_color',
             [
-                'label' => __('Hover Shadow Color', 'dasom-church'),
+                'label' => __('Hover Shadow Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => 'rgba(0, 0, 0, 0.2)',
                 'condition' => [
@@ -937,7 +937,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'dw_bulletin_general_style_section',
             [
-                'label' => __('General Style', 'dasom-church'),
+                'label' => __('General Style', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
@@ -1006,7 +1006,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         }
         
         if (empty($posts)) {
-            echo '<p>' . __('No bulletins found.', 'dasom-church') . '</p>';
+            echo '<p>' . __('No bulletins found.', 'dw-church') . '</p>';
             return;
         }
         
@@ -1061,9 +1061,9 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                 if ($bulletin_date_formatted) {
                     $post_date = $bulletin_date_formatted;
                 } elseif ($bulletin_date) {
-                    $post_date = date_i18n('Y년 m월 d일', strtotime($bulletin_date));
+                    $post_date = date_i18n('Y??m??d??, strtotime($bulletin_date));
                 } else {
-                    $post_date = get_the_date('Y년 m월 d일', $post->ID);
+                    $post_date = get_the_date('Y??m??d??, $post->ID);
                 }
                 
                 // Add "교회주보" text if enabled
@@ -1083,12 +1083,12 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                             <span class="dw-bulletin-date"><?php echo esc_html($post_date); ?></span>
                             <span class="dw-bulletin-separator">|</span>
                             <a href="<?php echo esc_url(get_permalink($post->ID)); ?>" class="dw-bulletin-view dw-bulletin-link" data-no-lightbox="true">
-                                <?php _e('주보보기', 'dasom-church'); ?>
+                                <?php _e('주보보기', 'dw-church'); ?>
                             </a>
                             <?php if ($pdf_url): ?>
                                 <span class="dw-bulletin-separator">|</span>
                                 <a href="<?php echo esc_url($pdf_url); ?>" target="_blank" class="dw-bulletin-download">
-                                    <?php _e('다운로드', 'dasom-church'); ?>
+                                    <?php _e('?�운로드', 'dw-church'); ?>
                                 </a>
                             <?php endif; ?>
                         </div>
@@ -1121,7 +1121,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                 } elseif ($bulletin_date) {
                     $display_text = $bulletin_date;
                 } else {
-                    $display_text = get_the_date('Y년 m월 d일', $post->ID);
+                    $display_text = get_the_date('Y??m??d??, $post->ID);
                 }
                 
                 // Add "교회주보" text if enabled
@@ -1133,11 +1133,11 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                     <div class="dw-bulletin-title"><?php echo esc_html($display_text); ?></div>
                     <div class="dw-bulletin-download-container">
                         <a href="<?php echo esc_url(get_permalink($post->ID)); ?>" class="dw-bulletin-view">
-                            <?php _e('주보보기', 'dasom-church'); ?>
+                            <?php _e('주보보기', 'dw-church'); ?>
                         </a>
                         <?php if ($pdf_url): ?>
                             <a href="<?php echo esc_url($pdf_url); ?>" target="_blank" class="dw-bulletin-download">
-                                <?php _e('주보 다운로드', 'dasom-church'); ?>
+                                <?php _e('주보 ?�운로드', 'dw-church'); ?>
                             </a>
                         <?php endif; ?>
                     </div>
@@ -1155,13 +1155,13 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         <div class="dw-bulletin-preview">
             <div class="dw-bulletin-item" style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px 20px; margin-bottom: 10px; background: #fff;">
                 <div class="dw-bulletin-title" style="font-weight: 500; color: #333; margin-bottom: 5px;">
-                    <?php _e('2025년 10월 26일 주보', 'dasom-church'); ?>
+                    <?php _e('2025??10??26??주보', 'dw-church'); ?>
                 </div>
                 <div class="dw-bulletin-meta" style="font-size: 14px; color: #666;">
-                    <span class="dw-bulletin-date">2025년 10월 26일</span>
+                    <span class="dw-bulletin-date">2025??10??26??/span>
                     <span class="dw-bulletin-separator" style="margin: 0 8px;">|</span>
                     <a href="#" class="dw-bulletin-download" style="background: #007cba; color: #fff; padding: 4px 12px; border-radius: 4px; text-decoration: none; font-size: 12px;">
-                        <?php _e('주보 다운로드', 'dasom-church'); ?>
+                        <?php _e('주보 ?�운로드', 'dw-church'); ?>
                     </a>
                 </div>
             </div>
@@ -1195,7 +1195,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
             <div class="dw-pagination-wrapper">
                 <?php if ($current_page > 1): ?>
                     <a href="<?php echo esc_url(add_query_arg('paged', $current_page - 1, $current_url)); ?>" class="dw-pagination-prev">
-                        <?php _e('이전', 'dasom-church'); ?>
+                        <?php _e('?�전', 'dw-church'); ?>
                     </a>
                 <?php endif; ?>
                 
@@ -1228,7 +1228,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                 
                 <?php if ($current_page < $total_pages): ?>
                     <a href="<?php echo esc_url(add_query_arg('paged', $current_page + 1, $current_url)); ?>" class="dw-pagination-next">
-                        <?php _e('다음', 'dasom-church'); ?>
+                        <?php _e('?�음', 'dw-church'); ?>
                     </a>
                 <?php endif; ?>
             </div>

@@ -2,7 +2,7 @@
 /**
  * DW Elementor Banner Slider Widget
  *
- * @package Dasom_Church
+ * @package DW_Church
  * @since 1.10.0
  */
 
@@ -18,7 +18,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
     }
     
     public function get_title() {
-        return __('DW Banner Slider', 'dasom-church');
+        return __('DW Banner Slider', 'dw-church');
     }
     
     public function get_icon() {
@@ -30,14 +30,14 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
     }
     
     public function get_keywords() {
-        return ['banner', 'slider', 'carousel', 'church', 'dw', '배너', '슬라이더'];
+        return ['banner', 'slider', 'carousel', 'church', 'dw', '배너', '?�라?�더'];
     }
     
     /**
      * Helper function to get taxonomy options
      */
     private function get_taxonomy_options($taxonomy) {
-        $options = array('' => __('All', 'dasom-church'));
+        $options = array('' => __('All', 'dw-church'));
         $terms = get_terms(array(
             'taxonomy' => $taxonomy,
             'hide_empty' => false,
@@ -55,7 +55,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'content_section',
             [
-                'label' => __('Settings', 'dasom-church'),
+                'label' => __('Settings', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
             ]
         );
@@ -66,7 +66,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
             'hide_empty' => false,
         ));
         
-        $category_options = array('' => __('All Banners', 'dasom-church'));
+        $category_options = array('' => __('All Banners', 'dw-church'));
         if (!is_wp_error($categories)) {
             foreach ($categories as $cat) {
                 $category_options[$cat->slug] = $cat->name;
@@ -76,12 +76,12 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'query_source',
             [
-                'label' => __('Query Source', 'dasom-church'),
+                'label' => __('Query Source', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'latest',
                 'options' => [
-                    'latest' => __('Latest Posts', 'dasom-church'),
-                    'manual' => __('Manual Selection', 'dasom-church'),
+                    'latest' => __('Latest Posts', 'dw-church'),
+                    'manual' => __('Manual Selection', 'dw-church'),
                 ],
             ]
         );
@@ -102,7 +102,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'manual_selection',
             [
-                'label' => __('Select Banners', 'dasom-church'),
+                'label' => __('Select Banners', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT2,
                 'multiple' => true,
                 'options' => $banner_options,
@@ -110,14 +110,14 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
                 'condition' => [
                     'query_source' => 'manual',
                 ],
-                'description' => __('Select specific banners to display.', 'dasom-church'),
+                'description' => __('Select specific banners to display.', 'dw-church'),
             ]
         );
         
         $this->add_control(
             'banner_category',
             [
-                'label' => __('Banner Category', 'dasom-church'),
+                'label' => __('Banner Category', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'options' => $category_options,
                 'default' => '',
@@ -130,7 +130,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'posts_per_page',
             [
-                'label' => __('Number of Banners', 'dasom-church'),
+                'label' => __('Number of Banners', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::NUMBER,
                 'default' => 5,
                 'min' => 1,
@@ -144,12 +144,12 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'order',
             [
-                'label' => __('Order', 'dasom-church'),
+                'label' => __('Order', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'DESC',
                 'options' => [
-                    'ASC' => __('Ascending', 'dasom-church'),
-                    'DESC' => __('Descending', 'dasom-church'),
+                    'ASC' => __('Ascending', 'dw-church'),
+                    'DESC' => __('Descending', 'dw-church'),
                 ],
                 'condition' => [
                     'query_source' => 'latest',
@@ -160,14 +160,14 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'orderby',
             [
-                'label' => __('Order By', 'dasom-church'),
+                'label' => __('Order By', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'date',
                 'options' => [
-                    'date' => __('Date', 'dasom-church'),
-                    'title' => __('Title', 'dasom-church'),
-                    'rand' => __('Random', 'dasom-church'),
-                    'menu_order' => __('Menu Order', 'dasom-church'),
+                    'date' => __('Date', 'dw-church'),
+                    'title' => __('Title', 'dw-church'),
+                    'rand' => __('Random', 'dw-church'),
+                    'menu_order' => __('Menu Order', 'dw-church'),
                 ],
                 'condition' => [
                     'query_source' => 'latest',
@@ -178,10 +178,10 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'autoplay',
             [
-                'label' => __('Autoplay', 'dasom-church'),
+                'label' => __('Autoplay', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
+                'label_on' => __('Yes', 'dw-church'),
+                'label_off' => __('No', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
             ]
@@ -190,7 +190,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'autoplay_speed',
             [
-                'label' => __('Autoplay Speed (ms)', 'dasom-church'),
+                'label' => __('Autoplay Speed (ms)', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::NUMBER,
                 'default' => 5000,
                 'condition' => [
@@ -202,10 +202,10 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'navigation',
             [
-                'label' => __('Show Navigation Arrows', 'dasom-church'),
+                'label' => __('Show Navigation Arrows', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Show', 'dasom-church'),
-                'label_off' => __('Hide', 'dasom-church'),
+                'label_on' => __('Show', 'dw-church'),
+                'label_off' => __('Hide', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
             ]
@@ -214,7 +214,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'navigation_size',
             [
-                'label' => __('Navigation Arrow Size', 'dasom-church'),
+                'label' => __('Navigation Arrow Size', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -248,7 +248,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'navigation_icon_size',
             [
-                'label' => __('Arrow Icon Size', 'dasom-church'),
+                'label' => __('Arrow Icon Size', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -282,7 +282,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'navigation_position',
             [
-                'label' => __('Arrow Position (Left/Right)', 'dasom-church'),
+                'label' => __('Arrow Position (Left/Right)', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -317,10 +317,10 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'pagination',
             [
-                'label' => __('Show Pagination', 'dasom-church'),
+                'label' => __('Show Pagination', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Show', 'dasom-church'),
-                'label_off' => __('Hide', 'dasom-church'),
+                'label_on' => __('Show', 'dw-church'),
+                'label_off' => __('Hide', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
             ]
@@ -329,7 +329,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'slider_height',
             [
-                'label' => __('Slider Height', 'dasom-church'),
+                'label' => __('Slider Height', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px', 'vh', '%'],
                 'range' => [
@@ -365,7 +365,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'style_navigation_section',
             [
-                'label' => __('Navigation & Pagination Colors', 'dasom-church'),
+                'label' => __('Navigation & Pagination Colors', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
@@ -373,7 +373,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'arrow_bg_color',
             [
-                'label' => __('Arrow Background Color', 'dasom-church'),
+                'label' => __('Arrow Background Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => 'rgba(255, 255, 255, 0.9)',
                 'selectors' => [
@@ -388,7 +388,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'arrow_icon_color',
             [
-                'label' => __('Arrow Icon Color', 'dasom-church'),
+                'label' => __('Arrow Icon Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#333333',
                 'selectors' => [
@@ -403,7 +403,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'arrow_bg_hover_color',
             [
-                'label' => __('Arrow Background Hover Color', 'dasom-church'),
+                'label' => __('Arrow Background Hover Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => 'rgba(255, 255, 255, 1)',
                 'selectors' => [
@@ -418,7 +418,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'arrow_icon_hover_color',
             [
-                'label' => __('Arrow Icon Hover Color', 'dasom-church'),
+                'label' => __('Arrow Icon Hover Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#000000',
                 'selectors' => [
@@ -433,7 +433,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'pagination_heading',
             [
-                'label' => __('Pagination', 'dasom-church'),
+                'label' => __('Pagination', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::HEADING,
                 'separator' => 'before',
                 'condition' => [
@@ -445,7 +445,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'pagination_bullet_color',
             [
-                'label' => __('Pagination Bullet Color', 'dasom-church'),
+                'label' => __('Pagination Bullet Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => 'rgba(255, 255, 255, 0.5)',
                 'selectors' => [
@@ -460,7 +460,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'pagination_bullet_active_color',
             [
-                'label' => __('Pagination Active Bullet Color', 'dasom-church'),
+                'label' => __('Pagination Active Bullet Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#ffffff',
                 'selectors' => [
@@ -475,7 +475,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'pagination_bullet_size',
             [
-                'label' => __('Pagination Bullet Size', 'dasom-church'),
+                'label' => __('Pagination Bullet Size', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -504,7 +504,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'style_text_section',
             [
-                'label' => __('Text Overlay', 'dasom-church'),
+                'label' => __('Text Overlay', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
@@ -512,7 +512,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'text_overlay_bg',
             [
-                'label' => __('Overlay Background', 'dasom-church'),
+                'label' => __('Overlay Background', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => 'rgba(0,0,0,0.3)',
                 'selectors' => [
@@ -524,7 +524,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'title_heading',
             [
-                'label' => __('Title', 'dasom-church'),
+                'label' => __('Title', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::HEADING,
                 'separator' => 'before',
             ]
@@ -534,7 +534,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Typography::get_type(),
             [
                 'name' => 'title_typography',
-                'label' => __('Typography', 'dasom-church'),
+                'label' => __('Typography', 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-banner-title',
                 'fields_options' => [
                     'font_family' => [
@@ -568,7 +568,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'title_color',
             [
-                'label' => __('Color', 'dasom-church'),
+                'label' => __('Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#ffffff',
                 'selectors' => [
@@ -580,7 +580,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'title_margin',
             [
-                'label' => __('Margin', 'dasom-church'),
+                'label' => __('Margin', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', 'em', '%'],
                 'default' => [
@@ -599,7 +599,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'title_padding',
             [
-                'label' => __('Padding', 'dasom-church'),
+                'label' => __('Padding', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', 'em', '%'],
                 'default' => [
@@ -618,7 +618,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'subtitle_heading',
             [
-                'label' => __('Subtitle', 'dasom-church'),
+                'label' => __('Subtitle', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::HEADING,
                 'separator' => 'before',
             ]
@@ -628,7 +628,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Typography::get_type(),
             [
                 'name' => 'subtitle_typography',
-                'label' => __('Typography', 'dasom-church'),
+                'label' => __('Typography', 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-banner-subtitle',
                 'fields_options' => [
                     'font_family' => [
@@ -662,7 +662,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'subtitle_color',
             [
-                'label' => __('Color', 'dasom-church'),
+                'label' => __('Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#ffffff',
                 'selectors' => [
@@ -674,7 +674,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'subtitle_margin',
             [
-                'label' => __('Margin', 'dasom-church'),
+                'label' => __('Margin', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', 'em', '%'],
                 'default' => [
@@ -693,7 +693,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'subtitle_padding',
             [
-                'label' => __('Padding', 'dasom-church'),
+                'label' => __('Padding', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', 'em', '%'],
                 'default' => [
@@ -712,7 +712,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'description_heading',
             [
-                'label' => __('Description', 'dasom-church'),
+                'label' => __('Description', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::HEADING,
                 'separator' => 'before',
             ]
@@ -722,7 +722,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Typography::get_type(),
             [
                 'name' => 'description_typography',
-                'label' => __('Typography', 'dasom-church'),
+                'label' => __('Typography', 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-banner-description',
                 'fields_options' => [
                     'font_family' => [
@@ -756,7 +756,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'description_color',
             [
-                'label' => __('Color', 'dasom-church'),
+                'label' => __('Color', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#ffffff',
                 'selectors' => [
@@ -768,7 +768,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'description_margin',
             [
-                'label' => __('Margin', 'dasom-church'),
+                'label' => __('Margin', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', 'em', '%'],
                 'default' => [
@@ -787,7 +787,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'description_padding',
             [
-                'label' => __('Padding', 'dasom-church'),
+                'label' => __('Padding', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', 'em', '%'],
                 'default' => [
@@ -882,7 +882,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
         }
         
         if (!$banners->have_posts()) {
-            echo '<p>' . __('No banners found.', 'dasom-church') . '</p>';
+            echo '<p>' . __('No banners found.', 'dw-church') . '</p>';
             return;
         }
         

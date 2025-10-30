@@ -2,7 +2,7 @@
 /**
  * Meta boxes and Quick Edit functionality for Dasom Church Management
  *
- * @package Dasom_Church
+ * @package DW_Church
  * @since 1.0.0
  */
 
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 /**
  * Meta boxes class
  */
-class Dasom_Church_Meta_Boxes {
+class DW_Church_Meta_Boxes {
     
     /**
      * Single instance of the class
@@ -47,7 +47,7 @@ class Dasom_Church_Meta_Boxes {
         add_action('admin_enqueue_scripts', array($this, 'dasom_church_admin_scripts'));
         add_action('admin_footer', array($this, 'dasom_church_admin_footer_scripts'));
         
-        // Quick Edit is handled by Dasom_Church_Columns class
+        // Quick Edit is handled by DW_Church_Columns class
         
         // Admin head styles
         add_action('admin_head', array($this, 'dasom_church_admin_head_styles'));
@@ -60,60 +60,60 @@ class Dasom_Church_Meta_Boxes {
      * Add meta boxes
      */
     public function dasom_church_add_meta_boxes() {
-        // 주보 메타박스
+        // 주보 메�?박스
         add_meta_box(
             'bulletin_meta',
-            __('주보 정보', 'dasom-church'),
+            __('주보 ?�보', 'dw-church'),
             array($this, 'dasom_church_bulletin_meta_box'),
             'bulletin',
             'normal',
             'default'
         );
         
-        // 설교 메타박스
+        // ?�교 메�?박스
         add_meta_box(
             'sermon_meta',
-            __('설교 정보', 'dasom-church'),
+            __('?�교 ?�보', 'dw-church'),
             array($this, 'dasom_church_sermon_meta_box'),
             'sermon',
             'normal',
             'default'
         );
         
-        // 목회컬럼 메타박스
+        // 목회컬럼 메�?박스
         add_meta_box(
             'column_meta',
-            __('목회컬럼 정보', 'dasom-church'),
+            __('목회컬럼 ?�보', 'dw-church'),
             array($this, 'dasom_church_column_meta_box'),
             'column',
             'normal',
             'default'
         );
         
-        // 교회앨범 메타박스
+        // 교회?�범 메�?박스
         add_meta_box(
             'album_meta',
-            __('앨범 정보', 'dasom-church'),
+            __('?�범 ?�보', 'dw-church'),
             array($this, 'dasom_church_album_meta_box'),
             'album',
             'normal',
             'default'
         );
         
-        // 배너 메타박스
+        // 배너 메�?박스
         add_meta_box(
             'banner_meta',
-            __('배너 정보', 'dasom-church'),
+            __('배너 ?�보', 'dw-church'),
             array($this, 'dasom_church_banner_meta_box'),
             'banner',
             'normal',
             'default'
         );
         
-        // 이벤트 메타박스
+        // ?�벤??메�?박스
         add_meta_box(
             'event_meta',
-            __('이벤트 정보', 'dasom-church'),
+            __('?�벤???�보', 'dw-church'),
             array($this, 'dasom_church_event_meta_box'),
             'event',
             'normal',
@@ -122,7 +122,7 @@ class Dasom_Church_Meta_Boxes {
     }
     
     /**
-     * 주보 메타박스
+     * 주보 메�?박스
      */
     public function dasom_church_bulletin_meta_box($post) {
         wp_nonce_field('dasom_church_bulletin_meta', 'dasom_church_bulletin_nonce');
@@ -136,7 +136,7 @@ class Dasom_Church_Meta_Boxes {
         <table class="form-table">
             <tr>
                 <th scope="row">
-                    <label for="dw_bulletin_date"><?php _e('주보 날짜', 'dasom-church'); ?></label>
+                    <label for="dw_bulletin_date"><?php _e('주보 ?�짜', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="date" id="dw_bulletin_date" name="dw_bulletin_date" value="<?php echo esc_attr($date); ?>" class="regular-text" />
@@ -144,25 +144,25 @@ class Dasom_Church_Meta_Boxes {
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_bulletin_pdf"><?php _e('주보 PDF', 'dasom-church'); ?></label>
+                    <label for="dw_bulletin_pdf"><?php _e('주보 PDF', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="hidden" id="dw_bulletin_pdf" name="dw_bulletin_pdf" value="<?php echo esc_attr($pdf); ?>" />
-                    <button type="button" class="button" id="dw_bulletin_pdf_button"><?php _e('PDF 업로드', 'dasom-church'); ?></button>
+                    <button type="button" class="button" id="dw_bulletin_pdf_button"><?php _e('PDF ?�로??, 'dw-church'); ?></button>
                     <div id="bulletin_pdf_preview" style="margin-top:8px;">
                         <?php if ($pdf): ?>
-                            <a href="<?php echo esc_url(wp_get_attachment_url($pdf)); ?>" target="_blank"><?php _e('현재 PDF 보기', 'dasom-church'); ?></a>
+                            <a href="<?php echo esc_url(wp_get_attachment_url($pdf)); ?>" target="_blank"><?php _e('?�재 PDF 보기', 'dw-church'); ?></a>
                         <?php endif; ?>
                     </div>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="bulletin_images"><?php _e('주보 이미지', 'dasom-church'); ?></label>
+                    <label for="bulletin_images"><?php _e('주보 ?��?지', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="hidden" id="dw_bulletin_images" name="dw_bulletin_images" value='<?php echo esc_attr(json_encode($images)); ?>' />
-                    <button type="button" class="button" id="dw_bulletin_images_button"><?php _e('이미지 업로드', 'dasom-church'); ?></button>
+                    <button type="button" class="button" id="dw_bulletin_images_button"><?php _e('?��?지 ?�로??, 'dw-church'); ?></button>
                     <ul id="dw_bulletin_images_preview" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
                         <?php foreach ($images as $id): ?>
                             <li data-id="<?php echo esc_attr($id); ?>" style="position:relative;">
@@ -171,7 +171,7 @@ class Dasom_Church_Meta_Boxes {
                             </li>
                         <?php endforeach; ?>
                     </ul>
-                    <p class="description"><?php _e('드래그하여 순서를 변경할 수 있습니다.', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('?�래그하???�서�?변경할 ???�습?�다.', 'dw-church'); ?></p>
                 </td>
             </tr>
         </table>
@@ -179,7 +179,7 @@ class Dasom_Church_Meta_Boxes {
     }
     
     /**
-     * 설교 메타박스
+     * ?�교 메�?박스
      */
     public function dasom_church_sermon_meta_box($post) {
         wp_nonce_field('dasom_church_sermon_meta', 'dasom_church_sermon_nonce');
@@ -190,7 +190,7 @@ class Dasom_Church_Meta_Boxes {
         $sermon_date = get_post_meta($post->ID, 'dw_sermon_date', true);
         $thumb_id = get_post_meta($post->ID, 'dw_sermon_thumb_id', true);
         
-        // 설교자 드롭다운용 데이터
+        // ?�교???�롭?�운???�이??
         $terms = get_terms(array(
             'taxonomy' => 'dw_sermon_preacher',
             'hide_empty' => false,
@@ -199,7 +199,7 @@ class Dasom_Church_Meta_Boxes {
         $selected_preacher_id = $assigned_ids ? $assigned_ids[0] : 0;
         
         if (!$selected_preacher_id) {
-            $def_name = get_option('default_sermon_preacher', __('담임목사', 'dasom-church'));
+            $def_name = get_option('default_sermon_preacher', __('?�임목사', 'dw-church'));
             if ($def_name) {
                 $def_term = get_term_by('name', $def_name, 'dw_sermon_preacher');
                 if ($def_term) {
@@ -211,7 +211,7 @@ class Dasom_Church_Meta_Boxes {
         <table class="form-table">
             <tr>
                 <th scope="row">
-                    <label for="dw_sermon_title"><?php _e('설교 제목', 'dasom-church'); ?></label>
+                    <label for="dw_sermon_title"><?php _e('?�교 ?�목', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="text" id="dw_sermon_title" name="dw_sermon_title" value="<?php echo esc_attr($title); ?>" class="regular-text" />
@@ -219,7 +219,7 @@ class Dasom_Church_Meta_Boxes {
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_sermon_scripture"><?php _e('성경구절', 'dasom-church'); ?></label>
+                    <label for="dw_sermon_scripture"><?php _e('?�경구절', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="text" id="dw_sermon_scripture" name="dw_sermon_scripture" value="<?php echo esc_attr($scripture); ?>" class="regular-text" />
@@ -227,23 +227,23 @@ class Dasom_Church_Meta_Boxes {
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="sermon_preacher_term"><?php _e('설교자', 'dasom-church'); ?></label>
+                    <label for="sermon_preacher_term"><?php _e('?�교??, 'dw-church'); ?></label>
                 </th>
                 <td>
                     <select id="dw_sermon_preacher_term" name="dw_sermon_preacher_term" class="regular-text">
-                        <option value="">— <?php _e('설교자 선택', 'dasom-church'); ?> —</option>
+                        <option value="">??<?php _e('?�교???�택', 'dw-church'); ?> ??/option>
                         <?php foreach ($terms as $t): ?>
                             <option value="<?php echo (int)$t->term_id; ?>" <?php selected($selected_preacher_id, (int)$t->term_id); ?>>
                                 <?php echo esc_html($t->name); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
-                    <p class="description"><?php _e('설교자 추가/수정/삭제는 교회관리 → 대시보드 → 설교자 관리에서 할 수 있습니다.', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('?�교??추�?/?�정/??��??교회관�????�?�보?????�교??관리에???????�습?�다.', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_sermon_youtube"><?php _e('YouTube URL', 'dasom-church'); ?></label>
+                    <label for="dw_sermon_youtube"><?php _e('YouTube URL', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="url" id="dw_sermon_youtube" name="dw_sermon_youtube" value="<?php echo esc_url($youtube); ?>" class="regular-text" />
@@ -251,7 +251,7 @@ class Dasom_Church_Meta_Boxes {
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_sermon_date"><?php _e('설교 일자', 'dasom-church'); ?></label>
+                    <label for="dw_sermon_date"><?php _e('?�교 ?�자', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="date" id="dw_sermon_date" name="dw_sermon_date" value="<?php echo esc_attr($sermon_date); ?>" class="regular-text" />
@@ -259,19 +259,19 @@ class Dasom_Church_Meta_Boxes {
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="sermon_thumb_id"><?php _e('YouTube 썸네일', 'dasom-church'); ?></label>
+                    <label for="sermon_thumb_id"><?php _e('YouTube ?�네??, 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="hidden" id="dw_sermon_thumb_id" name="dw_sermon_thumb_id" value="<?php echo esc_attr($thumb_id); ?>" />
-                    <button type="button" class="button" id="dw_sermon_thumb_button"><?php _e('썸네일 업로드/선택', 'dasom-church'); ?></button>
-                    <button type="button" class="button" id="dw_sermon_thumb_fetch"><?php _e('YouTube 썸네일 불러오기', 'dasom-church'); ?></button>
-                    <button type="button" class="button button-link-delete" id="dw_sermon_thumb_remove" style="color:#b32d2e;"><?php _e('썸네일 삭제', 'dasom-church'); ?></button>
+                    <button type="button" class="button" id="dw_sermon_thumb_button"><?php _e('?�네???�로???�택', 'dw-church'); ?></button>
+                    <button type="button" class="button" id="dw_sermon_thumb_fetch"><?php _e('YouTube ?�네??불러?�기', 'dw-church'); ?></button>
+                    <button type="button" class="button button-link-delete" id="dw_sermon_thumb_remove" style="color:#b32d2e;"><?php _e('?�네????��', 'dw-church'); ?></button>
                     <div id="dw_sermon_thumb_preview" style="margin-top:10px;">
                         <?php if ($thumb_id): ?>
                             <img src="<?php echo esc_url(wp_get_attachment_url($thumb_id)); ?>" style="width:160px;height:90px;object-fit:cover;" />
                         <?php endif; ?>
                     </div>
-                    <p class="description"><?php _e('미리보기만 표시됩니다. 저장 시 썸네일이 대표 이미지로 등록됩니다.', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('미리보기�??�시?�니?? ?�?????�네?�이 ?�???��?지�??�록?�니??', 'dw-church'); ?></p>
                 </td>
             </tr>
         </table>
@@ -279,7 +279,7 @@ class Dasom_Church_Meta_Boxes {
     }
     
     /**
-     * 목회컬럼 메타박스
+     * 목회컬럼 메�?박스
      */
     public function dasom_church_column_meta_box($post) {
         wp_nonce_field('dasom_church_column_meta', 'dasom_church_column_nonce');
@@ -292,24 +292,24 @@ class Dasom_Church_Meta_Boxes {
         $thumb_id = get_post_meta($post->ID, 'dw_column_thumb_id', true);
         ?>
         <div style="background: #fff; padding: 20px; border: 1px solid #ccd0d4; border-radius: 4px;">
-            <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 16px; font-weight: 600;"><?php _e('목회컬럼 정보', 'dasom-church'); ?></h3>
+            <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 16px; font-weight: 600;"><?php _e('목회컬럼 ?�보', 'dw-church'); ?></h3>
             
             <div style="margin-bottom: 20px;">
-                <label for="dw_column_top_image" style="display: block; margin-bottom: 8px; font-weight: 600;"><?php _e('상단 이미지', 'dasom-church'); ?></label>
+                <label for="dw_column_top_image" style="display: block; margin-bottom: 8px; font-weight: 600;"><?php _e('?�단 ?��?지', 'dw-church'); ?></label>
                 <input type="hidden" id="dw_column_top_image" name="dw_column_top_image" value="<?php echo esc_attr($top_image); ?>" />
-                <button type="button" class="button" id="dw_column_top_image_button"><?php _e('이미지 업로드/선택', 'dasom-church'); ?></button>
+                <button type="button" class="button" id="dw_column_top_image_button"><?php _e('?��?지 ?�로???�택', 'dw-church'); ?></button>
                 <div id="dw_column_top_image_preview" style="margin-top: 10px;">
                     <?php if ($top_image): ?>
                         <img src="<?php echo esc_url(wp_get_attachment_url($top_image)); ?>" style="width: 160px; height: 90px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px;" />
                     <?php endif; ?>
                 </div>
-                <p style="margin: 5px 0 0 0; color: #666; font-size: 12px;"><?php _e('상단 이미지가 대표 이미지로 설정됩니다.', 'dasom-church'); ?></p>
+                <p style="margin: 5px 0 0 0; color: #666; font-size: 12px;"><?php _e('?�단 ?��?지가 ?�???��?지�??�정?�니??', 'dw-church'); ?></p>
             </div>
             
             <div style="margin-bottom: 20px;">
-                <label for="dw_column_bottom_image" style="display: block; margin-bottom: 8px; font-weight: 600;"><?php _e('하단 이미지', 'dasom-church'); ?></label>
+                <label for="dw_column_bottom_image" style="display: block; margin-bottom: 8px; font-weight: 600;"><?php _e('?�단 ?��?지', 'dw-church'); ?></label>
                 <input type="hidden" id="dw_column_bottom_image" name="dw_column_bottom_image" value="<?php echo esc_attr($bottom_image); ?>" />
-                <button type="button" class="button" id="dw_column_bottom_image_button"><?php _e('이미지 업로드/선택', 'dasom-church'); ?></button>
+                <button type="button" class="button" id="dw_column_bottom_image_button"><?php _e('?��?지 ?�로???�택', 'dw-church'); ?></button>
                 <div id="dw_column_bottom_image_preview" style="margin-top: 10px;">
                     <?php if ($bottom_image): ?>
                         <img src="<?php echo esc_url(wp_get_attachment_url($bottom_image)); ?>" style="width: 160px; height: 90px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px;" />
@@ -318,29 +318,29 @@ class Dasom_Church_Meta_Boxes {
             </div>
             
             <div style="margin-bottom: 20px;">
-                <label for="dw_column_youtube" style="display: block; margin-bottom: 8px; font-weight: 600;"><?php _e('YouTube URL', 'dasom-church'); ?></label>
+                <label for="dw_column_youtube" style="display: block; margin-bottom: 8px; font-weight: 600;"><?php _e('YouTube URL', 'dw-church'); ?></label>
                 <input type="url" id="dw_column_youtube" name="dw_column_youtube" value="<?php echo esc_url($youtube); ?>" style="width: 100%; max-width: 500px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" />
             </div>
             
             <div style="margin-bottom: 20px;">
-                <label for="column_thumb_id" style="display: block; margin-bottom: 8px; font-weight: 600;"><?php _e('YouTube 썸네일', 'dasom-church'); ?></label>
+                <label for="column_thumb_id" style="display: block; margin-bottom: 8px; font-weight: 600;"><?php _e('YouTube ?�네??, 'dw-church'); ?></label>
                 <input type="hidden" id="dw_column_thumb_id" name="dw_column_thumb_id" value="<?php echo esc_attr($thumb_id); ?>" />
-                <button type="button" class="button" id="dw_column_thumb_button"><?php _e('썸네일 업로드/선택', 'dasom-church'); ?></button>
-                <button type="button" class="button" id="dw_column_thumb_fetch"><?php _e('YouTube 썸네일 불러오기', 'dasom-church'); ?></button>
-                <button type="button" class="button button-link-delete" id="dw_column_thumb_remove" style="color:#b32d2e;"><?php _e('썸네일 삭제', 'dasom-church'); ?></button>
+                <button type="button" class="button" id="dw_column_thumb_button"><?php _e('?�네???�로???�택', 'dw-church'); ?></button>
+                <button type="button" class="button" id="dw_column_thumb_fetch"><?php _e('YouTube ?�네??불러?�기', 'dw-church'); ?></button>
+                <button type="button" class="button button-link-delete" id="dw_column_thumb_remove" style="color:#b32d2e;"><?php _e('?�네????��', 'dw-church'); ?></button>
                 <div id="dw_column_thumb_preview" style="margin-top: 10px;">
                     <?php if ($thumb_id): ?>
                         <img src="<?php echo esc_url(wp_get_attachment_url($thumb_id)); ?>" style="width: 160px; height: 90px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px;" />
                     <?php endif; ?>
                 </div>
-                <p style="margin: 5px 0 0 0; color: #666; font-size: 12px;"><?php _e('미리보기만 표시됩니다. 저장 시 썸네일이 대표 이미지로 등록됩니다.', 'dasom-church'); ?></p>
+                <p style="margin: 5px 0 0 0; color: #666; font-size: 12px;"><?php _e('미리보기�??�시?�니?? ?�?????�네?�이 ?�???��?지�??�록?�니??', 'dw-church'); ?></p>
             </div>
         </div>
         <?php
     }
     
     /**
-     * 교회앨범 메타박스
+     * 교회?�범 메�?박스
      */
     public function dasom_church_album_meta_box($post) {
         wp_nonce_field('dasom_church_album_meta', 'dasom_church_album_nonce');
@@ -354,11 +354,11 @@ class Dasom_Church_Meta_Boxes {
         <table class="form-table">
             <tr>
                 <th scope="row">
-                    <label for="album_images"><?php _e('앨범 이미지', 'dasom-church'); ?></label>
+                    <label for="album_images"><?php _e('?�범 ?��?지', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="hidden" id="dw_album_images" name="dw_album_images" value='<?php echo esc_attr(json_encode($images)); ?>' />
-                    <button type="button" class="button" id="dw_album_images_button"><?php _e('이미지 업로드/선택', 'dasom-church'); ?></button>
+                    <button type="button" class="button" id="dw_album_images_button"><?php _e('?��?지 ?�로???�택', 'dw-church'); ?></button>
                     <ul id="dw_album_images_preview" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:10px;">
                         <?php foreach ($images as $id): ?>
                             <li data-id="<?php echo esc_attr($id); ?>" style="position:relative;">
@@ -376,13 +376,13 @@ class Dasom_Church_Meta_Boxes {
                         <?php endforeach; ?>
                     </ul>
                     <?php if (empty($images)): ?>
-                        <p class="description"><?php _e('이미지가 없습니다. 위의 버튼을 클릭하여 이미지를 업로드하세요.', 'dasom-church'); ?></p>
+                        <p class="description"><?php _e('?��?지가 ?�습?�다. ?�의 버튼???�릭?�여 ?��?지�??�로?�하?�요.', 'dw-church'); ?></p>
                     <?php endif; ?>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_album_youtube"><?php _e('YouTube URL', 'dasom-church'); ?></label>
+                    <label for="dw_album_youtube"><?php _e('YouTube URL', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="url" id="dw_album_youtube" name="dw_album_youtube" value="<?php echo esc_url($youtube); ?>" class="regular-text" />
@@ -390,19 +390,19 @@ class Dasom_Church_Meta_Boxes {
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="album_thumb_id"><?php _e('YouTube 썸네일', 'dasom-church'); ?></label>
+                    <label for="album_thumb_id"><?php _e('YouTube ?�네??, 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="hidden" id="dw_album_thumb_id" name="dw_album_thumb_id" value="<?php echo esc_attr($thumb_id); ?>" />
-                    <button type="button" class="button" id="dw_album_thumb_button"><?php _e('썸네일 업로드/선택', 'dasom-church'); ?></button>
-                    <button type="button" class="button" id="dw_album_thumb_fetch"><?php _e('YouTube 썸네일 불러오기', 'dasom-church'); ?></button>
-                    <button type="button" class="button button-link-delete" id="dw_album_thumb_remove" style="color:#b32d2e;"><?php _e('썸네일 삭제', 'dasom-church'); ?></button>
+                    <button type="button" class="button" id="dw_album_thumb_button"><?php _e('?�네???�로???�택', 'dw-church'); ?></button>
+                    <button type="button" class="button" id="dw_album_thumb_fetch"><?php _e('YouTube ?�네??불러?�기', 'dw-church'); ?></button>
+                    <button type="button" class="button button-link-delete" id="dw_album_thumb_remove" style="color:#b32d2e;"><?php _e('?�네????��', 'dw-church'); ?></button>
                     <div id="dw_album_thumb_preview" style="margin-top:10px;">
                         <?php if ($thumb_id): ?>
                             <img src="<?php echo esc_url(wp_get_attachment_url($thumb_id)); ?>" style="width:160px;height:90px;object-fit:cover;" />
                         <?php endif; ?>
                     </div>
-                    <p class="description"><?php _e('미리보기만 표시됩니다. 저장 시 썸네일이 대표 이미지로 등록됩니다.', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('미리보기�??�시?�니?? ?�?????�네?�이 ?�???��?지�??�록?�니??', 'dw-church'); ?></p>
                 </td>
             </tr>
         </table>
@@ -410,7 +410,7 @@ class Dasom_Church_Meta_Boxes {
     }
     
     /**
-     * 배너 메타박스
+     * 배너 메�?박스
      */
     public function dasom_church_banner_meta_box($post) {
         wp_nonce_field('dasom_church_banner_meta', 'dasom_church_banner_nonce');
@@ -465,68 +465,68 @@ class Dasom_Church_Meta_Boxes {
         ?>
         <div style="background:#f9f9f9;padding:15px;margin-bottom:20px;border:1px solid #ddd;border-radius:4px;">
             <p style="margin:0;font-size:13px;color:#666;">
-                <strong><?php _e('배너 이미지:', 'dasom-church'); ?></strong><br>
-                • <strong><?php _e('메인 배너', 'dasom-church'); ?>:</strong> <?php _e('PC (1920px) + 모바일 (720px) 이미지를 사용합니다', 'dasom-church'); ?><br>
-                • <strong><?php _e('서브 배너', 'dasom-church'); ?>:</strong> <?php _e('1024px 고정폭 이미지를 사용합니다 (비율 선택 가능: 16:9, 4:3, 1:1)', 'dasom-church'); ?><br><br>
-                <strong><?php _e('텍스트 오버레이:', 'dasom-church'); ?></strong> <?php _e('제목, 부제목, 설명을 입력하면 배경 이미지 위에 표시됩니다. 입력하지 않으면 이미지만 표시됩니다.', 'dasom-church'); ?>
+                <strong><?php _e('배너 ?��?지:', 'dw-church'); ?></strong><br>
+                ??<strong><?php _e('메인 배너', 'dw-church'); ?>:</strong> <?php _e('PC (1920px) + 모바??(720px) ?��?지�??�용?�니??, 'dw-church'); ?><br>
+                ??<strong><?php _e('?�브 배너', 'dw-church'); ?>:</strong> <?php _e('1024px 고정???��?지�??�용?�니??(비율 ?�택 가?? 16:9, 4:3, 1:1)', 'dw-church'); ?><br><br>
+                <strong><?php _e('?�스???�버?�이:', 'dw-church'); ?></strong> <?php _e('?�목, 부?�목, ?�명???�력?�면 배경 ?��?지 ?�에 ?�시?�니?? ?�력?��? ?�으�??��?지�??�시?�니??', 'dw-church'); ?>
             </p>
         </div>
         
         <table class="form-table">
-            <!-- 메인 배너 필드 -->
+            <!-- 메인 배너 ?�드 -->
             <tr class="banner-field banner-main-field" data-banner-type="main">
                 <th scope="row">
-                    <label for="dw_banner_pc_image"><?php _e('PC용 배너 이미지 (1920px)', 'dasom-church'); ?></label>
+                    <label for="dw_banner_pc_image"><?php _e('PC??배너 ?��?지 (1920px)', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="hidden" id="dw_banner_pc_image" name="dw_banner_pc_image" value="<?php echo esc_attr($pc_image); ?>" />
-                    <button type="button" class="button" id="dw_banner_pc_image_button"><?php _e('PC용 이미지 업로드', 'dasom-church'); ?></button>
-                    <button type="button" class="button button-link-delete" id="dw_banner_pc_image_remove" style="color:#b32d2e;"><?php _e('이미지 삭제', 'dasom-church'); ?></button>
+                    <button type="button" class="button" id="dw_banner_pc_image_button"><?php _e('PC???��?지 ?�로??, 'dw-church'); ?></button>
+                    <button type="button" class="button button-link-delete" id="dw_banner_pc_image_remove" style="color:#b32d2e;"><?php _e('?��?지 ??��', 'dw-church'); ?></button>
                     <div id="dw_banner_pc_image_preview" style="margin-top:10px;">
                         <?php if ($pc_image): ?>
                             <img src="<?php echo esc_url(wp_get_attachment_url($pc_image)); ?>" style="max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;" />
                         <?php endif; ?>
                     </div>
-                    <p class="description"><?php _e('권장 크기: 가로 1920px', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('권장 ?�기: 가�?1920px', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr class="banner-field banner-main-field" data-banner-type="main">
                 <th scope="row">
-                    <label for="dw_banner_mobile_image"><?php _e('모바일용 배너 이미지 (720px)', 'dasom-church'); ?></label>
+                    <label for="dw_banner_mobile_image"><?php _e('모바?�용 배너 ?��?지 (720px)', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="hidden" id="dw_banner_mobile_image" name="dw_banner_mobile_image" value="<?php echo esc_attr($mobile_image); ?>" />
-                    <button type="button" class="button" id="dw_banner_mobile_image_button"><?php _e('모바일용 이미지 업로드', 'dasom-church'); ?></button>
-                    <button type="button" class="button button-link-delete" id="dw_banner_mobile_image_remove" style="color:#b32d2e;"><?php _e('이미지 삭제', 'dasom-church'); ?></button>
+                    <button type="button" class="button" id="dw_banner_mobile_image_button"><?php _e('모바?�용 ?��?지 ?�로??, 'dw-church'); ?></button>
+                    <button type="button" class="button button-link-delete" id="dw_banner_mobile_image_remove" style="color:#b32d2e;"><?php _e('?��?지 ??��', 'dw-church'); ?></button>
                     <div id="dw_banner_mobile_image_preview" style="margin-top:10px;">
                         <?php if ($mobile_image): ?>
                             <img src="<?php echo esc_url(wp_get_attachment_url($mobile_image)); ?>" style="max-width:300px;height:auto;object-fit:cover;border:1px solid #ddd;" />
                         <?php endif; ?>
                     </div>
-                    <p class="description"><?php _e('권장 크기: 가로 720px', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('권장 ?�기: 가�?720px', 'dw-church'); ?></p>
                 </td>
             </tr>
             
-            <!-- 서브 배너 필드 -->
+            <!-- ?�브 배너 ?�드 -->
             <tr class="banner-field banner-sub-field" data-banner-type="sub">
                 <th scope="row">
-                    <label for="dw_banner_sub_image"><?php _e('서브 배너 이미지 (1024px)', 'dasom-church'); ?></label>
+                    <label for="dw_banner_sub_image"><?php _e('?�브 배너 ?��?지 (1024px)', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="hidden" id="dw_banner_sub_image" name="dw_banner_sub_image" value="<?php echo esc_attr($sub_image); ?>" />
-                    <button type="button" class="button" id="dw_banner_sub_image_button"><?php _e('이미지 업로드', 'dasom-church'); ?></button>
-                    <button type="button" class="button button-link-delete" id="dw_banner_sub_image_remove" style="color:#b32d2e;"><?php _e('이미지 삭제', 'dasom-church'); ?></button>
+                    <button type="button" class="button" id="dw_banner_sub_image_button"><?php _e('?��?지 ?�로??, 'dw-church'); ?></button>
+                    <button type="button" class="button button-link-delete" id="dw_banner_sub_image_remove" style="color:#b32d2e;"><?php _e('?��?지 ??��', 'dw-church'); ?></button>
                     <div id="dw_banner_sub_image_preview" style="margin-top:10px;">
                         <?php if ($sub_image): ?>
                             <img src="<?php echo esc_url(wp_get_attachment_url($sub_image)); ?>" style="max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;" />
                         <?php endif; ?>
                     </div>
-                    <p class="description"><?php _e('권장 크기: 가로 1024px, 세로는 선택한 비율에 따라 자동 결정', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('권장 ?�기: 가�?1024px, ?�로???�택??비율???�라 ?�동 결정', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr class="banner-field banner-sub-field" data-banner-type="sub">
                 <th scope="row">
-                    <label for="dw_banner_sub_ratio"><?php _e('서브 배너 이미지 비율', 'dasom-church'); ?></label>
+                    <label for="dw_banner_sub_ratio"><?php _e('?�브 배너 ?��?지 비율', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <select id="dw_banner_sub_ratio" name="dw_banner_sub_ratio" class="regular-text">
@@ -534,232 +534,232 @@ class Dasom_Church_Meta_Boxes {
                         <option value="4:3" <?php selected($sub_ratio, '4:3'); ?>>4:3 (1024x768px)</option>
                         <option value="1:1" <?php selected($sub_ratio, '1:1'); ?>>1:1 (1024x1024px)</option>
                     </select>
-                    <p class="description"><?php _e('서브 배너는 가로 1024px 고정입니다. 비율을 선택하세요.', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('?�브 배너??가�?1024px 고정?�니?? 비율???�택?�세??', 'dw-church'); ?></p>
                 </td>
             </tr>
             
-            <!-- 텍스트 오버레이 필드 (선택사항) -->
+            <!-- ?�스???�버?�이 ?�드 (?�택?�항) -->
             <tr>
                 <th scope="row" colspan="2" style="background:#e7f3ff;padding:15px;">
-                    <h3 style="margin:0;color:#135e96;">📝 <?php _e('텍스트 오버레이 (선택사항)', 'dasom-church'); ?></h3>
-                    <p style="margin:5px 0 0 0;font-weight:normal;font-size:13px;color:#666;"><?php _e('아래 필드를 입력하면 배경 이미지 위에 텍스트가 표시됩니다. 비워두면 이미지만 표시됩니다.', 'dasom-church'); ?></p>
+                    <h3 style="margin:0;color:#135e96;">?�� <?php _e('?�스???�버?�이 (?�택?�항)', 'dw-church'); ?></h3>
+                    <p style="margin:5px 0 0 0;font-weight:normal;font-size:13px;color:#666;"><?php _e('?�래 ?�드�??�력?�면 배경 ?��?지 ?�에 ?�스?��? ?�시?�니?? 비워?�면 ?��?지�??�시?�니??', 'dw-church'); ?></p>
                 </th>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_banner_text_title"><?php _e('제목 (Title)', 'dasom-church'); ?></label>
+                    <label for="dw_banner_text_title"><?php _e('?�목 (Title)', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="text" id="dw_banner_text_title" name="dw_banner_text_title" value="<?php echo esc_attr($text_title); ?>" class="regular-text" />
-                    <p class="description"><?php _e('배너에 표시될 메인 제목을 입력하세요.', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('배너???�시??메인 ?�목???�력?�세??', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_banner_text_subtitle"><?php _e('부제목 (Subtitle)', 'dasom-church'); ?></label>
+                    <label for="dw_banner_text_subtitle"><?php _e('부?�목 (Subtitle)', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="text" id="dw_banner_text_subtitle" name="dw_banner_text_subtitle" value="<?php echo esc_attr($text_subtitle); ?>" class="regular-text" />
-                    <p class="description"><?php _e('배너에 표시될 부제목을 입력하세요.', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('배너???�시??부?�목???�력?�세??', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_banner_text_description"><?php _e('설명 (Description)', 'dasom-church'); ?></label>
+                    <label for="dw_banner_text_description"><?php _e('?�명 (Description)', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <textarea id="dw_banner_text_description" name="dw_banner_text_description" class="large-text" rows="3"><?php echo esc_textarea($text_description); ?></textarea>
-                    <p class="description"><?php _e('배너에 표시될 짧은 설명을 입력하세요.', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('배너???�시??짧�? ?�명???�력?�세??', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_banner_text_position"><?php _e('텍스트 위치', 'dasom-church'); ?></label>
+                    <label for="dw_banner_text_position"><?php _e('?�스???�치', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <select id="dw_banner_text_position" name="dw_banner_text_position" class="regular-text">
-                        <optgroup label="<?php _e('상단', 'dasom-church'); ?>">
-                            <option value="top-left" <?php selected($text_position, 'top-left'); ?>><?php _e('상단 왼쪽', 'dasom-church'); ?></option>
-                            <option value="top-center" <?php selected($text_position, 'top-center'); ?>><?php _e('상단 중앙', 'dasom-church'); ?></option>
-                            <option value="top-right" <?php selected($text_position, 'top-right'); ?>><?php _e('상단 오른쪽', 'dasom-church'); ?></option>
+                        <optgroup label="<?php _e('?�단', 'dw-church'); ?>">
+                            <option value="top-left" <?php selected($text_position, 'top-left'); ?>><?php _e('?�단 ?�쪽', 'dw-church'); ?></option>
+                            <option value="top-center" <?php selected($text_position, 'top-center'); ?>><?php _e('?�단 중앙', 'dw-church'); ?></option>
+                            <option value="top-right" <?php selected($text_position, 'top-right'); ?>><?php _e('?�단 ?�른�?, 'dw-church'); ?></option>
                         </optgroup>
-                        <optgroup label="<?php _e('중앙', 'dasom-church'); ?>">
-                            <option value="center-left" <?php selected($text_position, 'center-left'); ?>><?php _e('중앙 왼쪽', 'dasom-church'); ?></option>
-                            <option value="center-center" <?php selected($text_position, 'center-center'); ?>><?php _e('중앙', 'dasom-church'); ?></option>
-                            <option value="center-right" <?php selected($text_position, 'center-right'); ?>><?php _e('중앙 오른쪽', 'dasom-church'); ?></option>
+                        <optgroup label="<?php _e('중앙', 'dw-church'); ?>">
+                            <option value="center-left" <?php selected($text_position, 'center-left'); ?>><?php _e('중앙 ?�쪽', 'dw-church'); ?></option>
+                            <option value="center-center" <?php selected($text_position, 'center-center'); ?>><?php _e('중앙', 'dw-church'); ?></option>
+                            <option value="center-right" <?php selected($text_position, 'center-right'); ?>><?php _e('중앙 ?�른�?, 'dw-church'); ?></option>
                         </optgroup>
-                        <optgroup label="<?php _e('하단', 'dasom-church'); ?>">
-                            <option value="bottom-left" <?php selected($text_position, 'bottom-left'); ?>><?php _e('하단 왼쪽', 'dasom-church'); ?></option>
-                            <option value="bottom-center" <?php selected($text_position, 'bottom-center'); ?>><?php _e('하단 중앙', 'dasom-church'); ?></option>
-                            <option value="bottom-right" <?php selected($text_position, 'bottom-right'); ?>><?php _e('하단 오른쪽', 'dasom-church'); ?></option>
+                        <optgroup label="<?php _e('?�단', 'dw-church'); ?>">
+                            <option value="bottom-left" <?php selected($text_position, 'bottom-left'); ?>><?php _e('?�단 ?�쪽', 'dw-church'); ?></option>
+                            <option value="bottom-center" <?php selected($text_position, 'bottom-center'); ?>><?php _e('?�단 중앙', 'dw-church'); ?></option>
+                            <option value="bottom-right" <?php selected($text_position, 'bottom-right'); ?>><?php _e('?�단 ?�른�?, 'dw-church'); ?></option>
                         </optgroup>
                     </select>
-                    <p class="description"><?php _e('텍스트가 표시될 위치를 선택하세요.', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('?�스?��? ?�시???�치�??�택?�세??', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_banner_text_align"><?php _e('텍스트 정렬', 'dasom-church'); ?></label>
+                    <label for="dw_banner_text_align"><?php _e('?�스???�렬', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <select id="dw_banner_text_align" name="dw_banner_text_align" class="regular-text">
-                        <option value="left" <?php selected($text_align, 'left'); ?>><?php _e('왼쪽 정렬', 'dasom-church'); ?></option>
-                        <option value="center" <?php selected($text_align, 'center'); ?>><?php _e('중앙 정렬', 'dasom-church'); ?></option>
-                        <option value="right" <?php selected($text_align, 'right'); ?>><?php _e('오른쪽 정렬', 'dasom-church'); ?></option>
+                        <option value="left" <?php selected($text_align, 'left'); ?>><?php _e('?�쪽 ?�렬', 'dw-church'); ?></option>
+                        <option value="center" <?php selected($text_align, 'center'); ?>><?php _e('중앙 ?�렬', 'dw-church'); ?></option>
+                        <option value="right" <?php selected($text_align, 'right'); ?>><?php _e('?�른�??�렬', 'dw-church'); ?></option>
                     </select>
-                    <p class="description"><?php _e('텍스트 콘텐츠 내부의 정렬 방식을 선택하세요.', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('?�스??콘텐�??��????�렬 방식???�택?�세??', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label><?php _e('텍스트 컨테이너 폭 (반응형)', 'dasom-church'); ?></label>
+                    <label><?php _e('?�스??컨테?�너 ??(반응??', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;max-width:600px;">
                         <div>
-                            <label for="dw_banner_text_width_pc" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('🖥️ PC', 'dasom-church'); ?></label>
+                            <label for="dw_banner_text_width_pc" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('?���?PC', 'dw-church'); ?></label>
                             <input type="number" id="dw_banner_text_width_pc" name="dw_banner_text_width_pc" value="<?php echo esc_attr($text_width_pc); ?>" class="small-text" min="100" max="2000" step="10" /> px
                         </div>
                         <div>
-                            <label for="dw_banner_text_width_laptop" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('💻 Laptop', 'dasom-church'); ?></label>
+                            <label for="dw_banner_text_width_laptop" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('?�� Laptop', 'dw-church'); ?></label>
                             <input type="number" id="dw_banner_text_width_laptop" name="dw_banner_text_width_laptop" value="<?php echo esc_attr($text_width_laptop); ?>" class="small-text" min="100" max="2000" step="10" /> px
                         </div>
                         <div>
-                            <label for="dw_banner_text_width_tablet" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('📱 Tablet', 'dasom-church'); ?></label>
+                            <label for="dw_banner_text_width_tablet" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('?�� Tablet', 'dw-church'); ?></label>
                             <input type="number" id="dw_banner_text_width_tablet" name="dw_banner_text_width_tablet" value="<?php echo esc_attr($text_width_tablet); ?>" class="small-text" min="100" max="2000" step="10" /> px
                         </div>
                         <div>
-                            <label for="dw_banner_text_width_mobile" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('📱 Mobile', 'dasom-church'); ?></label>
+                            <label for="dw_banner_text_width_mobile" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('?�� Mobile', 'dw-church'); ?></label>
                             <input type="number" id="dw_banner_text_width_mobile" name="dw_banner_text_width_mobile" value="<?php echo esc_attr($text_width_mobile); ?>" class="small-text" min="100" max="2000" step="10" /> px
                         </div>
                     </div>
-                    <p class="description" style="margin-top:10px;"><?php _e('각 디바이스별로 텍스트 컨테이너의 최대 폭을 설정하세요. 좁게 설정하면 여러 줄로, 넓게 설정하면 한 줄로 표시됩니다. (기본값 - PC: 600px, Laptop: 600px, Tablet: 500px, Mobile: 300px)', 'dasom-church'); ?></p>
+                    <p class="description" style="margin-top:10px;"><?php _e('�??�바?�스별로 ?�스??컨테?�너??최�? ??�� ?�정?�세?? 좁게 ?�정?�면 ?�러 줄로, ?�게 ?�정?�면 ??줄로 ?�시?�니?? (기본�?- PC: 600px, Laptop: 600px, Tablet: 500px, Mobile: 300px)', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label><?php _e('배경 이미지 위치 (반응형)', 'dasom-church'); ?></label>
+                    <label><?php _e('배경 ?��?지 ?�치 (반응??', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;max-width:800px;">
                         <div>
-                            <label for="dw_banner_bg_position_pc" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('🖥️ PC (1920px+)', 'dasom-church'); ?></label>
+                            <label for="dw_banner_bg_position_pc" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('?���?PC (1920px+)', 'dw-church'); ?></label>
                             <select id="dw_banner_bg_position_pc" name="dw_banner_bg_position_pc" class="regular-text">
-                                <option value="center top" <?php selected($bg_position_pc, 'center top'); ?>><?php _e('상단 중앙', 'dasom-church'); ?></option>
-                                <option value="center center" <?php selected($bg_position_pc, 'center center'); ?>><?php _e('정중앙', 'dasom-church'); ?></option>
-                                <option value="center bottom" <?php selected($bg_position_pc, 'center bottom'); ?>><?php _e('하단 중앙', 'dasom-church'); ?></option>
-                                <option value="left center" <?php selected($bg_position_pc, 'left center'); ?>><?php _e('왼쪽 중앙', 'dasom-church'); ?></option>
-                                <option value="right center" <?php selected($bg_position_pc, 'right center'); ?>><?php _e('오른쪽 중앙', 'dasom-church'); ?></option>
-                                <option value="left top" <?php selected($bg_position_pc, 'left top'); ?>><?php _e('왼쪽 상단', 'dasom-church'); ?></option>
-                                <option value="right top" <?php selected($bg_position_pc, 'right top'); ?>><?php _e('오른쪽 상단', 'dasom-church'); ?></option>
-                                <option value="left bottom" <?php selected($bg_position_pc, 'left bottom'); ?>><?php _e('왼쪽 하단', 'dasom-church'); ?></option>
-                                <option value="right bottom" <?php selected($bg_position_pc, 'right bottom'); ?>><?php _e('오른쪽 하단', 'dasom-church'); ?></option>
+                                <option value="center top" <?php selected($bg_position_pc, 'center top'); ?>><?php _e('?�단 중앙', 'dw-church'); ?></option>
+                                <option value="center center" <?php selected($bg_position_pc, 'center center'); ?>><?php _e('?�중??, 'dw-church'); ?></option>
+                                <option value="center bottom" <?php selected($bg_position_pc, 'center bottom'); ?>><?php _e('?�단 중앙', 'dw-church'); ?></option>
+                                <option value="left center" <?php selected($bg_position_pc, 'left center'); ?>><?php _e('?�쪽 중앙', 'dw-church'); ?></option>
+                                <option value="right center" <?php selected($bg_position_pc, 'right center'); ?>><?php _e('?�른�?중앙', 'dw-church'); ?></option>
+                                <option value="left top" <?php selected($bg_position_pc, 'left top'); ?>><?php _e('?�쪽 ?�단', 'dw-church'); ?></option>
+                                <option value="right top" <?php selected($bg_position_pc, 'right top'); ?>><?php _e('?�른�??�단', 'dw-church'); ?></option>
+                                <option value="left bottom" <?php selected($bg_position_pc, 'left bottom'); ?>><?php _e('?�쪽 ?�단', 'dw-church'); ?></option>
+                                <option value="right bottom" <?php selected($bg_position_pc, 'right bottom'); ?>><?php _e('?�른�??�단', 'dw-church'); ?></option>
                             </select>
                         </div>
                         <div>
-                            <label for="dw_banner_bg_position_laptop" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('💻 Laptop (1024px~1919px)', 'dasom-church'); ?></label>
+                            <label for="dw_banner_bg_position_laptop" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('?�� Laptop (1024px~1919px)', 'dw-church'); ?></label>
                             <select id="dw_banner_bg_position_laptop" name="dw_banner_bg_position_laptop" class="regular-text">
-                                <option value="center top" <?php selected($bg_position_laptop, 'center top'); ?>><?php _e('상단 중앙', 'dasom-church'); ?></option>
-                                <option value="center center" <?php selected($bg_position_laptop, 'center center'); ?>><?php _e('정중앙', 'dasom-church'); ?></option>
-                                <option value="center bottom" <?php selected($bg_position_laptop, 'center bottom'); ?>><?php _e('하단 중앙', 'dasom-church'); ?></option>
-                                <option value="left center" <?php selected($bg_position_laptop, 'left center'); ?>><?php _e('왼쪽 중앙', 'dasom-church'); ?></option>
-                                <option value="right center" <?php selected($bg_position_laptop, 'right center'); ?>><?php _e('오른쪽 중앙', 'dasom-church'); ?></option>
-                                <option value="left top" <?php selected($bg_position_laptop, 'left top'); ?>><?php _e('왼쪽 상단', 'dasom-church'); ?></option>
-                                <option value="right top" <?php selected($bg_position_laptop, 'right top'); ?>><?php _e('오른쪽 상단', 'dasom-church'); ?></option>
-                                <option value="left bottom" <?php selected($bg_position_laptop, 'left bottom'); ?>><?php _e('왼쪽 하단', 'dasom-church'); ?></option>
-                                <option value="right bottom" <?php selected($bg_position_laptop, 'right bottom'); ?>><?php _e('오른쪽 하단', 'dasom-church'); ?></option>
+                                <option value="center top" <?php selected($bg_position_laptop, 'center top'); ?>><?php _e('?�단 중앙', 'dw-church'); ?></option>
+                                <option value="center center" <?php selected($bg_position_laptop, 'center center'); ?>><?php _e('?�중??, 'dw-church'); ?></option>
+                                <option value="center bottom" <?php selected($bg_position_laptop, 'center bottom'); ?>><?php _e('?�단 중앙', 'dw-church'); ?></option>
+                                <option value="left center" <?php selected($bg_position_laptop, 'left center'); ?>><?php _e('?�쪽 중앙', 'dw-church'); ?></option>
+                                <option value="right center" <?php selected($bg_position_laptop, 'right center'); ?>><?php _e('?�른�?중앙', 'dw-church'); ?></option>
+                                <option value="left top" <?php selected($bg_position_laptop, 'left top'); ?>><?php _e('?�쪽 ?�단', 'dw-church'); ?></option>
+                                <option value="right top" <?php selected($bg_position_laptop, 'right top'); ?>><?php _e('?�른�??�단', 'dw-church'); ?></option>
+                                <option value="left bottom" <?php selected($bg_position_laptop, 'left bottom'); ?>><?php _e('?�쪽 ?�단', 'dw-church'); ?></option>
+                                <option value="right bottom" <?php selected($bg_position_laptop, 'right bottom'); ?>><?php _e('?�른�??�단', 'dw-church'); ?></option>
                             </select>
                         </div>
                         <div>
-                            <label for="dw_banner_bg_position_tablet" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('📱 Tablet (768px~1023px)', 'dasom-church'); ?></label>
+                            <label for="dw_banner_bg_position_tablet" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('?�� Tablet (768px~1023px)', 'dw-church'); ?></label>
                             <select id="dw_banner_bg_position_tablet" name="dw_banner_bg_position_tablet" class="regular-text">
-                                <option value="center top" <?php selected($bg_position_tablet, 'center top'); ?>><?php _e('상단 중앙', 'dasom-church'); ?></option>
-                                <option value="center center" <?php selected($bg_position_tablet, 'center center'); ?>><?php _e('정중앙', 'dasom-church'); ?></option>
-                                <option value="center bottom" <?php selected($bg_position_tablet, 'center bottom'); ?>><?php _e('하단 중앙', 'dasom-church'); ?></option>
-                                <option value="left center" <?php selected($bg_position_tablet, 'left center'); ?>><?php _e('왼쪽 중앙', 'dasom-church'); ?></option>
-                                <option value="right center" <?php selected($bg_position_tablet, 'right center'); ?>><?php _e('오른쪽 중앙', 'dasom-church'); ?></option>
-                                <option value="left top" <?php selected($bg_position_tablet, 'left top'); ?>><?php _e('왼쪽 상단', 'dasom-church'); ?></option>
-                                <option value="right top" <?php selected($bg_position_tablet, 'right top'); ?>><?php _e('오른쪽 상단', 'dasom-church'); ?></option>
-                                <option value="left bottom" <?php selected($bg_position_tablet, 'left bottom'); ?>><?php _e('왼쪽 하단', 'dasom-church'); ?></option>
-                                <option value="right bottom" <?php selected($bg_position_tablet, 'right bottom'); ?>><?php _e('오른쪽 하단', 'dasom-church'); ?></option>
+                                <option value="center top" <?php selected($bg_position_tablet, 'center top'); ?>><?php _e('?�단 중앙', 'dw-church'); ?></option>
+                                <option value="center center" <?php selected($bg_position_tablet, 'center center'); ?>><?php _e('?�중??, 'dw-church'); ?></option>
+                                <option value="center bottom" <?php selected($bg_position_tablet, 'center bottom'); ?>><?php _e('?�단 중앙', 'dw-church'); ?></option>
+                                <option value="left center" <?php selected($bg_position_tablet, 'left center'); ?>><?php _e('?�쪽 중앙', 'dw-church'); ?></option>
+                                <option value="right center" <?php selected($bg_position_tablet, 'right center'); ?>><?php _e('?�른�?중앙', 'dw-church'); ?></option>
+                                <option value="left top" <?php selected($bg_position_tablet, 'left top'); ?>><?php _e('?�쪽 ?�단', 'dw-church'); ?></option>
+                                <option value="right top" <?php selected($bg_position_tablet, 'right top'); ?>><?php _e('?�른�??�단', 'dw-church'); ?></option>
+                                <option value="left bottom" <?php selected($bg_position_tablet, 'left bottom'); ?>><?php _e('?�쪽 ?�단', 'dw-church'); ?></option>
+                                <option value="right bottom" <?php selected($bg_position_tablet, 'right bottom'); ?>><?php _e('?�른�??�단', 'dw-church'); ?></option>
                             </select>
                         </div>
                         <div>
-                            <label for="dw_banner_bg_position_mobile" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('📱 Mobile (~767px)', 'dasom-church'); ?></label>
+                            <label for="dw_banner_bg_position_mobile" style="display:block;margin-bottom:5px;font-weight:600;"><?php _e('?�� Mobile (~767px)', 'dw-church'); ?></label>
                             <select id="dw_banner_bg_position_mobile" name="dw_banner_bg_position_mobile" class="regular-text">
-                                <option value="center top" <?php selected($bg_position_mobile, 'center top'); ?>><?php _e('상단 중앙', 'dasom-church'); ?></option>
-                                <option value="center center" <?php selected($bg_position_mobile, 'center center'); ?>><?php _e('정중앙', 'dasom-church'); ?></option>
-                                <option value="center bottom" <?php selected($bg_position_mobile, 'center bottom'); ?>><?php _e('하단 중앙', 'dasom-church'); ?></option>
-                                <option value="left center" <?php selected($bg_position_mobile, 'left center'); ?>><?php _e('왼쪽 중앙', 'dasom-church'); ?></option>
-                                <option value="right center" <?php selected($bg_position_mobile, 'right center'); ?>><?php _e('오른쪽 중앙', 'dasom-church'); ?></option>
-                                <option value="left top" <?php selected($bg_position_mobile, 'left top'); ?>><?php _e('왼쪽 상단', 'dasom-church'); ?></option>
-                                <option value="right top" <?php selected($bg_position_mobile, 'right top'); ?>><?php _e('오른쪽 상단', 'dasom-church'); ?></option>
-                                <option value="left bottom" <?php selected($bg_position_mobile, 'left bottom'); ?>><?php _e('왼쪽 하단', 'dasom-church'); ?></option>
-                                <option value="right bottom" <?php selected($bg_position_mobile, 'right bottom'); ?>><?php _e('오른쪽 하단', 'dasom-church'); ?></option>
+                                <option value="center top" <?php selected($bg_position_mobile, 'center top'); ?>><?php _e('?�단 중앙', 'dw-church'); ?></option>
+                                <option value="center center" <?php selected($bg_position_mobile, 'center center'); ?>><?php _e('?�중??, 'dw-church'); ?></option>
+                                <option value="center bottom" <?php selected($bg_position_mobile, 'center bottom'); ?>><?php _e('?�단 중앙', 'dw-church'); ?></option>
+                                <option value="left center" <?php selected($bg_position_mobile, 'left center'); ?>><?php _e('?�쪽 중앙', 'dw-church'); ?></option>
+                                <option value="right center" <?php selected($bg_position_mobile, 'right center'); ?>><?php _e('?�른�?중앙', 'dw-church'); ?></option>
+                                <option value="left top" <?php selected($bg_position_mobile, 'left top'); ?>><?php _e('?�쪽 ?�단', 'dw-church'); ?></option>
+                                <option value="right top" <?php selected($bg_position_mobile, 'right top'); ?>><?php _e('?�른�??�단', 'dw-church'); ?></option>
+                                <option value="left bottom" <?php selected($bg_position_mobile, 'left bottom'); ?>><?php _e('?�쪽 ?�단', 'dw-church'); ?></option>
+                                <option value="right bottom" <?php selected($bg_position_mobile, 'right bottom'); ?>><?php _e('?�른�??�단', 'dw-church'); ?></option>
                             </select>
                         </div>
                     </div>
-                    <p class="description" style="margin-top:10px;"><?php _e('각 디바이스별로 배경 이미지의 표시 위치를 개별 설정할 수 있습니다. 모바일에서는 인물의 얼굴이 잘리지 않도록 상단 중앙을, PC에서는 정중앙을 선택하는 등 디바이스별 최적화가 가능합니다.', 'dasom-church'); ?></p>
+                    <p class="description" style="margin-top:10px;"><?php _e('�??�바?�스별로 배경 ?��?지???�시 ?�치�?개별 ?�정?????�습?�다. 모바?�에?�는 ?�물???�굴???�리지 ?�도�??�단 중앙?? PC?�서???�중?�을 ?�택?�는 ???�바?�스�?최적?��? 가?�합?�다.', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label><?php _e('콘텐츠 여백 (Padding)', 'dasom-church'); ?></label>
+                    <label><?php _e('콘텐�??�백 (Padding)', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:400px;">
                         <div>
-                            <label for="dw_banner_content_padding_top" style="display:block;margin-bottom:5px;"><?php _e('위쪽 (px)', 'dasom-church'); ?></label>
+                            <label for="dw_banner_content_padding_top" style="display:block;margin-bottom:5px;"><?php _e('?�쪽 (px)', 'dw-church'); ?></label>
                             <input type="number" id="dw_banner_content_padding_top" name="dw_banner_content_padding_top" value="<?php echo esc_attr($content_padding_top); ?>" class="small-text" min="0" step="5" />
                         </div>
                         <div>
-                            <label for="dw_banner_content_padding_right" style="display:block;margin-bottom:5px;"><?php _e('오른쪽 (px)', 'dasom-church'); ?></label>
+                            <label for="dw_banner_content_padding_right" style="display:block;margin-bottom:5px;"><?php _e('?�른�?(px)', 'dw-church'); ?></label>
                             <input type="number" id="dw_banner_content_padding_right" name="dw_banner_content_padding_right" value="<?php echo esc_attr($content_padding_right); ?>" class="small-text" min="0" step="5" />
                         </div>
                         <div>
-                            <label for="dw_banner_content_padding_bottom" style="display:block;margin-bottom:5px;"><?php _e('아래쪽 (px)', 'dasom-church'); ?></label>
+                            <label for="dw_banner_content_padding_bottom" style="display:block;margin-bottom:5px;"><?php _e('?�래�?(px)', 'dw-church'); ?></label>
                             <input type="number" id="dw_banner_content_padding_bottom" name="dw_banner_content_padding_bottom" value="<?php echo esc_attr($content_padding_bottom); ?>" class="small-text" min="0" step="5" />
                         </div>
                         <div>
-                            <label for="dw_banner_content_padding_left" style="display:block;margin-bottom:5px;"><?php _e('왼쪽 (px)', 'dasom-church'); ?></label>
+                            <label for="dw_banner_content_padding_left" style="display:block;margin-bottom:5px;"><?php _e('?�쪽 (px)', 'dw-church'); ?></label>
                             <input type="number" id="dw_banner_content_padding_left" name="dw_banner_content_padding_left" value="<?php echo esc_attr($content_padding_left); ?>" class="small-text" min="0" step="5" />
                         </div>
                     </div>
-                    <p class="description" style="margin-top:10px;"><?php _e('텍스트 콘텐츠의 여백을 픽셀 단위로 설정하세요. 기본값: 40px', 'dasom-church'); ?></p>
+                    <p class="description" style="margin-top:10px;"><?php _e('?�스??콘텐츠의 ?�백???��? ?�위�??�정?�세?? 기본�? 40px', 'dw-church'); ?></p>
                 </td>
             </tr>
             
             <tr>
                 <th scope="row">
-                    <label for="dw_banner_link_url"><?php _e('링크 URL', 'dasom-church'); ?></label>
+                    <label for="dw_banner_link_url"><?php _e('링크 URL', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="url" id="dw_banner_link_url" name="dw_banner_link_url" value="<?php echo esc_url($link_url); ?>" class="regular-text" placeholder="https://" style="width:70%;" />
                     <label style="margin-left:15px;">
                         <input type="checkbox" id="dw_banner_link_target" name="dw_banner_link_target" value="_blank" <?php checked($link_target, '_blank'); ?> />
-                        <?php _e('새창으로 열기', 'dasom-church'); ?>
+                        <?php _e('?�창?�로 ?�기', 'dw-church'); ?>
                     </label>
-                    <p class="description"><?php _e('배너 전체 영역 클릭 시 이동할 URL을 입력하세요.', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('배너 ?�체 ?�역 ?�릭 ???�동??URL???�력?�세??', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_banner_start_date"><?php _e('배너 시작 날짜', 'dasom-church'); ?></label>
+                    <label for="dw_banner_start_date"><?php _e('배너 ?�작 ?�짜', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="datetime-local" id="dw_banner_start_date" name="dw_banner_start_date" value="<?php echo esc_attr($start_date); ?>" class="regular-text" />
-                    <button type="button" class="button" id="dw_banner_start_date_reset" style="margin-left:5px;"><?php _e('Reset', 'dasom-church'); ?></button>
-                    <p class="description"><?php _e('이 날짜부터 배너가 표시됩니다. 비워두면 즉시 표시됩니다.', 'dasom-church'); ?></p>
+                    <button type="button" class="button" id="dw_banner_start_date_reset" style="margin-left:5px;"><?php _e('Reset', 'dw-church'); ?></button>
+                    <p class="description"><?php _e('???�짜부??배너가 ?�시?�니?? 비워?�면 즉시 ?�시?�니??', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_banner_end_date"><?php _e('배너 종료 날짜', 'dasom-church'); ?></label>
+                    <label for="dw_banner_end_date"><?php _e('배너 종료 ?�짜', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="datetime-local" id="dw_banner_end_date" name="dw_banner_end_date" value="<?php echo esc_attr($end_date); ?>" class="regular-text" />
-                    <button type="button" class="button" id="dw_banner_end_date_reset" style="margin-left:5px;"><?php _e('Reset', 'dasom-church'); ?></button>
-                    <p class="description"><?php _e('이 날짜 이후 배너가 자동으로 비공개(Draft)로 전환됩니다. 비워두면 무기한 표시됩니다.', 'dasom-church'); ?></p>
+                    <button type="button" class="button" id="dw_banner_end_date_reset" style="margin-left:5px;"><?php _e('Reset', 'dw-church'); ?></button>
+                    <p class="description"><?php _e('???�짜 ?�후 배너가 ?�동?�로 비공�?Draft)�??�환?�니?? 비워?�면 무기???�시?�니??', 'dw-church'); ?></p>
                 </td>
             </tr>
         </table>
@@ -767,7 +767,7 @@ class Dasom_Church_Meta_Boxes {
     }
     
     /**
-     * 이벤트 메타박스
+     * ?�벤??메�?박스
      */
     public function dasom_church_event_meta_box($post) {
         wp_nonce_field('dasom_church_event_meta', 'dasom_church_event_nonce');
@@ -783,21 +783,21 @@ class Dasom_Church_Meta_Boxes {
         ?>
         <div style="background:#f9f9f9;padding:15px;margin-bottom:20px;border:1px solid #ddd;border-radius:4px;">
             <p style="margin:0;font-size:13px;color:#666;">
-                <strong><?php _e('이벤트 정보:', 'dasom-church'); ?></strong><br>
-                • <?php _e('배경 이미지 위에 이벤트 제목, 날짜/시간, Read More 버튼이 표시됩니다.', 'dasom-church'); ?><br>
-                • <?php _e('YouTube 링크를 입력하면 썸네일을 자동으로 가져올 수 있습니다.', 'dasom-church'); ?>
+                <strong><?php _e('?�벤???�보:', 'dw-church'); ?></strong><br>
+                ??<?php _e('배경 ?��?지 ?�에 ?�벤???�목, ?�짜/?�간, Read More 버튼???�시?�니??', 'dw-church'); ?><br>
+                ??<?php _e('YouTube 링크�??�력?�면 ?�네?�을 ?�동?�로 가?�올 ???�습?�다.', 'dw-church'); ?>
             </p>
         </div>
         
         <table class="form-table">
             <tr>
                 <th scope="row">
-                    <label for="dw_event_bg_image"><?php _e('배경 이미지', 'dasom-church'); ?></label>
+                    <label for="dw_event_bg_image"><?php _e('배경 ?��?지', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="hidden" id="dw_event_bg_image" name="dw_event_bg_image" value="<?php echo esc_attr($bg_image); ?>" />
-                    <button type="button" class="button" id="dw_event_bg_image_button"><?php _e('이미지 업로드', 'dasom-church'); ?></button>
-                    <button type="button" class="button button-link-delete" id="dw_event_bg_image_remove" style="color:#b32d2e;"><?php _e('이미지 삭제', 'dasom-church'); ?></button>
+                    <button type="button" class="button" id="dw_event_bg_image_button"><?php _e('?��?지 ?�로??, 'dw-church'); ?></button>
+                    <button type="button" class="button button-link-delete" id="dw_event_bg_image_remove" style="color:#b32d2e;"><?php _e('?��?지 ??��', 'dw-church'); ?></button>
                     <div id="dw_event_bg_image_preview" style="margin-top:10px;">
                         <?php if ($bg_image): ?>
                             <img src="<?php echo esc_url(wp_get_attachment_url($bg_image)); ?>" style="max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;" />
@@ -807,68 +807,68 @@ class Dasom_Church_Meta_Boxes {
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_event_department"><?php _e('부서', 'dasom-church'); ?></label>
+                    <label for="dw_event_department"><?php _e('부??, 'dw-church'); ?></label>
                 </th>
                 <td>
-                    <input type="text" id="dw_event_department" name="dw_event_department" value="<?php echo esc_attr($event_department); ?>" class="regular-text" placeholder="예: 청년부, 유년부" />
-                    <p class="description"><?php _e('이벤트를 주관하는 부서를 입력하세요.', 'dasom-church'); ?></p>
+                    <input type="text" id="dw_event_department" name="dw_event_department" value="<?php echo esc_attr($event_department); ?>" class="regular-text" placeholder="?? �?��부, ?�년부" />
+                    <p class="description"><?php _e('?�벤?��? 주�??�는 부?��? ?�력?�세??', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_event_datetime"><?php _e('이벤트 날짜 및 시간', 'dasom-church'); ?></label>
+                    <label for="dw_event_datetime"><?php _e('?�벤???�짜 �??�간', 'dw-church'); ?></label>
                 </th>
                 <td>
-                    <input type="text" id="dw_event_datetime" name="dw_event_datetime" value="<?php echo esc_attr($event_datetime); ?>" class="regular-text" placeholder="예: 2025년 12월 25일 오후 3시" />
-                    <p class="description"><?php _e('이벤트가 열리는 날짜와 시간을 입력하세요. (자유 텍스트)', 'dasom-church'); ?></p>
+                    <input type="text" id="dw_event_datetime" name="dw_event_datetime" value="<?php echo esc_attr($event_datetime); ?>" class="regular-text" placeholder="?? 2025??12??25???�후 3?? />
+                    <p class="description"><?php _e('?�벤?��? ?�리???�짜?�??�간???�력?�세?? (?�유 ?�스??', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_event_url"><?php _e('이벤트 URL', 'dasom-church'); ?></label>
+                    <label for="dw_event_url"><?php _e('?�벤??URL', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="url" id="dw_event_url" name="dw_event_url" value="<?php echo esc_url($event_url); ?>" class="regular-text" placeholder="https://example.com" style="width:70%;" />
                     <label style="margin-left:15px;">
                         <input type="checkbox" id="dw_event_url_target" name="dw_event_url_target" value="_blank" <?php checked($event_url_target, '_blank'); ?> />
-                        <?php _e('새창으로 열기', 'dasom-church'); ?>
+                        <?php _e('?�창?�로 ?�기', 'dw-church'); ?>
                     </label>
-                    <p class="description"><?php _e('이벤트 상세 페이지 또는 외부 링크 URL을 입력하세요.', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('?�벤???�세 ?�이지 ?�는 ?��? 링크 URL???�력?�세??', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_event_description"><?php _e('행사 설명', 'dasom-church'); ?></label>
+                    <label for="dw_event_description"><?php _e('?�사 ?�명', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <textarea id="dw_event_description" name="dw_event_description" class="large-text" rows="4"><?php echo esc_textarea($event_description); ?></textarea>
-                    <p class="description"><?php _e('이벤트에 대한 설명을 입력하세요.', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('?�벤?�에 ?�???�명???�력?�세??', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_event_youtube_url"><?php _e('YouTube URL', 'dasom-church'); ?></label>
+                    <label for="dw_event_youtube_url"><?php _e('YouTube URL', 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="url" id="dw_event_youtube_url" name="dw_event_youtube_url" value="<?php echo esc_url($youtube_url); ?>" class="regular-text" placeholder="https://www.youtube.com/watch?v=..." />
-                    <p class="description"><?php _e('YouTube 비디오 링크를 입력하세요.', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('YouTube 비디??링크�??�력?�세??', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="dw_event_thumb_id"><?php _e('YouTube 썸네일', 'dasom-church'); ?></label>
+                    <label for="dw_event_thumb_id"><?php _e('YouTube ?�네??, 'dw-church'); ?></label>
                 </th>
                 <td>
                     <input type="hidden" id="dw_event_thumb_id" name="dw_event_thumb_id" value="<?php echo esc_attr($thumb_id); ?>" />
-                    <button type="button" class="button" id="dw_event_thumb_button"><?php _e('썸네일 업로드/선택', 'dasom-church'); ?></button>
-                    <button type="button" class="button" id="dw_event_thumb_fetch"><?php _e('YouTube 썸네일 불러오기', 'dasom-church'); ?></button>
-                    <button type="button" class="button button-link-delete" id="dw_event_thumb_remove" style="color:#b32d2e;"><?php _e('썸네일 삭제', 'dasom-church'); ?></button>
+                    <button type="button" class="button" id="dw_event_thumb_button"><?php _e('?�네???�로???�택', 'dw-church'); ?></button>
+                    <button type="button" class="button" id="dw_event_thumb_fetch"><?php _e('YouTube ?�네??불러?�기', 'dw-church'); ?></button>
+                    <button type="button" class="button button-link-delete" id="dw_event_thumb_remove" style="color:#b32d2e;"><?php _e('?�네????��', 'dw-church'); ?></button>
                     <div id="dw_event_thumb_preview" style="margin-top:10px;">
                         <?php if ($thumb_id): ?>
                             <img src="<?php echo esc_url(wp_get_attachment_url($thumb_id)); ?>" style="width:160px;height:90px;object-fit:cover;" />
                         <?php endif; ?>
                     </div>
-                    <p class="description"><?php _e('미리보기만 표시됩니다. 저장 시 썸네일이 대표 이미지로 등록됩니다.', 'dasom-church'); ?></p>
+                    <p class="description"><?php _e('미리보기�??�시?�니?? ?�?????�네?�이 ?�???��?지�??�록?�니??', 'dw-church'); ?></p>
                 </td>
             </tr>
         </table>
@@ -958,7 +958,7 @@ class Dasom_Church_Meta_Boxes {
         // Auto-generate title
         $date = get_post_meta($post_id, 'dw_bulletin_date', true);
         if ($date) {
-            $new_title = date_i18n('Y년 n월 j일', strtotime($date)) . ' ' . __('교회주보', 'dasom-church');
+            $new_title = date_i18n('Y??n??j??, strtotime($date)) . ' ' . __('교회주보', 'dw-church');
             $post = get_post($post_id);
             if ($post && $post->post_title !== $new_title) {
                 // Remove this action to prevent infinite loop
@@ -1029,7 +1029,7 @@ class Dasom_Church_Meta_Boxes {
                 wp_set_post_terms($post_id, array($preacher_id), 'dw_sermon_preacher', false);
             } else {
                 // Apply default preacher
-                $def = get_option('default_sermon_preacher', __('담임목사', 'dasom-church'));
+                $def = get_option('default_sermon_preacher', __('?�임목사', 'dw-church'));
                 if ($def) {
                     $term = get_term_by('name', $def, 'dw_sermon_preacher');
                     if ($term && !is_wp_error($term)) {
@@ -1127,14 +1127,14 @@ class Dasom_Church_Meta_Boxes {
                     $first_image_id = intval($images[0]);
                     if ($first_image_id > 0) {
                         set_post_thumbnail($post_id, $first_image_id);
-                        // album_thumb_id는 YouTube 썸네일용이므로 건드리지 않음
+                        // album_thumb_id??YouTube ?�네?�용?��?�?건드리�? ?�음
                     }
                 }
             }
         }
         
-        // 교회앨범에서는 YouTube 썸네일이 Featured Image를 대체하지 않음
-        // YouTube 썸네일은 별도 필드로만 관리됨
+        // 교회?�범?�서??YouTube ?�네?�이 Featured Image�??�체?��? ?�음
+        // YouTube ?�네?��? 별도 ?�드로만 관리됨
     }
     
     /**
@@ -1373,7 +1373,7 @@ class Dasom_Church_Meta_Boxes {
         }
     }
     
-    // Quick Edit functionality is handled by Dasom_Church_Columns class
+    // Quick Edit functionality is handled by DW_Church_Columns class
     
     /**
      * Admin scripts
@@ -1395,7 +1395,7 @@ class Dasom_Church_Meta_Boxes {
         
         // Enqueue admin.js file
         wp_enqueue_script(
-            'dasom-church-admin',
+            'dw-church-admin',
             DASOM_CHURCH_PLUGIN_URL . 'assets/js/admin.js',
             array('jquery', 'jquery-ui-sortable'),
             DASOM_CHURCH_VERSION,
@@ -1403,18 +1403,18 @@ class Dasom_Church_Meta_Boxes {
         );
         
         // Localize script for translations
-        wp_localize_script('dasom-church-admin', 'dasomChurchAdmin', array(
+        wp_localize_script('dw-church-admin', 'dwChurchAdmin', array(
             'strings' => array(
-                'uploadPdf' => __('주보 PDF 업로드', 'dasom-church'),
-                'select' => __('선택', 'dasom-church'),
-                'add' => __('추가', 'dasom-church'),
-                'uploadImages' => __('이미지 업로드', 'dasom-church'),
-                'uploadThumbnail' => __('썸네일 업로드', 'dasom-church'),
-                'uploadAlbumImages' => __('앨범 이미지 업로드', 'dasom-church'),
-                'enterYoutubeUrl' => __('먼저 YouTube URL을 입력하세요.', 'dasom-church'),
-                'invalidUrl' => __('유효하지 않은 YouTube URL입니다.', 'dasom-church'),
-                'validationError' => __('오류를 수정한 후 다시 시도하세요.', 'dasom-church'),
-                'viewPdf' => __('선택된 PDF 보기', 'dasom-church'),
+                'uploadPdf' => __('주보 PDF ?�로??, 'dw-church'),
+                'select' => __('?�택', 'dw-church'),
+                'add' => __('추�?', 'dw-church'),
+                'uploadImages' => __('?��?지 ?�로??, 'dw-church'),
+                'uploadThumbnail' => __('?�네???�로??, 'dw-church'),
+                'uploadAlbumImages' => __('?�범 ?��?지 ?�로??, 'dw-church'),
+                'enterYoutubeUrl' => __('먼�? YouTube URL???�력?�세??', 'dw-church'),
+                'invalidUrl' => __('?�효?��? ?��? YouTube URL?�니??', 'dw-church'),
+                'validationError' => __('?�류�??�정?????�시 ?�도?�세??', 'dw-church'),
+                'viewPdf' => __('?�택??PDF 보기', 'dw-church'),
             )
         ));
     }
@@ -1446,29 +1446,29 @@ class Dasom_Church_Meta_Boxes {
     private function dasom_church_get_admin_script() {
         return "
         jQuery(document).ready(function($) {
-            // PDF 업로더
+            // PDF ?�로??
             $('#dw_bulletin_pdf_button').on('click', function(e) {
                 e.preventDefault();
                 var frame = wp.media({
-                    title: '주보 PDF 업로드',
-                    button: {text: '선택'},
+                    title: '주보 PDF ?�로??,
+                    button: {text: '?�택'},
                     library: {type: 'application/pdf'},
                     multiple: false
                 });
                 frame.on('select', function() {
                     var attachment = frame.state().get('selection').first().toJSON();
                     $('#dw_bulletin_pdf').val(attachment.id);
-                    $('#bulletin_pdf_preview').html('<a href=\"' + attachment.url + '\" target=\"_blank\">선택된 PDF 보기</a>');
+                    $('#bulletin_pdf_preview').html('<a href=\"' + attachment.url + '\" target=\"_blank\">?�택??PDF 보기</a>');
                 });
                 frame.open();
             });
             
-            // 이미지 멀티 업로더
+            // ?��?지 멀???�로??
             $('#dw_bulletin_images_button, #dw_album_images_button').on('click', function(e) {
                 e.preventDefault();
                 var frame = wp.media({
-                    title: '이미지 업로드',
-                    button: {text: '추가'},
+                    title: '?��?지 ?�로??,
+                    button: {text: '추�?'},
                     library: {type: 'image'},
                     multiple: true
                 });
@@ -1490,12 +1490,12 @@ class Dasom_Church_Meta_Boxes {
                     });
                     $('#dw_bulletin_images, #dw_album_images').val(JSON.stringify(ids));
                     
-                    // 앨범 이미지 추가 시 Featured Image는 PHP에서 처리 (JavaScript에서는 thumb_id 건드리지 않음)
+                    // ?�범 ?��?지 추�? ??Featured Image??PHP?�서 처리 (JavaScript?�서??thumb_id 건드리�? ?�음)
                 });
                 frame.open();
             });
             
-            // 이미지 제거
+            // ?��?지 ?�거
             $(document).on('click', '.remove-image', function() {
                 $(this).parent().remove();
                 var ids = [];
@@ -1504,10 +1504,10 @@ class Dasom_Church_Meta_Boxes {
                 });
                 $('#dw_bulletin_images, #dw_album_images').val(JSON.stringify(ids));
                 
-                // 앨범 이미지 제거 시 Featured Image는 PHP에서 처리 (JavaScript에서는 thumb_id 건드리지 않음)
+                // ?�범 ?��?지 ?�거 ??Featured Image??PHP?�서 처리 (JavaScript?�서??thumb_id 건드리�? ?�음)
             });
             
-            // 주보 이미지 정렬 (성능 최적화)
+            // 주보 ?��?지 ?�렬 (?�능 최적??
             $('#dw_bulletin_images_preview').sortable({
                 items: 'li',
                 cursor: 'move',
@@ -1527,7 +1527,7 @@ class Dasom_Church_Meta_Boxes {
                 }
             });
             
-            // 앨범 이미지 정렬 (성능 최적화)
+            // ?�범 ?��?지 ?�렬 (?�능 최적??
             $('#dw_album_images_preview').sortable({
                 items: 'li',
                 cursor: 'move',
@@ -1547,12 +1547,12 @@ class Dasom_Church_Meta_Boxes {
                 }
             });
             
-            // 썸네일 업로드
+            // ?�네???�로??
             $('#dw_sermon_thumb_button, #dw_album_thumb_button, #dw_column_thumb_button, #dw_column_top_image_button, #dw_column_bottom_image_button').on('click', function(e) {
                 e.preventDefault();
                 var frame = wp.media({
-                    title: '이미지 업로드',
-                    button: {text: '선택'},
+                    title: '?��?지 ?�로??,
+                    button: {text: '?�택'},
                     library: {type: 'image'},
                     multiple: false
                 });
@@ -1580,7 +1580,7 @@ class Dasom_Church_Meta_Boxes {
                 frame.open();
             });
             
-            // YouTube 썸네일 불러오기 (설교, 목회컬럼, 교회앨범, 이벤트)
+            // YouTube ?�네??불러?�기 (?�교, 목회컬럼, 교회?�범, ?�벤??
             $('#dw_sermon_thumb_fetch, #dw_column_thumb_fetch, #dw_album_thumb_fetch, #dw_event_thumb_fetch').on('click', function(e) {
                 e.preventDefault();
                 var buttonId = $(e.target).attr('id');
@@ -1627,16 +1627,16 @@ class Dasom_Church_Meta_Boxes {
                     };
                     img.src = max;
                 } else {
-                    alert('유효한 YouTube URL이 아닙니다.');
+                    alert('?�효??YouTube URL???�닙?�다.');
                 }
             });
             
-            // YouTube 썸네일 삭제 (설교, 목회컬럼, 교회앨범, 이벤트)
+            // YouTube ?�네????�� (?�교, 목회컬럼, 교회?�범, ?�벤??
             $('#dw_sermon_thumb_remove, #dw_column_thumb_remove, #dw_album_thumb_remove, #dw_event_thumb_remove').on('click', function(e) {
                 e.preventDefault();
                 var buttonId = $(e.target).attr('id');
                 
-                if (confirm('썸네일을 삭제하시겠습니까?')) {
+                if (confirm('?�네?�을 ??��?�시겠습?�까?')) {
                     if (buttonId === 'dw_sermon_thumb_remove') {
                         $('#dw_sermon_thumb_id').val('');
                         $('#dw_sermon_thumb_preview').html('');
@@ -1653,12 +1653,12 @@ class Dasom_Church_Meta_Boxes {
                 }
             });
             
-            // 배너 PC 이미지 업로드
+            // 배너 PC ?��?지 ?�로??
             $('#dw_banner_pc_image_button').on('click', function(e) {
                 e.preventDefault();
                 var frame = wp.media({
-                    title: 'PC용 배너 이미지 업로드',
-                    button: {text: '선택'},
+                    title: 'PC??배너 ?��?지 ?�로??,
+                    button: {text: '?�택'},
                     library: {type: 'image'},
                     multiple: false
                 });
@@ -1670,21 +1670,21 @@ class Dasom_Church_Meta_Boxes {
                 frame.open();
             });
             
-            // 배너 PC 이미지 삭제
+            // 배너 PC ?��?지 ??��
             $('#dw_banner_pc_image_remove').on('click', function(e) {
                 e.preventDefault();
-                if (confirm('PC용 이미지를 삭제하시겠습니까?')) {
+                if (confirm('PC???��?지�???��?�시겠습?�까?')) {
                     $('#dw_banner_pc_image').val('');
                     $('#dw_banner_pc_image_preview').html('');
                 }
             });
             
-            // 배너 모바일 이미지 업로드
+            // 배너 모바???��?지 ?�로??
             $('#dw_banner_mobile_image_button').on('click', function(e) {
                 e.preventDefault();
                 var frame = wp.media({
-                    title: '모바일용 배너 이미지 업로드',
-                    button: {text: '선택'},
+                    title: '모바?�용 배너 ?��?지 ?�로??,
+                    button: {text: '?�택'},
                     library: {type: 'image'},
                     multiple: false
                 });
@@ -1696,21 +1696,21 @@ class Dasom_Church_Meta_Boxes {
                 frame.open();
             });
             
-            // 배너 모바일 이미지 삭제
+            // 배너 모바???��?지 ??��
             $('#dw_banner_mobile_image_remove').on('click', function(e) {
                 e.preventDefault();
-                if (confirm('모바일용 이미지를 삭제하시겠습니까?')) {
+                if (confirm('모바?�용 ?��?지�???��?�시겠습?�까?')) {
                     $('#dw_banner_mobile_image').val('');
                     $('#dw_banner_mobile_image_preview').html('');
                 }
             });
             
-            // 배너 서브 이미지 업로드
+            // 배너 ?�브 ?��?지 ?�로??
             $('#dw_banner_sub_image_button').on('click', function(e) {
                 e.preventDefault();
                 var frame = wp.media({
-                    title: '서브 배너 이미지 업로드',
-                    button: {text: '선택'},
+                    title: '?�브 배너 ?��?지 ?�로??,
+                    button: {text: '?�택'},
                     library: {type: 'image'},
                     multiple: false
                 });
@@ -1722,33 +1722,33 @@ class Dasom_Church_Meta_Boxes {
                 frame.open();
             });
             
-            // 배너 서브 이미지 삭제
+            // 배너 ?�브 ?��?지 ??��
             $('#dw_banner_sub_image_remove').on('click', function(e) {
                 e.preventDefault();
-                if (confirm('서브 배너 이미지를 삭제하시겠습니까?')) {
+                if (confirm('?�브 배너 ?��?지�???��?�시겠습?�까?')) {
                     $('#dw_banner_sub_image').val('');
                     $('#dw_banner_sub_image_preview').html('');
                 }
             });
             
-            // 배너 시작 날짜 리셋
+            // 배너 ?�작 ?�짜 리셋
             $('#dw_banner_start_date_reset').on('click', function(e) {
                 e.preventDefault();
                 $('#dw_banner_start_date').val('');
             });
             
-            // 배너 종료 날짜 리셋
+            // 배너 종료 ?�짜 리셋
             $('#dw_banner_end_date_reset').on('click', function(e) {
                 e.preventDefault();
                 $('#dw_banner_end_date').val('');
             });
             
-            // Event 배경 이미지 업로드
+            // Event 배경 ?��?지 ?�로??
             $('#dw_event_bg_image_button').on('click', function(e) {
                 e.preventDefault();
                 var frame = wp.media({
-                    title: '배경 이미지 업로드',
-                    button: {text: '선택'},
+                    title: '배경 ?��?지 ?�로??,
+                    button: {text: '?�택'},
                     library: {type: 'image'},
                     multiple: false
                 });
@@ -1760,10 +1760,10 @@ class Dasom_Church_Meta_Boxes {
                 frame.open();
             });
             
-            // Event 배경 이미지 삭제
+            // Event 배경 ?��?지 ??��
             $('#dw_event_bg_image_remove').on('click', function(e) {
                 e.preventDefault();
-                if (confirm('이미지를 삭제하시겠습니까?')) {
+                if (confirm('?��?지�???��?�시겠습?�까?')) {
                     $('#dw_event_bg_image').val('');
                     $('#dw_event_bg_image_preview').html('');
                 }
@@ -1844,4 +1844,4 @@ class Dasom_Church_Meta_Boxes {
 }
 
 // Initialize the meta boxes
-Dasom_Church_Meta_Boxes::get_instance();
+DW_Church_Meta_Boxes::get_instance();

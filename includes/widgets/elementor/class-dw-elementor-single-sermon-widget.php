@@ -2,7 +2,7 @@
 /**
  * DW Single Sermon Widget for Elementor
  *
- * @package Dasom_Church
+ * @package DW_Church
  * @since 1.12.0
  */
 
@@ -17,7 +17,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
     }
 
     public function get_title() {
-        return __('DW Sermon', 'dasom-church');
+        return __('DW Sermon', 'dw-church');
     }
 
     public function get_icon() {
@@ -34,7 +34,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'content_section',
             [
-                'label' => __('설교 선택', 'dasom-church'),
+                'label' => __('?�교 ?�택', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
             ]
         );
@@ -42,29 +42,29 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'widget_layout',
             [
-                'label' => __('위젯 레이아웃', 'dasom-church'),
+                'label' => __('?�젯 ?�이?�웃', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'classic',
                 'options' => [
-                    'classic' => __('Classic (제목 → 메타 → 비디오)', 'dasom-church'),
-                    'video_first' => __('Video First (비디오 → 메타/제목)', 'dasom-church'),
+                    'classic' => __('Classic (?�목 ??메�? ??비디??', 'dw-church'),
+                    'video_first' => __('Video First (비디????메�?/?�목)', 'dw-church'),
                 ],
-                'description' => __('위젯의 전체 레이아웃을 선택하세요.', 'dasom-church'),
+                'description' => __('?�젯???�체 ?�이?�웃???�택?�세??', 'dw-church'),
             ]
         );
         
         $this->add_control(
             'query_source',
             [
-                'label' => __('Query Source', 'dasom-church'),
+                'label' => __('Query Source', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'latest',
                 'options' => [
-                    'current' => __('Current Post (현재 포스트)', 'dasom-church'),
-                    'latest' => __('Latest Post (최신 설교)', 'dasom-church'),
-                    'manual' => __('Manual Selection (수동 선택)', 'dasom-church'),
+                    'current' => __('Current Post (?�재 ?�스??', 'dw-church'),
+                    'latest' => __('Latest Post (최신 ?�교)', 'dw-church'),
+                    'manual' => __('Manual Selection (?�동 ?�택)', 'dw-church'),
                 ],
-                'description' => __('설교 데이터를 불러올 소스를 선택하세요.', 'dasom-church'),
+                'description' => __('?�교 ?�이?��? 불러???�스�??�택?�세??', 'dw-church'),
             ]
         );
         
@@ -89,39 +89,39 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'sermon_id',
             [
-                'label' => __('설교 선택', 'dasom-church'),
+                'label' => __('?�교 ?�택', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'options' => $sermon_options,
                 'condition' => [
                     'query_source' => 'manual',
                 ],
-                'description' => __('표시할 설교를 선택하세요.', 'dasom-church'),
+                'description' => __('?�시???�교�??�택?�세??', 'dw-church'),
             ]
         );
         
         $this->add_control(
             'fallback_to_latest',
             [
-                'label' => __('Fallback to Latest', 'dasom-church'),
+                'label' => __('Fallback to Latest', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
+                'label_on' => __('Yes', 'dw-church'),
+                'label_off' => __('No', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
                 'condition' => [
                     'query_source' => 'current',
                 ],
-                'description' => __('현재 포스트가 설교가 아닐 경우 최신 설교를 표시합니다.', 'dasom-church'),
+                'description' => __('?�재 ?�스?��? ?�교가 ?�닐 경우 최신 ?�교�??�시?�니??', 'dw-church'),
             ]
         );
         
         $this->add_control(
             'show_date',
             [
-                'label' => __('날짜 표시', 'dasom-church'),
+                'label' => __('?�짜 ?�시', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
+                'label_on' => __('Yes', 'dw-church'),
+                'label_off' => __('No', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
             ]
@@ -130,10 +130,10 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'show_scripture',
             [
-                'label' => __('성경구절 표시', 'dasom-church'),
+                'label' => __('?�경구절 ?�시', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
+                'label_on' => __('Yes', 'dw-church'),
+                'label_off' => __('No', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
             ]
@@ -142,10 +142,10 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'show_preacher',
             [
-                'label' => __('설교자 표시', 'dasom-church'),
+                'label' => __('?�교???�시', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
+                'label_on' => __('Yes', 'dw-church'),
+                'label_off' => __('No', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
             ]
@@ -154,10 +154,10 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'show_video',
             [
-                'label' => __('비디오 표시', 'dasom-church'),
+                'label' => __('비디???�시', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'dasom-church'),
-                'label_off' => __('No', 'dasom-church'),
+                'label_on' => __('Yes', 'dw-church'),
+                'label_off' => __('No', 'dw-church'),
                 'return_value' => 'yes',
                 'default' => 'yes',
             ]
@@ -166,7 +166,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'video_aspect_ratio',
             [
-                'label' => __('비디오 비율', 'dasom-church'),
+                'label' => __('비디??비율', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => '16-9',
                 'options' => [
@@ -186,7 +186,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'style_title',
             [
-                'label' => __('제목 스타일', 'dasom-church'),
+                'label' => __('?�목 ?��???, 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
@@ -194,19 +194,19 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'title_alignment',
             [
-                'label' => __('정렬', 'dasom-church'),
+                'label' => __('?�렬', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::CHOOSE,
                 'options' => [
                     'left' => [
-                        'title' => __('Left', 'dasom-church'),
+                        'title' => __('Left', 'dw-church'),
                         'icon' => 'eicon-text-align-left',
                     ],
                     'center' => [
-                        'title' => __('Center', 'dasom-church'),
+                        'title' => __('Center', 'dw-church'),
                         'icon' => 'eicon-text-align-center',
                     ],
                     'right' => [
-                        'title' => __('Right', 'dasom-church'),
+                        'title' => __('Right', 'dw-church'),
                         'icon' => 'eicon-text-align-right',
                     ],
                 ],
@@ -221,7 +221,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Typography::get_type(),
             [
                 'name' => 'title_typography',
-                'label' => __('타이포그래피', 'dasom-church'),
+                'label' => __('?�?�포그래??, 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-single-sermon-title',
             ]
         );
@@ -229,7 +229,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'title_color',
             [
-                'label' => __('색상', 'dasom-church'),
+                'label' => __('?�상', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#333',
                 'selectors' => [
@@ -241,7 +241,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'title_spacing',
             [
-                'label' => __('하단 간격', 'dasom-church'),
+                'label' => __('?�단 간격', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -268,7 +268,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'title_padding',
             [
-                'label' => __('패딩', 'dasom-church'),
+                'label' => __('?�딩', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', 'em', '%'],
                 'default' => [
@@ -297,7 +297,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'style_meta',
             [
-                'label' => __('메타 정보 스타일', 'dasom-church'),
+                'label' => __('메�? ?�보 ?��???, 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
@@ -305,12 +305,12 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'meta_layout',
             [
-                'label' => __('레이아웃', 'dasom-church'),
+                'label' => __('?�이?�웃', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'inline',
                 'options' => [
-                    'inline' => __('Inline (한 줄)', 'dasom-church'),
-                    'stack' => __('Stack (세로 정렬)', 'dasom-church'),
+                    'inline' => __('Inline (??�?', 'dw-church'),
+                    'stack' => __('Stack (?�로 ?�렬)', 'dw-church'),
                 ],
             ]
         );
@@ -318,19 +318,19 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'meta_alignment',
             [
-                'label' => __('정렬', 'dasom-church'),
+                'label' => __('?�렬', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::CHOOSE,
                 'options' => [
                     'left' => [
-                        'title' => __('Left', 'dasom-church'),
+                        'title' => __('Left', 'dw-church'),
                         'icon' => 'eicon-text-align-left',
                     ],
                     'center' => [
-                        'title' => __('Center', 'dasom-church'),
+                        'title' => __('Center', 'dw-church'),
                         'icon' => 'eicon-text-align-center',
                     ],
                     'right' => [
-                        'title' => __('Right', 'dasom-church'),
+                        'title' => __('Right', 'dw-church'),
                         'icon' => 'eicon-text-align-right',
                     ],
                 ],
@@ -345,7 +345,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'meta_item_spacing',
             [
-                'label' => __('항목 간격', 'dasom-church'),
+                'label' => __('??�� 간격', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -370,7 +370,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Typography::get_type(),
             [
                 'name' => 'meta_typography',
-                'label' => __('타이포그래피', 'dasom-church'),
+                'label' => __('?�?�포그래??, 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-single-sermon-meta span, {{WRAPPER}} .dw-single-sermon-meta .meta-separator',
             ]
         );
@@ -378,7 +378,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'meta_color',
             [
-                'label' => __('색상', 'dasom-church'),
+                'label' => __('?�상', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#666',
                 'selectors' => [
@@ -390,7 +390,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'meta_separator',
             [
-                'label' => __('구분자', 'dasom-church'),
+                'label' => __('구분??, 'dw-church'),
                 'type' => \Elementor\Controls_Manager::TEXT,
                 'default' => '||',
             ]
@@ -399,7 +399,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'separator_size',
             [
-                'label' => __('구분자 크기', 'dasom-church'),
+                'label' => __('구분???�기', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px', 'em', 'rem'],
                 'range' => [
@@ -431,7 +431,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'separator_color',
             [
-                'label' => __('구분자 색상', 'dasom-church'),
+                'label' => __('구분???�상', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '#999',
                 'selectors' => [
@@ -443,7 +443,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'separator_spacing',
             [
-                'label' => __('구분자 좌우 간격', 'dasom-church'),
+                'label' => __('구분??좌우 간격', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -464,7 +464,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'separator_opacity',
             [
-                'label' => __('구분자 투명도', 'dasom-church'),
+                'label' => __('구분???�명??, 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'range' => [
                     'px' => [
@@ -485,14 +485,14 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'separator_valign',
             [
-                'label' => __('구분자 수직 정렬', 'dasom-church'),
+                'label' => __('구분???�직 ?�렬', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'middle',
                 'options' => [
-                    'top' => __('Top (상단)', 'dasom-church'),
-                    'middle' => __('Middle (중간)', 'dasom-church'),
-                    'bottom' => __('Bottom (하단)', 'dasom-church'),
-                    'baseline' => __('Baseline (기준선)', 'dasom-church'),
+                    'top' => __('Top (?�단)', 'dw-church'),
+                    'middle' => __('Middle (중간)', 'dw-church'),
+                    'bottom' => __('Bottom (?�단)', 'dw-church'),
+                    'baseline' => __('Baseline (기�???', 'dw-church'),
                 ],
                 'selectors' => [
                     '{{WRAPPER}} .dw-single-sermon-meta span' => 'vertical-align: {{VALUE}};',
@@ -504,7 +504,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'meta_spacing',
             [
-                'label' => __('하단 간격', 'dasom-church'),
+                'label' => __('?�단 간격', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -531,7 +531,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'meta_padding',
             [
-                'label' => __('패딩', 'dasom-church'),
+                'label' => __('?�딩', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', 'em', '%'],
                 'default' => [
@@ -560,7 +560,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'style_video',
             [
-                'label' => __('비디오 스타일', 'dasom-church'),
+                'label' => __('비디???��???, 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
@@ -568,7 +568,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'video_border_radius',
             [
-                'label' => __('모서리 둥글기', 'dasom-church'),
+                'label' => __('모서�??��?�?, 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => ['px'],
                 'range' => [
@@ -590,7 +590,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Box_Shadow::get_type(),
             [
                 'name' => 'video_box_shadow',
-                'label' => __('그림자', 'dasom-church'),
+                'label' => __('그림??, 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-single-sermon-video iframe',
             ]
         );
@@ -617,7 +617,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                 $query_source = 'latest'; // Fall through to latest logic
             } else {
                 echo '<div class="dw-sermon-notice" style="padding:20px;background:#f0f0f0;border-left:4px solid #2271b1;color:#333;">';
-                echo '<p style="margin:0;">' . __('⚠️ 현재 페이지는 설교 포스트가 아닙니다. 설교 상세 페이지에서 이 위젯을 사용하세요.', 'dasom-church') . '</p>';
+                echo '<p style="margin:0;">' . __('?�️ ?�재 ?�이지???�교 ?�스?��? ?�닙?�다. ?�교 ?�세 ?�이지?�서 ???�젯???�용?�세??', 'dw-church') . '</p>';
                 echo '</div>';
                 return;
             }
@@ -640,7 +640,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
             
             if (!$latest_sermon->have_posts()) {
                 echo '<div class="dw-sermon-notice" style="padding:20px;background:#fff3cd;border-left:4px solid #ffc107;color:#856404;">';
-                echo '<p style="margin:0;">' . __('⚠️ 설교가 없습니다.', 'dasom-church') . '</p>';
+                echo '<p style="margin:0;">' . __('?�️ ?�교가 ?�습?�다.', 'dw-church') . '</p>';
                 echo '</div>';
                 return;
             }
@@ -653,7 +653,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         // Validate sermon_id
         if (!$sermon_id || get_post_type($sermon_id) !== 'sermon') {
             echo '<div class="dw-sermon-notice" style="padding:20px;background:#f8d7da;border-left:4px solid #dc3545;color:#721c24;">';
-            echo '<p style="margin:0;">' . __('⚠️ 유효한 설교를 찾을 수 없습니다.', 'dasom-church') . '</p>';
+            echo '<p style="margin:0;">' . __('?�️ ?�효???�교�?찾을 ???�습?�다.', 'dw-church') . '</p>';
             echo '</div>';
             return;
         }
@@ -715,7 +715,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                         $meta_items = [];
                         
                         if (($settings['show_date'] ?? 'yes') === 'yes' && $sermon_date) {
-                            $meta_items[] = '<span class="meta-date">' . date_i18n('Y년 n월 j일', strtotime($sermon_date)) . '</span>';
+                            $meta_items[] = '<span class="meta-date">' . date_i18n('Y??n??j??, strtotime($sermon_date)) . '</span>';
                         }
                         
                         if (($settings['show_scripture'] ?? 'yes') === 'yes' && $scripture) {
@@ -764,7 +764,7 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
                     $meta_items = [];
                     
                     if (($settings['show_date'] ?? 'yes') === 'yes' && $sermon_date) {
-                        $meta_items[] = '<span class="meta-date">' . date_i18n('Y년 n월 j일', strtotime($sermon_date)) . '</span>';
+                        $meta_items[] = '<span class="meta-date">' . date_i18n('Y??n??j??, strtotime($sermon_date)) . '</span>';
                     }
                     
                     if (($settings['show_scripture'] ?? 'yes') === 'yes' && $scripture) {

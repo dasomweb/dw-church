@@ -2,7 +2,7 @@
 /**
  * Uninstall script for Dasom Church Management System
  *
- * @package Dasom_Church
+ * @package DW_Church
  * @since 1.0.0
  */
 

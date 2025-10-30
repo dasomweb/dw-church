@@ -2,7 +2,7 @@
 /**
  * DW Elementor Gallery Widget
  *
- * @package Dasom_Church
+ * @package DW_Church
  * @since 1.9.0
  */
 
@@ -24,7 +24,7 @@ class DW_Elementor_Gallery_Widget extends \Elementor\Widget_Base {
      * Get widget title
      */
     public function get_title() {
-        return __('DW Gallery', 'dasom-church');
+        return __('DW Gallery', 'dw-church');
     }
     
     /**
@@ -45,7 +45,7 @@ class DW_Elementor_Gallery_Widget extends \Elementor\Widget_Base {
      * Get widget keywords
      */
     public function get_keywords() {
-        return ['gallery', 'images', 'album', 'church', 'dw', '갤러리', '앨범'];
+        return ['gallery', 'images', 'album', 'church', 'dw', '갤러�?, '?�범'];
     }
     
     /**
@@ -57,7 +57,7 @@ class DW_Elementor_Gallery_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'dw_gallery_section',
             [
-                'label' => __('Gallery Source', 'dasom-church'),
+                'label' => __('Gallery Source', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
             ]
         );
@@ -65,25 +65,25 @@ class DW_Elementor_Gallery_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'meta_key',
             [
-                'label' => __('Meta Field Key', 'dasom-church'),
+                'label' => __('Meta Field Key', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::TEXT,
                 'default' => 'dw_album_images',
-                'description' => __('Enter the meta key containing comma-separated image IDs. Default: dw_album_images for Church Album', 'dasom-church'),
+                'description' => __('Enter the meta key containing comma-separated image IDs. Default: dw_album_images for Church Album', 'dw-church'),
             ]
         );
         
         $this->add_control(
             'image_size',
             [
-                'label' => __('Image Size', 'dasom-church'),
+                'label' => __('Image Size', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'medium',
                 'options' => [
-                    'thumbnail' => __('Thumbnail (150x150)', 'dasom-church'),
-                    'medium' => __('Medium (300x300)', 'dasom-church'),
-                    'medium_large' => __('Medium Large (768x768)', 'dasom-church'),
-                    'large' => __('Large (1024x1024)', 'dasom-church'),
-                    'full' => __('Full (Original)', 'dasom-church'),
+                    'thumbnail' => __('Thumbnail (150x150)', 'dw-church'),
+                    'medium' => __('Medium (300x300)', 'dw-church'),
+                    'medium_large' => __('Medium Large (768x768)', 'dw-church'),
+                    'large' => __('Large (1024x1024)', 'dw-church'),
+                    'full' => __('Full (Original)', 'dw-church'),
                 ],
             ]
         );
@@ -91,12 +91,12 @@ class DW_Elementor_Gallery_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'layout_type',
             [
-                'label' => __('Layout Type', 'dasom-church'),
+                'label' => __('Layout Type', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'grid',
                 'options' => [
-                    'grid' => __('Grid (Equal Heights)', 'dasom-church'),
-                    'masonry' => __('Masonry (Pinterest Style)', 'dasom-church'),
+                    'grid' => __('Grid (Equal Heights)', 'dw-church'),
+                    'masonry' => __('Masonry (Pinterest Style)', 'dw-church'),
                 ],
             ]
         );
@@ -104,26 +104,26 @@ class DW_Elementor_Gallery_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'columns',
             [
-                'label' => __('Columns', 'dasom-church'),
+                'label' => __('Columns', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::NUMBER,
                 'default' => 3,
                 'tablet_default' => 2,
                 'mobile_default' => 1,
                 'min' => 1,
                 'max' => 6,
-                'description' => __('Number of columns per row', 'dasom-church'),
+                'description' => __('Number of columns per row', 'dw-church'),
             ]
         );
         
         $this->add_responsive_control(
             'gap',
             [
-                'label' => __('Gap (px)', 'dasom-church'),
+                'label' => __('Gap (px)', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::NUMBER,
                 'default' => 10,
                 'min' => 0,
                 'max' => 50,
-                'description' => __('Space between images', 'dasom-church'),
+                'description' => __('Space between images', 'dw-church'),
             ]
         );
         
@@ -133,7 +133,7 @@ class DW_Elementor_Gallery_Widget extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'dw_gallery_style_section',
             [
-                'label' => __('Gallery Style', 'dasom-church'),
+                'label' => __('Gallery Style', 'dw-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
@@ -141,7 +141,7 @@ class DW_Elementor_Gallery_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'border_radius',
             [
-                'label' => __('Border Radius (px)', 'dasom-church'),
+                'label' => __('Border Radius (px)', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::NUMBER,
                 'default' => 8,
                 'min' => 0,
@@ -156,7 +156,7 @@ class DW_Elementor_Gallery_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Box_Shadow::get_type(),
             [
                 'name' => 'image_shadow',
-                'label' => __('Image Shadow', 'dasom-church'),
+                'label' => __('Image Shadow', 'dw-church'),
                 'selector' => '{{WRAPPER}} .dw-gallery-item img',
             ]
         );
@@ -164,13 +164,13 @@ class DW_Elementor_Gallery_Widget extends \Elementor\Widget_Base {
         $this->add_control(
             'hover_effect',
             [
-                'label' => __('Hover Effect', 'dasom-church'),
+                'label' => __('Hover Effect', 'dw-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'zoom',
                 'options' => [
-                    'none' => __('None', 'dasom-church'),
-                    'zoom' => __('Zoom In', 'dasom-church'),
-                    'opacity' => __('Opacity', 'dasom-church'),
+                    'none' => __('None', 'dw-church'),
+                    'zoom' => __('Zoom In', 'dw-church'),
+                    'opacity' => __('Opacity', 'dw-church'),
                 ],
             ]
         );
@@ -185,7 +185,7 @@ class DW_Elementor_Gallery_Widget extends \Elementor\Widget_Base {
         global $post;
         
         if (!$post) {
-            echo '<p>' . __('Please add this widget to a page or post.', 'dasom-church') . '</p>';
+            echo '<p>' . __('Please add this widget to a page or post.', 'dw-church') . '</p>';
             return;
         }
         
@@ -194,14 +194,14 @@ class DW_Elementor_Gallery_Widget extends \Elementor\Widget_Base {
         $raw = get_post_meta($post->ID, $meta_key, true);
         
         if (empty($raw)) {
-            echo '<p>' . __('No images found in this album.', 'dasom-church') . '</p>';
+            echo '<p>' . __('No images found in this album.', 'dw-church') . '</p>';
             return;
         }
         
         // Parse image IDs
         $ids = array_filter(array_map('intval', explode(',', $raw)));
         if (empty($ids)) {
-            echo '<p>' . __('No valid image IDs found.', 'dasom-church') . '</p>';
+            echo '<p>' . __('No valid image IDs found.', 'dw-church') . '</p>';
             return;
         }
         
@@ -378,8 +378,8 @@ class DW_Elementor_Gallery_Widget extends \Elementor\Widget_Base {
                     console.log('DW Gallery: Adding navigation to container', $container);
                     
                     // Add navigation buttons
-                    var $prevBtn = $('<button class="dw-lightbox-nav dw-lightbox-nav--prev" aria-label="Previous image">‹</button>');
-                    var $nextBtn = $('<button class="dw-lightbox-nav dw-lightbox-nav--next" aria-label="Next image">›</button>');
+                    var $prevBtn = $('<button class="dw-lightbox-nav dw-lightbox-nav--prev" aria-label="Previous image">??/button>');
+                    var $nextBtn = $('<button class="dw-lightbox-nav dw-lightbox-nav--next" aria-label="Next image">??/button>');
                     var $counter = $('<div class="dw-lightbox-counter"></div>');
                     
                     $container.append($prevBtn);
@@ -543,8 +543,8 @@ class DW_Elementor_Gallery_Widget extends \Elementor\Widget_Base {
                 <div style="background:#f0f0f0;padding:40px;text-align:center;border-radius:8px;">
                     <i class="eicon-gallery-grid" style="font-size:48px;color:#888;"></i>
                     <p style="margin:10px 0 0 0;color:#666;">
-                        <?php _e('Gallery Preview', 'dasom-church'); ?><br>
-                        <small><?php _e('Images will appear here on the frontend', 'dasom-church'); ?></small>
+                        <?php _e('Gallery Preview', 'dw-church'); ?><br>
+                        <small><?php _e('Images will appear here on the frontend', 'dw-church'); ?></small>
                     </p>
                 </div>
             </div>

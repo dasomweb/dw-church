@@ -40,12 +40,12 @@ class Test_Dashboard_Access {
         echo "Author can edit_posts: " . ($can_access ? 'YES' : 'NO') . "\n";
         
         // Test dashboard page function
-        $admin = Dasom_Church_Admin::get_instance();
+        $admin = DW_Church_Admin::get_instance();
         
         // Capture output
         ob_start();
         try {
-            $admin->dasom_church_dashboard_page();
+            $admin->DW_Church_dashboard_page();
             $output = ob_get_clean();
             echo "Dashboard page executed successfully\n";
             echo "Output length: " . strlen($output) . " characters\n";
@@ -82,12 +82,12 @@ class Test_Dashboard_Access {
         echo "Editor can edit_posts: " . ($can_access ? 'YES' : 'NO') . "\n";
         
         // Test dashboard page function
-        $admin = Dasom_Church_Admin::get_instance();
+        $admin = DW_Church_Admin::get_instance();
         
         // Capture output
         ob_start();
         try {
-            $admin->dasom_church_dashboard_page();
+            $admin->DW_Church_dashboard_page();
             $output = ob_get_clean();
             echo "Dashboard page executed successfully\n";
             echo "Output length: " . strlen($output) . " characters\n";
@@ -112,7 +112,7 @@ class Test_Dashboard_Access {
             $user->set_role('author');
             wp_set_current_user($author_id);
             
-            $menu_visibility = Dasom_Church_Menu_Visibility::get_instance();
+            $menu_visibility = DW_Church_Menu_Visibility::get_instance();
             $can_access_dashboard = $menu_visibility->user_can_access_menu('dasom-church-admin', 'author');
             echo "Author can access dasom-church-admin: " . ($can_access_dashboard ? 'YES' : 'NO') . "\n";
         }
@@ -124,7 +124,7 @@ class Test_Dashboard_Access {
             $user->set_role('editor');
             wp_set_current_user($editor_id);
             
-            $menu_visibility = Dasom_Church_Menu_Visibility::get_instance();
+            $menu_visibility = DW_Church_Menu_Visibility::get_instance();
             $can_access_dashboard = $menu_visibility->user_can_access_menu('dasom-church-admin', 'editor');
             echo "Editor can access dasom-church-admin: " . ($can_access_dashboard ? 'YES' : 'NO') . "\n";
         }
