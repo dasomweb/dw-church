@@ -357,28 +357,34 @@ class DW_Elementor_Gallery_Widget extends \Elementor\Widget_Base {
                 }, 1000);
                 
                 function addLightboxNavigation() {
-                    var $lightbox = $('.elementor-lightbox-slideshow');
+                    // Check for different lightbox types
+                    var $lightbox = $('.elementor-lightbox-slideshow, .elementor-lightbox, .swiper-container');
                     if (!$lightbox.length) return;
                     
-                    if ($lightbox.find('.dw-lightbox-nav').length) {
+                    // Find the actual lightbox container
+                    var $container = null;
+                    if ($lightbox.hasClass('swiper-container')) {
+                        $container = $lightbox;
+                    } else {
+                        $container = $lightbox.find('.elementor-lightbox-slideshow__container, .elementor-lightbox__container, .swiper-container');
+                        if (!$container.length) {
+                            $container = $lightbox;
+                        }
+                    }
+                    
+                    if ($container.find('.dw-lightbox-nav').length) {
                         return; // Already has navigation
                     }
                     
-                    // Find the lightbox container
-                    var $container = $lightbox.find('.elementor-lightbox-slideshow__container, .elementor-lightbox__container');
-                    if (!$container.length) {
-                        $container = $lightbox;
-                    }
+                    console.log('DW Gallery: Adding navigation to container', $container);
                     
-                    // Add navigation buttons with different class names
+                    // Add navigation buttons
                     var $prevBtn = $('<button class="dw-lightbox-nav dw-lightbox-nav--prev" aria-label="Previous image">‹</button>');
                     var $nextBtn = $('<button class="dw-lightbox-nav dw-lightbox-nav--next" aria-label="Next image">›</button>');
+                    var $counter = $('<div class="dw-lightbox-counter"></div>');
                     
                     $container.append($prevBtn);
                     $container.append($nextBtn);
-                    
-                    // Add counter
-                    var $counter = $('<div class="dw-lightbox-counter"></div>');
                     $container.append($counter);
                     
                     // Navigation click handlers
@@ -386,67 +392,91 @@ class DW_Elementor_Gallery_Widget extends \Elementor\Widget_Base {
                         e.preventDefault();
                         e.stopPropagation();
                         
-                        // Try different methods to go to previous
-                        if (window.elementorFrontend && window.elementorFrontend.lightbox) {
-                            var lightbox = window.elementorFrontend.lightbox;
-                            if (lightbox.previous) {
-                                lightbox.previous();
+                        // Try Swiper first
+                        if ($container[0] && $container[0].swiper) {
+                            $container[0].swiper.slidePrev();
+                        } else if (window.Swiper && $container.find('.swiper-container')[0] && $container.find('.swiper-container')[0].swiper) {
+                            $container.find('.swiper-container')[0].swiper.slidePrev();
+                        } else {
+                            // Try Elementor methods
+                            if (window.elementorFrontend && window.elementorFrontend.lightbox) {
+                                var lightbox = window.elementorFrontend.lightbox;
+                                if (lightbox.previous) {
+                                    lightbox.previous();
+                                }
+                            }
+                            
+                            // Alternative method
+                            var $prevLink = $lightbox.find('.elementor-lightbox-slideshow__prev, .elementor-lightbox__prev, .swiper-button-prev');
+                            if ($prevLink.length) {
+                                $prevLink[0].click();
                             }
                         }
                         
-                        // Alternative method
-                        var $prevLink = $lightbox.find('.elementor-lightbox-slideshow__prev, .elementor-lightbox__prev');
-                        if ($prevLink.length) {
-                            $prevLink[0].click();
-                        }
-                        
-                        updateCounter();
+                        setTimeout(updateCounter, 100);
                     });
                     
                     $nextBtn.on('click', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
                         
-                        // Try different methods to go to next
-                        if (window.elementorFrontend && window.elementorFrontend.lightbox) {
-                            var lightbox = window.elementorFrontend.lightbox;
-                            if (lightbox.next) {
-                                lightbox.next();
+                        // Try Swiper first
+                        if ($container[0] && $container[0].swiper) {
+                            $container[0].swiper.slideNext();
+                        } else if (window.Swiper && $container.find('.swiper-container')[0] && $container.find('.swiper-container')[0].swiper) {
+                            $container.find('.swiper-container')[0].swiper.slideNext();
+                        } else {
+                            // Try Elementor methods
+                            if (window.elementorFrontend && window.elementorFrontend.lightbox) {
+                                var lightbox = window.elementorFrontend.lightbox;
+                                if (lightbox.next) {
+                                    lightbox.next();
+                                }
+                            }
+                            
+                            // Alternative method
+                            var $nextLink = $lightbox.find('.elementor-lightbox-slideshow__next, .elementor-lightbox__next, .swiper-button-next');
+                            if ($nextLink.length) {
+                                $nextLink[0].click();
                             }
                         }
                         
-                        // Alternative method
-                        var $nextLink = $lightbox.find('.elementor-lightbox-slideshow__next, .elementor-lightbox__next');
-                        if ($nextLink.length) {
-                            $nextLink[0].click();
-                        }
-                        
-                        updateCounter();
+                        setTimeout(updateCounter, 100);
                     });
                     
                     updateCounter();
                 }
                 
                 function updateCounter() {
-                    var $lightbox = $('.elementor-lightbox-slideshow');
+                    var $lightbox = $('.elementor-lightbox-slideshow, .elementor-lightbox, .swiper-container');
                     if (!$lightbox.length) return;
                     
                     var $counter = $lightbox.find('.dw-lightbox-counter');
                     if (!$counter.length) return;
                     
-                    // Try to get current and total
                     var current = 1;
                     var total = 1;
                     
-                    // Method 1: From Elementor data
-                    var $currentSlide = $lightbox.find('.elementor-lightbox-slideshow__slide--active, .elementor-lightbox__slide--active');
-                    if ($currentSlide.length) {
-                        current = $currentSlide.index() + 1;
-                    }
-                    
-                    var $allSlides = $lightbox.find('.elementor-lightbox-slideshow__slide, .elementor-lightbox__slide');
-                    if ($allSlides.length) {
-                        total = $allSlides.length;
+                    // Try Swiper first
+                    if ($lightbox[0] && $lightbox[0].swiper) {
+                        var swiper = $lightbox[0].swiper;
+                        current = swiper.activeIndex + 1;
+                        total = swiper.slides.length;
+                    } else if (window.Swiper && $lightbox.find('.swiper-container')[0] && $lightbox.find('.swiper-container')[0].swiper) {
+                        var swiper = $lightbox.find('.swiper-container')[0].swiper;
+                        current = swiper.activeIndex + 1;
+                        total = swiper.slides.length;
+                    } else {
+                        // Try Elementor methods
+                        var $currentSlide = $lightbox.find('.elementor-lightbox-slideshow__slide--active, .elementor-lightbox__slide--active, .swiper-slide-active');
+                        if ($currentSlide.length) {
+                            current = $currentSlide.index() + 1;
+                        }
+                        
+                        var $allSlides = $lightbox.find('.elementor-lightbox-slideshow__slide, .elementor-lightbox__slide, .swiper-slide');
+                        if ($allSlides.length) {
+                            total = $allSlides.length;
+                        }
                     }
                     
                     $counter.text(current + ' / ' + total);
