@@ -1187,22 +1187,65 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         // Add inline CSS
         ?>
         <style>
+            .dw-event-grid-wrapper {
+                overflow: hidden;
+                position: relative;
+                width: 100%;
+            }
             .dw-event-grid {
                 display: grid;
                 width: 100%;
                 position: relative;
                 z-index: 1;
                 clear: both;
+                overflow: visible;
             }
             .dw-event-grid-item {
-                position: relative;
-                overflow: hidden;
+                position: relative !important;
+                overflow: hidden !important;
                 transition: all 0.3s ease;
+                border-radius: 12px;
             }
             .dw-event-grid-image {
                 position: relative;
                 width: 100%;
                 overflow: hidden;
+                display: block;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+            /* Prevent image from overflowing when scaled/transformed */
+            .dw-event-grid-item img {
+                width: 100%;
+                height: auto;
+                display: block;
+                max-width: 100%;
+            }
+            .dw-event-grid-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 1;
+                pointer-events: none;
+            }
+            .dw-event-grid-text {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                display: flex;
+                z-index: 2;
+                pointer-events: none;
+                overflow: hidden;
+            }
+            .dw-event-grid-text-content {
+                z-index: 1;
+                padding: 20px;
+                width: 100%;
+                box-sizing: border-box;
             }
             .dw-event-grid-title {
                 color: #ffffff;
@@ -1297,6 +1340,8 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     width: 100% !important;
                     max-width: 100% !important;
                     box-sizing: border-box !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
                 }
                 
                 .dw-event-grid-text-content {
@@ -1306,6 +1351,16 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     overflow: hidden !important;
                     word-wrap: break-word !important;
                     overflow-wrap: break-word !important;
+                    margin: 0 !important;
+                }
+                
+                /* Ensure images don't overflow */
+                .dw-event-grid-image {
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    height: auto !important;
+                    display: block !important;
+                    overflow: hidden !important;
                 }
                 
                 /* Ensure content flows properly after widget */
