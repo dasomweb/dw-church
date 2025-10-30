@@ -274,151 +274,182 @@ class DW_Elementor_Gallery_Widget extends \Elementor\Widget_Base {
         ?>
         <style>
         /* Modern Lightbox Navigation */
-        .elementor-lightbox-slideshow .elementor-lightbox-slideshow__navigation {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 1000;
-            width: 60px;
-            height: 60px;
-            background: rgba(255, 255, 255, 0.9);
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        .dw-lightbox-nav {
+            position: absolute !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            z-index: 9999 !important;
+            width: 60px !important;
+            height: 60px !important;
+            background: rgba(255, 255, 255, 0.9) !important;
+            border: none !important;
+            border-radius: 50% !important;
+            cursor: pointer !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: all 0.3s ease !important;
+            backdrop-filter: blur(10px) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+            font-size: 24px !important;
+            font-weight: bold !important;
+            color: #333 !important;
         }
         
-        .elementor-lightbox-slideshow .elementor-lightbox-slideshow__navigation:hover {
-            background: rgba(255, 255, 255, 1);
-            transform: translateY(-50%) scale(1.1);
-            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+        .dw-lightbox-nav:hover {
+            background: rgba(255, 255, 255, 1) !important;
+            transform: translateY(-50%) scale(1.1) !important;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2) !important;
         }
         
-        .elementor-lightbox-slideshow .elementor-lightbox-slideshow__navigation--prev {
-            left: 30px;
+        .dw-lightbox-nav--prev {
+            left: 30px !important;
         }
         
-        .elementor-lightbox-slideshow .elementor-lightbox-slideshow__navigation--next {
-            right: 30px;
-        }
-        
-        .elementor-lightbox-slideshow .elementor-lightbox-slideshow__navigation::before {
-            content: '';
-            width: 0;
-            height: 0;
-            border-style: solid;
-        }
-        
-        .elementor-lightbox-slideshow .elementor-lightbox-slideshow__navigation--prev::before {
-            border-width: 8px 12px 8px 0;
-            border-color: transparent #333 transparent transparent;
-            margin-left: -3px;
-        }
-        
-        .elementor-lightbox-slideshow .elementor-lightbox-slideshow__navigation--next::before {
-            border-width: 8px 0 8px 12px;
-            border-color: transparent transparent transparent #333;
-            margin-right: -3px;
+        .dw-lightbox-nav--next {
+            right: 30px !important;
         }
         
         /* Hide navigation on mobile */
         @media (max-width: 768px) {
-            .elementor-lightbox-slideshow .elementor-lightbox-slideshow__navigation {
+            .dw-lightbox-nav {
                 display: none !important;
             }
         }
         
         /* Lightbox counter */
-        .elementor-lightbox-slideshow .elementor-lightbox-slideshow__counter {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
-            z-index: 1000;
-            backdrop-filter: blur(10px);
+        .dw-lightbox-counter {
+            position: absolute !important;
+            bottom: 30px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            background: rgba(0, 0, 0, 0.7) !important;
+            color: white !important;
+            padding: 8px 16px !important;
+            border-radius: 20px !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            z-index: 9999 !important;
+            backdrop-filter: blur(10px) !important;
         }
         </style>
         
         <script>
         (function($) {
             $(document).ready(function() {
-                // Add navigation to lightbox when it opens
+                // Multiple ways to detect lightbox opening
                 $(document).on('elementor/popup/show', function(e, popup) {
-                    if (popup.$el.hasClass('elementor-lightbox-slideshow')) {
-                        setTimeout(function() {
-                            addLightboxNavigation(popup.$el);
-                        }, 100);
-                    }
+                    setTimeout(function() {
+                        addLightboxNavigation();
+                    }, 200);
                 });
                 
-                // Also check for existing lightboxes
-                setTimeout(function() {
-                    $('.elementor-lightbox-slideshow').each(function() {
-                        if (!$(this).find('.elementor-lightbox-slideshow__navigation').length) {
-                            addLightboxNavigation($(this));
-                        }
-                    });
-                }, 500);
+                // Also listen for lightbox events
+                $(document).on('elementor/frontend/lightbox/show', function() {
+                    setTimeout(function() {
+                        addLightboxNavigation();
+                    }, 200);
+                });
                 
-                function addLightboxNavigation($lightbox) {
-                    if ($lightbox.find('.elementor-lightbox-slideshow__navigation').length) {
+                // Check periodically for lightbox
+                setInterval(function() {
+                    addLightboxNavigation();
+                }, 1000);
+                
+                function addLightboxNavigation() {
+                    var $lightbox = $('.elementor-lightbox-slideshow');
+                    if (!$lightbox.length) return;
+                    
+                    if ($lightbox.find('.dw-lightbox-nav').length) {
                         return; // Already has navigation
                     }
                     
-                    var $container = $lightbox.find('.elementor-lightbox-slideshow__container');
-                    if (!$container.length) return;
+                    // Find the lightbox container
+                    var $container = $lightbox.find('.elementor-lightbox-slideshow__container, .elementor-lightbox__container');
+                    if (!$container.length) {
+                        $container = $lightbox;
+                    }
                     
-                    // Add navigation buttons
-                    var $prevBtn = $('<button class="elementor-lightbox-slideshow__navigation elementor-lightbox-slideshow__navigation--prev" aria-label="Previous image"></button>');
-                    var $nextBtn = $('<button class="elementor-lightbox-slideshow__navigation elementor-lightbox-slideshow__navigation--next" aria-label="Next image"></button>');
+                    // Add navigation buttons with different class names
+                    var $prevBtn = $('<button class="dw-lightbox-nav dw-lightbox-nav--prev" aria-label="Previous image">‹</button>');
+                    var $nextBtn = $('<button class="dw-lightbox-nav dw-lightbox-nav--next" aria-label="Next image">›</button>');
                     
                     $container.append($prevBtn);
                     $container.append($nextBtn);
                     
                     // Add counter
-                    var $counter = $('<div class="elementor-lightbox-slideshow__counter"></div>');
+                    var $counter = $('<div class="dw-lightbox-counter"></div>');
                     $container.append($counter);
                     
-                    // Get slideshow instance
-                    var slideshow = $lightbox.data('elementor-lightbox-slideshow');
-                    if (slideshow) {
-                        updateCounter(slideshow, $counter);
+                    // Navigation click handlers
+                    $prevBtn.on('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
                         
-                        // Navigation click handlers
-                        $prevBtn.on('click', function() {
-                            slideshow.previous();
-                            updateCounter(slideshow, $counter);
-                        });
+                        // Try different methods to go to previous
+                        if (window.elementorFrontend && window.elementorFrontend.lightbox) {
+                            var lightbox = window.elementorFrontend.lightbox;
+                            if (lightbox.previous) {
+                                lightbox.previous();
+                            }
+                        }
                         
-                        $nextBtn.on('click', function() {
-                            slideshow.next();
-                            updateCounter(slideshow, $counter);
-                        });
+                        // Alternative method
+                        var $prevLink = $lightbox.find('.elementor-lightbox-slideshow__prev, .elementor-lightbox__prev');
+                        if ($prevLink.length) {
+                            $prevLink[0].click();
+                        }
                         
-                        // Update counter on slide change
-                        slideshow.on('slideChange', function() {
-                            updateCounter(slideshow, $counter);
-                        });
-                    }
+                        updateCounter();
+                    });
+                    
+                    $nextBtn.on('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Try different methods to go to next
+                        if (window.elementorFrontend && window.elementorFrontend.lightbox) {
+                            var lightbox = window.elementorFrontend.lightbox;
+                            if (lightbox.next) {
+                                lightbox.next();
+                            }
+                        }
+                        
+                        // Alternative method
+                        var $nextLink = $lightbox.find('.elementor-lightbox-slideshow__next, .elementor-lightbox__next');
+                        if ($nextLink.length) {
+                            $nextLink[0].click();
+                        }
+                        
+                        updateCounter();
+                    });
+                    
+                    updateCounter();
                 }
                 
-                function updateCounter(slideshow, $counter) {
-                    if (slideshow && $counter) {
-                        var current = slideshow.getCurrentIndex ? slideshow.getCurrentIndex() + 1 : 1;
-                        var total = slideshow.getTotalSlides ? slideshow.getTotalSlides() : 1;
-                        $counter.text(current + ' / ' + total);
+                function updateCounter() {
+                    var $lightbox = $('.elementor-lightbox-slideshow');
+                    if (!$lightbox.length) return;
+                    
+                    var $counter = $lightbox.find('.dw-lightbox-counter');
+                    if (!$counter.length) return;
+                    
+                    // Try to get current and total
+                    var current = 1;
+                    var total = 1;
+                    
+                    // Method 1: From Elementor data
+                    var $currentSlide = $lightbox.find('.elementor-lightbox-slideshow__slide--active, .elementor-lightbox__slide--active');
+                    if ($currentSlide.length) {
+                        current = $currentSlide.index() + 1;
                     }
+                    
+                    var $allSlides = $lightbox.find('.elementor-lightbox-slideshow__slide, .elementor-lightbox__slide');
+                    if ($allSlides.length) {
+                        total = $allSlides.length;
+                    }
+                    
+                    $counter.text(current + ' / ' + total);
                 }
             });
         })(jQuery);
