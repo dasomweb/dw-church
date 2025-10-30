@@ -1104,6 +1104,11 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $v_align_style = $v_align === 'top' ? 'flex-start' : ($v_align === 'bottom' ? 'flex-end' : 'center');
         $h_align_style = $h_align === 'left' ? 'flex-start' : ($h_align === 'right' ? 'flex-end' : 'center');
         
+        // Get columns settings for responsive layout
+        $columns = intval($settings['columns'] ?? 3);
+        $columns_tablet = intval($settings['columns_tablet'] ?? 2);
+        $columns_mobile = intval($settings['columns_mobile'] ?? 1);
+        
         // Calculate height style based on ratio
         $height_ratio = $settings['height_ratio'] ?? '16:9';
         $height_style = '';
@@ -1194,11 +1199,18 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             }
             .dw-event-grid {
                 display: grid;
+                grid-template-columns: repeat(<?php echo esc_attr($columns); ?>, 1fr);
                 width: 100%;
                 position: relative;
                 z-index: 1;
                 clear: both;
                 overflow: visible;
+            }
+            
+            @media (max-width: 1024px) {
+                .dw-event-grid {
+                    grid-template-columns: repeat(<?php echo esc_attr($columns_tablet); ?>, 1fr);
+                }
             }
             .dw-event-grid-item {
                 position: relative !important;
@@ -1292,7 +1304,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     padding-bottom: 20px !important;
                     clear: both !important;
                     display: grid !important;
-                    grid-template-columns: 1fr !important;
+                    grid-template-columns: repeat(<?php echo esc_attr($columns_mobile); ?>, 1fr) !important;
                     gap: 20px !important;
                     overflow: hidden !important;
                     width: 100% !important;
