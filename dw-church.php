@@ -819,6 +819,95 @@ class Dasom_Church_Management {
     }
 }
 
+/**
+ * Main plugin class
+ */
+class DW_Church_Management {
+    
+    /**
+     * Single instance of the class
+     */
+    private static $instance = null;
+    
+    /**
+     * Get single instance
+     */
+    public static function get_instance() {
+        if (null === self::$instance) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+    
+    /**
+     * Constructor
+     */
+    private function __construct() {
+        $this->dw_church_load_dependencies();
+        $this->dw_church_init_hooks();
+    }
+    
+    /**
+     * Load dependencies
+     */
+    private function dw_church_load_dependencies() {
+        // Load core files
+        require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/functions-helpers.php';
+        
+        // Load admin files in correct order - ALWAYS load to register post types
+        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dw-church-menu-visibility.php';
+        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dw-church-admin-customization.php';
+        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dw-church-admin.php';
+        // Initialize admin class
+        DW_Church_Admin::get_instance();
+        
+        // Load public files
+        if (!is_admin()) {
+            require_once DASOM_CHURCH_PLUGIN_PATH . 'public/class-dw-church-public.php';
+        }
+    }
+    
+    /**
+     * Initialize hooks
+     */
+    private function dw_church_init_hooks() {
+        // Plugin activation/deactivation hooks
+        register_activation_hook(__FILE__, array($this, 'dw_church_activation'));
+        register_deactivation_hook(__FILE__, array($this, 'dw_church_deactivation'));
+        
+        // Initialize plugin
+        add_action('init', array($this, 'dw_church_init'));
+    }
+    
+    /**
+     * Plugin activation
+     */
+    public function dw_church_activation() {
+        // Create default terms
+        $default_preacher = __('담임목사', 'dw-church');
+        if (!term_exists($default_preacher, 'dw_sermon_preacher')) {
+            wp_insert_term($default_preacher, 'dw_sermon_preacher');
+        }
+        update_option('default_sermon_preacher', $default_preacher);
+        
+        flush_rewrite_rules();
+    }
+    
+    /**
+     * Plugin deactivation
+     */
+    public function dw_church_deactivation() {
+        flush_rewrite_rules();
+    }
+    
+    /**
+     * Initialize plugin
+     */
+    public function dw_church_init() {
+        // Plugin initialization
+    }
+}
+
 // Initialize the plugin
 DW_Church_Management::get_instance();
 
