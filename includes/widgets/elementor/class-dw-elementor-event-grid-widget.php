@@ -1225,7 +1225,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             
             /* Responsive adjustments */
             @media (max-width: 768px) {
-                .elementor-widget-dw_event_grid .dw-event-grid-wrapper {
+                .dw-event-grid-wrapper {
                     overflow: hidden !important;
                     width: 100% !important;
                     max-width: 100% !important;
@@ -1233,15 +1233,15 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 }
                 
                 /* Ensure all child elements respect container width */
-                .elementor-widget-dw_event_grid .dw-event-grid-wrapper *,
-                .elementor-widget-dw_event_grid .dw-event-grid * {
+                .dw-event-grid-wrapper *,
+                .dw-event-grid * {
                     max-width: 100% !important;
                     box-sizing: border-box !important;
                     word-wrap: break-word !important;
                     overflow-wrap: break-word !important;
                 }
                 
-                .elementor-widget-dw_event_grid .dw-event-grid {
+                .dw-event-grid {
                     position: relative !important;
                     z-index: 1 !important;
                     margin-bottom: 30px !important;
@@ -1257,7 +1257,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     box-sizing: border-box !important;
                 }
                 
-                .elementor-widget-dw_event_grid .dw-event-grid-item {
+                .dw-event-grid-item {
                     position: relative !important;
                     z-index: 1 !important;
                     background: #fff !important;
@@ -1270,7 +1270,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     box-sizing: border-box !important;
                 }
                 
-                .elementor-widget-dw_event_grid .dw-event-grid-overlay {
+                .dw-event-grid-overlay {
                     position: absolute !important;
                     top: 0 !important;
                     left: 0 !important;
@@ -1279,13 +1279,13 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     z-index: 1 !important;
                 }
                 
-                .elementor-widget-dw_event_grid .dw-event-grid-image {
+                .dw-event-grid-image {
                     position: relative !important;
                     z-index: 1 !important;
                 }
                 
                 /* Fix mobile text positioning and padding consistency */
-                .elementor-widget-dw_event_grid .dw-event-grid-text {
+                .dw-event-grid-text {
                     position: absolute !important;
                     top: 0 !important;
                     left: 0 !important;
@@ -1299,7 +1299,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     box-sizing: border-box !important;
                 }
                 
-                .elementor-widget-dw_event_grid .dw-event-grid-text-content {
+                .dw-event-grid-text-content {
                     width: 100% !important;
                     max-width: 100% !important;
                     box-sizing: border-box !important;
@@ -1309,7 +1309,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 }
                 
                 /* Ensure content flows properly after widget */
-                .elementor-widget-dw_event_grid .dw-event-grid::after {
+                .dw-event-grid::after {
                     content: "" !important;
                     display: block !important;
                     clear: both !important;
