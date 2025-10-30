@@ -431,10 +431,13 @@ class DW_Church_Admin {
                 'not_found_in_trash' => __('휴지통에서 앨범을 찾을 수 없습니다', 'dw-church'),
             ),
             'public' => true,
+            'show_ui' => true,
             'show_in_menu' => 'dasom-church-admin',
             'menu_position' => 5,
             'supports' => array('title', 'thumbnail'),
-            'show_in_rest' => false,
+            'show_in_rest' => true,
+            'has_archive' => true,
+            'rewrite' => array('slug' => 'album'),
             'capability_type' => 'post',
             'map_meta_cap' => true,
         ));
@@ -455,10 +458,13 @@ class DW_Church_Admin {
                 'not_found_in_trash' => __('휴지통에서 배너를 찾을 수 없습니다', 'dw-church'),
             ),
             'public' => true,
+            'show_ui' => true,
             'show_in_menu' => 'dasom-church-admin',
             'menu_position' => 7,
             'supports' => array('title'),
-            'show_in_rest' => false,
+            'show_in_rest' => true,
+            'has_archive' => true,
+            'rewrite' => array('slug' => 'banner'),
             'capability_type' => 'post',
             'map_meta_cap' => true,
         ));
@@ -479,13 +485,19 @@ class DW_Church_Admin {
                 'not_found_in_trash' => __('휴지통에서 이벤트를 찾을 수 없습니다', 'dw-church'),
             ),
             'public' => true,
+            'show_ui' => true,
             'show_in_menu' => 'dasom-church-admin',
             'menu_position' => 6,
             'supports' => array('title'),
-            'show_in_rest' => false,
+            'show_in_rest' => true,
+            'has_archive' => true,
+            'rewrite' => array('slug' => 'event'),
             'capability_type' => 'post',
             'map_meta_cap' => true,
         ));
+        
+        // Flush rewrite rules after registering post types
+        flush_rewrite_rules();
     }
     
     /**

@@ -790,6 +790,11 @@ class DW_Church_Management {
      */
     public function dw_church_init() {
         // Plugin initialization
+        // Force flush rewrite rules on init to ensure post type URLs work
+        if (!get_option('dw_church_rewrite_rules_flushed')) {
+            flush_rewrite_rules();
+            update_option('dw_church_rewrite_rules_flushed', true);
+        }
     }
 }
 
