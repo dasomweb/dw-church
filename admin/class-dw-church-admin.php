@@ -60,8 +60,8 @@ class DW_Church_Admin {
         add_action('init', array($this, 'dw_church_register_taxonomies'));
         
         // Load meta boxes and columns classes
-        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dasom-church-meta-boxes.php';
-        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dasom-church-columns.php';
+        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dw-church-meta-boxes.php';
+        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dw-church-columns.php';
         
         // Remove default editor support
         add_action('admin_init', array($this, 'dw_church_remove_editor_support'));

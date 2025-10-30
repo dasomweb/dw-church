@@ -25,13 +25,13 @@ if (function_exists('wp_get_current_user')) {
 
 // Test 2: Check plugin classes
 echo "\nTest 2: Plugin Classes\n";
-if (file_exists('../admin/class-dasom-church-admin.php')) {
+if (file_exists('../admin/class-dw-church-admin.php')) {
     echo "✓ Dasom_Church_Admin class file exists\n";
 } else {
     echo "✗ Dasom_Church_Admin class file NOT found\n";
 }
 
-if (file_exists('../admin/class-dasom-church-menu-visibility.php')) {
+if (file_exists('../admin/class-dw-church-menu-visibility.php')) {
     echo "✓ Dasom_Church_Menu_Visibility class file exists\n";
 } else {
     echo "✗ Dasom_Church_Menu_Visibility class file NOT found\n";
@@ -41,7 +41,7 @@ if (file_exists('../admin/class-dasom-church-menu-visibility.php')) {
 echo "\nTest 3: Recent Changes Verification\n";
 
 // Check if permission bypass code exists
-$admin_file = '../admin/class-dasom-church-admin.php';
+$admin_file = '../admin/class-dw-church-admin.php';
 if (file_exists($admin_file)) {
     $content = file_get_contents($admin_file);
     
@@ -61,7 +61,7 @@ if (file_exists($admin_file)) {
 }
 
 // Check menu visibility file
-$menu_file = '../admin/class-dasom-church-menu-visibility.php';
+$menu_file = '../admin/class-dw-church-menu-visibility.php';
 if (file_exists($menu_file)) {
     $content = file_get_contents($menu_file);
     
@@ -80,6 +80,6 @@ echo "If all tests show ✓, the dashboard access should work for Author/Editor 
 echo "\nTo test actual access, you need to:\n";
 echo "1. Access the WordPress admin area\n";
 echo "2. Login as Author or Editor user\n";
-echo "3. Navigate to: wp-admin/admin.php?page=dasom-church-dashboard\n";
+echo "3. Navigate to: wp-admin/admin.php?page=dw-church-dashboard\n";
 echo "4. Verify no 'Sorry, you are not allowed to access this page' error\n";
 ?>

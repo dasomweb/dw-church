@@ -16,8 +16,8 @@ require_once('../../../wp-includes/user.php');
 require_once('../../../wp-includes/capabilities.php');
 
 // Load our plugin classes
-require_once('../admin/class-dasom-church-admin.php');
-require_once('../admin/class-dasom-church-menu-visibility.php');
+require_once('../admin/class-dw-church-admin.php');
+require_once('../admin/class-dw-church-menu-visibility.php');
 
 // Initialize WordPress
 if (!function_exists('wp_set_current_user')) {

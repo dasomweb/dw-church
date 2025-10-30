@@ -14,8 +14,8 @@ require_once('../../../wp-includes/user.php');
 require_once('../../../wp-includes/capabilities.php');
 
 // Load our plugin classes
-require_once('../admin/class-dasom-church-admin.php');
-require_once('../admin/class-dasom-church-menu-visibility.php');
+require_once('../admin/class-dw-church-admin.php');
+require_once('../admin/class-dw-church-menu-visibility.php');
 
 // Initialize WordPress
 if (!function_exists('wp_set_current_user')) {
@@ -55,8 +55,8 @@ if (is_wp_error($author_id)) {
     // Test menu visibility
     if (class_exists('Dasom_Church_Menu_Visibility')) {
         $menu_visibility = Dasom_Church_Menu_Visibility::get_instance();
-        $can_access = $menu_visibility->user_can_access_menu('dasom-church-admin', 'author');
-        echo "Author can access dasom-church-admin: " . ($can_access ? 'YES' : 'NO') . "\n";
+        $can_access = $menu_visibility->user_can_access_menu('dw-church-admin', 'author');
+        echo "Author can access dw-church-admin: " . ($can_access ? 'YES' : 'NO') . "\n";
     }
     
     // Test dashboard page function
@@ -112,8 +112,8 @@ if (is_wp_error($editor_id)) {
     // Test menu visibility
     if (class_exists('Dasom_Church_Menu_Visibility')) {
         $menu_visibility = Dasom_Church_Menu_Visibility::get_instance();
-        $can_access = $menu_visibility->user_can_access_menu('dasom-church-admin', 'editor');
-        echo "Editor can access dasom-church-admin: " . ($can_access ? 'YES' : 'NO') . "\n";
+        $can_access = $menu_visibility->user_can_access_menu('dw-church-admin', 'editor');
+        echo "Editor can access dw-church-admin: " . ($can_access ? 'YES' : 'NO') . "\n";
     }
     
     // Test dashboard page function
