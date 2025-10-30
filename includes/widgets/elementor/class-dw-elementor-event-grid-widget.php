@@ -175,7 +175,9 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     '5' => '5',
                     '6' => '6',
                 ],
-                // Removed selectors - using inline CSS instead for better control
+                'selectors' => [
+                    '{{WRAPPER}} .dw-event-grid' => 'grid-template-columns: repeat({{VALUE}}, 1fr);',
+                ],
             ]
         );
         
@@ -1102,16 +1104,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $v_align_style = $v_align === 'top' ? 'flex-start' : ($v_align === 'bottom' ? 'flex-end' : 'center');
         $h_align_style = $h_align === 'left' ? 'flex-start' : ($h_align === 'right' ? 'flex-end' : 'center');
         
-        // Get columns settings for responsive layout
-        // Handle both string and number values from Elementor SELECT control
-        // Elementor responsive control may store values differently
-        $columns_raw = isset($settings['columns']) ? $settings['columns'] : (isset($settings['columns']['size']) ? $settings['columns']['size'] : '3');
-        $columns_tablet_raw = isset($settings['columns_tablet']) ? $settings['columns_tablet'] : (isset($settings['columns']['tablet']) ? $settings['columns']['tablet'] : '2');
-        $columns_mobile_raw = isset($settings['columns_mobile']) ? $settings['columns_mobile'] : (isset($settings['columns']['mobile']) ? $settings['columns']['mobile'] : '1');
-        
-        $columns = intval($columns_raw ?: '3');
-        $columns_tablet = intval($columns_tablet_raw ?: '2');
-        $columns_mobile = intval($columns_mobile_raw ?: '1');
+        // Remove hardcoded column logic - let Elementor handle it
         
         // Calculate height style based on ratio
         $height_ratio = $settings['height_ratio'] ?? '16:9';
@@ -1203,22 +1196,15 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             }
             .dw-event-grid {
                 display: grid;
-                grid-template-columns: repeat(<?php echo esc_attr($columns); ?>, 1fr);
                 width: 100%;
                 position: relative;
                 z-index: 1;
                 clear: both;
                 overflow: visible;
             }
-            
-            @media (min-width: 769px) and (max-width: 1024px) {
-                .dw-event-grid {
-                    grid-template-columns: repeat(<?php echo esc_attr($columns_tablet); ?>, 1fr) !important;
-                }
-            }
             .dw-event-grid-item {
-                position: relative !important;
-                overflow: hidden !important;
+                position: relative;
+                overflow: hidden;
                 transition: all 0.3s ease;
                 border-radius: 12px;
             }
@@ -1230,7 +1216,6 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 max-width: 100%;
                 box-sizing: border-box;
             }
-            /* Prevent image from overflowing when scaled/transformed */
             .dw-event-grid-item img {
                 width: 100%;
                 height: auto;
@@ -1277,117 +1262,6 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             .dw-event-grid-button {
                 display: inline-block;
                 cursor: pointer;
-            }
-            .dw-event-grid-item:hover {
-                /* Hover effects are now controlled by Elementor settings */
-            }
-            
-            /* Mobile Responsive CSS - Clean and Organized */
-            @media (max-width: 768px) {
-                /* Main wrapper - prevent overflow and ensure proper clearing */
-                .dw-event-grid-wrapper {
-                    overflow: hidden;
-                    width: 100%;
-                    max-width: 100%;
-                    box-sizing: border-box;
-                    clear: both;
-                    margin-bottom: 30px;
-                    position: relative;
-                }
-                
-                /* Grid container - mobile layout */
-                .dw-event-grid {
-                    display: grid;
-                    grid-template-columns: repeat(<?php echo esc_attr($columns_mobile); ?>, 1fr);
-                    gap: 15px;
-                    width: 100%;
-                    max-width: 100%;
-                    box-sizing: border-box;
-                    clear: both;
-                    margin-bottom: 20px;
-                }
-                
-                /* Grid items - prevent overflow */
-                .dw-event-grid-item {
-                    position: relative;
-                    background: #fff;
-                    border-radius: 12px;
-                    overflow: hidden;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                    width: 100%;
-                    max-width: 100%;
-                    box-sizing: border-box;
-                }
-                
-                /* Images - responsive and contained */
-                .dw-event-grid-image {
-                    position: relative;
-                    width: 100%;
-                    max-width: 100%;
-                    height: auto;
-                    display: block;
-                    overflow: hidden;
-                }
-                
-                .dw-event-grid-image img {
-                    width: 100%;
-                    height: auto;
-                    display: block;
-                    max-width: 100%;
-                }
-                
-                /* Overlay - positioned correctly */
-                .dw-event-grid-overlay {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    z-index: 1;
-                    pointer-events: none;
-                }
-                
-                /* Text container - positioned over image */
-                .dw-event-grid-text {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    display: flex;
-                    z-index: 2;
-                    overflow: hidden;
-                    pointer-events: none;
-                }
-                
-                /* Text content - responsive padding */
-                .dw-event-grid-text-content {
-                    width: 100%;
-                    max-width: 100%;
-                    box-sizing: border-box;
-                    overflow: hidden;
-                    word-wrap: break-word;
-                    overflow-wrap: break-word;
-                    padding: 15px;
-                }
-                
-                /* Ensure all child elements respect container width */
-                .dw-event-grid-wrapper *,
-                .dw-event-grid * {
-                    max-width: 100%;
-                    box-sizing: border-box;
-                }
-                
-                /* Clear content after widget */
-                .elementor-widget-dw_event_grid {
-                    clear: both;
-                    overflow: hidden;
-                }
-                
-                .elementor-widget-dw_event_grid + .elementor-widget {
-                    clear: both;
-                    margin-top: 20px;
-                }
             }
         </style>
         <?php
