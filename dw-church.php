@@ -582,8 +582,8 @@ function dw_church_upgrader_pre_download($reply, $package, $upgrader) {
     if (empty($github_token)) {
         return new WP_Error(
             'no_github_token',
-            __('❌ GitHub Personal Access Token이 필요합니다. DW 교회관리 → 설정에서 토큰을 입력해주세요.', 'dasom-church') . '<br>' .
-            sprintf(__('현재 Token 상태: %s', 'dasom-church'), empty($github_token) ? '없음' : '있음')
+            __('❌ GitHub Personal Access Token이 필요합니다. DW 교회관리 → 설정에서 토큰을 입력해주세요.', 'dw-church') . '<br>' .
+            sprintf(__('현재 Token 상태: %s', 'dw-church'), empty($github_token) ? '없음' : '있음')
         );
     }
     
@@ -600,7 +600,7 @@ function dw_church_upgrader_pre_download($reply, $package, $upgrader) {
     if (is_wp_error($response)) {
         return new WP_Error(
             'download_error',
-            sprintf(__('❌ 다운로드 오류: %s', 'dasom-church'), $response->get_error_message())
+            sprintf(__('❌ 다운로드 오류: %s', 'dw-church'), $response->get_error_message())
         );
     }
     
@@ -612,23 +612,23 @@ function dw_church_upgrader_pre_download($reply, $package, $upgrader) {
         
         return new WP_Error(
             'download_failed',
-            sprintf(__('❌ 다운로드 실패: HTTP %d', 'dasom-church'), $code) . '<br>' .
-            sprintf(__('URL: %s', 'dasom-church'), esc_url($package)) . '<br>' .
-            sprintf(__('Token: %s...', 'dasom-church'), substr($github_token, 0, 10)) . '<br>' .
-            sprintf(__('오류: %s', 'dasom-church'), esc_html(substr($error_message, 0, 200)))
+            sprintf(__('❌ 다운로드 실패: HTTP %d', 'dw-church'), $code) . '<br>' .
+            sprintf(__('URL: %s', 'dw-church'), esc_url($package)) . '<br>' .
+            sprintf(__('Token: %s...', 'dw-church'), substr($github_token, 0, 10)) . '<br>' .
+            sprintf(__('오류: %s', 'dw-church'), esc_html(substr($error_message, 0, 200)))
         );
     }
     
     // Save to temporary file
     $tmpfname = wp_tempnam($package);
     if (!$tmpfname) {
-        return new WP_Error('temp_file_failed', __('❌ 임시 파일 생성 실패', 'dasom-church'));
+        return new WP_Error('temp_file_failed', __('❌ 임시 파일 생성 실패', 'dw-church'));
     }
     
     $body = wp_remote_retrieve_body($response);
     if (file_put_contents($tmpfname, $body) === false) {
         @unlink($tmpfname);
-        return new WP_Error('file_write_failed', __('❌ 파일 쓰기 실패', 'dasom-church'));
+        return new WP_Error('file_write_failed', __('❌ 파일 쓰기 실패', 'dw-church'));
     }
     
     return $tmpfname;
@@ -669,7 +669,7 @@ function dw_church_fix_update_folder($source, $remote_source, $upgrader, $hook_e
         return $new_source;
     }
     
-    return new WP_Error('rename_failed', __('Unable to rename the update folder.', 'dasom-church'));
+    return new WP_Error('rename_failed', __('Unable to rename the update folder.', 'dw-church'));
 }
 
 /**
@@ -695,7 +695,7 @@ add_action('admin_init', function() {
         // Add admin notice
         add_action('admin_notices', function() {
             echo '<div class="notice notice-success is-dismissible"><p>';
-            echo esc_html__('업데이트 캐시가 삭제되었습니다. 플러그인 목록을 새로고침하세요.', 'dasom-church');
+            echo esc_html__('업데이트 캐시가 삭제되었습니다. 플러그인 목록을 새로고침하세요.', 'dw-church');
             echo '</p></div>';
         });
         
@@ -703,121 +703,6 @@ add_action('admin_init', function() {
         exit;
     }
 });
-
-/**
- * Main plugin class
- */
-class DW_Church_Management {
-    
-    /**
-     * Single instance of the class
-     */
-    private static $instance = null;
-    
-    /**
-     * Get single instance
-     */
-    public static function get_instance() {
-        if (null === self::$instance) {
-            self::$instance = new self();
-        }
-        return self::$instance;
-    }
-    
-    /**
-     * Constructor
-     */
-    private function __construct() {
-        $this->dw_church_load_dependencies();
-        $this->dw_church_init_hooks();
-    }
-    
-    /**
-     * Load plugin dependencies
-     */
-    private function dw_church_load_dependencies() {
-        // Load core files
-        require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/functions-helpers.php';
-        
-        // Load admin files in correct order - ALWAYS load to register post types
-        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dasom-church-menu-visibility.php';
-        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dw-church-admin-customization.php';
-        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dw-church-admin.php';
-        // Initialize admin class
-        DW_Church_Admin::get_instance();
-        
-        // Load public files
-        if (!is_admin()) {
-            require_once DASOM_CHURCH_PLUGIN_PATH . 'public/class-dw-church-public.php';
-        }
-    }
-    
-    /**
-     * Initialize hooks
-     */
-    private function dw_church_init_hooks() {
-        add_action('plugins_loaded', array($this, 'dw_church_load_textdomain'));
-        register_activation_hook(__FILE__, array($this, 'dw_church_activation'));
-        register_deactivation_hook(__FILE__, array($this, 'dw_church_deactivation'));
-        
-        // Initialize loader
-        add_action('init', array($this, 'dw_church_init'));
-    }
-    
-    /**
-     * Load text domain for internationalization
-     */
-    public function dw_church_load_textdomain() {
-        load_plugin_textdomain('dasom-church', false, dirname(plugin_basename(__FILE__)) . '/languages');
-    }
-    
-    /**
-     * Plugin activation
-     */
-    public function dw_church_activation() {
-        // Classes are already loaded in dw_church_init()
-        $admin = DW_Church_Admin::get_instance();
-        $admin->dw_church_register_post_types();
-        $admin->dw_church_register_taxonomies();
-        
-        // Create default sermon categories
-        $default_categories = array(
-            __('주일설교', 'dasom-church'),
-            __('새벽설교', 'dasom-church'),
-            __('수요설교', 'dasom-church'),
-            __('금요설교', 'dasom-church')
-        );
-        
-        foreach ($default_categories as $category) {
-            if (!term_exists($category, 'sermon_category')) {
-                wp_insert_term($category, 'sermon_category');
-            }
-        }
-        
-        // Create default preacher
-        $default_preacher = __('담임목사', 'dasom-church');
-        if (!term_exists($default_preacher, 'dw_sermon_preacher')) {
-            wp_insert_term($default_preacher, 'dw_sermon_preacher');
-        }
-        update_option('default_sermon_preacher', $default_preacher);
-        
-        flush_rewrite_rules();
-    }
-    
-    /**
-     * Plugin deactivation
-     */
-    public function dw_church_deactivation() {
-        flush_rewrite_rules();
-    }
-    
-    /**
-     * Initialize plugin
-     */
-    public function dw_church_init() {
-        // Plugin initialization
-    }
-}
 
 /**
  * Main plugin class
