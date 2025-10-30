@@ -5,6 +5,22 @@ All notable changes to the DW Church Management System project will be documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.46] - 2025-01-30
+
+### Cleaned
+- **Repository Cleanup**: Removed 34 unnecessary files and folders
+- **Development Files**: Removed build scripts, debug files, and test files
+- **Documentation**: Removed outdated guide files
+- **Duplicate Folders**: Removed redundant dasomweb-dasom-church-management-system folder
+- **Migration Scripts**: Removed completed migration files
+
+### Improved
+- **Code Organization**: Cleaner, production-ready folder structure
+- **Maintenance**: Easier maintenance with reduced file clutter
+- **Performance**: Smaller repository size for faster downloads
+
+## [2.45] - 2025-01-30
+
 ## [1.35.3] - 2025-01-27
 
 ### Enhanced
