@@ -2,7 +2,7 @@
 /**
  * Plugin Name: DW Church
  * Description: DW Church Management System
- * Version: 2.28
+ * Version: 2.29
  * Author: DasomWeb
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Update URI: dw-church
@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '2.28');
+define('DASOM_CHURCH_VERSION', '2.29');
 define('DASOM_CHURCH_PLUGIN_URL', str_replace('http://', 'https://', plugin_dir_url(__FILE__)));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -840,9 +840,56 @@ register_activation_hook(__FILE__, function() {
     add_option('dasom_church_version', DASOM_CHURCH_VERSION);
     add_option('dasom_church_installed', current_time('mysql'));
     
+    // Fix folder name if needed (fallback for wrong ZIP downloads)
+    dw_church_fix_folder_name();
+    
     // Flush rewrite rules
     flush_rewrite_rules();
 });
+
+// Fix folder name function (fallback for wrong ZIP downloads)
+function dw_church_fix_folder_name() {
+    $plugin_dir = WP_PLUGIN_DIR;
+    
+    // Look for hash-based folder patterns
+    $patterns = [
+        '/dasomweb-dasom-church-management-system-*',
+        '/dasom-church-management-system-*',
+        '/dw-church-management-system-*'
+    ];
+    
+    $found_dirs = [];
+    foreach ($patterns as $pattern) {
+        $dirs = glob($plugin_dir . $pattern, GLOB_ONLYDIR);
+        if ($dirs) {
+            $found_dirs = array_merge($found_dirs, $dirs);
+        }
+    }
+    
+    if ($found_dirs) {
+        $target = $plugin_dir . '/dw-church';
+        
+        // If target doesn't exist, rename the first found directory
+        if (!file_exists($target)) {
+            $source = $found_dirs[0];
+            if (rename($source, $target)) {
+                error_log('DW Church: Fixed folder name from ' . basename($source) . ' to dw-church');
+                
+                // Update active_plugins option
+                $active_plugins = get_option('active_plugins', []);
+                $old_plugin_file = basename($source) . '/dw-church.php';
+                $new_plugin_file = 'dw-church/dw-church.php';
+                
+                $key = array_search($old_plugin_file, $active_plugins);
+                if ($key !== false) {
+                    $active_plugins[$key] = $new_plugin_file;
+                    update_option('active_plugins', $active_plugins);
+                    error_log('DW Church: Updated active_plugins option');
+                }
+            }
+        }
+    }
+}
 
 
 // Plugin deactivation hook
