@@ -269,6 +269,161 @@ class DW_Elementor_Gallery_Widget extends \Elementor\Widget_Base {
         }
         
         echo '</div>';
+        
+        // Add modern lightbox navigation styles and scripts
+        ?>
+        <style>
+        /* Modern Lightbox Navigation */
+        .elementor-lightbox-slideshow .elementor-lightbox-slideshow__navigation {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1000;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .elementor-lightbox-slideshow .elementor-lightbox-slideshow__navigation:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .elementor-lightbox-slideshow .elementor-lightbox-slideshow__navigation--prev {
+            left: 30px;
+        }
+        
+        .elementor-lightbox-slideshow .elementor-lightbox-slideshow__navigation--next {
+            right: 30px;
+        }
+        
+        .elementor-lightbox-slideshow .elementor-lightbox-slideshow__navigation::before {
+            content: '';
+            width: 0;
+            height: 0;
+            border-style: solid;
+        }
+        
+        .elementor-lightbox-slideshow .elementor-lightbox-slideshow__navigation--prev::before {
+            border-width: 8px 12px 8px 0;
+            border-color: transparent #333 transparent transparent;
+            margin-left: -3px;
+        }
+        
+        .elementor-lightbox-slideshow .elementor-lightbox-slideshow__navigation--next::before {
+            border-width: 8px 0 8px 12px;
+            border-color: transparent transparent transparent #333;
+            margin-right: -3px;
+        }
+        
+        /* Hide navigation on mobile */
+        @media (max-width: 768px) {
+            .elementor-lightbox-slideshow .elementor-lightbox-slideshow__navigation {
+                display: none !important;
+            }
+        }
+        
+        /* Lightbox counter */
+        .elementor-lightbox-slideshow .elementor-lightbox-slideshow__counter {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        </style>
+        
+        <script>
+        (function($) {
+            $(document).ready(function() {
+                // Add navigation to lightbox when it opens
+                $(document).on('elementor/popup/show', function(e, popup) {
+                    if (popup.$el.hasClass('elementor-lightbox-slideshow')) {
+                        setTimeout(function() {
+                            addLightboxNavigation(popup.$el);
+                        }, 100);
+                    }
+                });
+                
+                // Also check for existing lightboxes
+                setTimeout(function() {
+                    $('.elementor-lightbox-slideshow').each(function() {
+                        if (!$(this).find('.elementor-lightbox-slideshow__navigation').length) {
+                            addLightboxNavigation($(this));
+                        }
+                    });
+                }, 500);
+                
+                function addLightboxNavigation($lightbox) {
+                    if ($lightbox.find('.elementor-lightbox-slideshow__navigation').length) {
+                        return; // Already has navigation
+                    }
+                    
+                    var $container = $lightbox.find('.elementor-lightbox-slideshow__container');
+                    if (!$container.length) return;
+                    
+                    // Add navigation buttons
+                    var $prevBtn = $('<button class="elementor-lightbox-slideshow__navigation elementor-lightbox-slideshow__navigation--prev" aria-label="Previous image"></button>');
+                    var $nextBtn = $('<button class="elementor-lightbox-slideshow__navigation elementor-lightbox-slideshow__navigation--next" aria-label="Next image"></button>');
+                    
+                    $container.append($prevBtn);
+                    $container.append($nextBtn);
+                    
+                    // Add counter
+                    var $counter = $('<div class="elementor-lightbox-slideshow__counter"></div>');
+                    $container.append($counter);
+                    
+                    // Get slideshow instance
+                    var slideshow = $lightbox.data('elementor-lightbox-slideshow');
+                    if (slideshow) {
+                        updateCounter(slideshow, $counter);
+                        
+                        // Navigation click handlers
+                        $prevBtn.on('click', function() {
+                            slideshow.previous();
+                            updateCounter(slideshow, $counter);
+                        });
+                        
+                        $nextBtn.on('click', function() {
+                            slideshow.next();
+                            updateCounter(slideshow, $counter);
+                        });
+                        
+                        // Update counter on slide change
+                        slideshow.on('slideChange', function() {
+                            updateCounter(slideshow, $counter);
+                        });
+                    }
+                }
+                
+                function updateCounter(slideshow, $counter) {
+                    if (slideshow && $counter) {
+                        var current = slideshow.getCurrentIndex ? slideshow.getCurrentIndex() + 1 : 1;
+                        var total = slideshow.getTotalSlides ? slideshow.getTotalSlides() : 1;
+                        $counter.text(current + ' / ' + total);
+                    }
+                }
+            });
+        })(jQuery);
+        </script>
+        <?php
     }
     
     /**
