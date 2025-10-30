@@ -2,7 +2,7 @@
 /**
  * Plugin Name: DW Church
  * Description: DW Church Management System
- * Version: 2.36
+ * Version: 2.37
  * Author: DasomWeb
  * Author URI: https://dasomweb.com
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '2.36');
+define('DASOM_CHURCH_VERSION', '2.37');
 define('DASOM_CHURCH_PLUGIN_URL', str_replace('http://', 'https://', plugin_dir_url(__FILE__)));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -488,7 +488,7 @@ function dasom_church_plugin_info($result, $action, $args) {
         // Sections
         $plugin_info->sections = array(
             'description' => 'Complete church management system for bulletins, sermons, pastoral columns, and photo albums with modern security practices.',
-            'installation' => 'Upload the plugin files to the /wp-content/plugins/ directory, or install through the WordPress plugins screen. Activate the plugin and configure settings under DW 교회관�?menu.',
+            'installation' => 'Upload the plugin files to the /wp-content/plugins/ directory, or install through the WordPress plugins screen. Activate the plugin and configure settings under DW 교회관�?menu.',
             'changelog' => !empty($release['body']) ? $release['body'] : 'See full changelog at ' . $release['html_url']
         );
         
@@ -582,7 +582,7 @@ function dasom_church_upgrader_pre_download($reply, $package, $upgrader) {
     if (empty($github_token)) {
         return new WP_Error(
             'no_github_token',
-            __('??GitHub Personal Access Token???�요?�니?? DW 교회관�????�정?�서 ?�큰???�력?�주?�요.', 'dw-church') . '<br>' .
+            __('??GitHub Personal Access Token???�요?�니?? DW 교회관�????�정?�서 ?�큰???�력?�주?�요.', 'dw-church') . '<br>' .
             sprintf(__('?�재 Token ?�태: %s', 'dw-church'), empty($github_token) ? '?�음' : '?�음')
         );
     }
@@ -966,10 +966,10 @@ add_action('upgrader_process_complete', function($upgrader, $hook_extra) {
 
 // Data migration function
 function dasom_church_migrate_data($old_version, $new_version) {
-    // 버전�?마이그레?�션 로직
+    // 버전�?마이그레?�션 로직
     if (version_compare($old_version, '2.0.0', '<')) {
         // 2.0.0 ?�전 버전?�서 마이그레?�션
-        // ?? ?�션�?변�? ?�이??구조 변�???
+        // ?? ?�션�?변�? ?�이??구조 변�???
     }
     
     if (version_compare($old_version, '2.20.0', '<')) {

@@ -254,7 +254,7 @@ class DW_Church_Columns {
         $new_columns['title'] = __('?�목', 'dw-church');
         $new_columns['top_image'] = __('?�단 ?��?지', 'dw-church');
         $new_columns['youtube'] = __('YouTube', 'dw-church');
-        $new_columns['thumb'] = __('?�???��?지', 'dw-church');
+        $new_columns['thumb'] = __('?�???��?지', 'dw-church');
         
         return $new_columns;
     }
@@ -388,7 +388,7 @@ class DW_Church_Columns {
                     $color = ($category_name === '메인 배너' || $category_name === 'Main Banner') ? '#2271b1' : '#50b83c';
                     echo '<span style="display:inline-block;padding:3px 8px;background:' . $color . ';color:#fff;border-radius:3px;font-size:11px;">' . esc_html($category_name) . '</span>';
                 } else {
-                    echo '<span style="color:#999;">' . __('미분�?, 'dw-church') . '</span>';
+                    echo '<span style="color:#999;">' . __('미분�?, 'dw-church') . '</span>';
                 }
                 break;
                 
@@ -484,9 +484,9 @@ class DW_Church_Columns {
             case 'link_target':
                 $link_target = get_post_meta($post_id, 'dw_banner_link_target', true);
                 if ($link_target === '_blank') {
-                    echo __('??�?, 'dw-church');
+                    echo __('??�?, 'dw-church');
                 } else {
-                    echo __('?�재 �?, 'dw-church');
+                    echo __('?�재 �?, 'dw-church');
                 }
                 break;
         }
