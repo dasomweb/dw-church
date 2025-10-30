@@ -28,7 +28,7 @@ jobs:
       - name: Prepare Build Folder (Fix Folder Name)
         run: |
           mkdir -p build
-          # 해시 없이 항상 고정 폴더명 "DW Church" 생성
+          # 해시 없이 항상 고정 폴더명 "dw-church" 생성
           rsync -av --exclude='.git*' \
             --exclude='.github' \
             --exclude='build' \
@@ -47,28 +47,28 @@ jobs:
             --exclude='build.ps1' \
             --exclude='.DS_Store' \
             --exclude='Thumbs.db' \
-            ./ build/DW\ Church/
+            ./ build/dw-church/
           
       - name: Clean up ZIP files in build
         run: |
-          find build/DW\ Church -name "*.zip" -type f -delete
+          find build/dw-church -name "*.zip" -type f -delete
           
       - name: Verify directory structure
         run: |
           echo "Plugin directory contents:"
-          ls -la build/DW\ Church/
+          ls -la build/dw-church/
           echo "Main plugin file:"
-          ls -la build/DW\ Church/dw-church.php
+          ls -la build/dw-church/dw-church.php
           
       - name: Create ZIP package
         run: |
           cd build
-          zip -r DW-Church.zip "DW Church"
+          zip -r dw-church.zip "dw-church"
           
       - name: Verify ZIP contents
         run: |
-          unzip -l build/DW-Church.zip | head -20
-          echo "ZIP file size: $(du -h build/DW-Church.zip)"
+          unzip -l build/dw-church.zip | head -20
+          echo "ZIP file size: $(du -h build/dw-church.zip)"
           
       - name: Extract version from tag
         run: |
@@ -79,7 +79,7 @@ jobs:
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v2
         with:
-          files: build/DW-Church.zip
+          files: build/dw-church.zip
           name: Release v${{ env.VERSION }}
           tag_name: ${{ github.ref_name }}
           body: |

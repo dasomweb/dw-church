@@ -2,7 +2,7 @@
 /**
  * Plugin Name: DW Church
  * Description: DW Church Management System
- * Version: 2.24
+ * Version: 2.25
  * Author: DasomWeb
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
  * Update URI: dw-church
@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '2.24');
+define('DASOM_CHURCH_VERSION', '2.25');
 define('DASOM_CHURCH_PLUGIN_URL', str_replace('http://', 'https://', plugin_dir_url(__FILE__)));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -853,10 +853,10 @@ function dw_church_fix_folder_name() {
     $dirs = glob($plugin_dir . '/dasomweb-dasom-church-management-system-*', GLOB_ONLYDIR);
 
     if ($dirs) {
-        $target = $plugin_dir . '/DW Church';
+        $target = $plugin_dir . '/dw-church';
         if (!file_exists($target)) {
             rename($dirs[0], $target);
-            error_log('DW Church: Fixed folder name from ' . basename($dirs[0]) . ' to DW Church');
+            error_log('DW Church: Fixed folder name from ' . basename($dirs[0]) . ' to dw-church');
         }
     }
 }
