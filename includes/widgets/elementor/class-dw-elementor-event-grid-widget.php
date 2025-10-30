@@ -175,9 +175,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     '5' => '5',
                     '6' => '6',
                 ],
-                'selectors' => [
-                    '{{WRAPPER}} .dw-event-grid' => 'grid-template-columns: repeat({{VALUE}}, 1fr);',
-                ],
+                // Removed selectors - using inline CSS instead for better control
             ]
         );
         
@@ -1105,9 +1103,14 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $h_align_style = $h_align === 'left' ? 'flex-start' : ($h_align === 'right' ? 'flex-end' : 'center');
         
         // Get columns settings for responsive layout
-        $columns = intval($settings['columns'] ?? 3);
-        $columns_tablet = intval($settings['columns_tablet'] ?? 2);
-        $columns_mobile = intval($settings['columns_mobile'] ?? 1);
+        // Handle both string and number values from Elementor SELECT control
+        $columns_raw = $settings['columns'] ?? '3';
+        $columns_tablet_raw = $settings['columns_tablet'] ?? '2';
+        $columns_mobile_raw = $settings['columns_mobile'] ?? '1';
+        
+        $columns = intval($columns_raw ?: '3');
+        $columns_tablet = intval($columns_tablet_raw ?: '2');
+        $columns_mobile = intval($columns_mobile_raw ?: '1');
         
         // Calculate height style based on ratio
         $height_ratio = $settings['height_ratio'] ?? '16:9';
@@ -1304,7 +1307,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     padding-bottom: 20px !important;
                     clear: both !important;
                     display: grid !important;
-                    grid-template-columns: repeat(<?php echo esc_attr($columns_mobile); ?>, 1fr) !important;
+                    grid-template-columns: repeat(<?php echo esc_attr($columns_mobile); ?>, 1fr);
                     gap: 20px !important;
                     overflow: hidden !important;
                     width: 100% !important;
