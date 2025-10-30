@@ -1189,31 +1189,43 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         // Add inline CSS
         ?>
         <style>
+            /* DW Event Grid - Completely Isolated */
             .dw-event-grid-wrapper {
                 overflow: hidden;
                 position: relative;
                 width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+                isolation: isolate;
+                contain: layout;
             }
             .dw-event-grid {
                 display: grid;
                 width: 100%;
+                max-width: 100%;
                 position: relative;
                 z-index: 1;
                 clear: both;
-                overflow: visible;
+                overflow: hidden;
+                box-sizing: border-box;
             }
             .dw-event-grid-item {
                 position: relative;
                 overflow: hidden;
                 transition: all 0.3s ease;
                 border-radius: 12px;
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+                isolation: isolate;
+                contain: layout;
             }
             .dw-event-grid-image {
                 position: relative;
                 width: 100%;
+                max-width: 100%;
                 overflow: hidden;
                 display: block;
-                max-width: 100%;
                 box-sizing: border-box;
             }
             .dw-event-grid-item img {
@@ -1221,6 +1233,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 height: auto;
                 display: block;
                 max-width: 100%;
+                box-sizing: border-box;
             }
             .dw-event-grid-overlay {
                 position: absolute;
@@ -1230,6 +1243,9 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 bottom: 0;
                 z-index: 1;
                 pointer-events: none;
+                width: 100%;
+                height: 100%;
+                box-sizing: border-box;
             }
             .dw-event-grid-text {
                 position: absolute;
@@ -1241,27 +1257,55 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 z-index: 2;
                 pointer-events: none;
                 overflow: hidden;
+                width: 100%;
+                height: 100%;
+                box-sizing: border-box;
             }
             .dw-event-grid-text-content {
                 z-index: 1;
                 padding: 20px;
                 width: 100%;
+                max-width: 100%;
                 box-sizing: border-box;
+                overflow: hidden;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
             }
             .dw-event-grid-title {
                 color: #ffffff;
                 text-shadow: 0 2px 4px rgba(0,0,0,0.4);
                 font-weight: 700;
                 line-height: 1.3;
+                margin: 0;
+                padding: 0;
             }
             .dw-event-grid-datetime {
                 color: #ffffff;
                 text-shadow: 0 2px 4px rgba(0,0,0,0.4);
                 opacity: 0.95;
+                margin: 0;
+                padding: 0;
             }
             .dw-event-grid-button {
                 display: inline-block;
                 cursor: pointer;
+                margin: 0;
+                padding: 0;
+            }
+            
+            /* Ensure no content escapes the widget boundaries */
+            .elementor-widget-dw_event_grid {
+                overflow: hidden;
+                position: relative;
+                z-index: 1;
+                isolation: isolate;
+                contain: layout;
+            }
+            
+            /* Prevent any child elements from overflowing */
+            .elementor-widget-dw_event_grid * {
+                max-width: 100%;
+                box-sizing: border-box;
             }
         </style>
         <?php
