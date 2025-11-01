@@ -1539,8 +1539,9 @@ class DW_Church_Meta_Boxes {
                 frame.open();
             });
             
-            // 이미지 멀티 업로더
-            $('#dw_bulletin_images_button, #dw_album_images_button').on('click', function(e) {
+            // 이미지 멀티 업로더 (bulletin만, album은 admin.js에서 처리)
+            // IMPORTANT: Album images button is handled in admin.js to avoid duplicate handlers
+            $('#dw_bulletin_images_button').on('click', function(e) {
                 e.preventDefault();
                 var frame = wp.media({
                     title: '이미지 업로드',
@@ -1551,36 +1552,34 @@ class DW_Church_Meta_Boxes {
                 frame.on('select', function() {
                     var selection = frame.state().get('selection');
                     var ids = [];
-                    $('#dw_bulletin_images_preview li, #dw_album_images_preview li').each(function() {
+                    $('#dw_bulletin_images_preview li').each(function() {
                         ids.push($(this).data('id'));
                     });
                     selection.each(function(attachment) {
                         var att = attachment.toJSON();
-                        ids.push(att.id);
-                        $('#dw_bulletin_images_preview, #dw_album_images_preview').append(
-                            '<li data-id=\"' + att.id + '\" style=\"position:relative;\">' +
-                            '<img src=\"' + att.url + '\" style=\"width:100px;height:100px;object-fit:cover;\" />' +
-                            '<button type=\"button\" class=\"button-link remove-image\" style=\"position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;\">×</button>' +
-                            '</li>'
-                        );
+                        if (ids.indexOf(att.id) === -1) {
+                            ids.push(att.id);
+                            $('#dw_bulletin_images_preview').append(
+                                '<li data-id=\"' + att.id + '\" style=\"position:relative;\">' +
+                                '<img src=\"' + att.url + '\" style=\"width:100px;height:100px;object-fit:cover;\" />' +
+                                '<button type=\"button\" class=\"button-link remove-image\" style=\"position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;\">×</button>' +
+                                '</li>'
+                            );
+                        }
                     });
-                    $('#dw_bulletin_images, #dw_album_images').val(JSON.stringify(ids));
-                    
-                    // 앨범 이미지 추가 시 Featured Image는 PHP에서 처리 (JavaScript에서는 thumb_id 건드리지 않음)
+                    $('#dw_bulletin_images').val(JSON.stringify(ids));
                 });
                 frame.open();
             });
             
-            // 이미지 제거
-            $(document).on('click', '.remove-image', function() {
+            // 이미지 제거 (bulletin만, album은 admin.js에서 처리)
+            $(document).on('click', '#dw_bulletin_images_preview .remove-image', function() {
                 $(this).parent().remove();
                 var ids = [];
-                $('#dw_bulletin_images_preview li, #dw_album_images_preview li').each(function() {
+                $('#dw_bulletin_images_preview li').each(function() {
                     ids.push($(this).data('id'));
                 });
-                $('#dw_bulletin_images, #dw_album_images').val(JSON.stringify(ids));
-                
-                // 앨범 이미지 제거 시 Featured Image는 PHP에서 처리 (JavaScript에서는 thumb_id 건드리지 않음)
+                $('#dw_bulletin_images').val(JSON.stringify(ids));
             });
             
             // 주보 이미지 정렬 (성능 최적화)

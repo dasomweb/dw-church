@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.60.9
+Stable tag: 2.61.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,15 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.61.0 =
+* Fix: Remove duplicate event handlers for album images button (root cause of duplicate image issue)
+* Fix: Initialize media frame selection to empty state when opening
+* Fix: Rebuild all thumbnails from hidden input IDs array instead of selection to ensure consistency
+* Enhancement: Use namespaced events to prevent duplicate handler registration
+* Enhancement: Implement single source of truth pattern (hidden input) for image IDs
+* Enhancement: Add attachment data map for efficient thumbnail reconstruction
+* Enhancement: Remove album images handler from footer script, keep only in admin.js
 
 = 2.60.9 =
 * Fix: Add error handling for browser extension conflicts in album image selection

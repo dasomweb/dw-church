@@ -112,15 +112,25 @@
         });
         
         // Album images uploader - Support both button IDs
-        $('#dw_album_images_button, #dasom_album_images_button').on('click', function(e) {
+        // IMPORTANT: Remove any existing handlers to prevent duplicates
+        $('#dw_album_images_button, #dasom_album_images_button').off('click.dw-album-images');
+        $('#dw_album_images_button, #dasom_album_images_button').on('click.dw-album-images', function(e) {
             e.preventDefault();
             var maxImages = 16;
-            var currentIds = [];
             
-            // Get current image count
-            $('#dw_album_images_preview li, #dasom_album_images_preview li').each(function() {
-                currentIds.push($(this).data('id'));
-            });
+            // Get current image IDs from hidden input (single source of truth)
+            var currentIds = [];
+            var hiddenValue = $('#dw_album_images, #dasom_album_images').val();
+            if (hiddenValue) {
+                try {
+                    var parsed = JSON.parse(hiddenValue);
+                    if (Array.isArray(parsed)) {
+                        currentIds = parsed.filter(function(id) { return id; }).map(String);
+                    }
+                } catch(e) {
+                    console.error('Error parsing current album images:', e);
+                }
+            }
             
             var remainingSlots = maxImages - currentIds.length;
             
@@ -129,7 +139,7 @@
                 return;
             }
             
-            // Create media frame directly to access selection properly
+            // Create a fresh media frame - never reuse to avoid stale selections
             var mediaFrame = wp.media({
                 title: dasomChurchAdmin.strings.uploadAlbumImages || 'Upload Album Images',
                 button: { text: dasomChurchAdmin.strings.add || 'Add' },
@@ -137,93 +147,168 @@
                 multiple: true
             });
             
+            // Initialize selection to empty state
+            mediaFrame.on('open', function() {
+                var selection = mediaFrame.state().get('selection');
+                selection.reset(); // Clear any existing selections
+            });
+            
+            // Flag to prevent duplicate event execution (defense in depth)
+            var isProcessing = false;
+            
             // Handle 'select' event - this fires when user clicks the "Select" button in media modal
             mediaFrame.on('select', function() {
+                // Prevent duplicate execution
+                if (isProcessing) {
+                    console.log('Album image selection already processing, skipping duplicate event');
+                    return;
+                }
+                isProcessing = true;
+                
                 try {
+                    // CRITICAL: Read current IDs from hidden input at the exact moment of selection
+                    // This is the single source of truth - ignore DOM preview which may be stale
+                    var actualCurrentIds = [];
+                    var currentHiddenValue = $('#dw_album_images, #dasom_album_images').val();
+                    if (currentHiddenValue) {
+                        try {
+                            var currentParsed = JSON.parse(currentHiddenValue);
+                            if (Array.isArray(currentParsed)) {
+                                actualCurrentIds = currentParsed.filter(function(id) { return id; }).map(String);
+                            }
+                        } catch(e) {
+                            console.error('Error parsing current album images at selection:', e);
+                        }
+                    }
+                    
                     // Get the selection collection from the media frame state
                     var selection = mediaFrame.state().get('selection');
                     
-                    // Get selected count using selection.length (as per WordPress media uploader best practices)
+                    // Get selected count
                     var selectedCount = selection.length;
-                
-                // Start with current IDs
-                var ids = currentIds.slice();
-                
-                // Limit to maxImages
-                var maxToAdd = Math.min(selectedCount, maxImages - ids.length);
-                
-                if (maxToAdd <= 0) {
-                    alert('최대 16개의 이미지만 업로드할 수 있습니다. (Maximum 16 images allowed)');
-                    return;
-                }
-                
-                // Add selected images to IDs array
-                var added = 0;
-                selection.each(function(attachment, index) {
-                    if (added >= maxToAdd) {
-                        return false; // Stop adding
-                    }
-                    var a = attachment.toJSON();
-                    if (ids.indexOf(a.id) === -1) { // Avoid duplicates
-                        ids.push(a.id);
-                        added++;
-                    }
-                });
-                
-                // Update both hidden fields FIRST with the new IDs array
-                $('#dw_album_images, #dasom_album_images').val(JSON.stringify(ids));
-                
-                // Update image count display IMMEDIATELY using the actual count
-                var totalCount = ids.length;
-                var $countElement = $('#dw_album_images_count');
-                if ($countElement.length) {
-                    var maxCount = 16;
-                    var countText = '현재 ' + totalCount + '개 / 최대 ' + maxCount + '개 이미지';
                     
-                    if (totalCount > maxCount) {
-                        countText += ' <span style="color:#dc3545;font-weight:bold;">(경고: ' + totalCount + '개 이미지가 선택되어 있습니다. 저장 시 16개 이하로 줄여주세요)</span>';
-                        if (!$('#dw_album_images_error').length) {
-                            $countElement.after('<p class="description" style="color:#dc3545;font-weight:bold;" id="dw_album_images_error">앨범 이미지는 최대 16개까지 저장할 수 있습니다. 이미지를 제거하여 16개 이하로 줄여주세요.</p>');
+                    if (selectedCount === 0) {
+                        isProcessing = false;
+                        return; // Nothing selected, exit early
+                    }
+                    
+                    // Start with current IDs
+                    var finalIds = actualCurrentIds.slice();
+                    
+                    // Calculate how many we can add
+                    var maxToAdd = Math.min(selectedCount, maxImages - finalIds.length);
+                    
+                    if (maxToAdd <= 0) {
+                        isProcessing = false;
+                        alert('최대 16개의 이미지만 업로드할 수 있습니다. (Maximum 16 images allowed)');
+                        return;
+                    }
+                    
+                    // Collect ONLY new, unique IDs from selection (single pass)
+                    var selectedIds = [];
+                    var attachmentMap = {}; // Map of ID -> attachment JSON for thumbnail rendering
+                    
+                    selection.each(function(attachment) {
+                        try {
+                            var a = attachment.toJSON();
+                            var attachmentId = String(a.id);
+                            
+                            // Store attachment data for later thumbnail rendering
+                            attachmentMap[attachmentId] = a;
+                            
+                            // Only add if not already in current IDs and not already in selectedIds
+                            if (finalIds.indexOf(attachmentId) === -1 && selectedIds.indexOf(attachmentId) === -1) {
+                                selectedIds.push(attachmentId);
+                            }
+                        } catch(attError) {
+                            console.error('Error processing attachment:', attError);
                         }
-                    } else if (totalCount >= maxCount) {
-                        countText += ' <span style="color:#dc3545;">(최대 개수에 도달했습니다)</span>';
-                        $('#dw_album_images_error').remove();
-                    } else {
-                        $('#dw_album_images_error').remove();
+                    });
+                    
+                    // Limit to maxToAdd
+                    if (selectedIds.length > maxToAdd) {
+                        selectedIds = selectedIds.slice(0, maxToAdd);
                     }
                     
-                    $countElement.html(countText);
+                    // Merge selected IDs with current IDs
+                    selectedIds.forEach(function(newId) {
+                        if (finalIds.indexOf(newId) === -1) {
+                            finalIds.push(newId);
+                        }
+                    });
                     
-                    // Hide "no images" message if images exist
-                    $('#dw_album_images_empty, #dasom_album_images_empty').hide();
-                }
-                
-                // Now add thumbnails to preview container
-                var previewContainer = $('#dw_album_images_preview').length ? $('#dw_album_images_preview') : $('#dasom_album_images_preview');
-                previewContainer.empty(); // Clear existing previews
-                
-                selection.each(function(attachment) {
-                    var a = attachment.toJSON();
-                    if (ids.indexOf(a.id) !== -1) {
-                        previewContainer.append('<li data-id="' + a.id + '" style="position:relative;"><img src="' + a.url + '" style="width:100px;height:100px;object-fit:cover;" /><button type="button" class="button-link remove-image" style="position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;">×</button></li>');
+                    // Final duplicate removal (defense in depth)
+                    finalIds = finalIds.filter(function(id, index) {
+                        return finalIds.indexOf(id) === index;
+                    });
+                    
+                    // Update hidden input FIRST (single source of truth)
+                    $('#dw_album_images, #dasom_album_images').val(JSON.stringify(finalIds));
+                    
+                    // Update image count display immediately
+                    var totalCount = finalIds.length;
+                    var $countElement = $('#dw_album_images_count');
+                    if ($countElement.length) {
+                        var maxCount = 16;
+                        var countText = '현재 ' + totalCount + '개 / 최대 ' + maxCount + '개 이미지';
+                        
+                        if (totalCount > maxCount) {
+                            countText += ' <span style="color:#dc3545;font-weight:bold;">(경고: ' + totalCount + '개 이미지가 선택되어 있습니다. 저장 시 16개 이하로 줄여주세요)</span>';
+                            if (!$('#dw_album_images_error').length) {
+                                $countElement.after('<p class="description" style="color:#dc3545;font-weight:bold;" id="dw_album_images_error">앨범 이미지는 최대 16개까지 저장할 수 있습니다. 이미지를 제거하여 16개 이하로 줄여주세요.</p>');
+                            }
+                        } else if (totalCount >= maxCount) {
+                            countText += ' <span style="color:#dc3545;">(최대 개수에 도달했습니다)</span>';
+                            $('#dw_album_images_error').remove();
+                        } else {
+                            $('#dw_album_images_error').remove();
+                        }
+                        
+                        $countElement.html(countText);
+                        $('#dw_album_images_empty, #dasom_album_images_empty').hide();
                     }
-                });
-                
-                // Final count update after thumbnails are added
-                setTimeout(function() {
-                    self.updateAlbumImageCount();
-                }, 100);
-                
-                // Show message if some images were not added due to limit
-                if (selectedCount > maxToAdd || ids.length > maxImages) {
-                    alert('최대 16개의 이미지만 업로드할 수 있습니다. ' + Math.min(added, maxToAdd) + '개의 이미지만 추가되었습니다. (Maximum 16 images allowed. Only ' + Math.min(added, maxToAdd) + ' images were added.)');
-                }
-                
-                // Show warning if total exceeds 16
-                if (ids.length > 16) {
-                    alert('경고: 현재 ' + ids.length + '개의 이미지가 선택되어 있습니다. 저장 시 16개 이하로 줄여주세요. (Warning: ' + ids.length + ' images selected. Please reduce to 16 or less before saving.)');
-                }
+                    
+                    // Rebuild ALL thumbnails from finalIds array (not from selection)
+                    // This ensures consistency - we show exactly what's in the hidden input
+                    var previewContainer = $('#dw_album_images_preview').length ? $('#dw_album_images_preview') : $('#dasom_album_images_preview');
+                    previewContainer.empty(); // Clear all
+                    
+                    // Rebuild thumbnails for all images in finalIds
+                    finalIds.forEach(function(imageId) {
+                        // Try to get attachment data from selection first
+                        var attachment = attachmentMap[imageId];
+                        
+                        if (attachment) {
+                            // Use data from selection
+                            previewContainer.append('<li data-id="' + attachment.id + '" style="position:relative;"><img src="' + attachment.url + '" style="width:100px;height:100px;object-fit:cover;" /><button type="button" class="button-link remove-image" style="position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;">×</button></li>');
+                        } else {
+                            // Fallback: fetch attachment data via AJAX or use existing preview
+                            // For now, we'll fetch it - but this should be rare
+                            wp.media.attachment(imageId).fetch().then(function(att) {
+                                var attData = att.toJSON();
+                                previewContainer.append('<li data-id="' + attData.id + '" style="position:relative;"><img src="' + attData.url + '" style="width:100px;height:100px;object-fit:cover;" /><button type="button" class="button-link remove-image" style="position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;">×</button></li>');
+                            });
+                        }
+                    });
+                    
+                    // Reset processing flag
+                    isProcessing = false;
+                    
+                    // Final count update
+                    setTimeout(function() {
+                        self.updateAlbumImageCount();
+                    }, 100);
+                    
+                    // Show messages if needed
+                    if (selectedIds.length < selectedCount) {
+                        alert('최대 16개의 이미지만 업로드할 수 있습니다. ' + selectedIds.length + '개의 이미지만 추가되었습니다. (Maximum 16 images allowed. Only ' + selectedIds.length + ' images were added.)');
+                    }
+                    
+                    if (finalIds.length > 16) {
+                        alert('경고: 현재 ' + finalIds.length + '개의 이미지가 선택되어 있습니다. 저장 시 16개 이하로 줄여주세요. (Warning: ' + finalIds.length + ' images selected. Please reduce to 16 or less before saving.)');
+                    }
                 } catch(e) {
+                    isProcessing = false;
                     console.error('Error in album image selection:', e);
                     // Fallback: try to update from hidden input value
                     try {
