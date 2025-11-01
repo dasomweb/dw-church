@@ -420,30 +420,33 @@
                             return idsToKeep.indexOf(item.id) !== -1;
                         });
                         
-                        // Show alert and then reopen media frame
+                        // Show alert first - after alert closes, keep media frame open
                         if (canAdd > 0) {
                             alert('최대 16개의 이미지를 업로드할 수 있습니다. 현재 ' + finalIds.length + '개의 이미지가 있습니다. ' + canAdd + '개만 추가 가능합니다. 처음 선택한 ' + canAdd + '개만 유지되었습니다. (Maximum 16 images allowed. Currently ' + finalIds.length + ' images. Only ' + canAdd + ' more can be added. First ' + canAdd + ' selections have been kept.)');
                         } else {
                             alert('최대 16개의 이미지를 업로드할 수 있습니다. 이미지를 제거한 후 다시 시도해주세요. (Maximum 16 images allowed. Please remove some images before adding new ones.)');
                         }
                         
-                        // Bring media frame to front (focus) since it's already open
+                        // Keep media frame open and bring it to front after alert
                         setTimeout(function() {
+                            // Check if media frame is still open, if not, reopen it
                             var $mediaModal = $('.media-modal:visible').first();
-                            if ($mediaModal.length) {
-                                // Focus on the media modal to bring it to front
-                                $mediaModal.focus();
-                                // Also try to trigger a click or focus on the frame
-                                var $mediaFrame = $mediaModal.find('.media-frame').first();
-                                if ($mediaFrame.length) {
-                                    $mediaFrame.focus();
-                                }
-                                // Ensure modal is visible and on top
-                                $mediaModal.css({
-                                    'z-index': '160000',
-                                    'display': 'block'
-                                });
+                            if (!$mediaModal.length) {
+                                // Frame was closed, reopen it
+                                mediaFrame.open();
                             }
+                            
+                            // Ensure the frame is visible and on top
+                            setTimeout(function() {
+                                var $mediaModal = $('.media-modal:visible').first();
+                                if ($mediaModal.length) {
+                                    $mediaModal.css({
+                                        'z-index': '160000',
+                                        'display': 'block'
+                                    });
+                                    $mediaModal.focus();
+                                }
+                            }, 100);
                         }, 100);
                         
                         // CRITICAL: Return immediately to prevent any image addition

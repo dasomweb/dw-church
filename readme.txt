@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.62.4
+Stable tag: 2.62.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,11 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.62.5 =
+* Fix: Keep media frame open after alert is dismissed when 16 image limit is exceeded
+* Fix: Automatically uncheck excess images beyond 16 limit, keeping first 16 selections
+* Fix: Ensure media frame remains open so user can click "추가" button with corrected selection
 
 = 2.62.4 =
 * Change: Remove selection count display from media library frame
