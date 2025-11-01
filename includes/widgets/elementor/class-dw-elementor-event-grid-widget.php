@@ -1268,20 +1268,34 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             }
             
             /* PC/Laptop/Tablet: Auto width to allow proper flex alignment */
-            /* Apply to all instances to ensure consistency across all cards */
+            /* Apply to ALL instances with maximum specificity to ensure consistency */
             @media (min-width: 768px) {
+                /* Target all possible selector combinations */
+                .elementor-widget-dw_event_grid .dw-event-grid .dw-event-grid-item .dw-event-grid-image .dw-event-grid-text .dw-event-grid-text-content,
+                .elementor-widget-dw_event_grid .dw-event-grid-item .dw-event-grid-image .dw-event-grid-text .dw-event-grid-text-content,
                 .elementor-widget-dw_event_grid .dw-event-grid-item .dw-event-grid-text .dw-event-grid-text-content,
+                .elementor-widget-dw_event_grid .dw-event-grid-text .dw-event-grid-text-content,
                 .elementor-widget-dw_event_grid .dw-event-grid-text-content,
+                .dw-event-grid .dw-event-grid-item .dw-event-grid-image .dw-event-grid-text .dw-event-grid-text-content,
                 .dw-event-grid .dw-event-grid-item .dw-event-grid-text .dw-event-grid-text-content,
+                .dw-event-grid .dw-event-grid-text .dw-event-grid-text-content,
                 .dw-event-grid .dw-event-grid-text-content {
                     width: auto !important;
                     max-width: none !important;
                     flex: 0 0 auto !important;
+                    flex-shrink: 0 !important;
+                    flex-grow: 0 !important;
+                    flex-basis: auto !important;
                     align-self: auto !important;
                 }
                 
-                /* Ensure flex container properly aligns content */
+                /* Ensure flex container properly aligns content with high specificity */
+                .elementor-widget-dw_event_grid .dw-event-grid .dw-event-grid-item .dw-event-grid-image .dw-event-grid-text,
+                .elementor-widget-dw_event_grid .dw-event-grid-item .dw-event-grid-image .dw-event-grid-text,
+                .elementor-widget-dw_event_grid .dw-event-grid-item .dw-event-grid-text,
                 .elementor-widget-dw_event_grid .dw-event-grid-text,
+                .dw-event-grid .dw-event-grid-item .dw-event-grid-image .dw-event-grid-text,
+                .dw-event-grid .dw-event-grid-item .dw-event-grid-text,
                 .dw-event-grid .dw-event-grid-text {
                     display: flex !important;
                 }
@@ -1335,18 +1349,22 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             }
             
             /* Prevent any child elements from overflowing */
-            .elementor-widget-dw_event_grid * {
+            /* Exclude text-content from this rule to allow proper positioning */
+            .elementor-widget-dw_event_grid *:not(.dw-event-grid-text-content):not(.dw-event-grid-text) {
                 max-width: 100% !important;
                 box-sizing: border-box !important;
             }
             
-            /* Exception for text-content to allow proper positioning */
-            /* Override the universal selector rule for text-content */
-            .elementor-widget-dw_event_grid .dw-event-grid-item .dw-event-grid-text .dw-event-grid-text-content,
+            /* Ensure text-content can size itself for flex alignment */
             .elementor-widget-dw_event_grid .dw-event-grid-text-content,
-            .dw-event-grid .dw-event-grid-item .dw-event-grid-text .dw-event-grid-text-content,
             .dw-event-grid .dw-event-grid-text-content {
                 max-width: none !important;
+                box-sizing: border-box !important;
+            }
+            
+            .elementor-widget-dw_event_grid .dw-event-grid-text,
+            .dw-event-grid .dw-event-grid-text {
+                box-sizing: border-box !important;
             }
             
             /* Force containment for all grid items */
