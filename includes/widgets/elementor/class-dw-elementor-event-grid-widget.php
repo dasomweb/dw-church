@@ -1100,12 +1100,6 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $button_text = $settings['button_text'] ?? __('Read More', 'dasom-church');
         $text_position = $settings['text_position'] ?? 'center-center';
         
-        list($v_align, $h_align) = explode('-', $text_position);
-        $v_align_style = $v_align === 'top' ? 'flex-start' : ($v_align === 'bottom' ? 'flex-end' : 'center');
-        $h_align_style = $h_align === 'left' ? 'flex-start' : ($h_align === 'right' ? 'flex-end' : 'center');
-        
-        // Remove hardcoded column logic - let Elementor handle it
-        
         // Calculate height style based on ratio
         $height_ratio = $settings['height_ratio'] ?? '16:9';
         $height_style = '';
@@ -1125,7 +1119,10 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             $height_style = 'padding-top:' . $padding . ';';
         }
         
-        echo '<div class="dw-event-grid">';
+        // Generate unique widget instance ID to avoid CSS conflicts
+        $widget_id = 'dw-event-grid-' . $this->get_id();
+        
+        echo '<div class="dw-event-grid" data-widget-id="' . esc_attr($widget_id) . '">';
         
         while ($events->have_posts()) {
             $events->the_post();
@@ -1150,8 +1147,9 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     echo '<div class="dw-event-grid-overlay"></div>';
                 }
                 
-                echo '<div class="dw-event-grid-text" style="align-items:' . esc_attr($v_align_style) . ';justify-content:' . esc_attr($h_align_style) . ';">';
-                echo '<div class="dw-event-grid-text-content" style="z-index:1;">';
+                // Use CSS class instead of inline style for consistent application
+                echo '<div class="dw-event-grid-text dw-text-position-' . esc_attr($text_position) . '">';
+                echo '<div class="dw-event-grid-text-content">';
                 
                 // Department
                 if ($event_department) {
@@ -1184,10 +1182,25 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         
         wp_reset_postdata();
         
-        // Add inline CSS
+        // Add inline CSS with widget-specific selector
         ?>
         <style>
             /* DW Event Grid - Direct Grid Layout */
+            [data-widget-id="<?php echo esc_attr($widget_id); ?>"] {
+                display: grid;
+                width: 100%;
+                max-width: 100%;
+                position: relative;
+                z-index: 1;
+                clear: both;
+                overflow: hidden;
+                box-sizing: border-box;
+                isolation: isolate;
+                contain: layout style paint;
+                margin: 0;
+                padding: 0;
+            }
+            
             .dw-event-grid {
                 display: grid;
                 width: 100%;
@@ -1244,12 +1257,51 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 left: 0;
                 width: 100%;
                 height: 100%;
-                display: flex;
+                display: flex !important;
                 z-index: 2;
                 pointer-events: auto;
                 overflow: hidden;
                 box-sizing: border-box;
             }
+            
+            /* Text position classes - Apply flex alignment consistently */
+            .dw-event-grid-text.dw-text-position-top-left {
+                align-items: flex-start !important;
+                justify-content: flex-start !important;
+            }
+            .dw-event-grid-text.dw-text-position-top-center {
+                align-items: flex-start !important;
+                justify-content: center !important;
+            }
+            .dw-event-grid-text.dw-text-position-top-right {
+                align-items: flex-start !important;
+                justify-content: flex-end !important;
+            }
+            .dw-event-grid-text.dw-text-position-center-left {
+                align-items: center !important;
+                justify-content: flex-start !important;
+            }
+            .dw-event-grid-text.dw-text-position-center-center {
+                align-items: center !important;
+                justify-content: center !important;
+            }
+            .dw-event-grid-text.dw-text-position-center-right {
+                align-items: center !important;
+                justify-content: flex-end !important;
+            }
+            .dw-event-grid-text.dw-text-position-bottom-left {
+                align-items: flex-end !important;
+                justify-content: flex-start !important;
+            }
+            .dw-event-grid-text.dw-text-position-bottom-center {
+                align-items: flex-end !important;
+                justify-content: center !important;
+            }
+            .dw-event-grid-text.dw-text-position-bottom-right {
+                align-items: flex-end !important;
+                justify-content: flex-end !important;
+            }
+            
             .dw-event-grid-text-content {
                 z-index: 1;
                 padding: 20px;
