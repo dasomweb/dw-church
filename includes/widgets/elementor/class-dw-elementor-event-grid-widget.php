@@ -1281,7 +1281,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 opacity: 0.8;
             }
             .dw-event-grid-datetime {
-                color: #ffffff;
+                /* Color and typography controlled by Elementor Typography control */
                 text-shadow: 0 2px 4px rgba(0,0,0,0.4);
                 opacity: 0.95;
                 margin: 0;

@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.48
+Stable tag: 2.49
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,11 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.49 =
+* Fix: Allow Typography controls to work properly in DW Event Grid widget
+* Fix: Remove hardcoded color from Date/Time element to enable Typography control
+* Enhancement: Department and Date/Time Typography settings now properly apply styles
 
 = 2.48 =
 * Fix: Resolve pagination overflow issue in DW Recent Gallery widget on mobile devices
