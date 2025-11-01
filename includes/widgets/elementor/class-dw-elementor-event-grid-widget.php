@@ -1265,9 +1265,10 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             /* Allow text-content to shrink and align properly based on justify-content */
             @media (min-width: 768px) {
                 .dw-event-grid-text-content {
-                    width: auto;
-                    max-width: 100%;
-                    align-self: auto;
+                    width: auto !important;
+                    max-width: 100% !important;
+                    flex: 0 0 auto !important;
+                    align-self: stretch !important;
                 }
             }
             .dw-event-grid-title {

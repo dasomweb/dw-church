@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.50
+Stable tag: 2.51
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,11 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.51 =
+* Fix: Improve text position alignment fix with stronger CSS rules for PC/Laptop/Tablet
+* Fix: Add !important flags and flex properties to ensure all 9 text positions work correctly
+* Enhancement: All text position options now properly apply across all desktop device sizes
 
 = 2.50 =
 * Fix: Resolve text position alignment issue in DW Event Grid widget for PC/Laptop/Tablet
