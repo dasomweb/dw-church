@@ -383,7 +383,8 @@ class DW_Church_Meta_Boxes {
                         <?php 
                         $current_count = count($images);
                         $max_count = 16;
-                        echo sprintf(__('현재 %d개 / 최대 %d개 이미지 (Current %d / Maximum %d images)', 'dw-church'), $current_count, $max_count);
+                        $message = sprintf(__('현재 %d개 / 최대 %d개 이미지', 'dw-church'), $current_count, $max_count);
+                        echo esc_html($message);
                         ?>
                         <?php if ($current_count >= $max_count): ?>
                             <span style="color:#dc3545;"><?php _e('(최대 개수에 도달했습니다)', 'dw-church'); ?></span>
