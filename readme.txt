@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.61.4
+Stable tag: 2.61.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.61.5 =
+* Fix: Preserve existing thumbnails when adding new images instead of clearing all
+* Fix: Only remove thumbnails that are no longer in the final IDs list
+* Enhancement: Keep existing thumbnails visible when adding new images to prevent flickering
+* Fix: Ensure thumbnails remain visible after removing an image and adding new ones
 
 = 2.61.4 =
 * Fix: Keep media frame open after alert so user can select images again

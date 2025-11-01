@@ -303,22 +303,38 @@
                         $('#dw_album_images_empty, #dasom_album_images_empty').hide();
                     }
                     
-                    // Rebuild ALL thumbnails from finalIds array (not from selection)
-                    // This ensures consistency - we show exactly what's in the hidden input
+                    // Update thumbnails: preserve existing ones and add only new ones
+                    // This ensures that existing thumbnails don't disappear when adding new images
                     var previewContainer = $('#dw_album_images_preview').length ? $('#dw_album_images_preview') : $('#dasom_album_images_preview');
-                    previewContainer.empty(); // Clear all
                     
-                    // Rebuild thumbnails for all images in finalIds
+                    // Remove thumbnails that are no longer in finalIds
+                    previewContainer.find('li').each(function() {
+                        var $li = $(this);
+                        var id = String($li.data('id'));
+                        if (id && finalIds.indexOf(id) === -1) {
+                            $li.remove();
+                        }
+                    });
+                    
+                    // Add only new thumbnails that are not yet displayed
                     finalIds.forEach(function(imageId) {
-                        // Try to get attachment data from selection first
-                        var attachment = attachmentMap[imageId];
+                        var imageIdStr = String(imageId);
+                        var $existingLi = previewContainer.find('li[data-id="' + imageIdStr + '"]');
+                        
+                        // If thumbnail already exists, preserve it (don't recreate)
+                        if ($existingLi.length > 0) {
+                            return;
+                        }
+                        
+                        // Try to get attachment data from selection first (for newly selected images)
+                        var attachment = attachmentMap[imageIdStr];
                         
                         if (attachment && attachment.id && attachment.url) {
-                            // Use data from selection
+                            // Use data from selection (new image)
                             previewContainer.append('<li data-id="' + attachment.id + '" style="position:relative;"><img src="' + attachment.url + '" style="width:100px;height:100px;object-fit:cover;" /><button type="button" class="button-link remove-image" style="position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;">×</button></li>');
                         } else {
-                            // Fallback: Try to get attachment model and fetch data safely
-                            var attachmentModel = wp.media.attachment(imageId);
+                            // Fallback: Try to get attachment model and fetch data safely (for images that were previously selected but not in current selection)
+                            var attachmentModel = wp.media.attachment(imageIdStr);
                             
                             if (attachmentModel && typeof attachmentModel.fetch === 'function') {
                                 attachmentModel.fetch()
@@ -327,30 +343,20 @@
                                             // Check if att has toJSON method
                                             var attData = (att && typeof att.toJSON === 'function') ? att.toJSON() : (att || {});
                                             
-                                            // Ensure we have required properties
+                                            // Ensure we have required properties and thumbnail doesn't already exist
                                             if (attData && attData.id && attData.url) {
-                                                previewContainer.append('<li data-id="' + attData.id + '" style="position:relative;"><img src="' + attData.url + '" style="width:100px;height:100px;object-fit:cover;" /><button type="button" class="button-link remove-image" style="position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;">×</button></li>');
-                                            } else {
-                                                // Last resort: use ID to construct placeholder
-                                                console.warn('Attachment data incomplete for ID:', imageId);
-                                                var placeholderUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+SW1hZ2U8L3RleHQ+PC9zdmc+';
-                                                previewContainer.append('<li data-id="' + imageId + '" style="position:relative;"><img src="' + placeholderUrl + '" style="width:100px;height:100px;object-fit:cover;" /><button type="button" class="button-link remove-image" style="position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;">×</button></li>');
+                                                var $checkLi = previewContainer.find('li[data-id="' + attData.id + '"]');
+                                                if ($checkLi.length === 0) {
+                                                    previewContainer.append('<li data-id="' + attData.id + '" style="position:relative;"><img src="' + attData.url + '" style="width:100px;height:100px;object-fit:cover;" /><button type="button" class="button-link remove-image" style="position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;">×</button></li>');
+                                                }
                                             }
                                         } catch(e) {
                                             console.error('Error processing fetched attachment:', e);
                                         }
                                     })
                                     .catch(function(error) {
-                                        console.error('Error fetching attachment for ID ' + imageId + ':', error);
-                                        // Placeholder for failed fetch
-                                        var placeholderUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+SW1hZ2U8L3RleHQ+PC9zdmc+';
-                                        previewContainer.append('<li data-id="' + imageId + '" style="position:relative;"><img src="' + placeholderUrl + '" style="width:100px;height:100px;object-fit:cover;" /><button type="button" class="button-link remove-image" style="position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;">×</button></li>');
+                                        console.error('Error fetching attachment for ID ' + imageIdStr + ':', error);
                                     });
-                            } else {
-                                // Last resort: placeholder
-                                console.warn('Could not get attachment model for ID:', imageId);
-                                var placeholderUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+SW1hZ2U8L3RleHQ+PC9zdmc+';
-                                previewContainer.append('<li data-id="' + imageId + '" style="position:relative;"><img src="' + placeholderUrl + '" style="width:100px;height:100px;object-fit:cover;" /><button type="button" class="button-link remove-image" style="position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;">×</button></li>');
                             }
                         }
                     });
