@@ -89,27 +89,67 @@
             });
         });
         
-        // Album images uploader
-        $('#dasom_album_images_button').on('click', function(e) {
+        // Album images uploader - Support both button IDs
+        $('#dw_album_images_button, #dasom_album_images_button').on('click', function(e) {
             e.preventDefault();
+            var maxImages = 16;
+            var currentIds = [];
+            
+            // Get current image count
+            $('#dw_album_images_preview li, #dasom_album_images_preview li').each(function() {
+                currentIds.push($(this).data('id'));
+            });
+            
+            var remainingSlots = maxImages - currentIds.length;
+            
+            if (remainingSlots <= 0) {
+                alert('최대 16개의 이미지만 업로드할 수 있습니다. (Maximum 16 images allowed)');
+                return;
+            }
+            
             self.openMediaFrame({
                 title: dasomChurchAdmin.strings.uploadAlbumImages || 'Upload Album Images',
                 button: { text: dasomChurchAdmin.strings.add || 'Add' },
                 library: { type: 'image' },
                 multiple: true,
                 onSelect: function(selection) {
-                    var ids = [];
-                    $('#dasom_album_images_preview li').each(function() {
-                        ids.push($(this).data('id'));
-                    });
+                    var ids = currentIds.slice(); // Copy current IDs
+                    var added = 0;
+                    
                     selection.each(function(attachment) {
+                        if (ids.length >= maxImages) {
+                            alert('최대 16개의 이미지만 업로드할 수 있습니다. ' + (ids.length - currentIds.length) + '개의 이미지만 추가되었습니다. (Maximum 16 images allowed. Only ' + (ids.length - currentIds.length) + ' images were added.)');
+                            return false; // Stop adding more
+                        }
                         var a = attachment.toJSON();
                         ids.push(a.id);
-                        $('#dasom_album_images_preview').append('<li data-id="' + a.id + '"><img src="' + a.url + '" style="width:100px;height:100px;object-fit:cover;" /></li>');
+                        added++;
+                        
+                        // Support both preview containers
+                        var previewContainer = $('#dw_album_images_preview').length ? $('#dw_album_images_preview') : $('#dasom_album_images_preview');
+                        previewContainer.append('<li data-id="' + a.id + '" style="position:relative;"><img src="' + a.url + '" style="width:100px;height:100px;object-fit:cover;" /><button type="button" class="button-link remove-image" style="position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;">×</button></li>');
                     });
-                    $('#dasom_album_images').val(JSON.stringify(ids));
+                    
+                    // Update both hidden fields if they exist
+                    $('#dw_album_images, #dasom_album_images').val(JSON.stringify(ids));
+                    
+                    // Show message if some images were not added
+                    if (selection.length > added) {
+                        alert('최대 16개의 이미지만 업로드할 수 있습니다. ' + added + '개의 이미지만 추가되었습니다. (Maximum 16 images allowed. Only ' + added + ' images were added.)');
+                    }
                 }
             });
+        });
+        
+        // Remove image button handler for album images
+        $(document).on('click', '#dw_album_images_preview .remove-image, #dasom_album_images_preview .remove-image', function(e) {
+            e.preventDefault();
+            $(this).closest('li').remove();
+            var ids = [];
+            $(this).closest('ul').find('li').each(function() {
+                ids.push($(this).data('id'));
+            });
+            $('#dw_album_images, #dasom_album_images').val(JSON.stringify(ids));
         });
     },
     

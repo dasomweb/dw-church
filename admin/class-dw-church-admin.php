@@ -78,6 +78,336 @@ class DW_Church_Admin {
         if (!wp_next_scheduled('dw_church_check_banner_schedule')) {
             wp_schedule_event(time(), 'hourly', 'dw_church_check_banner_schedule');
         }
+        
+        // Album image upload restrictions and resizing
+        add_filter('upload_mimes', array($this, 'dw_church_restrict_image_mimes'), 10, 1);
+        add_filter('wp_handle_upload_prefilter', array($this, 'dw_church_validate_image_upload'), 10, 1);
+        add_filter('wp_handle_upload', array($this, 'dw_church_resize_album_image'), 10, 2);
+        add_filter('wp_generate_attachment_metadata', array($this, 'dw_church_resize_album_image_metadata'), 10, 3);
+    }
+    
+    /**
+     * Restrict image mime types for album uploads
+     */
+    public function dw_church_restrict_image_mimes($mimes) {
+        // Only allow common image formats (iPhone photos are typically JPEG/HEIC)
+        $allowed = array(
+            'jpg|jpeg|jpe' => 'image/jpeg',
+            'png' => 'image/png',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+            // HEIC support (iPhone photos) - requires server support
+            'heic' => 'image/heic',
+            'heif' => 'image/heif',
+        );
+        
+        // Only apply to album post type uploads if in admin
+        if (is_admin()) {
+            global $post;
+            if ($post && $post->post_type === 'album') {
+                return $allowed;
+            }
+            // Also check if this is a new album post
+            $screen = get_current_screen();
+            if ($screen && ($screen->post_type === 'album' || $screen->id === 'album')) {
+                return $allowed;
+            }
+        }
+        
+        return $mimes;
+    }
+    
+    /**
+     * Validate image upload for albums
+     */
+    public function dw_church_validate_image_upload($file) {
+        // Only apply to album post type
+        if (is_admin()) {
+            global $post;
+            $is_album_upload = false;
+            
+            if ($post && $post->post_type === 'album') {
+                $is_album_upload = true;
+            } else {
+                $screen = get_current_screen();
+                if ($screen && ($screen->post_type === 'album' || $screen->id === 'album')) {
+                    $is_album_upload = true;
+                }
+            }
+            
+            if ($is_album_upload) {
+                $allowed_types = array('image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif');
+                $file_type = wp_check_filetype($file['name']);
+                $mime_type = $file['type'];
+                
+                // Check if file type is allowed
+                if (!in_array($mime_type, $allowed_types) && !in_array($file_type['type'], $allowed_types)) {
+                    $file['error'] = __('허용되지 않은 이미지 형식입니다. JPEG, PNG, GIF, WebP 형식만 업로드 가능합니다. (Only JPEG, PNG, GIF, WebP formats are allowed)', 'dw-church');
+                    return $file;
+                }
+            }
+        }
+        
+        return $file;
+    }
+    
+    /**
+     * Resize album images to maximum 1280px width
+     */
+    public function dw_church_resize_album_image($upload, $context) {
+        // Only process images uploaded for album post type
+        if ($context !== 'upload' || !isset($upload['file']) || !isset($upload['type'])) {
+            return $upload;
+        }
+        
+        // Check if this is an image
+        if (strpos($upload['type'], 'image/') !== 0) {
+            return $upload;
+        }
+        
+        // Check if uploaded during album post edit
+        $is_album_upload = false;
+        if (is_admin()) {
+            global $post;
+            if ($post && $post->post_type === 'album') {
+                $is_album_upload = true;
+            } else {
+                // Check if in media library upload for album
+                $referer = wp_get_referer();
+                if ($referer && (strpos($referer, 'post_type=album') !== false || strpos($referer, 'post.php') !== false)) {
+                    $is_album_upload = true;
+                }
+            }
+        }
+        
+        if (!$is_album_upload) {
+            return $upload;
+        }
+        
+        // Get image dimensions
+        $image_path = $upload['file'];
+        if (!file_exists($image_path)) {
+            return $upload;
+        }
+        
+        // Get image info
+        $image_info = @getimagesize($image_path);
+        if (!$image_info) {
+            return $upload;
+        }
+        
+        $max_width = 1280;
+        $current_width = $image_info[0];
+        $current_height = $image_info[1];
+        $mime_type = $image_info['mime'];
+        
+        // Only resize if image is wider than 1280px
+        if ($current_width <= $max_width) {
+            return $upload;
+        }
+        
+        // Calculate new height maintaining aspect ratio
+        $ratio = $current_height / $current_width;
+        $new_width = $max_width;
+        $new_height = round($max_width * $ratio);
+        
+        // Create image resource based on mime type
+        switch ($mime_type) {
+            case 'image/jpeg':
+                $source_image = @imagecreatefromjpeg($image_path);
+                break;
+            case 'image/png':
+                $source_image = @imagecreatefrompng($image_path);
+                break;
+            case 'image/gif':
+                $source_image = @imagecreatefromgif($image_path);
+                break;
+            case 'image/webp':
+                if (function_exists('imagecreatefromwebp')) {
+                    $source_image = @imagecreatefromwebp($image_path);
+                } else {
+                    return $upload; // WebP not supported
+                }
+                break;
+            default:
+                return $upload; // Unsupported format
+        }
+        
+        if (!$source_image) {
+            return $upload;
+        }
+        
+        // Create new image
+        $new_image = imagecreatetruecolor($new_width, $new_height);
+        
+        // Preserve transparency for PNG and GIF
+        if ($mime_type === 'image/png' || $mime_type === 'image/gif') {
+            imagealphablending($new_image, false);
+            imagesavealpha($new_image, true);
+            $transparent = imagecolorallocatealpha($new_image, 255, 255, 255, 127);
+            imagefilledrectangle($new_image, 0, 0, $new_width, $new_height, $transparent);
+        }
+        
+        // Resize image
+        imagecopyresampled($new_image, $source_image, 0, 0, 0, 0, $new_width, $new_height, $current_width, $current_height);
+        
+        // Save resized image
+        switch ($mime_type) {
+            case 'image/jpeg':
+                imagejpeg($new_image, $image_path, 90); // 90 quality
+                break;
+            case 'image/png':
+                imagepng($new_image, $image_path, 9); // 9 compression level
+                break;
+            case 'image/gif':
+                imagegif($new_image, $image_path);
+                break;
+            case 'image/webp':
+                if (function_exists('imagewebp')) {
+                    imagewebp($new_image, $image_path, 90);
+                }
+                break;
+        }
+        
+        // Free memory
+        imagedestroy($source_image);
+        imagedestroy($new_image);
+        
+        // Update file size in upload array
+        if (file_exists($image_path)) {
+            $upload['filesize'] = filesize($image_path);
+        }
+        
+        return $upload;
+    }
+    
+    /**
+     * Resize album images via attachment metadata hook (alternative method)
+     */
+    public function dw_church_resize_album_image_metadata($metadata, $attachment_id, $context) {
+        // Only process in admin and for images
+        if (!is_admin() || $context !== 'create') {
+            return $metadata;
+        }
+        
+        // Check if attachment is an image
+        $mime_type = get_post_mime_type($attachment_id);
+        if (!$mime_type || strpos($mime_type, 'image/') !== 0) {
+            return $metadata;
+        }
+        
+        // Check if this attachment is associated with an album post
+        $parent_post = get_post(wp_get_post_parent_id($attachment_id));
+        $is_album_attachment = false;
+        
+        if ($parent_post && $parent_post->post_type === 'album') {
+            $is_album_attachment = true;
+        } else {
+            // Check if uploaded during album post edit via referer
+            $referer = wp_get_referer();
+            if ($referer && (strpos($referer, 'post_type=album') !== false || strpos($referer, 'post.php') !== false)) {
+                // Check if uploaded in last 30 seconds (reasonable time window)
+                $upload_time = get_post_time('U', false, $attachment_id);
+                if ($upload_time && (time() - $upload_time) < 30) {
+                    $is_album_attachment = true;
+                }
+            }
+        }
+        
+        if (!$is_album_attachment) {
+            return $metadata;
+        }
+        
+        // Get full size image path
+        $upload_dir = wp_upload_dir();
+        $file_path = get_attached_file($attachment_id);
+        
+        if (!$file_path || !file_exists($file_path)) {
+            return $metadata;
+        }
+        
+        // Check if image needs resizing
+        if (!isset($metadata['width']) || $metadata['width'] <= 1280) {
+            return $metadata;
+        }
+        
+        $current_width = $metadata['width'];
+        $current_height = $metadata['height'];
+        $max_width = 1280;
+        
+        // Calculate new dimensions
+        $ratio = $current_height / $current_width;
+        $new_width = $max_width;
+        $new_height = round($max_width * $ratio);
+        
+        // Load image based on mime type
+        switch ($mime_type) {
+            case 'image/jpeg':
+                $source_image = @imagecreatefromjpeg($file_path);
+                break;
+            case 'image/png':
+                $source_image = @imagecreatefrompng($file_path);
+                break;
+            case 'image/gif':
+                $source_image = @imagecreatefromgif($file_path);
+                break;
+            case 'image/webp':
+                if (function_exists('imagecreatefromwebp')) {
+                    $source_image = @imagecreatefromwebp($file_path);
+                } else {
+                    return $metadata;
+                }
+                break;
+            default:
+                return $metadata;
+        }
+        
+        if (!$source_image) {
+            return $metadata;
+        }
+        
+        // Create new image
+        $new_image = imagecreatetruecolor($new_width, $new_height);
+        
+        // Preserve transparency
+        if ($mime_type === 'image/png' || $mime_type === 'image/gif') {
+            imagealphablending($new_image, false);
+            imagesavealpha($new_image, true);
+            $transparent = imagecolorallocatealpha($new_image, 255, 255, 255, 127);
+            imagefilledrectangle($new_image, 0, 0, $new_width, $new_height, $transparent);
+        }
+        
+        // Resize
+        imagecopyresampled($new_image, $source_image, 0, 0, 0, 0, $new_width, $new_height, $current_width, $current_height);
+        
+        // Save
+        switch ($mime_type) {
+            case 'image/jpeg':
+                imagejpeg($new_image, $file_path, 90);
+                break;
+            case 'image/png':
+                imagepng($new_image, $file_path, 9);
+                break;
+            case 'image/gif':
+                imagegif($new_image, $file_path);
+                break;
+            case 'image/webp':
+                if (function_exists('imagewebp')) {
+                    imagewebp($new_image, $file_path, 90);
+                }
+                break;
+        }
+        
+        // Free memory
+        imagedestroy($source_image);
+        imagedestroy($new_image);
+        
+        // Update metadata
+        $metadata['width'] = $new_width;
+        $metadata['height'] = $new_height;
+        $metadata['filesize'] = filesize($file_path);
+        
+        return $metadata;
     }
     
     /**

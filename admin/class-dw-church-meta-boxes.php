@@ -379,6 +379,16 @@ class DW_Church_Meta_Boxes {
                             </li>
                         <?php endforeach; ?>
                     </ul>
+                    <p class="description">
+                        <?php 
+                        $current_count = count($images);
+                        $max_count = 16;
+                        echo sprintf(__('현재 %d개 / 최대 %d개 이미지 (Current %d / Maximum %d images)', 'dw-church'), $current_count, $max_count);
+                        ?>
+                        <?php if ($current_count >= $max_count): ?>
+                            <span style="color:#dc3545;"><?php _e('(최대 개수에 도달했습니다)', 'dw-church'); ?></span>
+                        <?php endif; ?>
+                    </p>
                     <?php if (empty($images)): ?>
                         <p class="description"><?php _e('이미지가 없습니다. 위의 버튼을 클릭하여 이미지를 업로드하세요.', 'dw-church'); ?></p>
                     <?php endif; ?>
@@ -1142,13 +1152,23 @@ class DW_Church_Meta_Boxes {
         }
         
         if (isset($_POST['dw_album_images'])) {
-            update_post_meta($post_id, 'dw_album_images', sanitize_text_field($_POST['dw_album_images']));
-            
-            // Auto-set first image as featured image (only if no manual YouTube thumbnail is set)
-            $manual_youtube_thumb_id = get_post_meta($post_id, 'dw_album_thumb_id', true);
-            if (!$manual_youtube_thumb_id) {
-                $images = json_decode(sanitize_text_field($_POST['dw_album_images']), true);
-                if (is_array($images) && !empty($images)) {
+            $images = json_decode(sanitize_text_field($_POST['dw_album_images']), true);
+            if (is_array($images)) {
+                // Limit to maximum 16 images
+                $max_images = 16;
+                if (count($images) > $max_images) {
+                    $images = array_slice($images, 0, $max_images);
+                }
+                // Ensure all values are integers
+                $images = array_map('absint', $images);
+                $images = array_filter($images); // Remove any zero values
+                $images = array_values($images); // Reindex array
+                
+                update_post_meta($post_id, 'dw_album_images', wp_json_encode($images));
+                
+                // Auto-set first image as featured image (only if no manual YouTube thumbnail is set)
+                $manual_youtube_thumb_id = get_post_meta($post_id, 'dw_album_thumb_id', true);
+                if (!$manual_youtube_thumb_id && !empty($images)) {
                     $first_image_id = intval($images[0]);
                     if ($first_image_id > 0) {
                         set_post_thumbnail($post_id, $first_image_id);
