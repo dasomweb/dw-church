@@ -181,6 +181,26 @@
                         }
                     }
                     
+                    // ALSO read from DOM as fallback to ensure we don't lose existing images
+                    // This is a safety measure - hidden input is still the source of truth, but DOM can help
+                    var previewContainer = $('#dw_album_images_preview').length ? $('#dw_album_images_preview') : $('#dasom_album_images_preview');
+                    var domIds = [];
+                    previewContainer.find('li').each(function() {
+                        var id = String($(this).data('id'));
+                        if (id && domIds.indexOf(id) === -1) {
+                            domIds.push(id);
+                        }
+                    });
+                    
+                    // Merge actualCurrentIds and domIds to ensure we don't lose any existing images
+                    // actualCurrentIds takes precedence (source of truth), but domIds fills in gaps
+                    var mergedCurrentIds = actualCurrentIds.slice();
+                    domIds.forEach(function(domId) {
+                        if (mergedCurrentIds.indexOf(domId) === -1) {
+                            mergedCurrentIds.push(domId);
+                        }
+                    });
+                    
                     // Get the selection collection from the media frame state
                     var selection = mediaFrame.state().get('selection');
                     
@@ -192,8 +212,8 @@
                         return; // Nothing selected, exit early
                     }
                     
-                    // Start with current IDs
-                    var finalIds = actualCurrentIds.slice();
+                    // Start with merged current IDs (includes both hidden input and DOM)
+                    var finalIds = mergedCurrentIds.slice();
                     
                     // Check if already at maximum
                     if (finalIds.length >= maxImages) {

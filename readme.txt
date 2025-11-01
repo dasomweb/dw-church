@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.61.5
+Stable tag: 2.61.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,11 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.61.6 =
+* Fix: Read existing image IDs from both hidden input and DOM to prevent losing thumbnails
+* Fix: Merge hidden input IDs with DOM IDs to ensure existing images are preserved when adding new ones
+* Enhancement: Add fallback mechanism to read image IDs from DOM when hidden input is empty or incorrect
 
 = 2.61.5 =
 * Fix: Preserve existing thumbnails when adding new images instead of clearing all
