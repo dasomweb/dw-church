@@ -364,7 +364,7 @@ class DW_Church_Meta_Boxes {
                     <label for="album_images"><?php _e('앨범 이미지', 'dw-church'); ?></label>
                 </th>
                 <td>
-                    <input type="hidden" id="dw_album_images" name="dw_album_images" value='<?php echo esc_attr(json_encode($images)); ?>' />
+                    <input type="hidden" id="dw_album_images" name="dw_album_images" value='<?php echo esc_attr(json_encode($images)); ?>' autocomplete="off" data-lpignore="true" />
                     <button type="button" class="button" id="dw_album_images_button"><?php _e('이미지 업로드/선택', 'dw-church'); ?></button>
                     
                     <!-- Image count display moved ABOVE the thumbnail list -->

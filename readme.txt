@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.60.8
+Stable tag: 2.60.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.60.9 =
+* Fix: Add error handling for browser extension conflicts in album image selection
+* Fix: Add autocomplete="off" and data-lpignore="true" to album images hidden input field
+* Enhancement: Add try-catch blocks to prevent browser extension errors from breaking image count display
+* Enhancement: Add fallback mechanism to read image count from hidden input when errors occur
 
 = 2.60.8 =
 * Fix: Fix JavaScript syntax error - missing closing brace for DasomChurchAdmin object

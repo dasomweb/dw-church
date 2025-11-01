@@ -139,11 +139,12 @@
             
             // Handle 'select' event - this fires when user clicks the "Select" button in media modal
             mediaFrame.on('select', function() {
-                // Get the selection collection from the media frame state
-                var selection = mediaFrame.state().get('selection');
-                
-                // Get selected count using selection.length (as per WordPress media uploader best practices)
-                var selectedCount = selection.length;
+                try {
+                    // Get the selection collection from the media frame state
+                    var selection = mediaFrame.state().get('selection');
+                    
+                    // Get selected count using selection.length (as per WordPress media uploader best practices)
+                    var selectedCount = selection.length;
                 
                 // Start with current IDs
                 var ids = currentIds.slice();
@@ -221,6 +222,25 @@
                 // Show warning if total exceeds 16
                 if (ids.length > 16) {
                     alert('경고: 현재 ' + ids.length + '개의 이미지가 선택되어 있습니다. 저장 시 16개 이하로 줄여주세요. (Warning: ' + ids.length + ' images selected. Please reduce to 16 or less before saving.)');
+                }
+                } catch(e) {
+                    console.error('Error in album image selection:', e);
+                    // Fallback: try to update from hidden input value
+                    try {
+                        var hiddenValue = $('#dw_album_images, #dasom_album_images').val();
+                        if (hiddenValue) {
+                            var parsed = JSON.parse(hiddenValue);
+                            if (Array.isArray(parsed)) {
+                                var fallbackCount = parsed.length;
+                                var $countElement = $('#dw_album_images_count');
+                                if ($countElement.length) {
+                                    $countElement.html('현재 ' + fallbackCount + '개 / 최대 16개 이미지');
+                                }
+                            }
+                        }
+                    } catch(parseError) {
+                        console.error('Error parsing fallback value:', parseError);
+                    }
                 }
             });
             
@@ -375,34 +395,39 @@
      * Update album image count display
      */
     updateAlbumImageCount: function() {
-        var ids = [];
-        
-        // First, try reading from DOM preview elements
-        $('#dw_album_images_preview li, #dasom_album_images_preview li').each(function() {
-            var id = $(this).data('id');
-            if (id) {
-                ids.push(String(id)); // Convert to string for consistency
-            }
-        });
-        
-        // Also read from hidden input field (always check this as backup)
-        var hiddenValue = $('#dw_album_images, #dasom_album_images').val();
-        if (hiddenValue) {
-            try {
-                var parsed = JSON.parse(hiddenValue);
-                if (Array.isArray(parsed)) {
-                    // Merge with DOM data, avoiding duplicates
-                    var hiddenIds = parsed.filter(function(id) { return id; }).map(String);
-                    hiddenIds.forEach(function(id) {
-                        if (ids.indexOf(id) === -1) {
-                            ids.push(id);
-                        }
-                    });
+        try {
+            var ids = [];
+            
+            // First, try reading from DOM preview elements
+            $('#dw_album_images_preview li, #dasom_album_images_preview li').each(function() {
+                try {
+                    var id = $(this).data('id');
+                    if (id) {
+                        ids.push(String(id)); // Convert to string for consistency
+                    }
+                } catch(e) {
+                    // Ignore errors from individual elements
                 }
-            } catch(e) {
-                console.error('Error parsing album images:', e);
+            });
+            
+            // Also read from hidden input field (always check this as backup)
+            var hiddenValue = $('#dw_album_images, #dasom_album_images').val();
+            if (hiddenValue) {
+                try {
+                    var parsed = JSON.parse(hiddenValue);
+                    if (Array.isArray(parsed)) {
+                        // Merge with DOM data, avoiding duplicates
+                        var hiddenIds = parsed.filter(function(id) { return id; }).map(String);
+                        hiddenIds.forEach(function(id) {
+                            if (ids.indexOf(id) === -1) {
+                                ids.push(id);
+                            }
+                        });
+                    }
+                } catch(e) {
+                    console.error('Error parsing album images:', e);
+                }
             }
-        }
         
         // Remove duplicates and ensure we have valid IDs
         ids = ids.filter(function(id, index) {
@@ -449,6 +474,25 @@
             }
             
             $countElement.html(countText);
+        }
+        } catch(e) {
+            console.error('Error updating album image count:', e);
+            // Try to show at least something if there's an error
+            try {
+                var hiddenValue = $('#dw_album_images, #dasom_album_images').val();
+                if (hiddenValue) {
+                    var parsed = JSON.parse(hiddenValue);
+                    if (Array.isArray(parsed)) {
+                        var errorCount = parsed.length;
+                        var $countElement = $('#dw_album_images_count');
+                        if ($countElement.length) {
+                            $countElement.html('현재 ' + errorCount + '개 / 최대 16개 이미지');
+                        }
+                    }
+                }
+            } catch(parseError) {
+                console.error('Error in fallback count update:', parseError);
+            }
         }
     },
     
