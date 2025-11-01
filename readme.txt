@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.61.6
+Stable tag: 2.62.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.62.0 =
+* Enhancement: Display selected image count in media library frame when selecting album images
+* Enhancement: Automatically uncheck excess images beyond 16 limit, keeping first 16 selections in order
+* Enhancement: Show automatic warning message when attempting to select more than 16 images
+* Enhancement: Maintain selection order and keep only first 16 images when limit is exceeded
 
 = 2.61.6 =
 * Fix: Read existing image IDs from both hidden input and DOM to prevent losing thumbnails

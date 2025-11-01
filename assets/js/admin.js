@@ -147,10 +147,114 @@
                 multiple: true
             });
             
+            // Track selection order for maintaining first 16 selections
+            var selectionOrder = []; // Array to track selection order: [{id: '123', timestamp: 123456}]
+            var maxAllowedInFrame = remainingSlots; // Maximum images that can be selected in this frame
+            
             // Initialize selection to empty state
             mediaFrame.on('open', function() {
                 var selection = mediaFrame.state().get('selection');
                 selection.reset(); // Clear any existing selections
+                selectionOrder = []; // Reset selection order
+                maxAllowedInFrame = remainingSlots; // Reset max allowed
+                
+                // Update selection count display in media frame
+                self.updateSelectionCountInFrame(mediaFrame, 0, maxImages);
+            });
+            
+            // Listen to selection changes to track selection order and update count
+            // Use setTimeout to ensure DOM is ready after 'open' event
+            mediaFrame.on('open', function() {
+                setTimeout(function() {
+                    var selection = mediaFrame.state().get('selection');
+                    
+                    // Listen to selection updates (when checkboxes are clicked)
+                    selection.off('add.dw-album remove.dw-album reset.dw-album'); // Remove any existing handlers
+                    selection.on('add.dw-album remove.dw-album reset.dw-album', function() {
+                    var currentCount = selection.length;
+                    var currentSelectedIds = [];
+                    
+                    // Get currently selected IDs
+                    selection.each(function(attachment) {
+                        try {
+                            var a = attachment.toJSON();
+                            var attachmentId = String(a.id);
+                            currentSelectedIds.push(attachmentId);
+                            
+                            // Track selection order if not already tracked
+                            var exists = selectionOrder.some(function(item) {
+                                return item.id === attachmentId;
+                            });
+                            if (!exists) {
+                                selectionOrder.push({
+                                    id: attachmentId,
+                                    timestamp: Date.now()
+                                });
+                            }
+                        } catch(e) {
+                            console.error('Error processing attachment:', e);
+                        }
+                    });
+                    
+                    // Remove items from selectionOrder that are no longer selected
+                    selectionOrder = selectionOrder.filter(function(item) {
+                        return currentSelectedIds.indexOf(item.id) !== -1;
+                    });
+                    
+                    // Update selection count display
+                    self.updateSelectionCountInFrame(mediaFrame, currentCount, maxImages);
+                    
+                    // Check if selection exceeds limit
+                    if (currentCount > maxAllowedInFrame) {
+                        // Keep only the first 16 selections (by order)
+                        var idsToKeep = selectionOrder
+                            .slice(0, maxAllowedInFrame)
+                            .map(function(item) { return item.id; });
+                        
+                        // Uncheck images that are not in idsToKeep
+                        var selectionToUpdate = mediaFrame.state().get('selection');
+                        selectionToUpdate.each(function(attachment) {
+                            try {
+                                var a = attachment.toJSON();
+                                var attachmentId = String(a.id);
+                                if (idsToKeep.indexOf(attachmentId) === -1) {
+                                    selectionToUpdate.remove(attachment);
+                                }
+                            } catch(e) {
+                                console.error('Error removing attachment:', e);
+                            }
+                        });
+                        
+                        // Update selectionOrder to match current selection
+                        selectionOrder = selectionOrder.filter(function(item) {
+                            return idsToKeep.indexOf(item.id) !== -1;
+                        });
+                        
+                        // Show alert message
+                        setTimeout(function() {
+                            alert('최대 ' + maxAllowedInFrame + '개의 이미지만 선택할 수 있습니다. 처음 선택한 ' + maxAllowedInFrame + '개만 유지되었습니다. (Maximum ' + maxAllowedInFrame + ' images can be selected. First ' + maxAllowedInFrame + ' selections have been kept.)');
+                        }, 100);
+                    }
+                    });
+                    
+                    // Also use jQuery to detect checkbox clicks as a fallback
+                    setTimeout(function() {
+                        var $mediaFrame = $('.media-frame:visible, .media-modal:visible').first();
+                        if ($mediaFrame.length) {
+                            // Remove existing handlers to prevent duplicates
+                            $mediaFrame.off('change.dw-album', 'input[type="checkbox"]');
+                            
+                            // Listen to checkbox changes
+                            $mediaFrame.on('change.dw-album', 'input[type="checkbox"]', function() {
+                                setTimeout(function() {
+                                    var selection = mediaFrame.state().get('selection');
+                                    var currentCount = selection.length;
+                                    self.updateSelectionCountInFrame(mediaFrame, currentCount, maxImages);
+                                }, 50);
+                            });
+                        }
+                    }, 500);
+                }, 300);
             });
             
             // Flag to prevent duplicate event execution (defense in depth)
@@ -250,19 +354,70 @@
                         // CRITICAL: Reset processing flag BEFORE showing alert
                         isProcessing = false;
                         
+                        // Get selection to keep only first 16 selected images
+                        var selection = mediaFrame.state().get('selection');
+                        var allSelectedIds = [];
+                        var selectionWithOrder = [];
+                        
+                        // Collect all selected IDs with their order
+                        selection.each(function(attachment) {
+                            try {
+                                var a = attachment.toJSON();
+                                var attachmentId = String(a.id);
+                                allSelectedIds.push(attachmentId);
+                                
+                                // Find order from selectionOrder array (compatible with older browsers)
+                                var orderItem = null;
+                                for (var i = 0; i < selectionOrder.length; i++) {
+                                    if (selectionOrder[i].id === attachmentId) {
+                                        orderItem = selectionOrder[i];
+                                        break;
+                                    }
+                                }
+                                var order = orderItem ? selectionOrder.indexOf(orderItem) : selectionOrder.length;
+                                
+                                selectionWithOrder.push({
+                                    id: attachmentId,
+                                    order: order,
+                                    attachment: attachment
+                                });
+                            } catch(e) {
+                                console.error('Error processing attachment:', e);
+                            }
+                        });
+                        
+                        // Sort by selection order (first selected first)
+                        selectionWithOrder.sort(function(a, b) {
+                            return a.order - b.order;
+                        });
+                        
+                        // Keep only first 16 selections
+                        var idsToKeep = selectionWithOrder
+                            .slice(0, maxAllowedInFrame)
+                            .map(function(item) { return item.id; });
+                        
+                        // Uncheck images that are not in the first 16
+                        selectionWithOrder.forEach(function(item) {
+                            if (idsToKeep.indexOf(item.id) === -1) {
+                                selection.remove(item.attachment);
+                            }
+                        });
+                        
+                        // Update selectionOrder to match kept selections
+                        selectionOrder = selectionOrder.filter(function(item) {
+                            return idsToKeep.indexOf(item.id) !== -1;
+                        });
+                        
                         if (canAdd > 0) {
-                            alert('최대 16개의 이미지를 업로드할 수 있습니다. 현재 ' + finalIds.length + '개의 이미지가 있습니다. ' + canAdd + '개만 추가 가능합니다. 일부 이미지를 선택 해제해주세요. (Maximum 16 images allowed. Currently ' + finalIds.length + ' images. Only ' + canAdd + ' more can be added. Please deselect some images.)');
+                            alert('최대 16개의 이미지를 업로드할 수 있습니다. 현재 ' + finalIds.length + '개의 이미지가 있습니다. ' + canAdd + '개만 추가 가능합니다. 처음 선택한 ' + canAdd + '개만 유지되었습니다. (Maximum 16 images allowed. Currently ' + finalIds.length + ' images. Only ' + canAdd + ' more can be added. First ' + canAdd + ' selections have been kept.)');
                         } else {
                             alert('최대 16개의 이미지를 업로드할 수 있습니다. 이미지를 제거한 후 다시 시도해주세요. (Maximum 16 images allowed. Please remove some images before adding new ones.)');
                         }
                         
-                        // Reset selection in media frame to allow user to select again
-                        var selection = mediaFrame.state().get('selection');
-                        selection.reset();
-                        
-                        // Reopen media frame after a short delay so user can select again
+                        // Update selection count in frame after unchecking
                         setTimeout(function() {
-                            mediaFrame.open();
+                            var updatedCount = selection.length;
+                            self.updateSelectionCountInFrame(mediaFrame, updatedCount, maxImages);
                         }, 100);
                         
                         // CRITICAL: Return immediately to prevent any image addition
@@ -466,6 +621,89 @@
                 self.updateAlbumImageCount();
             }, 50);
         });
+    },
+    
+    /**
+     * Update selection count display in media frame
+     */
+    updateSelectionCountInFrame: function(mediaFrame, currentCount, maxCount) {
+        try {
+            // Find or create selection count element
+            var $frameContent = $(mediaFrame.el || mediaFrame.$el || '.media-frame');
+            if (!$frameContent.length) {
+                // Try to find media frame in DOM
+                $frameContent = $('.media-frame:visible');
+            }
+            
+            // Try multiple selectors to find the media frame
+            var $frame = $frameContent.first();
+            if (!$frame.length) {
+                // Fallback: try to find by looking for media modal
+                $frame = $('.media-modal:visible').first();
+            }
+            
+            if (!$frame.length) {
+                return; // Media frame not found
+            }
+            
+            // Find or create count display element
+            var $countDisplay = $frame.find('.dw-media-selection-count');
+            if (!$countDisplay.length) {
+                // Create count display element - add it to the toolbar
+                var $toolbar = $frame.find('.media-toolbar, .media-frame-toolbar').first();
+                if ($toolbar.length) {
+                    $countDisplay = $('<div class="dw-media-selection-count" style="padding: 10px; text-align: center; background: #f5f5f5; border-bottom: 1px solid #ddd; font-weight: bold; color: #333;"></div>');
+                    $toolbar.prepend($countDisplay);
+                } else {
+                    // Fallback: add to frame title area
+                    var $title = $frame.find('.media-frame-title, .media-frame-title-bar').first();
+                    if ($title.length) {
+                        $countDisplay = $('<div class="dw-media-selection-count" style="padding: 8px 15px; background: #f5f5f5; border-bottom: 1px solid #ddd; font-weight: bold; color: #333; font-size: 13px;"></div>');
+                        $title.after($countDisplay);
+                    }
+                }
+            }
+            
+            if ($countDisplay.length) {
+                var countText = '선택한 이미지: ' + currentCount + '개';
+                if (maxCount) {
+                    countText += ' / 최대 ' + maxCount + '개';
+                }
+                
+                // Add warning style if approaching or exceeding limit
+                if (maxCount && currentCount >= maxCount) {
+                    $countDisplay.css({
+                        'background': '#fff3cd',
+                        'color': '#856404',
+                        'border-bottom-color': '#ffc107'
+                    });
+                    if (currentCount > maxCount) {
+                        countText += ' (초과)';
+                        $countDisplay.css({
+                            'background': '#f8d7da',
+                            'color': '#721c24',
+                            'border-bottom-color': '#dc3545'
+                        });
+                    }
+                } else if (maxCount && currentCount >= maxCount - 2) {
+                    $countDisplay.css({
+                        'background': '#fff3cd',
+                        'color': '#856404',
+                        'border-bottom-color': '#ffc107'
+                    });
+                } else {
+                    $countDisplay.css({
+                        'background': '#f5f5f5',
+                        'color': '#333',
+                        'border-bottom-color': '#ddd'
+                    });
+                }
+                
+                $countDisplay.text(countText);
+            }
+        } catch(e) {
+            console.error('Error updating selection count in frame:', e);
+        }
     },
     
     /**
