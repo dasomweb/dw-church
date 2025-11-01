@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.60.6
+Stable tag: 2.60.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,13 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.60.7 =
+* Fix: Use WordPress media uploader selection.length to accurately count selected images
+* Fix: Update image count immediately when removing images via X button
+* Enhancement: Use direct wp.media() API instead of helper function for better selection access
+* Enhancement: Update count display synchronously when removing images (no delay)
+* Enhancement: Ensure accurate count calculation using mediaFrame.state().get('selection').length
 
 = 2.60.6 =
 * Fix: Move image count display above thumbnail list to ensure accurate counting

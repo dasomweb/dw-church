@@ -129,64 +129,111 @@
                 return;
             }
             
-            self.openMediaFrame({
+            // Create media frame directly to access selection properly
+            var mediaFrame = wp.media({
                 title: dasomChurchAdmin.strings.uploadAlbumImages || 'Upload Album Images',
                 button: { text: dasomChurchAdmin.strings.add || 'Add' },
                 library: { type: 'image' },
-                multiple: true,
-                onSelect: function(selection) {
-                    var ids = currentIds.slice(); // Copy current IDs
-                    var added = 0;
-                    
-                    selection.each(function(attachment) {
-                        if (ids.length >= maxImages) {
-                            alert('최대 16개의 이미지만 업로드할 수 있습니다. ' + (ids.length - currentIds.length) + '개의 이미지만 추가되었습니다. (Maximum 16 images allowed. Only ' + (ids.length - currentIds.length) + ' images were added.)');
-                            return false; // Stop adding more
-                        }
-                        var a = attachment.toJSON();
+                multiple: true
+            });
+            
+            // Handle 'select' event - this fires when user clicks the "Select" button in media modal
+            mediaFrame.on('select', function() {
+                // Get the selection collection from the media frame state
+                var selection = mediaFrame.state().get('selection');
+                
+                // Get selected count using selection.length (as per WordPress media uploader best practices)
+                var selectedCount = selection.length;
+                
+                // Start with current IDs
+                var ids = currentIds.slice();
+                
+                // Limit to maxImages
+                var maxToAdd = Math.min(selectedCount, maxImages - ids.length);
+                
+                if (maxToAdd <= 0) {
+                    alert('최대 16개의 이미지만 업로드할 수 있습니다. (Maximum 16 images allowed)');
+                    return;
+                }
+                
+                // Add selected images to IDs array
+                var added = 0;
+                selection.each(function(attachment, index) {
+                    if (added >= maxToAdd) {
+                        return false; // Stop adding
+                    }
+                    var a = attachment.toJSON();
+                    if (ids.indexOf(a.id) === -1) { // Avoid duplicates
                         ids.push(a.id);
                         added++;
-                    });
+                    }
+                });
+                
+                // Update both hidden fields FIRST with the new IDs array
+                $('#dw_album_images, #dasom_album_images').val(JSON.stringify(ids));
+                
+                // Update image count display IMMEDIATELY using the actual count
+                var totalCount = ids.length;
+                var $countElement = $('#dw_album_images_count');
+                if ($countElement.length) {
+                    var maxCount = 16;
+                    var countText = '현재 ' + totalCount + '개 / 최대 ' + maxCount + '개 이미지';
                     
-                    // Update both hidden fields FIRST
-                    $('#dw_album_images, #dasom_album_images').val(JSON.stringify(ids));
-                    
-                    // Update image count display IMMEDIATELY (before adding thumbnails)
-                    self.updateAlbumImageCount();
-                    
-                    // Now add thumbnails to preview container
-                    selection.each(function(attachment, index) {
-                        if (index >= added) return; // Skip if already processed
-                        var a = attachment.toJSON();
-                        if (ids.indexOf(String(a.id)) !== -1) {
-                            // Support both preview containers
-                            var previewContainer = $('#dw_album_images_preview').length ? $('#dw_album_images_preview') : $('#dasom_album_images_preview');
-                            previewContainer.append('<li data-id="' + a.id + '" style="position:relative;"><img src="' + a.url + '" style="width:100px;height:100px;object-fit:cover;" /><button type="button" class="button-link remove-image" style="position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;">×</button></li>');
+                    if (totalCount > maxCount) {
+                        countText += ' <span style="color:#dc3545;font-weight:bold;">(경고: ' + totalCount + '개 이미지가 선택되어 있습니다. 저장 시 16개 이하로 줄여주세요)</span>';
+                        if (!$('#dw_album_images_error').length) {
+                            $countElement.after('<p class="description" style="color:#dc3545;font-weight:bold;" id="dw_album_images_error">앨범 이미지는 최대 16개까지 저장할 수 있습니다. 이미지를 제거하여 16개 이하로 줄여주세요.</p>');
                         }
-                    });
-                    
-                    // Final count update after thumbnails are added
-                    setTimeout(function() {
-                        self.updateAlbumImageCount();
-                    }, 100);
-                    
-                    // Show message if some images were not added
-                    if (selection.length > added) {
-                        alert('최대 16개의 이미지만 업로드할 수 있습니다. ' + added + '개의 이미지만 추가되었습니다. (Maximum 16 images allowed. Only ' + added + ' images were added.)');
+                    } else if (totalCount >= maxCount) {
+                        countText += ' <span style="color:#dc3545;">(최대 개수에 도달했습니다)</span>';
+                        $('#dw_album_images_error').remove();
+                    } else {
+                        $('#dw_album_images_error').remove();
                     }
                     
-                    // Show warning if total exceeds 16
-                    if (ids.length > 16) {
-                        alert('경고: 현재 ' + ids.length + '개의 이미지가 선택되어 있습니다. 저장 시 16개 이하로 줄여주세요. (Warning: ' + ids.length + ' images selected. Please reduce to 16 or less before saving.)');
+                    $countElement.html(countText);
+                    
+                    // Hide "no images" message if images exist
+                    $('#dw_album_images_empty, #dasom_album_images_empty').hide();
+                }
+                
+                // Now add thumbnails to preview container
+                var previewContainer = $('#dw_album_images_preview').length ? $('#dw_album_images_preview') : $('#dasom_album_images_preview');
+                previewContainer.empty(); // Clear existing previews
+                
+                selection.each(function(attachment) {
+                    var a = attachment.toJSON();
+                    if (ids.indexOf(a.id) !== -1) {
+                        previewContainer.append('<li data-id="' + a.id + '" style="position:relative;"><img src="' + a.url + '" style="width:100px;height:100px;object-fit:cover;" /><button type="button" class="button-link remove-image" style="position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;">×</button></li>');
                     }
+                });
+                
+                // Final count update after thumbnails are added
+                setTimeout(function() {
+                    self.updateAlbumImageCount();
+                }, 100);
+                
+                // Show message if some images were not added due to limit
+                if (selectedCount > maxToAdd || ids.length > maxImages) {
+                    alert('최대 16개의 이미지만 업로드할 수 있습니다. ' + Math.min(added, maxToAdd) + '개의 이미지만 추가되었습니다. (Maximum 16 images allowed. Only ' + Math.min(added, maxToAdd) + ' images were added.)');
+                }
+                
+                // Show warning if total exceeds 16
+                if (ids.length > 16) {
+                    alert('경고: 현재 ' + ids.length + '개의 이미지가 선택되어 있습니다. 저장 시 16개 이하로 줄여주세요. (Warning: ' + ids.length + ' images selected. Please reduce to 16 or less before saving.)');
                 }
             });
+            
+            // Open the media frame
+            mediaFrame.open();
         });
         
         // Remove image button handler for album images
         $(document).on('click', '#dw_album_images_preview .remove-image, #dasom_album_images_preview .remove-image', function(e) {
             e.preventDefault();
             $(this).closest('li').remove();
+            
+            // Collect remaining image IDs
             var ids = [];
             $(this).closest('ul').find('li').each(function() {
                 var id = $(this).data('id');
@@ -194,9 +241,41 @@
                     ids.push(id);
                 }
             });
+            
+            // Update hidden input field
             $('#dw_album_images, #dasom_album_images').val(JSON.stringify(ids));
             
-            // Update image count display immediately after removing images
+            // Update image count display IMMEDIATELY with actual count
+            var totalCount = ids.length;
+            var $countElement = $('#dw_album_images_count');
+            if ($countElement.length) {
+                var maxCount = 16;
+                var countText = '현재 ' + totalCount + '개 / 최대 ' + maxCount + '개 이미지';
+                
+                if (totalCount > maxCount) {
+                    countText += ' <span style="color:#dc3545;font-weight:bold;">(경고: ' + totalCount + '개 이미지가 선택되어 있습니다. 저장 시 16개 이하로 줄여주세요)</span>';
+                    if (!$('#dw_album_images_error').length) {
+                        $countElement.after('<p class="description" style="color:#dc3545;font-weight:bold;" id="dw_album_images_error">앨범 이미지는 최대 16개까지 저장할 수 있습니다. 이미지를 제거하여 16개 이하로 줄여주세요.</p>');
+                    }
+                } else if (totalCount >= maxCount) {
+                    countText += ' <span style="color:#dc3545;">(최대 개수에 도달했습니다)</span>';
+                    $('#dw_album_images_error').remove();
+                } else {
+                    $('#dw_album_images_error').remove();
+                }
+                
+                $countElement.html(countText);
+                
+                // Show/hide "no images" message
+                var $emptyMessage = $('#dw_album_images_empty, #dasom_album_images_empty');
+                if (totalCount > 0) {
+                    $emptyMessage.hide();
+                } else {
+                    $emptyMessage.show();
+                }
+            }
+            
+            // Also call updateAlbumImageCount as backup
             setTimeout(function() {
                 self.updateAlbumImageCount();
             }, 50);
