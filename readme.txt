@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.60.5
+Stable tag: 2.60.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,13 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.60.6 =
+* Fix: Move image count display above thumbnail list to ensure accurate counting
+* Enhancement: Update image count immediately after hidden input update (before thumbnail rendering)
+* Enhancement: Improve JavaScript execution order - update count first, then render thumbnails
+* Enhancement: Add ID to "no images" message for better JavaScript targeting
+* Enhancement: Ensure image count is displayed and updated correctly regardless of thumbnail rendering speed
 
 = 2.60.5 =
 * Fix: Fix image count display issue when 20+ images are selected but showing 0

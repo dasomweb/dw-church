@@ -146,19 +146,29 @@
                         var a = attachment.toJSON();
                         ids.push(a.id);
                         added++;
-                        
-                        // Support both preview containers
-                        var previewContainer = $('#dw_album_images_preview').length ? $('#dw_album_images_preview') : $('#dasom_album_images_preview');
-                        previewContainer.append('<li data-id="' + a.id + '" style="position:relative;"><img src="' + a.url + '" style="width:100px;height:100px;object-fit:cover;" /><button type="button" class="button-link remove-image" style="position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;">×</button></li>');
                     });
                     
-                    // Update both hidden fields if they exist
+                    // Update both hidden fields FIRST
                     $('#dw_album_images, #dasom_album_images').val(JSON.stringify(ids));
                     
-                    // Update image count display immediately after adding images
+                    // Update image count display IMMEDIATELY (before adding thumbnails)
+                    self.updateAlbumImageCount();
+                    
+                    // Now add thumbnails to preview container
+                    selection.each(function(attachment, index) {
+                        if (index >= added) return; // Skip if already processed
+                        var a = attachment.toJSON();
+                        if (ids.indexOf(String(a.id)) !== -1) {
+                            // Support both preview containers
+                            var previewContainer = $('#dw_album_images_preview').length ? $('#dw_album_images_preview') : $('#dasom_album_images_preview');
+                            previewContainer.append('<li data-id="' + a.id + '" style="position:relative;"><img src="' + a.url + '" style="width:100px;height:100px;object-fit:cover;" /><button type="button" class="button-link remove-image" style="position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;">×</button></li>');
+                        }
+                    });
+                    
+                    // Final count update after thumbnails are added
                     setTimeout(function() {
                         self.updateAlbumImageCount();
-                    }, 50);
+                    }, 100);
                     
                     // Show message if some images were not added
                     if (selection.length > added) {
@@ -351,22 +361,12 @@
                 $('#dw_album_images_error').remove();
             }
             
-            // Hide "no images" message if images exist
+            // Hide/show "no images" message based on count
+            var $emptyMessage = $('#dw_album_images_empty, #dasom_album_images_empty');
             if (count > 0) {
-                $countElement.nextAll('p.description').each(function() {
-                    var text = $(this).text();
-                    if (text.indexOf('이미지가 없습니다') >= 0 || text.indexOf('업로드하세요') >= 0) {
-                        $(this).hide();
-                    }
-                });
+                $emptyMessage.hide();
             } else {
-                // Show "no images" message if count is 0
-                $countElement.nextAll('p.description').each(function() {
-                    var text = $(this).text();
-                    if (text.indexOf('이미지가 없습니다') >= 0 || text.indexOf('업로드하세요') >= 0) {
-                        $(this).show();
-                    }
-                });
+                $emptyMessage.show();
             }
             
             $countElement.html(countText);

@@ -366,23 +366,9 @@ class DW_Church_Meta_Boxes {
                 <td>
                     <input type="hidden" id="dw_album_images" name="dw_album_images" value='<?php echo esc_attr(json_encode($images)); ?>' />
                     <button type="button" class="button" id="dw_album_images_button"><?php _e('이미지 업로드/선택', 'dw-church'); ?></button>
-                    <ul id="dw_album_images_preview" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:10px;">
-                        <?php foreach ($images as $id): ?>
-                            <li data-id="<?php echo esc_attr($id); ?>" style="position:relative;">
-                                <?php 
-                                $attachment_url = wp_get_attachment_url($id);
-                                if ($attachment_url): ?>
-                                    <img src="<?php echo esc_url($attachment_url); ?>" style="width:100px;height:100px;object-fit:cover;" />
-                                <?php else: ?>
-                                    <div style="width:100px;height:100px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;color:#666;">
-                                        <?php echo esc_html($id); ?>
-                                    </div>
-                                <?php endif; ?>
-                                <button type="button" class="button-link remove-image" style="position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;">×</button>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                    <p class="description" id="dw_album_images_count">
+                    
+                    <!-- Image count display moved ABOVE the thumbnail list -->
+                    <p class="description" id="dw_album_images_count" style="margin-top:10px;">
                         <?php 
                         $current_count = count($images);
                         $max_count = 16;
@@ -401,8 +387,26 @@ class DW_Church_Meta_Boxes {
                         </p>
                     <?php endif; ?>
                     <?php if (empty($images)): ?>
-                        <p class="description"><?php _e('이미지가 없습니다. 위의 버튼을 클릭하여 이미지를 업로드하세요.', 'dw-church'); ?></p>
+                        <p class="description" id="dw_album_images_empty"><?php _e('이미지가 없습니다. 위의 버튼을 클릭하여 이미지를 업로드하세요.', 'dw-church'); ?></p>
                     <?php endif; ?>
+                    
+                    <!-- Thumbnail list -->
+                    <ul id="dw_album_images_preview" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:10px;">
+                        <?php foreach ($images as $id): ?>
+                            <li data-id="<?php echo esc_attr($id); ?>" style="position:relative;">
+                                <?php 
+                                $attachment_url = wp_get_attachment_url($id);
+                                if ($attachment_url): ?>
+                                    <img src="<?php echo esc_url($attachment_url); ?>" style="width:100px;height:100px;object-fit:cover;" />
+                                <?php else: ?>
+                                    <div style="width:100px;height:100px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <?php echo esc_html($id); ?>
+                                    </div>
+                                <?php endif; ?>
+                                <button type="button" class="button-link remove-image" style="position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;">×</button>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
                 </td>
             </tr>
             <tr>
