@@ -675,12 +675,14 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             ]
         );
         
-        $this->add_control(
+        $this->add_responsive_control(
             'text_position',
             [
                 'label' => __('Text Position', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'center-center',
+                'tablet_default' => 'center-center',
+                'mobile_default' => 'top-left',
                 'options' => [
                     'top-left' => __('상단 왼쪽', 'dasom-church'),
                     'top-center' => __('상단 중앙', 'dasom-church'),
@@ -1072,7 +1074,11 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         }
         
         $button_text = $settings['button_text'] ?? __('Read More', 'dasom-church');
+        
+        // Get responsive text position values
         $text_position = $settings['text_position'] ?? 'center-center';
+        $text_position_tablet = $settings['text_position_tablet'] ?? $text_position;
+        $text_position_mobile = $settings['text_position_mobile'] ?? $text_position;
         
         // Calculate height style based on ratio
         $height_ratio = $settings['height_ratio'] ?? '16:9';
@@ -1121,7 +1127,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     echo '<div class="dw-event-grid-overlay"></div>';
                 }
                 
-                // Determine text-align based on text_position
+                // Determine text-align based on text_position (desktop default)
                 // left positions: top-left, center-left, bottom-left → text-align: left
                 // center positions: top-center, center-center, bottom-center → text-align: center
                 // right positions: top-right, center-right, bottom-right → text-align: right
@@ -1135,8 +1141,11 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     $text_align_class = 'dw-text-align-center';
                 }
                 
-                // Use CSS class instead of inline style for consistent application
-                echo '<div class="dw-event-grid-text dw-text-position-' . esc_attr($text_position) . '">';
+                // Use CSS class with data attributes for responsive positioning
+                echo '<div class="dw-event-grid-text dw-text-position-' . esc_attr($text_position) . '" ';
+                echo 'data-position-desktop="' . esc_attr($text_position) . '" ';
+                echo 'data-position-tablet="' . esc_attr($text_position_tablet) . '" ';
+                echo 'data-position-mobile="' . esc_attr($text_position_mobile) . '">';
                 echo '<div class="dw-event-grid-text-content ' . esc_attr($text_align_class) . '">';
                 
                 // Department
@@ -1310,11 +1319,125 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 overflow-wrap: break-word;
             }
             
-            /* Mobile: Full width for text content */
+            /* Mobile: Full width for text content and apply mobile text position */
             @media (max-width: 767px) {
                 .dw-event-grid-text-content {
                     width: 100% !important;
                     max-width: 100% !important;
+                }
+                
+                /* Apply mobile text position based on data attribute */
+                .dw-event-grid-text[data-position-mobile="top-left"] {
+                    align-items: flex-start !important;
+                    justify-content: flex-start !important;
+                }
+                .dw-event-grid-text[data-position-mobile="top-center"] {
+                    align-items: flex-start !important;
+                    justify-content: center !important;
+                }
+                .dw-event-grid-text[data-position-mobile="top-right"] {
+                    align-items: flex-start !important;
+                    justify-content: flex-end !important;
+                }
+                .dw-event-grid-text[data-position-mobile="center-left"] {
+                    align-items: center !important;
+                    justify-content: flex-start !important;
+                }
+                .dw-event-grid-text[data-position-mobile="center-center"] {
+                    align-items: center !important;
+                    justify-content: center !important;
+                }
+                .dw-event-grid-text[data-position-mobile="center-right"] {
+                    align-items: center !important;
+                    justify-content: flex-end !important;
+                }
+                .dw-event-grid-text[data-position-mobile="bottom-left"] {
+                    align-items: flex-end !important;
+                    justify-content: flex-start !important;
+                }
+                .dw-event-grid-text[data-position-mobile="bottom-center"] {
+                    align-items: flex-end !important;
+                    justify-content: center !important;
+                }
+                .dw-event-grid-text[data-position-mobile="bottom-right"] {
+                    align-items: flex-end !important;
+                    justify-content: flex-end !important;
+                }
+                
+                /* Apply mobile text alignment */
+                .dw-event-grid-text[data-position-mobile*="-left"] .dw-event-grid-text-content {
+                    text-align: left !important;
+                }
+                .dw-event-grid-text[data-position-mobile*="-right"] .dw-event-grid-text-content {
+                    text-align: right !important;
+                }
+                .dw-event-grid-text[data-position-mobile*="-center"] .dw-event-grid-text-content {
+                    text-align: center !important;
+                }
+            }
+            
+            /* Tablet: Apply tablet text position */
+            @media (min-width: 768px) and (max-width: 1024px) {
+                /* Apply tablet text position based on data attribute */
+                .dw-event-grid-text[data-position-tablet="top-left"] {
+                    align-items: flex-start !important;
+                    justify-content: flex-start !important;
+                }
+                .dw-event-grid-text[data-position-tablet="top-center"] {
+                    align-items: flex-start !important;
+                    justify-content: center !important;
+                }
+                .dw-event-grid-text[data-position-tablet="top-right"] {
+                    align-items: flex-start !important;
+                    justify-content: flex-end !important;
+                }
+                .dw-event-grid-text[data-position-tablet="center-left"] {
+                    align-items: center !important;
+                    justify-content: flex-start !important;
+                }
+                .dw-event-grid-text[data-position-tablet="center-center"] {
+                    align-items: center !important;
+                    justify-content: center !important;
+                }
+                .dw-event-grid-text[data-position-tablet="center-right"] {
+                    align-items: center !important;
+                    justify-content: flex-end !important;
+                }
+                .dw-event-grid-text[data-position-tablet="bottom-left"] {
+                    align-items: flex-end !important;
+                    justify-content: flex-start !important;
+                }
+                .dw-event-grid-text[data-position-tablet="bottom-center"] {
+                    align-items: flex-end !important;
+                    justify-content: center !important;
+                }
+                .dw-event-grid-text[data-position-tablet="bottom-right"] {
+                    align-items: flex-end !important;
+                    justify-content: flex-end !important;
+                }
+                
+                /* Apply tablet text alignment */
+                .dw-event-grid-text[data-position-tablet*="-left"] .dw-event-grid-text-content {
+                    text-align: left !important;
+                }
+                .dw-event-grid-text[data-position-tablet*="-right"] .dw-event-grid-text-content {
+                    text-align: right !important;
+                }
+                .dw-event-grid-text[data-position-tablet*="-center"] .dw-event-grid-text-content {
+                    text-align: center !important;
+                }
+            }
+            
+            /* Desktop: Apply desktop text alignment */
+            @media (min-width: 1025px) {
+                .dw-event-grid-text[data-position-desktop*="-left"] .dw-event-grid-text-content {
+                    text-align: left !important;
+                }
+                .dw-event-grid-text[data-position-desktop*="-right"] .dw-event-grid-text-content {
+                    text-align: right !important;
+                }
+                .dw-event-grid-text[data-position-desktop*="-center"] .dw-event-grid-text-content {
+                    text-align: center !important;
                 }
             }
             
