@@ -883,6 +883,51 @@ class DW_Elementor_Recent_Gallery_Widget extends \Elementor\Widget_Base {
                 height: 32px;
                 color: #999;
             }
+            
+            /* Ensure no content escapes the widget boundaries */
+            .elementor-widget-dw_recent_gallery {
+                overflow: hidden !important;
+                position: relative !important;
+                z-index: 1 !important;
+                isolation: isolate !important;
+                contain: layout style paint !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            
+            /* Prevent any child elements from overflowing */
+            .elementor-widget-dw_recent_gallery * {
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            
+            /* Force containment for gallery widget container */
+            .elementor-widget-dw_recent_gallery .dw-gallery-widget {
+                contain: layout style paint !important;
+                isolation: isolate !important;
+                overflow: hidden !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            
+            /* Ensure gallery grid doesn't overflow */
+            .elementor-widget-dw_recent_gallery .dw-gallery-grid {
+                width: 100% !important;
+                max-width: 100% !important;
+                contain: layout style paint !important;
+                overflow: hidden !important;
+            }
+            
+            /* Ensure gallery cards don't overflow */
+            .elementor-widget-dw_recent_gallery .dw-gallery-card {
+                contain: layout style paint !important;
+                isolation: isolate !important;
+                overflow: hidden !important;
+                max-width: 100% !important;
+            }
         </style>
         <?php
     }
