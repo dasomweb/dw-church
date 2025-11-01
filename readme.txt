@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.61.1
+Stable tag: 2.61.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,11 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.61.2 =
+* Fix: Prevent image addition when selection exceeds 16 images limit instead of auto-truncating
+* Enhancement: Show detailed alert message with current count and how many more can be added
+* Change: Require users to manually deselect images if selection would exceed 16 images
 
 = 2.61.1 =
 * Fix: Add error handling for wp.media.attachment().fetch() Promise in album image thumbnail rendering
