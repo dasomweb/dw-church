@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.61.3
+Stable tag: 2.61.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,11 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.61.4 =
+* Fix: Keep media frame open after alert so user can select images again
+* Enhancement: Reset selection in media frame and reopen it after limit exceeded alert
+* Fix: Allow user to deselect images and try again without closing media frame
 
 = 2.61.3 =
 * Fix: Ensure return statement properly prevents image addition when limit exceeded

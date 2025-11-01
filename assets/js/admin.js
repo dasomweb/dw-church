@@ -231,10 +231,19 @@
                         isProcessing = false;
                         
                         if (canAdd > 0) {
-                            alert('최대 16개의 이미지만 업로드할 수 있습니다. 현재 ' + finalIds.length + '개의 이미지가 있습니다. ' + canAdd + '개만 추가 가능합니다. 일부 이미지를 선택 해제해주세요. (Maximum 16 images allowed. Currently ' + finalIds.length + ' images. Only ' + canAdd + ' more can be added. Please deselect some images.)');
+                            alert('최대 16개의 이미지를 업로드할 수 있습니다. 현재 ' + finalIds.length + '개의 이미지가 있습니다. ' + canAdd + '개만 추가 가능합니다. 일부 이미지를 선택 해제해주세요. (Maximum 16 images allowed. Currently ' + finalIds.length + ' images. Only ' + canAdd + ' more can be added. Please deselect some images.)');
                         } else {
-                            alert('최대 16개의 이미지만 업로드할 수 있습니다. 이미지를 제거한 후 다시 시도해주세요. (Maximum 16 images allowed. Please remove some images before adding new ones.)');
+                            alert('최대 16개의 이미지를 업로드할 수 있습니다. 이미지를 제거한 후 다시 시도해주세요. (Maximum 16 images allowed. Please remove some images before adding new ones.)');
                         }
+                        
+                        // Reset selection in media frame to allow user to select again
+                        var selection = mediaFrame.state().get('selection');
+                        selection.reset();
+                        
+                        // Reopen media frame after a short delay so user can select again
+                        setTimeout(function() {
+                            mediaFrame.open();
+                        }, 100);
                         
                         // CRITICAL: Return immediately to prevent any image addition
                         // This MUST be the last statement - nothing should execute after this
