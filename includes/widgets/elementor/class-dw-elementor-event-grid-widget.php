@@ -1253,22 +1253,37 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             .dw-event-grid-text-content {
                 z-index: 1;
                 padding: 20px;
-                width: 100%;
-                max-width: 100%;
                 box-sizing: border-box;
                 overflow: hidden;
                 word-wrap: break-word;
                 overflow-wrap: break-word;
             }
             
-            /* Fix text position alignment for PC/Laptop/Tablet */
-            /* Allow text-content to shrink and align properly based on justify-content */
-            @media (min-width: 768px) {
+            /* Mobile: Full width for text content */
+            @media (max-width: 767px) {
                 .dw-event-grid-text-content {
-                    width: auto !important;
+                    width: 100% !important;
                     max-width: 100% !important;
+                }
+            }
+            
+            /* PC/Laptop/Tablet: Auto width to allow proper flex alignment */
+            /* Apply to all instances to ensure consistency across all cards */
+            @media (min-width: 768px) {
+                .elementor-widget-dw_event_grid .dw-event-grid-item .dw-event-grid-text .dw-event-grid-text-content,
+                .elementor-widget-dw_event_grid .dw-event-grid-text-content,
+                .dw-event-grid .dw-event-grid-item .dw-event-grid-text .dw-event-grid-text-content,
+                .dw-event-grid .dw-event-grid-text-content {
+                    width: auto !important;
+                    max-width: none !important;
                     flex: 0 0 auto !important;
-                    align-self: stretch !important;
+                    align-self: auto !important;
+                }
+                
+                /* Ensure flex container properly aligns content */
+                .elementor-widget-dw_event_grid .dw-event-grid-text,
+                .dw-event-grid .dw-event-grid-text {
+                    display: flex !important;
                 }
             }
             .dw-event-grid-title {
@@ -1323,6 +1338,15 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             .elementor-widget-dw_event_grid * {
                 max-width: 100% !important;
                 box-sizing: border-box !important;
+            }
+            
+            /* Exception for text-content to allow proper positioning */
+            /* Override the universal selector rule for text-content */
+            .elementor-widget-dw_event_grid .dw-event-grid-item .dw-event-grid-text .dw-event-grid-text-content,
+            .elementor-widget-dw_event_grid .dw-event-grid-text-content,
+            .dw-event-grid .dw-event-grid-item .dw-event-grid-text .dw-event-grid-text-content,
+            .dw-event-grid .dw-event-grid-text-content {
+                max-width: none !important;
             }
             
             /* Force containment for all grid items */

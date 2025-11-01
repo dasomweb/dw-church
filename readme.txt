@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.51
+Stable tag: 2.52
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.52 =
+* Fix: Ensure consistent text position alignment across all cards in DW Event Grid widget
+* Fix: Remove default width constraints and apply responsive width rules separately for mobile and desktop
+* Fix: Strengthen CSS selectors with multiple variations to ensure all cards receive styling
+* Enhancement: All 9 text position options now work consistently on every card in the grid
 
 = 2.51 =
 * Fix: Improve text position alignment fix with stronger CSS rules for PC/Laptop/Tablet
