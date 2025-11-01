@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.62.0
+Stable tag: 2.62.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.62.1 =
+* Fix: Prevent checkbox clicks when 16 images are already selected in media library
+* Fix: Show alert immediately when user attempts to select more than 16 images
+* Fix: Bring media frame back to front after alert is dismissed
+* Enhancement: Intercept checkbox clicks directly to prevent selection before it happens
 
 = 2.62.0 =
 * Enhancement: Display selected image count in media library frame when selecting album images
