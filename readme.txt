@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.61.2
+Stable tag: 2.61.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.61.3 =
+* Fix: Ensure return statement properly prevents image addition when limit exceeded
+* Fix: Move isProcessing flag reset before alert to prevent race conditions
+* Enhancement: Add additional safety checks to prevent images from being added after limit check
+* Enhancement: Add double-check before merging images to ensure limit is not exceeded
 
 = 2.61.2 =
 * Fix: Prevent image addition when selection exceeds 16 images limit instead of auto-truncating

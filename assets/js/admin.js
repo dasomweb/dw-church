@@ -226,13 +226,27 @@
                     // Check if adding selected images would exceed maximum
                     var totalAfterAdd = finalIds.length + selectedIds.length;
                     if (totalAfterAdd > maxImages) {
-                        isProcessing = false;
                         var canAdd = maxImages - finalIds.length;
+                        // CRITICAL: Reset processing flag BEFORE showing alert
+                        isProcessing = false;
+                        
                         if (canAdd > 0) {
                             alert('최대 16개의 이미지만 업로드할 수 있습니다. 현재 ' + finalIds.length + '개의 이미지가 있습니다. ' + canAdd + '개만 추가 가능합니다. 일부 이미지를 선택 해제해주세요. (Maximum 16 images allowed. Currently ' + finalIds.length + ' images. Only ' + canAdd + ' more can be added. Please deselect some images.)');
                         } else {
                             alert('최대 16개의 이미지만 업로드할 수 있습니다. 이미지를 제거한 후 다시 시도해주세요. (Maximum 16 images allowed. Please remove some images before adding new ones.)');
                         }
+                        
+                        // CRITICAL: Return immediately to prevent any image addition
+                        // This MUST be the last statement - nothing should execute after this
+                        return;
+                    }
+                    
+                    // Only proceed if we pass the limit check above
+                    // Double-check: ensure we haven't exceeded the limit
+                    if (finalIds.length + selectedIds.length > maxImages) {
+                        // This should never happen if the check above worked, but defense in depth
+                        console.error('Unexpected: totalAfterAdd exceeded maxImages even after check');
+                        isProcessing = false;
                         return;
                     }
                     
@@ -247,6 +261,12 @@
                     finalIds = finalIds.filter(function(id, index) {
                         return finalIds.indexOf(id) === index;
                     });
+                    
+                    // Final safety check: never exceed maxImages
+                    if (finalIds.length > maxImages) {
+                        console.error('Unexpected: finalIds exceeded maxImages');
+                        finalIds = finalIds.slice(0, maxImages);
+                    }
                     
                     // Update hidden input FIRST (single source of truth)
                     $('#dw_album_images, #dasom_album_images').val(JSON.stringify(finalIds));
