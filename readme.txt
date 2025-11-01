@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.60.3
+Stable tag: 2.60.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.60.4 =
+* Fix: Fix image count display showing 0 when images are present on page load
+* Enhancement: Read image count from hidden input field if preview elements are not ready
+* Enhancement: Hide "no images" message when images exist
+* Enhancement: Improve DOM readiness check with delayed execution
 
 = 2.60.3 =
 * Feature: Add validation to prevent saving albums with more than 16 images

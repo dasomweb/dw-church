@@ -28,10 +28,13 @@
         this.initFormValidation();
         this.initBannerAdditionalUploaders();
         
-        // Update album image count on page load
-        if ($('#dw_album_images_preview, #dasom_album_images_preview').length) {
-            this.updateAlbumImageCount();
-        }
+        // Update album image count on page load (with delay to ensure DOM is ready)
+        var self = this;
+        setTimeout(function() {
+            if ($('#dw_album_images_preview, #dasom_album_images_preview').length) {
+                self.updateAlbumImageCount();
+            }
+        }, 100);
     },
     
     /**
@@ -264,8 +267,26 @@
     updateAlbumImageCount: function() {
         var ids = [];
         $('#dw_album_images_preview li, #dasom_album_images_preview li').each(function() {
-            ids.push($(this).data('id'));
+            var id = $(this).data('id');
+            if (id) {
+                ids.push(id);
+            }
         });
+        
+        // If no IDs found from preview, try reading from hidden input
+        if (ids.length === 0) {
+            var hiddenValue = $('#dw_album_images, #dasom_album_images').val();
+            if (hiddenValue) {
+                try {
+                    var parsed = JSON.parse(hiddenValue);
+                    if (Array.isArray(parsed)) {
+                        ids = parsed.filter(function(id) { return id; });
+                    }
+                } catch(e) {
+                    console.error('Error parsing album images:', e);
+                }
+            }
+        }
         
         var count = ids.length;
         var maxCount = 16;
@@ -296,6 +317,15 @@
                     $warningSpan.remove();
                 }
                 $('#dw_album_images_error').remove();
+            }
+            
+            // Hide "no images" message if images exist
+            if (count > 0) {
+                $countElement.next('p.description').each(function() {
+                    if ($(this).text().indexOf('이미지가 없습니다') >= 0) {
+                        $(this).hide();
+                    }
+                });
             }
             
             $countElement.html(countText);
