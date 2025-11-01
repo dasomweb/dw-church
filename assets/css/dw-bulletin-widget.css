@@ -73,9 +73,10 @@
     aspect-ratio: 9/16;
 }
 
-.dw-bulletin-image-item:hover {
+/* Default hover effect removed to allow Elementor hover controls to work */
+/* .dw-bulletin-image-item:hover {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
+} */
 
 .dw-bulletin-image {
     position: relative;
@@ -206,11 +207,12 @@
     gap: 10px;
 }
 
-.dw-bulletin-item:hover {
+/* Default hover effect removed to allow Elementor hover controls to work */
+/* .dw-bulletin-item:hover {
     border-color: #007cba;
     box-shadow: 0 2px 8px rgba(0, 124, 186, 0.15);
     transform: translateY(-1px);
-}
+} */
 
 /* Hover effects for button template */
 .dw-bulletin-item[data-hover="lift"]:hover {
@@ -592,12 +594,13 @@
     object-fit: contain;
 }
 
-.dw-single-bulletin-image:hover {
+/* Default hover effect removed to allow Elementor hover controls to work */
+/* .dw-single-bulletin-image:hover {
     transform: scale(1.02);
-}
+} */
 
-/* Single Bulletin Hover Effects */
-.dw-single-bulletin-image-item[data-hover="lift"]:hover {
+/* Single Bulletin Hover Effects - Now controlled by Elementor hover controls */
+/* .dw-single-bulletin-image-item[data-hover="lift"]:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
@@ -617,7 +620,7 @@
 .dw-single-bulletin-image-item[data-hover="none"]:hover {
     transform: none;
     box-shadow: inherit;
-}
+} */
 
 /* Responsive Design */
 @media (max-width: 768px) {

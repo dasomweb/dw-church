@@ -275,21 +275,98 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
             ]
         );
         
-        $this->add_control(
-            'hover_effect',
+        $this->end_controls_section();
+        
+        // Style Tab - Card Hover Style
+        $this->start_controls_section(
+            'card_hover_section',
             [
-                'label' => __('Hover Effect', 'dasom-church'),
+                'label' => __('Card Hover', 'dasom-church'),
+                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+        
+        $this->start_controls_tabs('card_hover_tabs');
+        
+        $this->start_controls_tab(
+            'card_normal',
+            [
+                'label' => __('Normal', 'dasom-church'),
+            ]
+        );
+        
+        // Normal state controls can be added here if needed
+        
+        $this->end_controls_tab();
+        
+        $this->start_controls_tab(
+            'card_hover',
+            [
+                'label' => __('Hover', 'dasom-church'),
+            ]
+        );
+        
+        $this->add_group_control(
+            \Elementor\Group_Control_Box_Shadow::get_type(),
+            [
+                'name' => 'card_hover_shadow',
+                'label' => __('Hover Shadow', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-single-bulletin-image-item:hover',
+            ]
+        );
+        
+        $this->add_group_control(
+            \Elementor\Group_Control_Border::get_type(),
+            [
+                'name' => 'card_hover_border',
+                'label' => __('Hover Border', 'dasom-church'),
+                'selector' => '{{WRAPPER}} .dw-single-bulletin-image-item:hover',
+            ]
+        );
+        
+        $this->add_control(
+            'card_hover_transform',
+            [
+                'label' => __('Transform', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
-                'default' => 'lift',
+                'default' => '',
                 'options' => [
-                    'none' => __('None', 'dasom-church'),
-                    'lift' => __('Lift', 'dasom-church'),
-                    'shadow' => __('Shadow', 'dasom-church'),
-                    'scale' => __('Scale', 'dasom-church'),
-                    'glow' => __('Glow', 'dasom-church'),
+                    '' => __('None', 'dasom-church'),
+                    'translateY(-5px)' => __('Lift Up', 'dasom-church'),
+                    'translateY(5px)' => __('Push Down', 'dasom-church'),
+                    'scale(1.05)' => __('Scale Up', 'dasom-church'),
+                    'scale(0.95)' => __('Scale Down', 'dasom-church'),
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-single-bulletin-image-item:hover' => 'transform: {{VALUE}};',
                 ],
             ]
         );
+        
+        $this->add_control(
+            'card_hover_transition',
+            [
+                'label' => __('Transition Duration', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 1,
+                        'step' => 0.1,
+                    ],
+                ],
+                'default' => [
+                    'size' => 0.3,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .dw-single-bulletin-image-item' => 'transition: all {{SIZE}}s ease;',
+                ],
+            ]
+        );
+        
+        $this->end_controls_tab();
+        
+        $this->end_controls_tabs();
         
         $this->end_controls_section();
     }
@@ -364,8 +441,7 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
         error_log('Bulletin Images Raw: ' . $bulletin_images);
         error_log('Show Images Setting: ' . ($settings['show_images'] ?? 'NOT SET'));
         
-        // Get hover effect
-        $hover_effect = isset($settings['hover_effect']) ? $settings['hover_effect'] : 'lift';
+        // Hover effect now controlled by Elementor hover controls
         
         ?>
         <div class="dw-single-bulletin-container">
@@ -428,7 +504,7 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
                             if ($image_url) {
                                 error_log("Rendering image $index");
                                 ?>
-                                <div class="dw-single-bulletin-image-item" data-hover="<?php echo esc_attr($hover_effect); ?>">
+                                <div class="dw-single-bulletin-image-item">
                                     <img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr(get_the_title($post_id)); ?>" class="dw-single-bulletin-image" />
                                 </div>
                                 <?php

@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.58
+Stable tag: 2.59
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,13 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.59 =
+* Fix: Remove default hover effects and enable Elementor hover controls
+* Feature: Add Card Hover section with Normal/Hover tabs in DW Single Bulletin widget
+* Enhancement: Replace custom hover_effect control with Elementor's standard hover controls
+* Enhancement: Add Hover Shadow, Hover Border, Transform, and Transition Duration controls
+* Fix: Remove data-hover attribute and related CSS to prevent conflicts
 
 = 2.58 =
 * Fix: Remove hardcoded box-shadow and border from CSS to allow Elementor controls to work
