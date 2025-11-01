@@ -158,8 +158,11 @@
                 selectionOrder = []; // Reset selection order
                 maxAllowedInFrame = remainingSlots; // Reset max allowed
                 
-                // Update selection count display in media frame
-                self.updateSelectionCountInFrame(mediaFrame, 0, maxImages);
+                // Update selection count display in media frame after a short delay
+                setTimeout(function() {
+                    var currentCount = selection.length;
+                    self.updateSelectionCountInFrame(mediaFrame, currentCount, maxImages);
+                }, 200);
             });
             
             // Listen to selection changes to track selection order and update count
@@ -173,47 +176,50 @@
                     
                     // Prevent adding when limit is reached
                     selection.on('add.dw-album', function(attachment) {
-                        var currentCount = selection.length;
-                        
-                        // If adding this would exceed limit, remove it immediately and show alert
-                        if (currentCount > maxAllowedInFrame) {
-                            // Remove the attachment that was just added
-                            selection.remove(attachment);
+                        // Small delay to ensure selection.length is accurate
+                        setTimeout(function() {
+                            var currentCount = selection.length;
                             
-                            // Show alert immediately
-                            alert('최대 ' + maxAllowedInFrame + '개의 이미지만 선택할 수 있습니다. (Maximum ' + maxAllowedInFrame + ' images can be selected)');
-                            
-                            // Update count display
-                            setTimeout(function() {
-                                var updatedCount = selection.length;
-                                self.updateSelectionCountInFrame(mediaFrame, updatedCount, maxImages);
-                            }, 50);
-                            
-                            return; // Don't process this addition
-                        }
-                        
-                        // Track selection order for valid additions
-                        try {
-                            var a = attachment.toJSON();
-                            var attachmentId = String(a.id);
-                            
-                            // Track selection order if not already tracked
-                            var exists = selectionOrder.some(function(item) {
-                                return item.id === attachmentId;
-                            });
-                            if (!exists) {
-                                selectionOrder.push({
-                                    id: attachmentId,
-                                    timestamp: Date.now()
-                                });
+                            // If adding this would exceed limit, remove it immediately and show alert
+                            if (currentCount > maxAllowedInFrame) {
+                                // Remove the attachment that was just added
+                                selection.remove(attachment);
+                                
+                                // Show alert immediately
+                                alert('최대 ' + maxAllowedInFrame + '개의 이미지만 선택할 수 있습니다. (Maximum ' + maxAllowedInFrame + ' images can be selected)');
+                                
+                                // Update count display
+                                setTimeout(function() {
+                                    var updatedCount = selection.length;
+                                    self.updateSelectionCountInFrame(mediaFrame, updatedCount, maxImages);
+                                }, 50);
+                                
+                                return; // Don't process this addition
                             }
-                        } catch(e) {
-                            console.error('Error processing attachment:', e);
-                        }
-                        
-                        // Update selection count display
-                        var updatedCount = selection.length;
-                        self.updateSelectionCountInFrame(mediaFrame, updatedCount, maxImages);
+                            
+                            // Track selection order for valid additions
+                            try {
+                                var a = attachment.toJSON();
+                                var attachmentId = String(a.id);
+                                
+                                // Track selection order if not already tracked
+                                var exists = selectionOrder.some(function(item) {
+                                    return item.id === attachmentId;
+                                });
+                                if (!exists) {
+                                    selectionOrder.push({
+                                        id: attachmentId,
+                                        timestamp: Date.now()
+                                    });
+                                }
+                            } catch(e) {
+                                console.error('Error processing attachment:', e);
+                            }
+                            
+                            // Update selection count display immediately
+                            var updatedCount = selection.length;
+                            self.updateSelectionCountInFrame(mediaFrame, updatedCount, maxImages);
+                        }, 10);
                     });
                     
                     // Handle remove events
@@ -242,23 +248,30 @@
                     });
                     
                     // Also intercept checkbox clicks directly to prevent selection before it happens
+                    // and update count display in real-time
                     setTimeout(function() {
                         var $mediaFrame = $('.media-frame:visible, .media-modal:visible').first();
                         if ($mediaFrame.length) {
                             // Remove existing handlers to prevent duplicates
-                            $mediaFrame.off('click.dw-album-checkbox', 'input[type="checkbox"]');
+                            $mediaFrame.off('click.dw-album-checkbox change.dw-album-checkbox', 'input[type="checkbox"]');
                             
                             // Intercept checkbox clicks before they change the selection
                             $mediaFrame.on('click.dw-album-checkbox', 'input[type="checkbox"]', function(e) {
                                 var $checkbox = $(this);
-                                var isChecked = $checkbox.is(':checked');
+                                var willBeChecked = !$checkbox.is(':checked'); // Will be checked after click
                                 
                                 // Only check if trying to check (not uncheck)
-                                if (!isChecked) {
+                                if (!willBeChecked) {
+                                    // Allow unchecking, but update count after a delay
+                                    setTimeout(function() {
+                                        var selection = mediaFrame.state().get('selection');
+                                        var currentCount = selection.length;
+                                        self.updateSelectionCountInFrame(mediaFrame, currentCount, maxImages);
+                                    }, 50);
                                     return; // Allow unchecking
                                 }
                                 
-                                // Get current selection count
+                                // Get current selection count (before the new check)
                                 var selection = mediaFrame.state().get('selection');
                                 var currentCount = selection.length;
                                 
@@ -273,6 +286,16 @@
                                     
                                     return false;
                                 }
+                            });
+                            
+                            // Also listen to change events to update count after selection changes
+                            $mediaFrame.on('change.dw-album-checkbox', 'input[type="checkbox"]', function() {
+                                // Update count after checkbox state changes
+                                setTimeout(function() {
+                                    var selection = mediaFrame.state().get('selection');
+                                    var currentCount = selection.length;
+                                    self.updateSelectionCountInFrame(mediaFrame, currentCount, maxImages);
+                                }, 100);
                             });
                         }
                     }, 500);
