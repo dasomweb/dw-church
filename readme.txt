@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.61.0
+Stable tag: 2.61.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.61.1 =
+* Fix: Add error handling for wp.media.attachment().fetch() Promise in album image thumbnail rendering
+* Fix: Check for toJSON() method existence before calling to prevent TypeError
+* Fix: Add fallback placeholder images when attachment fetch fails
+* Enhancement: Add try-catch blocks and .catch() handlers for Promise error handling
 
 = 2.61.0 =
 * Fix: Remove duplicate event handlers for album images button (root cause of duplicate image issue)

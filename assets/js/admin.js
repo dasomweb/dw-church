@@ -24,9 +24,9 @@
     init: function() {
         this.initMediaUploaders();
         this.initImageSorting();
-        this.initYouTubeThumbnails();
-        this.initFormValidation();
-        this.initBannerAdditionalUploaders();
+                this.initYouTubeThumbnails();
+                this.initFormValidation();
+                this.initBannerAdditionalUploaders();
         
         // Update album image count on page load (with multiple attempts to ensure DOM is ready)
         var self = this;
@@ -210,7 +210,7 @@
                     
                     selection.each(function(attachment) {
                         try {
-                            var a = attachment.toJSON();
+                        var a = attachment.toJSON();
                             var attachmentId = String(a.id);
                             
                             // Store attachment data for later thumbnail rendering
@@ -278,16 +278,45 @@
                         // Try to get attachment data from selection first
                         var attachment = attachmentMap[imageId];
                         
-                        if (attachment) {
+                        if (attachment && attachment.id && attachment.url) {
                             // Use data from selection
                             previewContainer.append('<li data-id="' + attachment.id + '" style="position:relative;"><img src="' + attachment.url + '" style="width:100px;height:100px;object-fit:cover;" /><button type="button" class="button-link remove-image" style="position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;">×</button></li>');
                         } else {
-                            // Fallback: fetch attachment data via AJAX or use existing preview
-                            // For now, we'll fetch it - but this should be rare
-                            wp.media.attachment(imageId).fetch().then(function(att) {
-                                var attData = att.toJSON();
-                                previewContainer.append('<li data-id="' + attData.id + '" style="position:relative;"><img src="' + attData.url + '" style="width:100px;height:100px;object-fit:cover;" /><button type="button" class="button-link remove-image" style="position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;">×</button></li>');
-                            });
+                            // Fallback: Try to get attachment model and fetch data safely
+                            var attachmentModel = wp.media.attachment(imageId);
+                            
+                            if (attachmentModel && typeof attachmentModel.fetch === 'function') {
+                                attachmentModel.fetch()
+                                    .then(function(att) {
+                                        try {
+                                            // Check if att has toJSON method
+                                            var attData = (att && typeof att.toJSON === 'function') ? att.toJSON() : (att || {});
+                                            
+                                            // Ensure we have required properties
+                                            if (attData && attData.id && attData.url) {
+                                                previewContainer.append('<li data-id="' + attData.id + '" style="position:relative;"><img src="' + attData.url + '" style="width:100px;height:100px;object-fit:cover;" /><button type="button" class="button-link remove-image" style="position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;">×</button></li>');
+                                            } else {
+                                                // Last resort: use ID to construct placeholder
+                                                console.warn('Attachment data incomplete for ID:', imageId);
+                                                var placeholderUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+SW1hZ2U8L3RleHQ+PC9zdmc+';
+                                                previewContainer.append('<li data-id="' + imageId + '" style="position:relative;"><img src="' + placeholderUrl + '" style="width:100px;height:100px;object-fit:cover;" /><button type="button" class="button-link remove-image" style="position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;">×</button></li>');
+                                            }
+                                        } catch(e) {
+                                            console.error('Error processing fetched attachment:', e);
+                                        }
+                                    })
+                                    .catch(function(error) {
+                                        console.error('Error fetching attachment for ID ' + imageId + ':', error);
+                                        // Placeholder for failed fetch
+                                        var placeholderUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+SW1hZ2U8L3RleHQ+PC9zdmc+';
+                                        previewContainer.append('<li data-id="' + imageId + '" style="position:relative;"><img src="' + placeholderUrl + '" style="width:100px;height:100px;object-fit:cover;" /><button type="button" class="button-link remove-image" style="position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;">×</button></li>');
+                                    });
+                            } else {
+                                // Last resort: placeholder
+                                console.warn('Could not get attachment model for ID:', imageId);
+                                var placeholderUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+SW1hZ2U8L3RleHQ+PC9zdmc+';
+                                previewContainer.append('<li data-id="' + imageId + '" style="position:relative;"><img src="' + placeholderUrl + '" style="width:100px;height:100px;object-fit:cover;" /><button type="button" class="button-link remove-image" style="position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease;">×</button></li>');
+                            }
                         }
                     });
                     
