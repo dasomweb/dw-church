@@ -24,11 +24,11 @@
 }
 
 .dw-bulletin-image-item {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
+    /* border removed to allow Elementor Group_Control_Border to work */
+    /* border-radius removed to allow Elementor card_border_radius control to work */
     overflow: hidden;
     background: #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    /* box-shadow removed to allow Elementor Group_Control_Box_Shadow to work */
     transition: box-shadow 0.3s ease;
 }
 
@@ -195,8 +195,8 @@
 }
 
 .dw-bulletin-item {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
+    /* border removed to allow Elementor Group_Control_Border to work */
+    /* border-radius removed to allow Elementor card_border_radius control to work */
     padding: 15px 20px;
     background: #fff;
     transition: all 0.3s ease;
@@ -576,10 +576,11 @@
     max-width: 900px;
     text-align: center;
     background: #ffffff;
-    border-radius: 12px;
+    /* border-radius removed to allow Elementor card_border_radius control to work */
     padding: 15px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e0e0e0;
+    /* box-shadow removed to allow Elementor Group_Control_Box_Shadow to work */
+    /* border removed to allow Elementor Group_Control_Border to work */
+    transition: all 0.3s ease;
 }
 
 .dw-single-bulletin-image {

@@ -288,9 +288,6 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
                     'scale' => __('Scale', 'dasom-church'),
                     'glow' => __('Glow', 'dasom-church'),
                 ],
-                'selectors' => [
-                    '{{WRAPPER}} .dw-single-bulletin-image-item' => 'transition: all 0.3s ease;',
-                ],
             ]
         );
         

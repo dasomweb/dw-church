@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.57
+Stable tag: 2.58
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,14 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.58 =
+* Fix: Remove hardcoded box-shadow and border from CSS to allow Elementor controls to work
+* Fix: Remove hardcoded border-radius from CSS and inline styles to allow Elementor controls to work
+* Fix: Enable Card Border control in DW Single Bulletin and DW Bulletin widgets
+* Fix: Enable Card Shadow control by removing conflicting CSS
+* Fix: Enable Card Border Radius control by removing conflicting CSS
+* Enhancement: All Elementor Group_Control styles now work correctly without CSS conflicts
 
 = 2.57 =
 * Fix: Prevent content overflow with comprehensive CSS overflow controls

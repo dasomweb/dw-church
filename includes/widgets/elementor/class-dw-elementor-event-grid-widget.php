@@ -1229,7 +1229,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 position: relative;
                 overflow: hidden !important;
                 transition: all 0.3s ease;
-                border-radius: 12px;
+                /* border-radius removed to allow Elementor card_border_radius control to work */
                 width: 100% !important;
                 max-width: 100% !important;
                 box-sizing: border-box !important;
