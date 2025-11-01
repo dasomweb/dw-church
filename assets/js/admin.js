@@ -28,13 +28,27 @@
         this.initFormValidation();
         this.initBannerAdditionalUploaders();
         
-        // Update album image count on page load (with delay to ensure DOM is ready)
+        // Update album image count on page load (with multiple attempts to ensure DOM is ready)
         var self = this;
+        var updateCount = function(attempt) {
+            attempt = attempt || 1;
+            if ($('#dw_album_images_preview, #dasom_album_images_preview').length || $('#dw_album_images, #dasom_album_images').length) {
+                self.updateAlbumImageCount();
+            } else if (attempt < 5) {
+                // Retry up to 5 times with increasing delays
+                setTimeout(function() {
+                    updateCount(attempt + 1);
+                }, 100 * attempt);
+            }
+        };
+        updateCount();
+        
+        // Also update after a longer delay to catch any late-loading content
         setTimeout(function() {
-            if ($('#dw_album_images_preview, #dasom_album_images_preview').length) {
+            if ($('#dw_album_images_preview, #dasom_album_images_preview').length || $('#dw_album_images, #dasom_album_images').length) {
                 self.updateAlbumImageCount();
             }
-        }, 100);
+        }, 500);
     },
     
     /**
@@ -141,8 +155,10 @@
                     // Update both hidden fields if they exist
                     $('#dw_album_images, #dasom_album_images').val(JSON.stringify(ids));
                     
-                    // Update image count display
-                    self.updateAlbumImageCount();
+                    // Update image count display immediately after adding images
+                    setTimeout(function() {
+                        self.updateAlbumImageCount();
+                    }, 50);
                     
                     // Show message if some images were not added
                     if (selection.length > added) {
@@ -163,12 +179,17 @@
             $(this).closest('li').remove();
             var ids = [];
             $(this).closest('ul').find('li').each(function() {
-                ids.push($(this).data('id'));
+                var id = $(this).data('id');
+                if (id) {
+                    ids.push(id);
+                }
             });
             $('#dw_album_images, #dasom_album_images').val(JSON.stringify(ids));
             
-            // Update image count display
-            self.updateAlbumImageCount();
+            // Update image count display immediately after removing images
+            setTimeout(function() {
+                self.updateAlbumImageCount();
+            }, 50);
         });
     },
     
@@ -266,27 +287,38 @@
      */
     updateAlbumImageCount: function() {
         var ids = [];
+        
+        // First, try reading from DOM preview elements
         $('#dw_album_images_preview li, #dasom_album_images_preview li').each(function() {
             var id = $(this).data('id');
             if (id) {
-                ids.push(id);
+                ids.push(String(id)); // Convert to string for consistency
             }
         });
         
-        // If no IDs found from preview, try reading from hidden input
-        if (ids.length === 0) {
-            var hiddenValue = $('#dw_album_images, #dasom_album_images').val();
-            if (hiddenValue) {
-                try {
-                    var parsed = JSON.parse(hiddenValue);
-                    if (Array.isArray(parsed)) {
-                        ids = parsed.filter(function(id) { return id; });
-                    }
-                } catch(e) {
-                    console.error('Error parsing album images:', e);
+        // Also read from hidden input field (always check this as backup)
+        var hiddenValue = $('#dw_album_images, #dasom_album_images').val();
+        if (hiddenValue) {
+            try {
+                var parsed = JSON.parse(hiddenValue);
+                if (Array.isArray(parsed)) {
+                    // Merge with DOM data, avoiding duplicates
+                    var hiddenIds = parsed.filter(function(id) { return id; }).map(String);
+                    hiddenIds.forEach(function(id) {
+                        if (ids.indexOf(id) === -1) {
+                            ids.push(id);
+                        }
+                    });
                 }
+            } catch(e) {
+                console.error('Error parsing album images:', e);
             }
         }
+        
+        // Remove duplicates and ensure we have valid IDs
+        ids = ids.filter(function(id, index) {
+            return id && ids.indexOf(id) === index;
+        });
         
         var count = ids.length;
         var maxCount = 16;
@@ -321,9 +353,18 @@
             
             // Hide "no images" message if images exist
             if (count > 0) {
-                $countElement.next('p.description').each(function() {
-                    if ($(this).text().indexOf('이미지가 없습니다') >= 0) {
+                $countElement.nextAll('p.description').each(function() {
+                    var text = $(this).text();
+                    if (text.indexOf('이미지가 없습니다') >= 0 || text.indexOf('업로드하세요') >= 0) {
                         $(this).hide();
+                    }
+                });
+            } else {
+                // Show "no images" message if count is 0
+                $countElement.nextAll('p.description').each(function() {
+                    var text = $(this).text();
+                    if (text.indexOf('이미지가 없습니다') >= 0 || text.indexOf('업로드하세요') >= 0) {
+                        $(this).show();
                     }
                 });
             }
