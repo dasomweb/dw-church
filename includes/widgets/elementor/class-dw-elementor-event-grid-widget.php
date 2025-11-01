@@ -1260,6 +1260,16 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 word-wrap: break-word;
                 overflow-wrap: break-word;
             }
+            
+            /* Fix text position alignment for PC/Laptop/Tablet */
+            /* Allow text-content to shrink and align properly based on justify-content */
+            @media (min-width: 768px) {
+                .dw-event-grid-text-content {
+                    width: auto;
+                    max-width: 100%;
+                    align-self: auto;
+                }
+            }
             .dw-event-grid-title {
                 color: #ffffff;
                 text-shadow: 0 2px 4px rgba(0,0,0,0.4);
