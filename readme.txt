@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.56
+Stable tag: 2.57
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,13 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.57 =
+* Fix: Prevent content overflow with comprehensive CSS overflow controls
+* Enhancement: Add word-wrap and break-word properties to all text elements
+* Enhancement: Ensure max-width and max-height constraints on all containers
+* Feature: Allow simple HTML tags (br, strong, em, span) in Title and Date/Time fields
+* Fix: Apply overflow:hidden and containment properties to prevent any content from escaping card boundaries
 
 = 2.56 =
 * Feature: Make Text Position responsive (Desktop/Tablet/Mobile)

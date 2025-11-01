@@ -1148,17 +1148,30 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 echo 'data-position-mobile="' . esc_attr($text_position_mobile) . '">';
                 echo '<div class="dw-event-grid-text-content ' . esc_attr($text_align_class) . '">';
                 
+                // Allowed HTML tags for title and datetime
+                $allowed_html = array(
+                    'br' => array(),
+                    'strong' => array(),
+                    'b' => array(),
+                    'em' => array(),
+                    'i' => array(),
+                    'span' => array('style' => array()),
+                );
+                
                 // Department
                 if ($event_department) {
                     echo '<div class="dw-event-grid-department">' . esc_html($event_department) . '</div>';
                 }
                 
-                // Title (linked to post)
-                echo '<h3 class="dw-event-grid-title"><a href="' . esc_url(get_permalink()) . '" style="color:inherit;text-decoration:none;">' . esc_html(get_the_title()) . '</a></h3>';
+                // Title (linked to post) - Allow simple HTML
+                $title = get_the_title();
+                $title_allowed = wp_kses($title, $allowed_html);
+                echo '<h3 class="dw-event-grid-title"><a href="' . esc_url(get_permalink()) . '" style="color:inherit;text-decoration:none;">' . $title_allowed . '</a></h3>';
                 
-                // Date/Time
+                // Date/Time - Allow simple HTML
                 if ($event_datetime) {
-                    echo '<div class="dw-event-grid-datetime">' . esc_html($event_datetime) . '</div>';
+                    $datetime_allowed = wp_kses($event_datetime, $allowed_html);
+                    echo '<div class="dw-event-grid-datetime">' . $datetime_allowed . '</div>';
                 }
                 
                 // Read More button
@@ -1214,22 +1227,22 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             }
             .dw-event-grid-item {
                 position: relative;
-                overflow: hidden;
+                overflow: hidden !important;
                 transition: all 0.3s ease;
                 border-radius: 12px;
-                width: 100%;
-                max-width: 100%;
-                box-sizing: border-box;
-                isolation: isolate;
-                contain: layout style paint;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                isolation: isolate !important;
+                contain: layout style paint !important;
             }
             .dw-event-grid-image {
                 position: relative;
-                width: 100%;
-                max-width: 100%;
-                overflow: hidden;
+                width: 100% !important;
+                max-width: 100% !important;
+                overflow: hidden !important;
                 display: block;
-                box-sizing: border-box;
+                box-sizing: border-box !important;
             }
             .dw-event-grid-item img {
                 width: 100%;
@@ -1252,13 +1265,15 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 position: absolute;
                 top: 0;
                 left: 0;
-                width: 100%;
-                height: 100%;
+                width: 100% !important;
+                max-width: 100% !important;
+                height: 100% !important;
+                max-height: 100% !important;
                 display: flex !important;
                 z-index: 2;
                 pointer-events: auto;
-                overflow: hidden;
-                box-sizing: border-box;
+                overflow: hidden !important;
+                box-sizing: border-box !important;
             }
             
             /* Text position classes - Apply flex alignment consistently */
@@ -1313,10 +1328,51 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             .dw-event-grid-text-content {
                 z-index: 1;
                 padding: 20px;
-                box-sizing: border-box;
-                overflow: hidden;
-                word-wrap: break-word;
-                overflow-wrap: break-word;
+                box-sizing: border-box !important;
+                overflow: hidden !important;
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+                word-break: break-word !important;
+                hyphens: auto !important;
+                max-width: 100% !important;
+                width: auto !important;
+                max-height: 100% !important;
+                overflow-y: hidden !important;
+                overflow-x: hidden !important;
+                /* Ensure content stays within parent */
+                position: relative !important;
+                contain: layout style paint !important;
+            }
+            
+            /* Prevent text overflow in all text elements */
+            .dw-event-grid-text-content * {
+                max-width: 100% !important;
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+                word-break: break-word !important;
+            }
+            
+            .dw-event-grid-department,
+            .dw-event-grid-title,
+            .dw-event-grid-title a,
+            .dw-event-grid-datetime,
+            .dw-event-grid-button {
+                max-width: 100% !important;
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+                word-break: break-word !important;
+                overflow: hidden !important;
+                display: block !important;
+            }
+            
+            .dw-event-grid-title {
+                line-height: 1.3 !important;
+            }
+            
+            .dw-event-grid-title a {
+                display: inline-block !important;
+                width: auto !important;
+                max-width: 100% !important;
             }
             
             /* Mobile: Full width for text content and apply mobile text position */
@@ -1455,9 +1511,9 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 .dw-event-grid .dw-event-grid-text .dw-event-grid-text-content,
                 .dw-event-grid .dw-event-grid-text-content {
                     width: auto !important;
-                    max-width: none !important;
+                    max-width: calc(100% - 40px) !important; /* Account for padding to prevent overflow */
                     flex: 0 0 auto !important;
-                    flex-shrink: 0 !important;
+                    flex-shrink: 1 !important; /* Allow shrinking if content is too long */
                     flex-grow: 0 !important;
                     flex-basis: auto !important;
                     align-self: auto !important;
@@ -1523,16 +1579,21 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             }
             
             /* Prevent any child elements from overflowing */
-            /* Exclude text-content from this rule to allow proper positioning */
-            .elementor-widget-dw_event_grid *:not(.dw-event-grid-text-content):not(.dw-event-grid-text) {
+            /* Exclude text-content and text from this rule to allow proper positioning */
+            .elementor-widget-dw_event_grid *:not(.dw-event-grid-text-content):not(.dw-event-grid-text):not(.dw-event-grid-department):not(.dw-event-grid-title):not(.dw-event-grid-datetime):not(.dw-event-grid-button) {
                 max-width: 100% !important;
                 box-sizing: border-box !important;
             }
             
-            /* Ensure text-content can size itself for flex alignment */
+            /* Ensure text-content never exceeds its container */
+            .elementor-widget-dw_event_grid .dw-event-grid-text {
+                max-width: 100% !important;
+                max-height: 100% !important;
+            }
+            
+            /* Ensure text-content can size itself for flex alignment but never overflow */
             .elementor-widget-dw_event_grid .dw-event-grid-text-content,
             .dw-event-grid .dw-event-grid-text-content {
-                max-width: none !important;
                 box-sizing: border-box !important;
             }
             
