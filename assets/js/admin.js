@@ -158,14 +158,9 @@
                 selectionOrder = []; // Reset selection order
                 maxAllowedInFrame = remainingSlots; // Reset max allowed
                 
-                // Update selection count display in media frame after a short delay
-                setTimeout(function() {
-                    var currentCount = selection.length;
-                    self.updateSelectionCountInFrame(mediaFrame, currentCount, maxImages);
-                }, 200);
             });
             
-            // Listen to selection changes to track selection order and update count
+            // Listen to selection changes to track selection order
             // Use setTimeout to ensure DOM is ready after 'open' event
             mediaFrame.on('open', function() {
                 setTimeout(function() {
@@ -189,11 +184,6 @@
                                     // Show alert immediately
                                     alert('최대 ' + maxAllowedInFrame + '개의 이미지만 선택할 수 있습니다. (Maximum ' + maxAllowedInFrame + ' images can be selected)');
                                     
-                                    // Update count display
-                                    setTimeout(function() {
-                                        var updatedCount = selection.length;
-                                        self.updateSelectionCountInFrame(mediaFrame, updatedCount, maxImages);
-                                    }, 50);
                                     
                                     return; // Don't process this addition
                                 }
@@ -216,9 +206,6 @@
                                 } catch(e) {
                                     console.error('Error processing attachment:', e);
                                 }
-                                
-                                // Update selection count display immediately
-                                self.updateSelectionCountInFrame(mediaFrame, currentCount, maxImages);
                             }, 20);
                         });
                     });
@@ -238,10 +225,6 @@
                                 } catch(e) {
                                     console.error('Error processing removed attachment:', e);
                                 }
-                                
-                                // Update selection count display
-                                var updatedCount = selection.length;
-                                self.updateSelectionCountInFrame(mediaFrame, updatedCount, maxImages);
                             }, 20);
                         });
                     });
@@ -249,16 +232,14 @@
                     // Handle reset events
                     selection.on('reset.dw-album', function() {
                         selectionOrder = [];
-                        self.updateSelectionCountInFrame(mediaFrame, 0, maxImages);
                     });
                     
                     // Also intercept checkbox clicks directly to prevent selection before it happens
-                    // and update count display in real-time
                     setTimeout(function() {
                         var $mediaFrame = $('.media-frame:visible, .media-modal:visible').first();
                         if ($mediaFrame.length) {
                             // Remove existing handlers to prevent duplicates
-                            $mediaFrame.off('click.dw-album-checkbox change.dw-album-checkbox', 'input[type="checkbox"]');
+                            $mediaFrame.off('click.dw-album-checkbox', 'input[type="checkbox"]');
                             
                             // Intercept checkbox clicks before they change the selection
                             $mediaFrame.on('click.dw-album-checkbox', 'input[type="checkbox"]', function(e) {
@@ -281,23 +262,8 @@
                                     return false;
                                 }
                                 
-                                // Update count after checkbox state changes (for both check and uncheck)
-                                setTimeout(function() {
-                                    var selection = mediaFrame.state().get('selection');
-                                    var currentCount = selection.length;
-                                    self.updateSelectionCountInFrame(mediaFrame, currentCount, maxImages);
-                                }, 50);
                             });
                             
-                            // Also listen to change events to update count after selection changes
-                            $mediaFrame.on('change.dw-album-checkbox', 'input[type="checkbox"]', function() {
-                                // Update count after checkbox state changes (redundant but ensures update)
-                                setTimeout(function() {
-                                    var selection = mediaFrame.state().get('selection');
-                                    var currentCount = selection.length;
-                                    self.updateSelectionCountInFrame(mediaFrame, currentCount, maxImages);
-                                }, 80);
-                            });
                         }
                     }, 500);
                 }, 300);
@@ -461,12 +427,8 @@
                             alert('최대 16개의 이미지를 업로드할 수 있습니다. 이미지를 제거한 후 다시 시도해주세요. (Maximum 16 images allowed. Please remove some images before adding new ones.)');
                         }
                         
-                        // Update selection count in frame after unchecking
+                        // Bring media frame to front (focus) since it's already open
                         setTimeout(function() {
-                            var updatedCount = selection.length;
-                            self.updateSelectionCountInFrame(mediaFrame, updatedCount, maxImages);
-                            
-                            // Bring media frame to front (focus) since it's already open
                             var $mediaModal = $('.media-modal:visible').first();
                             if ($mediaModal.length) {
                                 // Focus on the media modal to bring it to front
