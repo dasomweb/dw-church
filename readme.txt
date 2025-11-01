@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.62.2
+Stable tag: 2.62.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,11 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.62.3 =
+* Fix: Improve real-time selection count update using requestAnimationFrame for better timing
+* Fix: Update count on both checkbox check and uncheck events
+* Fix: Ensure count updates immediately on all selection events (add, remove, click, change)
 
 = 2.62.2 =
 * Fix: Update selection count display dynamically when checkboxes are clicked in media library
