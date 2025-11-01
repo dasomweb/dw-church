@@ -705,32 +705,6 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         );
         
         $this->add_responsive_control(
-            'text_align',
-            [
-                'label' => __('Text Alignment', 'dasom-church'),
-                'type' => \Elementor\Controls_Manager::CHOOSE,
-                'options' => [
-                    'left' => [
-                        'title' => __('Left', 'dasom-church'),
-                        'icon' => 'eicon-text-align-left',
-                    ],
-                    'center' => [
-                        'title' => __('Center', 'dasom-church'),
-                        'icon' => 'eicon-text-align-center',
-                    ],
-                    'right' => [
-                        'title' => __('Right', 'dasom-church'),
-                        'icon' => 'eicon-text-align-right',
-                    ],
-                ],
-                'default' => 'center',
-                'selectors' => [
-                    '{{WRAPPER}} .dw-event-grid-text-content' => 'text-align: {{VALUE}};',
-                ],
-            ]
-        );
-        
-        $this->add_responsive_control(
             'text_padding',
             [
                 'label' => __('Text Padding', 'dasom-church'),
@@ -1147,9 +1121,23 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     echo '<div class="dw-event-grid-overlay"></div>';
                 }
                 
+                // Determine text-align based on text_position
+                // left positions: top-left, center-left, bottom-left → text-align: left
+                // center positions: top-center, center-center, bottom-center → text-align: center
+                // right positions: top-right, center-right, bottom-right → text-align: right
+                $text_align_class = '';
+                if (strpos($text_position, '-left') !== false) {
+                    $text_align_class = 'dw-text-align-left';
+                } elseif (strpos($text_position, '-right') !== false) {
+                    $text_align_class = 'dw-text-align-right';
+                } else {
+                    // center or default
+                    $text_align_class = 'dw-text-align-center';
+                }
+                
                 // Use CSS class instead of inline style for consistent application
                 echo '<div class="dw-event-grid-text dw-text-position-' . esc_attr($text_position) . '">';
-                echo '<div class="dw-event-grid-text-content">';
+                echo '<div class="dw-event-grid-text-content ' . esc_attr($text_align_class) . '">';
                 
                 // Department
                 if ($event_department) {
@@ -1300,6 +1288,17 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             .dw-event-grid-text.dw-text-position-bottom-right {
                 align-items: flex-end !important;
                 justify-content: flex-end !important;
+            }
+            
+            /* Text alignment based on position */
+            .dw-event-grid-text-content.dw-text-align-left {
+                text-align: left !important;
+            }
+            .dw-event-grid-text-content.dw-text-align-center {
+                text-align: center !important;
+            }
+            .dw-event-grid-text-content.dw-text-align-right {
+                text-align: right !important;
             }
             
             .dw-event-grid-text-content {

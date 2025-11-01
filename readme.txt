@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.54
+Stable tag: 2.55
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,13 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.55 =
+* Fix: Remove Text Alignment control and auto-apply text-align based on Text Position
+* Fix: Left positions (top-left, center-left, bottom-left) automatically use left text alignment
+* Fix: Right positions (top-right, center-right, bottom-right) automatically use right text alignment
+* Fix: Center positions (top-center, center-center, bottom-center) automatically use center text alignment
+* Enhancement: Simplify widget controls by removing redundant Text Alignment option
 
 = 2.54 =
 * Fix: Replace inline styles with CSS classes for consistent text position alignment
