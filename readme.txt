@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.60.1
+Stable tag: 2.60.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,9 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.60.2 =
+* Fix: Fix plugin activation error by removing incorrect wp_handle_upload filter usage
 
 = 2.60.1 =
 * Fix: Fix ArgumentCountError in album meta box sprintf() call

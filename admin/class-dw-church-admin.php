@@ -82,7 +82,6 @@ class DW_Church_Admin {
         // Album image upload restrictions and resizing
         add_filter('upload_mimes', array($this, 'dw_church_restrict_image_mimes'), 10, 1);
         add_filter('wp_handle_upload_prefilter', array($this, 'dw_church_validate_image_upload'), 10, 1);
-        add_filter('wp_handle_upload', array($this, 'dw_church_resize_album_image'), 10, 2);
         add_filter('wp_generate_attachment_metadata', array($this, 'dw_church_resize_album_image_metadata'), 10, 3);
     }
     
@@ -152,137 +151,7 @@ class DW_Church_Admin {
     }
     
     /**
-     * Resize album images to maximum 1280px width
-     */
-    public function dw_church_resize_album_image($upload, $context) {
-        // Only process images uploaded for album post type
-        if ($context !== 'upload' || !isset($upload['file']) || !isset($upload['type'])) {
-            return $upload;
-        }
-        
-        // Check if this is an image
-        if (strpos($upload['type'], 'image/') !== 0) {
-            return $upload;
-        }
-        
-        // Check if uploaded during album post edit
-        $is_album_upload = false;
-        if (is_admin()) {
-            global $post;
-            if ($post && $post->post_type === 'album') {
-                $is_album_upload = true;
-            } else {
-                // Check if in media library upload for album
-                $referer = wp_get_referer();
-                if ($referer && (strpos($referer, 'post_type=album') !== false || strpos($referer, 'post.php') !== false)) {
-                    $is_album_upload = true;
-                }
-            }
-        }
-        
-        if (!$is_album_upload) {
-            return $upload;
-        }
-        
-        // Get image dimensions
-        $image_path = $upload['file'];
-        if (!file_exists($image_path)) {
-            return $upload;
-        }
-        
-        // Get image info
-        $image_info = @getimagesize($image_path);
-        if (!$image_info) {
-            return $upload;
-        }
-        
-        $max_width = 1280;
-        $current_width = $image_info[0];
-        $current_height = $image_info[1];
-        $mime_type = $image_info['mime'];
-        
-        // Only resize if image is wider than 1280px
-        if ($current_width <= $max_width) {
-            return $upload;
-        }
-        
-        // Calculate new height maintaining aspect ratio
-        $ratio = $current_height / $current_width;
-        $new_width = $max_width;
-        $new_height = round($max_width * $ratio);
-        
-        // Create image resource based on mime type
-        switch ($mime_type) {
-            case 'image/jpeg':
-                $source_image = @imagecreatefromjpeg($image_path);
-                break;
-            case 'image/png':
-                $source_image = @imagecreatefrompng($image_path);
-                break;
-            case 'image/gif':
-                $source_image = @imagecreatefromgif($image_path);
-                break;
-            case 'image/webp':
-                if (function_exists('imagecreatefromwebp')) {
-                    $source_image = @imagecreatefromwebp($image_path);
-                } else {
-                    return $upload; // WebP not supported
-                }
-                break;
-            default:
-                return $upload; // Unsupported format
-        }
-        
-        if (!$source_image) {
-            return $upload;
-        }
-        
-        // Create new image
-        $new_image = imagecreatetruecolor($new_width, $new_height);
-        
-        // Preserve transparency for PNG and GIF
-        if ($mime_type === 'image/png' || $mime_type === 'image/gif') {
-            imagealphablending($new_image, false);
-            imagesavealpha($new_image, true);
-            $transparent = imagecolorallocatealpha($new_image, 255, 255, 255, 127);
-            imagefilledrectangle($new_image, 0, 0, $new_width, $new_height, $transparent);
-        }
-        
-        // Resize image
-        imagecopyresampled($new_image, $source_image, 0, 0, 0, 0, $new_width, $new_height, $current_width, $current_height);
-        
-        // Save resized image
-        switch ($mime_type) {
-            case 'image/jpeg':
-                imagejpeg($new_image, $image_path, 90); // 90 quality
-                break;
-            case 'image/png':
-                imagepng($new_image, $image_path, 9); // 9 compression level
-                break;
-            case 'image/gif':
-                imagegif($new_image, $image_path);
-                break;
-            case 'image/webp':
-                if (function_exists('imagewebp')) {
-                    imagewebp($new_image, $image_path, 90);
-                }
-                break;
-        }
-        
-        // Free memory
-        imagedestroy($source_image);
-        imagedestroy($new_image);
-        
-        // Update file size in upload array
-        if (file_exists($image_path)) {
-            $upload['filesize'] = filesize($image_path);
-        }
-        
-        return $upload;
-    }
-    
-    /**
-     * Resize album images via attachment metadata hook (alternative method)
+     * Resize album images via attachment metadata hook
      */
     public function dw_church_resize_album_image_metadata($metadata, $attachment_id, $context) {
         // Only process in admin and for images
