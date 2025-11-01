@@ -24,9 +24,14 @@
     init: function() {
         this.initMediaUploaders();
         this.initImageSorting();
-                this.initYouTubeThumbnails();
-                this.initFormValidation();
-                this.initBannerAdditionalUploaders();
+        this.initYouTubeThumbnails();
+        this.initFormValidation();
+        this.initBannerAdditionalUploaders();
+        
+        // Update album image count on page load
+        if ($('#dw_album_images_preview, #dasom_album_images_preview').length) {
+            this.updateAlbumImageCount();
+        }
     },
     
     /**
@@ -133,9 +138,17 @@
                     // Update both hidden fields if they exist
                     $('#dw_album_images, #dasom_album_images').val(JSON.stringify(ids));
                     
+                    // Update image count display
+                    self.updateAlbumImageCount();
+                    
                     // Show message if some images were not added
                     if (selection.length > added) {
                         alert('최대 16개의 이미지만 업로드할 수 있습니다. ' + added + '개의 이미지만 추가되었습니다. (Maximum 16 images allowed. Only ' + added + ' images were added.)');
+                    }
+                    
+                    // Show warning if total exceeds 16
+                    if (ids.length > 16) {
+                        alert('경고: 현재 ' + ids.length + '개의 이미지가 선택되어 있습니다. 저장 시 16개 이하로 줄여주세요. (Warning: ' + ids.length + ' images selected. Please reduce to 16 or less before saving.)');
                     }
                 }
             });
@@ -150,6 +163,9 @@
                 ids.push($(this).data('id'));
             });
             $('#dw_album_images, #dasom_album_images').val(JSON.stringify(ids));
+            
+            // Update image count display
+            self.updateAlbumImageCount();
         });
     },
     
@@ -243,12 +259,90 @@
     },
     
     /**
+     * Update album image count display
+     */
+    updateAlbumImageCount: function() {
+        var ids = [];
+        $('#dw_album_images_preview li, #dasom_album_images_preview li').each(function() {
+            ids.push($(this).data('id'));
+        });
+        
+        var count = ids.length;
+        var maxCount = 16;
+        var countText = '현재 ' + count + '개 / 최대 ' + maxCount + '개 이미지';
+        
+        // Update count display
+        var $countElement = $('#dw_album_images_count');
+        if ($countElement.length) {
+            var $warningSpan = $countElement.find('span[style*="color:#dc3545"]');
+            
+            if (count > maxCount) {
+                // Show error message
+                if (!$('#dw_album_images_error').length) {
+                    $countElement.after('<p class="description" style="color:#dc3545;font-weight:bold;" id="dw_album_images_error">앨범 이미지는 최대 16개까지 저장할 수 있습니다. 이미지를 제거하여 16개 이하로 줄여주세요.</p>');
+                }
+                countText += ' <span style="color:#dc3545;font-weight:bold;">(경고: ' + count + '개 이미지가 선택되어 있습니다. 저장 시 16개 이하로 줄여주세요)</span>';
+            } else if (count >= maxCount) {
+                // At maximum
+                if ($warningSpan.length) {
+                    $warningSpan.text('(최대 개수에 도달했습니다)');
+                } else {
+                    countText += ' <span style="color:#dc3545;">(최대 개수에 도달했습니다)</span>';
+                }
+                $('#dw_album_images_error').remove();
+            } else {
+                // Under maximum
+                if ($warningSpan.length && $warningSpan.text().indexOf('경고') >= 0) {
+                    $warningSpan.remove();
+                }
+                $('#dw_album_images_error').remove();
+            }
+            
+            $countElement.html(countText);
+        }
+    },
+    
+    /**
      * Initialize form validation
      */
     initFormValidation: function() {
+        var self = this;
+        
+        // Validate album post form before submit
+        $('#post, #post-new').on('submit', function(e) {
+            // Check if this is an album post
+            var postType = $('#post_type').val();
+            if (postType !== 'album') {
+                return; // Not an album post, use default validation
+            }
+            
+            // Check album image count
+            var ids = [];
+            $('#dw_album_images_preview li, #dasom_album_images_preview li').each(function() {
+                ids.push($(this).data('id'));
+            });
+            
+            if (ids.length > 16) {
+                e.preventDefault();
+                alert('앨범 이미지는 최대 16개까지 저장할 수 있습니다. 현재 ' + ids.length + '개의 이미지가 선택되어 있습니다. 이미지를 제거하여 16개 이하로 줄여주세요.\n\n(Album images are limited to 16. Currently ' + ids.length + ' images are selected. Please remove images to reduce to 16 or less.)');
+                
+                // Scroll to image section
+                $('html, body').animate({
+                    scrollTop: $('#dw_album_images_preview, #dasom_album_images_preview').offset().top - 100
+                }, 500);
+                
+                return false;
+            }
+        });
+        
         $('form').on('submit', function(e) {
             var form = $(this);
             var isValid = true;
+            
+            // Skip if we already handled album validation
+            if (form.is('#post, #post-new')) {
+                return;
+            }
             
             // Validate required fields
             form.find('[required]').each(function() {

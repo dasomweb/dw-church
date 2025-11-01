@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.60.2
+Stable tag: 2.60.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,13 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.60.3 =
+* Feature: Add validation to prevent saving albums with more than 16 images
+* Enhancement: Display warning message when album image count exceeds 16
+* Enhancement: Prevent form submission when album has more than 16 images (client-side validation)
+* Enhancement: Display error notice after failed save attempt (server-side validation)
+* Enhancement: Real-time image count update when adding/removing images
 
 = 2.60.2 =
 * Fix: Fix plugin activation error by removing incorrect wp_handle_upload filter usage

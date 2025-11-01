@@ -54,6 +54,9 @@ class DW_Church_Meta_Boxes {
         
         // Force classic editor for column post type
         add_filter('use_block_editor_for_post_type', array($this, 'dasom_church_disable_gutenberg_for_column'), 10, 2);
+        
+        // Display album image error notices
+        add_action('admin_notices', array($this, 'dasom_church_display_album_image_error'));
     }
     
     /**
@@ -379,7 +382,7 @@ class DW_Church_Meta_Boxes {
                             </li>
                         <?php endforeach; ?>
                     </ul>
-                    <p class="description">
+                    <p class="description" id="dw_album_images_count">
                         <?php 
                         $current_count = count($images);
                         $max_count = 16;
@@ -388,8 +391,15 @@ class DW_Church_Meta_Boxes {
                         ?>
                         <?php if ($current_count >= $max_count): ?>
                             <span style="color:#dc3545;"><?php _e('(최대 개수에 도달했습니다)', 'dw-church'); ?></span>
+                        <?php elseif ($current_count > $max_count): ?>
+                            <span style="color:#dc3545;font-weight:bold;"><?php echo sprintf(__('(경고: %d개 이미지가 선택되어 있습니다. 저장 시 16개 이하로 줄여주세요)', 'dw-church'), $current_count); ?></span>
                         <?php endif; ?>
                     </p>
+                    <?php if ($current_count > $max_count): ?>
+                        <p class="description" style="color:#dc3545;font-weight:bold;" id="dw_album_images_error">
+                            <?php _e('앨범 이미지는 최대 16개까지 저장할 수 있습니다. 이미지를 제거하여 16개 이하로 줄여주세요.', 'dw-church'); ?>
+                        </p>
+                    <?php endif; ?>
                     <?php if (empty($images)): ?>
                         <p class="description"><?php _e('이미지가 없습니다. 위의 버튼을 클릭하여 이미지를 업로드하세요.', 'dw-church'); ?></p>
                     <?php endif; ?>
@@ -1155,11 +1165,23 @@ class DW_Church_Meta_Boxes {
         if (isset($_POST['dw_album_images'])) {
             $images = json_decode(sanitize_text_field($_POST['dw_album_images']), true);
             if (is_array($images)) {
-                // Limit to maximum 16 images
+                // Validate: Maximum 16 images allowed
                 $max_images = 16;
-                if (count($images) > $max_images) {
-                    $images = array_slice($images, 0, $max_images);
+                $image_count = count($images);
+                
+                if ($image_count > $max_images) {
+                    // Store error message in transient for display on next page load
+                    set_transient('dw_church_album_image_error_' . $post_id, sprintf(
+                        __('앨범 이미지 저장 실패: %d개의 이미지가 선택되어 있습니다. 최대 %d개까지만 저장할 수 있습니다. 이미지를 제거하여 %d개 이하로 줄여주세요.', 'dw-church'),
+                        $image_count,
+                        $max_images,
+                        $max_images
+                    ), 30);
+                    
+                    // Prevent save by returning early
+                    return;
                 }
+                
                 // Ensure all values are integers
                 $images = array_map('absint', $images);
                 $images = array_filter($images); // Remove any zero values
@@ -1890,6 +1912,30 @@ class DW_Church_Meta_Boxes {
             return false;
         }
         return $current_status;
+    }
+    
+    /**
+     * Display album image error notice
+     */
+    public function dasom_church_display_album_image_error() {
+        global $post;
+        
+        // Only show on album post edit pages
+        if (!isset($_GET['post']) || get_post_type($_GET['post']) !== 'album') {
+            return;
+        }
+        
+        $post_id = intval($_GET['post']);
+        $error_message = get_transient('dw_church_album_image_error_' . $post_id);
+        
+        if ($error_message) {
+            echo '<div class="notice notice-error is-dismissible">';
+            echo '<p><strong>' . esc_html($error_message) . '</strong></p>';
+            echo '</div>';
+            
+            // Delete transient after displaying
+            delete_transient('dw_church_album_image_error_' . $post_id);
+        }
     }
 }
 
