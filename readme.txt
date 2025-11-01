@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.60.7
+Stable tag: 2.60.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,9 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.60.8 =
+* Fix: Fix JavaScript syntax error - missing closing brace for DasomChurchAdmin object
 
 = 2.60.7 =
 * Fix: Use WordPress media uploader selection.length to accurately count selected images
