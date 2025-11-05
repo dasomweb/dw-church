@@ -631,31 +631,18 @@
                 return; // Not an album post
             }
             
-            // Check album image count - ALWAYS count from actual DOM, not just hidden input
+            // CRITICAL: Sync DOM preview to hidden input BEFORE validation
+            // This ensures the hidden input always has the current state
             var ids = [];
-            
-            // First, try to get from actual preview DOM (most reliable)
             $('#dw_album_images_preview li, #dasom_album_images_preview li').each(function() {
                 var id = $(this).data('id');
                 if (id) {
-                    ids.push(id);
+                    ids.push(String(id));
                 }
             });
             
-            // If no DOM preview found, fall back to hidden input
-            if (ids.length === 0) {
-                var hiddenValue = $('#dw_album_images, #dasom_album_images').val();
-                if (hiddenValue) {
-                    try {
-                        var parsed = JSON.parse(hiddenValue);
-                        if (Array.isArray(parsed)) {
-                            ids = parsed.filter(function(id) { return id; });
-                        }
-                    } catch(e) {
-                        console.error('Error parsing album images:', e);
-                    }
-                }
-            }
+            // Update hidden input with current DOM state
+            $('#dw_album_images, #dasom_album_images').val(JSON.stringify(ids));
             
             // Check if exceeds limit
             if (ids.length > 15) {

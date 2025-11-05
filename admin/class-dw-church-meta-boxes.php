@@ -1160,36 +1160,53 @@ class DW_Church_Meta_Boxes {
         
         if (isset($_POST['dw_album_images'])) {
             $images_json = wp_unslash($_POST['dw_album_images']);
-            $images = json_decode($images_json, true);
-            if (is_array($images)) {
-                // Check if exceeds 15 images limit
-                if (count($images) > 15) {
-                    // Store error message in transient for display
-                    set_transient('dw_church_album_image_error_' . $post_id, sprintf(
-                        __('앨범 이미지 저장 실패: %d개의 이미지가 선택되어 있습니다. 최대 15개까지만 저장할 수 있습니다. 이미지를 제거하여 15개 이하로 줄여주세요.', 'dw-church'),
-                        count($images)
-                    ), 30);
-                    
-                    // Prevent save - don't update post meta
-                    // The post itself may be saved, but images won't be saved
-                    return;
+            
+            // Handle empty string case
+            if (trim($images_json) === '') {
+                $images = array();
+            } else {
+                $images = json_decode($images_json, true);
+                
+                // If JSON decode failed, log error and try to continue with empty array
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    error_log('DW Church Album: JSON decode error - ' . json_last_error_msg() . ' for value: ' . substr($images_json, 0, 100));
+                    $images = array();
                 }
+            }
+            
+            // Ensure $images is always an array
+            if (!is_array($images)) {
+                $images = array();
+            }
+            
+            // Check if exceeds 15 images limit
+            if (count($images) > 15) {
+                // Store error message in transient for display
+                set_transient('dw_church_album_image_error_' . $post_id, sprintf(
+                    __('앨범 이미지 저장 실패: %d개의 이미지가 선택되어 있습니다. 최대 15개까지만 저장할 수 있습니다. 이미지를 제거하여 15개 이하로 줄여주세요.', 'dw-church'),
+                    count($images)
+                ), 30);
                 
-                // Ensure all values are integers
-                $images = array_map('absint', $images);
-                $images = array_filter($images); // Remove any zero values
-                $images = array_values($images); // Reindex array
-                
-                update_post_meta($post_id, 'dw_album_images', wp_json_encode($images));
-                
-                // Auto-set first image as featured image (only if no manual YouTube thumbnail is set)
-                $manual_youtube_thumb_id = get_post_meta($post_id, 'dw_album_thumb_id', true);
-                if (!$manual_youtube_thumb_id && !empty($images)) {
-                    $first_image_id = intval($images[0]);
-                    if ($first_image_id > 0) {
-                        set_post_thumbnail($post_id, $first_image_id);
-                        // album_thumb_id는 YouTube 썸네일용이므로 건드리지 않음
-                    }
+                // Prevent save - don't update post meta
+                // The post itself may be saved, but images won't be saved
+                return;
+            }
+            
+            // Ensure all values are integers
+            $images = array_map('absint', $images);
+            $images = array_filter($images); // Remove any zero values
+            $images = array_values($images); // Reindex array
+            
+            // Always save, even if empty array (to clear previous images)
+            update_post_meta($post_id, 'dw_album_images', wp_json_encode($images));
+            
+            // Auto-set first image as featured image (only if no manual YouTube thumbnail is set)
+            $manual_youtube_thumb_id = get_post_meta($post_id, 'dw_album_thumb_id', true);
+            if (!$manual_youtube_thumb_id && !empty($images)) {
+                $first_image_id = intval($images[0]);
+                if ($first_image_id > 0) {
+                    set_post_thumbnail($post_id, $first_image_id);
+                    // album_thumb_id는 YouTube 썸네일용이므로 건드리지 않음
                 }
             }
         }
