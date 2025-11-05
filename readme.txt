@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.62.5
+Stable tag: 2.62.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.62.6 =
+* Change: Remove 16 image limit restriction for album images
+* Enhancement: Add recommendation message suggesting 10-15 images for optimal gallery loading performance
+* Fix: Remove all 16 image limit checks, alerts, and validation from album image uploader
+* Enhancement: Add helpful notice about gallery loading speed when selecting images
 
 = 2.62.5 =
 * Fix: Keep media frame open after alert is dismissed when 16 image limit is exceeded

@@ -360,6 +360,9 @@ class DW_Church_Loader {
             <label><?php echo esc_html__('Album Images', 'dw-church'); ?></label><br>
             <input type="hidden" id="dasom_album_images" name="dasom_album_images" value="<?php echo esc_attr(wp_json_encode($images)); ?>" />
             <button type="button" class="button" id="dasom_album_images_button"><?php echo esc_html__('Upload/Select Images', 'dw-church'); ?></button>
+            <p class="description" style="margin-top:8px; color:#666;">
+                <?php echo esc_html__('💡 Recommendation: It is recommended to limit the number of images to 10-15. If there are too many images, gallery loading speed issues may occur.', 'dw-church'); ?>
+            </p>
             <ul id="dasom_album_images_preview" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:10px;">
                 <?php foreach ($images as $id): ?>
                     <li data-id="<?php echo esc_attr($id); ?>">

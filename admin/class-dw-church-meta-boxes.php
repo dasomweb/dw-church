@@ -366,6 +366,9 @@ class DW_Church_Meta_Boxes {
                 <td>
                     <input type="hidden" id="dw_album_images" name="dw_album_images" value='<?php echo esc_attr(json_encode($images)); ?>' autocomplete="off" data-lpignore="true" />
                     <button type="button" class="button" id="dw_album_images_button"><?php _e('이미지 업로드/선택', 'dw-church'); ?></button>
+                    <p class="description" style="margin-top:8px; color:#666;">
+                        <?php _e('💡 권장사항: 이미지 개수는 10-15개 정도로 제한하는 것을 권장합니다. 이미지가 많을 경우 갤러리 로딩 시 속도 문제가 발생할 수 있습니다.', 'dw-church'); ?>
+                    </p>
                     
                     <!-- Image count display moved ABOVE the thumbnail list -->
                     <p class="description" id="dw_album_images_count" style="margin-top:10px;">
