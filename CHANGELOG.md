@@ -5,6 +5,21 @@ All notable changes to the DW Church Management System project will be documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.62.22] - 2025-01-XX
+
+### Fixed
+- **Plugin Auto-Activation**: Improved detection and multiple activation methods to ensure plugin stays active after updates
+- **Error Logging**: Added better error logging for activation failures
+
+### Enhanced
+- **Multiple Activation Mechanisms**: Primary, Secondary, and Emergency activation methods
+- **Better Error Handling**: Enhanced error detection and logging for activation issues
+
+## [2.62.21] - 2025-01-XX
+
+### Fixed
+- **Church Information Settings**: Fixed nonce field name mismatch that prevented church information from being saved
+
 ## [2.46] - 2025-01-30
 
 ### Cleaned
