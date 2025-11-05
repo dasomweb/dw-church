@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.62.10
+Stable tag: 2.62.11
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,10 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.62.11 =
+* Enhancement: Add auto-updates UI to plugins list - users can now enable/disable auto-updates from WordPress admin
+* Fix: Plugin now shows "Enable auto-updates" option in plugins list like standard WordPress plugins
 
 = 2.62.10 =
 * Change: Remove forced auto-update enablement - plugin now respects WordPress default auto-update settings

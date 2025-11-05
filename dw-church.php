@@ -2,7 +2,7 @@
 /**
  * Plugin Name: DW Church
  * Description: DW Church Management System
- * Version: 2.62.10
+ * Version: 2.62.11
  * Author: DasomWeb
  * Author URI: https://dasomweb.com
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '2.62.10');
+define('DASOM_CHURCH_VERSION', '2.62.11');
 define('DASOM_CHURCH_PLUGIN_URL', str_replace('http://', 'https://', plugin_dir_url(__FILE__)));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -792,6 +792,26 @@ require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/class-dw-church-widgets.php';
 
 // Load update manager
 require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/class-dw-church-update-manager.php';
+
+// Enable auto-updates UI for this plugin (user can choose to enable/disable)
+// This allows users to see and control auto-updates in the plugins list
+add_filter('plugin_auto_update_setting_html', function($html, $plugin_file, $plugin_data) {
+    $current_plugin = plugin_basename(__FILE__);
+    
+    if ($plugin_file === $current_plugin) {
+        $auto_updates = (array) get_site_option('auto_update_plugins', array());
+        $is_auto_update_enabled = in_array($plugin_file, $auto_updates, true);
+        
+        if ($is_auto_update_enabled) {
+            $html = '<span class="auto-update-status">' . esc_html__('Auto-updates enabled', 'dw-church') . '</span>';
+            $html .= ' | <a href="' . wp_nonce_url(admin_url('plugins.php?action=disable-auto-update&plugin=' . urlencode($plugin_file)), 'updates') . '" class="toggle-auto-update" data-wp-action="disable">' . esc_html__('Disable auto-updates', 'dw-church') . '</a>';
+        } else {
+            $html = '<a href="' . wp_nonce_url(admin_url('plugins.php?action=enable-auto-update&plugin=' . urlencode($plugin_file)), 'updates') . '" class="toggle-auto-update" data-wp-action="enable">' . esc_html__('Enable auto-updates', 'dw-church') . '</a>';
+        }
+    }
+    
+    return $html;
+}, 10, 3);
 
 // Plugin activation hook
 register_activation_hook(__FILE__, function() {
