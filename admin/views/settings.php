@@ -206,6 +206,19 @@ if (is_wp_error($preachers)) {
         <hr>
         <h2>🧑‍💼 <?php _e('설교자 관리', 'dasom-church'); ?></h2>
         
+        <!-- 기본 설교자 이름 설정 -->
+        <div style="margin-bottom:30px;padding:15px;background:#f9f9f9;border-left:4px solid #0073aa;">
+            <h3><?php _e('기본 설교자 설정', 'dasom-church'); ?></h3>
+            <p class="description" style="margin-bottom:10px;"><?php _e('기본 설교자 이름을 설정합니다. 예: "한동민 담임목사", "담임목사" 등', 'dasom-church'); ?></p>
+            <form method="post" style="display:flex;gap:10px;align-items:center;">
+                <?php wp_nonce_field('sermon_preacher_actions'); ?>
+                <input type="hidden" name="preacher_action" value="save_default_name">
+                <input type="text" name="default_preacher_name" value="<?php echo esc_attr($default_preacher); ?>" class="regular-text" style="max-width:400px;" placeholder="<?php _e('예: 담임목사', 'dasom-church'); ?>">
+                <?php submit_button(__('저장', 'dasom-church'), 'primary', '', false); ?>
+            </form>
+        </div>
+        
+        <h3><?php _e('설교자 목록', 'dasom-church'); ?></h3>
         <form method="post" style="margin-bottom:20px;">
             <?php wp_nonce_field('sermon_preacher_actions'); ?>
             <input type="hidden" name="preacher_action" value="add">

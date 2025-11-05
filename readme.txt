@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.62.23
+Stable tag: 2.62.28
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,11 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.62.28 =
+* Enhancement: Add default preacher name editing UI in settings page
+* Enhancement: Users can now edit default preacher name directly from settings
+* Fix: Default preacher name can be changed (e.g., "담임목사", "한동민 담임목사")
 
 = 2.62.23 =
 * Fix: Church information settings save error - fix undefined function dw_church_update_setting()
