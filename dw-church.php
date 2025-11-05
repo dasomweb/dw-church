@@ -2,7 +2,7 @@
 /**
  * Plugin Name: DW Church
  * Description: DW Church Management System
- * Version: 2.62.27
+ * Version: 2.62.23
  * Author: DasomWeb
  * Author URI: https://dasomweb.com
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
@@ -34,7 +34,7 @@ if (!defined('ABSPATH')) {
  * @const string DASOM_CHURCH_PLUGIN_FILE 플러그인 메인 파일 경로
  * @const string DASOM_CHURCH_PLUGIN_BASENAME 플러그인 베이스네임 (예: 'dw-church/dw-church.php')
  */
-define('DASOM_CHURCH_VERSION', '2.62.19');
+define('DASOM_CHURCH_VERSION', '2.62.23');
 // 플러그인 URL을 HTTPS로 강제 변환 (보안 및 혼합 콘텐츠 문제 방지)
 define('DASOM_CHURCH_PLUGIN_URL', str_replace('http://', 'https://', plugin_dir_url(__FILE__)));
 // 플러그인 파일 시스템 경로
@@ -576,21 +576,48 @@ function dw_church_restore_active_state($upgrader_object, $options) {
     // 업데이트 액션이고 플러그인 타입인지 확인
     // 다른 타입(테마, 코어 등)의 업데이트는 건너뜀
     if ($options['action'] === 'update' && $options['type'] === 'plugin') {
-        // 업데이트된 플러그인 목록이 있는지 확인
-        if (isset($options['plugins'])) {
-            // 업데이트된 각 플러그인을 순회
-            foreach ($options['plugins'] as $plugin) {
-                // 현재 플러그인이 업데이트된 플러그인 목록에 있는지 확인
-                if ($plugin === plugin_basename(__FILE__)) {
-                    // 업데이트 전에 저장된 활성 상태 확인
-                    // transient에 'dw_church_was_active' 값이 있으면 업데이트 전에 활성화되어 있었던 것
-                    if (get_transient('dw_church_was_active')) {
-                        // transient 삭제 (한 번만 사용)
-                        delete_transient('dw_church_was_active');
-                        // 플러그인 자동 활성화
-                        // activate_plugin(플러그인경로, 리다이렉트URL, 네트워크활성화여부, silent모드)
-                        // silent 모드(true)로 설정하여 리다이렉트 없이 조용히 활성화
-                        activate_plugin($plugin, '', false, true);
+        $plugin = plugin_basename(__FILE__);
+        $is_our_plugin = false;
+        
+        // 업데이트된 플러그인 목록 확인 (여러 형태 지원)
+        if (isset($options['plugins']) && is_array($options['plugins'])) {
+            // 배열 형태인 경우
+            $is_our_plugin = in_array($plugin, $options['plugins'], true);
+        } elseif (isset($options['plugin']) && is_string($options['plugin'])) {
+            // 단일 플러그인 문자열인 경우
+            $is_our_plugin = ($options['plugin'] === $plugin);
+        } elseif (isset($upgrader_object->skin) && isset($upgrader_object->skin->plugin)) {
+            // Upgrader 객체에서 직접 확인
+            $is_our_plugin = ($upgrader_object->skin->plugin === $plugin);
+        }
+        
+        // 현재 플러그인이 업데이트된 경우에만 처리
+        if ($is_our_plugin) {
+            // 업데이트 전에 저장된 활성 상태 확인
+            // transient에 'dw_church_was_active' 값이 있으면 업데이트 전에 활성화되어 있었던 것
+            if (get_transient('dw_church_was_active')) {
+                // transient 삭제 (한 번만 사용)
+                delete_transient('dw_church_was_active');
+                
+                // 플러그인이 비활성화되어 있으면 활성화
+                if (!is_plugin_active($plugin)) {
+                    // 플러그인 자동 활성화
+                    // activate_plugin(플러그인경로, 리다이렉트URL, 네트워크활성화여부, silent모드)
+                    // silent 모드(true)로 설정하여 리다이렉트 없이 조용히 활성화
+                    $result = activate_plugin($plugin, '', false, true);
+                    if (is_wp_error($result)) {
+                        error_log('DW Church: Failed to restore active state - ' . $result->get_error_message());
+                    } else {
+                        error_log('DW Church: Successfully restored active state after update');
+                    }
+                }
+            } else {
+                // transient가 없어도, 플러그인이 비활성화되어 있으면 활성화 시도
+                // (다른 메커니즘으로 저장된 경우를 대비)
+                if (!is_plugin_active($plugin)) {
+                    $result = activate_plugin($plugin, '', false, true);
+                    if (!is_wp_error($result)) {
+                        error_log('DW Church: Auto-reactivated plugin (transient not found but was inactive)');
                     }
                 }
             }
@@ -919,25 +946,56 @@ register_activation_hook(__FILE__, function() {
 
 
 // Auto-reactivate plugin after updates to prevent deactivation
+// 우선순위 30으로 설정하여 다른 핸들러보다 나중에 실행
 add_action('upgrader_process_complete', function($upgrader_object, $options) {
     if ($options['type'] === 'plugin' && $options['action'] === 'update') {
         $plugin = 'dw-church/dw-church.php';
-        if (!is_plugin_active($plugin)) {
-            activate_plugin($plugin);
-            error_log('DW Church: Auto-reactivated plugin after update');
+        
+        // 플러그인이 업데이트된 것인지 확인
+        $is_our_plugin = false;
+        if (isset($options['plugins']) && is_array($options['plugins'])) {
+            $is_our_plugin = in_array($plugin, $options['plugins'], true);
+        } elseif (isset($options['plugin']) && $options['plugin'] === $plugin) {
+            $is_our_plugin = true;
+        }
+        
+        if ($is_our_plugin && !is_plugin_active($plugin)) {
+            $result = activate_plugin($plugin, '', false, true);
+            if (is_wp_error($result)) {
+                error_log('DW Church: Auto-reactivate failed - ' . $result->get_error_message());
+            } else {
+                error_log('DW Church: Auto-reactivated plugin after update');
+            }
         }
     }
-}, 10, 2);
+}, 30, 2);
 
 // Additional safety: Check and reactivate on admin_init if needed
+// 우선순위 1로 설정하여 가장 먼저 실행
 add_action('admin_init', function() {
+    // 한 번만 실행되도록 체크 (중복 실행 방지)
+    static $executed = false;
+    if ($executed) {
+        return;
+    }
+    $executed = true;
+    
     $plugin = 'dw-church/dw-church.php';
-    if (!is_plugin_active($plugin) && current_user_can('activate_plugins')) {
-        // Only auto-reactivate if this is our plugin and it should be active
-        $current_plugin = plugin_basename(__FILE__);
-        if ($current_plugin === $plugin) {
-            activate_plugin($plugin);
-            error_log('DW Church: Emergency reactivation on admin_init');
+    $current_plugin = plugin_basename(__FILE__);
+    
+    // 현재 플러그인이 우리 플러그인이고, 비활성화되어 있으며, 권한이 있는 경우
+    if ($current_plugin === $plugin && !is_plugin_active($plugin) && current_user_can('activate_plugins')) {
+        // transient를 확인하여 업데이트 후인지 확인
+        $was_active = get_transient('dw_church_was_active');
+        if ($was_active || !$was_active) { // transient가 있든 없든 활성화 시도
+            $result = activate_plugin($plugin, '', false, true);
+            if (is_wp_error($result)) {
+                error_log('DW Church: Emergency reactivation failed - ' . $result->get_error_message());
+            } else {
+                error_log('DW Church: Emergency reactivation on admin_init');
+                // transient 삭제
+                delete_transient('dw_church_was_active');
+            }
         }
     }
 }, 1);

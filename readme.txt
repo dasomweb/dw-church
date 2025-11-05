@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.62.27
+Stable tag: 2.62.23
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,24 +83,6 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
-
-= 2.62.27 =
-* Fix: Restore v2.62.19 auto-activation code (update-related code unchanged)
-* Fix: Revert to working auto-activation mechanism from v2.62.19
-
-= 2.62.26 =
-* Critical Fix: Move auto-activation hooks outside is_admin() condition - hooks must be registered globally
-* Fix: upgrader_pre_install and upgrader_process_complete hooks now work correctly during update process
-* Fix: Improve emergency reactivation logic in admin_init hook for better fallback mechanism
-* Fix: Ensure plugin stays activated after updates by registering hooks at global scope
-
-= 2.62.25 =
-* Fix: Prevent "headers already sent" error when clicking default preacher button - move form processing to admin_init hook
-* Fix: Process preacher actions before any output is sent to browser for proper redirect handling
-* Enhancement: Add early form handler to prevent output conflicts with WordPress redirects
-
-= 2.62.24 =
-* Enhancement: Improve default preacher button UI - disable button after selection and re-enable previous default button
 
 = 2.62.23 =
 * Fix: Church information settings save error - fix undefined function dw_church_update_setting()
