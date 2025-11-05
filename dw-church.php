@@ -2,7 +2,7 @@
 /**
  * Plugin Name: DW Church
  * Description: DW Church Management System
- * Version: 2.62.9
+ * Version: 2.62.10
  * Author: DasomWeb
  * Author URI: https://dasomweb.com
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '2.62.9');
+define('DASOM_CHURCH_VERSION', '2.62.10');
 define('DASOM_CHURCH_PLUGIN_URL', str_replace('http://', 'https://', plugin_dir_url(__FILE__)));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -82,20 +82,6 @@ add_filter('style_loader_src', function($src, $handle) {
         return str_replace('http://', 'https://', $src);
     }
     return $src;
-}, 10, 2);
-
-// Auto-update configuration
-add_filter('auto_update_plugin', function($update, $item) {
-    // Enable auto-update for this plugin only
-    if ($item->plugin === plugin_basename(__FILE__)) {
-        // Optional: Add conditions for auto-update
-        // 예: 특정 사용자만 자동 업데이트
-        // if (current_user_can('manage_options')) {
-        //     return true;
-        // }
-        return true;
-    }
-    return $update;
 }, 10, 2);
 
 // Force HTTPS for WordPress
@@ -807,14 +793,6 @@ require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/class-dw-church-widgets.php';
 // Load update manager
 require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/class-dw-church-update-manager.php';
 
-// Auto-update support
-add_filter('auto_update_plugin', function($update, $item) {
-    if (isset($item->slug) && $item->slug === 'dw-church') {
-        return true; // DW Church는 항상 자동 업데이트 허용
-    }
-    return $update;
-}, 10, 2);
-
 // Plugin activation hook
 register_activation_hook(__FILE__, function() {
     add_option('dw_church_version', DASOM_CHURCH_VERSION);
@@ -951,13 +929,4 @@ add_action('init', function() {
     }
 });
 
-/**
- * Enable auto-update for DW Church plugin
- */
-add_filter('auto_update_plugin', function($update, $item) {
-    if (isset($item->slug) && $item->slug === 'dw-church') {
-        return true; // Always allow auto-update for DW Church
-    }
-    return $update;
-}, 10, 2);
 
