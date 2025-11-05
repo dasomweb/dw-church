@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.62.7
+Stable tag: 2.62.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,11 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.62.8 =
+* Fix: Fix JSON decoding issue in album image save handler - use wp_unslash() instead of sanitize_text_field() to prevent JSON corruption
+* Fix: Remove unnecessary updateAlbumImageCount() call from select event handler that could cause issues
+* Fix: Album images now save and display correctly after post save
 
 = 2.62.7 =
 * Fix: Remove server-side 16 image limit validation that was preventing album images from being saved

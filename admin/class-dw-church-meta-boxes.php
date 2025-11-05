@@ -1159,7 +1159,8 @@ class DW_Church_Meta_Boxes {
         }
         
         if (isset($_POST['dw_album_images'])) {
-            $images = json_decode(sanitize_text_field($_POST['dw_album_images']), true);
+            $images_json = wp_unslash($_POST['dw_album_images']);
+            $images = json_decode($images_json, true);
             if (is_array($images)) {
                 // Ensure all values are integers
                 $images = array_map('absint', $images);

@@ -299,11 +299,6 @@
                     
                     // Reset processing flag
                     isProcessing = false;
-                    
-                    // Final count update
-                    setTimeout(function() {
-                        self.updateAlbumImageCount();
-                    }, 100);
                 } catch(e) {
                     isProcessing = false;
                     console.error('Error in album image selection:', e);
