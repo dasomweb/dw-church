@@ -631,22 +631,36 @@
                 return; // Not an album post
             }
             
-            // Check album image count
+            // Check album image count - ALWAYS count from actual DOM, not just hidden input
             var ids = [];
-            var hiddenValue = $('#dw_album_images, #dasom_album_images').val();
-            if (hiddenValue) {
-                try {
-                    var parsed = JSON.parse(hiddenValue);
-                    if (Array.isArray(parsed)) {
-                        ids = parsed.filter(function(id) { return id; });
+            
+            // First, try to get from actual preview DOM (most reliable)
+            $('#dw_album_images_preview li, #dasom_album_images_preview li').each(function() {
+                var id = $(this).data('id');
+                if (id) {
+                    ids.push(id);
+                }
+            });
+            
+            // If no DOM preview found, fall back to hidden input
+            if (ids.length === 0) {
+                var hiddenValue = $('#dw_album_images, #dasom_album_images').val();
+                if (hiddenValue) {
+                    try {
+                        var parsed = JSON.parse(hiddenValue);
+                        if (Array.isArray(parsed)) {
+                            ids = parsed.filter(function(id) { return id; });
+                        }
+                    } catch(e) {
+                        console.error('Error parsing album images:', e);
                     }
-                } catch(e) {
-                    console.error('Error parsing album images:', e);
                 }
             }
             
+            // Check if exceeds limit
             if (ids.length > 15) {
                 e.preventDefault();
+                e.stopImmediatePropagation();
                 alert('앨범 이미지는 최대 15개까지만 저장할 수 있습니다. 현재 ' + ids.length + '개의 이미지가 선택되어 있습니다. 이미지를 제거하여 15개 이하로 줄여주세요.\n\n(Album images are limited to 15. Currently ' + ids.length + ' images are selected. Please remove images to reduce to 15 or less.)');
                 return false;
             }

@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.62.13
+Stable tag: 2.62.14
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,11 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.62.14 =
+* Fix: Remove auto-update custom code that was affecting other plugins in plugins list
+* Fix: Album image validation now counts from actual DOM preview instead of hidden input - ensures accurate count after thumbnail deletion
+* Fix: Improve form submit validation to prevent saving when 15+ images are selected
 
 = 2.62.13 =
 * Fix: Improve folder name fix logic for plugin installation - handle various wrong folder name patterns
