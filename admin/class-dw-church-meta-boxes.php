@@ -374,21 +374,10 @@ class DW_Church_Meta_Boxes {
                     <p class="description" id="dw_album_images_count" style="margin-top:10px;">
                         <?php 
                         $current_count = count($images);
-                        $max_count = 16;
-                        $message = sprintf(__('현재 %d개 / 최대 %d개 이미지', 'dw-church'), $current_count, $max_count);
+                        $message = sprintf(__('현재 %d개 이미지', 'dw-church'), $current_count);
                         echo esc_html($message);
                         ?>
-                        <?php if ($current_count >= $max_count): ?>
-                            <span style="color:#dc3545;"><?php _e('(최대 개수에 도달했습니다)', 'dw-church'); ?></span>
-                        <?php elseif ($current_count > $max_count): ?>
-                            <span style="color:#dc3545;font-weight:bold;"><?php echo sprintf(__('(경고: %d개 이미지가 선택되어 있습니다. 저장 시 16개 이하로 줄여주세요)', 'dw-church'), $current_count); ?></span>
-                        <?php endif; ?>
                     </p>
-                    <?php if ($current_count > $max_count): ?>
-                        <p class="description" style="color:#dc3545;font-weight:bold;" id="dw_album_images_error">
-                            <?php _e('앨범 이미지는 최대 16개까지 저장할 수 있습니다. 이미지를 제거하여 16개 이하로 줄여주세요.', 'dw-church'); ?>
-                        </p>
-                    <?php endif; ?>
                     <?php if (empty($images)): ?>
                         <p class="description" id="dw_album_images_empty"><?php _e('이미지가 없습니다. 위의 버튼을 클릭하여 이미지를 업로드하세요.', 'dw-church'); ?></p>
                     <?php endif; ?>
@@ -1172,23 +1161,6 @@ class DW_Church_Meta_Boxes {
         if (isset($_POST['dw_album_images'])) {
             $images = json_decode(sanitize_text_field($_POST['dw_album_images']), true);
             if (is_array($images)) {
-                // Validate: Maximum 16 images allowed
-                $max_images = 16;
-                $image_count = count($images);
-                
-                if ($image_count > $max_images) {
-                    // Store error message in transient for display on next page load
-                    set_transient('dw_church_album_image_error_' . $post_id, sprintf(
-                        __('앨범 이미지 저장 실패: %d개의 이미지가 선택되어 있습니다. 최대 %d개까지만 저장할 수 있습니다. 이미지를 제거하여 %d개 이하로 줄여주세요.', 'dw-church'),
-                        $image_count,
-                        $max_images,
-                        $max_images
-                    ), 30);
-                    
-                    // Prevent save by returning early
-                    return;
-                }
-                
                 // Ensure all values are integers
                 $images = array_map('absint', $images);
                 $images = array_filter($images); // Remove any zero values

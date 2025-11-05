@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.62.6
+Stable tag: 2.62.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,11 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.62.7 =
+* Fix: Remove server-side 16 image limit validation that was preventing album images from being saved
+* Fix: Remove 16 image limit warning messages from album meta box display
+* Fix: Album images now save correctly after removing client-side and server-side restrictions
 
 = 2.62.6 =
 * Change: Remove 16 image limit restriction for album images
