@@ -2,7 +2,7 @@
 /**
  * Plugin Name: DW Church
  * Description: DW Church Management System
- * Version: 2.62.25
+ * Version: 2.62.26
  * Author: DasomWeb
  * Author URI: https://dasomweb.com
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
@@ -347,6 +347,14 @@ add_filter('elementor/frontend/print_google_fonts', function($google_fonts) {
     return $google_fonts;
 });
 
+// Save active state before update - MUST be registered globally, not in is_admin()
+// This hook runs during update process and must be available at all times
+add_filter('upgrader_pre_install', 'dw_church_save_active_state', 10, 2);
+
+// Restore active state after update - MUST be registered globally
+// This hook runs during update process and must be available at all times
+add_action('upgrader_process_complete', 'dw_church_restore_active_state', 20, 2);
+
 // Add update checker for GitHub releases
 add_action('init', function() {
     if (is_admin()) {
@@ -355,11 +363,6 @@ add_action('init', function() {
         add_action('upgrader_process_complete', 'dw_church_clear_update_cache', 10, 2);
         add_filter('upgrader_source_selection', 'dw_church_fix_update_folder', 10, 4);
         add_filter('upgrader_pre_download', 'dw_church_upgrader_pre_download', 10, 3);
-        
-        // Save active state before update
-        add_filter('upgrader_pre_install', 'dw_church_save_active_state', 10, 2);
-        // Restore active state after update
-        add_action('upgrader_process_complete', 'dw_church_restore_active_state', 20, 2);
     }
 });
 
@@ -987,7 +990,9 @@ add_action('admin_init', function() {
     if ($current_plugin === $plugin && !is_plugin_active($plugin) && current_user_can('activate_plugins')) {
         // transient를 확인하여 업데이트 후인지 확인
         $was_active = get_transient('dw_church_was_active');
-        if ($was_active || !$was_active) { // transient가 있든 없든 활성화 시도
+        // transient가 있으면 업데이트 전에 활성화되어 있었던 것
+        // transient가 없어도 비활성화되어 있으면 활성화 시도 (안전장치)
+        if ($was_active || (!$was_active && !is_plugin_active($plugin))) {
             $result = activate_plugin($plugin, '', false, true);
             if (is_wp_error($result)) {
                 error_log('DW Church: Emergency reactivation failed - ' . $result->get_error_message());
