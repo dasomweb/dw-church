@@ -1132,7 +1132,8 @@ class DW_Church_Admin {
         );
         
         foreach ($settings as $key => $value) {
-            dw_church_update_setting($key, $value);
+            // dasom_church_update_setting 함수 사용 (includes/functions-helpers.php에 정의됨)
+            dasom_church_update_setting($key, $value);
         }
         
         // Add success message
