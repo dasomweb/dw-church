@@ -181,6 +181,10 @@
     flex-wrap: wrap;
     gap: 10px;
     margin: 15px 0;
+    /* Overflow 방지: 컨테이너가 부모 요소를 넘지 않도록 */
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .dasom-album-images img {
@@ -190,6 +194,10 @@
     border: 2px solid #ddd;
     border-radius: 4px;
     transition: transform 0.2s ease;
+    /* 이미지가 컨테이너를 넘지 않도록 */
+    max-width: 100%;
+    height: auto;
+    box-sizing: border-box;
 }
 
 .dasom-album-images img:hover {

@@ -267,7 +267,8 @@ class DW_Church_Public {
                     foreach (array_slice($images, 0, 3) as $id) {
                         $url = wp_get_attachment_url($id);
                         if ($url) {
-                            $output .= '<img src="' . esc_url($url) . '" alt="" style="width:100px;height:100px;object-fit:cover;margin:5px;" />';
+                            // 이미지에 overflow 방지 스타일 추가
+                            $output .= '<img src="' . esc_url($url) . '" alt="" style="width:100px;height:100px;object-fit:cover;margin:5px;max-width:100%;box-sizing:border-box;" />';
                         }
                     }
                     $output .= '</div>';

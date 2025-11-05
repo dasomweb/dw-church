@@ -9,17 +9,27 @@
     margin: 0;
     padding: 0;
     list-style: none;
+    /* Overflow 방지: 갤러리 그리드가 부모 요소를 넘지 않도록 */
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .dw-gallery-item {
     overflow: hidden;
     position: relative;
+    /* 갤러리 아이템이 그리드를 넘지 않도록 */
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .dw-gallery-item a {
     display: block;
     text-decoration: none;
     cursor: zoom-in;
+    /* 링크가 아이템을 넘지 않도록 */
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .dw-gallery-item img {
@@ -27,6 +37,10 @@
     width: 100%;
     height: auto;
     transition: all 0.3s ease;
+    /* 이미지가 컨테이너를 넘지 않도록 */
+    max-width: 100%;
+    box-sizing: border-box;
+    object-fit: cover;
 }
 
 .dw-gallery-item:hover img {

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: DW Church
  * Description: DW Church Management System
- * Version: 2.62.16
+ * Version: 2.62.17
  * Author: DasomWeb
  * Author URI: https://dasomweb.com
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
@@ -17,51 +17,91 @@
  * Network: false
  */
 
-// Block direct access
+/**
+ * 보안: 직접 접근 차단
+ * WordPress가 로드되지 않은 상태에서 직접 접근 시 종료
+ */
 if (!defined('ABSPATH')) {
     exit;
 }
 
-// Define plugin constants
-define('DASOM_CHURCH_VERSION', '2.62.16');
+/**
+ * 플러그인 상수 정의
+ * 
+ * @const string DASOM_CHURCH_VERSION 플러그인 버전 번호
+ * @const string DASOM_CHURCH_PLUGIN_URL 플러그인 URL (HTTPS 강제)
+ * @const string DASOM_CHURCH_PLUGIN_PATH 플러그인 디렉토리 경로
+ * @const string DASOM_CHURCH_PLUGIN_FILE 플러그인 메인 파일 경로
+ * @const string DASOM_CHURCH_PLUGIN_BASENAME 플러그인 베이스네임 (예: 'dw-church/dw-church.php')
+ */
+define('DASOM_CHURCH_VERSION', '2.62.17');
+// 플러그인 URL을 HTTPS로 강제 변환 (보안 및 혼합 콘텐츠 문제 방지)
 define('DASOM_CHURCH_PLUGIN_URL', str_replace('http://', 'https://', plugin_dir_url(__FILE__)));
+// 플러그인 파일 시스템 경로
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
+// 플러그인 메인 파일의 절대 경로
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
+// WordPress 플러그인 디렉토리 기준 상대 경로
 define('DASOM_CHURCH_PLUGIN_BASENAME', plugin_basename(__FILE__));
 
-// Force HTTPS for plugin assets
+/**
+ * 플러그인 자산에 HTTPS 강제 적용
+ * 
+ * script_loader_src 필터를 통해 플러그인의 모든 JavaScript 파일이 HTTPS로 로드되도록 보장
+ * 혼합 콘텐츠 경고를 방지하고 보안을 강화
+ */
 add_filter('script_loader_src', function($src, $handle) {
+    // 플러그인 URL이 포함된 스크립트 소스인지 확인
     if (strpos($src, DASOM_CHURCH_PLUGIN_URL) !== false) {
+        // HTTP를 HTTPS로 변환
         return str_replace('http://', 'https://', $src);
     }
     return $src;
 }, 10, 2);
 
+/**
+ * 플러그인 스타일시트에 HTTPS 강제 적용
+ * 
+ * style_loader_src 필터를 통해 플러그인의 모든 CSS 파일이 HTTPS로 로드되도록 보장
+ */
 add_filter('style_loader_src', function($src, $handle) {
+    // 플러그인 URL이 포함된 스타일 소스인지 확인
     if (strpos($src, DASOM_CHURCH_PLUGIN_URL) !== false) {
+        // HTTP를 HTTPS로 변환
         return str_replace('http://', 'https://', $src);
     }
     return $src;
 }, 10, 2);
 
-// Force HTTPS for all external resources
+/**
+ * 외부 CDN 리소스에 HTTPS 강제 적용
+ * 
+ * 일반적인 CDN 서비스(jSDelivr, Google Fonts, Google APIs)의 리소스가
+ * HTTPS로 로드되도록 보장하여 혼합 콘텐츠 문제를 방지
+ */
 add_filter('script_loader_src', function($src, $handle) {
-    // Force HTTPS for common CDN resources
+    // 일반적인 CDN 서비스 URL 패턴 확인
+    // 프로토콜 상대 URL(//)도 처리하여 안전하게 HTTPS로 변환
     if (strpos($src, '//cdn.jsdelivr.net') !== false || 
         strpos($src, '//fonts.googleapis.com') !== false ||
         strpos($src, '//fonts.gstatic.com') !== false ||
         strpos($src, '//ajax.googleapis.com') !== false) {
+        // HTTP 또는 프로토콜 상대 URL을 HTTPS로 변환
         return str_replace('http://', 'https://', $src);
     }
     return $src;
 }, 10, 2);
 
+/**
+ * 외부 CDN 스타일시트에 HTTPS 강제 적용
+ */
 add_filter('style_loader_src', function($src, $handle) {
-    // Force HTTPS for common CDN resources
+    // 일반적인 CDN 서비스 URL 패턴 확인
     if (strpos($src, '//cdn.jsdelivr.net') !== false || 
         strpos($src, '//fonts.googleapis.com') !== false ||
         strpos($src, '//fonts.gstatic.com') !== false ||
         strpos($src, '//ajax.googleapis.com') !== false) {
+        // HTTP를 HTTPS로 변환
         return str_replace('http://', 'https://', $src);
     }
     return $src;
@@ -488,36 +528,68 @@ function dw_church_plugin_info($result, $action, $args) {
 }
 
 /**
- * Save plugin active state before update
+ * 플러그인 업데이트 전에 활성 상태를 저장하는 함수
+ * 
+ * WordPress의 upgrader_pre_install 필터에서 호출됨
+ * 플러그인이 업데이트되기 전에 현재 활성화 상태를 transient에 저장하여
+ * 업데이트 후 자동으로 다시 활성화할 수 있도록 함
  *
- * @param bool $response
- * @param array $hook_extra
- * @return bool
+ * @param mixed $response WordPress upgrader 응답 객체 (필터 체인에서 다음 필터로 전달)
+ * @param array $hook_extra 업데이트 관련 추가 정보
+ *                          - 'plugin': 업데이트 대상 플러그인 경로 (예: 'dw-church/dw-church.php')
+ * @return mixed 원본 $response 객체 반환 (다른 플러그인에 영향을 주지 않음)
  */
 function dw_church_save_active_state($response, $hook_extra) {
+    // 업데이트 대상이 현재 플러그인인지 확인
+    // $hook_extra['plugin']에 플러그인 경로가 포함되어 있음
     if (isset($hook_extra['plugin']) && $hook_extra['plugin'] === plugin_basename(__FILE__)) {
+        // WordPress 옵션에서 현재 활성화된 플러그인 목록 가져오기
+        // active_plugins 옵션은 배열 형태로 플러그인 경로들을 저장
         $active_plugins = get_option('active_plugins', array());
+        
+        // 현재 플러그인이 활성화되어 있는지 확인
         if (in_array(plugin_basename(__FILE__), $active_plugins)) {
+            // 활성화되어 있다면 transient에 상태 저장 (5분간 유효)
+            // 5분(300초)은 업데이트가 완료될 때까지 충분한 시간
+            // transient는 임시 데이터 저장소로, 자동으로 만료됨
             set_transient('dw_church_was_active', true, 300); // 5 minutes
         }
     }
+    // 원본 응답 객체를 그대로 반환 (다른 플러그인에 영향을 주지 않음)
     return $response;
 }
 
 /**
- * Restore plugin active state after update
+ * 플러그인 업데이트 후 저장된 활성 상태를 복원하는 함수
+ * 
+ * WordPress의 upgrader_process_complete 액션에서 호출됨
+ * 업데이트 전에 저장된 활성 상태를 확인하고, 활성화되어 있었다면 자동으로 다시 활성화
  *
- * @param object $upgrader_object Upgrader object
- * @param array $options Update options
+ * @param object $upgrader_object WordPress Upgrader 객체 (현재 사용하지 않음)
+ * @param array $options 업데이트 옵션
+ *                       - 'action': 액션 타입 ('update', 'install' 등)
+ *                       - 'type': 업데이트 타입 ('plugin', 'theme' 등)
+ *                       - 'plugins': 업데이트된 플러그인 경로 배열
+ * @return void
  */
 function dw_church_restore_active_state($upgrader_object, $options) {
+    // 업데이트 액션이고 플러그인 타입인지 확인
+    // 다른 타입(테마, 코어 등)의 업데이트는 건너뜀
     if ($options['action'] === 'update' && $options['type'] === 'plugin') {
+        // 업데이트된 플러그인 목록이 있는지 확인
         if (isset($options['plugins'])) {
+            // 업데이트된 각 플러그인을 순회
             foreach ($options['plugins'] as $plugin) {
+                // 현재 플러그인이 업데이트된 플러그인 목록에 있는지 확인
                 if ($plugin === plugin_basename(__FILE__)) {
-                    // Check if plugin was active before update
+                    // 업데이트 전에 저장된 활성 상태 확인
+                    // transient에 'dw_church_was_active' 값이 있으면 업데이트 전에 활성화되어 있었던 것
                     if (get_transient('dw_church_was_active')) {
+                        // transient 삭제 (한 번만 사용)
                         delete_transient('dw_church_was_active');
+                        // 플러그인 자동 활성화
+                        // activate_plugin(플러그인경로, 리다이렉트URL, 네트워크활성화여부, silent모드)
+                        // silent 모드(true)로 설정하여 리다이렉트 없이 조용히 활성화
                         activate_plugin($plugin, '', false, true);
                     }
                 }
@@ -621,64 +693,83 @@ function dw_church_upgrader_pre_download($reply, $package, $upgrader) {
 }
 
 /**
- * Fix GitHub archive folder name during update/install
+ * GitHub 아카이브 폴더 이름을 업데이트/설치 중에 수정하는 함수
+ * 
+ * GitHub 아카이브는 {repo-name}-{tag}/ 또는 {user}-{repo}-{hash}/ 형식으로 압축 해제되지만,
+ * WordPress는 실제 플러그인 폴더 이름(dw-church)을 기대함
+ * 이 함수는 압축 해제된 폴더를 올바른 이름으로 변경
+ * 
+ * WordPress의 upgrader_source_selection 필터에서 호출됨
  *
- * GitHub archives extract to {repo-name}-{tag}/ or {user}-{repo}-{hash}/ but WordPress expects the plugin folder name
- * This function renames the extracted folder to match the expected plugin folder name (dw-church)
- *
- * @param string $source File source location
- * @param string $remote_source Remote file source location
- * @param WP_Upgrader $upgrader WP_Upgrader instance
- * @param array $hook_extra Extra arguments passed to hooked filters
- * @return string|WP_Error Modified source location or WP_Error on failure
+ * @param string $source 압축 해제된 소스 디렉토리 경로
+ * @param string $remote_source 원격 소스 경로 (사용하지 않음)
+ * @param WP_Upgrader $upgrader WordPress Upgrader 객체 (사용하지 않음)
+ * @param array $hook_extra 추가 훅 정보 (사용하지 않음)
+ * @return string|WP_Error 수정된 소스 경로 또는 에러 객체
  */
 function dw_church_fix_update_folder($source, $remote_source, $upgrader, $hook_extra) {
+    // WordPress 파일 시스템 API 가져오기
     global $wp_filesystem;
     
+    // 파일 시스템이 초기화되지 않았으면 원본 경로 반환
     if (!$wp_filesystem) {
         return $source;
     }
     
-    // Expected plugin folder name (must match the actual folder name in WordPress)
+    // 예상되는 플러그인 폴더 이름 (WordPress 설치에서 실제로 사용되는 이름과 일치해야 함)
     $expected_folder = 'dw-church';
     
-    // Check if source directory contains our plugin file
+    /**
+     * 소스 디렉토리에 플러그인 파일이 있는지 확인
+     * 두 가지 경우를 확인:
+     * 1. 소스 폴더 안에 dw-church 폴더가 있는 경우
+     * 2. 소스 폴더 자체가 플러그인 폴더인 경우
+     */
     $plugin_file_path = trailingslashit($source) . $expected_folder . '.php';
     if (!$wp_filesystem->exists($plugin_file_path)) {
-        // Maybe the source itself is the folder with dw-church.php?
+        // 소스 폴더 자체에 dw-church.php가 있는지 확인
         $plugin_file_path = trailingslashit($source) . 'dw-church.php';
         if (!$wp_filesystem->exists($plugin_file_path)) {
+            // 플러그인 파일이 없으면 우리 플러그인이 아님 - 원본 반환
             return $source; // Not our plugin, return as-is
         }
     }
     
-    // Get the actual folder name from source path
+    // 소스 경로에서 실제 폴더 이름 추출
     $source_folder = basename($source);
     
-    // If folder already has correct name, return it
+    // 폴더 이름이 이미 올바르면 변경 불필요 - 원본 반환
     if ($source_folder === $expected_folder) {
         return $source;
     }
     
-    // Build new source path with correct folder name
+    // 올바른 폴더 이름으로 새 소스 경로 생성
+    // dirname()으로 부모 디렉토리 경로 가져오기
     $new_source = trailingslashit(dirname($source)) . $expected_folder . '/';
     
-    // If new source already exists, remove it first
+    // 새 소스 경로가 이미 존재하면 먼저 삭제
+    // (중복 폴더 방지)
     if ($wp_filesystem->exists($new_source)) {
-        $wp_filesystem->delete($new_source, true);
+        $wp_filesystem->delete($new_source, true); // true = 재귀적 삭제
     }
     
-    // Rename the folder to the expected name
+    // 폴더 이름을 예상되는 이름으로 변경 (이동)
     if ($wp_filesystem->move($source, $new_source)) {
         return $new_source;
     }
     
-    // Fallback: try to copy contents if move fails
+    /**
+     * 이동 실패 시 대안: 복사 시도
+     * 파일 시스템 권한 문제 등으로 이동이 실패할 수 있으므로
+     * 복사 후 원본 삭제하는 방식으로 시도
+     */
     if ($wp_filesystem->copy($source, $new_source, true)) {
+        // 복사 성공 후 원본 삭제
         $wp_filesystem->delete($source, true);
         return $new_source;
     }
     
+    // 모든 시도 실패 시 에러 반환
     return new WP_Error('rename_failed', __('Unable to rename the update folder to dw-church.', 'dw-church'));
 }
 

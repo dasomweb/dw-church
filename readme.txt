@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.62.16
+Stable tag: 2.62.17
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,10 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.62.17 =
+* Fix: Prevent gallery images from overflowing containers - add max-width and overflow controls to all gallery displays
+* Fix: Improve gallery CSS for better responsive behavior on mobile devices
 
 = 2.62.16 =
 * Documentation: Add comprehensive code comments to GitHub Wiki pages for better developer understanding

@@ -244,7 +244,8 @@ class DW_Elementor_Gallery_Widget extends \Elementor\Widget_Base {
         
         $grid_class = $layout === 'masonry' ? 'dw-masonry-grid dw-masonry-grid-' . $this->get_id() : 'dw-grid-layout';
         
-        echo '<div class="dw-gallery-grid ' . esc_attr($grid_class) . '" style="display:flex;flex-wrap:wrap;gap:' . $gap . 'px;">';
+        // Overflow 방지를 위해 max-width와 overflow 추가
+        echo '<div class="dw-gallery-grid ' . esc_attr($grid_class) . '" style="display:flex;flex-wrap:wrap;gap:' . $gap . 'px;max-width:100%;overflow:hidden;box-sizing:border-box;">';
         
         // Sizer for masonry
         if ($layout === 'masonry') {
@@ -257,10 +258,13 @@ class DW_Elementor_Gallery_Widget extends \Elementor\Widget_Base {
             $alt = get_post_meta($img_id, '_wp_attachment_image_alt', true);
             
             if ($url) {
-                echo '<div class="dw-gallery-item" style="flex:0 0 calc(' . $col_width . '% - ' . $gap . 'px);box-sizing:border-box;">';
-                echo '<a href="' . esc_url($full) . '" data-elementor-open-lightbox="yes" data-elementor-lightbox-slideshow="dw-gallery-' . $this->get_id() . '">';
+                // 갤러리 아이템에 overflow 방지 스타일 추가
+                echo '<div class="dw-gallery-item" style="flex:0 0 calc(' . $col_width . '% - ' . $gap . 'px);box-sizing:border-box;max-width:100%;overflow:hidden;">';
+                // 링크에도 overflow 방지 추가
+                echo '<a href="' . esc_url($full) . '" data-elementor-open-lightbox="yes" data-elementor-lightbox-slideshow="dw-gallery-' . $this->get_id() . '" style="display:block;max-width:100%;overflow:hidden;">';
+                // 이미지에 max-width 추가하여 overflow 방지
                 echo '<img src="' . esc_url($url) . '" alt="' . esc_attr($alt) . '" 
-                    style="width:100%;height:auto;display:block;border-radius:' . $border_radius . 'px;box-shadow:0 2px 8px rgba(0,0,0,0.1);transition:all 0.3s ease;"
+                    style="width:100%;height:auto;display:block;border-radius:' . $border_radius . 'px;box-shadow:0 2px 8px rgba(0,0,0,0.1);transition:all 0.3s ease;max-width:100%;box-sizing:border-box;object-fit:cover;"
                     onmouseover="this.style.cssText+=\'' . $hover_style . '\'" 
                     onmouseout="this.style.transform=\'scale(1)\';this.style.opacity=\'1\';">';
                 echo '</a>';

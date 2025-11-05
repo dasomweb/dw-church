@@ -238,7 +238,8 @@ class DW_Church_Widgets {
         }
         
         $grid_class = $layout === 'masonry' ? 'dw-masonry-grid' : 'dw-grid-layout';
-        $output .= '<div class="dw-gallery-grid ' . esc_attr($grid_class) . '" style="display:flex;flex-wrap:wrap;gap:' . $gap . 'px;">';
+        // Overflow 방지를 위해 max-width와 overflow 추가
+        $output .= '<div class="dw-gallery-grid ' . esc_attr($grid_class) . '" style="display:flex;flex-wrap:wrap;gap:' . $gap . 'px;max-width:100%;overflow:hidden;box-sizing:border-box;">';
         
         // Add sizer for masonry
         if ($layout === 'masonry') {
@@ -253,10 +254,13 @@ class DW_Church_Widgets {
             $description = $caption ? $caption : $alt;
             
             if ($url) {
-                $output .= '<div class="dw-gallery-item" style="flex:0 0 calc(' . $col_width . '% - ' . $gap . 'px);box-sizing:border-box;">';
-                $output .= '<a href="' . esc_url($full) . '" class="glightbox" data-gallery="dw-gallery" data-title="' . esc_attr($alt) . '" data-description="' . esc_attr($description) . '">';
+                // 갤러리 아이템에 overflow 방지 스타일 추가
+                $output .= '<div class="dw-gallery-item" style="flex:0 0 calc(' . $col_width . '% - ' . $gap . 'px);box-sizing:border-box;max-width:100%;overflow:hidden;">';
+                // 링크에도 overflow 방지 추가
+                $output .= '<a href="' . esc_url($full) . '" class="glightbox" data-gallery="dw-gallery" data-title="' . esc_attr($alt) . '" data-description="' . esc_attr($description) . '" style="display:block;max-width:100%;overflow:hidden;">';
+                // 이미지에 max-width 추가하여 overflow 방지
                 $output .= '<img src="' . esc_url($url) . '" alt="' . esc_attr($alt) . '" 
-                    style="width:100%;height:auto;display:block;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);transition:transform 0.3s ease;"
+                    style="width:100%;height:auto;display:block;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);transition:transform 0.3s ease;max-width:100%;box-sizing:border-box;object-fit:cover;"
                     onmouseover="this.style.transform=\'scale(1.05)\'" 
                     onmouseout="this.style.transform=\'scale(1)\'">';
                 $output .= '</a>';
