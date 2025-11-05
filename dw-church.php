@@ -2,7 +2,7 @@
 /**
  * Plugin Name: DW Church
  * Description: DW Church Management System
- * Version: 2.62.12
+ * Version: 2.62.13
  * Author: DasomWeb
  * Author URI: https://dasomweb.com
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '2.62.12');
+define('DASOM_CHURCH_VERSION', '2.62.13');
 define('DASOM_CHURCH_PLUGIN_URL', str_replace('http://', 'https://', plugin_dir_url(__FILE__)));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -621,10 +621,10 @@ function dw_church_upgrader_pre_download($reply, $package, $upgrader) {
 }
 
 /**
- * Fix GitHub archive folder name during update
+ * Fix GitHub archive folder name during update/install
  *
- * GitHub archives extract to {repo-name}-{tag}/ but WordPress expects the plugin folder name
- * This function renames the extracted folder to match the expected plugin folder name
+ * GitHub archives extract to {repo-name}-{tag}/ or {user}-{repo}-{hash}/ but WordPress expects the plugin folder name
+ * This function renames the extracted folder to match the expected plugin folder name (dw-church)
  *
  * @param string $source File source location
  * @param string $remote_source Remote file source location
@@ -635,27 +635,51 @@ function dw_church_upgrader_pre_download($reply, $package, $upgrader) {
 function dw_church_fix_update_folder($source, $remote_source, $upgrader, $hook_extra) {
     global $wp_filesystem;
     
-    // Check if this is our plugin
-    $plugin_slug = 'dasom-church-management-system';
-    
-    if (!isset($hook_extra['plugin']) || dirname($hook_extra['plugin']) !== $plugin_slug) {
+    if (!$wp_filesystem) {
         return $source;
     }
     
-    // Get the expected folder name
-    $new_source = trailingslashit($remote_source) . $plugin_slug . '/';
+    // Expected plugin folder name (must match the actual folder name in WordPress)
+    $expected_folder = 'dw-church';
     
-    // If the folder already has the correct name, return it
-    if ($source === $new_source) {
+    // Check if source directory contains our plugin file
+    $plugin_file_path = trailingslashit($source) . $expected_folder . '.php';
+    if (!$wp_filesystem->exists($plugin_file_path)) {
+        // Maybe the source itself is the folder with dw-church.php?
+        $plugin_file_path = trailingslashit($source) . 'dw-church.php';
+        if (!$wp_filesystem->exists($plugin_file_path)) {
+            return $source; // Not our plugin, return as-is
+        }
+    }
+    
+    // Get the actual folder name from source path
+    $source_folder = basename($source);
+    
+    // If folder already has correct name, return it
+    if ($source_folder === $expected_folder) {
         return $source;
     }
     
-    // Rename the folder
+    // Build new source path with correct folder name
+    $new_source = trailingslashit(dirname($source)) . $expected_folder . '/';
+    
+    // If new source already exists, remove it first
+    if ($wp_filesystem->exists($new_source)) {
+        $wp_filesystem->delete($new_source, true);
+    }
+    
+    // Rename the folder to the expected name
     if ($wp_filesystem->move($source, $new_source)) {
         return $new_source;
     }
     
-    return new WP_Error('rename_failed', __('Unable to rename the update folder.', 'dw-church'));
+    // Fallback: try to copy contents if move fails
+    if ($wp_filesystem->copy($source, $new_source, true)) {
+        $wp_filesystem->delete($source, true);
+        return $new_source;
+    }
+    
+    return new WP_Error('rename_failed', __('Unable to rename the update folder to dw-church.', 'dw-church'));
 }
 
 /**
@@ -977,54 +1001,123 @@ function dw_church_migrate_data($old_version, $new_version) {
 }
 
 /**
- * Fix folder name if installed with hash suffix
- * This handles cases where the plugin was installed with a hash-based folder name
+ * Fix folder name if installed with hash suffix or wrong folder name
+ * This handles cases where the plugin was installed with various wrong folder names
  */
 function dw_church_fix_folder_name() {
     $plugin_dir = WP_PLUGIN_DIR;
     $target_dir = $plugin_dir . '/dw-church';
     
-    // Check if target directory already exists
-    if (file_exists($target_dir)) {
-        return;
+    // Check if target directory already exists and is correct
+    if (file_exists($target_dir) && file_exists($target_dir . '/dw-church.php')) {
+        return; // Already correct
     }
     
-    // Look for hash-based folder names
-    $hash_folders = glob($plugin_dir . '/dasomweb-dasom-church-management-system-*', GLOB_ONLYDIR);
+    // Look for various wrong folder name patterns
+    $patterns = array(
+        $plugin_dir . '/dasomweb-dasom-church-management-system-*',
+        $plugin_dir . '/dasom-church-management-system-*',
+        $plugin_dir . '/dasom-church-management-system',
+        $plugin_dir . '/dw-church-management-system-*',
+    );
     
-    if (!empty($hash_folders)) {
-        $source_dir = $hash_folders[0];
+    $found_folders = array();
+    foreach ($patterns as $pattern) {
+        $folders = glob($pattern, GLOB_ONLYDIR);
+        if (!empty($folders)) {
+            $found_folders = array_merge($found_folders, $folders);
+        }
+    }
+    
+    // Also check for any folder containing dw-church.php but with wrong name
+    $all_plugin_folders = glob($plugin_dir . '/*', GLOB_ONLYDIR);
+    foreach ($all_plugin_folders as $folder) {
+        $folder_name = basename($folder);
+        // Skip if already correct name or doesn't contain our plugin file
+        if ($folder_name === 'dw-church' || !file_exists($folder . '/dw-church.php')) {
+            continue;
+        }
+        // Skip if it's a known WordPress plugin folder (like akismet, hello.php, etc.)
+        if (in_array($folder_name, array('akismet', 'hello.php', 'index.php'))) {
+            continue;
+        }
+        // Check if this folder contains our plugin
+        if (file_exists($folder . '/dw-church.php') && 
+            file_get_contents($folder . '/dw-church.php', false, null, 0, 100) !== false &&
+            strpos(file_get_contents($folder . '/dw-church.php', false, null, 0, 200), 'DW Church') !== false) {
+            $found_folders[] = $folder;
+        }
+    }
+    
+    // Remove duplicates and target directory
+    $found_folders = array_unique($found_folders);
+    $found_folders = array_filter($found_folders, function($folder) use ($target_dir) {
+        return $folder !== $target_dir;
+    });
+    
+    if (empty($found_folders)) {
+        return; // No wrong folders found
+    }
+    
+    // Process each found folder
+    foreach ($found_folders as $source_dir) {
+        $source_dir = realpath($source_dir);
+        if (!$source_dir || !file_exists($source_dir . '/dw-church.php')) {
+            continue;
+        }
         
-        // Check if the source directory contains our plugin files
-        if (file_exists($source_dir . '/dw-church.php')) {
-            // Rename the folder
-            if (rename($source_dir, $target_dir)) {
-                error_log('DW Church: Renamed folder from ' . basename($source_dir) . ' to dw-church');
-                
-                // Update active plugins option
-                $active_plugins = get_option('active_plugins', array());
-                $old_plugin_path = 'dasomweb-dasom-church-management-system-' . basename($source_dir) . '/dw-church.php';
-                $new_plugin_path = 'dw-church/dw-church.php';
-                
-                $key = array_search($old_plugin_path, $active_plugins);
-                if ($key !== false) {
-                    $active_plugins[$key] = $new_plugin_path;
-                    update_option('active_plugins', $active_plugins);
-                }
-                
-                // Update sitewide active plugins for multisite
-                if (is_multisite()) {
-                    $sitewide_plugins = get_site_option('active_sitewide_plugins', array());
-                    if (isset($sitewide_plugins[$old_plugin_path])) {
-                        unset($sitewide_plugins[$old_plugin_path]);
-                        $sitewide_plugins[$new_plugin_path] = time();
-                        update_site_option('active_sitewide_plugins', $sitewide_plugins);
+        // If target exists, remove it first (but only if it's empty or doesn't have our plugin)
+        if (file_exists($target_dir)) {
+            if (!file_exists($target_dir . '/dw-church.php')) {
+                // Target exists but doesn't have our plugin - remove it
+                if (is_dir($target_dir)) {
+                    // Try to remove directory
+                    $files = glob($target_dir . '/*');
+                    if (empty($files)) {
+                        @rmdir($target_dir);
                     }
                 }
-                
-                // Clear rewrite rules
-                flush_rewrite_rules();
+            } else {
+                // Target already has correct plugin, skip
+                continue;
             }
+        }
+        
+        // Rename the folder
+        if (@rename($source_dir, $target_dir)) {
+            error_log('DW Church: Renamed folder from ' . basename($source_dir) . ' to dw-church');
+            
+            // Update active plugins option
+            $active_plugins = get_option('active_plugins', array());
+            $old_plugin_path = basename($source_dir) . '/dw-church.php';
+            $new_plugin_path = 'dw-church/dw-church.php';
+            
+            foreach ($active_plugins as $key => $plugin_path) {
+                if ($plugin_path === $old_plugin_path || strpos($plugin_path, basename($source_dir) . '/') === 0) {
+                    $active_plugins[$key] = $new_plugin_path;
+                }
+            }
+            update_option('active_plugins', array_unique($active_plugins));
+            
+            // Update sitewide active plugins for multisite
+            if (is_multisite()) {
+                $sitewide_plugins = get_site_option('active_sitewide_plugins', array());
+                $updated = false;
+                foreach ($sitewide_plugins as $plugin_path => $timestamp) {
+                    if ($plugin_path === $old_plugin_path || strpos($plugin_path, basename($source_dir) . '/') === 0) {
+                        unset($sitewide_plugins[$plugin_path]);
+                        $sitewide_plugins[$new_plugin_path] = $timestamp;
+                        $updated = true;
+                    }
+                }
+                if ($updated) {
+                    update_site_option('active_sitewide_plugins', $sitewide_plugins);
+                }
+            }
+            
+            // Clear rewrite rules
+            flush_rewrite_rules();
+            break; // Only process first match
         }
     }
 }

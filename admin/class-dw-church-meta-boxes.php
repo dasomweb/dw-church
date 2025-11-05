@@ -1164,7 +1164,14 @@ class DW_Church_Meta_Boxes {
             if (is_array($images)) {
                 // Check if exceeds 15 images limit
                 if (count($images) > 15) {
-                    // Prevent save by returning early
+                    // Store error message in transient for display
+                    set_transient('dw_church_album_image_error_' . $post_id, sprintf(
+                        __('앨범 이미지 저장 실패: %d개의 이미지가 선택되어 있습니다. 최대 15개까지만 저장할 수 있습니다. 이미지를 제거하여 15개 이하로 줄여주세요.', 'dw-church'),
+                        count($images)
+                    ), 30);
+                    
+                    // Prevent save - don't update post meta
+                    // The post itself may be saved, but images won't be saved
                     return;
                 }
                 

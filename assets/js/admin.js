@@ -628,7 +628,7 @@
             // Check if this is an album post
             var postType = $('#post_type').val();
             if (postType !== 'album') {
-                return; // Not an album post, use default validation
+                return; // Not an album post
             }
             
             // Check album image count
