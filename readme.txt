@@ -87,7 +87,7 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 = 2.62.28 =
 * Enhancement: Add default preacher name editing UI in settings page
 * Enhancement: Users can now edit default preacher name directly from settings
-* Fix: Default preacher name can be changed (e.g., "담임목사", "한동민 담임목사")
+* Fix: Default preacher name can be changed (e.g., "담임목사")
 
 = 2.62.23 =
 * Fix: Church information settings save error - fix undefined function dw_church_update_setting()
