@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.62.24
+Stable tag: 2.62.25
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,11 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.62.25 =
+* Fix: Prevent "headers already sent" error when clicking default preacher button - move form processing to admin_init hook
+* Fix: Process preacher actions before any output is sent to browser for proper redirect handling
+* Enhancement: Add early form handler to prevent output conflicts with WordPress redirects
 
 = 2.62.24 =
 * Enhancement: Improve default preacher button UI - disable button after selection and re-enable previous default button
