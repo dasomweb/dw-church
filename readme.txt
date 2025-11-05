@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.62.28
+Stable tag: 2.62.29
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,10 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.62.29 =
+* Fix: Remove hardcoded example names from default preacher UI and documentation
+* Fix: Remove "한동민 담임목사" example from UI text and readme.txt
 
 = 2.62.28 =
 * Enhancement: Add default preacher name editing UI in settings page
