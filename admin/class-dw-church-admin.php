@@ -50,7 +50,6 @@ class DW_Church_Admin {
         add_action('admin_menu', array($this, 'dw_church_admin_menu'));
         add_action('admin_enqueue_scripts', array($this, 'dw_church_admin_scripts'));
         add_action('admin_init', array($this, 'dw_church_handle_settings_save'));
-        add_action('admin_init', array($this, 'dw_church_handle_preacher_action_early'));
         add_action('admin_init', array($this, 'redirect_to_dw_dashboard'));
         add_filter('login_redirect', array($this, 'dw_church_login_redirect'), 20, 3);
         // REMOVED: Conflicting menu filter - Dasom_Church_Menu_Visibility handles this
@@ -854,17 +853,15 @@ class DW_Church_Admin {
     /**
      * Handle preacher management actions
      */
-    private function dw_church_handle_preacher_action($action, $skip_security_check = false) {
-        // Verify nonce (skip if called from early handler which already checked)
-        if (!$skip_security_check) {
-            if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'sermon_preacher_actions')) {
-                wp_die(__('Security check failed', 'dw-church'));
-            }
-            
-            // Check user permissions - Allow Author/Editor to manage preachers
-            if (!current_user_can('edit_posts')) {
-                wp_die(__('You do not have sufficient permissions to perform this action.', 'dw-church'));
-            }
+    private function dw_church_handle_preacher_action($action) {
+        // Verify nonce
+        if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'sermon_preacher_actions')) {
+            wp_die(__('Security check failed', 'dw-church'));
+        }
+        
+        // Check user permissions - Allow Author/Editor to manage preachers
+        if (!current_user_can('edit_posts')) {
+            wp_die(__('You do not have sufficient permissions to perform this action.', 'dw-church'));
         }
         
         switch ($action) {
@@ -916,8 +913,9 @@ class DW_Church_Admin {
                 break;
         }
         
-        // Note: Success messages are handled via redirect query parameter
-        // in dw_church_handle_preacher_action_early() for settings page
+        add_action('admin_notices', function() {
+            echo '<div class="updated"><p>' . __('설정이 저장되었습니다.', 'dw-church') . '</p></div>';
+        });
     }
     
     /**
@@ -946,22 +944,20 @@ class DW_Church_Admin {
     /**
      * Settings page
      */
-    /**
-     * 설정 페이지
-     * 
-     * 교회 정보 및 설교자 관리 설정 페이지를 표시합니다.
-     */
     public function dw_church_settings_page() {
         // Allow access for Administrator, Editor, and Author
         if (!current_user_can('edit_posts')) {
             wp_die(__('You do not have sufficient permissions to access this page.', 'dw-church'));
         }
         
-        // Show success message if action was processed
-        if (isset($_GET['preacher_action']) && $_GET['preacher_action'] === 'success') {
-            add_action('admin_notices', function() {
-                echo '<div class="notice notice-success is-dismissible"><p>' . __('설정이 저장되었습니다.', 'dw-church') . '</p></div>';
-            });
+        // 설교자 관리 액션 처리
+        if (isset($_POST['preacher_action']) && check_admin_referer('sermon_preacher_actions')) {
+            if (!current_user_can('edit_posts')) {
+                wp_die(__('권한이 없습니다.', 'dw-church'));
+            }
+            
+            $action = sanitize_text_field($_POST['preacher_action']);
+            $this->dw_church_handle_preacher_action($action);
         }
         
         // Load settings view
@@ -1199,48 +1195,6 @@ class DW_Church_Admin {
         add_action('admin_notices', function() {
             echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Settings saved successfully!', 'dw-church') . '</p></div>';
         });
-    }
-    
-    /**
-     * Handle preacher action form submission early (in admin_init hook)
-     * 
-     * This method processes preacher actions (set_default, add, rename, delete) 
-     * before any output is sent to the browser, preventing "headers already sent" errors.
-     * The redirect happens here to ensure no output occurs before the redirect.
-     */
-    public function dw_church_handle_preacher_action_early() {
-        // Only process if this is the settings page and preacher_action is submitted
-        if (!isset($_POST['preacher_action']) || !isset($_GET['page']) || $_GET['page'] !== 'dasom-church-settings') {
-            return;
-        }
-        
-        // Verify nonce
-        if (!check_admin_referer('sermon_preacher_actions')) {
-            wp_die(__('Security check failed', 'dw-church'));
-        }
-        
-        // Check user permissions
-        if (!current_user_can('edit_posts')) {
-            wp_die(__('권한이 없습니다.', 'dw-church'));
-        }
-        
-        // Process the action (skip security check since we already did it)
-        $action = sanitize_text_field($_POST['preacher_action']);
-        $this->dw_church_handle_preacher_action($action, true);
-        
-        // Redirect after processing (before any output)
-        $redirect_url = admin_url('admin.php?page=dasom-church-settings');
-        if (isset($_GET['tab'])) {
-            $redirect_url .= '&tab=' . urlencode($_GET['tab']);
-        } else {
-            $redirect_url .= '&tab=speaker_management';
-        }
-        
-        // Add success message via query parameter instead of admin_notices
-        $redirect_url .= '&preacher_action=success';
-        
-        wp_safe_redirect($redirect_url);
-        exit;
     }
     
     /**
