@@ -2,7 +2,7 @@
 /**
  * Plugin Name: DW Church
  * Description: DW Church Management System
- * Version: 2.62.11
+ * Version: 2.62.12
  * Author: DasomWeb
  * Author URI: https://dasomweb.com
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DASOM_CHURCH_VERSION', '2.62.11');
+define('DASOM_CHURCH_VERSION', '2.62.12');
 define('DASOM_CHURCH_PLUGIN_URL', str_replace('http://', 'https://', plugin_dir_url(__FILE__)));
 define('DASOM_CHURCH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
@@ -801,17 +801,106 @@ add_filter('plugin_auto_update_setting_html', function($html, $plugin_file, $plu
     if ($plugin_file === $current_plugin) {
         $auto_updates = (array) get_site_option('auto_update_plugins', array());
         $is_auto_update_enabled = in_array($plugin_file, $auto_updates, true);
+        $auto_update_enabled_class = $is_auto_update_enabled ? 'auto-update-enabled' : '';
         
-        if ($is_auto_update_enabled) {
-            $html = '<span class="auto-update-status">' . esc_html__('Auto-updates enabled', 'dw-church') . '</span>';
-            $html .= ' | <a href="' . wp_nonce_url(admin_url('plugins.php?action=disable-auto-update&plugin=' . urlencode($plugin_file)), 'updates') . '" class="toggle-auto-update" data-wp-action="disable">' . esc_html__('Disable auto-updates', 'dw-church') . '</a>';
-        } else {
-            $html = '<a href="' . wp_nonce_url(admin_url('plugins.php?action=enable-auto-update&plugin=' . urlencode($plugin_file)), 'updates') . '" class="toggle-auto-update" data-wp-action="enable">' . esc_html__('Enable auto-updates', 'dw-church') . '</a>';
-        }
+        // Use WordPress standard markup for AJAX compatibility
+        $html = '<label class="label-auto-update">';
+        $html .= '<input type="checkbox" class="auto-update-toggle"';
+        $html .= ' id="auto-update-' . esc_attr($plugin_file) . '"';
+        $html .= ' data-plugin="' . esc_attr($plugin_file) . '"';
+        $html .= checked($is_auto_update_enabled, true, false);
+        $html .= ' /> ';
+        $html .= '<span class="label">' . esc_html__('Enable auto-updates', 'dw-church') . '</span>';
+        $html .= '</label>';
     }
     
     return $html;
 }, 10, 3);
+
+// Handle AJAX request for auto-update toggle
+add_action('wp_ajax_toggle-auto-update-plugin', function() {
+    $plugin = isset($_POST['plugin']) ? sanitize_text_field($_POST['plugin']) : '';
+    $current_plugin = plugin_basename(__FILE__);
+    
+    // Only handle our plugin
+    if ($plugin !== $current_plugin) {
+        return; // Let WordPress handle other plugins
+    }
+    
+    // Check nonce
+    if (!isset($_POST['_ajax_nonce']) || !wp_verify_nonce($_POST['_ajax_nonce'], 'updates')) {
+        wp_send_json_error(array('message' => __('Security check failed.', 'dw-church')));
+    }
+    
+    if (!current_user_can('update_plugins')) {
+        wp_send_json_error(array('message' => __('You do not have permission to update plugins.', 'dw-church')));
+    }
+    
+    $auto_updates = (array) get_site_option('auto_update_plugins', array());
+    $enabled = isset($_POST['enabled']) && $_POST['enabled'] === 'true';
+    
+    if ($enabled) {
+        if (!in_array($plugin, $auto_updates, true)) {
+            $auto_updates[] = $plugin;
+            update_site_option('auto_update_plugins', $auto_updates);
+        }
+        wp_send_json_success(array('enabled' => true));
+    } else {
+        $auto_updates = array_diff($auto_updates, array($plugin));
+        update_site_option('auto_update_plugins', array_values($auto_updates));
+        wp_send_json_success(array('enabled' => false));
+    }
+}, 5); // Priority 5 to run before WordPress default handler
+
+// Add JavaScript to handle checkbox toggle
+add_action('admin_footer', function() {
+    $screen = get_current_screen();
+    if (!$screen || $screen->id !== 'plugins') {
+        return;
+    }
+    
+    $plugin_file = plugin_basename(__FILE__);
+    ?>
+    <script>
+    jQuery(document).ready(function($) {
+        $(document).on('change', '#auto-update-<?php echo esc_js($plugin_file); ?>', function() {
+            var $checkbox = $(this);
+            var enabled = $checkbox.is(':checked');
+            
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'toggle-auto-update-plugin',
+                    plugin: '<?php echo esc_js($plugin_file); ?>',
+                    enabled: enabled,
+                    _ajax_nonce: '<?php echo wp_create_nonce('updates'); ?>'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Update UI
+                        if (response.data.enabled) {
+                            $checkbox.closest('label').find('.label').text('<?php echo esc_js(__('Enable auto-updates', 'dw-church')); ?>');
+                        } else {
+                            $checkbox.closest('label').find('.label').text('<?php echo esc_js(__('Enable auto-updates', 'dw-church')); ?>');
+                        }
+                    } else {
+                        // Revert checkbox on error
+                        $checkbox.prop('checked', !enabled);
+                        alert(response.data.message || '<?php echo esc_js(__('An error occurred.', 'dw-church')); ?>');
+                    }
+                },
+                error: function() {
+                    // Revert checkbox on error
+                    $checkbox.prop('checked', !enabled);
+                    alert('<?php echo esc_js(__('An error occurred.', 'dw-church')); ?>');
+                }
+            });
+        });
+    });
+    </script>
+    <?php
+});
 
 // Plugin activation hook
 register_activation_hook(__FILE__, function() {
