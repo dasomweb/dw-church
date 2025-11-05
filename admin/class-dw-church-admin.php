@@ -944,6 +944,11 @@ class DW_Church_Admin {
     /**
      * Settings page
      */
+    /**
+     * 설정 페이지
+     * 
+     * 교회 정보 및 설교자 관리 설정 페이지를 표시합니다.
+     */
     public function dw_church_settings_page() {
         // Allow access for Administrator, Editor, and Author
         if (!current_user_can('edit_posts')) {
@@ -958,6 +963,17 @@ class DW_Church_Admin {
             
             $action = sanitize_text_field($_POST['preacher_action']);
             $this->dw_church_handle_preacher_action($action);
+            
+            // 액션 처리 후 페이지 리다이렉트 (중복 제출 방지 및 상태 반영)
+            // 현재 탭 정보 유지하면서 리다이렉트
+            $redirect_url = admin_url('admin.php?page=dasom-church-settings');
+            if (isset($_GET['tab'])) {
+                $redirect_url .= '&tab=' . urlencode($_GET['tab']);
+            } else {
+                $redirect_url .= '&tab=speaker_management';
+            }
+            wp_redirect($redirect_url);
+            exit;
         }
         
         // Load settings view

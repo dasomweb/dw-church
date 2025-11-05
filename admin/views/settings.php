@@ -236,13 +236,21 @@ if (is_wp_error($preachers)) {
                                 </form>
                             </td>
                             <td>
-                                <?php $is_default = ($term->name === $default_preacher); ?>
+                                <?php 
+                                // 기본 설교자 여부 확인
+                                // 옵션에서 현재 기본 설교자 이름을 가져와서 비교
+                                $is_default = ($term->name === $default_preacher);
+                                ?>
                                 <form method="post" style="display:inline;">
                                     <?php wp_nonce_field('sermon_preacher_actions'); ?>
                                     <input type="hidden" name="preacher_action" value="set_default">
                                     <input type="hidden" name="term_id" value="<?php echo (int)$term->term_id; ?>">
-                                    <button type="submit" class="button <?php echo $is_default ? 'button-secondary' : 'button-primary'; ?>" <?php echo $is_default ? 'disabled style="cursor:not-allowed;opacity:0.5;"' : ''; ?>>
-                                        <?php echo $is_default ? __('기본 설교자 (현재)', 'dasom-church') : __('기본 설교자로 지정', 'dasom-church'); ?>
+                                    <button type="submit" 
+                                            id="default_preacher_btn_<?php echo (int)$term->term_id; ?>"
+                                            class="button <?php echo $is_default ? 'button-secondary' : 'button-primary'; ?>" 
+                                            <?php echo $is_default ? 'disabled style="cursor:not-allowed;opacity:0.6;pointer-events:none;"' : ''; ?>
+                                            <?php if ($is_default): ?>title="<?php esc_attr_e('현재 기본 설교자로 설정되어 있습니다.', 'dw-church'); ?>"<?php endif; ?>>
+                                        <?php echo $is_default ? esc_html__('기본 설교자 (현재)', 'dw-church') : esc_html__('기본 설교자로 지정', 'dw-church'); ?>
                                     </button>
                                 </form>
                                 <form method="post" style="display:inline;margin-left:8px;" onsubmit="return confirm('<?php _e('삭제하시겠습니까? 이 설교자가 지정된 글의 설교자 값은 비어 있을 수 있습니다.', 'dasom-church'); ?>');">
@@ -267,4 +275,48 @@ if (is_wp_error($preachers)) {
         <?php submit_button(); ?>
     </form>
 </div>
+
+<script>
+jQuery(document).ready(function($) {
+    // 기본 설교자로 지정 버튼 클릭 시 처리
+    $('form[method="post"]').on('submit', function(e) {
+        var $form = $(this);
+        var $button = $form.find('button[type="submit"]');
+        var action = $form.find('input[name="preacher_action"]').val();
+        var termId = $form.find('input[name="term_id"]').val();
+        
+        // 기본 설교자로 지정 액션인 경우
+        if (action === 'set_default' && termId) {
+            // 1. 모든 기본 설교자 버튼을 활성화 (기존 기본 설교자 버튼 활성화)
+            $('button[id^="default_preacher_btn_"]').each(function() {
+                var $btn = $(this);
+                $btn.prop('disabled', false)
+                    .removeClass('button-secondary')
+                    .addClass('button-primary')
+                    .css({
+                        'cursor': 'pointer',
+                        'opacity': '1',
+                        'pointer-events': 'auto'
+                    })
+                    .text('<?php echo esc_js(__('기본 설교자로 지정', 'dw-church')); ?>')
+                    .removeAttr('title');
+            });
+            
+            // 2. 클릭한 버튼만 비활성화
+            setTimeout(function() {
+                $button.prop('disabled', true)
+                       .removeClass('button-primary')
+                       .addClass('button-secondary')
+                       .css({
+                           'cursor': 'not-allowed',
+                           'opacity': '0.6',
+                           'pointer-events': 'none'
+                       })
+                       .text('<?php echo esc_js(__('기본 설교자 (현재)', 'dw-church')); ?>')
+                       .attr('title', '<?php echo esc_js(__('현재 기본 설교자로 설정되어 있습니다.', 'dw-church')); ?>');
+            }, 50);
+        }
+    });
+});
+</script>
 

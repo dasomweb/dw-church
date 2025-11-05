@@ -2,7 +2,7 @@
 /**
  * Plugin Name: DW Church
  * Description: DW Church Management System
- * Version: 2.62.23
+ * Version: 2.62.24
  * Author: DasomWeb
  * Author URI: https://dasomweb.com
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
@@ -34,7 +34,7 @@ if (!defined('ABSPATH')) {
  * @const string DASOM_CHURCH_PLUGIN_FILE 플러그인 메인 파일 경로
  * @const string DASOM_CHURCH_PLUGIN_BASENAME 플러그인 베이스네임 (예: 'dw-church/dw-church.php')
  */
-define('DASOM_CHURCH_VERSION', '2.62.23');
+define('DASOM_CHURCH_VERSION', '2.62.24');
 // 플러그인 URL을 HTTPS로 강제 변환 (보안 및 혼합 콘텐츠 문제 방지)
 define('DASOM_CHURCH_PLUGIN_URL', str_replace('http://', 'https://', plugin_dir_url(__FILE__)));
 // 플러그인 파일 시스템 경로
