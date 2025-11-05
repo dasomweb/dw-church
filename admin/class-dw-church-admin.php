@@ -1105,8 +1105,9 @@ class DW_Church_Admin {
      * Handle settings form submission
      */
     public function dw_church_handle_settings_save() {
-        if (!isset($_POST['dw_church_settings_nonce']) || 
-            !wp_verify_nonce($_POST['dw_church_settings_nonce'], 'dw_church_settings_action')) {
+        // nonce 필드 이름을 템플릿과 일치시킴 (교회 정보 저장 문제 해결)
+        if (!isset($_POST['dasom_church_settings_nonce']) || 
+            !wp_verify_nonce($_POST['dasom_church_settings_nonce'], 'dasom_church_settings_action')) {
             return;
         }
         
