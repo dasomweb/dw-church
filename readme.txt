@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.62.8
+Stable tag: 2.62.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,10 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.62.9 =
+* Enhancement: Add 15 image limit validation on form submit - prevent saving if more than 15 images are selected
+* Fix: Simple validation that blocks submit when album images exceed 15 on publish/update
 
 = 2.62.8 =
 * Fix: Fix JSON decoding issue in album image save handler - use wp_unslash() instead of sanitize_text_field() to prevent JSON corruption

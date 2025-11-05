@@ -1162,6 +1162,12 @@ class DW_Church_Meta_Boxes {
             $images_json = wp_unslash($_POST['dw_album_images']);
             $images = json_decode($images_json, true);
             if (is_array($images)) {
+                // Check if exceeds 15 images limit
+                if (count($images) > 15) {
+                    // Prevent save by returning early
+                    return;
+                }
+                
                 // Ensure all values are integers
                 $images = array_map('absint', $images);
                 $images = array_filter($images); // Remove any zero values

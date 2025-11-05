@@ -631,6 +631,25 @@
                 return; // Not an album post, use default validation
             }
             
+            // Check album image count
+            var ids = [];
+            var hiddenValue = $('#dw_album_images, #dasom_album_images').val();
+            if (hiddenValue) {
+                try {
+                    var parsed = JSON.parse(hiddenValue);
+                    if (Array.isArray(parsed)) {
+                        ids = parsed.filter(function(id) { return id; });
+                    }
+                } catch(e) {
+                    console.error('Error parsing album images:', e);
+                }
+            }
+            
+            if (ids.length > 15) {
+                e.preventDefault();
+                alert('앨범 이미지는 최대 15개까지만 저장할 수 있습니다. 현재 ' + ids.length + '개의 이미지가 선택되어 있습니다. 이미지를 제거하여 15개 이하로 줄여주세요.\n\n(Album images are limited to 15. Currently ' + ids.length + ' images are selected. Please remove images to reduce to 15 or less.)');
+                return false;
+            }
         });
         
         $('form').on('submit', function(e) {
