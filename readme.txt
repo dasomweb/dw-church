@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.62.26
+Stable tag: 2.62.27
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,10 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 7. Plugin settings and permissions
 
 == Changelog ==
+
+= 2.62.27 =
+* Fix: Restore v2.62.19 auto-activation code (update-related code unchanged)
+* Fix: Revert to working auto-activation mechanism from v2.62.19
 
 = 2.62.26 =
 * Critical Fix: Move auto-activation hooks outside is_admin() condition - hooks must be registered globally
