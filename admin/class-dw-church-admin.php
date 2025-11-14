@@ -107,9 +107,12 @@ class DW_Church_Admin {
                 return $allowed;
             }
             // Also check if this is a new album post
-            $screen = get_current_screen();
-            if ($screen && ($screen->post_type === 'album' || $screen->id === 'album')) {
-                return $allowed;
+            // Check if get_current_screen() is available (only available after admin_init)
+            if (function_exists('get_current_screen')) {
+                $screen = get_current_screen();
+                if ($screen && ($screen->post_type === 'album' || $screen->id === 'album')) {
+                    return $allowed;
+                }
             }
         }
         
@@ -128,9 +131,12 @@ class DW_Church_Admin {
             if ($post && $post->post_type === 'album') {
                 $is_album_upload = true;
             } else {
-                $screen = get_current_screen();
-                if ($screen && ($screen->post_type === 'album' || $screen->id === 'album')) {
-                    $is_album_upload = true;
+                // Check if get_current_screen() is available (only available after admin_init)
+                if (function_exists('get_current_screen')) {
+                    $screen = get_current_screen();
+                    if ($screen && ($screen->post_type === 'album' || $screen->id === 'album')) {
+                        $is_album_upload = true;
+                    }
                 }
             }
             

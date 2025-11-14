@@ -1508,6 +1508,11 @@ class DW_Church_Meta_Boxes {
         global $post;
         
         // Only load on post edit screens
+        // Check if get_current_screen() is available (only available after admin_init)
+        if (!function_exists('get_current_screen')) {
+            return;
+        }
+        
         $screen = get_current_screen();
         if (!$screen || !in_array($screen->id, array('bulletin', 'sermon', 'column', 'album', 'banner', 'event'))) {
             return;
