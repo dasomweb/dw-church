@@ -35,11 +35,81 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
     
     protected function register_controls() {
         
+        // Query Settings Section
         $this->start_controls_section(
-            'content_section',
+            'query_section',
             [
-                'label' => __('Settings', 'dasom-church'),
+                'label' => __('Query Settings', 'dasom-church'),
                 'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
+            ]
+        );
+        
+        $this->add_control(
+            'query_source',
+            [
+                'label' => __('Query Source', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'latest',
+                'options' => [
+                    'latest' => __('Latest Posts', 'dasom-church'),
+                    'manual' => __('Manual Selection', 'dasom-church'),
+                ],
+            ]
+        );
+        
+        // Get all sermons for manual selection
+        $sermon_options = array();
+        $all_sermons = get_posts(array(
+            'post_type' => 'sermon',
+            'posts_per_page' => -1,
+            'post_status' => 'publish',
+            'orderby' => 'title',
+            'order' => 'ASC',
+        ));
+        foreach ($all_sermons as $sermon) {
+            $sermon_options[$sermon->ID] = $sermon->post_title;
+        }
+        
+        $this->add_control(
+            'manual_selection',
+            [
+                'label' => __('Select Sermons', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT2,
+                'multiple' => true,
+                'options' => $sermon_options,
+                'label_block' => true,
+                'condition' => [
+                    'query_source' => 'manual',
+                ],
+                'description' => __('Select specific sermons to display.', 'dasom-church'),
+            ]
+        );
+        
+        // Get sermon categories
+        $categories = get_terms(array(
+            'taxonomy' => 'sermon_category',
+            'hide_empty' => false,
+        ));
+        
+        $category_options = array();
+        if (!is_wp_error($categories)) {
+            foreach ($categories as $cat) {
+                $category_options[$cat->term_id] = $cat->name;
+            }
+        }
+        
+        $this->add_control(
+            'sermon_categories',
+            [
+                'label' => __('Sermon Categories', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT2,
+                'multiple' => true,
+                'options' => $category_options,
+                'label_block' => true,
+                'condition' => [
+                    'query_source' => 'latest',
+                ],
+                'description' => __('Select categories to filter sermons. Leave empty to show all.', 'dasom-church'),
             ]
         );
         
@@ -51,6 +121,54 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
                 'default' => 6,
                 'min' => 1,
                 'max' => 50,
+                'condition' => [
+                    'query_source' => 'latest',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'order',
+            [
+                'label' => __('Order', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'DESC',
+                'options' => [
+                    'ASC' => __('Ascending', 'dasom-church'),
+                    'DESC' => __('Descending', 'dasom-church'),
+                ],
+                'condition' => [
+                    'query_source' => 'latest',
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'orderby',
+            [
+                'label' => __('Order By', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'date',
+                'options' => [
+                    'date' => __('Date', 'dasom-church'),
+                    'title' => __('Title', 'dasom-church'),
+                    'rand' => __('Random', 'dasom-church'),
+                    'menu_order' => __('Menu Order', 'dasom-church'),
+                ],
+                'condition' => [
+                    'query_source' => 'latest',
+                ],
+            ]
+        );
+        
+        $this->end_controls_section();
+        
+        // Settings Section
+        $this->start_controls_section(
+            'content_section',
+            [
+                'label' => __('Settings', 'dasom-church'),
+                'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
             ]
         );
         
@@ -696,16 +814,38 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
     protected function render() {
         $settings = $this->get_settings_for_display();
         
+        $query_source = $settings['query_source'] ?? 'latest';
         $enable_pagination = $settings['enable_pagination'] ?? 'no';
         $paged = (get_query_var('paged')) ? get_query_var('paged') : 1;
         
         $args = array(
             'post_type' => 'sermon',
-            'posts_per_page' => $settings['posts_per_page'],
             'post_status' => 'publish',
-            'orderby' => 'date',
-            'order' => 'DESC',
         );
+        
+        // Query Source: Manual Selection
+        if ($query_source === 'manual' && !empty($settings['manual_selection'])) {
+            $args['post__in'] = $settings['manual_selection'];
+            $args['orderby'] = 'post__in';
+            $args['posts_per_page'] = -1;
+        } 
+        // Query Source: Latest Posts
+        else {
+            $args['posts_per_page'] = $settings['posts_per_page'] ?? 6;
+            $args['orderby'] = $settings['orderby'] ?? 'date';
+            $args['order'] = $settings['order'] ?? 'DESC';
+            
+            // Add category filter if selected
+            if (!empty($settings['sermon_categories']) && is_array($settings['sermon_categories'])) {
+                $args['tax_query'] = array(
+                    array(
+                        'taxonomy' => 'sermon_category',
+                        'field' => 'term_id',
+                        'terms' => $settings['sermon_categories'],
+                    ),
+                );
+            }
+        }
         
         // Add pagination if enabled
         if ($enable_pagination === 'yes') {

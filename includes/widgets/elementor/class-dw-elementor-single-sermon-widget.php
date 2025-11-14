@@ -68,6 +68,34 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
             ]
         );
         
+        // Get sermon categories
+        $categories = get_terms(array(
+            'taxonomy' => 'sermon_category',
+            'hide_empty' => false,
+        ));
+        
+        $category_options = array();
+        if (!is_wp_error($categories)) {
+            foreach ($categories as $cat) {
+                $category_options[$cat->term_id] = $cat->name;
+            }
+        }
+        
+        $this->add_control(
+            'sermon_categories',
+            [
+                'label' => __('Sermon Categories', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT2,
+                'multiple' => true,
+                'options' => $category_options,
+                'label_block' => true,
+                'condition' => [
+                    'query_source' => 'latest',
+                ],
+                'description' => __('카테고리를 선택하면 해당 카테고리의 최신 설교를 표시합니다. 비워두면 모든 카테고리에서 최신 설교를 표시합니다.', 'dasom-church'),
+            ]
+        );
+        
         // Get all sermons for dropdown
         $sermons_query = new \WP_Query([
             'post_type' => 'sermon',
@@ -630,13 +658,26 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
         
         // Query Source: Latest Post (or fallback)
         if ($query_source === 'latest' || !$sermon_id) {
-            $latest_sermon = new \WP_Query([
+            $latest_args = [
                 'post_type' => 'sermon',
                 'posts_per_page' => 1,
                 'post_status' => 'publish',
                 'orderby' => 'date',
                 'order' => 'DESC',
-            ]);
+            ];
+            
+            // Add category filter if selected
+            if (!empty($settings['sermon_categories']) && is_array($settings['sermon_categories'])) {
+                $latest_args['tax_query'] = array(
+                    array(
+                        'taxonomy' => 'sermon_category',
+                        'field' => 'term_id',
+                        'terms' => $settings['sermon_categories'],
+                    ),
+                );
+            }
+            
+            $latest_sermon = new \WP_Query($latest_args);
             
             if (!$latest_sermon->have_posts()) {
                 echo '<div class="dw-sermon-notice" style="padding:20px;background:#fff3cd;border-left:4px solid #ffc107;color:#856404;">';
