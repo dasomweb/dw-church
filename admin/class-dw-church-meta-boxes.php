@@ -157,8 +157,18 @@ class DW_Church_Meta_Boxes {
                     <input type="hidden" id="dw_bulletin_pdf" name="dw_bulletin_pdf" value="<?php echo esc_attr($pdf); ?>" />
                     <button type="button" class="button" id="dw_bulletin_pdf_button"><?php _e('PDF 업로드', 'dw-church'); ?></button>
                     <div id="bulletin_pdf_preview" style="margin-top:8px;">
-                        <?php if ($pdf): ?>
-                            <a href="<?php echo esc_url(wp_get_attachment_url($pdf)); ?>" target="_blank"><?php _e('현재 PDF 보기', 'dw-church'); ?></a>
+                        <?php if ($pdf): 
+                            $pdf_url = wp_get_attachment_url($pdf);
+                            $pdf_filename = get_the_title($pdf);
+                            if (empty($pdf_filename)) {
+                                $pdf_path = get_attached_file($pdf);
+                                $pdf_filename = $pdf_path ? basename($pdf_path) : __('PDF 파일', 'dw-church');
+                            }
+                        ?>
+                            <div style="display:flex;align-items:center;gap:8px;padding:8px;background:#f0f0f1;border-radius:4px;">
+                                <span style="color:#2271b1;font-weight:500;"><?php echo esc_html($pdf_filename); ?></span>
+                                <a href="<?php echo esc_url($pdf_url); ?>" target="_blank" style="text-decoration:none;color:#2271b1;"><?php _e('보기', 'dw-church'); ?></a>
+                            </div>
                         <?php endif; ?>
                     </div>
                 </td>
@@ -1575,7 +1585,13 @@ class DW_Church_Meta_Boxes {
                 frame.on('select', function() {
                     var attachment = frame.state().get('selection').first().toJSON();
                     $('#dw_bulletin_pdf').val(attachment.id);
-                    $('#bulletin_pdf_preview').html('<a href=\"' + attachment.url + '\" target=\"_blank\">선택된 PDF 보기</a>');
+                    var filename = attachment.filename || attachment.title || 'PDF 파일';
+                    $('#bulletin_pdf_preview').html(
+                        '<div style=\"display:flex;align-items:center;gap:8px;padding:8px;background:#f0f0f1;border-radius:4px;\">' +
+                        '<span style=\"color:#2271b1;font-weight:500;\">' + filename + '</span>' +
+                        '<a href=\"' + attachment.url + '\" target=\"_blank\" style=\"text-decoration:none;color:#2271b1;\">보기</a>' +
+                        '</div>'
+                    );
                 });
                 frame.open();
             });
