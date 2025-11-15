@@ -742,6 +742,8 @@ class DW_Church_Columns {
             
             // Function to populate Quick Edit fields
             function populateQuickEditFields(post_id, post_type) {
+                console.log('[Quick Edit] populateQuickEditFields called', { post_id: post_id, post_type: post_type });
+                
                 // Get data via AJAX (same for all post types)
                 $.ajax({
                     url: dasomChurchQuickEdit.ajaxUrl,
@@ -753,18 +755,33 @@ class DW_Church_Columns {
                         nonce: dasomChurchQuickEdit.nonce
                     },
                     success: function(response) {
+                        console.log('[Quick Edit] AJAX Success Response:', response);
                         if (response.success) {
                             var ajaxData = response.data;
+                            console.log('[Quick Edit] AJAX Data:', ajaxData);
                             
                             // Function to fill fields with retry
                             var fillFields = function(attempts) {
                                 attempts = attempts || 0;
-                                if (attempts > 20) return; // Max 20 attempts (1 second)
+                                if (attempts > 20) {
+                                    console.log('[Quick Edit] fillFields: Max attempts reached');
+                                    return;
+                                }
                                 
                                 var fieldsReady = true;
                                 
                                 // Check if Quick Edit form is ready
-                                if ($('input[name=\"aa\"]').length === 0 || $('select[name=\"mm\"]').length === 0 || $('input[name=\"jj\"]').length === 0) {
+                                var aaField = $('input[name=\"aa\"]');
+                                var mmField = $('select[name=\"mm\"]');
+                                var jjField = $('input[name=\"jj\"]');
+                                
+                                console.log('[Quick Edit] fillFields attempt ' + attempts + ':', {
+                                    aaExists: aaField.length > 0,
+                                    mmExists: mmField.length > 0,
+                                    jjExists: jjField.length > 0
+                                });
+                                
+                                if (aaField.length === 0 || mmField.length === 0 || jjField.length === 0) {
                                     fieldsReady = false;
                                 }
                                 
@@ -773,38 +790,64 @@ class DW_Church_Columns {
                                     return;
                                 }
                                 
+                                console.log('[Quick Edit] Fields ready, filling data...');
+                                
                                 // Fill WordPress default date fields
                                 if (ajaxData.post_date) {
+                                    console.log('[Quick Edit] Filling date:', ajaxData.post_date);
                                     // post_date format: Y-m-d H:i:s or Y-m-d
                                     var dateMatch = ajaxData.post_date.match(/(\d{4})-(\d{2})-(\d{2})/);
                                     if (dateMatch) {
-                                        $('input[name=\"aa\"]').val(dateMatch[1]);
-                                        $('select[name=\"mm\"]').val(dateMatch[2]);
-                                        $('input[name=\"jj\"]').val(dateMatch[3]);
+                                        console.log('[Quick Edit] Date match:', dateMatch[1], dateMatch[2], dateMatch[3]);
+                                        aaField.val(dateMatch[1]);
+                                        mmField.val(dateMatch[2]);
+                                        jjField.val(dateMatch[3]);
+                                        console.log('[Quick Edit] Date fields filled:', {
+                                            aa: aaField.val(),
+                                            mm: mmField.val(),
+                                            jj: jjField.val()
+                                        });
+                                    } else {
+                                        console.warn('[Quick Edit] Date format not matched:', ajaxData.post_date);
                                     }
+                                } else {
+                                    console.warn('[Quick Edit] No post_date in ajaxData');
                                 }
                                 
                                 // Fill WordPress default author field
                                 if (ajaxData.post_author) {
+                                    console.log('[Quick Edit] Filling author:', ajaxData.post_author);
                                     var authorSelect = $('select[name=\"post_author\"]');
                                     if (authorSelect.length > 0) {
                                         authorSelect.val(ajaxData.post_author);
+                                        console.log('[Quick Edit] Author field filled:', authorSelect.val());
+                                    } else {
+                                        console.warn('[Quick Edit] Author select not found');
                                     }
+                                } else {
+                                    console.warn('[Quick Edit] No post_author in ajaxData');
                                 }
                                 
                                 // Fill post status
                                 if (ajaxData.post_status) {
+                                    console.log('[Quick Edit] Filling status:', ajaxData.post_status);
                                     var statusSelect = $('select[name=\"_status\"]');
                                     if (statusSelect.length > 0) {
                                         // Ensure Published option exists
                                         ensurePublishedOption();
                                         
                                         var currentValue = statusSelect.val();
+                                        console.log('[Quick Edit] Status current value:', currentValue, 'target:', ajaxData.post_status);
                                         if (currentValue !== ajaxData.post_status) {
                                             statusSelect.val(ajaxData.post_status);
                                             statusSelect.trigger('change');
+                                            console.log('[Quick Edit] Status field set to:', statusSelect.val());
                                         }
+                                    } else {
+                                        console.warn('[Quick Edit] Status select not found');
                                     }
+                                } else {
+                                    console.warn('[Quick Edit] No post_status in ajaxData');
                                 }
                                 
                                 // Fill custom fields
@@ -823,13 +866,29 @@ class DW_Church_Columns {
                                 
                                 // Check sermon categories
                                 if (post_type === 'sermon' && ajaxData.sermon_categories && ajaxData.sermon_categories.length > 0) {
+                                    console.log('[Quick Edit] Filling sermon categories:', ajaxData.sermon_categories);
                                     var categoryCheckboxes = $('input[name=\"tax_input[sermon_category][]\"]');
+                                    console.log('[Quick Edit] Found category checkboxes:', categoryCheckboxes.length);
                                     if (categoryCheckboxes.length > 0) {
                                         categoryCheckboxes.prop('checked', false);
                                         ajaxData.sermon_categories.forEach(function(categoryId) {
-                                            $('input[name=\"tax_input[sermon_category][]\"][value=\"' + categoryId + '\"]').prop('checked', true);
+                                            var checkbox = $('input[name=\"tax_input[sermon_category][]\"][value=\"' + categoryId + '\"]');
+                                            if (checkbox.length > 0) {
+                                                checkbox.prop('checked', true);
+                                                console.log('[Quick Edit] Category checked:', categoryId);
+                                            } else {
+                                                console.warn('[Quick Edit] Category checkbox not found:', categoryId);
+                                            }
                                         });
+                                    } else {
+                                        console.warn('[Quick Edit] No category checkboxes found');
                                     }
+                                } else {
+                                    console.warn('[Quick Edit] No sermon_categories in ajaxData or empty', {
+                                        post_type: post_type,
+                                        has_categories: ajaxData.sermon_categories ? true : false,
+                                        categories_length: ajaxData.sermon_categories ? ajaxData.sermon_categories.length : 0
+                                    });
                                 }
                             };
                             
@@ -840,8 +899,9 @@ class DW_Church_Columns {
                         }
                     },
                     error: function(xhr, status, error) {
-                        console.error('Quick Edit AJAX Error:', status, error);
-                        console.error('Response:', xhr.responseText);
+                        console.error('[Quick Edit] AJAX Error:', status, error);
+                        console.error('[Quick Edit] Response:', xhr.responseText);
+                        console.error('[Quick Edit] Status Code:', xhr.status);
                     }
                 });
             }
@@ -908,16 +968,23 @@ DW_Church_Columns::get_instance();
 // AJAX handler for Quick Edit data
 add_action('wp_ajax_dasom_church_get_quick_edit_data', 'dasom_church_get_quick_edit_data_callback');
 function dasom_church_get_quick_edit_data_callback() {
+    error_log('[Quick Edit PHP] AJAX callback called');
+    error_log('[Quick Edit PHP] POST data: ' . print_r($_POST, true));
+    
     if (!wp_verify_nonce($_POST['nonce'], 'dasom_church_quick_edit_data')) {
+        error_log('[Quick Edit PHP] Security check failed');
         wp_die('Security check failed');
     }
     
     if (!current_user_can('edit_posts')) {
+        error_log('[Quick Edit PHP] Insufficient permissions');
         wp_die('Insufficient permissions');
     }
     
     $post_id = intval($_POST['post_id']);
     $post_type = sanitize_text_field($_POST['post_type']);
+    
+    error_log('[Quick Edit PHP] Processing post_id: ' . $post_id . ', post_type: ' . $post_type);
     
     $data = array();
     
@@ -927,6 +994,9 @@ function dasom_church_get_quick_edit_data_callback() {
         $data['post_date'] = $post->post_date;
         $data['post_author'] = $post->post_author;
         $data['post_status'] = $post->post_status;
+        error_log('[Quick Edit PHP] Post data retrieved: ' . print_r($data, true));
+    } else {
+        error_log('[Quick Edit PHP] Post not found for post_id: ' . $post_id);
     }
     
     switch ($post_type) {
@@ -948,6 +1018,7 @@ function dasom_church_get_quick_edit_data_callback() {
             
         case 'sermon':
             $sermon_date = get_post_meta($post_id, 'dw_sermon_date', true);
+            error_log('[Quick Edit PHP] Sermon date meta: ' . ($sermon_date ? $sermon_date : 'empty'));
             if ($sermon_date && $sermon_date !== '') {
                 // If already in YYYY-MM-DD format, use as is
                 if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $sermon_date)) {
@@ -962,8 +1033,12 @@ function dasom_church_get_quick_edit_data_callback() {
             }
             // Get sermon categories
             $categories = wp_get_post_terms($post_id, 'sermon_category', array('fields' => 'ids'));
+            error_log('[Quick Edit PHP] Sermon categories: ' . print_r($categories, true));
             if (!is_wp_error($categories) && !empty($categories)) {
                 $data['sermon_categories'] = $categories;
+                error_log('[Quick Edit PHP] Sermon categories added to data: ' . print_r($categories, true));
+            } else {
+                error_log('[Quick Edit PHP] Sermon categories error or empty: ' . (is_wp_error($categories) ? $categories->get_error_message() : 'empty'));
             }
             break;
             
@@ -973,5 +1048,6 @@ function dasom_church_get_quick_edit_data_callback() {
             break;
     }
     
+    error_log('[Quick Edit PHP] Final data to send: ' . print_r($data, true));
     wp_send_json_success($data);
 }
