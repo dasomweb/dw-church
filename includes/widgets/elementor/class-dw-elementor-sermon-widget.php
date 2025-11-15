@@ -53,6 +53,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
                 'options' => [
                     'latest' => __('Latest Posts', 'dasom-church'),
                     'manual' => __('Manual Selection', 'dasom-church'),
+                    'related' => __('Related Posts', 'dasom-church'),
                 ],
             ]
         );
@@ -107,7 +108,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
                 'options' => $category_options,
                 'label_block' => true,
                 'condition' => [
-                    'query_source' => 'latest',
+                    'query_source' => ['latest', 'related'],
                 ],
                 'description' => __('Select categories to filter sermons. Leave empty to show all.', 'dasom-church'),
             ]
@@ -122,7 +123,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
                 'min' => 1,
                 'max' => 50,
                 'condition' => [
-                    'query_source' => 'latest',
+                    'query_source' => ['latest', 'related'],
                 ],
             ]
         );
@@ -138,7 +139,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
                     'DESC' => __('Descending', 'dasom-church'),
                 ],
                 'condition' => [
-                    'query_source' => 'latest',
+                    'query_source' => ['latest', 'related'],
                 ],
             ]
         );
@@ -156,7 +157,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
                     'menu_order' => __('Menu Order', 'dasom-church'),
                 ],
                 'condition' => [
-                    'query_source' => 'latest',
+                    'query_source' => ['latest', 'related'],
                 ],
             ]
         );
@@ -829,6 +830,52 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             $args['orderby'] = 'post__in';
             $args['posts_per_page'] = -1;
         } 
+        // Query Source: Related Posts
+        elseif ($query_source === 'related') {
+            global $post;
+            $current_post_id = null;
+            
+            // Get current post ID if we're on a sermon post page
+            if ($post && get_post_type($post->ID) === 'sermon') {
+                $current_post_id = $post->ID;
+            }
+            
+            // If we have a current sermon post, get related sermons by category
+            if ($current_post_id) {
+                // Get categories of current post
+                $current_categories = wp_get_post_terms($current_post_id, 'sermon_category', array('fields' => 'ids'));
+                
+                if (!empty($current_categories) && !is_wp_error($current_categories)) {
+                    $args['tax_query'] = array(
+                        array(
+                            'taxonomy' => 'sermon_category',
+                            'field' => 'term_id',
+                            'terms' => $current_categories,
+                        ),
+                    );
+                    // Exclude current post
+                    $args['post__not_in'] = array($current_post_id);
+                } else {
+                    // If no categories, fallback to latest
+                    $args['post__not_in'] = array($current_post_id);
+                }
+            }
+            
+            // Add manual category filter if selected (overrides auto-detection)
+            if (!empty($settings['sermon_categories']) && is_array($settings['sermon_categories'])) {
+                $args['tax_query'] = array(
+                    array(
+                        'taxonomy' => 'sermon_category',
+                        'field' => 'term_id',
+                        'terms' => $settings['sermon_categories'],
+                    ),
+                );
+            }
+            
+            $args['posts_per_page'] = $settings['posts_per_page'] ?? 6;
+            $args['orderby'] = $settings['orderby'] ?? 'date';
+            $args['order'] = $settings['order'] ?? 'DESC';
+        }
         // Query Source: Latest Posts
         else {
             $args['posts_per_page'] = $settings['posts_per_page'] ?? 6;
