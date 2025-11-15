@@ -796,27 +796,31 @@ class DW_Church_Columns {
                                 }
                                 
                                 // Fill post status - wait for WordPress default Quick Edit to finish
+                                // For sermon post type, we need to be more aggressive
                                 if (ajaxData.post_status) {
                                     var setStatus = function(attempts) {
                                         attempts = attempts || 0;
-                                        if (attempts > 20) return; // Max 20 attempts (1 second)
+                                        if (attempts > 30) return; // Max 30 attempts (1.5 seconds)
                                         
                                         var statusSelect = $('select[name=\"_status\"]');
                                         if (statusSelect.length > 0) {
-                                            // Only set if current value is different (avoid overriding WordPress default)
                                             var currentValue = statusSelect.val();
-                                            if (currentValue !== ajaxData.post_status) {
-                                                statusSelect.val(ajaxData.post_status);
-                                                // Trigger change event to ensure WordPress recognizes the change
-                                                statusSelect.trigger('change');
+                                            // For sermon, always set if different (WordPress default may not work correctly)
+                                            if (post_type === 'sermon' || currentValue !== ajaxData.post_status) {
+                                                if (currentValue !== ajaxData.post_status) {
+                                                    statusSelect.val(ajaxData.post_status);
+                                                    // Trigger change event to ensure WordPress recognizes the change
+                                                    statusSelect.trigger('change');
+                                                }
                                             }
                                         } else {
                                             // Retry if status select doesn't exist yet
                                             setTimeout(function() { setStatus(attempts + 1); }, 50);
                                         }
                                     };
-                                    // Wait a bit longer to let WordPress default Quick Edit finish
-                                    setTimeout(function() { setStatus(0); }, 300);
+                                    // Wait longer for sermon to ensure WordPress default is done
+                                    var delay = (post_type === 'sermon') ? 400 : 300;
+                                    setTimeout(function() { setStatus(0); }, delay);
                                 }
                                 
                                 // Fill our custom fields
@@ -871,18 +875,27 @@ class DW_Church_Columns {
                 // Store data for this post
                 postData[post_id] = getPostDataFromRow(row);
                 
+                // Get status from row data attribute (WordPress stores it here)
+                var rowStatus = row.find('.post-state').data('status') || row.data('status');
+                if (rowStatus) {
+                    postData[post_id].post_status = rowStatus;
+                }
+                
                 // Populate fields
                 populateQuickEditFields(post_id, post_type);
             });
             
             // Also handle WordPress inlineEditPost event to ensure status is set correctly
+            // This is especially important for sermon post type
             $(document).on('inlineEditPost', function(e, post) {
-                // Wait for WordPress to finish setting up the Quick Edit form
+                var post_id = post.ID;
+                var post_type = dasomChurchQuickEdit.postType;
+                
+                // For sermon, use longer delay and more aggressive approach
+                var delay = (post_type === 'sermon') ? 250 : 150;
+                
                 setTimeout(function() {
-                    var post_id = post.ID;
-                    var post_type = dasomChurchQuickEdit.postType;
-                    
-                    // Get status from AJAX if available
+                    // Get status from AJAX (most reliable method)
                     $.ajax({
                         url: dasomChurchQuickEdit.ajaxUrl,
                         type: 'POST',
@@ -894,19 +907,29 @@ class DW_Church_Columns {
                         },
                         success: function(response) {
                             if (response.success && response.data.post_status) {
-                                var statusSelect = $('select[name=\"_status\"]');
-                                if (statusSelect.length > 0) {
-                                    var currentValue = statusSelect.val();
-                                    // Only set if different to avoid unnecessary changes
-                                    if (currentValue !== response.data.post_status) {
-                                        statusSelect.val(response.data.post_status);
-                                        statusSelect.trigger('change');
+                                var setStatusSafely = function(attempts) {
+                                    attempts = attempts || 0;
+                                    if (attempts > 20) return;
+                                    
+                                    var statusSelect = $('select[name=\"_status\"]');
+                                    if (statusSelect.length > 0) {
+                                        var currentValue = statusSelect.val();
+                                        // For sermon, always correct if wrong
+                                        if (post_type === 'sermon' || currentValue !== response.data.post_status) {
+                                            if (currentValue !== response.data.post_status) {
+                                                statusSelect.val(response.data.post_status);
+                                                statusSelect.trigger('change');
+                                            }
+                                        }
+                                    } else {
+                                        setTimeout(function() { setStatusSafely(attempts + 1); }, 50);
                                     }
-                                }
+                                };
+                                setStatusSafely(0);
                             }
                         }
                     });
-                }, 100);
+                }, delay);
             });
             
             // Also populate when Quick Edit form is shown
