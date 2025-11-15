@@ -165,9 +165,8 @@ class DW_Church_Meta_Boxes {
                                 $pdf_filename = $pdf_path ? basename($pdf_path) : __('PDF 파일', 'dw-church');
                             }
                         ?>
-                            <div style="display:flex;align-items:center;gap:8px;padding:8px;background:#f0f0f1;border-radius:4px;">
-                                <span style="color:#2271b1;font-weight:500;"><?php echo esc_html($pdf_filename); ?></span>
-                                <a href="<?php echo esc_url($pdf_url); ?>" target="_blank" style="text-decoration:none;color:#2271b1;"><?php _e('보기', 'dw-church'); ?></a>
+                            <div style="padding:8px;background:#f0f0f1;border-radius:4px;">
+                                <a href="<?php echo esc_url($pdf_url); ?>" target="_blank" style="color:#2271b1;font-weight:500;text-decoration:none;"><?php echo esc_html($pdf_filename); ?></a>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -1587,9 +1586,8 @@ class DW_Church_Meta_Boxes {
                     $('#dw_bulletin_pdf').val(attachment.id);
                     var filename = attachment.filename || attachment.title || 'PDF 파일';
                     $('#bulletin_pdf_preview').html(
-                        '<div style=\"display:flex;align-items:center;gap:8px;padding:8px;background:#f0f0f1;border-radius:4px;\">' +
-                        '<span style=\"color:#2271b1;font-weight:500;\">' + filename + '</span>' +
-                        '<a href=\"' + attachment.url + '\" target=\"_blank\" style=\"text-decoration:none;color:#2271b1;\">보기</a>' +
+                        '<div style=\"padding:8px;background:#f0f0f1;border-radius:4px;\">' +
+                        '<a href=\"' + attachment.url + '\" target=\"_blank\" style=\"color:#2271b1;font-weight:500;text-decoration:none;\">' + filename + '</a>' +
                         '</div>'
                     );
                 });
