@@ -854,7 +854,8 @@ class DW_Church_Meta_Boxes {
                             <?php _e('이미지만 사용', 'dw-church'); ?>
                         </label>
                         <br>
-                        <small style="color:#666;"><?php _e('체크하면 DW Event Grid에서 텍스트 오버레이(제목, 날짜 등)가 표시되지 않습니다.', 'dw-church'); ?></small>
+                        <small style="color:#666;"><?php _e('체크하면 DW Event Grid에서 텍스트 오버레이(제목, 날짜 등)가 표시되지 않습니다.', 'dw-church'); ?><br>
+                        <?php _e('이미지만 사용할 경우 이미지는 1080x1350을 권장합니다.', 'dw-church'); ?></small>
                     </p>
                 </td>
             </tr>
