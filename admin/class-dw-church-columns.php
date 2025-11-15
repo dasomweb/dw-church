@@ -148,7 +148,17 @@ class DW_Church_Columns {
                 if ($pdf) {
                     $url = wp_get_attachment_url($pdf);
                     if ($url) {
-                        echo '<a href="' . esc_url($url) . '" target="_blank">' . __('보기', 'dw-church') . '</a>';
+                        // Get PDF filename with extension
+                        $pdf_path = get_attached_file($pdf);
+                        if ($pdf_path) {
+                            $pdf_filename = basename($pdf_path);
+                        } else {
+                            $pdf_filename = get_the_title($pdf);
+                            if (empty($pdf_filename)) {
+                                $pdf_filename = __('PDF 파일', 'dw-church');
+                            }
+                        }
+                        echo '<a href="' . esc_url($url) . '" target="_blank" style="color:#2271b1;text-decoration:none;">' . esc_html($pdf_filename) . '</a>';
                     } else {
                         echo '—';
                     }

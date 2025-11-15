@@ -159,10 +159,14 @@ class DW_Church_Meta_Boxes {
                     <div id="bulletin_pdf_preview" style="margin-top:8px;">
                         <?php if ($pdf): 
                             $pdf_url = wp_get_attachment_url($pdf);
-                            $pdf_filename = get_the_title($pdf);
-                            if (empty($pdf_filename)) {
-                                $pdf_path = get_attached_file($pdf);
-                                $pdf_filename = $pdf_path ? basename($pdf_path) : __('PDF 파일', 'dw-church');
+                            $pdf_path = get_attached_file($pdf);
+                            if ($pdf_path) {
+                                $pdf_filename = basename($pdf_path);
+                            } else {
+                                $pdf_filename = get_the_title($pdf);
+                                if (empty($pdf_filename)) {
+                                    $pdf_filename = __('PDF 파일', 'dw-church');
+                                }
                             }
                         ?>
                             <div style="padding:8px;background:#f0f0f1;border-radius:4px;">
