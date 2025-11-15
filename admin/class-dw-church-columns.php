@@ -775,6 +775,25 @@ class DW_Church_Columns {
                                     $('select[name=\"post_author\"]').val(ajaxData.post_author);
                                 }
                                 
+                                // Fill post status
+                                if (ajaxData.post_status) {
+                                    var statusSelect = $('select[name=\"_status\"]');
+                                    if (statusSelect.length > 0) {
+                                        statusSelect.val(ajaxData.post_status);
+                                    } else {
+                                        // If status select doesn't exist yet, wait for it
+                                        var setStatus = function() {
+                                            var statusSelect = $('select[name=\"_status\"]');
+                                            if (statusSelect.length > 0) {
+                                                statusSelect.val(ajaxData.post_status);
+                                            } else {
+                                                setTimeout(setStatus, 50);
+                                            }
+                                        };
+                                        setTimeout(setStatus, 50);
+                                    }
+                                }
+                                
                                 // Fill our custom fields
                                 if (post_type === 'bulletin' && ajaxData.dw_bulletin_date) {
                                     $('input[name=\"dw_bulletin_date\"]').val(ajaxData.dw_bulletin_date);
@@ -872,6 +891,7 @@ function dasom_church_get_quick_edit_data_callback() {
     if ($post) {
         $data['post_date'] = $post->post_date;
         $data['post_author'] = $post->post_author;
+        $data['post_status'] = $post->post_status;
     }
     
     switch ($post_type) {
