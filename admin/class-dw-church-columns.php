@@ -877,6 +877,15 @@ class DW_Church_Columns {
                                         console.log('[Quick Edit] Target option found:', targetOption.length > 0);
                                         
                                         if (targetOption.length > 0) {
+                                            // Get native DOM element AFTER ensurePublishedOption
+                                            var selectElement = statusSelect[0];
+                                            
+                                            // Log all options with their indices for debugging
+                                            console.log('[Quick Edit] All options in select:');
+                                            for (var i = 0; i < selectElement.options.length; i++) {
+                                                console.log('[Quick Edit]   Index ' + i + ': value=\"' + selectElement.options[i].value + '\", text=\"' + selectElement.options[i].text + '\"');
+                                            }
+                                            
                                             // Remove or unselect the -1 (No Change) option first
                                             var noChangeOption = statusSelect.find('option[value=\"-1\"]');
                                             if (noChangeOption.length > 0) {
@@ -887,17 +896,18 @@ class DW_Church_Columns {
                                             // Unselect all options
                                             statusSelect.find('option').prop('selected', false);
                                             
-                                            // Use native DOM API to set selectedIndex for more reliable selection
-                                            var selectElement = statusSelect[0];
+                                            // Find target option index using native DOM
                                             var targetIndex = -1;
                                             for (var i = 0; i < selectElement.options.length; i++) {
                                                 if (selectElement.options[i].value === targetStatus) {
                                                     targetIndex = i;
+                                                    console.log('[Quick Edit] Found target option at index:', i);
                                                     break;
                                                 }
                                             }
                                             
                                             if (targetIndex >= 0) {
+                                                // Set selectedIndex using native DOM API
                                                 selectElement.selectedIndex = targetIndex;
                                                 console.log('[Quick Edit] Target option selected using selectedIndex:', targetIndex);
                                                 
@@ -931,6 +941,18 @@ class DW_Church_Columns {
                                                 console.log('[Quick Edit] Final selected options:', finalOptions.join(', '));
                                             } else {
                                                 console.error('[Quick Edit] Target option index not found for value:', targetStatus);
+                                                console.error('[Quick Edit] Available option values:', Array.from(selectElement.options).map(function(opt) { return opt.value; }).join(', '));
+                                                
+                                                // Fallback: try using jQuery .val() directly
+                                                console.log('[Quick Edit] Trying fallback: jQuery .val() method');
+                                                statusSelect.val(targetStatus);
+                                                var fallbackValue = statusSelect.val();
+                                                console.log('[Quick Edit] Fallback value:', fallbackValue);
+                                                
+                                                if (fallbackValue === targetStatus) {
+                                                    statusSelect.trigger('change');
+                                                    console.log('[Quick Edit] Fallback successful');
+                                                }
                                             }
                                         } else {
                                             console.error('[Quick Edit] Target option not found for value:', targetStatus);
