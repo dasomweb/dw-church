@@ -1116,9 +1116,16 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             $event_url_target = get_post_meta(get_the_ID(), 'dw_event_url_target', true);
             $event_url_target = $event_url_target === '_blank' ? '_blank' : '_self';
             
+            // Determine link URL: use event_url if available, otherwise use post permalink
+            $link_url = $event_url ? $event_url : get_permalink();
+            
             echo '<div class="dw-event-grid-item">';
             
             if ($image_url) {
+                // Wrap image in link if event_url exists
+                if ($event_url) {
+                    echo '<a href="' . esc_url($event_url) . '" target="' . esc_attr($event_url_target) . '" class="dw-event-grid-link" style="display:block;text-decoration:none;color:inherit;">';
+                }
                 echo '<div class="dw-event-grid-image" style="position:relative;background-image:url(' . esc_url($image_url) . ');background-size:cover;background-position:center center;width:100%;' . esc_attr($height_style) . '">';
                 
                 // Overlay rendering based on settings
@@ -1163,10 +1170,17 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     echo '<div class="dw-event-grid-department">' . esc_html($event_department) . '</div>';
                 }
                 
-                // Title (linked to post) - Allow simple HTML
+                // Title - Allow simple HTML
+                // If event_url exists, title is already inside the card link, so don't add another link
                 $title = get_the_title();
                 $title_allowed = wp_kses($title, $allowed_html);
-                echo '<h3 class="dw-event-grid-title"><a href="' . esc_url(get_permalink()) . '" style="color:inherit;text-decoration:none;">' . $title_allowed . '</a></h3>';
+                if ($event_url) {
+                    // Title is inside the card link, so just display it
+                    echo '<h3 class="dw-event-grid-title">' . $title_allowed . '</h3>';
+                } else {
+                    // No event URL, link to post
+                    echo '<h3 class="dw-event-grid-title"><a href="' . esc_url(get_permalink()) . '" style="color:inherit;text-decoration:none;">' . $title_allowed . '</a></h3>';
+                }
                 
                 // Date/Time - Allow simple HTML
                 if ($event_datetime) {
@@ -1174,15 +1188,20 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     echo '<div class="dw-event-grid-datetime">' . $datetime_allowed . '</div>';
                 }
                 
-                // Read More button
+                // Read More button - only show if event_url exists and card is not already linked
+                // If card is already linked, button is optional (can be hidden via CSS if needed)
                 if ($event_url) {
-                    echo '<a href="' . esc_url($event_url) . '" target="' . esc_attr($event_url_target) . '" class="dw-event-grid-button" style="display:inline-block;text-decoration:none;transition:all 0.3s ease;">' . esc_html($button_text) . '</a>';
+                    echo '<div class="dw-event-grid-button" style="display:inline-block;pointer-events:none;">' . esc_html($button_text) . '</div>';
                 }
                 
                 echo '</div>';
                 echo '</div>';
                 
                 echo '</div>';
+                // Close the card link if event_url exists
+                if ($event_url) {
+                    echo '</a>';
+                }
             }
             
             echo '</div>';
@@ -1549,6 +1568,18 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             }
             .dw-event-grid-title a:hover {
                 opacity: 0.8;
+            }
+            .dw-event-grid-link {
+                display: block;
+                text-decoration: none;
+                color: inherit;
+                transition: opacity 0.3s ease;
+            }
+            .dw-event-grid-link:hover {
+                opacity: 0.9;
+            }
+            .dw-event-grid-link .dw-event-grid-image {
+                cursor: pointer;
             }
             .dw-event-grid-datetime {
                 /* Color and typography controlled by Elementor Typography control */
