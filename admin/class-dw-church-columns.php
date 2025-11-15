@@ -691,31 +691,100 @@ class DW_Church_Columns {
             function getPostDataFromRow(row) {
                 var post_id = row.attr('id').replace('post-', '');
                 var data = { post_id: post_id };
+                var post_type = dasomChurchQuickEdit.postType;
                 
-                // Extract data from table cells
-                row.find('td').each(function(index) {
-                    var cell = $(this);
-                    var columnClass = cell.attr('class');
-                    
-                    if (columnClass) {
-                        if (columnClass.includes('bulletin_date')) {
-                            data.dw_bulletin_date = cell.text().trim();
-                        } else if (columnClass.includes('sermon_date')) {
-                            data.dw_sermon_date = cell.text().trim();
-                        } else if (columnClass.includes('column_author')) {
-                            data.column_author = cell.text().trim();
-                        } else if (columnClass.includes('column_topic')) {
-                            data.column_topic = cell.text().trim();
+                // Only extract custom field data for post types that need it
+                // For sermon, we don't need custom fields - use WordPress default Quick Edit
+                if (post_type !== 'sermon') {
+                    // Extract data from table cells
+                    row.find('td').each(function(index) {
+                        var cell = $(this);
+                        var columnClass = cell.attr('class');
+                        
+                        if (columnClass) {
+                            if (columnClass.includes('bulletin_date')) {
+                                data.dw_bulletin_date = cell.text().trim();
+                            } else if (columnClass.includes('column_author')) {
+                                data.column_author = cell.text().trim();
+                            } else if (columnClass.includes('column_topic')) {
+                                data.column_topic = cell.text().trim();
+                            }
                         }
-                    }
-                });
+                    });
+                }
                 
                 return data;
             }
             
             // Function to populate Quick Edit fields
             function populateQuickEditFields(post_id, post_type) {
-                // Try to get data from stored post data first
+                // For sermon, use WordPress default Quick Edit - only handle status and categories
+                if (post_type === 'sermon') {
+                    // Get status and categories via AJAX
+                    $.ajax({
+                        url: dasomChurchQuickEdit.ajaxUrl,
+                        type: 'POST',
+                        data: {
+                            action: 'dasom_church_get_quick_edit_data',
+                            post_id: post_id,
+                            post_type: post_type,
+                            nonce: dasomChurchQuickEdit.nonce
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                var ajaxData = response.data;
+                                
+                                setTimeout(function() {
+                                    // Fill post status - wait for WordPress default Quick Edit to finish
+                                    if (ajaxData.post_status) {
+                                        var setStatus = function(attempts) {
+                                            attempts = attempts || 0;
+                                            if (attempts > 40) return; // Max 40 attempts (2 seconds)
+                                            
+                                            var statusSelect = $('select[name=\"_status\"]');
+                                            if (statusSelect.length > 0) {
+                                                // Ensure Published option exists
+                                                var hasPublished = statusSelect.find('option[value=\"publish\"]').length > 0;
+                                                if (!hasPublished) {
+                                                    var publishOption = $('<option></option>').attr('value', 'publish').text('Published');
+                                                    statusSelect.append(publishOption);
+                                                }
+                                                
+                                                var currentValue = statusSelect.val();
+                                                if (currentValue !== ajaxData.post_status) {
+                                                    statusSelect.val(ajaxData.post_status);
+                                                    statusSelect.trigger('change');
+                                                }
+                                            } else {
+                                                setTimeout(function() { setStatus(attempts + 1); }, 50);
+                                            }
+                                        };
+                                        setTimeout(function() { setStatus(0); }, 500);
+                                    }
+                                    
+                                    // Check sermon categories
+                                    if (ajaxData.sermon_categories && ajaxData.sermon_categories.length > 0) {
+                                        var checkCategories = function() {
+                                            var categoryCheckboxes = $('input[name=\"tax_input[sermon_category][]\"]');
+                                            if (categoryCheckboxes.length > 0) {
+                                                categoryCheckboxes.prop('checked', false);
+                                                ajaxData.sermon_categories.forEach(function(categoryId) {
+                                                    $('input[name=\"tax_input[sermon_category][]\"][value=\"' + categoryId + '\"]').prop('checked', true);
+                                                });
+                                            } else {
+                                                setTimeout(checkCategories, 50);
+                                            }
+                                        };
+                                        checkCategories();
+                                    }
+                                }, 200);
+                            }
+                        }
+                    });
+                    return; // Don't process custom fields for sermon
+                }
+                
+                // For other post types, handle custom fields
                 var data = postData[post_id];
                 
                 if (data) {
@@ -727,12 +796,11 @@ class DW_Church_Columns {
                         
                         // Fill WordPress default date fields
                         if (postDate && postDate !== '—') {
-                            // Parse the date and fill the WordPress date fields
                             var dateMatch = postDate.match(/(\d{4})-(\d{2})-(\d{2})/);
                             if (dateMatch) {
-                                $('input[name=\"aa\"]').val(dateMatch[1]); // Year
-                                $('select[name=\"mm\"]').val(dateMatch[2]); // Month
-                                $('input[name=\"jj\"]').val(dateMatch[3]); // Day
+                                $('input[name=\"aa\"]').val(dateMatch[1]);
+                                $('select[name=\"mm\"]').val(dateMatch[2]);
+                                $('input[name=\"jj\"]').val(dateMatch[3]);
                             }
                         }
                         
@@ -744,21 +812,9 @@ class DW_Church_Columns {
                         // Fill our custom fields
                         if (post_type === 'bulletin' && data.dw_bulletin_date && data.dw_bulletin_date !== '—') {
                             var bulletinDate = data.dw_bulletin_date;
-                            // Only set if it's already in YYYY-MM-DD format
                             if (bulletinDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
                                 $('input[name=\"dw_bulletin_date\"]').val(bulletinDate);
                             }
-                        }
-                        
-                        if (post_type === 'sermon') {
-                            if (data.dw_sermon_date && data.dw_sermon_date !== '—') {
-                                var sermonDate = data.dw_sermon_date;
-                                // Only set if it's already in YYYY-MM-DD format
-                                if (sermonDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                                    $('input[name=\"dw_sermon_date\"]').val(sermonDate);
-                                }
-                            }
-                            // Note: Categories will be populated via AJAX
                         }
                         
                         if (post_type === 'column') {
@@ -772,7 +828,7 @@ class DW_Church_Columns {
                     }, 100);
                 }
                 
-                // Also try AJAX as backup
+                // Also try AJAX as backup for other post types
                 $.ajax({
                     url: dasomChurchQuickEdit.ajaxUrl,
                     type: 'POST',
@@ -791,9 +847,9 @@ class DW_Church_Columns {
                                 if (ajaxData.post_date) {
                                     var dateMatch = ajaxData.post_date.match(/(\d{4})-(\d{2})-(\d{2})/);
                                     if (dateMatch) {
-                                        $('input[name=\"aa\"]').val(dateMatch[1]); // Year
-                                        $('select[name=\"mm\"]').val(dateMatch[2]); // Month
-                                        $('input[name=\"jj\"]').val(dateMatch[3]); // Day
+                                        $('input[name=\"aa\"]').val(dateMatch[1]);
+                                        $('select[name=\"mm\"]').val(dateMatch[2]);
+                                        $('input[name=\"jj\"]').val(dateMatch[3]);
                                     }
                                 }
                                 
@@ -801,68 +857,29 @@ class DW_Church_Columns {
                                     $('select[name=\"post_author\"]').val(ajaxData.post_author);
                                 }
                                 
-                                // Fill post status - wait for WordPress default Quick Edit to finish
-                                // For sermon post type, we need to be more aggressive
+                                // Fill post status
                                 if (ajaxData.post_status) {
                                     var setStatus = function(attempts) {
                                         attempts = attempts || 0;
-                                        if (attempts > 40) return; // Max 40 attempts (2 seconds)
+                                        if (attempts > 30) return;
                                         
                                         var statusSelect = $('select[name=\"_status\"]');
                                         if (statusSelect.length > 0) {
-                                            // Ensure Published option exists
-                                            var hasPublished = statusSelect.find('option[value=\"publish\"]').length > 0;
-                                            if (!hasPublished) {
-                                                var publishOption = $('<option></option>').attr('value', 'publish').text('Published');
-                                                statusSelect.append(publishOption);
-                                            }
-                                            
                                             var currentValue = statusSelect.val();
-                                            // For sermon, always set if different (WordPress default may not work correctly)
-                                            if (post_type === 'sermon' || currentValue !== ajaxData.post_status) {
-                                                if (currentValue !== ajaxData.post_status) {
-                                                    statusSelect.val(ajaxData.post_status);
-                                                    // Trigger change event to ensure WordPress recognizes the change
-                                                    statusSelect.trigger('change');
-                                                }
+                                            if (currentValue !== ajaxData.post_status) {
+                                                statusSelect.val(ajaxData.post_status);
+                                                statusSelect.trigger('change');
                                             }
                                         } else {
-                                            // Retry if status select doesn't exist yet
                                             setTimeout(function() { setStatus(attempts + 1); }, 50);
                                         }
                                     };
-                                    // Wait longer for sermon to ensure WordPress default is done
-                                    var delay = (post_type === 'sermon') ? 500 : 300;
-                                    setTimeout(function() { setStatus(0); }, delay);
+                                    setTimeout(function() { setStatus(0); }, 300);
                                 }
                                 
                                 // Fill our custom fields
                                 if (post_type === 'bulletin' && ajaxData.dw_bulletin_date) {
                                     $('input[name=\"dw_bulletin_date\"]').val(ajaxData.dw_bulletin_date);
-                                }
-                                
-                                if (post_type === 'sermon') {
-                                    if (ajaxData.dw_sermon_date) {
-                                        $('input[name=\"dw_sermon_date\"]').val(ajaxData.dw_sermon_date);
-                                    }
-                                    // Check sermon categories - wait for checkboxes to be available
-                                    if (ajaxData.sermon_categories && ajaxData.sermon_categories.length > 0) {
-                                        var checkCategories = function() {
-                                            var categoryCheckboxes = $('input[name=\"tax_input[sermon_category][]\"]');
-                                            if (categoryCheckboxes.length > 0) {
-                                                // Uncheck all categories first
-                                                categoryCheckboxes.prop('checked', false);
-                                                // Check selected categories
-                                                ajaxData.sermon_categories.forEach(function(categoryId) {
-                                                    $('input[name=\"tax_input[sermon_category][]\"][value=\"' + categoryId + '\"]').prop('checked', true);
-                                                });
-                                            } else {
-                                                // Retry after a short delay if checkboxes not yet loaded
-                                                setTimeout(checkCategories, 50);
-                                            }
-                                        };
-                                        checkCategories();
-                                    }
                                 }
                                 
                                 if (post_type === 'column') {
