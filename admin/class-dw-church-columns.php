@@ -724,12 +724,15 @@ class DW_Church_Columns {
                             }
                         }
                         
-                        if (post_type === 'sermon' && data.dw_sermon_date && data.dw_sermon_date !== '—') {
-                            var sermonDate = data.dw_sermon_date;
-                            // Only set if it's already in YYYY-MM-DD format
-                            if (sermonDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                                $('input[name=\"dw_sermon_date\"]').val(sermonDate);
+                        if (post_type === 'sermon') {
+                            if (data.dw_sermon_date && data.dw_sermon_date !== '—') {
+                                var sermonDate = data.dw_sermon_date;
+                                // Only set if it's already in YYYY-MM-DD format
+                                if (sermonDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                                    $('input[name=\"dw_sermon_date\"]').val(sermonDate);
+                                }
                             }
+                            // Note: Categories will be populated via AJAX
                         }
                         
                         if (post_type === 'column') {
@@ -777,8 +780,28 @@ class DW_Church_Columns {
                                     $('input[name=\"dw_bulletin_date\"]').val(ajaxData.dw_bulletin_date);
                                 }
                                 
-                                if (post_type === 'sermon' && ajaxData.dw_sermon_date) {
-                                    $('input[name=\"dw_sermon_date\"]').val(ajaxData.dw_sermon_date);
+                                if (post_type === 'sermon') {
+                                    if (ajaxData.dw_sermon_date) {
+                                        $('input[name=\"dw_sermon_date\"]').val(ajaxData.dw_sermon_date);
+                                    }
+                                    // Check sermon categories - wait for checkboxes to be available
+                                    if (ajaxData.sermon_categories && ajaxData.sermon_categories.length > 0) {
+                                        var checkCategories = function() {
+                                            var categoryCheckboxes = $('input[name=\"tax_input[sermon_category][]\"]');
+                                            if (categoryCheckboxes.length > 0) {
+                                                // Uncheck all categories first
+                                                categoryCheckboxes.prop('checked', false);
+                                                // Check selected categories
+                                                ajaxData.sermon_categories.forEach(function(categoryId) {
+                                                    $('input[name=\"tax_input[sermon_category][]\"][value=\"' + categoryId + '\"]').prop('checked', true);
+                                                });
+                                            } else {
+                                                // Retry after a short delay if checkboxes not yet loaded
+                                                setTimeout(checkCategories, 50);
+                                            }
+                                        };
+                                        checkCategories();
+                                    }
                                 }
                                 
                                 if (post_type === 'column') {
@@ -881,6 +904,11 @@ function dasom_church_get_quick_edit_data_callback() {
                         $data['dw_sermon_date'] = date('Y-m-d', $timestamp);
                     }
                 }
+            }
+            // Get sermon categories
+            $categories = wp_get_post_terms($post_id, 'sermon_category', array('fields' => 'ids'));
+            if (!is_wp_error($categories) && !empty($categories)) {
+                $data['sermon_categories'] = $categories;
             }
             break;
             
