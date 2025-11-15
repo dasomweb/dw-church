@@ -877,8 +877,15 @@ class DW_Church_Columns {
                                         console.log('[Quick Edit] Target option found:', targetOption.length > 0);
                                         
                                         if (targetOption.length > 0) {
-                                            // Get native DOM element AFTER ensurePublishedOption
+                                            // IMPORTANT: Get native DOM element AFTER ensurePublishedOption and AFTER any DOM updates
+                                            // Re-query the select element to ensure we have the latest DOM state
+                                            statusSelect = $('select[name=\"_status\"]');
                                             var selectElement = statusSelect[0];
+                                            
+                                            if (!selectElement) {
+                                                console.error('[Quick Edit] Select element not found after re-query');
+                                                return;
+                                            }
                                             
                                             // Log all options with their indices for debugging
                                             console.log('[Quick Edit] All options in select:');
