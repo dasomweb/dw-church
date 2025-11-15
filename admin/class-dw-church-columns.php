@@ -1134,19 +1134,26 @@ class DW_Church_Columns {
         return "
         (function($) {
             $(document).ready(function() {
-                // Handle menu order input change
-                $(document).on('blur', '.banner-menu-order-input', function() {
+                var saveTimeout = {};
+                
+                // Initialize original values
+                $('.banner-menu-order-input').each(function() {
+                    $(this).data('original-value', $(this).val());
+                });
+                
+                // Handle menu order input change - save immediately
+                $(document).on('input change', '.banner-menu-order-input', function() {
                     var input = $(this);
                     var postId = input.data('post-id');
                     var newOrder = parseInt(input.val()) || 0;
                     var originalValue = input.data('original-value');
                     
-                    // If value hasn't changed, do nothing
-                    if (originalValue === undefined) {
-                        input.data('original-value', input.val());
-                        originalValue = input.val();
+                    // Clear any existing timeout for this input
+                    if (saveTimeout[postId]) {
+                        clearTimeout(saveTimeout[postId]);
                     }
                     
+                    // If value hasn't changed, do nothing
                     if (newOrder == originalValue) {
                         return;
                     }
@@ -1154,6 +1161,7 @@ class DW_Church_Columns {
                     // Disable input while saving
                     input.prop('disabled', true);
                     
+                    // Save immediately (no delay)
                     $.ajax({
                         url: dasomChurchBannerOrder.ajaxUrl,
                         type: 'POST',
@@ -1167,8 +1175,12 @@ class DW_Church_Columns {
                             if (response.success) {
                                 // Update original value
                                 input.data('original-value', newOrder);
-                                // Reload page to reflect changes
-                                location.reload();
+                                input.prop('disabled', false);
+                                // Show success indicator briefly
+                                input.css('background-color', '#d4edda');
+                                setTimeout(function() {
+                                    input.css('background-color', '');
+                                }, 500);
                             } else {
                                 alert('순서 변경 실패: ' + (response.data.message || '알 수 없는 오류'));
                                 input.val(originalValue);
@@ -1181,13 +1193,6 @@ class DW_Church_Columns {
                             input.prop('disabled', false);
                         }
                     });
-                });
-                
-                // Handle Enter key press
-                $(document).on('keypress', '.banner-menu-order-input', function(e) {
-                    if (e.which === 13) { // Enter key
-                        $(this).blur();
-                    }
                 });
             });
         })(jQuery);
