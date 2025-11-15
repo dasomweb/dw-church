@@ -697,14 +697,26 @@ class DW_Church_Columns {
             // Function to ensure Published option exists in status dropdown
             function ensurePublishedOption() {
                 var statusSelect = $('select[name=\"_status\"]');
+                console.log('[Quick Edit] ensurePublishedOption called - statusSelect found:', statusSelect.length > 0);
                 if (statusSelect.length > 0) {
+                    // Log all existing options
+                    var allOptions = [];
+                    statusSelect.find('option').each(function() {
+                        allOptions.push($(this).val() + ':' + $(this).text());
+                    });
+                    console.log('[Quick Edit] Current status options:', allOptions.join(', '));
+                    
                     var hasPublished = statusSelect.find('option[value=\"publish\"]').length > 0;
+                    console.log('[Quick Edit] Has Published option:', hasPublished);
                     if (!hasPublished) {
                         // Add Published option at the beginning
                         var publishOption = $('<option></option>').attr('value', 'publish').text('Published');
                         statusSelect.prepend(publishOption);
+                        console.log('[Quick Edit] Published option added');
                         return true;
                     }
+                } else {
+                    console.warn('[Quick Edit] Status select not found in ensurePublishedOption');
                 }
                 return false;
             }
@@ -822,24 +834,66 @@ class DW_Church_Columns {
                                 
                                 // Fill post status
                                 if (ajaxData.post_status) {
-                                    console.log('[Quick Edit] Filling status:', ajaxData.post_status);
+                                    console.log('[Quick Edit] ===== STATUS FILLING START =====');
+                                    console.log('[Quick Edit] Target status from AJAX:', ajaxData.post_status);
                                     var statusSelect = $('select[name=\"_status\"]');
+                                    console.log('[Quick Edit] Status select found:', statusSelect.length > 0);
+                                    
                                     if (statusSelect.length > 0) {
+                                        // Log all options before ensuring Published
+                                        var optionsBefore = [];
+                                        statusSelect.find('option').each(function() {
+                                            var opt = $(this);
+                                            optionsBefore.push(opt.val() + ':' + opt.text() + (opt.prop('selected') ? '(selected)' : ''));
+                                        });
+                                        console.log('[Quick Edit] Options BEFORE ensurePublishedOption:', optionsBefore.join(', '));
+                                        
                                         // Ensure Published option exists
                                         ensurePublishedOption();
                                         
+                                        // Log all options after ensuring Published
+                                        var optionsAfter = [];
+                                        statusSelect.find('option').each(function() {
+                                            var opt = $(this);
+                                            optionsAfter.push(opt.val() + ':' + opt.text() + (opt.prop('selected') ? '(selected)' : ''));
+                                        });
+                                        console.log('[Quick Edit] Options AFTER ensurePublishedOption:', optionsAfter.join(', '));
+                                        
                                         var currentValue = statusSelect.val();
-                                        console.log('[Quick Edit] Status current value:', currentValue, 'target:', ajaxData.post_status);
+                                        console.log('[Quick Edit] Current status value:', currentValue);
+                                        console.log('[Quick Edit] Target status value:', ajaxData.post_status);
+                                        console.log('[Quick Edit] Values match?', currentValue === ajaxData.post_status);
+                                        
                                         if (currentValue !== ajaxData.post_status) {
+                                            console.log('[Quick Edit] Setting status to:', ajaxData.post_status);
                                             statusSelect.val(ajaxData.post_status);
+                                            var afterSet = statusSelect.val();
+                                            console.log('[Quick Edit] Status after setting:', afterSet);
+                                            console.log('[Quick Edit] Status set successfully?', afterSet === ajaxData.post_status);
+                                            
                                             statusSelect.trigger('change');
-                                            console.log('[Quick Edit] Status field set to:', statusSelect.val());
+                                            var afterChange = statusSelect.val();
+                                            console.log('[Quick Edit] Status after trigger change:', afterChange);
+                                        } else {
+                                            console.log('[Quick Edit] Status already matches, no change needed');
                                         }
+                                        
+                                        // Final check
+                                        var finalValue = statusSelect.val();
+                                        var finalOptions = [];
+                                        statusSelect.find('option').each(function() {
+                                            if ($(this).prop('selected')) {
+                                                finalOptions.push($(this).val() + ':' + $(this).text());
+                                            }
+                                        });
+                                        console.log('[Quick Edit] Final status value:', finalValue);
+                                        console.log('[Quick Edit] Final selected options:', finalOptions.join(', '));
+                                        console.log('[Quick Edit] ===== STATUS FILLING END =====');
                                     } else {
-                                        console.warn('[Quick Edit] Status select not found');
+                                        console.error('[Quick Edit] Status select not found!');
                                     }
                                 } else {
-                                    console.warn('[Quick Edit] No post_status in ajaxData');
+                                    console.error('[Quick Edit] No post_status in ajaxData!', ajaxData);
                                 }
                                 
                                 // Fill custom fields
@@ -982,6 +1036,10 @@ function dasom_church_get_quick_edit_data_callback() {
         $data['post_author'] = $post->post_author;
         $data['post_status'] = $post->post_status;
         error_log('[Quick Edit PHP] Post data retrieved: ' . print_r($data, true));
+        error_log('[Quick Edit PHP] Post status value: ' . $post->post_status);
+        error_log('[Quick Edit PHP] Post status type: ' . gettype($post->post_status));
+        error_log('[Quick Edit PHP] Post status empty check: ' . (empty($post->post_status) ? 'EMPTY' : 'NOT EMPTY'));
+        error_log('[Quick Edit PHP] Post status === publish: ' . ($post->post_status === 'publish' ? 'YES' : 'NO'));
     } else {
         error_log('[Quick Edit PHP] Post not found for post_id: ' . $post_id);
     }
