@@ -498,13 +498,6 @@ class DW_Church_Meta_Boxes {
         $content_padding_left = get_post_meta($post->ID, 'dw_banner_content_padding_left', true);
         $content_padding_left = $content_padding_left ? $content_padding_left : '40';
         ?>
-        <!-- Debug: Meta box is rendering -->
-        <div style="background:#e7f3ff;padding:10px;margin-bottom:15px;border:2px solid #135e96;border-radius:4px;">
-            <p style="margin:0;font-weight:bold;color:#135e96;">
-                🔍 DEBUG: 배너 메타박스가 로드되었습니다! Post ID: <?php echo $post->ID; ?>
-            </p>
-        </div>
-        
         <div style="background:#f9f9f9;padding:15px;margin-bottom:20px;border:1px solid #ddd;border-radius:4px;">
             <p style="margin:0;font-size:13px;color:#666;">
                 <strong><?php _e('배너 이미지:', 'dw-church'); ?></strong><br>
