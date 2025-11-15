@@ -795,23 +795,28 @@ class DW_Church_Columns {
                                     $('select[name=\"post_author\"]').val(ajaxData.post_author);
                                 }
                                 
-                                // Fill post status
+                                // Fill post status - wait for WordPress default Quick Edit to finish
                                 if (ajaxData.post_status) {
-                                    var statusSelect = $('select[name=\"_status\"]');
-                                    if (statusSelect.length > 0) {
-                                        statusSelect.val(ajaxData.post_status);
-                                    } else {
-                                        // If status select doesn't exist yet, wait for it
-                                        var setStatus = function() {
-                                            var statusSelect = $('select[name=\"_status\"]');
-                                            if (statusSelect.length > 0) {
+                                    var setStatus = function(attempts) {
+                                        attempts = attempts || 0;
+                                        if (attempts > 20) return; // Max 20 attempts (1 second)
+                                        
+                                        var statusSelect = $('select[name=\"_status\"]');
+                                        if (statusSelect.length > 0) {
+                                            // Only set if current value is different (avoid overriding WordPress default)
+                                            var currentValue = statusSelect.val();
+                                            if (currentValue !== ajaxData.post_status) {
                                                 statusSelect.val(ajaxData.post_status);
-                                            } else {
-                                                setTimeout(setStatus, 50);
+                                                // Trigger change event to ensure WordPress recognizes the change
+                                                statusSelect.trigger('change');
                                             }
-                                        };
-                                        setTimeout(setStatus, 50);
-                                    }
+                                        } else {
+                                            // Retry if status select doesn't exist yet
+                                            setTimeout(function() { setStatus(attempts + 1); }, 50);
+                                        }
+                                    };
+                                    // Wait a bit longer to let WordPress default Quick Edit finish
+                                    setTimeout(function() { setStatus(0); }, 300);
                                 }
                                 
                                 // Fill our custom fields
@@ -868,6 +873,40 @@ class DW_Church_Columns {
                 
                 // Populate fields
                 populateQuickEditFields(post_id, post_type);
+            });
+            
+            // Also handle WordPress inlineEditPost event to ensure status is set correctly
+            $(document).on('inlineEditPost', function(e, post) {
+                // Wait for WordPress to finish setting up the Quick Edit form
+                setTimeout(function() {
+                    var post_id = post.ID;
+                    var post_type = dasomChurchQuickEdit.postType;
+                    
+                    // Get status from AJAX if available
+                    $.ajax({
+                        url: dasomChurchQuickEdit.ajaxUrl,
+                        type: 'POST',
+                        data: {
+                            action: 'dasom_church_get_quick_edit_data',
+                            post_id: post_id,
+                            post_type: post_type,
+                            nonce: dasomChurchQuickEdit.nonce
+                        },
+                        success: function(response) {
+                            if (response.success && response.data.post_status) {
+                                var statusSelect = $('select[name=\"_status\"]');
+                                if (statusSelect.length > 0) {
+                                    var currentValue = statusSelect.val();
+                                    // Only set if different to avoid unnecessary changes
+                                    if (currentValue !== response.data.post_status) {
+                                        statusSelect.val(response.data.post_status);
+                                        statusSelect.trigger('change');
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }, 100);
             });
             
             // Also populate when Quick Edit form is shown
