@@ -888,7 +888,7 @@ class DW_Church_Columns {
                                             }
                                             
                                             // Log all options with their indices for debugging
-                                            console.log('[Quick Edit] All options in select:');
+                                            console.log('[Quick Edit] All options in select (BEFORE adding publish):');
                                             for (var i = 0; i < selectElement.options.length; i++) {
                                                 console.log('[Quick Edit]   Index ' + i + ': value=\"' + selectElement.options[i].value + '\", text=\"' + selectElement.options[i].text + '\"');
                                             }
@@ -910,6 +910,24 @@ class DW_Church_Columns {
                                                     targetIndex = i;
                                                     console.log('[Quick Edit] Found target option at index:', i);
                                                     break;
+                                                }
+                                            }
+                                            
+                                            // If target option not found in native DOM, add it directly
+                                            if (targetIndex < 0 && targetStatus === 'publish') {
+                                                console.log('[Quick Edit] publish option not found in native DOM, adding it directly');
+                                                var publishOption = document.createElement('option');
+                                                publishOption.value = 'publish';
+                                                publishOption.text = 'Published';
+                                                // Insert at the beginning
+                                                selectElement.insertBefore(publishOption, selectElement.options[0]);
+                                                targetIndex = 0;
+                                                console.log('[Quick Edit] publish option added to native DOM at index 0');
+                                                
+                                                // Log all options after adding
+                                                console.log('[Quick Edit] All options in select (AFTER adding publish):');
+                                                for (var i = 0; i < selectElement.options.length; i++) {
+                                                    console.log('[Quick Edit]   Index ' + i + ': value=\"' + selectElement.options[i].value + '\", text=\"' + selectElement.options[i].text + '\"');
                                                 }
                                             }
                                             
