@@ -877,37 +877,61 @@ class DW_Church_Columns {
                                         console.log('[Quick Edit] Target option found:', targetOption.length > 0);
                                         
                                         if (targetOption.length > 0) {
-                                            // Unselect all first
-                                            statusSelect.find('option').prop('selected', false);
-                                            // Select target option
-                                            targetOption.prop('selected', true);
-                                            console.log('[Quick Edit] Target option selected directly');
-                                            
-                                            // Verify
-                                            var currentValue = statusSelect.val();
-                                            console.log('[Quick Edit] Current status value after direct select:', currentValue);
-                                            
-                                            if (currentValue !== targetStatus) {
-                                                // Fallback: use .val() method
-                                                statusSelect.val(targetStatus);
-                                                currentValue = statusSelect.val();
-                                                console.log('[Quick Edit] Status after .val() method:', currentValue);
+                                            // Remove or unselect the -1 (No Change) option first
+                                            var noChangeOption = statusSelect.find('option[value=\"-1\"]');
+                                            if (noChangeOption.length > 0) {
+                                                noChangeOption.prop('selected', false);
+                                                console.log('[Quick Edit] -1 (No Change) option unselected');
                                             }
                                             
-                                            statusSelect.trigger('change');
-                                            var afterChange = statusSelect.val();
-                                            console.log('[Quick Edit] Status after trigger change:', afterChange);
+                                            // Unselect all options
+                                            statusSelect.find('option').prop('selected', false);
                                             
-                                            // Final check
-                                            var finalValue = statusSelect.val();
-                                            var finalOptions = [];
-                                            statusSelect.find('option').each(function() {
-                                                if ($(this).prop('selected')) {
-                                                    finalOptions.push($(this).val() + ':' + $(this).text());
+                                            // Use native DOM API to set selectedIndex for more reliable selection
+                                            var selectElement = statusSelect[0];
+                                            var targetIndex = -1;
+                                            for (var i = 0; i < selectElement.options.length; i++) {
+                                                if (selectElement.options[i].value === targetStatus) {
+                                                    targetIndex = i;
+                                                    break;
                                                 }
-                                            });
-                                            console.log('[Quick Edit] Final status value:', finalValue);
-                                            console.log('[Quick Edit] Final selected options:', finalOptions.join(', '));
+                                            }
+                                            
+                                            if (targetIndex >= 0) {
+                                                selectElement.selectedIndex = targetIndex;
+                                                console.log('[Quick Edit] Target option selected using selectedIndex:', targetIndex);
+                                                
+                                                // Also set using jQuery for consistency
+                                                targetOption.prop('selected', true);
+                                                
+                                                // Verify using native API
+                                                var nativeValue = selectElement.value;
+                                                console.log('[Quick Edit] Native select value:', nativeValue);
+                                                
+                                                // Verify using jQuery
+                                                var jqueryValue = statusSelect.val();
+                                                console.log('[Quick Edit] jQuery select value:', jqueryValue);
+                                                
+                                                // Trigger change event
+                                                statusSelect.trigger('change');
+                                                
+                                                // Final verification
+                                                var finalNativeValue = selectElement.value;
+                                                var finalJqueryValue = statusSelect.val();
+                                                console.log('[Quick Edit] Final native value:', finalNativeValue);
+                                                console.log('[Quick Edit] Final jQuery value:', finalJqueryValue);
+                                                
+                                                // Log all selected options
+                                                var finalOptions = [];
+                                                statusSelect.find('option').each(function() {
+                                                    if ($(this).prop('selected')) {
+                                                        finalOptions.push($(this).val() + ':' + $(this).text());
+                                                    }
+                                                });
+                                                console.log('[Quick Edit] Final selected options:', finalOptions.join(', '));
+                                            } else {
+                                                console.error('[Quick Edit] Target option index not found for value:', targetStatus);
+                                            }
                                         } else {
                                             console.error('[Quick Edit] Target option not found for value:', targetStatus);
                                         }
