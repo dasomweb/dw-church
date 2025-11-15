@@ -1115,6 +1115,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             $event_url = get_post_meta(get_the_ID(), 'dw_event_url', true);
             $event_url_target = get_post_meta(get_the_ID(), 'dw_event_url_target', true);
             $event_url_target = $event_url_target === '_blank' ? '_blank' : '_self';
+            $image_only = get_post_meta(get_the_ID(), 'dw_event_image_only', true);
             
             echo '<div class="dw-event-grid-item">';
             
@@ -1123,9 +1124,11 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 echo '<a href="' . esc_url(get_permalink()) . '" class="dw-event-grid-link" style="display:block;text-decoration:none;color:inherit;">';
                 echo '<div class="dw-event-grid-image" style="position:relative;background-image:url(' . esc_url($image_url) . ');background-size:cover;background-position:center center;width:100%;' . esc_attr($height_style) . '">';
                 
-                // Overlay rendering based on settings
+                // Overlay rendering based on settings and image_only option
+                // If image_only is checked, don't show overlay regardless of settings
+                // Otherwise, follow the widget settings
                 $overlay_enable = $settings['overlay_enable'] ?? 'yes';
-                if ($overlay_enable === 'yes') {
+                if ($overlay_enable === 'yes' && $image_only !== '1') {
                     echo '<div class="dw-event-grid-overlay"></div>';
                 }
                 
@@ -1143,42 +1146,45 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                     $text_align_class = 'dw-text-align-center';
                 }
                 
-                // Use CSS class with data attributes for responsive positioning
-                echo '<div class="dw-event-grid-text dw-text-position-' . esc_attr($text_position) . '" ';
-                echo 'data-position-desktop="' . esc_attr($text_position) . '" ';
-                echo 'data-position-tablet="' . esc_attr($text_position_tablet) . '" ';
-                echo 'data-position-mobile="' . esc_attr($text_position_mobile) . '">';
-                echo '<div class="dw-event-grid-text-content ' . esc_attr($text_align_class) . '">';
-                
-                // Allowed HTML tags for title and datetime
-                $allowed_html = array(
-                    'br' => array(),
-                    'strong' => array(),
-                    'b' => array(),
-                    'em' => array(),
-                    'i' => array(),
-                    'span' => array('style' => array()),
-                );
-                
-                // Department
-                if ($event_department) {
-                    echo '<div class="dw-event-grid-department">' . esc_html($event_department) . '</div>';
+                // Only show text content if image_only is not checked
+                if ($image_only !== '1') {
+                    // Use CSS class with data attributes for responsive positioning
+                    echo '<div class="dw-event-grid-text dw-text-position-' . esc_attr($text_position) . '" ';
+                    echo 'data-position-desktop="' . esc_attr($text_position) . '" ';
+                    echo 'data-position-tablet="' . esc_attr($text_position_tablet) . '" ';
+                    echo 'data-position-mobile="' . esc_attr($text_position_mobile) . '">';
+                    echo '<div class="dw-event-grid-text-content ' . esc_attr($text_align_class) . '">';
+                    
+                    // Allowed HTML tags for title and datetime
+                    $allowed_html = array(
+                        'br' => array(),
+                        'strong' => array(),
+                        'b' => array(),
+                        'em' => array(),
+                        'i' => array(),
+                        'span' => array('style' => array()),
+                    );
+                    
+                    // Department
+                    if ($event_department) {
+                        echo '<div class="dw-event-grid-department">' . esc_html($event_department) . '</div>';
+                    }
+                    
+                    // Title - Allow simple HTML
+                    // Title is inside the card link, so just display it
+                    $title = get_the_title();
+                    $title_allowed = wp_kses($title, $allowed_html);
+                    echo '<h3 class="dw-event-grid-title">' . $title_allowed . '</h3>';
+                    
+                    // Date/Time - Allow simple HTML
+                    if ($event_datetime) {
+                        $datetime_allowed = wp_kses($event_datetime, $allowed_html);
+                        echo '<div class="dw-event-grid-datetime">' . $datetime_allowed . '</div>';
+                    }
+                    
+                    echo '</div>';
+                    echo '</div>';
                 }
-                
-                // Title - Allow simple HTML
-                // Title is inside the card link, so just display it
-                $title = get_the_title();
-                $title_allowed = wp_kses($title, $allowed_html);
-                echo '<h3 class="dw-event-grid-title">' . $title_allowed . '</h3>';
-                
-                // Date/Time - Allow simple HTML
-                if ($event_datetime) {
-                    $datetime_allowed = wp_kses($event_datetime, $allowed_html);
-                    echo '<div class="dw-event-grid-datetime">' . $datetime_allowed . '</div>';
-                }
-                
-                echo '</div>';
-                echo '</div>';
                 
                 echo '</div>';
                 // Close the card link

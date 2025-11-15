@@ -824,6 +824,7 @@ class DW_Church_Meta_Boxes {
         $event_description = get_post_meta($post->ID, 'dw_event_description', true);
         $youtube_url = get_post_meta($post->ID, 'dw_event_youtube_url', true);
         $thumb_id = get_post_meta($post->ID, 'dw_event_thumb_id', true);
+        $image_only = get_post_meta($post->ID, 'dw_event_image_only', true);
         ?>
         <div style="background:#f9f9f9;padding:15px;margin-bottom:20px;border:1px solid #ddd;border-radius:4px;">
             <p style="margin:0;font-size:13px;color:#666;">
@@ -847,6 +848,14 @@ class DW_Church_Meta_Boxes {
                             <img src="<?php echo esc_url(wp_get_attachment_url($bg_image)); ?>" style="max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;" />
                         <?php endif; ?>
                     </div>
+                    <p class="description" style="margin-top:10px;">
+                        <label>
+                            <input type="checkbox" id="dw_event_image_only" name="dw_event_image_only" value="1" <?php checked($image_only, '1'); ?> />
+                            <?php _e('이미지만 사용', 'dw-church'); ?>
+                        </label>
+                        <br>
+                        <small style="color:#666;"><?php _e('체크하면 DW Event Grid에서 텍스트 오버레이(제목, 날짜 등)가 표시되지 않습니다.', 'dw-church'); ?></small>
+                    </p>
                 </td>
             </tr>
             <tr>
@@ -1459,6 +1468,13 @@ class DW_Church_Meta_Boxes {
         // Save YouTube thumbnail ID
         if (isset($_POST['dw_event_thumb_id'])) {
             update_post_meta($post_id, 'dw_event_thumb_id', intval($_POST['dw_event_thumb_id']));
+        }
+        
+        // Save image only option
+        if (isset($_POST['dw_event_image_only'])) {
+            update_post_meta($post_id, 'dw_event_image_only', '1');
+        } else {
+            update_post_meta($post_id, 'dw_event_image_only', '0');
         }
         
         // Set featured image - prioritize manual thumb_id
