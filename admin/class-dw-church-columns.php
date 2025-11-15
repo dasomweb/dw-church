@@ -70,7 +70,8 @@ class DW_Church_Columns {
         add_action('admin_enqueue_scripts', array($this, 'dasom_church_admin_scripts'));
         
         // Ensure Published status is available in Quick Edit
-        add_filter('get_available_post_statuses', array($this, 'dasom_church_ensure_published_status'), 10, 2);
+        // Use high priority to ensure it runs after other filters
+        add_filter('get_available_post_statuses', array($this, 'dasom_church_ensure_published_status'), 99, 2);
     }
     
     /**
@@ -83,9 +84,14 @@ class DW_Church_Columns {
         }
         
         // Ensure 'publish' status is included
-        if (!in_array('publish', $statuses)) {
-            $statuses[] = 'publish';
-        }
+        // Remove it first if it exists to avoid duplicates, then add it
+        $statuses = array_filter($statuses, function($status) {
+            return $status !== 'publish';
+        });
+        $statuses[] = 'publish';
+        
+        // Re-index array to ensure proper order
+        $statuses = array_values($statuses);
         
         return $statuses;
     }
@@ -800,10 +806,17 @@ class DW_Church_Columns {
                                 if (ajaxData.post_status) {
                                     var setStatus = function(attempts) {
                                         attempts = attempts || 0;
-                                        if (attempts > 30) return; // Max 30 attempts (1.5 seconds)
+                                        if (attempts > 40) return; // Max 40 attempts (2 seconds)
                                         
                                         var statusSelect = $('select[name=\"_status\"]');
                                         if (statusSelect.length > 0) {
+                                            // Ensure Published option exists
+                                            var hasPublished = statusSelect.find('option[value=\"publish\"]').length > 0;
+                                            if (!hasPublished) {
+                                                var publishOption = $('<option></option>').attr('value', 'publish').text('Published');
+                                                statusSelect.append(publishOption);
+                                            }
+                                            
                                             var currentValue = statusSelect.val();
                                             // For sermon, always set if different (WordPress default may not work correctly)
                                             if (post_type === 'sermon' || currentValue !== ajaxData.post_status) {
@@ -819,7 +832,7 @@ class DW_Church_Columns {
                                         }
                                     };
                                     // Wait longer for sermon to ensure WordPress default is done
-                                    var delay = (post_type === 'sermon') ? 400 : 300;
+                                    var delay = (post_type === 'sermon') ? 500 : 300;
                                     setTimeout(function() { setStatus(0); }, delay);
                                 }
                                 
@@ -881,6 +894,20 @@ class DW_Church_Columns {
                     postData[post_id].post_status = rowStatus;
                 }
                 
+                // For sermon, ensure Published option exists immediately
+                if (post_type === 'sermon') {
+                    setTimeout(function() {
+                        var statusSelect = $('select[name=\"_status\"]');
+                        if (statusSelect.length > 0) {
+                            var hasPublished = statusSelect.find('option[value=\"publish\"]').length > 0;
+                            if (!hasPublished) {
+                                var publishOption = $('<option></option>').attr('value', 'publish').text('Published');
+                                statusSelect.append(publishOption);
+                            }
+                        }
+                    }, 100);
+                }
+                
                 // Populate fields
                 populateQuickEditFields(post_id, post_type);
             });
@@ -892,9 +919,37 @@ class DW_Church_Columns {
                 var post_type = dasomChurchQuickEdit.postType;
                 
                 // For sermon, use longer delay and more aggressive approach
-                var delay = (post_type === 'sermon') ? 250 : 150;
+                var delay = (post_type === 'sermon') ? 300 : 150;
                 
                 setTimeout(function() {
+                    // First, ensure Published option exists in the dropdown
+                    var ensurePublishedOption = function() {
+                        var statusSelect = $('select[name=\"_status\"]');
+                        if (statusSelect.length > 0) {
+                            // Check if Published option exists
+                            var hasPublished = statusSelect.find('option[value=\"publish\"]').length > 0;
+                            if (!hasPublished) {
+                                // Add Published option
+                                var publishOption = $('<option></option>').attr('value', 'publish').text('Published');
+                                statusSelect.append(publishOption);
+                            }
+                            return true;
+                        }
+                        return false;
+                    };
+                    
+                    // Try to ensure Published option exists
+                    if (!ensurePublishedOption()) {
+                        // Retry if select doesn't exist yet
+                        var retryCount = 0;
+                        var retryInterval = setInterval(function() {
+                            if (ensurePublishedOption() || retryCount > 20) {
+                                clearInterval(retryInterval);
+                            }
+                            retryCount++;
+                        }, 50);
+                    }
+                    
                     // Get status from AJAX (most reliable method)
                     $.ajax({
                         url: dasomChurchQuickEdit.ajaxUrl,
@@ -909,10 +964,17 @@ class DW_Church_Columns {
                             if (response.success && response.data.post_status) {
                                 var setStatusSafely = function(attempts) {
                                     attempts = attempts || 0;
-                                    if (attempts > 20) return;
+                                    if (attempts > 30) return;
                                     
                                     var statusSelect = $('select[name=\"_status\"]');
                                     if (statusSelect.length > 0) {
+                                        // Ensure Published option exists
+                                        var hasPublished = statusSelect.find('option[value=\"publish\"]').length > 0;
+                                        if (!hasPublished) {
+                                            var publishOption = $('<option></option>').attr('value', 'publish').text('Published');
+                                            statusSelect.append(publishOption);
+                                        }
+                                        
                                         var currentValue = statusSelect.val();
                                         // For sermon, always correct if wrong
                                         if (post_type === 'sermon' || currentValue !== response.data.post_status) {
