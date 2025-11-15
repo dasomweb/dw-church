@@ -427,7 +427,41 @@ class DW_Church_Columns {
             case 'menu_order':
                 $post = get_post($post_id);
                 $menu_order = $post->menu_order;
-                echo '<strong>' . esc_html($menu_order) . '</strong>';
+                
+                // Get all banners to determine if we can move up/down
+                $all_banners = get_posts(array(
+                    'post_type' => 'banner',
+                    'posts_per_page' => -1,
+                    'post_status' => 'any',
+                    'orderby' => 'menu_order',
+                    'order' => 'ASC',
+                    'fields' => 'ids'
+                ));
+                
+                $current_index = array_search($post_id, $all_banners);
+                $can_move_up = $current_index > 0;
+                $can_move_down = $current_index < count($all_banners) - 1;
+                
+                echo '<div style="display:flex;align-items:center;gap:5px;">';
+                echo '<strong style="min-width:30px;text-align:center;">' . esc_html($menu_order) . '</strong>';
+                echo '<div style="display:flex;flex-direction:column;gap:2px;">';
+                
+                // Up arrow
+                if ($can_move_up) {
+                    echo '<button type="button" class="button button-small banner-order-up" data-post-id="' . esc_attr($post_id) . '" style="padding:2px 6px;line-height:1;height:auto;min-height:auto;" title="' . esc_attr__('위로 이동', 'dw-church') . '">↑</button>';
+                } else {
+                    echo '<button type="button" class="button button-small" disabled style="padding:2px 6px;line-height:1;height:auto;min-height:auto;opacity:0.3;cursor:not-allowed;" title="' . esc_attr__('이미 맨 위', 'dw-church') . '">↑</button>';
+                }
+                
+                // Down arrow
+                if ($can_move_down) {
+                    echo '<button type="button" class="button button-small banner-order-down" data-post-id="' . esc_attr($post_id) . '" style="padding:2px 6px;line-height:1;height:auto;min-height:auto;" title="' . esc_attr__('아래로 이동', 'dw-church') . '">↓</button>';
+                } else {
+                    echo '<button type="button" class="button button-small" disabled style="padding:2px 6px;line-height:1;height:auto;min-height:auto;opacity:0.3;cursor:not-allowed;" title="' . esc_attr__('이미 맨 아래', 'dw-church') . '">↓</button>';
+                }
+                
+                echo '</div>';
+                echo '</div>';
                 echo '<br><small style="color:#666;">' . __('숫자가 작을수록 먼저 표시', 'dw-church') . '</small>';
                 break;
                 
@@ -687,19 +721,32 @@ class DW_Church_Columns {
         }
         
         global $post_type;
-        if (!in_array($post_type, array('bulletin', 'sermon', 'column', 'album'))) {
-            return;
+        
+        // Quick Edit scripts for bulletin, sermon, column, album
+        if (in_array($post_type, array('bulletin', 'sermon', 'column', 'album'))) {
+            wp_enqueue_script('jquery');
+            wp_add_inline_script('jquery', $this->dasom_church_get_quick_edit_script());
+            
+            // Localize script with AJAX URL
+            wp_localize_script('jquery', 'dasomChurchQuickEdit', array(
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('dasom_church_quick_edit_data'),
+                'postType' => $post_type
+            ));
         }
         
-        wp_enqueue_script('jquery');
-        wp_add_inline_script('jquery', $this->dasom_church_get_quick_edit_script());
-        
-        // Localize script with AJAX URL
-        wp_localize_script('jquery', 'dasomChurchQuickEdit', array(
-            'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('dasom_church_quick_edit_data'),
-            'postType' => $post_type
-        ));
+        // Banner order arrows
+        if ($post_type === 'banner') {
+            wp_enqueue_script('jquery');
+            wp_add_inline_script('jquery', $this->dasom_church_get_banner_order_script());
+            
+            // Localize script with AJAX URL
+            wp_localize_script('jquery', 'dasomChurchBannerOrder', array(
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('dasom_church_banner_order'),
+                'postType' => $post_type
+            ));
+        }
     }
     
     /**
@@ -1113,6 +1160,81 @@ class DW_Church_Columns {
         })(jQuery);
         ";
     }
+    
+    /**
+     * Get banner order script
+     */
+    private function dasom_church_get_banner_order_script() {
+        return "
+        (function($) {
+            $(document).ready(function() {
+                // Handle up arrow click
+                $(document).on('click', '.banner-order-up', function(e) {
+                    e.preventDefault();
+                    var button = $(this);
+                    var postId = button.data('post-id');
+                    
+                    button.prop('disabled', true).text('...');
+                    
+                    $.ajax({
+                        url: dasomChurchBannerOrder.ajaxUrl,
+                        type: 'POST',
+                        data: {
+                            action: 'dasom_church_change_banner_order',
+                            post_id: postId,
+                            direction: 'up',
+                            nonce: dasomChurchBannerOrder.nonce
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                location.reload();
+                            } else {
+                                alert('순서 변경 실패: ' + (response.data.message || '알 수 없는 오류'));
+                                button.prop('disabled', false).text('↑');
+                            }
+                        },
+                        error: function() {
+                            alert('순서 변경 중 오류가 발생했습니다.');
+                            button.prop('disabled', false).text('↑');
+                        }
+                    });
+                });
+                
+                // Handle down arrow click
+                $(document).on('click', '.banner-order-down', function(e) {
+                    e.preventDefault();
+                    var button = $(this);
+                    var postId = button.data('post-id');
+                    
+                    button.prop('disabled', true).text('...');
+                    
+                    $.ajax({
+                        url: dasomChurchBannerOrder.ajaxUrl,
+                        type: 'POST',
+                        data: {
+                            action: 'dasom_church_change_banner_order',
+                            post_id: postId,
+                            direction: 'down',
+                            nonce: dasomChurchBannerOrder.nonce
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                location.reload();
+                            } else {
+                                alert('순서 변경 실패: ' + (response.data.message || '알 수 없는 오류'));
+                                button.prop('disabled', false).text('↓');
+                            }
+                        },
+                        error: function() {
+                            alert('순서 변경 중 오류가 발생했습니다.');
+                            button.prop('disabled', false).text('↓');
+                        }
+                    });
+                });
+            });
+        })(jQuery);
+        ";
+    }
 }
 
 // Initialize the columns
@@ -1207,4 +1329,77 @@ function dasom_church_get_quick_edit_data_callback() {
     
     error_log('[Quick Edit PHP] Final data to send: ' . print_r($data, true));
     wp_send_json_success($data);
+}
+
+// Initialize the columns
+DW_Church_Columns::get_instance();
+
+// AJAX handler for banner order change
+add_action('wp_ajax_dasom_church_change_banner_order', 'dasom_church_change_banner_order_callback');
+function dasom_church_change_banner_order_callback() {
+    if (!wp_verify_nonce($_POST['nonce'], 'dasom_church_banner_order')) {
+        wp_die('Security check failed');
+    }
+    
+    if (!current_user_can('edit_posts')) {
+        wp_die('Insufficient permissions');
+    }
+    
+    $post_id = intval($_POST['post_id']);
+    $direction = sanitize_text_field($_POST['direction']); // 'up' or 'down'
+    
+    $post = get_post($post_id);
+    if (!$post || $post->post_type !== 'banner') {
+        wp_send_json_error(array('message' => 'Invalid post'));
+        return;
+    }
+    
+    // Get all banners ordered by menu_order
+    $all_banners = get_posts(array(
+        'post_type' => 'banner',
+        'posts_per_page' => -1,
+        'post_status' => 'any',
+        'orderby' => 'menu_order',
+        'order' => 'ASC',
+        'fields' => 'ids'
+    ));
+    
+    $current_index = array_search($post_id, $all_banners);
+    if ($current_index === false) {
+        wp_send_json_error(array('message' => 'Post not found in list'));
+        return;
+    }
+    
+    // Determine target index
+    if ($direction === 'up' && $current_index > 0) {
+        $target_index = $current_index - 1;
+    } elseif ($direction === 'down' && $current_index < count($all_banners) - 1) {
+        $target_index = $current_index + 1;
+    } else {
+        wp_send_json_error(array('message' => 'Cannot move in that direction'));
+        return;
+    }
+    
+    $target_post_id = $all_banners[$target_index];
+    $target_post = get_post($target_post_id);
+    
+    // Swap menu_order values
+    $current_order = $post->menu_order;
+    $target_order = $target_post->menu_order;
+    
+    wp_update_post(array(
+        'ID' => $post_id,
+        'menu_order' => $target_order
+    ));
+    
+    wp_update_post(array(
+        'ID' => $target_post_id,
+        'menu_order' => $current_order
+    ));
+    
+    wp_send_json_success(array(
+        'message' => 'Order updated',
+        'current_order' => $target_order,
+        'target_order' => $current_order
+    ));
 }
