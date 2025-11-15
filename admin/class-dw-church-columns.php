@@ -61,6 +61,7 @@ class DW_Church_Columns {
         // Banner columns
         add_filter('manage_banner_posts_columns', array($this, 'dasom_church_banner_columns'));
         add_action('manage_banner_posts_custom_column', array($this, 'dasom_church_banner_column_content'), 10, 2);
+        add_filter('manage_edit-banner_sortable_columns', array($this, 'dasom_church_banner_sortable_columns'));
         
         // Quick Edit - DISABLED to prevent infinite loop
         // add_action('quick_edit_custom_box', array($this, 'dasom_church_quick_edit_fields'), 10, 2);
@@ -398,6 +399,7 @@ class DW_Church_Columns {
         }
         
         $new_columns['title'] = __('배너 제목', 'dw-church');
+        $new_columns['menu_order'] = __('순서', 'dw-church');
         $new_columns['banner_category'] = __('카테고리', 'dw-church');
         $new_columns['banner_image'] = __('배너 이미지', 'dw-church');
         $new_columns['link_url'] = __('링크 URL', 'dw-church');
@@ -410,10 +412,25 @@ class DW_Church_Columns {
     }
     
     /**
+     * Banner sortable columns
+     */
+    public function dasom_church_banner_sortable_columns($columns) {
+        $columns['menu_order'] = 'menu_order';
+        return $columns;
+    }
+    
+    /**
      * Banner column content
      */
     public function dasom_church_banner_column_content($column, $post_id) {
         switch ($column) {
+            case 'menu_order':
+                $post = get_post($post_id);
+                $menu_order = $post->menu_order;
+                echo '<strong>' . esc_html($menu_order) . '</strong>';
+                echo '<br><small style="color:#666;">' . __('숫자가 작을수록 먼저 표시', 'dw-church') . '</small>';
+                break;
+                
             case 'banner_category':
                 $terms = wp_get_post_terms($post_id, 'banner_category');
                 if (!empty($terms) && !is_wp_error($terms)) {

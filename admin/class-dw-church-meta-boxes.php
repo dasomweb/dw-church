@@ -797,6 +797,15 @@ class DW_Church_Meta_Boxes {
                     <p class="description"><?php _e('이 날짜 이후 배너가 자동으로 비공개(Draft)로 전환됩니다. 비워두면 무기한 표시됩니다.', 'dw-church'); ?></p>
                 </td>
             </tr>
+            <tr>
+                <th scope="row">
+                    <label for="menu_order"><?php _e('표시 순서', 'dw-church'); ?></label>
+                </th>
+                <td>
+                    <input type="number" id="menu_order" name="menu_order" value="<?php echo esc_attr($post->menu_order); ?>" class="small-text" min="0" step="1" />
+                    <p class="description"><?php _e('숫자가 작을수록 먼저 표시됩니다. DW Banner Slider 위젯에서 "Order By"를 "Menu Order"로 설정하면 이 순서대로 표시됩니다.', 'dw-church'); ?></p>
+                </td>
+            </tr>
         </table>
         <?php
     }
@@ -1381,6 +1390,17 @@ class DW_Church_Meta_Boxes {
         if (isset($_POST['dw_banner_end_date'])) {
             $end_date = sanitize_text_field($_POST['dw_banner_end_date']);
             update_post_meta($post_id, 'dw_banner_end_date', $end_date);
+        }
+        
+        // Save menu_order (display order)
+        if (isset($_POST['menu_order'])) {
+            $menu_order = intval($_POST['menu_order']);
+            remove_action('save_post', array($this, 'dasom_church_save_meta_boxes'));
+            wp_update_post(array(
+                'ID' => $post_id,
+                'menu_order' => $menu_order
+            ));
+            add_action('save_post', array($this, 'dasom_church_save_meta_boxes'));
         }
     }
     

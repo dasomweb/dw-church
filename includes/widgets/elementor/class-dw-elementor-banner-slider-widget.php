@@ -162,12 +162,12 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
             [
                 'label' => __('Order By', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
-                'default' => 'date',
+                'default' => 'menu_order',
                 'options' => [
+                    'menu_order' => __('Menu Order (관리자 순서)', 'dasom-church'),
                     'date' => __('Date', 'dasom-church'),
                     'title' => __('Title', 'dasom-church'),
                     'rand' => __('Random', 'dasom-church'),
-                    'menu_order' => __('Menu Order', 'dasom-church'),
                 ],
                 'condition' => [
                     'query_source' => 'latest',
@@ -823,12 +823,22 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
             );
         } else {
             // Latest posts
+            $orderby = $settings['orderby'] ?? 'menu_order';
+            $order = 'ASC';
+            
+            // If orderby is menu_order, always use ASC
+            if ($orderby === 'menu_order') {
+                $order = 'ASC';
+            } else {
+                $order = $settings['order'] ?? 'DESC';
+            }
+            
             $args = array(
                 'post_type' => 'banner',
                 'posts_per_page' => $settings['posts_per_page'] ?? 5,
                 'post_status' => 'publish',
-                'orderby' => $settings['orderby'] ?? 'date',
-                'order' => $settings['order'] ?? 'DESC',
+                'orderby' => $orderby,
+                'order' => $order,
             );
             
             // Filter by category if selected
