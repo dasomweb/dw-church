@@ -944,7 +944,6 @@ class DW_Church_Columns {
                 // Populate fields
                 populateQuickEditFields(post_id, post_type);
             });
-            });
         })(jQuery);
         ";
     }
