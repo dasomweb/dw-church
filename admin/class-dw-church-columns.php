@@ -735,6 +735,21 @@ class DW_Church_Columns {
                                 var ajaxData = response.data;
                                 
                                 setTimeout(function() {
+                                    // Fill WordPress default date fields
+                                    if (ajaxData.post_date) {
+                                        var dateMatch = ajaxData.post_date.match(/(\d{4})-(\d{2})-(\d{2})/);
+                                        if (dateMatch) {
+                                            $('input[name=\"aa\"]').val(dateMatch[1]); // Year
+                                            $('select[name=\"mm\"]').val(dateMatch[2]); // Month
+                                            $('input[name=\"jj\"]').val(dateMatch[3]); // Day
+                                        }
+                                    }
+                                    
+                                    // Fill WordPress default author field
+                                    if (ajaxData.post_author) {
+                                        $('select[name=\"post_author\"]').val(ajaxData.post_author);
+                                    }
+                                    
                                     // Fill post status - wait for WordPress default Quick Edit to finish
                                     if (ajaxData.post_status) {
                                         var setStatus = function(attempts) {
@@ -967,7 +982,7 @@ class DW_Church_Columns {
                         }, 50);
                     }
                     
-                    // Get status from AJAX (most reliable method)
+                    // Get data from AJAX (most reliable method)
                     $.ajax({
                         url: dasomChurchQuickEdit.ajaxUrl,
                         type: 'POST',
@@ -978,33 +993,69 @@ class DW_Church_Columns {
                             nonce: dasomChurchQuickEdit.nonce
                         },
                         success: function(response) {
-                            if (response.success && response.data.post_status) {
-                                var setStatusSafely = function(attempts) {
-                                    attempts = attempts || 0;
-                                    if (attempts > 30) return;
-                                    
-                                    var statusSelect = $('select[name=\"_status\"]');
-                                    if (statusSelect.length > 0) {
-                                        // Ensure Published option exists
-                                        var hasPublished = statusSelect.find('option[value=\"publish\"]').length > 0;
-                                        if (!hasPublished) {
-                                            var publishOption = $('<option></option>').attr('value', 'publish').text('Published');
-                                            statusSelect.append(publishOption);
-                                        }
-                                        
-                                        var currentValue = statusSelect.val();
-                                        // For sermon, always correct if wrong
-                                        if (post_type === 'sermon' || currentValue !== response.data.post_status) {
-                                            if (currentValue !== response.data.post_status) {
-                                                statusSelect.val(response.data.post_status);
-                                                statusSelect.trigger('change');
-                                            }
-                                        }
-                                    } else {
-                                        setTimeout(function() { setStatusSafely(attempts + 1); }, 50);
+                            if (response.success) {
+                                var ajaxData = response.data;
+                                
+                                // Fill WordPress default date fields
+                                if (ajaxData.post_date) {
+                                    var dateMatch = ajaxData.post_date.match(/(\d{4})-(\d{2})-(\d{2})/);
+                                    if (dateMatch) {
+                                        $('input[name=\"aa\"]').val(dateMatch[1]); // Year
+                                        $('select[name=\"mm\"]').val(dateMatch[2]); // Month
+                                        $('input[name=\"jj\"]').val(dateMatch[3]); // Day
                                     }
-                                };
-                                setStatusSafely(0);
+                                }
+                                
+                                // Fill WordPress default author field
+                                if (ajaxData.post_author) {
+                                    $('select[name=\"post_author\"]').val(ajaxData.post_author);
+                                }
+                                
+                                // Fill post status
+                                if (ajaxData.post_status) {
+                                    var setStatusSafely = function(attempts) {
+                                        attempts = attempts || 0;
+                                        if (attempts > 30) return;
+                                        
+                                        var statusSelect = $('select[name=\"_status\"]');
+                                        if (statusSelect.length > 0) {
+                                            // Ensure Published option exists
+                                            var hasPublished = statusSelect.find('option[value=\"publish\"]').length > 0;
+                                            if (!hasPublished) {
+                                                var publishOption = $('<option></option>').attr('value', 'publish').text('Published');
+                                                statusSelect.append(publishOption);
+                                            }
+                                            
+                                            var currentValue = statusSelect.val();
+                                            // For sermon, always correct if wrong
+                                            if (post_type === 'sermon' || currentValue !== ajaxData.post_status) {
+                                                if (currentValue !== ajaxData.post_status) {
+                                                    statusSelect.val(ajaxData.post_status);
+                                                    statusSelect.trigger('change');
+                                                }
+                                            }
+                                        } else {
+                                            setTimeout(function() { setStatusSafely(attempts + 1); }, 50);
+                                        }
+                                    };
+                                    setStatusSafely(0);
+                                }
+                                
+                                // For sermon, also handle categories
+                                if (post_type === 'sermon' && ajaxData.sermon_categories && ajaxData.sermon_categories.length > 0) {
+                                    var checkCategories = function() {
+                                        var categoryCheckboxes = $('input[name=\"tax_input[sermon_category][]\"]');
+                                        if (categoryCheckboxes.length > 0) {
+                                            categoryCheckboxes.prop('checked', false);
+                                            ajaxData.sermon_categories.forEach(function(categoryId) {
+                                                $('input[name=\"tax_input[sermon_category][]\"][value=\"' + categoryId + '\"]').prop('checked', true);
+                                            });
+                                        } else {
+                                            setTimeout(checkCategories, 50);
+                                        }
+                                    };
+                                    checkCategories();
+                                }
                             }
                         }
                     });
