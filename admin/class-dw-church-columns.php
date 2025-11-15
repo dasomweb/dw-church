@@ -709,44 +709,10 @@ class DW_Church_Columns {
                 return false;
             }
             
-            // Use MutationObserver to watch for status dropdown creation
-            var observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    if (mutation.addedNodes.length > 0) {
-                        // Check if status select was added
-                        $(mutation.addedNodes).find('select[name=\"_status\"]').each(function() {
-                            ensurePublishedOption();
-                        });
-                        // Also check if the added node itself is the select
-                        $(mutation.addedNodes).filter('select[name=\"_status\"]').each(function() {
-                            ensurePublishedOption();
-                        });
-                    }
-                });
-            });
-            
-            // Start observing when DOM is ready
+            // Start when DOM is ready
             $(document).ready(function() {
-                // Observe the entire document for changes
-                observer.observe(document.body, {
-                    childList: true,
-                    subtree: true
-                });
-                
-                // Also try immediately
+                // Try immediately
                 ensurePublishedOption();
-                
-                // Try periodically as well
-                var checkInterval = setInterval(function() {
-                    if (ensurePublishedOption()) {
-                        // Option was added, but keep checking in case it gets removed
-                    }
-                }, 100);
-                
-                // Stop checking after 10 seconds
-                setTimeout(function() {
-                    clearInterval(checkInterval);
-                }, 10000);
             });
             
             // Get post data from the table row
