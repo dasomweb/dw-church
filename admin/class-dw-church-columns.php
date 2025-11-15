@@ -68,6 +68,26 @@ class DW_Church_Columns {
         
         // Admin scripts for Quick Edit
         add_action('admin_enqueue_scripts', array($this, 'dasom_church_admin_scripts'));
+        
+        // Ensure Published status is available in Quick Edit
+        add_filter('get_available_post_statuses', array($this, 'dasom_church_ensure_published_status'), 10, 2);
+    }
+    
+    /**
+     * Ensure Published status is available in Quick Edit
+     */
+    public function dasom_church_ensure_published_status($statuses, $post_type) {
+        // Only apply to our custom post types
+        if (!in_array($post_type, array('bulletin', 'sermon', 'column', 'album', 'banner'))) {
+            return $statuses;
+        }
+        
+        // Ensure 'publish' status is included
+        if (!in_array('publish', $statuses)) {
+            $statuses[] = 'publish';
+        }
+        
+        return $statuses;
     }
     
     /**
