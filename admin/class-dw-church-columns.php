@@ -742,7 +742,7 @@ class DW_Church_Columns {
             
             // Function to populate Quick Edit fields
             function populateQuickEditFields(post_id, post_type) {
-                console.log('[Quick Edit] populateQuickEditFields called', { post_id: post_id, post_type: post_type });
+                console.log('[Quick Edit] populateQuickEditFields called - post_id:', post_id, 'post_type:', post_type);
                 
                 // Get data via AJAX (same for all post types)
                 $.ajax({
@@ -775,11 +775,7 @@ class DW_Church_Columns {
                                 var mmField = $('select[name=\"mm\"]');
                                 var jjField = $('input[name=\"jj\"]');
                                 
-                                console.log('[Quick Edit] fillFields attempt ' + attempts + ':', {
-                                    aaExists: aaField.length > 0,
-                                    mmExists: mmField.length > 0,
-                                    jjExists: jjField.length > 0
-                                });
+                                console.log('[Quick Edit] fillFields attempt ' + attempts + ' - aaExists:', aaField.length > 0, 'mmExists:', mmField.length > 0, 'jjExists:', jjField.length > 0);
                                 
                                 if (aaField.length === 0 || mmField.length === 0 || jjField.length === 0) {
                                     fieldsReady = false;
@@ -802,11 +798,7 @@ class DW_Church_Columns {
                                         aaField.val(dateMatch[1]);
                                         mmField.val(dateMatch[2]);
                                         jjField.val(dateMatch[3]);
-                                        console.log('[Quick Edit] Date fields filled:', {
-                                            aa: aaField.val(),
-                                            mm: mmField.val(),
-                                            jj: jjField.val()
-                                        });
+                                        console.log('[Quick Edit] Date fields filled - aa:', aaField.val(), 'mm:', mmField.val(), 'jj:', jjField.val());
                                     } else {
                                         console.warn('[Quick Edit] Date format not matched:', ajaxData.post_date);
                                     }
@@ -884,11 +876,7 @@ class DW_Church_Columns {
                                         console.warn('[Quick Edit] No category checkboxes found');
                                     }
                                 } else {
-                                    console.warn('[Quick Edit] No sermon_categories in ajaxData or empty', {
-                                        post_type: post_type,
-                                        has_categories: ajaxData.sermon_categories ? true : false,
-                                        categories_length: ajaxData.sermon_categories ? ajaxData.sermon_categories.length : 0
-                                    });
+                                    console.warn('[Quick Edit] No sermon_categories in ajaxData or empty - post_type:', post_type, 'has_categories:', ajaxData.sermon_categories ? true : false, 'categories_length:', ajaxData.sermon_categories ? ajaxData.sermon_categories.length : 0);
                                 }
                             };
                             
