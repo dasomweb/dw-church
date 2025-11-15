@@ -840,54 +840,78 @@ class DW_Church_Columns {
                                     console.log('[Quick Edit] Status select found:', statusSelect.length > 0);
                                     
                                     if (statusSelect.length > 0) {
-                                        // Log all options before ensuring Published
-                                        var optionsBefore = [];
+                                        // First, unselect all options
+                                        statusSelect.find('option').prop('selected', false);
+                                        console.log('[Quick Edit] All options unselected');
+                                        
+                                        // Remove duplicate options (keep only first occurrence of each value)
+                                        var seenValues = {};
                                         statusSelect.find('option').each(function() {
                                             var opt = $(this);
-                                            optionsBefore.push(opt.val() + ':' + opt.text() + (opt.prop('selected') ? '(selected)' : ''));
+                                            var val = opt.val();
+                                            if (seenValues[val]) {
+                                                opt.remove();
+                                                console.log('[Quick Edit] Removed duplicate option:', val);
+                                            } else {
+                                                seenValues[val] = true;
+                                            }
                                         });
-                                        console.log('[Quick Edit] Options BEFORE ensurePublishedOption:', optionsBefore.join(', '));
                                         
                                         // Ensure Published option exists
                                         ensurePublishedOption();
                                         
-                                        // Log all options after ensuring Published
+                                        // Log all options after cleanup
                                         var optionsAfter = [];
                                         statusSelect.find('option').each(function() {
                                             var opt = $(this);
-                                            optionsAfter.push(opt.val() + ':' + opt.text() + (opt.prop('selected') ? '(selected)' : ''));
+                                            optionsAfter.push(opt.val() + ':' + opt.text());
                                         });
-                                        console.log('[Quick Edit] Options AFTER ensurePublishedOption:', optionsAfter.join(', '));
+                                        console.log('[Quick Edit] Options AFTER cleanup:', optionsAfter.join(', '));
                                         
-                                        var currentValue = statusSelect.val();
-                                        console.log('[Quick Edit] Current status value:', currentValue);
-                                        console.log('[Quick Edit] Target status value:', ajaxData.post_status);
-                                        console.log('[Quick Edit] Values match?', currentValue === ajaxData.post_status);
+                                        // Now set the status value
+                                        var targetStatus = ajaxData.post_status;
+                                        console.log('[Quick Edit] Setting status to:', targetStatus);
                                         
-                                        if (currentValue !== ajaxData.post_status) {
-                                            console.log('[Quick Edit] Setting status to:', ajaxData.post_status);
-                                            statusSelect.val(ajaxData.post_status);
-                                            var afterSet = statusSelect.val();
-                                            console.log('[Quick Edit] Status after setting:', afterSet);
-                                            console.log('[Quick Edit] Status set successfully?', afterSet === ajaxData.post_status);
+                                        // Find and select the target option directly
+                                        var targetOption = statusSelect.find('option[value=\"' + targetStatus + '\"]');
+                                        console.log('[Quick Edit] Target option found:', targetOption.length > 0);
+                                        
+                                        if (targetOption.length > 0) {
+                                            // Unselect all first
+                                            statusSelect.find('option').prop('selected', false);
+                                            // Select target option
+                                            targetOption.prop('selected', true);
+                                            console.log('[Quick Edit] Target option selected directly');
+                                            
+                                            // Verify
+                                            var currentValue = statusSelect.val();
+                                            console.log('[Quick Edit] Current status value after direct select:', currentValue);
+                                            
+                                            if (currentValue !== targetStatus) {
+                                                // Fallback: use .val() method
+                                                statusSelect.val(targetStatus);
+                                                currentValue = statusSelect.val();
+                                                console.log('[Quick Edit] Status after .val() method:', currentValue);
+                                            }
                                             
                                             statusSelect.trigger('change');
                                             var afterChange = statusSelect.val();
                                             console.log('[Quick Edit] Status after trigger change:', afterChange);
+                                            
+                                            // Final check
+                                            var finalValue = statusSelect.val();
+                                            var finalOptions = [];
+                                            statusSelect.find('option').each(function() {
+                                                if ($(this).prop('selected')) {
+                                                    finalOptions.push($(this).val() + ':' + $(this).text());
+                                                }
+                                            });
+                                            console.log('[Quick Edit] Final status value:', finalValue);
+                                            console.log('[Quick Edit] Final selected options:', finalOptions.join(', '));
                                         } else {
-                                            console.log('[Quick Edit] Status already matches, no change needed');
+                                            console.error('[Quick Edit] Target option not found for value:', targetStatus);
                                         }
                                         
-                                        // Final check
-                                        var finalValue = statusSelect.val();
-                                        var finalOptions = [];
-                                        statusSelect.find('option').each(function() {
-                                            if ($(this).prop('selected')) {
-                                                finalOptions.push($(this).val() + ':' + $(this).text());
-                                            }
-                                        });
-                                        console.log('[Quick Edit] Final status value:', finalValue);
-                                        console.log('[Quick Edit] Final selected options:', finalOptions.join(', '));
                                         console.log('[Quick Edit] ===== STATUS FILLING END =====');
                                     } else {
                                         console.error('[Quick Edit] Status select not found!');
