@@ -690,9 +690,64 @@ class DW_Church_Columns {
      */
     private function dasom_church_get_quick_edit_script() {
         return "
-        jQuery(document).ready(function($) {
+        (function($) {
             // Store current post data for Quick Edit
             var postData = {};
+            
+            // Function to ensure Published option exists in status dropdown
+            function ensurePublishedOption() {
+                var statusSelect = $('select[name=\"_status\"]');
+                if (statusSelect.length > 0) {
+                    var hasPublished = statusSelect.find('option[value=\"publish\"]').length > 0;
+                    if (!hasPublished) {
+                        // Add Published option at the beginning
+                        var publishOption = $('<option></option>').attr('value', 'publish').text('Published');
+                        statusSelect.prepend(publishOption);
+                        return true;
+                    }
+                }
+                return false;
+            }
+            
+            // Use MutationObserver to watch for status dropdown creation
+            var observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.addedNodes.length > 0) {
+                        // Check if status select was added
+                        $(mutation.addedNodes).find('select[name=\"_status\"]').each(function() {
+                            ensurePublishedOption();
+                        });
+                        // Also check if the added node itself is the select
+                        $(mutation.addedNodes).filter('select[name=\"_status\"]').each(function() {
+                            ensurePublishedOption();
+                        });
+                    }
+                });
+            });
+            
+            // Start observing when DOM is ready
+            $(document).ready(function() {
+                // Observe the entire document for changes
+                observer.observe(document.body, {
+                    childList: true,
+                    subtree: true
+                });
+                
+                // Also try immediately
+                ensurePublishedOption();
+                
+                // Try periodically as well
+                var checkInterval = setInterval(function() {
+                    if (ensurePublishedOption()) {
+                        // Option was added, but keep checking in case it gets removed
+                    }
+                }, 100);
+                
+                // Stop checking after 10 seconds
+                setTimeout(function() {
+                    clearInterval(checkInterval);
+                }, 10000);
+            });
             
             // Get post data from the table row
             function getPostDataFromRow(row) {
@@ -765,12 +820,8 @@ class DW_Church_Columns {
                                             
                                             var statusSelect = $('select[name=\"_status\"]');
                                             if (statusSelect.length > 0) {
-                                                // Ensure Published option exists - add at beginning if missing
-                                                var hasPublished = statusSelect.find('option[value=\"publish\"]').length > 0;
-                                                if (!hasPublished) {
-                                                    var publishOption = $('<option></option>').attr('value', 'publish').text('Published');
-                                                    statusSelect.prepend(publishOption);
-                                                }
+                                                // Ensure Published option exists (using the global function)
+                                                ensurePublishedOption();
                                                 
                                                 var currentValue = statusSelect.val();
                                                 if (currentValue !== ajaxData.post_status) {
@@ -891,12 +942,8 @@ class DW_Church_Columns {
                                         
                                         var statusSelect = $('select[name=\"_status\"]');
                                         if (statusSelect.length > 0) {
-                                            // Ensure Published option exists - add at beginning if missing
-                                            var hasPublished = statusSelect.find('option[value=\"publish\"]').length > 0;
-                                            if (!hasPublished) {
-                                                var publishOption = $('<option></option>').attr('value', 'publish').text('Published');
-                                                statusSelect.prepend(publishOption);
-                                            }
+                                            // Ensure Published option exists (using the global function)
+                                            ensurePublishedOption();
                                             
                                             var currentValue = statusSelect.val();
                                             if (currentValue !== ajaxData.post_status) {
@@ -947,31 +994,16 @@ class DW_Church_Columns {
                     postData[post_id].post_status = rowStatus;
                 }
                 
-                // Immediately ensure Published option exists for all custom post types
-                // Use multiple attempts with different delays to catch the dropdown at different stages
-                var ensurePublished = function() {
-                    var statusSelect = $('select[name=\"_status\"]');
-                    if (statusSelect.length > 0) {
-                        var hasPublished = statusSelect.find('option[value=\"publish\"]').length > 0;
-                        if (!hasPublished) {
-                            // Add Published option at the beginning
-                            var publishOption = $('<option></option>').attr('value', 'publish').text('Published');
-                            statusSelect.prepend(publishOption);
-                        }
-                        return true;
-                    }
-                    return false;
-                };
-                
-                // Try immediately
-                ensurePublished();
+                // Ensure Published option exists (using the global function)
+                ensurePublishedOption();
                 
                 // Try with short delays (multiple attempts)
-                setTimeout(ensurePublished, 10);
-                setTimeout(ensurePublished, 50);
-                setTimeout(ensurePublished, 100);
-                setTimeout(ensurePublished, 200);
-                setTimeout(ensurePublished, 300);
+                setTimeout(ensurePublishedOption, 10);
+                setTimeout(ensurePublishedOption, 50);
+                setTimeout(ensurePublishedOption, 100);
+                setTimeout(ensurePublishedOption, 200);
+                setTimeout(ensurePublishedOption, 300);
+                setTimeout(ensurePublishedOption, 500);
                 
                 // Populate fields
                 populateQuickEditFields(post_id, post_type);
@@ -983,23 +1015,7 @@ class DW_Church_Columns {
                 var post_id = post.ID;
                 var post_type = dasomChurchQuickEdit.postType;
                 
-                // Immediately ensure Published option exists
-                var ensurePublishedOption = function() {
-                    var statusSelect = $('select[name=\"_status\"]');
-                    if (statusSelect.length > 0) {
-                        // Check if Published option exists
-                        var hasPublished = statusSelect.find('option[value=\"publish\"]').length > 0;
-                        if (!hasPublished) {
-                            // Add Published option at the beginning
-                            var publishOption = $('<option></option>').attr('value', 'publish').text('Published');
-                            statusSelect.prepend(publishOption);
-                        }
-                        return true;
-                    }
-                    return false;
-                };
-                
-                // Try immediately
+                // Ensure Published option exists (using the global function)
                 ensurePublishedOption();
                 
                 // Try with multiple delays to catch the dropdown at different stages
@@ -1007,15 +1023,8 @@ class DW_Church_Columns {
                 setTimeout(ensurePublishedOption, 50);
                 setTimeout(ensurePublishedOption, 100);
                 setTimeout(ensurePublishedOption, 200);
-                
-                // Also use interval for more aggressive checking
-                var retryCount = 0;
-                var retryInterval = setInterval(function() {
-                    if (ensurePublishedOption() || retryCount > 30) {
-                        clearInterval(retryInterval);
-                    }
-                    retryCount++;
-                }, 50);
+                setTimeout(ensurePublishedOption, 300);
+                setTimeout(ensurePublishedOption, 500);
                 
                 // For sermon, use longer delay and more aggressive approach
                 var delay = (post_type === 'sermon') ? 300 : 150;
@@ -1059,12 +1068,8 @@ class DW_Church_Columns {
                                         
                                         var statusSelect = $('select[name=\"_status\"]');
                                         if (statusSelect.length > 0) {
-                                            // Ensure Published option exists - add at beginning if missing
-                                            var hasPublished = statusSelect.find('option[value=\"publish\"]').length > 0;
-                                            if (!hasPublished) {
-                                                var publishOption = $('<option></option>').attr('value', 'publish').text('Published');
-                                                statusSelect.prepend(publishOption);
-                                            }
+                                            // Ensure Published option exists (using the global function)
+                                            ensurePublishedOption();
                                             
                                             var currentValue = statusSelect.val();
                                             // For sermon, always correct if wrong
@@ -1117,7 +1122,8 @@ class DW_Church_Columns {
                 // Populate fields
                 populateQuickEditFields(post_id, post_type);
             });
-        });
+            });
+        })(jQuery);
         ";
     }
 }
