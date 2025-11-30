@@ -919,9 +919,13 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
             
             // Get appropriate image based on category
             $image_url = '';
+            $mobile_image_url = '';
             if ($category === '메인 배너' || $category === 'Main Banner') {
                 $pc_image = get_post_meta(get_the_ID(), 'dw_banner_pc_image', true);
                 $image_url = $pc_image ? wp_get_attachment_url($pc_image) : '';
+                // Get mobile image for main banner
+                $mobile_image = get_post_meta(get_the_ID(), 'dw_banner_mobile_image', true);
+                $mobile_image_url = $mobile_image ? wp_get_attachment_url($mobile_image) : '';
             } else {
                 $sub_image = get_post_meta(get_the_ID(), 'dw_banner_sub_image', true);
                 $image_url = $sub_image ? wp_get_attachment_url($sub_image) : '';
@@ -959,9 +963,17 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
                 echo '<a href="' . esc_url($link_url) . '" target="' . esc_attr($link_target) . '" class="dw-banner-link" style="display:block;position:relative;text-decoration:none;color:inherit;">';
             }
             
-            // Generate responsive CSS for background position (for all banners)
+            // Generate responsive CSS for background position and image (for all banners)
             echo '<style>';
-            echo '.' . $banner_id . ' { background-position: ' . esc_attr($bg_position_pc) . '; }';
+            // Background image - PC image by default
+            if ($image_url) {
+                echo '.' . $banner_id . ' { background-image: url(' . esc_url($image_url) . '); background-position: ' . esc_attr($bg_position_pc) . '; }';
+            }
+            // Mobile image for main banner (if exists)
+            if ($mobile_image_url && ($category === '메인 배너' || $category === 'Main Banner')) {
+                echo '@media (max-width: 767px) { .' . $banner_id . ' { background-image: url(' . esc_url($mobile_image_url) . '); } }';
+            }
+            // Background position responsive
             echo '@media (max-width: 1919px) { .' . $banner_id . ' { background-position: ' . esc_attr($bg_position_laptop) . '; } }';
             echo '@media (max-width: 1023px) { .' . $banner_id . ' { background-position: ' . esc_attr($bg_position_tablet) . '; } }';
             echo '@media (max-width: 767px) { .' . $banner_id . ' { background-position: ' . esc_attr($bg_position_mobile) . '; } }';
@@ -1026,7 +1038,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
                     }
                     
                     // Background with text overlay
-                    echo '<div class="dw-banner-bg ' . esc_attr($banner_id) . '" style="position:relative;width:100%;background-image:url(' . esc_url($image_url) . ');background-size:cover;display:flex;align-items:' . esc_attr($v_align_style) . ';">';
+                    echo '<div class="dw-banner-bg ' . esc_attr($banner_id) . '" style="position:relative;width:100%;background-size:cover;display:flex;align-items:' . esc_attr($v_align_style) . ';">';
                     
                     echo '<div class="dw-banner-text-content ' . esc_attr($text_content_id) . '" style="padding:' . esc_attr($padding_top) . 'px ' . esc_attr($padding_right) . 'px ' . esc_attr($padding_bottom) . 'px ' . esc_attr($padding_left) . 'px;width:100%;' . $container_margin . 'text-align:' . esc_attr($text_alignment) . ';position:relative;z-index:2;">';
                     
@@ -1044,7 +1056,7 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
                     echo '</div>'; // banner-bg
                 } else {
                     // Background image only (no text overlay)
-                    echo '<div class="dw-banner-bg ' . esc_attr($banner_id) . '" style="position:relative;width:100%;background-image:url(' . esc_url($image_url) . ');background-size:cover;"></div>';
+                    echo '<div class="dw-banner-bg ' . esc_attr($banner_id) . '" style="position:relative;width:100%;background-size:cover;"></div>';
                 }
             }
             
