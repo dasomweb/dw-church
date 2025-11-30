@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.67.8
+Stable tag: 2.67.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -703,6 +703,11 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 * UI: All navigation controls appear when arrows are enabled
 * Defaults: Desktop 40px, Tablet 36px, Mobile 32px arrow size
 * Flexibility: Fine-tune arrow appearance per device
+
+= 2.67.9 =
+* Fix: Sub banner image (1024px) now explicitly applies to tablet version (768-1023px) in Banner Slider and Grid widgets
+* Add: Sub banner custom fields (dw_banner_sub_image) added to Elementor custom field guide in DW settings
+* Remove: Sub banner ratio field removed from meta box, columns display, and custom field guide
 
 = 1.22.0 =
 * Feature: Responsive slider height control in widget settings
