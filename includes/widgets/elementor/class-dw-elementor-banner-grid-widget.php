@@ -500,12 +500,16 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
             
             $banner_grid_id = 'dw-banner-grid-' . get_the_ID();
             
-            // Generate responsive CSS for background position
+            // Generate responsive CSS for background position and image
             echo '<style>';
             echo '.' . $banner_grid_id . ' { background-position: ' . esc_attr($bg_position_pc) . '; }';
             echo '@media (max-width: 1919px) { .' . $banner_grid_id . ' { background-position: ' . esc_attr($bg_position_laptop) . '; } }';
             echo '@media (max-width: 1023px) { .' . $banner_grid_id . ' { background-position: ' . esc_attr($bg_position_tablet) . '; } }';
             echo '@media (max-width: 767px) { .' . $banner_grid_id . ' { background-position: ' . esc_attr($bg_position_mobile) . '; } }';
+            // Sub banner image for tablet (explicitly set for 768-1023px)
+            if ($image_url && ($category === '서브 배너' || $category === 'Sub Banner')) {
+                echo '@media (min-width: 768px) and (max-width: 1023px) { .' . $banner_grid_id . ' { background-image: url(' . esc_url($image_url) . ') !important; } }';
+            }
             echo '</style>';
             
             echo '<div class="dw-banner-grid-item">';

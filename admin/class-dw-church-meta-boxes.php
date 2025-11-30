@@ -463,8 +463,6 @@ class DW_Church_Meta_Boxes {
         $pc_image = get_post_meta($post->ID, 'dw_banner_pc_image', true);
         $mobile_image = get_post_meta($post->ID, 'dw_banner_mobile_image', true);
         $sub_image = get_post_meta($post->ID, 'dw_banner_sub_image', true);
-        $sub_ratio = get_post_meta($post->ID, 'dw_banner_sub_ratio', true);
-        $sub_ratio = $sub_ratio ? $sub_ratio : '16:9';
         $link_url = get_post_meta($post->ID, 'dw_banner_link_url', true);
         $link_target = get_post_meta($post->ID, 'dw_banner_link_target', true);
         $link_target = $link_target ? $link_target : '_self';
@@ -515,7 +513,7 @@ class DW_Church_Meta_Boxes {
             <p style="margin:0;font-size:13px;color:#666;">
                 <strong><?php _e('배너 이미지:', 'dw-church'); ?></strong><br>
                 • <strong><?php _e('메인 배너', 'dw-church'); ?>:</strong> <?php _e('PC (1920px) + 모바일 (720px) 이미지를 사용합니다', 'dw-church'); ?><br>
-                • <strong><?php _e('서브 배너', 'dw-church'); ?>:</strong> <?php _e('1024px 고정폭 이미지를 사용합니다 (비율 선택 가능: 16:9, 4:3, 1:1)', 'dw-church'); ?><br><br>
+                • <strong><?php _e('서브 배너', 'dw-church'); ?>:</strong> <?php _e('1024px 고정폭 이미지를 사용합니다', 'dw-church'); ?><br><br>
                 <strong><?php _e('텍스트 오버레이:', 'dw-church'); ?></strong> <?php _e('제목, 부제목, 설명을 입력하면 배경 이미지 위에 표시됩니다. 입력하지 않으면 이미지만 표시됩니다.', 'dw-church'); ?>
             </p>
         </div>
@@ -569,20 +567,7 @@ class DW_Church_Meta_Boxes {
                             <img src="<?php echo esc_url(wp_get_attachment_url($sub_image)); ?>" style="max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;" />
                         <?php endif; ?>
                     </div>
-                    <p class="description"><?php _e('권장 크기: 가로 1024px, 세로는 선택한 비율에 따라 자동 결정', 'dw-church'); ?></p>
-                </td>
-            </tr>
-            <tr class="banner-field banner-sub-field" data-banner-type="sub">
-                <th scope="row">
-                    <label for="dw_banner_sub_ratio"><?php _e('서브 배너 이미지 비율', 'dw-church'); ?></label>
-                </th>
-                <td>
-                    <select id="dw_banner_sub_ratio" name="dw_banner_sub_ratio" class="regular-text">
-                        <option value="16:9" <?php selected($sub_ratio, '16:9'); ?>>16:9 (1024x576px)</option>
-                        <option value="4:3" <?php selected($sub_ratio, '4:3'); ?>>4:3 (1024x768px)</option>
-                        <option value="1:1" <?php selected($sub_ratio, '1:1'); ?>>1:1 (1024x1024px)</option>
-                    </select>
-                    <p class="description"><?php _e('서브 배너는 가로 1024px 고정입니다. 비율을 선택하세요.', 'dw-church'); ?></p>
+                    <p class="description"><?php _e('권장 크기: 가로 1024px', 'dw-church'); ?></p>
                 </td>
             </tr>
             
@@ -1265,13 +1250,6 @@ class DW_Church_Meta_Boxes {
         }
         
         // Sub banner fields
-        if (isset($_POST['dw_banner_sub_ratio'])) {
-            $ratio = sanitize_text_field($_POST['dw_banner_sub_ratio']);
-            if (in_array($ratio, array('16:9', '4:3', '1:1'))) {
-                update_post_meta($post_id, 'dw_banner_sub_ratio', $ratio);
-            }
-        }
-        
         if (isset($_POST['dw_banner_sub_image'])) {
             $sub_image_id = intval($_POST['dw_banner_sub_image']);
             update_post_meta($post_id, 'dw_banner_sub_image', $sub_image_id);

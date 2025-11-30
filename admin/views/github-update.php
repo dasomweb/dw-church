@@ -110,13 +110,17 @@ $github_token = get_option('dw_github_access_token', '');
                 <td><code>dw_album_images</code></td>
             </tr>
             <tr>
-                <td rowspan="6">🎯 <?php _e('배너 (banner)', 'dasom-church'); ?></td>
+                <td rowspan="7">🎯 <?php _e('배너 (banner)', 'dasom-church'); ?></td>
                 <td><?php _e('PC용 배너 이미지 ID', 'dasom-church'); ?></td>
                 <td><code>dw_banner_pc_image</code></td>
             </tr>
             <tr>
                 <td><?php _e('모바일용 배너 이미지 ID', 'dasom-church'); ?></td>
                 <td><code>dw_banner_mobile_image</code></td>
+            </tr>
+            <tr>
+                <td><?php _e('서브 배너 이미지 ID (1024px)', 'dasom-church'); ?></td>
+                <td><code>dw_banner_sub_image</code></td>
             </tr>
             <tr>
                 <td><?php _e('링크 URL', 'dasom-church'); ?></td>

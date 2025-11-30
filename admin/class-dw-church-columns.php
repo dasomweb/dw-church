@@ -478,15 +478,11 @@ class DW_Church_Columns {
                     }
                 } elseif ($category === '서브 배너' || $category === 'Sub Banner') {
                     $sub_image = get_post_meta($post_id, 'dw_banner_sub_image', true);
-                    $sub_ratio = get_post_meta($post_id, 'dw_banner_sub_ratio', true);
                     
                     if ($sub_image) {
                         $url = wp_get_attachment_url($sub_image);
                         if ($url) {
                             echo '<img src="' . esc_url($url) . '" style="width:120px;height:auto;max-height:50px;object-fit:cover;border:1px solid #ddd;" />';
-                            if ($sub_ratio) {
-                                echo '<br><small style="color:#666;">' . esc_html($sub_ratio) . '</small>';
-                            }
                         } else {
                             echo '—';
                         }

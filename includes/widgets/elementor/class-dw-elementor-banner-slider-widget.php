@@ -973,6 +973,10 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
             if ($mobile_image_url && ($category === '메인 배너' || $category === 'Main Banner')) {
                 echo '@media (max-width: 767px) { .' . $banner_id . ' { background-image: url(' . esc_url($mobile_image_url) . '); } }';
             }
+            // Sub banner image for tablet (explicitly set for 768-1023px)
+            if ($image_url && ($category === '서브 배너' || $category === 'Sub Banner')) {
+                echo '@media (min-width: 768px) and (max-width: 1023px) { .' . $banner_id . ' { background-image: url(' . esc_url($image_url) . '); } }';
+            }
             // Background position responsive
             echo '@media (max-width: 1919px) { .' . $banner_id . ' { background-position: ' . esc_attr($bg_position_laptop) . '; } }';
             echo '@media (max-width: 1023px) { .' . $banner_id . ' { background-position: ' . esc_attr($bg_position_tablet) . '; } }';

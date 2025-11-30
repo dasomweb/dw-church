@@ -143,3 +143,4 @@ if (targetIndex >= 0) {
 
 이 문제는 WordPress의 Quick Edit 기능이 동적으로 생성되는 특성 때문에 발생했습니다. jQuery와 Native DOM의 동기화 문제를 해결하기 위해 Native DOM API를 직접 사용하는 방식으로 해결했습니다.
 
+
