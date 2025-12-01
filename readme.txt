@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.67.9
+Stable tag: 2.68.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -703,6 +703,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 * UI: All navigation controls appear when arrows are enabled
 * Defaults: Desktop 40px, Tablet 36px, Mobile 32px arrow size
 * Flexibility: Fine-tune arrow appearance per device
+
+= 2.68.0 =
+* Add: Instagram and TikTok aspect ratios to Event Grid widget height ratio options
+* Add: 1:1 (Instagram Feed) aspect ratio option
+* Add: 4:5 (Instagram Portrait) aspect ratio option
+* Update: 9:16 option label to include TikTok and Instagram Story
 
 = 2.67.9 =
 * Fix: Sub banner image (1024px) now explicitly applies to tablet version (768-1023px) in Banner Slider and Grid widgets
