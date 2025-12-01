@@ -225,12 +225,14 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             ]
         );
         
-        $this->add_control(
+        $this->add_responsive_control(
             'height_ratio',
             [
                 'label' => __('Height Ratio', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => '16:9',
+                'tablet_default' => '16:9',
+                'mobile_default' => '9:16',
                 'options' => [
                     '4:3' => __('4:3', 'dasom-church'),
                     '16:9' => __('16:9', 'dasom-church'),
@@ -260,6 +262,14 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 ],
                 'default' => [
                     'size' => 400,
+                    'unit' => 'px',
+                ],
+                'tablet_default' => [
+                    'size' => 350,
+                    'unit' => 'px',
+                ],
+                'mobile_default' => [
+                    'size' => 300,
                     'unit' => 'px',
                 ],
                 'condition' => [
@@ -1082,26 +1092,19 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         $text_position_tablet = $settings['text_position_tablet'] ?? $text_position;
         $text_position_mobile = $settings['text_position_mobile'] ?? $text_position;
         
-        // Calculate height style based on ratio
+        // Get responsive height ratio values
         $height_ratio = $settings['height_ratio'] ?? '16:9';
-        $height_style = '';
+        $height_ratio_tablet = $settings['height_ratio_tablet'] ?? $height_ratio;
+        $height_ratio_mobile = $settings['height_ratio_mobile'] ?? $height_ratio_tablet;
         
-        if ($height_ratio === 'custom') {
-            $custom_height = $settings['custom_height']['size'] ?? 400;
-            $custom_unit = $settings['custom_height']['unit'] ?? 'px';
-            $height_style = 'height:' . $custom_height . $custom_unit . ';';
-        } else {
-            // Use padding-top for aspect ratio
-            $ratio_map = [
-                '4:3' => '75%',      // 3/4 * 100
-                '16:9' => '56.25%',  // 9/16 * 100
-                '9:16' => '177.78%', // 16/9 * 100
-                '1:1' => '100%',     // 1/1 * 100 (Instagram Feed, Square)
-                '4:5' => '125%',     // 5/4 * 100 (Instagram Portrait)
-            ];
-            $padding = $ratio_map[$height_ratio] ?? '56.25%';
-            $height_style = 'padding-top:' . $padding . ';';
-        }
+        // Ratio to padding percentage map
+        $ratio_map = [
+            '4:3' => '75%',      // 3/4 * 100
+            '16:9' => '56.25%',  // 9/16 * 100
+            '9:16' => '177.78%', // 16/9 * 100
+            '1:1' => '100%',     // 1/1 * 100 (Instagram Feed, Square)
+            '4:5' => '125%',     // 5/4 * 100 (Instagram Portrait)
+        ];
         
         // Generate unique widget instance ID to avoid CSS conflicts
         $widget_id = 'dw-event-grid-' . $this->get_id();
@@ -1126,7 +1129,7 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             if ($image_url) {
                 // Wrap entire card in link to post permalink
                 echo '<a href="' . esc_url(get_permalink()) . '" class="dw-event-grid-link" style="display:block;text-decoration:none;color:inherit;">';
-                echo '<div class="dw-event-grid-image" style="position:relative;background-image:url(' . esc_url($image_url) . ');background-size:cover;background-position:center center;width:100%;' . esc_attr($height_style) . '">';
+                echo '<div class="dw-event-grid-image dw-event-grid-image-' . esc_attr($widget_id) . '" style="position:relative;background-image:url(' . esc_url($image_url) . ');background-size:cover;background-position:center center;width:100%;">';
                 
                 // Overlay rendering based on settings and image_only option
                 // If image_only is checked, don't show overlay regardless of settings
@@ -1254,6 +1257,39 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 display: block;
                 box-sizing: border-box !important;
             }
+            
+            /* Responsive height ratio styles */
+            <?php
+            // Desktop (default)
+            if ($height_ratio === 'custom') {
+                $custom_height = $settings['custom_height']['size'] ?? 400;
+                $custom_unit = $settings['custom_height']['unit'] ?? 'px';
+                echo '.dw-event-grid-image-' . esc_attr($widget_id) . ' { height: ' . esc_attr($custom_height) . esc_attr($custom_unit) . '; padding-top: 0; }';
+            } else {
+                $padding = $ratio_map[$height_ratio] ?? '56.25%';
+                echo '.dw-event-grid-image-' . esc_attr($widget_id) . ' { padding-top: ' . esc_attr($padding) . '; height: auto; }';
+            }
+            
+            // Tablet (max-width: 1024px)
+            if ($height_ratio_tablet === 'custom') {
+                $custom_height_tablet = $settings['custom_height_tablet']['size'] ?? ($settings['custom_height']['size'] ?? 400);
+                $custom_unit_tablet = $settings['custom_height_tablet']['unit'] ?? ($settings['custom_height']['unit'] ?? 'px');
+                echo '@media (max-width: 1024px) { .dw-event-grid-image-' . esc_attr($widget_id) . ' { height: ' . esc_attr($custom_height_tablet) . esc_attr($custom_unit_tablet) . '; padding-top: 0; } }';
+            } else {
+                $padding_tablet = $ratio_map[$height_ratio_tablet] ?? '56.25%';
+                echo '@media (max-width: 1024px) { .dw-event-grid-image-' . esc_attr($widget_id) . ' { padding-top: ' . esc_attr($padding_tablet) . '; height: auto; } }';
+            }
+            
+            // Mobile (max-width: 767px)
+            if ($height_ratio_mobile === 'custom') {
+                $custom_height_mobile = $settings['custom_height_mobile']['size'] ?? ($settings['custom_height_tablet']['size'] ?? ($settings['custom_height']['size'] ?? 400));
+                $custom_unit_mobile = $settings['custom_height_mobile']['unit'] ?? ($settings['custom_height_tablet']['unit'] ?? ($settings['custom_height']['unit'] ?? 'px'));
+                echo '@media (max-width: 767px) { .dw-event-grid-image-' . esc_attr($widget_id) . ' { height: ' . esc_attr($custom_height_mobile) . esc_attr($custom_unit_mobile) . '; padding-top: 0; } }';
+            } else {
+                $padding_mobile = $ratio_map[$height_ratio_mobile] ?? '56.25%';
+                echo '@media (max-width: 767px) { .dw-event-grid-image-' . esc_attr($widget_id) . ' { padding-top: ' . esc_attr($padding_mobile) . '; height: auto; } }';
+            }
+            ?>
             .dw-event-grid-item img {
                 width: 100%;
                 height: auto;
