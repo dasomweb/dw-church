@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.68.0
+Stable tag: 2.69.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -703,6 +703,13 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 * UI: All navigation controls appear when arrows are enabled
 * Defaults: Desktop 40px, Tablet 36px, Mobile 32px arrow size
 * Flexibility: Fine-tune arrow appearance per device
+
+= 2.69.0 =
+* Feature: Make height ratio responsive in Event Grid widget
+* Change: Height ratio control from single to responsive (Desktop, Tablet, Mobile)
+* Add: Device-specific height ratio settings for PC, Tablet, and Mobile
+* Add: Responsive custom height settings with device-specific defaults
+* Enhancement: Each device can now have different aspect ratios (e.g., 16:9 on desktop, 9:16 on mobile)
 
 = 2.68.0 =
 * Add: Instagram and TikTok aspect ratios to Event Grid widget height ratio options
