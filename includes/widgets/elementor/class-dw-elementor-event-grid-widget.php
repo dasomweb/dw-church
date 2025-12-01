@@ -234,7 +234,9 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 'options' => [
                     '4:3' => __('4:3', 'dasom-church'),
                     '16:9' => __('16:9', 'dasom-church'),
-                    '9:16' => __('9:16', 'dasom-church'),
+                    '9:16' => __('9:16 (TikTok, Instagram Story)', 'dasom-church'),
+                    '1:1' => __('1:1 (Instagram Feed)', 'dasom-church'),
+                    '4:5' => __('4:5 (Instagram Portrait)', 'dasom-church'),
                     'custom' => __('Custom', 'dasom-church'),
                 ],
             ]
@@ -1094,6 +1096,8 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
                 '4:3' => '75%',      // 3/4 * 100
                 '16:9' => '56.25%',  // 9/16 * 100
                 '9:16' => '177.78%', // 16/9 * 100
+                '1:1' => '100%',     // 1/1 * 100 (Instagram Feed, Square)
+                '4:5' => '125%',     // 5/4 * 100 (Instagram Portrait)
             ];
             $padding = $ratio_map[$height_ratio] ?? '56.25%';
             $height_style = 'padding-top:' . $padding . ';';
