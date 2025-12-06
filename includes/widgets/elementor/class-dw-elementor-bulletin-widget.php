@@ -114,6 +114,9 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                 'default' => 6,
                 'min' => 1,
                 'max' => 50,
+                'condition' => [
+                    'query_source' => 'latest',
+                ],
                 'description' => __('Number of posts to show', 'dasom-church'),
             ]
         );
@@ -127,6 +130,9 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                 'label_off' => __('Disable', 'dasom-church'),
                 'return_value' => 'yes',
                 'default' => 'no',
+                'condition' => [
+                    'query_source' => 'latest',
+                ],
                 'description' => __('Show pagination controls for bulletin posts', 'dasom-church'),
             ]
         );
