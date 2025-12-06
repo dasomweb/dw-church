@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.70.1
+Stable tag: 2.70.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -703,6 +703,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 * UI: All navigation controls appear when arrows are enabled
 * Defaults: Desktop 40px, Tablet 36px, Mobile 32px arrow size
 * Flexibility: Fine-tune arrow appearance per device
+
+= 2.70.2 =
+* Fix: PC banner images now correctly apply laptop breakpoint settings (1025px-1366px)
+* Fix: Sub banner images now only display on tablet (768px-1024px) instead of all screen sizes
+* Fix: Mobile banner images now only display on mobile (max-width: 767px)
+* Fix: Background position responsive settings now only apply to main banners, not sub banners
 
 = 2.70.1 =
 * Fix: Prevent version mismatch by auto-syncing DASOM_CHURCH_VERSION with plugin header

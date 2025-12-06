@@ -965,26 +965,32 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
             
             // Generate responsive CSS for background position and image (for all banners)
             echo '<style>';
-            // Background image - PC image by default
-            if ($image_url) {
+            // Background image - PC image by default (for main banner)
+            if ($image_url && ($category === '메인 배너' || $category === 'Main Banner')) {
                 echo '.' . $banner_id . ' { background-image: url(' . esc_url($image_url) . '); background-position: ' . esc_attr($bg_position_pc) . '; }';
             }
-            // Mobile image for main banner (if exists)
+            // Mobile image for main banner (if exists) - only on mobile
             if ($mobile_image_url && ($category === '메인 배너' || $category === 'Main Banner')) {
                 echo '@media (max-width: 767px) { .' . $banner_id . ' { background-image: url(' . esc_url($mobile_image_url) . '); } }';
             }
-            // Sub banner image for tablet (Elementor Tablet breakpoint: max-width: 1024px)
+            // Sub banner image - only on tablet (768px-1024px)
             if ($image_url && ($category === '서브 배너' || $category === 'Sub Banner')) {
-                echo '@media (max-width: 1024px) { .' . $banner_id . ' { background-image: url(' . esc_url($image_url) . '); } }';
+                echo '@media (min-width: 768px) and (max-width: 1024px) { .' . $banner_id . ' { background-image: url(' . esc_url($image_url) . '); background-position: ' . esc_attr($bg_position_tablet) . '; } }';
             }
             // Background position responsive - Elementor breakpoints
-            // Desktop: 1367px+ (default, already set above)
-            // Laptop: 1025px-1366px (Elementor Laptop breakpoint)
-            echo '@media (min-width: 1025px) and (max-width: 1366px) { .' . $banner_id . ' { background-position: ' . esc_attr($bg_position_laptop) . '; } }';
-            // Tablet: max-width: 1024px (Elementor Tablet breakpoint)
-            echo '@media (max-width: 1024px) { .' . $banner_id . ' { background-position: ' . esc_attr($bg_position_tablet) . '; } }';
-            // Mobile: max-width: 767px (Elementor Mobile breakpoint)
-            echo '@media (max-width: 767px) { .' . $banner_id . ' { background-position: ' . esc_attr($bg_position_mobile) . '; } }';
+            // Desktop: 1367px+ (default, already set above for main banner)
+            // Laptop: 1025px-1366px (Elementor Laptop breakpoint) - only for main banner
+            if ($category === '메인 배너' || $category === 'Main Banner') {
+                echo '@media (min-width: 1025px) and (max-width: 1366px) { .' . $banner_id . ' { background-position: ' . esc_attr($bg_position_laptop) . '; } }';
+            }
+            // Tablet: max-width: 1024px (Elementor Tablet breakpoint) - only for main banner (sub banner handled above)
+            if ($category === '메인 배너' || $category === 'Main Banner') {
+                echo '@media (max-width: 1024px) { .' . $banner_id . ' { background-position: ' . esc_attr($bg_position_tablet) . '; } }';
+            }
+            // Mobile: max-width: 767px (Elementor Mobile breakpoint) - only for main banner
+            if ($category === '메인 배너' || $category === 'Main Banner') {
+                echo '@media (max-width: 767px) { .' . $banner_id . ' { background-position: ' . esc_attr($bg_position_mobile) . '; } }';
+            }
             
             if ($has_text) {
                 // Banner with text overlay - also need text width responsive CSS

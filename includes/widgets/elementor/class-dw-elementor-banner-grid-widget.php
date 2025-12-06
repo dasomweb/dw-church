@@ -502,17 +502,23 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
             
             // Generate responsive CSS for background position and image - Elementor breakpoints
             echo '<style>';
-            // Desktop: 1367px+ (default)
-            echo '.' . $banner_grid_id . ' { background-position: ' . esc_attr($bg_position_pc) . '; }';
-            // Laptop: 1025px-1366px (Elementor Laptop breakpoint)
-            echo '@media (min-width: 1025px) and (max-width: 1366px) { .' . $banner_grid_id . ' { background-position: ' . esc_attr($bg_position_laptop) . '; } }';
-            // Tablet: max-width: 1024px (Elementor Tablet breakpoint)
-            echo '@media (max-width: 1024px) { .' . $banner_grid_id . ' { background-position: ' . esc_attr($bg_position_tablet) . '; } }';
-            // Mobile: max-width: 767px (Elementor Mobile breakpoint)
-            echo '@media (max-width: 767px) { .' . $banner_grid_id . ' { background-position: ' . esc_attr($bg_position_mobile) . '; } }';
-            // Sub banner image for tablet (Elementor Tablet breakpoint: max-width: 1024px)
+            // Background image - PC image by default (for main banner)
+            if ($image_url && ($category === '메인 배너' || $category === 'Main Banner')) {
+                echo '.' . $banner_grid_id . ' { background-image: url(' . esc_url($image_url) . '); background-position: ' . esc_attr($bg_position_pc) . '; }';
+            }
+            // Sub banner image - only on tablet (768px-1024px)
             if ($image_url && ($category === '서브 배너' || $category === 'Sub Banner')) {
-                echo '@media (max-width: 1024px) { .' . $banner_grid_id . ' { background-image: url(' . esc_url($image_url) . ') !important; } }';
+                echo '@media (min-width: 768px) and (max-width: 1024px) { .' . $banner_grid_id . ' { background-image: url(' . esc_url($image_url) . ') !important; background-position: ' . esc_attr($bg_position_tablet) . '; } }';
+            }
+            // Background position responsive - Elementor breakpoints (only for main banner)
+            if ($category === '메인 배너' || $category === 'Main Banner') {
+                // Desktop: 1367px+ (default, already set above)
+                // Laptop: 1025px-1366px (Elementor Laptop breakpoint)
+                echo '@media (min-width: 1025px) and (max-width: 1366px) { .' . $banner_grid_id . ' { background-position: ' . esc_attr($bg_position_laptop) . '; } }';
+                // Tablet: max-width: 1024px (Elementor Tablet breakpoint)
+                echo '@media (max-width: 1024px) { .' . $banner_grid_id . ' { background-position: ' . esc_attr($bg_position_tablet) . '; } }';
+                // Mobile: max-width: 767px (Elementor Mobile breakpoint)
+                echo '@media (max-width: 767px) { .' . $banner_grid_id . ' { background-position: ' . esc_attr($bg_position_mobile) . '; } }';
             }
             echo '</style>';
             
