@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.70.3
+Stable tag: 2.70.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -703,6 +703,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 * UI: All navigation controls appear when arrows are enabled
 * Defaults: Desktop 40px, Tablet 36px, Mobile 32px arrow size
 * Flexibility: Fine-tune arrow appearance per device
+
+= 2.70.4 =
+* Remove: Sub banner image field removed from banner meta box
+* Remove: Sub banner image field removed from DW settings custom field guide
+* Remove: Sub banner image upload/delete JavaScript handlers removed
+* Remove: Sub banner image save logic removed
 
 = 2.70.3 =
 * Fix: Sub banner image now displays as main banner on tablet (768px-1024px) with !important priority
