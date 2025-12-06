@@ -782,6 +782,30 @@ class DW_Church_Admin {
             ),
         ));
         
+        // 앨범 카테고리
+        register_taxonomy('album_category', 'album', array(
+            'labels' => array(
+                'name' => __('앨범 카테고리', 'dw-church'),
+                'singular_name' => __('앨범 카테고리', 'dw-church'),
+                'menu_name' => __('앨범 카테고리', 'dw-church'),
+                'add_new_item' => __('새 카테고리 추가', 'dw-church'),
+                'edit_item' => __('카테고리 편집', 'dw-church'),
+                'update_item' => __('카테고리 업데이트', 'dw-church'),
+                'search_items' => __('카테고리 검색', 'dw-church'),
+                'not_found' => __('카테고리를 찾을 수 없습니다', 'dw-church'),
+            ),
+            'hierarchical' => true,
+            'show_admin_column' => true,
+            'rewrite' => array('slug' => 'album-category'),
+            'show_in_rest' => true,
+            'capabilities' => array(
+                'manage_terms' => 'manage_categories',
+                'edit_terms' => 'manage_categories',
+                'delete_terms' => 'manage_categories',
+                'assign_terms' => 'edit_posts',
+            ),
+        ));
+        
         // 기본 카테고리 및 설교자 생성
         $this->dw_church_create_default_terms();
     }
