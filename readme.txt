@@ -5,7 +5,7 @@ Tags: church, management, sermon, bulletin, worship, gallery, events, dashboard
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.71.2
+Stable tag: 2.71.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -703,6 +703,11 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 * UI: All navigation controls appear when arrows are enabled
 * Defaults: Desktop 40px, Tablet 36px, Mobile 32px arrow size
 * Flexibility: Fine-tune arrow appearance per device
+
+= 2.71.3 =
+* Fix: Remove condition from posts_per_page control in DW Recent Bulletin widget
+* Fix: Preserve existing settings when enabling pagination
+* Fix: posts_per_page control now always visible regardless of pagination status
 
 = 2.71.2 =
 * Add: Pagination feature to DW Recent Bulletin widget
