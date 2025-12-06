@@ -704,6 +704,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 * Defaults: Desktop 40px, Tablet 36px, Mobile 32px arrow size
 * Flexibility: Fine-tune arrow appearance per device
 
+= 2.71.1 =
+* Add: Query Source feature to DW Recent Gallery widget
+* Feature: Users can now choose between Latest Posts or Manual Selection
+* Feature: Album Category filter available when using Latest Posts
+* Feature: Manual album selection with multiple selection support
+
 = 2.71.0 =
 * Add: Album category taxonomy for church album posts
 * Feature: Users can now add and select categories when creating/editing album posts
