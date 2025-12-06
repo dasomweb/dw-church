@@ -704,6 +704,10 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 * Defaults: Desktop 40px, Tablet 36px, Mobile 32px arrow size
 * Flexibility: Fine-tune arrow appearance per device
 
+= 2.70.3 =
+* Fix: Sub banner image now displays as main banner on tablet (768px-1024px) with !important priority
+* Fix: Sub banner image properly overrides main banner PC image on tablet devices
+
 = 2.70.2 =
 * Fix: PC banner images now correctly apply laptop breakpoint settings (1025px-1366px)
 * Fix: Sub banner images now only display on tablet (768px-1024px) instead of all screen sizes
