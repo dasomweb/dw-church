@@ -506,7 +506,7 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
             if ($image_url && ($category === '메인 배너' || $category === 'Main Banner')) {
                 echo '.' . $banner_grid_id . ' { background-image: url(' . esc_url($image_url) . '); background-position: ' . esc_attr($bg_position_pc) . '; }';
             }
-            // Sub banner image - only on tablet (768px-1024px)
+            // Sub banner image - display on tablet (768px-1024px) as main banner
             if ($image_url && ($category === '서브 배너' || $category === 'Sub Banner')) {
                 echo '@media (min-width: 768px) and (max-width: 1024px) { .' . $banner_grid_id . ' { background-image: url(' . esc_url($image_url) . ') !important; background-position: ' . esc_attr($bg_position_tablet) . '; } }';
             }

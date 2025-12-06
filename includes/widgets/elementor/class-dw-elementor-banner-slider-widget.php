@@ -969,13 +969,13 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
             if ($image_url && ($category === '메인 배너' || $category === 'Main Banner')) {
                 echo '.' . $banner_id . ' { background-image: url(' . esc_url($image_url) . '); background-position: ' . esc_attr($bg_position_pc) . '; }';
             }
+            // Sub banner image - display on tablet (768px-1024px) as main banner
+            if ($image_url && ($category === '서브 배너' || $category === 'Sub Banner')) {
+                echo '@media (min-width: 768px) and (max-width: 1024px) { .' . $banner_id . ' { background-image: url(' . esc_url($image_url) . ') !important; background-position: ' . esc_attr($bg_position_tablet) . '; } }';
+            }
             // Mobile image for main banner (if exists) - only on mobile
             if ($mobile_image_url && ($category === '메인 배너' || $category === 'Main Banner')) {
                 echo '@media (max-width: 767px) { .' . $banner_id . ' { background-image: url(' . esc_url($mobile_image_url) . '); } }';
-            }
-            // Sub banner image - only on tablet (768px-1024px)
-            if ($image_url && ($category === '서브 배너' || $category === 'Sub Banner')) {
-                echo '@media (min-width: 768px) and (max-width: 1024px) { .' . $banner_id . ' { background-image: url(' . esc_url($image_url) . '); background-position: ' . esc_attr($bg_position_tablet) . '; } }';
             }
             // Background position responsive - Elementor breakpoints
             // Desktop: 1367px+ (default, already set above for main banner)
