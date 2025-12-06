@@ -462,7 +462,6 @@ class DW_Church_Meta_Boxes {
         
         $pc_image = get_post_meta($post->ID, 'dw_banner_pc_image', true);
         $mobile_image = get_post_meta($post->ID, 'dw_banner_mobile_image', true);
-        $sub_image = get_post_meta($post->ID, 'dw_banner_sub_image', true);
         $link_url = get_post_meta($post->ID, 'dw_banner_link_url', true);
         $link_target = get_post_meta($post->ID, 'dw_banner_link_target', true);
         $link_target = $link_target ? $link_target : '_self';
@@ -513,7 +512,6 @@ class DW_Church_Meta_Boxes {
             <p style="margin:0;font-size:13px;color:#666;">
                 <strong><?php _e('배너 이미지:', 'dw-church'); ?></strong><br>
                 • <strong><?php _e('메인 배너', 'dw-church'); ?>:</strong> <?php _e('PC (1920px) + 모바일 (720px) 이미지를 사용합니다', 'dw-church'); ?><br>
-                • <strong><?php _e('서브 배너', 'dw-church'); ?>:</strong> <?php _e('1024px 고정폭 이미지를 사용합니다', 'dw-church'); ?><br><br>
                 <strong><?php _e('텍스트 오버레이:', 'dw-church'); ?></strong> <?php _e('제목, 부제목, 설명을 입력하면 배경 이미지 위에 표시됩니다. 입력하지 않으면 이미지만 표시됩니다.', 'dw-church'); ?>
             </p>
         </div>
@@ -550,24 +548,6 @@ class DW_Church_Meta_Boxes {
                         <?php endif; ?>
                     </div>
                     <p class="description"><?php _e('권장 크기: 가로 720px', 'dw-church'); ?></p>
-                </td>
-            </tr>
-            
-            <!-- 서브 배너 필드 -->
-            <tr class="banner-field banner-sub-field" data-banner-type="sub">
-                <th scope="row">
-                    <label for="dw_banner_sub_image"><?php _e('서브 배너 이미지 (1024px)', 'dw-church'); ?></label>
-                </th>
-                <td>
-                    <input type="hidden" id="dw_banner_sub_image" name="dw_banner_sub_image" value="<?php echo esc_attr($sub_image); ?>" />
-                    <button type="button" class="button" id="dw_banner_sub_image_button"><?php _e('이미지 업로드', 'dw-church'); ?></button>
-                    <button type="button" class="button button-link-delete" id="dw_banner_sub_image_remove" style="color:#b32d2e;"><?php _e('이미지 삭제', 'dw-church'); ?></button>
-                    <div id="dw_banner_sub_image_preview" style="margin-top:10px;">
-                        <?php if ($sub_image): ?>
-                            <img src="<?php echo esc_url(wp_get_attachment_url($sub_image)); ?>" style="max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;" />
-                        <?php endif; ?>
-                    </div>
-                    <p class="description"><?php _e('권장 크기: 가로 1024px', 'dw-church'); ?></p>
                 </td>
             </tr>
             
@@ -1249,22 +1229,13 @@ class DW_Church_Meta_Boxes {
             update_post_meta($post_id, 'dw_banner_mobile_image', intval($_POST['dw_banner_mobile_image']));
         }
         
-        // Sub banner fields
-        if (isset($_POST['dw_banner_sub_image'])) {
-            $sub_image_id = intval($_POST['dw_banner_sub_image']);
-            update_post_meta($post_id, 'dw_banner_sub_image', $sub_image_id);
-        }
-        
         // Set featured image based on which image is uploaded
-        // Priority: PC image > Sub image > Mobile image
+        // Priority: PC image > Mobile image
         $pc_image_id = isset($_POST['dw_banner_pc_image']) ? intval($_POST['dw_banner_pc_image']) : 0;
-        $sub_image_id = isset($_POST['dw_banner_sub_image']) ? intval($_POST['dw_banner_sub_image']) : 0;
         $mobile_image_id = isset($_POST['dw_banner_mobile_image']) ? intval($_POST['dw_banner_mobile_image']) : 0;
         
         if ($pc_image_id > 0) {
             set_post_thumbnail($post_id, $pc_image_id);
-        } elseif ($sub_image_id > 0) {
-            set_post_thumbnail($post_id, $sub_image_id);
         } elseif ($mobile_image_id > 0) {
             set_post_thumbnail($post_id, $mobile_image_id);
         }
@@ -1817,31 +1788,6 @@ class DW_Church_Meta_Boxes {
                 }
             });
             
-            // 배너 서브 이미지 업로드
-            $('#dw_banner_sub_image_button').on('click', function(e) {
-                e.preventDefault();
-                var frame = wp.media({
-                    title: '서브 배너 이미지 업로드',
-                    button: {text: '선택'},
-                    library: {type: 'image'},
-                    multiple: false
-                });
-                frame.on('select', function() {
-                    var attachment = frame.state().get('selection').first().toJSON();
-                    $('#dw_banner_sub_image').val(attachment.id);
-                    $('#dw_banner_sub_image_preview').html('<img src=\"' + attachment.url + '\" style=\"max-width:400px;height:auto;object-fit:cover;border:1px solid #ddd;\" />');
-                });
-                frame.open();
-            });
-            
-            // 배너 서브 이미지 삭제
-            $('#dw_banner_sub_image_remove').on('click', function(e) {
-                e.preventDefault();
-                if (confirm('서브 배너 이미지를 삭제하시겠습니까?')) {
-                    $('#dw_banner_sub_image').val('');
-                    $('#dw_banner_sub_image_preview').html('');
-                }
-            });
             
             // 배너 시작 날짜 리셋
             $('#dw_banner_start_date_reset').on('click', function(e) {
