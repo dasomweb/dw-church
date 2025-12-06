@@ -117,6 +117,18 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         );
         
         $this->add_control(
+            'posts_per_page',
+            [
+                'label' => __('Posts Per Page', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::NUMBER,
+                'default' => 6,
+                'min' => 1,
+                'max' => 50,
+                'description' => __('Number of posts to show', 'dasom-church'),
+            ]
+        );
+        
+        $this->add_control(
             'enable_pagination',
             [
                 'label' => __('Enable Pagination', 'dasom-church'),
@@ -126,21 +138,6 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                 'return_value' => 'yes',
                 'default' => 'no',
                 'description' => __('Show pagination controls for bulletin posts', 'dasom-church'),
-            ]
-        );
-        
-        $this->add_control(
-            'posts_per_page',
-            [
-                'label' => __('Posts Per Page', 'dasom-church'),
-                'type' => \Elementor\Controls_Manager::NUMBER,
-                'default' => 6,
-                'min' => 1,
-                'max' => 50,
-                'condition' => [
-                    'enable_pagination' => 'yes',
-                ],
-                'description' => __('Number of posts to show per page', 'dasom-church'),
             ]
         );
         
