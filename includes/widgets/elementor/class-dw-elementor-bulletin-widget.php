@@ -969,11 +969,8 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
     protected function render() {
         $settings = $this->get_settings_for_display();
         
-        // Pagination setup
-        $paged = get_query_var('paged') ? get_query_var('paged') : 1;
-        $posts_per_page = isset($settings['enable_pagination']) && $settings['enable_pagination'] === 'yes' 
-            ? $settings['posts_per_page'] 
-            : (isset($settings['posts_per_page']) ? $settings['posts_per_page'] : 10);
+        $enable_pagination = $settings['enable_pagination'] ?? 'no';
+        $paged = (get_query_var('paged')) ? get_query_var('paged') : 1;
         
         // Get posts based on query source
         if ($settings['query_source'] === 'current') {
@@ -984,6 +981,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
             } else {
                 $posts = [];
             }
+            $query = null;
         } elseif ($settings['query_source'] === 'manual' && !empty($settings['bulletin_posts'])) {
             // Manual selection
             $posts = get_posts([
@@ -993,16 +991,24 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                 'post_status' => 'publish',
                 'orderby' => 'post__in',
             ]);
+            $query = null;
         } else {
-            // Latest posts with pagination
-            $posts = get_posts([
+            // Latest posts with pagination - use WP_Query for proper pagination
+            $args = array(
                 'post_type' => 'bulletin',
-                'posts_per_page' => $posts_per_page,
+                'posts_per_page' => $settings['posts_per_page'] ?? 6,
                 'post_status' => 'publish',
                 'orderby' => 'date',
                 'order' => 'DESC',
-                'paged' => $paged,
-            ]);
+            );
+            
+            // Add pagination if enabled
+            if ($enable_pagination === 'yes') {
+                $args['paged'] = $paged;
+            }
+            
+            $query = new WP_Query($args);
+            $posts = $query->posts;
         }
         
         if (empty($posts)) {
@@ -1020,8 +1026,13 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
         }
         
         // Render pagination if enabled
-        if (isset($settings['enable_pagination']) && $settings['enable_pagination'] === 'yes' && $settings['query_source'] === 'latest') {
-            $this->render_pagination($posts_per_page, $paged);
+        if ($enable_pagination === 'yes' && $settings['query_source'] === 'latest' && $query) {
+            $this->render_pagination($query);
+        }
+        
+        // Reset post data
+        if ($query) {
+            wp_reset_postdata();
         }
     }
     
@@ -1170,69 +1181,110 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
     }
     
     /**
-     * Render pagination
+     * Render pagination HTML
      */
-    private function render_pagination($posts_per_page, $current_page) {
-        // Get total number of bulletin posts
-        $total_posts = wp_count_posts('bulletin');
-        $total_posts = $total_posts->publish;
-        
-        if ($total_posts <= $posts_per_page) {
-            return; // No pagination needed
+    private function render_pagination($query) {
+        if ($query->max_num_pages <= 1) {
+            return;
         }
         
-        $total_pages = ceil($total_posts / $posts_per_page);
+        $paged = max(1, get_query_var('paged'));
+        $max_pages = $query->max_num_pages;
         
-        if ($total_pages <= 1) {
-            return; // No pagination needed
+        echo '<div class="dw-pagination">';
+        
+        // First page (text only)
+        if ($paged > 1) {
+            echo '<a href="' . esc_url(get_pagenum_link(1)) . '" class="dw-pagination-text">처음</a>';
         }
         
-        $current_url = get_permalink();
-        $current_url = remove_query_arg('paged', $current_url);
+        // Previous page (circular button)
+        if ($paged > 1) {
+            echo '<a href="' . esc_url(get_pagenum_link($paged - 1)) . '" class="dw-pagination-link dw-pagination-prev">‹</a>';
+        }
         
+        // Page numbers (circular buttons)
+        $range = 2;
+        for ($i = 1; $i <= $max_pages; $i++) {
+            if ($i == 1 || $i == $max_pages || ($i >= $paged - $range && $i <= $paged + $range)) {
+                if ($i == $paged) {
+                    echo '<span class="dw-pagination-link current">' . $i . '</span>';
+                } else {
+                    echo '<a href="' . esc_url(get_pagenum_link($i)) . '" class="dw-pagination-link">' . $i . '</a>';
+                }
+            } elseif ($i == $paged - $range - 1 || $i == $paged + $range + 1) {
+                echo '<span class="dw-pagination-dots">...</span>';
+            }
+        }
+        
+        // Next page (circular button)
+        if ($paged < $max_pages) {
+            echo '<a href="' . esc_url(get_pagenum_link($paged + 1)) . '" class="dw-pagination-link dw-pagination-next">›</a>';
+        }
+        
+        // Last page (text only)
+        if ($paged < $max_pages) {
+            echo '<a href="' . esc_url(get_pagenum_link($max_pages)) . '" class="dw-pagination-text">마지막</a>';
+        }
+        
+        echo '</div>';
+        
+        // Pagination CSS
         ?>
-        <div class="dw-bulletin-pagination">
-            <div class="dw-pagination-wrapper">
-                <?php if ($current_page > 1): ?>
-                    <a href="<?php echo esc_url(add_query_arg('paged', $current_page - 1, $current_url)); ?>" class="dw-pagination-prev">
-                        <?php _e('이전', 'dasom-church'); ?>
-                    </a>
-                <?php endif; ?>
-                
-                <div class="dw-pagination-numbers">
-                    <?php
-                    $start_page = max(1, $current_page - 2);
-                    $end_page = min($total_pages, $current_page + 2);
-                    
-                    if ($start_page > 1) {
-                        echo '<a href="' . esc_url(add_query_arg('paged', 1, $current_url)) . '" class="dw-pagination-number">1</a>';
-                        if ($start_page > 2) {
-                            echo '<span class="dw-pagination-dots">...</span>';
-                        }
-                    }
-                    
-                    for ($i = $start_page; $i <= $end_page; $i++) {
-                        $class = ($i == $current_page) ? 'dw-pagination-number current' : 'dw-pagination-number';
-                        $url = ($i == $current_page) ? '#' : add_query_arg('paged', $i, $current_url);
-                        echo '<a href="' . esc_url($url) . '" class="' . esc_attr($class) . '">' . $i . '</a>';
-                    }
-                    
-                    if ($end_page < $total_pages) {
-                        if ($end_page < $total_pages - 1) {
-                            echo '<span class="dw-pagination-dots">...</span>';
-                        }
-                        echo '<a href="' . esc_url(add_query_arg('paged', $total_pages, $current_url)) . '" class="dw-pagination-number">' . $total_pages . '</a>';
-                    }
-                    ?>
-                </div>
-                
-                <?php if ($current_page < $total_pages): ?>
-                    <a href="<?php echo esc_url(add_query_arg('paged', $current_page + 1, $current_url)); ?>" class="dw-pagination-next">
-                        <?php _e('다음', 'dasom-church'); ?>
-                    </a>
-                <?php endif; ?>
-            </div>
-        </div>
+        <style>
+            .dw-pagination {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+            .dw-pagination-text {
+                display: inline-flex;
+                align-items: center;
+                padding: 0 8px;
+                text-decoration: none;
+                font-size: 14px;
+                color: #666;
+                transition: color 0.3s ease;
+            }
+            .dw-pagination-text:hover {
+                color: #000;
+            }
+            .dw-pagination-link {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 32px;
+                height: 32px;
+                padding: 0;
+                border: 1px solid #e0e0e0;
+                border-radius: 50%;
+                text-decoration: none;
+                font-size: 13px;
+                background-color: #f5f5f5;
+                transition: all 0.3s ease;
+            }
+            .dw-pagination-link:hover {
+                background-color: #e0e0e0;
+            }
+            .dw-pagination-link.current {
+                background-color: #000000;
+                border-color: transparent;
+            }
+            .dw-pagination-link.dw-pagination-prev,
+            .dw-pagination-link.dw-pagination-next {
+                font-size: 16px;
+            }
+            .dw-pagination-dots {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 32px;
+                height: 32px;
+                color: #999;
+            }
+        </style>
         <?php
     }
 }
