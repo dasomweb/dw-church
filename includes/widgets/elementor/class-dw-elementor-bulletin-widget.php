@@ -979,81 +979,76 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
     protected function render() {
         $settings = $this->get_settings_for_display();
         
+        $query_source = $settings['query_source'] ?? 'latest';
         $enable_pagination = $settings['enable_pagination'] ?? 'no';
         $paged = (get_query_var('paged')) ? get_query_var('paged') : 1;
         
-        // Get posts based on query source
-        if ($settings['query_source'] === 'current') {
-            // Current post
+        $args = array(
+            'post_type' => 'bulletin',
+            'post_status' => 'publish',
+        );
+        
+        // Query Source: Current Post
+        if ($query_source === 'current') {
             $current_post = get_post();
             if ($current_post && $current_post->post_type === 'bulletin') {
-                $posts = [$current_post];
+                $args['p'] = $current_post->ID;
+                $args['posts_per_page'] = 1;
             } else {
-                $posts = [];
+                echo '<p>' . __('No bulletins found.', 'dasom-church') . '</p>';
+                return;
             }
-            $query = null;
-        } elseif ($settings['query_source'] === 'manual' && !empty($settings['bulletin_posts'])) {
-            // Manual selection
-            $posts = get_posts([
-                'post_type' => 'bulletin',
-                'post__in' => $settings['bulletin_posts'],
-                'posts_per_page' => -1,
-                'post_status' => 'publish',
-                'orderby' => 'post__in',
-            ]);
-            $query = null;
-        } else {
-            // Latest posts with pagination - use WP_Query for proper pagination
-            $args = array(
-                'post_type' => 'bulletin',
-                'posts_per_page' => $settings['posts_per_page'] ?? 6,
-                'post_status' => 'publish',
-                'orderby' => 'date',
-                'order' => 'DESC',
-            );
-            
-            // Add pagination if enabled
-            if ($enable_pagination === 'yes') {
-                $args['paged'] = $paged;
-            }
-            
-            $query = new WP_Query($args);
-            $posts = $query->posts;
+        }
+        // Query Source: Manual Selection
+        elseif ($query_source === 'manual' && !empty($settings['bulletin_posts'])) {
+            $args['post__in'] = $settings['bulletin_posts'];
+            $args['orderby'] = 'post__in';
+            $args['posts_per_page'] = -1;
+        }
+        // Query Source: Latest Posts
+        else {
+            $args['posts_per_page'] = $settings['posts_per_page'] ?? 6;
+            $args['orderby'] = 'date';
+            $args['order'] = 'DESC';
         }
         
-        if (empty($posts)) {
+        // Add pagination if enabled
+        if ($enable_pagination === 'yes') {
+            $args['paged'] = $paged;
+        }
+        
+        $query = new WP_Query($args);
+        
+        if (!$query->have_posts()) {
             echo '<p>' . __('No bulletins found.', 'dasom-church') . '</p>';
+            wp_reset_postdata();
             return;
         }
         
-        $display_type = isset($settings['display_type']) ? $settings['display_type'] : 'image';
-        $layout_type = isset($settings['layout_type']) ? $settings['layout_type'] : 'list';
+        $display_type = $settings['display_type'] ?? 'image';
+        $layout_type = $settings['layout_type'] ?? 'list';
         
         if ($display_type === 'image') {
-            $this->render_image_template($posts, $layout_type);
-        } elseif ($display_type === 'button') {
-            $this->render_button_template($posts, $layout_type);
+            $this->render_image_template($query->posts, $layout_type, $settings);
         } else {
-            // Fallback to button template if display_type is not recognized
-            $this->render_button_template($posts, $layout_type);
+            $this->render_button_template($query->posts, $layout_type, $settings);
         }
         
-        // Render pagination if enabled
-        if ($enable_pagination === 'yes' && $settings['query_source'] === 'latest' && $query) {
+        // Display pagination if enabled
+        if ($enable_pagination === 'yes') {
             $this->render_pagination($query);
         }
         
-        // Reset post data
-        if ($query) {
-            wp_reset_postdata();
-        }
+        wp_reset_postdata();
     }
     
     /**
      * Render image template
      */
-    private function render_image_template($posts, $layout_type = 'list') {
-        $settings = $this->get_settings_for_display();
+    private function render_image_template($posts, $layout_type = 'list', $settings = null) {
+        if ($settings === null) {
+            $settings = $this->get_settings_for_display();
+        }
         $hover_effect = isset($settings['card_hover_effect']) ? $settings['card_hover_effect'] : 'lift';
         $shadow_color = isset($settings['card_hover_shadow_color']) ? $settings['card_hover_shadow_color'] : 'rgba(0, 0, 0, 0.2)';
         $image_position = isset($settings['image_position']) ? $settings['image_position'] : 'left';
@@ -1126,8 +1121,10 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
     /**
      * Render button template
      */
-    private function render_button_template($posts, $layout_type = 'list') {
-        $settings = $this->get_settings_for_display();
+    private function render_button_template($posts, $layout_type = 'list', $settings = null) {
+        if ($settings === null) {
+            $settings = $this->get_settings_for_display();
+        }
         $hover_effect = isset($settings['card_hover_effect']) ? $settings['card_hover_effect'] : 'lift';
         $shadow_color = isset($settings['card_hover_shadow_color']) ? $settings['card_hover_shadow_color'] : 'rgba(0, 0, 0, 0.2)';
         
