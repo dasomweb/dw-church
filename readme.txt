@@ -704,6 +704,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 * Defaults: Desktop 40px, Tablet 36px, Mobile 32px arrow size
 * Flexibility: Fine-tune arrow appearance per device
 
+= 2.71.2 =
+* Add: Pagination feature to DW Recent Bulletin widget
+* Fix: Improved pagination implementation using WP_Query instead of get_posts
+* Style: Pagination design matches DW Recent Sermons widget style
+* Feature: Pagination works with Latest Posts query source
+
 = 2.71.1 =
 * Add: Query Source feature to DW Recent Gallery widget
 * Feature: Users can now choose between Latest Posts or Manual Selection
