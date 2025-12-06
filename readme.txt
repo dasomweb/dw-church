@@ -704,6 +704,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 * Defaults: Desktop 40px, Tablet 36px, Mobile 32px arrow size
 * Flexibility: Fine-tune arrow appearance per device
 
+= 2.71.7 =
+* Fix: Add condition to posts_per_page and enable_pagination in DW Recent Bulletin widget
+* Fix: Prevent settings reset when changing posts_per_page value
+* Fix: Match condition pattern with other widgets (DW Recent Sermons, Gallery, Event Grid)
+* Fix: posts_per_page and enable_pagination now only visible when query_source is 'latest'
+
 = 2.71.6 =
 * Fix: Align DW Recent Bulletin widget with other widgets pattern to prevent settings reset
 * Fix: Use WP_Query consistently for all query sources (matching DW Recent Sermons and Gallery widgets)
