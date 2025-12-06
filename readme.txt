@@ -704,6 +704,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 * Defaults: Desktop 40px, Tablet 36px, Mobile 32px arrow size
 * Flexibility: Fine-tune arrow appearance per device
 
+= 2.71.5 =
+* Fix: Prevent settings reset when clicking buttons in DW Recent Bulletin widget
+* Fix: Cache bulletin posts options to prevent settings initialization
+* Fix: Add static caching to get_bulletin_posts() function
+* Fix: Add label_block to SELECT2 control for better stability
+
 = 2.71.4 =
 * Fix: Preserve settings when changing Display Type in DW Recent Bulletin widget
 * Fix: Reorder controls to prevent settings loss when switching between Image and Button templates
