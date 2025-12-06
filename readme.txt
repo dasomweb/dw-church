@@ -704,6 +704,13 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 * Defaults: Desktop 40px, Tablet 36px, Mobile 32px arrow size
 * Flexibility: Fine-tune arrow appearance per device
 
+= 2.71.6 =
+* Fix: Align DW Recent Bulletin widget with other widgets pattern to prevent settings reset
+* Fix: Use WP_Query consistently for all query sources (matching DW Recent Sermons and Gallery widgets)
+* Fix: Optimize get_settings_for_display() to be called only once
+* Fix: Simplify pagination condition to match other widgets
+* Fix: Pass settings to template functions to prevent multiple get_settings_for_display() calls
+
 = 2.71.5 =
 * Fix: Prevent settings reset when clicking buttons in DW Recent Bulletin widget
 * Fix: Cache bulletin posts options to prevent settings initialization
