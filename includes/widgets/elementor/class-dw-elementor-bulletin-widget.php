@@ -76,13 +76,17 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
             ]
         );
         
+        // Get bulletin posts options - cache to prevent settings reset
+        $bulletin_options = $this->get_bulletin_posts();
+        
         $this->add_control(
             'bulletin_posts',
             [
                 'label' => __('Select Bulletins', 'dasom-church'),
                 'type' => \Elementor\Controls_Manager::SELECT2,
                 'multiple' => true,
-                'options' => $this->get_bulletin_posts(),
+                'options' => $bulletin_options,
+                'label_block' => true,
                 'condition' => [
                     'query_source' => 'manual',
                 ],
@@ -943,12 +947,21 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
     
     /**
      * Get bulletin posts for manual selection
+     * Cached to prevent settings reset when options are regenerated
      */
     private function get_bulletin_posts() {
+        static $cached_options = null;
+        
+        if ($cached_options !== null) {
+            return $cached_options;
+        }
+        
         $posts = get_posts([
             'post_type' => 'bulletin',
             'posts_per_page' => -1,
             'post_status' => 'publish',
+            'orderby' => 'date',
+            'order' => 'DESC',
         ]);
         
         $options = [];
@@ -956,6 +969,7 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
             $options[$post->ID] = $post->post_title;
         }
         
+        $cached_options = $options;
         return $options;
     }
     
