@@ -704,6 +704,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 * Defaults: Desktop 40px, Tablet 36px, Mobile 32px arrow size
 * Flexibility: Fine-tune arrow appearance per device
 
+= 2.71.0 =
+* Add: Album category taxonomy for church album posts
+* Feature: Users can now add and select categories when creating/editing album posts
+* Feature: Hierarchical album categories with admin column display
+* Feature: REST API support for album categories
+
 = 2.70.4 =
 * Remove: Sub banner image field removed from banner meta box
 * Remove: Sub banner image field removed from DW settings custom field guide
