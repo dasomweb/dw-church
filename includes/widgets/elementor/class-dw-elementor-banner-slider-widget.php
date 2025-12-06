@@ -973,13 +973,17 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
             if ($mobile_image_url && ($category === '메인 배너' || $category === 'Main Banner')) {
                 echo '@media (max-width: 767px) { .' . $banner_id . ' { background-image: url(' . esc_url($mobile_image_url) . '); } }';
             }
-            // Sub banner image for tablet (explicitly set for 768-1023px)
+            // Sub banner image for tablet (Elementor Tablet breakpoint: max-width: 1024px)
             if ($image_url && ($category === '서브 배너' || $category === 'Sub Banner')) {
-                echo '@media (min-width: 768px) and (max-width: 1023px) { .' . $banner_id . ' { background-image: url(' . esc_url($image_url) . '); } }';
+                echo '@media (max-width: 1024px) { .' . $banner_id . ' { background-image: url(' . esc_url($image_url) . '); } }';
             }
-            // Background position responsive
-            echo '@media (max-width: 1919px) { .' . $banner_id . ' { background-position: ' . esc_attr($bg_position_laptop) . '; } }';
-            echo '@media (max-width: 1023px) { .' . $banner_id . ' { background-position: ' . esc_attr($bg_position_tablet) . '; } }';
+            // Background position responsive - Elementor breakpoints
+            // Desktop: 1367px+ (default, already set above)
+            // Laptop: 1025px-1366px (Elementor Laptop breakpoint)
+            echo '@media (min-width: 1025px) and (max-width: 1366px) { .' . $banner_id . ' { background-position: ' . esc_attr($bg_position_laptop) . '; } }';
+            // Tablet: max-width: 1024px (Elementor Tablet breakpoint)
+            echo '@media (max-width: 1024px) { .' . $banner_id . ' { background-position: ' . esc_attr($bg_position_tablet) . '; } }';
+            // Mobile: max-width: 767px (Elementor Mobile breakpoint)
             echo '@media (max-width: 767px) { .' . $banner_id . ' { background-position: ' . esc_attr($bg_position_mobile) . '; } }';
             
             if ($has_text) {
@@ -996,8 +1000,11 @@ class DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {
                 $text_content_id = 'dw-banner-text-' . get_the_ID();
                 
                 echo '.' . $text_content_id . ' { max-width: ' . esc_attr($text_width_pc) . 'px; }';
-                echo '@media (max-width: 1919px) { .' . $text_content_id . ' { max-width: ' . esc_attr($text_width_laptop) . 'px; } }';
-                echo '@media (max-width: 1023px) { .' . $text_content_id . ' { max-width: ' . esc_attr($text_width_tablet) . 'px; } }';
+                // Laptop: 1025px-1366px (Elementor Laptop breakpoint)
+                echo '@media (min-width: 1025px) and (max-width: 1366px) { .' . $text_content_id . ' { max-width: ' . esc_attr($text_width_laptop) . 'px; } }';
+                // Tablet: max-width: 1024px (Elementor Tablet breakpoint)
+                echo '@media (max-width: 1024px) { .' . $text_content_id . ' { max-width: ' . esc_attr($text_width_tablet) . 'px; } }';
+                // Mobile: max-width: 767px (Elementor Mobile breakpoint)
                 echo '@media (max-width: 767px) { .' . $text_content_id . ' { max-width: ' . esc_attr($text_width_mobile) . 'px; } }';
             }
             

@@ -500,15 +500,19 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
             
             $banner_grid_id = 'dw-banner-grid-' . get_the_ID();
             
-            // Generate responsive CSS for background position and image
+            // Generate responsive CSS for background position and image - Elementor breakpoints
             echo '<style>';
+            // Desktop: 1367px+ (default)
             echo '.' . $banner_grid_id . ' { background-position: ' . esc_attr($bg_position_pc) . '; }';
-            echo '@media (max-width: 1919px) { .' . $banner_grid_id . ' { background-position: ' . esc_attr($bg_position_laptop) . '; } }';
-            echo '@media (max-width: 1023px) { .' . $banner_grid_id . ' { background-position: ' . esc_attr($bg_position_tablet) . '; } }';
+            // Laptop: 1025px-1366px (Elementor Laptop breakpoint)
+            echo '@media (min-width: 1025px) and (max-width: 1366px) { .' . $banner_grid_id . ' { background-position: ' . esc_attr($bg_position_laptop) . '; } }';
+            // Tablet: max-width: 1024px (Elementor Tablet breakpoint)
+            echo '@media (max-width: 1024px) { .' . $banner_grid_id . ' { background-position: ' . esc_attr($bg_position_tablet) . '; } }';
+            // Mobile: max-width: 767px (Elementor Mobile breakpoint)
             echo '@media (max-width: 767px) { .' . $banner_grid_id . ' { background-position: ' . esc_attr($bg_position_mobile) . '; } }';
-            // Sub banner image for tablet (explicitly set for 768-1023px)
+            // Sub banner image for tablet (Elementor Tablet breakpoint: max-width: 1024px)
             if ($image_url && ($category === '서브 배너' || $category === 'Sub Banner')) {
-                echo '@media (min-width: 768px) and (max-width: 1023px) { .' . $banner_grid_id . ' { background-image: url(' . esc_url($image_url) . ') !important; } }';
+                echo '@media (max-width: 1024px) { .' . $banner_grid_id . ' { background-image: url(' . esc_url($image_url) . ') !important; } }';
             }
             echo '</style>';
             
