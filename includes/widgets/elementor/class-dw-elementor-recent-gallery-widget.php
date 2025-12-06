@@ -43,6 +43,73 @@ class DW_Elementor_Recent_Gallery_Widget extends \Elementor\Widget_Base {
             ]
         );
         
+        // Get album categories
+        $album_categories = get_terms(array(
+            'taxonomy' => 'album_category',
+            'hide_empty' => false,
+        ));
+        
+        $category_options = array('' => __('All Albums', 'dasom-church'));
+        if (!is_wp_error($album_categories)) {
+            foreach ($album_categories as $cat) {
+                $category_options[$cat->slug] = $cat->name;
+            }
+        }
+        
+        $this->add_control(
+            'query_source',
+            [
+                'label' => __('Query Source', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'latest',
+                'options' => [
+                    'latest' => __('Latest Posts', 'dasom-church'),
+                    'manual' => __('Manual Selection', 'dasom-church'),
+                ],
+            ]
+        );
+        
+        // Get all albums for manual selection
+        $album_options = array();
+        $all_albums = get_posts(array(
+            'post_type' => 'album',
+            'posts_per_page' => -1,
+            'post_status' => 'publish',
+            'orderby' => 'title',
+            'order' => 'ASC',
+        ));
+        foreach ($all_albums as $album) {
+            $album_options[$album->ID] = $album->post_title;
+        }
+        
+        $this->add_control(
+            'manual_selection',
+            [
+                'label' => __('Select Albums', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT2,
+                'multiple' => true,
+                'options' => $album_options,
+                'label_block' => true,
+                'condition' => [
+                    'query_source' => 'manual',
+                ],
+                'description' => __('Select specific albums to display.', 'dasom-church'),
+            ]
+        );
+        
+        $this->add_control(
+            'album_category',
+            [
+                'label' => __('Album Category', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'options' => $category_options,
+                'default' => '',
+                'condition' => [
+                    'query_source' => 'latest',
+                ],
+            ]
+        );
+        
         $this->add_control(
             'posts_per_page',
             [
@@ -51,6 +118,9 @@ class DW_Elementor_Recent_Gallery_Widget extends \Elementor\Widget_Base {
                 'default' => 6,
                 'min' => 1,
                 'max' => 50,
+                'condition' => [
+                    'query_source' => 'latest',
+                ],
             ]
         );
         
@@ -586,18 +656,45 @@ class DW_Elementor_Recent_Gallery_Widget extends \Elementor\Widget_Base {
         
         $enable_pagination = $settings['enable_pagination'] ?? 'no';
         $paged = (get_query_var('paged')) ? get_query_var('paged') : 1;
+        $query_source = $settings['query_source'] ?? 'latest';
         
         $args = array(
             'post_type' => 'album',
-            'posts_per_page' => $settings['posts_per_page'],
             'post_status' => 'publish',
-            'orderby' => 'date',
-            'order' => 'DESC',
         );
         
-        // Add pagination if enabled
-        if ($enable_pagination === 'yes') {
-            $args['paged'] = $paged;
+        // Query Source: Manual Selection
+        if ($query_source === 'manual') {
+            $manual_selection = $settings['manual_selection'] ?? array();
+            if (!empty($manual_selection) && is_array($manual_selection)) {
+                $args['post__in'] = $manual_selection;
+                $args['orderby'] = 'post__in';
+                $args['posts_per_page'] = -1; // Show all selected albums
+            } else {
+                echo '<p>' . __('No albums selected.', 'dasom-church') . '</p>';
+                return;
+            }
+        } else {
+            // Query Source: Latest Posts
+            $args['posts_per_page'] = $settings['posts_per_page'] ?? 6;
+            $args['orderby'] = 'date';
+            $args['order'] = 'DESC';
+            
+            // Album Category filter
+            if (!empty($settings['album_category'])) {
+                $args['tax_query'] = array(
+                    array(
+                        'taxonomy' => 'album_category',
+                        'field' => 'slug',
+                        'terms' => $settings['album_category'],
+                    ),
+                );
+            }
+            
+            // Add pagination if enabled
+            if ($enable_pagination === 'yes') {
+                $args['paged'] = $paged;
+            }
         }
         
         $query = new WP_Query($args);
