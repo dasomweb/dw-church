@@ -89,20 +89,6 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
             ]
         );
         
-        
-        $this->add_control(
-            'display_type',
-            [
-                'label' => __('Display Type', 'dasom-church'),
-                'type' => \Elementor\Controls_Manager::SELECT,
-                'default' => 'image',
-                'options' => [
-                    'image' => __('Image Template', 'dasom-church'),
-                    'button' => __('Button Template', 'dasom-church'),
-                ],
-            ]
-        );
-        
         $this->add_control(
             'show_bulletin_text',
             [
@@ -150,6 +136,19 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
                 'options' => [
                     'list' => __('List Layout', 'dasom-church'),
                     'grid' => __('Grid Layout', 'dasom-church'),
+                ],
+            ]
+        );
+        
+        $this->add_control(
+            'display_type',
+            [
+                'label' => __('Display Type', 'dasom-church'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'image',
+                'options' => [
+                    'image' => __('Image Template', 'dasom-church'),
+                    'button' => __('Button Template', 'dasom-church'),
                 ],
             ]
         );
@@ -1013,12 +1012,15 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
             return;
         }
         
-        $display_type = $settings['display_type'];
+        $display_type = isset($settings['display_type']) ? $settings['display_type'] : 'image';
         $layout_type = isset($settings['layout_type']) ? $settings['layout_type'] : 'list';
         
         if ($display_type === 'image') {
             $this->render_image_template($posts, $layout_type);
+        } elseif ($display_type === 'button') {
+            $this->render_button_template($posts, $layout_type);
         } else {
+            // Fallback to button template if display_type is not recognized
             $this->render_button_template($posts, $layout_type);
         }
         
