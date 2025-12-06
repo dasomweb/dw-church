@@ -704,6 +704,12 @@ All plugin data, including custom posts, settings, and meta fields, will be remo
 * Defaults: Desktop 40px, Tablet 36px, Mobile 32px arrow size
 * Flexibility: Fine-tune arrow appearance per device
 
+= 2.70.1 =
+* Fix: Prevent version mismatch by auto-syncing DASOM_CHURCH_VERSION with plugin header
+* Enhancement: DASOM_CHURCH_VERSION now automatically reads from plugin header Version
+* Fix: Resolves issue where update notification persists after update due to version mismatch
+* Improvement: Only plugin header Version needs to be updated, constant syncs automatically
+
 = 2.70.0 =
 * Fix: Align Banner Slider and Grid breakpoints with Elementor standard
 * Fix: Laptop breakpoint now correctly applies (1025px-1366px) instead of overlapping with tablet
