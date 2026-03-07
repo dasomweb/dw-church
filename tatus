@@ -1,0 +1,26 @@
+warning: in the working copy of 'includes/widgets/elementor/class-dw-elementor-banner-slider-widget.php', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/includes/widgets/elementor/class-dw-elementor-banner-slider-widget.php b/includes/widgets/elementor/class-dw-elementor-banner-slider-widget.php[m
+[1mindex d13967f..9f265b0 100644[m
+[1m--- a/includes/widgets/elementor/class-dw-elementor-banner-slider-widget.php[m
+[1m+++ b/includes/widgets/elementor/class-dw-elementor-banner-slider-widget.php[m
+[36m@@ -965,18 +965,14 @@[m [mclass DW_Elementor_Banner_Slider_Widget extends \Elementor\Widget_Base {[m
+             [m
+             // Generate responsive CSS for background position and image (for all banners)[m
+             echo '<style>';[m
+[31m-            // Background image - PC image by default[m
+[32m+[m[32m            // Background image - PC image for main banner, Sub banner image for sub banner (default for all screen sizes)[m
+             if ($image_url) {[m
+                 echo '.' . $banner_id . ' { background-image: url(' . esc_url($image_url) . '); background-position: ' . esc_attr($bg_position_pc) . '; }';[m
+             }[m
+[31m-            // Mobile image for main banner (if exists)[m
+[32m+[m[32m            // Mobile image for main banner (if exists) - overrides PC image on mobile[m
+             if ($mobile_image_url && ($category === '메인 배너' || $category === 'Main Banner')) {[m
+                 echo '@media (max-width: 767px) { .' . $banner_id . ' { background-image: url(' . esc_url($mobile_image_url) . '); } }';[m
+             }[m
+[31m-            // Sub banner image for tablet (Elementor Tablet breakpoint: max-width: 1024px)[m
+[31m-            if ($image_url && ($category === '서브 배너' || $category === 'Sub Banner')) {[m
+[31m-                echo '@media (max-width: 1024px) { .' . $banner_id . ' { background-image: url(' . esc_url($image_url) . '); } }';[m
+[31m-            }[m
+             // Background position responsive - Elementor breakpoints[m
+             // Desktop: 1367px+ (default, already set above)[m
+             // Laptop: 1025px-1366px (Elementor Laptop breakpoint)[m
