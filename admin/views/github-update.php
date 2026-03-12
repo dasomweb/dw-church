@@ -865,6 +865,8 @@ $github_token = get_option('dw_github_access_token', '');
     
     <?php elseif ($active_tab == 'plugin_settings'): ?>
     <!-- 플러그인 설정 탭 -->
+    <form method="post" action="">
+        <?php wp_nonce_field('dasom_church_settings_action', 'dasom_church_settings_nonce'); ?>
     <h2><?php echo esc_html__('대시보드 설정', 'dasom-church'); ?></h2>
     <table class="form-table">
         <tr>
@@ -929,10 +931,8 @@ $github_token = get_option('dw_github_access_token', '');
             </td>
         </tr>
     </table>
-    
-    <form method="post" action="">
-        <?php wp_nonce_field('dasom_church_settings_action', 'dasom_church_settings_nonce'); ?>
-        <?php submit_button(); ?>
+
+        <?php submit_button(__('설정 저장', 'dasom-church')); ?>
     </form>
     
     <?php endif; ?>

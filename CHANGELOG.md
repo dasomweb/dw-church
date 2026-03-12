@@ -5,6 +5,11 @@ All notable changes to the DW Church Management System project will be documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.71.9] - 2025-03-06
+
+### Fixed
+- **플러그인 설정 저장**: 플러그인 설정 탭의 필드(대시보드 권한, ACF 주보 마이그레이션, 삭제 시 데이터 삭제)가 form 밖에 있어 저장되지 않던 문제 수정 — 필드를 하나의 form으로 감싸고, 탭별로 해당 폼에서 제출된 값만 저장하도록 저장 로직 정리
+
 ## [2.71.8] - 2025-03-06
 
 ### Added

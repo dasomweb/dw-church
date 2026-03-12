@@ -1145,43 +1145,38 @@ class DW_Church_Admin {
             return;
         }
         
-        // Sanitize and save settings
-        $settings = array(
-            'name' => sanitize_text_field($_POST['dw_church_name'] ?? ''),
-            'address' => sanitize_textarea_field($_POST['dw_church_address'] ?? ''),
-            'phone' => sanitize_text_field($_POST['dw_church_phone'] ?? ''),
-            'email' => sanitize_email($_POST['dw_church_email'] ?? ''),
-            'website' => esc_url_raw($_POST['dw_church_website'] ?? ''),
-            'social_youtube' => esc_url_raw($_POST['dw_social_youtube'] ?? ''),
-            'social_instagram' => esc_url_raw($_POST['dw_social_instagram'] ?? ''),
-            'social_facebook' => esc_url_raw($_POST['dw_social_facebook'] ?? ''),
-            'social_linkedin' => esc_url_raw($_POST['dw_social_linkedin'] ?? ''),
-            'social_tiktok' => esc_url_raw($_POST['dw_social_tiktok'] ?? ''),
-            'social_kakaotalk' => esc_url_raw($_POST['dw_social_kakaotalk'] ?? ''),
-            'social_kakaotalk_channel' => esc_url_raw($_POST['dw_social_kakaotalk_channel'] ?? '')
-        );
-        
-        foreach ($settings as $key => $value) {
-            // dasom_church_update_setting 함수 사용 (includes/functions-helpers.php에 정의됨)
-            dasom_church_update_setting($key, $value);
+        // 교회 정보: 해당 폼에서 제출된 경우에만 저장 (다른 탭 저장 시 덮어쓰기 방지)
+        if (isset($_POST['dw_church_name'])) {
+            $settings = array(
+                'name' => sanitize_text_field($_POST['dw_church_name'] ?? ''),
+                'address' => sanitize_textarea_field($_POST['dw_church_address'] ?? ''),
+                'phone' => sanitize_text_field($_POST['dw_church_phone'] ?? ''),
+                'email' => sanitize_email($_POST['dw_church_email'] ?? ''),
+                'website' => esc_url_raw($_POST['dw_church_website'] ?? ''),
+                'social_youtube' => esc_url_raw($_POST['dw_social_youtube'] ?? ''),
+                'social_instagram' => esc_url_raw($_POST['dw_social_instagram'] ?? ''),
+                'social_facebook' => esc_url_raw($_POST['dw_social_facebook'] ?? ''),
+                'social_linkedin' => esc_url_raw($_POST['dw_social_linkedin'] ?? ''),
+                'social_tiktok' => esc_url_raw($_POST['dw_social_tiktok'] ?? ''),
+                'social_kakaotalk' => esc_url_raw($_POST['dw_social_kakaotalk'] ?? ''),
+                'social_kakaotalk_channel' => esc_url_raw($_POST['dw_social_kakaotalk_channel'] ?? '')
+            );
+            foreach ($settings as $key => $value) {
+                dasom_church_update_setting($key, $value);
+            }
         }
-        
-        // Add success message
-        add_action('admin_notices', function() {
-            echo '<div class="notice notice-success is-dismissible"><p>' . __('설정이 성공적으로 저장되었습니다.', 'dw-church') . '</p></div>';
-        });
-        
-        // Save dashboard visibility setting
+
+        // 플러그인 설정 탭: 대시보드/마이그레이션/삭제 옵션 (이 탭에서 제출된 경우에만 저장)
         if (isset($_POST['dw_dashboard_fields_visibility'])) {
             update_option('dw_dashboard_fields_visibility', sanitize_text_field($_POST['dw_dashboard_fields_visibility']));
+            update_option('dw_enable_acf_bulletin_migration', isset($_POST['dw_enable_acf_bulletin_migration']) ? 'yes' : '');
+            update_option('dw_delete_data_on_uninstall', isset($_POST['dw_delete_data_on_uninstall']) ? 'yes' : 'no');
         }
-        
+
         // Save GitHub access token
         if (isset($_POST['dw_github_access_token'])) {
             $token = sanitize_text_field($_POST['dw_github_access_token']);
             update_option('dw_github_access_token', $token);
-            
-            // Clear update cache when token is updated
             if (!empty($token)) {
                 $github_username = 'dasomweb';
                 $github_repo = 'dasom-church-management-system';
@@ -1189,42 +1184,20 @@ class DW_Church_Admin {
                 delete_transient('dw_church_plugin_info_' . md5($github_username . $github_repo));
             }
         }
-        
-        // Save data deletion setting
-        $delete_data = isset($_POST['dw_delete_data_on_uninstall']) ? 'yes' : 'no';
-        update_option('dw_delete_data_on_uninstall', $delete_data);
-        
-        // Save widget settings
-        $enable_gallery_widget = isset($_POST['dw_enable_gallery_widget']) ? 'yes' : 'no';
-        update_option('dw_enable_gallery_widget', $enable_gallery_widget);
-        
-        $enable_sermon_widget = isset($_POST['dw_enable_sermon_widget']) ? 'yes' : 'no';
-        update_option('dw_enable_sermon_widget', $enable_sermon_widget);
-        
-        $enable_single_sermon_widget = isset($_POST['dw_enable_single_sermon_widget']) ? 'yes' : 'no';
-        update_option('dw_enable_single_sermon_widget', $enable_single_sermon_widget);
-        
-        $enable_bulletin_widget = isset($_POST['dw_enable_bulletin_widget']) ? 'yes' : 'no';
-        update_option('dw_enable_bulletin_widget', $enable_bulletin_widget);
-        
-        $enable_single_bulletin_widget = isset($_POST['dw_enable_single_bulletin_widget']) ? 'yes' : 'no';
-        update_option('dw_enable_single_bulletin_widget', $enable_single_bulletin_widget);
-        
-        $enable_column_widget = isset($_POST['dw_enable_column_widget']) ? 'yes' : 'no';
-        update_option('dw_enable_column_widget', $enable_column_widget);
-        
-        $enable_banner_slider_widget = isset($_POST['dw_enable_banner_slider_widget']) ? 'yes' : 'no';
-        update_option('dw_enable_banner_slider_widget', $enable_banner_slider_widget);
-        
-        $enable_pastoral_column_widget = isset($_POST['dw_enable_pastoral_column_widget']) ? 'yes' : 'no';
-        update_option('dw_enable_pastoral_column_widget', $enable_pastoral_column_widget);
-        
-        $enable_pastoral_columns_grid_widget = isset($_POST['dw_enable_pastoral_columns_grid_widget']) ? 'yes' : 'no';
-        update_option('dw_enable_pastoral_columns_grid_widget', $enable_pastoral_columns_grid_widget);
-        
-        $enable_acf_bulletin_migration = isset($_POST['dw_enable_acf_bulletin_migration']) ? 'yes' : '';
-        update_option('dw_enable_acf_bulletin_migration', $enable_acf_bulletin_migration);
-        
+
+        // 위젯 설정: 해당 폼에서 제출된 경우에만 저장
+        if (isset($_POST['dw_enable_gallery_widget'])) {
+            update_option('dw_enable_gallery_widget', isset($_POST['dw_enable_gallery_widget']) ? 'yes' : 'no');
+            update_option('dw_enable_sermon_widget', isset($_POST['dw_enable_sermon_widget']) ? 'yes' : 'no');
+            update_option('dw_enable_single_sermon_widget', isset($_POST['dw_enable_single_sermon_widget']) ? 'yes' : 'no');
+            update_option('dw_enable_bulletin_widget', isset($_POST['dw_enable_bulletin_widget']) ? 'yes' : 'no');
+            update_option('dw_enable_single_bulletin_widget', isset($_POST['dw_enable_single_bulletin_widget']) ? 'yes' : 'no');
+            update_option('dw_enable_column_widget', isset($_POST['dw_enable_column_widget']) ? 'yes' : 'no');
+            update_option('dw_enable_banner_slider_widget', isset($_POST['dw_enable_banner_slider_widget']) ? 'yes' : 'no');
+            update_option('dw_enable_pastoral_column_widget', isset($_POST['dw_enable_pastoral_column_widget']) ? 'yes' : 'no');
+            update_option('dw_enable_pastoral_columns_grid_widget', isset($_POST['dw_enable_pastoral_columns_grid_widget']) ? 'yes' : 'no');
+        }
+
         add_action('admin_notices', function() {
             echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Settings saved successfully!', 'dw-church') . '</p></div>';
         });
