@@ -5,6 +5,11 @@ All notable changes to the DW Church Management System project will be documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.71.12] - 2025-03-06
+
+### Added
+- **목회컬럼 마이그레이션 (Post→Column)**: ACF 없이 일반 Post(제목, 본문, 대표 이미지)를 목회컬럼(column)으로 옮기는 도구 — 본문 내 YouTube URL 자동 추출
+
 ## [2.71.11] - 2025-03-06
 
 ### Added

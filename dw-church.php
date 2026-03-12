@@ -2,7 +2,7 @@
 /**
  * Plugin Name: DW Church
  * Description: DW Church Management System
- * Version: 2.71.11
+ * Version: 2.71.12
  * Author: DasomWeb
  * Author URI: https://dasomweb.com
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system
@@ -879,10 +879,12 @@ class DW_Church_Management {
         require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dw-church-admin.php';
         require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dw-church-acf-bulletin-migration.php';
         require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dw-church-acf-sermon-migration.php';
+        require_once DASOM_CHURCH_PLUGIN_PATH . 'admin/class-dw-church-post-column-migration.php';
         // Initialize admin class
         DW_Church_Admin::get_instance();
         DW_Church_ACF_Bulletin_Migration::init();
         DW_Church_ACF_Sermon_Migration::init();
+        DW_Church_Post_Column_Migration::init();
         
         // Load public files
         if (!is_admin()) {
