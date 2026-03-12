@@ -1011,10 +1011,11 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
             $args['orderby'] = 'post__in';
             $args['posts_per_page'] = -1;
         }
-        // Query Source: Latest Posts
+        // Query Source: Latest Posts (주보 날짜 dw_bulletin_date 기준)
         else {
             $args['posts_per_page'] = $settings['posts_per_page'] ?? 6;
-            $args['orderby'] = 'date';
+            $args['meta_key'] = 'dw_bulletin_date';
+            $args['orderby'] = 'meta_value';
             $args['order'] = 'DESC';
         }
         

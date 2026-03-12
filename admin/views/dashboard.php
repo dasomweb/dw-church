@@ -33,8 +33,9 @@ if (!defined('ABSPATH')) {
             $bulletins = get_posts(array(
                 'post_type' => 'bulletin',
                 'posts_per_page' => 7,
-                'orderby' => 'date',
-                'order' => 'DESC'
+                'meta_key' => 'dw_bulletin_date',
+                'orderby' => 'meta_value',
+                'order' => 'DESC',
             ));
             if ($bulletins) {
                 echo '<ul class="dasom-dashboard-list">';

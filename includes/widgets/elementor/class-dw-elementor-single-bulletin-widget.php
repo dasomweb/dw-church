@@ -379,7 +379,8 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
             'post_type' => 'bulletin',
             'posts_per_page' => -1,
             'post_status' => 'publish',
-            'orderby' => 'date',
+            'meta_key' => 'dw_bulletin_date',
+            'orderby' => 'meta_value',
             'order' => 'DESC',
         ]);
         
