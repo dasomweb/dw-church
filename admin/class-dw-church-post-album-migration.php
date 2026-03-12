@@ -15,8 +15,8 @@ class DW_Church_Post_Album_Migration {
 
     const OPTION_ENABLED = 'dw_enable_acf_bulletin_migration';
 
-    /** 교회앨범으로 가져올 Post 카테고리 slug */
-    const CATEGORY_SLUGS = array('album', '교회앨범');
+    /** 교회앨범으로 가져올 Post 카테고리 slug (교회앨범 = gallery) */
+    const CATEGORY_SLUGS = array('gallery');
 
     public static function init() {
         $self = new self();
@@ -229,11 +229,11 @@ class DW_Church_Post_Album_Migration {
         <div class="wrap">
             <h1><?php esc_html_e('Post → 교회앨범 마이그레이션', 'dw-church'); ?></h1>
             <p class="description">
-                <?php esc_html_e('카테고리 "교회앨범"(album)에 속한 글만 목록에 표시됩니다. 본문에 들어 있는 img 태그의 이미지 주소를 추출해 DW 교회앨범(album)으로 옮기며, 같은 사이트 이미지는 기존 첨부를 쓰고 외부/경로가 다른 이미지는 미디어로 가져옵니다.', 'dw-church'); ?>
+                <?php esc_html_e('카테고리 "교회앨범"(slug: gallery)에 속한 글만 목록에 표시됩니다. 본문에 들어 있는 img 태그의 이미지 주소를 추출해 DW 교회앨범(album)으로 옮기며, 같은 사이트 이미지는 기존 첨부를 쓰고 외부/경로가 다른 이미지는 미디어로 가져옵니다.', 'dw-church'); ?>
             </p>
 
             <?php if (empty($posts)) : ?>
-                <p><?php esc_html_e('해당 카테고리(교회앨범)에 속한 글이 없습니다.', 'dw-church'); ?></p>
+                <p><?php esc_html_e('해당 카테고리(교회앨범, slug: gallery)에 속한 글이 없습니다.', 'dw-church'); ?></p>
                 <p><a href="<?php echo esc_url(admin_url('edit.php')); ?>"><?php esc_html_e('글 목록으로', 'dw-church'); ?></a></p>
             <?php else : ?>
                 <form method="post" action="" id="dw-post-album-migrate-form">
