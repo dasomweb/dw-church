@@ -14,6 +14,9 @@ class DW_Church_Post_Column_Migration {
 
     const OPTION_ENABLED = 'dw_enable_acf_bulletin_migration';
 
+    /** 목회컬럼으로 가져올 Post 카테고리 slug (빨간색 표시 카테고리만) */
+    const CATEGORY_SLUGS = array('column', 'churchplanting');
+
     public static function init() {
         $self = new self();
         add_action('admin_menu', array($self, 'add_menu'), 27);
@@ -125,13 +128,23 @@ class DW_Church_Post_Column_Migration {
     }
 
     private function get_posts_for_migration() {
-        return get_posts(array(
+        $args = array(
             'post_type' => 'post',
             'post_status' => array('publish', 'draft', 'private'),
             'numberposts' => -1,
             'orderby' => 'date',
             'order' => 'DESC',
-        ));
+        );
+        if (!empty(self::CATEGORY_SLUGS)) {
+            $args['tax_query'] = array(
+                array(
+                    'taxonomy' => 'category',
+                    'field' => 'slug',
+                    'terms' => self::CATEGORY_SLUGS,
+                ),
+            );
+        }
+        return get_posts($args);
     }
 
     public function render_page() {
@@ -159,11 +172,11 @@ class DW_Church_Post_Column_Migration {
         <div class="wrap">
             <h1><?php esc_html_e('Post → 목회컬럼 마이그레이션', 'dw-church'); ?></h1>
             <p class="description">
-                <?php esc_html_e('일반 글(Post)을 DW 교회 목회컬럼(column)으로 옮깁니다. ACF를 사용하지 않았어도 제목, 본문, 대표 이미지가 그대로 복사되며, 본문에 YouTube URL이 있으면 자동으로 추출해 넣습니다.', 'dw-church'); ?>
+                <?php esc_html_e('카테고리 "목회컬럼"(column), "베델믿음교회 개척 이야기"(churchplanting)에 속한 글만 목록에 표시됩니다. ACF 없이 제목, 본문, 대표 이미지를 복사하며, 본문 내 YouTube URL은 자동 추출됩니다.', 'dw-church'); ?>
             </p>
 
             <?php if (empty($posts)) : ?>
-                <p><?php esc_html_e('마이그레이션할 글이 없습니다.', 'dw-church'); ?></p>
+                <p><?php esc_html_e('해당 카테고리(목회컬럼, 베델믿음교회 개척 이야기)에 속한 글이 없습니다.', 'dw-church'); ?></p>
                 <p><a href="<?php echo esc_url(admin_url('edit.php')); ?>"><?php esc_html_e('글 목록으로', 'dw-church'); ?></a></p>
             <?php else : ?>
                 <form method="post" action="" id="dw-post-column-migrate-form">

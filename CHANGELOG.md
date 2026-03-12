@@ -5,6 +5,11 @@ All notable changes to the DW Church Management System project will be documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.71.13] - 2025-03-06
+
+### Changed
+- **목회컬럼 마이그레이션**: 카테고리 "목회컬럼"(column), "베델믿음교회 개척 이야기"(churchplanting)에 속한 글만 목록에 표시되도록 필터 적용
+
 ## [2.71.12] - 2025-03-06
 
 ### Added
