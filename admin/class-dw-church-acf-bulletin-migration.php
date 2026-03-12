@@ -205,24 +205,55 @@ class DW_Church_ACF_Bulletin_Migration {
                 return sprintf('%04d-%02d-%02d', $y, $mo, $d);
             }
         }
-        // 한글 형식 보조: "2024년 3월 17일" → "2024-03-17"
+        // 한글 형식 보조: "2024년 3월 17일" → "2024-03-17" (년=연도, 월=월, 일=일 순서 고정)
         $value_normalized = preg_replace('/년\s*/', '-', $value);
         $value_normalized = preg_replace('/월\s*/', '-', $value_normalized);
         $value_normalized = preg_replace('/일\s*$/', '', $value_normalized);
         $value_normalized = trim($value_normalized);
         if (preg_match('/^\d{1,4}-\d{1,2}-\d{1,2}$/', $value_normalized)) {
-            $ts = strtotime($value_normalized);
-            if ($ts !== false) {
-                return date('Y-m-d', $ts);
+            $parts = array_map('intval', explode('-', $value_normalized));
+            if (count($parts) === 3) {
+                $y = $parts[0];
+                $mo = $parts[1];
+                $d = $parts[2];
+                if ($y >= 1970 && $y <= 2100 && $mo >= 1 && $mo <= 12 && $d >= 1 && $d <= 31) {
+                    return sprintf('%04d-%02d-%02d', $y, $mo, $d);
+                }
             }
         }
-        // d/m/Y, m/d/Y 등 strtotime으로 시도
+        // ##/##/####, ##-##-####, ##.##.####: day/month 뒤바뀜 방지 — 일/월/년(d/m/Y) 우선 해석
+        if (preg_match('/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/', $value, $parts)) {
+            $a = (int) $parts[1];
+            $b = (int) $parts[2];
+            $y = (int) $parts[3];
+            if ($y >= 1970 && $y <= 2100) {
+                if ($a > 12 && $b >= 1 && $b <= 12 && $a >= 1 && $a <= 31) {
+                    return sprintf('%04d-%02d-%02d', $y, $b, $a);
+                }
+                if ($b > 12 && $a >= 1 && $a <= 12 && $b >= 1 && $b <= 31) {
+                    return sprintf('%04d-%02d-%02d', $y, $a, $b);
+                }
+                $day_first = array('d/m/Y', 'd-m-Y', 'd.m.Y');
+                foreach ($day_first as $fmt) {
+                    $dt = \DateTime::createFromFormat($fmt, $value);
+                    if ($dt instanceof \DateTime) {
+                        return $dt->format('Y-m-d');
+                    }
+                }
+                $month_first = array('m/d/Y', 'm-d-Y', 'm.d.Y');
+                foreach ($month_first as $fmt) {
+                    $dt = \DateTime::createFromFormat($fmt, $value);
+                    if ($dt instanceof \DateTime) {
+                        return $dt->format('Y-m-d');
+                    }
+                }
+            }
+        }
         $ts = strtotime($value);
         if ($ts !== false && $ts > 0) {
             return date('Y-m-d', $ts);
         }
-        // DateTime으로 여러 형식 시도
-        $formats = array('Y-m-d', 'd/m/Y', 'm/d/Y', 'Y/m/d', 'd-m-Y', 'm-d-Y', 'F j, Y', 'j F Y', 'Y.n.j', 'Y.m.d');
+        $formats = array('Y-m-d', 'd/m/Y', 'd-m-Y', 'm/d/Y', 'm-d-Y', 'Y/m/d', 'F j, Y', 'j F Y', 'Y.n.j', 'Y.m.d');
         foreach ($formats as $fmt) {
             $dt = \DateTime::createFromFormat($fmt, $value);
             if ($dt instanceof \DateTime) {
