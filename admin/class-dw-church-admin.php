@@ -886,7 +886,7 @@ class DW_Church_Admin {
     }
     
     /**
-     * 관리자 설교·교회주보 목록: 일자 meta 기준 DESC 정렬
+     * 관리자 설교·교회주보 목록: 일자 meta 기준 DESC 정렬 (날짜 타입으로 정렬)
      */
     public function dw_church_cpt_list_orderby_date_meta($query) {
         if (!is_admin() || !$query->get('post_type')) {
@@ -896,10 +896,12 @@ class DW_Church_Admin {
         if ($post_type === 'sermon') {
             $query->set('meta_key', 'dw_sermon_date');
             $query->set('orderby', 'meta_value');
+            $query->set('meta_type', 'DATE');
             $query->set('order', 'DESC');
         } elseif ($post_type === 'bulletin') {
             $query->set('meta_key', 'dw_bulletin_date');
             $query->set('orderby', 'meta_value');
+            $query->set('meta_type', 'DATE');
             $query->set('order', 'DESC');
         }
     }

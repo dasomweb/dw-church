@@ -878,11 +878,12 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             if ($orderby === 'date') {
                 $args['meta_key'] = 'dw_sermon_date';
                 $args['orderby'] = 'meta_value';
+                $args['meta_type'] = 'DATE';
             } else {
                 $args['orderby'] = $orderby;
             }
         }
-        // Query Source: Latest Posts (설교 일자 dw_sermon_date 기준)
+        // Query Source: Latest Posts (설교 일자 dw_sermon_date 기준, 날짜 타입 정렬)
         else {
             $args['posts_per_page'] = $settings['posts_per_page'] ?? 6;
             $orderby = $settings['orderby'] ?? 'date';
@@ -890,6 +891,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             if ($orderby === 'date') {
                 $args['meta_key'] = 'dw_sermon_date';
                 $args['orderby'] = 'meta_value';
+                $args['meta_type'] = 'DATE';
             } else {
                 $args['orderby'] = $orderby;
             }

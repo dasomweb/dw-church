@@ -35,6 +35,7 @@ if (!defined('ABSPATH')) {
                 'posts_per_page' => 7,
                 'meta_key' => 'dw_bulletin_date',
                 'orderby' => 'meta_value',
+                'meta_type' => 'DATE',
                 'order' => 'DESC',
             ));
             if ($bulletins) {
@@ -66,6 +67,7 @@ if (!defined('ABSPATH')) {
                 'posts_per_page' => 7,
                 'meta_key' => 'dw_sermon_date',
                 'orderby' => 'meta_value',
+                'meta_type' => 'DATE',
                 'order' => 'DESC',
             ));
             if ($sermons) {
