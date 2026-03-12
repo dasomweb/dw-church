@@ -342,6 +342,7 @@ class DW_Church_Admin {
         $allowed_slugs = array(
             'dasom-church-admin',
             'dasom-church-dashboard',
+            'dasom-church-sermon-category',
             'dasom-church-sermon',
             'dasom-church-column',
             'dasom-church-bulletin',
@@ -395,6 +396,14 @@ class DW_Church_Admin {
     
     public function redirect_to_banner() {
         wp_redirect(admin_url('edit.php?post_type=banner'));
+        exit;
+    }
+    
+    /**
+     * 설교 카테고리 관리 화면으로 이동 (추가·수정·삭제)
+     */
+    public function dw_church_sermon_category_redirect() {
+        wp_safe_redirect(admin_url('edit-tags.php?taxonomy=sermon_category&post_type=sermon'));
         exit;
     }
     
@@ -491,6 +500,16 @@ class DW_Church_Admin {
             'edit_posts',
             'dasom-church-dashboard',
             array($this, 'dw_church_dashboard_page')
+        );
+        
+        // 설교 카테고리 (수정·추가·삭제) — 메뉴에 직접 표시
+        add_submenu_page(
+            'dasom-church-admin',
+            __('설교 카테고리', 'dw-church'),
+            __('설교 카테고리', 'dw-church'),
+            'edit_posts',
+            'dw-church-sermon-category',
+            array($this, 'dw_church_sermon_category_redirect')
         );
         
         // Settings submenu
