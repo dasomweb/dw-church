@@ -226,7 +226,8 @@ class DW_Church_ACF_Bulletin_Migration {
     }
 
     /**
-     * ACF File 필드 값에서 첨부 ID 반환 (URL/배열/ID 모두 처리)
+     * ACF File 필드 값에서 첨부 ID 반환 (URL/배열/ID 모두 처리).
+     * uploads/formidable/ 경로의 파일은 미디어 폴더(업로드 기준 경로)로 복사 후 새 첨부로 등록.
      */
     private function get_pdf_attachment_id($value) {
         if (empty($value)) {
@@ -235,6 +236,7 @@ class DW_Church_ACF_Bulletin_Migration {
         if (is_numeric($value)) {
             return (int) $value;
         }
+        $url = '';
         if (is_array($value)) {
             if (isset($value['ID'])) {
                 return (int) $value['ID'];
@@ -242,15 +244,78 @@ class DW_Church_ACF_Bulletin_Migration {
             if (isset($value['id'])) {
                 return (int) $value['id'];
             }
-            if (isset($value['url']) && function_exists('attachment_url_to_postid')) {
-                return (int) attachment_url_to_postid($value['url']);
+            if (isset($value['url'])) {
+                $url = $value['url'];
             }
-            return 0;
+        } elseif (is_string($value)) {
+            $url = $value;
         }
-        if (is_string($value) && function_exists('attachment_url_to_postid')) {
-            return (int) attachment_url_to_postid($value);
+        if ($url !== '' && strpos($url, '/formidable/') !== false) {
+            $new_id = $this->move_pdf_from_formidable_to_uploads($url);
+            if ($new_id) {
+                return $new_id;
+            }
+        }
+        if ($url !== '' && function_exists('attachment_url_to_postid')) {
+            return (int) attachment_url_to_postid($url);
         }
         return 0;
+    }
+
+    /**
+     * formidable 경로(wp-content/uploads/formidable/...)의 PDF를 미디어 폴더로 복사 후 첨부 등록
+     */
+    private function move_pdf_from_formidable_to_uploads($url) {
+        $url = esc_url_raw($url);
+        if (!$url) {
+            return 0;
+        }
+        $upload_dir = wp_upload_dir();
+        if (!empty($upload_dir['error'])) {
+            return 0;
+        }
+        $basedir = trailingslashit($upload_dir['basedir']);
+        $parsed = wp_parse_url($url);
+        $path = isset($parsed['path']) ? ltrim($parsed['path'], '/') : '';
+        if ($path === '' || strpos($path, 'wp-content/uploads/') !== 0) {
+            return 0;
+        }
+        $content_path = substr($path, strlen('wp-content/uploads/'));
+        $source_file = $basedir . $content_path;
+        if (!file_exists($source_file) || !is_readable($source_file)) {
+            return 0;
+        }
+        $filename = basename($source_file);
+        $filename = sanitize_file_name($filename);
+        if ($filename === '') {
+            return 0;
+        }
+        $subdir = date('Y/m');
+        $dest_dir = path_join($upload_dir['basedir'], $subdir);
+        if (!wp_mkdir_p($dest_dir)) {
+            return 0;
+        }
+        $dest_file = path_join($dest_dir, $filename);
+        if (file_exists($dest_file)) {
+            $filename = wp_unique_filename($dest_dir, $filename);
+            $dest_file = path_join($dest_dir, $filename);
+        }
+        if (!@copy($source_file, $dest_file)) {
+            return 0;
+        }
+        $filetype = wp_check_filetype($filename, null);
+        $attachment = array(
+            'post_mime_type' => $filetype['type'] ?: 'application/pdf',
+            'post_title' => sanitize_file_name(pathinfo($filename, PATHINFO_FILENAME)),
+            'post_content' => '',
+            'post_status' => 'inherit',
+        );
+        $new_id = wp_insert_attachment($attachment, $dest_file, 0, true);
+        if (is_wp_error($new_id)) {
+            @unlink($dest_file);
+            return 0;
+        }
+        return (int) $new_id;
     }
 
     /**
