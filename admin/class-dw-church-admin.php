@@ -73,6 +73,9 @@ class DW_Church_Admin {
         // Admin head styles
         add_action('admin_head', array($this, 'dw_church_admin_head_styles'));
         
+        // 설교 목록: 설교 일자(dw_sermon_date) 기준 DESC 정렬
+        add_action('pre_get_posts', array($this, 'dw_church_sermon_list_orderby_sermon_date'));
+        
         // Banner scheduling cron
         add_action('dw_church_check_banner_schedule', array($this, 'dw_church_check_expired_banners'));
         if (!wp_next_scheduled('dw_church_check_banner_schedule')) {
@@ -880,6 +883,18 @@ class DW_Church_Admin {
             return false;
         }
         return $use;
+    }
+    
+    /**
+     * 관리자 설교 목록: 설교 일자(dw_sermon_date) 기준 DESC 정렬
+     */
+    public function dw_church_sermon_list_orderby_sermon_date($query) {
+        if (!is_admin() || !$query->get('post_type') || $query->get('post_type') !== 'sermon') {
+            return;
+        }
+        $query->set('meta_key', 'dw_sermon_date');
+        $query->set('orderby', 'meta_value');
+        $query->set('order', 'DESC');
     }
     
     /**

@@ -151,7 +151,7 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'default' => 'date',
                 'options' => [
-                    'date' => __('Date', 'dasom-church'),
+                    'date' => __('Date (Sermon Date)', 'dasom-church'),
                     'title' => __('Title', 'dasom-church'),
                     'rand' => __('Random', 'dasom-church'),
                     'menu_order' => __('Menu Order', 'dasom-church'),
@@ -873,14 +873,26 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             }
             
             $args['posts_per_page'] = $settings['posts_per_page'] ?? 6;
-            $args['orderby'] = $settings['orderby'] ?? 'date';
+            $orderby = $settings['orderby'] ?? 'date';
             $args['order'] = $settings['order'] ?? 'DESC';
+            if ($orderby === 'date') {
+                $args['meta_key'] = 'dw_sermon_date';
+                $args['orderby'] = 'meta_value';
+            } else {
+                $args['orderby'] = $orderby;
+            }
         }
-        // Query Source: Latest Posts
+        // Query Source: Latest Posts (설교 일자 dw_sermon_date 기준)
         else {
             $args['posts_per_page'] = $settings['posts_per_page'] ?? 6;
-            $args['orderby'] = $settings['orderby'] ?? 'date';
+            $orderby = $settings['orderby'] ?? 'date';
             $args['order'] = $settings['order'] ?? 'DESC';
+            if ($orderby === 'date') {
+                $args['meta_key'] = 'dw_sermon_date';
+                $args['orderby'] = 'meta_value';
+            } else {
+                $args['orderby'] = $orderby;
+            }
             
             // Add category filter if selected
             if (!empty($settings['sermon_categories']) && is_array($settings['sermon_categories'])) {

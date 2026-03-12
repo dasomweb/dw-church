@@ -63,8 +63,9 @@ if (!defined('ABSPATH')) {
             $sermons = get_posts(array(
                 'post_type' => 'sermon',
                 'posts_per_page' => 7,
-                'orderby' => 'date',
-                'order' => 'DESC'
+                'meta_key' => 'dw_sermon_date',
+                'orderby' => 'meta_value',
+                'order' => 'DESC',
             ));
             if ($sermons) {
                 echo '<ul class="dasom-dashboard-list">';
