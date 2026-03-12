@@ -235,6 +235,7 @@ class DW_Church_Meta_Boxes {
                 </th>
                 <td>
                     <input type="text" id="dw_sermon_title" name="dw_sermon_title" value="<?php echo esc_attr($title); ?>" class="regular-text" />
+                    <p class="description"><?php _e('제목 앞뒤에 따옴표(")를 넣지 마세요.', 'dw-church'); ?></p>
                 </td>
             </tr>
             <tr>
@@ -292,6 +293,7 @@ class DW_Church_Meta_Boxes {
                         <?php endif; ?>
                     </div>
                     <p class="description"><?php _e('미리보기만 표시됩니다. 저장 시 썸네일이 대표 이미지로 등록됩니다.', 'dw-church'); ?></p>
+                    <p class="description"><?php _e('권장 이미지 사이즈: 1280×720px, 72dpi', 'dw-church'); ?></p>
                 </td>
             </tr>
         </table>
