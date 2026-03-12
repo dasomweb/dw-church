@@ -898,7 +898,7 @@ $github_token = get_option('dw_github_access_token', '');
                         <?php echo esc_html__('ACF → 교회주보/설교 마이그레이션 메뉴 표시 (특정 사이트에서만 사용 시 활성화)', 'dasom-church'); ?>
                     </label>
                     <p class="description" style="margin-top:8px;">
-                        <?php echo esc_html__('활성화하면 DW 교회관리 메뉴에 "ACF 주보 마이그레이션", "ACF 설교 마이그레이션", "목회컬럼 마이그레이션"이 나타납니다. Post의 ACF 필드(주보/설교) 또는 일반 글(목회컬럼)을 교회주보·설교·목회컬럼으로 옮길 수 있습니다.', 'dasom-church'); ?>
+                        <?php echo esc_html__('활성화하면 DW 교회관리 메뉴에 "ACF 주보 마이그레이션", "ACF 설교 마이그레이션", "목회컬럼 마이그레이션", "교회앨범 마이그레이션"이 나타납니다. Post의 ACF 필드(주보/설교) 또는 일반 글(목회컬럼·교회앨범)을 교회주보·설교·목회컬럼·교회앨범으로 옮길 수 있습니다.', 'dasom-church'); ?>
                     </p>
                 </fieldset>
             </td>

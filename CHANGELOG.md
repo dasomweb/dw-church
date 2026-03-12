@@ -5,6 +5,11 @@ All notable changes to the DW Church Management System project will be documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.71.16] - 2025-03-06
+
+### Added
+- **교회앨범 마이그레이션 (Post→Album)**: 카테고리 "교회앨범" Post 본문의 img src를 추출해 DW 교회앨범(album)으로 옮기는 도구 — 같은 사이트는 기존 첨부 사용, 외부/다른 경로는 sideload
+
 ## [2.71.15] - 2025-03-06
 
 ### Fixed
