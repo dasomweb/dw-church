@@ -60,6 +60,17 @@ $preachers = get_terms(array(
 if (is_wp_error($preachers)) {
     $preachers = array();
 }
+
+// 설교 카테고리 목록 (설정 탭용)
+$sermon_categories = get_terms(array(
+    'taxonomy' => 'sermon_category',
+    'hide_empty' => false,
+    'orderby' => 'name',
+    'order' => 'ASC'
+));
+if (is_wp_error($sermon_categories)) {
+    $sermon_categories = array();
+}
 ?>
 
 <div class="wrap">
@@ -75,6 +86,9 @@ if (is_wp_error($preachers)) {
         </a>
         <a href="?page=dasom-church-settings&tab=speaker_management" class="nav-tab <?php echo $active_tab == 'speaker_management' ? 'nav-tab-active' : ''; ?>">
             <?php _e('설교자 관리', 'dasom-church'); ?>
+        </a>
+        <a href="?page=dasom-church-settings&tab=sermon_category" class="nav-tab <?php echo $active_tab == 'sermon_category' ? 'nav-tab-active' : ''; ?>">
+            <?php _e('설교 카테고리', 'dasom-church'); ?>
         </a>
     </h2>
     
@@ -283,9 +297,59 @@ if (is_wp_error($preachers)) {
             </tbody>
         </table>
         
+        <?php elseif ($active_tab == 'sermon_category'): ?>
+        <!-- 설교 카테고리 탭: 추가·수정·삭제 -->
+        <h2><?php _e('설교 카테고리', 'dasom-church'); ?></h2>
+        <p class="description" style="margin-bottom:16px;"><?php _e('설교 카테고리를 추가·수정·삭제할 수 있습니다.', 'dasom-church'); ?></p>
+        
+        <form method="post" style="margin-bottom:24px;">
+            <?php wp_nonce_field('sermon_category_actions'); ?>
+            <input type="hidden" name="sermon_category_action" value="add">
+            <input type="text" name="sermon_category_name" class="regular-text" placeholder="<?php esc_attr_e('새 카테고리 이름', 'dasom-church'); ?>" style="max-width:320px;">
+            <?php submit_button(__('추가', 'dasom-church'), 'secondary', '', false); ?>
+        </form>
+        
+        <table class="widefat striped" style="max-width:900px;">
+            <thead>
+                <tr>
+                    <th style="width:50px;"><?php _e('ID', 'dasom-church'); ?></th>
+                    <th><?php _e('이름', 'dasom-church'); ?></th>
+                    <th style="width:220px;"><?php _e('동작', 'dasom-church'); ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!empty($sermon_categories)) : ?>
+                    <?php foreach ($sermon_categories as $cat) : ?>
+                        <tr>
+                            <td><?php echo (int) $cat->term_id; ?></td>
+                            <td>
+                                <form method="post" style="display:flex;gap:8px;align-items:center;">
+                                    <?php wp_nonce_field('sermon_category_actions'); ?>
+                                    <input type="hidden" name="sermon_category_action" value="rename">
+                                    <input type="hidden" name="term_id" value="<?php echo (int) $cat->term_id; ?>">
+                                    <input type="text" name="new_name" value="<?php echo esc_attr($cat->name); ?>" class="regular-text" style="max-width:300px;">
+                                    <?php submit_button(__('이름 변경', 'dasom-church'), 'small', '', false); ?>
+                                </form>
+                            </td>
+                            <td>
+                                <form method="post" style="display:inline;" onsubmit="return confirm('<?php echo esc_js(__('이 카테고리를 삭제하시겠습니까?', 'dasom-church')); ?>');">
+                                    <?php wp_nonce_field('sermon_category_actions'); ?>
+                                    <input type="hidden" name="sermon_category_action" value="delete">
+                                    <input type="hidden" name="term_id" value="<?php echo (int) $cat->term_id; ?>">
+                                    <button type="submit" class="button button-link-delete" style="color:#b32d2e;"><?php _e('삭제', 'dasom-church'); ?></button>
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else : ?>
+                    <tr><td colspan="3"><?php _e('등록된 설교 카테고리가 없습니다. 위에서 추가하세요.', 'dasom-church'); ?></td></tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+        
         <?php endif; ?>
         
-        <?php submit_button(); ?>
+        <?php if ($active_tab !== 'sermon_category') { submit_button(); } ?>
     </form>
 </div>
 

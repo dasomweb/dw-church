@@ -190,7 +190,7 @@ class DW_Church_Post_Album_Migration {
             'post_status' => array('publish', 'draft', 'private'),
             'numberposts' => -1,
             'orderby' => 'date',
-            'order' => 'DESC',
+            'order' => 'ASC',
         );
         if (!empty(self::CATEGORY_SLUGS)) {
             $args['tax_query'] = array(

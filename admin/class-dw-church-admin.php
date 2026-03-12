@@ -342,7 +342,6 @@ class DW_Church_Admin {
         $allowed_slugs = array(
             'dasom-church-admin',
             'dasom-church-dashboard',
-            'dasom-church-sermon-category',
             'dasom-church-sermon',
             'dasom-church-column',
             'dasom-church-bulletin',
@@ -396,14 +395,6 @@ class DW_Church_Admin {
     
     public function redirect_to_banner() {
         wp_redirect(admin_url('edit.php?post_type=banner'));
-        exit;
-    }
-    
-    /**
-     * 설교 카테고리 관리 화면으로 이동 (추가·수정·삭제)
-     */
-    public function dw_church_sermon_category_redirect() {
-        wp_safe_redirect(admin_url('edit-tags.php?taxonomy=sermon_category&post_type=sermon'));
         exit;
     }
     
@@ -500,16 +491,6 @@ class DW_Church_Admin {
             'edit_posts',
             'dasom-church-dashboard',
             array($this, 'dw_church_dashboard_page')
-        );
-        
-        // 설교 카테고리 (수정·추가·삭제) — 메뉴에 직접 표시
-        add_submenu_page(
-            'dasom-church-admin',
-            __('설교 카테고리', 'dw-church'),
-            __('설교 카테고리', 'dw-church'),
-            'edit_posts',
-            'dw-church-sermon-category',
-            array($this, 'dw_church_sermon_category_redirect')
         );
         
         // Settings submenu
@@ -970,6 +951,38 @@ class DW_Church_Admin {
     }
     
     /**
+     * Handle sermon category (sermon_category taxonomy) add/rename/delete
+     */
+    private function dw_church_handle_sermon_category_action() {
+        $action = sanitize_text_field($_POST['sermon_category_action'] ?? '');
+        $taxonomy = 'sermon_category';
+        switch ($action) {
+            case 'add':
+                $name = trim(sanitize_text_field($_POST['sermon_category_name'] ?? ''));
+                if ($name && !term_exists($name, $taxonomy)) {
+                    wp_insert_term($name, $taxonomy);
+                }
+                break;
+            case 'rename':
+                $term_id = intval($_POST['term_id'] ?? 0);
+                $name = trim(sanitize_text_field($_POST['new_name'] ?? ''));
+                if ($term_id && $name) {
+                    wp_update_term($term_id, $taxonomy, array('name' => $name));
+                }
+                break;
+            case 'delete':
+                $term_id = intval($_POST['term_id'] ?? 0);
+                if ($term_id) {
+                    wp_delete_term($term_id, $taxonomy);
+                }
+                break;
+        }
+        add_action('admin_notices', function() {
+            echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('설교 카테고리가 저장되었습니다.', 'dw-church') . '</p></div>';
+        });
+    }
+    
+    /**
      * Dashboard page
      */
     public function dw_church_dashboard_page() {
@@ -1009,6 +1022,14 @@ class DW_Church_Admin {
             
             $action = sanitize_text_field($_POST['preacher_action']);
             $this->dw_church_handle_preacher_action($action);
+        }
+        
+        // 설교 카테고리 액션 처리
+        if (isset($_POST['sermon_category_action']) && check_admin_referer('sermon_category_actions')) {
+            if (!current_user_can('edit_posts')) {
+                wp_die(__('권한이 없습니다.', 'dw-church'));
+            }
+            $this->dw_church_handle_sermon_category_action();
         }
         
         // Load settings view

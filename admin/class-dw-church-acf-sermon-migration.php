@@ -323,7 +323,7 @@ class DW_Church_ACF_Sermon_Migration {
              FROM {$wpdb->posts} p
              INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key IN ($placeholders)
              WHERE p.post_type = 'post' AND p.post_status IN ('publish','draft','private')
-             ORDER BY p.post_date DESC",
+             ORDER BY p.post_date ASC",
             ...$meta_keys
         );
         return $wpdb->get_results($query);
