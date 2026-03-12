@@ -5,6 +5,11 @@ All notable changes to the DW Church Management System project will be documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.71.8] - 2025-03-06
+
+### Added
+- **ACF 주보 마이그레이션**: Post의 ACF Jubo 필드(Sunday, Jubo File Url, Image 01~04)를 교회주보(bulletin)로 옮기는 선택적 마이그레이션 도구 (설정 → DW 설정 → 플러그인 설정에서 활성화)
+
 ## [2.62.22] - 2025-01-XX
 
 ### Fixed

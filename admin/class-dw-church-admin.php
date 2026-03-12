@@ -1222,6 +1222,9 @@ class DW_Church_Admin {
         $enable_pastoral_columns_grid_widget = isset($_POST['dw_enable_pastoral_columns_grid_widget']) ? 'yes' : 'no';
         update_option('dw_enable_pastoral_columns_grid_widget', $enable_pastoral_columns_grid_widget);
         
+        $enable_acf_bulletin_migration = isset($_POST['dw_enable_acf_bulletin_migration']) ? 'yes' : '';
+        update_option('dw_enable_acf_bulletin_migration', $enable_acf_bulletin_migration);
+        
         add_action('admin_notices', function() {
             echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Settings saved successfully!', 'dw-church') . '</p></div>';
         });

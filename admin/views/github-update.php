@@ -883,6 +883,26 @@ $github_token = get_option('dw_github_access_token', '');
         </tr>
     </table>
     
+    <h2><?php echo esc_html__('마이그레이션 도구', 'dasom-church'); ?></h2>
+    <table class="form-table">
+        <tr>
+            <th scope="row">
+                <label for="dw_enable_acf_bulletin_migration"><?php echo esc_html__('ACF 주보 마이그레이션', 'dasom-church'); ?></label>
+            </th>
+            <td>
+                <fieldset>
+                    <label>
+                        <input type="checkbox" id="dw_enable_acf_bulletin_migration" name="dw_enable_acf_bulletin_migration" value="yes" <?php checked(get_option('dw_enable_acf_bulletin_migration', ''), 'yes'); ?> />
+                        <?php echo esc_html__('ACF Jubo → 교회주보 마이그레이션 메뉴 표시 (특정 사이트에서만 사용 시 활성화)', 'dasom-church'); ?>
+                    </label>
+                    <p class="description" style="margin-top:8px;">
+                        <?php echo esc_html__('활성화하면 DW 교회관리 메뉴에 "ACF 주보 마이그레이션"이 나타나며, Post의 ACF 필드(Sunday, Jubo File Url 등)를 교회주보로 옮길 수 있습니다.', 'dasom-church'); ?>
+                    </p>
+                </fieldset>
+            </td>
+        </tr>
+    </table>
+
     <h2><?php echo esc_html__('플러그인 삭제 설정', 'dasom-church'); ?></h2>
     <table class="form-table">
         <tr>
