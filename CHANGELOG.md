@@ -5,6 +5,11 @@ All notable changes to the DW Church Management System project will be documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.71.15] - 2025-03-06
+
+### Fixed
+- **목회컬럼 마이그레이션**: 대표 이미지(Featured Image)를 첨부 파일 복제 후 새 column에 소유권 부여해 확실히 표시되도록 수정
+
 ## [2.71.14] - 2025-03-06
 
 ### Fixed

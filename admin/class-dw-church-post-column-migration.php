@@ -105,8 +105,14 @@ class DW_Church_Post_Column_Migration {
 
         $thumb_id = get_post_thumbnail_id($source_post_id);
         if ($thumb_id) {
-            update_post_meta($column_id, 'dw_column_top_image', $thumb_id);
-            set_post_thumbnail($column_id, $thumb_id);
+            $new_thumb_id = $this->duplicate_attachment_for_post($thumb_id, $column_id);
+            if ($new_thumb_id) {
+                update_post_meta($column_id, 'dw_column_top_image', $new_thumb_id);
+                set_post_thumbnail($column_id, $new_thumb_id);
+            } else {
+                update_post_meta($column_id, 'dw_column_top_image', $thumb_id);
+                set_post_thumbnail($column_id, $thumb_id);
+            }
         }
 
         $youtube = $this->extract_youtube_from_content($source->post_content);
@@ -115,6 +121,50 @@ class DW_Church_Post_Column_Migration {
         }
 
         return true;
+    }
+
+    /**
+     * 첨부 파일을 복제해 지정한 포스트에 소유권 부여 (Featured Image가 확실히 표시되도록)
+     */
+    private function duplicate_attachment_for_post($attachment_id, $parent_post_id) {
+        $file = get_attached_file($attachment_id, true);
+        if (!$file || !file_exists($file)) {
+            return 0;
+        }
+        $wp_upload_dir = wp_upload_dir();
+        if (!empty($wp_upload_dir['error'])) {
+            return 0;
+        }
+        $filename = basename($file);
+        $new_file = $wp_upload_dir['path'] . '/' . $filename;
+        if (file_exists($new_file)) {
+            $filename = wp_unique_filename($wp_upload_dir['path'], $filename);
+            $new_file = $wp_upload_dir['path'] . '/' . $filename;
+        }
+        if (!@copy($file, $new_file)) {
+            return 0;
+        }
+        $filetype = wp_check_filetype($filename, null);
+        $attachment = array(
+            'post_mime_type' => $filetype['type'],
+            'post_title' => sanitize_file_name(pathinfo($filename, PATHINFO_FILENAME)),
+            'post_content' => '',
+            'post_status' => 'inherit',
+            'post_parent' => $parent_post_id,
+        );
+        if (!function_exists('wp_generate_attachment_metadata')) {
+            require_once ABSPATH . 'wp-admin/includes/image.php';
+        }
+        $new_id = wp_insert_attachment($attachment, $new_file, $parent_post_id, true);
+        if (is_wp_error($new_id)) {
+            @unlink($new_file);
+            return 0;
+        }
+        $meta = wp_generate_attachment_metadata($new_id, $new_file);
+        if (!empty($meta)) {
+            wp_update_attachment_metadata($new_id, $meta);
+        }
+        return (int) $new_id;
     }
 
     private function extract_youtube_from_content($content) {
