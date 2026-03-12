@@ -21,9 +21,9 @@ jobs:
         with:
           php-version: '8.0'
           
-      - name: Install dependencies
+      - name: Install dependencies (optional; ZIP does not include vendor)
         run: |
-          composer install --no-dev --optimize-autoloader
+          composer install --no-dev --optimize-autoloader || true
 
       - name: Prepare Build Folder (Fix Folder Name)
         run: |

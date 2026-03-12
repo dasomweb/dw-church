@@ -2,7 +2,7 @@
 /**
  * Plugin Name: DW Church
  * Description: DW Church Management System
- * Version: 2.71.13
+ * Version: 2.71.14
  * Author: DasomWeb
  * Author URI: https://dasomweb.com
  * Plugin URI: https://github.com/dasomweb/dasom-church-management-system

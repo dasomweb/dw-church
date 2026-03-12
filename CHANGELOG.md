@@ -5,6 +5,11 @@ All notable changes to the DW Church Management System project will be documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.71.14] - 2025-03-06
+
+### Fixed
+- **릴리즈 빌드**: GitHub Actions에서 `composer install` 실패 시에도 ZIP 생성·릴리즈 업로드가 진행되도록 수정 (`|| true`)
+
 ## [2.71.13] - 2025-03-06
 
 ### Changed
