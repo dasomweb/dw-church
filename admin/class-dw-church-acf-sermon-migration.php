@@ -153,6 +153,12 @@ class DW_Church_ACF_Sermon_Migration {
         }
 
         $sermon_category_ids = $this->map_source_categories_to_sermon_category($source_post_id);
+        if (empty($sermon_category_ids)) {
+            $sermon_category_ids = $this->get_or_create_sermon_category_term_id('주일설교');
+            if ($sermon_category_ids) {
+                $sermon_category_ids = array($sermon_category_ids);
+            }
+        }
         if (!empty($sermon_category_ids)) {
             wp_set_post_terms($sermon_id, $sermon_category_ids, self::TAXONOMY_SERMON_CATEGORY, false);
         }
@@ -172,8 +178,32 @@ class DW_Church_ACF_Sermon_Migration {
         return true;
     }
 
+    /** 설교 카테고리 이름 '주일설교'에 해당하는 이름/슬러그 (매핑용) */
+    const SERMON_CATEGORY_SUNDAY_NAMES = array('주일설교', 'Sunday Sermon', '주일');
+
+    /**
+     * sermon_category taxonomy에서 이름으로 term_id 하나 반환 (없으면 생성)
+     */
+    private function get_or_create_sermon_category_term_id($name) {
+        $name = trim($name);
+        if ($name === '') {
+            return 0;
+        }
+        $existing = term_exists($name, self::TAXONOMY_SERMON_CATEGORY);
+        if ($existing) {
+            $tid = is_array($existing) ? $existing['term_id'] : (int) $existing;
+            return $tid ? (int) $tid : 0;
+        }
+        $new = wp_insert_term($name, self::TAXONOMY_SERMON_CATEGORY);
+        if (is_wp_error($new) || !isset($new['term_id'])) {
+            return 0;
+        }
+        return (int) $new['term_id'];
+    }
+
     /**
      * 원본 글의 카테고리( taxonomy 'category' )를 설교 카테고리( sermon_category )로 매핑한 term_id 배열 반환
+     * '주일설교' 계열(주일설교, Sunday Sermon, slug sermon 등)은 설교 카테고리 '주일설교'로 매핑
      */
     private function map_source_categories_to_sermon_category($source_post_id) {
         $terms = get_the_terms($source_post_id, 'category');
@@ -182,23 +212,41 @@ class DW_Church_ACF_Sermon_Migration {
         }
         $sermon_term_ids = array();
         foreach ($terms as $term) {
-            if (!isset($term->name) || $term->name === '') {
+            $name = isset($term->name) ? trim($term->name) : '';
+            $slug = isset($term->slug) ? $term->slug : '';
+            $is_sunday = ($name !== '' && in_array($name, self::SERMON_CATEGORY_SUNDAY_NAMES, true))
+                || $slug === 'sermon' || $slug === '주일설교' || $slug === 'sunday-sermon';
+            if ($is_sunday) {
+                $tid = $this->get_or_create_sermon_category_term_id('주일설교');
+                if ($tid) {
+                    $sermon_term_ids[] = $tid;
+                }
                 continue;
             }
-            $existing = term_exists($term->name, self::TAXONOMY_SERMON_CATEGORY);
+            if ($name === '') {
+                continue;
+            }
+            $existing = term_exists($name, self::TAXONOMY_SERMON_CATEGORY);
             if ($existing) {
                 $tid = is_array($existing) ? $existing['term_id'] : (int) $existing;
                 if ($tid) {
                     $sermon_term_ids[] = (int) $tid;
                 }
             } else {
-                $new = wp_insert_term($term->name, self::TAXONOMY_SERMON_CATEGORY);
+                $new = wp_insert_term($name, self::TAXONOMY_SERMON_CATEGORY);
                 if (!is_wp_error($new) && isset($new['term_id'])) {
                     $sermon_term_ids[] = (int) $new['term_id'];
                 }
             }
         }
-        return array_unique($sermon_term_ids);
+        $ids = array_unique($sermon_term_ids);
+        if (empty($ids)) {
+            $tid = $this->get_or_create_sermon_category_term_id('주일설교');
+            if ($tid) {
+                $ids = array($tid);
+            }
+        }
+        return $ids;
     }
 
     /**
