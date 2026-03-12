@@ -5,6 +5,12 @@ All notable changes to the DW Church Management System project will be documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.71.11] - 2025-03-06
+
+### Added
+- **ACF 설교 마이그레이션**: Post의 ACF Sermon 필드(일자, 설교자, 성경구절, YouTube)를 교회 설교(sermon)로 옮기는 마이그레이션 도구 — ACF 주보 마이그레이션 옵션 활성화 시 "ACF 설교 마이그레이션" 메뉴 표시
+- **로컬 빌드 스크립트**: `build.ps1` — GitHub Actions와 동일한 방식으로 dw-church.zip 생성
+
 ## [2.71.10] - 2025-03-06
 
 ### Fixed
