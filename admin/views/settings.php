@@ -92,10 +92,9 @@ if (is_wp_error($sermon_categories)) {
         </a>
     </h2>
     
+    <?php if ($active_tab == 'church_info'): ?>
     <form method="post" action="">
         <?php wp_nonce_field('dasom_church_settings_action', 'dasom_church_settings_nonce'); ?>
-        
-        <?php if ($active_tab == 'church_info'): ?>
         <!-- 교회 정보 탭 -->
         <h2><?php _e('기본 정보', 'dasom-church'); ?></h2>
         <table class="form-table">
@@ -214,8 +213,9 @@ if (is_wp_error($sermon_categories)) {
                 </td>
             </tr>
         </table>
-        
-        <?php elseif ($active_tab == 'speaker_management'): ?>
+        <?php submit_button(); ?>
+    </form>
+    <?php elseif ($active_tab == 'speaker_management'): ?>
         <!-- 설교자 관리 탭 -->
         <hr>
         <h2>🧑‍💼 <?php _e('설교자 관리', 'dasom-church'); ?></h2>
@@ -297,7 +297,7 @@ if (is_wp_error($sermon_categories)) {
             </tbody>
         </table>
         
-        <?php elseif ($active_tab == 'sermon_category'): ?>
+    <?php elseif ($active_tab == 'sermon_category'): ?>
         <!-- 설교 카테고리 탭: 추가·수정·삭제 -->
         <h2><?php _e('설교 카테고리', 'dasom-church'); ?></h2>
         <p class="description" style="margin-bottom:16px;"><?php _e('설교 카테고리를 추가·수정·삭제할 수 있습니다.', 'dasom-church'); ?></p>
@@ -347,10 +347,7 @@ if (is_wp_error($sermon_categories)) {
             </tbody>
         </table>
         
-        <?php endif; ?>
-        
-        <?php if ($active_tab !== 'sermon_category') { submit_button(); } ?>
-    </form>
+    <?php endif; ?>
 </div>
 
 <script>
