@@ -148,19 +148,81 @@ class DW_Church_ACF_Bulletin_Migration {
         return true;
     }
 
+    /**
+     * ACF Date Picker 값 → Y-m-d 정규화.
+     * 배열(date/Ymd), Ymd 문자열, 타임스탬프, 다양한 표시 형식 지원.
+     */
     private function normalize_date($value) {
-        if (is_array($value) && isset($value['date'])) {
-            $value = $value['date'];
+        if (empty($value) && $value !== 0 && $value !== '0') {
+            return '';
+        }
+        // ACF 배열: array('date' => '...') 또는 array('Y' => 2024, 'm' => 3, 'd' => 17)
+        if (is_array($value)) {
+            if (isset($value['date']) && $value['date'] !== '') {
+                $value = $value['date'];
+            } elseif (isset($value['Y'], $value['m'], $value['d'])) {
+                $y = (int) $value['Y'];
+                $m = (int) $value['m'];
+                $d = (int) $value['d'];
+                if ($y >= 1970 && $y <= 2100 && $m >= 1 && $m <= 12 && $d >= 1 && $d <= 31) {
+                    return sprintf('%04d-%02d-%02d', $y, $m, $d);
+                }
+                return '';
+            } else {
+                return '';
+            }
+        }
+        // 숫자 타임스탬프
+        if (is_numeric($value)) {
+            $ts = (int) $value;
+            if ($ts > 0) {
+                return date('Y-m-d', $ts);
+            }
+            return '';
         }
         $value = trim((string) $value);
         if ($value === '') {
             return '';
         }
-        $ts = strtotime($value);
-        if ($ts === false) {
-            return '';
+        // 이미 Y-m-d 형식
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+            $ts = strtotime($value);
+            return $ts !== false ? date('Y-m-d', $ts) : '';
         }
-        return date('Y-m-d', $ts);
+        // Ymd (8자리, ACF 저장 형식)
+        if (preg_match('/^(\d{4})(\d{2})(\d{2})$/', $value, $ymd)) {
+            $y = (int) $ymd[1];
+            $mo = (int) $ymd[2];
+            $d = (int) $ymd[3];
+            if ($mo >= 1 && $mo <= 12 && $d >= 1 && $d <= 31) {
+                return sprintf('%04d-%02d-%02d', $y, $mo, $d);
+            }
+        }
+        // 한글 형식 보조: "2024년 3월 17일" → "2024-03-17"
+        $value_normalized = preg_replace('/년\s*/', '-', $value);
+        $value_normalized = preg_replace('/월\s*/', '-', $value_normalized);
+        $value_normalized = preg_replace('/일\s*$/', '', $value_normalized);
+        $value_normalized = trim($value_normalized);
+        if (preg_match('/^\d{1,4}-\d{1,2}-\d{1,2}$/', $value_normalized)) {
+            $ts = strtotime($value_normalized);
+            if ($ts !== false) {
+                return date('Y-m-d', $ts);
+            }
+        }
+        // d/m/Y, m/d/Y 등 strtotime으로 시도
+        $ts = strtotime($value);
+        if ($ts !== false && $ts > 0) {
+            return date('Y-m-d', $ts);
+        }
+        // DateTime으로 여러 형식 시도
+        $formats = array('Y-m-d', 'd/m/Y', 'm/d/Y', 'Y/m/d', 'd-m-Y', 'm-d-Y', 'F j, Y', 'j F Y', 'Y.n.j', 'Y.m.d');
+        foreach ($formats as $fmt) {
+            $dt = \DateTime::createFromFormat($fmt, $value);
+            if ($dt instanceof \DateTime) {
+                return $dt->format('Y-m-d');
+            }
+        }
+        return '';
     }
 
     /**

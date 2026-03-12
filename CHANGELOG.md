@@ -5,6 +5,11 @@ All notable changes to the DW Church Management System project will be documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.71.10] - 2025-03-06
+
+### Fixed
+- **ACF 주보 마이그레이션 날짜**: ACF Sunday 필드의 다양한 날짜 형식(Ymd, 배열, 타임스탬프, 한글 등)을 인식해 정규화하도록 개선 — 날짜 형식 오류로 건너뛰되던 항목 마이그레이션 가능
+
 ## [2.71.9] - 2025-03-06
 
 ### Fixed
