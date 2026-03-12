@@ -122,6 +122,8 @@ class DW_Church_ACF_Sermon_Migration {
             'post_name' => sanitize_title($title),
             'post_status' => 'publish',
             'post_author' => get_current_user_id(),
+            'post_date' => $source_post ? $source_post->post_date : current_time('mysql'),
+            'post_date_gmt' => $source_post ? $source_post->post_date_gmt : current_time('mysql', 1),
         );
         $sermon_id = wp_insert_post($post_data, true);
         if (is_wp_error($sermon_id)) {

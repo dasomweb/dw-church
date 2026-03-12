@@ -112,6 +112,11 @@ class DW_Church_ACF_Bulletin_Migration {
 
         $title = date_i18n(__('Y년 n월 j일', 'dw-church'), strtotime($sunday)) . ' ' . __('교회주보', 'dw-church');
 
+        $source_post = get_post($source_post_id);
+        if (!$source_post) {
+            return sprintf(__('원본 글을 찾을 수 없습니다 (Post ID: %d)', 'dw-church'), $source_post_id);
+        }
+
         $pdf_value = get_field(self::ACF_FIELD_PDF, $source_post_id);
         $pdf_attachment_id = $this->get_pdf_attachment_id($pdf_value);
 
@@ -130,6 +135,8 @@ class DW_Church_ACF_Bulletin_Migration {
             'post_name' => sanitize_title($title),
             'post_status' => 'publish',
             'post_author' => get_current_user_id(),
+            'post_date' => $source_post->post_date,
+            'post_date_gmt' => $source_post->post_date_gmt,
         );
         $bulletin_id = wp_insert_post($post_data, true);
         if (is_wp_error($bulletin_id)) {
