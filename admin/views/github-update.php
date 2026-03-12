@@ -886,21 +886,46 @@ $github_token = get_option('dw_github_access_token', '');
     </table>
     
     <h2><?php echo esc_html__('마이그레이션 도구', 'dasom-church'); ?></h2>
+    <p class="description" style="margin-bottom:14px;"><?php echo esc_html__('필요한 마이그레이션만 개별로 활성화할 수 있습니다. 활성화한 항목만 DW 교회관리 메뉴에 표시됩니다.', 'dasom-church'); ?></p>
     <table class="form-table">
         <tr>
-            <th scope="row">
-                <label for="dw_enable_acf_bulletin_migration"><?php echo esc_html__('ACF 주보 마이그레이션', 'dasom-church'); ?></label>
-            </th>
+            <th scope="row"><?php echo esc_html__('ACF 주보 마이그레이션', 'dasom-church'); ?></th>
             <td>
-                <fieldset>
-                    <label>
-                        <input type="checkbox" id="dw_enable_acf_bulletin_migration" name="dw_enable_acf_bulletin_migration" value="yes" <?php checked(get_option('dw_enable_acf_bulletin_migration', ''), 'yes'); ?> />
-                        <?php echo esc_html__('ACF → 교회주보/설교 마이그레이션 메뉴 표시 (특정 사이트에서만 사용 시 활성화)', 'dasom-church'); ?>
-                    </label>
-                    <p class="description" style="margin-top:8px;">
-                        <?php echo esc_html__('활성화하면 DW 교회관리 메뉴에 "ACF 주보 마이그레이션", "ACF 설교 마이그레이션", "목회컬럼 마이그레이션", "교회앨범 마이그레이션"이 나타납니다. Post의 ACF 필드(주보/설교) 또는 일반 글(목회컬럼·교회앨범)을 교회주보·설교·목회컬럼·교회앨범으로 옮길 수 있습니다.', 'dasom-church'); ?>
-                    </p>
-                </fieldset>
+                <label>
+                    <input type="checkbox" id="dw_enable_acf_bulletin_migration" name="dw_enable_acf_bulletin_migration" value="yes" <?php checked(get_option('dw_enable_acf_bulletin_migration', ''), 'yes'); ?> />
+                    <?php echo esc_html__('메뉴 표시', 'dasom-church'); ?>
+                </label>
+                <p class="description"><?php echo esc_html__('Post ACF Jubo(Sunday, Jubo File Url 등) → 교회주보', 'dasom-church'); ?></p>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row"><?php echo esc_html__('ACF 설교 마이그레이션', 'dasom-church'); ?></th>
+            <td>
+                <label>
+                    <input type="checkbox" id="dw_enable_acf_sermon_migration" name="dw_enable_acf_sermon_migration" value="yes" <?php checked(get_option('dw_enable_acf_sermon_migration', ''), 'yes'); ?> />
+                    <?php echo esc_html__('메뉴 표시', 'dasom-church'); ?>
+                </label>
+                <p class="description"><?php echo esc_html__('Post ACF Sermon(일자, 설교자, 성경구절, YouTube) → 교회 설교', 'dasom-church'); ?></p>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row"><?php echo esc_html__('목회컬럼 마이그레이션', 'dasom-church'); ?></th>
+            <td>
+                <label>
+                    <input type="checkbox" id="dw_enable_post_column_migration" name="dw_enable_post_column_migration" value="yes" <?php checked(get_option('dw_enable_post_column_migration', ''), 'yes'); ?> />
+                    <?php echo esc_html__('메뉴 표시', 'dasom-church'); ?>
+                </label>
+                <p class="description"><?php echo esc_html__('Post(카테고리 목회컬럼/개척이야기) → 목회컬럼', 'dasom-church'); ?></p>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row"><?php echo esc_html__('교회앨범 마이그레이션', 'dasom-church'); ?></th>
+            <td>
+                <label>
+                    <input type="checkbox" id="dw_enable_post_album_migration" name="dw_enable_post_album_migration" value="yes" <?php checked(get_option('dw_enable_post_album_migration', ''), 'yes'); ?> />
+                    <?php echo esc_html__('메뉴 표시', 'dasom-church'); ?>
+                </label>
+                <p class="description"><?php echo esc_html__('Post(카테고리 교회앨범) 본문 img → 교회앨범', 'dasom-church'); ?></p>
             </td>
         </tr>
     </table>

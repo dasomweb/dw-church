@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 
 class DW_Church_Post_Column_Migration {
 
-    const OPTION_ENABLED = 'dw_enable_acf_bulletin_migration';
+    const OPTION_ENABLED = 'dw_enable_post_column_migration';
 
     /** 목회컬럼으로 가져올 Post 카테고리 slug (빨간색 표시 카테고리만) */
     const CATEGORY_SLUGS = array('column', 'churchplanting');

@@ -351,6 +351,7 @@ class DW_Church_Admin {
             'dasom-church-settings',
             'edit.php?post_type=bulletin',
             'edit.php?post_type=sermon',
+            'edit-tags.php?taxonomy=sermon_category&post_type=sermon',
             'edit.php?post_type=column',
             'edit.php?post_type=album',
             'edit.php?post_type=banner',
@@ -709,7 +710,7 @@ class DW_Church_Admin {
      * Register Taxonomies
      */
     public function dw_church_register_taxonomies() {
-        // 설교 카테고리
+        // 설교 카테고리 (수정·추가·삭제 가능)
         register_taxonomy('sermon_category', 'sermon', array(
             'labels' => array(
                 'name' => __('설교 카테고리', 'dw-church'),
@@ -722,13 +723,14 @@ class DW_Church_Admin {
                 'not_found' => __('카테고리를 찾을 수 없습니다', 'dw-church'),
             ),
             'hierarchical' => true,
+            'show_ui' => true,
             'show_admin_column' => true,
             'rewrite' => array('slug' => 'sermon-category'),
             'show_in_rest' => true,
             'capabilities' => array(
-                'manage_terms' => 'manage_categories',
-                'edit_terms' => 'manage_categories',
-                'delete_terms' => 'manage_categories',
+                'manage_terms' => 'edit_posts',
+                'edit_terms' => 'edit_posts',
+                'delete_terms' => 'edit_posts',
                 'assign_terms' => 'edit_posts',
             ),
         ));
@@ -1170,6 +1172,9 @@ class DW_Church_Admin {
         if (isset($_POST['dw_dashboard_fields_visibility'])) {
             update_option('dw_dashboard_fields_visibility', sanitize_text_field($_POST['dw_dashboard_fields_visibility']));
             update_option('dw_enable_acf_bulletin_migration', isset($_POST['dw_enable_acf_bulletin_migration']) ? 'yes' : '');
+            update_option('dw_enable_acf_sermon_migration', isset($_POST['dw_enable_acf_sermon_migration']) ? 'yes' : '');
+            update_option('dw_enable_post_column_migration', isset($_POST['dw_enable_post_column_migration']) ? 'yes' : '');
+            update_option('dw_enable_post_album_migration', isset($_POST['dw_enable_post_album_migration']) ? 'yes' : '');
             update_option('dw_delete_data_on_uninstall', isset($_POST['dw_delete_data_on_uninstall']) ? 'yes' : 'no');
         }
 

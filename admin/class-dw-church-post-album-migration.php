@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
 
 class DW_Church_Post_Album_Migration {
 
-    const OPTION_ENABLED = 'dw_enable_acf_bulletin_migration';
+    const OPTION_ENABLED = 'dw_enable_post_album_migration';
 
     /** 교회앨범으로 가져올 Post 카테고리 slug (교회앨범 = gallery) */
     const CATEGORY_SLUGS = array('gallery');

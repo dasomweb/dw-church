@@ -15,12 +15,13 @@ if (!defined('ABSPATH')) {
 
 class DW_Church_ACF_Sermon_Migration {
 
-    const OPTION_ENABLED = 'dw_enable_acf_bulletin_migration';
+    const OPTION_ENABLED = 'dw_enable_acf_sermon_migration';
     const ACF_FIELD_DATE = 'date';
     const ACF_FIELD_PREACHER = 'preacher';
     const ACF_FIELD_SCRIPTURE = 'Bibleverse';
     const ACF_FIELD_YOUTUBE = 'youtube';
     const TAXONOMY_PREACHER = 'dw_sermon_preacher';
+    const TAXONOMY_SERMON_CATEGORY = 'sermon_category';
 
     public static function init() {
         $self = new self();
@@ -151,7 +152,97 @@ class DW_Church_ACF_Sermon_Migration {
             }
         }
 
+        $sermon_category_ids = $this->map_source_categories_to_sermon_category($source_post_id);
+        if (!empty($sermon_category_ids)) {
+            wp_set_post_terms($sermon_id, $sermon_category_ids, self::TAXONOMY_SERMON_CATEGORY, false);
+        }
+
+        $thumb_id = get_post_thumbnail_id($source_post_id);
+        if ($thumb_id) {
+            $new_thumb_id = $this->duplicate_attachment_for_post($thumb_id, $sermon_id);
+            if ($new_thumb_id) {
+                update_post_meta($sermon_id, 'dw_sermon_thumb_id', $new_thumb_id);
+                set_post_thumbnail($sermon_id, $new_thumb_id);
+            } else {
+                update_post_meta($sermon_id, 'dw_sermon_thumb_id', $thumb_id);
+                set_post_thumbnail($sermon_id, $thumb_id);
+            }
+        }
+
         return true;
+    }
+
+    /**
+     * 원본 글의 카테고리( taxonomy 'category' )를 설교 카테고리( sermon_category )로 매핑한 term_id 배열 반환
+     */
+    private function map_source_categories_to_sermon_category($source_post_id) {
+        $terms = get_the_terms($source_post_id, 'category');
+        if (!$terms || is_wp_error($terms)) {
+            return array();
+        }
+        $sermon_term_ids = array();
+        foreach ($terms as $term) {
+            if (!isset($term->name) || $term->name === '') {
+                continue;
+            }
+            $existing = term_exists($term->name, self::TAXONOMY_SERMON_CATEGORY);
+            if ($existing) {
+                $tid = is_array($existing) ? $existing['term_id'] : (int) $existing;
+                if ($tid) {
+                    $sermon_term_ids[] = (int) $tid;
+                }
+            } else {
+                $new = wp_insert_term($term->name, self::TAXONOMY_SERMON_CATEGORY);
+                if (!is_wp_error($new) && isset($new['term_id'])) {
+                    $sermon_term_ids[] = (int) $new['term_id'];
+                }
+            }
+        }
+        return array_unique($sermon_term_ids);
+    }
+
+    /**
+     * 첨부 파일을 복제해 지정한 포스트에 소유권 부여 (Featured Image가 확실히 표시되도록)
+     */
+    private function duplicate_attachment_for_post($attachment_id, $parent_post_id) {
+        $file = get_attached_file($attachment_id, true);
+        if (!$file || !file_exists($file)) {
+            return 0;
+        }
+        $wp_upload_dir = wp_upload_dir();
+        if (!empty($wp_upload_dir['error'])) {
+            return 0;
+        }
+        $filename = basename($file);
+        $new_file = $wp_upload_dir['path'] . '/' . $filename;
+        if (file_exists($new_file)) {
+            $filename = wp_unique_filename($wp_upload_dir['path'], $filename);
+            $new_file = $wp_upload_dir['path'] . '/' . $filename;
+        }
+        if (!@copy($file, $new_file)) {
+            return 0;
+        }
+        $filetype = wp_check_filetype($filename, null);
+        $attachment = array(
+            'post_mime_type' => $filetype['type'],
+            'post_title' => sanitize_file_name(pathinfo($filename, PATHINFO_FILENAME)),
+            'post_content' => '',
+            'post_status' => 'inherit',
+            'post_parent' => $parent_post_id,
+        );
+        if (!function_exists('wp_generate_attachment_metadata')) {
+            require_once ABSPATH . 'wp-admin/includes/image.php';
+        }
+        $new_id = wp_insert_attachment($attachment, $new_file, $parent_post_id, true);
+        if (is_wp_error($new_id)) {
+            @unlink($new_file);
+            return 0;
+        }
+        $meta = wp_generate_attachment_metadata($new_id, $new_file);
+        if (!empty($meta)) {
+            wp_update_attachment_metadata($new_id, $meta);
+        }
+        return (int) $new_id;
     }
 
     /**
