@@ -1,0 +1,10 @@
+{
+  "name": "@dw-church/wp-plugin",
+  "version": "0.1.0",
+  "description": "WordPress plugin package — references the existing PHP plugin and bundles React assets",
+  "license": "GPL-3.0",
+  "private": true,
+  "scripts": {
+    "build": "echo 'PHP plugin — no JS build step. See packages/admin-app and packages/ui-components for React builds.'"
+  }
+}

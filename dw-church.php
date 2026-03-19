@@ -764,6 +764,13 @@ DW_Church_Management::get_instance();
 // Load widgets
 require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/class-dw-church-widgets.php';
 
+// Load REST API (custom endpoints for React app)
+require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/class-dw-church-rest-api.php';
+
+// Load React embed layer (shortcodes, Gutenberg blocks, admin app)
+require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/class-dw-church-react-embed.php';
+add_action('init', array('DW_Church_React_Embed', 'init'));
+
 // Load update manager
 require_once DASOM_CHURCH_PLUGIN_PATH . 'includes/class-dw-church-update-manager.php';
 

@@ -694,9 +694,63 @@ class DW_Church_Admin {
             'capability_type' => 'post',
             'map_meta_cap' => true,
         ));
-        
+
+        // 교역자/팀원 소개 (신규)
+        register_post_type('dw_staff', array(
+            'labels' => array(
+                'name' => __('교역자', 'dw-church'),
+                'singular_name' => __('교역자', 'dw-church'),
+                'menu_name' => __('교역자', 'dw-church'),
+                'add_new' => __('새 교역자 추가', 'dw-church'),
+                'add_new_item' => __('새 교역자 추가', 'dw-church'),
+                'edit_item' => __('교역자 편집', 'dw-church'),
+                'new_item' => __('새 교역자', 'dw-church'),
+                'view_item' => __('교역자 보기', 'dw-church'),
+                'search_items' => __('교역자 검색', 'dw-church'),
+                'not_found' => __('교역자를 찾을 수 없습니다', 'dw-church'),
+                'not_found_in_trash' => __('휴지통에서 교역자를 찾을 수 없습니다', 'dw-church'),
+            ),
+            'public' => true,
+            'show_ui' => true,
+            'show_in_menu' => 'dasom-church-admin',
+            'menu_position' => 8,
+            'supports' => array('title', 'thumbnail'),
+            'show_in_rest' => true,
+            'has_archive' => false,
+            'rewrite' => array('slug' => 'staff'),
+            'capability_type' => 'post',
+            'map_meta_cap' => true,
+        ));
+
+        // 연혁 (신규)
+        register_post_type('dw_history', array(
+            'labels' => array(
+                'name' => __('연혁', 'dw-church'),
+                'singular_name' => __('연혁', 'dw-church'),
+                'menu_name' => __('연혁', 'dw-church'),
+                'add_new' => __('새 연혁 추가', 'dw-church'),
+                'add_new_item' => __('새 연혁 추가', 'dw-church'),
+                'edit_item' => __('연혁 편집', 'dw-church'),
+                'new_item' => __('새 연혁', 'dw-church'),
+                'view_item' => __('연혁 보기', 'dw-church'),
+                'search_items' => __('연혁 검색', 'dw-church'),
+                'not_found' => __('연혁을 찾을 수 없습니다', 'dw-church'),
+                'not_found_in_trash' => __('휴지통에서 연혁을 찾을 수 없습니다', 'dw-church'),
+            ),
+            'public' => true,
+            'show_ui' => true,
+            'show_in_menu' => 'dasom-church-admin',
+            'menu_position' => 9,
+            'supports' => array('title'),
+            'show_in_rest' => true,
+            'has_archive' => false,
+            'rewrite' => array('slug' => 'history'),
+            'capability_type' => 'post',
+            'map_meta_cap' => true,
+        ));
+
     }
-    
+
     /**
      * Register Taxonomies
      */
@@ -798,7 +852,32 @@ class DW_Church_Admin {
                 'assign_terms' => 'edit_posts',
             ),
         ));
-        
+
+        // 교역자 부서 택소노미 (신규)
+        register_taxonomy('dw_staff_department', 'dw_staff', array(
+            'labels' => array(
+                'name' => __('부서', 'dw-church'),
+                'singular_name' => __('부서', 'dw-church'),
+                'menu_name' => __('부서 관리', 'dw-church'),
+                'add_new_item' => __('새 부서 추가', 'dw-church'),
+                'edit_item' => __('부서 편집', 'dw-church'),
+                'update_item' => __('부서 업데이트', 'dw-church'),
+                'search_items' => __('부서 검색', 'dw-church'),
+                'not_found' => __('부서를 찾을 수 없습니다', 'dw-church'),
+            ),
+            'hierarchical' => true,
+            'show_ui' => true,
+            'show_admin_column' => true,
+            'rewrite' => array('slug' => 'staff-department'),
+            'show_in_rest' => true,
+            'capabilities' => array(
+                'manage_terms' => 'manage_categories',
+                'edit_terms' => 'manage_categories',
+                'delete_terms' => 'manage_categories',
+                'assign_terms' => 'edit_posts',
+            ),
+        ));
+
         // 기본 카테고리 및 설교자 생성
         $this->dw_church_create_default_terms();
     }

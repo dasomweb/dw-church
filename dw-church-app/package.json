@@ -1,0 +1,43 @@
+{
+  "name": "dw-church-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DW Church Management System — React App Monorepo",
+  "license": "GPL-3.0",
+  "author": "DasomWeb <https://dasomweb.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dasomweb/dasom-church-management-system"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "build:api-client": "pnpm --filter @dw-church/api-client build",
+    "build:ui": "pnpm --filter @dw-church/ui-components build",
+    "build:admin": "pnpm --filter @dw-church/admin-app build",
+    "build:demo": "pnpm --filter @dw-church/demo build",
+    "lint": "pnpm -r lint",
+    "lint:fix": "pnpm -r lint:fix",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "test": "pnpm -r test",
+    "test:watch": "pnpm -r --parallel test:watch",
+    "storybook": "pnpm --filter @dw-church/ui-components storybook",
+    "clean": "pnpm -r exec rm -rf dist node_modules .turbo",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

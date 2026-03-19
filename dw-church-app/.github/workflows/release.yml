@@ -1,0 +1,39 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: dw-church-app/pnpm-lock.yaml
+      - name: Install & Build
+        working-directory: dw-church-app
+        run: |
+          pnpm install
+          pnpm build
+      - name: Create Release ZIP
+        run: |
+          # Copy PHP plugin + React builds
+          mkdir -p release/dw-church
+          cp -r admin includes public assets languages dw-church.php uninstall.php composer.json readme.txt release/dw-church/
+          mkdir -p release/dw-church/dw-church-app/packages/ui-components/dist
+          mkdir -p release/dw-church/dw-church-app/packages/admin-app/dist
+          cp -r dw-church-app/packages/ui-components/dist/* release/dw-church/dw-church-app/packages/ui-components/dist/
+          cp -r dw-church-app/packages/admin-app/dist/* release/dw-church/dw-church-app/packages/admin-app/dist/
+          cd release && zip -r ../dw-church.zip dw-church/
+      - name: Upload Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dw-church.zip

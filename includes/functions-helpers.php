@@ -52,6 +52,21 @@ class DW_Meta_Keys {
     const EVENT_END_DATE = 'dw_event_end_date';
     const EVENT_LOCATION = 'dw_event_location';
     const EVENT_URL      = 'dw_event_url';
+
+    // Staff (New)
+    const STAFF_ROLE       = 'dw_staff_role';
+    const STAFF_DEPARTMENT = 'dw_staff_department';
+    const STAFF_EMAIL      = 'dw_staff_email';
+    const STAFF_PHONE      = 'dw_staff_phone';
+    const STAFF_BIO        = 'dw_staff_bio';
+    const STAFF_ORDER      = 'dw_staff_order';
+    const STAFF_PHOTO_ID   = 'dw_staff_photo_id';
+    const STAFF_SNS_LINKS  = 'dw_staff_sns_links';
+    const STAFF_IS_ACTIVE  = 'dw_staff_is_active';
+
+    // History (New)
+    const HISTORY_YEAR  = 'dw_history_year';
+    const HISTORY_ITEMS = 'dw_history_items';
 }
 
 /**
