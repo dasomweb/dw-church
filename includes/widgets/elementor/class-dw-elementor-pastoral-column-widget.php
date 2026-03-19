@@ -812,20 +812,7 @@ class DW_Elementor_Pastoral_Column_Widget extends \Elementor\Widget_Base {
     }
 
     private function get_column_posts() {
-        $posts = get_posts([
-            'post_type' => 'column',
-            'post_status' => 'publish',
-            'posts_per_page' => -1,
-            'orderby' => 'date',
-            'order' => 'DESC',
-        ]);
-
-        $options = [];
-        foreach ($posts as $post) {
-            $options[$post->ID] = $post->post_title;
-        }
-
-        return $options;
+        return dasom_church_get_post_options('column');
     }
 
     protected function render() {

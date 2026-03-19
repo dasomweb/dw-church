@@ -58,18 +58,8 @@ class DW_Elementor_Sermon_Widget extends \Elementor\Widget_Base {
             ]
         );
         
-        // Get all sermons for manual selection
-        $sermon_options = array();
-        $all_sermons = get_posts(array(
-            'post_type' => 'sermon',
-            'posts_per_page' => -1,
-            'post_status' => 'publish',
-            'orderby' => 'title',
-            'order' => 'ASC',
-        ));
-        foreach ($all_sermons as $sermon) {
-            $sermon_options[$sermon->ID] = $sermon->post_title;
-        }
+        // Get sermons for manual selection (cached)
+        $sermon_options = dasom_church_get_post_options('sermon');
         
         $this->add_control(
             'manual_selection',

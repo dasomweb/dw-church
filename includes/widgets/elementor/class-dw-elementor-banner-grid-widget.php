@@ -74,18 +74,8 @@ class DW_Elementor_Banner_Grid_Widget extends \Elementor\Widget_Base {
             ]
         );
         
-        // Get all banners for manual selection
-        $banner_options = array();
-        $all_banners = get_posts(array(
-            'post_type' => 'banner',
-            'posts_per_page' => -1,
-            'post_status' => 'publish',
-            'orderby' => 'title',
-            'order' => 'ASC',
-        ));
-        foreach ($all_banners as $banner) {
-            $banner_options[$banner->ID] = $banner->post_title;
-        }
+        // Get banners for manual selection (cached)
+        $banner_options = dasom_church_get_post_options('banner');
         
         $this->add_control(
             'manual_selection',

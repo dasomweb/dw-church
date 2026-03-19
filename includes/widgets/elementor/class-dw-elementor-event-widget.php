@@ -624,20 +624,7 @@ class DW_Elementor_Event_Widget extends \Elementor\Widget_Base {
     }
     
     private function get_event_posts() {
-        $posts = get_posts([
-            'post_type' => 'event',
-            'post_status' => 'publish',
-            'posts_per_page' => -1,
-            'orderby' => 'date',
-            'order' => 'DESC',
-        ]);
-        
-        $options = [];
-        foreach ($posts as $post) {
-            $options[$post->ID] = $post->post_title;
-        }
-        
-        return $options;
+        return dasom_church_get_post_options('event');
     }
     
     protected function render() {

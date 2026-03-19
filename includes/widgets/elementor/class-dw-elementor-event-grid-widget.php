@@ -57,18 +57,8 @@ class DW_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             ]
         );
         
-        // Get all events for manual selection
-        $event_options = array();
-        $all_events = get_posts(array(
-            'post_type' => 'event',
-            'posts_per_page' => -1,
-            'post_status' => 'publish',
-            'orderby' => 'title',
-            'order' => 'ASC',
-        ));
-        foreach ($all_events as $event) {
-            $event_options[$event->ID] = $event->post_title;
-        }
+        // Get events for manual selection (cached)
+        $event_options = dasom_church_get_post_options('event');
         
         $this->add_control(
             'manual_selection',

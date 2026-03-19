@@ -12,6 +12,49 @@ if (!defined('ABSPATH')) {
 }
 
 /**
+ * Meta key constants for DW Church post types
+ *
+ * Centralizes all meta key strings to prevent typos and ease refactoring.
+ */
+class DW_Meta_Keys {
+    // Bulletin
+    const BULLETIN_DATE   = 'dw_bulletin_date';
+    const BULLETIN_PDF    = 'dw_bulletin_pdf';
+    const BULLETIN_IMAGES = 'dw_bulletin_images';
+
+    // Sermon
+    const SERMON_TITLE     = 'dw_sermon_title';
+    const SERMON_YOUTUBE   = 'dw_sermon_youtube';
+    const SERMON_SCRIPTURE = 'dw_sermon_scripture';
+    const SERMON_DATE      = 'dw_sermon_date';
+    const SERMON_THUMB_ID  = 'dw_sermon_thumb_id';
+
+    // Column
+    const COLUMN_TITLE        = 'dw_column_title';
+    const COLUMN_CONTENT      = 'dw_column_content';
+    const COLUMN_TOP_IMAGE    = 'dw_column_top_image';
+    const COLUMN_BOTTOM_IMAGE = 'dw_column_bottom_image';
+    const COLUMN_YOUTUBE      = 'dw_column_youtube';
+    const COLUMN_THUMB_ID     = 'dw_column_thumb_id';
+
+    // Album
+    const ALBUM_IMAGES   = 'dw_album_images';
+    const ALBUM_YOUTUBE  = 'dw_album_youtube';
+    const ALBUM_THUMB_ID = 'dw_album_thumb_id';
+
+    // Banner
+    const BANNER_IMAGE    = 'dw_banner_image';
+    const BANNER_URL      = 'dw_banner_url';
+    const BANNER_END_DATE = 'dw_banner_end_date';
+
+    // Event
+    const EVENT_DATE     = 'dw_event_date';
+    const EVENT_END_DATE = 'dw_event_end_date';
+    const EVENT_LOCATION = 'dw_event_location';
+    const EVENT_URL      = 'dw_event_url';
+}
+
+/**
  * Get YouTube video ID from URL
  *
  * @param string $url YouTube URL
@@ -235,6 +278,49 @@ function dasom_church_log($data, $level = 'info') {
         error_log("[Dasom Church {$level}] " . $message);
     }
 }
+
+/**
+ * Get post options for Elementor widget controls (with transient caching)
+ *
+ * @param string $post_type Post type slug
+ * @param int $limit Maximum number of posts to retrieve (default: 200)
+ * @return array Associative array of post ID => post title
+ */
+function dasom_church_get_post_options($post_type, $limit = 200) {
+    $cache_key = 'dw_post_options_' . $post_type;
+    $options = get_transient($cache_key);
+
+    if (false === $options) {
+        $options = array();
+        $posts = get_posts(array(
+            'post_type' => $post_type,
+            'posts_per_page' => $limit,
+            'post_status' => 'publish',
+            'orderby' => 'date',
+            'order' => 'DESC',
+        ));
+        foreach ($posts as $post) {
+            $options[$post->ID] = $post->post_title;
+        }
+        set_transient($cache_key, $options, HOUR_IN_SECONDS);
+    }
+
+    return $options;
+}
+
+/**
+ * Invalidate post options cache when a post is saved/deleted
+ *
+ * @param int $post_id Post ID
+ */
+function dasom_church_invalidate_post_options_cache($post_id) {
+    $post_type = get_post_type($post_id);
+    if ($post_type) {
+        delete_transient('dw_post_options_' . $post_type);
+    }
+}
+add_action('save_post', 'dasom_church_invalidate_post_options_cache');
+add_action('delete_post', 'dasom_church_invalidate_post_options_cache');
 
 /**
  * Get all social media URLs

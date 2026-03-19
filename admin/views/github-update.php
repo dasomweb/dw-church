@@ -444,7 +444,7 @@ $github_token = get_option('dw_github_access_token', '');
                     <?php echo esc_html__('업데이트 캐시', 'dasom-church'); ?>
                 </th>
                 <td>
-                    <a href="<?php echo esc_url(admin_url('plugins.php?dasom_check_update=1')); ?>" class="button button-secondary">
+                    <a href="<?php echo esc_url(wp_nonce_url(admin_url('plugins.php?dasom_check_update=1'), 'dasom_check_update_nonce')); ?>" class="button button-secondary">
                         <?php echo esc_html__('🔄 업데이트 강제 확인', 'dasom-church'); ?>
                     </a>
                     <p class="description">

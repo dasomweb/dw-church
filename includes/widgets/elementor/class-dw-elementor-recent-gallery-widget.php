@@ -69,18 +69,8 @@ class DW_Elementor_Recent_Gallery_Widget extends \Elementor\Widget_Base {
             ]
         );
         
-        // Get all albums for manual selection
-        $album_options = array();
-        $all_albums = get_posts(array(
-            'post_type' => 'album',
-            'posts_per_page' => -1,
-            'post_status' => 'publish',
-            'orderby' => 'title',
-            'order' => 'ASC',
-        ));
-        foreach ($all_albums as $album) {
-            $album_options[$album->ID] = $album->post_title;
-        }
+        // Get albums for manual selection (cached)
+        $album_options = dasom_church_get_post_options('album');
         
         $this->add_control(
             'manual_selection',

@@ -96,23 +96,8 @@ class DW_Elementor_Single_Sermon_Widget extends \Elementor\Widget_Base {
             ]
         );
         
-        // Get all sermons for dropdown
-        $sermons_query = new \WP_Query([
-            'post_type' => 'sermon',
-            'posts_per_page' => -1,
-            'post_status' => 'publish',
-            'orderby' => 'date',
-            'order' => 'DESC',
-        ]);
-        
-        $sermon_options = [];
-        if ($sermons_query->have_posts()) {
-            while ($sermons_query->have_posts()) {
-                $sermons_query->the_post();
-                $sermon_options[get_the_ID()] = get_the_title();
-            }
-            wp_reset_postdata();
-        }
+        // Get sermons for dropdown (cached)
+        $sermon_options = dasom_church_get_post_options('sermon');
         
         $this->add_control(
             'sermon_id',

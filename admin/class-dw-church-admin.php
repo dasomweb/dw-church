@@ -315,12 +315,8 @@ class DW_Church_Admin {
         }
         
         // Only redirect when accessing the main WordPress dashboard
-        $current_url = $_SERVER['REQUEST_URI'] ?? '';
-        $is_main_dashboard = (
-            $current_url === '/wp-admin/' || 
-            $current_url === '/wp-admin/index.php' ||
-            $current_url === '/wp-admin'
-        );
+        global $pagenow;
+        $is_main_dashboard = ($pagenow === 'index.php');
         
         if (!$is_main_dashboard) {
             return;
@@ -405,6 +401,10 @@ class DW_Church_Admin {
      * Set default widget settings
      */
     public function dw_church_set_default_widget_settings() {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+
         // Force all widget settings to 'yes' regardless of current values
         $widget_settings = array(
             'dw_enable_gallery_widget' => 'yes',
@@ -462,14 +462,6 @@ class DW_Church_Admin {
      * Add admin menu
      */
     public function dw_church_admin_menu() {
-        // DEBUG: 메뉴 등록 디버그
-        error_log('=== ADMIN MENU DEBUG ===');
-        error_log('Current User ID: ' . get_current_user_id());
-        error_log('User Roles: ' . implode(', ', wp_get_current_user()->roles));
-        error_log('Can edit_posts: ' . (current_user_can('edit_posts') ? 'YES' : 'NO'));
-        error_log('Can read: ' . (current_user_can('read') ? 'YES' : 'NO'));
-        error_log('Can manage_options: ' . (current_user_can('manage_options') ? 'YES' : 'NO'));
-        
         // Main menu - 고유한 슬러그 사용
         add_menu_page(
             __('DW 교회관리', 'dw-church'),
@@ -480,8 +472,6 @@ class DW_Church_Admin {
             'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M11 2v6h6v3h-6v7H8v-7H2V8h6V2z"/></svg>'),
             5
         );
-        
-        error_log('DW 교회관리 메뉴 등록 완료');
         
         // Remove default submenu
         remove_submenu_page('dasom-church-admin', 'dasom-church-admin');
@@ -705,8 +695,6 @@ class DW_Church_Admin {
             'map_meta_cap' => true,
         ));
         
-        // Flush rewrite rules after registering post types
-        flush_rewrite_rules();
     }
     
     /**
@@ -1166,34 +1154,27 @@ class DW_Church_Admin {
      * Check and update expired banners
      */
     public function dw_church_check_expired_banners() {
-        $args = array(
+        $current_date = current_time('Y-m-d');
+
+        $banners = get_posts(array(
             'post_type' => 'banner',
             'post_status' => 'publish',
-            'posts_per_page' => -1,
+            'posts_per_page' => 100,
             'meta_query' => array(
                 array(
                     'key' => 'dw_banner_end_date',
-                    'value' => '',
-                    'compare' => '!='
+                    'value' => $current_date,
+                    'compare' => '<',
+                    'type' => 'DATE',
                 )
             )
-        );
-        
-        $banners = get_posts($args);
-        $current_time = current_time('timestamp');
-        
+        ));
+
         foreach ($banners as $banner) {
-            $end_date = get_post_meta($banner->ID, 'dw_banner_end_date', true);
-            if (!empty($end_date)) {
-                $end_timestamp = strtotime($end_date);
-                if ($end_timestamp && $end_timestamp < $current_time) {
-                    wp_update_post(array(
-                        'ID' => $banner->ID,
-                        'post_status' => 'draft'
-                    ));
-                    error_log('Banner ID ' . $banner->ID . ' expired and set to draft');
-                }
-            }
+            wp_update_post(array(
+                'ID' => $banner->ID,
+                'post_status' => 'draft'
+            ));
         }
     }
     

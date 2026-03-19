@@ -262,6 +262,7 @@ class DW_Church_Public {
             if ($atts['show_images'] === 'true') {
                 $images = get_post_meta($album->ID, 'dasom_album_images', true);
                 $images = $images ? json_decode($images, true) : array();
+                $images = is_array($images) ? $images : array();
                 if (!empty($images)) {
                     $output .= '<div class="dasom-album-images">';
                     foreach (array_slice($images, 0, 3) as $id) {

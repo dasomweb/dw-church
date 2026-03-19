@@ -51,120 +51,91 @@ define('DASOM_CHURCH_PLUGIN_FILE', __FILE__);
 define('DASOM_CHURCH_PLUGIN_BASENAME', plugin_basename(__FILE__));
 
 /**
- * 플러그인 자산에 HTTPS 강제 적용
- * 
- * script_loader_src 필터를 통해 플러그인의 모든 JavaScript 파일이 HTTPS로 로드되도록 보장
+ * HTTPS 강제 적용 통합 클래스
+ *
+ * 모든 WordPress/Elementor 자산에 대해 HTTPS를 강제 적용
  * 혼합 콘텐츠 경고를 방지하고 보안을 강화
  */
-add_filter('script_loader_src', function($src, $handle) {
-    // 플러그인 URL이 포함된 스크립트 소스인지 확인
-    if (strpos($src, DASOM_CHURCH_PLUGIN_URL) !== false) {
-        // HTTP를 HTTPS로 변환
-        return str_replace('http://', 'https://', $src);
-    }
-    return $src;
-}, 10, 2);
+class DW_Church_HTTPS_Enforcer {
 
-/**
- * 플러그인 스타일시트에 HTTPS 강제 적용
- * 
- * style_loader_src 필터를 통해 플러그인의 모든 CSS 파일이 HTTPS로 로드되도록 보장
- */
-add_filter('style_loader_src', function($src, $handle) {
-    // 플러그인 URL이 포함된 스타일 소스인지 확인
-    if (strpos($src, DASOM_CHURCH_PLUGIN_URL) !== false) {
-        // HTTP를 HTTPS로 변환
-        return str_replace('http://', 'https://', $src);
-    }
-    return $src;
-}, 10, 2);
+    public static function init() {
+        // 스크립트/스타일 소스 HTTPS 강제
+        add_filter('script_loader_src', array(__CLASS__, 'force_https_src'), 10, 2);
+        add_filter('style_loader_src', array(__CLASS__, 'force_https_src'), 10, 2);
 
-/**
- * 외부 CDN 리소스에 HTTPS 강제 적용
- * 
- * 일반적인 CDN 서비스(jSDelivr, Google Fonts, Google APIs)의 리소스가
- * HTTPS로 로드되도록 보장하여 혼합 콘텐츠 문제를 방지
- */
-add_filter('script_loader_src', function($src, $handle) {
-    // 일반적인 CDN 서비스 URL 패턴 확인
-    // 프로토콜 상대 URL(//)도 처리하여 안전하게 HTTPS로 변환
-    if (strpos($src, '//cdn.jsdelivr.net') !== false || 
-        strpos($src, '//fonts.googleapis.com') !== false ||
-        strpos($src, '//fonts.gstatic.com') !== false ||
-        strpos($src, '//ajax.googleapis.com') !== false) {
-        // HTTP 또는 프로토콜 상대 URL을 HTTPS로 변환
-        return str_replace('http://', 'https://', $src);
-    }
-    return $src;
-}, 10, 2);
+        // WordPress URL 필터
+        add_filter('content_url', array(__CLASS__, 'force_https_url'));
+        add_filter('plugins_url', array(__CLASS__, 'force_https_url'));
+        add_filter('theme_root_uri', array(__CLASS__, 'force_https_url'));
+        add_filter('wp_get_attachment_url', array(__CLASS__, 'force_https_url'));
+        add_filter('wp_get_attachment_image_url', array(__CLASS__, 'force_https_url'));
+        add_filter('get_the_post_thumbnail_url', array(__CLASS__, 'force_https_url'));
+        add_filter('option_siteurl', array(__CLASS__, 'force_https_url'));
+        add_filter('option_home', array(__CLASS__, 'force_https_url'));
+        add_filter('admin_url', array(__CLASS__, 'force_https_url'));
+        add_filter('login_url', array(__CLASS__, 'force_https_url'));
 
-/**
- * 외부 CDN 스타일시트에 HTTPS 강제 적용
- */
-add_filter('style_loader_src', function($src, $handle) {
-    // 일반적인 CDN 서비스 URL 패턴 확인
-    if (strpos($src, '//cdn.jsdelivr.net') !== false || 
-        strpos($src, '//fonts.googleapis.com') !== false ||
-        strpos($src, '//fonts.gstatic.com') !== false ||
-        strpos($src, '//ajax.googleapis.com') !== false) {
-        // HTTP를 HTTPS로 변환
-        return str_replace('http://', 'https://', $src);
-    }
-    return $src;
-}, 10, 2);
+        // WordPress 업로드 디렉토리
+        add_filter('upload_dir', array(__CLASS__, 'force_https_upload_dir'));
 
-// Force HTTPS for all WordPress assets
-add_filter('script_loader_src', function($src, $handle) {
-    // Force HTTPS for WordPress core and plugin assets
-    if (strpos($src, home_url()) !== false) {
-        return str_replace('http://', 'https://', $src);
-    }
-    return $src;
-}, 10, 2);
+        // 이미지/썸네일 HTML
+        add_filter('wp_get_attachment_image_src', array(__CLASS__, 'force_https_image_src'));
+        add_filter('post_thumbnail_html', array(__CLASS__, 'force_https_html'));
 
-add_filter('style_loader_src', function($src, $handle) {
-    // Force HTTPS for WordPress core and plugin assets
-    if (strpos($src, home_url()) !== false) {
-        return str_replace('http://', 'https://', $src);
-    }
-    return $src;
-}, 10, 2);
+        // Elementor Google Fonts
+        add_filter('elementor/frontend/print_google_fonts', array(__CLASS__, 'force_https_google_fonts'));
 
-// Force HTTPS for WordPress
-add_action('init', function() {
-    if (is_ssl()) {
-        // Force HTTPS for WordPress admin
-        if (is_admin() && !is_ssl()) {
-            wp_redirect('https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'], 301);
-            exit;
+        // Elementor 캐시 클리어 (플러그인 업데이트 시)
+        add_action('upgrader_process_complete', array(__CLASS__, 'clear_elementor_cache'), 10, 2);
+    }
+
+    /**
+     * 스크립트/스타일 소스 URL에 HTTPS 강제 적용
+     */
+    public static function force_https_src($src, $handle) {
+        if (strpos($src, 'http://') === 0) {
+            return str_replace('http://', 'https://', $src);
         }
+        return $src;
     }
-});
 
-// Force HTTPS for WordPress content
-add_filter('content_url', function($url) {
-    return str_replace('http://', 'https://', $url);
-});
+    /**
+     * 일반 URL에 HTTPS 강제 적용
+     */
+    public static function force_https_url($url) {
+        return str_replace('http://', 'https://', $url);
+    }
 
-add_filter('plugins_url', function($url) {
-    return str_replace('http://', 'https://', $url);
-});
+    /**
+     * 업로드 디렉토리 URL에 HTTPS 강제 적용
+     */
+    public static function force_https_upload_dir($uploads) {
+        $uploads['url'] = str_replace('http://', 'https://', $uploads['url']);
+        $uploads['baseurl'] = str_replace('http://', 'https://', $uploads['baseurl']);
+        return $uploads;
+    }
 
-add_filter('theme_root_uri', function($url) {
-    return str_replace('http://', 'https://', $url);
-});
+    /**
+     * 이미지 소스 배열에 HTTPS 강제 적용
+     */
+    public static function force_https_image_src($image) {
+        if (is_array($image) && isset($image[0])) {
+            $image[0] = str_replace('http://', 'https://', $image[0]);
+        }
+        return $image;
+    }
 
-// Force HTTPS for WordPress uploads
-add_filter('upload_dir', function($uploads) {
-    $uploads['url'] = str_replace('http://', 'https://', $uploads['url']);
-    $uploads['baseurl'] = str_replace('http://', 'https://', $uploads['baseurl']);
-    return $uploads;
-});
+    /**
+     * HTML 출력에 HTTPS 강제 적용
+     */
+    public static function force_https_html($html) {
+        return str_replace('http://', 'https://', $html);
+    }
 
-// Force HTTPS for Elementor assets
-add_action('elementor/frontend/after_enqueue_styles', function() {
-    // Force HTTPS for Elementor Google Fonts
-    add_filter('elementor/frontend/print_google_fonts', function($google_fonts) {
+    /**
+     * Elementor Google Fonts URL에 HTTPS 강제 적용
+     */
+    public static function force_https_google_fonts($google_fonts) {
         if (is_array($google_fonts)) {
             foreach ($google_fonts as $key => $font) {
                 if (isset($font['font_url'])) {
@@ -173,185 +144,27 @@ add_action('elementor/frontend/after_enqueue_styles', function() {
             }
         }
         return $google_fonts;
-    });
-});
-
-// Smart HTTPS enforcement - only when SSL is detected and needed
-add_filter('style_loader_src', function($src, $handle) {
-    // Only enforce HTTPS if SSL is actually detected and URL is HTTP
-    if (is_ssl() && strpos($src, 'http://') === 0) {
-        // Check if it's an Elementor Google Font CSS file
-        if (strpos($handle, 'elementor-gf-local-') === 0 || strpos($src, '/wp-content/uploads/elementor/') !== false) {
-            return str_replace('http://', 'https://', $src);
-        }
     }
-    return $src;
-}, 10, 2);
 
-// Force HTTPS for Elementor uploaded assets
-add_filter('elementor/frontend/print_google_fonts', function($google_fonts) {
-    if (is_array($google_fonts)) {
-        foreach ($google_fonts as $key => $font) {
-            if (isset($font['font_url'])) {
-                $google_fonts[$key]['font_url'] = str_replace('http://', 'https://', $font['font_url']);
-            }
-        }
-    }
-    return $google_fonts;
-});
-
-// Force HTTPS for Elementor CSS files
-add_filter('elementor/frontend/print_google_fonts', function($google_fonts) {
-    if (is_array($google_fonts)) {
-        foreach ($google_fonts as $key => $font) {
-            if (isset($font['font_url'])) {
-                $google_fonts[$key]['font_url'] = str_replace('http://', 'https://', $font['font_url']);
-            }
-        }
-    }
-    return $google_fonts;
-});
-
-// Force HTTPS for Elementor uploaded CSS files
-add_filter('elementor/frontend/print_google_fonts', function($google_fonts) {
-    if (is_array($google_fonts)) {
-        foreach ($google_fonts as $key => $font) {
-            if (isset($font['font_url'])) {
-                $google_fonts[$key]['font_url'] = str_replace('http://', 'https://', $font['font_url']);
-            }
-        }
-    }
-    return $google_fonts;
-});
-
-// Force HTTPS for all Elementor assets
-add_filter('elementor/frontend/print_google_fonts', function($google_fonts) {
-    if (is_array($google_fonts)) {
-        foreach ($google_fonts as $key => $font) {
-            if (isset($font['font_url'])) {
-                $google_fonts[$key]['font_url'] = str_replace('http://', 'https://', $font['font_url']);
-            }
-        }
-    }
-    return $google_fonts;
-});
-
-// Force HTTPS for all WordPress URLs
-add_filter('wp_get_attachment_url', function($url) {
-    return str_replace('http://', 'https://', $url);
-});
-
-add_filter('wp_get_attachment_image_src', function($image) {
-    if (is_array($image) && isset($image[0])) {
-        $image[0] = str_replace('http://', 'https://', $image[0]);
-    }
-    return $image;
-});
-
-// Force HTTPS for WordPress post thumbnail URLs
-add_filter('post_thumbnail_html', function($html) {
-    return str_replace('http://', 'https://', $html);
-});
-
-// Force HTTPS for WordPress attachment image URLs
-add_filter('wp_get_attachment_image_url', function($url) {
-    return str_replace('http://', 'https://', $url);
-});
-
-// Force HTTPS for WordPress post thumbnail URLs
-add_filter('get_the_post_thumbnail_url', function($url) {
-    return str_replace('http://', 'https://', $url);
-});
-
-// Force HTTPS for WordPress site URL
-add_filter('option_siteurl', function($url) {
-    return str_replace('http://', 'https://', $url);
-});
-
-add_filter('option_home', function($url) {
-    return str_replace('http://', 'https://', $url);
-});
-
-// Force HTTPS for WordPress admin
-add_filter('admin_url', function($url) {
-    return str_replace('http://', 'https://', $url);
-});
-
-// Force HTTPS for WordPress login
-add_filter('login_url', function($url) {
-    return str_replace('http://', 'https://', $url);
-});
-
-// Clear Elementor cache when plugin is updated
-add_action('upgrader_process_complete', function($upgrader_object, $options) {
-    if ($options['action'] === 'update' && $options['type'] === 'plugin') {
-        if (isset($options['plugins']) && in_array(plugin_basename(__FILE__), $options['plugins'])) {
-            // Clear Elementor cache
-            if (class_exists('\Elementor\Plugin')) {
-                \Elementor\Plugin::$instance->files_manager->clear_cache();
-            }
-            // Clear WordPress cache
-            if (function_exists('wp_cache_flush')) {
-                wp_cache_flush();
-            }
-        }
-    }
-}, 10, 2);
-
-// Alternative approach: Use protocol-relative URLs for fonts
-add_filter('elementor/frontend/print_google_fonts', function($google_fonts) {
-    if (is_array($google_fonts)) {
-        foreach ($google_fonts as $key => $font) {
-            if (isset($font['font_url']) && strpos($font['font_url'], 'http://') === 0) {
-                // Convert to protocol-relative URL
-                $google_fonts[$key]['font_url'] = str_replace('http://', '//', $font['font_url']);
-            }
-        }
-    }
-    return $google_fonts;
-});
-
-// Force WordPress to use HTTPS for content URLs when SSL is detected
-add_filter('content_url', function($url) {
-    if (is_ssl() && strpos($url, 'http://') === 0) {
-        return str_replace('http://', 'https://', $url);
-    }
-    return $url;
-});
-
-// Alternative approach: Set WordPress to force SSL for admin and login
-add_action('init', function() {
-    if (is_ssl()) {
-        // Force SSL for admin
-        if (is_admin() && !is_ssl()) {
-            wp_redirect('https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'], 301);
-            exit();
-        }
-    }
-});
-
-// Smart URL handling - use protocol-relative URLs when possible
-add_filter('wp_get_attachment_url', function($url) {
-    if (is_ssl() && strpos($url, 'http://') === 0) {
-        return str_replace('http://', 'https://', $url);
-    }
-    return $url;
-});
-
-// Handle Elementor font URLs more intelligently
-add_filter('elementor/frontend/print_google_fonts', function($google_fonts) {
-    if (is_array($google_fonts)) {
-        foreach ($google_fonts as $key => $font) {
-            if (isset($font['font_url'])) {
-                // Use protocol-relative URL for better compatibility
-                if (strpos($font['font_url'], 'http://') === 0) {
-                    $google_fonts[$key]['font_url'] = str_replace('http://', '//', $font['font_url']);
+    /**
+     * 플러그인 업데이트 시 Elementor 캐시 클리어
+     */
+    public static function clear_elementor_cache($upgrader_object, $options) {
+        if ($options['action'] === 'update' && $options['type'] === 'plugin') {
+            if (isset($options['plugins']) && in_array(plugin_basename(DASOM_CHURCH_PLUGIN_FILE), $options['plugins'])) {
+                if (class_exists('\Elementor\Plugin')) {
+                    \Elementor\Plugin::$instance->files_manager->clear_cache();
+                }
+                if (function_exists('wp_cache_flush')) {
+                    wp_cache_flush();
                 }
             }
         }
     }
-    return $google_fonts;
-});
+}
+
+// HTTPS 강제 적용 초기화
+DW_Church_HTTPS_Enforcer::init();
 
 // Add update checker for GitHub releases
 add_action('init', function() {
@@ -812,28 +625,33 @@ function dw_church_fix_update_folder($source, $remote_source, $upgrader, $hook_e
  */
 add_action('admin_init', function() {
     if (isset($_GET['dasom_check_update']) && current_user_can('update_plugins')) {
+        // Nonce 검증 (CSRF 방지)
+        if (!isset($_GET['_wpnonce']) || !wp_verify_nonce(sanitize_text_field($_GET['_wpnonce']), 'dasom_check_update_nonce')) {
+            wp_die(__('Security check failed', 'dw-church'));
+        }
+
         $github_username = 'dasomweb';
         $github_repo = 'dasom-church-management-system';
-        
+
         // Delete our custom transients
         delete_transient('dw_church_update_' . md5($github_username . $github_repo));
         delete_transient('dw_church_plugin_info_' . md5($github_username . $github_repo));
-        
+
         // Delete WordPress update transients to force refresh
         delete_site_transient('update_plugins');
         delete_transient('update_plugins');
-        
+
         // Force WordPress to check for updates
         wp_update_plugins();
-        
+
         // Add admin notice
         add_action('admin_notices', function() {
             echo '<div class="notice notice-success is-dismissible"><p>';
             echo esc_html__('업데이트 캐시가 삭제되었습니다. 플러그인 목록을 새로고침하세요.', 'dw-church');
             echo '</p></div>';
         });
-        
-        wp_redirect(admin_url('plugins.php'));
+
+        wp_safe_redirect(admin_url('plugins.php'));
         exit;
     }
 });

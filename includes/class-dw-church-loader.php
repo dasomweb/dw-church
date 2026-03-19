@@ -241,7 +241,8 @@ class DW_Church_Loader {
         $pdf = get_post_meta($post->ID, 'dasom_bulletin_pdf', true);
         $images = get_post_meta($post->ID, 'dasom_bulletin_images', true);
         $images = $images ? json_decode($images, true) : array();
-        
+        $images = is_array($images) ? $images : array();
+
         ?>
         <p>
             <label for="dasom_bulletin_date"><?php echo esc_html__('Bulletin Date', 'dw-church'); ?></label><br>
@@ -352,6 +353,7 @@ class DW_Church_Loader {
         
         $images = get_post_meta($post->ID, 'dasom_album_images', true);
         $images = $images ? json_decode($images, true) : array();
+        $images = is_array($images) ? $images : array();
         $youtube = get_post_meta($post->ID, 'dasom_album_youtube', true);
         $thumb_id = get_post_meta($post->ID, 'dasom_album_thumb_id', true);
         

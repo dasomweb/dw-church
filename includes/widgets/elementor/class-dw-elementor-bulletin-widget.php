@@ -952,31 +952,10 @@ class DW_Elementor_Bulletin_Widget extends \Elementor\Widget_Base {
     }
     
     /**
-     * Get bulletin posts for manual selection
-     * Cached to prevent settings reset when options are regenerated
+     * Get bulletin posts for manual selection (transient cached)
      */
     private function get_bulletin_posts() {
-        static $cached_options = null;
-        
-        if ($cached_options !== null) {
-            return $cached_options;
-        }
-        
-        $posts = get_posts([
-            'post_type' => 'bulletin',
-            'posts_per_page' => -1,
-            'post_status' => 'publish',
-            'orderby' => 'date',
-            'order' => 'DESC',
-        ]);
-        
-        $options = [];
-        foreach ($posts as $post) {
-            $options[$post->ID] = $post->post_title;
-        }
-        
-        $cached_options = $options;
-        return $options;
+        return dasom_church_get_post_options('bulletin');
     }
     
     /**

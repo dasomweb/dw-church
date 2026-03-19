@@ -63,9 +63,6 @@ class DW_Church_Meta_Boxes {
      * Add meta boxes
      */
     public function dasom_church_add_meta_boxes() {
-        // Debug: Log meta box registration
-        error_log('DW Church Meta Boxes - Registering meta boxes');
-        
         // 주보 메타박스
         add_meta_box(
             'bulletin_meta',
@@ -107,7 +104,6 @@ class DW_Church_Meta_Boxes {
         );
         
         // 배너 메타박스
-        error_log('DW Church Meta Boxes - Registering banner meta box');
         add_meta_box(
             'banner_meta',
             __('배너 정보', 'dw-church'),
@@ -449,19 +445,12 @@ class DW_Church_Meta_Boxes {
      * 배너 메타박스
      */
     public function dasom_church_banner_meta_box($post) {
-        error_log('DW Church Banner Meta Box - Function called for post ID: ' . $post->ID);
-        
         wp_nonce_field('dasom_church_banner_meta', 'dasom_church_banner_nonce');
-        
-        // Debug: Log post ID and meta data
-        error_log('DW Church Banner Meta Box - Post ID: ' . $post->ID);
-        error_log('DW Church Banner Meta Box - Post type: ' . $post->post_type);
-        error_log('DW Church Banner Meta Box - Post status: ' . $post->post_status);
-        
+
         // Get current banner category (for reference only, all fields always visible)
         $terms = wp_get_post_terms($post->ID, 'banner_category');
         $current_category = !empty($terms) && !is_wp_error($terms) ? $terms[0]->name : '';
-        
+
         $pc_image = get_post_meta($post->ID, 'dw_banner_pc_image', true);
         $mobile_image = get_post_meta($post->ID, 'dw_banner_mobile_image', true);
         $link_url = get_post_meta($post->ID, 'dw_banner_link_url', true);
@@ -469,14 +458,7 @@ class DW_Church_Meta_Boxes {
         $link_target = $link_target ? $link_target : '_self';
         $start_date = get_post_meta($post->ID, 'dw_banner_start_date', true);
         $end_date = get_post_meta($post->ID, 'dw_banner_end_date', true);
-        
-        // Debug: Log loaded meta data
-        error_log('DW Church Banner Meta - PC Image: ' . $pc_image);
-        error_log('DW Church Banner Meta - Mobile Image: ' . $mobile_image);
-        error_log('DW Church Banner Meta - Link URL: ' . $link_url);
-        error_log('DW Church Banner Meta - Start Date: ' . $start_date);
-        error_log('DW Church Banner Meta - End Date: ' . $end_date);
-        
+
         // Get text overlay fields (optional)
         $text_title = get_post_meta($post->ID, 'dw_banner_text_title', true);
         $text_subtitle = get_post_meta($post->ID, 'dw_banner_text_subtitle', true);
@@ -956,9 +938,8 @@ class DW_Church_Meta_Boxes {
      * Save bulletin meta
      */
     private function dasom_church_save_bulletin_meta($post_id) {
-        if (!isset($_POST['dasom_church_bulletin_nonce']) || 
+        if (!isset($_POST['dasom_church_bulletin_nonce']) ||
             !wp_verify_nonce($_POST['dasom_church_bulletin_nonce'], 'dasom_church_bulletin_meta')) {
-            error_log('Bulletin meta save: Nonce verification failed');
             return;
         }
         
@@ -966,9 +947,6 @@ class DW_Church_Meta_Boxes {
         if (isset($_POST['dw_bulletin_date'])) {
             $date = sanitize_text_field($_POST['dw_bulletin_date']);
             update_post_meta($post_id, 'dw_bulletin_date', $date);
-            error_log("Bulletin date saved: Post ID={$post_id}, Date={$date}");
-        } else {
-            error_log("Bulletin date NOT received in POST data");
         }
         
         if (isset($_POST['dw_bulletin_pdf'])) {
@@ -984,7 +962,6 @@ class DW_Church_Meta_Boxes {
                 $first_image_id = intval($images[0]);
                 if ($first_image_id > 0) {
                     set_post_thumbnail($post_id, $first_image_id);
-                    error_log("Bulletin featured image set: Post ID={$post_id}, Image ID={$first_image_id}");
                 }
             }
         }
@@ -1211,15 +1188,11 @@ class DW_Church_Meta_Boxes {
      * Save banner meta
      */
     private function dasom_church_save_banner_meta($post_id) {
-        if (!isset($_POST['dasom_church_banner_nonce']) || 
+        if (!isset($_POST['dasom_church_banner_nonce']) ||
             !wp_verify_nonce($_POST['dasom_church_banner_nonce'], 'dasom_church_banner_meta')) {
-            error_log('DW Church Banner Save - Nonce verification failed');
             return;
         }
-        
-        error_log('DW Church Banner Save - Post ID: ' . $post_id);
-        error_log('DW Church Banner Save - POST data: ' . print_r($_POST, true));
-        
+
         // Save all banner image fields (no category restriction)
         // Main banner fields
         if (isset($_POST['dw_banner_pc_image'])) {

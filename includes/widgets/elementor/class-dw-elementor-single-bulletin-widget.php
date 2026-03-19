@@ -375,22 +375,7 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
      * Get bulletin posts for select options
      */
     private function get_bulletin_posts() {
-        $posts = get_posts([
-            'post_type' => 'bulletin',
-            'posts_per_page' => -1,
-            'post_status' => 'publish',
-            'meta_key' => 'dw_bulletin_date',
-            'orderby' => 'meta_value',
-            'meta_type' => 'DATE',
-            'order' => 'DESC',
-        ]);
-        
-        $options = [];
-        foreach ($posts as $post) {
-            $options[$post->ID] = $post->post_title;
-        }
-        
-        return $options;
+        return dasom_church_get_post_options('bulletin');
     }
     
     /**
@@ -398,62 +383,43 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
      */
     protected function render() {
         $settings = $this->get_settings_for_display();
-        
-        // Debug: Log widget rendering
-        error_log('DW Single Bulletin Widget: Starting render');
-        error_log('DW Single Bulletin Widget Settings: ' . print_r($settings, true));
-        
+
         // Get post based on query source
         if ($settings['query_source'] === 'current') {
             $post = get_post();
             if (!$post || $post->post_type !== 'bulletin') {
                 echo '<p>' . __('Current post is not a bulletin.', 'dasom-church') . '</p>';
-                error_log('DW Single Bulletin Widget: Current post is not a bulletin');
                 return;
             }
             $post_id = $post->ID;
-            error_log('DW Single Bulletin Widget: Using current post ID: ' . $post_id);
         } else {
             if (empty($settings['bulletin_post'])) {
                 echo '<p>' . __('Please select a bulletin to display.', 'dasom-church') . '</p>';
-                error_log('DW Single Bulletin Widget: No bulletin selected');
                 return;
             }
             $post_id = $settings['bulletin_post'];
             $post = get_post($post_id);
-            
+
             if (!$post || $post->post_type !== 'bulletin') {
                 echo '<p>' . __('Selected bulletin not found.', 'dasom-church') . '</p>';
-                error_log('DW Single Bulletin Widget: Selected bulletin not found');
                 return;
             }
-            error_log('DW Single Bulletin Widget: Using selected post ID: ' . $post_id);
         }
-        
+
         // Get bulletin data
         $bulletin_date = get_post_meta($post_id, 'dw_bulletin_date', true);
         $bulletin_date_formatted = get_post_meta($post_id, 'dw_bulletin_date_formatted', true);
         $pdf_url = get_post_meta($post_id, 'dw_bulletin_pdf', true);
         $bulletin_images = get_post_meta($post_id, 'dw_bulletin_images', true);
-        
-        // DEBUG: Log everything to find the issue
-        error_log('=== DW SINGLE BULLETIN DEBUG START ===');
-        error_log('Post ID: ' . $post_id);
-        error_log('Settings: ' . print_r($settings, true));
-        error_log('Bulletin Images Raw: ' . $bulletin_images);
-        error_log('Show Images Setting: ' . ($settings['show_images'] ?? 'NOT SET'));
-        
-        // Hover effect now controlled by Elementor hover controls
-        
+
         ?>
         <div class="dw-single-bulletin-container">
             <?php if ($settings['show_date'] === 'yes'): ?>
                 <div class="dw-single-bulletin-date">
-                    <?php 
+                    <?php
                     if ($bulletin_date_formatted) {
                         echo esc_html($bulletin_date_formatted);
                     } elseif ($bulletin_date) {
-                        // Format the date to Korean format
                         $formatted_date = date_i18n('Y년 m월 d일', strtotime($bulletin_date));
                         echo esc_html($formatted_date);
                     } else {
@@ -462,7 +428,7 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
                     ?>
                 </div>
             <?php endif; ?>
-            
+
             <?php if ($settings['show_pdf_download'] === 'yes' && $pdf_url): ?>
                 <div class="dw-single-bulletin-pdf-container">
                     <a href="<?php echo esc_url($pdf_url); ?>" target="_blank" class="dw-single-bulletin-pdf">
@@ -470,61 +436,32 @@ class DW_Elementor_Single_Bulletin_Widget extends \Elementor\Widget_Base {
                     </a>
                 </div>
             <?php endif; ?>
-            
-            <?php 
-            // DEBUG: Check conditions
-            error_log('=== IMAGE DISPLAY CONDITIONS ===');
-            error_log('Show Images Setting: ' . ($settings['show_images'] ?? 'NOT SET'));
-            error_log('Bulletin Images: ' . ($bulletin_images ? 'EXISTS' : 'EMPTY'));
-            error_log('Show Images === yes: ' . ($settings['show_images'] === 'yes' ? 'TRUE' : 'FALSE'));
-            error_log('Bulletin Images exists: ' . ($bulletin_images ? 'TRUE' : 'FALSE'));
-            error_log('Combined condition: ' . (($settings['show_images'] === 'yes' && $bulletin_images) ? 'TRUE' : 'FALSE'));
-            ?>
-            
+
             <?php if ($settings['show_images'] === 'yes' && $bulletin_images): ?>
                 <div class="dw-single-bulletin-images">
                     <?php
                     // Handle both JSON array and comma-separated string formats
                     if (strpos($bulletin_images, '[') === 0) {
-                        // JSON array format: [2526,2527]
                         $images = json_decode($bulletin_images, true);
+                        $images = is_array($images) ? $images : array();
                     } else {
-                        // Comma-separated string format: 2526,2527
                         $images = array_filter(array_map('intval', explode(',', $bulletin_images)));
                     }
-                    error_log('Decoded images: ' . print_r($images, true));
-                    error_log('Is array: ' . (is_array($images) ? 'TRUE' : 'FALSE'));
-                    error_log('Is empty: ' . (empty($images) ? 'TRUE' : 'FALSE'));
-                    
-                    if (is_array($images) && !empty($images)) {
-                        error_log('Processing ' . count($images) . ' images');
-                        foreach ($images as $index => $image_id) {
-                            error_log("Image $index: ID = $image_id");
+
+                    if (!empty($images)) {
+                        foreach ($images as $image_id) {
                             $image_url = wp_get_attachment_url($image_id);
-                            error_log("Image $index: URL = $image_url");
-                            
                             if ($image_url) {
-                                error_log("Rendering image $index");
                                 ?>
                                 <div class="dw-single-bulletin-image-item">
                                     <img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr(get_the_title($post_id)); ?>" class="dw-single-bulletin-image" />
                                 </div>
                                 <?php
-                            } else {
-                                error_log("No URL for image $index (ID: $image_id)");
                             }
                         }
-                    } else {
-                        error_log('No valid images array or empty array');
                     }
                     ?>
                 </div>
-            <?php else: ?>
-                <?php 
-                error_log('=== IMAGES NOT SHOWN ===');
-                error_log('Show images setting: ' . ($settings['show_images'] ?? 'NOT SET'));
-                error_log('Bulletin images: ' . ($bulletin_images ? 'EXISTS' : 'EMPTY'));
-                ?>
             <?php endif; ?>
         </div>
         <?php
