@@ -6,11 +6,11 @@ const envSchema = z.object({
   SUPABASE_ANON_KEY: z.string().min(1),
   SUPABASE_SERVICE_KEY: z.string().min(1),
 
-  R2_ENDPOINT: z.string().url(),
-  R2_ACCESS_KEY_ID: z.string().min(1),
-  R2_SECRET_ACCESS_KEY: z.string().min(1),
-  R2_BUCKET_NAME: z.string().min(1),
-  R2_PUBLIC_URL: z.string().url(),
+  R2_ENDPOINT: z.string().default(''),
+  R2_ACCESS_KEY_ID: z.string().default(''),
+  R2_SECRET_ACCESS_KEY: z.string().default(''),
+  R2_BUCKET_NAME: z.string().default('dw-church-files'),
+  R2_PUBLIC_URL: z.string().default(''),
 
   SUPER_ADMIN_EMAILS: z
     .string()
