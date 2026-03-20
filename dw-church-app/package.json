@@ -14,8 +14,10 @@
     "node": ">=18.0.0"
   },
   "scripts": {
+    "start": "node apps/server/dist/index.js",
     "dev": "pnpm -r --parallel dev",
-    "build": "pnpm -r build",
+    "build": "pnpm --filter @dw-church/server db:generate && pnpm --filter @dw-church/server build",
+    "build:all": "pnpm -r build",
     "build:api-client": "pnpm --filter @dw-church/api-client build",
     "build:ui": "pnpm --filter @dw-church/ui-components build",
     "build:admin": "pnpm --filter @dw-church/admin-app build",
