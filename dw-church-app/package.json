@@ -9,9 +9,9 @@
     "type": "git",
     "url": "https://github.com/dasomweb/dasom-church-management-system"
   },
+  "packageManager": "pnpm@10.30.3",
   "engines": {
-    "node": ">=18.0.0",
-    "pnpm": ">=9.0.0"
+    "node": ">=18.0.0"
   },
   "scripts": {
     "dev": "pnpm -r --parallel dev",
@@ -28,7 +28,9 @@
     "test:watch": "pnpm -r --parallel test:watch",
     "storybook": "pnpm --filter @dw-church/ui-components storybook",
     "clean": "pnpm -r exec rm -rf dist node_modules .turbo",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "build:server": "pnpm --filter @dw-church/server db:generate && pnpm --filter @dw-church/server build",
+    "start:server": "cd apps/server && node dist/index.js"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
