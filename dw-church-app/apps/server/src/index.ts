@@ -75,9 +75,9 @@ async function main(): Promise<void> {
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(tenantRoutes, { prefix: '/api/v1/admin' });
   await app.register(billingRoutes, { prefix: '/api/v1/billing' });
-  await app.register(pageRoutes, { prefix: '/api/v1' });
-  await app.register(menuRoutes, { prefix: '/api/v1' });
-  await app.register(themeRoutes, { prefix: '/api/v1' });
+  await app.register(pageRoutes, { prefix: '/api/v1/pages' });
+  await app.register(menuRoutes, { prefix: '/api/v1/menus' });
+  await app.register(themeRoutes, { prefix: '/api/v1/theme' });
   await app.register(sermonRoutes, { prefix: '/api/v1' });
   await app.register(bulletinRoutes, { prefix: '/api/v1' });
   await app.register(columnRoutes, { prefix: '/api/v1' });
