@@ -68,18 +68,24 @@ async function registerRoutes() {
 export default async function handler(req: any, res: any) {
   await registerRoutes();
 
-  // Collect request body
-  const chunks: Buffer[] = [];
-  for await (const chunk of req) {
-    chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+  // Vercel may pre-parse the body — use req.body if available, otherwise read stream
+  let body: string | undefined;
+  if (req.body) {
+    body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+  } else {
+    const chunks: Buffer[] = [];
+    for await (const chunk of req) {
+      chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+    }
+    const raw = Buffer.concat(chunks).toString();
+    if (raw) body = raw;
   }
-  const body = Buffer.concat(chunks).toString();
 
   const response = await app.inject({
     method: req.method,
     url: req.url,
     headers: req.headers,
-    payload: body || undefined,
+    payload: body,
   });
 
   res.statusCode = response.statusCode;
