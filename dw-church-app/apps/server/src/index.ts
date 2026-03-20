@@ -32,13 +32,9 @@ async function main(): Promise<void> {
   initMonitoring();
 
   const app = Fastify({
-    logger: {
-      level: env.NODE_ENV === 'production' ? 'info' : 'debug',
-      transport:
-        env.NODE_ENV === 'development'
-          ? { target: 'pino-pretty', options: { translateTime: 'HH:MM:ss' } }
-          : undefined,
-    },
+    logger: env.NODE_ENV === 'production'
+      ? { level: 'info' }
+      : { level: 'debug' },
   });
 
   // --- Plugins ---

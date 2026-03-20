@@ -2,7 +2,8 @@ import Stripe from 'stripe';
 import { prisma } from '../../config/database.js';
 import { AppError } from '../../middleware/error-handler.js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '');
+const stripeKey = process.env.STRIPE_SECRET_KEY || '';
+const stripe = stripeKey ? new Stripe(stripeKey) : null;
 
 const PLAN_PRICES: Record<string, string | undefined> = {
   basic: process.env.STRIPE_PRICE_BASIC,
@@ -12,12 +13,18 @@ const PLAN_PRICES: Record<string, string | undefined> = {
 /**
  * Create a Stripe Checkout Session for a plan upgrade.
  */
+function requireStripe(): Stripe {
+  if (!stripe) throw new AppError('BILLING_NOT_CONFIGURED', 503, 'Stripe is not configured');
+  return stripe;
+}
+
 export async function createCheckoutSession(
   tenantId: string,
   plan: string,
   successUrl: string,
   cancelUrl: string,
 ): Promise<{ url: string }> {
+  const s = requireStripe();
   const priceId = PLAN_PRICES[plan];
   if (!priceId) {
     throw new AppError('INVALID_PLAN', 400, `Unknown plan: ${plan}`);
@@ -32,7 +39,7 @@ export async function createCheckoutSession(
   let stripeCustomerId = tenant.stripeCustomerId as string | null;
 
   if (!stripeCustomerId) {
-    const customer = await stripe.customers.create({
+    const customer = await requireStripe().customers.create({
       metadata: { tenantId: tenant.id, tenantSlug: tenant.slug },
       name: tenant.name,
     });
@@ -44,7 +51,7 @@ export async function createCheckoutSession(
     });
   }
 
-  const session = await stripe.checkout.sessions.create({
+  const session = await requireStripe().checkout.sessions.create({
     customer: stripeCustomerId,
     mode: 'subscription',
     line_items: [{ price: priceId, quantity: 1 }],
@@ -74,7 +81,7 @@ export async function handleWebhook(
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+    event = requireStripe().webhooks.constructEvent(payload, signature, webhookSecret);
   } catch (err) {
     throw new AppError(
       'WEBHOOK_SIGNATURE_INVALID',
@@ -170,7 +177,7 @@ export async function createPortalSession(
     );
   }
 
-  const session = await stripe.billingPortal.sessions.create({
+  const session = await requireStripe().billingPortal.sessions.create({
     customer: stripeCustomerId,
   });
 
@@ -201,7 +208,7 @@ export async function getSubscriptionStatus(tenantId: string) {
 
   if (tenant.stripeSubscriptionId) {
     try {
-      const subscription = await stripe.subscriptions.retrieve(
+      const subscription = await requireStripe().subscriptions.retrieve(
         tenant.stripeSubscriptionId as string,
       );
       subscriptionStatus = subscription.status;
