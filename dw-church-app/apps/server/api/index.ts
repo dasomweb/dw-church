@@ -4,7 +4,10 @@ import { env } from '../src/config/env.js';
 import { tenantMiddleware } from '../src/middleware/tenant.js';
 import { errorHandler } from '../src/middleware/error-handler.js';
 
-const app = Fastify({ logger: true });
+const app = Fastify({
+  logger: true,
+  trustProxy: true,
+});
 
 let registered = false;
 
@@ -64,5 +67,24 @@ async function registerRoutes() {
 
 export default async function handler(req: any, res: any) {
   await registerRoutes();
-  app.server.emit('request', req, res);
+
+  // Collect request body
+  const chunks: Buffer[] = [];
+  for await (const chunk of req) {
+    chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+  }
+  const body = Buffer.concat(chunks).toString();
+
+  const response = await app.inject({
+    method: req.method,
+    url: req.url,
+    headers: req.headers,
+    payload: body || undefined,
+  });
+
+  res.statusCode = response.statusCode;
+  for (const [key, value] of Object.entries(response.headers)) {
+    if (value !== undefined) res.setHeader(key, value);
+  }
+  res.end(response.body);
 }
