@@ -2,7 +2,7 @@ import type { Staff } from '@dw-church/api-client';
 
 export interface StaffCardProps {
   staff: Staff;
-  onClick?: (id: number) => void;
+  onClick?: (id: string) => void;
   className?: string;
 }
 

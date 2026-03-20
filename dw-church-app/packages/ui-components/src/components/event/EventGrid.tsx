@@ -8,7 +8,7 @@ export interface EventGridProps {
   data?: Event[];
   limit?: number;
   className?: string;
-  onItemClick?: (id: number) => void;
+  onItemClick?: (id: string) => void;
 }
 
 export function EventGrid({ data, limit, className = '', onItemClick }: EventGridProps) {

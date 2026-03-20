@@ -3,7 +3,7 @@ import { DateBadge } from '../common/DateBadge';
 
 export interface BulletinCardProps {
   bulletin: Bulletin;
-  onClick?: (id: number) => void;
+  onClick?: (id: string) => void;
   className?: string;
 }
 

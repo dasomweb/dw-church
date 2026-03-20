@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ═══════════════════════════════════════
+// Public Schema — shared across all tenants
+// ═══════════════════════════════════════
+
+model Tenant {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug          String    @unique @db.VarChar(63)
+  name          String    @db.VarChar(255)
+  plan          String    @default("free") @db.VarChar(20)
+  customDomain  String?   @map("custom_domain") @db.VarChar(255)
+  logoUrl       String?   @map("logo_url")
+  templateName  String    @default("modern") @map("template_name") @db.VarChar(50)
+  isActive              Boolean   @default(true) @map("is_active")
+  stripeCustomerId      String?   @unique @map("stripe_customer_id") @db.VarChar(255)
+  stripeSubscriptionId  String?   @unique @map("stripe_subscription_id") @db.VarChar(255)
+  trialEndsAt           DateTime? @map("trial_ends_at") @db.Timestamptz()
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+
+  domains  TenantDomain[]
+  billings Billing[]
+
+  @@map("tenants")
+}
+
+model TenantDomain {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  domain    String   @unique @db.VarChar(255)
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("tenant_domains")
+}
+
+model Billing {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId        String   @map("tenant_id") @db.Uuid
+  plan            String   @db.VarChar(20)
+  amountCents     Int      @map("amount_cents")
+  currency        String   @default("USD") @db.VarChar(3)
+  paymentProvider String?  @map("payment_provider") @db.VarChar(20)
+  providerId      String?  @map("provider_id") @db.VarChar(255)
+  status          String   @default("pending") @db.VarChar(20)
+  periodStart     DateTime? @map("period_start") @db.Timestamptz()
+  periodEnd       DateTime? @map("period_end") @db.Timestamptz()
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@map("billing")
+}

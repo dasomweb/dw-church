@@ -1,10 +1,16 @@
-import { lazy, Suspense, useMemo } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { lazy, Suspense, useEffect, useMemo } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { DWChurchClient } from '@dw-church/api-client';
 import { DWChurchProvider } from '@dw-church/ui-components';
 import { AdminLayout } from './layouts/AdminLayout';
+import { useAuthStore } from './stores/auth';
 
-// Lazy-loaded pages
+// Lazy-loaded pages — Auth
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
+
+// Lazy-loaded pages — Admin
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const BulletinManagement = lazy(() => import('./pages/BulletinManagement'));
 const SermonManagement = lazy(() => import('./pages/SermonManagement'));
@@ -14,7 +20,12 @@ const BannerManagement = lazy(() => import('./pages/BannerManagement'));
 const EventManagement = lazy(() => import('./pages/EventManagement'));
 const StaffManagement = lazy(() => import('./pages/StaffManagement'));
 const HistoryManagement = lazy(() => import('./pages/HistoryManagement'));
+const PageEditor = lazy(() => import('./pages/PageEditor'));
+const MenuEditor = lazy(() => import('./pages/MenuEditor'));
+const ThemeEditor = lazy(() => import('./pages/ThemeEditor'));
+const UserManagement = lazy(() => import('./pages/UserManagement'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'));
 
 export interface AppConfig {
   baseUrl: string;
@@ -31,18 +42,95 @@ function PageLoader() {
   );
 }
 
+/** Redirect to /login if not authenticated */
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isLoading = useAuthStore((s) => s.isLoading);
+  const location = useLocation();
+
+  if (isLoading) {
+    return <PageLoader />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return <>{children}</>;
+}
+
+/** Redirect to / if already authenticated */
+function PublicOnly({ children }: { children: React.ReactNode }) {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isLoading = useAuthStore((s) => s.isLoading);
+
+  if (isLoading) {
+    return <PageLoader />;
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+}
+
 export function App({ config }: { config: AppConfig }) {
-  const client = useMemo(
-    () => new DWChurchClient({ baseUrl: config.baseUrl }),
-    [config.baseUrl],
-  );
+  const session = useAuthStore((s) => s.session);
+  const hydrate = useAuthStore((s) => s.hydrate);
+
+  // Hydrate auth state from localStorage on mount
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
+
+  const client = useMemo(() => {
+    const c = new DWChurchClient({
+      baseUrl: config.baseUrl,
+      token: session?.accessToken,
+    });
+    return c;
+  }, [config.baseUrl, session?.accessToken]);
 
   return (
     <DWChurchProvider client={client}>
       <BrowserRouter>
         <Suspense fallback={<PageLoader />}>
           <Routes>
-            <Route element={<AdminLayout />}>
+            {/* Public routes */}
+            <Route
+              path="/login"
+              element={
+                <PublicOnly>
+                  <LoginPage />
+                </PublicOnly>
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <PublicOnly>
+                  <RegisterPage />
+                </PublicOnly>
+              }
+            />
+            <Route
+              path="/forgot-password"
+              element={
+                <PublicOnly>
+                  <ForgotPasswordPage />
+                </PublicOnly>
+              }
+            />
+
+            {/* Protected routes */}
+            <Route
+              element={
+                <RequireAuth>
+                  <AdminLayout />
+                </RequireAuth>
+              }
+            >
               <Route index element={<Dashboard />} />
               <Route path="bulletins" element={<BulletinManagement />} />
               <Route path="sermons" element={<SermonManagement />} />
@@ -52,8 +140,16 @@ export function App({ config }: { config: AppConfig }) {
               <Route path="events" element={<EventManagement />} />
               <Route path="staff" element={<StaffManagement />} />
               <Route path="history" element={<HistoryManagement />} />
+              <Route path="pages" element={<PageEditor />} />
+              <Route path="menus" element={<MenuEditor />} />
+              <Route path="theme" element={<ThemeEditor />} />
+              <Route path="users" element={<UserManagement />} />
               <Route path="settings" element={<SettingsPage />} />
+              <Route path="super-admin" element={<SuperAdminDashboard />} />
             </Route>
+
+            {/* Catch-all */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
       </BrowserRouter>

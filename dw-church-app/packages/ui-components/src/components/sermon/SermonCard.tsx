@@ -3,7 +3,7 @@ import { DateBadge } from '../common/DateBadge';
 
 export interface SermonCardProps {
   sermon: Sermon;
-  onClick?: (id: number) => void;
+  onClick?: (id: string) => void;
   className?: string;
 }
 

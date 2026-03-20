@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --dw-primary: #2563eb;
+  --dw-secondary: #64748b;
+  --dw-accent: #f59e0b;
+  --dw-background: #ffffff;
+  --dw-surface: #f8fafc;
+  --dw-text: #0f172a;
+  --dw-font-heading: 'Pretendard', sans-serif;
+  --dw-font-body: 'Pretendard', sans-serif;
+}
+
+body {
+  font-family: var(--dw-font-body);
+  color: var(--dw-text);
+  background-color: var(--dw-background);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--dw-font-heading);
+}

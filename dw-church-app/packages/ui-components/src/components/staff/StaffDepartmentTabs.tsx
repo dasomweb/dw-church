@@ -1,5 +1,5 @@
 export interface StaffDepartmentTabsProps {
-  departments: { id: number; name: string; slug: string }[];
+  departments: { id: string; name: string; slug: string }[];
   selected?: string;
   onSelect?: (slug: string) => void;
   className?: string;

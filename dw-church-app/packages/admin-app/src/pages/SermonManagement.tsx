@@ -1,7 +1,14 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type { Sermon, SermonListParams, PostStatus } from '@dw-church/api-client';
-import { useSermons, useSermonCategories, useSermonPreachers } from '@dw-church/api-client';
+import {
+  useSermons,
+  useCreateSermon,
+  useUpdateSermon,
+  useDeleteSermon,
+  useSermonCategories,
+  useSermonPreachers,
+} from '@dw-church/api-client';
 
 interface SermonFormData {
   title: string;
@@ -22,6 +29,9 @@ export default function SermonManagement() {
   const { data, isLoading, error } = useSermons(params);
   const { data: categories } = useSermonCategories();
   const { data: preachers } = useSermonPreachers();
+  const createMutation = useCreateSermon();
+  const updateMutation = useUpdateSermon();
+  const deleteMutation = useDeleteSermon();
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<SermonFormData>();
 
@@ -48,22 +58,33 @@ export default function SermonManagement() {
 
   const handleDelete = (item: Sermon) => {
     if (window.confirm(`"${item.title}" 을(를) 삭제하시겠습니까?`)) {
-      console.log('[DELETE] Sermon:', item.id);
+      deleteMutation.mutate(item.id);
     }
   };
 
   const onSubmit = (formData: SermonFormData) => {
     const payload = {
-      ...formData,
-      categoryIds: JSON.parse(formData.categoryIds || '[]') as number[],
+      title: formData.title,
+      scripture: formData.scripture,
+      preacher: formData.preacher,
+      youtubeUrl: formData.youtubeUrl,
+      date: formData.date,
+      categoryIds: JSON.parse(formData.categoryIds || '[]') as string[],
+      category: '',
+      thumbnailUrl: formData.thumbnailUrl,
+      status: formData.status,
     };
     if (editingItem) {
-      console.log('[UPDATE] Sermon:', editingItem.id, payload);
+      updateMutation.mutate(
+        { id: editingItem.id, data: payload },
+        { onSuccess: () => setView('list') },
+      );
     } else {
-      console.log('[CREATE] Sermon:', payload);
+      createMutation.mutate(payload, { onSuccess: () => setView('list') });
     }
-    alert('저장 기능은 WP REST API 연동 후 활성화됩니다.');
   };
+
+  const isSaving = createMutation.isPending || updateMutation.isPending;
 
   if (view === 'edit') {
     return (
@@ -157,19 +178,19 @@ export default function SermonManagement() {
           <div>
             <label className="block text-sm font-medium mb-1">상태</label>
             <select {...register('status')} className="w-full border rounded px-3 py-2">
-              <option value="publish">공개</option>
+              <option value="published">공개</option>
               <option value="draft">임시저장</option>
-              <option value="pending">검토 대기</option>
-              <option value="private">비공개</option>
+              <option value="archived">보관</option>
             </select>
           </div>
 
           <div className="flex gap-2 pt-4">
             <button
               type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              disabled={isSaving}
+              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
             >
-              저장 (placeholder)
+              {isSaving ? '저장 중...' : '저장'}
             </button>
             <button
               type="button"
@@ -179,6 +200,10 @@ export default function SermonManagement() {
               취소
             </button>
           </div>
+
+          {(createMutation.isError || updateMutation.isError) && (
+            <p className="text-red-500 text-sm">저장 중 오류가 발생했습니다.</p>
+          )}
         </form>
       </div>
     );
@@ -216,7 +241,7 @@ export default function SermonManagement() {
         </select>
         <select
           value={params.preacher || ''}
-          onChange={(e) => setParams((p) => ({ ...p, preacher: e.target.value ? Number(e.target.value) : undefined, page: 1 }))}
+          onChange={(e) => setParams((p) => ({ ...p, preacher: e.target.value || undefined, page: 1 }))}
           className="border rounded px-3 py-2"
         >
           <option value="">전체 설교자</option>
@@ -263,7 +288,13 @@ export default function SermonManagement() {
                     <td className="px-4 py-3 text-sm">{item.category || '-'}</td>
                     <td className="px-4 py-3 text-sm space-x-2">
                       <button onClick={() => handleEdit(item)} className="text-blue-600 hover:underline">편집</button>
-                      <button onClick={() => handleDelete(item)} className="text-red-600 hover:underline">삭제</button>
+                      <button
+                        onClick={() => handleDelete(item)}
+                        disabled={deleteMutation.isPending}
+                        className="text-red-600 hover:underline disabled:opacity-50"
+                      >
+                        삭제
+                      </button>
                     </td>
                   </tr>
                 ))}

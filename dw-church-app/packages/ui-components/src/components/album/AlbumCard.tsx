@@ -2,7 +2,7 @@ import type { Album } from '@dw-church/api-client';
 
 export interface AlbumCardProps {
   album: Album;
-  onClick?: (id: number) => void;
+  onClick?: (id: string) => void;
   className?: string;
 }
 

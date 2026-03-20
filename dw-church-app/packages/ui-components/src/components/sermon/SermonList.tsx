@@ -9,11 +9,11 @@ import { SermonFilter } from './SermonFilter';
 export interface SermonListProps {
   data?: Sermon[];
   category?: string;
-  preacher?: number;
+  preacher?: string;
   limit?: number;
   showFilter?: boolean;
   className?: string;
-  onItemClick?: (id: number) => void;
+  onItemClick?: (id: string) => void;
 }
 
 export function SermonList({
@@ -26,7 +26,7 @@ export function SermonList({
   onItemClick,
 }: SermonListProps) {
   const [category, setCategory] = useState(initialCategory ?? '');
-  const [preacher, setPreacher] = useState(initialPreacher ?? 0);
+  const [preacher, setPreacher] = useState(initialPreacher ?? '');
 
   const {
     data: response,

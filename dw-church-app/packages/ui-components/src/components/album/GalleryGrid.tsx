@@ -9,7 +9,7 @@ export interface GalleryGridProps {
   category?: string;
   limit?: number;
   className?: string;
-  onItemClick?: (id: number) => void;
+  onItemClick?: (id: string) => void;
 }
 
 export function GalleryGrid({ data, category, limit, className = '', onItemClick }: GalleryGridProps) {

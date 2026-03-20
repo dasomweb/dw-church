@@ -8,12 +8,12 @@ import { DateBadge } from '../common/DateBadge';
 
 export interface PastoralColumnProps {
   data?: Column;
-  postId?: number;
+  postId?: string;
   className?: string;
 }
 
 export function PastoralColumn({ data, postId, className = '' }: PastoralColumnProps) {
-  const id = data?.id ?? postId ?? 0;
+  const id = data?.id ?? postId ?? '';
   const { data: fetched, isLoading } = useColumn(id);
   const { data: relatedColumns } = useRelatedColumns(id);
 

@@ -3,14 +3,21 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import './index.css';
 
-// When embedded in WordPress, read config from DOM element
-const rootEl = document.getElementById('dw-church-admin-root');
+// Support both embedded (WordPress) and standalone (SaaS) modes
+const rootEl =
+  document.getElementById('dw-church-admin-root') ||
+  document.getElementById('root');
 
 if (rootEl) {
   const config = {
-    baseUrl: rootEl.dataset.restUrl || '/wp-json',
+    baseUrl:
+      rootEl.dataset.restUrl ||
+      (import.meta.env.VITE_API_BASE_URL as string) ||
+      window.location.origin,
     nonce: rootEl.dataset.nonce || '',
-    postId: rootEl.dataset.postId ? parseInt(rootEl.dataset.postId, 10) : undefined,
+    postId: rootEl.dataset.postId
+      ? parseInt(rootEl.dataset.postId, 10)
+      : undefined,
     postType: rootEl.dataset.postType || undefined,
   };
 

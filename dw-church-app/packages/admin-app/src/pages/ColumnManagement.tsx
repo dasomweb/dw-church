@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type { Column, ListParams, PostStatus } from '@dw-church/api-client';
-import { useColumns } from '@dw-church/api-client';
+import {
+  useColumns,
+  useCreateColumn,
+  useUpdateColumn,
+  useDeleteColumn,
+} from '@dw-church/api-client';
 
 interface ColumnFormData {
   title: string;
@@ -19,6 +24,9 @@ export default function ColumnManagement() {
   const [params, setParams] = useState<ListParams>({ page: 1, perPage: 10, search: '' });
 
   const { data, isLoading, error } = useColumns(params);
+  const createMutation = useCreateColumn();
+  const updateMutation = useUpdateColumn();
+  const deleteMutation = useDeleteColumn();
   const { register, handleSubmit, reset, formState: { errors } } = useForm<ColumnFormData>();
 
   const handleEdit = (item: Column) => {
@@ -43,18 +51,22 @@ export default function ColumnManagement() {
 
   const handleDelete = (item: Column) => {
     if (window.confirm(`"${item.title}" 을(를) 삭제하시겠습니까?`)) {
-      console.log('[DELETE] Column:', item.id);
+      deleteMutation.mutate(item.id);
     }
   };
 
   const onSubmit = (formData: ColumnFormData) => {
     if (editingItem) {
-      console.log('[UPDATE] Column:', editingItem.id, formData);
+      updateMutation.mutate(
+        { id: editingItem.id, data: formData },
+        { onSuccess: () => setView('list') },
+      );
     } else {
-      console.log('[CREATE] Column:', formData);
+      createMutation.mutate(formData, { onSuccess: () => setView('list') });
     }
-    alert('저장 기능은 WP REST API 연동 후 활성화됩니다.');
   };
+
+  const isSaving = createMutation.isPending || updateMutation.isPending;
 
   if (view === 'edit') {
     return (
@@ -130,19 +142,19 @@ export default function ColumnManagement() {
           <div>
             <label className="block text-sm font-medium mb-1">상태</label>
             <select {...register('status')} className="w-full border rounded px-3 py-2">
-              <option value="publish">공개</option>
+              <option value="published">공개</option>
               <option value="draft">임시저장</option>
-              <option value="pending">검토 대기</option>
-              <option value="private">비공개</option>
+              <option value="archived">보관</option>
             </select>
           </div>
 
           <div className="flex gap-2 pt-4">
             <button
               type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              disabled={isSaving}
+              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
             >
-              저장 (placeholder)
+              {isSaving ? '저장 중...' : '저장'}
             </button>
             <button
               type="button"
@@ -152,6 +164,10 @@ export default function ColumnManagement() {
               취소
             </button>
           </div>
+
+          {(createMutation.isError || updateMutation.isError) && (
+            <p className="text-red-500 text-sm">저장 중 오류가 발생했습니다.</p>
+          )}
         </form>
       </div>
     );
@@ -210,7 +226,13 @@ export default function ColumnManagement() {
                     </td>
                     <td className="px-4 py-3 text-sm space-x-2">
                       <button onClick={() => handleEdit(item)} className="text-blue-600 hover:underline">편집</button>
-                      <button onClick={() => handleDelete(item)} className="text-red-600 hover:underline">삭제</button>
+                      <button
+                        onClick={() => handleDelete(item)}
+                        disabled={deleteMutation.isPending}
+                        className="text-red-600 hover:underline disabled:opacity-50"
+                      >
+                        삭제
+                      </button>
                     </td>
                   </tr>
                 ))}

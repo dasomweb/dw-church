@@ -4,7 +4,7 @@ import { RelatedPosts } from '../common/RelatedPosts';
 import { SermonCard } from './SermonCard';
 
 export interface RelatedSermonsProps {
-  sermonId: number;
+  sermonId: string;
   limit?: number;
   className?: string;
 }

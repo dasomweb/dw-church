@@ -69,6 +69,10 @@ const quickLinks = [
   { to: '/events', label: '이벤트 관리', description: '교회 행사를 관리합니다.' },
   { to: '/staff', label: '교역자 관리', description: '교역자 정보를 관리합니다.' },
   { to: '/history', label: '연혁 관리', description: '교회 연혁을 관리합니다.' },
+  { to: '/pages', label: '페이지 편집', description: '사이트 페이지를 구성하고 편집합니다.' },
+  { to: '/menus', label: '메뉴 관리', description: '사이트 메뉴를 구성합니다.' },
+  { to: '/theme', label: '테마 설정', description: '사이트 디자인과 색상을 변경합니다.' },
+  { to: '/users', label: '사용자 관리', description: '팀원을 초대하고 권한을 관리합니다.' },
   { to: '/settings', label: '설정', description: '교회 정보 및 사이트 설정을 변경합니다.' },
 ];
 

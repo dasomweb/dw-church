@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type { Bulletin, ListParams, PostStatus } from '@dw-church/api-client';
-import { useBulletins } from '@dw-church/api-client';
+import {
+  useBulletins,
+  useCreateBulletin,
+  useUpdateBulletin,
+  useDeleteBulletin,
+} from '@dw-church/api-client';
 
 interface BulletinFormData {
   title: string;
@@ -17,6 +22,9 @@ export default function BulletinManagement() {
   const [params, setParams] = useState<ListParams>({ page: 1, perPage: 10, search: '' });
 
   const { data, isLoading, error } = useBulletins(params);
+  const createMutation = useCreateBulletin();
+  const updateMutation = useUpdateBulletin();
+  const deleteMutation = useDeleteBulletin();
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<BulletinFormData>();
 
@@ -40,22 +48,31 @@ export default function BulletinManagement() {
 
   const handleDelete = (item: Bulletin) => {
     if (window.confirm(`"${item.title}" 을(를) 삭제하시겠습니까?`)) {
-      console.log('[DELETE] Bulletin:', item.id);
+      deleteMutation.mutate(item.id);
     }
   };
 
   const onSubmit = (formData: BulletinFormData) => {
+    const images = JSON.parse(formData.images || '[]') as string[];
     const payload = {
-      ...formData,
-      images: JSON.parse(formData.images || '[]') as string[],
+      title: formData.title,
+      date: formData.date,
+      pdfUrl: formData.pdfUrl,
+      images,
+      thumbnailUrl: '',
+      status: formData.status,
     };
     if (editingItem) {
-      console.log('[UPDATE] Bulletin:', editingItem.id, payload);
+      updateMutation.mutate(
+        { id: editingItem.id, data: payload },
+        { onSuccess: () => setView('list') },
+      );
     } else {
-      console.log('[CREATE] Bulletin:', payload);
+      createMutation.mutate(payload, { onSuccess: () => setView('list') });
     }
-    alert('저장 기능은 WP REST API 연동 후 활성화됩니다.');
   };
+
+  const isSaving = createMutation.isPending || updateMutation.isPending;
 
   if (view === 'edit') {
     return (
@@ -115,19 +132,19 @@ export default function BulletinManagement() {
           <div>
             <label className="block text-sm font-medium mb-1">상태</label>
             <select {...register('status')} className="w-full border rounded px-3 py-2">
-              <option value="publish">공개</option>
+              <option value="published">공개</option>
               <option value="draft">임시저장</option>
-              <option value="pending">검토 대기</option>
-              <option value="private">비공개</option>
+              <option value="archived">보관</option>
             </select>
           </div>
 
           <div className="flex gap-2 pt-4">
             <button
               type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              disabled={isSaving}
+              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
             >
-              저장 (placeholder)
+              {isSaving ? '저장 중...' : '저장'}
             </button>
             <button
               type="button"
@@ -137,6 +154,10 @@ export default function BulletinManagement() {
               취소
             </button>
           </div>
+
+          {(createMutation.isError || updateMutation.isError) && (
+            <p className="text-red-500 text-sm">저장 중 오류가 발생했습니다.</p>
+          )}
         </form>
       </div>
     );
@@ -197,13 +218,19 @@ export default function BulletinManagement() {
                     </td>
                     <td className="px-4 py-3 text-sm">{item.images?.length ?? 0}</td>
                     <td className="px-4 py-3 text-sm">
-                      <span className={`px-2 py-1 rounded text-xs ${item.status === 'publish' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+                      <span className={`px-2 py-1 rounded text-xs ${item.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
                         {item.status}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm space-x-2">
                       <button onClick={() => handleEdit(item)} className="text-blue-600 hover:underline">편집</button>
-                      <button onClick={() => handleDelete(item)} className="text-red-600 hover:underline">삭제</button>
+                      <button
+                        onClick={() => handleDelete(item)}
+                        disabled={deleteMutation.isPending}
+                        className="text-red-600 hover:underline disabled:opacity-50"
+                      >
+                        삭제
+                      </button>
                     </td>
                   </tr>
                 ))}

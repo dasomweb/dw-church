@@ -8,7 +8,7 @@ export interface ColumnGridProps {
   data?: Column[];
   limit?: number;
   className?: string;
-  onItemClick?: (id: number) => void;
+  onItemClick?: (id: string) => void;
 }
 
 function truncate(text: string, max: number): string {

@@ -88,10 +88,10 @@ describe('DWChurchClient', () => {
 
   describe('with MockAdapter', () => {
     const adapter = new MockAdapter({
-      '/dw-church/v1/bulletins': mockBulletins,
-      '/dw-church/v1/sermons': mockSermons,
-      '/dw-church/v1/staff': mockStaff,
-      '/dw-church/v1/sermons/10/related': [mockSermons.data[0]],
+      '/api/v1/bulletins': mockBulletins,
+      '/api/v1/sermons': mockSermons,
+      '/api/v1/staff': mockStaff,
+      '/api/v1/sermons/10/related': [mockSermons.data[0]],
     });
     const client = new DWChurchClient({ baseUrl: 'https://example.com', adapter });
 
@@ -140,7 +140,7 @@ describe('DWChurchClient', () => {
         limit: 6,
       });
 
-      expect(getSpy).toHaveBeenCalledWith('/dw-church/v1/sermons/5/related', {
+      expect(getSpy).toHaveBeenCalledWith('/api/v1/sermons/5/related', {
         taxonomy: 'sermon_category',
         term_ids: '1,2,3',
         limit: 6,
@@ -162,7 +162,7 @@ describe('DWChurchClient', () => {
         currentId: 1,
       });
 
-      expect(getSpy).toHaveBeenCalledWith('/dw-church/v1/bulletins/1/related', {
+      expect(getSpy).toHaveBeenCalledWith('/api/v1/bulletins/1/related', {
         taxonomy: undefined,
         term_ids: undefined,
         limit: 4,

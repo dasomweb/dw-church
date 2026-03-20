@@ -9,7 +9,7 @@ export interface BulletinListProps {
   limit?: number;
   page?: number;
   className?: string;
-  onItemClick?: (id: number) => void;
+  onItemClick?: (id: string) => void;
 }
 
 export function BulletinList({

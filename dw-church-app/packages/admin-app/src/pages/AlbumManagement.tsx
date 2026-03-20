@@ -1,7 +1,13 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type { Album, ListParams, PostStatus } from '@dw-church/api-client';
-import { useAlbums, useAlbumCategories } from '@dw-church/api-client';
+import {
+  useAlbums,
+  useCreateAlbum,
+  useUpdateAlbum,
+  useDeleteAlbum,
+  useAlbumCategories,
+} from '@dw-church/api-client';
 
 interface AlbumFormData {
   title: string;
@@ -19,6 +25,9 @@ export default function AlbumManagement() {
 
   const { data, isLoading, error } = useAlbums(params);
   const { data: categories } = useAlbumCategories();
+  const createMutation = useCreateAlbum();
+  const updateMutation = useUpdateAlbum();
+  const deleteMutation = useDeleteAlbum();
   const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<AlbumFormData>();
 
   const watchImages = watch('images');
@@ -44,7 +53,7 @@ export default function AlbumManagement() {
 
   const handleDelete = (item: Album) => {
     if (window.confirm(`"${item.title}" 을(를) 삭제하시겠습니까?`)) {
-      console.log('[DELETE] Album:', item.id);
+      deleteMutation.mutate(item.id);
     }
   };
 
@@ -62,17 +71,24 @@ export default function AlbumManagement() {
   const onSubmit = (formData: AlbumFormData) => {
     const images = parseImages(formData.images);
     const payload = {
-      ...formData,
+      title: formData.title,
       images,
-      categoryIds: JSON.parse(formData.categoryIds || '[]') as number[],
+      youtubeUrl: formData.youtubeUrl,
+      thumbnailUrl: formData.thumbnailUrl,
+      categoryIds: JSON.parse(formData.categoryIds || '[]') as string[],
+      status: formData.status,
     };
     if (editingItem) {
-      console.log('[UPDATE] Album:', editingItem.id, payload);
+      updateMutation.mutate(
+        { id: editingItem.id, data: payload },
+        { onSuccess: () => setView('list') },
+      );
     } else {
-      console.log('[CREATE] Album:', payload);
+      createMutation.mutate(payload, { onSuccess: () => setView('list') });
     }
-    alert('저장 기능은 WP REST API 연동 후 활성화됩니다.');
   };
+
+  const isSaving = createMutation.isPending || updateMutation.isPending;
 
   if (view === 'edit') {
     return (
@@ -157,19 +173,19 @@ export default function AlbumManagement() {
           <div>
             <label className="block text-sm font-medium mb-1">상태</label>
             <select {...register('status')} className="w-full border rounded px-3 py-2">
-              <option value="publish">공개</option>
+              <option value="published">공개</option>
               <option value="draft">임시저장</option>
-              <option value="pending">검토 대기</option>
-              <option value="private">비공개</option>
+              <option value="archived">보관</option>
             </select>
           </div>
 
           <div className="flex gap-2 pt-4">
             <button
               type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              disabled={isSaving}
+              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
             >
-              저장 (placeholder)
+              {isSaving ? '저장 중...' : '저장'}
             </button>
             <button
               type="button"
@@ -179,6 +195,10 @@ export default function AlbumManagement() {
               취소
             </button>
           </div>
+
+          {(createMutation.isError || updateMutation.isError) && (
+            <p className="text-red-500 text-sm">저장 중 오류가 발생했습니다.</p>
+          )}
         </form>
       </div>
     );
@@ -234,7 +254,13 @@ export default function AlbumManagement() {
                   <h3 className="text-sm font-medium truncate">{item.title}</h3>
                   <div className="flex gap-2 mt-2">
                     <button onClick={() => handleEdit(item)} className="text-xs text-blue-600 hover:underline">편집</button>
-                    <button onClick={() => handleDelete(item)} className="text-xs text-red-600 hover:underline">삭제</button>
+                    <button
+                      onClick={() => handleDelete(item)}
+                      disabled={deleteMutation.isPending}
+                      className="text-xs text-red-600 hover:underline disabled:opacity-50"
+                    >
+                      삭제
+                    </button>
                   </div>
                 </div>
               </div>

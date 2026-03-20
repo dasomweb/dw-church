@@ -9,15 +9,15 @@ import { BulletinCard } from './BulletinCard';
 
 export interface SingleBulletinProps {
   data?: Bulletin;
-  postId?: number;
+  postId?: string;
   className?: string;
 }
 
 export function SingleBulletin({ data, postId, className = '' }: SingleBulletinProps) {
-  const { data: fetched, isLoading } = useBulletin(postId ?? 0);
+  const { data: fetched, isLoading } = useBulletin(postId ?? '');
   const bulletin = data ?? fetched;
 
-  const bulletinId = bulletin?.id ?? 0;
+  const bulletinId = bulletin?.id ?? '';
   const { data: relatedBulletins } = useRelatedBulletins(bulletinId);
 
   if (!data && isLoading) {

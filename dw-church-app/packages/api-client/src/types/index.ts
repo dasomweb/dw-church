@@ -1,6 +1,6 @@
 // ─── Bulletin ───────────────────────────────────────────────
 export interface Bulletin {
-  id: number;
+  id: string;
   title: string;
   date: string;
   pdfUrl: string;
@@ -13,14 +13,14 @@ export interface Bulletin {
 
 // ─── Sermon ─────────────────────────────────────────────────
 export interface Sermon {
-  id: number;
+  id: string;
   title: string;
   youtubeUrl: string;
   scripture: string;
   preacher: string;
   date: string;
   thumbnailUrl: string;
-  categoryIds: number[];
+  categoryIds: string[];
   category: string;
   status: PostStatus;
   createdAt: string;
@@ -29,7 +29,7 @@ export interface Sermon {
 
 // ─── Column (Pastoral Column) ───────────────────────────────
 export interface Column {
-  id: number;
+  id: string;
   title: string;
   content: string;
   topImageUrl: string;
@@ -43,12 +43,12 @@ export interface Column {
 
 // ─── Album ──────────────────────────────────────────────────
 export interface Album {
-  id: number;
+  id: string;
   title: string;
   images: string[];
   youtubeUrl: string;
   thumbnailUrl: string;
-  categoryIds: number[];
+  categoryIds: string[];
   status: PostStatus;
   createdAt: string;
   modifiedAt: string;
@@ -85,7 +85,7 @@ export interface BannerTextOverlay {
 }
 
 export interface Banner {
-  id: number;
+  id: string;
   title: string;
   pcImageUrl: string;
   mobileImageUrl: string;
@@ -103,7 +103,7 @@ export interface Banner {
 
 // ─── Event ──────────────────────────────────────────────────
 export interface Event {
-  id: number;
+  id: string;
   title: string;
   backgroundImageUrl: string;
   imageOnly: boolean;
@@ -127,7 +127,7 @@ export interface StaffSnsLinks {
 }
 
 export interface Staff {
-  id: number;
+  id: string;
   name: string;
   role: string;
   department: string;
@@ -150,7 +150,7 @@ export interface HistoryItem {
 }
 
 export interface History {
-  id: number;
+  id: string;
   year: number;
   items: HistoryItem[];
 }
@@ -172,7 +172,7 @@ export interface ChurchSettings {
 }
 
 // ─── Common Types ───────────────────────────────────────────
-export type PostStatus = 'publish' | 'draft' | 'pending' | 'private' | 'trash';
+export type PostStatus = 'published' | 'draft' | 'archived';
 
 export type PostType =
   | 'bulletin'
@@ -203,7 +203,7 @@ export interface ListParams {
 
 export interface SermonListParams extends ListParams {
   category?: string;
-  preacher?: number;
+  preacher?: string;
 }
 
 export interface BannerListParams extends ListParams {
@@ -222,30 +222,141 @@ export interface HistoryListParams {
 
 export interface RelatedPostsParams {
   postType: PostType;
-  currentId: number;
+  currentId: string;
   taxonomy?: string;
-  termIds?: number[];
+  termIds?: string[];
   limit?: number;
 }
 
 // ─── Taxonomy ───────────────────────────────────────────────
 export interface TaxonomyTerm {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   count: number;
-  parentId?: number;
+  parentId?: string;
 }
 
-// ─── Auth ───────────────────────────────────────────────────
-export interface AuthConfig {
-  username: string;
+// ─── Page System ────────────────────────────────────────────
+export type BlockType =
+  | 'hero_banner'
+  | 'text_image'
+  | 'text_only'
+  | 'image_gallery'
+  | 'video'
+  | 'divider'
+  | 'recent_sermons'
+  | 'recent_bulletins'
+  | 'album_gallery'
+  | 'staff_grid'
+  | 'history_timeline'
+  | 'event_grid'
+  | 'worship_schedule'
+  | 'location_map'
+  | 'contact_info'
+  | 'newcomer_info'
+  | 'two_columns'
+  | 'three_columns'
+  | 'tabs'
+  | 'accordion';
+
+export interface PageSection {
+  id: string;
+  pageId: string;
+  blockType: BlockType;
+  props: Record<string, unknown>;
+  sortOrder: number;
+  isVisible: boolean;
+}
+
+export interface Page {
+  id: string;
+  title: string;
+  slug: string;
+  isHome: boolean;
+  status: 'draft' | 'published';
+  sortOrder: number;
+  sections: PageSection[];
+}
+
+export interface MenuItem {
+  id: string;
+  label: string;
+  pageId?: string;
+  externalUrl?: string;
+  parentId?: string;
+  sortOrder: number;
+  isVisible: boolean;
+  children?: MenuItem[];
+}
+
+export interface Theme {
+  id: string;
+  templateName: string;
+  colors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    background: string;
+    surface: string;
+    text: string;
+  };
+  fonts: { heading: string; body: string };
+  customCss: string;
+}
+
+// ─── Auth Types ─────────────────────────────────────────────
+export interface AuthSession {
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: number;
+  user: AuthUser;
+}
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  tenantId: string;
+  tenantSlug: string;
+  role: 'owner' | 'admin' | 'editor';
+}
+
+export interface RegisterInput {
+  churchName: string;
+  slug: string;
+  email: string;
+  password: string;
+  ownerName: string;
+}
+
+export interface LoginInput {
+  email: string;
   password: string;
 }
 
+// ─── Tenant ─────────────────────────────────────────────────
+export interface Tenant {
+  id: string;
+  slug: string;
+  name: string;
+  plan: 'free' | 'basic' | 'pro';
+  customDomain?: string;
+  logoUrl?: string;
+  templateName: string;
+  isActive: boolean;
+}
+
+// ─── File Upload ────────────────────────────────────────────
+export interface UploadedFile {
+  id: string;
+  url: string;
+}
+
+// ─── Auth / Client Config ───────────────────────────────────
 export interface ClientConfig {
   baseUrl: string;
-  auth?: AuthConfig;
+  token?: string;
   adapter?: ApiAdapter;
 }
 

@@ -5,7 +5,7 @@ import { EmptyState } from '../common/EmptyState';
 
 export interface StaffProfileProps {
   data?: Staff;
-  postId?: number;
+  postId?: string;
   className?: string;
 }
 
@@ -29,7 +29,7 @@ function SnsLink({ type, url }: { type: string; url: string }) {
 }
 
 export function StaffProfile({ data, postId, className = '' }: StaffProfileProps) {
-  const { data: fetchedStaff, isLoading } = useStaffMember(postId ?? 0);
+  const { data: fetchedStaff, isLoading } = useStaffMember(postId ?? '');
   const staff = data ?? fetchedStaff;
 
   if (!data && isLoading) return <LoadingSpinner />;

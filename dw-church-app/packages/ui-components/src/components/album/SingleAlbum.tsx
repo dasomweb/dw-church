@@ -10,12 +10,12 @@ import { AlbumCard } from './AlbumCard';
 
 export interface SingleAlbumProps {
   data?: Album;
-  postId?: number;
+  postId?: string;
   className?: string;
 }
 
 export function SingleAlbum({ data, postId, className = '' }: SingleAlbumProps) {
-  const id = data?.id ?? postId ?? 0;
+  const id = data?.id ?? postId ?? '';
   const { data: fetched, isLoading } = useAlbum(id);
   const { data: relatedAlbums } = useRelatedAlbums(id);
 

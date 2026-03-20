@@ -8,15 +8,15 @@ import { SermonCard } from './SermonCard';
 
 export interface SingleSermonProps {
   data?: Sermon;
-  postId?: number;
+  postId?: string;
   className?: string;
 }
 
 export function SingleSermon({ data, postId, className = '' }: SingleSermonProps) {
-  const { data: fetchedSermon, isLoading } = useSermon(data ? 0 : (postId ?? 0));
+  const { data: fetchedSermon, isLoading } = useSermon(data ? '' : (postId ?? ''));
   const sermon = data ?? fetchedSermon;
 
-  const { data: relatedSermons } = useRelatedSermons(sermon?.id ?? 0, { limit: 4 });
+  const { data: relatedSermons } = useRelatedSermons(sermon?.id ?? '', { limit: 4 });
 
   if (!sermon && isLoading) {
     return <LoadingSpinner className={className} />;

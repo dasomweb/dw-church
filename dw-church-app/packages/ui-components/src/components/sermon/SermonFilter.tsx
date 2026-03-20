@@ -2,9 +2,9 @@ import { useSermonCategories, useSermonPreachers } from '@dw-church/api-client';
 
 export interface SermonFilterProps {
   selectedCategory?: string;
-  selectedPreacher?: number;
+  selectedPreacher?: string;
   onCategoryChange?: (category: string) => void;
-  onPreacherChange?: (id: number) => void;
+  onPreacherChange?: (id: string) => void;
   className?: string;
 }
 
@@ -39,7 +39,7 @@ export function SermonFilter({
         value={selectedPreacher ?? ''}
         onChange={(e) => {
           const value = e.target.value;
-          onPreacherChange?.(value ? Number(value) : 0);
+          onPreacherChange?.(value);
         }}
         aria-label="설교자"
       >

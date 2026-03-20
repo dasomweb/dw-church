@@ -6,7 +6,7 @@ import { AlbumCard } from './AlbumCard';
 export interface RecentGalleryProps {
   limit?: number;
   className?: string;
-  onItemClick?: (id: number) => void;
+  onItemClick?: (id: string) => void;
 }
 
 export function RecentGallery({ limit = 6, className = '', onItemClick }: RecentGalleryProps) {

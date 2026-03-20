@@ -9,14 +9,14 @@ import { EventCard } from './EventCard';
 
 export interface SingleEventProps {
   data?: Event;
-  postId?: number;
+  postId?: string;
   className?: string;
 }
 
 export function SingleEvent({ data, postId, className = '' }: SingleEventProps) {
-  const { data: fetchedEvent, isLoading } = useEvent(postId ?? 0);
+  const { data: fetchedEvent, isLoading } = useEvent(postId ?? '');
   const event = data ?? fetchedEvent;
-  const eventId = event?.id ?? postId ?? 0;
+  const eventId = event?.id ?? postId ?? '';
   const { data: relatedEvents } = useRelatedEvents(eventId);
 
   if (!data && isLoading) return <LoadingSpinner />;

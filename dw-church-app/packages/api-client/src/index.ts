@@ -30,9 +30,23 @@ export type {
   HistoryListParams,
   RelatedPostsParams,
   TaxonomyTerm,
-  AuthConfig,
   ClientConfig,
   ApiAdapter,
+  // Page system
+  Page,
+  PageSection,
+  BlockType,
+  MenuItem,
+  Theme,
+  // Auth
+  AuthSession,
+  AuthUser,
+  RegisterInput,
+  LoginInput,
+  // Tenant
+  Tenant,
+  // File
+  UploadedFile,
 } from './types';
 
 // React Hooks
@@ -40,29 +54,54 @@ export {
   DWChurchClientContext,
   useDWChurchClient,
   queryKeys,
+  // Auth
+  useLogin,
+  useRegister,
+  useLogout,
+  useCurrentUser,
+  useForgotPassword,
+  useInviteUser,
   // Bulletins
   useBulletins,
   useBulletin,
+  useCreateBulletin,
+  useUpdateBulletin,
+  useDeleteBulletin,
   useRelatedBulletins,
   // Sermons
   useSermons,
   useSermon,
+  useCreateSermon,
+  useUpdateSermon,
+  useDeleteSermon,
   useRelatedSermons,
   // Columns
   useColumns,
   useColumn,
+  useCreateColumn,
+  useUpdateColumn,
+  useDeleteColumn,
   useRelatedColumns,
   // Albums
   useAlbums,
   useAlbum,
+  useCreateAlbum,
+  useUpdateAlbum,
+  useDeleteAlbum,
   useRelatedAlbums,
   // Banners
   useBanners,
   useActiveBanners,
   useBanner,
+  useCreateBanner,
+  useUpdateBanner,
+  useDeleteBanner,
   // Events
   useEvents,
   useEvent,
+  useCreateEvent,
+  useUpdateEvent,
+  useDeleteEvent,
   useRelatedEvents,
   // Staff
   useStaff,
@@ -89,4 +128,31 @@ export {
   useBannerCategories,
   useAlbumCategories,
   useStaffDepartments,
+  // Pages
+  usePages,
+  usePage,
+  useCreatePage,
+  useUpdatePage,
+  useDeletePage,
+  usePageSections,
+  useCreateSection,
+  useUpdateSection,
+  useDeleteSection,
+  useReorderSections,
+  // Menus
+  useMenus,
+  useCreateMenu,
+  useUpdateMenu,
+  useDeleteMenu,
+  useReorderMenus,
+  // Theme
+  useTheme,
+  useUpdateTheme,
+  // Users
+  useUsers,
+  useRemoveUser,
+  // Files
+  useUploadFile,
+  useDeleteFile,
+  useFiles,
 } from './hooks';

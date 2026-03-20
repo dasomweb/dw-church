@@ -11,7 +11,7 @@ export interface StaffGridProps {
   department?: string;
   showFilter?: boolean;
   className?: string;
-  onItemClick?: (id: number) => void;
+  onItemClick?: (id: string) => void;
 }
 
 export function StaffGrid({
