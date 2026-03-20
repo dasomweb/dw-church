@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import { getChurchSettings, getMenuItems, getTheme } from '@/lib/api';
-import type { ChurchSettings, MenuItem, Theme } from '@dw-church/api-client';
+// Types inlined to avoid importing @dw-church/api-client in server components
+type ChurchSettings = Record<string, string>;
+type MenuItem = { id: string; label: string; pageId?: string; externalUrl?: string; parentId?: string; sortOrder: number; isVisible: boolean; children?: MenuItem[] };
+type Theme = { colors: Record<string, string>; fonts: Record<string, string> };
 
 interface TenantLayoutProps {
   children: React.ReactNode;

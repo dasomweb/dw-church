@@ -1,4 +1,4 @@
-import type { PageSection } from '@dw-church/api-client';
+type PageSection = { id: string; blockType: string; props: Record<string, unknown>; sortOrder: number; isVisible: boolean };
 import { HeroBannerBlock } from './blocks/HeroBannerBlock';
 import { TextImageBlock } from './blocks/TextImageBlock';
 import { TextOnlyBlock } from './blocks/TextOnlyBlock';
