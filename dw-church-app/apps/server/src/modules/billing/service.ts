@@ -24,7 +24,7 @@ export async function createCheckoutSession(
   successUrl: string,
   cancelUrl: string,
 ): Promise<{ url: string }> {
-  const s = requireStripe();
+  requireStripe();
   const priceId = PLAN_PRICES[plan];
   if (!priceId) {
     throw new AppError('INVALID_PLAN', 400, `Unknown plan: ${plan}`);
