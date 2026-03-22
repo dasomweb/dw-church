@@ -38,6 +38,21 @@ export async function tenantMiddleware(
 ): Promise<void> {
   if (shouldSkip(request.url)) return;
 
+  // 1. Check X-Tenant-Slug header (used by Next.js SSR)
+  const headerSlug = request.headers['x-tenant-slug'] as string | undefined;
+  if (headerSlug) {
+    const tenant = await prisma.tenant.findFirst({
+      where: { slug: headerSlug, isActive: true },
+      select: { id: true, slug: true, name: true, plan: true },
+    });
+    if (tenant) {
+      request.tenant = { id: tenant.id, slug: tenant.slug, name: tenant.name, plan: tenant.plan };
+      request.tenantSchema = `tenant_${tenant.slug}`;
+      return;
+    }
+  }
+
+  // 2. Check subdomain
   const slug = extractSubdomain(request.hostname);
 
   if (!slug) {
