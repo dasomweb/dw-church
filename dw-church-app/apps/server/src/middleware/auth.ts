@@ -1,5 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { supabaseAdmin } from '../config/supabase.js';
+import { prisma } from '../config/database.js';
 import { AppError } from './error-handler.js';
 
 function extractToken(request: FastifyRequest): string | null {
@@ -34,6 +35,24 @@ async function resolveUser(
     tenantSlug,
     role,
   };
+
+  // If tenant middleware didn't resolve tenant (e.g. api.dasomchurch.org),
+  // fill it from JWT token
+  if (!request.tenant && tenantSlug) {
+    const tenant = await prisma.tenant.findFirst({
+      where: { slug: tenantSlug, isActive: true },
+      select: { id: true, slug: true, name: true, plan: true },
+    });
+    if (tenant) {
+      request.tenant = {
+        id: tenant.id,
+        slug: tenant.slug,
+        name: tenant.name,
+        plan: tenant.plan,
+      };
+      request.tenantSchema = `tenant_${tenant.slug}`;
+    }
+  }
 }
 
 /**
