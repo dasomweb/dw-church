@@ -155,4 +155,8 @@ export {
   useUploadFile,
   useDeleteFile,
   useFiles,
+  // Billing
+  useBillingStatus,
+  useBillingCheckout,
+  useBillingPortal,
 } from './hooks';

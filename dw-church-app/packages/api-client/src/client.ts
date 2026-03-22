@@ -448,7 +448,7 @@ export class DWChurchClient {
   }
 
   async updateSettings(data: Partial<ChurchSettings>): Promise<ChurchSettings> {
-    return this.api.post(`${this.namespace}/settings`, data);
+    return this.api.put(`${this.namespace}/settings`, data);
   }
 
   // ─── Related Posts (generic) ────────────────────────────
@@ -578,7 +578,7 @@ export class DWChurchClient {
   async uploadFile(file: File): Promise<UploadedFile> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.api.post(`${this.namespace}/files`, formData);
+    return this.api.post(`${this.namespace}/files/upload`, formData);
   }
 
   async deleteFile(id: string): Promise<void> {
@@ -587,5 +587,18 @@ export class DWChurchClient {
 
   async getFiles(): Promise<UploadedFile[]> {
     return this.api.get(`${this.namespace}/files`);
+  }
+
+  // ─── Billing ─────────────────────────────────────────────
+  async getBillingStatus(): Promise<{ plan: string; status: string; subscription?: unknown }> {
+    return this.api.get(`${this.namespace}/billing/status`);
+  }
+
+  async createCheckout(params: { plan: string; successUrl: string; cancelUrl: string }): Promise<{ url: string }> {
+    return this.api.post(`${this.namespace}/billing/checkout`, params);
+  }
+
+  async createPortalSession(returnUrl: string): Promise<{ url: string }> {
+    return this.api.post(`${this.namespace}/billing/portal`, { returnUrl });
   }
 }

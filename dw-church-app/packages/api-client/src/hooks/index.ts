@@ -927,3 +927,28 @@ export function useFiles() {
     staleTime: STALE_TIME,
   });
 }
+
+// ─── Billing Hooks ──────────────────────────────────────────
+export function useBillingStatus() {
+  const client = useDWChurchClient();
+  return useQuery({
+    queryKey: ['billing', 'status'],
+    queryFn: () => client.getBillingStatus(),
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useBillingCheckout() {
+  const client = useDWChurchClient();
+  return useMutation({
+    mutationFn: (params: { plan: string; successUrl: string; cancelUrl: string }) =>
+      client.createCheckout(params),
+  });
+}
+
+export function useBillingPortal() {
+  const client = useDWChurchClient();
+  return useMutation({
+    mutationFn: (returnUrl: string) => client.createPortalSession(returnUrl),
+  });
+}
