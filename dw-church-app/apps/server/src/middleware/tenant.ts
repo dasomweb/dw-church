@@ -39,7 +39,28 @@ export async function tenantMiddleware(
   if (shouldSkip(request.url)) return;
 
   const slug = extractSubdomain(request.hostname);
-  if (!slug) return; // System subdomain or no subdomain — skip tenant resolution
+
+  if (!slug) {
+    // No subdomain resolved — check if the full hostname is a custom domain
+    const host = request.hostname.split(':')[0];
+    if (host) {
+      const customTenant = await prisma.$queryRawUnsafe<
+        { id: string; slug: string; name: string; plan: string }[]
+      >(
+        `SELECT id, slug, name, plan FROM public.tenants
+         WHERE custom_domain = $1 AND is_active = true
+         LIMIT 1`,
+        host,
+      );
+      if (customTenant.length > 0) {
+        const t = customTenant[0]!;
+        request.tenant = { id: t.id, slug: t.slug, name: t.name, plan: t.plan };
+        request.tenantSchema = `tenant_${t.slug}`;
+        return;
+      }
+    }
+    return; // System subdomain or no subdomain — skip tenant resolution
+  }
 
   const tenant = await prisma.tenant.findFirst({
     where: { slug, isActive: true },

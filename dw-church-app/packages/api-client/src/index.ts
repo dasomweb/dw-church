@@ -155,6 +155,11 @@ export {
   useUploadFile,
   useDeleteFile,
   useFiles,
+  // Domains
+  useDomains,
+  useAddDomain,
+  useRemoveDomain,
+  useVerifyDomain,
   // Billing
   useBillingStatus,
   useBillingCheckout,

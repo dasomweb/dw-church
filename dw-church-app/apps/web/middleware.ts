@@ -1,15 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export function middleware(request: NextRequest) {
+/** Known platform hostnames (not custom domains) */
+const PLATFORM_HOSTS = new Set([
+  'dw-church.app',
+  'www.dw-church.app',
+  'localhost:3002',
+]);
+
+/** Check if a hostname belongs to the platform (*.dasomchurch.org or known hosts) */
+function isPlatformHost(hostname: string): boolean {
+  if (PLATFORM_HOSTS.has(hostname)) return true;
+  // Any subdomain of dasomchurch.org
+  if (hostname.endsWith('.dasomchurch.org')) return true;
+  // Localhost subdomains for development
+  if (hostname.endsWith('.localhost:3002') || hostname === 'localhost:3002') return true;
+  return false;
+}
+
+export async function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
   const pathname = request.nextUrl.pathname;
 
   // Main landing page
-  if (
-    hostname === 'dw-church.app' ||
-    hostname === 'www.dw-church.app' ||
-    hostname === 'localhost:3002'
-  ) {
+  if (PLATFORM_HOSTS.has(hostname)) {
+    return NextResponse.next();
+  }
+
+  // Custom domain handling — if the host is not a platform host, it may be a custom domain
+  if (!isPlatformHost(hostname)) {
+    try {
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api.dasomchurch.org';
+      const res = await fetch(
+        `${apiBase}/api/v1/admin/tenants/resolve-domain?domain=${encodeURIComponent(hostname.split(':')[0])}`,
+        { headers: { 'x-internal': '1' }, next: { revalidate: 60 } },
+      );
+      if (res.ok) {
+        const { slug } = (await res.json()) as { slug: string };
+        if (slug) {
+          return NextResponse.rewrite(new URL(`/tenant/${slug}${pathname}`, request.url));
+        }
+      }
+    } catch {
+      // If the lookup fails, fall through to default behavior
+    }
     return NextResponse.next();
   }
 

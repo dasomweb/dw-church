@@ -69,6 +69,7 @@ async function main(): Promise<void> {
   const { categoryRoutes } = await import('./modules/categories/routes.js');
   const { settingsRoutes } = await import('./modules/settings/routes.js');
   const { fileRoutes } = await import('./modules/files/routes.js');
+  const { domainRoutes } = await import('./modules/domains/routes.js');
 
   const { default: billingRoutes } = await import('./modules/billing/routes.js');
 
@@ -89,6 +90,19 @@ async function main(): Promise<void> {
   await app.register(categoryRoutes, { prefix: '/api/v1' });
   await app.register(settingsRoutes, { prefix: '/api/v1' });
   await app.register(fileRoutes, { prefix: '/api/v1' });
+  await app.register(domainRoutes, { prefix: '/api/v1' });
+
+  // --- Internal: resolve custom domain to tenant slug (used by Next.js middleware) ---
+  app.get('/api/v1/admin/tenants/resolve-domain', async (request, reply) => {
+    const { domain } = request.query as { domain?: string };
+    if (!domain) return reply.status(400).send({ error: 'domain query parameter required' });
+    const rows = await prisma.$queryRawUnsafe<{ slug: string }[]>(
+      `SELECT slug FROM public.tenants WHERE custom_domain = $1 AND is_active = true LIMIT 1`,
+      domain,
+    );
+    if (rows.length === 0) return reply.status(404).send({ error: 'Domain not found' });
+    return reply.send({ slug: rows[0]!.slug });
+  });
 
   // --- Health check ---
   app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));

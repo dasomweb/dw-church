@@ -928,6 +928,43 @@ export function useFiles() {
   });
 }
 
+// ─── Domain Hooks ───────────────────────────────────────
+export function useDomains() {
+  const client = useDWChurchClient();
+  return useQuery({
+    queryKey: ['domains'] as const,
+    queryFn: () => client.getDomains(),
+    staleTime: STALE_TIME,
+  });
+}
+
+export function useAddDomain() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (domain: string) => client.addDomain(domain),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['domains'] }),
+  });
+}
+
+export function useRemoveDomain() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => client.removeDomain(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['domains'] }),
+  });
+}
+
+export function useVerifyDomain() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => client.verifyDomain(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['domains'] }),
+  });
+}
+
 // ─── Billing Hooks ──────────────────────────────────────────
 export function useBillingStatus() {
   const client = useDWChurchClient();

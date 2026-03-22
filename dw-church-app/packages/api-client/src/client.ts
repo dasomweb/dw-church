@@ -589,6 +589,26 @@ export class DWChurchClient {
     return this.api.get(`${this.namespace}/files`);
   }
 
+  // ─── Domains ─────────────────────────────────────────────
+  async getDomains(): Promise<{ id: string; domain: string; status: string; verified_at: string | null; created_at: string; updated_at: string }[]> {
+    const res = await this.api.get(`${this.namespace}/domains`);
+    return (res as { data: unknown }).data ?? res;
+  }
+
+  async addDomain(domain: string): Promise<{ id: string; domain: string; status: string; verified_at: string | null; created_at: string; updated_at: string }> {
+    const res = await this.api.post(`${this.namespace}/domains`, { domain });
+    return (res as { data: unknown }).data ?? res;
+  }
+
+  async removeDomain(id: string): Promise<void> {
+    return this.api.delete(`${this.namespace}/domains/${id}`);
+  }
+
+  async verifyDomain(id: string): Promise<{ id: string; domain: string; status: string; verified_at: string | null; created_at: string; updated_at: string }> {
+    const res = await this.api.post(`${this.namespace}/domains/${id}/verify`);
+    return (res as { data: unknown }).data ?? res;
+  }
+
   // ─── Billing ─────────────────────────────────────────────
   async getBillingStatus(): Promise<{ plan: string; status: string; subscription?: unknown }> {
     return this.api.get(`${this.namespace}/billing/status`);

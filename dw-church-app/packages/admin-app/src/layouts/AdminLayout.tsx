@@ -126,6 +126,16 @@ const navItems = [
     ),
   },
   {
+    to: '/domains',
+    label: '도메인',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <circle cx="12" cy="12" r="10" />
+        <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
+      </svg>
+    ),
+  },
+  {
     to: '/settings',
     label: '설정',
     icon: (
@@ -169,6 +179,7 @@ const pageTitles: Record<string, string> = {
   '/menus': '메뉴 관리',
   '/theme': '테마 설정',
   '/users': '사용자 관리',
+  '/domains': '도메인 설정',
   '/settings': '설정',
   '/super-admin': 'Super Admin',
 };

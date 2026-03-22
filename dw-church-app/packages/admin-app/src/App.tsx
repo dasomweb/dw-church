@@ -26,6 +26,7 @@ const MenuEditor = lazy(() => import('./pages/MenuEditor'));
 const ThemeEditor = lazy(() => import('./pages/ThemeEditor'));
 const UserManagement = lazy(() => import('./pages/UserManagement'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const DomainSettings = lazy(() => import('./pages/DomainSettings'));
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'));
 
 export interface AppConfig {
@@ -146,6 +147,7 @@ export function App({ config }: { config: AppConfig }) {
               <Route path="menus" element={<MenuEditor />} />
               <Route path="theme" element={<ThemeEditor />} />
               <Route path="users" element={<UserManagement />} />
+              <Route path="domains" element={<DomainSettings />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="super-admin" element={<SuperAdminDashboard />} />
             </Route>
