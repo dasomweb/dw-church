@@ -81,10 +81,15 @@ export default async function handler(req: any, res: any) {
     if (raw) body = raw;
   }
 
+  // Remove content-length as Vercel may pre-parse body causing mismatch
+  const headers = { ...req.headers };
+  delete headers['content-length'];
+  delete headers['transfer-encoding'];
+
   const response = await app.inject({
     method: req.method,
     url: req.url,
-    headers: req.headers,
+    headers,
     payload: body,
   });
 
