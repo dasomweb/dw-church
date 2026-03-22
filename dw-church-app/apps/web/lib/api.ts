@@ -20,7 +20,7 @@ async function apiFetch<T>(slug: string, path: string, init?: RequestInit): Prom
     cache: 'no-store',
   });
   if (!res.ok) {
-    throw new Error(`API error ${res.status}: ${res.statusText}`);
+    throw new Error(`API error ${res.status}: ${res.statusText} (${API_BASE}${path})`);
   }
   const data = await res.json() as any;
   return data;
