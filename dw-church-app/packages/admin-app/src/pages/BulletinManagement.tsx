@@ -7,13 +7,13 @@ import {
   useUpdateBulletin,
   useDeleteBulletin,
 } from '@dw-church/api-client';
-import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, ImageUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
+import { FormField, FormSection, FormRow, inputClass, selectClass, MultiImageUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
 
 interface BulletinFormData {
   title: string;
   date: string;
   pdfUrl: string;
-  images: string;
+  images: string[];
   status: PostStatus;
 }
 
@@ -29,7 +29,7 @@ export default function BulletinManagement() {
   const updateMutation = useUpdateBulletin();
   const deleteMutation = useDeleteBulletin();
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<BulletinFormData>();
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<BulletinFormData>();
 
   const handleEdit = (item: Bulletin) => {
     setEditingItem(item);
@@ -37,7 +37,7 @@ export default function BulletinManagement() {
       title: item.title,
       date: item.date,
       pdfUrl: item.pdfUrl,
-      images: JSON.stringify(item.images),
+      images: item.images || [],
       status: item.status,
     });
     setView('edit');
@@ -45,7 +45,7 @@ export default function BulletinManagement() {
 
   const handleCreate = () => {
     setEditingItem(null);
-    reset({ title: '', date: '', pdfUrl: '', images: '[]', status: 'draft' });
+    reset({ title: '', date: '', pdfUrl: '', images: [], status: 'draft' });
     setView('edit');
   };
 
@@ -54,7 +54,7 @@ export default function BulletinManagement() {
   };
 
   const onSubmit = (formData: BulletinFormData) => {
-    const images = JSON.parse(formData.images || '[]') as string[];
+    const images = formData.images || [];
     const payload = {
       title: formData.title,
       date: formData.date,
@@ -124,23 +124,22 @@ export default function BulletinManagement() {
           </FormSection>
 
           <FormSection title="파일">
-            <FormField label="PDF URL">
+            <FormField label="PDF URL" help="주보 PDF 파일의 URL을 입력하세요">
               <input
                 {...register('pdfUrl')}
                 placeholder="https://example.com/bulletin.pdf"
                 className={inputClass}
               />
-              <p className="text-sm text-gray-500 mt-1">주보 PDF 파일의 URL을 입력하세요</p>
             </FormField>
-            <FormField label="이미지 URLs (JSON 배열)">
-              <textarea
-                {...register('images')}
-                rows={3}
-                placeholder='["https://example.com/img1.jpg", "https://example.com/img2.jpg"]'
-                className={`${textareaClass} font-mono text-sm`}
-              />
-              <p className="text-sm text-gray-500 mt-1">이미지 URL을 JSON 배열 형식으로 입력하세요</p>
-            </FormField>
+          </FormSection>
+
+          <FormSection title="주보 이미지">
+            <MultiImageUpload
+              value={watch('images') || []}
+              onChange={(urls) => setValue('images', urls)}
+              max={10}
+              label="주보 이미지"
+            />
           </FormSection>
 
           <div className="flex gap-2 pt-4">
