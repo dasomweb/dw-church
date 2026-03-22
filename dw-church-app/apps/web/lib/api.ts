@@ -17,7 +17,7 @@ async function apiFetch<T>(slug: string, path: string, init?: RequestInit): Prom
       'X-Tenant-Slug': slug,
       ...init?.headers,
     },
-    next: { revalidate: 60 },
+    next: { revalidate: 10 },
   });
   if (!res.ok) {
     throw new Error(`API error ${res.status}: ${res.statusText}`);
