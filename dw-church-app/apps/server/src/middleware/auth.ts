@@ -36,7 +36,7 @@ async function resolveUser(
     role,
   };
 
-  // If tenant middleware didn't resolve tenant (e.g. api.dasomchurch.org),
+  // If tenant middleware didn't resolve tenant (e.g. api.truelight.app),
   // fill it from JWT token
   if (!request.tenant && tenantSlug) {
     const tenant = await prisma.tenant.findFirst({

@@ -7,11 +7,11 @@ const PLATFORM_HOSTS = new Set([
   'localhost:3002',
 ]);
 
-/** Check if a hostname belongs to the platform (*.dasomchurch.org or known hosts) */
+/** Check if a hostname belongs to the platform (*.truelight.app or known hosts) */
 function isPlatformHost(hostname: string): boolean {
   if (PLATFORM_HOSTS.has(hostname)) return true;
-  // Any subdomain of dasomchurch.org
-  if (hostname.endsWith('.dasomchurch.org')) return true;
+  // Any subdomain of truelight.app
+  if (hostname.endsWith('.truelight.app')) return true;
   // Localhost subdomains for development
   if (hostname.endsWith('.localhost:3002') || hostname === 'localhost:3002') return true;
   return false;
@@ -29,7 +29,7 @@ export async function middleware(request: NextRequest) {
   // Custom domain handling — if the host is not a platform host, it may be a custom domain
   if (!isPlatformHost(hostname)) {
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api.dasomchurch.org';
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api.truelight.app';
       const res = await fetch(
         `${apiBase}/api/v1/admin/tenants/resolve-domain?domain=${encodeURIComponent(hostname.split(':')[0])}`,
         { headers: { 'x-internal': '1' }, next: { revalidate: 60 } },

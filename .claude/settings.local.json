@@ -14,7 +14,11 @@
       "Bash(pnpm --filter @dw-church/server typecheck)",
       "Bash(npx prisma:*)",
       "Bash(grep -rn \"from ''''@dw-church/\" --include=\"*.ts\" --include=\"*.tsx\")",
-      "WebFetch(domain:dw-church-admin.vercel.app)"
+      "WebFetch(domain:dw-church-admin.vercel.app)",
+      "Bash(curl -s -w \"\\\\nHTTP:%{http_code}\" \"https://api.truelight.app/health\")",
+      "Bash(pip install:*)",
+      "Bash(python3 -c \":*)",
+      "Bash(grep -rn \"WHERE.*id = $1[^:]\" --include=\"*.ts\")"
     ]
   }
 }
