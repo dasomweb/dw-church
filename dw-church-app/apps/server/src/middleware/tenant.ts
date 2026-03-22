@@ -2,7 +2,9 @@ import type { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '../config/database.js';
 import { AppError } from './error-handler.js';
 
-const SKIP_PREFIXES = ['/api/v1/auth/register', '/api/v1/admin', '/api/v1/billing'];
+const SKIP_PREFIXES = ['/api/v1/auth/register', '/api/v1/admin', '/api/v1/billing', '/health'];
+
+const SYSTEM_SUBDOMAINS = new Set(['api', 'admin', 'www', 'mail', 'ftp', 'staging', 'dev']);
 
 function shouldSkip(path: string): boolean {
   return SKIP_PREFIXES.some((prefix) => path.startsWith(prefix));
@@ -22,7 +24,12 @@ function extractSubdomain(hostname: string): string | null {
     return parts[0] ?? null;
   }
 
-  return parts[0] ?? null;
+  const subdomain = parts[0] ?? null;
+
+  // Skip system subdomains (api, admin, www, etc.)
+  if (subdomain && SYSTEM_SUBDOMAINS.has(subdomain)) return null;
+
+  return subdomain;
 }
 
 export async function tenantMiddleware(
@@ -32,9 +39,7 @@ export async function tenantMiddleware(
   if (shouldSkip(request.url)) return;
 
   const slug = extractSubdomain(request.hostname);
-  if (!slug) {
-    throw new AppError('TENANT_NOT_FOUND', 404, 'Tenant not found');
-  }
+  if (!slug) return; // System subdomain or no subdomain — skip tenant resolution
 
   const tenant = await prisma.tenant.findFirst({
     where: { slug, isActive: true },
