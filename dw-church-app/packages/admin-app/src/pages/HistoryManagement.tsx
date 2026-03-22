@@ -143,175 +143,158 @@ export default function HistoryManagement() {
 
   if (view === 'edit') {
     return (
-      <div className="p-6 max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              {editingEntry ? '연혁 수정' : '연혁 등록'}
-            </h2>
-            <p className="text-sm text-gray-500 mt-1">교회 연혁을 관리합니다</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setView('list')}
-            className="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-          >
-            ← 목록으로
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-8">
+          <button type="button" onClick={() => setView('list')} className="text-sm text-gray-500 hover:text-gray-700 mb-3 inline-flex items-center gap-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+            목록으로
           </button>
+          <h2 className="text-2xl font-bold text-gray-900">{editingEntry ? '연혁 수정' : '연혁 등록'}</h2>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <FormSection title="연도 정보">
-            <div className="space-y-4">
-              <FormField label="연도" required error={errors.year?.message}>
-                <input
-                  type="number"
-                  {...register('year', {
-                    required: '연도를 입력하세요',
-                    valueAsNumber: true,
-                    min: { value: 1900, message: '1900 이상' },
-                    max: { value: 2100, message: '2100 이하' },
-                  })}
-                  className={`${inputClass} w-40`}
-                />
-              </FormField>
-            </div>
+            <FormField label="연도" required error={errors.year?.message}>
+              <input
+                type="number"
+                {...register('year', {
+                  required: '연도를 입력하세요',
+                  valueAsNumber: true,
+                  min: { value: 1900, message: '1900 이상' },
+                  max: { value: 2100, message: '2100 이하' },
+                })}
+                className={`${inputClass} w-40`}
+              />
+            </FormField>
           </FormSection>
 
           <FormSection title="연혁 항목" description="해당 연도의 주요 이벤트를 추가하세요">
-            <div className="space-y-4">
-              {items.length > 0 ? (
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-gray-50 text-left">
-                        <th className="px-4 py-2 font-medium text-gray-600 w-24">날짜</th>
-                        <th className="px-4 py-2 font-medium text-gray-600">내용</th>
-                        <th className="px-4 py-2 font-medium text-gray-600 w-16 text-center">사진</th>
-                        <th className="px-4 py-2 font-medium text-gray-600 w-24 text-right">관리</th>
+            {items.length > 0 ? (
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50 text-left">
+                      <th className="px-4 py-2 font-medium text-gray-600 w-24">날짜</th>
+                      <th className="px-4 py-2 font-medium text-gray-600">내용</th>
+                      <th className="px-4 py-2 font-medium text-gray-600 w-16 text-center">사진</th>
+                      <th className="px-4 py-2 font-medium text-gray-600 w-24 text-right">관리</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {items.map((item, index) => (
+                      <tr key={item.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-2.5 font-medium text-gray-800">
+                          {item.month > 0 ? `${item.month}월` : ''}
+                          {item.day > 0 ? ` ${item.day}일` : ''}
+                          {item.month === 0 && item.day === 0 ? '(미지정)' : ''}
+                        </td>
+                        <td className="px-4 py-2.5 text-gray-600">{item.content}</td>
+                        <td className="px-4 py-2.5 text-center">
+                          {item.photoUrl && (
+                            <span className="text-xs text-blue-500">[사진]</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2.5 text-right">
+                          <div className="flex gap-2 justify-end">
+                            <button
+                              type="button"
+                              onClick={() => handleEditItem(index)}
+                              className="text-xs text-blue-600 hover:underline"
+                            >
+                              편집
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteItem(index)}
+                              className="text-xs text-red-600 hover:underline"
+                            >
+                              삭제
+                            </button>
+                          </div>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {items.map((item, index) => (
-                        <tr key={item.id} className="hover:bg-gray-50">
-                          <td className="px-4 py-2.5 font-medium text-gray-800">
-                            {item.month > 0 ? `${item.month}월` : ''}
-                            {item.day > 0 ? ` ${item.day}일` : ''}
-                            {item.month === 0 && item.day === 0 ? '(미지정)' : ''}
-                          </td>
-                          <td className="px-4 py-2.5 text-gray-600">{item.content}</td>
-                          <td className="px-4 py-2.5 text-center">
-                            {item.photoUrl && (
-                              <span className="text-xs text-blue-500">[사진]</span>
-                            )}
-                          </td>
-                          <td className="px-4 py-2.5 text-right">
-                            <div className="flex gap-2 justify-end">
-                              <button
-                                type="button"
-                                onClick={() => handleEditItem(index)}
-                                className="text-xs text-blue-600 hover:underline"
-                              >
-                                편집
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteItem(index)}
-                                className="text-xs text-red-600 hover:underline"
-                              >
-                                삭제
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <p className="text-sm text-gray-400 py-4 text-center">등록된 항목이 없습니다.</p>
-              )}
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-400 py-4 text-center">등록된 항목이 없습니다.</p>
+            )}
 
-              <div className="border border-gray-200 rounded-lg p-4 bg-gray-50/50">
-                <h4 className="text-sm font-semibold text-gray-700 mb-3">
+            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50/50">
+              <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                {editingItemIndex !== null ? '항목 수정' : '항목 추가'}
+              </h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <FormField label="월 (0=미지정)">
+                  <select
+                    {...registerItem('month', { valueAsNumber: true })}
+                    className={selectClass}
+                  >
+                    {Array.from({ length: 13 }, (_, i) => (
+                      <option key={i} value={i}>{monthLabels[i]}</option>
+                    ))}
+                  </select>
+                </FormField>
+                <FormField label="일 (0=미지정)">
+                  <input
+                    type="number"
+                    {...registerItem('day', { valueAsNumber: true, min: 0, max: 31 })}
+                    className={inputClass}
+                  />
+                </FormField>
+                <div className="col-span-2">
+                  <FormField label="내용" error={itemErrors.content?.message}>
+                    <input
+                      {...registerItem('content', { required: '내용을 입력하세요' })}
+                      className={inputClass}
+                    />
+                  </FormField>
+                </div>
+              </div>
+              <div className="mt-3">
+                <FormField label="사진 URL">
+                  <input
+                    {...registerItem('photoUrl')}
+                    placeholder="https://example.com/photo.jpg"
+                    className={inputClass}
+                  />
+                </FormField>
+              </div>
+              <div className="flex gap-2 mt-4">
+                <button
+                  type="button"
+                  onClick={handleSubmitItem(handleAddItem)}
+                  className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 font-medium transition-colors"
+                >
                   {editingItemIndex !== null ? '항목 수정' : '항목 추가'}
-                </h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <FormField label="월 (0=미지정)">
-                    <select
-                      {...registerItem('month', { valueAsNumber: true })}
-                      className={selectClass}
-                    >
-                      {Array.from({ length: 13 }, (_, i) => (
-                        <option key={i} value={i}>{monthLabels[i]}</option>
-                      ))}
-                    </select>
-                  </FormField>
-                  <FormField label="일 (0=미지정)">
-                    <input
-                      type="number"
-                      {...registerItem('day', { valueAsNumber: true, min: 0, max: 31 })}
-                      className={inputClass}
-                    />
-                  </FormField>
-                  <div className="col-span-2">
-                    <FormField label="내용" error={itemErrors.content?.message}>
-                      <input
-                        {...registerItem('content', { required: '내용을 입력하세요' })}
-                        className={inputClass}
-                      />
-                    </FormField>
-                  </div>
-                </div>
-                <div className="mt-3">
-                  <FormField label="사진 URL">
-                    <input
-                      {...registerItem('photoUrl')}
-                      placeholder="https://example.com/photo.jpg"
-                      className={inputClass}
-                    />
-                  </FormField>
-                </div>
-                <div className="flex gap-2 mt-4">
+                </button>
+                {editingItemIndex !== null && (
                   <button
                     type="button"
-                    onClick={handleSubmitItem(handleAddItem)}
-                    className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 font-medium transition-colors"
+                    onClick={() => {
+                      setEditingItemIndex(null);
+                      resetItem({ month: 1, day: 1, content: '', photoUrl: '' });
+                    }}
+                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
                   >
-                    {editingItemIndex !== null ? '항목 수정' : '항목 추가'}
+                    취소
                   </button>
-                  {editingItemIndex !== null && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditingItemIndex(null);
-                        resetItem({ month: 1, day: 1, content: '', photoUrl: '' });
-                      }}
-                      className="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-                    >
-                      취소
-                    </button>
-                  )}
-                </div>
+                )}
               </div>
             </div>
           </FormSection>
 
-          <div className="flex gap-3 pt-6 border-t border-gray-200">
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-6 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSaving ? '저장 중...' : '저장'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setView('list')}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg px-6 py-2.5 text-sm font-medium transition-colors"
-            >
-              취소
-            </button>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-6 py-4 flex items-center justify-between">
+            <p className="text-sm text-gray-500">모든 필수 항목을 입력해주세요</p>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setView('list')} className="px-5 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+                취소
+              </button>
+              <button type="submit" disabled={isSaving} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-6 py-2.5 text-sm font-medium transition-all disabled:opacity-50 shadow-sm shadow-blue-600/25">
+                {isSaving ? '저장 중...' : '저장'}
+              </button>
+            </div>
           </div>
 
           {(createMutation.isError || updateMutation.isError) && (

@@ -146,146 +146,125 @@ export default function BannerManagement() {
 
   if (view === 'edit') {
     return (
-      <div className="p-6 max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              {editingItem ? '배너 수정' : '배너 등록'}
-            </h2>
-            <p className="text-sm text-gray-500 mt-1">웹사이트 배너를 등록하고 관리합니다</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setView('list')}
-            className="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-          >
-            ← 목록으로
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-8">
+          <button type="button" onClick={() => setView('list')} className="text-sm text-gray-500 hover:text-gray-700 mb-3 inline-flex items-center gap-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+            목록으로
           </button>
+          <h2 className="text-2xl font-bold text-gray-900">{editingItem ? '배너 수정' : '배너 등록'}</h2>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <FormSection title="배너 정보">
-            <div className="space-y-4">
-              <FormRow>
-                <FormField label="제목" required error={errors.title?.message}>
-                  <input {...register('title', { required: '제목을 입력하세요' })} className={inputClass} />
-                </FormField>
-                <FormField label="상태">
-                  <select {...register('status')} className={selectClass}>
-                    <option value="published">공개</option>
-                    <option value="draft">임시저장</option>
-                    <option value="archived">보관</option>
-                  </select>
-                </FormField>
-              </FormRow>
-              <FormRow>
-                <FormField label="카테고리">
-                  <select {...register('category')} className={selectClass}>
-                    <option value="main">메인</option>
-                    <option value="sub">서브</option>
-                  </select>
-                </FormField>
-                <div />
-              </FormRow>
-              <FormRow>
-                <FormField label="시작일">
-                  <input type="date" {...register('startDate')} className={inputClass} />
-                </FormField>
-                <FormField label="종료일">
-                  <input type="date" {...register('endDate')} className={inputClass} />
-                </FormField>
-              </FormRow>
-            </div>
+            <FormRow>
+              <FormField label="제목" required error={errors.title?.message}>
+                <input {...register('title', { required: '제목을 입력하세요' })} className={inputClass} />
+              </FormField>
+              <FormField label="상태">
+                <select {...register('status')} className={selectClass}>
+                  <option value="published">공개</option>
+                  <option value="draft">임시저장</option>
+                  <option value="archived">보관</option>
+                </select>
+              </FormField>
+            </FormRow>
+            <FormRow>
+              <FormField label="카테고리">
+                <select {...register('category')} className={selectClass}>
+                  <option value="main">메인</option>
+                  <option value="sub">서브</option>
+                </select>
+              </FormField>
+              <div />
+            </FormRow>
+            <FormRow>
+              <FormField label="시작일">
+                <input type="date" {...register('startDate')} className={inputClass} />
+              </FormField>
+              <FormField label="종료일">
+                <input type="date" {...register('endDate')} className={inputClass} />
+              </FormField>
+            </FormRow>
           </FormSection>
 
           <FormSection title="배너 이미지">
-            <div className="space-y-4">
-              <FormRow>
-                <ImageUpload
-                  label="PC 이미지"
-                  value={watch('pcImageUrl') || ''}
-                  onChange={(url) => setValue('pcImageUrl', url)}
-                  aspectRatio="21/9"
-                />
-                <ImageUpload
-                  label="모바일 이미지"
-                  value={watch('mobileImageUrl') || ''}
-                  onChange={(url) => setValue('mobileImageUrl', url)}
-                  aspectRatio="9/16"
-                />
-              </FormRow>
+            <FormRow>
               <ImageUpload
-                label="서브 배너 이미지"
-                value={watch('subImageUrl') || ''}
-                onChange={(url) => setValue('subImageUrl', url)}
-                aspectRatio="16/9"
+                label="PC 이미지"
+                value={watch('pcImageUrl') || ''}
+                onChange={(url) => setValue('pcImageUrl', url)}
+                aspectRatio="21/9"
               />
-            </div>
+              <ImageUpload
+                label="모바일 이미지"
+                value={watch('mobileImageUrl') || ''}
+                onChange={(url) => setValue('mobileImageUrl', url)}
+                aspectRatio="9/16"
+              />
+            </FormRow>
+            <ImageUpload
+              label="서브 배너 이미지"
+              value={watch('subImageUrl') || ''}
+              onChange={(url) => setValue('subImageUrl', url)}
+              aspectRatio="16/9"
+            />
           </FormSection>
 
           <FormSection title="링크">
-            <div className="space-y-4">
-              <FormRow>
-                <FormField label="링크 URL">
-                  <input {...register('linkUrl')} placeholder="https://example.com/page" className={inputClass} />
-                </FormField>
-                <FormField label="링크 타겟">
-                  <select {...register('linkTarget')} className={selectClass}>
-                    <option value="_self">현재 창 (_self)</option>
-                    <option value="_blank">새 창 (_blank)</option>
-                  </select>
-                </FormField>
-              </FormRow>
-            </div>
+            <FormRow>
+              <FormField label="링크 URL">
+                <input {...register('linkUrl')} placeholder="https://example.com/page" className={inputClass} />
+              </FormField>
+              <FormField label="링크 타겟">
+                <select {...register('linkTarget')} className={selectClass}>
+                  <option value="_self">현재 창 (_self)</option>
+                  <option value="_blank">새 창 (_blank)</option>
+                </select>
+              </FormField>
+            </FormRow>
           </FormSection>
 
           <FormSection title="텍스트 오버레이">
-            <div className="space-y-4">
-              <FormRow>
-                <FormField label="제목">
-                  <input {...register('textHeading')} className={inputClass} />
-                </FormField>
-                <FormField label="부제목">
-                  <input {...register('textSubheading')} className={inputClass} />
-                </FormField>
-              </FormRow>
-              <FormField label="설명">
-                <textarea {...register('textDescription')} rows={3} className={textareaClass} />
+            <FormRow>
+              <FormField label="제목">
+                <input {...register('textHeading')} className={inputClass} />
               </FormField>
-              <FormRow>
-                <FormField label="위치">
-                  <select {...register('textPosition')} className={selectClass}>
-                    {POSITION_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
-                </FormField>
-                <FormField label="정렬">
-                  <select {...register('textAlign')} className={selectClass}>
-                    {ALIGN_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
-                </FormField>
-              </FormRow>
-            </div>
+              <FormField label="부제목">
+                <input {...register('textSubheading')} className={inputClass} />
+              </FormField>
+            </FormRow>
+            <FormField label="설명">
+              <textarea {...register('textDescription')} rows={3} className={textareaClass} />
+            </FormField>
+            <FormRow>
+              <FormField label="위치">
+                <select {...register('textPosition')} className={selectClass}>
+                  {POSITION_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </FormField>
+              <FormField label="정렬">
+                <select {...register('textAlign')} className={selectClass}>
+                  {ALIGN_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </FormField>
+            </FormRow>
           </FormSection>
 
-          <div className="flex gap-3 pt-6 border-t border-gray-200">
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-6 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSaving ? '저장 중...' : '저장'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setView('list')}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg px-6 py-2.5 text-sm font-medium transition-colors"
-            >
-              취소
-            </button>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-6 py-4 flex items-center justify-between">
+            <p className="text-sm text-gray-500">모든 필수 항목을 입력해주세요</p>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setView('list')} className="px-5 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+                취소
+              </button>
+              <button type="submit" disabled={isSaving} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-6 py-2.5 text-sm font-medium transition-all disabled:opacity-50 shadow-sm shadow-blue-600/25">
+                {isSaving ? '저장 중...' : '저장'}
+              </button>
+            </div>
           </div>
 
           {(createMutation.isError || updateMutation.isError) && (
