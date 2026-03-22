@@ -387,10 +387,11 @@ export class DWChurchClient {
 
   // ─── Staff ──────────────────────────────────────────────
   async getStaff(params?: StaffListParams): Promise<Staff[]> {
-    return this.api.get(`${this.namespace}/staff`, {
+    const res = await this.api.get(`${this.namespace}/staff`, {
       department: params?.department,
       active_only: params?.activeOnly,
     });
+    return res.data ?? res;
   }
 
   async getStaffMember(id: string): Promise<Staff> {
@@ -459,28 +460,34 @@ export class DWChurchClient {
 
   // ─── Taxonomies ─────────────────────────────────────────
   async getSermonCategories(): Promise<TaxonomyTerm[]> {
-    return this.api.get(`${this.namespace}/taxonomies/sermon_category`);
+    const res = await this.api.get(`${this.namespace}/taxonomies/sermon_category`);
+    return res.data ?? res;
   }
 
   async getSermonPreachers(): Promise<TaxonomyTerm[]> {
-    return this.api.get(`${this.namespace}/taxonomies/sermon_preacher`);
+    const res = await this.api.get(`${this.namespace}/taxonomies/sermon_preacher`);
+    return res.data ?? res;
   }
 
   async getBannerCategories(): Promise<TaxonomyTerm[]> {
-    return this.api.get(`${this.namespace}/taxonomies/banner_category`);
+    const res = await this.api.get(`${this.namespace}/taxonomies/banner_category`);
+    return res.data ?? res;
   }
 
   async getAlbumCategories(): Promise<TaxonomyTerm[]> {
-    return this.api.get(`${this.namespace}/taxonomies/album_category`);
+    const res = await this.api.get(`${this.namespace}/taxonomies/album_category`);
+    return res.data ?? res;
   }
 
   async getStaffDepartments(): Promise<TaxonomyTerm[]> {
-    return this.api.get(`${this.namespace}/taxonomies/staff_department`);
+    const res = await this.api.get(`${this.namespace}/taxonomies/staff_department`);
+    return res.data ?? res;
   }
 
   // ─── Pages ──────────────────────────────────────────────
   async getPages(): Promise<Page[]> {
-    return this.api.get(`${this.namespace}/pages`);
+    const res = await this.api.get(`${this.namespace}/pages`);
+    return res.data ?? res;
   }
 
   async getPage(slug: string): Promise<Page> {
@@ -522,7 +529,8 @@ export class DWChurchClient {
 
   // ─── Menus ──────────────────────────────────────────────
   async getMenus(): Promise<MenuItem[]> {
-    return this.api.get(`${this.namespace}/menus`);
+    const res = await this.api.get(`${this.namespace}/menus`);
+    return res.data ?? res;
   }
 
   async createMenu(data: Omit<MenuItem, 'id' | 'children'>): Promise<MenuItem> {
