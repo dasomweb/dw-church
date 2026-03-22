@@ -1,11 +1,11 @@
 import type { FastifyInstance } from 'fastify';
-import { requireAuth } from '../../middleware/auth.js';
+import { requireAuth, optionalAuth } from '../../middleware/auth.js';
 import { getSchema } from '../../utils/get-schema.js';
 import { createHistorySchema, updateHistorySchema } from './schema.js';
 import * as historyService from './service.js';
 
 export async function historyRoutes(app: FastifyInstance) {
-  app.get('/history', async (request, reply) => {
+  app.get('/history', { preHandler: [optionalAuth] }, async (request, reply) => {
     const { data } = await historyService.listHistory(getSchema(request));
     return reply.send({ data });
   });

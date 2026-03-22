@@ -1,10 +1,10 @@
 import type { FastifyInstance } from 'fastify';
-import { requireAuth } from '../../middleware/auth.js';
+import { requireAuth, optionalAuth } from '../../middleware/auth.js';
 import { getSchema } from '../../utils/get-schema.js';
 import * as settingsService from './service.js';
 
 export async function settingsRoutes(app: FastifyInstance) {
-  app.get('/settings', async (request, reply) => {
+  app.get('/settings', { preHandler: [optionalAuth] }, async (request, reply) => {
     const data = await settingsService.getAllSettings(getSchema(request));
     return reply.send({ data });
   });
