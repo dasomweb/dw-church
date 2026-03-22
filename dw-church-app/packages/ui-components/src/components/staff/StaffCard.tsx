@@ -67,7 +67,7 @@ export function StaffCard({ staff, onClick, className = '' }: StaffCardProps) {
           />
         ) : (
           <div className="dw-flex dw-h-full dw-w-full dw-items-center dw-justify-center dw-bg-surface-alt dw-text-2xl dw-text-text-muted">
-            {staff.name.charAt(0)}
+            {staff.name?.charAt(0) ?? ''}
           </div>
         )}
       </div>
