@@ -142,11 +142,11 @@ export async function getRelatedSermons(schema: string, id: string, limit = 6) {
 }
 
 export async function createSermon(schema: string, input: CreateSermonInput) {
-  const { category_ids, ...data } = input;
+  const { category_ids = [], ...data } = input;
 
   const rows = await prisma.$queryRawUnsafe<[{ id: string }]>(
     `INSERT INTO "${schema}".sermons (title, scripture, youtube_url, sermon_date, thumbnail_url, preacher_id, status)
-     VALUES ($1, $2, $3, $4::date, $5, $6, $7)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
      RETURNING id`,
     data.title,
     data.scripture ?? null,
@@ -154,12 +154,12 @@ export async function createSermon(schema: string, input: CreateSermonInput) {
     data.sermon_date,
     data.thumbnail_url ?? null,
     data.preacher_id ?? null,
-    data.status,
+    data.status ?? 'published',
   );
 
   const sermonId = rows[0].id;
 
-  if (category_ids.length > 0) {
+  if (category_ids && category_ids.length > 0) {
     const placeholders = category_ids
       .map((_, i) => `($1, $${i + 2})`)
       .join(', ');
