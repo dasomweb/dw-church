@@ -38,13 +38,13 @@ export async function upload(params: UploadParams) {
 
 export async function remove(schema: string, id: string) {
   const rows = await prisma.$queryRawUnsafe<{ storage_key: string }[]>(
-    `SELECT storage_key FROM "${schema}".files WHERE id = $1`, id,
+    `SELECT storage_key FROM "${schema}".files WHERE id = $1::uuid`, id,
   );
 
   if (rows.length === 0) return false;
 
   await deleteFile(rows[0]!.storage_key);
-  await prisma.$queryRawUnsafe(`DELETE FROM "${schema}".files WHERE id = $1`, id);
+  await prisma.$queryRawUnsafe(`DELETE FROM "${schema}".files WHERE id = $1::uuid`, id);
   return true;
 }
 

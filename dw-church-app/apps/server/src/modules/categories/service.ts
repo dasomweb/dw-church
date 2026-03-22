@@ -24,7 +24,7 @@ export async function listSermonCategories(schema: string) {
 
 export async function getSermonCategory(schema: string, id: string) {
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-    `SELECT * FROM "${schema}".categories WHERE id = $1 AND type = 'sermon'`, id,
+    `SELECT * FROM "${schema}".categories WHERE id = $1::uuid AND type = 'sermon'`, id,
   );
   return rows[0] ?? null;
 }
@@ -52,7 +52,7 @@ export async function updateSermonCategory(schema: string, id: string, input: Up
 
   setClauses.push(`updated_at = NOW()`);
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-    `UPDATE "${schema}".categories SET ${setClauses.join(', ')} WHERE id = $${paramIndex} AND type = 'sermon' RETURNING *`,
+    `UPDATE "${schema}".categories SET ${setClauses.join(', ')} WHERE id = $${paramIndex}::uuid AND type = 'sermon' RETURNING *`,
     ...values, id,
   );
   return rows[0] ?? null;
@@ -60,7 +60,7 @@ export async function updateSermonCategory(schema: string, id: string, input: Up
 
 export async function deleteSermonCategory(schema: string, id: string) {
   await prisma.$queryRawUnsafe(
-    `DELETE FROM "${schema}".categories WHERE id = $1 AND type = 'sermon'`, id,
+    `DELETE FROM "${schema}".categories WHERE id = $1::uuid AND type = 'sermon'`, id,
   );
 }
 
@@ -74,7 +74,7 @@ export async function listPreachers(schema: string) {
 
 export async function getPreacher(schema: string, id: string) {
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-    `SELECT * FROM "${schema}".preachers WHERE id = $1`, id,
+    `SELECT * FROM "${schema}".preachers WHERE id = $1::uuid`, id,
   );
   return rows[0] ?? null;
 }
@@ -102,14 +102,14 @@ export async function updatePreacher(schema: string, id: string, input: UpdatePr
 
   setClauses.push(`updated_at = NOW()`);
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-    `UPDATE "${schema}".preachers SET ${setClauses.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+    `UPDATE "${schema}".preachers SET ${setClauses.join(', ')} WHERE id = $${paramIndex}::uuid RETURNING *`,
     ...values, id,
   );
   return rows[0] ?? null;
 }
 
 export async function deletePreacher(schema: string, id: string) {
-  await prisma.$queryRawUnsafe(`DELETE FROM "${schema}".preachers WHERE id = $1`, id);
+  await prisma.$queryRawUnsafe(`DELETE FROM "${schema}".preachers WHERE id = $1::uuid`, id);
 }
 
 // ─── Album Categories ────────────────────────────────────────────────
@@ -122,7 +122,7 @@ export async function listAlbumCategories(schema: string) {
 
 export async function getAlbumCategory(schema: string, id: string) {
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-    `SELECT * FROM "${schema}".categories WHERE id = $1 AND type = 'album'`, id,
+    `SELECT * FROM "${schema}".categories WHERE id = $1::uuid AND type = 'album'`, id,
   );
   return rows[0] ?? null;
 }
@@ -149,7 +149,7 @@ export async function updateAlbumCategory(schema: string, id: string, input: Upd
 
   setClauses.push(`updated_at = NOW()`);
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-    `UPDATE "${schema}".categories SET ${setClauses.join(', ')} WHERE id = $${paramIndex} AND type = 'album' RETURNING *`,
+    `UPDATE "${schema}".categories SET ${setClauses.join(', ')} WHERE id = $${paramIndex}::uuid AND type = 'album' RETURNING *`,
     ...values, id,
   );
   return rows[0] ?? null;
@@ -157,6 +157,6 @@ export async function updateAlbumCategory(schema: string, id: string, input: Upd
 
 export async function deleteAlbumCategory(schema: string, id: string) {
   await prisma.$queryRawUnsafe(
-    `DELETE FROM "${schema}".categories WHERE id = $1 AND type = 'album'`, id,
+    `DELETE FROM "${schema}".categories WHERE id = $1::uuid AND type = 'album'`, id,
   );
 }

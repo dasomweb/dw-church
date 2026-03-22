@@ -35,7 +35,7 @@ export async function listEvents(schema: string, params: ListParams) {
 
 export async function getEvent(schema: string, id: string) {
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-    `SELECT * FROM "${schema}".events WHERE id = $1`, id,
+    `SELECT * FROM "${schema}".events WHERE id = $1::uuid`, id,
   );
   return rows[0] ?? null;
 }
@@ -82,12 +82,12 @@ export async function updateEvent(schema: string, id: string, input: UpdateEvent
 
   setClauses.push(`updated_at = NOW()`);
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-    `UPDATE "${schema}".events SET ${setClauses.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+    `UPDATE "${schema}".events SET ${setClauses.join(', ')} WHERE id = $${paramIndex}::uuid RETURNING *`,
     ...values, id,
   );
   return rows[0] ?? null;
 }
 
 export async function deleteEvent(schema: string, id: string) {
-  await prisma.$queryRawUnsafe(`DELETE FROM "${schema}".events WHERE id = $1`, id);
+  await prisma.$queryRawUnsafe(`DELETE FROM "${schema}".events WHERE id = $1::uuid`, id);
 }

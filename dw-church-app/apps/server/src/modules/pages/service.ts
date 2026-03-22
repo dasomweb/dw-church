@@ -62,7 +62,7 @@ export async function getPageBySlug(
   const sections = await prisma.$queryRawUnsafe<SectionRow[]>(
     `SELECT id, page_id, block_type, props, sort_order, is_visible, created_at, updated_at
      FROM "${schema}".page_sections
-     WHERE page_id = $1
+     WHERE page_id = $1::uuid
      ORDER BY sort_order ASC`,
     page.id,
   );
@@ -102,7 +102,7 @@ export async function updatePage(
 ): Promise<PageRow> {
   // Verify page exists
   const existing = await prisma.$queryRawUnsafe<PageRow[]>(
-    `SELECT id FROM "${schema}".pages WHERE id = $1`,
+    `SELECT id FROM "${schema}".pages WHERE id = $1::uuid`,
     id,
   );
   if (existing.length === 0) {
@@ -112,7 +112,7 @@ export async function updatePage(
   // If setting as home, unset others
   if (input.isHome === true) {
     await prisma.$executeRawUnsafe(
-      `UPDATE "${schema}".pages SET is_home = false WHERE is_home = true AND id != $1`,
+      `UPDATE "${schema}".pages SET is_home = false WHERE is_home = true AND id != $1::uuid`,
       id,
     );
   }
@@ -152,7 +152,7 @@ export async function updatePage(
   const rows = await prisma.$queryRawUnsafe<PageRow[]>(
     `UPDATE "${schema}".pages
      SET ${setClauses.join(', ')}
-     WHERE id = $${paramIndex}
+     WHERE id = $${paramIndex}::uuid
      RETURNING id, title, slug, is_home, status, sort_order, created_at, updated_at`,
     ...params,
   );
@@ -163,12 +163,12 @@ export async function updatePage(
 export async function deletePage(schema: string, id: string): Promise<void> {
   // Cascade deletes sections
   await prisma.$executeRawUnsafe(
-    `DELETE FROM "${schema}".page_sections WHERE page_id = $1`,
+    `DELETE FROM "${schema}".page_sections WHERE page_id = $1::uuid`,
     id,
   );
 
   const result = await prisma.$executeRawUnsafe(
-    `DELETE FROM "${schema}".pages WHERE id = $1`,
+    `DELETE FROM "${schema}".pages WHERE id = $1::uuid`,
     id,
   );
 
@@ -188,7 +188,7 @@ export async function listSections(
   return prisma.$queryRawUnsafe<SectionRow[]>(
     `SELECT id, page_id, block_type, props, sort_order, is_visible, created_at, updated_at
      FROM "${schema}".page_sections
-     WHERE page_id = $1
+     WHERE page_id = $1::uuid
      ORDER BY sort_order ASC`,
     pageId,
   );
@@ -201,7 +201,7 @@ export async function createSection(
 ): Promise<SectionRow> {
   // Verify page exists
   const existing = await prisma.$queryRawUnsafe<PageRow[]>(
-    `SELECT id FROM "${schema}".pages WHERE id = $1`,
+    `SELECT id FROM "${schema}".pages WHERE id = $1::uuid`,
     pageId,
   );
   if (existing.length === 0) {
@@ -210,7 +210,7 @@ export async function createSection(
 
   const rows = await prisma.$queryRawUnsafe<SectionRow[]>(
     `INSERT INTO "${schema}".page_sections (page_id, block_type, props, sort_order, is_visible)
-     VALUES ($1, $2, $3::jsonb, $4, $5)
+     VALUES ($1::uuid, $2, $3::jsonb, $4, $5)
      RETURNING id, page_id, block_type, props, sort_order, is_visible, created_at, updated_at`,
     pageId,
     input.blockType,
@@ -259,7 +259,7 @@ export async function updateSection(
   const rows = await prisma.$queryRawUnsafe<SectionRow[]>(
     `UPDATE "${schema}".page_sections
      SET ${setClauses.join(', ')}
-     WHERE page_id = $${paramIndex} AND id = $${paramIndex + 1}
+     WHERE page_id = $${paramIndex}::uuid AND id = $${paramIndex + 1}::uuid
      RETURNING id, page_id, block_type, props, sort_order, is_visible, created_at, updated_at`,
     ...params,
   );
@@ -277,7 +277,7 @@ export async function deleteSection(
   sectionId: string,
 ): Promise<void> {
   const result = await prisma.$executeRawUnsafe(
-    `DELETE FROM "${schema}".page_sections WHERE page_id = $1 AND id = $2`,
+    `DELETE FROM "${schema}".page_sections WHERE page_id = $1::uuid AND id = $2::uuid`,
     pageId,
     sectionId,
   );
@@ -297,7 +297,7 @@ export async function reorderSections(
     await prisma.$executeRawUnsafe(
       `UPDATE "${schema}".page_sections
        SET sort_order = $1, updated_at = NOW()
-       WHERE page_id = $2 AND id = $3`,
+       WHERE page_id = $2::uuid AND id = $3::uuid`,
       i,
       pageId,
       ids[i],
@@ -307,7 +307,7 @@ export async function reorderSections(
   return prisma.$queryRawUnsafe<SectionRow[]>(
     `SELECT id, page_id, block_type, props, sort_order, is_visible, created_at, updated_at
      FROM "${schema}".page_sections
-     WHERE page_id = $1
+     WHERE page_id = $1::uuid
      ORDER BY sort_order ASC`,
     pageId,
   );

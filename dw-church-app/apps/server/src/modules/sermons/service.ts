@@ -28,7 +28,7 @@ export async function listSermons(schema: string, params: ListParams) {
     values.push(`%${search}%`);
   }
   if (categoryId) {
-    whereClause += ` AND EXISTS (SELECT 1 FROM "${schema}".sermon_category_map scm WHERE scm.sermon_id = s.id AND scm.category_id = $${paramIndex++})`;
+    whereClause += ` AND EXISTS (SELECT 1 FROM "${schema}".sermon_category_map scm WHERE scm.sermon_id = s.id AND scm.category_id = $${paramIndex++}::uuid)`;
     values.push(categoryId);
   }
 
@@ -77,7 +77,7 @@ export async function getSermon(schema: string, id: string) {
             ) AS categories
      FROM "${schema}".sermons s
      LEFT JOIN "${schema}".preachers p ON p.id = s.preacher_id
-     WHERE s.id = $1`,
+     WHERE s.id = $1::uuid`,
     id,
   );
   return rows[0] ?? null;
@@ -86,7 +86,7 @@ export async function getSermon(schema: string, id: string) {
 export async function getRelatedSermons(schema: string, id: string, limit = 6) {
   // Get current sermon's categories
   const cats = await prisma.$queryRawUnsafe<{ category_id: string }[]>(
-    `SELECT category_id FROM "${schema}".sermon_category_map WHERE sermon_id = $1`,
+    `SELECT category_id FROM "${schema}".sermon_category_map WHERE sermon_id = $1::uuid`,
     id,
   );
 
@@ -98,7 +98,7 @@ export async function getRelatedSermons(schema: string, id: string, limit = 6) {
       `(SELECT s.*, p.name AS preacher_name, 1 AS relevance
         FROM "${schema}".sermons s
         LEFT JOIN "${schema}".preachers p ON p.id = s.preacher_id
-        WHERE s.id != $1
+        WHERE s.id != $1::uuid
           AND s.status = 'published'
           AND EXISTS (
             SELECT 1 FROM "${schema}".sermon_category_map scm
@@ -110,7 +110,7 @@ export async function getRelatedSermons(schema: string, id: string, limit = 6) {
        (SELECT s.*, p.name AS preacher_name, 2 AS relevance
         FROM "${schema}".sermons s
         LEFT JOIN "${schema}".preachers p ON p.id = s.preacher_id
-        WHERE s.id != $1
+        WHERE s.id != $1::uuid
           AND s.status = 'published'
           AND NOT EXISTS (
             SELECT 1 FROM "${schema}".sermon_category_map scm
@@ -132,7 +132,7 @@ export async function getRelatedSermons(schema: string, id: string, limit = 6) {
     `SELECT s.*, p.name AS preacher_name
      FROM "${schema}".sermons s
      LEFT JOIN "${schema}".preachers p ON p.id = s.preacher_id
-     WHERE s.id != $1 AND s.status = 'published'
+     WHERE s.id != $1::uuid AND s.status = 'published'
      ORDER BY s.sermon_date DESC
      LIMIT $2`,
     id,
@@ -146,7 +146,7 @@ export async function createSermon(schema: string, input: CreateSermonInput) {
 
   const rows = await prisma.$queryRawUnsafe<[{ id: string }]>(
     `INSERT INTO "${schema}".sermons (title, scripture, youtube_url, sermon_date, thumbnail_url, preacher_id, status)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
+     VALUES ($1, $2, $3, $4, $5, $6::uuid, $7)
      RETURNING id`,
     data.title,
     data.scripture ?? null,
@@ -161,7 +161,7 @@ export async function createSermon(schema: string, input: CreateSermonInput) {
 
   if (category_ids && category_ids.length > 0) {
     const placeholders = category_ids
-      .map((_, i) => `($1, $${i + 2})`)
+      .map((_, i) => `($1::uuid, $${i + 2}::uuid)`)
       .join(', ');
     await prisma.$queryRawUnsafe(
       `INSERT INTO "${schema}".sermon_category_map (sermon_id, category_id) VALUES ${placeholders}`,
@@ -185,13 +185,13 @@ export async function updateSermon(schema: string, id: string, input: UpdateSerm
   if (data.youtube_url !== undefined) { setClauses.push(`youtube_url = $${paramIndex++}`); values.push(data.youtube_url); }
   if (data.sermon_date !== undefined) { setClauses.push(`sermon_date = $${paramIndex++}::date`); values.push(data.sermon_date); }
   if (data.thumbnail_url !== undefined) { setClauses.push(`thumbnail_url = $${paramIndex++}`); values.push(data.thumbnail_url); }
-  if (data.preacher_id !== undefined) { setClauses.push(`preacher_id = $${paramIndex++}`); values.push(data.preacher_id); }
+  if (data.preacher_id !== undefined) { setClauses.push(`preacher_id = $${paramIndex++}::uuid`); values.push(data.preacher_id); }
   if (data.status !== undefined) { setClauses.push(`status = $${paramIndex++}`); values.push(data.status); }
 
   if (setClauses.length > 0) {
     setClauses.push(`updated_at = NOW()`);
     await prisma.$queryRawUnsafe(
-      `UPDATE "${schema}".sermons SET ${setClauses.join(', ')} WHERE id = $${paramIndex}`,
+      `UPDATE "${schema}".sermons SET ${setClauses.join(', ')} WHERE id = $${paramIndex}::uuid`,
       ...values,
       id,
     );
@@ -199,12 +199,12 @@ export async function updateSermon(schema: string, id: string, input: UpdateSerm
 
   if (category_ids !== undefined) {
     await prisma.$queryRawUnsafe(
-      `DELETE FROM "${schema}".sermon_category_map WHERE sermon_id = $1`,
+      `DELETE FROM "${schema}".sermon_category_map WHERE sermon_id = $1::uuid`,
       id,
     );
     if (category_ids.length > 0) {
       const placeholders = category_ids
-        .map((_, i) => `($1, $${i + 2})`)
+        .map((_, i) => `($1::uuid, $${i + 2}::uuid)`)
         .join(', ');
       await prisma.$queryRawUnsafe(
         `INSERT INTO "${schema}".sermon_category_map (sermon_id, category_id) VALUES ${placeholders}`,
@@ -219,11 +219,11 @@ export async function updateSermon(schema: string, id: string, input: UpdateSerm
 
 export async function deleteSermon(schema: string, id: string) {
   await prisma.$queryRawUnsafe(
-    `DELETE FROM "${schema}".sermon_category_map WHERE sermon_id = $1`,
+    `DELETE FROM "${schema}".sermon_category_map WHERE sermon_id = $1::uuid`,
     id,
   );
   await prisma.$queryRawUnsafe(
-    `DELETE FROM "${schema}".sermons WHERE id = $1`,
+    `DELETE FROM "${schema}".sermons WHERE id = $1::uuid`,
     id,
   );
 }

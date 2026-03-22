@@ -24,7 +24,7 @@ export async function listStaff(schema: string, params: ListParams) {
 
 export async function getStaffMember(schema: string, id: string) {
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-    `SELECT * FROM "${schema}".staff WHERE id = $1`, id,
+    `SELECT * FROM "${schema}".staff WHERE id = $1::uuid`, id,
   );
   return rows[0] ?? null;
 }
@@ -69,7 +69,7 @@ export async function updateStaffMember(schema: string, id: string, input: Updat
 
   setClauses.push(`updated_at = NOW()`);
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-    `UPDATE "${schema}".staff SET ${setClauses.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+    `UPDATE "${schema}".staff SET ${setClauses.join(', ')} WHERE id = $${paramIndex}::uuid RETURNING *`,
     ...values, id,
   );
   return rows[0] ?? null;
@@ -78,7 +78,7 @@ export async function updateStaffMember(schema: string, id: string, input: Updat
 export async function reorderStaff(schema: string, ids: string[]) {
   for (let i = 0; i < ids.length; i++) {
     await prisma.$queryRawUnsafe(
-      `UPDATE "${schema}".staff SET sort_order = $1, updated_at = NOW() WHERE id = $2`,
+      `UPDATE "${schema}".staff SET sort_order = $1, updated_at = NOW() WHERE id = $2::uuid`,
       i + 1,
       ids[i],
     );
@@ -86,5 +86,5 @@ export async function reorderStaff(schema: string, ids: string[]) {
 }
 
 export async function deleteStaffMember(schema: string, id: string) {
-  await prisma.$queryRawUnsafe(`DELETE FROM "${schema}".staff WHERE id = $1`, id);
+  await prisma.$queryRawUnsafe(`DELETE FROM "${schema}".staff WHERE id = $1::uuid`, id);
 }

@@ -32,7 +32,7 @@ export async function createMenu(
 ): Promise<MenuRow> {
   const rows = await prisma.$queryRawUnsafe<MenuRow[]>(
     `INSERT INTO "${schema}".menus (label, page_id, external_url, parent_id, sort_order, is_visible)
-     VALUES ($1, $2, $3, $4, $5, $6)
+     VALUES ($1, $2::uuid, $3, $4::uuid, $5, $6)
      RETURNING id, label, page_id, external_url, parent_id, sort_order, is_visible, created_at, updated_at`,
     input.label,
     input.pageId ?? null,
@@ -59,7 +59,7 @@ export async function updateMenu(
     params.push(input.label);
   }
   if (input.pageId !== undefined) {
-    setClauses.push(`page_id = $${paramIndex++}`);
+    setClauses.push(`page_id = $${paramIndex++}::uuid`);
     params.push(input.pageId);
   }
   if (input.externalUrl !== undefined) {
@@ -67,7 +67,7 @@ export async function updateMenu(
     params.push(input.externalUrl);
   }
   if (input.parentId !== undefined) {
-    setClauses.push(`parent_id = $${paramIndex++}`);
+    setClauses.push(`parent_id = $${paramIndex++}::uuid`);
     params.push(input.parentId);
   }
   if (input.sortOrder !== undefined) {
@@ -89,7 +89,7 @@ export async function updateMenu(
   const rows = await prisma.$queryRawUnsafe<MenuRow[]>(
     `UPDATE "${schema}".menus
      SET ${setClauses.join(', ')}
-     WHERE id = $${paramIndex}
+     WHERE id = $${paramIndex}::uuid
      RETURNING id, label, page_id, external_url, parent_id, sort_order, is_visible, created_at, updated_at`,
     ...params,
   );
@@ -107,12 +107,12 @@ export async function deleteMenu(
 ): Promise<void> {
   // Cascade: delete children first
   await prisma.$executeRawUnsafe(
-    `DELETE FROM "${schema}".menus WHERE parent_id = $1`,
+    `DELETE FROM "${schema}".menus WHERE parent_id = $1::uuid`,
     id,
   );
 
   const result = await prisma.$executeRawUnsafe(
-    `DELETE FROM "${schema}".menus WHERE id = $1`,
+    `DELETE FROM "${schema}".menus WHERE id = $1::uuid`,
     id,
   );
 
@@ -128,8 +128,8 @@ export async function reorderMenus(
   for (const item of input.items) {
     await prisma.$executeRawUnsafe(
       `UPDATE "${schema}".menus
-       SET parent_id = $1, sort_order = $2, updated_at = NOW()
-       WHERE id = $3`,
+       SET parent_id = $1::uuid, sort_order = $2, updated_at = NOW()
+       WHERE id = $3::uuid`,
       item.parentId,
       item.sortOrder,
       item.id,

@@ -35,7 +35,7 @@ export async function listColumns(schema: string, params: ListParams) {
 
 export async function getColumn(schema: string, id: string) {
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-    `SELECT * FROM "${schema}".columns_pastoral WHERE id = $1`, id,
+    `SELECT * FROM "${schema}".columns_pastoral WHERE id = $1::uuid`, id,
   );
   return rows[0] ?? null;
 }
@@ -73,12 +73,12 @@ export async function updateColumn(schema: string, id: string, input: UpdateColu
 
   setClauses.push(`updated_at = NOW()`);
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-    `UPDATE "${schema}".columns_pastoral SET ${setClauses.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+    `UPDATE "${schema}".columns_pastoral SET ${setClauses.join(', ')} WHERE id = $${paramIndex}::uuid RETURNING *`,
     ...values, id,
   );
   return rows[0] ?? null;
 }
 
 export async function deleteColumn(schema: string, id: string) {
-  await prisma.$queryRawUnsafe(`DELETE FROM "${schema}".columns_pastoral WHERE id = $1`, id);
+  await prisma.$queryRawUnsafe(`DELETE FROM "${schema}".columns_pastoral WHERE id = $1::uuid`, id);
 }
