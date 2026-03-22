@@ -12,7 +12,7 @@ export async function AlbumGalleryBlock({ props, slug }: AlbumGalleryBlockProps)
   let albums;
   try {
     const result = await getAlbums(slug, { perPage: limit });
-    albums = result.data;
+    albums = Array.isArray(result) ? result : (result?.data ?? []);
   } catch {
     albums = [];
   }

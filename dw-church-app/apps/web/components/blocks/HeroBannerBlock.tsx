@@ -10,7 +10,7 @@ export async function HeroBannerBlock({ slug }: HeroBannerBlockProps) {
   let banners;
   try {
     const result = await getBanners(slug);
-    banners = result.data;
+    banners = Array.isArray(result) ? result : ((result as any)?.data ?? []);
   } catch {
     banners = [];
   }

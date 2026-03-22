@@ -12,7 +12,7 @@ export async function RecentBulletinsBlock({ props, slug }: RecentBulletinsBlock
   let bulletins;
   try {
     const result = await getBulletins(slug, { perPage: limit });
-    bulletins = result.data;
+    bulletins = Array.isArray(result) ? result : (result?.data ?? []);
   } catch {
     bulletins = [];
   }

@@ -12,7 +12,7 @@ export async function EventGridBlock({ props, slug }: EventGridBlockProps) {
   let events;
   try {
     const result = await getEvents(slug, { perPage: limit });
-    events = result.data;
+    events = Array.isArray(result) ? result : (result?.data ?? []);
   } catch {
     events = [];
   }

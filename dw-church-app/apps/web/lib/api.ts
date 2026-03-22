@@ -45,7 +45,8 @@ export async function getMenuItems(slug: string): Promise<any[]> {
 }
 
 export async function getTheme(slug: string): Promise<any> {
-  return apiFetch(slug, `/api/v1/theme`);
+  const res = await apiFetch(slug, `/api/v1/theme`);
+  return unwrap(res);
 }
 
 // ─── Pages ───────────────────────────────────────────────────

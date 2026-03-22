@@ -12,7 +12,7 @@ export async function RecentSermonsBlock({ props, slug }: RecentSermonsBlockProp
   let sermons;
   try {
     const result = await getSermons(slug, { perPage: limit });
-    sermons = result.data;
+    sermons = Array.isArray(result) ? result : (result?.data ?? []);
   } catch {
     sermons = [];
   }
