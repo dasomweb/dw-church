@@ -78,8 +78,15 @@ export function errorHandler(
         break;
     }
 
-    const body: ErrorBody = { error: { code, message } };
+    const body: ErrorBody = { error: { code, message, details: error.message } };
     void reply.status(status).send(body);
+    return;
+  }
+
+  // --- Prisma unknown errors ---
+  if (error instanceof Prisma.PrismaClientUnknownRequestError) {
+    const body: ErrorBody = { error: { code: 'DATABASE_ERROR', message: 'A database error occurred', details: error.message } };
+    void reply.status(500).send(body);
     return;
   }
 
