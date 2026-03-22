@@ -4,6 +4,7 @@ import { DWChurchClient } from '@dw-church/api-client';
 import { DWChurchProvider } from '@dw-church/ui-components';
 import { AdminLayout } from './layouts/AdminLayout';
 import { useAuthStore } from './stores/auth';
+import { ToastProvider } from './components';
 
 // Lazy-loaded pages — Auth
 const LoginPage = lazy(() => import('./pages/LoginPage'));
@@ -93,6 +94,7 @@ export function App({ config }: { config: AppConfig }) {
   }, [config.baseUrl, session?.accessToken]);
 
   return (
+    <ToastProvider>
     <DWChurchProvider client={client}>
       <BrowserRouter>
         <Suspense fallback={<PageLoader />}>
@@ -154,5 +156,6 @@ export function App({ config }: { config: AppConfig }) {
         </Suspense>
       </BrowserRouter>
     </DWChurchProvider>
+    </ToastProvider>
   );
 }

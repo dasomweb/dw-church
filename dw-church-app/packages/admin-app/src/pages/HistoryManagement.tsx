@@ -7,6 +7,7 @@ import {
   useUpdateHistory,
   useDeleteHistory,
 } from '@dw-church/api-client';
+import { useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
 
 interface HistoryFormData {
   year: number;
@@ -24,7 +25,9 @@ export default function HistoryManagement() {
   const [editingEntry, setEditingEntry] = useState<History | null>(null);
   const [items, setItems] = useState<HistoryItem[]>([]);
   const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{id: string; name: string} | null>(null);
 
+  const { showToast } = useToast();
   const { data: historyList, isLoading, error } = useHistory();
   const createMutation = useCreateHistory();
   const updateMutation = useUpdateHistory();
@@ -64,9 +67,7 @@ export default function HistoryManagement() {
   };
 
   const handleDelete = (entry: History) => {
-    if (window.confirm(`${entry.year}년 연혁을 삭제하시겠습니까?`)) {
-      deleteMutation.mutate(entry.id);
-    }
+    setDeleteTarget({ id: entry.id, name: `${entry.year}년 연혁` });
   };
 
   const handleAddItem = (data: ItemFormData) => {
@@ -120,10 +121,16 @@ export default function HistoryManagement() {
     if (editingEntry) {
       updateMutation.mutate(
         { id: editingEntry.id, data: payload },
-        { onSuccess: () => setView('list') },
+        {
+          onSuccess: () => { showToast('success', '저장되었습니다.'); setView('list'); },
+          onError: () => { showToast('error', '오류가 발생했습니다.'); },
+        },
       );
     } else {
-      createMutation.mutate(payload, { onSuccess: () => setView('list') });
+      createMutation.mutate(payload, {
+        onSuccess: () => { showToast('success', '저장되었습니다.'); setView('list'); },
+        onError: () => { showToast('error', '오류가 발생했습니다.'); },
+      });
     }
   };
 
@@ -144,7 +151,7 @@ export default function HistoryManagement() {
           <button
             type="button"
             onClick={() => setView('list')}
-            className="px-4 py-2 text-sm bg-gray-200 rounded hover:bg-gray-300"
+            className="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
           >
             목록으로
           </button>
@@ -263,7 +270,7 @@ export default function HistoryManagement() {
                       setEditingItemIndex(null);
                       resetItem({ month: 1, day: 1, content: '', photoUrl: '' });
                     }}
-                    className="px-4 py-1.5 bg-gray-200 text-sm rounded hover:bg-gray-300"
+                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg px-4 py-1.5 text-sm font-medium transition-colors"
                   >
                     취소
                   </button>
@@ -276,14 +283,14 @@ export default function HistoryManagement() {
             <button
               type="submit"
               disabled={isSaving}
-              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? '저장 중...' : '저장'}
             </button>
             <button
               type="button"
               onClick={() => setView('list')}
-              className="px-6 py-2 bg-gray-200 rounded hover:bg-gray-300"
+              className="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
             >
               취소
             </button>
@@ -303,16 +310,26 @@ export default function HistoryManagement() {
         <h2 className="text-xl font-bold">연혁 관리</h2>
         <button
           onClick={handleCreate}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"
         >
           새 연혁
         </button>
       </div>
 
-      {isLoading && <p className="text-gray-500">로딩 중...</p>}
+      {isLoading && <CardSkeleton />}
       {error && <p className="text-red-500">오류가 발생했습니다.</p>}
 
-      {historyList && (
+      {historyList && historyList.length === 0 && !isLoading && (
+        <EmptyState
+          icon="📜"
+          title="등록된 연혁이 없습니다"
+          description="새로운 연혁을 추가해보세요."
+          actionLabel="연혁 추가"
+          onAction={() => handleCreate()}
+        />
+      )}
+
+      {historyList && historyList.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {historyList.map((entry) => (
             <div key={entry.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
@@ -330,7 +347,7 @@ export default function HistoryManagement() {
                 <button
                   onClick={() => handleDelete(entry)}
                   disabled={deleteMutation.isPending}
-                  className="text-sm text-red-600 hover:underline disabled:opacity-50"
+                  className="text-sm text-red-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   삭제
                 </button>
@@ -339,6 +356,22 @@ export default function HistoryManagement() {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="삭제 확인"
+        message={`"${deleteTarget?.name}"을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
+        confirmLabel="삭제"
+        variant="danger"
+        onConfirm={() => {
+          deleteMutation.mutate(deleteTarget!.id, {
+            onSuccess: () => { showToast('success', '삭제되었습니다.'); },
+            onError: () => { showToast('error', '오류가 발생했습니다.'); },
+          });
+          setDeleteTarget(null);
+        }}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

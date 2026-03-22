@@ -7,6 +7,7 @@ import {
   useUpdateColumn,
   useDeleteColumn,
 } from '@dw-church/api-client';
+import { useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
 
 interface ColumnFormData {
   title: string;
@@ -22,7 +23,9 @@ export default function ColumnManagement() {
   const [view, setView] = useState<'list' | 'edit'>('list');
   const [editingItem, setEditingItem] = useState<Column | null>(null);
   const [params, setParams] = useState<ListParams>({ page: 1, perPage: 10, search: '' });
+  const [deleteTarget, setDeleteTarget] = useState<{id: string; name: string} | null>(null);
 
+  const { showToast } = useToast();
   const { data, isLoading, error } = useColumns(params);
   const createMutation = useCreateColumn();
   const updateMutation = useUpdateColumn();
@@ -50,19 +53,23 @@ export default function ColumnManagement() {
   };
 
   const handleDelete = (item: Column) => {
-    if (window.confirm(`"${item.title}" 을(를) 삭제하시겠습니까?`)) {
-      deleteMutation.mutate(item.id);
-    }
+    setDeleteTarget({ id: item.id, name: item.title || '' });
   };
 
   const onSubmit = (formData: ColumnFormData) => {
     if (editingItem) {
       updateMutation.mutate(
         { id: editingItem.id, data: formData },
-        { onSuccess: () => setView('list') },
+        {
+          onSuccess: () => { showToast('success', '저장되었습니다.'); setView('list'); },
+          onError: () => { showToast('error', '오류가 발생했습니다.'); },
+        },
       );
     } else {
-      createMutation.mutate(formData, { onSuccess: () => setView('list') });
+      createMutation.mutate(formData, {
+        onSuccess: () => { showToast('success', '저장되었습니다.'); setView('list'); },
+        onError: () => { showToast('error', '오류가 발생했습니다.'); },
+      });
     }
   };
 
@@ -78,7 +85,7 @@ export default function ColumnManagement() {
           <button
             type="button"
             onClick={() => setView('list')}
-            className="px-4 py-2 text-sm bg-gray-200 rounded hover:bg-gray-300"
+            className="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
           >
             목록으로
           </button>
@@ -152,14 +159,14 @@ export default function ColumnManagement() {
             <button
               type="submit"
               disabled={isSaving}
-              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? '저장 중...' : '저장'}
             </button>
             <button
               type="button"
               onClick={() => setView('list')}
-              className="px-6 py-2 bg-gray-200 rounded hover:bg-gray-300"
+              className="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
             >
               취소
             </button>
@@ -179,7 +186,7 @@ export default function ColumnManagement() {
         <h2 className="text-xl font-bold">칼럼 관리</h2>
         <button
           onClick={handleCreate}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"
         >
           새 칼럼
         </button>
@@ -195,10 +202,20 @@ export default function ColumnManagement() {
         />
       </div>
 
-      {isLoading && <p className="text-gray-500">로딩 중...</p>}
+      {isLoading && <TableSkeleton />}
       {error && <p className="text-red-500">오류가 발생했습니다.</p>}
 
-      {data && (
+      {data && data.data.length === 0 && !isLoading && (
+        <EmptyState
+          icon="✍️"
+          title="등록된 칼럼이 없습니다"
+          description="새로운 칼럼을 추가해보세요."
+          actionLabel="칼럼 추가"
+          onAction={() => handleCreate()}
+        />
+      )}
+
+      {data && data.data.length > 0 && (
         <>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
@@ -229,7 +246,7 @@ export default function ColumnManagement() {
                       <button
                         onClick={() => handleDelete(item)}
                         disabled={deleteMutation.isPending}
-                        className="text-red-600 hover:underline disabled:opacity-50"
+                        className="text-red-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         삭제
                       </button>
@@ -248,14 +265,14 @@ export default function ColumnManagement() {
               <button
                 disabled={data.page <= 1}
                 onClick={() => setParams((p) => ({ ...p, page: (p.page || 1) - 1 }))}
-                className="px-3 py-1 border rounded disabled:opacity-50"
+                className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 이전
               </button>
               <button
                 disabled={data.page >= data.totalPages}
                 onClick={() => setParams((p) => ({ ...p, page: (p.page || 1) + 1 }))}
-                className="px-3 py-1 border rounded disabled:opacity-50"
+                className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 다음
               </button>
@@ -263,6 +280,22 @@ export default function ColumnManagement() {
           </div>
         </>
       )}
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="삭제 확인"
+        message={`"${deleteTarget?.name}"을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
+        confirmLabel="삭제"
+        variant="danger"
+        onConfirm={() => {
+          deleteMutation.mutate(deleteTarget!.id, {
+            onSuccess: () => { showToast('success', '삭제되었습니다.'); },
+            onError: () => { showToast('error', '오류가 발생했습니다.'); },
+          });
+          setDeleteTarget(null);
+        }}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }
