@@ -416,15 +416,18 @@ export class DWChurchClient {
 
   // ─── History ────────────────────────────────────────────
   async getHistory(params?: HistoryListParams): Promise<History[]> {
-    return this.api.get(`${this.namespace}/history`, { year: params?.year });
+    const res = await this.api.get(`${this.namespace}/history`, { year: params?.year });
+    return res.data ?? res;
   }
 
   async getHistoryEntry(id: string): Promise<History> {
-    return this.api.get(`${this.namespace}/history/${id}`);
+    const res = await this.api.get(`${this.namespace}/history/${id}`);
+    return res.data ?? res;
   }
 
   async getHistoryYears(): Promise<number[]> {
-    return this.api.get(`${this.namespace}/history/years`);
+    const res = await this.api.get(`${this.namespace}/history/years`);
+    return res.data ?? res;
   }
 
   async createHistory(data: Omit<History, 'id'>): Promise<History> {
