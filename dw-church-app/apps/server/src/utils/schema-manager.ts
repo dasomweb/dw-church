@@ -28,7 +28,7 @@ export async function deleteTenantSchema(slug: string): Promise<void> {
 export async function seedDefaultData(slug: string): Promise<void> {
   const schema = `tenant_${slug}`;
 
-  // 1. Sermon categories
+  // 1. Default sermon categories
   const categories = [
     { name: '주일설교', slug: 'sunday', sort_order: 1 },
     { name: '수요설교', slug: 'wednesday', sort_order: 2 },
@@ -49,47 +49,96 @@ export async function seedDefaultData(slug: string): Promise<void> {
 
   // 2. Default preacher
   await prisma.$executeRawUnsafe(
-    `INSERT INTO "${schema}".preachers (name, title, is_default)
-     VALUES ('담임목사', '담임목사', true)
+    `INSERT INTO "${schema}".preachers (name, is_default)
+     VALUES ('담임목사', true)
      ON CONFLICT DO NOTHING`,
   );
 
   // 3. Default theme
   await prisma.$executeRawUnsafe(
     `INSERT INTO "${schema}".themes (name, is_active, settings)
-     VALUES ('default', true, '{}')
+     VALUES ('modern', true, $1::jsonb)
      ON CONFLICT DO NOTHING`,
+    JSON.stringify({
+      templateName: 'modern',
+      colors: { primary: '#2563eb', secondary: '#64748b', accent: '#f59e0b', background: '#ffffff', surface: '#f8fafc', text: '#0f172a' },
+      fonts: { heading: 'Pretendard', body: 'Pretendard' },
+      customCss: '',
+    }),
   );
 
-  // 4. Default home page with sections
+  // 4. Default home page
   await prisma.$executeRawUnsafe(
-    `INSERT INTO "${schema}".pages (title, slug, is_home, is_published, sections)
-     VALUES ('홈', 'home', true, true, $1::jsonb)
+    `INSERT INTO "${schema}".pages (title, slug, is_home, status, sort_order)
+     VALUES ('홈', 'home', true, 'published', 0)
      ON CONFLICT DO NOTHING`,
-    JSON.stringify([
-      { type: 'hero', title: '환영합니다', sort_order: 1 },
-      { type: 'sermons', title: '최근 설교', count: 4, sort_order: 2 },
-      { type: 'bulletins', title: '주보', count: 1, sort_order: 3 },
-      { type: 'events', title: '교회 소식', count: 3, sort_order: 4 },
-    ]),
   );
 
-  // 5. Default menu items
+  // Get the home page ID for sections
+  const pages = await prisma.$queryRawUnsafe<[{ id: string }]>(
+    `SELECT id FROM "${schema}".pages WHERE slug = 'home' LIMIT 1`,
+  );
+  const homePageId = pages[0]?.id;
+
+  if (homePageId) {
+    // 5. Default home page sections
+    const sections = [
+      { block_type: 'hero_banner', props: { message: '환영합니다' }, sort_order: 0 },
+      { block_type: 'recent_sermons', props: { limit: 6 }, sort_order: 1 },
+      { block_type: 'recent_bulletins', props: { limit: 3 }, sort_order: 2 },
+      { block_type: 'event_grid', props: { limit: 4 }, sort_order: 3 },
+      { block_type: 'staff_grid', props: { limit: 8 }, sort_order: 4 },
+    ];
+
+    for (const sec of sections) {
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO "${schema}".page_sections (page_id, block_type, props, sort_order, is_visible)
+         VALUES ($1, $2, $3::jsonb, $4, true)
+         ON CONFLICT DO NOTHING`,
+        homePageId,
+        sec.block_type,
+        JSON.stringify(sec.props),
+        sec.sort_order,
+      );
+    }
+  }
+
+  // 6. Default menu items
   const menus = [
-    { label: '설교', path: '/sermons', sort_order: 1 },
-    { label: '주보', path: '/bulletins', sort_order: 2 },
-    { label: '교회 소식', path: '/events', sort_order: 3 },
-    { label: '갤러리', path: '/albums', sort_order: 4 },
+    { label: '교회소개', url: '/about', sort_order: 0 },
+    { label: '설교', url: '/sermons', sort_order: 1 },
+    { label: '주보', url: '/bulletins', sort_order: 2 },
+    { label: '갤러리', url: '/albums', sort_order: 3 },
+    { label: '교회소식', url: '/events', sort_order: 4 },
+    { label: '섬기는 사람들', url: '/staff', sort_order: 5 },
   ];
 
   for (const menu of menus) {
     await prisma.$executeRawUnsafe(
-      `INSERT INTO "${schema}".menus (label, path, sort_order, is_visible)
+      `INSERT INTO "${schema}".menus (label, external_url, sort_order, is_visible)
        VALUES ($1, $2, $3, true)
        ON CONFLICT DO NOTHING`,
       menu.label,
-      menu.path,
+      menu.url,
       menu.sort_order,
+    );
+  }
+
+  // 7. Default settings
+  const settings = [
+    { key: 'church_name', value: '' },
+    { key: 'church_address', value: '' },
+    { key: 'church_phone', value: '' },
+    { key: 'church_email', value: '' },
+  ];
+
+  for (const s of settings) {
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO "${schema}".settings (key, value)
+       VALUES ($1, $2)
+       ON CONFLICT DO NOTHING`,
+      s.key,
+      s.value,
     );
   }
 }
