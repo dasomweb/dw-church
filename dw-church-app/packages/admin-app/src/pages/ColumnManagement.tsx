@@ -77,86 +77,97 @@ export default function ColumnManagement() {
 
   if (view === 'edit') {
     return (
-      <div className="p-6 max-w-3xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold">
-            {editingItem ? '칼럼 수정' : '칼럼 등록'}
-          </h2>
+      <div className="p-6 max-w-4xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">
+              {editingItem ? '목회컬럼 수정' : '목회컬럼 등록'}
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">목회컬럼을 작성하고 관리합니다</p>
+          </div>
           <button
             type="button"
             onClick={() => setView('list')}
             className="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
           >
-            목록으로
+            ← 목록으로
           </button>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <FormSection title="기본 정보">
-            <FormField label="제목" required error={errors.title?.message}>
-              <input
-                {...register('title', { required: '제목을 입력하세요' })}
-                className={inputClass}
-              />
-            </FormField>
-            <FormField label="상태">
-              <select {...register('status')} className={selectClass}>
-                <option value="published">공개</option>
-                <option value="draft">임시저장</option>
-                <option value="archived">보관</option>
-              </select>
-            </FormField>
+            <div className="space-y-4">
+              <FormRow>
+                <FormField label="제목" required error={errors.title?.message}>
+                  <input
+                    {...register('title', { required: '제목을 입력하세요' })}
+                    className={inputClass}
+                  />
+                </FormField>
+                <FormField label="상태">
+                  <select {...register('status')} className={selectClass}>
+                    <option value="published">공개</option>
+                    <option value="draft">임시저장</option>
+                    <option value="archived">보관</option>
+                  </select>
+                </FormField>
+              </FormRow>
+            </div>
           </FormSection>
 
           <FormSection title="본문">
-            <FormField label="내용">
-              <textarea
-                {...register('content')}
-                rows={12}
-                className={textareaClass}
-              />
-            </FormField>
+            <div className="space-y-4">
+              <FormField label="내용">
+                <textarea
+                  {...register('content')}
+                  rows={12}
+                  className={textareaClass}
+                />
+              </FormField>
+            </div>
           </FormSection>
 
           <FormSection title="미디어">
-            <FormRow>
+            <div className="space-y-4">
+              <FormRow>
+                <ImageUpload
+                  value={watch('topImageUrl') || ''}
+                  onChange={(url) => setValue('topImageUrl', url)}
+                  label="상단 이미지"
+                />
+                <ImageUpload
+                  value={watch('bottomImageUrl') || ''}
+                  onChange={(url) => setValue('bottomImageUrl', url)}
+                  label="하단 이미지"
+                />
+              </FormRow>
+              <FormField label="YouTube URL">
+                <input
+                  {...register('youtubeUrl')}
+                  placeholder="https://youtube.com/watch?v=..."
+                  className={inputClass}
+                />
+              </FormField>
               <ImageUpload
-                value={watch('topImageUrl') || ''}
-                onChange={(url) => setValue('topImageUrl', url)}
-                label="상단 이미지"
+                value={watch('thumbnailUrl') || ''}
+                onChange={(url) => setValue('thumbnailUrl', url)}
+                label="썸네일"
               />
-              <ImageUpload
-                value={watch('bottomImageUrl') || ''}
-                onChange={(url) => setValue('bottomImageUrl', url)}
-                label="하단 이미지"
-              />
-            </FormRow>
-            <FormField label="YouTube URL">
-              <input
-                {...register('youtubeUrl')}
-                placeholder="https://youtube.com/watch?v=..."
-                className={inputClass}
-              />
-            </FormField>
-            <ImageUpload
-              value={watch('thumbnailUrl') || ''}
-              onChange={(url) => setValue('thumbnailUrl', url)}
-              label="썸네일"
-            />
+            </div>
           </FormSection>
 
-          <div className="flex gap-2 pt-4">
+          <div className="flex gap-3 pt-6 border-t border-gray-200">
             <button
               type="submit"
               disabled={isSaving}
-              className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-6 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? '저장 중...' : '저장'}
             </button>
             <button
               type="button"
               onClick={() => setView('list')}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+              className="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg px-6 py-2.5 text-sm font-medium transition-colors"
             >
               취소
             </button>

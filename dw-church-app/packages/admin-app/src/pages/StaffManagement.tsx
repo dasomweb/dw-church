@@ -110,134 +110,148 @@ export default function StaffManagement() {
 
   if (view === 'edit') {
     return (
-      <div className="p-6 max-w-3xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold">
-            {editingItem ? '교역자 수정' : '교역자 등록'}
-          </h2>
+      <div className="p-6 max-w-4xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">
+              {editingItem ? '교역자 수정' : '교역자 등록'}
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">교역자 및 섬기는 분들을 관리합니다</p>
+          </div>
           <button
             type="button"
             onClick={() => setView('list')}
             className="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
           >
-            목록으로
+            ← 목록으로
           </button>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <FormSection title="기본 정보">
-            <FormRow>
-              <FormField label="이름" required error={errors.name?.message}>
-                <input
-                  {...register('name', { required: '이름을 입력하세요' })}
-                  className={inputClass}
-                />
-              </FormField>
-              <FormField label="직분/역할">
-                <input
-                  {...register('role')}
-                  placeholder="담임목사"
-                  className={inputClass}
-                />
-              </FormField>
-            </FormRow>
-            <FormRow>
-              <FormField label="부서">
-                <select {...register('department')} className={selectClass}>
-                  <option value="">선택하세요</option>
-                  {departments?.map((dept) => (
-                    <option key={dept.id} value={dept.slug}>{dept.name}</option>
-                  ))}
-                </select>
-              </FormField>
-              <FormField label="노출 순서">
-                <input
-                  type="number"
-                  {...register('order', { valueAsNumber: true })}
-                  className={inputClass}
-                />
-              </FormField>
-            </FormRow>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" {...register('isActive')} className="rounded" />
-              <span className="text-sm font-medium text-gray-700">활성 상태</span>
-            </label>
+            <div className="space-y-4">
+              <FormRow>
+                <FormField label="이름" required error={errors.name?.message}>
+                  <input
+                    {...register('name', { required: '이름을 입력하세요' })}
+                    className={inputClass}
+                  />
+                </FormField>
+                <FormField label="직분/역할">
+                  <input
+                    {...register('role')}
+                    placeholder="담임목사"
+                    className={inputClass}
+                  />
+                </FormField>
+              </FormRow>
+              <FormRow>
+                <FormField label="부서">
+                  <select {...register('department')} className={selectClass}>
+                    <option value="">선택하세요</option>
+                    {departments?.map((dept) => (
+                      <option key={dept.id} value={dept.slug}>{dept.name}</option>
+                    ))}
+                  </select>
+                </FormField>
+                <FormField label="노출 순서">
+                  <input
+                    type="number"
+                    {...register('order', { valueAsNumber: true })}
+                    className={inputClass}
+                  />
+                </FormField>
+              </FormRow>
+              <div className="flex items-center gap-3 bg-gray-50 rounded-lg px-4 py-3">
+                <input type="checkbox" {...register('isActive')} className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                <div>
+                  <span className="text-sm font-medium text-gray-700">활성 상태</span>
+                  <p className="text-xs text-gray-500">비활성으로 설정하면 사이트에 표시되지 않습니다</p>
+                </div>
+              </div>
+            </div>
           </FormSection>
 
           <FormSection title="프로필">
-            <ImageUpload
-              value={watch('photoUrl') || ''}
-              onChange={(url) => setValue('photoUrl', url)}
-              aspectRatio="1/1"
-              label="프로필 사진"
-            />
-            <FormField label="약력">
-              <textarea
-                {...register('bio')}
-                rows={6}
-                className={textareaClass}
+            <div className="space-y-4">
+              <ImageUpload
+                value={watch('photoUrl') || ''}
+                onChange={(url) => setValue('photoUrl', url)}
+                aspectRatio="1/1"
+                label="프로필 사진"
               />
-            </FormField>
+              <FormField label="약력">
+                <textarea
+                  {...register('bio')}
+                  rows={6}
+                  className={textareaClass}
+                />
+              </FormField>
+            </div>
           </FormSection>
 
           <FormSection title="연락처">
-            <FormRow>
-              <FormField label="이메일">
-                <input
-                  type="email"
-                  {...register('email')}
-                  className={inputClass}
-                />
-              </FormField>
-              <FormField label="전화번호">
-                <input
-                  type="tel"
-                  {...register('phone')}
-                  placeholder="010-0000-0000"
-                  className={inputClass}
-                />
-              </FormField>
-            </FormRow>
+            <div className="space-y-4">
+              <FormRow>
+                <FormField label="이메일">
+                  <input
+                    type="email"
+                    {...register('email')}
+                    className={inputClass}
+                  />
+                </FormField>
+                <FormField label="전화번호">
+                  <input
+                    type="tel"
+                    {...register('phone')}
+                    placeholder="010-0000-0000"
+                    className={inputClass}
+                  />
+                </FormField>
+              </FormRow>
+            </div>
           </FormSection>
 
           <FormSection title="SNS">
-            <FormRow cols={3}>
-              <FormField label="Facebook URL">
-                <input
-                  {...register('snsFacebook')}
-                  placeholder="https://facebook.com/..."
-                  className={inputClass}
-                />
-              </FormField>
-              <FormField label="Instagram URL">
-                <input
-                  {...register('snsInstagram')}
-                  placeholder="https://instagram.com/..."
-                  className={inputClass}
-                />
-              </FormField>
-              <FormField label="YouTube URL">
-                <input
-                  {...register('snsYoutube')}
-                  placeholder="https://youtube.com/..."
-                  className={inputClass}
-                />
-              </FormField>
-            </FormRow>
+            <div className="space-y-4">
+              <FormRow cols={3}>
+                <FormField label="Facebook URL">
+                  <input
+                    {...register('snsFacebook')}
+                    placeholder="https://facebook.com/..."
+                    className={inputClass}
+                  />
+                </FormField>
+                <FormField label="Instagram URL">
+                  <input
+                    {...register('snsInstagram')}
+                    placeholder="https://instagram.com/..."
+                    className={inputClass}
+                  />
+                </FormField>
+                <FormField label="YouTube URL">
+                  <input
+                    {...register('snsYoutube')}
+                    placeholder="https://youtube.com/..."
+                    className={inputClass}
+                  />
+                </FormField>
+              </FormRow>
+            </div>
           </FormSection>
 
-          <div className="flex gap-2 pt-4">
+          <div className="flex gap-3 pt-6 border-t border-gray-200">
             <button
               type="submit"
               disabled={isSaving}
-              className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-6 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? '저장 중...' : '저장'}
             </button>
             <button
               type="button"
               onClick={() => setView('list')}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+              className="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg px-6 py-2.5 text-sm font-medium transition-colors"
             >
               취소
             </button>
