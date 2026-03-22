@@ -9,6 +9,13 @@ import {
 import * as categoryService from './service.js';
 
 export async function categoryRoutes(app: FastifyInstance) {
+  // ─── Generic taxonomy GET by type ──────────────────────────────────
+  app.get('/taxonomies/:type', { preHandler: [optionalAuth] }, async (request, reply) => {
+    const { type } = request.params as { type: string };
+    const data = await categoryService.listByType(getSchema(request), type);
+    return reply.send({ data });
+  });
+
   // ─── Sermon Categories ───────────────────────────────────────────
 
   app.get('/sermon-categories', async (request, reply) => {
