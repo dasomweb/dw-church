@@ -7,7 +7,7 @@ import {
   useUpdateEvent,
   useDeleteEvent,
 } from '@dw-church/api-client';
-import { useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
+import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, ImageUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
 
 interface EventFormData {
   title: string;
@@ -19,6 +19,7 @@ interface EventFormData {
   linkUrl: string;
   description: string;
   youtubeUrl: string;
+  thumbnailUrl: string;
   status: PostStatus;
 }
 
@@ -33,7 +34,7 @@ export default function EventManagement() {
   const createMutation = useCreateEvent();
   const updateMutation = useUpdateEvent();
   const deleteMutation = useDeleteEvent();
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<EventFormData>();
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<EventFormData>();
 
   const handleEdit = (item: Event) => {
     setEditingItem(item);
@@ -47,6 +48,7 @@ export default function EventManagement() {
       linkUrl: item.linkUrl,
       description: item.description,
       youtubeUrl: item.youtubeUrl,
+      thumbnailUrl: (item as any).thumbnailUrl || '',
       status: item.status,
     });
     setView('edit');
@@ -56,7 +58,7 @@ export default function EventManagement() {
     setEditingItem(null);
     reset({
       title: '', backgroundImageUrl: '', imageOnly: false, department: '',
-      eventDate: '', location: '', linkUrl: '', description: '', youtubeUrl: '', status: 'draft',
+      eventDate: '', location: '', linkUrl: '', description: '', youtubeUrl: '', thumbnailUrl: '', status: 'draft',
     });
     setView('edit');
   };
@@ -68,7 +70,7 @@ export default function EventManagement() {
   const onSubmit = (formData: EventFormData) => {
     const payload = {
       ...formData,
-      thumbnailUrl: '',
+      thumbnailUrl: formData.thumbnailUrl || '',
     };
     if (editingItem) {
       updateMutation.mutate(
@@ -104,95 +106,62 @@ export default function EventManagement() {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">제목</label>
-            <input
-              {...register('title', { required: '제목을 입력하세요' })}
-              className="w-full border rounded px-3 py-2"
-            />
-            {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">배경 이미지 URL</label>
-            <input
-              {...register('backgroundImageUrl')}
-              placeholder="https://example.com/event-bg.jpg"
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-
-          <div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <FormSection title="이벤트 정보">
+            <FormField label="제목" required error={errors.title?.message}>
+              <input {...register('title', { required: '제목을 입력하세요' })} className={inputClass} />
+            </FormField>
+            <FormRow>
+              <FormField label="부서">
+                <input {...register('department')} placeholder="예: 청년부" className={inputClass} />
+              </FormField>
+              <FormField label="날짜/시간">
+                <input {...register('eventDate')} placeholder="예: 2026-03-22 10:00" className={inputClass} />
+              </FormField>
+            </FormRow>
+            <FormRow>
+              <FormField label="장소">
+                <input {...register('location')} placeholder="본당 대예배실" className={inputClass} />
+              </FormField>
+              <FormField label="상태">
+                <select {...register('status')} className={selectClass}>
+                  <option value="published">공개</option>
+                  <option value="draft">임시저장</option>
+                  <option value="archived">보관</option>
+                </select>
+              </FormField>
+            </FormRow>
+            <FormField label="이벤트 URL">
+              <input {...register('linkUrl')} placeholder="https://example.com/register" className={inputClass} />
+            </FormField>
             <label className="flex items-center gap-2">
               <input type="checkbox" {...register('imageOnly')} className="rounded" />
-              <span className="text-sm font-medium">이미지만 표시 (텍스트 숨김)</span>
+              <span className="text-sm font-medium text-gray-700">이미지만 사용</span>
             </label>
-          </div>
+          </FormSection>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">부서</label>
-              <input
-                {...register('department')}
-                placeholder="예: 청년부"
-                className="w-full border rounded px-3 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">이벤트 날짜</label>
-              <input
-                type="date"
-                {...register('eventDate')}
-                className="w-full border rounded px-3 py-2"
-              />
-            </div>
-          </div>
+          <FormSection title="설명">
+            <FormField label="설명">
+              <textarea {...register('description')} rows={6} className={textareaClass} />
+            </FormField>
+          </FormSection>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">장소</label>
-            <input
-              {...register('location')}
-              placeholder="본당 대예배실"
-              className="w-full border rounded px-3 py-2"
+          <FormSection title="미디어">
+            <ImageUpload
+              label="배경 이미지"
+              value={watch('backgroundImageUrl') || ''}
+              onChange={(url) => setValue('backgroundImageUrl', url)}
+              aspectRatio="16/9"
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">링크 URL</label>
-            <input
-              {...register('linkUrl')}
-              placeholder="https://example.com/register"
-              className="w-full border rounded px-3 py-2"
+            <FormField label="YouTube URL">
+              <input {...register('youtubeUrl')} placeholder="https://youtube.com/watch?v=..." className={inputClass} />
+            </FormField>
+            <ImageUpload
+              label="썸네일"
+              value={watch('thumbnailUrl') || ''}
+              onChange={(url) => setValue('thumbnailUrl', url)}
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">설명</label>
-            <textarea
-              {...register('description')}
-              rows={4}
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">YouTube URL</label>
-            <input
-              {...register('youtubeUrl')}
-              placeholder="https://youtube.com/watch?v=..."
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">상태</label>
-            <select {...register('status')} className="w-full border rounded px-3 py-2">
-              <option value="published">공개</option>
-              <option value="draft">임시저장</option>
-              <option value="archived">보관</option>
-            </select>
-          </div>
+          </FormSection>
 
           <div className="flex gap-2 pt-4">
             <button

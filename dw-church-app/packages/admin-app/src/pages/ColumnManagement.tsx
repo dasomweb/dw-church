@@ -7,7 +7,7 @@ import {
   useUpdateColumn,
   useDeleteColumn,
 } from '@dw-church/api-client';
-import { useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
+import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, ImageUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
 
 interface ColumnFormData {
   title: string;
@@ -30,7 +30,7 @@ export default function ColumnManagement() {
   const createMutation = useCreateColumn();
   const updateMutation = useUpdateColumn();
   const deleteMutation = useDeleteColumn();
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<ColumnFormData>();
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<ColumnFormData>();
 
   const handleEdit = (item: Column) => {
     setEditingItem(item);
@@ -91,69 +91,59 @@ export default function ColumnManagement() {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">제목</label>
-            <input
-              {...register('title', { required: '제목을 입력하세요' })}
-              className="w-full border rounded px-3 py-2"
-            />
-            {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>}
-          </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <FormSection title="기본 정보">
+            <FormField label="제목" required error={errors.title?.message}>
+              <input
+                {...register('title', { required: '제목을 입력하세요' })}
+                className={inputClass}
+              />
+            </FormField>
+            <FormField label="상태">
+              <select {...register('status')} className={selectClass}>
+                <option value="published">공개</option>
+                <option value="draft">임시저장</option>
+                <option value="archived">보관</option>
+              </select>
+            </FormField>
+          </FormSection>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">내용</label>
-            <textarea
-              {...register('content')}
-              rows={8}
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
+          <FormSection title="본문">
+            <FormField label="내용">
+              <textarea
+                {...register('content')}
+                rows={12}
+                className={textareaClass}
+              />
+            </FormField>
+          </FormSection>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">상단 이미지 URL</label>
-            <input
-              {...register('topImageUrl')}
-              placeholder="https://example.com/top.jpg"
-              className="w-full border rounded px-3 py-2"
+          <FormSection title="미디어">
+            <FormRow>
+              <ImageUpload
+                value={watch('topImageUrl') || ''}
+                onChange={(url) => setValue('topImageUrl', url)}
+                label="상단 이미지"
+              />
+              <ImageUpload
+                value={watch('bottomImageUrl') || ''}
+                onChange={(url) => setValue('bottomImageUrl', url)}
+                label="하단 이미지"
+              />
+            </FormRow>
+            <FormField label="YouTube URL">
+              <input
+                {...register('youtubeUrl')}
+                placeholder="https://youtube.com/watch?v=..."
+                className={inputClass}
+              />
+            </FormField>
+            <ImageUpload
+              value={watch('thumbnailUrl') || ''}
+              onChange={(url) => setValue('thumbnailUrl', url)}
+              label="썸네일"
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">하단 이미지 URL</label>
-            <input
-              {...register('bottomImageUrl')}
-              placeholder="https://example.com/bottom.jpg"
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">YouTube URL</label>
-            <input
-              {...register('youtubeUrl')}
-              placeholder="https://youtube.com/watch?v=..."
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">썸네일 URL</label>
-            <input
-              {...register('thumbnailUrl')}
-              placeholder="https://example.com/thumb.jpg"
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">상태</label>
-            <select {...register('status')} className="w-full border rounded px-3 py-2">
-              <option value="published">공개</option>
-              <option value="draft">임시저장</option>
-              <option value="archived">보관</option>
-            </select>
-          </div>
+          </FormSection>
 
           <div className="flex gap-2 pt-4">
             <button

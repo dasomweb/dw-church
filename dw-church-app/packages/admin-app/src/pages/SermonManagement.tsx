@@ -9,7 +9,7 @@ import {
   useSermonCategories,
   useSermonPreachers,
 } from '@dw-church/api-client';
-import { useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
+import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, ImageUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
 
 interface SermonFormData {
   title: string;
@@ -36,7 +36,7 @@ export default function SermonManagement() {
   const updateMutation = useUpdateSermon();
   const deleteMutation = useDeleteSermon();
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<SermonFormData>();
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<SermonFormData>();
 
   const handleEdit = (item: Sermon) => {
     setEditingItem(item);
@@ -109,56 +109,67 @@ export default function SermonManagement() {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">제목</label>
-            <input
-              {...register('title', { required: '제목을 입력하세요' })}
-              className="w-full border rounded px-3 py-2"
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <FormSection title="설교 정보">
+            <FormField label="제목" required error={errors.title?.message}>
+              <input
+                {...register('title', { required: '제목을 입력하세요' })}
+                className={inputClass}
+              />
+            </FormField>
+            <FormRow>
+              <FormField label="설교자">
+                <select {...register('preacher')} className={selectClass}>
+                  <option value="">선택하세요</option>
+                  {preachers?.map((p) => (
+                    <option key={p.id} value={p.name}>{p.name}</option>
+                  ))}
+                </select>
+              </FormField>
+              <FormField label="성경구절">
+                <input
+                  {...register('scripture')}
+                  placeholder="요한복음 3:16"
+                  className={inputClass}
+                />
+              </FormField>
+            </FormRow>
+            <FormRow>
+              <FormField label="날짜" required error={errors.date?.message}>
+                <input
+                  type="date"
+                  {...register('date', { required: '날짜를 선택하세요' })}
+                  className={inputClass}
+                />
+              </FormField>
+              <FormField label="상태">
+                <select {...register('status')} className={selectClass}>
+                  <option value="published">공개</option>
+                  <option value="draft">임시저장</option>
+                  <option value="archived">보관</option>
+                </select>
+              </FormField>
+            </FormRow>
+          </FormSection>
+
+          <FormSection title="미디어">
+            <FormField label="YouTube URL">
+              <input
+                {...register('youtubeUrl')}
+                placeholder="https://youtube.com/watch?v=..."
+                className={inputClass}
+              />
+              <p className="text-sm text-gray-500 mt-1">설교 영상의 YouTube URL을 입력하세요</p>
+            </FormField>
+            <ImageUpload
+              value={watch('thumbnailUrl') || ''}
+              onChange={(url) => setValue('thumbnailUrl', url)}
+              label="썸네일"
+              aspectRatio="16/9"
             />
-            {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>}
-          </div>
+          </FormSection>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">성경구절</label>
-            <input
-              {...register('scripture')}
-              placeholder="요한복음 3:16"
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">설교자</label>
-            <select {...register('preacher')} className="w-full border rounded px-3 py-2">
-              <option value="">선택하세요</option>
-              {preachers?.map((p) => (
-                <option key={p.id} value={p.name}>{p.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">YouTube URL</label>
-            <input
-              {...register('youtubeUrl')}
-              placeholder="https://youtube.com/watch?v=..."
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">날짜</label>
-            <input
-              type="date"
-              {...register('date', { required: '날짜를 선택하세요' })}
-              className="w-full border rounded px-3 py-2"
-            />
-            {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date.message}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">카테고리 (복수 선택)</label>
+          <FormSection title="카테고리">
             <div className="border rounded p-3 max-h-40 overflow-y-auto space-y-1">
               {categories?.map((cat) => (
                 <label key={cat.id} className="flex items-center gap-2 text-sm">
@@ -171,25 +182,7 @@ export default function SermonManagement() {
               )}
             </div>
             <input type="hidden" {...register('categoryIds')} />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">썸네일 URL</label>
-            <input
-              {...register('thumbnailUrl')}
-              placeholder="https://example.com/thumb.jpg"
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">상태</label>
-            <select {...register('status')} className="w-full border rounded px-3 py-2">
-              <option value="published">공개</option>
-              <option value="draft">임시저장</option>
-              <option value="archived">보관</option>
-            </select>
-          </div>
+          </FormSection>
 
           <div className="flex gap-2 pt-4">
             <button

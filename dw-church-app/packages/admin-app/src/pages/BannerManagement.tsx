@@ -7,7 +7,7 @@ import {
   useUpdateBanner,
   useDeleteBanner,
 } from '@dw-church/api-client';
-import { useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
+import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, ImageUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
 
 interface BannerFormData {
   title: string;
@@ -56,7 +56,7 @@ export default function BannerManagement() {
   const createMutation = useCreateBanner();
   const updateMutation = useUpdateBanner();
   const deleteMutation = useDeleteBanner();
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<BannerFormData>();
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<BannerFormData>();
 
   const handleEdit = (item: Banner) => {
     setEditingItem(item);
@@ -160,144 +160,100 @@ export default function BannerManagement() {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">제목</label>
-            <input
-              {...register('title', { required: '제목을 입력하세요' })}
-              className="w-full border rounded px-3 py-2"
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <FormSection title="배너 정보">
+            <FormField label="제목" required error={errors.title?.message}>
+              <input {...register('title', { required: '제목을 입력하세요' })} className={inputClass} />
+            </FormField>
+            <FormRow>
+              <FormField label="카테고리">
+                <select {...register('category')} className={selectClass}>
+                  <option value="main">메인</option>
+                  <option value="sub">서브</option>
+                </select>
+              </FormField>
+              <FormField label="상태">
+                <select {...register('status')} className={selectClass}>
+                  <option value="published">공개</option>
+                  <option value="draft">임시저장</option>
+                  <option value="archived">보관</option>
+                </select>
+              </FormField>
+            </FormRow>
+            <FormRow>
+              <FormField label="시작일">
+                <input type="date" {...register('startDate')} className={inputClass} />
+              </FormField>
+              <FormField label="종료일">
+                <input type="date" {...register('endDate')} className={inputClass} />
+              </FormField>
+            </FormRow>
+          </FormSection>
+
+          <FormSection title="이미지">
+            <FormRow>
+              <ImageUpload
+                label="PC 이미지"
+                value={watch('pcImageUrl') || ''}
+                onChange={(url) => setValue('pcImageUrl', url)}
+                aspectRatio="21/9"
+              />
+              <ImageUpload
+                label="모바일 이미지"
+                value={watch('mobileImageUrl') || ''}
+                onChange={(url) => setValue('mobileImageUrl', url)}
+                aspectRatio="9/16"
+              />
+            </FormRow>
+            <ImageUpload
+              label="서브 배너 이미지"
+              value={watch('subImageUrl') || ''}
+              onChange={(url) => setValue('subImageUrl', url)}
+              aspectRatio="16/9"
             />
-            {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>}
-          </div>
+          </FormSection>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">PC 이미지 URL</label>
-              <input
-                {...register('pcImageUrl')}
-                placeholder="https://example.com/pc-banner.jpg"
-                className="w-full border rounded px-3 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">모바일 이미지 URL</label>
-              <input
-                {...register('mobileImageUrl')}
-                placeholder="https://example.com/mobile-banner.jpg"
-                className="w-full border rounded px-3 py-2"
-              />
-            </div>
-          </div>
+          <FormSection title="링크">
+            <FormRow>
+              <FormField label="링크 URL">
+                <input {...register('linkUrl')} placeholder="https://example.com/page" className={inputClass} />
+              </FormField>
+              <FormField label="링크 타겟">
+                <select {...register('linkTarget')} className={selectClass}>
+                  <option value="_self">현재 창 (_self)</option>
+                  <option value="_blank">새 창 (_blank)</option>
+                </select>
+              </FormField>
+            </FormRow>
+          </FormSection>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">서브 이미지 URL</label>
-            <input
-              {...register('subImageUrl')}
-              placeholder="https://example.com/sub.jpg"
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">링크 URL</label>
-              <input
-                {...register('linkUrl')}
-                placeholder="https://example.com/page"
-                className="w-full border rounded px-3 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">링크 타겟</label>
-              <select {...register('linkTarget')} className="w-full border rounded px-3 py-2">
-                <option value="_self">현재 창 (_self)</option>
-                <option value="_blank">새 창 (_blank)</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">시작일</label>
-              <input
-                type="date"
-                {...register('startDate')}
-                className="w-full border rounded px-3 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">종료일</label>
-              <input
-                type="date"
-                {...register('endDate')}
-                className="w-full border rounded px-3 py-2"
-              />
-            </div>
-          </div>
-
-          <fieldset className="border rounded p-4">
-            <legend className="text-sm font-medium px-2">텍스트 오버레이</legend>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium mb-1">제목 (Heading)</label>
-                <input
-                  {...register('textHeading')}
-                  className="w-full border rounded px-3 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">부제목 (Subheading)</label>
-                <input
-                  {...register('textSubheading')}
-                  className="w-full border rounded px-3 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">설명 (Description)</label>
-                <textarea
-                  {...register('textDescription')}
-                  rows={2}
-                  className="w-full border rounded px-3 py-2"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">위치 (Position)</label>
-                  <select {...register('textPosition')} className="w-full border rounded px-3 py-2">
-                    {POSITION_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">정렬 (Align)</label>
-                  <select {...register('textAlign')} className="w-full border rounded px-3 py-2">
-                    {ALIGN_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-          </fieldset>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">카테고리</label>
-              <select {...register('category')} className="w-full border rounded px-3 py-2">
-                <option value="main">메인</option>
-                <option value="sub">서브</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">상태</label>
-              <select {...register('status')} className="w-full border rounded px-3 py-2">
-                <option value="published">공개</option>
-                <option value="draft">임시저장</option>
-                <option value="archived">보관</option>
-              </select>
-            </div>
-          </div>
+          <FormSection title="텍스트 오버레이">
+            <FormField label="제목">
+              <input {...register('textHeading')} className={inputClass} />
+            </FormField>
+            <FormField label="부제목">
+              <input {...register('textSubheading')} className={inputClass} />
+            </FormField>
+            <FormField label="설명">
+              <textarea {...register('textDescription')} rows={3} className={textareaClass} />
+            </FormField>
+            <FormRow>
+              <FormField label="위치">
+                <select {...register('textPosition')} className={selectClass}>
+                  {POSITION_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </FormField>
+              <FormField label="정렬">
+                <select {...register('textAlign')} className={selectClass}>
+                  {ALIGN_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </FormField>
+            </FormRow>
+          </FormSection>
 
           <div className="flex gap-2 pt-4">
             <button

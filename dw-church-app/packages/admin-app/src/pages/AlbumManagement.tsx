@@ -8,11 +8,11 @@ import {
   useDeleteAlbum,
   useAlbumCategories,
 } from '@dw-church/api-client';
-import { useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
+import { FormField, FormSection, FormRow, inputClass, selectClass, ImageUpload, MultiImageUpload, useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
 
 interface AlbumFormData {
   title: string;
-  images: string;
+  images: string[];
   youtubeUrl: string;
   thumbnailUrl: string;
   categoryIds: string;
@@ -31,15 +31,13 @@ export default function AlbumManagement() {
   const createMutation = useCreateAlbum();
   const updateMutation = useUpdateAlbum();
   const deleteMutation = useDeleteAlbum();
-  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<AlbumFormData>();
-
-  const watchImages = watch('images');
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<AlbumFormData>();
 
   const handleEdit = (item: Album) => {
     setEditingItem(item);
     reset({
       title: item.title,
-      images: item.images.join(', '),
+      images: item.images || [],
       youtubeUrl: item.youtubeUrl,
       thumbnailUrl: item.thumbnailUrl,
       categoryIds: JSON.stringify(item.categoryIds),
@@ -50,7 +48,7 @@ export default function AlbumManagement() {
 
   const handleCreate = () => {
     setEditingItem(null);
-    reset({ title: '', images: '', youtubeUrl: '', thumbnailUrl: '', categoryIds: '[]', status: 'draft' });
+    reset({ title: '', images: [], youtubeUrl: '', thumbnailUrl: '', categoryIds: '[]', status: 'draft' });
     setView('edit');
   };
 
@@ -58,22 +56,10 @@ export default function AlbumManagement() {
     setDeleteTarget({ id: item.id, name: item.title || '' });
   };
 
-  const parseImages = (input: string): string[] => {
-    const trimmed = (input || '').trim();
-    if (!trimmed) return [];
-    if (trimmed.startsWith('[')) {
-      try { return JSON.parse(trimmed); } catch { /* fall through */ }
-    }
-    return trimmed.split(',').map((s) => s.trim()).filter(Boolean);
-  };
-
-  const imageCount = parseImages(watchImages || '').length;
-
   const onSubmit = (formData: AlbumFormData) => {
-    const images = parseImages(formData.images);
     const payload = {
       title: formData.title,
-      images,
+      images: formData.images,
       youtubeUrl: formData.youtubeUrl,
       thumbnailUrl: formData.thumbnailUrl,
       categoryIds: JSON.parse(formData.categoryIds || '[]') as string[],
@@ -113,78 +99,48 @@ export default function AlbumManagement() {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">제목</label>
-            <input
-              {...register('title', { required: '제목을 입력하세요' })}
-              className="w-full border rounded px-3 py-2"
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <FormSection title="앨범 정보">
+            <FormField label="제목" required error={errors.title?.message}>
+              <input {...register('title', { required: '제목을 입력하세요' })} className={inputClass} />
+            </FormField>
+            <FormRow>
+              <FormField label="카테고리">
+                <select {...register('categoryIds')} className={selectClass}>
+                  <option value="[]">선택</option>
+                  {categories?.map((cat) => (
+                    <option key={cat.id} value={JSON.stringify([cat.id])}>{cat.name}</option>
+                  ))}
+                </select>
+              </FormField>
+              <FormField label="상태">
+                <select {...register('status')} className={selectClass}>
+                  <option value="published">공개</option>
+                  <option value="draft">임시저장</option>
+                  <option value="archived">보관</option>
+                </select>
+              </FormField>
+            </FormRow>
+          </FormSection>
+
+          <FormSection title="이미지" description="첫 번째 이미지가 대표 이미지로 사용됩니다. 최대 15개">
+            <MultiImageUpload
+              value={watch('images') || []}
+              onChange={(urls) => setValue('images', urls)}
+              max={15}
             />
-            {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>}
-          </div>
+          </FormSection>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              이미지 URLs (쉼표 구분 또는 JSON 배열)
-            </label>
-            <textarea
-              {...register('images')}
-              rows={4}
-              placeholder="https://example.com/img1.jpg, https://example.com/img2.jpg"
-              className="w-full border rounded px-3 py-2 font-mono text-sm"
+          <FormSection title="미디어">
+            <FormField label="YouTube URL">
+              <input {...register('youtubeUrl')} placeholder="https://youtube.com/watch?v=..." className={inputClass} />
+            </FormField>
+            <ImageUpload
+              label="썸네일"
+              value={watch('thumbnailUrl') || ''}
+              onChange={(url) => setValue('thumbnailUrl', url)}
             />
-            <div className="flex justify-between mt-1">
-              <span className="text-sm text-gray-500">이미지 수: {imageCount}</span>
-              {imageCount > 15 && (
-                <span className="text-sm text-amber-600 font-medium">
-                  경고: 이미지가 15개를 초과합니다. 성능에 영향을 줄 수 있습니다.
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">YouTube URL</label>
-            <input
-              {...register('youtubeUrl')}
-              placeholder="https://youtube.com/watch?v=..."
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">썸네일 URL</label>
-            <input
-              {...register('thumbnailUrl')}
-              placeholder="https://example.com/thumb.jpg"
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">카테고리</label>
-            <div className="border rounded p-3 max-h-40 overflow-y-auto space-y-1">
-              {categories?.map((cat) => (
-                <label key={cat.id} className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" value={cat.id} className="rounded" />
-                  {cat.name}
-                </label>
-              ))}
-              {(!categories || categories.length === 0) && (
-                <p className="text-gray-400 text-sm">카테고리가 없습니다</p>
-              )}
-            </div>
-            <input type="hidden" {...register('categoryIds')} />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">상태</label>
-            <select {...register('status')} className="w-full border rounded px-3 py-2">
-              <option value="published">공개</option>
-              <option value="draft">임시저장</option>
-              <option value="archived">보관</option>
-            </select>
-          </div>
+          </FormSection>
 
           <div className="flex gap-2 pt-4">
             <button

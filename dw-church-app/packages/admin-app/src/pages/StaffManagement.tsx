@@ -8,7 +8,7 @@ import {
   useDeleteStaff,
   useStaffDepartments,
 } from '@dw-church/api-client';
-import { useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
+import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, ImageUpload, useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
 
 interface StaffFormData {
   name: string;
@@ -38,7 +38,7 @@ export default function StaffManagement() {
   const updateMutation = useUpdateStaff();
   const deleteMutation = useDeleteStaff();
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<StaffFormData>();
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<StaffFormData>();
 
   const handleEdit = (item: Staff) => {
     setEditingItem(item);
@@ -124,119 +124,107 @@ export default function StaffManagement() {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">이름</label>
-              <input
-                {...register('name', { required: '이름을 입력하세요' })}
-                className="w-full border rounded px-3 py-2"
-              />
-              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">직분</label>
-              <input
-                {...register('role')}
-                placeholder="담임목사"
-                className="w-full border rounded px-3 py-2"
-              />
-            </div>
-          </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <FormSection title="기본 정보">
+            <FormRow>
+              <FormField label="이름" required error={errors.name?.message}>
+                <input
+                  {...register('name', { required: '이름을 입력하세요' })}
+                  className={inputClass}
+                />
+              </FormField>
+              <FormField label="직분/역할">
+                <input
+                  {...register('role')}
+                  placeholder="담임목사"
+                  className={inputClass}
+                />
+              </FormField>
+            </FormRow>
+            <FormRow>
+              <FormField label="부서">
+                <select {...register('department')} className={selectClass}>
+                  <option value="">선택하세요</option>
+                  {departments?.map((dept) => (
+                    <option key={dept.id} value={dept.slug}>{dept.name}</option>
+                  ))}
+                </select>
+              </FormField>
+              <FormField label="노출 순서">
+                <input
+                  type="number"
+                  {...register('order', { valueAsNumber: true })}
+                  className={inputClass}
+                />
+              </FormField>
+            </FormRow>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" {...register('isActive')} className="rounded" />
+              <span className="text-sm font-medium text-gray-700">활성 상태</span>
+            </label>
+          </FormSection>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">부서</label>
-            <select {...register('department')} className="w-full border rounded px-3 py-2">
-              <option value="">선택하세요</option>
-              {departments?.map((dept) => (
-                <option key={dept.id} value={dept.slug}>{dept.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">사진 URL</label>
-            <input
-              {...register('photoUrl')}
-              placeholder="https://example.com/photo.jpg"
-              className="w-full border rounded px-3 py-2"
+          <FormSection title="프로필">
+            <ImageUpload
+              value={watch('photoUrl') || ''}
+              onChange={(url) => setValue('photoUrl', url)}
+              aspectRatio="1/1"
+              label="프로필 사진"
             />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">이메일</label>
-              <input
-                type="email"
-                {...register('email')}
-                className="w-full border rounded px-3 py-2"
+            <FormField label="약력">
+              <textarea
+                {...register('bio')}
+                rows={6}
+                className={textareaClass}
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">전화번호</label>
-              <input
-                {...register('phone')}
-                placeholder="010-0000-0000"
-                className="w-full border rounded px-3 py-2"
-              />
-            </div>
-          </div>
+            </FormField>
+          </FormSection>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">소개</label>
-            <textarea
-              {...register('bio')}
-              rows={4}
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
+          <FormSection title="연락처">
+            <FormRow>
+              <FormField label="이메일">
+                <input
+                  type="email"
+                  {...register('email')}
+                  className={inputClass}
+                />
+              </FormField>
+              <FormField label="전화번호">
+                <input
+                  type="tel"
+                  {...register('phone')}
+                  placeholder="010-0000-0000"
+                  className={inputClass}
+                />
+              </FormField>
+            </FormRow>
+          </FormSection>
 
-          <fieldset className="border rounded p-4">
-            <legend className="text-sm font-medium px-2">SNS 링크</legend>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium mb-1">Facebook</label>
+          <FormSection title="SNS">
+            <FormRow cols={3}>
+              <FormField label="Facebook URL">
                 <input
                   {...register('snsFacebook')}
                   placeholder="https://facebook.com/..."
-                  className="w-full border rounded px-3 py-2"
+                  className={inputClass}
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Instagram</label>
+              </FormField>
+              <FormField label="Instagram URL">
                 <input
                   {...register('snsInstagram')}
                   placeholder="https://instagram.com/..."
-                  className="w-full border rounded px-3 py-2"
+                  className={inputClass}
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">YouTube</label>
+              </FormField>
+              <FormField label="YouTube URL">
                 <input
                   {...register('snsYoutube')}
                   placeholder="https://youtube.com/..."
-                  className="w-full border rounded px-3 py-2"
+                  className={inputClass}
                 />
-              </div>
-            </div>
-          </fieldset>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">정렬 순서</label>
-              <input
-                type="number"
-                {...register('order', { valueAsNumber: true })}
-                className="w-full border rounded px-3 py-2"
-              />
-            </div>
-            <div className="flex items-end pb-2">
-              <label className="flex items-center gap-2">
-                <input type="checkbox" {...register('isActive')} className="rounded" />
-                <span className="text-sm font-medium">활성 상태</span>
-              </label>
-            </div>
-          </div>
+              </FormField>
+            </FormRow>
+          </FormSection>
 
           <div className="flex gap-2 pt-4">
             <button

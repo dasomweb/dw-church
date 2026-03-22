@@ -7,7 +7,7 @@ import {
   useUpdateHistory,
   useDeleteHistory,
 } from '@dw-church/api-client';
-import { useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
+import { FormField, FormSection, inputClass, selectClass, useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
 
 interface HistoryFormData {
   year: number;
@@ -158,108 +158,120 @@ export default function HistoryManagement() {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium mb-1">연도</label>
-            <input
-              type="number"
-              {...register('year', {
-                required: '연도를 입력하세요',
-                valueAsNumber: true,
-                min: { value: 1900, message: '1900 이상' },
-                max: { value: 2100, message: '2100 이하' },
-              })}
-              className="w-32 border rounded px-3 py-2"
-            />
-            {errors.year && <p className="text-red-500 text-sm mt-1">{errors.year.message}</p>}
-          </div>
+          <FormSection title="연도 정보">
+            <FormField label="연도" required error={errors.year?.message}>
+              <input
+                type="number"
+                {...register('year', {
+                  required: '연도를 입력하세요',
+                  valueAsNumber: true,
+                  min: { value: 1900, message: '1900 이상' },
+                  max: { value: 2100, message: '2100 이하' },
+                })}
+                className={inputClass}
+                style={{ maxWidth: '10rem' }}
+              />
+            </FormField>
+          </FormSection>
 
-          <div>
-            <h3 className="text-sm font-bold mb-3">항목 목록 ({items.length}건)</h3>
-
-            {items.length > 0 && (
-              <div className="border rounded mb-4 divide-y">
-                {items.map((item, index) => (
-                  <div key={item.id} className="flex items-center justify-between px-4 py-2 hover:bg-gray-50">
-                    <div className="flex-1">
-                      <span className="text-sm font-medium">
-                        {item.month > 0 ? `${item.month}월` : ''}
-                        {item.day > 0 ? ` ${item.day}일` : ''}
-                        {item.month === 0 && item.day === 0 ? '(날짜 미지정)' : ''}
-                      </span>
-                      <span className="text-sm text-gray-600 ml-2">{item.content}</span>
-                      {item.photoUrl && (
-                        <span className="text-xs text-blue-500 ml-2">[사진]</span>
-                      )}
-                    </div>
-                    <div className="flex gap-2 ml-4">
-                      <button
-                        type="button"
-                        onClick={() => handleEditItem(index)}
-                        className="text-xs text-blue-600 hover:underline"
-                      >
-                        편집
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteItem(index)}
-                        className="text-xs text-red-600 hover:underline"
-                      >
-                        삭제
-                      </button>
-                    </div>
-                  </div>
-                ))}
+          <FormSection title="연혁 항목" description="해당 연도의 주요 이벤트를 추가하세요">
+            {items.length > 0 ? (
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50 text-left">
+                      <th className="px-4 py-2 font-medium text-gray-600 w-24">날짜</th>
+                      <th className="px-4 py-2 font-medium text-gray-600">내용</th>
+                      <th className="px-4 py-2 font-medium text-gray-600 w-16 text-center">사진</th>
+                      <th className="px-4 py-2 font-medium text-gray-600 w-24 text-right">관리</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {items.map((item, index) => (
+                      <tr key={item.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-2.5 font-medium text-gray-800">
+                          {item.month > 0 ? `${item.month}월` : ''}
+                          {item.day > 0 ? ` ${item.day}일` : ''}
+                          {item.month === 0 && item.day === 0 ? '(미지정)' : ''}
+                        </td>
+                        <td className="px-4 py-2.5 text-gray-600">{item.content}</td>
+                        <td className="px-4 py-2.5 text-center">
+                          {item.photoUrl && (
+                            <span className="text-xs text-blue-500">[사진]</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2.5 text-right">
+                          <div className="flex gap-2 justify-end">
+                            <button
+                              type="button"
+                              onClick={() => handleEditItem(index)}
+                              className="text-xs text-blue-600 hover:underline"
+                            >
+                              편집
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteItem(index)}
+                              className="text-xs text-red-600 hover:underline"
+                            >
+                              삭제
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
+            ) : (
+              <p className="text-sm text-gray-400 py-4 text-center">등록된 항목이 없습니다.</p>
             )}
 
-            <div className="border rounded p-4 bg-gray-50">
-              <h4 className="text-sm font-medium mb-3">
+            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50/50">
+              <h4 className="text-sm font-semibold text-gray-700 mb-3">
                 {editingItemIndex !== null ? '항목 수정' : '항목 추가'}
               </h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div>
-                  <label className="block text-xs font-medium mb-1">월 (0=미지정)</label>
+                <FormField label="월 (0=미지정)">
                   <select
                     {...registerItem('month', { valueAsNumber: true })}
-                    className="w-full border rounded px-2 py-1.5 text-sm"
+                    className={selectClass}
                   >
                     {Array.from({ length: 13 }, (_, i) => (
                       <option key={i} value={i}>{monthLabels[i]}</option>
                     ))}
                   </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1">일 (0=미지정)</label>
+                </FormField>
+                <FormField label="일 (0=미지정)">
                   <input
                     type="number"
                     {...registerItem('day', { valueAsNumber: true, min: 0, max: 31 })}
-                    className="w-full border rounded px-2 py-1.5 text-sm"
+                    className={inputClass}
                   />
-                </div>
+                </FormField>
                 <div className="col-span-2">
-                  <label className="block text-xs font-medium mb-1">내용</label>
-                  <input
-                    {...registerItem('content', { required: '내용을 입력하세요' })}
-                    className="w-full border rounded px-2 py-1.5 text-sm"
-                  />
-                  {itemErrors.content && (
-                    <p className="text-red-500 text-xs mt-0.5">{itemErrors.content.message}</p>
-                  )}
+                  <FormField label="내용" error={itemErrors.content?.message}>
+                    <input
+                      {...registerItem('content', { required: '내용을 입력하세요' })}
+                      className={inputClass}
+                    />
+                  </FormField>
                 </div>
               </div>
               <div className="mt-3">
-                <label className="block text-xs font-medium mb-1">사진 URL</label>
-                <input
-                  {...registerItem('photoUrl')}
-                  placeholder="https://example.com/photo.jpg"
-                  className="w-full border rounded px-2 py-1.5 text-sm"
-                />
+                <FormField label="사진 URL">
+                  <input
+                    {...registerItem('photoUrl')}
+                    placeholder="https://example.com/photo.jpg"
+                    className={inputClass}
+                  />
+                </FormField>
               </div>
-              <div className="flex gap-2 mt-3">
+              <div className="flex gap-2 mt-4">
                 <button
                   type="button"
                   onClick={handleSubmitItem(handleAddItem)}
-                  className="px-4 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+                  className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 font-medium transition-colors"
                 >
                   {editingItemIndex !== null ? '항목 수정' : '항목 추가'}
                 </button>
@@ -270,14 +282,14 @@ export default function HistoryManagement() {
                       setEditingItemIndex(null);
                       resetItem({ month: 1, day: 1, content: '', photoUrl: '' });
                     }}
-                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg px-4 py-1.5 text-sm font-medium transition-colors"
+                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
                   >
                     취소
                   </button>
                 )}
               </div>
             </div>
-          </div>
+          </FormSection>
 
           <div className="flex gap-2 pt-4 border-t">
             <button

@@ -7,7 +7,7 @@ import {
   useUpdateBulletin,
   useDeleteBulletin,
 } from '@dw-church/api-client';
-import { useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
+import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, ImageUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
 
 interface BulletinFormData {
   title: string;
@@ -97,53 +97,51 @@ export default function BulletinManagement() {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">제목</label>
-            <input
-              {...register('title', { required: '제목을 입력하세요' })}
-              className="w-full border rounded px-3 py-2"
-            />
-            {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>}
-          </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <FormSection title="기본 정보">
+            <FormRow>
+              <FormField label="제목" required error={errors.title?.message}>
+                <input
+                  {...register('title', { required: '제목을 입력하세요' })}
+                  className={inputClass}
+                />
+              </FormField>
+              <FormField label="날짜" required error={errors.date?.message}>
+                <input
+                  type="date"
+                  {...register('date', { required: '날짜를 선택하세요' })}
+                  className={inputClass}
+                />
+              </FormField>
+            </FormRow>
+            <FormField label="상태">
+              <select {...register('status')} className={selectClass}>
+                <option value="published">공개</option>
+                <option value="draft">임시저장</option>
+                <option value="archived">보관</option>
+              </select>
+            </FormField>
+          </FormSection>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">날짜</label>
-            <input
-              type="date"
-              {...register('date', { required: '날짜를 선택하세요' })}
-              className="w-full border rounded px-3 py-2"
-            />
-            {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date.message}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">PDF URL</label>
-            <input
-              {...register('pdfUrl')}
-              placeholder="https://example.com/bulletin.pdf"
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">이미지 URLs (JSON 배열)</label>
-            <textarea
-              {...register('images')}
-              rows={3}
-              placeholder='["https://example.com/img1.jpg", "https://example.com/img2.jpg"]'
-              className="w-full border rounded px-3 py-2 font-mono text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">상태</label>
-            <select {...register('status')} className="w-full border rounded px-3 py-2">
-              <option value="published">공개</option>
-              <option value="draft">임시저장</option>
-              <option value="archived">보관</option>
-            </select>
-          </div>
+          <FormSection title="파일">
+            <FormField label="PDF URL">
+              <input
+                {...register('pdfUrl')}
+                placeholder="https://example.com/bulletin.pdf"
+                className={inputClass}
+              />
+              <p className="text-sm text-gray-500 mt-1">주보 PDF 파일의 URL을 입력하세요</p>
+            </FormField>
+            <FormField label="이미지 URLs (JSON 배열)">
+              <textarea
+                {...register('images')}
+                rows={3}
+                placeholder='["https://example.com/img1.jpg", "https://example.com/img2.jpg"]'
+                className={`${textareaClass} font-mono text-sm`}
+              />
+              <p className="text-sm text-gray-500 mt-1">이미지 URL을 JSON 배열 형식으로 입력하세요</p>
+            </FormField>
+          </FormSection>
 
           <div className="flex gap-2 pt-4">
             <button
