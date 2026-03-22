@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { requireAuth } from '../../middleware/auth.js';
+import { requireAuth, optionalAuth } from '../../middleware/auth.js';
 import { getSchema } from '../../utils/get-schema.js';
 import {
   createSermonCategorySchema, updateSermonCategorySchema,
@@ -75,6 +75,13 @@ export async function categoryRoutes(app: FastifyInstance) {
     const { id } = request.params as { id: string };
     await categoryService.deletePreacher(getSchema(request), id);
     return reply.status(204).send();
+  });
+
+  // ─── Staff Departments ───────────────────────────────────────────
+
+  app.get('/staff-departments', async (request, reply) => {
+    const data = await categoryService.listByType(getSchema(request), 'staff_department');
+    return reply.send({ data });
   });
 
   // ─── Album Categories ────────────────────────────────────────────

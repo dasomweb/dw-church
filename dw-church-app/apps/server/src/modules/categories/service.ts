@@ -5,6 +5,15 @@ import type {
   CreateAlbumCategoryInput, UpdateAlbumCategoryInput,
 } from './schema.js';
 
+// ─── Generic ─────────────────────────────────────────────────────────
+
+export async function listByType(schema: string, type: string) {
+  return prisma.$queryRawUnsafe<Record<string, unknown>[]>(
+    `SELECT * FROM "${schema}".categories WHERE type = $1 ORDER BY sort_order ASC, name ASC`,
+    type,
+  );
+}
+
 // ─── Sermon Categories ───────────────────────────────────────────────
 
 export async function listSermonCategories(schema: string) {

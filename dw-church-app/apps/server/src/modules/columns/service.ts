@@ -21,11 +21,11 @@ export async function listColumns(schema: string, params: ListParams) {
 
   const [rows, countResult] = await Promise.all([
     prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-      `SELECT * FROM "${schema}".columns ${whereClause} ORDER BY created_at DESC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`,
+      `SELECT * FROM "${schema}".columns_pastoral ${whereClause} ORDER BY created_at DESC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`,
       ...values, perPage, offset,
     ),
     prisma.$queryRawUnsafe<[{ total: number }]>(
-      `SELECT COUNT(*)::int AS total FROM "${schema}".columns ${whereClause}`,
+      `SELECT COUNT(*)::int AS total FROM "${schema}".columns_pastoral ${whereClause}`,
       ...values,
     ),
   ]);
@@ -35,14 +35,14 @@ export async function listColumns(schema: string, params: ListParams) {
 
 export async function getColumn(schema: string, id: string) {
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-    `SELECT * FROM "${schema}".columns WHERE id = $1`, id,
+    `SELECT * FROM "${schema}".columns_pastoral WHERE id = $1`, id,
   );
   return rows[0] ?? null;
 }
 
 export async function createColumn(schema: string, input: CreateColumnInput) {
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-    `INSERT INTO "${schema}".columns (title, content, top_image_url, bottom_image_url, youtube_url, thumbnail_url, status)
+    `INSERT INTO "${schema}".columns_pastoral (title, content, top_image_url, bottom_image_url, youtube_url, thumbnail_url, status)
      VALUES ($1, $2, $3, $4, $5, $6, $7)
      RETURNING *`,
     input.title,
@@ -73,12 +73,12 @@ export async function updateColumn(schema: string, id: string, input: UpdateColu
 
   setClauses.push(`updated_at = NOW()`);
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-    `UPDATE "${schema}".columns SET ${setClauses.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+    `UPDATE "${schema}".columns_pastoral SET ${setClauses.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
     ...values, id,
   );
   return rows[0] ?? null;
 }
 
 export async function deleteColumn(schema: string, id: string) {
-  await prisma.$queryRawUnsafe(`DELETE FROM "${schema}".columns WHERE id = $1`, id);
+  await prisma.$queryRawUnsafe(`DELETE FROM "${schema}".columns_pastoral WHERE id = $1`, id);
 }
