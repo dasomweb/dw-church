@@ -65,9 +65,19 @@ export async function register(input: RegisterInput) {
     );
   }
 
+  const rs = session.session!;
   return {
-    session: session.session,
-    user: session.user,
+    accessToken: rs.access_token,
+    refreshToken: rs.refresh_token,
+    expiresAt: (rs.expires_at ?? 0) * 1000,
+    user: {
+      id: session.user!.id,
+      email: session.user!.email ?? '',
+      name: ownerName,
+      role: 'owner',
+      tenantId: tenant.id,
+      tenantSlug: slug,
+    },
     tenant: { id: tenant.id, slug: tenant.slug, name: tenant.name },
   };
 }
@@ -84,7 +94,20 @@ export async function login(input: LoginInput) {
     throw new AppError('LOGIN_FAILED', 401, 'Invalid email or password');
   }
 
-  return { session: data.session, user: data.user };
+  const s = data.session!;
+  return {
+    accessToken: s.access_token,
+    refreshToken: s.refresh_token,
+    expiresAt: (s.expires_at ?? 0) * 1000,
+    user: {
+      id: data.user!.id,
+      email: data.user!.email ?? '',
+      name: data.user!.user_metadata?.name ?? '',
+      role: data.user!.user_metadata?.role ?? 'member',
+      tenantId: data.user!.user_metadata?.tenant_id ?? '',
+      tenantSlug: data.user!.user_metadata?.tenant_slug ?? '',
+    },
+  };
 }
 
 export async function logout(accessToken: string) {
