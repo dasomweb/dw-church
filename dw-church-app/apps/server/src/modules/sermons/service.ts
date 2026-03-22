@@ -151,7 +151,7 @@ export async function createSermon(schema: string, input: CreateSermonInput) {
     data.title,
     data.scripture ?? null,
     data.youtube_url ?? null,
-    data.sermon_date,
+    new Date(data.sermon_date),
     data.thumbnail_url ?? null,
     data.preacher_id ?? null,
     data.status ?? 'published',
