@@ -80,28 +80,31 @@ async function registerRoutes() {
   registered = true;
 }
 
-// Set CORS headers directly on the Vercel response (inject() may not propagate them)
+// Set CORS headers directly on the Vercel response (inject() doesn't propagate Fastify CORS headers)
 function setCorsHeaders(req: any, res: any): boolean {
   const origin = req.headers?.origin || '';
-  const allowed = env.CORS_ORIGINS;
 
-  // Check if the request origin is in the allowed list
-  if (allowed.includes(origin) || allowed.includes('*')) {
+  // Allow all truelight.app subdomains + localhost dev + env-configured origins
+  const isAllowed =
+    origin.endsWith('.truelight.app') ||
+    origin === 'https://truelight.app' ||
+    origin.startsWith('http://localhost') ||
+    env.CORS_ORIGINS.includes(origin);
+
+  if (isAllowed && origin) {
     res.setHeader('Access-Control-Allow-Origin', origin);
-  } else if (allowed.length > 0 && origin) {
-    // If origin not allowed, still set first allowed origin for non-browser clients
-    res.setHeader('Access-Control-Allow-Origin', allowed[0]);
   }
 
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Tenant-Slug');
+  res.setHeader('Vary', 'Origin');
 
   // Handle preflight
   if (req.method === 'OPTIONS') {
     res.statusCode = 204;
     res.end();
-    return true; // signal that we handled it
+    return true;
   }
   return false;
 }
