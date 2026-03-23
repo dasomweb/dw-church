@@ -35,7 +35,8 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
     { id: 'nav-albums', label: '앨범', externalUrl: '/albums', sortOrder: 3, isVisible: true },
     { id: 'nav-events', label: '행사', externalUrl: '/events', sortOrder: 4, isVisible: true },
     { id: 'nav-staff', label: '교역자', externalUrl: '/staff', sortOrder: 5, isVisible: true },
-    { id: 'nav-history', label: '연혁', externalUrl: '/history', sortOrder: 6, isVisible: true },
+    { id: 'nav-columns', label: '칼럼', externalUrl: '/columns', sortOrder: 6, isVisible: true },
+    { id: 'nav-history', label: '연혁', externalUrl: '/history', sortOrder: 7, isVisible: true },
   ];
 
   const navItems = menuItems.length > 0 ? menuItems : DEFAULT_NAV;
