@@ -1,8 +1,15 @@
 import { getHistory } from '@/lib/api';
 import { HistoryTimelineClient } from './HistoryTimelineClient';
+import { buildTenantMetadata } from '@/lib/metadata';
+import type { Metadata } from 'next';
 
 interface HistoryPageProps {
   params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: HistoryPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  return buildTenantMetadata(slug, '연혁');
 }
 
 export default async function HistoryPage({ params }: HistoryPageProps) {

@@ -1,9 +1,16 @@
 import { getBulletins } from '@/lib/api';
 import { BulletinListClient } from './BulletinListClient';
+import { buildTenantMetadata } from '@/lib/metadata';
+import type { Metadata } from 'next';
 
 interface BulletinsPageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ page?: string }>;
+}
+
+export async function generateMetadata({ params }: BulletinsPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  return buildTenantMetadata(slug, '주보');
 }
 
 export default async function BulletinsPage({ params, searchParams }: BulletinsPageProps) {

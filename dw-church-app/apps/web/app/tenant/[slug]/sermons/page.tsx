@@ -1,9 +1,16 @@
 import { getSermons } from '@/lib/api';
 import { SermonListClient } from './SermonListClient';
+import { buildTenantMetadata } from '@/lib/metadata';
+import type { Metadata } from 'next';
 
 interface SermonsPageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ page?: string; category?: string }>;
+}
+
+export async function generateMetadata({ params }: SermonsPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  return buildTenantMetadata(slug, '설교');
 }
 
 export default async function SermonsPage({ params, searchParams }: SermonsPageProps) {

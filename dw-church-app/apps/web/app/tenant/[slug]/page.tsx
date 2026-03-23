@@ -1,8 +1,15 @@
 import { getHomePage } from '@/lib/api';
 import { BlockRenderer } from '@/components/BlockRenderer';
+import { buildTenantMetadata } from '@/lib/metadata';
+import type { Metadata } from 'next';
 
 interface TenantHomeProps {
   params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: TenantHomeProps): Promise<Metadata> {
+  const { slug } = await params;
+  return buildTenantMetadata(slug);
 }
 
 export default async function TenantHomePage({ params }: TenantHomeProps) {

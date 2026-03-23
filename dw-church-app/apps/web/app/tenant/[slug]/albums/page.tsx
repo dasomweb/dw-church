@@ -1,9 +1,16 @@
 import { getAlbums } from '@/lib/api';
 import { AlbumGalleryClient } from './AlbumGalleryClient';
+import { buildTenantMetadata } from '@/lib/metadata';
+import type { Metadata } from 'next';
 
 interface AlbumsPageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ page?: string }>;
+}
+
+export async function generateMetadata({ params }: AlbumsPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  return buildTenantMetadata(slug, '앨범');
 }
 
 export default async function AlbumsPage({ params, searchParams }: AlbumsPageProps) {

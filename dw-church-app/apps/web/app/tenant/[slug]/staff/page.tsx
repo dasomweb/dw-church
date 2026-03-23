@@ -1,8 +1,15 @@
 import { getStaff } from '@/lib/api';
 import { StaffGridClient } from './StaffGridClient';
+import { buildTenantMetadata } from '@/lib/metadata';
+import type { Metadata } from 'next';
 
 interface StaffPageProps {
   params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: StaffPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  return buildTenantMetadata(slug, '교역자');
 }
 
 export default async function StaffPage({ params }: StaffPageProps) {

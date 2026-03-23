@@ -1,9 +1,16 @@
 import { getEvents } from '@/lib/api';
 import { EventGridClient } from './EventGridClient';
+import { buildTenantMetadata } from '@/lib/metadata';
+import type { Metadata } from 'next';
 
 interface EventsPageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ page?: string }>;
+}
+
+export async function generateMetadata({ params }: EventsPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  return buildTenantMetadata(slug, '행사');
 }
 
 export default async function EventsPage({ params, searchParams }: EventsPageProps) {
