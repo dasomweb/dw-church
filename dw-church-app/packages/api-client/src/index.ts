@@ -59,6 +59,7 @@ export {
   useRegister,
   useLogout,
   useCurrentUser,
+  useUpdateProfile,
   useForgotPassword,
   useInviteUser,
   // Bulletins

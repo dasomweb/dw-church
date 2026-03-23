@@ -160,6 +160,17 @@ export function useCurrentUser() {
   });
 }
 
+export function useUpdateProfile() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation<AuthUser, Error, { name?: string; email?: string }>({
+    mutationFn: (data) => client!.updateProfile(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
+    },
+  });
+}
+
 export function useForgotPassword() {
   const client = useDWChurchClient();
   return useMutation<void, Error, string>({

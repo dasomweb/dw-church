@@ -7,6 +7,7 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
   inviteSchema,
+  updateProfileSchema,
 } from './schema.js';
 import * as authService from './service.js';
 
@@ -50,6 +51,17 @@ export default async function authRoutes(app: FastifyInstance): Promise<void> {
     const result = await authService.getMe(request.user!.id);
     return reply.send(result);
   });
+
+  // PUT /auth/me
+  app.put(
+    '/me',
+    { preHandler: [requireAuth] },
+    async (request, reply) => {
+      const body = updateProfileSchema.parse(request.body);
+      const result = await authService.updateProfile(request.user!.id, body);
+      return reply.send(result);
+    },
+  );
 
   // POST /auth/forgot-password
   app.post('/forgot-password', async (request, reply) => {

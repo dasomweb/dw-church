@@ -191,6 +191,50 @@ export async function resetPassword(accessToken: string, newPassword: string) {
   }
 }
 
+export async function updateProfile(
+  userId: string,
+  data: { name?: string; email?: string },
+) {
+  const updatePayload: Record<string, unknown> = {};
+
+  if (data.email) {
+    updatePayload.email = data.email;
+  }
+
+  if (data.name) {
+    // Get current metadata first to merge
+    const { data: current, error: fetchError } =
+      await supabaseAdmin.auth.admin.getUserById(userId);
+    if (fetchError || !current.user) {
+      throw new AppError('USER_NOT_FOUND', 404, 'User not found');
+    }
+    updatePayload.user_metadata = {
+      ...current.user.user_metadata,
+      name: data.name,
+    };
+  }
+
+  const { data: updated, error } =
+    await supabaseAdmin.auth.admin.updateUserById(userId, updatePayload);
+
+  if (error || !updated.user) {
+    throw new AppError(
+      'PROFILE_UPDATE_FAILED',
+      500,
+      error?.message ?? 'Failed to update profile',
+    );
+  }
+
+  return {
+    id: updated.user.id,
+    email: updated.user.email ?? '',
+    name: updated.user.user_metadata?.name ?? '',
+    role: updated.user.user_metadata?.role ?? 'member',
+    tenantId: updated.user.user_metadata?.tenant_id ?? '',
+    tenantSlug: updated.user.user_metadata?.tenant_slug ?? '',
+  };
+}
+
 export async function inviteUser(
   input: InviteInput,
   inviterRole: string,

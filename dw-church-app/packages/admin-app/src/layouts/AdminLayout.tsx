@@ -182,6 +182,7 @@ const pageTitles: Record<string, string> = {
   '/domains': '도메인 설정',
   '/settings': '설정',
   '/super-admin': 'Super Admin',
+  '/profile': '내 정보',
 };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -319,6 +320,21 @@ export function AdminLayout() {
                 </span>
               </div>
             )}
+            <NavLink
+              to="/profile"
+              className={({ isActive }) =>
+                `flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                  isActive
+                    ? 'text-blue-700 bg-blue-50'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`
+              }
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span className="hidden sm:inline">내 정보</span>
+            </NavLink>
             <button
               onClick={handleLogout}
               className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"

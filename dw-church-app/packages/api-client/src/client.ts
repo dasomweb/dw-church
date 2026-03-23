@@ -215,6 +215,10 @@ export class DWChurchClient {
     return this.api.get(`${this.namespace}/auth/me`);
   }
 
+  async updateProfile(data: { name?: string; email?: string }): Promise<AuthUser> {
+    return this.api.put(`${this.namespace}/auth/me`, data);
+  }
+
   async forgotPassword(email: string): Promise<void> {
     return this.api.post(`${this.namespace}/auth/forgot-password`, { email });
   }

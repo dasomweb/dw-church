@@ -28,6 +28,7 @@ const UserManagement = lazy(() => import('./pages/UserManagement'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const DomainSettings = lazy(() => import('./pages/DomainSettings'));
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 
 export interface AppConfig {
   baseUrl: string;
@@ -175,6 +176,7 @@ export function App({ config }: { config: AppConfig }) {
               <Route path="users" element={<UserManagement />} />
               <Route path="domains" element={<DomainSettings />} />
               <Route path="settings" element={<SettingsPage />} />
+              <Route path="profile" element={<ProfilePage />} />
               <Route path="super-admin" element={<SuperAdminDashboard />} />
             </Route>
 
