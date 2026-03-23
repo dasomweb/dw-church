@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 interface TextImageBlockProps {
   props: Record<string, unknown>;
   slug: string;
@@ -15,7 +17,15 @@ export function TextImageBlock({ props }: TextImageBlockProps) {
         <div className="mx-auto max-w-4xl text-center">
           {title && <h2 className="mb-6 text-3xl font-bold font-heading">{title}</h2>}
           {imageUrl && (
-            <img src={imageUrl} alt={title} className="mx-auto mb-6 max-h-96 rounded-xl object-cover" />
+            <div className="relative mx-auto mb-6 aspect-video max-w-2xl overflow-hidden rounded-xl">
+              <Image
+                src={imageUrl}
+                alt={title}
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover"
+              />
+            </div>
           )}
           {content && (
             <div className="prose prose-lg mx-auto" dangerouslySetInnerHTML={{ __html: content }} />
@@ -37,8 +47,14 @@ export function TextImageBlock({ props }: TextImageBlockProps) {
           )}
         </div>
         {imageUrl && (
-          <div className={imageFirst ? 'order-1' : 'order-2'}>
-            <img src={imageUrl} alt={title} className="w-full rounded-xl object-cover" />
+          <div className={`relative aspect-video overflow-hidden rounded-xl ${imageFirst ? 'order-1' : 'order-2'}`}>
+            <Image
+              src={imageUrl}
+              alt={title}
+              fill
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-cover"
+            />
           </div>
         )}
       </div>
