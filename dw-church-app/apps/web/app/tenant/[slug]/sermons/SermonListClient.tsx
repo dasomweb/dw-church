@@ -25,7 +25,6 @@ export function SermonListClient({
   currentCategory,
 }: SermonListClientProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [searchInput, setSearchInput] = useState(currentSearch ?? '');
 
   const buildUrl = useCallback(
