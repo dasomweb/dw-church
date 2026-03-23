@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import type { Sermon, SermonListParams, PostStatus } from '@dw-church/api-client';
 import {
@@ -9,7 +9,194 @@ import {
   useSermonCategories,
   useSermonPreachers,
 } from '@dw-church/api-client';
-import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, ImageUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
+import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
+
+// ─── YouTube 썸네일 유틸 ──────────────────────────────────
+function extractYouTubeId(url: string): string | null {
+  if (!url) return null;
+  const match = url.match(/(?:v=|\/embed\/|\/shorts\/|youtu\.be\/)([0-9A-Za-z_-]{11})/);
+  return match?.[1] ?? null;
+}
+
+const YOUTUBE_THUMBS = [
+  { key: 'maxresdefault', label: '최고 화질 (1280x720)', suffix: '_max' },
+  { key: 'sddefault', label: '표준 화질 (640x480)', suffix: '_sd' },
+  { key: 'hqdefault', label: '고화질 (480x360)', suffix: '_large' },
+  { key: 'mqdefault', label: '중간 화질 (320x180)', suffix: '_medium' },
+] as const;
+
+function getYouTubeThumbnailUrl(videoId: string, quality: string = 'maxresdefault'): string {
+  return `https://img.youtube.com/vi/${videoId}/${quality}.jpg`;
+}
+
+// ─── YouTube 미디어 섹션 컴포넌트 ─────────────────────────
+interface YouTubeMediaSectionProps {
+  register: ReturnType<typeof useForm<SermonFormData>>['register'];
+  watch: ReturnType<typeof useForm<SermonFormData>>['watch'];
+  setValue: ReturnType<typeof useForm<SermonFormData>>['setValue'];
+}
+
+function YouTubeMediaSection({ register, watch, setValue }: YouTubeMediaSectionProps) {
+  const youtubeUrl = watch('youtubeUrl') || '';
+  const thumbnailUrl = watch('thumbnailUrl') || '';
+  const videoId = extractYouTubeId(youtubeUrl);
+
+  type ThumbStatus = 'loading' | 'ok' | 'error';
+  const [thumbStatuses, setThumbStatuses] = useState<Record<string, ThumbStatus>>({});
+
+  // 썸네일 존재 여부 확인 (YouTube는 없는 해상도에 120x90 기본 이미지를 반환)
+  useEffect(() => {
+    if (!videoId) {
+      setThumbStatuses({});
+      return;
+    }
+    setThumbStatuses({});
+    YOUTUBE_THUMBS.forEach(({ key }) => {
+      const url = getYouTubeThumbnailUrl(videoId, key);
+      setThumbStatuses((prev: Record<string, ThumbStatus>) => ({ ...prev, [key]: 'loading' }));
+      const img = new Image();
+      img.onload = () => {
+        // maxresdefault가 없으면 YouTube가 120x90 fallback 이미지를 줌
+        const isPlaceholder = img.naturalWidth === 120 && img.naturalHeight === 90;
+        setThumbStatuses((prev: Record<string, ThumbStatus>) => ({ ...prev, [key]: isPlaceholder ? 'error' : 'ok' }));
+      };
+      img.onerror = () => {
+        setThumbStatuses((prev: Record<string, ThumbStatus>) => ({ ...prev, [key]: 'error' }));
+      };
+      img.src = url;
+    });
+  }, [videoId]);
+
+  // YouTube URL 입력 시 썸네일이 비어있으면 자동으로 최고화질 설정
+  useEffect(() => {
+    if (!videoId || thumbnailUrl) return;
+    const bestKey = YOUTUBE_THUMBS[0].key;
+    if (thumbStatuses[bestKey] === 'ok') {
+      setValue('thumbnailUrl', getYouTubeThumbnailUrl(videoId, bestKey));
+    } else if (thumbStatuses[bestKey] === 'error') {
+      // maxresdefault 실패 시 다음 화질로 폴백
+      for (const { key } of YOUTUBE_THUMBS) {
+        if (thumbStatuses[key] === 'ok') {
+          setValue('thumbnailUrl', getYouTubeThumbnailUrl(videoId, key));
+          break;
+        }
+      }
+    }
+  }, [videoId, thumbStatuses, thumbnailUrl, setValue]);
+
+  const handleSelectThumb = (url: string) => {
+    setValue('thumbnailUrl', url);
+  };
+
+  const handleRemoveThumb = () => {
+    setValue('thumbnailUrl', '');
+  };
+
+  return (
+    <FormSection title="미디어">
+      <FormField label="YouTube URL">
+        <input
+          {...register('youtubeUrl')}
+          placeholder="https://youtube.com/watch?v=..."
+          className={inputClass}
+        />
+        {youtubeUrl && !videoId && (
+          <p className="text-red-500 text-sm mt-1">유효한 YouTube URL이 아닙니다.</p>
+        )}
+        {videoId && (
+          <p className="text-green-600 text-sm mt-1">영상 ID: {videoId}</p>
+        )}
+      </FormField>
+
+      {/* 썸네일 선택 영역 */}
+      {videoId && (
+        <div>
+          <p className="text-sm font-medium text-gray-700 mb-2">YouTube 썸네일 선택</p>
+          <div className="grid grid-cols-2 gap-3">
+            {YOUTUBE_THUMBS.map(({ key, label }) => {
+              const url = getYouTubeThumbnailUrl(videoId, key);
+              const status = thumbStatuses[key];
+              const isSelected = thumbnailUrl === url;
+
+              if (status === 'error') return null;
+
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => handleSelectThumb(url)}
+                  className={`relative rounded-lg overflow-hidden border-2 transition-all text-left ${
+                    isSelected
+                      ? 'border-blue-500 ring-2 ring-blue-200'
+                      : 'border-gray-200 hover:border-gray-400'
+                  }`}
+                >
+                  <div className="aspect-video bg-gray-100 relative">
+                    {status === 'loading' ? (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600" />
+                      </div>
+                    ) : (
+                      <img src={url} alt={label} className="w-full h-full object-cover" />
+                    )}
+                  </div>
+                  <div className="px-2 py-1.5 flex items-center justify-between">
+                    <span className="text-xs text-gray-600">{label}</span>
+                    {isSelected && (
+                      <span className="text-xs font-medium text-blue-600">선택됨</span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 현재 선택된 썸네일 미리보기 */}
+      <div>
+        <p className="text-sm font-medium text-gray-700 mb-1.5">썸네일</p>
+        {thumbnailUrl ? (
+          <div className="relative group">
+            <div className="relative rounded-lg overflow-hidden border border-gray-200" style={{ aspectRatio: '16/9' }}>
+              <img src={thumbnailUrl} alt="썸네일 미리보기" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                <button
+                  type="button"
+                  onClick={handleRemoveThumb}
+                  className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium shadow"
+                >
+                  삭제
+                </button>
+              </div>
+            </div>
+            <p className="text-xs text-gray-400 mt-1 truncate">{thumbnailUrl}</p>
+          </div>
+        ) : (
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+            <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p className="text-sm text-gray-500">
+              {videoId ? 'YouTube 썸네일을 선택하세요' : 'YouTube URL을 입력하면 썸네일이 자동 생성됩니다'}
+            </p>
+          </div>
+        )}
+        {/* 직접 URL 입력 폴백 */}
+        <div className="mt-2">
+          <input
+            type="text"
+            value={thumbnailUrl}
+            onChange={(e) => setValue('thumbnailUrl', e.target.value)}
+            placeholder="또는 썸네일 URL 직접 입력"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+          />
+        </div>
+        <input type="hidden" {...register('thumbnailUrl')} />
+      </div>
+    </FormSection>
+  );
+}
 
 interface SermonFormData {
   title: string;
@@ -147,22 +334,11 @@ export default function SermonManagement() {
             </FormRow>
           </FormSection>
 
-          <FormSection title="미디어">
-            <FormField label="YouTube URL">
-              <input
-                {...register('youtubeUrl')}
-                placeholder="https://youtube.com/watch?v=..."
-                className={inputClass}
-              />
-              <p className="text-sm text-gray-500 mt-1">설교 영상의 YouTube URL을 입력하세요</p>
-            </FormField>
-            <ImageUpload
-              value={watch('thumbnailUrl') || ''}
-              onChange={(url) => setValue('thumbnailUrl', url)}
-              label="썸네일"
-              aspectRatio="16/9"
-            />
-          </FormSection>
+          <YouTubeMediaSection
+            register={register}
+            watch={watch}
+            setValue={setValue}
+          />
 
           <FormSection title="카테고리">
             <div className="border rounded p-3 max-h-40 overflow-y-auto space-y-1">

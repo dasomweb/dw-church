@@ -5,17 +5,23 @@ conn = psycopg2.connect('postgresql://postgres.klqifxqwujsckcyuznma:7NBXfwUc3mkC
 cur = conn.cursor()
 s = 'tenant_dwchurch'
 
-# === Sermons ===
+# === Sermons (베델믿음교회 사도행전 강해 시리즈) ===
 sermons = [
-    ('은혜의 강물이 흐르는 곳', '시편 23:1-6', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', '2026-03-01', 'https://picsum.photos/seed/sermon1/640/360'),
-    ('십자가의 사랑', '요한복음 3:16', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', '2026-03-08', 'https://picsum.photos/seed/sermon2/640/360'),
-    ('믿음으로 걷는 길', '히브리서 11:1-6', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', '2026-03-15', 'https://picsum.photos/seed/sermon3/640/360'),
-    ('기도의 능력', '마태복음 6:5-15', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', '2026-03-22', 'https://picsum.photos/seed/sermon4/640/360'),
-    ('감사하는 삶', '데살로니가전서 5:16-18', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', '2026-02-22', 'https://picsum.photos/seed/sermon5/640/360'),
+    ('사명 안에 진정한 위로가 있습니다', '사도행전 20:1-6', 'https://www.youtube.com/watch?v=5UPR3i0u4WQ', '2026-03-22', 'https://img.youtube.com/vi/5UPR3i0u4WQ/maxresdefault.jpg', '서성봉 목사'),
+    ('에베소 소동 사건의 전말', '사도행전 19:21-41', 'https://www.youtube.com/watch?v=M_f3YB441o4', '2026-03-15', 'https://img.youtube.com/vi/M_f3YB441o4/maxresdefault.jpg', '서성봉 목사'),
+    ('복음 침투 사명', '사도행전 19:8-20', 'https://www.youtube.com/watch?v=1SuW2LF46uI', '2026-03-08', 'https://img.youtube.com/vi/1SuW2LF46uI/maxresdefault.jpg', '서성봉 목사'),
+    ('도(the way) 때문에, 도(the way)를 위해', '사도행전 19:1-7', 'https://www.youtube.com/watch?v=MbW1GNDYnvI', '2026-03-01', 'https://img.youtube.com/vi/MbW1GNDYnvI/maxresdefault.jpg', '서성봉 목사'),
+    ('성령을 아는 믿음의 삶', '사도행전 19:1-7', 'https://www.youtube.com/watch?v=gcrz3FOkynI', '2026-02-22', 'https://img.youtube.com/vi/gcrz3FOkynI/maxresdefault.jpg', '서성봉 목사'),
+    ('믿음의 가정, 아굴라부부', '사도행전 18:18-28', 'https://www.youtube.com/watch?v=ZCSY186vDVU', '2026-02-15', 'https://img.youtube.com/vi/ZCSY186vDVU/maxresdefault.jpg', '서성봉 목사'),
+    ('선교사적인 삶을 살자', '', 'https://www.youtube.com/watch?v=JvZDT1r8YcM', '2026-02-08', 'https://img.youtube.com/vi/JvZDT1r8YcM/maxresdefault.jpg', '박동한 선교사'),
+    ('아브라함의 종, 엘리에셀', '창세기 24장', 'https://www.youtube.com/watch?v=OhfiMXh9WTs', '2026-02-01', 'https://img.youtube.com/vi/OhfiMXh9WTs/maxresdefault.jpg', '서성봉 목사'),
+    ('날마다 우리의 짐을 지시는 주님', '시편 68:19-20', 'https://www.youtube.com/watch?v=lF5NnnD0KZ0', '2026-01-25', 'https://img.youtube.com/vi/lF5NnnD0KZ0/maxresdefault.jpg', '서성봉 목사'),
+    ('감사·말씀·기도로 하나되는 공동체 2', '사도행전 2:42-47', 'https://www.youtube.com/watch?v=70OXpyNMGRE', '2026-01-11', 'https://img.youtube.com/vi/70OXpyNMGRE/maxresdefault.jpg', '서성봉 목사'),
 ]
-for t, sc, yt, d, th in sermons:
-    cur.execute(f'INSERT INTO "{s}".sermons (title, scripture, youtube_url, sermon_date, thumbnail_url, status) VALUES (%s,%s,%s,%s::date,%s,%s)', (t, sc, yt, d, th, 'published'))
-print('Sermons: 5 inserted')
+for t, sc, yt, d, th, preacher in sermons:
+    cur.execute(f"""INSERT INTO "{s}".sermons (title, scripture, youtube_url, sermon_date, thumbnail_url, status)
+        VALUES (%s,%s,%s,%s::date,%s,%s)""", (t, sc, yt, d, th, 'published'))
+print(f'Sermons: {len(sermons)} inserted')
 
 # === Bulletins ===
 for i in range(1, 6):

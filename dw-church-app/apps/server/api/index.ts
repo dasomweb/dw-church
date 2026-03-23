@@ -40,6 +40,7 @@ async function registerRoutes() {
   const { default: pageRoutes } = await import('../src/modules/pages/routes.js');
   const { default: menuRoutes } = await import('../src/modules/menus/routes.js');
   const { default: themeRoutes } = await import('../src/modules/themes/routes.js');
+  const { domainRoutes } = await import('../src/modules/domains/routes.js');
 
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(tenantRoutes, { prefix: '/api/v1/admin' });
@@ -58,6 +59,20 @@ async function registerRoutes() {
   await app.register(categoryRoutes, { prefix: '/api/v1' });
   await app.register(settingsRoutes, { prefix: '/api/v1' });
   await app.register(fileRoutes, { prefix: '/api/v1' });
+  await app.register(domainRoutes, { prefix: '/api/v1' });
+
+  // Resolve custom domain to tenant slug (used by Next.js middleware)
+  app.get('/api/v1/admin/tenants/resolve-domain', async (request, reply) => {
+    const { domain } = request.query as { domain?: string };
+    if (!domain) return reply.status(400).send({ error: 'domain query parameter required' });
+    const { prisma } = await import('../src/config/database.js');
+    const rows = await prisma.$queryRawUnsafe<{ slug: string }[]>(
+      `SELECT slug FROM public.tenants WHERE custom_domain = $1 AND is_active = true LIMIT 1`,
+      domain,
+    );
+    if (rows.length === 0) return reply.status(404).send({ error: 'Domain not found' });
+    return reply.send({ slug: rows[0]!.slug });
+  });
 
   app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
 
@@ -65,7 +80,36 @@ async function registerRoutes() {
   registered = true;
 }
 
+// Set CORS headers directly on the Vercel response (inject() may not propagate them)
+function setCorsHeaders(req: any, res: any): boolean {
+  const origin = req.headers?.origin || '';
+  const allowed = env.CORS_ORIGINS;
+
+  // Check if the request origin is in the allowed list
+  if (allowed.includes(origin) || allowed.includes('*')) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else if (allowed.length > 0 && origin) {
+    // If origin not allowed, still set first allowed origin for non-browser clients
+    res.setHeader('Access-Control-Allow-Origin', allowed[0]);
+  }
+
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Tenant-Slug');
+
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    res.statusCode = 204;
+    res.end();
+    return true; // signal that we handled it
+  }
+  return false;
+}
+
 export default async function handler(req: any, res: any) {
+  // Handle CORS first (before registerRoutes to respond fast to preflight)
+  if (setCorsHeaders(req, res)) return;
+
   await registerRoutes();
 
   // Vercel may pre-parse the body — use req.body if available, otherwise read stream
