@@ -11,6 +11,7 @@ export { PostNavigation, type PostNavigationProps } from './components/common/Po
 export { ImageGallery, type ImageGalleryProps } from './components/common/ImageGallery';
 export { RelatedPosts, type RelatedPostsProps } from './components/common/RelatedPosts';
 export { PdfViewer, type PdfViewerProps } from './components/common/PdfViewer';
+export { Pagination, type PaginationProps } from './components/common/Pagination';
 
 // ─── Bulletin Components ────────────────────────────────────
 export { BulletinList } from './components/bulletin/BulletinList';
