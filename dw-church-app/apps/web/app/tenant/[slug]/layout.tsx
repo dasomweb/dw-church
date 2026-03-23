@@ -27,6 +27,18 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
     // Fallback: render with defaults if API unavailable
   }
 
+  // Default navigation when no menu items are configured
+  const DEFAULT_NAV: MenuItem[] = [
+    { id: 'nav-sermons', label: '설교', externalUrl: `/tenant/${slug}/sermons`, sortOrder: 1, isVisible: true },
+    { id: 'nav-bulletins', label: '주보', externalUrl: `/tenant/${slug}/bulletins`, sortOrder: 2, isVisible: true },
+    { id: 'nav-albums', label: '앨범', externalUrl: `/tenant/${slug}/albums`, sortOrder: 3, isVisible: true },
+    { id: 'nav-events', label: '행사', externalUrl: `/tenant/${slug}/events`, sortOrder: 4, isVisible: true },
+    { id: 'nav-staff', label: '교역자', externalUrl: `/tenant/${slug}/staff`, sortOrder: 5, isVisible: true },
+    { id: 'nav-history', label: '연혁', externalUrl: `/tenant/${slug}/history`, sortOrder: 6, isVisible: true },
+  ];
+
+  const navItems = menuItems.length > 0 ? menuItems : DEFAULT_NAV;
+
   const colors = theme?.colors;
   const fonts = theme?.fonts;
 
@@ -50,7 +62,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
             {settings?.name ?? slug}
           </Link>
           <nav className="hidden gap-6 md:flex">
-            {menuItems
+            {navItems
               .filter((item) => item.isVisible)
               .sort((a, b) => a.sortOrder - b.sortOrder)
               .map((item) => (
