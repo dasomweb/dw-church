@@ -5,7 +5,7 @@ import type { Metadata } from 'next';
 
 interface SermonsPageProps {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ page?: string; category?: string }>;
+  searchParams: Promise<{ page?: string; category?: string; search?: string }>;
 }
 
 export async function generateMetadata({ params }: SermonsPageProps): Promise<Metadata> {
@@ -18,8 +18,9 @@ export default async function SermonsPage({ params, searchParams }: SermonsPageP
   const search = await searchParams;
   const page = parseInt(search.page ?? '1', 10);
   const category = search.category;
+  const searchQuery = search.search;
 
-  const sermons = await getSermons(slug, { page, perPage: 12, category });
+  const sermons = await getSermons(slug, { page, perPage: 12, category, search: searchQuery });
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12">
@@ -30,6 +31,8 @@ export default async function SermonsPage({ params, searchParams }: SermonsPageP
         totalPages={sermons.meta?.totalPages ?? 1}
         currentPage={page}
         slug={slug}
+        currentSearch={searchQuery}
+        currentCategory={category}
       />
     </div>
   );

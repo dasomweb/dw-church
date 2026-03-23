@@ -101,12 +101,13 @@ export async function getPageBySlug(tenantSlug: string, pageSlug: string): Promi
 
 export async function getSermons(
   slug: string,
-  params?: { page?: number; perPage?: number; category?: string },
+  params?: { page?: number; perPage?: number; category?: string; search?: string },
 ): Promise<any> {
   const p = new URLSearchParams();
   if (params?.page) p.set('page', String(params.page));
   if (params?.perPage) p.set('perPage', String(params.perPage));
   if (params?.category) p.set('category', params.category);
+  if (params?.search) p.set('search', params.search);
   const qs = p.toString();
   return apiFetch(slug, `/api/v1/sermons${qs ? '?' + qs : ''}`);
 }
