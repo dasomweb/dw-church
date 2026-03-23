@@ -4,7 +4,8 @@ export interface YoutubeEmbedProps {
   className?: string;
 }
 
-function extractYoutubeId(url: string): string | null {
+function extractYoutubeId(url?: string | null): string | null {
+  if (!url) return null;
   const match = url.match(
     /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([^&?\s/]+)/,
   );
