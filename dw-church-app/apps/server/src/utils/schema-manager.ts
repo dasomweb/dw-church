@@ -97,7 +97,7 @@ export async function seedDefaultData(slug: string): Promise<void> {
     for (const sec of sections) {
       await prisma.$executeRawUnsafe(
         `INSERT INTO "${schema}".page_sections (page_id, block_type, props, sort_order, is_visible)
-         VALUES ($1, $2, $3::jsonb, $4, true)
+         VALUES ($1::uuid, $2, $3::jsonb, $4, true)
          ON CONFLICT DO NOTHING`,
         homePageId,
         sec.block_type,
