@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getChurchSettings, getMenuItems, getTheme } from '@/lib/api';
+import MobileMenu from '@/components/MobileMenu';
 // Types inlined to avoid importing @dw-church/api-client in server components
 type ChurchSettings = Record<string, string>;
 type MenuItem = { id: string; label: string; pageId?: string; externalUrl?: string; parentId?: string; sortOrder: number; isVisible: boolean; children?: MenuItem[] };
@@ -55,13 +56,20 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
 
   return (
     <div style={cssVars as React.CSSProperties}>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--dw-primary)]"
+      >
+        본문으로 건너뛰기
+      </a>
+
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b bg-[var(--dw-background)] border-gray-200">
+      <header role="banner" className="sticky top-0 z-50 border-b bg-[var(--dw-background)] border-gray-200">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <Link href="/" className="text-xl font-bold font-heading" style={{ color: 'var(--dw-primary)' }}>
             {settings?.name ?? slug}
           </Link>
-          <nav className="hidden gap-6 md:flex">
+          <nav aria-label="주 메뉴" className="hidden gap-6 md:flex">
             {navItems
               .filter((item) => item.isVisible)
               .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -75,16 +83,17 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                 </Link>
               ))}
           </nav>
+          <MobileMenu navItems={navItems} />
         </div>
       </header>
 
       {/* Main */}
-      <main className="min-h-[60vh]" style={{ backgroundColor: 'var(--dw-background)', color: 'var(--dw-text)' }}>
+      <main id="main-content" className="min-h-[60vh]" style={{ backgroundColor: 'var(--dw-background)', color: 'var(--dw-text)' }}>
         {children}
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200" style={{ backgroundColor: 'var(--dw-surface)' }}>
+      <footer role="contentinfo" className="border-t border-gray-200" style={{ backgroundColor: 'var(--dw-surface)' }}>
         <div className="mx-auto max-w-7xl px-6 py-12">
           <div className="grid gap-8 md:grid-cols-3">
             <div>
