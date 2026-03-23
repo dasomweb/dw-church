@@ -11,5 +11,5 @@ interface StaffGridClientProps {
 export function StaffGridClient({ staff }: StaffGridClientProps) {
   const router = useRouter();
 
-  return <StaffGrid data={staff} onItemClick={(id) => router.push(`/staff/${id}`)} />;
+  return <StaffGrid data={staff} />;
 }

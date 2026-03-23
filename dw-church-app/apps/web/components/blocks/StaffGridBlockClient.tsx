@@ -14,7 +14,7 @@ export function StaffGridBlockClient({ staff, slug }: StaffGridBlockClientProps)
   const router = useRouter();
   return (
     <div>
-      <StaffGrid data={staff} onItemClick={(id) => router.push(`/staff/${id}`)} />
+      <StaffGrid data={staff} />
       <div className="mt-8 text-center">
         <Link
           href={`/staff`}
