@@ -3,6 +3,7 @@ import { requireAuth, requireAdmin } from '../../middleware/auth.js';
 import {
   registerSchema,
   loginSchema,
+  refreshSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
   inviteSchema,
@@ -21,6 +22,13 @@ export default async function authRoutes(app: FastifyInstance): Promise<void> {
   app.post('/login', async (request, reply) => {
     const body = loginSchema.parse(request.body);
     const result = await authService.login(body);
+    return reply.send(result);
+  });
+
+  // POST /auth/refresh
+  app.post('/refresh', async (request, reply) => {
+    const { refreshToken } = refreshSchema.parse(request.body);
+    const result = await authService.refreshSession(refreshToken);
     return reply.send(result);
   });
 

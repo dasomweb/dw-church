@@ -2,7 +2,7 @@ import { prisma } from '../../config/database.js';
 import { supabaseAdmin } from '../../config/supabase.js';
 import { AppError } from '../../middleware/error-handler.js';
 import { createTenantSchema } from '../../utils/schema-manager.js';
-import type { RegisterInput, LoginInput, InviteInput } from './schema.js';
+import type { RegisterInput, LoginInput, InviteInput, RefreshInput } from './schema.js';
 
 export async function register(input: RegisterInput) {
   const { churchName, slug, email, password, ownerName } = input;
@@ -95,6 +95,31 @@ export async function login(input: LoginInput) {
   }
 
   const s = data.session!;
+  return {
+    accessToken: s.access_token,
+    refreshToken: s.refresh_token,
+    expiresAt: (s.expires_at ?? 0) * 1000,
+    user: {
+      id: data.user!.id,
+      email: data.user!.email ?? '',
+      name: data.user!.user_metadata?.name ?? '',
+      role: data.user!.user_metadata?.role ?? 'member',
+      tenantId: data.user!.user_metadata?.tenant_id ?? '',
+      tenantSlug: data.user!.user_metadata?.tenant_slug ?? '',
+    },
+  };
+}
+
+export async function refreshSession(refreshToken: string) {
+  const { data, error } = await supabaseAdmin.auth.refreshSession({
+    refresh_token: refreshToken,
+  });
+
+  if (error || !data.session) {
+    throw new AppError('REFRESH_FAILED', 401, 'Invalid or expired refresh token');
+  }
+
+  const s = data.session;
   return {
     accessToken: s.access_token,
     refreshToken: s.refresh_token,

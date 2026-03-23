@@ -33,8 +33,13 @@ export const inviteSchema = z.object({
   role: z.enum(['admin', 'editor', 'member']),
 });
 
+export const refreshSchema = z.object({
+  refreshToken: z.string(),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type InviteInput = z.infer<typeof inviteSchema>;
+export type RefreshInput = z.infer<typeof refreshSchema>;

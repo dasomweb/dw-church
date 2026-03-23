@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { DWChurchClient } from '@dw-church/api-client';
 import { DWChurchProvider } from '@dw-church/ui-components';
 import { AdminLayout } from './layouts/AdminLayout';
-import { useAuthStore } from './stores/auth';
+import { useAuthStore, isTokenExpiringSoon } from './stores/auth';
 import { ToastProvider } from './components';
 
 // Lazy-loaded pages — Auth
@@ -77,9 +77,14 @@ function PublicOnly({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/** Interval in ms for proactive token refresh checks (4 minutes). */
+const REFRESH_CHECK_INTERVAL_MS = 4 * 60 * 1000;
+
 export function App({ config }: { config: AppConfig }) {
   const session = useAuthStore((s) => s.session);
   const hydrate = useAuthStore((s) => s.hydrate);
+  const refresh = useAuthStore((s) => s.refresh);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   // Hydrate auth state from localStorage on mount
   useEffect(() => {
@@ -93,6 +98,27 @@ export function App({ config }: { config: AppConfig }) {
     });
     return c;
   }, [config.baseUrl, session?.accessToken]);
+
+  // After hydrate, if session exists but is expired, attempt a refresh
+  useEffect(() => {
+    if (session?.refreshToken && !isAuthenticated) {
+      refresh(client);
+    }
+  }, [session?.refreshToken, isAuthenticated, refresh, client]);
+
+  // Proactively refresh token every 4 minutes if close to expiry
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const interval = setInterval(() => {
+      const currentSession = useAuthStore.getState().session;
+      if (isTokenExpiringSoon(currentSession)) {
+        refresh(client);
+      }
+    }, REFRESH_CHECK_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated, refresh, client]);
 
   return (
     <ToastProvider>

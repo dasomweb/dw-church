@@ -203,6 +203,10 @@ export class DWChurchClient {
     return this.api.post(`${this.namespace}/auth/login`, input);
   }
 
+  async refreshToken(token: string): Promise<AuthSession> {
+    return this.api.post(`${this.namespace}/auth/refresh`, { refreshToken: token });
+  }
+
   async logout(): Promise<void> {
     return this.api.post(`${this.namespace}/auth/logout`);
   }
