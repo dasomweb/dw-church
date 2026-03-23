@@ -110,7 +110,7 @@ function setCorsHeaders(req: any, res: any): boolean {
 }
 
 export default async function handler(req: any, res: any) {
-  // Handle CORS first (before registerRoutes to respond fast to preflight)
+  // Handle CORS preflight immediately (no need to boot Fastify)
   if (setCorsHeaders(req, res)) return;
 
   await registerRoutes();
@@ -140,9 +140,14 @@ export default async function handler(req: any, res: any) {
     payload: body,
   });
 
+  // Write inject response headers first
   res.statusCode = response.statusCode;
   for (const [key, value] of Object.entries(response.headers)) {
     if (value !== undefined) res.setHeader(key, value);
   }
+
+  // Then OVERWRITE with our CORS headers (inject may not set them correctly)
+  setCorsHeaders(req, res);
+
   res.end(response.body);
 }
