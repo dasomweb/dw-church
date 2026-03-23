@@ -14,7 +14,6 @@ interface AlbumFormData {
   title: string;
   images: string[];
   youtubeUrl: string;
-  thumbnailUrl: string;
   categoryIds: string;
   status: PostStatus;
 }
@@ -39,7 +38,6 @@ export default function AlbumManagement() {
       title: item.title,
       images: item.images || [],
       youtubeUrl: item.youtubeUrl,
-      thumbnailUrl: item.thumbnailUrl,
       categoryIds: JSON.stringify(item.categoryIds),
       status: item.status,
     });
@@ -48,7 +46,7 @@ export default function AlbumManagement() {
 
   const handleCreate = () => {
     setEditingItem(null);
-    reset({ title: '', images: [], youtubeUrl: '', thumbnailUrl: '', categoryIds: '[]', status: 'draft' });
+    reset({ title: '', images: [], youtubeUrl: '', categoryIds: '[]', status: 'draft' });
     setView('edit');
   };
 
@@ -61,7 +59,7 @@ export default function AlbumManagement() {
       title: formData.title,
       images: formData.images,
       youtubeUrl: formData.youtubeUrl,
-      thumbnailUrl: formData.thumbnailUrl,
+      thumbnailUrl: formData.images?.[0] || '',
       categoryIds: JSON.parse(formData.categoryIds || '[]') as string[],
       status: formData.status,
     };
@@ -126,15 +124,10 @@ export default function AlbumManagement() {
             />
           </FormSection>
 
-          <FormSection title="미디어">
+          <FormSection title="미디어" description="YouTube 영상이 있으면 앨범 상세에서 재생됩니다">
             <FormField label="YouTube URL">
               <input {...register('youtubeUrl')} placeholder="https://youtube.com/watch?v=..." className={inputClass} />
             </FormField>
-            <ImageUpload
-              label="썸네일"
-              value={watch('thumbnailUrl') || ''}
-              onChange={(url) => setValue('thumbnailUrl', url)}
-            />
           </FormSection>
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-6 py-4 flex items-center justify-between">
@@ -198,9 +191,9 @@ export default function AlbumManagement() {
             {data.data.map((item) => (
               <div key={item.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
                 <div className="aspect-video bg-gray-100 relative">
-                  {item.thumbnailUrl ? (
+                  {(item.images?.[0] || item.thumbnailUrl) ? (
                     <img
-                      src={item.thumbnailUrl}
+                      src={item.images?.[0] || item.thumbnailUrl}
                       alt={item.title}
                       className="w-full h-full object-cover"
                     />
