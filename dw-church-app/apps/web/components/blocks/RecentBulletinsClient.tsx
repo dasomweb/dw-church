@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { BulletinList } from '@dw-church/ui-components';
 import type { Bulletin } from '@dw-church/api-client';
 import Link from 'next/link';
@@ -10,9 +11,10 @@ interface RecentBulletinsClientProps {
 }
 
 export function RecentBulletinsClient({ bulletins, slug }: RecentBulletinsClientProps) {
+  const router = useRouter();
   return (
     <div>
-      <BulletinList data={bulletins} />
+      <BulletinList data={bulletins} onItemClick={(id) => router.push(`/bulletins/${id}`)} />
       <div className="mt-8 text-center">
         <Link
           href={`/bulletins`}

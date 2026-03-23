@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { EventGrid } from '@dw-church/ui-components';
 import type { Event } from '@dw-church/api-client';
 import Link from 'next/link';
@@ -10,9 +11,10 @@ interface EventGridBlockClientProps {
 }
 
 export function EventGridBlockClient({ events, slug }: EventGridBlockClientProps) {
+  const router = useRouter();
   return (
     <div>
-      <EventGrid data={events} />
+      <EventGrid data={events} onItemClick={(id) => router.push(`/events/${id}`)} />
       <div className="mt-8 text-center">
         <Link
           href={`/events`}

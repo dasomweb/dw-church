@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { GalleryGrid } from '@dw-church/ui-components';
 import type { Album } from '@dw-church/api-client';
 import Link from 'next/link';
@@ -10,9 +11,10 @@ interface AlbumGalleryBlockClientProps {
 }
 
 export function AlbumGalleryBlockClient({ albums, slug }: AlbumGalleryBlockClientProps) {
+  const router = useRouter();
   return (
     <div>
-      <GalleryGrid data={albums} />
+      <GalleryGrid data={albums} onItemClick={(id) => router.push(`/albums/${id}`)} />
       <div className="mt-8 text-center">
         <Link
           href={`/albums`}

@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { StaffGrid } from '@dw-church/ui-components';
 import type { Staff } from '@dw-church/api-client';
 import Link from 'next/link';
@@ -10,9 +11,10 @@ interface StaffGridBlockClientProps {
 }
 
 export function StaffGridBlockClient({ staff, slug }: StaffGridBlockClientProps) {
+  const router = useRouter();
   return (
     <div>
-      <StaffGrid data={staff} />
+      <StaffGrid data={staff} onItemClick={(id) => router.push(`/staff/${id}`)} />
       <div className="mt-8 text-center">
         <Link
           href={`/staff`}

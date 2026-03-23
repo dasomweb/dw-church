@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { SermonList } from '@dw-church/ui-components';
 import type { Sermon } from '@dw-church/api-client';
 import Link from 'next/link';
@@ -10,9 +11,10 @@ interface RecentSermonsClientProps {
 }
 
 export function RecentSermonsClient({ sermons, slug }: RecentSermonsClientProps) {
+  const router = useRouter();
   return (
     <div>
-      <SermonList data={sermons} />
+      <SermonList data={sermons} onItemClick={(id) => router.push(`/sermons/${id}`)} />
       <div className="mt-8 text-center">
         <Link
           href={`/sermons`}

@@ -136,7 +136,7 @@ export function SermonListClient({
 
       {/* Sermon List */}
       {initialData.length > 0 ? (
-        <SermonList data={initialData} />
+        <SermonList data={initialData} onItemClick={(id) => router.push(`/sermons/${id}`)} />
       ) : (
         <div className="py-16 text-center text-gray-500">
           {hasActiveFilters

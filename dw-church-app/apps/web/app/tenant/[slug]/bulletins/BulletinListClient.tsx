@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { BulletinList } from '@dw-church/ui-components';
 import type { Bulletin } from '@dw-church/api-client';
 
@@ -12,9 +13,11 @@ interface BulletinListClientProps {
 }
 
 export function BulletinListClient({ initialData, total, totalPages, currentPage, slug }: BulletinListClientProps) {
+  const router = useRouter();
+
   return (
     <div>
-      <BulletinList data={initialData} />
+      <BulletinList data={initialData} onItemClick={(id) => router.push(`/bulletins/${id}`)} />
       {totalPages > 1 && (
         <div className="mt-8 flex items-center justify-center gap-2">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (

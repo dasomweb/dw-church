@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { GalleryGrid } from '@dw-church/ui-components';
 import type { Album } from '@dw-church/api-client';
 
@@ -12,9 +13,11 @@ interface AlbumGalleryClientProps {
 }
 
 export function AlbumGalleryClient({ initialData, total, totalPages, currentPage, slug }: AlbumGalleryClientProps) {
+  const router = useRouter();
+
   return (
     <div>
-      <GalleryGrid data={initialData} />
+      <GalleryGrid data={initialData} onItemClick={(id) => router.push(`/albums/${id}`)} />
       {totalPages > 1 && (
         <div className="mt-8 flex items-center justify-center gap-2">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (

@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { StaffGrid } from '@dw-church/ui-components';
 import type { Staff } from '@dw-church/api-client';
 
@@ -8,5 +9,7 @@ interface StaffGridClientProps {
 }
 
 export function StaffGridClient({ staff }: StaffGridClientProps) {
-  return <StaffGrid data={staff} />;
+  const router = useRouter();
+
+  return <StaffGrid data={staff} onItemClick={(id) => router.push(`/staff/${id}`)} />;
 }

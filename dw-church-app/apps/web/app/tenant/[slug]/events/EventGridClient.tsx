@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { EventGrid } from '@dw-church/ui-components';
 import type { Event } from '@dw-church/api-client';
 
@@ -12,9 +13,11 @@ interface EventGridClientProps {
 }
 
 export function EventGridClient({ initialData, total, totalPages, currentPage, slug }: EventGridClientProps) {
+  const router = useRouter();
+
   return (
     <div>
-      <EventGrid data={initialData} />
+      <EventGrid data={initialData} onItemClick={(id) => router.push(`/events/${id}`)} />
       {totalPages > 1 && (
         <div className="mt-8 flex items-center justify-center gap-2">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
