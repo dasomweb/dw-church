@@ -56,6 +56,9 @@ export { HistoryYearSection } from './components/history/HistoryYearSection';
 export { HistoryYearTabs } from './components/history/HistoryYearTabs';
 export { HistoryItem as HistoryItemComponent } from './components/history/HistoryItem';
 
+// ─── i18n ───────────────────────────────────────────────────
+export { strings } from './i18n/strings';
+
 // ─── Re-export API Client types and hooks for convenience ───
 export {
   useBulletins,
