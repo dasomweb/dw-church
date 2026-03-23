@@ -29,12 +29,12 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
 
   // Default navigation when no menu items are configured
   const DEFAULT_NAV: MenuItem[] = [
-    { id: 'nav-sermons', label: '설교', externalUrl: `/tenant/${slug}/sermons`, sortOrder: 1, isVisible: true },
-    { id: 'nav-bulletins', label: '주보', externalUrl: `/tenant/${slug}/bulletins`, sortOrder: 2, isVisible: true },
-    { id: 'nav-albums', label: '앨범', externalUrl: `/tenant/${slug}/albums`, sortOrder: 3, isVisible: true },
-    { id: 'nav-events', label: '행사', externalUrl: `/tenant/${slug}/events`, sortOrder: 4, isVisible: true },
-    { id: 'nav-staff', label: '교역자', externalUrl: `/tenant/${slug}/staff`, sortOrder: 5, isVisible: true },
-    { id: 'nav-history', label: '연혁', externalUrl: `/tenant/${slug}/history`, sortOrder: 6, isVisible: true },
+    { id: 'nav-sermons', label: '설교', externalUrl: '/sermons', sortOrder: 1, isVisible: true },
+    { id: 'nav-bulletins', label: '주보', externalUrl: '/bulletins', sortOrder: 2, isVisible: true },
+    { id: 'nav-albums', label: '앨범', externalUrl: '/albums', sortOrder: 3, isVisible: true },
+    { id: 'nav-events', label: '행사', externalUrl: '/events', sortOrder: 4, isVisible: true },
+    { id: 'nav-staff', label: '교역자', externalUrl: '/staff', sortOrder: 5, isVisible: true },
+    { id: 'nav-history', label: '연혁', externalUrl: '/history', sortOrder: 6, isVisible: true },
   ];
 
   const navItems = menuItems.length > 0 ? menuItems : DEFAULT_NAV;
@@ -58,7 +58,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
       {/* Header */}
       <header className="sticky top-0 z-50 border-b bg-[var(--dw-background)] border-gray-200">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link href={`/tenant/${slug}`} className="text-xl font-bold font-heading" style={{ color: 'var(--dw-primary)' }}>
+          <Link href="/" className="text-xl font-bold font-heading" style={{ color: 'var(--dw-primary)' }}>
             {settings?.name ?? slug}
           </Link>
           <nav className="hidden gap-6 md:flex">
@@ -68,7 +68,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
               .map((item) => (
                 <Link
                   key={item.id}
-                  href={item.externalUrl ?? `/tenant/${slug}/${item.pageId ? item.label : ''}`}
+                  href={item.externalUrl ?? `/${item.pageId ? item.label : ''}`}
                   className="text-sm font-medium text-[var(--dw-text)] hover:text-[var(--dw-primary)] transition-colors"
                 >
                   {item.label}

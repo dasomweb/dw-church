@@ -15,7 +15,7 @@ export function HistoryTimelineBlockClient({ history, slug }: HistoryTimelineBlo
       <HistoryTimeline data={history} />
       <div className="mt-8 text-center">
         <Link
-          href={`/tenant/${slug}/history`}
+          href={`/history`}
           className="inline-block rounded-lg border border-[var(--dw-primary)] px-6 py-2 text-sm font-medium text-[var(--dw-primary)] hover:bg-[var(--dw-primary)] hover:text-white transition-colors"
         >
           전체 연혁 보기

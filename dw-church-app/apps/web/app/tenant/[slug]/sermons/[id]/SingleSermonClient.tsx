@@ -13,7 +13,7 @@ export function SingleSermonClient({ sermon, slug }: SingleSermonClientProps) {
   return (
     <div>
       <Link
-        href={`/tenant/${slug}/sermons`}
+        href={`/sermons`}
         className="mb-6 inline-block text-sm text-[var(--dw-primary)] hover:underline"
       >
         &larr; 설교 목록

@@ -20,7 +20,7 @@ export function EventGridClient({ initialData, total, totalPages, currentPage, s
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
             <a
               key={p}
-              href={`/tenant/${slug}/events?page=${p}`}
+              href={`/events?page=${p}`}
               className={`rounded-lg px-4 py-2 text-sm ${
                 p === currentPage
                   ? 'bg-[var(--dw-primary)] text-white'

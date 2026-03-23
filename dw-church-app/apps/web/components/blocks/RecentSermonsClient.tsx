@@ -15,7 +15,7 @@ export function RecentSermonsClient({ sermons, slug }: RecentSermonsClientProps)
       <SermonList data={sermons} />
       <div className="mt-8 text-center">
         <Link
-          href={`/tenant/${slug}/sermons`}
+          href={`/sermons`}
           className="inline-block rounded-lg border border-[var(--dw-primary)] px-6 py-2 text-sm font-medium text-[var(--dw-primary)] hover:bg-[var(--dw-primary)] hover:text-white transition-colors"
         >
           전체 설교 보기

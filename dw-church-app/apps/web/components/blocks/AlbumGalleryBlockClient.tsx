@@ -15,7 +15,7 @@ export function AlbumGalleryBlockClient({ albums, slug }: AlbumGalleryBlockClien
       <GalleryGrid data={albums} />
       <div className="mt-8 text-center">
         <Link
-          href={`/tenant/${slug}/albums`}
+          href={`/albums`}
           className="inline-block rounded-lg border border-[var(--dw-primary)] px-6 py-2 text-sm font-medium text-[var(--dw-primary)] hover:bg-[var(--dw-primary)] hover:text-white transition-colors"
         >
           전체 앨범 보기
