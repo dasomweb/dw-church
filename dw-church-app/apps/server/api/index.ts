@@ -14,22 +14,7 @@ let registered = false;
 async function registerRoutes() {
   if (registered) return;
 
-  await app.register(cors, {
-    origin: (origin: string | undefined, cb: (err: Error | null, allow: boolean) => void) => {
-      // Allow all truelight.app subdomains + localhost + configured origins
-      if (!origin) return cb(null, true);
-      if (
-        origin.endsWith('.truelight.app') ||
-        origin === 'https://truelight.app' ||
-        origin.startsWith('http://localhost') ||
-        env.CORS_ORIGINS.includes(origin)
-      ) {
-        return cb(null, true);
-      }
-      cb(null, false);
-    },
-    credentials: true,
-  });
+  await app.register(cors, { origin: true, credentials: true });
   app.setErrorHandler(errorHandler);
 
   app.addHook('preHandler', async (request, reply) => {
