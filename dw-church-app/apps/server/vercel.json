@@ -2,7 +2,6 @@
   "version": 2,
   "installCommand": "pnpm install",
   "buildCommand": "npx prisma generate --schema=prisma/schema.prisma && npx tsc -b",
-  "outputDirectory": "dist",
   "rewrites": [
     { "source": "/(.*)", "destination": "/api" }
   ]
