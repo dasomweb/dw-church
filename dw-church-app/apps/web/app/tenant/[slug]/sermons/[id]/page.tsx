@@ -8,15 +8,14 @@ interface SermonDetailProps {
 
 export default async function SermonDetailPage({ params }: SermonDetailProps) {
   const { slug, id } = await params;
-  const sermonId = parseInt(id, 10);
 
-  if (isNaN(sermonId)) {
+  if (!id) {
     notFound();
   }
 
   let sermon;
   try {
-    sermon = await getSermon(slug, sermonId);
+    sermon = await getSermon(slug, id);
   } catch {
     notFound();
   }

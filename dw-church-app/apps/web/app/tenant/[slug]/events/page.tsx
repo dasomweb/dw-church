@@ -17,9 +17,9 @@ export default async function EventsPage({ params, searchParams }: EventsPagePro
     <div className="mx-auto max-w-7xl px-6 py-12">
       <h1 className="mb-8 text-3xl font-bold font-heading">행사/이벤트</h1>
       <EventGridClient
-        initialData={events.data}
-        total={events.total}
-        totalPages={events.totalPages}
+        initialData={events.data ?? []}
+        total={events.meta?.total ?? 0}
+        totalPages={events.meta?.totalPages ?? 1}
         currentPage={page}
         slug={slug}
       />

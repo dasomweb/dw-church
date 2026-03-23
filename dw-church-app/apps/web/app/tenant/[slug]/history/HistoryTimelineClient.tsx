@@ -8,5 +8,5 @@ interface HistoryTimelineClientProps {
 }
 
 export function HistoryTimelineClient({ history }: HistoryTimelineClientProps) {
-  return <HistoryTimeline history={history} />;
+  return <HistoryTimeline data={history} />;
 }

@@ -14,7 +14,7 @@ interface EventGridClientProps {
 export function EventGridClient({ initialData, total, totalPages, currentPage, slug }: EventGridClientProps) {
   return (
     <div>
-      <EventGrid events={initialData} />
+      <EventGrid data={initialData} />
       {totalPages > 1 && (
         <div className="mt-8 flex items-center justify-center gap-2">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (

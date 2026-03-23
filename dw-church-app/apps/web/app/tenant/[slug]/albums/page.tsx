@@ -17,9 +17,9 @@ export default async function AlbumsPage({ params, searchParams }: AlbumsPagePro
     <div className="mx-auto max-w-7xl px-6 py-12">
       <h1 className="mb-8 text-3xl font-bold font-heading">앨범</h1>
       <AlbumGalleryClient
-        initialData={albums.data}
-        total={albums.total}
-        totalPages={albums.totalPages}
+        initialData={albums.data ?? []}
+        total={albums.meta?.total ?? 0}
+        totalPages={albums.meta?.totalPages ?? 1}
         currentPage={page}
         slug={slug}
       />

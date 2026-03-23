@@ -12,7 +12,7 @@ interface RecentSermonsClientProps {
 export function RecentSermonsClient({ sermons, slug }: RecentSermonsClientProps) {
   return (
     <div>
-      <SermonList sermons={sermons} />
+      <SermonList data={sermons} />
       <div className="mt-8 text-center">
         <Link
           href={`/tenant/${slug}/sermons`}

@@ -12,7 +12,7 @@ interface EventGridBlockClientProps {
 export function EventGridBlockClient({ events, slug }: EventGridBlockClientProps) {
   return (
     <div>
-      <EventGrid events={events} />
+      <EventGrid data={events} />
       <div className="mt-8 text-center">
         <Link
           href={`/tenant/${slug}/events`}

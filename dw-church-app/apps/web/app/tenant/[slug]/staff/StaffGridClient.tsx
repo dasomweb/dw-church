@@ -8,5 +8,5 @@ interface StaffGridClientProps {
 }
 
 export function StaffGridClient({ staff }: StaffGridClientProps) {
-  return <StaffGrid staff={staff} />;
+  return <StaffGrid data={staff} />;
 }

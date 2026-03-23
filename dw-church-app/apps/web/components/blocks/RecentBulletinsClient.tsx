@@ -12,7 +12,7 @@ interface RecentBulletinsClientProps {
 export function RecentBulletinsClient({ bulletins, slug }: RecentBulletinsClientProps) {
   return (
     <div>
-      <BulletinList bulletins={bulletins} />
+      <BulletinList data={bulletins} />
       <div className="mt-8 text-center">
         <Link
           href={`/tenant/${slug}/bulletins`}

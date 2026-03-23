@@ -8,5 +8,5 @@ interface HeroBannerClientProps {
 }
 
 export function HeroBannerClient({ banners }: HeroBannerClientProps) {
-  return <BannerSlider banners={banners} />;
+  return <BannerSlider data={banners} />;
 }

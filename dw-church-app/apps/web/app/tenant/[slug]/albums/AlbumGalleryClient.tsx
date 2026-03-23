@@ -14,7 +14,7 @@ interface AlbumGalleryClientProps {
 export function AlbumGalleryClient({ initialData, total, totalPages, currentPage, slug }: AlbumGalleryClientProps) {
   return (
     <div>
-      <GalleryGrid albums={initialData} />
+      <GalleryGrid data={initialData} />
       {totalPages > 1 && (
         <div className="mt-8 flex items-center justify-center gap-2">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (

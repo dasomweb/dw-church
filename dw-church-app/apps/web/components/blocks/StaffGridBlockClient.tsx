@@ -12,7 +12,7 @@ interface StaffGridBlockClientProps {
 export function StaffGridBlockClient({ staff, slug }: StaffGridBlockClientProps) {
   return (
     <div>
-      <StaffGrid staff={staff} />
+      <StaffGrid data={staff} />
       <div className="mt-8 text-center">
         <Link
           href={`/tenant/${slug}/staff`}

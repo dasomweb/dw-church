@@ -12,7 +12,7 @@ interface HistoryTimelineBlockClientProps {
 export function HistoryTimelineBlockClient({ history, slug }: HistoryTimelineBlockClientProps) {
   return (
     <div>
-      <HistoryTimeline history={history} />
+      <HistoryTimeline data={history} />
       <div className="mt-8 text-center">
         <Link
           href={`/tenant/${slug}/history`}

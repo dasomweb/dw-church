@@ -17,9 +17,9 @@ export default async function BulletinsPage({ params, searchParams }: BulletinsP
     <div className="mx-auto max-w-7xl px-6 py-12">
       <h1 className="mb-8 text-3xl font-bold font-heading">주보</h1>
       <BulletinListClient
-        initialData={bulletins.data}
-        total={bulletins.total}
-        totalPages={bulletins.totalPages}
+        initialData={bulletins.data ?? []}
+        total={bulletins.meta?.total ?? 0}
+        totalPages={bulletins.meta?.totalPages ?? 1}
         currentPage={page}
         slug={slug}
       />

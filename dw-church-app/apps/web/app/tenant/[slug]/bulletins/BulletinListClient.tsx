@@ -14,7 +14,7 @@ interface BulletinListClientProps {
 export function BulletinListClient({ initialData, total, totalPages, currentPage, slug }: BulletinListClientProps) {
   return (
     <div>
-      <BulletinList bulletins={initialData} />
+      <BulletinList data={initialData} />
       {totalPages > 1 && (
         <div className="mt-8 flex items-center justify-center gap-2">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (

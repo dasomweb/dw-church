@@ -18,9 +18,9 @@ export default async function SermonsPage({ params, searchParams }: SermonsPageP
     <div className="mx-auto max-w-7xl px-6 py-12">
       <h1 className="mb-8 text-3xl font-bold font-heading">설교</h1>
       <SermonListClient
-        initialData={sermons.data}
-        total={sermons.total}
-        totalPages={sermons.totalPages}
+        initialData={sermons.data ?? []}
+        total={sermons.meta?.total ?? 0}
+        totalPages={sermons.meta?.totalPages ?? 1}
         currentPage={page}
         slug={slug}
       />

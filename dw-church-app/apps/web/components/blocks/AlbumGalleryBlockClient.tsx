@@ -12,7 +12,7 @@ interface AlbumGalleryBlockClientProps {
 export function AlbumGalleryBlockClient({ albums, slug }: AlbumGalleryBlockClientProps) {
   return (
     <div>
-      <GalleryGrid albums={albums} />
+      <GalleryGrid data={albums} />
       <div className="mt-8 text-center">
         <Link
           href={`/tenant/${slug}/albums`}
