@@ -25,27 +25,27 @@ export function SingleAlbum({ data, postId, className = '' }: SingleAlbumProps) 
   if (!album) return <EmptyState title="앨범을 찾을 수 없습니다" />;
 
   return (
-    <article className={`dw-mx-auto dw-max-w-4xl ${className}`}>
+    <article className={`mx-auto max-w-4xl ${className}`}>
       {/* Title */}
-      <header className="dw-mb-8">
-        <h1 className="dw-text-2xl dw-font-bold dw-text-text-primary sm:dw-text-3xl">
+      <header className="mb-8">
+        <h1 className="text-2xl font-bold text-text-primary sm:text-3xl">
           {album.title}
         </h1>
-        <div className="dw-mt-2">
+        <div className="mt-2">
           <DateBadge date={album.createdAt} format="long" />
         </div>
       </header>
 
       {/* Image Gallery */}
       {album.images?.length > 0 && (
-        <div className="dw-mb-8">
+        <div className="mb-8">
           <ImageGallery images={album.images} />
         </div>
       )}
 
       {/* YouTube Video */}
       {album.youtubeUrl && (
-        <div className="dw-mb-8">
+        <div className="mb-8">
           <YoutubeEmbed url={album.youtubeUrl} title={album.title} />
         </div>
       )}

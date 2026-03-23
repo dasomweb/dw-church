@@ -50,11 +50,11 @@ export function Pagination({
   const isLast = currentPage === totalPages;
 
   const baseBtn =
-    'dw-inline-flex dw-items-center dw-justify-center dw-min-w-[2rem] dw-h-8 dw-rounded dw-text-sm dw-font-medium dw-transition-colors';
-  const activeClass = 'dw-bg-primary dw-text-on-primary';
+    'inline-flex items-center justify-center min-w-[2rem] h-8 rounded text-sm font-medium transition-colors';
+  const activeClass = 'bg-primary text-on-primary';
   const inactiveClass =
-    'dw-text-text-primary hover:dw-bg-surface-alt';
-  const disabledClass = 'dw-text-text-muted dw-pointer-events-none dw-opacity-50';
+    'text-text-primary hover:bg-surface-alt';
+  const disabledClass = 'text-text-muted pointer-events-none opacity-50';
 
   function renderItem(
     label: React.ReactNode,
@@ -96,7 +96,7 @@ export function Pagination({
   return (
     <nav
       aria-label="페이지 탐색"
-      className={`dw-flex dw-items-center dw-justify-center dw-gap-1 ${className}`}
+      className={`flex items-center justify-center gap-1 ${className}`}
     >
       {/* First */}
       {renderItem(
@@ -117,7 +117,7 @@ export function Pagination({
         p === null ? (
           <span
             key={`ellipsis-${idx}`}
-            className="dw-inline-flex dw-items-center dw-justify-center dw-min-w-[2rem] dw-h-8 dw-text-sm dw-text-text-muted"
+            className="inline-flex items-center justify-center min-w-[2rem] h-8 text-sm text-text-muted"
             aria-hidden="true"
           >
             &hellip;

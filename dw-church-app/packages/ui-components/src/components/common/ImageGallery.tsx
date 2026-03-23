@@ -23,7 +23,7 @@ export function ImageGallery({ images, columns = 3, gap = 8, className = '' }: I
   return (
     <>
       <div
-        className={`dw-grid ${className}`}
+        className={`grid ${className}`}
         style={{
           gridTemplateColumns: `repeat(${columns}, 1fr)`,
           gap: `${gap}px`,
@@ -33,13 +33,13 @@ export function ImageGallery({ images, columns = 3, gap = 8, className = '' }: I
           <button
             key={i}
             onClick={() => openLightbox(i)}
-            className="dw-overflow-hidden dw-rounded dw-border-0 dw-bg-transparent dw-p-0 dw-cursor-pointer"
+            className="overflow-hidden rounded border-0 bg-transparent p-0 cursor-pointer"
           >
             <img
               src={src}
               alt=""
               loading="lazy"
-              className="dw-h-full dw-w-full dw-object-cover dw-transition-transform hover:dw-scale-105"
+              className="h-full w-full object-cover transition-transform hover:scale-105"
               style={{ aspectRatio: '1' }}
             />
           </button>
@@ -48,12 +48,12 @@ export function ImageGallery({ images, columns = 3, gap = 8, className = '' }: I
 
       {lightboxIndex !== null && (
         <div
-          className="dw-fixed dw-inset-0 dw-z-50 dw-flex dw-items-center dw-justify-center dw-bg-black/80"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
           onClick={closeLightbox}
         >
           <button
             onClick={(e) => { e.stopPropagation(); prev(); }}
-            className="dw-absolute dw-left-4 dw-top-1/2 -dw-translate-y-1/2 dw-rounded-full dw-bg-white/20 dw-p-3 dw-text-white hover:dw-bg-white/40"
+            className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/20 p-3 text-white hover:bg-white/40"
             aria-label="Previous"
           >
             &larr;
@@ -61,24 +61,24 @@ export function ImageGallery({ images, columns = 3, gap = 8, className = '' }: I
           <img
             src={images[lightboxIndex]}
             alt=""
-            className="dw-max-h-[90vh] dw-max-w-[90vw] dw-rounded-lg dw-object-contain"
+            className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
             onClick={(e) => e.stopPropagation()}
           />
           <button
             onClick={(e) => { e.stopPropagation(); next(); }}
-            className="dw-absolute dw-right-4 dw-top-1/2 -dw-translate-y-1/2 dw-rounded-full dw-bg-white/20 dw-p-3 dw-text-white hover:dw-bg-white/40"
+            className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/20 p-3 text-white hover:bg-white/40"
             aria-label="Next"
           >
             &rarr;
           </button>
           <button
             onClick={closeLightbox}
-            className="dw-absolute dw-right-4 dw-top-4 dw-rounded-full dw-bg-white/20 dw-p-2 dw-text-white hover:dw-bg-white/40"
+            className="absolute right-4 top-4 rounded-full bg-white/20 p-2 text-white hover:bg-white/40"
             aria-label="Close"
           >
             &times;
           </button>
-          <span className="dw-absolute dw-bottom-4 dw-left-1/2 -dw-translate-x-1/2 dw-text-sm dw-text-white/70">
+          <span className="absolute bottom-4 left-1/2 -translate-x-1/2 text-sm text-white/70">
             {lightboxIndex + 1} / {images.length}
           </span>
         </div>

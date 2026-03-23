@@ -19,11 +19,11 @@ export function YoutubeEmbed({ url, title = 'YouTube Video', className = '' }: Y
 
   return (
     <div
-      className={`dw-relative dw-w-full dw-overflow-hidden dw-rounded ${className}`}
+      className={`relative w-full overflow-hidden rounded ${className}`}
       style={{ paddingBottom: '56.25%' }}
     >
       <iframe
-        className="dw-absolute dw-inset-0 dw-h-full dw-w-full"
+        className="absolute inset-0 h-full w-full"
         src={`https://www.youtube-nocookie.com/embed/${videoId}`}
         title={title}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

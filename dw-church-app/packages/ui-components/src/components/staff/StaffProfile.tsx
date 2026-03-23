@@ -21,7 +21,7 @@ function SnsLink({ type, url }: { type: string; url: string }) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="dw-inline-flex dw-items-center dw-gap-1.5 dw-rounded dw-bg-surface-alt dw-px-3 dw-py-1.5 dw-text-sm dw-text-text-secondary dw-transition-colors hover:dw-bg-primary/10 hover:dw-text-primary"
+      className="inline-flex items-center gap-1.5 rounded bg-surface-alt px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-primary/10 hover:text-primary"
     >
       {labels[type] ?? type}
     </a>
@@ -40,51 +40,51 @@ export function StaffProfile({ data, postId, className = '' }: StaffProfileProps
   ) as [string, string][];
 
   return (
-    <div className={`dw-mx-auto dw-max-w-3xl ${className}`}>
-      <div className="dw-flex dw-flex-col dw-items-center dw-gap-8 md:dw-flex-row md:dw-items-start">
+    <div className={`mx-auto max-w-3xl ${className}`}>
+      <div className="flex flex-col items-center gap-8 md:flex-row md:items-start">
         {/* Photo */}
-        <div className="dw-h-48 dw-w-48 dw-flex-shrink-0 dw-overflow-hidden dw-rounded-full dw-border-4 dw-border-border">
+        <div className="h-48 w-48 flex-shrink-0 overflow-hidden rounded-full border-4 border-border">
           {staff.photoUrl ? (
             <img
               src={staff.photoUrl}
               alt={staff.name}
-              className="dw-h-full dw-w-full dw-object-cover"
+              className="h-full w-full object-cover"
             />
           ) : (
-            <div className="dw-flex dw-h-full dw-w-full dw-items-center dw-justify-center dw-bg-surface-alt dw-text-5xl dw-text-text-muted">
+            <div className="flex h-full w-full items-center justify-center bg-surface-alt text-5xl text-text-muted">
               {staff.name.charAt(0)}
             </div>
           )}
         </div>
 
         {/* Info */}
-        <div className="dw-flex-1 dw-text-center md:dw-text-left">
-          <h1 className="dw-text-2xl dw-font-bold dw-text-text-primary md:dw-text-3xl">
+        <div className="flex-1 text-center md:text-left">
+          <h1 className="text-2xl font-bold text-text-primary md:text-3xl">
             {staff.name}
           </h1>
           {staff.role && (
-            <p className="dw-mt-1 dw-text-lg dw-text-text-secondary">{staff.role}</p>
+            <p className="mt-1 text-lg text-text-secondary">{staff.role}</p>
           )}
           {staff.department && (
-            <span className="dw-mt-2 dw-inline-block dw-rounded dw-bg-primary/10 dw-px-3 dw-py-1 dw-text-sm dw-font-medium dw-text-primary">
+            <span className="mt-2 inline-block rounded bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
               {staff.department}
             </span>
           )}
 
           {/* Contact */}
-          <div className="dw-mt-4 dw-space-y-1 dw-text-sm dw-text-text-secondary">
+          <div className="mt-4 space-y-1 text-sm text-text-secondary">
             {staff.email && (
               <p>
-                <span className="dw-font-medium dw-text-text-primary">이메일:</span>{' '}
-                <a href={`mailto:${staff.email}`} className="hover:dw-text-primary">
+                <span className="font-medium text-text-primary">이메일:</span>{' '}
+                <a href={`mailto:${staff.email}`} className="hover:text-primary">
                   {staff.email}
                 </a>
               </p>
             )}
             {staff.phone && (
               <p>
-                <span className="dw-font-medium dw-text-text-primary">전화:</span>{' '}
-                <a href={`tel:${staff.phone}`} className="hover:dw-text-primary">
+                <span className="font-medium text-text-primary">전화:</span>{' '}
+                <a href={`tel:${staff.phone}`} className="hover:text-primary">
                   {staff.phone}
                 </a>
               </p>
@@ -93,7 +93,7 @@ export function StaffProfile({ data, postId, className = '' }: StaffProfileProps
 
           {/* SNS Links */}
           {snsEntries.length > 0 && (
-            <div className="dw-mt-4 dw-flex dw-flex-wrap dw-gap-2">
+            <div className="mt-4 flex flex-wrap gap-2">
               {snsEntries.map(([type, url]) => (
                 <SnsLink key={type} type={type} url={url} />
               ))}
@@ -105,7 +105,7 @@ export function StaffProfile({ data, postId, className = '' }: StaffProfileProps
       {/* Bio */}
       {staff.bio && (
         <div
-          className="dw-prose dw-mt-8 dw-max-w-none dw-text-text-primary"
+          className="prose mt-8 max-w-none text-text-primary"
           dangerouslySetInnerHTML={{ __html: staff.bio }}
         />
       )}

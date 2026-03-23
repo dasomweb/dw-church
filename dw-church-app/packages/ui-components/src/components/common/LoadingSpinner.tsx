@@ -4,20 +4,20 @@ export interface LoadingSpinnerProps {
 }
 
 const sizeClasses = {
-  sm: 'dw-h-4 dw-w-4',
-  md: 'dw-h-8 dw-w-8',
-  lg: 'dw-h-12 dw-w-12',
+  sm: 'h-4 w-4',
+  md: 'h-8 w-8',
+  lg: 'h-12 w-12',
 } as const;
 
 export function LoadingSpinner({ size = 'md', className = '' }: LoadingSpinnerProps) {
   return (
-    <div className={`dw-flex dw-items-center dw-justify-center dw-p-4 ${className}`}>
+    <div className={`flex items-center justify-center p-4 ${className}`}>
       <div
-        className={`${sizeClasses[size]} dw-animate-spin dw-rounded-full dw-border-2 dw-border-border dw-border-t-primary`}
+        className={`${sizeClasses[size]} animate-spin rounded-full border-2 border-border border-t-primary`}
         role="status"
         aria-label="Loading"
       >
-        <span className="dw-sr-only">Loading...</span>
+        <span className="sr-only">Loading...</span>
       </div>
     </div>
   );

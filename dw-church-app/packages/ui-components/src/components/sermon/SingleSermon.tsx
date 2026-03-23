@@ -25,22 +25,22 @@ export function SingleSermon({ data, postId, className = '' }: SingleSermonProps
   if (!sermon) return null;
 
   return (
-    <article className={`dw-mx-auto dw-max-w-4xl ${className}`}>
+    <article className={`mx-auto max-w-4xl ${className}`}>
       {sermon.youtubeUrl && (
-        <YoutubeEmbed url={sermon.youtubeUrl} title={sermon.title} className="dw-mb-6" />
+        <YoutubeEmbed url={sermon.youtubeUrl} title={sermon.title} className="mb-6" />
       )}
 
-      <header className="dw-mb-8">
-        <h1 className="dw-text-2xl dw-font-bold dw-text-text-primary md:dw-text-3xl">
+      <header className="mb-8">
+        <h1 className="text-2xl font-bold text-text-primary md:text-3xl">
           {sermon.title}
         </h1>
-        <div className="dw-mt-3 dw-flex dw-flex-wrap dw-items-center dw-gap-3">
-          <span className="dw-text-sm dw-font-medium dw-text-text-secondary">
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <span className="text-sm font-medium text-text-secondary">
             {sermon.preacher}
           </span>
           <DateBadge date={sermon.date} format="long" />
           {sermon.scripture && (
-            <span className="dw-rounded dw-bg-primary/10 dw-px-2 dw-py-0.5 dw-text-xs dw-font-medium dw-text-primary">
+            <span className="rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
               {sermon.scripture}
             </span>
           )}

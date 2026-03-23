@@ -23,34 +23,34 @@ export function PostNavigation({
   };
 
   return (
-    <nav className={`dw-flex dw-items-center dw-justify-between dw-gap-4 dw-border-t dw-border-border dw-pt-6 ${className}`}>
+    <nav className={`flex items-center justify-between gap-4 border-t border-border pt-6 ${className}`}>
       {previousPost ? (
         <a
           href={`${baseUrl}/${previousPost.id}`}
           onClick={handleClick(previousPost.id)}
-          className="dw-group dw-flex dw-flex-1 dw-flex-col dw-items-start dw-gap-1 dw-text-left"
+          className="group flex flex-1 flex-col items-start gap-1 text-left"
         >
-          <span className="dw-text-xs dw-text-text-muted">&larr; 이전</span>
-          <span className="dw-text-sm dw-font-medium dw-text-text-primary group-hover:dw-text-primary dw-line-clamp-1">
+          <span className="text-xs text-text-muted">&larr; 이전</span>
+          <span className="text-sm font-medium text-text-primary group-hover:text-primary line-clamp-1">
             {previousPost.title}
           </span>
         </a>
       ) : (
-        <div className="dw-flex-1" />
+        <div className="flex-1" />
       )}
       {nextPost ? (
         <a
           href={`${baseUrl}/${nextPost.id}`}
           onClick={handleClick(nextPost.id)}
-          className="dw-group dw-flex dw-flex-1 dw-flex-col dw-items-end dw-gap-1 dw-text-right"
+          className="group flex flex-1 flex-col items-end gap-1 text-right"
         >
-          <span className="dw-text-xs dw-text-text-muted">다음 &rarr;</span>
-          <span className="dw-text-sm dw-font-medium dw-text-text-primary group-hover:dw-text-primary dw-line-clamp-1">
+          <span className="text-xs text-text-muted">다음 &rarr;</span>
+          <span className="text-sm font-medium text-text-primary group-hover:text-primary line-clamp-1">
             {nextPost.title}
           </span>
         </a>
       ) : (
-        <div className="dw-flex-1" />
+        <div className="flex-1" />
       )}
     </nav>
   );

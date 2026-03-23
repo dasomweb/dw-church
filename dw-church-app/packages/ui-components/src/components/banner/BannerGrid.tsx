@@ -22,7 +22,7 @@ export function BannerGrid({ data, category, limit, className = '' }: BannerGrid
 
   return (
     <div
-      className={`dw-grid dw-grid-cols-1 dw-gap-4 sm:dw-grid-cols-2 lg:dw-grid-cols-3 ${className}`}
+      className={`grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 ${className}`}
     >
       {banners.map((banner) => (
         <a
@@ -30,17 +30,17 @@ export function BannerGrid({ data, category, limit, className = '' }: BannerGrid
           href={banner.linkUrl || undefined}
           target={banner.linkUrl ? banner.linkTarget : undefined}
           rel={banner.linkUrl ? 'noopener noreferrer' : undefined}
-          className="dw-group dw-relative dw-overflow-hidden dw-rounded dw-border dw-border-border dw-transition-shadow hover:dw-shadow-md"
+          className="group relative overflow-hidden rounded border border-border transition-shadow hover:shadow-md"
         >
-          <div className="dw-relative dw-w-full dw-overflow-hidden" style={{ paddingBottom: '56.25%' }}>
+          <div className="relative w-full overflow-hidden" style={{ paddingBottom: '56.25%' }}>
             <img
               src={banner.pcImageUrl}
               alt={banner.title}
-              className="dw-absolute dw-inset-0 dw-h-full dw-w-full dw-object-cover dw-transition-transform group-hover:dw-scale-105"
+              className="absolute inset-0 h-full w-full object-cover transition-transform group-hover:scale-105"
               loading="lazy"
             />
-            <div className="dw-absolute dw-inset-x-0 dw-bottom-0 dw-bg-gradient-to-t dw-from-black/70 dw-to-transparent dw-px-4 dw-pb-4 dw-pt-12">
-              <h3 className="dw-line-clamp-2 dw-text-base dw-font-semibold dw-text-white">
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-4 pb-4 pt-12">
+              <h3 className="line-clamp-2 text-base font-semibold text-white">
                 {banner.title}
               </h3>
             </div>

@@ -9,19 +9,19 @@ export interface HistoryYearSectionProps {
 
 export function HistoryYearSection({ year, items, className = '' }: HistoryYearSectionProps) {
   return (
-    <section className={`dw-relative ${className}`}>
+    <section className={`relative ${className}`}>
       {/* Year Header */}
-      <div className="dw-mb-4 dw-flex dw-items-center dw-gap-3">
-        <h2 className="dw-text-xl dw-font-bold dw-text-primary">{year}</h2>
-        <div className="dw-h-px dw-flex-1 dw-bg-border" />
+      <div className="mb-4 flex items-center gap-3">
+        <h2 className="text-xl font-bold text-primary">{year}</h2>
+        <div className="h-px flex-1 bg-border" />
       </div>
 
       {/* Timeline Items */}
-      <div className="dw-relative dw-ml-4 dw-border-l-2 dw-border-border dw-pl-6">
+      <div className="relative ml-4 border-l-2 border-border pl-6">
         {items.map((item) => (
-          <div key={item.id} className="dw-relative dw-pb-6 last:dw-pb-0">
+          <div key={item.id} className="relative pb-6 last:pb-0">
             {/* Dot on timeline */}
-            <div className="dw-absolute -dw-left-[31px] dw-top-1 dw-h-3 dw-w-3 dw-rounded-full dw-border-2 dw-border-primary dw-bg-surface" />
+            <div className="absolute -left-[31px] top-1 h-3 w-3 rounded-full border-2 border-primary bg-surface" />
             <HistoryItem item={item} />
           </div>
         ))}

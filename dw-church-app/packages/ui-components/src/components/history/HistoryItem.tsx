@@ -14,25 +14,25 @@ export function HistoryItem({ item, className = '' }: HistoryItemProps) {
         : '';
 
   return (
-    <div className={`dw-flex dw-gap-4 ${className}`}>
+    <div className={`flex gap-4 ${className}`}>
       {/* Date Badge */}
       {dateLabel && (
-        <div className="dw-flex-shrink-0">
-          <span className="dw-inline-block dw-rounded dw-bg-primary/10 dw-px-2.5 dw-py-1 dw-text-xs dw-font-semibold dw-text-primary">
+        <div className="flex-shrink-0">
+          <span className="inline-block rounded bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
             {dateLabel}
           </span>
         </div>
       )}
 
       {/* Content */}
-      <div className="dw-flex-1">
-        <p className="dw-text-sm dw-text-text-primary">{item.content}</p>
+      <div className="flex-1">
+        <p className="text-sm text-text-primary">{item.content}</p>
         {item.photoUrl && (
-          <div className="dw-mt-2 dw-w-32 dw-overflow-hidden dw-rounded">
+          <div className="mt-2 w-32 overflow-hidden rounded">
             <img
               src={item.photoUrl}
               alt={item.content}
-              className="dw-h-auto dw-w-full dw-object-cover"
+              className="h-auto w-full object-cover"
               loading="lazy"
             />
           </div>

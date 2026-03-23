@@ -13,7 +13,7 @@ export function StaffDepartmentTabs({
 }: StaffDepartmentTabsProps) {
   return (
     <div
-      className={`dw-flex dw-gap-1 dw-overflow-x-auto dw-border-b dw-border-border dw-pb-px ${className}`}
+      className={`flex gap-1 overflow-x-auto border-b border-border pb-px ${className}`}
       role="tablist"
     >
       <button
@@ -21,10 +21,10 @@ export function StaffDepartmentTabs({
         role="tab"
         aria-selected={!selected}
         onClick={() => onSelect?.('')}
-        className={`dw-whitespace-nowrap dw-px-4 dw-py-2 dw-text-sm dw-font-medium dw-transition-colors ${
+        className={`whitespace-nowrap px-4 py-2 text-sm font-medium transition-colors ${
           !selected
-            ? 'dw-border-b-2 dw-border-primary dw-text-primary'
-            : 'dw-text-text-secondary hover:dw-text-text-primary'
+            ? 'border-b-2 border-primary text-primary'
+            : 'text-text-secondary hover:text-text-primary'
         }`}
       >
         전체
@@ -36,10 +36,10 @@ export function StaffDepartmentTabs({
           role="tab"
           aria-selected={selected === dept.slug}
           onClick={() => onSelect?.(dept.slug)}
-          className={`dw-whitespace-nowrap dw-px-4 dw-py-2 dw-text-sm dw-font-medium dw-transition-colors ${
+          className={`whitespace-nowrap px-4 py-2 text-sm font-medium transition-colors ${
             selected === dept.slug
-              ? 'dw-border-b-2 dw-border-primary dw-text-primary'
-              : 'dw-text-text-secondary hover:dw-text-text-primary'
+              ? 'border-b-2 border-primary text-primary'
+              : 'text-text-secondary hover:text-text-primary'
           }`}
         >
           {dept.name}

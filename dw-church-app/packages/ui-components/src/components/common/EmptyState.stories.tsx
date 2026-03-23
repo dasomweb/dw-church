@@ -24,6 +24,6 @@ export const Custom: Story = {
   args: {
     title: '등록된 설교가 없습니다',
     description: '새로운 설교를 등록해 주세요.',
-    className: 'dw-max-w-md',
+    className: 'max-w-md',
   },
 };

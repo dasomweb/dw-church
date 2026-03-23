@@ -55,14 +55,14 @@ export function SermonList({
           selectedPreacher={preacher}
           onCategoryChange={setCategory}
           onPreacherChange={setPreacher}
-          className="dw-mb-6"
+          className="mb-6"
         />
       )}
 
       {sermons.length === 0 ? (
         <EmptyState title="설교 영상이 없습니다" />
       ) : (
-        <div className="dw-grid dw-grid-cols-1 sm:dw-grid-cols-2 lg:dw-grid-cols-3 xl:dw-grid-cols-4 dw-gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {sermons.map((sermon) => (
             <SermonCard
               key={sermon.id}

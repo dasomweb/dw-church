@@ -23,7 +23,7 @@ function formatDate(dateStr: string, format: 'short' | 'long' | 'year-month'): s
 export function DateBadge({ date, format = 'short', className = '' }: DateBadgeProps) {
   return (
     <span
-      className={`dw-inline-block dw-rounded dw-bg-surface-alt dw-px-2 dw-py-0.5 dw-text-xs dw-font-medium dw-text-text-secondary ${className}`}
+      className={`inline-block rounded bg-surface-alt px-2 py-0.5 text-xs font-medium text-text-secondary ${className}`}
     >
       {formatDate(date, format)}
     </span>

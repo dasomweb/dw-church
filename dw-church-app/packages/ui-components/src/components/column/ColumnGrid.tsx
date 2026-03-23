@@ -30,13 +30,13 @@ export function ColumnGrid({ data, limit, className = '', onItemClick }: ColumnG
 
   return (
     <div
-      className={`dw-grid dw-grid-cols-1 dw-gap-6 sm:dw-grid-cols-2 lg:dw-grid-cols-3 ${className}`}
+      className={`grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 ${className}`}
     >
       {items.map((column) => (
         <article
           key={column.id}
-          className={`dw-group dw-overflow-hidden dw-rounded-lg dw-border dw-border-border dw-bg-surface dw-shadow-sm dw-transition-shadow hover:dw-shadow-md ${
-            onItemClick ? 'dw-cursor-pointer' : ''
+          className={`group overflow-hidden rounded-lg border border-border bg-surface shadow-sm transition-shadow hover:shadow-md ${
+            onItemClick ? 'cursor-pointer' : ''
           }`}
           onClick={() => onItemClick?.(column.id)}
           role={onItemClick ? 'button' : undefined}
@@ -49,17 +49,17 @@ export function ColumnGrid({ data, limit, className = '', onItemClick }: ColumnG
           }}
         >
           {/* Thumbnail */}
-          <div className="dw-aspect-[16/9] dw-overflow-hidden dw-bg-surface-alt">
+          <div className="aspect-[16/9] overflow-hidden bg-surface-alt">
             {column.thumbnailUrl ? (
               <img
                 src={column.thumbnailUrl}
                 alt={column.title}
                 loading="lazy"
-                className="dw-h-full dw-w-full dw-object-cover dw-transition-transform group-hover:dw-scale-105"
+                className="h-full w-full object-cover transition-transform group-hover:scale-105"
               />
             ) : (
-              <div className="dw-flex dw-h-full dw-w-full dw-items-center dw-justify-center dw-text-text-muted">
-                <svg className="dw-h-12 dw-w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex h-full w-full items-center justify-center text-text-muted">
+                <svg className="h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -72,11 +72,11 @@ export function ColumnGrid({ data, limit, className = '', onItemClick }: ColumnG
           </div>
 
           {/* Content */}
-          <div className="dw-flex dw-flex-col dw-gap-2 dw-p-4">
-            <h3 className="dw-line-clamp-2 dw-text-base dw-font-semibold dw-text-text-primary group-hover:dw-text-primary dw-transition-colors">
+          <div className="flex flex-col gap-2 p-4">
+            <h3 className="line-clamp-2 text-base font-semibold text-text-primary group-hover:text-primary transition-colors">
               {column.title}
             </h3>
-            <p className="dw-line-clamp-3 dw-text-sm dw-text-text-secondary">
+            <p className="line-clamp-3 text-sm text-text-secondary">
               {truncate(column.content, 100)}
             </p>
             <DateBadge date={column.createdAt} format="short" />

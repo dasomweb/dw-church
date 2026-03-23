@@ -23,24 +23,24 @@ export function PastoralColumn({ data, postId, className = '' }: PastoralColumnP
   if (!column) return <EmptyState title="칼럼을 찾을 수 없습니다" />;
 
   return (
-    <article className={`dw-mx-auto dw-max-w-3xl ${className}`}>
+    <article className={`mx-auto max-w-3xl ${className}`}>
       {/* Title */}
-      <header className="dw-mb-8">
-        <h1 className="dw-text-2xl dw-font-bold dw-text-text-primary sm:dw-text-3xl">
+      <header className="mb-8">
+        <h1 className="text-2xl font-bold text-text-primary sm:text-3xl">
           {column.title}
         </h1>
-        <div className="dw-mt-2">
+        <div className="mt-2">
           <DateBadge date={column.createdAt} format="long" />
         </div>
       </header>
 
       {/* Top Image */}
       {column.topImageUrl && (
-        <div className="dw-mb-8 dw-overflow-hidden dw-rounded-lg">
+        <div className="mb-8 overflow-hidden rounded-lg">
           <img
             src={column.topImageUrl}
             alt={column.title}
-            className="dw-w-full dw-object-cover"
+            className="w-full object-cover"
             loading="lazy"
           />
         </div>
@@ -48,17 +48,17 @@ export function PastoralColumn({ data, postId, className = '' }: PastoralColumnP
 
       {/* Content */}
       <div
-        className="dw-prose dw-max-w-none dw-text-text-primary"
+        className="prose max-w-none text-text-primary"
         dangerouslySetInnerHTML={{ __html: column.content }}
       />
 
       {/* Bottom Image */}
       {column.bottomImageUrl && (
-        <div className="dw-mt-8 dw-overflow-hidden dw-rounded-lg">
+        <div className="mt-8 overflow-hidden rounded-lg">
           <img
             src={column.bottomImageUrl}
             alt=""
-            className="dw-w-full dw-object-cover"
+            className="w-full object-cover"
             loading="lazy"
           />
         </div>
@@ -66,7 +66,7 @@ export function PastoralColumn({ data, postId, className = '' }: PastoralColumnP
 
       {/* YouTube Video */}
       {column.youtubeUrl && (
-        <div className="dw-mt-8">
+        <div className="mt-8">
           <YoutubeEmbed url={column.youtubeUrl} title={column.title} />
         </div>
       )}
@@ -77,19 +77,19 @@ export function PastoralColumn({ data, postId, className = '' }: PastoralColumnP
           {relatedColumns.map((related) => (
             <article
               key={related.id}
-              className="dw-overflow-hidden dw-rounded-lg dw-border dw-border-border dw-bg-surface dw-shadow-sm"
+              className="overflow-hidden rounded-lg border border-border bg-surface shadow-sm"
             >
-              <div className="dw-aspect-[16/9] dw-overflow-hidden dw-bg-surface-alt">
+              <div className="aspect-[16/9] overflow-hidden bg-surface-alt">
                 {related.thumbnailUrl ? (
                   <img
                     src={related.thumbnailUrl}
                     alt={related.title}
                     loading="lazy"
-                    className="dw-h-full dw-w-full dw-object-cover"
+                    className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="dw-flex dw-h-full dw-w-full dw-items-center dw-justify-center dw-text-text-muted">
-                    <svg className="dw-h-8 dw-w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex h-full w-full items-center justify-center text-text-muted">
+                    <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -100,8 +100,8 @@ export function PastoralColumn({ data, postId, className = '' }: PastoralColumnP
                   </div>
                 )}
               </div>
-              <div className="dw-p-3">
-                <h4 className="dw-line-clamp-2 dw-text-sm dw-font-medium dw-text-text-primary">
+              <div className="p-3">
+                <h4 className="line-clamp-2 text-sm font-medium text-text-primary">
                   {related.title}
                 </h4>
               </div>

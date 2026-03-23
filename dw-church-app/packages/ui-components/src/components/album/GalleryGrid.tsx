@@ -25,7 +25,7 @@ export function GalleryGrid({ data, category, limit, className = '', onItemClick
 
   return (
     <div
-      className={`dw-grid dw-grid-cols-1 dw-gap-6 sm:dw-grid-cols-2 lg:dw-grid-cols-3 ${className}`}
+      className={`grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 ${className}`}
     >
       {items.map((album) => (
         <AlbumCard key={album.id} album={album} onClick={onItemClick} />

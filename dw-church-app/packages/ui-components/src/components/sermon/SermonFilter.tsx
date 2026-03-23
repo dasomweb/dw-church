@@ -19,9 +19,9 @@ export function SermonFilter({
   const { data: preachers } = useSermonPreachers();
 
   return (
-    <div className={`dw-flex dw-flex-wrap dw-items-center dw-gap-3 ${className}`}>
+    <div className={`flex flex-wrap items-center gap-3 ${className}`}>
       <select
-        className="dw-rounded dw-border dw-border-border dw-bg-surface dw-px-3 dw-py-2 dw-text-sm dw-text-text-primary focus:dw-outline-none focus:dw-ring-2 focus:dw-ring-primary"
+        className="rounded border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
         value={selectedCategory ?? ''}
         onChange={(e) => onCategoryChange?.(e.target.value)}
         aria-label="설교 카테고리"
@@ -35,7 +35,7 @@ export function SermonFilter({
       </select>
 
       <select
-        className="dw-rounded dw-border dw-border-border dw-bg-surface dw-px-3 dw-py-2 dw-text-sm dw-text-text-primary focus:dw-outline-none focus:dw-ring-2 focus:dw-ring-primary"
+        className="rounded border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
         value={selectedPreacher ?? ''}
         onChange={(e) => {
           const value = e.target.value;

@@ -43,14 +43,14 @@ export function StaffGrid({
           departments={departments}
           selected={selectedDept}
           onSelect={setSelectedDept}
-          className="dw-mb-6"
+          className="mb-6"
         />
       )}
 
       {filteredStaff.length === 0 ? (
         <EmptyState title="교역자가 없습니다" />
       ) : (
-        <div className="dw-grid dw-grid-cols-2 sm:dw-grid-cols-3 lg:dw-grid-cols-4 dw-gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
           {filteredStaff.map((member) => (
             <StaffCard key={member.id} staff={member} onClick={onItemClick} />
           ))}

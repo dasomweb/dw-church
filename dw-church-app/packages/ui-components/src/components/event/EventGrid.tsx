@@ -21,7 +21,7 @@ export function EventGrid({ data, limit, className = '', onItemClick }: EventGri
 
   return (
     <div
-      className={`dw-grid dw-grid-cols-1 sm:dw-grid-cols-2 lg:dw-grid-cols-3 dw-gap-6 ${className}`}
+      className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 ${className}`}
     >
       {events.map((event) => (
         <EventCard key={event.id} event={event} onClick={onItemClick} />

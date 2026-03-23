@@ -29,10 +29,10 @@ export function SingleBulletin({ data, postId, className = '' }: SingleBulletinP
   }
 
   return (
-    <article className={`dw-flex dw-flex-col dw-gap-8 ${className}`}>
+    <article className={`flex flex-col gap-8 ${className}`}>
       {/* Header */}
-      <header className="dw-flex dw-flex-col dw-gap-3">
-        <h1 className="dw-text-2xl dw-font-bold dw-text-text-primary md:dw-text-3xl">
+      <header className="flex flex-col gap-3">
+        <h1 className="text-2xl font-bold text-text-primary md:text-3xl">
           {bulletin.title}
         </h1>
         <DateBadge date={bulletin.date} format="long" />

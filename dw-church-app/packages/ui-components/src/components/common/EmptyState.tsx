@@ -11,11 +11,11 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div
-      className={`dw-flex dw-flex-col dw-items-center dw-justify-center dw-rounded dw-border dw-border-dashed dw-border-border dw-bg-surface-alt dw-px-6 dw-py-12 dw-text-center ${className}`}
+      className={`flex flex-col items-center justify-center rounded border border-dashed border-border bg-surface-alt px-6 py-12 text-center ${className}`}
     >
-      <p className="dw-text-lg dw-font-medium dw-text-text-primary">{title}</p>
+      <p className="text-lg font-medium text-text-primary">{title}</p>
       {description && (
-        <p className="dw-mt-1 dw-text-sm dw-text-text-muted">{description}</p>
+        <p className="mt-1 text-sm text-text-muted">{description}</p>
       )}
     </div>
   );

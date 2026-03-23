@@ -25,10 +25,10 @@ export function HistoryTimeline({
 
   if (layout === 'horizontal') {
     return (
-      <div className={`dw-overflow-x-auto ${className}`}>
-        <div className="dw-flex dw-gap-8 dw-pb-4">
+      <div className={`overflow-x-auto ${className}`}>
+        <div className="flex gap-8 pb-4">
           {sorted.map((entry) => (
-            <div key={entry.id} className="dw-w-80 dw-flex-shrink-0">
+            <div key={entry.id} className="w-80 flex-shrink-0">
               <HistoryYearSection year={entry.year} items={entry.items} />
             </div>
           ))}
@@ -38,7 +38,7 @@ export function HistoryTimeline({
   }
 
   return (
-    <div className={`dw-space-y-10 ${className}`}>
+    <div className={`space-y-10 ${className}`}>
       {sorted.map((entry) => (
         <HistoryYearSection key={entry.id} year={entry.year} items={entry.items} />
       ))}

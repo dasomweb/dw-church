@@ -23,7 +23,7 @@ export function RecentGallery({ limit = 6, className = '', onItemClick }: Recent
 
   return (
     <div
-      className={`dw-grid dw-grid-cols-2 dw-gap-4 sm:dw-grid-cols-3 lg:dw-grid-cols-4 ${className}`}
+      className={`grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 ${className}`}
     >
       {albums.slice(0, limit).map((album) => (
         <AlbumCard key={album.id} album={album} onClick={onItemClick} />
