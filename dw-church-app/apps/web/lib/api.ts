@@ -41,6 +41,30 @@ function camelizeKeys(obj: any): any {
   return obj;
 }
 
+// Alias API field names to match TypeScript types
+// API: sermon_date → sermonDate, but type expects: date
+const FIELD_ALIASES: Record<string, Record<string, string>> = {
+  sermon: { sermonDate: 'date', preacherName: 'preacher', preacherId: '_preacherId' },
+  bulletin: { bulletinDate: 'date' },
+  staff: { sortOrder: 'order' },
+};
+
+function aliasFields(item: any, type: string): any {
+  const map = FIELD_ALIASES[type];
+  if (!map || !item || typeof item !== 'object') return item;
+  const result = { ...item };
+  for (const [from, to] of Object.entries(map)) {
+    if (from in result && !(to in result)) {
+      result[to] = result[from];
+    }
+  }
+  return result;
+}
+
+function aliasArray(items: any[], type: string): any[] {
+  return items.map((item) => aliasFields(item, type));
+}
+
 // Unwrap {data: ...} wrapper from API responses
 function unwrap(res: any): any {
   if (res && typeof res === 'object' && 'data' in res) return res.data;
@@ -73,7 +97,7 @@ export async function getPages(slug: string): Promise<any[]> {
 
 export async function getHomePage(slug: string): Promise<any> {
   const pages = await getPages(slug);
-  const home = pages.find((p: any) => p.is_home || p.slug === 'home');
+  const home = pages.find((p: any) => p.isHome || p.is_home || p.slug === 'home');
   if (!home) throw new Error('Home page not found');
 
   // Get sections for this page
@@ -84,10 +108,10 @@ export async function getHomePage(slug: string): Promise<any> {
     ...home,
     sections: sections.map((s: any) => ({
       id: s.id,
-      blockType: s.block_type,
+      blockType: s.blockType ?? s.block_type,
       props: s.props ?? {},
-      sortOrder: s.sort_order ?? 0,
-      isVisible: s.is_visible ?? true,
+      sortOrder: s.sortOrder ?? s.sort_order ?? 0,
+      isVisible: s.isVisible ?? s.is_visible ?? true,
     })),
   };
 }
@@ -104,10 +128,10 @@ export async function getPageBySlug(tenantSlug: string, pageSlug: string): Promi
     ...page,
     sections: sections.map((s: any) => ({
       id: s.id,
-      blockType: s.block_type,
+      blockType: s.blockType ?? s.block_type,
       props: s.props ?? {},
-      sortOrder: s.sort_order ?? 0,
-      isVisible: s.is_visible ?? true,
+      sortOrder: s.sortOrder ?? s.sort_order ?? 0,
+      isVisible: s.isVisible ?? s.is_visible ?? true,
     })),
   };
 }
@@ -124,12 +148,14 @@ export async function getSermons(
   if (params?.category) p.set('category', params.category);
   if (params?.search) p.set('search', params.search);
   const qs = p.toString();
-  return apiFetch(slug, `/api/v1/sermons${qs ? '?' + qs : ''}`);
+  const res = await apiFetch<any>(slug, `/api/v1/sermons${qs ? '?' + qs : ''}`);
+  if (res?.data) res.data = aliasArray(res.data, 'sermon');
+  return res;
 }
 
 export async function getSermon(slug: string, id: string): Promise<any> {
   const res = await apiFetch(slug, `/api/v1/sermons/${id}`);
-  return unwrap(res);
+  return aliasFields(unwrap(res), 'sermon');
 }
 
 // ─── Bulletins ───────────────────────────────────────────────
@@ -142,12 +168,14 @@ export async function getBulletins(
   if (params?.page) p.set('page', String(params.page));
   if (params?.perPage) p.set('perPage', String(params.perPage));
   const qs = p.toString();
-  return apiFetch(slug, `/api/v1/bulletins${qs ? '?' + qs : ''}`);
+  const res = await apiFetch<any>(slug, `/api/v1/bulletins${qs ? '?' + qs : ''}`);
+  if (res?.data) res.data = aliasArray(res.data, 'bulletin');
+  return res;
 }
 
 export async function getBulletin(slug: string, id: string): Promise<any> {
   const res = await apiFetch(slug, `/api/v1/bulletins/${id}`);
-  return unwrap(res);
+  return aliasFields(unwrap(res), 'bulletin');
 }
 
 // ─── Albums ──────────────────────────────────────────────────
@@ -172,12 +200,13 @@ export async function getAlbum(slug: string, id: string): Promise<any> {
 
 export async function getStaff(slug: string): Promise<any[]> {
   const res = await apiFetch(slug, `/api/v1/staff`);
-  return unwrap(res) ?? [];
+  const items = unwrap(res) ?? [];
+  return aliasArray(items, 'staff');
 }
 
 export async function getStaffMember(slug: string, id: string): Promise<any> {
   const res = await apiFetch(slug, `/api/v1/staff/${id}`);
-  return unwrap(res);
+  return aliasFields(unwrap(res), 'staff');
 }
 
 // ─── Columns ────────────────────────────────────────────────
