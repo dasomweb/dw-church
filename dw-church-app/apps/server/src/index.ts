@@ -38,21 +38,8 @@ async function main(): Promise<void> {
   });
 
   // --- Plugins ---
-  await app.register(cors, {
-    origin: (origin: string | undefined, cb: (err: Error | null, allow: boolean) => void) => {
-      if (!origin) return cb(null, true);
-      if (
-        origin.endsWith('.truelight.app') ||
-        origin === 'https://truelight.app' ||
-        origin.startsWith('http://localhost') ||
-        env.CORS_ORIGINS.includes(origin)
-      ) {
-        return cb(null, true);
-      }
-      cb(null, false);
-    },
-    credentials: true,
-  });
+  const { corsOptions } = await import('./cors.js');
+  await app.register(cors, corsOptions);
   await app.register(rateLimit, rateLimitConfig);
 
   // --- Error handler ---

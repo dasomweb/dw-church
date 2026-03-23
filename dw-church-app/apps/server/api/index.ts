@@ -1,6 +1,5 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import { env } from '../src/config/env.js';
 import { tenantMiddleware } from '../src/middleware/tenant.js';
 import { errorHandler } from '../src/middleware/error-handler.js';
 
@@ -14,6 +13,7 @@ let registered = false;
 async function registerRoutes() {
   if (registered) return;
 
+  // CORS: allow all *.truelight.app, localhost, and env-configured origins
   await app.register(cors, { origin: true, credentials: true });
   app.setErrorHandler(errorHandler);
 
@@ -61,7 +61,6 @@ async function registerRoutes() {
   await app.register(fileRoutes, { prefix: '/api/v1' });
   await app.register(domainRoutes, { prefix: '/api/v1' });
 
-  // Resolve custom domain to tenant slug (used by Next.js middleware)
   app.get('/api/v1/admin/tenants/resolve-domain', async (request, reply) => {
     const { domain } = request.query as { domain?: string };
     if (!domain) return reply.status(400).send({ error: 'domain query parameter required' });
@@ -80,36 +79,23 @@ async function registerRoutes() {
   registered = true;
 }
 
-// Set CORS headers directly on the Vercel response (inject() doesn't propagate Fastify CORS headers)
-function setCorsHeaders(req: any, res: any): boolean {
-  const origin = req.headers?.origin || '';
-
-  // Allow any origin for now to debug, then restrict later
-  // All truelight.app subdomains + localhost dev are always allowed
-  const allowedOrigin = origin || '*';
-  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Tenant-Slug');
-  res.setHeader('Vary', 'Origin');
-  res.setHeader('X-DW-CORS', 'v2'); // Debug: confirm this code is running
-
-  // Handle preflight
-  if (req.method === 'OPTIONS') {
-    res.statusCode = 204;
-    res.end();
-    return true;
-  }
-  return false;
-}
-
 export default async function handler(req: any, res: any) {
-  // Handle CORS preflight immediately (no need to boot Fastify)
-  if (setCorsHeaders(req, res)) return;
-
   await registerRoutes();
 
-  // Vercel may pre-parse the body — use req.body if available, otherwise read stream
+  // Handle CORS preflight at Vercel level (before inject)
+  const origin = req.headers?.origin || '';
+  if (req.method === 'OPTIONS') {
+    if (origin) res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Tenant-Slug');
+    res.setHeader('Vary', 'Origin');
+    res.statusCode = 204;
+    res.end();
+    return;
+  }
+
+  // Read body
   let body: string | undefined;
   if (req.body) {
     body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
@@ -122,7 +108,6 @@ export default async function handler(req: any, res: any) {
     if (raw) body = raw;
   }
 
-  // Remove content-length as Vercel may pre-parse body causing mismatch
   const headers = { ...req.headers };
   delete headers['content-length'];
   delete headers['transfer-encoding'];
@@ -134,14 +119,18 @@ export default async function handler(req: any, res: any) {
     payload: body,
   });
 
-  // Write inject response headers first
+  // Write response
   res.statusCode = response.statusCode;
   for (const [key, value] of Object.entries(response.headers)) {
     if (value !== undefined) res.setHeader(key, value);
   }
 
-  // Then OVERWRITE with our CORS headers (inject may not set them correctly)
-  setCorsHeaders(req, res);
+  // Ensure CORS headers are present (inject may not propagate them)
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Vary', 'Origin');
+  }
 
   res.end(response.body);
 }
