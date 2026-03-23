@@ -15,9 +15,10 @@ function extractYoutubeId(url?: string | null): string | null {
 }
 
 function getThumbnailUrl(sermon: Sermon): string {
-  if (sermon.thumbnailUrl) return sermon.thumbnailUrl;
+  // Always prefer YouTube hqdefault (maxresdefault often 404s)
   const videoId = extractYoutubeId(sermon.youtubeUrl);
   if (videoId) return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+  if (sermon.thumbnailUrl) return sermon.thumbnailUrl;
   return '';
 }
 

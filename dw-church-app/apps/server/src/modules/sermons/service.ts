@@ -1,6 +1,12 @@
 import { prisma } from '../../config/database.js';
 import type { CreateSermonInput, UpdateSermonInput } from './schema.js';
 
+function extractYoutubeThumbnail(url?: string | null): string | null {
+  if (!url) return null;
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([^&?\s/]+)/);
+  return match?.[1] ? `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg` : null;
+}
+
 interface ListParams {
   page: number;
   perPage: number;
@@ -144,6 +150,9 @@ export async function getRelatedSermons(schema: string, id: string, limit = 6) {
 export async function createSermon(schema: string, input: CreateSermonInput) {
   const { category_ids = [], ...data } = input;
 
+  // Auto-generate thumbnail from YouTube URL if not provided
+  const thumbnailUrl = data.thumbnail_url || extractYoutubeThumbnail(data.youtube_url) || null;
+
   const rows = await prisma.$queryRawUnsafe<[{ id: string }]>(
     `INSERT INTO "${schema}".sermons (title, scripture, youtube_url, sermon_date, thumbnail_url, preacher_id, status)
      VALUES ($1, $2, $3, $4, $5, $6::uuid, $7)
@@ -152,7 +161,7 @@ export async function createSermon(schema: string, input: CreateSermonInput) {
     data.scripture ?? null,
     data.youtube_url ?? null,
     new Date(data.sermon_date),
-    data.thumbnail_url ?? null,
+    thumbnailUrl,
     data.preacher_id ?? null,
     data.status ?? 'published',
   );
@@ -182,7 +191,14 @@ export async function updateSermon(schema: string, id: string, input: UpdateSerm
 
   if (data.title !== undefined) { setClauses.push(`title = $${paramIndex++}`); values.push(data.title); }
   if (data.scripture !== undefined) { setClauses.push(`scripture = $${paramIndex++}`); values.push(data.scripture); }
-  if (data.youtube_url !== undefined) { setClauses.push(`youtube_url = $${paramIndex++}`); values.push(data.youtube_url); }
+  if (data.youtube_url !== undefined) {
+    setClauses.push(`youtube_url = $${paramIndex++}`); values.push(data.youtube_url);
+    // Auto-update thumbnail when YouTube URL changes (unless thumbnail explicitly provided)
+    if (data.thumbnail_url === undefined) {
+      const autoThumb = extractYoutubeThumbnail(data.youtube_url);
+      if (autoThumb) { setClauses.push(`thumbnail_url = $${paramIndex++}`); values.push(autoThumb); }
+    }
+  }
   if (data.sermon_date !== undefined) { setClauses.push(`sermon_date = $${paramIndex++}::date`); values.push(data.sermon_date); }
   if (data.thumbnail_url !== undefined) { setClauses.push(`thumbnail_url = $${paramIndex++}`); values.push(data.thumbnail_url); }
   if (data.preacher_id !== undefined) { setClauses.push(`preacher_id = $${paramIndex++}::uuid`); values.push(data.preacher_id); }
