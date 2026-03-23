@@ -2,6 +2,7 @@ import type { FastifyRequest, FastifyReply } from 'fastify';
 import { supabaseAdmin } from '../config/supabase.js';
 import { prisma } from '../config/database.js';
 import { AppError } from './error-handler.js';
+import { validateSchemaName } from '../utils/validate-schema.js';
 
 function extractToken(request: FastifyRequest): string | null {
   const header = request.headers.authorization;
@@ -50,7 +51,7 @@ async function resolveUser(
         name: tenant.name,
         plan: tenant.plan,
       };
-      request.tenantSchema = `tenant_${tenant.slug}`;
+      request.tenantSchema = validateSchemaName(`tenant_${tenant.slug}`);
     }
   }
 }

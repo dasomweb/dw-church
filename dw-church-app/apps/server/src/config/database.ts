@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { env } from './env.js';
+import { validateSlug } from '../utils/validate-schema.js';
 
 export const prisma = new PrismaClient({
   datasources: { db: { url: env.DATABASE_URL } },
@@ -9,6 +10,7 @@ export const prisma = new PrismaClient({
 const tenantConnections = new Map<string, PrismaClient>();
 
 export function getTenantConnection(slug: string): PrismaClient {
+  validateSlug(slug);
   const cached = tenantConnections.get(slug);
   if (cached) return cached;
 

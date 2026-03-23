@@ -1,10 +1,12 @@
 import { prisma } from '../config/database.js';
+import { validateSlug, validateSchemaName } from './validate-schema.js';
 
 /**
  * Clone the template schema and provision default data for a new tenant.
  */
 export async function createTenantSchema(slug: string): Promise<void> {
-  const schema = `tenant_${slug}`;
+  validateSlug(slug);
+  const schema = validateSchemaName(`tenant_${slug}`);
 
   // Clone from the template schema
   await prisma.$executeRawUnsafe(
@@ -18,7 +20,8 @@ export async function createTenantSchema(slug: string): Promise<void> {
  * Permanently remove a tenant schema and all its data.
  */
 export async function deleteTenantSchema(slug: string): Promise<void> {
-  const schema = `tenant_${slug}`;
+  validateSlug(slug);
+  const schema = validateSchemaName(`tenant_${slug}`);
   await prisma.$executeRawUnsafe(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`);
 }
 
@@ -26,7 +29,8 @@ export async function deleteTenantSchema(slug: string): Promise<void> {
  * Insert default rows a new tenant needs to function.
  */
 export async function seedDefaultData(slug: string): Promise<void> {
-  const schema = `tenant_${slug}`;
+  validateSlug(slug);
+  const schema = validateSchemaName(`tenant_${slug}`);
 
   // 1. Default sermon categories
   const categories = [

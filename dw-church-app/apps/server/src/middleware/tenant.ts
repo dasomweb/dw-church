@@ -1,6 +1,7 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '../config/database.js';
 import { AppError } from './error-handler.js';
+import { validateSchemaName } from '../utils/validate-schema.js';
 
 const SKIP_PREFIXES = ['/api/v1/auth/register', '/api/v1/admin', '/api/v1/billing', '/health'];
 
@@ -47,7 +48,7 @@ export async function tenantMiddleware(
     });
     if (tenant) {
       request.tenant = { id: tenant.id, slug: tenant.slug, name: tenant.name, plan: tenant.plan };
-      request.tenantSchema = `tenant_${tenant.slug}`;
+      request.tenantSchema = validateSchemaName(`tenant_${tenant.slug}`);
       return;
     }
   }
@@ -70,7 +71,7 @@ export async function tenantMiddleware(
       if (customTenant.length > 0) {
         const t = customTenant[0]!;
         request.tenant = { id: t.id, slug: t.slug, name: t.name, plan: t.plan };
-        request.tenantSchema = `tenant_${t.slug}`;
+        request.tenantSchema = validateSchemaName(`tenant_${t.slug}`);
         return;
       }
     }
@@ -96,5 +97,5 @@ export async function tenantMiddleware(
     name: tenant.name,
     plan: tenant.plan,
   };
-  request.tenantSchema = `tenant_${tenant.slug}`;
+  request.tenantSchema = validateSchemaName(`tenant_${tenant.slug}`);
 }
