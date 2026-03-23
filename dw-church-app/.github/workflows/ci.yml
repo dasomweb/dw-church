@@ -21,6 +21,12 @@ jobs:
       - name: Install
         working-directory: dw-church-app
         run: pnpm install
+      - name: Lint
+        working-directory: dw-church-app
+        run: pnpm lint
+      - name: Type check
+        working-directory: dw-church-app
+        run: pnpm typecheck
       - name: Build
         working-directory: dw-church-app
         run: pnpm build
