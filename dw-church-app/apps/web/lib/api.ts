@@ -23,7 +23,22 @@ async function apiFetch<T>(slug: string, path: string, init?: RequestInit): Prom
     throw new Error(`API error ${res.status}: ${res.statusText} (${API_BASE}${path})`);
   }
   const data = await res.json() as any;
-  return data;
+  return camelizeKeys(data);
+}
+
+// snake_case → camelCase converter
+function toCamel(str: string): string {
+  return str.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+}
+
+function camelizeKeys(obj: any): any {
+  if (Array.isArray(obj)) return obj.map(camelizeKeys);
+  if (obj !== null && typeof obj === 'object' && !(obj instanceof Date)) {
+    return Object.fromEntries(
+      Object.entries(obj).map(([k, v]) => [toCamel(k), camelizeKeys(v)])
+    );
+  }
+  return obj;
 }
 
 // Unwrap {data: ...} wrapper from API responses
