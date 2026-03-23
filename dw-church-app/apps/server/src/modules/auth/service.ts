@@ -2,7 +2,7 @@ import { prisma } from '../../config/database.js';
 import { supabaseAdmin } from '../../config/supabase.js';
 import { AppError } from '../../middleware/error-handler.js';
 import { createTenantSchema } from '../../utils/schema-manager.js';
-import type { RegisterInput, LoginInput, InviteInput, RefreshInput } from './schema.js';
+import type { RegisterInput, LoginInput, InviteInput } from './schema.js';
 
 export async function register(input: RegisterInput) {
   const { churchName, slug, email, password, ownerName } = input;
