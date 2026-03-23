@@ -130,6 +130,11 @@ export async function getBulletins(
   return apiFetch(slug, `/api/v1/bulletins${qs ? '?' + qs : ''}`);
 }
 
+export async function getBulletin(slug: string, id: string): Promise<any> {
+  const res = await apiFetch(slug, `/api/v1/bulletins/${id}`);
+  return unwrap(res);
+}
+
 // ─── Albums ──────────────────────────────────────────────────
 
 export async function getAlbums(
@@ -143,11 +148,40 @@ export async function getAlbums(
   return apiFetch(slug, `/api/v1/albums${qs ? '?' + qs : ''}`);
 }
 
+export async function getAlbum(slug: string, id: string): Promise<any> {
+  const res = await apiFetch(slug, `/api/v1/albums/${id}`);
+  return unwrap(res);
+}
+
 // ─── Staff ───────────────────────────────────────────────────
 
 export async function getStaff(slug: string): Promise<any[]> {
   const res = await apiFetch(slug, `/api/v1/staff`);
   return unwrap(res) ?? [];
+}
+
+export async function getStaffMember(slug: string, id: string): Promise<any> {
+  const res = await apiFetch(slug, `/api/v1/staff/${id}`);
+  return unwrap(res);
+}
+
+// ─── Columns ────────────────────────────────────────────────
+
+export async function getColumns(
+  slug: string,
+  params?: { page?: number; perPage?: number; search?: string },
+): Promise<any> {
+  const p = new URLSearchParams();
+  if (params?.page) p.set('page', String(params.page));
+  if (params?.perPage) p.set('perPage', String(params.perPage));
+  if (params?.search) p.set('search', params.search);
+  const qs = p.toString();
+  return apiFetch(slug, `/api/v1/columns${qs ? '?' + qs : ''}`);
+}
+
+export async function getColumn(slug: string, id: string): Promise<any> {
+  const res = await apiFetch(slug, `/api/v1/columns/${id}`);
+  return unwrap(res);
 }
 
 // ─── History ─────────────────────────────────────────────────
@@ -168,6 +202,11 @@ export async function getEvents(
   if (params?.perPage) p.set('perPage', String(params.perPage));
   const qs = p.toString();
   return apiFetch(slug, `/api/v1/events${qs ? '?' + qs : ''}`);
+}
+
+export async function getEvent(slug: string, id: string): Promise<any> {
+  const res = await apiFetch(slug, `/api/v1/events/${id}`);
+  return unwrap(res);
 }
 
 // ─── Banners ─────────────────────────────────────────────────
