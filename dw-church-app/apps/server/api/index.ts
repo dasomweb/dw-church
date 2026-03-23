@@ -84,21 +84,15 @@ async function registerRoutes() {
 function setCorsHeaders(req: any, res: any): boolean {
   const origin = req.headers?.origin || '';
 
-  // Allow all truelight.app subdomains + localhost dev + env-configured origins
-  const isAllowed =
-    origin.endsWith('.truelight.app') ||
-    origin === 'https://truelight.app' ||
-    origin.startsWith('http://localhost') ||
-    env.CORS_ORIGINS.includes(origin);
-
-  if (isAllowed && origin) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-
+  // Allow any origin for now to debug, then restrict later
+  // All truelight.app subdomains + localhost dev are always allowed
+  const allowedOrigin = origin || '*';
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Tenant-Slug');
   res.setHeader('Vary', 'Origin');
+  res.setHeader('X-DW-CORS', 'v2'); // Debug: confirm this code is running
 
   // Handle preflight
   if (req.method === 'OPTIONS') {
