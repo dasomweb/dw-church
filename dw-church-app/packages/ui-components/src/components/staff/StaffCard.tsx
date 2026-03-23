@@ -30,7 +30,7 @@ function SnsIcon({ type, url }: { type: string; url: string }) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="dw-text-text-muted dw-transition-colors hover:dw-text-primary"
+      className="dw-flex dw-h-8 dw-w-8 dw-items-center dw-justify-center dw-rounded-full dw-bg-gray-100 dw-text-gray-400 dw-transition-all dw-duration-200 hover:dw-bg-primary hover:dw-text-white"
       aria-label={type}
     >
       {icons[type]}
@@ -45,7 +45,7 @@ export function StaffCard({ staff, onClick, className = '' }: StaffCardProps) {
 
   return (
     <article
-      className={`dw-group dw-cursor-pointer dw-overflow-hidden dw-rounded dw-border dw-border-border dw-bg-surface dw-p-6 dw-text-center dw-transition-shadow hover:dw-shadow-md ${className}`}
+      className={`dw-group dw-cursor-pointer dw-overflow-hidden dw-rounded-lg dw-bg-white dw-px-6 dw-pb-6 dw-pt-8 dw-text-center dw-transition-all dw-duration-300 hover:dw--translate-y-1.5 hover:dw-shadow-[0_8px_30px_rgba(0,0,0,0.12)] ${className}`}
       onClick={() => onClick?.(staff.id)}
       role="button"
       tabIndex={0}
@@ -56,8 +56,8 @@ export function StaffCard({ staff, onClick, className = '' }: StaffCardProps) {
         }
       }}
     >
-      {/* Photo */}
-      <div className="dw-mx-auto dw-h-24 dw-w-24 dw-overflow-hidden dw-rounded-full dw-border-2 dw-border-border">
+      {/* Circular photo */}
+      <div className="dw-mx-auto dw-h-28 dw-w-28 dw-overflow-hidden dw-rounded-full dw-border-[3px] dw-border-gray-100 dw-transition-all dw-duration-300 group-hover:dw-border-primary/30 group-hover:dw-shadow-lg">
         {staff.photoUrl ? (
           <img
             src={staff.photoUrl}
@@ -66,21 +66,25 @@ export function StaffCard({ staff, onClick, className = '' }: StaffCardProps) {
             loading="lazy"
           />
         ) : (
-          <div className="dw-flex dw-h-full dw-w-full dw-items-center dw-justify-center dw-bg-surface-alt dw-text-2xl dw-text-text-muted">
+          <div className="dw-flex dw-h-full dw-w-full dw-items-center dw-justify-center dw-bg-gray-50 dw-text-3xl dw-font-semibold dw-text-gray-300">
             {staff.name?.charAt(0) ?? ''}
           </div>
         )}
       </div>
 
-      {/* Info */}
-      <h3 className="dw-mt-4 dw-text-base dw-font-semibold dw-text-text-primary group-hover:dw-text-primary">
+      {/* Name */}
+      <h3 className="dw-mt-4 dw-text-base dw-font-bold dw-text-gray-900 dw-transition-colors dw-duration-200 group-hover:dw-text-primary">
         {staff.name}
       </h3>
+
+      {/* Role */}
       {staff.role && (
-        <p className="dw-mt-1 dw-text-sm dw-text-text-secondary">{staff.role}</p>
+        <p className="dw-mt-1 dw-text-[13px] dw-text-gray-500">{staff.role}</p>
       )}
+
+      {/* Department badge */}
       {staff.department && (
-        <span className="dw-mt-2 dw-inline-block dw-rounded dw-bg-primary/10 dw-px-2 dw-py-0.5 dw-text-xs dw-font-medium dw-text-primary">
+        <span className="dw-mt-2.5 dw-inline-block dw-rounded-full dw-bg-primary/8 dw-px-3 dw-py-1 dw-text-xs dw-font-medium dw-text-primary">
           {staff.department}
         </span>
       )}
@@ -88,7 +92,7 @@ export function StaffCard({ staff, onClick, className = '' }: StaffCardProps) {
       {/* SNS Icons */}
       {snsEntries.length > 0 && (
         <div
-          className="dw-mt-3 dw-flex dw-justify-center dw-gap-3"
+          className="dw-mt-4 dw-flex dw-justify-center dw-gap-2"
           onClick={(e) => e.stopPropagation()}
         >
           {snsEntries.map(([type, url]) => (

@@ -62,7 +62,7 @@ export function SermonList({
       {sermons.length === 0 ? (
         <EmptyState title="설교 영상이 없습니다" />
       ) : (
-        <div className="dw-grid dw-grid-cols-1 dw-gap-6 sm:dw-grid-cols-2 lg:dw-grid-cols-3">
+        <div className="dw-grid dw-grid-cols-1 sm:dw-grid-cols-2 lg:dw-grid-cols-3 xl:dw-grid-cols-4 dw-gap-6">
           {sermons.map((sermon) => (
             <SermonCard
               key={sermon.id}

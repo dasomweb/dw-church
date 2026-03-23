@@ -1,5 +1,4 @@
 import type { Bulletin } from '@dw-church/api-client';
-import { DateBadge } from '../common/DateBadge';
 
 export interface BulletinCardProps {
   bulletin: Bulletin;
@@ -7,12 +6,19 @@ export interface BulletinCardProps {
   className?: string;
 }
 
+function formatDate(dateStr?: string | null): string {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+}
+
 export function BulletinCard({ bulletin, onClick, className = '' }: BulletinCardProps) {
   const thumbnailSrc = bulletin.images?.[0] ?? bulletin.thumbnailUrl;
 
   return (
     <article
-      className={`dw-group dw-overflow-hidden dw-rounded-lg dw-border dw-border-border dw-bg-surface dw-shadow-sm dw-transition-shadow hover:dw-shadow-md ${
+      className={`dw-group dw-overflow-hidden dw-rounded-lg dw-bg-white dw-transition-all dw-duration-300 hover:dw--translate-y-1.5 hover:dw-shadow-[0_8px_30px_rgba(0,0,0,0.12)] ${
         onClick ? 'dw-cursor-pointer' : ''
       } ${className}`}
       onClick={() => onClick?.(bulletin.id)}
@@ -25,18 +31,18 @@ export function BulletinCard({ bulletin, onClick, className = '' }: BulletinCard
         }
       }}
     >
-      {/* Thumbnail */}
-      <div className="dw-aspect-[4/3] dw-overflow-hidden dw-bg-surface-alt">
+      {/* Thumbnail 16:9 */}
+      <div className="dw-relative dw-w-full dw-overflow-hidden dw-bg-gray-50" style={{ paddingBottom: '56.25%' }}>
         {thumbnailSrc ? (
           <img
             src={thumbnailSrc}
             alt={bulletin.title}
             loading="lazy"
-            className="dw-h-full dw-w-full dw-object-cover dw-transition-transform group-hover:dw-scale-105"
+            className="dw-absolute dw-inset-0 dw-h-full dw-w-full dw-object-cover dw-transition-transform dw-duration-500 group-hover:dw-scale-105"
           />
         ) : (
-          <div className="dw-flex dw-h-full dw-w-full dw-items-center dw-justify-center dw-text-text-muted">
-            <svg className="dw-h-12 dw-w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="dw-absolute dw-inset-0 dw-flex dw-items-center dw-justify-center dw-bg-gray-50">
+            <svg className="dw-h-14 dw-w-14 dw-text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -46,24 +52,32 @@ export function BulletinCard({ bulletin, onClick, className = '' }: BulletinCard
             </svg>
           </div>
         )}
+
+        {/* Subtle dark overlay */}
+        <div className="dw-absolute dw-inset-0 dw-bg-black/5 dw-transition-opacity dw-duration-300 group-hover:dw-bg-black/10" />
+
+        {/* Date badge overlaid on bottom-right */}
+        {bulletin.date && (
+          <span className="dw-absolute dw-bottom-3 dw-right-3 dw-rounded dw-bg-black/60 dw-px-2.5 dw-py-1 dw-text-xs dw-font-medium dw-text-white dw-backdrop-blur-sm">
+            {formatDate(bulletin.date)}
+          </span>
+        )}
       </div>
 
       {/* Content */}
-      <div className="dw-flex dw-flex-col dw-gap-2 dw-p-4">
-        <h3 className="dw-line-clamp-2 dw-text-base dw-font-semibold dw-text-text-primary group-hover:dw-text-primary dw-transition-colors">
+      <div className="dw-px-4 dw-pb-4 dw-pt-4">
+        <h3 className="dw-line-clamp-2 dw-text-[15px] dw-font-bold dw-leading-snug dw-text-gray-900 dw-transition-colors dw-duration-200 group-hover:dw-text-primary">
           {bulletin.title}
         </h3>
 
-        <div className="dw-flex dw-items-center dw-justify-between dw-gap-2">
-          <DateBadge date={bulletin.date} format="short" />
-
-          {bulletin.pdfUrl && (
+        {bulletin.pdfUrl && (
+          <div className="dw-mt-3 dw-border-t dw-border-gray-100 dw-pt-3">
             <a
               href={bulletin.pdfUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="dw-inline-flex dw-items-center dw-gap-1 dw-rounded dw-bg-primary dw-px-3 dw-py-1.5 dw-text-xs dw-font-medium dw-text-white hover:dw-bg-primary-hover dw-transition-colors"
+              className="dw-inline-flex dw-items-center dw-gap-1.5 dw-rounded dw-bg-gray-100 dw-px-3 dw-py-1.5 dw-text-xs dw-font-medium dw-text-gray-600 dw-transition-colors dw-duration-200 hover:dw-bg-primary hover:dw-text-white"
               aria-label={`${bulletin.title} PDF 다운로드`}
             >
               <svg className="dw-h-3.5 dw-w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,10 +88,10 @@ export function BulletinCard({ bulletin, onClick, className = '' }: BulletinCard
                   d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
-              PDF
+              PDF 다운로드
             </a>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </article>
   );

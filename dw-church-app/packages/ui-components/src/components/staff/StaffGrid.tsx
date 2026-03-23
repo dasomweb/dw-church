@@ -50,7 +50,7 @@ export function StaffGrid({
       {filteredStaff.length === 0 ? (
         <EmptyState title="교역자가 없습니다" />
       ) : (
-        <div className="dw-grid dw-grid-cols-1 dw-gap-4 sm:dw-grid-cols-2 md:dw-grid-cols-3 lg:dw-grid-cols-4">
+        <div className="dw-grid dw-grid-cols-2 sm:dw-grid-cols-3 lg:dw-grid-cols-4 dw-gap-6">
           {filteredStaff.map((member) => (
             <StaffCard key={member.id} staff={member} onClick={onItemClick} />
           ))}
