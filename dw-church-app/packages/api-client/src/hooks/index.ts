@@ -33,12 +33,8 @@ import { useContext, createContext } from 'react';
 // ─── Client Context ─────────────────────────────────────────
 export const DWChurchClientContext = createContext<DWChurchClient | null>(null);
 
-export function useDWChurchClient(): DWChurchClient {
-  const client = useContext(DWChurchClientContext);
-  if (!client) {
-    throw new Error('useDWChurchClient must be used within a DWChurchProvider');
-  }
-  return client;
+export function useDWChurchClient(): DWChurchClient | null {
+  return useContext(DWChurchClientContext);
 }
 
 // ─── Query Key Factory ──────────────────────────────────────
@@ -122,7 +118,7 @@ export function useLogin() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation<AuthSession, Error, LoginInput>({
-    mutationFn: (input) => client.login(input),
+    mutationFn: (input) => client!.login(input),
     onSuccess: (session) => {
       client.setToken(session.accessToken);
       queryClient.setQueryData(queryKeys.auth.me, session.user);
@@ -134,7 +130,7 @@ export function useRegister() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation<AuthSession, Error, RegisterInput>({
-    mutationFn: (input) => client.register(input),
+    mutationFn: (input) => client!.register(input),
     onSuccess: (session) => {
       client.setToken(session.accessToken);
       queryClient.setQueryData(queryKeys.auth.me, session.user);
@@ -146,7 +142,7 @@ export function useLogout() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation<void, Error, void>({
-    mutationFn: () => client.logout(),
+    mutationFn: () => client!.logout(),
     onSuccess: () => {
       client.clearToken();
       queryClient.clear();
@@ -158,7 +154,7 @@ export function useCurrentUser() {
   const client = useDWChurchClient();
   return useQuery<AuthUser>({
     queryKey: queryKeys.auth.me,
-    queryFn: () => client.getMe(),
+    queryFn: () => client!.getMe(),
     staleTime: STALE_TIME,
     retry: false,
   });
@@ -167,14 +163,14 @@ export function useCurrentUser() {
 export function useForgotPassword() {
   const client = useDWChurchClient();
   return useMutation<void, Error, string>({
-    mutationFn: (email) => client.forgotPassword(email),
+    mutationFn: (email) => client!.forgotPassword(email),
   });
 }
 
 export function useInviteUser() {
   const client = useDWChurchClient();
   return useMutation<void, Error, { email: string; name: string; role: 'admin' | 'editor' }>({
-    mutationFn: ({ email, name, role }) => client.invite(email, name, role),
+    mutationFn: ({ email, name, role }) => client!.invite(email, name, role),
   });
 }
 
@@ -183,7 +179,8 @@ export function useBulletins(params?: ListParams) {
   const client = useDWChurchClient();
   return useQuery<PaginatedResponse<Bulletin>>({
     queryKey: queryKeys.bulletins.list(params),
-    queryFn: () => client.getBulletins(params),
+    queryFn: () => client!.getBulletins(params),
+    enabled: !!client,
     staleTime: STALE_TIME,
   });
 }
@@ -192,8 +189,8 @@ export function useBulletin(id: string) {
   const client = useDWChurchClient();
   return useQuery<Bulletin>({
     queryKey: queryKeys.bulletins.detail(id),
-    queryFn: () => client.getBulletin(id),
-    enabled: !!id,
+    queryFn: () => client!.getBulletin(id),
+    enabled: !!client && !!id,
     staleTime: STALE_TIME,
   });
 }
@@ -202,7 +199,7 @@ export function useCreateBulletin() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Omit<Bulletin, 'id' | 'createdAt' | 'modifiedAt'>) => client.createBulletin(data),
+    mutationFn: (data: Omit<Bulletin, 'id' | 'createdAt' | 'modifiedAt'>) => client!.createBulletin(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.bulletins.all }),
   });
 }
@@ -221,7 +218,7 @@ export function useDeleteBulletin() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => client.deleteBulletin(id),
+    mutationFn: (id: string) => client!.deleteBulletin(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.bulletins.all }),
   });
 }
@@ -230,8 +227,8 @@ export function useRelatedBulletins(id: string, limit = 4) {
   const client = useDWChurchClient();
   return useQuery<Bulletin[]>({
     queryKey: queryKeys.bulletins.related(id),
-    queryFn: () => client.getRelatedBulletins(id, limit),
-    enabled: !!id,
+    queryFn: () => client!.getRelatedBulletins(id, limit),
+    enabled: !!client && !!id,
     staleTime: STALE_TIME,
   });
 }
@@ -241,7 +238,8 @@ export function useSermons(params?: SermonListParams) {
   const client = useDWChurchClient();
   return useQuery<PaginatedResponse<Sermon>>({
     queryKey: queryKeys.sermons.list(params),
-    queryFn: () => client.getSermons(params),
+    queryFn: () => client!.getSermons(params),
+    enabled: !!client,
     staleTime: STALE_TIME,
   });
 }
@@ -250,8 +248,8 @@ export function useSermon(id: string) {
   const client = useDWChurchClient();
   return useQuery<Sermon>({
     queryKey: queryKeys.sermons.detail(id),
-    queryFn: () => client.getSermon(id),
-    enabled: !!id,
+    queryFn: () => client!.getSermon(id),
+    enabled: !!client && !!id,
     staleTime: STALE_TIME,
   });
 }
@@ -260,7 +258,7 @@ export function useCreateSermon() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Omit<Sermon, 'id' | 'createdAt' | 'modifiedAt'>) => client.createSermon(data),
+    mutationFn: (data: Omit<Sermon, 'id' | 'createdAt' | 'modifiedAt'>) => client!.createSermon(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.sermons.all }),
   });
 }
@@ -279,7 +277,7 @@ export function useDeleteSermon() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => client.deleteSermon(id),
+    mutationFn: (id: string) => client!.deleteSermon(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.sermons.all }),
   });
 }
@@ -291,8 +289,8 @@ export function useRelatedSermons(
   const client = useDWChurchClient();
   return useQuery<Sermon[]>({
     queryKey: queryKeys.sermons.related(id, options?.taxonomy),
-    queryFn: () => client.getRelatedSermons(id, options),
-    enabled: !!id,
+    queryFn: () => client!.getRelatedSermons(id, options),
+    enabled: !!client && !!id,
     staleTime: STALE_TIME,
   });
 }
@@ -302,7 +300,8 @@ export function useColumns(params?: ListParams) {
   const client = useDWChurchClient();
   return useQuery<PaginatedResponse<Column>>({
     queryKey: queryKeys.columns.list(params),
-    queryFn: () => client.getColumns(params),
+    queryFn: () => client!.getColumns(params),
+    enabled: !!client,
     staleTime: STALE_TIME,
   });
 }
@@ -311,8 +310,8 @@ export function useColumn(id: string) {
   const client = useDWChurchClient();
   return useQuery<Column>({
     queryKey: queryKeys.columns.detail(id),
-    queryFn: () => client.getColumn(id),
-    enabled: !!id,
+    queryFn: () => client!.getColumn(id),
+    enabled: !!client && !!id,
     staleTime: STALE_TIME,
   });
 }
@@ -321,7 +320,7 @@ export function useCreateColumn() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Omit<Column, 'id' | 'createdAt' | 'modifiedAt'>) => client.createColumn(data),
+    mutationFn: (data: Omit<Column, 'id' | 'createdAt' | 'modifiedAt'>) => client!.createColumn(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.columns.all }),
   });
 }
@@ -340,7 +339,7 @@ export function useDeleteColumn() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => client.deleteColumn(id),
+    mutationFn: (id: string) => client!.deleteColumn(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.columns.all }),
   });
 }
@@ -349,8 +348,8 @@ export function useRelatedColumns(id: string, limit = 4) {
   const client = useDWChurchClient();
   return useQuery<Column[]>({
     queryKey: queryKeys.columns.related(id),
-    queryFn: () => client.getRelatedColumns(id, limit),
-    enabled: !!id,
+    queryFn: () => client!.getRelatedColumns(id, limit),
+    enabled: !!client && !!id,
     staleTime: STALE_TIME,
   });
 }
@@ -360,7 +359,8 @@ export function useAlbums(params?: ListParams) {
   const client = useDWChurchClient();
   return useQuery<PaginatedResponse<Album>>({
     queryKey: queryKeys.albums.list(params),
-    queryFn: () => client.getAlbums(params),
+    queryFn: () => client!.getAlbums(params),
+    enabled: !!client,
     staleTime: STALE_TIME,
   });
 }
@@ -369,8 +369,8 @@ export function useAlbum(id: string) {
   const client = useDWChurchClient();
   return useQuery<Album>({
     queryKey: queryKeys.albums.detail(id),
-    queryFn: () => client.getAlbum(id),
-    enabled: !!id,
+    queryFn: () => client!.getAlbum(id),
+    enabled: !!client && !!id,
     staleTime: STALE_TIME,
   });
 }
@@ -379,7 +379,7 @@ export function useCreateAlbum() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Omit<Album, 'id' | 'createdAt' | 'modifiedAt'>) => client.createAlbum(data),
+    mutationFn: (data: Omit<Album, 'id' | 'createdAt' | 'modifiedAt'>) => client!.createAlbum(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.albums.all }),
   });
 }
@@ -398,7 +398,7 @@ export function useDeleteAlbum() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => client.deleteAlbum(id),
+    mutationFn: (id: string) => client!.deleteAlbum(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.albums.all }),
   });
 }
@@ -407,8 +407,8 @@ export function useRelatedAlbums(id: string, limit = 4) {
   const client = useDWChurchClient();
   return useQuery<Album[]>({
     queryKey: queryKeys.albums.related(id),
-    queryFn: () => client.getRelatedAlbums(id, limit),
-    enabled: !!id,
+    queryFn: () => client!.getRelatedAlbums(id, limit),
+    enabled: !!client && !!id,
     staleTime: STALE_TIME,
   });
 }
@@ -418,7 +418,8 @@ export function useBanners(params?: BannerListParams) {
   const client = useDWChurchClient();
   return useQuery<PaginatedResponse<Banner>>({
     queryKey: queryKeys.banners.list(params),
-    queryFn: () => client.getBanners(params),
+    queryFn: () => client!.getBanners(params),
+    enabled: !!client,
     staleTime: STALE_TIME,
   });
 }
@@ -431,7 +432,7 @@ export function useCreateBanner() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Omit<Banner, 'id' | 'createdAt' | 'modifiedAt'>) => client.createBanner(data),
+    mutationFn: (data: Omit<Banner, 'id' | 'createdAt' | 'modifiedAt'>) => client!.createBanner(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.banners.all }),
   });
 }
@@ -450,7 +451,7 @@ export function useDeleteBanner() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => client.deleteBanner(id),
+    mutationFn: (id: string) => client!.deleteBanner(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.banners.all }),
   });
 }
@@ -459,8 +460,8 @@ export function useBanner(id: string) {
   const client = useDWChurchClient();
   return useQuery<Banner>({
     queryKey: queryKeys.banners.detail(id),
-    queryFn: () => client.getBanner(id),
-    enabled: !!id,
+    queryFn: () => client!.getBanner(id),
+    enabled: !!client && !!id,
     staleTime: STALE_TIME,
   });
 }
@@ -470,7 +471,8 @@ export function useEvents(params?: ListParams) {
   const client = useDWChurchClient();
   return useQuery<PaginatedResponse<Event>>({
     queryKey: queryKeys.events.list(params),
-    queryFn: () => client.getEvents(params),
+    queryFn: () => client!.getEvents(params),
+    enabled: !!client,
     staleTime: STALE_TIME,
   });
 }
@@ -479,8 +481,8 @@ export function useEvent(id: string) {
   const client = useDWChurchClient();
   return useQuery<Event>({
     queryKey: queryKeys.events.detail(id),
-    queryFn: () => client.getEvent(id),
-    enabled: !!id,
+    queryFn: () => client!.getEvent(id),
+    enabled: !!client && !!id,
     staleTime: STALE_TIME,
   });
 }
@@ -489,7 +491,7 @@ export function useCreateEvent() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Omit<Event, 'id' | 'createdAt' | 'modifiedAt'>) => client.createEvent(data),
+    mutationFn: (data: Omit<Event, 'id' | 'createdAt' | 'modifiedAt'>) => client!.createEvent(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.events.all }),
   });
 }
@@ -508,7 +510,7 @@ export function useDeleteEvent() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => client.deleteEvent(id),
+    mutationFn: (id: string) => client!.deleteEvent(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.events.all }),
   });
 }
@@ -517,8 +519,8 @@ export function useRelatedEvents(id: string, limit = 4) {
   const client = useDWChurchClient();
   return useQuery<Event[]>({
     queryKey: queryKeys.events.related(id),
-    queryFn: () => client.getRelatedEvents(id, limit),
-    enabled: !!id,
+    queryFn: () => client!.getRelatedEvents(id, limit),
+    enabled: !!client && !!id,
     staleTime: STALE_TIME,
   });
 }
@@ -528,7 +530,8 @@ export function useStaff(params?: StaffListParams) {
   const client = useDWChurchClient();
   return useQuery<Staff[]>({
     queryKey: queryKeys.staff.list(params),
-    queryFn: () => client.getStaff(params),
+    queryFn: () => client!.getStaff(params),
+    enabled: !!client,
     staleTime: STALE_TIME,
   });
 }
@@ -537,8 +540,8 @@ export function useStaffMember(id: string) {
   const client = useDWChurchClient();
   return useQuery<Staff>({
     queryKey: queryKeys.staff.detail(id),
-    queryFn: () => client.getStaffMember(id),
-    enabled: !!id,
+    queryFn: () => client!.getStaffMember(id),
+    enabled: !!client && !!id,
     staleTime: STALE_TIME,
   });
 }
@@ -547,7 +550,7 @@ export function useCreateStaff() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Omit<Staff, 'id'>) => client.createStaff(data),
+    mutationFn: (data: Omit<Staff, 'id'>) => client!.createStaff(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.staff.all }),
   });
 }
@@ -566,7 +569,7 @@ export function useDeleteStaff() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => client.deleteStaff(id),
+    mutationFn: (id: string) => client!.deleteStaff(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.staff.all }),
   });
 }
@@ -575,7 +578,7 @@ export function useReorderStaff() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (orderedIds: string[]) => client.reorderStaff(orderedIds),
+    mutationFn: (orderedIds: string[]) => client!.reorderStaff(orderedIds),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.staff.all }),
   });
 }
@@ -585,7 +588,8 @@ export function useHistory(params?: HistoryListParams) {
   const client = useDWChurchClient();
   return useQuery<History[]>({
     queryKey: queryKeys.history.list(params),
-    queryFn: () => client.getHistory(params),
+    queryFn: () => client!.getHistory(params),
+    enabled: !!client,
     staleTime: STALE_TIME,
   });
 }
@@ -594,8 +598,8 @@ export function useHistoryEntry(id: string) {
   const client = useDWChurchClient();
   return useQuery<History>({
     queryKey: queryKeys.history.detail(id),
-    queryFn: () => client.getHistoryEntry(id),
-    enabled: !!id,
+    queryFn: () => client!.getHistoryEntry(id),
+    enabled: !!client && !!id,
     staleTime: STALE_TIME,
   });
 }
@@ -604,7 +608,8 @@ export function useHistoryYears() {
   const client = useDWChurchClient();
   return useQuery<number[]>({
     queryKey: queryKeys.history.years,
-    queryFn: () => client.getHistoryYears(),
+    queryFn: () => client!.getHistoryYears(),
+    enabled: !!client,
     staleTime: STALE_TIME,
   });
 }
@@ -613,7 +618,7 @@ export function useCreateHistory() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Omit<History, 'id'>) => client.createHistory(data),
+    mutationFn: (data: Omit<History, 'id'>) => client!.createHistory(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.history.all }),
   });
 }
@@ -632,7 +637,7 @@ export function useDeleteHistory() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => client.deleteHistory(id),
+    mutationFn: (id: string) => client!.deleteHistory(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.history.all }),
   });
 }
@@ -642,7 +647,8 @@ export function useChurchSettings() {
   const client = useDWChurchClient();
   return useQuery<ChurchSettings>({
     queryKey: queryKeys.settings,
-    queryFn: () => client.getSettings(),
+    queryFn: () => client!.getSettings(),
+    enabled: !!client,
     staleTime: STALE_TIME,
   });
 }
@@ -651,7 +657,7 @@ export function useUpdateChurchSettings() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Partial<ChurchSettings>) => client.updateSettings(data),
+    mutationFn: (data: Partial<ChurchSettings>) => client!.updateSettings(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings }),
   });
 }
@@ -661,8 +667,8 @@ export function useRelatedPosts<T>(params: RelatedPostsParams) {
   const client = useDWChurchClient();
   return useQuery<T[]>({
     queryKey: ['related', params.postType, params.currentId, params.taxonomy],
-    queryFn: () => client.getRelatedPosts<T>(params),
-    enabled: !!params.currentId,
+    queryFn: () => client!.getRelatedPosts<T>(params),
+    enabled: !!client && !!params.currentId,
     staleTime: STALE_TIME,
   });
 }
@@ -672,7 +678,7 @@ export function useSermonCategories() {
   const client = useDWChurchClient();
   return useQuery<TaxonomyTerm[]>({
     queryKey: queryKeys.taxonomies.sermonCategories,
-    queryFn: () => client.getSermonCategories(),
+    queryFn: () => client!.getSermonCategories(),
     staleTime: 30 * 60 * 1000, // 30 minutes (taxonomies change rarely)
   });
 }
@@ -681,7 +687,8 @@ export function useSermonPreachers() {
   const client = useDWChurchClient();
   return useQuery<TaxonomyTerm[]>({
     queryKey: queryKeys.taxonomies.sermonPreachers,
-    queryFn: () => client.getSermonPreachers(),
+    queryFn: () => client!.getSermonPreachers(),
+    enabled: !!client,
     staleTime: 30 * 60 * 1000,
   });
 }
@@ -690,7 +697,8 @@ export function useBannerCategories() {
   const client = useDWChurchClient();
   return useQuery<TaxonomyTerm[]>({
     queryKey: queryKeys.taxonomies.bannerCategories,
-    queryFn: () => client.getBannerCategories(),
+    queryFn: () => client!.getBannerCategories(),
+    enabled: !!client,
     staleTime: 30 * 60 * 1000,
   });
 }
@@ -699,7 +707,8 @@ export function useAlbumCategories() {
   const client = useDWChurchClient();
   return useQuery<TaxonomyTerm[]>({
     queryKey: queryKeys.taxonomies.albumCategories,
-    queryFn: () => client.getAlbumCategories(),
+    queryFn: () => client!.getAlbumCategories(),
+    enabled: !!client,
     staleTime: 30 * 60 * 1000,
   });
 }
@@ -708,7 +717,8 @@ export function useStaffDepartments() {
   const client = useDWChurchClient();
   return useQuery<TaxonomyTerm[]>({
     queryKey: queryKeys.taxonomies.staffDepartments,
-    queryFn: () => client.getStaffDepartments(),
+    queryFn: () => client!.getStaffDepartments(),
+    enabled: !!client,
     staleTime: 30 * 60 * 1000,
   });
 }
@@ -718,7 +728,8 @@ export function usePages() {
   const client = useDWChurchClient();
   return useQuery<Page[]>({
     queryKey: queryKeys.pages.all,
-    queryFn: () => client.getPages(),
+    queryFn: () => client!.getPages(),
+    enabled: !!client,
     staleTime: STALE_TIME,
   });
 }
@@ -727,8 +738,8 @@ export function usePage(slug: string) {
   const client = useDWChurchClient();
   return useQuery<Page>({
     queryKey: queryKeys.pages.detail(slug),
-    queryFn: () => client.getPage(slug),
-    enabled: !!slug,
+    queryFn: () => client!.getPage(slug),
+    enabled: !!client && !!slug,
     staleTime: STALE_TIME,
   });
 }
@@ -737,7 +748,7 @@ export function useCreatePage() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Omit<Page, 'id' | 'sections'>) => client.createPage(data),
+    mutationFn: (data: Omit<Page, 'id' | 'sections'>) => client!.createPage(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.pages.all }),
   });
 }
@@ -756,7 +767,7 @@ export function useDeletePage() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => client.deletePage(id),
+    mutationFn: (id: string) => client!.deletePage(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.pages.all }),
   });
 }
@@ -765,8 +776,8 @@ export function usePageSections(pageId: string) {
   const client = useDWChurchClient();
   return useQuery<PageSection[]>({
     queryKey: queryKeys.pages.sections(pageId),
-    queryFn: () => client.getPageSections(pageId),
-    enabled: !!pageId,
+    queryFn: () => client!.getPageSections(pageId),
+    enabled: !!client && !!pageId,
     staleTime: STALE_TIME,
   });
 }
@@ -820,7 +831,8 @@ export function useMenus() {
   const client = useDWChurchClient();
   return useQuery<MenuItem[]>({
     queryKey: queryKeys.menus.all,
-    queryFn: () => client.getMenus(),
+    queryFn: () => client!.getMenus(),
+    enabled: !!client,
     staleTime: STALE_TIME,
   });
 }
@@ -829,7 +841,7 @@ export function useCreateMenu() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Omit<MenuItem, 'id' | 'children'>) => client.createMenu(data),
+    mutationFn: (data: Omit<MenuItem, 'id' | 'children'>) => client!.createMenu(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.menus.all }),
   });
 }
@@ -848,7 +860,7 @@ export function useDeleteMenu() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => client.deleteMenu(id),
+    mutationFn: (id: string) => client!.deleteMenu(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.menus.all }),
   });
 }
@@ -857,7 +869,7 @@ export function useReorderMenus() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (orderedIds: string[]) => client.reorderMenus(orderedIds),
+    mutationFn: (orderedIds: string[]) => client!.reorderMenus(orderedIds),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.menus.all }),
   });
 }
@@ -867,7 +879,8 @@ export function useTheme() {
   const client = useDWChurchClient();
   return useQuery<Theme>({
     queryKey: queryKeys.theme,
-    queryFn: () => client.getTheme(),
+    queryFn: () => client!.getTheme(),
+    enabled: !!client,
     staleTime: STALE_TIME,
   });
 }
@@ -876,7 +889,7 @@ export function useUpdateTheme() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Partial<Theme>) => client.updateTheme(data),
+    mutationFn: (data: Partial<Theme>) => client!.updateTheme(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.theme }),
   });
 }
@@ -886,7 +899,8 @@ export function useUsers() {
   const client = useDWChurchClient();
   return useQuery<AuthUser[]>({
     queryKey: ['users'] as const,
-    queryFn: () => client.getUsers(),
+    queryFn: () => client!.getUsers(),
+    enabled: !!client,
     staleTime: STALE_TIME,
   });
 }
@@ -895,7 +909,7 @@ export function useRemoveUser() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (userId: string) => client.removeUser(userId),
+    mutationFn: (userId: string) => client!.removeUser(userId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
   });
 }
@@ -905,7 +919,7 @@ export function useUploadFile() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation<UploadedFile, Error, File>({
-    mutationFn: (file) => client.uploadFile(file),
+    mutationFn: (file) => client!.uploadFile(file),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.files.all }),
   });
 }
@@ -914,7 +928,7 @@ export function useDeleteFile() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation<void, Error, string>({
-    mutationFn: (id) => client.deleteFile(id),
+    mutationFn: (id) => client!.deleteFile(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.files.all }),
   });
 }
@@ -923,7 +937,8 @@ export function useFiles() {
   const client = useDWChurchClient();
   return useQuery<UploadedFile[]>({
     queryKey: queryKeys.files.all,
-    queryFn: () => client.getFiles(),
+    queryFn: () => client!.getFiles(),
+    enabled: !!client,
     staleTime: STALE_TIME,
   });
 }
@@ -933,7 +948,8 @@ export function useDomains() {
   const client = useDWChurchClient();
   return useQuery({
     queryKey: ['domains'] as const,
-    queryFn: () => client.getDomains(),
+    queryFn: () => client!.getDomains(),
+    enabled: !!client,
     staleTime: STALE_TIME,
   });
 }
@@ -942,7 +958,7 @@ export function useAddDomain() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (domain: string) => client.addDomain(domain),
+    mutationFn: (domain: string) => client!.addDomain(domain),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['domains'] }),
   });
 }
@@ -951,7 +967,7 @@ export function useRemoveDomain() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => client.removeDomain(id),
+    mutationFn: (id: string) => client!.removeDomain(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['domains'] }),
   });
 }
@@ -960,7 +976,7 @@ export function useVerifyDomain() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => client.verifyDomain(id),
+    mutationFn: (id: string) => client!.verifyDomain(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['domains'] }),
   });
 }
@@ -970,7 +986,8 @@ export function useBillingStatus() {
   const client = useDWChurchClient();
   return useQuery({
     queryKey: ['billing', 'status'],
-    queryFn: () => client.getBillingStatus(),
+    queryFn: () => client!.getBillingStatus(),
+    enabled: !!client,
     staleTime: 60 * 1000,
   });
 }
@@ -986,6 +1003,6 @@ export function useBillingCheckout() {
 export function useBillingPortal() {
   const client = useDWChurchClient();
   return useMutation({
-    mutationFn: (returnUrl: string) => client.createPortalSession(returnUrl),
+    mutationFn: (returnUrl: string) => client!.createPortalSession(returnUrl),
   });
 }
