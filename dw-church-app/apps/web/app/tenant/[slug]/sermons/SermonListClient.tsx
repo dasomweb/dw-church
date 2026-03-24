@@ -28,10 +28,11 @@ export function SermonListClient({
   const [searchInput, setSearchInput] = useState(currentSearch ?? '');
 
   const buildUrl = useCallback(
-    (overrides: { page?: number; search?: string; category?: string }) => {
+    (overrides: { page?: number; search?: string | null; category?: string | null }) => {
       const params = new URLSearchParams();
-      const search = overrides.search ?? currentSearch;
-      const category = overrides.category ?? currentCategory;
+      // null = explicitly remove, undefined = keep current
+      const search = overrides.search === null ? '' : (overrides.search ?? currentSearch);
+      const category = overrides.category === null ? '' : (overrides.category ?? currentCategory);
       const page = overrides.page ?? 1;
 
       if (search) params.set('search', search);
@@ -112,7 +113,7 @@ export function SermonListClient({
               <button
                 onClick={() => {
                   setSearchInput('');
-                  router.push(buildUrl({ search: undefined, page: 1 }));
+                  router.push(buildUrl({ search: null, page: 1 }));
                 }}
                 className="ml-1 text-gray-400 hover:text-gray-600"
               >
@@ -124,7 +125,7 @@ export function SermonListClient({
             <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-gray-700">
               카테고리: {currentCategory}
               <button
-                onClick={() => router.push(buildUrl({ category: undefined, page: 1 }))}
+                onClick={() => router.push(buildUrl({ category: null, page: 1 }))}
                 className="ml-1 text-gray-400 hover:text-gray-600"
               >
                 &times;
