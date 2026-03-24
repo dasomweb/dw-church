@@ -37,7 +37,9 @@ export async function middleware(request: NextRequest) {
       if (res.ok) {
         const { slug } = (await res.json()) as { slug: string };
         if (slug) {
-          return NextResponse.rewrite(new URL(`/tenant/${slug}${pathname}`, request.url));
+          const url = new URL(`/tenant/${slug}${pathname}`, request.url);
+          url.search = request.nextUrl.search;
+          return NextResponse.rewrite(url);
         }
       }
     } catch {
@@ -49,8 +51,10 @@ export async function middleware(request: NextRequest) {
   // Extract tenant slug from subdomain
   const slug = hostname.split('.')[0];
   if (slug && slug !== 'www' && slug !== 'admin') {
-    // Rewrite to /tenant/[slug]/... path
-    return NextResponse.rewrite(new URL(`/tenant/${slug}${pathname}`, request.url));
+    // Rewrite to /tenant/[slug]/... path (preserve query string)
+    const url = new URL(`/tenant/${slug}${pathname}`, request.url);
+    url.search = request.nextUrl.search;
+    return NextResponse.rewrite(url);
   }
 
   return NextResponse.next();
