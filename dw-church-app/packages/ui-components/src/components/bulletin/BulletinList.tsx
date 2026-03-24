@@ -39,9 +39,7 @@ export function BulletinList({
   }
 
   return (
-    <div
-      className={`grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${className}`}
-    >
+    <div className={`overflow-hidden rounded-lg border border-gray-200 bg-white ${className}`}>
       {bulletins.map((bulletin) => (
         <BulletinCard
           key={bulletin.id}
