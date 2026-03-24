@@ -50,7 +50,26 @@ export async function middleware(request: NextRequest) {
 
   // Extract tenant slug from subdomain
   const slug = hostname.split('.')[0];
-  if (slug && slug !== 'www' && slug !== 'admin') {
+  if (slug && slug !== 'www' && slug !== 'admin' && slug !== 'api') {
+    // Verify tenant exists via API
+    try {
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api.truelight.app';
+      const res = await fetch(
+        `${apiBase}/api/v1/settings`,
+        {
+          headers: { 'X-Tenant-Slug': slug },
+          next: { revalidate: 60 },
+        },
+      );
+      if (!res.ok) {
+        // Tenant doesn't exist — return 404 page
+        const notFoundUrl = new URL('/not-found', request.url);
+        return NextResponse.rewrite(notFoundUrl, { status: 404 });
+      }
+    } catch {
+      // API unavailable — allow through to show error in page
+    }
+
     // Rewrite to /tenant/[slug]/... path (preserve query string)
     const url = new URL(`/tenant/${slug}${pathname}`, request.url);
     url.search = request.nextUrl.search;
