@@ -174,6 +174,9 @@ export class DWChurchClient {
       if (config.token) {
         headers['Authorization'] = `Bearer ${config.token}`;
       }
+      if (config.tenantSlug) {
+        headers['X-Tenant-Slug'] = config.tenantSlug;
+      }
       const adapter = new FetchAdapter(config.baseUrl, headers);
       this.fetchAdapter = adapter;
       this.api = adapter;
@@ -184,6 +187,13 @@ export class DWChurchClient {
   setToken(token: string): void {
     if (this.fetchAdapter) {
       this.fetchAdapter.setHeader('Authorization', `Bearer ${token}`);
+    }
+  }
+
+  /** Update the tenant slug header at runtime. */
+  setTenantSlug(slug: string): void {
+    if (this.fetchAdapter) {
+      this.fetchAdapter.setHeader('X-Tenant-Slug', slug);
     }
   }
 

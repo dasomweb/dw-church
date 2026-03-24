@@ -5,6 +5,8 @@ import { env } from '../../config/env.js';
 import { parsePagination } from '../../utils/pagination.js';
 import { createTenantSchema, updateTenantSchema } from './schema.js';
 import * as tenantService from './service.js';
+import { supabaseAdmin } from '../../config/supabase.js';
+import { prisma } from '../../config/database.js';
 
 const SUPER_ADMIN_EMAILS = env.SUPER_ADMIN_EMAILS;
 
@@ -62,4 +64,30 @@ export default async function tenantRoutes(app: FastifyInstance): Promise<void> 
     const stats = await tenantService.getGlobalStats();
     return reply.send(stats);
   });
+
+  // PUT /admin/users/:userId/tenant — Reassign a user to a different tenant
+  app.put<{ Params: { userId: string }; Body: { tenantSlug: string } }>(
+    '/users/:userId/tenant',
+    async (request, reply) => {
+      const { userId } = request.params;
+      const { tenantSlug } = request.body as { tenantSlug: string };
+
+      const tenant = await prisma.tenant.findFirst({
+        where: { slug: tenantSlug, isActive: true },
+        select: { id: true, slug: true },
+      });
+      if (!tenant) {
+        throw new AppError('TENANT_NOT_FOUND', 404, `Tenant '${tenantSlug}' not found`);
+      }
+
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+        user_metadata: { tenant_id: tenant.id, tenant_slug: tenant.slug },
+      });
+      if (error) {
+        throw new AppError('UPDATE_FAILED', 500, error.message);
+      }
+
+      return reply.send({ success: true, tenantId: tenant.id, tenantSlug: tenant.slug });
+    },
+  );
 }

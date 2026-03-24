@@ -121,6 +121,9 @@ export function useLogin() {
     mutationFn: (input) => client!.login(input),
     onSuccess: (session) => {
       client.setToken(session.accessToken);
+      if (session.user?.tenantSlug) {
+        client.setTenantSlug(session.user.tenantSlug);
+      }
       queryClient.setQueryData(queryKeys.auth.me, session.user);
     },
   });

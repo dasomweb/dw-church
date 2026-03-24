@@ -96,9 +96,10 @@ export function App({ config }: { config: AppConfig }) {
     const c = new DWChurchClient({
       baseUrl: config.baseUrl,
       token: session?.accessToken,
+      tenantSlug: session?.user?.tenantSlug,
     });
     return c;
-  }, [config.baseUrl, session?.accessToken]);
+  }, [config.baseUrl, session?.accessToken, session?.user?.tenantSlug]);
 
   // After hydrate, if session exists but is expired, attempt a refresh
   useEffect(() => {

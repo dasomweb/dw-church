@@ -357,6 +357,7 @@ export interface UploadedFile {
 export interface ClientConfig {
   baseUrl: string;
   token?: string;
+  tenantSlug?: string;
   adapter?: ApiAdapter;
 }
 
