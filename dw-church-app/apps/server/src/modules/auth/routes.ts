@@ -10,6 +10,9 @@ import {
   updateProfileSchema,
 } from './schema.js';
 import * as authService from './service.js';
+import { supabaseAdmin } from '../../config/supabase.js';
+import { prisma } from '../../config/database.js';
+import { AppError } from '../../middleware/error-handler.js';
 
 export default async function authRoutes(app: FastifyInstance): Promise<void> {
   // POST /auth/register
@@ -96,6 +99,41 @@ export default async function authRoutes(app: FastifyInstance): Promise<void> {
         request.user!.tenantSlug,
       );
       return reply.status(201).send(result);
+    },
+  );
+
+  // PUT /auth/switch-tenant — Owner can switch to a tenant they own
+  app.put(
+    '/switch-tenant',
+    { preHandler: [requireAuth] },
+    async (request, reply) => {
+      const { tenantSlug } = request.body as { tenantSlug: string };
+      if (!tenantSlug) {
+        throw new AppError('VALIDATION_ERROR', 400, 'tenantSlug is required');
+      }
+
+      const tenant = await prisma.tenant.findFirst({
+        where: { slug: tenantSlug, isActive: true },
+        select: { id: true, slug: true },
+      });
+      if (!tenant) {
+        throw new AppError('TENANT_NOT_FOUND', 404, `Tenant '${tenantSlug}' not found`);
+      }
+
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(
+        request.user!.id,
+        {
+          user_metadata: {
+            tenant_id: tenant.id,
+            tenant_slug: tenant.slug,
+          },
+        },
+      );
+      if (error) {
+        throw new AppError('UPDATE_FAILED', 500, error.message);
+      }
+
+      return reply.send({ success: true, tenantId: tenant.id, tenantSlug: tenant.slug });
     },
   );
 }
