@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
-import { useLogin } from '@dw-church/api-client';
+import { useLogin, DWChurchApiError } from '@dw-church/api-client';
 import { useAuthStore } from '../stores/auth';
 
 interface LoginFormData {
@@ -28,8 +28,16 @@ export default function LoginPage() {
       setSession(session);
       navigate('/');
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : '로그인에 실패했습니다.';
-      setErrorMsg(message);
+      if (err instanceof DWChurchApiError) {
+        if (err.status === 401) {
+          setErrorMsg('이메일 또는 비밀번호가 올바르지 않습니다.');
+        } else {
+          setErrorMsg(`서버 오류가 발생했습니다. (${err.status})`);
+        }
+      } else {
+        const message = err instanceof Error ? err.message : '로그인에 실패했습니다.';
+        setErrorMsg(message);
+      }
     }
   };
 
