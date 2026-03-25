@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import type { Page, PageSection, BlockType } from '@dw-church/api-client';
 import {
@@ -12,309 +12,321 @@ import {
   useDeleteSection,
   useReorderSections,
 } from '@dw-church/api-client';
+import type { BlockMeta, BlockCategory, PropSchema, PageTemplate } from '@dw-church/design-blocks';
+import {
+  getAllBlockMeta,
+  getBlockMeta,
+  getBlocksByCategory,
+  BLOCK_CATEGORY_LABELS,
+  templates,
+  getTemplatesByCategory,
+  TEMPLATE_CATEGORY_LABELS,
+} from '@dw-church/design-blocks';
 
-// ─── Block type definitions ───────────────────────────────────
-const BLOCK_CATEGORIES: { label: string; types: { type: BlockType; label: string; icon: string }[] }[] = [
-  {
-    label: '콘텐츠',
-    types: [
-      { type: 'hero_banner', label: '히어로 배너', icon: 'B' },
-      { type: 'text_image', label: '텍스트+이미지', icon: 'TI' },
-      { type: 'text_only', label: '텍스트', icon: 'T' },
-      { type: 'image_gallery', label: '이미지 갤러리', icon: 'IG' },
-      { type: 'video', label: '비디오', icon: 'V' },
-      { type: 'divider', label: '구분선', icon: '—' },
-    ],
-  },
-  {
-    label: 'CPT 블록',
-    types: [
-      { type: 'recent_sermons', label: '최근 설교', icon: 'RS' },
-      { type: 'recent_bulletins', label: '최근 주보', icon: 'RB' },
-      { type: 'album_gallery', label: '앨범 갤러리', icon: 'AG' },
-      { type: 'staff_grid', label: '교역자 그리드', icon: 'SG' },
-      { type: 'history_timeline', label: '연혁 타임라인', icon: 'HT' },
-      { type: 'event_grid', label: '이벤트 그리드', icon: 'EG' },
-    ],
-  },
-  {
-    label: '교회 정보',
-    types: [
-      { type: 'worship_schedule', label: '예배 시간', icon: 'WS' },
-      { type: 'location_map', label: '찾아오는 길', icon: 'LM' },
-      { type: 'contact_info', label: '연락처 정보', icon: 'CI' },
-      { type: 'newcomer_info', label: '새가족 안내', icon: 'NI' },
-    ],
-  },
-  {
-    label: '레이아웃',
-    types: [
-      { type: 'two_columns', label: '2단 레이아웃', icon: '2C' },
-      { type: 'three_columns', label: '3단 레이아웃', icon: '3C' },
-      { type: 'tabs', label: '탭', icon: 'TB' },
-      { type: 'accordion', label: '아코디언', icon: 'AC' },
-    ],
-  },
-];
-
-const ALL_BLOCK_TYPES = BLOCK_CATEGORIES.flatMap((c) => c.types);
-
-function getBlockLabel(type: BlockType): string {
-  return ALL_BLOCK_TYPES.find((b) => b.type === type)?.label ?? type;
-}
-
-function getBlockIcon(type: BlockType): string {
-  return ALL_BLOCK_TYPES.find((b) => b.type === type)?.icon ?? '?';
-}
-
-// ─── Section props form per blockType ────────────────────────
-function SectionPropsForm({
-  blockType,
+// ─── Dynamic Props Form (schema-driven) ──────────────────
+function DynamicPropsForm({
+  schema,
   props,
   onChange,
 }: {
-  blockType: BlockType;
+  schema: PropSchema[];
   props: Record<string, unknown>;
   onChange: (p: Record<string, unknown>) => void;
 }) {
   const set = (key: string, value: unknown) => onChange({ ...props, [key]: value });
 
-  switch (blockType) {
-    case 'text_image':
-      return (
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs font-medium mb-1">제목</label>
-            <input
-              value={(props.title as string) || ''}
-              onChange={(e) => set('title', e.target.value)}
-              className="w-full border rounded px-2 py-1.5 text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium mb-1">내용</label>
-            <textarea
-              value={(props.content as string) || ''}
-              onChange={(e) => set('content', e.target.value)}
-              rows={4}
-              className="w-full border rounded px-2 py-1.5 text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium mb-1">이미지 URL</label>
-            <input
-              value={(props.imageUrl as string) || ''}
-              onChange={(e) => set('imageUrl', e.target.value)}
-              className="w-full border rounded px-2 py-1.5 text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium mb-1">레이아웃</label>
-            <div className="flex gap-4">
-              {(['left', 'right', 'center'] as const).map((layout) => (
-                <label key={layout} className="flex items-center gap-1 text-sm">
-                  <input
-                    type="radio"
-                    name="text_image_layout"
-                    checked={props.layout === layout}
-                    onChange={() => set('layout', layout)}
-                  />
-                  {layout === 'left' ? '왼쪽' : layout === 'right' ? '오른쪽' : '중앙'}
-                </label>
-              ))}
-            </div>
-          </div>
-        </div>
-      );
+  if (schema.length === 0) {
+    return (
+      <div className="bg-gray-50 rounded p-3 text-sm text-gray-500">
+        이 블록은 기본 설정으로 작동합니다.
+      </div>
+    );
+  }
 
-    case 'worship_schedule': {
-      const schedules = (props.schedules as { name: string; time: string; location: string }[]) || [];
-      return (
-        <div className="space-y-3">
-          <label className="block text-xs font-medium">예배 시간표</label>
-          {schedules.map((item, idx) => (
-            <div key={idx} className="flex gap-2 items-end">
-              <div className="flex-1">
-                <label className="block text-xs text-gray-500">예배명</label>
+  return (
+    <div className="space-y-3">
+      {schema.map((field) => {
+        const value = props[field.key] ?? field.defaultValue ?? '';
+
+        switch (field.type) {
+          case 'string':
+          case 'url':
+          case 'image':
+          case 'color':
+            return (
+              <div key={field.key}>
+                <label className="block text-xs font-medium mb-1">
+                  {field.label}{field.required && <span className="text-red-400"> *</span>}
+                </label>
                 <input
-                  value={item.name}
-                  onChange={(e) => {
-                    const updated = [...schedules];
-                    updated[idx] = { ...item, name: e.target.value };
-                    set('schedules', updated);
-                  }}
-                  className="w-full border rounded px-2 py-1 text-sm"
+                  type={field.type === 'color' ? 'color' : 'text'}
+                  value={(value as string) || ''}
+                  onChange={(e) => set(field.key, e.target.value)}
+                  placeholder={field.placeholder}
+                  className={`w-full border rounded px-2 py-1.5 text-sm ${field.type === 'color' ? 'h-10' : ''}`}
                 />
               </div>
-              <div className="flex-1">
-                <label className="block text-xs text-gray-500">시간</label>
-                <input
-                  value={item.time}
-                  onChange={(e) => {
-                    const updated = [...schedules];
-                    updated[idx] = { ...item, time: e.target.value };
-                    set('schedules', updated);
-                  }}
-                  className="w-full border rounded px-2 py-1 text-sm"
+            );
+
+          case 'text':
+          case 'rich_text':
+            return (
+              <div key={field.key}>
+                <label className="block text-xs font-medium mb-1">
+                  {field.label}{field.required && <span className="text-red-400"> *</span>}
+                </label>
+                <textarea
+                  value={(value as string) || ''}
+                  onChange={(e) => set(field.key, e.target.value)}
+                  rows={4}
+                  className="w-full border rounded px-2 py-1.5 text-sm"
                 />
               </div>
-              <div className="flex-1">
-                <label className="block text-xs text-gray-500">장소</label>
+            );
+
+          case 'number':
+            return (
+              <div key={field.key}>
+                <label className="block text-xs font-medium mb-1">
+                  {field.label}{field.required && <span className="text-red-400"> *</span>}
+                </label>
                 <input
-                  value={item.location}
-                  onChange={(e) => {
-                    const updated = [...schedules];
-                    updated[idx] = { ...item, location: e.target.value };
-                    set('schedules', updated);
-                  }}
-                  className="w-full border rounded px-2 py-1 text-sm"
+                  type="number"
+                  min={field.min}
+                  max={field.max}
+                  step={field.step}
+                  value={(value as number) || 0}
+                  onChange={(e) => set(field.key, parseFloat(e.target.value) || 0)}
+                  className="w-32 border rounded px-2 py-1.5 text-sm"
                 />
               </div>
-              <button
-                type="button"
-                onClick={() => set('schedules', schedules.filter((_, i) => i !== idx))}
-                className="text-red-500 hover:text-red-700 text-sm px-2 py-1"
-              >
-                삭제
-              </button>
+            );
+
+          case 'boolean':
+            return (
+              <div key={field.key}>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={!!value}
+                    onChange={(e) => set(field.key, e.target.checked)}
+                    className="rounded"
+                  />
+                  {field.label}
+                </label>
+              </div>
+            );
+
+          case 'select':
+            return (
+              <div key={field.key}>
+                <label className="block text-xs font-medium mb-1">{field.label}</label>
+                <select
+                  value={(value as string) || ''}
+                  onChange={(e) => set(field.key, e.target.value)}
+                  className="w-full border rounded px-2 py-1.5 text-sm"
+                >
+                  <option value="">선택하세요</option>
+                  {field.options?.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+            );
+
+          case 'array':
+            return (
+              <ArrayField
+                key={field.key}
+                field={field}
+                value={(value as Record<string, unknown>[]) || []}
+                onChange={(arr) => set(field.key, arr)}
+              />
+            );
+
+          default:
+            return null;
+        }
+      })}
+    </div>
+  );
+}
+
+// ─── Array field for nested schemas ──────────────────────
+function ArrayField({
+  field,
+  value,
+  onChange,
+}: {
+  field: PropSchema;
+  value: Record<string, unknown>[];
+  onChange: (arr: Record<string, unknown>[]) => void;
+}) {
+  const addItem = () => {
+    const defaults: Record<string, unknown> = {};
+    field.arrayItemSchema?.forEach((s) => { defaults[s.key] = s.defaultValue ?? ''; });
+    onChange([...value, defaults]);
+  };
+
+  const removeItem = (idx: number) => onChange(value.filter((_, i) => i !== idx));
+
+  const updateItem = (idx: number, key: string, val: unknown) => {
+    const updated = [...value];
+    updated[idx] = { ...updated[idx], [key]: val };
+    onChange(updated);
+  };
+
+  return (
+    <div>
+      <label className="block text-xs font-medium mb-2">{field.label}</label>
+      {value.map((item, idx) => (
+        <div key={idx} className="flex gap-2 items-end mb-2 p-2 bg-gray-50 rounded">
+          {field.arrayItemSchema?.map((sub) => (
+            <div key={sub.key} className="flex-1">
+              <label className="block text-[10px] text-gray-500">{sub.label}</label>
+              {sub.type === 'text' ? (
+                <textarea
+                  value={(item[sub.key] as string) || ''}
+                  onChange={(e) => updateItem(idx, sub.key, e.target.value)}
+                  rows={2}
+                  className="w-full border rounded px-2 py-1 text-sm"
+                />
+              ) : (
+                <input
+                  value={(item[sub.key] as string) || ''}
+                  onChange={(e) => updateItem(idx, sub.key, e.target.value)}
+                  className="w-full border rounded px-2 py-1 text-sm"
+                />
+              )}
             </div>
           ))}
           <button
             type="button"
-            onClick={() => set('schedules', [...schedules, { name: '', time: '', location: '' }])}
-            className="text-sm text-blue-600 hover:text-blue-800"
+            onClick={() => removeItem(idx)}
+            className="text-red-500 hover:text-red-700 text-sm px-2 py-1 flex-shrink-0"
           >
-            + 예배 추가
+            삭제
           </button>
         </div>
-      );
-    }
-
-    case 'location_map':
-      return (
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs font-medium mb-1">주소</label>
-            <input
-              value={(props.address as string) || ''}
-              onChange={(e) => set('address', e.target.value)}
-              className="w-full border rounded px-2 py-1.5 text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium mb-1">설명</label>
-            <textarea
-              value={(props.description as string) || ''}
-              onChange={(e) => set('description', e.target.value)}
-              rows={3}
-              className="w-full border rounded px-2 py-1.5 text-sm"
-            />
-          </div>
-        </div>
-      );
-
-    case 'hero_banner':
-      return (
-        <div className="bg-gray-50 rounded p-3 text-sm text-gray-600">
-          배너 CPT에서 관리됩니다. 배너 관리 페이지에서 수정하세요.
-        </div>
-      );
-
-    // CPT blocks: just limit and optional filter
-    case 'recent_sermons':
-    case 'recent_bulletins':
-    case 'album_gallery':
-    case 'staff_grid':
-    case 'history_timeline':
-    case 'event_grid':
-      return (
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs font-medium mb-1">표시 개수</label>
-            <input
-              type="number"
-              min={1}
-              max={50}
-              value={(props.limit as number) || 6}
-              onChange={(e) => set('limit', parseInt(e.target.value) || 6)}
-              className="w-32 border rounded px-2 py-1.5 text-sm"
-            />
-          </div>
-          {(blockType === 'recent_sermons') && (
-            <div>
-              <label className="block text-xs font-medium mb-1">카테고리 slug (선택)</label>
-              <input
-                value={(props.categorySlug as string) || ''}
-                onChange={(e) => set('categorySlug', e.target.value)}
-                placeholder="예: sunday-sermon"
-                className="w-full border rounded px-2 py-1.5 text-sm"
-              />
-            </div>
-          )}
-        </div>
-      );
-
-    // Simple blocks
-    case 'text_only':
-      return (
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs font-medium mb-1">제목</label>
-            <input
-              value={(props.title as string) || ''}
-              onChange={(e) => set('title', e.target.value)}
-              className="w-full border rounded px-2 py-1.5 text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium mb-1">내용</label>
-            <textarea
-              value={(props.content as string) || ''}
-              onChange={(e) => set('content', e.target.value)}
-              rows={6}
-              className="w-full border rounded px-2 py-1.5 text-sm"
-            />
-          </div>
-        </div>
-      );
-
-    case 'video':
-      return (
-        <div>
-          <label className="block text-xs font-medium mb-1">YouTube URL</label>
-          <input
-            value={(props.youtubeUrl as string) || ''}
-            onChange={(e) => set('youtubeUrl', e.target.value)}
-            className="w-full border rounded px-2 py-1.5 text-sm"
-            placeholder="https://youtube.com/watch?v=..."
-          />
-        </div>
-      );
-
-    case 'image_gallery':
-      return (
-        <div>
-          <label className="block text-xs font-medium mb-1">이미지 URLs (한 줄에 하나)</label>
-          <textarea
-            value={((props.images as string[]) || []).join('\n')}
-            onChange={(e) => set('images', e.target.value.split('\n').filter(Boolean))}
-            rows={4}
-            className="w-full border rounded px-2 py-1.5 text-sm font-mono"
-            placeholder="https://example.com/img1.jpg"
-          />
-        </div>
-      );
-
-    default:
-      return (
-        <div className="bg-gray-50 rounded p-3 text-sm text-gray-500">
-          이 블록 유형의 설정은 기본 설정으로 작동합니다.
-        </div>
-      );
-  }
+      ))}
+      <button
+        type="button"
+        onClick={addItem}
+        className="text-sm text-blue-600 hover:text-blue-800"
+      >
+        + 항목 추가
+      </button>
+    </div>
+  );
 }
 
-// ─── Page form ───────────────────────────────────────────────
+// ─── Block label/icon helpers (registry-driven) ──────────
+function getBlockLabel(type: BlockType): string {
+  return getBlockMeta(type)?.label ?? type;
+}
+
+function getBlockIcon(type: BlockType): string {
+  const meta = getBlockMeta(type);
+  if (!meta) return '?';
+  return meta.icon.length <= 2 ? meta.icon.toUpperCase() : meta.icon.charAt(0).toUpperCase();
+}
+
+// ─── Build categories from registry ──────────────────────
+function useBlockCategories() {
+  return useMemo(() => {
+    const categoryOrder: BlockCategory[] = [
+      'hero', 'about', 'content_grid', 'text', 'gallery',
+      'staff', 'timeline', 'schedule', 'contact', 'newcomer',
+      'cta', 'footer', 'layout',
+    ];
+    return categoryOrder
+      .map((cat) => {
+        const entries = getBlocksByCategory(cat);
+        // Filter out legacy aliases (no propsSchema)
+        const blocks = entries
+          .filter((e) => e.meta.propsSchema.length > 0 || !e.meta.label.includes('레거시'))
+          .map((e) => e.meta);
+        return {
+          category: cat,
+          label: BLOCK_CATEGORY_LABELS[cat]?.ko ?? cat,
+          blocks,
+        };
+      })
+      .filter((c) => c.blocks.length > 0);
+  }, []);
+}
+
+// ─── Template Gallery ────────────────────────────────────
+function TemplateGallery({ onSelect, onClose }: { onSelect: (t: PageTemplate) => void; onClose: () => void }) {
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+
+  const filtered = selectedCategory === 'all'
+    ? templates
+    : templates.filter((t) => t.category === selectedCategory);
+
+  const categories = Object.entries(TEMPLATE_CATEGORY_LABELS);
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl w-full max-w-4xl max-h-[85vh] flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b">
+          <h3 className="text-lg font-bold">템플릿으로 시작하기</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+        </div>
+
+        <div className="flex gap-2 px-6 py-3 border-b overflow-x-auto flex-shrink-0">
+          <button
+            onClick={() => setSelectedCategory('all')}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+              selectedCategory === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            전체
+          </button>
+          {categories.map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setSelectedCategory(key)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                selectedCategory === key ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {label.ko}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {filtered.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => onSelect(t)}
+                className="text-left border border-gray-200 rounded-xl p-4 hover:border-blue-400 hover:shadow-md transition-all group"
+              >
+                <div className="aspect-video bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg mb-3 flex items-center justify-center">
+                  <span className="text-2xl opacity-50">{TEMPLATE_CATEGORY_LABELS[t.category]?.ko?.charAt(0) || '?'}</span>
+                </div>
+                <h4 className="font-bold text-sm group-hover:text-blue-600 transition-colors">{t.name}</h4>
+                <p className="text-xs text-gray-500 mt-1 line-clamp-2">{t.description}</p>
+                <div className="flex gap-1 mt-2">
+                  <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
+                    {t.sections.length}개 섹션
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+          {filtered.length === 0 && (
+            <p className="text-center text-gray-400 py-12">이 카테고리에 템플릿이 없습니다.</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Page form ───────────────────────────────────────────
 interface PageFormData {
   title: string;
   slug: string;
@@ -322,14 +334,16 @@ interface PageFormData {
   isHome: boolean;
 }
 
-// ─── Main component ─────────────────────────────────────────
+// ─── Main component ─────────────────────────────────────
 export default function PageEditor() {
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
   const [showAddBlock, setShowAddBlock] = useState(false);
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [sectionProps, setSectionProps] = useState<Record<string, Record<string, unknown>>>({});
   const [showPageForm, setShowPageForm] = useState(false);
+  const [showTemplateGallery, setShowTemplateGallery] = useState(false);
 
+  const blockCategories = useBlockCategories();
   const { data: pages, isLoading: pagesLoading } = usePages();
   const { data: sections } = usePageSections(selectedPageId || '');
   const createPage = useCreatePage();
@@ -393,16 +407,33 @@ export default function PageEditor() {
 
   const handleAddSection = (blockType: BlockType) => {
     if (!selectedPageId) return;
+    const meta = getBlockMeta(blockType);
     createSection.mutate({
       pageId: selectedPageId,
       data: {
         blockType,
-        props: {},
+        props: meta?.defaultProps ?? {},
         sortOrder: sortedSections.length,
         isVisible: true,
       },
     });
     setShowAddBlock(false);
+  };
+
+  const handleApplyTemplate = (template: PageTemplate) => {
+    if (!selectedPageId) return;
+    template.sections.forEach((sec, i) => {
+      createSection.mutate({
+        pageId: selectedPageId,
+        data: {
+          blockType: sec.blockType,
+          props: sec.defaultProps,
+          sortOrder: sortedSections.length + i,
+          isVisible: sec.isVisible,
+        },
+      });
+    });
+    setShowTemplateGallery(false);
   };
 
   const handleMoveSection = (index: number, direction: 'up' | 'down') => {
@@ -504,6 +535,12 @@ export default function PageEditor() {
               </div>
               <div className="flex gap-2">
                 <button
+                  onClick={() => setShowTemplateGallery(true)}
+                  className="text-sm px-3 py-1.5 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200"
+                >
+                  템플릿 적용
+                </button>
+                <button
                   onClick={handleEditPage}
                   className="text-sm px-3 py-1.5 bg-gray-100 rounded hover:bg-gray-200"
                 >
@@ -519,96 +556,80 @@ export default function PageEditor() {
             </div>
 
             {/* Sections */}
-            {sortedSections.map((section, index) => (
-              <div
-                key={section.id}
-                className={`bg-white border rounded-lg overflow-hidden ${
-                  !section.isVisible ? 'opacity-60' : ''
-                } ${editingSectionId === section.id ? 'border-blue-300 ring-1 ring-blue-200' : 'border-gray-200'}`}
-              >
-                {/* Section header */}
-                <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 border-b">
-                  <span className="w-8 h-8 bg-blue-100 text-blue-700 text-xs font-bold rounded flex items-center justify-center">
-                    {getBlockIcon(section.blockType)}
-                  </span>
-                  <span className="text-sm font-medium flex-1">
-                    {getBlockLabel(section.blockType)}
-                  </span>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => handleMoveSection(index, 'up')}
-                      disabled={index === 0}
-                      className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30"
-                      title="위로"
-                    >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M5 15l7-7 7 7" /></svg>
-                    </button>
-                    <button
-                      onClick={() => handleMoveSection(index, 'down')}
-                      disabled={index === sortedSections.length - 1}
-                      className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30"
-                      title="아래로"
-                    >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 9l-7 7-7-7" /></svg>
-                    </button>
-                    <button
-                      onClick={() => handleToggleVisibility(section)}
-                      className="p-1 text-gray-400 hover:text-gray-700"
-                      title={section.isVisible ? '숨기기' : '표시'}
-                    >
-                      {section.isVisible ? (
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                      ) : (
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+            {sortedSections.map((section, index) => {
+              const meta = getBlockMeta(section.blockType);
+              return (
+                <div
+                  key={section.id}
+                  className={`bg-white border rounded-lg overflow-hidden ${
+                    !section.isVisible ? 'opacity-60' : ''
+                  } ${editingSectionId === section.id ? 'border-blue-300 ring-1 ring-blue-200' : 'border-gray-200'}`}
+                >
+                  <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 border-b">
+                    <span className="w-8 h-8 bg-blue-100 text-blue-700 text-xs font-bold rounded flex items-center justify-center">
+                      {getBlockIcon(section.blockType)}
+                    </span>
+                    <div className="flex-1">
+                      <span className="text-sm font-medium">{getBlockLabel(section.blockType)}</span>
+                      {meta?.category && (
+                        <span className="ml-2 text-[10px] text-gray-400">
+                          {BLOCK_CATEGORY_LABELS[meta.category]?.ko}
+                        </span>
                       )}
-                    </button>
-                    <button
-                      onClick={() =>
-                        setEditingSectionId(editingSectionId === section.id ? null : section.id)
-                      }
-                      className={`p-1 hover:text-gray-700 ${editingSectionId === section.id ? 'text-blue-600' : 'text-gray-400'}`}
-                      title="편집"
-                    >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                    </button>
-                    <button
-                      onClick={() => handleDeleteSection(section)}
-                      className="p-1 text-gray-400 hover:text-red-600"
-                      title="삭제"
-                    >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Section edit form */}
-                {editingSectionId === section.id && (
-                  <div className="p-4 border-t bg-white">
-                    <SectionPropsForm
-                      blockType={section.blockType}
-                      props={sectionProps[section.id] ?? section.props}
-                      onChange={(p) =>
-                        setSectionProps((prev) => ({ ...prev, [section.id]: p }))
-                      }
-                    />
-                    <div className="flex gap-2 mt-4 pt-3 border-t">
-                      <button
-                        onClick={() => handleSaveSectionProps(section)}
-                        className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-                      >
-                        저장
+                    </div>
+                    <div className="flex gap-1">
+                      <button onClick={() => handleMoveSection(index, 'up')} disabled={index === 0} className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30" title="위로">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M5 15l7-7 7 7" /></svg>
+                      </button>
+                      <button onClick={() => handleMoveSection(index, 'down')} disabled={index === sortedSections.length - 1} className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30" title="아래로">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 9l-7 7-7-7" /></svg>
+                      </button>
+                      <button onClick={() => handleToggleVisibility(section)} className="p-1 text-gray-400 hover:text-gray-700" title={section.isVisible ? '숨기기' : '표시'}>
+                        {section.isVisible ? (
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                        ) : (
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                        )}
                       </button>
                       <button
-                        onClick={() => setEditingSectionId(null)}
-                        className="px-4 py-1.5 bg-gray-200 text-sm rounded hover:bg-gray-300"
+                        onClick={() => setEditingSectionId(editingSectionId === section.id ? null : section.id)}
+                        className={`p-1 hover:text-gray-700 ${editingSectionId === section.id ? 'text-blue-600' : 'text-gray-400'}`}
+                        title="편집"
                       >
-                        취소
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                      </button>
+                      <button onClick={() => handleDeleteSection(section)} className="p-1 text-gray-400 hover:text-red-600" title="삭제">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M6 18L18 6M6 6l12 12" /></svg>
                       </button>
                     </div>
                   </div>
-                )}
-              </div>
-            ))}
+
+                  {editingSectionId === section.id && (
+                    <div className="p-4 border-t bg-white">
+                      <DynamicPropsForm
+                        schema={meta?.propsSchema ?? []}
+                        props={sectionProps[section.id] ?? section.props}
+                        onChange={(p) => setSectionProps((prev) => ({ ...prev, [section.id]: p }))}
+                      />
+                      <div className="flex gap-2 mt-4 pt-3 border-t">
+                        <button
+                          onClick={() => handleSaveSectionProps(section)}
+                          className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                        >
+                          저장
+                        </button>
+                        <button
+                          onClick={() => setEditingSectionId(null)}
+                          className="px-4 py-1.5 bg-gray-200 text-sm rounded hover:bg-gray-300"
+                        >
+                          취소
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
 
             {/* Add section button */}
             <div className="relative">
@@ -621,21 +642,24 @@ export default function PageEditor() {
 
               {showAddBlock && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-96 overflow-y-auto">
-                  {BLOCK_CATEGORIES.map((category) => (
-                    <div key={category.label}>
+                  {blockCategories.map((category) => (
+                    <div key={category.category}>
                       <div className="px-4 py-2 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         {category.label}
                       </div>
-                      {category.types.map((block) => (
+                      {category.blocks.map((block) => (
                         <button
                           key={block.type}
                           onClick={() => handleAddSection(block.type)}
                           className="w-full text-left px-4 py-2.5 hover:bg-blue-50 flex items-center gap-3 text-sm"
                         >
                           <span className="w-7 h-7 bg-blue-100 text-blue-700 text-xs font-bold rounded flex items-center justify-center flex-shrink-0">
-                            {block.icon}
+                            {block.icon.length <= 2 ? block.icon.toUpperCase() : block.icon.charAt(0).toUpperCase()}
                           </span>
-                          {block.label}
+                          <div>
+                            <span className="font-medium">{block.label}</span>
+                            <span className="text-xs text-gray-400 ml-2">{block.description}</span>
+                          </div>
                         </button>
                       ))}
                     </div>
@@ -646,6 +670,14 @@ export default function PageEditor() {
           </div>
         )}
       </div>
+
+      {/* Template gallery modal */}
+      {showTemplateGallery && (
+        <TemplateGallery
+          onSelect={handleApplyTemplate}
+          onClose={() => setShowTemplateGallery(false)}
+        />
+      )}
 
       {/* Page form modal */}
       {showPageForm && (
@@ -661,9 +693,7 @@ export default function PageEditor() {
                   {...register('title', { required: '제목을 입력하세요' })}
                   className="w-full border rounded px-3 py-2 text-sm"
                 />
-                {errors.title && (
-                  <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
-                )}
+                {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Slug</label>
@@ -672,9 +702,7 @@ export default function PageEditor() {
                   className="w-full border rounded px-3 py-2 text-sm"
                   placeholder="about-us"
                 />
-                {errors.slug && (
-                  <p className="text-red-500 text-sm mt-1">{errors.slug.message}</p>
-                )}
+                {errors.slug && <p className="text-red-500 text-sm mt-1">{errors.slug.message}</p>}
               </div>
               <div className="flex gap-4">
                 <div className="flex-1">
@@ -699,11 +727,7 @@ export default function PageEditor() {
                 >
                   저장
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setShowPageForm(false)}
-                  className="px-4 py-2 bg-gray-200 text-sm rounded hover:bg-gray-300"
-                >
+                <button type="button" onClick={() => setShowPageForm(false)} className="px-4 py-2 bg-gray-200 text-sm rounded hover:bg-gray-300">
                   취소
                 </button>
               </div>

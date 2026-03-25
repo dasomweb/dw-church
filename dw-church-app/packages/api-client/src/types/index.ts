@@ -238,27 +238,8 @@ export interface TaxonomyTerm {
 }
 
 // ─── Page System ────────────────────────────────────────────
-export type BlockType =
-  | 'hero_banner'
-  | 'text_image'
-  | 'text_only'
-  | 'image_gallery'
-  | 'video'
-  | 'divider'
-  | 'recent_sermons'
-  | 'recent_bulletins'
-  | 'album_gallery'
-  | 'staff_grid'
-  | 'history_timeline'
-  | 'event_grid'
-  | 'worship_schedule'
-  | 'location_map'
-  | 'contact_info'
-  | 'newcomer_info'
-  | 'two_columns'
-  | 'three_columns'
-  | 'tabs'
-  | 'accordion';
+/** Block type string — extensible via @dw-church/design-blocks registry. */
+export type BlockType = string;
 
 export interface PageSection {
   id: string;
