@@ -3,6 +3,7 @@ import { requireAuth, optionalAuth } from '../../middleware/auth.js';
 import { AppError } from '../../middleware/error-handler.js';
 import { updateThemeSchema } from './schema.js';
 import * as themeService from './service.js';
+import { getAllPresets, getPreset } from './presets.js';
 
 export default async function themeRoutes(app: FastifyInstance): Promise<void> {
   // GET /theme — public
@@ -13,6 +14,21 @@ export default async function themeRoutes(app: FastifyInstance): Promise<void> {
     }
     const theme = await themeService.getTheme(schema);
     return reply.send(theme);
+  });
+
+  // GET /theme/presets — list all template presets (public)
+  app.get('/presets', async (_request, reply) => {
+    return reply.send({ data: getAllPresets() });
+  });
+
+  // GET /theme/presets/:name — single preset (public)
+  app.get('/presets/:name', async (request, reply) => {
+    const { name } = request.params as { name: string };
+    const preset = getPreset(name);
+    if (!preset) {
+      throw new AppError('PRESET_NOT_FOUND', 404, `Template preset "${name}" not found`);
+    }
+    return reply.send(preset);
   });
 
   // PUT /theme — auth required
