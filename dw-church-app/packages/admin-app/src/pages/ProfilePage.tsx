@@ -14,6 +14,7 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 
 const passwordSchema = z
   .object({
+    currentPassword: z.string().min(1, '현재 비밀번호를 입력해주세요'),
     newPassword: z.string().min(8, '비밀번호는 8자 이상이어야 합니다'),
     confirmPassword: z.string().min(1, '비밀번호 확인을 입력해주세요'),
   })
@@ -79,10 +80,35 @@ export default function ProfilePage() {
     }
   };
 
-  const onPasswordSubmit = async (_data: PasswordFormData) => {
-    // TODO: Implement password change via reset-password flow or a dedicated endpoint
-    showToast('info', '비밀번호 변경 기능은 준비 중입니다. 비밀번호 찾기를 이용해주세요.');
-    resetPassword();
+  const onPasswordSubmit = async (data: PasswordFormData) => {
+    try {
+      const host = window.location.hostname;
+      const baseUrl = host.startsWith('admin.')
+        ? `https://api.${host.replace('admin.', '')}`
+        : (import.meta.env.VITE_API_BASE_URL as string) || '';
+
+      const res = await fetch(`${baseUrl}/api/v1/auth/change-password`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.accessToken || ''}`,
+        },
+        body: JSON.stringify({
+          currentPassword: data.currentPassword,
+          newPassword: data.newPassword,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: { message: '변경 실패' } }));
+        throw new Error(err.error?.message || `HTTP ${res.status}`);
+      }
+
+      showToast('success', '비밀번호가 변경되었습니다.');
+      resetPassword();
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '비밀번호 변경에 실패했습니다.');
+    }
   };
 
   if (!user) {
@@ -155,6 +181,23 @@ export default function ProfilePage() {
         <h2 className="text-lg font-semibold text-gray-900 mb-6">비밀번호 변경</h2>
 
         <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="space-y-4">
+          {/* Current Password */}
+          <div>
+            <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1">
+              현재 비밀번호
+            </label>
+            <input
+              id="currentPassword"
+              type="password"
+              {...registerPassword('currentPassword')}
+              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              placeholder="현재 비밀번호 입력"
+            />
+            {passwordErrors.currentPassword && (
+              <p className="mt-1 text-sm text-red-600">{passwordErrors.currentPassword.message}</p>
+            )}
+          </div>
+
           {/* New Password */}
           <div>
             <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">

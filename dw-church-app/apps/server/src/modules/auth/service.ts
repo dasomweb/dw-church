@@ -1,12 +1,12 @@
 import { prisma } from '../../config/database.js';
 import { supabaseAdmin } from '../../config/supabase.js';
-import { env } from '../../config/env.js';
 import { AppError } from '../../middleware/error-handler.js';
 import { createTenantSchema } from '../../utils/schema-manager.js';
 import type { RegisterInput, LoginInput, InviteInput } from './schema.js';
 
-function checkSuperAdmin(email: string): boolean {
-  return env.SUPER_ADMIN_EMAILS.includes(email);
+/** Check super admin from user_metadata role (DB-driven, not env var). */
+function isSuperAdminRole(role: string | undefined): boolean {
+  return role === 'super_admin';
 }
 
 export async function register(input: RegisterInput) {
@@ -82,7 +82,7 @@ export async function register(input: RegisterInput) {
       role: 'owner',
       tenantId: tenant.id,
       tenantSlug: slug,
-      isSuperAdmin: checkSuperAdmin(email),
+      isSuperAdmin: false,
     },
     tenant: { id: tenant.id, slug: tenant.slug, name: tenant.name },
   };
@@ -113,7 +113,7 @@ export async function login(input: LoginInput) {
       role: data.user!.user_metadata?.role ?? 'member',
       tenantId: data.user!.user_metadata?.tenant_id ?? '',
       tenantSlug: data.user!.user_metadata?.tenant_slug ?? '',
-      isSuperAdmin: checkSuperAdmin(userEmail),
+      isSuperAdmin: isSuperAdminRole(data.user!.user_metadata?.role as string),
     },
   };
 }
@@ -140,7 +140,7 @@ export async function refreshSession(refreshToken: string) {
       role: data.user!.user_metadata?.role ?? 'member',
       tenantId: data.user!.user_metadata?.tenant_id ?? '',
       tenantSlug: data.user!.user_metadata?.tenant_slug ?? '',
-      isSuperAdmin: checkSuperAdmin(refreshEmail),
+      isSuperAdmin: isSuperAdminRole(data.user!.user_metadata?.role as string),
     },
   };
 }
@@ -278,4 +278,30 @@ export async function inviteUser(
   await supabaseAdmin.auth.admin.inviteUserByEmail(input.email);
 
   return { user: data.user };
+}
+
+export async function changePassword(
+  userId: string,
+  email: string,
+  currentPassword: string,
+  newPassword: string,
+) {
+  // Verify current password by attempting sign-in
+  const { error: verifyError } = await supabaseAdmin.auth.signInWithPassword({
+    email,
+    password: currentPassword,
+  });
+
+  if (verifyError) {
+    throw new AppError('INVALID_PASSWORD', 400, '현재 비밀번호가 올바르지 않습니다.');
+  }
+
+  // Update to new password
+  const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+    password: newPassword,
+  });
+
+  if (error) {
+    throw new AppError('PASSWORD_CHANGE_FAILED', 500, error.message);
+  }
 }

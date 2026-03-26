@@ -8,6 +8,7 @@ import {
   resetPasswordSchema,
   inviteSchema,
   updateProfileSchema,
+  changePasswordSchema,
 } from './schema.js';
 import * as authService from './service.js';
 import { supabaseAdmin } from '../../config/supabase.js';
@@ -134,6 +135,22 @@ export default async function authRoutes(app: FastifyInstance): Promise<void> {
       }
 
       return reply.send({ success: true, tenantId: tenant.id, tenantSlug: tenant.slug });
+    },
+  );
+
+  // PUT /auth/change-password
+  app.put(
+    '/change-password',
+    { preHandler: [requireAuth] },
+    async (request, reply) => {
+      const body = changePasswordSchema.parse(request.body);
+      await authService.changePassword(
+        request.user!.id,
+        request.user!.email,
+        body.currentPassword,
+        body.newPassword,
+      );
+      return reply.send({ message: '비밀번호가 변경되었습니다.' });
     },
   );
 }
