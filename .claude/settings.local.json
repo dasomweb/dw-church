@@ -18,7 +18,8 @@
       "Bash(curl -s -w \"\\\\nHTTP:%{http_code}\" \"https://api.truelight.app/health\")",
       "Bash(pip install:*)",
       "Bash(python3 -c \":*)",
-      "Bash(grep -rn \"WHERE.*id = $1[^:]\" --include=\"*.ts\")"
+      "Bash(grep -rn \"WHERE.*id = $1[^:]\" --include=\"*.ts\")",
+      "WebFetch(domain:api.truelight.app)"
     ]
   }
 }
