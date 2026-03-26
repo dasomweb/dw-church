@@ -1,12 +1,17 @@
 import { prisma } from '../../config/database.js';
 import { supabaseAdmin } from '../../config/supabase.js';
+import { env } from '../../config/env.js';
 import { AppError } from '../../middleware/error-handler.js';
 import { createTenantSchema } from '../../utils/schema-manager.js';
 import type { RegisterInput, LoginInput, InviteInput } from './schema.js';
 
-/** Check super admin from user_metadata role (DB-driven, not env var). */
-function isSuperAdminRole(role: string | undefined): boolean {
-  return role === 'super_admin';
+/**
+ * Check super admin: role from DB, with env var fallback for bootstrap.
+ */
+function checkIsSuperAdmin(role: string | undefined, email: string): boolean {
+  if (role === 'super_admin') return true;
+  if (email && env.SUPER_ADMIN_EMAILS.includes(email)) return true;
+  return false;
 }
 
 export async function register(input: RegisterInput) {
@@ -113,7 +118,7 @@ export async function login(input: LoginInput) {
       role: data.user!.user_metadata?.role ?? 'member',
       tenantId: data.user!.user_metadata?.tenant_id ?? '',
       tenantSlug: data.user!.user_metadata?.tenant_slug ?? '',
-      isSuperAdmin: isSuperAdminRole(data.user!.user_metadata?.role as string),
+      isSuperAdmin: checkIsSuperAdmin(data.user!.user_metadata?.role as string, userEmail),
     },
   };
 }
@@ -140,7 +145,7 @@ export async function refreshSession(refreshToken: string) {
       role: data.user!.user_metadata?.role ?? 'member',
       tenantId: data.user!.user_metadata?.tenant_id ?? '',
       tenantSlug: data.user!.user_metadata?.tenant_slug ?? '',
-      isSuperAdmin: isSuperAdminRole(data.user!.user_metadata?.role as string),
+      isSuperAdmin: checkIsSuperAdmin(data.user!.user_metadata?.role as string, refreshEmail),
     },
   };
 }

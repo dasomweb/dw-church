@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { requireAuth } from '../../middleware/auth.js';
 import { AppError } from '../../middleware/error-handler.js';
+import { env } from '../../config/env.js';
 import { parsePagination } from '../../utils/pagination.js';
 import { createTenantSchema, updateTenantSchema } from './schema.js';
 import * as tenantService from './service.js';
@@ -8,15 +9,18 @@ import { supabaseAdmin } from '../../config/supabase.js';
 import { prisma } from '../../config/database.js';
 
 /**
- * Require super_admin role (stored in Supabase user_metadata.role).
- * No more environment variable — role is DB-driven.
+ * Require super_admin role.
+ * Primary: user_metadata.role === 'super_admin' (DB-driven)
+ * Fallback: SUPER_ADMIN_EMAILS env var (for bootstrap only)
  */
 async function requireSuperAdmin(
   request: FastifyRequest,
   reply: FastifyReply,
 ): Promise<void> {
   await requireAuth(request, reply);
-  if (request.user?.role !== 'super_admin') {
+  const isSuperByRole = request.user?.role === 'super_admin';
+  const isSuperByEnv = !!request.user?.email && env.SUPER_ADMIN_EMAILS.includes(request.user.email);
+  if (!isSuperByRole && !isSuperByEnv) {
     throw new AppError('FORBIDDEN', 403, 'Super admin access required');
   }
 }
