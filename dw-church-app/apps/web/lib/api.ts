@@ -97,7 +97,7 @@ export async function getPages(slug: string): Promise<any[]> {
 
 export async function getHomePage(slug: string): Promise<any> {
   const pages = await getPages(slug);
-  const home = pages.find((p: any) => p.isHome || p.is_home || p.slug === 'home');
+  const home = pages.find((p: any) => p.isHome || p.slug === 'home');
   if (!home) throw new Error('Home page not found');
 
   // Get sections for this page
@@ -108,10 +108,10 @@ export async function getHomePage(slug: string): Promise<any> {
     ...home,
     sections: sections.map((s: any) => ({
       id: s.id,
-      blockType: s.blockType ?? s.block_type,
+      blockType: s.blockType,
       props: s.props ?? {},
-      sortOrder: s.sortOrder ?? s.sort_order ?? 0,
-      isVisible: s.isVisible ?? s.is_visible ?? true,
+      sortOrder: s.sortOrder ?? 0,
+      isVisible: s.isVisible ?? true,
     })),
   };
 }
@@ -128,10 +128,10 @@ export async function getPageBySlug(tenantSlug: string, pageSlug: string): Promi
     ...page,
     sections: sections.map((s: any) => ({
       id: s.id,
-      blockType: s.blockType ?? s.block_type,
+      blockType: s.blockType,
       props: s.props ?? {},
-      sortOrder: s.sortOrder ?? s.sort_order ?? 0,
-      isVisible: s.isVisible ?? s.is_visible ?? true,
+      sortOrder: s.sortOrder ?? 0,
+      isVisible: s.isVisible ?? true,
     })),
   };
 }

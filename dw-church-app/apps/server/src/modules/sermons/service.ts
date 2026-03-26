@@ -30,7 +30,8 @@ export async function listSermons(schema: string, params: ListParams) {
     values.push(status);
   }
   if (search) {
-    whereClause += ` AND s.title ILIKE $${paramIndex++}`;
+    whereClause += ` AND (s.title ILIKE $${paramIndex} OR p.name ILIKE $${paramIndex})`;
+    paramIndex++;
     values.push(`%${search}%`);
   }
   if (categoryId) {
@@ -63,6 +64,7 @@ export async function listSermons(schema: string, params: ListParams) {
     prisma.$queryRawUnsafe<[{ total: number }]>(
       `SELECT COUNT(*)::int AS total
        FROM "${schema}".sermons s
+       LEFT JOIN "${schema}".preachers p ON p.id = s.preacher_id
        ${whereClause}`,
       ...values,
     ),
