@@ -12,16 +12,172 @@ import {
   useDeleteSection,
   useReorderSections,
 } from '@dw-church/api-client';
-import type { BlockMeta, BlockCategory, PropSchema, PageTemplate } from '@dw-church/design-blocks';
-import {
-  getAllBlockMeta,
-  getBlockMeta,
-  getBlocksByCategory,
-  BLOCK_CATEGORY_LABELS,
-  templates,
-  getTemplatesByCategory,
-  TEMPLATE_CATEGORY_LABELS,
-} from '@dw-church/design-blocks';
+// ─── Inline block/template metadata (from @dw-church/design-blocks) ──
+// Avoids external dependency that breaks Vercel builds.
+// When design-blocks is published to npm, replace with:
+//   import { ... } from '@dw-church/design-blocks';
+
+type PropFieldType = 'string' | 'text' | 'number' | 'boolean' | 'select' | 'image' | 'url' | 'color' | 'array' | 'rich_text';
+
+interface PropSchema {
+  key: string;
+  type: PropFieldType;
+  label: string;
+  required?: boolean;
+  defaultValue?: unknown;
+  placeholder?: string;
+  options?: { label: string; value: string }[];
+  arrayItemSchema?: PropSchema[];
+  min?: number;
+  max?: number;
+  step?: number;
+}
+
+interface BlockMeta {
+  type: string;
+  label: string;
+  category: string;
+  icon: string;
+  description: string;
+  defaultProps: Record<string, unknown>;
+  propsSchema: PropSchema[];
+}
+
+interface PageTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  sections: { blockType: string; defaultProps: Record<string, unknown>; sortOrder: number; isVisible: boolean }[];
+}
+
+const BLOCK_REGISTRY: BlockMeta[] = [
+  // Hero
+  { type: 'hero_full_width', label: '풀 와이드 히어로', category: '히어로', icon: 'H', description: '전체 너비 배경 이미지 히어로', defaultProps: { title: '환영합니다', height: 'lg' }, propsSchema: [{ key: 'title', type: 'string', label: '제목', required: true }, { key: 'subtitle', type: 'string', label: '부제목' }, { key: 'backgroundImageUrl', type: 'image', label: '배경 이미지' }, { key: 'ctaLabel', type: 'string', label: 'CTA 버튼' }, { key: 'ctaUrl', type: 'url', label: 'CTA 링크' }, { key: 'height', type: 'select', label: '높이', options: [{ label: '작게', value: 'sm' }, { label: '보통', value: 'md' }, { label: '크게', value: 'lg' }, { label: '전체', value: 'full' }] }] },
+  { type: 'hero_image_slider', label: '이미지 슬라이더', category: '히어로', icon: 'S', description: '여러 이미지 자동 전환', defaultProps: { slides: [], height: 'lg' }, propsSchema: [{ key: 'autoplayInterval', type: 'number', label: '자동 전환 (ms)', defaultValue: 5000 }] },
+  { type: 'hero_split', label: '분할 히어로', category: '히어로', icon: 'SP', description: '텍스트+이미지 분할', defaultProps: { title: '', imageUrl: '' }, propsSchema: [{ key: 'title', type: 'string', label: '제목', required: true }, { key: 'subtitle', type: 'string', label: '부제목' }, { key: 'description', type: 'text', label: '설명' }, { key: 'imageUrl', type: 'image', label: '이미지', required: true }, { key: 'imagePosition', type: 'select', label: '이미지 위치', options: [{ label: '오른쪽', value: 'right' }, { label: '왼쪽', value: 'left' }] }] },
+  // About
+  { type: 'pastor_message', label: '담임목사 인사', category: '소개', icon: 'PM', description: '담임목사 인사말', defaultProps: { pastorName: '', message: '' }, propsSchema: [{ key: 'title', type: 'string', label: '섹션 제목' }, { key: 'pastorName', type: 'string', label: '이름', required: true }, { key: 'pastorTitle', type: 'string', label: '직함' }, { key: 'message', type: 'text', label: '인사말', required: true }, { key: 'imageUrl', type: 'image', label: '사진' }] },
+  { type: 'church_intro', label: '교회 소개', category: '소개', icon: 'CI', description: '교회 소개 텍스트', defaultProps: { description: '' }, propsSchema: [{ key: 'title', type: 'string', label: '제목' }, { key: 'description', type: 'text', label: '소개글', required: true }, { key: 'imageUrl', type: 'image', label: '이미지' }] },
+  { type: 'mission_vision', label: '미션/비전', category: '소개', icon: 'MV', description: '미션, 비전, 핵심 가치', defaultProps: { items: [] }, propsSchema: [{ key: 'title', type: 'string', label: '제목' }, { key: 'items', type: 'array', label: '항목', arrayItemSchema: [{ key: 'icon', type: 'string', label: '아이콘' }, { key: 'title', type: 'string', label: '제목', required: true }, { key: 'description', type: 'text', label: '설명', required: true }] }] },
+  // Content
+  { type: 'recent_sermons', label: '설교 그리드', category: '콘텐츠', icon: 'RS', description: '최근 설교', defaultProps: { limit: 6 }, propsSchema: [{ key: 'title', type: 'string', label: '제목' }, { key: 'limit', type: 'number', label: '표시 개수', defaultValue: 6, min: 1, max: 50 }] },
+  { type: 'recent_bulletins', label: '주보 목록', category: '콘텐츠', icon: 'RB', description: '최근 주보', defaultProps: { limit: 6 }, propsSchema: [{ key: 'title', type: 'string', label: '제목' }, { key: 'limit', type: 'number', label: '표시 개수', defaultValue: 6, min: 1, max: 50 }] },
+  { type: 'event_grid', label: '행사 카드', category: '콘텐츠', icon: 'EG', description: '교회 행사', defaultProps: { limit: 4 }, propsSchema: [{ key: 'title', type: 'string', label: '제목' }, { key: 'limit', type: 'number', label: '표시 개수', defaultValue: 4, min: 1, max: 50 }] },
+  { type: 'album_gallery', label: '앨범 갤러리', category: '콘텐츠', icon: 'AG', description: '앨범 그리드', defaultProps: { limit: 6 }, propsSchema: [{ key: 'title', type: 'string', label: '제목' }, { key: 'limit', type: 'number', label: '표시 개수', defaultValue: 6, min: 1, max: 50 }] },
+  { type: 'staff_grid', label: '교역자 그리드', category: '콘텐츠', icon: 'SG', description: '교역자 카드', defaultProps: { limit: 8 }, propsSchema: [{ key: 'title', type: 'string', label: '제목' }, { key: 'limit', type: 'number', label: '표시 개수', defaultValue: 8, min: 1, max: 50 }] },
+  { type: 'history_timeline', label: '교회 연혁', category: '콘텐츠', icon: 'HT', description: '세로 타임라인', defaultProps: {}, propsSchema: [{ key: 'title', type: 'string', label: '제목' }] },
+  // Text
+  { type: 'text_image', label: '텍스트+이미지', category: '텍스트', icon: 'TI', description: '텍스트와 이미지 좌우 배치', defaultProps: { content: '', imageUrl: '' }, propsSchema: [{ key: 'title', type: 'string', label: '제목' }, { key: 'content', type: 'text', label: '내용', required: true }, { key: 'imageUrl', type: 'image', label: '이미지', required: true }, { key: 'imagePosition', type: 'select', label: '이미지 위치', options: [{ label: '오른쪽', value: 'right' }, { label: '왼쪽', value: 'left' }] }] },
+  { type: 'text_only', label: '텍스트', category: '텍스트', icon: 'T', description: '텍스트 전용', defaultProps: { content: '' }, propsSchema: [{ key: 'title', type: 'string', label: '제목' }, { key: 'content', type: 'text', label: '내용', required: true }] },
+  { type: 'quote_block', label: '인용/성경구절', category: '텍스트', icon: 'Q', description: '인용문 또는 성경 말씀', defaultProps: { quote: '' }, propsSchema: [{ key: 'quote', type: 'text', label: '인용문', required: true }, { key: 'source', type: 'string', label: '출처' }, { key: 'reference', type: 'string', label: '참조' }, { key: 'style', type: 'select', label: '스타일', options: [{ label: '카드', value: 'card' }, { label: '심플', value: 'simple' }, { label: '하이라이트', value: 'highlight' }] }] },
+  // Schedule/Contact
+  { type: 'worship_times', label: '예배 시간', category: '교회 정보', icon: 'WT', description: '예배 시간 안내', defaultProps: { services: [] }, propsSchema: [{ key: 'title', type: 'string', label: '제목' }, { key: 'services', type: 'array', label: '예배', arrayItemSchema: [{ key: 'name', type: 'string', label: '예배명', required: true }, { key: 'day', type: 'string', label: '요일', required: true }, { key: 'time', type: 'string', label: '시간', required: true }, { key: 'location', type: 'string', label: '장소' }] }, { key: 'layout', type: 'select', label: '레이아웃', options: [{ label: '카드', value: 'cards' }, { label: '테이블', value: 'table' }] }] },
+  { type: 'map_embed', label: '약도', category: '교회 정보', icon: 'M', description: 'Google Maps 임베드', defaultProps: { address: '' }, propsSchema: [{ key: 'title', type: 'string', label: '제목' }, { key: 'address', type: 'string', label: '주소', required: true }, { key: 'embedUrl', type: 'url', label: '임베드 URL' }] },
+  { type: 'address_info', label: '연락처 정보', category: '교회 정보', icon: 'AI', description: '주소, 전화, 이메일', defaultProps: {}, propsSchema: [{ key: 'title', type: 'string', label: '제목' }, { key: 'address', type: 'string', label: '주소' }, { key: 'phone', type: 'string', label: '전화' }, { key: 'email', type: 'string', label: '이메일' }] },
+  { type: 'visitor_welcome', label: '새가족 환영', category: '교회 정보', icon: 'VW', description: '새가족 환영 메시지', defaultProps: { message: '' }, propsSchema: [{ key: 'title', type: 'string', label: '제목' }, { key: 'message', type: 'text', label: '환영 메시지', required: true }, { key: 'imageUrl', type: 'image', label: '이미지' }] },
+  { type: 'first_time_guide', label: '처음 오시는 분', category: '교회 정보', icon: 'FG', description: '단계별 안내', defaultProps: { steps: [] }, propsSchema: [{ key: 'title', type: 'string', label: '제목' }, { key: 'steps', type: 'array', label: '단계', arrayItemSchema: [{ key: 'title', type: 'string', label: '제목', required: true }, { key: 'description', type: 'text', label: '설명', required: true }] }] },
+  // CTA
+  { type: 'call_to_action', label: 'CTA 배너', category: 'CTA', icon: 'CTA', description: '행동 유도 배너', defaultProps: { title: '', ctaLabel: '', ctaUrl: '' }, propsSchema: [{ key: 'title', type: 'string', label: '제목', required: true }, { key: 'description', type: 'string', label: '설명' }, { key: 'ctaLabel', type: 'string', label: '버튼 텍스트', required: true }, { key: 'ctaUrl', type: 'url', label: '버튼 링크', required: true }, { key: 'backgroundColor', type: 'color', label: '배경색' }] },
+  { type: 'newsletter_signup', label: '뉴스레터 구독', category: 'CTA', icon: 'NL', description: '이메일 구독 폼', defaultProps: {}, propsSchema: [{ key: 'title', type: 'string', label: '제목' }, { key: 'description', type: 'string', label: '설명' }] },
+  // Layout
+  { type: 'hero_banner', label: '히어로 배너 (레거시)', category: '레거시', icon: 'B', description: '기존 히어로 배너', defaultProps: {}, propsSchema: [] },
+  { type: 'divider', label: '구분선', category: '레이아웃', icon: '—', description: '섹션 구분선', defaultProps: {}, propsSchema: [{ key: 'style', type: 'select', label: '스타일', options: [{ label: '라인', value: 'line' }, { label: '점', value: 'dots' }, { label: '그래디언트', value: 'gradient' }] }] },
+  { type: 'section_header', label: '섹션 헤더', category: '레이아웃', icon: 'SH', description: '섹션 제목+부제목', defaultProps: { title: '' }, propsSchema: [{ key: 'title', type: 'string', label: '제목', required: true }, { key: 'subtitle', type: 'string', label: '부제목' }, { key: 'align', type: 'select', label: '정렬', options: [{ label: '왼쪽', value: 'left' }, { label: '가운데', value: 'center' }, { label: '오른쪽', value: 'right' }] }] },
+  { type: 'video', label: '비디오', category: '레거시', icon: 'V', description: 'YouTube 영상', defaultProps: {}, propsSchema: [{ key: 'youtubeUrl', type: 'url', label: 'YouTube URL' }] },
+  { type: 'image_gallery', label: '이미지 갤러리', category: '레거시', icon: 'IG', description: '이미지 URL 목록', defaultProps: {}, propsSchema: [{ key: 'images', type: 'text', label: '이미지 URLs (한 줄에 하나)' }] },
+];
+
+function getBlockMetaByType(type: string): BlockMeta | undefined {
+  return BLOCK_REGISTRY.find((b) => b.type === type);
+}
+
+const BLOCK_CATEGORIES_GROUPED = (() => {
+  const groups: { category: string; blocks: BlockMeta[] }[] = [];
+  const order = ['히어로', '소개', '콘텐츠', '텍스트', '교회 정보', 'CTA', '레이아웃'];
+  for (const cat of order) {
+    const blocks = BLOCK_REGISTRY.filter((b) => b.category === cat);
+    if (blocks.length > 0) groups.push({ category: cat, blocks });
+  }
+  // Add any remaining
+  const covered = new Set(order);
+  for (const b of BLOCK_REGISTRY) {
+    if (!covered.has(b.category)) {
+      const existing = groups.find((g) => g.category === b.category);
+      if (existing) existing.blocks.push(b);
+      else groups.push({ category: b.category, blocks: [b] });
+    }
+  }
+  return groups;
+})();
+
+const TEMPLATES: PageTemplate[] = [
+  { id: 'home-classic', name: '클래식 홈페이지', description: '히어로 + 설교 + 예배안내 + 연락처', category: 'home', sections: [
+    { blockType: 'hero_image_slider', defaultProps: { slides: [], height: 'lg' }, sortOrder: 0, isVisible: true },
+    { blockType: 'pastor_message', defaultProps: { title: '담임목사 인사', pastorName: '', message: '' }, sortOrder: 1, isVisible: true },
+    { blockType: 'recent_sermons', defaultProps: { title: '최근 설교', limit: 6 }, sortOrder: 2, isVisible: true },
+    { blockType: 'worship_times', defaultProps: { title: '예배 안내', services: [] }, sortOrder: 3, isVisible: true },
+    { blockType: 'address_info', defaultProps: { title: '연락처' }, sortOrder: 4, isVisible: true },
+  ] },
+  { id: 'home-modern', name: '모던 홈페이지', description: '히어로 + 미션 + 설교 + 행사 + 뉴스레터', category: 'home', sections: [
+    { blockType: 'hero_full_width', defaultProps: { title: '환영합니다', subtitle: '함께 예배하는 공동체', height: 'lg' }, sortOrder: 0, isVisible: true },
+    { blockType: 'mission_vision', defaultProps: { title: '미션 & 비전', items: [] }, sortOrder: 1, isVisible: true },
+    { blockType: 'recent_sermons', defaultProps: { title: '최근 설교', limit: 6 }, sortOrder: 2, isVisible: true },
+    { blockType: 'event_grid', defaultProps: { title: '교회 소식', limit: 4 }, sortOrder: 3, isVisible: true },
+    { blockType: 'newsletter_signup', defaultProps: { title: '소식 받기' }, sortOrder: 4, isVisible: true },
+  ] },
+  { id: 'about', name: '교회 소개', description: '교회 소개 + 미션/비전 + 담임목사', category: 'about', sections: [
+    { blockType: 'section_header', defaultProps: { title: '교회 소개', subtitle: '' }, sortOrder: 0, isVisible: true },
+    { blockType: 'church_intro', defaultProps: { title: '우리 교회', description: '' }, sortOrder: 1, isVisible: true },
+    { blockType: 'mission_vision', defaultProps: { title: '미션 & 비전', items: [] }, sortOrder: 2, isVisible: true },
+    { blockType: 'pastor_message', defaultProps: { title: '담임목사 인사', pastorName: '', message: '' }, sortOrder: 3, isVisible: true },
+  ] },
+  { id: 'history', name: '교회 연혁', description: '타임라인 연혁', category: 'history', sections: [
+    { blockType: 'section_header', defaultProps: { title: '교회 연혁' }, sortOrder: 0, isVisible: true },
+    { blockType: 'history_timeline', defaultProps: { title: '' }, sortOrder: 1, isVisible: true },
+  ] },
+  { id: 'staff', name: '교역자 소개', description: '교역자 그리드', category: 'staff', sections: [
+    { blockType: 'section_header', defaultProps: { title: '섬기는 사람들' }, sortOrder: 0, isVisible: true },
+    { blockType: 'staff_grid', defaultProps: { title: '', limit: 20 }, sortOrder: 1, isVisible: true },
+  ] },
+  { id: 'worship', name: '예배 안내', description: '예배 시간 + 약도', category: 'worship', sections: [
+    { blockType: 'section_header', defaultProps: { title: '예배 안내' }, sortOrder: 0, isVisible: true },
+    { blockType: 'worship_times', defaultProps: { services: [] }, sortOrder: 1, isVisible: true },
+    { blockType: 'map_embed', defaultProps: { title: '오시는 길', address: '' }, sortOrder: 2, isVisible: true },
+  ] },
+  { id: 'contact', name: '연락처', description: '연락처 + 약도', category: 'contact', sections: [
+    { blockType: 'address_info', defaultProps: { title: '연락처' }, sortOrder: 0, isVisible: true },
+    { blockType: 'map_embed', defaultProps: { title: '오시는 길', address: '' }, sortOrder: 1, isVisible: true },
+  ] },
+  { id: 'newcomer', name: '새가족 안내', description: '환영 메시지 + 안내 + 예배 + 약도', category: 'newcomer', sections: [
+    { blockType: 'hero_full_width', defaultProps: { title: '새가족을 환영합니다', height: 'md' }, sortOrder: 0, isVisible: true },
+    { blockType: 'visitor_welcome', defaultProps: { title: '환영합니다', message: '' }, sortOrder: 1, isVisible: true },
+    { blockType: 'first_time_guide', defaultProps: { title: '처음 오시는 분', steps: [] }, sortOrder: 2, isVisible: true },
+    { blockType: 'worship_times', defaultProps: { title: '예배 시간', services: [] }, sortOrder: 3, isVisible: true },
+    { blockType: 'map_embed', defaultProps: { title: '오시는 길', address: '' }, sortOrder: 4, isVisible: true },
+  ] },
+  { id: 'sermons', name: '설교 아카이브', description: '설교 목록', category: 'sermons', sections: [
+    { blockType: 'section_header', defaultProps: { title: '설교' }, sortOrder: 0, isVisible: true },
+    { blockType: 'recent_sermons', defaultProps: { limit: 12 }, sortOrder: 1, isVisible: true },
+  ] },
+  { id: 'bulletins', name: '주보 아카이브', description: '주보 목록', category: 'bulletins', sections: [
+    { blockType: 'section_header', defaultProps: { title: '주보' }, sortOrder: 0, isVisible: true },
+    { blockType: 'recent_bulletins', defaultProps: { limit: 12 }, sortOrder: 1, isVisible: true },
+  ] },
+  { id: 'events', name: '행사 페이지', description: '행사 목록', category: 'events', sections: [
+    { blockType: 'section_header', defaultProps: { title: '교회 행사' }, sortOrder: 0, isVisible: true },
+    { blockType: 'event_grid', defaultProps: { limit: 12 }, sortOrder: 1, isVisible: true },
+  ] },
+  { id: 'gallery', name: '갤러리', description: '앨범 갤러리', category: 'gallery', sections: [
+    { blockType: 'section_header', defaultProps: { title: '갤러리' }, sortOrder: 0, isVisible: true },
+    { blockType: 'album_gallery', defaultProps: { limit: 12 }, sortOrder: 1, isVisible: true },
+  ] },
+  { id: 'giving', name: '헌금 안내', description: 'CTA + 안내', category: 'giving', sections: [
+    { blockType: 'hero_full_width', defaultProps: { title: '헌금 안내', height: 'sm' }, sortOrder: 0, isVisible: true },
+    { blockType: 'text_only', defaultProps: { title: '헌금 방법', content: '' }, sortOrder: 1, isVisible: true },
+    { blockType: 'call_to_action', defaultProps: { title: '온라인 헌금', ctaLabel: '헌금하기', ctaUrl: '' }, sortOrder: 2, isVisible: true },
+  ] },
+];
 
 // ─── Dynamic Props Form (schema-driven) ──────────────────
 function DynamicPropsForm({
@@ -222,38 +378,18 @@ function ArrayField({
 
 // ─── Block label/icon helpers (registry-driven) ──────────
 function getBlockLabel(type: BlockType): string {
-  return getBlockMeta(type)?.label ?? type;
+  return getBlockMetaByType(type)?.label ?? type;
 }
 
 function getBlockIcon(type: BlockType): string {
-  const meta = getBlockMeta(type);
+  const meta = getBlockMetaByType(type);
   if (!meta) return '?';
   return meta.icon.length <= 2 ? meta.icon.toUpperCase() : meta.icon.charAt(0).toUpperCase();
 }
 
 // ─── Build categories from registry ──────────────────────
 function useBlockCategories() {
-  return useMemo(() => {
-    const categoryOrder: BlockCategory[] = [
-      'hero', 'about', 'content_grid', 'text', 'gallery',
-      'staff', 'timeline', 'schedule', 'contact', 'newcomer',
-      'cta', 'footer', 'layout',
-    ];
-    return categoryOrder
-      .map((cat) => {
-        const entries = getBlocksByCategory(cat);
-        // Filter out legacy aliases (no propsSchema)
-        const blocks = entries
-          .filter((e) => e.meta.propsSchema.length > 0 || !e.meta.label.includes('레거시'))
-          .map((e) => e.meta);
-        return {
-          category: cat,
-          label: BLOCK_CATEGORY_LABELS[cat]?.ko ?? cat,
-          blocks,
-        };
-      })
-      .filter((c) => c.blocks.length > 0);
-  }, []);
+  return useMemo(() => BLOCK_CATEGORIES_GROUPED, []);
 }
 
 // ─── Template Gallery ────────────────────────────────────
@@ -261,10 +397,10 @@ function TemplateGallery({ onSelect, onClose }: { onSelect: (t: PageTemplate) =>
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   const filtered = selectedCategory === 'all'
-    ? templates
-    : templates.filter((t) => t.category === selectedCategory);
+    ? TEMPLATES
+    : TEMPLATES.filter((t) => t.category === selectedCategory);
 
-  const categories = Object.entries(TEMPLATE_CATEGORY_LABELS);
+  const categories = [...new Set(TEMPLATES.map((t) => t.category))];
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
@@ -283,15 +419,15 @@ function TemplateGallery({ onSelect, onClose }: { onSelect: (t: PageTemplate) =>
           >
             전체
           </button>
-          {categories.map(([key, label]) => (
+          {categories.map((cat) => (
             <button
-              key={key}
-              onClick={() => setSelectedCategory(key)}
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-                selectedCategory === key ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                selectedCategory === cat ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              {label.ko}
+              {cat}
             </button>
           ))}
         </div>
@@ -305,7 +441,7 @@ function TemplateGallery({ onSelect, onClose }: { onSelect: (t: PageTemplate) =>
                 className="text-left border border-gray-200 rounded-xl p-4 hover:border-blue-400 hover:shadow-md transition-all group"
               >
                 <div className="aspect-video bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg mb-3 flex items-center justify-center">
-                  <span className="text-2xl opacity-50">{TEMPLATE_CATEGORY_LABELS[t.category]?.ko?.charAt(0) || '?'}</span>
+                  <span className="text-2xl opacity-50">{t.category.charAt(0).toUpperCase()}</span>
                 </div>
                 <h4 className="font-bold text-sm group-hover:text-blue-600 transition-colors">{t.name}</h4>
                 <p className="text-xs text-gray-500 mt-1 line-clamp-2">{t.description}</p>
@@ -407,7 +543,7 @@ export default function PageEditor() {
 
   const handleAddSection = (blockType: BlockType) => {
     if (!selectedPageId) return;
-    const meta = getBlockMeta(blockType);
+    const meta = getBlockMetaByType(blockType);
     createSection.mutate({
       pageId: selectedPageId,
       data: {
@@ -557,7 +693,7 @@ export default function PageEditor() {
 
             {/* Sections */}
             {sortedSections.map((section, index) => {
-              const meta = getBlockMeta(section.blockType);
+              const meta = getBlockMetaByType(section.blockType);
               return (
                 <div
                   key={section.id}
@@ -573,7 +709,7 @@ export default function PageEditor() {
                       <span className="text-sm font-medium">{getBlockLabel(section.blockType)}</span>
                       {meta?.category && (
                         <span className="ml-2 text-[10px] text-gray-400">
-                          {BLOCK_CATEGORY_LABELS[meta.category]?.ko}
+                          {meta.category}
                         </span>
                       )}
                     </div>
