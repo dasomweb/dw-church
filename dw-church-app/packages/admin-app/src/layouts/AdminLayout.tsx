@@ -157,13 +157,7 @@ const superAdminNavItem = {
   ),
 };
 
-/** Email addresses that have access to the super admin dashboard */
-const SUPER_ADMIN_EMAILS = (
-  import.meta.env.VITE_SUPER_ADMIN_EMAILS ?? ''
-)
-  .split(',')
-  .map((s: string) => s.trim())
-  .filter(Boolean);
+// Super admin access is determined by the server via isSuperAdmin flag in login response
 
 const pageTitles: Record<string, string> = {
   '/': '대시보드',
@@ -201,8 +195,7 @@ export function AdminLayout() {
 
   const pageTitle = pageTitles[location.pathname] || '관리';
   const user = session?.user;
-  const isSuperAdmin =
-    !!user?.email && SUPER_ADMIN_EMAILS.includes(user.email);
+  const isSuperAdmin = !!user?.isSuperAdmin;
 
   const handleLogout = async () => {
     try {

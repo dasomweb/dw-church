@@ -1,8 +1,13 @@
 import { prisma } from '../../config/database.js';
 import { supabaseAdmin } from '../../config/supabase.js';
+import { env } from '../../config/env.js';
 import { AppError } from '../../middleware/error-handler.js';
 import { createTenantSchema } from '../../utils/schema-manager.js';
 import type { RegisterInput, LoginInput, InviteInput } from './schema.js';
+
+function checkSuperAdmin(email: string): boolean {
+  return env.SUPER_ADMIN_EMAILS.includes(email);
+}
 
 export async function register(input: RegisterInput) {
   const { churchName, slug, email, password, ownerName } = input;
@@ -77,6 +82,7 @@ export async function register(input: RegisterInput) {
       role: 'owner',
       tenantId: tenant.id,
       tenantSlug: slug,
+      isSuperAdmin: checkSuperAdmin(email),
     },
     tenant: { id: tenant.id, slug: tenant.slug, name: tenant.name },
   };
@@ -95,17 +101,19 @@ export async function login(input: LoginInput) {
   }
 
   const s = data.session!;
+  const userEmail = data.user!.email ?? '';
   return {
     accessToken: s.access_token,
     refreshToken: s.refresh_token,
     expiresAt: (s.expires_at ?? 0) * 1000,
     user: {
       id: data.user!.id,
-      email: data.user!.email ?? '',
+      email: userEmail,
       name: data.user!.user_metadata?.name ?? '',
       role: data.user!.user_metadata?.role ?? 'member',
       tenantId: data.user!.user_metadata?.tenant_id ?? '',
       tenantSlug: data.user!.user_metadata?.tenant_slug ?? '',
+      isSuperAdmin: checkSuperAdmin(userEmail),
     },
   };
 }
@@ -120,17 +128,19 @@ export async function refreshSession(refreshToken: string) {
   }
 
   const s = data.session;
+  const refreshEmail = data.user!.email ?? '';
   return {
     accessToken: s.access_token,
     refreshToken: s.refresh_token,
     expiresAt: (s.expires_at ?? 0) * 1000,
     user: {
       id: data.user!.id,
-      email: data.user!.email ?? '',
+      email: refreshEmail,
       name: data.user!.user_metadata?.name ?? '',
       role: data.user!.user_metadata?.role ?? 'member',
       tenantId: data.user!.user_metadata?.tenant_id ?? '',
       tenantSlug: data.user!.user_metadata?.tenant_slug ?? '',
+      isSuperAdmin: checkSuperAdmin(refreshEmail),
     },
   };
 }

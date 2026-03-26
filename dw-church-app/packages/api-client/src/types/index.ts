@@ -301,6 +301,7 @@ export interface AuthUser {
   tenantId: string;
   tenantSlug: string;
   role: 'owner' | 'admin' | 'editor';
+  isSuperAdmin?: boolean;
 }
 
 export interface RegisterInput {
