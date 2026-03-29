@@ -21,6 +21,12 @@ export async function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
   const pathname = request.nextUrl.pathname;
 
+  // API subdomain → proxy to Railway
+  if (hostname.startsWith('api.truelight.app') || hostname.startsWith('api.localhost')) {
+    const railwayUrl = process.env.RAILWAY_API_URL || 'https://api-server-production-c612.up.railway.app';
+    return NextResponse.rewrite(new URL(`${railwayUrl}${pathname}${request.nextUrl.search}`));
+  }
+
   // Main landing page
   if (PLATFORM_HOSTS.has(hostname)) {
     return NextResponse.next();

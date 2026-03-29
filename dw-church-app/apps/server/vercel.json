@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "installCommand": "pnpm install",
-  "buildCommand": "npx prisma generate --schema=prisma/schema.prisma && npx tsc -b",
-  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "https://api-server-production-c612.up.railway.app/$1" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -13,8 +13,5 @@
         { "key": "Access-Control-Allow-Headers", "value": "Content-Type,Authorization,X-Tenant-Slug" }
       ]
     }
-  ],
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/api" }
   ]
 }
