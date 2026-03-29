@@ -14,6 +14,9 @@ COPY dw-church-app/packages/ui-components/package.json packages/ui-components/
 COPY dw-church-app/packages/admin-app/package.json packages/admin-app/
 COPY dw-church-app/packages/wp-plugin/package.json packages/wp-plugin/
 
+# Copy tsconfig base (referenced by server tsconfig)
+COPY dw-church-app/tsconfig.base.json ./
+
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
