@@ -144,13 +144,13 @@ export async function deleteTenant(id: string) {
   // Drop the tenant schema
   await deleteTenantSchema(tenant.slug);
 
-  // Deactivate the tenant record
-  await prisma.tenant.update({
-    where: { id },
-    data: { isActive: false },
-  });
+  // Delete associated users
+  await prisma.user.deleteMany({ where: { tenantId: id } });
 
-  return { message: `Tenant '${tenant.slug}' deactivated and schema dropped` };
+  // Delete the tenant record
+  await prisma.tenant.delete({ where: { id } });
+
+  return { message: `Tenant '${tenant.slug}' permanently deleted` };
 }
 
 export async function getGlobalStats() {
