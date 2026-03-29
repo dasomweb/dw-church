@@ -5,6 +5,7 @@ import {
   createTenantSchema as createTenantSchemaFn,
   deleteTenantSchema,
 } from '../../utils/schema-manager.js';
+import { deleteFilesByPrefix } from '../../config/r2.js';
 import type { CreateTenantInput, UpdateTenantInput } from './schema.js';
 
 const BCRYPT_ROUNDS = 12;
@@ -141,13 +142,24 @@ export async function deleteTenant(id: string) {
     throw new AppError('NOT_FOUND', 404, 'Tenant not found');
   }
 
-  // Drop the tenant schema
+  // 1. Delete all uploaded files from R2 storage
+  try {
+    const filesDeleted = await deleteFilesByPrefix(`tenant_${tenant.slug}/`);
+    if (filesDeleted > 0) {
+      console.log(`Deleted ${filesDeleted} files from R2 for tenant ${tenant.slug}`);
+    }
+  } catch (err) {
+    // Don't block deletion if R2 cleanup fails (might not be configured)
+    console.warn(`R2 cleanup failed for tenant ${tenant.slug}:`, err);
+  }
+
+  // 2. Drop the tenant schema (all DB data)
   await deleteTenantSchema(tenant.slug);
 
-  // Delete associated users
+  // 3. Delete associated users
   await prisma.user.deleteMany({ where: { tenantId: id } });
 
-  // Delete the tenant record
+  // 4. Delete the tenant record
   await prisma.tenant.delete({ where: { id } });
 
   return { message: `Tenant '${tenant.slug}' permanently deleted` };

@@ -3,6 +3,7 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
+  ListObjectsV2Command,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl as awsGetSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { env } from './env.js';
@@ -45,6 +46,42 @@ export async function deleteFile(key: string): Promise<void> {
       Key: key,
     }),
   );
+}
+
+/**
+ * Delete all files with a given prefix (e.g. "tenant_bethelfaith/").
+ */
+export async function deleteFilesByPrefix(prefix: string): Promise<number> {
+  let deleted = 0;
+  let continuationToken: string | undefined;
+
+  do {
+    const list = await s3.send(
+      new ListObjectsV2Command({
+        Bucket: env.R2_BUCKET_NAME,
+        Prefix: prefix,
+        ContinuationToken: continuationToken,
+      }),
+    );
+
+    if (list.Contents) {
+      for (const obj of list.Contents) {
+        if (obj.Key) {
+          await s3.send(
+            new DeleteObjectCommand({
+              Bucket: env.R2_BUCKET_NAME,
+              Key: obj.Key,
+            }),
+          );
+          deleted++;
+        }
+      }
+    }
+
+    continuationToken = list.IsTruncated ? list.NextContinuationToken : undefined;
+  } while (continuationToken);
+
+  return deleted;
 }
 
 /**
