@@ -11,7 +11,6 @@ import {
   changePasswordSchema,
 } from './schema.js';
 import * as authService from './service.js';
-import { supabaseAdmin } from '../../config/supabase.js';
 import { prisma } from '../../config/database.js';
 import { AppError } from '../../middleware/error-handler.js';
 
@@ -121,18 +120,7 @@ export default async function authRoutes(app: FastifyInstance): Promise<void> {
         throw new AppError('TENANT_NOT_FOUND', 404, `Tenant '${tenantSlug}' not found`);
       }
 
-      const { error } = await supabaseAdmin.auth.admin.updateUserById(
-        request.user!.id,
-        {
-          user_metadata: {
-            tenant_id: tenant.id,
-            tenant_slug: tenant.slug,
-          },
-        },
-      );
-      if (error) {
-        throw new AppError('UPDATE_FAILED', 500, error.message);
-      }
+      await authService.switchTenant(request.user!.id, tenant.id, tenant.slug);
 
       return reply.send({ success: true, tenantId: tenant.id, tenantSlug: tenant.slug });
     },

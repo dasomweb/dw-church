@@ -1,11 +1,13 @@
+import bcrypt from 'bcryptjs';
 import { prisma } from '../../config/database.js';
-import { supabaseAdmin } from '../../config/supabase.js';
 import { AppError } from '../../middleware/error-handler.js';
 import {
   createTenantSchema as createTenantSchemaFn,
   deleteTenantSchema,
 } from '../../utils/schema-manager.js';
 import type { CreateTenantInput, UpdateTenantInput } from './schema.js';
+
+const BCRYPT_ROUNDS = 12;
 
 export async function listTenants(page: number, perPage: number) {
   const skip = (page - 1) * perPage;
@@ -44,16 +46,11 @@ export async function listTenants(page: number, perPage: number) {
       }
 
       try {
-        const { data } = await supabaseAdmin.auth.admin.listUsers({
-          page: 1,
-          perPage: 1,
+        userCount = await prisma.user.count({
+          where: { tenantId: tenant.id },
         });
-        // Filter by tenant in metadata - rough count
-        userCount = data.users.filter(
-          (u) => u.user_metadata?.tenant_id === tenant.id,
-        ).length;
       } catch {
-        // Ignore auth errors
+        // Ignore errors
       }
 
       return {
@@ -83,20 +80,10 @@ export async function createTenant(input: CreateTenantInput) {
     throw new AppError('SLUG_TAKEN', 409, `Slug '${slug}' is already in use`);
   }
 
-  // Create owner in Supabase Auth
-  const { data: authData, error: authError } =
-    await supabaseAdmin.auth.admin.createUser({
-      email: ownerEmail,
-      email_confirm: true,
-      user_metadata: { tenant_slug: slug, role: 'owner', name: ownerName },
-    });
-
-  if (authError || !authData.user) {
-    throw new AppError(
-      'AUTH_CREATE_FAILED',
-      500,
-      authError?.message ?? 'Failed to create auth user',
-    );
+  // Check email uniqueness
+  const existingUser = await prisma.user.findUnique({ where: { email: ownerEmail } });
+  if (existingUser) {
+    throw new AppError('AUTH_CREATE_FAILED', 409, 'Owner email is already in use');
   }
 
   // Insert tenant
@@ -109,13 +96,18 @@ export async function createTenant(input: CreateTenantInput) {
     },
   });
 
-  // Update user metadata with tenant_id
-  await supabaseAdmin.auth.admin.updateUserById(authData.user.id, {
-    user_metadata: {
-      tenant_id: tenant.id,
-      tenant_slug: slug,
-      role: 'owner',
+  // Create owner user with a temporary random password
+  const tempPassword = crypto.randomUUID();
+  const passwordHash = await bcrypt.hash(tempPassword, BCRYPT_ROUNDS);
+
+  await prisma.user.create({
+    data: {
+      email: ownerEmail,
+      passwordHash,
       name: ownerName,
+      role: 'owner',
+      tenantId: tenant.id,
+      tenantSlug: slug,
     },
   });
 

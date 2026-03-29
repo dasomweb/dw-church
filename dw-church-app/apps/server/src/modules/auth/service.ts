@@ -1,9 +1,13 @@
+import bcrypt from 'bcryptjs';
 import { prisma } from '../../config/database.js';
-import { supabaseAdmin } from '../../config/supabase.js';
+import { signAccessToken, signRefreshToken, verifyToken } from '../../config/jwt.js';
 import { env } from '../../config/env.js';
 import { AppError } from '../../middleware/error-handler.js';
 import { createTenantSchema } from '../../utils/schema-manager.js';
 import type { RegisterInput, LoginInput, InviteInput } from './schema.js';
+
+const BCRYPT_ROUNDS = 12;
+const ACCESS_TOKEN_LIFETIME_MS = 3600000; // 1 hour
 
 /**
  * Check super admin: role from DB, with env var fallback for bootstrap.
@@ -12,6 +16,29 @@ function checkIsSuperAdmin(role: string | undefined, email: string): boolean {
   if (role === 'super_admin') return true;
   if (email && env.SUPER_ADMIN_EMAILS.includes(email)) return true;
   return false;
+}
+
+function buildTokenResponse(user: {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  tenantId: string | null;
+  tenantSlug: string | null;
+}) {
+  const payload = {
+    userId: user.id,
+    email: user.email,
+    tenantId: user.tenantId ?? '',
+    tenantSlug: user.tenantSlug ?? '',
+    role: user.role,
+  };
+
+  return {
+    accessToken: signAccessToken(payload),
+    refreshToken: signRefreshToken({ userId: user.id }),
+    expiresAt: Date.now() + ACCESS_TOKEN_LIFETIME_MS,
+  };
 }
 
 export async function register(input: RegisterInput) {
@@ -23,21 +50,10 @@ export async function register(input: RegisterInput) {
     throw new AppError('SLUG_TAKEN', 409, `Slug '${slug}' is already in use`);
   }
 
-  // Create user in Supabase Auth
-  const { data: authData, error: authError } =
-    await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { tenant_slug: slug, role: 'owner', name: ownerName },
-    });
-
-  if (authError || !authData.user) {
-    throw new AppError(
-      'AUTH_CREATE_FAILED',
-      500,
-      authError?.message ?? 'Failed to create auth user',
-    );
+  // Check email uniqueness
+  const existingUser = await prisma.user.findUnique({ where: { email } });
+  if (existingUser) {
+    throw new AppError('AUTH_CREATE_FAILED', 409, 'Email is already in use');
   }
 
   // Insert tenant into public.tenants
@@ -50,40 +66,37 @@ export async function register(input: RegisterInput) {
     },
   });
 
-  // Update user metadata with tenant_id
-  await supabaseAdmin.auth.admin.updateUserById(authData.user.id, {
-    user_metadata: {
-      tenant_id: tenant.id,
-      tenant_slug: slug,
-      role: 'owner',
+  // Hash password and create user
+  const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+  const user = await prisma.user.create({
+    data: {
+      email,
+      passwordHash,
       name: ownerName,
+      role: 'owner',
+      tenantId: tenant.id,
+      tenantSlug: slug,
     },
   });
 
   // Provision tenant schema
   await createTenantSchema(slug);
 
-  // Sign in to get session
-  const { data: session, error: sessionError } =
-    await supabaseAdmin.auth.signInWithPassword({ email, password });
+  const tokens = buildTokenResponse({
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    tenantId: tenant.id,
+    tenantSlug: slug,
+  });
 
-  if (sessionError) {
-    throw new AppError(
-      'SESSION_CREATE_FAILED',
-      500,
-      'Account created but failed to create session',
-    );
-  }
-
-  const rs = session.session!;
   return {
-    accessToken: rs.access_token,
-    refreshToken: rs.refresh_token,
-    expiresAt: (rs.expires_at ?? 0) * 1000,
+    ...tokens,
     user: {
-      id: session.user!.id,
-      email: session.user!.email ?? '',
-      name: ownerName,
+      id: user.id,
+      email: user.email,
+      name: user.name,
       role: 'owner',
       tenantId: tenant.id,
       tenantSlug: slug,
@@ -96,157 +109,155 @@ export async function register(input: RegisterInput) {
 export async function login(input: LoginInput) {
   const { email, password } = input;
 
-  const { data, error } = await supabaseAdmin.auth.signInWithPassword({
-    email,
-    password,
-  });
-
-  if (error) {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user || !user.isActive) {
     throw new AppError('LOGIN_FAILED', 401, 'Invalid email or password');
   }
 
-  const s = data.session!;
-  const userEmail = data.user!.email ?? '';
+  const valid = await bcrypt.compare(password, user.passwordHash);
+  if (!valid) {
+    throw new AppError('LOGIN_FAILED', 401, 'Invalid email or password');
+  }
+
+  const tokens = buildTokenResponse({
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    tenantId: user.tenantId,
+    tenantSlug: user.tenantSlug,
+  });
+
   return {
-    accessToken: s.access_token,
-    refreshToken: s.refresh_token,
-    expiresAt: (s.expires_at ?? 0) * 1000,
+    ...tokens,
     user: {
-      id: data.user!.id,
-      email: userEmail,
-      name: data.user!.user_metadata?.name ?? '',
-      role: data.user!.user_metadata?.role ?? 'member',
-      tenantId: data.user!.user_metadata?.tenant_id ?? '',
-      tenantSlug: data.user!.user_metadata?.tenant_slug ?? '',
-      isSuperAdmin: checkIsSuperAdmin(data.user!.user_metadata?.role as string, userEmail),
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      tenantId: user.tenantId ?? '',
+      tenantSlug: user.tenantSlug ?? '',
+      isSuperAdmin: checkIsSuperAdmin(user.role, user.email),
     },
   };
 }
 
 export async function refreshSession(refreshToken: string) {
-  const { data, error } = await supabaseAdmin.auth.refreshSession({
-    refresh_token: refreshToken,
-  });
-
-  if (error || !data.session) {
+  let payload;
+  try {
+    payload = verifyToken(refreshToken);
+  } catch {
     throw new AppError('REFRESH_FAILED', 401, 'Invalid or expired refresh token');
   }
 
-  const s = data.session;
-  const refreshEmail = data.user!.email ?? '';
+  const userId = payload.userId;
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user || !user.isActive) {
+    throw new AppError('REFRESH_FAILED', 401, 'Invalid or expired refresh token');
+  }
+
+  const tokens = buildTokenResponse({
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    tenantId: user.tenantId,
+    tenantSlug: user.tenantSlug,
+  });
+
   return {
-    accessToken: s.access_token,
-    refreshToken: s.refresh_token,
-    expiresAt: (s.expires_at ?? 0) * 1000,
+    ...tokens,
     user: {
-      id: data.user!.id,
-      email: refreshEmail,
-      name: data.user!.user_metadata?.name ?? '',
-      role: data.user!.user_metadata?.role ?? 'member',
-      tenantId: data.user!.user_metadata?.tenant_id ?? '',
-      tenantSlug: data.user!.user_metadata?.tenant_slug ?? '',
-      isSuperAdmin: checkIsSuperAdmin(data.user!.user_metadata?.role as string, refreshEmail),
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      tenantId: user.tenantId ?? '',
+      tenantSlug: user.tenantSlug ?? '',
+      isSuperAdmin: checkIsSuperAdmin(user.role, user.email),
     },
   };
 }
 
-export async function logout(accessToken: string) {
-  const { error } = await supabaseAdmin.auth.admin.signOut(accessToken);
-  if (error) {
-    throw new AppError('LOGOUT_FAILED', 500, 'Failed to invalidate session');
-  }
+export async function logout(_accessToken: string) {
+  // With JWT auth, logout is handled client-side by deleting the token.
+  // No server-side session to invalidate.
 }
 
 export async function getMe(userId: string) {
-  const { data, error } = await supabaseAdmin.auth.admin.getUserById(userId);
-
-  if (error || !data.user) {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
     throw new AppError('USER_NOT_FOUND', 404, 'User not found');
   }
 
-  const tenantId = data.user.user_metadata?.tenant_id as string | undefined;
   let tenant = null;
-
-  if (tenantId) {
+  if (user.tenantId) {
     tenant = await prisma.tenant.findUnique({
-      where: { id: tenantId },
+      where: { id: user.tenantId },
       select: { id: true, slug: true, name: true, plan: true, isActive: true },
     });
   }
 
-  return { user: data.user, tenant };
+  return {
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      tenantId: user.tenantId ?? '',
+      tenantSlug: user.tenantSlug ?? '',
+      isSuperAdmin: checkIsSuperAdmin(user.role, user.email),
+    },
+    tenant,
+  };
 }
 
-export async function forgotPassword(email: string) {
-  const { error } = await supabaseAdmin.auth.resetPasswordForEmail(email);
-  if (error) {
-    throw new AppError(
-      'RESET_EMAIL_FAILED',
-      500,
-      'Failed to send password reset email',
-    );
-  }
+export async function forgotPassword(_email: string) {
+  // Email sending requires a separate service (e.g. SendGrid, Resend).
+  // For now, log a warning. The endpoint still returns success to avoid
+  // leaking whether an email exists.
+  console.warn('[auth] forgotPassword called — email sending not yet configured');
 }
 
-export async function resetPassword(accessToken: string, newPassword: string) {
-  const { data: userData, error: userError } =
-    await supabaseAdmin.auth.getUser(accessToken);
-
-  if (userError || !userData.user) {
+export async function resetPassword(token: string, newPassword: string) {
+  let payload;
+  try {
+    payload = verifyToken(token);
+  } catch {
     throw new AppError('UNAUTHORIZED', 401, 'Invalid or expired token');
   }
 
-  const { error } = await supabaseAdmin.auth.admin.updateUserById(
-    userData.user.id,
-    { password: newPassword },
-  );
-
-  if (error) {
-    throw new AppError('RESET_FAILED', 500, 'Failed to reset password');
-  }
+  const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+  await prisma.user.update({
+    where: { id: payload.userId },
+    data: { passwordHash },
+  });
 }
 
 export async function updateProfile(
   userId: string,
   data: { name?: string; email?: string },
 ) {
-  const updatePayload: Record<string, unknown> = {};
-
-  if (data.email) {
-    updatePayload.email = data.email;
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    throw new AppError('USER_NOT_FOUND', 404, 'User not found');
   }
 
-  if (data.name) {
-    // Get current metadata first to merge
-    const { data: current, error: fetchError } =
-      await supabaseAdmin.auth.admin.getUserById(userId);
-    if (fetchError || !current.user) {
-      throw new AppError('USER_NOT_FOUND', 404, 'User not found');
-    }
-    updatePayload.user_metadata = {
-      ...current.user.user_metadata,
-      name: data.name,
-    };
-  }
-
-  const { data: updated, error } =
-    await supabaseAdmin.auth.admin.updateUserById(userId, updatePayload);
-
-  if (error || !updated.user) {
-    throw new AppError(
-      'PROFILE_UPDATE_FAILED',
-      500,
-      error?.message ?? 'Failed to update profile',
-    );
-  }
+  const updated = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      ...(data.name !== undefined && { name: data.name }),
+      ...(data.email !== undefined && { email: data.email }),
+    },
+  });
 
   return {
-    id: updated.user.id,
-    email: updated.user.email ?? '',
-    name: updated.user.user_metadata?.name ?? '',
-    role: updated.user.user_metadata?.role ?? 'member',
-    tenantId: updated.user.user_metadata?.tenant_id ?? '',
-    tenantSlug: updated.user.user_metadata?.tenant_slug ?? '',
+    id: updated.id,
+    email: updated.email,
+    name: updated.name,
+    role: updated.role,
+    tenantId: updated.tenantId ?? '',
+    tenantSlug: updated.tenantSlug ?? '',
   };
 }
 
@@ -260,53 +271,68 @@ export async function inviteUser(
     throw new AppError('FORBIDDEN', 403, 'Only owners and admins can invite users');
   }
 
-  const { data, error } = await supabaseAdmin.auth.admin.createUser({
-    email: input.email,
-    user_metadata: {
-      tenant_id: tenantId,
-      tenant_slug: tenantSlug,
-      role: input.role,
-      name: input.name,
-    },
-    email_confirm: false, // Supabase sends invite email
-  });
-
-  if (error) {
-    throw new AppError(
-      'INVITE_FAILED',
-      500,
-      error.message ?? 'Failed to invite user',
-    );
+  // Check if user already exists
+  const existingUser = await prisma.user.findUnique({ where: { email: input.email } });
+  if (existingUser) {
+    throw new AppError('INVITE_FAILED', 409, 'User with this email already exists');
   }
 
-  // Send invite email
-  await supabaseAdmin.auth.admin.inviteUserByEmail(input.email);
+  // Create user with a temporary random password (they'll need to reset it)
+  const tempPassword = crypto.randomUUID();
+  const passwordHash = await bcrypt.hash(tempPassword, BCRYPT_ROUNDS);
 
-  return { user: data.user };
+  const user = await prisma.user.create({
+    data: {
+      email: input.email,
+      passwordHash,
+      name: input.name,
+      role: input.role,
+      tenantId,
+      tenantSlug,
+    },
+  });
+
+  // TODO: Send invite email with password reset link
+  console.warn(`[auth] inviteUser — email sending not yet configured for ${input.email}`);
+
+  return {
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      tenantId: user.tenantId ?? '',
+      tenantSlug: user.tenantSlug ?? '',
+    },
+  };
 }
 
 export async function changePassword(
   userId: string,
-  email: string,
+  _email: string,
   currentPassword: string,
   newPassword: string,
 ) {
-  // Verify current password by attempting sign-in
-  const { error: verifyError } = await supabaseAdmin.auth.signInWithPassword({
-    email,
-    password: currentPassword,
-  });
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    throw new AppError('USER_NOT_FOUND', 404, 'User not found');
+  }
 
-  if (verifyError) {
+  const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+  if (!valid) {
     throw new AppError('INVALID_PASSWORD', 400, '현재 비밀번호가 올바르지 않습니다.');
   }
 
-  // Update to new password
-  const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
-    password: newPassword,
+  const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+  await prisma.user.update({
+    where: { id: userId },
+    data: { passwordHash },
   });
+}
 
-  if (error) {
-    throw new AppError('PASSWORD_CHANGE_FAILED', 500, error.message);
-  }
+export async function switchTenant(userId: string, tenantId: string, tenantSlug: string) {
+  await prisma.user.update({
+    where: { id: userId },
+    data: { tenantId, tenantSlug },
+  });
 }

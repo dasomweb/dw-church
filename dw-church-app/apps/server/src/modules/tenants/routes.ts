@@ -1,12 +1,14 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import bcrypt from 'bcryptjs';
 import { requireAuth } from '../../middleware/auth.js';
 import { AppError } from '../../middleware/error-handler.js';
 import { env } from '../../config/env.js';
 import { parsePagination } from '../../utils/pagination.js';
 import { createTenantSchema, updateTenantSchema } from './schema.js';
 import * as tenantService from './service.js';
-import { supabaseAdmin } from '../../config/supabase.js';
 import { prisma } from '../../config/database.js';
+
+const BCRYPT_ROUNDS = 12;
 
 /**
  * Require super_admin role.
@@ -85,12 +87,10 @@ export default async function tenantRoutes(app: FastifyInstance): Promise<void> 
         throw new AppError('TENANT_NOT_FOUND', 404, `Tenant '${tenantSlug}' not found`);
       }
 
-      const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
-        user_metadata: { tenant_id: tenant.id, tenant_slug: tenant.slug },
+      await prisma.user.update({
+        where: { id: userId },
+        data: { tenantId: tenant.id, tenantSlug: tenant.slug },
       });
-      if (error) {
-        throw new AppError('UPDATE_FAILED', 500, error.message);
-      }
 
       return reply.send({ success: true, tenantId: tenant.id, tenantSlug: tenant.slug });
     },
@@ -108,17 +108,15 @@ export default async function tenantRoutes(app: FastifyInstance): Promise<void> 
         throw new AppError('VALIDATION_ERROR', 400, `Invalid role. Must be one of: ${validRoles.join(', ')}`);
       }
 
-      const { data: user, error: fetchError } = await supabaseAdmin.auth.admin.getUserById(userId);
-      if (fetchError || !user.user) {
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user) {
         throw new AppError('USER_NOT_FOUND', 404, 'User not found');
       }
 
-      const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
-        user_metadata: { ...user.user.user_metadata, role },
+      await prisma.user.update({
+        where: { id: userId },
+        data: { role },
       });
-      if (error) {
-        throw new AppError('UPDATE_FAILED', 500, error.message);
-      }
 
       return reply.send({ success: true, userId, role });
     },
@@ -135,33 +133,44 @@ export default async function tenantRoutes(app: FastifyInstance): Promise<void> 
         throw new AppError('VALIDATION_ERROR', 400, 'Password must be at least 8 characters');
       }
 
-      const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, { password });
-      if (error) {
-        throw new AppError('UPDATE_FAILED', 500, error.message);
-      }
+      const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+      await prisma.user.update({
+        where: { id: userId },
+        data: { passwordHash },
+      });
 
       return reply.send({ success: true, message: 'Password updated' });
     },
   );
 
-  // GET /admin/users — List all users (Supabase)
+  // GET /admin/users — List all users
   app.get('/users', async (_request, reply) => {
-    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 100 });
-    if (error) {
-      throw new AppError('LIST_FAILED', 500, error.message);
-    }
+    const users = await prisma.user.findMany({
+      take: 100,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        tenantSlug: true,
+        tenantId: true,
+        createdAt: true,
+        isActive: true,
+      },
+    });
 
-    const users = data.users.map((u) => ({
+    const mapped = users.map((u) => ({
       id: u.id,
       email: u.email,
-      name: u.user_metadata?.name ?? '',
-      role: u.user_metadata?.role ?? 'member',
-      tenantSlug: u.user_metadata?.tenant_slug ?? '',
-      tenantId: u.user_metadata?.tenant_id ?? '',
-      createdAt: u.created_at,
-      lastSignIn: u.last_sign_in_at,
+      name: u.name,
+      role: u.role,
+      tenantSlug: u.tenantSlug ?? '',
+      tenantId: u.tenantId ?? '',
+      createdAt: u.createdAt.toISOString(),
+      lastSignIn: null,
     }));
 
-    return reply.send({ data: users, total: users.length });
+    return reply.send({ data: mapped, total: mapped.length });
   });
 }

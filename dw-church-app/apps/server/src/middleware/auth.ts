@@ -1,8 +1,10 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import { supabaseAdmin } from '../config/supabase.js';
+import jwt from 'jsonwebtoken';
+import { env } from '../config/env.js';
 import { prisma } from '../config/database.js';
 import { AppError } from './error-handler.js';
 import { validateSchemaName } from '../utils/validate-schema.js';
+import type { JwtPayload } from '../config/jwt.js';
 
 function extractToken(request: FastifyRequest): string | null {
   const header = request.headers.authorization;
@@ -16,32 +18,26 @@ async function resolveUser(
   request: FastifyRequest,
   token: string,
 ): Promise<void> {
-  const {
-    data: { user },
-    error,
-  } = await supabaseAdmin.auth.getUser(token);
-
-  if (error || !user) {
+  let payload: JwtPayload;
+  try {
+    payload = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  } catch {
     throw new AppError('UNAUTHORIZED', 401, 'Invalid or expired token');
   }
 
-  const tenantId = (user.user_metadata?.tenant_id as string) ?? '';
-  const tenantSlug = (user.user_metadata?.tenant_slug as string) ?? '';
-  const role = (user.user_metadata?.role as string) ?? 'member';
-
   request.user = {
-    id: user.id,
-    email: user.email ?? '',
-    tenantId,
-    tenantSlug,
-    role,
+    id: payload.userId,
+    email: payload.email,
+    tenantId: payload.tenantId ?? '',
+    tenantSlug: payload.tenantSlug ?? '',
+    role: payload.role ?? 'member',
   };
 
   // If tenant middleware didn't resolve tenant (e.g. api.truelight.app),
   // fill it from JWT token
-  if (!request.tenant && tenantSlug) {
+  if (!request.tenant && payload.tenantSlug) {
     const tenant = await prisma.tenant.findFirst({
-      where: { slug: tenantSlug, isActive: true },
+      where: { slug: payload.tenantSlug, isActive: true },
       select: { id: true, slug: true, name: true, plan: true },
     });
     if (tenant) {

@@ -2,9 +2,7 @@ import { z } from 'zod';
 
 const envSchema = z.object({
   DATABASE_URL: z.string().url(),
-  SUPABASE_URL: z.string().url(),
-  SUPABASE_ANON_KEY: z.string().min(1),
-  SUPABASE_SERVICE_KEY: z.string().min(1),
+  JWT_SECRET: z.string().min(32),
 
   R2_ENDPOINT: z.string().default(''),
   R2_ACCESS_KEY_ID: z.string().default(''),
