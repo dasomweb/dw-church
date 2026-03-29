@@ -5,15 +5,14 @@ WORKDIR /app
 # Copy workspace root files
 COPY dw-church-app/package.json dw-church-app/pnpm-workspace.yaml dw-church-app/pnpm-lock.yaml ./
 
-# Copy only the packages needed by server
+# Copy package.json for all workspace packages
 COPY dw-church-app/apps/server/package.json apps/server/
+COPY dw-church-app/apps/web/package.json apps/web/
+COPY dw-church-app/apps/demo/package.json apps/demo/
 COPY dw-church-app/packages/api-client/package.json packages/api-client/
 COPY dw-church-app/packages/ui-components/package.json packages/ui-components/
-COPY dw-church-app/packages/wp-plugin/package.json packages/wp-plugin/
 COPY dw-church-app/packages/admin-app/package.json packages/admin-app/
-COPY dw-church-app/packages/wp-connector/package.json packages/wp-connector/
-COPY dw-church-app/apps/demo/package.json apps/demo/
-COPY dw-church-app/apps/web/package.json apps/web/
+COPY dw-church-app/packages/wp-plugin/package.json packages/wp-plugin/
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
