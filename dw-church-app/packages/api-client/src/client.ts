@@ -628,8 +628,15 @@ export class DWChurchClient {
   }
 
   // ─── Billing ─────────────────────────────────────────────
-  async getBillingStatus(): Promise<{ plan: string; status: string; subscription?: unknown }> {
-    return this.api.get(`${this.namespace}/billing/status`);
+  async getBillingStatus(): Promise<{
+    tenantId: string;
+    plan: string;
+    isActive: boolean;
+    stripeCustomerId: string | null;
+    subscriptionStatus: string | null;
+    currentPeriodEnd: string | null;
+  }> {
+    return this.api.get(`${this.namespace}/billing`);
   }
 
   async createCheckout(params: { plan: string; successUrl: string; cancelUrl: string }): Promise<{ url: string }> {

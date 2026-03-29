@@ -7,3 +7,9 @@ export const checkoutInputSchema = z.object({
 });
 
 export type CheckoutInput = z.infer<typeof checkoutInputSchema>;
+
+export const portalInputSchema = z.object({
+  returnUrl: z.string().url().optional(),
+});
+
+export type PortalInput = z.infer<typeof portalInputSchema>;

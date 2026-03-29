@@ -162,6 +162,7 @@ export async function handleWebhook(
  */
 export async function createPortalSession(
   tenantId: string,
+  returnUrl?: string,
 ): Promise<{ url: string }> {
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
   if (!tenant) {
@@ -179,6 +180,7 @@ export async function createPortalSession(
 
   const session = await requireStripe().billingPortal.sessions.create({
     customer: stripeCustomerId,
+    ...(returnUrl ? { return_url: returnUrl } : {}),
   });
 
   return { url: session.url };
