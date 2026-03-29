@@ -35,7 +35,7 @@ export async function middleware(request: NextRequest) {
   // Custom domain handling — if the host is not a platform host, it may be a custom domain
   if (!isPlatformHost(hostname)) {
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api.truelight.app';
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api-server-production-c612.up.railway.app';
       const res = await fetch(
         `${apiBase}/api/v1/admin/tenants/resolve-domain?domain=${encodeURIComponent(hostname.split(':')[0])}`,
         { headers: { 'x-internal': '1' }, next: { revalidate: 60 } },
@@ -59,7 +59,7 @@ export async function middleware(request: NextRequest) {
   if (slug && slug !== 'www' && slug !== 'admin' && slug !== 'api') {
     // Verify tenant exists via API
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api.truelight.app';
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api-server-production-c612.up.railway.app';
       const res = await fetch(
         `${apiBase}/api/v1/settings`,
         {

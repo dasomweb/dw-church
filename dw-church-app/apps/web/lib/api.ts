@@ -11,7 +11,7 @@
  *   revalidate: false – search results (never cache)
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.truelight.app';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api-server-production-c612.up.railway.app';
 
 // ─── Generic fetch helper ────────────────────────────────────
 

@@ -16,7 +16,7 @@
 (function () {
   'use strict';
 
-  var API_BASE = 'https://api.truelight.app/api/v1';
+  var API_BASE = 'https://api-server-production-c612.up.railway.app/api/v1';
   var SITE_BASE = 'https://truelight.app';
 
   // ── Helpers ─────────────────────────────────────────────────
