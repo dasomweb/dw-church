@@ -44,13 +44,18 @@ function useAdminApi() {
         ? `https://api.${host.replace('admin.', '')}`
         : (import.meta.env.VITE_API_BASE_URL as string) || '';
 
+      const headers: Record<string, string> = {
+        Authorization: `Bearer ${session?.accessToken || ''}`,
+        ...(options?.headers as Record<string, string>),
+      };
+      // Only set Content-Type for requests with a body
+      if (options?.body) {
+        headers['Content-Type'] = 'application/json';
+      }
+
       const res = await fetch(`${baseUrl}/api/v1/admin${path}`, {
         ...options,
-        headers: {
-          Authorization: `Bearer ${session?.accessToken || ''}`,
-          'Content-Type': 'application/json',
-          ...options?.headers,
-        },
+        headers,
       });
 
       if (!res.ok) {
