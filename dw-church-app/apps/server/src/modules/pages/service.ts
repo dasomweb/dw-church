@@ -6,6 +6,7 @@ import type {
   CreateSectionInput,
   UpdateSectionInput,
 } from './schema.js';
+import type { TemplateSection } from './templates.js';
 
 // ──────────────────────────────────────────────────────────────
 // Pages
@@ -311,4 +312,37 @@ export async function reorderSections(
      ORDER BY sort_order ASC`,
     pageId,
   );
+}
+
+// ──────────────────────────────────────────────────────────────
+// Template-based page creation
+// ──────────────────────────────────────────────────────────────
+
+export async function createPageFromTemplate(
+  schema: string,
+  title: string,
+  slug: string,
+  sections: TemplateSection[],
+): Promise<{ page: PageRow; sections: SectionRow[] }> {
+  const page = await createPage(schema, {
+    title,
+    slug,
+    isHome: false,
+    status: 'draft' as const,
+    sortOrder: 0,
+  });
+
+  const createdSections: SectionRow[] = [];
+  for (let i = 0; i < sections.length; i++) {
+    const s = sections[i]!;
+    const section = await createSection(schema, page.id, {
+      blockType: s.blockType as CreateSectionInput['blockType'],
+      props: s.props,
+      sortOrder: i,
+      isVisible: true,
+    });
+    createdSections.push(section);
+  }
+
+  return { page, sections: createdSections };
 }
