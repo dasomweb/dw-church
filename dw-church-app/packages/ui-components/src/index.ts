@@ -46,7 +46,7 @@ export { SingleEvent } from './components/event/SingleEvent';
 
 // ─── Staff Components ───────────────────────────────────────
 export { StaffGrid } from './components/staff/StaffGrid';
-export { StaffCard } from './components/staff/StaffCard';
+export { StaffCard, StaffFeatured } from './components/staff/StaffCard';
 export { StaffProfile } from './components/staff/StaffProfile';
 export { StaffDepartmentTabs } from './components/staff/StaffDepartmentTabs';
 

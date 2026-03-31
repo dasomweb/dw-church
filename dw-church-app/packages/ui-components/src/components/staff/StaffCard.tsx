@@ -30,7 +30,7 @@ function SnsIcon({ type, url }: { type: string; url: string }) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-400 transition-all duration-200 hover:bg-primary hover:text-white"
+      className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-gray-400 transition-all duration-200 hover:border-primary hover:bg-primary hover:text-white"
       aria-label={type}
     >
       {icons[type]}
@@ -38,68 +38,157 @@ function SnsIcon({ type, url }: { type: string; url: string }) {
   );
 }
 
-export function StaffCard({ staff, onClick, className = '' }: StaffCardProps) {
+/**
+ * Featured staff card — large, horizontal layout for lead pastor.
+ */
+export function StaffFeatured({ staff, className = '' }: { staff: Staff; className?: string }) {
   const snsEntries = Object.entries(staff.snsLinks ?? {}).filter(
     ([, url]) => url,
   ) as [string, string][];
 
   return (
+    <div className={`overflow-hidden rounded-xl bg-white shadow-sm ${className}`}>
+      <div className="flex flex-col md:flex-row">
+        {/* Photo — left side */}
+        <div className="relative w-full md:w-2/5">
+          {/* Role badge */}
+          {staff.role && (
+            <span className="absolute left-4 top-4 z-10 rounded bg-primary/90 px-3 py-1 text-xs font-semibold text-white">
+              {staff.role}
+            </span>
+          )}
+          {staff.photoUrl ? (
+            <img
+              src={staff.photoUrl}
+              alt={staff.name}
+              className="h-full min-h-[320px] w-full object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <div className="flex h-full min-h-[320px] w-full items-center justify-center bg-gray-100 text-6xl font-semibold text-gray-300">
+              {staff.name?.charAt(0) ?? ''}
+            </div>
+          )}
+        </div>
+
+        {/* Info — right side */}
+        <div className="flex flex-1 flex-col justify-center px-8 py-8">
+          <h2 className="text-2xl font-bold text-gray-900">{staff.name}</h2>
+
+          {/* Bio */}
+          {staff.bio && (
+            <div
+              className="mt-4 text-sm leading-relaxed text-gray-600"
+              dangerouslySetInnerHTML={{ __html: staff.bio }}
+            />
+          )}
+
+          {/* SNS Icons */}
+          {snsEntries.length > 0 && (
+            <div className="mt-5 flex gap-2">
+              {snsEntries.map(([type, url]) => (
+                <SnsIcon key={type} type={type} url={url} />
+              ))}
+            </div>
+          )}
+
+          {/* Department */}
+          {staff.department && (
+            <div className="mt-5 border-t border-gray-100 pt-5">
+              <span className="text-sm font-medium text-gray-900">{staff.department} 사역</span>
+            </div>
+          )}
+
+          {/* Contact */}
+          <div className="mt-4 space-y-1">
+            {staff.email && (
+              <p className="text-sm text-gray-500">
+                <span className="font-medium">이메일:</span> {staff.email}
+              </p>
+            )}
+            {staff.phone && (
+              <p className="text-sm text-gray-500">
+                <span className="font-medium">전화:</span> {staff.phone}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Grid staff card — rectangular photo with role badge.
+ */
+export function StaffCard({ staff, onClick, className = '' }: StaffCardProps) {
+  const PASTEL_COLORS = [
+    'bg-teal-50', 'bg-rose-50', 'bg-sky-50', 'bg-amber-50',
+    'bg-emerald-50', 'bg-violet-50', 'bg-pink-50', 'bg-cyan-50',
+  ];
+  const bgColor = PASTEL_COLORS[
+    staff.name?.charCodeAt(0) ? staff.name.charCodeAt(0) % PASTEL_COLORS.length : 0
+  ];
+
+  return (
     <article
-      className={`group cursor-pointer overflow-hidden rounded-lg bg-white px-6 pb-6 pt-8 text-center transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] ${className}`}
+      className={`group overflow-hidden rounded-xl bg-white transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.1)] ${
+        onClick ? 'cursor-pointer' : ''
+      } ${className}`}
       onClick={() => onClick?.(staff.id)}
-      role="button"
-      tabIndex={0}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (onClick && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault();
-          onClick?.(staff.id);
+          onClick(staff.id);
         }
       }}
     >
-      {/* Circular photo */}
-      <div className="mx-auto h-28 w-28 overflow-hidden rounded-full border-[3px] border-gray-100 transition-all duration-300 group-hover:border-primary/30 group-hover:shadow-lg">
+      {/* Photo with pastel background */}
+      <div className={`relative aspect-[4/5] w-full overflow-hidden ${bgColor}`}>
+        {/* Role badge */}
+        {staff.role && (
+          <span className="absolute left-3 top-3 z-10 rounded bg-white/90 px-2.5 py-1 text-xs font-semibold text-gray-700 shadow-sm backdrop-blur-sm">
+            {staff.role}
+          </span>
+        )}
+
         {staff.photoUrl ? (
           <img
             src={staff.photoUrl}
             alt={staff.name}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gray-50 text-3xl font-semibold text-gray-300">
+          <div className="flex h-full w-full items-center justify-center text-5xl font-semibold text-gray-300">
             {staff.name?.charAt(0) ?? ''}
           </div>
         )}
       </div>
 
-      {/* Name */}
-      <h3 className="mt-4 text-base font-bold text-gray-900 transition-colors duration-200 group-hover:text-primary">
-        {staff.name}
-      </h3>
+      {/* Content */}
+      <div className="px-4 pb-5 pt-4">
+        <h3 className="text-base font-bold text-gray-900 transition-colors duration-200 group-hover:text-primary">
+          {staff.name}
+        </h3>
 
-      {/* Role */}
-      {staff.role && (
-        <p className="mt-1 text-[13px] text-gray-500">{staff.role}</p>
-      )}
+        {/* Department */}
+        {staff.department && (
+          <p className="mt-1 text-[13px] text-gray-500">{staff.department}</p>
+        )}
 
-      {/* Department badge */}
-      {staff.department && (
-        <span className="mt-2.5 inline-block rounded-full bg-primary/8 px-3 py-1 text-xs font-medium text-primary">
-          {staff.department}
-        </span>
-      )}
-
-      {/* SNS Icons */}
-      {snsEntries.length > 0 && (
-        <div
-          className="mt-4 flex justify-center gap-2"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {snsEntries.map(([type, url]) => (
-            <SnsIcon key={type} type={type} url={url} />
-          ))}
-        </div>
-      )}
+        {/* Short bio excerpt */}
+        {staff.bio && (
+          <p
+            className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-gray-400"
+            dangerouslySetInnerHTML={{
+              __html: staff.bio.replace(/<[^>]*>/g, '').slice(0, 80),
+            }}
+          />
+        )}
+      </div>
     </article>
   );
 }
