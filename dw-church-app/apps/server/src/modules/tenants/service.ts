@@ -39,7 +39,7 @@ export async function listTenants(page: number, perPage: number) {
         const storageResult = await prisma.$queryRawUnsafe<
           [{ total: bigint }]
         >(
-          `SELECT COALESCE(SUM(file_size), 0)::bigint as total FROM "${schema}".files`,
+          `SELECT COALESCE(SUM(size_bytes), 0)::bigint as total FROM "${schema}".files`,
         );
         storageUsed = Number(storageResult[0]?.total ?? 0);
       } catch {
@@ -192,7 +192,7 @@ export async function getGlobalStats() {
       totalSermons += Number(sermonResult[0]?.count ?? 0);
 
       const storageResult = await prisma.$queryRawUnsafe<[{ total: bigint }]>(
-        `SELECT COALESCE(SUM(file_size), 0)::bigint as total FROM "${schema}".files`,
+        `SELECT COALESCE(SUM(size_bytes), 0)::bigint as total FROM "${schema}".files`,
       );
       totalStorage += Number(storageResult[0]?.total ?? 0);
 
@@ -304,7 +304,7 @@ export async function getTenantDetailedStats(tenantId: string) {
   let storageUsedBytes = 0;
   try {
     const storageResult = await prisma.$queryRawUnsafe<[{ total: bigint }]>(
-      `SELECT COALESCE(SUM(file_size), 0)::bigint as total FROM "${schema}".files`,
+      `SELECT COALESCE(SUM(size_bytes), 0)::bigint as total FROM "${schema}".files`,
     );
     storageUsedBytes = Number(storageResult[0]?.total ?? 0);
   } catch {

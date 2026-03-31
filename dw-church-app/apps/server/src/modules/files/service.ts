@@ -22,15 +22,14 @@ export async function upload(params: UploadParams) {
   const url = await uploadFile(storageKey, buffer, contentType);
 
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-    `INSERT INTO "${schema}".files (original_name, storage_key, url, content_type, size, entity_type)
-     VALUES ($1, $2, $3, $4, $5, $6)
+    `INSERT INTO "${schema}".files (original_name, storage_key, url, mime_type, size_bytes)
+     VALUES ($1, $2, $3, $4, $5)
      RETURNING *`,
     filename,
     storageKey,
     url,
     contentType,
     buffer.length,
-    entityType,
   );
 
   return rows[0];
