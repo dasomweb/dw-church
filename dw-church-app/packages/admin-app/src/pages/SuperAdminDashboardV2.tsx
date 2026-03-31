@@ -1015,7 +1015,16 @@ function TenantsTab() {
                           onClick={() => setViewingTenantId(t.id)}
                           className="px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded transition-colors"
                         >
-                          보기
+                          상세
+                        </button>
+                        <button
+                          onClick={() => {
+                            // Open tenant admin page in new window (switch-tenant then redirect)
+                            window.open(`${window.location.origin}/?tenant=${t.slug}`, '_blank');
+                          }}
+                          className="px-2 py-1 text-xs text-indigo-600 hover:bg-indigo-50 rounded transition-colors font-medium"
+                        >
+                          관리
                         </button>
                         <button
                           onClick={() => setEditingTenant(t)}
@@ -1558,8 +1567,33 @@ export default function SuperAdminDashboardV2() {
     );
   }
 
+  const handleLogout = () => {
+    useAuthStore.getState().logout();
+    window.location.href = '/login';
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-gray-50">
+      {/* Top bar */}
+      <header className="sticky top-0 z-50 border-b border-gray-200 bg-white">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
+          <div className="flex items-center gap-3">
+            <span className="text-xl font-bold text-blue-600">DW Church</span>
+            <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-600">Super Admin</span>
+          </div>
+          <div className="flex items-center gap-4 text-sm">
+            <span className="text-gray-500">{session?.user?.email}</span>
+            <button
+              onClick={handleLogout}
+              className="text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              로그아웃
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div className="mx-auto max-w-7xl px-6 py-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -1618,6 +1652,7 @@ export default function SuperAdminDashboardV2() {
           }}
         />
       )}
-    </div>
+      </div>{/* end max-w-7xl container */}
+    </div>{/* end min-h-screen */}
   );
 }

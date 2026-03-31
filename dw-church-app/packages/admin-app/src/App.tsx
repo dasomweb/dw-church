@@ -73,7 +73,10 @@ function PublicOnly({ children }: { children: React.ReactNode }) {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    // Super admin goes to platform dashboard, tenant admin goes to tenant dashboard
+    const user = useAuthStore.getState().session?.user;
+    const dest = user?.isSuperAdmin ? '/super-admin' : '/';
+    return <Navigate to={dest} replace />;
   }
 
   return <>{children}</>;
@@ -81,6 +84,52 @@ function PublicOnly({ children }: { children: React.ReactNode }) {
 
 /** Interval in ms for proactive token refresh checks (4 minutes). */
 const REFRESH_CHECK_INTERVAL_MS = 4 * 60 * 1000;
+
+/**
+ * Handle ?tenant=slug query param: switch the current user's tenant context
+ * and reload the dashboard. Used by Super Admin "관리" button.
+ */
+function TenantSwitcher() {
+  const session = useAuthStore((s) => s.session);
+  const hydrate = useAuthStore((s) => s.hydrate);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tenantSlug = params.get('tenant');
+    if (!tenantSlug || !session?.accessToken) return;
+
+    const host = window.location.hostname;
+    const baseUrl = host.startsWith('admin.')
+      ? `https://api.${host.replace('admin.', '')}`
+      : (import.meta.env.VITE_API_BASE_URL as string) || '';
+
+    fetch(`${baseUrl}/api/v1/auth/switch-tenant`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ tenantSlug }),
+    })
+      .then((res) => {
+        if (res.ok) {
+          // Update local session with new tenant
+          const updatedSession = {
+            ...session,
+            user: { ...session.user, tenantSlug },
+          };
+          localStorage.setItem('dw-church-session', JSON.stringify(updatedSession));
+          // Remove query param and reload
+          window.location.href = '/';
+        }
+      })
+      .catch(() => {
+        window.location.href = '/';
+      });
+  }, [session, hydrate]);
+
+  return <PageLoader />;
+}
 
 export function App({ config }: { config: AppConfig }) {
   const session = useAuthStore((s) => s.session);
@@ -155,7 +204,17 @@ export function App({ config }: { config: AppConfig }) {
               }
             />
 
-            {/* Protected routes */}
+            {/* Super Admin — separate layout, no tenant sidebar */}
+            <Route
+              path="super-admin"
+              element={
+                <RequireAuth>
+                  <SuperAdminDashboard />
+                </RequireAuth>
+              }
+            />
+
+            {/* Tenant Admin routes — standard sidebar layout */}
             <Route
               element={
                 <RequireAuth>
@@ -180,10 +239,9 @@ export function App({ config }: { config: AppConfig }) {
               <Route path="settings" element={<SettingsPage />} />
               <Route path="billing" element={<BillingPage />} />
               <Route path="profile" element={<ProfilePage />} />
-              <Route path="super-admin" element={<SuperAdminDashboard />} />
             </Route>
 
-            {/* Catch-all */}
+            {/* Catch-all: super admin → super-admin, tenant admin → / */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
