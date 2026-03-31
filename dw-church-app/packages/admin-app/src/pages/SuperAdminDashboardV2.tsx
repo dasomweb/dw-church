@@ -1532,6 +1532,7 @@ function StorageTab() {
 // ═══════════════════════════════════════════════════════════
 export default function SuperAdminDashboardV2() {
   const apiFetch = useAdminApi();
+  const session = useAuthStore((s) => s.session);
   const { showToast } = useToast();
 
   const [activeTab, setActiveTab] = useState<TabId>('overview');
