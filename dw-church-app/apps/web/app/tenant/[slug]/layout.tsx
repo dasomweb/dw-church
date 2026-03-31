@@ -156,6 +156,10 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
 
   const navLinkColor = isDarkHeader ? 'var(--dw-background)' : 'var(--dw-text)';
 
+  // Logo: settings.logoUrl or settings.logo_url, fallback to church name
+  const logoUrl = settings?.logoUrl ?? settings?.logo_url ?? null;
+  const churchName = settings?.name ?? settings?.churchName ?? slug;
+
   const sortedVisibleItems = navItems
     .filter((item) => item.isVisible)
     .sort((a, b) => a.sortOrder - b.sortOrder);
@@ -182,8 +186,14 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
           /* Centered header: logo above, nav below, both centered */
           <div className="mx-auto max-w-7xl px-6 py-4">
             <div className="flex flex-col items-center gap-3">
-              <Link href="/" className="text-xl font-bold font-heading" style={{ color: isDarkHeader ? 'var(--dw-background)' : 'var(--dw-primary)' }}>
-                {settings?.name ?? slug}
+              <Link href="/" className="flex items-center gap-2">
+                {logoUrl ? (
+                  <img src={logoUrl} alt={churchName} className="h-10 w-auto object-contain" />
+                ) : (
+                  <span className="text-xl font-bold font-heading" style={{ color: isDarkHeader ? 'var(--dw-background)' : 'var(--dw-primary)' }}>
+                    {churchName}
+                  </span>
+                )}
               </Link>
               <nav aria-label="주 메뉴" className="hidden gap-6 md:flex">
                 {sortedVisibleItems.map((item) => (
@@ -205,8 +215,14 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
         ) : (
           /* Default / transparent / dark header: left logo, right nav */
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-            <Link href="/" className="text-xl font-bold font-heading" style={{ color: isDarkHeader ? 'var(--dw-background)' : 'var(--dw-primary)' }}>
-              {settings?.name ?? slug}
+            <Link href="/" className="flex items-center gap-2">
+              {logoUrl ? (
+                <img src={logoUrl} alt={churchName} className="h-10 w-auto object-contain" />
+              ) : (
+                <span className="text-xl font-bold font-heading" style={{ color: isDarkHeader ? 'var(--dw-background)' : 'var(--dw-primary)' }}>
+                  {churchName}
+                </span>
+              )}
             </Link>
             <nav aria-label="주 메뉴" className="hidden gap-6 md:flex">
               {sortedVisibleItems.map((item) => (
@@ -245,7 +261,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
           /* Centered footer: all content centered */
           <div className="mx-auto max-w-7xl px-6 py-12 text-center">
             <h3 className="mb-3 text-lg font-bold font-heading" style={{ color: 'var(--dw-primary)' }}>
-              {settings?.name ?? slug}
+              {churchName}
             </h3>
             {settings?.address && (
               <p className="text-sm text-gray-600">{settings.address}</p>
@@ -286,7 +302,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                   className="mb-3 text-lg font-bold font-heading"
                   style={{ color: isDarkFooter ? 'var(--dw-accent)' : 'var(--dw-primary)' }}
                 >
-                  {settings?.name ?? slug}
+                  {churchName}
                 </h3>
                 {settings?.address && (
                   <p className={`text-sm ${isDarkFooter ? 'text-gray-300' : 'text-gray-600'}`}>{settings.address}</p>
