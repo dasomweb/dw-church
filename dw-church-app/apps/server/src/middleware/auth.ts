@@ -67,7 +67,7 @@ export async function requireAuth(
 }
 
 /**
- * Require admin or owner role.
+ * Require admin or owner role. super_admin has all permissions.
  */
 export async function requireAdmin(
   request: FastifyRequest,
@@ -75,20 +75,21 @@ export async function requireAdmin(
 ): Promise<void> {
   await requireAuth(request, reply);
   const role = request.user?.role;
-  if (role !== 'admin' && role !== 'owner') {
+  if (role !== 'admin' && role !== 'owner' && role !== 'super_admin') {
     throw new AppError('FORBIDDEN', 403, 'Admin access required');
   }
 }
 
 /**
- * Require owner role.
+ * Require owner role. super_admin has all permissions.
  */
 export async function requireOwner(
   request: FastifyRequest,
   reply: FastifyReply,
 ): Promise<void> {
   await requireAuth(request, reply);
-  if (request.user?.role !== 'owner') {
+  const role = request.user?.role;
+  if (role !== 'owner' && role !== 'super_admin') {
     throw new AppError('FORBIDDEN', 403, 'Owner access required');
   }
 }

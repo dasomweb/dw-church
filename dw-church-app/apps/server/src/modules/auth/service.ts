@@ -331,8 +331,31 @@ export async function changePassword(
 }
 
 export async function switchTenant(userId: string, tenantId: string, tenantSlug: string) {
-  await prisma.user.update({
+  const user = await prisma.user.update({
     where: { id: userId },
     data: { tenantId, tenantSlug },
   });
+
+  // Issue new tokens with updated tenant context
+  const tokens = buildTokenResponse({
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    tenantId: user.tenantId,
+    tenantSlug: user.tenantSlug,
+  });
+
+  return {
+    ...tokens,
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      tenantId: user.tenantId ?? '',
+      tenantSlug: user.tenantSlug ?? '',
+      isSuperAdmin: checkIsSuperAdmin(user.role, user.email),
+    },
+  };
 }

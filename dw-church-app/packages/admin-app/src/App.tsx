@@ -134,17 +134,18 @@ function TenantSwitcher() {
       },
       body: JSON.stringify({ tenantSlug }),
     })
-      .then((res) => {
-        if (res.ok) {
-          // Update local session with new tenant
-          const updatedSession = {
-            ...session,
-            user: { ...session.user, tenantSlug },
-          };
-          localStorage.setItem('dw-church-session', JSON.stringify(updatedSession));
-          // Remove query param and reload
-          window.location.href = '/';
-        }
+      .then((res) => res.ok ? res.json() : Promise.reject())
+      .then((data) => {
+        // Server returns new tokens with updated tenant context
+        const newSession = {
+          accessToken: data.accessToken ?? session.accessToken,
+          refreshToken: data.refreshToken ?? session.refreshToken,
+          expiresAt: data.expiresAt ?? session.expiresAt,
+          user: data.user ?? { ...session.user, tenantSlug },
+        };
+        localStorage.setItem('dw-church-session', JSON.stringify(newSession));
+        // Remove query param and reload
+        window.location.href = '/';
       })
       .catch(() => {
         window.location.href = '/';

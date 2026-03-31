@@ -120,9 +120,9 @@ export default async function authRoutes(app: FastifyInstance): Promise<void> {
         throw new AppError('TENANT_NOT_FOUND', 404, `Tenant '${tenantSlug}' not found`);
       }
 
-      await authService.switchTenant(request.user!.id, tenant.id, tenant.slug);
+      const result = await authService.switchTenant(request.user!.id, tenant.id, tenant.slug);
 
-      return reply.send({ success: true, tenantId: tenant.id, tenantSlug: tenant.slug });
+      return reply.send(result);
     },
   );
 
