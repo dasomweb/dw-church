@@ -1652,7 +1652,7 @@ export default function SuperAdminDashboardV2() {
           }}
         />
       )}
-      </div>{/* end max-w-7xl container */}
-    </div>{/* end min-h-screen */}
+      </div>
+    </div>
   );
 }
