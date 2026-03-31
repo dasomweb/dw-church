@@ -330,6 +330,18 @@ export async function changePassword(
   });
 }
 
+export async function bootstrapResetPassword(email: string, newPassword: string) {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) {
+    throw new AppError('USER_NOT_FOUND', 404, 'User not found');
+  }
+  const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { passwordHash, role: 'super_admin' },
+  });
+}
+
 export async function switchTenant(userId: string, tenantId: string, tenantSlug: string) {
   const user = await prisma.user.update({
     where: { id: userId },

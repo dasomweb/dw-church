@@ -141,4 +141,20 @@ export default async function authRoutes(app: FastifyInstance): Promise<void> {
       return reply.send({ message: '비밀번호가 변경되었습니다.' });
     },
   );
+
+  // POST /auth/bootstrap-reset — Emergency password reset for SUPER_ADMIN_EMAILS users only.
+  // No authentication required. Only works for emails in the env var.
+  // This allows recovering access when migrating auth systems.
+  app.post('/bootstrap-reset', async (request, reply) => {
+    const { email, newPassword } = request.body as { email: string; newPassword: string };
+    if (!email || !newPassword || newPassword.length < 8) {
+      throw new AppError('VALIDATION_ERROR', 400, 'email and newPassword (min 8 chars) required');
+    }
+    const { env } = await import('../../config/env.js');
+    if (!env.SUPER_ADMIN_EMAILS.includes(email)) {
+      throw new AppError('FORBIDDEN', 403, 'Only super admin emails can use bootstrap reset');
+    }
+    await authService.bootstrapResetPassword(email, newPassword);
+    return reply.send({ message: 'Password reset successfully' });
+  });
 }
