@@ -26,7 +26,7 @@ export default function LoginPage() {
     try {
       const session = await loginMutation.mutateAsync(data);
       setSession(session);
-      navigate('/');
+      navigate(session.user?.isSuperAdmin ? '/super-admin' : '/');
     } catch (err: unknown) {
       if (err instanceof DWChurchApiError) {
         if (err.status === 401) {
