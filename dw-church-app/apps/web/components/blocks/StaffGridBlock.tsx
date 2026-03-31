@@ -8,6 +8,10 @@ interface StaffGridBlockProps {
 
 export async function StaffGridBlock({ props, slug }: StaffGridBlockProps) {
   const limit = (props.limit as number) ?? 8;
+  const layout = (props.layout as 'featured' | 'grid' | 'list') ?? 'featured';
+  const photoStyle = (props.photoStyle as 'rect' | 'circle') ?? 'rect';
+  const columns = Number(props.columns ?? 3);
+  const showItems = (props.showItems as string) ?? 'name,role,department,bio';
 
   let staff;
   try {
@@ -22,8 +26,22 @@ export async function StaffGridBlock({ props, slug }: StaffGridBlockProps) {
   return (
     <section className="px-6 py-16" style={{ backgroundColor: 'var(--dw-surface)' }}>
       <div className="mx-auto max-w-7xl">
-        <h2 className="mb-8 text-center text-3xl font-bold font-heading">교역자</h2>
-        <StaffGridBlockClient staff={staff} slug={slug} />
+        {props.title && (
+          <h2 className="mb-8 text-center text-3xl font-bold font-heading">
+            {props.title as string}
+          </h2>
+        )}
+        {!props.title && (
+          <h2 className="mb-8 text-center text-3xl font-bold font-heading">교역자</h2>
+        )}
+        <StaffGridBlockClient
+          staff={staff}
+          slug={slug}
+          layout={layout}
+          photoStyle={photoStyle}
+          columns={columns}
+          showItems={showItems}
+        />
       </div>
     </section>
   );

@@ -4,6 +4,10 @@ export interface StaffCardProps {
   staff: Staff;
   onClick?: (id: string) => void;
   className?: string;
+  /** Photo shape: 'rect' (default) or 'circle' */
+  photoStyle?: 'rect' | 'circle';
+  /** Which fields to show (default: all) */
+  visibleFields?: Set<string>;
 }
 
 function SnsIcon({ type, url }: { type: string; url: string }) {
@@ -121,7 +125,8 @@ export function StaffFeatured({ staff, className = '' }: { staff: Staff; classNa
 /**
  * Grid staff card — rectangular photo with role badge.
  */
-export function StaffCard({ staff, onClick, className = '' }: StaffCardProps) {
+export function StaffCard({ staff, onClick, className = '', photoStyle = 'rect', visibleFields }: StaffCardProps) {
+  const show = (field: string) => !visibleFields || visibleFields.has(field);
   const PASTEL_COLORS = [
     'bg-teal-50', 'bg-rose-50', 'bg-sky-50', 'bg-amber-50',
     'bg-emerald-50', 'bg-violet-50', 'bg-pink-50', 'bg-cyan-50',
@@ -145,42 +150,52 @@ export function StaffCard({ staff, onClick, className = '' }: StaffCardProps) {
         }
       }}
     >
-      {/* Photo with pastel background */}
-      <div className={`relative aspect-[4/5] w-full overflow-hidden ${bgColor}`}>
-        {/* Role badge */}
-        {staff.role && (
-          <span className="absolute left-3 top-3 z-10 rounded bg-white/90 px-2.5 py-1 text-xs font-semibold text-gray-700 shadow-sm backdrop-blur-sm">
-            {staff.role}
-          </span>
-        )}
-
-        {staff.photoUrl ? (
-          <img
-            src={staff.photoUrl}
-            alt={staff.name}
-            className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-5xl font-semibold text-gray-300">
-            {staff.name?.charAt(0) ?? ''}
+      {/* Photo */}
+      {photoStyle === 'circle' ? (
+        <div className="flex justify-center pt-8">
+          <div className={`h-32 w-32 overflow-hidden rounded-full ${bgColor}`}>
+            {staff.photoUrl ? (
+              <img src={staff.photoUrl} alt={staff.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-4xl font-semibold text-gray-300">{staff.name?.charAt(0) ?? ''}</div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className={`relative aspect-[4/5] w-full overflow-hidden ${bgColor}`}>
+          {show('role') && staff.role && (
+            <span className="absolute left-3 top-3 z-10 rounded bg-white/90 px-2.5 py-1 text-xs font-semibold text-gray-700 shadow-sm backdrop-blur-sm">
+              {staff.role}
+            </span>
+          )}
+          {staff.photoUrl ? (
+            <img src={staff.photoUrl} alt={staff.name} className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-5xl font-semibold text-gray-300">{staff.name?.charAt(0) ?? ''}</div>
+          )}
+        </div>
+      )}
 
       {/* Content */}
-      <div className="px-4 pb-5 pt-4">
-        <h3 className="text-base font-bold text-gray-900 transition-colors duration-200 group-hover:text-primary">
-          {staff.name}
-        </h3>
+      <div className={`px-4 pb-5 pt-4 ${photoStyle === 'circle' ? 'text-center' : ''}`}>
+        {show('name') && (
+          <h3 className="text-base font-bold text-gray-900 transition-colors duration-200 group-hover:text-primary">
+            {staff.name}
+          </h3>
+        )}
+
+        {/* Role (shown below name for circle style, or skip if shown as badge) */}
+        {photoStyle === 'circle' && show('role') && staff.role && (
+          <p className="mt-1 text-[13px] text-gray-500">{staff.role}</p>
+        )}
 
         {/* Department */}
-        {staff.department && (
+        {show('department') && staff.department && (
           <p className="mt-1 text-[13px] text-gray-500">{staff.department}</p>
         )}
 
         {/* Short bio excerpt */}
-        {staff.bio && (
+        {show('bio') && staff.bio && (
           <p
             className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-gray-400"
             dangerouslySetInnerHTML={{

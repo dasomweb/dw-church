@@ -129,9 +129,15 @@ export const BLOCK_SCHEMAS: Record<string, BlockSchema> = {
   },
 
   staff_grid: {
-    description: 'Staff grid widget',
+    description: 'Staff grid widget with configurable layout',
     dynamic: true,
-    props: { limit: { type: 'number', default: 8 } },
+    props: {
+      limit: { type: 'number', default: 8 },
+      layout: { type: 'enum', options: ['featured', 'grid', 'list'], default: 'featured', description: 'featured=담임목사 강조, grid=전체 그리드, list=리스트' },
+      photoStyle: { type: 'enum', options: ['rect', 'circle'], default: 'rect' },
+      columns: { type: 'number', default: 3, description: '그리드 열 수 (2/3/4)' },
+      showItems: { type: 'string', default: 'name,role,department,bio', description: '표시 항목 (콤마 구분)' },
+    },
   },
 
   event_grid: {
