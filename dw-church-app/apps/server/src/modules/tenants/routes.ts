@@ -72,6 +72,120 @@ export default async function tenantRoutes(app: FastifyInstance): Promise<void> 
     return reply.send(stats);
   });
 
+  // GET /admin/tenants/:id/stats — Detailed stats for a single tenant
+  app.get<{ Params: { id: string } }>(
+    '/tenants/:id/stats',
+    async (request, reply) => {
+      const stats = await tenantService.getTenantDetailedStats(request.params.id);
+      return reply.send(stats);
+    },
+  );
+
+  // ─── Domain management ───────────────────────────────────────
+
+  // GET /admin/domains — List all domains across all tenants
+  app.get('/domains', async (_request, reply) => {
+    const domains = await prisma.tenantDomain.findMany({
+      include: {
+        tenant: { select: { id: true, slug: true, name: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return reply.send({
+      data: domains.map((d) => ({
+        id: d.id,
+        domain: d.domain,
+        isVerified: d.verified,
+        createdAt: d.createdAt.toISOString(),
+        tenant: d.tenant,
+      })),
+      total: domains.length,
+    });
+  });
+
+  // DELETE /admin/domains/:id — Delete a domain
+  app.delete<{ Params: { id: string } }>(
+    '/domains/:id',
+    async (request, reply) => {
+      const { id } = request.params;
+
+      const domain = await prisma.tenantDomain.findUnique({ where: { id } });
+      if (!domain) {
+        throw new AppError('NOT_FOUND', 404, 'Domain not found');
+      }
+
+      await prisma.tenantDomain.delete({ where: { id } });
+      return reply.send({ success: true, message: `Domain '${domain.domain}' deleted` });
+    },
+  );
+
+  // PUT /admin/domains/:id/verify — Manually mark domain as verified
+  app.put<{ Params: { id: string } }>(
+    '/domains/:id/verify',
+    async (request, reply) => {
+      const { id } = request.params;
+
+      const domain = await prisma.tenantDomain.findUnique({ where: { id } });
+      if (!domain) {
+        throw new AppError('NOT_FOUND', 404, 'Domain not found');
+      }
+
+      const updated = await prisma.tenantDomain.update({
+        where: { id },
+        data: { verified: true },
+      });
+
+      return reply.send({
+        success: true,
+        domain: updated.domain,
+        isVerified: updated.verified,
+      });
+    },
+  );
+
+  // ─── User lock/unlock ────────────────────────────────────────
+
+  // PUT /admin/users/:userId/lock — Deactivate a user
+  app.put<{ Params: { userId: string } }>(
+    '/users/:userId/lock',
+    async (request, reply) => {
+      const { userId } = request.params;
+
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user) {
+        throw new AppError('USER_NOT_FOUND', 404, 'User not found');
+      }
+
+      await prisma.user.update({
+        where: { id: userId },
+        data: { isActive: false },
+      });
+
+      return reply.send({ success: true, userId, isActive: false });
+    },
+  );
+
+  // PUT /admin/users/:userId/unlock — Reactivate a user
+  app.put<{ Params: { userId: string } }>(
+    '/users/:userId/unlock',
+    async (request, reply) => {
+      const { userId } = request.params;
+
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user) {
+        throw new AppError('USER_NOT_FOUND', 404, 'User not found');
+      }
+
+      await prisma.user.update({
+        where: { id: userId },
+        data: { isActive: true },
+      });
+
+      return reply.send({ success: true, userId, isActive: true });
+    },
+  );
+
   // PUT /admin/users/:userId/tenant — Reassign a user to a different tenant
   app.put<{ Params: { userId: string }; Body: { tenantSlug: string } }>(
     '/users/:userId/tenant',

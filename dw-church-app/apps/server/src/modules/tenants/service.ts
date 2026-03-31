@@ -173,6 +173,9 @@ export async function getGlobalStats() {
 
   let totalSermons = 0;
   let totalStorage = 0;
+  let totalBulletins = 0;
+  let totalAlbums = 0;
+  let totalEvents = 0;
 
   // Aggregate across all active tenant schemas
   const tenants = await prisma.tenant.findMany({
@@ -192,9 +195,37 @@ export async function getGlobalStats() {
         `SELECT COALESCE(SUM(file_size), 0)::bigint as total FROM "${schema}".files`,
       );
       totalStorage += Number(storageResult[0]?.total ?? 0);
+
+      const bulletinResult = await prisma.$queryRawUnsafe<[{ count: bigint }]>(
+        `SELECT COUNT(*)::bigint as count FROM "${schema}".bulletins`,
+      );
+      totalBulletins += Number(bulletinResult[0]?.count ?? 0);
+
+      const albumResult = await prisma.$queryRawUnsafe<[{ count: bigint }]>(
+        `SELECT COUNT(*)::bigint as count FROM "${schema}".albums`,
+      );
+      totalAlbums += Number(albumResult[0]?.count ?? 0);
+
+      const eventResult = await prisma.$queryRawUnsafe<[{ count: bigint }]>(
+        `SELECT COUNT(*)::bigint as count FROM "${schema}".events`,
+      );
+      totalEvents += Number(eventResult[0]?.count ?? 0);
     } catch {
       // Schema might not exist
     }
+  }
+
+  const totalUsers = await prisma.user.count();
+
+  // Total database size
+  let dbSizeBytes = 0;
+  try {
+    const dbSizeResult = await prisma.$queryRawUnsafe<[{ size: bigint }]>(
+      `SELECT pg_database_size(current_database())::bigint as size`,
+    );
+    dbSizeBytes = Number(dbSizeResult[0]?.size ?? 0);
+  } catch {
+    // Ignore if permission denied
   }
 
   const planBreakdown = await prisma.tenant.groupBy({
@@ -211,6 +242,158 @@ export async function getGlobalStats() {
     planBreakdown: planBreakdown.map((p) => ({
       plan: p.plan,
       count: p._count,
+    })),
+    totalUsers,
+    totalBulletins,
+    totalAlbums,
+    totalEvents,
+    dbSizeBytes,
+  };
+}
+
+export async function getTenantDetailedStats(tenantId: string) {
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    include: {
+      domains: {
+        select: { id: true, domain: true, verified: true, createdAt: true },
+      },
+    },
+  });
+  if (!tenant) {
+    throw new AppError('NOT_FOUND', 404, 'Tenant not found');
+  }
+
+  const schema = `tenant_${tenant.slug}`;
+
+  // Helper to safely count rows in a tenant table
+  async function countTable(table: string): Promise<number> {
+    try {
+      const result = await prisma.$queryRawUnsafe<[{ count: bigint }]>(
+        `SELECT COUNT(*)::bigint as count FROM "${schema}"."${table}"`,
+      );
+      return Number(result[0]?.count ?? 0);
+    } catch {
+      return 0;
+    }
+  }
+
+  const [
+    sermonCount,
+    bulletinCount,
+    albumCount,
+    eventCount,
+    staffCount,
+    columnCount,
+    historyYearCount,
+    pageCount,
+    fileCount,
+  ] = await Promise.all([
+    countTable('sermons'),
+    countTable('bulletins'),
+    countTable('albums'),
+    countTable('events'),
+    countTable('staff'),
+    countTable('columns_pastoral'),
+    countTable('history'),
+    countTable('pages'),
+    countTable('files'),
+  ]);
+
+  // Storage used
+  let storageUsedBytes = 0;
+  try {
+    const storageResult = await prisma.$queryRawUnsafe<[{ total: bigint }]>(
+      `SELECT COALESCE(SUM(file_size), 0)::bigint as total FROM "${schema}".files`,
+    );
+    storageUsedBytes = Number(storageResult[0]?.total ?? 0);
+  } catch {
+    // Ignore
+  }
+
+  // DB size for this schema
+  let dbSizeBytes = 0;
+  try {
+    const sizeResult = await prisma.$queryRawUnsafe<[{ size: bigint }]>(
+      `SELECT COALESCE(SUM(pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename))), 0)::bigint as size FROM pg_tables WHERE schemaname = '${schema}'`,
+    );
+    dbSizeBytes = Number(sizeResult[0]?.size ?? 0);
+  } catch {
+    // Ignore
+  }
+
+  // User count for this tenant
+  const userCount = await prisma.user.count({
+    where: { tenantId: tenant.id },
+  });
+
+  // Last activity across key tables
+  let lastActivity: string | null = null;
+  try {
+    const activityResult = await prisma.$queryRawUnsafe<[{ last_activity: Date | null }]>(
+      `SELECT GREATEST(
+        (SELECT MAX(updated_at) FROM "${schema}".sermons),
+        (SELECT MAX(updated_at) FROM "${schema}".bulletins),
+        (SELECT MAX(updated_at) FROM "${schema}".albums)
+      ) as last_activity`,
+    );
+    const ts = activityResult[0]?.last_activity;
+    lastActivity = ts ? new Date(ts).toISOString() : null;
+  } catch {
+    // Ignore
+  }
+
+  // Users belonging to this tenant
+  const users = await prisma.user.findMany({
+    where: { tenantId: tenant.id },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      isActive: true,
+      createdAt: true,
+    },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  return {
+    tenant: {
+      id: tenant.id,
+      slug: tenant.slug,
+      name: tenant.name,
+      plan: tenant.plan,
+      isActive: tenant.isActive,
+      createdAt: tenant.createdAt.toISOString(),
+    },
+    stats: {
+      sermonCount,
+      bulletinCount,
+      albumCount,
+      eventCount,
+      staffCount,
+      columnCount,
+      historyYearCount,
+      pageCount,
+      fileCount,
+      storageUsedBytes,
+      dbSizeBytes,
+      userCount,
+      lastActivity,
+    },
+    users: users.map((u) => ({
+      id: u.id,
+      email: u.email,
+      name: u.name,
+      role: u.role,
+      isActive: u.isActive,
+      createdAt: u.createdAt.toISOString(),
+    })),
+    domains: tenant.domains.map((d) => ({
+      id: d.id,
+      domain: d.domain,
+      isVerified: d.verified,
+      createdAt: d.createdAt.toISOString(),
     })),
   };
 }
