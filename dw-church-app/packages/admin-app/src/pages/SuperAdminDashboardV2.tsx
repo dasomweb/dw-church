@@ -1107,8 +1107,8 @@ function DomainsTab() {
   const fetchDomains = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await apiFetch<Domain[]>('/domains');
-      setDomains(data);
+      const res = await apiFetch<{ data: Domain[] } | Domain[]>('/domains');
+      setDomains(Array.isArray(res) ? res : res.data ?? []);
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : '도메인 목록 로딩 실패');
     } finally {
@@ -1214,8 +1214,8 @@ function UsersTab() {
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await apiFetch<User[]>('/users');
-      setUsers(data);
+      const res = await apiFetch<{ data: User[]; total: number } | User[]>('/users');
+      setUsers(Array.isArray(res) ? res : res.data ?? []);
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : '사용자 목록 로딩 실패');
     } finally {
