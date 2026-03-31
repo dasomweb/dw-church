@@ -26,7 +26,13 @@ export default function LoginPage() {
     try {
       const session = await loginMutation.mutateAsync(data);
       setSession(session);
-      navigate(session.user?.isSuperAdmin ? '/super-admin' : '/');
+      // Use window.location for super admin to ensure full page load
+      // (React Router navigate may fire before zustand state propagates)
+      if (session.user?.isSuperAdmin) {
+        window.location.href = '/super-admin';
+      } else {
+        navigate('/');
+      }
     } catch (err: unknown) {
       if (err instanceof DWChurchApiError) {
         if (err.status === 401) {
