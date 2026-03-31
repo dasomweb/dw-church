@@ -1404,23 +1404,23 @@ function StorageTab() {
       try {
         const [statsRes, tenantsRes] = await Promise.all([
           apiFetch<GlobalStats>('/stats'),
-          apiFetch<TenantsResponse>('/tenants?page=1&perPage=1000'),
+          apiFetch<TenantsResponse>('/tenants?page=1&perPage=100'),
         ]);
         if (cancelled) return;
 
-        setTotalStorage(statsRes.totalStorage);
-        setTotalDbSize(statsRes.totalDbSize ?? 0);
+        setTotalStorage(statsRes.totalStorage ?? 0);
+        setTotalDbSize((statsRes as Record<string, unknown>).dbSizeBytes as number ?? 0);
 
         // Build storage list from tenants, sorted by total size descending
-        const storageList: StorageTenant[] = tenantsRes.data
-          .map((t) => ({
-            id: t.id,
-            name: t.name,
-            fileCount: t.stats?.sermonCount ?? 0,
-            storageUsed: t.stats?.storageUsed ?? 0,
-            dbSize: t.dbSize ?? 0,
+        const storageList: StorageTenant[] = (tenantsRes.data ?? [])
+          .map((t: Record<string, unknown>) => ({
+            id: t.id as string,
+            name: t.name as string,
+            fileCount: (t.stats as Record<string, number>)?.sermonCount ?? 0,
+            storageUsed: (t.stats as Record<string, number>)?.storageUsed ?? 0,
+            dbSize: (t.stats as Record<string, number>)?.dbSizeBytes ?? 0,
           }))
-          .sort((a, b) => (b.storageUsed + b.dbSize) - (a.storageUsed + a.dbSize));
+          .sort((a: StorageTenant, b: StorageTenant) => (b.storageUsed + b.dbSize) - (a.storageUsed + a.dbSize));
 
         setTenants(storageList);
       } catch (err) {
