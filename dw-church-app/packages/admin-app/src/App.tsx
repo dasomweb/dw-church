@@ -79,7 +79,14 @@ function PublicOnly({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-/** Super admin can access both tenant dashboard and super-admin page via sidebar menu. */
+/** Block non-super-admin users from /super-admin */
+function RequireSuperAdmin({ children }: { children: React.ReactNode }) {
+  const session = useAuthStore((s) => s.session);
+  if (!session?.user?.isSuperAdmin) {
+    return <Navigate to="/" replace />;
+  }
+  return <>{children}</>;
+}
 
 /** Interval in ms for proactive token refresh checks (4 minutes). */
 const REFRESH_CHECK_INTERVAL_MS = 4 * 60 * 1000;
@@ -204,12 +211,14 @@ export function App({ config }: { config: AppConfig }) {
               }
             />
 
-            {/* Super Admin — separate layout, no tenant sidebar */}
+            {/* Super Admin — only accessible by super_admin role */}
             <Route
               path="super-admin"
               element={
                 <RequireAuth>
-                  <SuperAdminDashboard />
+                  <RequireSuperAdmin>
+                    <SuperAdminDashboard />
+                  </RequireSuperAdmin>
                 </RequireAuth>
               }
             />
