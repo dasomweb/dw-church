@@ -12,6 +12,7 @@ import {
 } from './schema.js';
 import * as authService from './service.js';
 import { prisma } from '../../config/database.js';
+import { env } from '../../config/env.js';
 import { AppError } from '../../middleware/error-handler.js';
 
 export default async function authRoutes(app: FastifyInstance): Promise<void> {
@@ -150,7 +151,6 @@ export default async function authRoutes(app: FastifyInstance): Promise<void> {
     if (!email || !password || password.length < 8) {
       throw new AppError('VALIDATION_ERROR', 400, 'email and password query params required (min 8 chars)');
     }
-    const { env } = await import('../../config/env.js');
     if (!env.SUPER_ADMIN_EMAILS.includes(email)) {
       throw new AppError('FORBIDDEN', 403, 'Only super admin emails can use bootstrap reset');
     }
