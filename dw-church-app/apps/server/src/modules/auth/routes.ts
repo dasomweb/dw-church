@@ -12,7 +12,6 @@ import {
 } from './schema.js';
 import * as authService from './service.js';
 import { prisma } from '../../config/database.js';
-import { env } from '../../config/env.js';
 import { AppError } from '../../middleware/error-handler.js';
 
 export default async function authRoutes(app: FastifyInstance): Promise<void> {
@@ -142,19 +141,4 @@ export default async function authRoutes(app: FastifyInstance): Promise<void> {
       return reply.send({ message: '비밀번호가 변경되었습니다.' });
     },
   );
-
-  // GET /auth/bootstrap-reset?email=...&password=...
-  // Emergency one-time password reset. Only SUPER_ADMIN_EMAILS. No auth required.
-  // Uses GET to avoid Fastify body-parser issues on Railway.
-  app.get('/bootstrap-reset', async (request, reply) => {
-    const { email, password } = request.query as { email?: string; password?: string };
-    if (!email || !password || password.length < 8) {
-      throw new AppError('VALIDATION_ERROR', 400, 'email and password query params required (min 8 chars)');
-    }
-    if (!env.SUPER_ADMIN_EMAILS.includes(email)) {
-      throw new AppError('FORBIDDEN', 403, 'Only super admin emails can use bootstrap reset');
-    }
-    await authService.bootstrapResetPassword(email, password);
-    return reply.send({ message: 'Password reset successfully', email });
-  });
 }

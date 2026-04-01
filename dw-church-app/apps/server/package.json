@@ -1,6 +1,6 @@
 {
   "name": "@dw-church/server",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "description": "DW Church SaaS API Server",
   "license": "GPL-3.0",
   "private": true,
