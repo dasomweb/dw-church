@@ -142,19 +142,19 @@ export default async function authRoutes(app: FastifyInstance): Promise<void> {
     },
   );
 
-  // POST /auth/bootstrap-reset — Emergency password reset for SUPER_ADMIN_EMAILS users only.
-  // No authentication required. Only works for emails in the env var.
-  // This allows recovering access when migrating auth systems.
-  app.post('/bootstrap-reset', async (request, reply) => {
-    const { email, newPassword } = request.body as { email: string; newPassword: string };
-    if (!email || !newPassword || newPassword.length < 8) {
-      throw new AppError('VALIDATION_ERROR', 400, 'email and newPassword (min 8 chars) required');
+  // GET /auth/bootstrap-reset?email=...&password=...
+  // Emergency one-time password reset. Only SUPER_ADMIN_EMAILS. No auth required.
+  // Uses GET to avoid Fastify body-parser issues on Railway.
+  app.get('/bootstrap-reset', async (request, reply) => {
+    const { email, password } = request.query as { email?: string; password?: string };
+    if (!email || !password || password.length < 8) {
+      throw new AppError('VALIDATION_ERROR', 400, 'email and password query params required (min 8 chars)');
     }
     const { env } = await import('../../config/env.js');
     if (!env.SUPER_ADMIN_EMAILS.includes(email)) {
       throw new AppError('FORBIDDEN', 403, 'Only super admin emails can use bootstrap reset');
     }
-    await authService.bootstrapResetPassword(email, newPassword);
-    return reply.send({ message: 'Password reset successfully' });
+    await authService.bootstrapResetPassword(email, password);
+    return reply.send({ message: 'Password reset successfully', email });
   });
 }
