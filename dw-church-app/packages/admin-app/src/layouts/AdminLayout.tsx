@@ -273,26 +273,7 @@ export function AdminLayout() {
             </NavLink>
           ))}
 
-          {/* Super Admin nav — only visible to super admin users */}
-          {isSuperAdmin && (
-            <>
-              <div className="my-3 border-t border-gray-200" />
-              <NavLink
-                to={superAdminNavItem.to}
-                onClick={() => setSidebarOpen(false)}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-red-100 text-red-700'
-                      : 'text-red-600 hover:bg-red-50 hover:text-red-700'
-                  }`
-                }
-              >
-                {superAdminNavItem.icon}
-                {superAdminNavItem.label}
-              </NavLink>
-            </>
-          )}
+          {/* Super Admin menu removed — super_admin users go directly to /super-admin */}
         </nav>
       </aside>
 

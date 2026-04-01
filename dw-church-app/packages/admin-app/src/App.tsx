@@ -73,17 +73,27 @@ function PublicOnly({ children }: { children: React.ReactNode }) {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    const user = useAuthStore.getState().session?.user;
+    return <Navigate to={user?.isSuperAdmin ? '/super-admin' : '/'} replace />;
   }
 
   return <>{children}</>;
 }
 
-/** Block non-super-admin users from /super-admin */
+/** Block non-super-admin from /super-admin */
 function RequireSuperAdmin({ children }: { children: React.ReactNode }) {
   const session = useAuthStore((s) => s.session);
   if (!session?.user?.isSuperAdmin) {
     return <Navigate to="/" replace />;
+  }
+  return <>{children}</>;
+}
+
+/** Block super-admin from tenant admin pages */
+function BlockSuperAdmin({ children }: { children: React.ReactNode }) {
+  const session = useAuthStore((s) => s.session);
+  if (session?.user?.isSuperAdmin) {
+    return <Navigate to="/super-admin" replace />;
   }
   return <>{children}</>;
 }
@@ -228,7 +238,9 @@ export function App({ config }: { config: AppConfig }) {
             <Route
               element={
                 <RequireAuth>
-                  <AdminLayout />
+                  <BlockSuperAdmin>
+                    <AdminLayout />
+                  </BlockSuperAdmin>
                 </RequireAuth>
               }
             >
