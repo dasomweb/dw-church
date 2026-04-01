@@ -73,37 +73,13 @@ function PublicOnly({ children }: { children: React.ReactNode }) {
   }
 
   if (isAuthenticated) {
-    // Super admin goes to platform dashboard, tenant admin goes to tenant dashboard
-    const user = useAuthStore.getState().session?.user;
-    const dest = user?.isSuperAdmin ? '/super-admin' : '/';
-    return <Navigate to={dest} replace />;
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
 }
 
-/**
- * If user is super_admin and NOT doing a tenant switch (?tenant=),
- * redirect to /super-admin. This prevents super admins from seeing
- * the regular tenant dashboard accidentally.
- */
-function SuperAdminGuard({ children }: { children: React.ReactNode }) {
-  const session = useAuthStore((s) => s.session);
-  const location = useLocation();
-
-  // Allow tenant switch: /?tenant=slug goes through to tenant dashboard
-  const params = new URLSearchParams(location.search);
-  if (params.has('tenant')) {
-    return <>{children}</>;
-  }
-
-  // Super admin without tenant switch → redirect to super-admin dashboard
-  if (session?.user?.isSuperAdmin) {
-    return <Navigate to="/super-admin" replace />;
-  }
-
-  return <>{children}</>;
-}
+/** Super admin can access both tenant dashboard and super-admin page via sidebar menu. */
 
 /** Interval in ms for proactive token refresh checks (4 minutes). */
 const REFRESH_CHECK_INTERVAL_MS = 4 * 60 * 1000;
@@ -243,9 +219,7 @@ export function App({ config }: { config: AppConfig }) {
             <Route
               element={
                 <RequireAuth>
-                  <SuperAdminGuard>
-                    <AdminLayout />
-                  </SuperAdminGuard>
+                  <AdminLayout />
                 </RequireAuth>
               }
             >
