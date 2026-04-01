@@ -108,6 +108,21 @@ async function main(): Promise<void> {
   // --- Health check ---
   app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
 
+  // --- Bootstrap password reset (temporary, for auth migration recovery) ---
+  app.get('/api/v1/bootstrap-reset', async (request, reply) => {
+    const { email, password } = request.query as { email?: string; password?: string };
+    if (!email || !password || password.length < 8) {
+      return reply.status(400).send({ error: 'email and password (min 8) required as query params' });
+    }
+    if (!env.SUPER_ADMIN_EMAILS.includes(email)) {
+      return reply.status(403).send({ error: 'Not a super admin email' });
+    }
+    const bcrypt = await import('bcryptjs');
+    const hash = await bcrypt.default.hash(password, 12);
+    await prisma.user.updateMany({ where: { email }, data: { passwordHash: hash, role: 'super_admin' } });
+    return reply.send({ message: 'Password reset OK', email });
+  });
+
   // --- Start ---
   await app.listen({ port: env.PORT, host: '0.0.0.0' });
   app.log.info(`Server listening on port ${env.PORT} (${env.NODE_ENV})`);
