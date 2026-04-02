@@ -23,13 +23,13 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormData) => {
     setErrorMsg('');
+    // Clear any stale session before login
+    localStorage.removeItem('dw-church-session');
     try {
       const session = await loginMutation.mutateAsync(data);
       setSession(session);
-      // Use window.location for super admin to ensure full page load
-      // (React Router navigate may fire before zustand state propagates)
       if (session.user?.isSuperAdmin) {
-        window.location.href = '/super-admin';
+        navigate('/super-admin');
       } else {
         navigate('/');
       }

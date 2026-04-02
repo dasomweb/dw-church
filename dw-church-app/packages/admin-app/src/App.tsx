@@ -98,6 +98,15 @@ function BlockSuperAdmin({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/** Catch-all: redirect based on role */
+function CatchAllRedirect() {
+  const session = useAuthStore((s) => s.session);
+  if (session?.user?.isSuperAdmin) {
+    return <Navigate to="/super-admin" replace />;
+  }
+  return <Navigate to="/" replace />;
+}
+
 /** Interval in ms for proactive token refresh checks (4 minutes). */
 const REFRESH_CHECK_INTERVAL_MS = 4 * 60 * 1000;
 
@@ -263,8 +272,8 @@ export function App({ config }: { config: AppConfig }) {
               <Route path="profile" element={<ProfilePage />} />
             </Route>
 
-            {/* Catch-all: super admin → super-admin, tenant admin → / */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            {/* Catch-all */}
+            <Route path="*" element={<CatchAllRedirect />} />
           </Routes>
         </Suspense>
       </BrowserRouter>
