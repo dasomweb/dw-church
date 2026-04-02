@@ -19,7 +19,12 @@
       "Bash(pip install:*)",
       "Bash(python3 -c \":*)",
       "Bash(grep -rn \"WHERE.*id = $1[^:]\" --include=\"*.ts\")",
-      "WebFetch(domain:api.truelight.app)"
+      "Bash(git fetch:*)",
+      "Bash(ls /Users/johnkwak/Documents/GitHub/dw-church/dw-church-app/apps/web/app/tenant/[slug]/)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git tag:*)"
     ]
   }
 }
