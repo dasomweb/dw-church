@@ -1,9 +1,12 @@
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import { prisma } from '../../config/database.js';
 import { signAccessToken, signRefreshToken, verifyToken } from '../../config/jwt.js';
 import { env } from '../../config/env.js';
 import { AppError } from '../../middleware/error-handler.js';
 import { createTenantSchema } from '../../utils/schema-manager.js';
+import { sendEmail } from '../../config/email.js';
+import { welcomeEmail, passwordResetEmail, inviteEmail } from '../../config/email-templates.js';
 import type { RegisterInput, LoginInput, InviteInput } from './schema.js';
 
 const BCRYPT_ROUNDS = 12;
@@ -90,6 +93,12 @@ export async function register(input: RegisterInput) {
     tenantId: tenant.id,
     tenantSlug: slug,
   });
+
+  // Fire-and-forget welcome email
+  const welcome = welcomeEmail(churchName);
+  sendEmail({ to: email, ...welcome }).catch((err) =>
+    console.error('[email] Failed to send welcome email:', err),
+  );
 
   return {
     ...tokens,
@@ -212,11 +221,25 @@ export async function getMe(userId: string) {
   };
 }
 
-export async function forgotPassword(_email: string) {
-  // Email sending requires a separate service (e.g. SendGrid, Resend).
-  // For now, log a warning. The endpoint still returns success to avoid
-  // leaking whether an email exists.
-  console.warn('[auth] forgotPassword called — email sending not yet configured');
+export async function forgotPassword(email: string) {
+  // Always return success to avoid leaking whether an email exists.
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user || !user.isActive) return;
+
+  // Generate a password-reset JWT (1hr expiry)
+  const resetToken = jwt.sign(
+    { userId: user.id, purpose: 'password-reset' },
+    env.JWT_SECRET,
+    { expiresIn: '1h' },
+  );
+
+  const resetUrl = `https://admin.truelight.app/reset-password?token=${resetToken}`;
+  const tpl = passwordResetEmail(resetUrl);
+
+  // Fire-and-forget
+  sendEmail({ to: email, ...tpl }).catch((err) =>
+    console.error('[email] Failed to send password reset email:', err),
+  );
 }
 
 export async function resetPassword(token: string, newPassword: string) {
@@ -292,8 +315,23 @@ export async function inviteUser(
     },
   });
 
-  // TODO: Send invite email with password reset link
-  console.warn(`[auth] inviteUser — email sending not yet configured for ${input.email}`);
+  // Generate invite token (password-reset style, 72hr expiry for invites)
+  const inviteToken = jwt.sign(
+    { userId: user.id, purpose: 'invite' },
+    env.JWT_SECRET,
+    { expiresIn: '72h' },
+  );
+
+  // Look up tenant name for the email template
+  const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+  const churchName = tenant?.name ?? tenantSlug;
+  const inviteUrl = `https://admin.truelight.app/reset-password?token=${inviteToken}`;
+  const tpl = inviteEmail(churchName, inviteUrl);
+
+  // Fire-and-forget
+  sendEmail({ to: input.email, ...tpl }).catch((err) =>
+    console.error('[email] Failed to send invite email:', err),
+  );
 
   return {
     user: {
