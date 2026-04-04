@@ -1,6 +1,7 @@
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import { ZodError } from 'zod';
 import { Prisma } from '@prisma/client';
+import { Sentry } from '../config/sentry.js';
 
 export class AppError extends Error {
   public readonly code: string;
@@ -78,6 +79,9 @@ export function errorHandler(
         break;
     }
 
+    if (status >= 500) {
+      Sentry.captureException(error);
+    }
     const body: ErrorBody = { error: { code, message, details: error.message } };
     void reply.status(status).send(body);
     return;
@@ -85,6 +89,7 @@ export function errorHandler(
 
   // --- Prisma unknown errors ---
   if (error instanceof Prisma.PrismaClientUnknownRequestError) {
+    Sentry.captureException(error);
     const body: ErrorBody = { error: { code: 'DATABASE_ERROR', message: 'A database error occurred', details: error.message } };
     void reply.status(500).send(body);
     return;
@@ -103,6 +108,7 @@ export function errorHandler(
   }
 
   // --- Fallback ---
+  Sentry.captureException(error);
   const body: ErrorBody = {
     error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' },
   };

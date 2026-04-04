@@ -6,7 +6,7 @@ on:
     branches: [main]
 
 jobs:
-  build-and-test:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,18 +18,29 @@ jobs:
           node-version: 20
           cache: pnpm
           cache-dependency-path: dw-church-app/pnpm-lock.yaml
-      - name: Install
+      - run: pnpm install --frozen-lockfile
         working-directory: dw-church-app
-        run: pnpm install
-      - name: Lint
+      - run: pnpm lint
         working-directory: dw-church-app
-        run: pnpm lint
-      - name: Type check
+      - run: pnpm typecheck
         working-directory: dw-church-app
-        run: pnpm typecheck
-      - name: Build
+      - run: cd apps/server && npx prisma generate && pnpm test
         working-directory: dw-church-app
-        run: pnpm build
-      - name: Test
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: dw-church-app/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
         working-directory: dw-church-app
-        run: pnpm test
+      - run: pnpm build
+        working-directory: dw-church-app

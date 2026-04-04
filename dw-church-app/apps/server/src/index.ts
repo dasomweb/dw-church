@@ -7,6 +7,7 @@ import { tenantMiddleware } from './middleware/tenant.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { rateLimitConfig } from './middleware/rate-limit.js';
 import { initMonitoring } from './config/monitoring.js';
+import { initSentry } from './config/sentry.js';
 
 /* ------------------------------------------------------------------
  * Fastify type augmentation
@@ -28,7 +29,10 @@ declare module 'fastify' {
 /* ------------------------------------------------------------------
  * Bootstrap
  * ----------------------------------------------------------------*/
+const serverStartTime = Date.now();
+
 async function main(): Promise<void> {
+  initSentry();
   initMonitoring();
 
   const app = Fastify({
@@ -106,7 +110,12 @@ async function main(): Promise<void> {
   });
 
   // --- Health check ---
-  app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
+  app.get('/health', async () => ({
+    status: 'ok',
+    version: '5.2.0',
+    timestamp: new Date().toISOString(),
+    uptime: Math.floor((Date.now() - serverStartTime) / 1000),
+  }));
 
   // --- Start ---
   await app.listen({ port: env.PORT, host: '0.0.0.0' });
