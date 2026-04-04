@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import multipart from '@fastify/multipart';
 import rateLimit from '@fastify/rate-limit';
 import { env } from './config/env.js';
 import { prisma, disconnectAllTenants } from './config/database.js';
@@ -44,6 +45,7 @@ async function main(): Promise<void> {
   // --- Plugins ---
   const { corsOptions } = await import('./cors.js');
   await app.register(cors, corsOptions);
+  await app.register(multipart, { limits: { fileSize: 20 * 1024 * 1024 } }); // 20MB max
   await app.register(rateLimit, rateLimitConfig);
 
   // --- Error handler ---
