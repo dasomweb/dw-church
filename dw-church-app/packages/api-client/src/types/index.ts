@@ -286,6 +286,33 @@ export interface Theme {
   customCss: string;
 }
 
+export interface TemplatePreset {
+  name: string;
+  label: string;
+  description: string;
+  colors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    background: string;
+    surface: string;
+    text: string;
+  };
+  fonts: {
+    heading: string;
+    body: string;
+  };
+  layout: {
+    headerStyle: 'default' | 'centered' | 'transparent' | 'dark';
+    heroStyle: 'full' | 'split' | 'minimal' | 'overlay' | 'none';
+    contentWidth: 'narrow' | 'default' | 'wide' | 'full';
+    cardStyle: 'shadow' | 'border' | 'flat' | 'elevated';
+    footerStyle: 'default' | 'minimal' | 'centered' | 'dark';
+    borderRadius: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+    sermonGrid: 2 | 3 | 4;
+  };
+}
+
 // ─── Auth Types ─────────────────────────────────────────────
 export interface AuthSession {
   accessToken: string;

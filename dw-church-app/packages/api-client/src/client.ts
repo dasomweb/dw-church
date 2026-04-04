@@ -25,6 +25,7 @@ import type {
   Staff,
   StaffListParams,
   TaxonomyTerm,
+  TemplatePreset,
   Theme,
   UploadedFile,
 } from './types';
@@ -577,6 +578,11 @@ export class DWChurchClient {
 
   async updateTheme(data: Partial<Theme>): Promise<Theme> {
     return this.api.put(`${this.namespace}/theme`, data);
+  }
+
+  async getThemePresets(): Promise<TemplatePreset[]> {
+    const res = await this.api.get(`${this.namespace}/theme/presets`);
+    return (res as { data: TemplatePreset[] }).data ?? res;
   }
 
   // ─── Users ────────────────────────────────────────────────

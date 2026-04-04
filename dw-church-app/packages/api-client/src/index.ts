@@ -37,6 +37,7 @@ export type {
   PageSection,
   BlockType,
   MenuItem,
+  TemplatePreset,
   Theme,
   // Auth
   AuthSession,
@@ -148,6 +149,7 @@ export {
   useReorderMenus,
   // Theme
   useTheme,
+  useThemePresets,
   useUpdateTheme,
   // Users
   useUsers,

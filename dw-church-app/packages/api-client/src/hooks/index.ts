@@ -25,6 +25,7 @@ import type {
   PaginatedResponse,
   RelatedPostsParams,
   TaxonomyTerm,
+  TemplatePreset,
   Theme,
   UploadedFile,
 } from '../types';
@@ -106,6 +107,7 @@ export const queryKeys = {
     all: ['menus'] as const,
   },
   theme: ['theme'] as const,
+  themePresets: ['themePresets'] as const,
   files: {
     all: ['files'] as const,
   },
@@ -896,6 +898,16 @@ export function useTheme() {
     queryFn: () => client!.getTheme(),
     enabled: !!client,
     staleTime: STALE_TIME,
+  });
+}
+
+export function useThemePresets() {
+  const client = useDWChurchClient();
+  return useQuery<TemplatePreset[]>({
+    queryKey: queryKeys.themePresets,
+    queryFn: () => client!.getThemePresets(),
+    enabled: !!client,
+    staleTime: 5 * 60 * 1000, // presets rarely change
   });
 }
 
