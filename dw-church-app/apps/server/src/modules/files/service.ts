@@ -32,7 +32,14 @@ export async function upload(params: UploadParams) {
     buffer.length,
   );
 
-  return rows[0];
+  // Convert BigInt values to Number for JSON serialization
+  const row = rows[0];
+  if (row) {
+    for (const key of Object.keys(row)) {
+      if (typeof row[key] === 'bigint') row[key] = Number(row[key]);
+    }
+  }
+  return row;
 }
 
 export async function remove(schema: string, id: string) {
