@@ -509,7 +509,15 @@ export class DWChurchClient {
   // ─── Pages ──────────────────────────────────────────────
   async getPages(): Promise<Page[]> {
     const res = await this.api.get(`${this.namespace}/pages`);
-    return res.data ?? res;
+    const data = res.data ?? res;
+    return (Array.isArray(data) ? data : []).map((p: Record<string, unknown>) => ({
+      id: p.id as string,
+      title: (p.title ?? '') as string,
+      slug: (p.slug ?? '') as string,
+      isHome: (p.is_home ?? p.isHome ?? false) as boolean,
+      status: (p.status ?? 'draft') as string,
+      sortOrder: (p.sort_order ?? p.sortOrder ?? 0) as number,
+    }));
   }
 
   async getPage(slug: string): Promise<Page> {
@@ -530,7 +538,17 @@ export class DWChurchClient {
 
   // ─── Page Sections ──────────────────────────────────────
   async getPageSections(pageId: string): Promise<PageSection[]> {
-    return this.api.get(`${this.namespace}/pages/${pageId}/sections`);
+    const res = await this.api.get(`${this.namespace}/pages/${pageId}/sections`);
+    const data = res.data ?? res;
+    // Convert snake_case to camelCase for each section
+    return (Array.isArray(data) ? data : []).map((s: Record<string, unknown>) => ({
+      id: s.id as string,
+      pageId: (s.page_id ?? s.pageId) as string,
+      blockType: (s.block_type ?? s.blockType) as string,
+      props: (s.props ?? {}) as Record<string, unknown>,
+      sortOrder: (s.sort_order ?? s.sortOrder ?? 0) as number,
+      isVisible: (s.is_visible ?? s.isVisible ?? true) as boolean,
+    }));
   }
 
   async createSection(pageId: string, data: Omit<PageSection, 'id' | 'pageId'>): Promise<PageSection> {
