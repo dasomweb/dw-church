@@ -184,7 +184,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
       >
         {headerStyle === 'centered' ? (
           /* Centered header: logo above, nav below, both centered */
-          <div className="mx-auto max-w-7xl px-6 py-4">
+          <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
             <div className="flex flex-col items-center gap-3">
               <Link href="/" className="flex items-center gap-2">
                 {logoUrl ? (
@@ -208,13 +208,13 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                 ))}
               </nav>
             </div>
-            <div className="absolute right-6 top-4 md:hidden">
+            <div className="absolute right-4 top-4 sm:right-6 md:hidden">
               <MobileMenu navItems={navItems} />
             </div>
           </div>
         ) : (
           /* Default / transparent / dark header: left logo, right nav */
-          <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+          <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
             <Link href="/" className="flex items-center gap-2">
               {logoUrl ? (
                 <img src={logoUrl} alt={churchName} className="h-10 w-auto object-contain" />
@@ -254,12 +254,12 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
       >
         {footerStyle === 'minimal' ? (
           /* Minimal footer: just copyright */
-          <div className="mx-auto max-w-7xl px-6 py-6 text-center text-xs text-gray-400">
+          <div className="mx-auto max-w-7xl px-4 py-6 text-center text-xs text-gray-400 sm:px-6">
             {settings?.name ? `\u00A9 ${settings.name}. ` : ''}Powered by DW Church
           </div>
         ) : footerStyle === 'centered' ? (
           /* Centered footer: all content centered */
-          <div className="mx-auto max-w-7xl px-6 py-12 text-center">
+          <div className="mx-auto max-w-7xl px-4 py-12 text-center sm:px-6">
             <h3 className="mb-3 text-lg font-bold font-heading" style={{ color: 'var(--dw-primary)' }}>
               {churchName}
             </h3>
@@ -295,7 +295,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
           </div>
         ) : (
           /* Default / dark footer: 3-column grid */
-          <div className="mx-auto max-w-7xl px-6 py-12">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
             <div className="grid gap-8 md:grid-cols-3">
               <div>
                 <h3

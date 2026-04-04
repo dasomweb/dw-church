@@ -99,7 +99,7 @@ export default function MobileMenu({ navItems }: MobileMenuProps) {
         aria-label="Open navigation menu"
         aria-expanded={isOpen}
         aria-controls="mobile-menu-panel"
-        className="p-2 rounded-md text-[var(--dw-text)] hover:bg-gray-100 transition-colors"
+        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-md text-[var(--dw-text)] hover:bg-gray-100 transition-colors"
       >
         <svg
           width="24"
@@ -142,7 +142,7 @@ export default function MobileMenu({ navItems }: MobileMenuProps) {
           <button
             onClick={close}
             aria-label="Close navigation menu"
-            className="p-2 rounded-md text-[var(--dw-text)] hover:bg-gray-100 transition-colors"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-md text-[var(--dw-text)] hover:bg-gray-100 transition-colors"
           >
             <svg
               width="24"

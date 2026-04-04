@@ -21,7 +21,7 @@ export default async function BulletinsPage({ params, searchParams }: BulletinsP
   const bulletins = await getBulletins(slug, { page, perPage: 12 });
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-12">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
       <h1 className="mb-8 text-3xl font-bold font-heading">주보</h1>
       <BulletinListClient
         initialData={bulletins.data ?? []}

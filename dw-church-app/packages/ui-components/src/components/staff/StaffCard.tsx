@@ -76,7 +76,7 @@ export function StaffFeatured({ staff, className = '' }: { staff: Staff; classNa
         </div>
 
         {/* Info — right side */}
-        <div className="flex flex-1 flex-col justify-center px-8 py-8">
+        <div className="flex flex-1 flex-col justify-center px-4 py-6 sm:px-8 sm:py-8">
           <h2 className="text-2xl font-bold text-gray-900">{staff.name}</h2>
 
           {/* Bio */}

@@ -8,7 +8,7 @@ export function DividerBlock({ props }: DividerBlockProps) {
   const spacingMap = { sm: 'py-4', md: 'py-8', lg: 'py-12' };
 
   return (
-    <div className={`px-6 ${spacingMap[spacing]}`}>
+    <div className={`px-4 sm:px-6 ${spacingMap[spacing]}`}>
       <hr className="mx-auto max-w-7xl border-gray-200" />
     </div>
   );

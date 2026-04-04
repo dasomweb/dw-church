@@ -8,7 +8,7 @@ export function NewcomerInfoBlock({ props }: NewcomerInfoBlockProps) {
   const content = (props.content as string) ?? '';
 
   return (
-    <section className="px-6 py-16" style={{ backgroundColor: 'var(--dw-surface)' }}>
+    <section className="px-4 py-10 sm:px-6 sm:py-16" style={{ backgroundColor: 'var(--dw-surface)' }}>
       <div className="mx-auto max-w-4xl text-center">
         <div
           className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full text-3xl"

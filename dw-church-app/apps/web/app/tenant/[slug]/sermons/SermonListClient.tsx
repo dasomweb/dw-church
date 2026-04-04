@@ -82,12 +82,12 @@ export function SermonListClient({
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="설교 제목, 설교자로 검색..."
-              className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm placeholder-gray-400 focus:border-[var(--dw-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--dw-primary)]"
+              className="min-h-[44px] w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-4 text-sm placeholder-gray-400 focus:border-[var(--dw-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--dw-primary)]"
             />
           </div>
           <button
             type="submit"
-            className="rounded-lg bg-[var(--dw-primary)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
+            className="min-h-[44px] rounded-lg bg-[var(--dw-primary)] px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 transition-opacity"
           >
             검색
           </button>
@@ -96,7 +96,7 @@ export function SermonListClient({
         {hasActiveFilters && (
           <button
             onClick={handleClearFilters}
-            className="text-sm text-gray-500 hover:text-gray-700 underline"
+            className="min-h-[44px] text-sm text-gray-500 hover:text-gray-700 underline"
           >
             필터 초기화
           </button>
@@ -153,7 +153,7 @@ export function SermonListClient({
             <a
               key={p}
               href={buildUrl({ page: p })}
-              className={`rounded-lg px-4 py-2 text-sm ${
+              className={`min-h-[44px] min-w-[44px] rounded-lg px-3 py-2 text-sm sm:px-4 ${
                 p === currentPage
                   ? 'bg-[var(--dw-primary)] text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'

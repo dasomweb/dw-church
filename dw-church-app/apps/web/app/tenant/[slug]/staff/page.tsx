@@ -17,7 +17,7 @@ export default async function StaffPage({ params }: StaffPageProps) {
   const staff = await getStaff(slug);
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-12">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
       <h1 className="mb-8 text-3xl font-bold font-heading">교역자 소개</h1>
       <StaffGridClient staff={staff} />
     </div>

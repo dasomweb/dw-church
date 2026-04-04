@@ -23,7 +23,7 @@ export default async function SermonsPage({ params, searchParams }: SermonsPageP
   const sermons = await getSermons(slug, { page, perPage: 12, category, search: searchQuery });
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-12">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
       <h1 className="mb-8 text-3xl font-bold font-heading">설교</h1>
       <SermonListClient
         initialData={sermons.data ?? []}

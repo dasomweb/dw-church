@@ -17,7 +17,7 @@ export default async function HistoryPage({ params }: HistoryPageProps) {
   const history = await getHistory(slug);
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-12">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
       <h1 className="mb-8 text-3xl font-bold font-heading">교회 연혁</h1>
       <HistoryTimelineClient history={history} />
     </div>

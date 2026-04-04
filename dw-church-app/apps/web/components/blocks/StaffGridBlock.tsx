@@ -24,7 +24,7 @@ export async function StaffGridBlock({ props, slug }: StaffGridBlockProps) {
   if (staff.length === 0) return null;
 
   return (
-    <section className="px-6 py-16" style={{ backgroundColor: 'var(--dw-surface)' }}>
+    <section className="px-4 py-10 sm:px-6 sm:py-16" style={{ backgroundColor: 'var(--dw-surface)' }}>
       <div className="mx-auto max-w-7xl">
         {props.title && (
           <h2 className="mb-8 text-center text-3xl font-bold font-heading">

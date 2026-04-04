@@ -15,16 +15,16 @@ export function WorshipScheduleBlock({ props }: WorshipScheduleBlockProps) {
   if (services.length === 0) return null;
 
   return (
-    <section className="px-6 py-16">
+    <section className="px-4 py-10 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-4xl">
         <h2 className="mb-8 text-center text-3xl font-bold font-heading">예배 안내</h2>
-        <div className="overflow-hidden rounded-xl border border-gray-200">
-          <table className="w-full">
+        <div className="overflow-x-auto rounded-xl border border-gray-200">
+          <table className="w-full min-w-[480px]">
             <thead>
               <tr style={{ backgroundColor: 'var(--dw-primary)' }}>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-white">예배</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-white">시간</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-white">장소</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-white sm:px-6 sm:py-4">예배</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-white sm:px-6 sm:py-4">시간</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-white sm:px-6 sm:py-4">장소</th>
               </tr>
             </thead>
             <tbody>
@@ -33,9 +33,9 @@ export function WorshipScheduleBlock({ props }: WorshipScheduleBlockProps) {
                   key={idx}
                   className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
                 >
-                  <td className="px-6 py-4 text-sm font-medium">{service.name}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{service.time}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{service.location}</td>
+                  <td className="px-4 py-3 text-sm font-medium sm:px-6 sm:py-4">{service.name}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600 sm:px-6 sm:py-4">{service.time}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600 sm:px-6 sm:py-4">{service.location}</td>
                 </tr>
               ))}
             </tbody>

@@ -21,7 +21,7 @@ export async function ContactInfoBlock({ slug }: ContactInfoBlockProps) {
   ].filter((l) => l.url);
 
   return (
-    <section className="px-6 py-16">
+    <section className="px-4 py-10 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-4xl">
         <h2 className="mb-8 text-center text-3xl font-bold font-heading">연락처</h2>
         <div className="grid gap-6 sm:grid-cols-2">

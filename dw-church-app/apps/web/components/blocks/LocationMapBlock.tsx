@@ -16,7 +16,7 @@ export function LocationMapBlock({ props }: LocationMapBlockProps) {
       : '';
 
   return (
-    <section className="px-6 py-16" style={{ backgroundColor: 'var(--dw-surface)' }}>
+    <section className="px-4 py-10 sm:px-6 sm:py-16" style={{ backgroundColor: 'var(--dw-surface)' }}>
       <div className="mx-auto max-w-7xl">
         <h2 className="mb-8 text-center text-3xl font-bold font-heading">오시는 길</h2>
         {mapSrc && (
