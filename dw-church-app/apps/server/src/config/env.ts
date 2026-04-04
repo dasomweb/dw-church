@@ -20,9 +20,12 @@ const envSchema = z.object({
         .filter(Boolean),
     ),
 
-  // Email (optional — emails are skipped if not configured)
-  RESEND_API_KEY: z.string().default(''),
-  EMAIL_FROM: z.string().default('DW Church <noreply@truelight.app>'),
+  // Email SMTP (optional — emails are skipped if not configured)
+  SMTP_HOST: z.string().default(''),
+  SMTP_PORT: z.coerce.number().default(465),
+  SMTP_USER: z.string().default(''),
+  SMTP_PASS: z.string().default(''),
+  EMAIL_FROM: z.string().default('DW Church <mailer@truelight.app>'),
 
   // Stripe billing (optional — only required if billing is enabled)
   STRIPE_SECRET_KEY: z.string().default(''),
