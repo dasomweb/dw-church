@@ -12,6 +12,7 @@ import {
   useDeleteSection,
   useReorderSections,
 } from '@dw-church/api-client';
+import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '../components';
 
 // ═══════════════════════════════════════════════════════════
@@ -466,6 +467,7 @@ export default function PageEditor() {
   const { showToast } = useToast();
   const { data: pages, isLoading: pagesLoading } = usePages();
   const { data: sections } = usePageSections(selectedPageId || '');
+  const queryClient = useQueryClient();
   const createPage = useCreatePage();
   const updatePage = useUpdatePage();
   const deletePage = useDeletePage();
@@ -587,8 +589,17 @@ export default function PageEditor() {
 
   const handleDeleteSection = (section: PageSection) => {
     if (!selectedPageId || !window.confirm('이 섹션을 삭제하시겠습니까?')) return;
-    deleteSection.mutate({ pageId: selectedPageId, sectionId: section.id });
     if (editingSectionId === section.id) setEditingSectionId(null);
+    // Optimistic delete: remove from cache immediately, then sync with server
+    const queryKey = ['pages', 'sections', selectedPageId];
+    const prev = queryClient.getQueryData<PageSection[]>(queryKey);
+    if (prev) {
+      queryClient.setQueryData(queryKey, prev.filter((s) => s.id !== section.id));
+    }
+    deleteSection.mutate(
+      { pageId: selectedPageId, sectionId: section.id },
+      { onError: () => { if (prev) queryClient.setQueryData(queryKey, prev); } },
+    );
   };
 
   const handleVariantChange = (section: PageSection, variant: string) => {
