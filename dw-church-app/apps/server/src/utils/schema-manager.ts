@@ -107,14 +107,16 @@ export async function seedDefaultData(slug: string): Promise<void> {
     }
   }
 
-  // 6. Default menu items
+  // 6. Default menu items (matches dynamic content pages)
   const menus = [
-    { label: '교회소개', url: '/about', sort_order: 0 },
+    { label: '홈', url: '/', sort_order: 0 },
     { label: '설교', url: '/sermons', sort_order: 1 },
     { label: '주보', url: '/bulletins', sort_order: 2 },
-    { label: '갤러리', url: '/albums', sort_order: 3 },
-    { label: '교회소식', url: '/events', sort_order: 4 },
-    { label: '섬기는 사람들', url: '/staff', sort_order: 5 },
+    { label: '앨범', url: '/albums', sort_order: 3 },
+    { label: '행사', url: '/events', sort_order: 4 },
+    { label: '교역자', url: '/staff', sort_order: 5 },
+    { label: '칼럼', url: '/columns', sort_order: 6 },
+    { label: '연혁', url: '/history', sort_order: 7 },
   ];
 
   for (const menu of menus) {

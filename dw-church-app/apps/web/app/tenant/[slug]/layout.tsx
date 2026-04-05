@@ -113,18 +113,9 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
     // Fallback: render with defaults if API unavailable
   }
 
-  // Default navigation when no menu items are configured
-  const DEFAULT_NAV: MenuItem[] = [
-    { id: 'nav-sermons', label: '설교', externalUrl: '/sermons', sortOrder: 1, isVisible: true },
-    { id: 'nav-bulletins', label: '주보', externalUrl: '/bulletins', sortOrder: 2, isVisible: true },
-    { id: 'nav-albums', label: '앨범', externalUrl: '/albums', sortOrder: 3, isVisible: true },
-    { id: 'nav-events', label: '행사', externalUrl: '/events', sortOrder: 4, isVisible: true },
-    { id: 'nav-staff', label: '교역자', externalUrl: '/staff', sortOrder: 5, isVisible: true },
-    { id: 'nav-columns', label: '칼럼', externalUrl: '/columns', sortOrder: 6, isVisible: true },
-    { id: 'nav-history', label: '연혁', externalUrl: '/history', sortOrder: 7, isVisible: true },
-  ];
-
-  const navItems = menuItems.length > 0 ? menuItems : DEFAULT_NAV;
+  // Menu items from admin panel — no hardcoded defaults.
+  // If no menus configured, show nothing (admin should set up menus).
+  const navItems = menuItems;
 
   const colors = theme?.colors;
   const fonts = theme?.fonts;
