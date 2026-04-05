@@ -6,19 +6,22 @@ import Link from 'next/link';
 // ─── Hero Slides (21:9 ratio) ────────────────────────────────
 const SLIDES = [
   {
-    image: 'https://images.unsplash.com/photo-1438232992991-995b7058bdb3?w=1680&h=720&fit=crop',
+    // Church interior with warm lighting — welcoming, modern worship space
+    image: 'https://images.unsplash.com/photo-1507692049790-de58290a4334?w=1680&h=720&fit=crop',
     headline: 'Your Church.\nOnline. Effortlessly.',
     subline: 'Sermons, bulletins, events, staff — all managed in one platform.\nNo coding. No hassle. Just your ministry, amplified.',
   },
   {
-    image: 'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=1680&h=720&fit=crop',
+    // Team collaboration / people using laptop — church admin managing website
+    image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1680&h=720&fit=crop',
     headline: 'Built for Churches.\nManaged by You.',
     subline: 'Professional church websites with 10 design templates,\ndrag-and-drop editor, and everything your congregation needs.',
   },
   {
-    image: 'https://images.unsplash.com/photo-1519491050282-cf00c82424df?w=1680&h=720&fit=crop',
+    // Sunrise over mountains with cross silhouette — ministry focus, peaceful
+    image: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1680&h=720&fit=crop',
     headline: 'Focus on Ministry.\nWe Handle the Tech.',
-    subline: 'Custom domain, mobile-ready design, YouTube integration,\nPDF bulletins — all included. Start in minutes.',
+    subline: 'Custom domain, mobile-ready design, YouTube integration,\nand seamless content management — all included. Start in minutes.',
   },
 ];
 
