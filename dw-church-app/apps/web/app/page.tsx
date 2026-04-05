@@ -151,7 +151,7 @@ const plans = [
       'Member directory (up to 1,000)',
       'Analytics & engagement dashboard',
       'Up to 30 pages',
-      'Unlimited media storage',
+      'Extended media storage',
       'Priority email support',
     ],
     cta: 'Get Outreach Plan',
