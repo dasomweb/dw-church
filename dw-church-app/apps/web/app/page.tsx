@@ -18,8 +18,8 @@ const SLIDES = [
     subline: 'Professional church websites with 10 design templates,\ndrag-and-drop editor, and everything your congregation needs.',
   },
   {
-    // Sunrise over mountains with cross silhouette — ministry focus, peaceful
-    image: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1680&h=720&fit=crop',
+    // Person working on laptop in a calm setting — tech handled for you
+    image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1680&h=720&fit=crop',
     headline: 'Focus on Ministry.\nWe Handle the Tech.',
     subline: 'Custom domain, mobile-ready design, YouTube integration,\nand seamless content management — all included. Start in minutes.',
   },
@@ -131,7 +131,7 @@ const plans = [
       'Member search & filtering',
       'Private access controls',
       'Bulk import / export',
-      'Priority email & chat support',
+      'Priority email support',
     ],
     cta: 'Start Ministry Plan',
     highlighted: true,
@@ -150,7 +150,7 @@ const plans = [
       'Content calendar & scheduling',
       'Analytics & engagement dashboard',
       'Multi-site management',
-      'Priority support (chat & email)',
+      'Priority email support',
     ],
     cta: 'Get Outreach Plan',
     highlighted: false,
