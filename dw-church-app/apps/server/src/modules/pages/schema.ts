@@ -1,22 +1,45 @@
 import { z } from 'zod';
 
 export const blockTypes = [
+  // Hero
   'hero_banner',
-  'text_image',
-  'text_only',
-  'image_gallery',
-  'video',
-  'divider',
+  'hero_full_width',
+  'hero_image_slider',
+  'hero_split',
+  // About
+  'pastor_message',
+  'church_intro',
+  'mission_vision',
+  // Content (dynamic widgets)
   'recent_sermons',
   'recent_bulletins',
   'album_gallery',
   'staff_grid',
   'history_timeline',
   'event_grid',
+  // Text
+  'text_image',
+  'text_only',
+  'quote_block',
+  // Church Info
   'worship_schedule',
+  'worship_times',
   'location_map',
+  'map_embed',
   'contact_info',
+  'address_info',
   'newcomer_info',
+  'visitor_welcome',
+  'first_time_guide',
+  // Media
+  'image_gallery',
+  'video',
+  // CTA
+  'call_to_action',
+  'newsletter_signup',
+  // Layout
+  'divider',
+  'section_header',
   'two_columns',
   'three_columns',
   'tabs',
