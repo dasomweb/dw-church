@@ -5,9 +5,9 @@
  * Uses plain fetch() with X-Tenant-Slug header for tenant identification.
  *
  * ISR caching strategy:
- *   revalidate: 300  – settings, theme, menus, history (rarely change)
- *   revalidate: 120  – pages, banners, staff
- *   revalidate: 60   – content lists & individual items (sermons, bulletins, …)
+ *   revalidate: false  – settings, theme, menus, history (rarely change)
+ *   revalidate: false  – pages, banners, staff
+ *   revalidate: false   – content lists & individual items (sermons, bulletins, …)
  *   revalidate: false – search results (never cache)
  */
 
@@ -38,7 +38,7 @@ async function apiFetch<T>(
     fetchInit.next = { revalidate };
   } else {
     // Default: revalidate every 60 seconds
-    fetchInit.next = { revalidate: 60 };
+    fetchInit.next = { revalidate: false };
   }
 
   const res = await fetch(`${API_BASE}${path}`, fetchInit);
@@ -97,24 +97,24 @@ function unwrap(res: any): any {
 // ─── Settings & Navigation ───────────────────────────────────
 
 export async function getChurchSettings(slug: string): Promise<any> {
-  const res = await apiFetch(slug, `/api/v1/settings`, { revalidate: 300 });
+  const res = await apiFetch(slug, `/api/v1/settings`, { revalidate: false });
   return unwrap(res);
 }
 
 export async function getMenuItems(slug: string): Promise<any[]> {
-  const res = await apiFetch(slug, `/api/v1/menus`, { revalidate: 300 });
+  const res = await apiFetch(slug, `/api/v1/menus`, { revalidate: false });
   return unwrap(res) ?? [];
 }
 
 export async function getTheme(slug: string): Promise<any> {
-  const res = await apiFetch(slug, `/api/v1/theme`, { revalidate: 300 });
+  const res = await apiFetch(slug, `/api/v1/theme`, { revalidate: false });
   return unwrap(res);
 }
 
 // ─── Pages ───────────────────────────────────────────────────
 
 export async function getPages(slug: string): Promise<any[]> {
-  const res = await apiFetch(slug, `/api/v1/pages`, { revalidate: 120 });
+  const res = await apiFetch(slug, `/api/v1/pages`, { revalidate: false });
   return unwrap(res) ?? [];
 }
 
@@ -124,7 +124,7 @@ export async function getHomePage(slug: string): Promise<any> {
   if (!home) throw new Error('Home page not found');
 
   // Get sections for this page
-  const sectionsRes = await apiFetch(slug, `/api/v1/pages/${home.id}/sections`, { revalidate: 120 });
+  const sectionsRes = await apiFetch(slug, `/api/v1/pages/${home.id}/sections`, { revalidate: false });
   const sections = unwrap(sectionsRes) ?? [];
 
   return {
@@ -144,7 +144,7 @@ export async function getPageBySlug(tenantSlug: string, pageSlug: string): Promi
   const page = pages.find((p: any) => p.slug === pageSlug);
   if (!page) throw new Error('Page not found');
 
-  const sectionsRes = await apiFetch(tenantSlug, `/api/v1/pages/${page.id}/sections`, { revalidate: 120 });
+  const sectionsRes = await apiFetch(tenantSlug, `/api/v1/pages/${page.id}/sections`, { revalidate: false });
   const sections = unwrap(sectionsRes) ?? [];
 
   return {
@@ -180,7 +180,7 @@ export async function getSermons(
 }
 
 export async function getSermon(slug: string, id: string): Promise<any> {
-  const res = await apiFetch(slug, `/api/v1/sermons/${id}`, { revalidate: 60 });
+  const res = await apiFetch(slug, `/api/v1/sermons/${id}`, { revalidate: false });
   return aliasFields(unwrap(res), 'sermon');
 }
 
@@ -194,13 +194,13 @@ export async function getBulletins(
   if (params?.page) p.set('page', String(params.page));
   if (params?.perPage) p.set('perPage', String(params.perPage));
   const qs = p.toString();
-  const res = await apiFetch<any>(slug, `/api/v1/bulletins${qs ? '?' + qs : ''}`, { revalidate: 60 });
+  const res = await apiFetch<any>(slug, `/api/v1/bulletins${qs ? '?' + qs : ''}`, { revalidate: false });
   if (res?.data) res.data = aliasArray(res.data, 'bulletin');
   return res;
 }
 
 export async function getBulletin(slug: string, id: string): Promise<any> {
-  const res = await apiFetch(slug, `/api/v1/bulletins/${id}`, { revalidate: 60 });
+  const res = await apiFetch(slug, `/api/v1/bulletins/${id}`, { revalidate: false });
   return aliasFields(unwrap(res), 'bulletin');
 }
 
@@ -214,24 +214,24 @@ export async function getAlbums(
   if (params?.page) p.set('page', String(params.page));
   if (params?.perPage) p.set('perPage', String(params.perPage));
   const qs = p.toString();
-  return apiFetch(slug, `/api/v1/albums${qs ? '?' + qs : ''}`, { revalidate: 60 });
+  return apiFetch(slug, `/api/v1/albums${qs ? '?' + qs : ''}`, { revalidate: false });
 }
 
 export async function getAlbum(slug: string, id: string): Promise<any> {
-  const res = await apiFetch(slug, `/api/v1/albums/${id}`, { revalidate: 60 });
+  const res = await apiFetch(slug, `/api/v1/albums/${id}`, { revalidate: false });
   return unwrap(res);
 }
 
 // ─── Staff ───────────────────────────────────────────────────
 
 export async function getStaff(slug: string): Promise<any[]> {
-  const res = await apiFetch(slug, `/api/v1/staff`, { revalidate: 120 });
+  const res = await apiFetch(slug, `/api/v1/staff`, { revalidate: false });
   const items = unwrap(res) ?? [];
   return aliasArray(items, 'staff');
 }
 
 export async function getStaffMember(slug: string, id: string): Promise<any> {
-  const res = await apiFetch(slug, `/api/v1/staff/${id}`, { revalidate: 60 });
+  const res = await apiFetch(slug, `/api/v1/staff/${id}`, { revalidate: false });
   return aliasFields(unwrap(res), 'staff');
 }
 
@@ -253,14 +253,14 @@ export async function getColumns(
 }
 
 export async function getColumn(slug: string, id: string): Promise<any> {
-  const res = await apiFetch(slug, `/api/v1/columns/${id}`, { revalidate: 60 });
+  const res = await apiFetch(slug, `/api/v1/columns/${id}`, { revalidate: false });
   return unwrap(res);
 }
 
 // ─── History ─────────────────────────────────────────────────
 
 export async function getHistory(slug: string): Promise<any[]> {
-  const res = await apiFetch(slug, `/api/v1/history`, { revalidate: 300 });
+  const res = await apiFetch(slug, `/api/v1/history`, { revalidate: false });
   return unwrap(res) ?? [];
 }
 
@@ -274,17 +274,17 @@ export async function getEvents(
   if (params?.page) p.set('page', String(params.page));
   if (params?.perPage) p.set('perPage', String(params.perPage));
   const qs = p.toString();
-  return apiFetch(slug, `/api/v1/events${qs ? '?' + qs : ''}`, { revalidate: 60 });
+  return apiFetch(slug, `/api/v1/events${qs ? '?' + qs : ''}`, { revalidate: false });
 }
 
 export async function getEvent(slug: string, id: string): Promise<any> {
-  const res = await apiFetch(slug, `/api/v1/events/${id}`, { revalidate: 60 });
+  const res = await apiFetch(slug, `/api/v1/events/${id}`, { revalidate: false });
   return unwrap(res);
 }
 
 // ─── Banners ─────────────────────────────────────────────────
 
 export async function getBanners(slug: string): Promise<any[]> {
-  const res = await apiFetch(slug, `/api/v1/banners?active=true`, { revalidate: 120 });
+  const res = await apiFetch(slug, `/api/v1/banners?active=true`, { revalidate: false });
   return unwrap(res) ?? [];
 }
