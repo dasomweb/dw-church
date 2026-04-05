@@ -18,11 +18,13 @@ interface MenuRow {
   updated_at: Date;
 }
 
-export async function listMenus(schema: string): Promise<MenuRow[]> {
-  return prisma.$queryRawUnsafe<MenuRow[]>(
-    `SELECT id, label, page_id, external_url, parent_id, sort_order, is_visible, created_at, updated_at
-     FROM "${schema}".menus
-     ORDER BY sort_order ASC, created_at ASC`,
+export async function listMenus(schema: string): Promise<(MenuRow & { page_slug?: string })[]> {
+  return prisma.$queryRawUnsafe<(MenuRow & { page_slug?: string })[]>(
+    `SELECT m.id, m.label, m.page_id, m.external_url, m.parent_id, m.sort_order, m.is_visible,
+            m.created_at, m.updated_at, p.slug AS page_slug
+     FROM "${schema}".menus m
+     LEFT JOIN "${schema}".pages p ON p.id = m.page_id
+     ORDER BY m.sort_order ASC, m.created_at ASC`,
   );
 }
 

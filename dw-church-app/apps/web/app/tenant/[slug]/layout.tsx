@@ -3,7 +3,7 @@ import { getChurchSettings, getMenuItems, getTheme } from '@/lib/api';
 import MobileMenu from '@/components/MobileMenu';
 // Types inlined to avoid importing @dw-church/api-client in server components
 type ChurchSettings = Record<string, string>;
-type MenuItem = { id: string; label: string; pageId?: string; externalUrl?: string; parentId?: string; sortOrder: number; isVisible: boolean; children?: MenuItem[] };
+type MenuItem = { id: string; label: string; pageId?: string; pageSlug?: string; externalUrl?: string; parentId?: string; sortOrder: number; isVisible: boolean; children?: MenuItem[] };
 type Theme = {
   colors: Record<string, string>;
   fonts: Record<string, string>;
@@ -190,7 +190,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                 {sortedVisibleItems.map((item) => (
                   <Link
                     key={item.id}
-                    href={item.externalUrl ?? `/${item.pageId ? item.label : ''}`}
+                    href={item.externalUrl ?? (item.pageSlug ? `/${item.pageSlug}` : '/')}
                     className="text-sm font-medium transition-colors hover:opacity-80"
                     style={{ color: navLinkColor }}
                   >
@@ -219,7 +219,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
               {sortedVisibleItems.map((item) => (
                 <Link
                   key={item.id}
-                  href={item.externalUrl ?? `/${item.pageId ? item.label : ''}`}
+                  href={item.externalUrl ?? (item.pageSlug ? `/${item.pageSlug}` : '/')}
                   className="text-sm font-medium transition-colors hover:opacity-80"
                   style={{ color: navLinkColor }}
                 >
