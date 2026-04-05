@@ -325,7 +325,8 @@ export default function LandingPage() {
             ))}
           </div>
           <p className="mt-8 text-center text-sm text-gray-500">
-            All plans include hosting, SSL, backups, and platform updates. No hidden fees.
+            All plans include hosting, SSL, backups, and platform updates. No hidden fees.<br />
+            Need more members? Add 50 members for $10/mo. Over 1,000 members? <a href="mailto:hello@truelight.app" className="text-blue-600 hover:underline">Contact us</a> for a custom plan.
           </p>
 
           {/* Custom Design Add-on */}
