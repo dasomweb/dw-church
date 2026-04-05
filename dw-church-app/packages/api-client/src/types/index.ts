@@ -263,9 +263,10 @@ export interface Page {
 export interface MenuItem {
   id: string;
   label: string;
-  pageId?: string;
-  externalUrl?: string;
-  parentId?: string;
+  pageId?: string | null;
+  pageSlug?: string | null;
+  externalUrl?: string | null;
+  parentId?: string | null;
   sortOrder: number;
   isVisible: boolean;
   children?: MenuItem[];

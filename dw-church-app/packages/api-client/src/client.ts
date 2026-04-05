@@ -575,7 +575,17 @@ export class DWChurchClient {
   // ─── Menus ──────────────────────────────────────────────
   async getMenus(): Promise<MenuItem[]> {
     const res = await this.api.get(`${this.namespace}/menus`);
-    return res.data ?? res;
+    const data = res.data ?? res;
+    return (Array.isArray(data) ? data : []).map((m: Record<string, unknown>) => ({
+      id: m.id as string,
+      label: (m.label ?? '') as string,
+      pageId: (m.page_id ?? m.pageId ?? null) as string | null,
+      pageSlug: (m.page_slug ?? m.pageSlug ?? null) as string | null,
+      externalUrl: (m.external_url ?? m.externalUrl ?? null) as string | null,
+      parentId: (m.parent_id ?? m.parentId ?? null) as string | null,
+      sortOrder: (m.sort_order ?? m.sortOrder ?? 0) as number,
+      isVisible: (m.is_visible ?? m.isVisible ?? true) as boolean,
+    }));
   }
 
   async createMenu(data: Omit<MenuItem, 'id' | 'children'>): Promise<MenuItem> {
