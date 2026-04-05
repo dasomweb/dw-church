@@ -341,7 +341,7 @@ export default function LandingPage() {
             </div>
             <p className="mb-1 text-2xl font-bold text-gray-900">{customDesignAddon.price}</p>
             <p className="text-xs text-gray-500">{customDesignAddon.note}</p>
-          </p>
+          </div>
         </div>
       </section>
 
