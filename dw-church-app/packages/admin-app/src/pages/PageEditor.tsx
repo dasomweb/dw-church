@@ -548,20 +548,27 @@ export default function PageEditor() {
     });
   };
 
-  const handleApplyTemplate = (template: PageTemplate) => {
+  const handleApplyTemplate = async (template: PageTemplate) => {
     if (!selectedPageId) return;
-    template.sections.forEach((sec, i) => {
-      createSection.mutate({
-        pageId: selectedPageId,
-        data: {
-          blockType: sec.blockType as BlockType,
-          props: sec.defaultProps,
-          sortOrder: sortedSections.length + i,
-          isVisible: sec.isVisible,
-        },
-      });
-    });
     setShowTemplateGallery(false);
+    // Create sections sequentially to avoid race conditions
+    for (let i = 0; i < template.sections.length; i++) {
+      const sec = template.sections[i];
+      await new Promise<void>((resolve, reject) => {
+        createSection.mutate(
+          {
+            pageId: selectedPageId,
+            data: {
+              blockType: sec.blockType as BlockType,
+              props: sec.defaultProps,
+              sortOrder: sortedSections.length + i,
+              isVisible: sec.isVisible,
+            },
+          },
+          { onSuccess: () => resolve(), onError: () => reject() },
+        );
+      }).catch(() => {});
+    }
     showToast('success', `"${template.name}" 템플릿이 적용되었습니다.`);
   };
 
