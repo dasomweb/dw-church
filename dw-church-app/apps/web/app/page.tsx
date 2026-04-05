@@ -1,152 +1,294 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 
-const features = [
-  { title: '설교관리', desc: '유튜브 영상 연동, 카테고리 분류, 설교자별 검색까지 한번에', icon: '🎙️' },
-  { title: '주보관리', desc: 'PDF 주보 업로드 및 이미지 뷰어로 간편하게 확인', icon: '📄' },
-  { title: '앨범관리', desc: '교회 행사 사진을 아름다운 갤러리로 공유', icon: '📸' },
-  { title: '교역자 소개', desc: '목회자와 교역자 프로필을 부서별로 깔끔하게 정리', icon: '👥' },
-  { title: '교회연혁', desc: '교회 역사를 타임라인으로 한눈에 보여주세요', icon: '📅' },
-  { title: '이벤트', desc: '교회 행사와 특별 집회를 카드형 레이아웃으로 홍보', icon: '🎉' },
+// ─── Hero Slides (21:9 ratio) ────────────────────────────────
+const SLIDES = [
+  {
+    image: 'https://images.unsplash.com/photo-1438232992991-995b7058bdb3?w=1680&h=720&fit=crop',
+    headline: 'Your Church.\nOnline. Effortlessly.',
+    subline: 'Sermons, bulletins, events, staff — all managed in one platform.\nNo coding. No hassle. Just your ministry, amplified.',
+  },
+  {
+    image: 'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=1680&h=720&fit=crop',
+    headline: 'Built for Churches.\nManaged by You.',
+    subline: 'Professional church websites with 10 design templates,\ndrag-and-drop editor, and everything your congregation needs.',
+  },
+  {
+    image: 'https://images.unsplash.com/photo-1519491050282-cf00c82424df?w=1680&h=720&fit=crop',
+    headline: 'Focus on Ministry.\nWe Handle the Tech.',
+    subline: 'Custom domain, mobile-ready design, YouTube integration,\nPDF bulletins — all included. Start in minutes.',
+  },
 ];
 
+function HeroSlider() {
+  const [current, setCurrent] = useState(0);
+
+  const next = useCallback(() => setCurrent((c) => (c + 1) % SLIDES.length), []);
+
+  useEffect(() => {
+    const timer = setInterval(next, 6000);
+    return () => clearInterval(timer);
+  }, [next]);
+
+  return (
+    <section className="relative w-full overflow-hidden bg-gray-900" style={{ aspectRatio: '21/9' }}>
+      {SLIDES.map((slide, i) => (
+        <div
+          key={i}
+          className={`absolute inset-0 transition-opacity duration-1000 ${i === current ? 'opacity-100' : 'opacity-0'}`}
+        >
+          <img
+            src={slide.image}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+            loading={i === 0 ? 'eager' : 'lazy'}
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
+          <div className="relative flex h-full items-center px-6 sm:px-12 lg:px-20">
+            <div className="max-w-2xl">
+              <h1 className="text-3xl font-bold leading-tight text-white sm:text-4xl lg:text-5xl xl:text-6xl" style={{ whiteSpace: 'pre-line', letterSpacing: '-0.5px' }}>
+                {slide.headline}
+              </h1>
+              <p className="mt-4 text-sm leading-relaxed text-gray-200 sm:mt-6 sm:text-base lg:text-lg" style={{ whiteSpace: 'pre-line' }}>
+                {slide.subline}
+              </p>
+              <div className="mt-6 flex gap-3 sm:mt-8">
+                <Link href="/register" className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg hover:bg-blue-700 sm:px-8 sm:text-base">
+                  Get Started
+                </Link>
+                <a href="#plans" className="rounded-lg border border-white/30 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10 sm:px-8 sm:text-base">
+                  See Plans
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+      {/* Dots */}
+      <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2 sm:bottom-6">
+        {SLIDES.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setCurrent(i)}
+            className={`h-2 rounded-full transition-all ${i === current ? 'w-8 bg-white' : 'w-2 bg-white/40 hover:bg-white/60'}`}
+            aria-label={`Slide ${i + 1}`}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ─── Features ────────────────────────────────────────────────
+const features = [
+  { title: 'Sermon Management', desc: 'YouTube integration, categories, speaker filtering, and automatic thumbnail extraction.', icon: '🎙️' },
+  { title: 'Weekly Bulletin', desc: 'Upload PDF bulletins and display as image pages. Members access them anytime.', icon: '📄' },
+  { title: 'Photo Albums', desc: 'Share church moments in beautiful gallery grids with lightbox viewing.', icon: '📸' },
+  { title: 'Staff Directory', desc: 'Showcase pastors and staff with featured layouts, bios, and contact info.', icon: '👥' },
+  { title: 'Event Calendar', desc: 'Promote services, retreats, and special events with rich cards and locations.', icon: '📅' },
+  { title: 'Custom Domain', desc: 'Use your own domain (e.g., yourbethel.com) with free SSL certificate.', icon: '🌐' },
+  { title: 'Page Builder', desc: 'Drag-and-drop block editor with 20+ block types and 8 page templates.', icon: '🧱' },
+  { title: 'Mobile Ready', desc: 'Every site looks great on phones, tablets, and desktops. No extra work.', icon: '📱' },
+  { title: 'Multi-language', desc: 'Korean and English interface. Serve your congregation in their language.', icon: '🌍' },
+];
+
+// ─── Plans ───────────────────────────────────────────────────
 const plans = [
   {
-    name: 'Free',
-    price: '무료',
-    period: '',
-    features: ['기본 템플릿 1개', '설교/주보 관리', '최대 100건 콘텐츠', '커뮤니티 지원'],
-    cta: '무료 시작',
+    name: 'Starter',
+    price: '$99',
+    period: '/mo',
+    subtitle: 'Template-based',
+    description: 'Choose from 10 professional templates and manage your content with our easy admin panel.',
+    features: [
+      'Choose from 10 templates',
+      'Sermon, bulletin, album management',
+      'Staff directory & event calendar',
+      'Basic theme customization',
+      'Subdomain (yourchurch.truelight.app)',
+      'Email support',
+    ],
+    cta: 'Start with Starter',
     highlighted: false,
   },
   {
-    name: 'Basic',
-    price: '₩29,000',
-    period: '/월',
-    features: ['템플릿 5개', '모든 CPT 관리', '무제한 콘텐츠', '커스텀 도메인', '이메일 지원'],
-    cta: 'Basic 시작',
+    name: 'Professional',
+    price: '$199',
+    period: '/mo',
+    subtitle: 'Custom design included',
+    description: 'Our team designs a custom website tailored to your church\'s identity and needs.',
+    features: [
+      'Everything in Starter',
+      'Custom design by our team',
+      'Unlimited pages & content',
+      'Custom domain + SSL',
+      'Advanced theme editor',
+      'Priority email & chat support',
+      'Monthly design updates (1 hr)',
+    ],
+    cta: 'Go Professional',
     highlighted: true,
+    badge: 'Most Popular',
   },
   {
-    name: 'Pro',
-    price: '₩59,000',
-    period: '/월',
-    features: ['전체 템플릿', '모든 기능', '무제한 콘텐츠', '커스텀 도메인', 'CSS 커스터마이징', '우선 지원'],
-    cta: 'Pro 시작',
+    name: 'Enterprise',
+    price: '$399',
+    period: '/mo',
+    subtitle: 'Full-service management',
+    description: 'We manage everything — design, content updates, and technical support so you focus on ministry.',
+    features: [
+      'Everything in Professional',
+      'Dedicated account manager',
+      'Weekly content updates',
+      'Custom feature development',
+      'Multi-site management',
+      'Phone support',
+      'Training sessions for staff',
+    ],
+    cta: 'Contact Us',
     highlighted: false,
   },
 ];
 
+// ─── Process ─────────────────────────────────────────────────
+const process_steps = [
+  { step: '01', title: 'Choose Your Plan', desc: 'Select a template-based or custom design plan that fits your church.' },
+  { step: '02', title: 'We Set It Up', desc: 'We configure your site, connect your domain, and import your content.' },
+  { step: '03', title: 'You Manage It', desc: 'Use the admin panel to update sermons, bulletins, events, and more.' },
+  { step: '04', title: 'We Support You', desc: 'Ongoing support and updates. Focus on ministry, not technology.' },
+];
+
+// ─── Page Component ──────────────────────────────────────────
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="border-b border-gray-100">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <span className="text-xl font-bold text-blue-600">DW Church</span>
+      <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
+              <span className="text-sm font-bold text-white">T</span>
+            </div>
+            <span className="text-lg font-bold tracking-tight text-gray-900">TRUE <span className="text-blue-600">LIGHT</span></span>
+          </Link>
           <nav className="hidden gap-6 md:flex">
-            <a href="#features" className="text-sm text-gray-600 hover:text-gray-900">기능</a>
-            <a href="#pricing" className="text-sm text-gray-600 hover:text-gray-900">요금</a>
+            <a href="#features" className="text-sm text-gray-600 hover:text-gray-900">Features</a>
+            <a href="#how-it-works" className="text-sm text-gray-600 hover:text-gray-900">How It Works</a>
+            <a href="#plans" className="text-sm text-gray-600 hover:text-gray-900">Plans</a>
           </nav>
           <div className="flex items-center gap-3">
             <Link href="/login" className="text-sm text-gray-600 hover:text-gray-900">
-              로그인
+              Sign In
             </Link>
-            <Link
-              href="/register"
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-            >
-              무료 시작
+            <Link href="/register" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+              Get Started
             </Link>
           </div>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="px-6 py-24 text-center">
-        <div className="mx-auto max-w-4xl">
-          <h1 className="mb-6 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
-            교회 웹사이트를
-            <br />
-            <span className="text-blue-600">5분 만에</span>
-          </h1>
-          <p className="mx-auto mb-10 max-w-2xl text-lg text-gray-600">
-            설교, 주보, 앨범, 교역자 소개까지 — 코딩 없이 교회에 꼭 맞는 웹사이트를 만들어 보세요.
-            10가지 디자인 템플릿과 드래그 앤 드롭 편집기로 누구나 쉽게 시작할 수 있습니다.
+      {/* Hero Slider */}
+      <HeroSlider />
+
+      {/* Trust Bar */}
+      <section className="border-b border-gray-100 bg-gray-50 px-4 py-6 sm:px-6">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-8 text-sm text-gray-500">
+          <span className="flex items-center gap-2"><span className="text-green-500">✓</span> No coding required</span>
+          <span className="flex items-center gap-2"><span className="text-green-500">✓</span> Mobile responsive</span>
+          <span className="flex items-center gap-2"><span className="text-green-500">✓</span> Custom domain support</span>
+          <span className="flex items-center gap-2"><span className="text-green-500">✓</span> Managed hosting</span>
+          <span className="flex items-center gap-2"><span className="text-green-500">✓</span> Dedicated support</span>
+        </div>
+      </section>
+
+      {/* Value Proposition */}
+      <section className="px-4 py-20 sm:px-6">
+        <div className="mx-auto max-w-4xl text-center">
+          <h2 className="mb-6 text-3xl font-bold text-gray-900 sm:text-4xl" style={{ letterSpacing: '-0.5px' }}>
+            Church Website Management,<br />
+            <span className="text-blue-600">Simplified.</span>
+          </h2>
+          <p className="mx-auto max-w-2xl text-base leading-relaxed text-gray-600 sm:text-lg">
+            TRUE LIGHT provides a complete church website platform — professionally designed,
+            easy to manage, and fully hosted. We handle the technology so your team can focus
+            on what matters most: ministry.
           </p>
-          <div className="flex items-center justify-center gap-4">
-            <Link
-              href="/register"
-              className="rounded-lg bg-blue-600 px-8 py-3 text-base font-semibold text-white shadow-lg hover:bg-blue-700"
-            >
-              무료 시작
-            </Link>
-            <a
-              href="#features"
-              className="rounded-lg border border-gray-300 px-8 py-3 text-base font-semibold text-gray-700 hover:bg-gray-50"
-            >
-              기능 보기
-            </a>
-          </div>
         </div>
       </section>
 
       {/* Features */}
-      <section id="features" className="bg-gray-50 px-6 py-24">
+      <section id="features" className="bg-gray-50 px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-7xl">
-          <h2 className="mb-4 text-center text-3xl font-bold text-gray-900">
-            교회에 필요한 모든 기능
-          </h2>
-          <p className="mb-16 text-center text-gray-600">
-            별도의 개발 없이 교회 운영에 필요한 핵심 기능을 바로 사용하세요.
-          </p>
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mb-16 text-center">
+            <h2 className="mb-4 text-3xl font-bold text-gray-900">Everything Your Church Needs</h2>
+            <p className="text-gray-600">A complete platform built specifically for church ministry.</p>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((f) => (
-              <div
-                key={f.title}
-                className="rounded-xl bg-white p-8 shadow-sm transition-shadow hover:shadow-md"
-              >
+              <div key={f.title} className="rounded-2xl bg-white p-7 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md">
                 <div className="mb-4 text-3xl">{f.icon}</div>
-                <h3 className="mb-2 text-lg font-semibold text-gray-900">{f.title}</h3>
-                <p className="text-sm text-gray-600">{f.desc}</p>
+                <h3 className="mb-2 text-base font-bold text-gray-900">{f.title}</h3>
+                <p className="text-sm leading-relaxed text-gray-600">{f.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="px-6 py-24">
+      {/* How It Works */}
+      <section id="how-it-works" className="px-4 py-20 sm:px-6">
+        <div className="mx-auto max-w-5xl">
+          <div className="mb-16 text-center">
+            <h2 className="mb-4 text-3xl font-bold text-gray-900">How It Works</h2>
+            <p className="text-gray-600">Get your church online in four simple steps.</p>
+          </div>
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {process_steps.map((s) => (
+              <div key={s.step} className="text-center">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-xl font-bold text-blue-600">
+                  {s.step}
+                </div>
+                <h3 className="mb-2 text-base font-bold text-gray-900">{s.title}</h3>
+                <p className="text-sm leading-relaxed text-gray-600">{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Plans */}
+      <section id="plans" className="bg-gray-50 px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-7xl">
-          <h2 className="mb-4 text-center text-3xl font-bold text-gray-900">합리적인 요금제</h2>
-          <p className="mb-16 text-center text-gray-600">
-            교회 규모와 필요에 맞는 플랜을 선택하세요.
-          </p>
-          <div className="grid gap-8 md:grid-cols-3">
+          <div className="mb-16 text-center">
+            <h2 className="mb-4 text-3xl font-bold text-gray-900">Simple, Transparent Pricing</h2>
+            <p className="text-gray-600">Choose the plan that fits your church. Upgrade or downgrade anytime.</p>
+          </div>
+          <div className="grid gap-8 lg:grid-cols-3">
             {plans.map((plan) => (
               <div
                 key={plan.name}
-                className={`rounded-2xl border-2 p-8 ${
-                  plan.highlighted
-                    ? 'border-blue-600 shadow-xl'
-                    : 'border-gray-200'
+                className={`relative rounded-2xl border-2 bg-white p-8 transition-shadow hover:shadow-lg ${
+                  plan.highlighted ? 'border-blue-600 shadow-xl' : 'border-gray-200'
                 }`}
               >
-                {plan.highlighted && (
-                  <span className="mb-4 inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-                    인기
+                {plan.badge && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-4 py-1 text-xs font-bold text-white">
+                    {plan.badge}
                   </span>
                 )}
+                <div className="mb-1 text-sm font-medium text-blue-600">{plan.subtitle}</div>
                 <h3 className="mb-2 text-xl font-bold text-gray-900">{plan.name}</h3>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
-                  {plan.period && (
-                    <span className="text-gray-500">{plan.period}</span>
-                  )}
+                <div className="mb-3">
+                  <span className="text-4xl font-extrabold text-gray-900">{plan.price}</span>
+                  <span className="text-gray-500">{plan.period}</span>
                 </div>
+                <p className="mb-6 text-sm leading-relaxed text-gray-600">{plan.description}</p>
                 <ul className="mb-8 space-y-3">
                   {plan.features.map((feat) => (
-                    <li key={feat} className="flex items-center gap-2 text-sm text-gray-600">
-                      <svg className="h-4 w-4 flex-shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                    <li key={feat} className="flex items-start gap-2 text-sm text-gray-700">
+                      <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                       {feat}
@@ -154,8 +296,8 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 <Link
-                  href="/register"
-                  className={`block w-full rounded-lg py-3 text-center text-sm font-semibold ${
+                  href={plan.name === 'Enterprise' ? 'mailto:hello@truelight.app' : '/register'}
+                  className={`block w-full rounded-xl py-3.5 text-center text-sm font-bold transition-colors ${
                     plan.highlighted
                       ? 'bg-blue-600 text-white hover:bg-blue-700'
                       : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
@@ -166,19 +308,63 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
+          <p className="mt-8 text-center text-sm text-gray-500">
+            All plans include hosting, SSL, backups, and platform updates. No hidden fees.
+          </p>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="px-4 py-20 sm:px-6">
+        <div className="mx-auto max-w-3xl rounded-3xl bg-gradient-to-br from-blue-600 to-blue-800 px-8 py-16 text-center shadow-2xl sm:px-16">
+          <h2 className="mb-4 text-3xl font-bold text-white sm:text-4xl">Ready to Get Started?</h2>
+          <p className="mb-8 text-base text-blue-100">
+            Join churches across the U.S. using TRUE LIGHT to connect with their communities online.
+          </p>
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Link href="/register" className="rounded-xl bg-white px-8 py-3.5 text-sm font-bold text-blue-700 shadow-lg hover:bg-gray-50">
+              Start Free Trial
+            </Link>
+            <a href="mailto:hello@truelight.app" className="rounded-xl border border-white/30 px-8 py-3.5 text-sm font-semibold text-white hover:bg-white/10">
+              Schedule a Demo
+            </a>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 bg-gray-50 px-6 py-12">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 md:flex-row">
-          <p className="text-sm text-gray-500">
-            &copy; {new Date().getFullYear()} DW Church. All rights reserved.
-          </p>
-          <div className="flex gap-6">
-            <a href="/terms" className="text-sm text-gray-500 hover:text-gray-700">이용약관</a>
-            <a href="/privacy" className="text-sm text-gray-500 hover:text-gray-700">개인정보처리방침</a>
-            <a href="mailto:support@dw-church.app" className="text-sm text-gray-500 hover:text-gray-700">문의</a>
+      <footer className="border-t border-gray-200 bg-white px-4 py-12 sm:px-6">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid gap-8 md:grid-cols-4">
+            <div>
+              <span className="text-lg font-bold text-gray-900">TRUE <span className="text-blue-600">LIGHT</span></span>
+              <p className="mt-3 text-sm text-gray-500">Professional church website platform for modern ministries.</p>
+            </div>
+            <div>
+              <h4 className="mb-3 text-sm font-bold text-gray-900">Platform</h4>
+              <ul className="space-y-2 text-sm text-gray-500">
+                <li><a href="#features" className="hover:text-gray-700">Features</a></li>
+                <li><a href="#plans" className="hover:text-gray-700">Pricing</a></li>
+                <li><Link href="/embed" className="hover:text-gray-700">Widget Embed</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="mb-3 text-sm font-bold text-gray-900">Support</h4>
+              <ul className="space-y-2 text-sm text-gray-500">
+                <li><a href="mailto:hello@truelight.app" className="hover:text-gray-700">Contact Us</a></li>
+                <li><Link href="/login" className="hover:text-gray-700">Admin Login</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="mb-3 text-sm font-bold text-gray-900">Company</h4>
+              <ul className="space-y-2 text-sm text-gray-500">
+                <li><a href="/terms" className="hover:text-gray-700">Terms of Service</a></li>
+                <li><a href="/privacy" className="hover:text-gray-700">Privacy Policy</a></li>
+              </ul>
+            </div>
+          </div>
+          <div className="mt-10 border-t border-gray-200 pt-6 text-center text-xs text-gray-400">
+            &copy; {new Date().getFullYear()} TRUE LIGHT by DASOMWEB. All rights reserved.
           </div>
         </div>
       </footer>
