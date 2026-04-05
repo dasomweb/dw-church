@@ -19,22 +19,52 @@ import { NewcomerInfoBlock } from './blocks/NewcomerInfoBlock';
 type BlockComponent = React.FC<{ props: Record<string, unknown>; slug: string }>;
 
 const BLOCK_MAP: Record<string, BlockComponent> = {
+  // Hero variants → all render as HeroBannerBlock
   hero_banner: HeroBannerBlock,
-  text_image: TextImageBlock,
-  text_only: TextOnlyBlock,
+  hero_full_width: HeroBannerBlock,
+  hero_image_slider: HeroBannerBlock,
+  hero_split: TextImageBlock,        // Split hero = text + image side by side
+
+  // About / Intro → render as TextImage or TextOnly
+  pastor_message: TextImageBlock,     // Pastor photo + message
+  church_intro: TextImageBlock,       // Church intro with image
+  mission_vision: TextOnlyBlock,      // Mission/vision text blocks
+
+  // Content (dynamic widgets)
   recent_sermons: RecentSermonsBlock,
   recent_bulletins: RecentBulletinsBlock,
   album_gallery: AlbumGalleryBlock,
   staff_grid: StaffGridBlock,
   history_timeline: HistoryTimelineBlock,
   event_grid: EventGridBlock,
+
+  // Text
+  text_image: TextImageBlock,
+  text_only: TextOnlyBlock,
+  quote_block: TextOnlyBlock,         // Quote renders as text block
+
+  // Church Info
   worship_schedule: WorshipScheduleBlock,
+  worship_times: WorshipScheduleBlock, // Alias
   location_map: LocationMapBlock,
+  map_embed: LocationMapBlock,         // Alias
   contact_info: ContactInfoBlock,
-  divider: DividerBlock,
+  address_info: ContactInfoBlock,      // Alias
+  newcomer_info: NewcomerInfoBlock,
+  visitor_welcome: NewcomerInfoBlock,  // Alias
+  first_time_guide: TextOnlyBlock,     // Steps rendered as text
+
+  // Media
   image_gallery: ImageGalleryBlock,
   video: VideoBlock,
-  newcomer_info: NewcomerInfoBlock,
+
+  // CTA → render as hero-style banner
+  call_to_action: HeroBannerBlock,
+  newsletter_signup: TextOnlyBlock,
+
+  // Layout
+  divider: DividerBlock,
+  section_header: TextOnlyBlock,       // Section header = title text
 };
 
 interface BlockRendererProps {
