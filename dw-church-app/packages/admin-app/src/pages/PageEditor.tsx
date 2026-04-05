@@ -13,6 +13,7 @@ import {
   useReorderSections,
 } from '@dw-church/api-client';
 import { useQueryClient } from '@tanstack/react-query';
+import { useDWChurchClient } from '@dw-church/api-client';
 import { useToast } from '../components';
 
 // ═══════════════════════════════════════════════════════════
@@ -468,6 +469,7 @@ export default function PageEditor() {
   const { data: pages, isLoading: pagesLoading } = usePages();
   const { data: sections } = usePageSections(selectedPageId || '');
   const queryClient = useQueryClient();
+  const apiClient = useDWChurchClient();
   const createPage = useCreatePage();
   const updatePage = useUpdatePage();
   const deletePage = useDeletePage();
@@ -549,27 +551,33 @@ export default function PageEditor() {
   };
 
   const handleApplyTemplate = async (template: PageTemplate) => {
-    if (!selectedPageId) return;
+    if (!selectedPageId || !apiClient) return;
     setShowTemplateGallery(false);
-    // Create sections sequentially to avoid race conditions
+    const baseOrder = sortedSections.length;
+    // Direct API calls to bypass React Query onSuccess invalidation
+    // which causes race conditions between sequential creates
+    let successCount = 0;
     for (let i = 0; i < template.sections.length; i++) {
       const sec = template.sections[i];
-      await new Promise<void>((resolve, reject) => {
-        createSection.mutate(
-          {
-            pageId: selectedPageId,
-            data: {
-              blockType: sec.blockType as BlockType,
-              props: sec.defaultProps,
-              sortOrder: sortedSections.length + i,
-              isVisible: sec.isVisible,
-            },
-          },
-          { onSuccess: () => resolve(), onError: () => reject() },
-        );
-      }).catch(() => {});
+      try {
+        await apiClient.createSection(selectedPageId, {
+          blockType: sec.blockType as BlockType,
+          props: sec.defaultProps,
+          sortOrder: baseOrder + i,
+          isVisible: sec.isVisible,
+        });
+        successCount++;
+      } catch {
+        // Continue with remaining sections
+      }
     }
-    showToast('success', `"${template.name}" 템플릿이 적용되었습니다.`);
+    // Single refetch after all sections created
+    queryClient.invalidateQueries({ queryKey: ['pages', 'sections', selectedPageId] });
+    if (successCount === template.sections.length) {
+      showToast('success', `"${template.name}" 템플릿이 적용되었습니다. (${successCount}개 블록)`);
+    } else {
+      showToast('error', `${successCount}/${template.sections.length}개 블록만 생성되었습니다.`);
+    }
   };
 
   const handleMoveSection = (index: number, direction: 'up' | 'down') => {
