@@ -161,7 +161,7 @@ const plans = [
 const customDesignAddon = {
   title: 'Need a Custom Design?',
   description: 'Want a unique look beyond our templates? Our design team will create a fully custom website tailored to your church\'s brand and identity.',
-  features: ['Custom homepage & page layouts', 'Brand-matched color scheme & typography', 'Custom logo & graphic elements', 'Delivered as a reusable template'],
+  features: ['Custom homepage & page layouts', 'Brand-matched color scheme & typography', 'Custom logo & graphic elements', 'Exclusive design template built for your church'],
   price: 'Custom Quote',
   note: 'One-time design fee. Contact us for a personalized estimate.',
 };
