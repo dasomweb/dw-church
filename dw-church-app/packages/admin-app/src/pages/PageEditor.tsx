@@ -74,9 +74,13 @@ const BLOCK_DEFS: BlockDef[] = [
   { type: 'section_header', label: '섹션 헤더', category: '레이아웃', icon: '🏷️', description: '제목+부제목', variants: [{ id: 'center', label: '중앙' }, { id: 'left', label: '좌측' }], defaultProps: { title: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'subtitle', label: '부제목', type: 'text' }] },
 
   // ─── Legacy ────────────────────────────────────
-  { type: 'hero_banner', label: '히어로 배너', category: '레거시', icon: '🖼️', description: '기존 배너', variants: [], defaultProps: {}, editableFields: [] },
-  { type: 'video', label: '비디오', category: '레거시', icon: '🎬', description: 'YouTube 영상', variants: [], defaultProps: {}, editableFields: [{ key: 'youtubeUrl', label: 'YouTube URL', type: 'url' }] },
-  { type: 'image_gallery', label: '이미지 갤러리', category: '레거시', icon: '🎨', description: '이미지 목록', variants: [], defaultProps: {}, editableFields: [] },
+  { type: 'hero_banner', label: '히어로 배너', category: '레거시', icon: '🖼️', description: '기존 배너', variants: [], defaultProps: { title: '환영합니다', subtitle: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'subtitle', label: '부제목', type: 'text' }, { key: 'backgroundImageUrl', label: '배경 이미지', type: 'image' }] },
+  { type: 'location_map', label: '지도/약도', category: '교회 정보', icon: '🗺️', description: '교회 위치 지도', variants: [{ id: 'default', label: '기본' }], defaultProps: { address: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'address', label: '주소', type: 'text' }, { key: 'lat', label: '위도', type: 'number' }, { key: 'lng', label: '경도', type: 'number' }] },
+  { type: 'contact_info', label: '연락처 (자동)', category: '교회 정보', icon: '📱', description: '설정에서 자동 로드', variants: [], defaultProps: {}, editableFields: [] },
+  { type: 'newcomer_info', label: '새가족 안내 (레거시)', category: '교회 정보', icon: '🤝', description: '새가족 환영 메시지', variants: [], defaultProps: { title: '처음 오신 분들을 환영합니다' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'content', label: '내용', type: 'textarea' }] },
+  { type: 'worship_schedule', label: '예배안내 (레거시)', category: '교회 정보', icon: '🕐', description: '예배 시간 안내', variants: [], defaultProps: { services: [] }, editableFields: [{ key: 'title', label: '제목', type: 'text' }] },
+  { type: 'video', label: '비디오', category: '레거시', icon: '🎬', description: 'YouTube 영상', variants: [], defaultProps: {}, editableFields: [{ key: 'youtubeUrl', label: 'YouTube URL', type: 'url' }, { key: 'title', label: '제목', type: 'text' }] },
+  { type: 'image_gallery', label: '이미지 갤러리', category: '레거시', icon: '🎨', description: '이미지 목록', variants: [], defaultProps: {}, editableFields: [{ key: 'title', label: '제목', type: 'text' }] },
 ];
 
 function getBlockDef(type: string): BlockDef | undefined {
@@ -294,7 +298,7 @@ function SectionCard({
       onDragOver={onDragOver}
       onDrop={onDrop}
       className={`bg-white border rounded-xl overflow-hidden transition-all cursor-grab active:cursor-grabbing ${
-        !section.isVisible ? 'opacity-50' : ''
+        !section.isVisible ? 'bg-gray-50' : ''
       } ${isEditing ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-200 hover:border-gray-300'} ${
         dragOverIdx === index ? 'border-t-4 border-t-blue-500' : ''
       }`}
@@ -489,6 +493,7 @@ export default function PageEditor() {
   };
 
   const handleCreatePage = () => {
+    setSelectedPageId(null); // Deselect so modal shows "새 페이지" title
     reset({ title: '', slug: '', status: 'draft', isHome: false });
     setShowPageForm(true);
   };
