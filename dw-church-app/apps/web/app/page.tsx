@@ -100,67 +100,78 @@ const features = [
 // ─── Plans ───────────────────────────────────────────────────
 const plans = [
   {
-    name: 'Starter',
+    name: 'Essential',
     price: '$99',
     period: '/mo',
-    subtitle: 'Template-based',
-    description: 'Choose from 10 professional templates and manage your content with our easy admin panel.',
+    subtitle: 'Church Website',
+    description: 'A complete church website with template-based design, content management, and your own domain.',
     features: [
-      'Choose from 10 templates',
-      'Sermon, bulletin, album management',
-      'Staff directory & event calendar',
-      'Basic theme customization',
-      'Subdomain (yourchurch.truelight.app)',
+      '10 professional design templates',
+      'Sermon & bulletin management',
+      'Photo albums & event calendar',
+      'Staff directory & church history',
+      'Page builder with drag & drop',
+      'Custom domain + SSL',
+      'Mobile-responsive design',
       'Email support',
     ],
-    cta: 'Start with Starter',
+    cta: 'Get Started',
     highlighted: false,
   },
   {
-    name: 'Professional',
+    name: 'Ministry',
     price: '$199',
     period: '/mo',
-    subtitle: 'Custom design included',
-    description: 'Our team designs a custom website tailored to your church\'s identity and needs.',
+    subtitle: 'Website + Member Directory',
+    description: 'Everything in Essential, plus a private member directory to stay connected with your congregation.',
     features: [
-      'Everything in Starter',
-      'Custom design by our team',
-      'Unlimited pages & content',
-      'Custom domain + SSL',
-      'Advanced theme editor',
+      'Everything in Essential',
+      'Member directory & profiles',
+      'Contact groups & categories',
+      'Member search & filtering',
+      'Private access controls',
+      'Bulk import / export',
       'Priority email & chat support',
-      'Monthly design updates (1 hr)',
     ],
-    cta: 'Go Professional',
+    cta: 'Start Ministry Plan',
     highlighted: true,
     badge: 'Most Popular',
   },
   {
-    name: 'Enterprise',
+    name: 'Outreach',
     price: '$399',
     period: '/mo',
-    subtitle: 'Full-service management',
-    description: 'We manage everything — design, content updates, and technical support so you focus on ministry.',
+    subtitle: 'Website + Members + Social Media',
+    description: 'The complete platform — manage your website, congregation, and social media presence from one dashboard.',
     features: [
-      'Everything in Professional',
-      'Dedicated account manager',
-      'Weekly content updates',
-      'Custom feature development',
+      'Everything in Ministry',
+      'Social media auto-posting',
+      'Sermon → YouTube/Facebook auto-share',
+      'Content calendar & scheduling',
+      'Analytics & engagement dashboard',
       'Multi-site management',
-      'Phone support',
-      'Training sessions for staff',
+      'Priority support (chat & email)',
     ],
-    cta: 'Contact Us',
+    cta: 'Get Outreach Plan',
     highlighted: false,
   },
 ];
 
+// Custom design add-on (shown below pricing table)
+const customDesignAddon = {
+  title: 'Need a Custom Design?',
+  description: 'Want a unique look beyond our templates? Our design team will create a fully custom website tailored to your church\'s brand and identity.',
+  features: ['Custom homepage & page layouts', 'Brand-matched color scheme & typography', 'Custom logo & graphic elements', 'Delivered as a reusable template'],
+  price: 'Starting at $2,000',
+  note: 'One-time design fee. Works with any plan.',
+};
+
 // ─── Process ─────────────────────────────────────────────────
 const process_steps = [
-  { step: '01', title: 'Choose Your Plan', desc: 'Select a template-based or custom design plan that fits your church.' },
-  { step: '02', title: 'We Set It Up', desc: 'We configure your site, connect your domain, and import your content.' },
-  { step: '03', title: 'You Manage It', desc: 'Use the admin panel to update sermons, bulletins, events, and more.' },
-  { step: '04', title: 'We Support You', desc: 'Ongoing support and updates. Focus on ministry, not technology.' },
+  { step: '01', title: 'Sign Up & Choose a Plan', desc: 'Pick the plan that fits your church. Get instant access to the admin panel.' },
+  { step: '02', title: 'Pick a Template', desc: 'Choose from 10 professional designs. Customize colors, fonts, and layout.' },
+  { step: '03', title: 'Add Your Content', desc: 'Upload sermons, bulletins, photos, and staff info through the easy admin panel.' },
+  { step: '04', title: 'Go Live', desc: 'Connect your domain and share your website with your congregation.' },
 ];
 
 // ─── Page Component ──────────────────────────────────────────
@@ -314,6 +325,20 @@ export default function LandingPage() {
           <p className="mt-8 text-center text-sm text-gray-500">
             All plans include hosting, SSL, backups, and platform updates. No hidden fees.
           </p>
+
+          {/* Custom Design Add-on */}
+          <div className="mt-12 mx-auto max-w-3xl rounded-2xl border-2 border-dashed border-gray-300 bg-white p-8 text-center">
+            <div className="mb-3 text-3xl">🎨</div>
+            <h3 className="mb-2 text-xl font-bold text-gray-900">{customDesignAddon.title}</h3>
+            <p className="mb-5 text-sm text-gray-600">{customDesignAddon.description}</p>
+            <div className="mb-5 flex flex-wrap justify-center gap-3">
+              {customDesignAddon.features.map((f) => (
+                <span key={f} className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-700">{f}</span>
+              ))}
+            </div>
+            <p className="mb-1 text-2xl font-bold text-gray-900">{customDesignAddon.price}</p>
+            <p className="text-xs text-gray-500">{customDesignAddon.note}</p>
+          </p>
         </div>
       </section>
 
@@ -326,10 +351,10 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Link href="/register" className="rounded-xl bg-white px-8 py-3.5 text-sm font-bold text-blue-700 shadow-lg hover:bg-gray-50">
-              Start Free Trial
+              Get Started Now
             </Link>
             <a href="mailto:hello@truelight.app" className="rounded-xl border border-white/30 px-8 py-3.5 text-sm font-semibold text-white hover:bg-white/10">
-              Schedule a Demo
+              Contact Us
             </a>
           </div>
         </div>
