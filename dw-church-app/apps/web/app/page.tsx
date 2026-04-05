@@ -328,28 +328,38 @@ export default function LandingPage() {
           </p>
 
           {/* Custom Design Add-on */}
-          <div className="mt-16 mx-auto max-w-4xl rounded-2xl bg-gradient-to-r from-gray-900 to-gray-800 p-10 sm:p-12">
-            <div className="flex flex-col items-center gap-8 md:flex-row md:items-start md:gap-12">
-              <div className="flex-1 text-center md:text-left">
-                <h3 className="mb-3 text-2xl font-bold text-white">{customDesignAddon.title}</h3>
-                <p className="mb-6 text-sm leading-relaxed text-gray-300">{customDesignAddon.description}</p>
-                <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                  {customDesignAddon.features.map((f) => (
-                    <span key={f} className="flex items-center gap-1.5 text-sm text-gray-300">
-                      <svg className="h-4 w-4 text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        </div>
+      </section>
+
+      {/* Custom Design */}
+      <section className="px-4 py-20 sm:px-6">
+        <div className="mx-auto max-w-5xl rounded-3xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-10 sm:p-16">
+          <div className="flex flex-col gap-10 md:flex-row md:items-center md:gap-16">
+            <div className="flex-1">
+              <p className="mb-2 text-sm font-medium text-blue-400">Custom Design Service</p>
+              <h2 className="mb-4 text-3xl font-bold text-white sm:text-4xl" style={{ letterSpacing: '-0.5px' }}>{customDesignAddon.title}</h2>
+              <p className="mb-8 text-base leading-relaxed text-gray-300">{customDesignAddon.description}</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {customDesignAddon.features.map((f) => (
+                  <div key={f} className="flex items-center gap-3">
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-500/20">
+                      <svg className="h-3.5 w-3.5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
-                      {f}
-                    </span>
-                  ))}
-                </div>
+                    </div>
+                    <span className="text-sm text-gray-200">{f}</span>
+                  </div>
+                ))}
               </div>
-              <div className="flex flex-col items-center gap-4 shrink-0">
-                <p className="text-sm text-gray-400">{customDesignAddon.note}</p>
-                <a href="mailto:hello@truelight.app" className="rounded-xl bg-blue-600 px-8 py-3.5 text-sm font-bold text-white hover:bg-blue-700 transition-colors">
-                  Get a Quote
-                </a>
+            </div>
+            <div className="flex flex-col items-center gap-5 shrink-0 text-center md:items-start md:text-left">
+              <div>
+                <p className="text-sm text-gray-400">One-time design fee</p>
+                <p className="mt-1 text-sm text-gray-400">Works with any plan</p>
               </div>
+              <a href="mailto:hello@truelight.app" className="rounded-xl bg-white px-8 py-3.5 text-sm font-bold text-gray-900 shadow-lg hover:bg-gray-100 transition-colors">
+                Get a Quote →
+              </a>
             </div>
           </div>
         </div>
