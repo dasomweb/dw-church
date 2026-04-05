@@ -59,13 +59,18 @@ class FetchAdapter implements ApiAdapter {
     const fullUrl = `${this.baseUrl}${url}${queryString}`;
 
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
       ...this.headers,
     };
 
-    // Remove Content-Type for FormData (let browser set boundary)
-    if (data instanceof FormData) {
-      delete headers['Content-Type'];
+    // Only set Content-Type when there's a body (not for DELETE without body)
+    if (data) {
+      if (data instanceof FormData) {
+        // Let browser set boundary for FormData
+      } else {
+        headers['Content-Type'] = 'application/json';
+      }
+    } else if (method !== 'GET' && method !== 'DELETE') {
+      headers['Content-Type'] = 'application/json';
     }
 
     const response = await fetch(fullUrl, {

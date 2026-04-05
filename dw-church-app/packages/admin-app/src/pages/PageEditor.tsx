@@ -226,20 +226,25 @@ function BlockPalette({ onAdd }: { onAdd: (type: string) => void }) {
             <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-1 mb-1">{cat.category}</p>
             <div className="space-y-0.5">
               {cat.blocks.map((block) => (
-                <button
+                <div
                   key={block.type}
                   draggable
                   onDragStart={(e) => {
                     e.dataTransfer.setData('application/x-block-type', block.type);
                     e.dataTransfer.effectAllowed = 'copy';
                   }}
-                  onClick={() => onAdd(block.type)}
+                  onClick={(e) => {
+                    // Prevent double-add: only handle click, not drag-end
+                    if (e.detail === 1) onAdd(block.type);
+                  }}
                   className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs hover:bg-blue-50 cursor-grab active:cursor-grabbing transition-colors text-left group"
                   title={block.description}
+                  role="button"
+                  tabIndex={0}
                 >
                   <span className="text-base">{block.icon}</span>
                   <span className="truncate font-medium text-gray-700 group-hover:text-blue-700">{block.label}</span>
-                </button>
+                </div>
               ))}
             </div>
           </div>
@@ -523,8 +528,11 @@ export default function PageEditor() {
     deletePage.mutate(selectedPage.id, { onSuccess: () => setSelectedPageId(null) });
   };
 
+  const addingRef = useRef(false);
   const handleAddBlock = (blockType: string, atIndex?: number) => {
-    if (!selectedPageId) return;
+    if (!selectedPageId || addingRef.current) return;
+    addingRef.current = true;
+    setTimeout(() => { addingRef.current = false; }, 1000); // Debounce 1s
     const def = getBlockDef(blockType);
     const insertIdx = atIndex ?? sortedSections.length;
     createSection.mutate({
