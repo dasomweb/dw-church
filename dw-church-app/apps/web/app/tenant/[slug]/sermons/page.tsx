@@ -1,5 +1,6 @@
 import { getSermons } from '@/lib/api';
 import { SermonListClient } from './SermonListClient';
+import { PageHeroBanner } from '@/components/PageHeroBanner';
 import { buildTenantMetadata } from '@/lib/metadata';
 import type { Metadata } from 'next';
 
@@ -23,8 +24,9 @@ export default async function SermonsPage({ params, searchParams }: SermonsPageP
   const sermons = await getSermons(slug, { page, perPage: 12, category, search: searchQuery });
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-      <h1 className="mb-8 text-3xl font-bold font-heading">설교</h1>
+    <div>
+      <PageHeroBanner tenantSlug={slug} pageSlug="sermons" fallbackTitle="설교" fallbackSubtitle="말씀을 통해 은혜를 나눕니다" />
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
       <SermonListClient
         initialData={sermons.data ?? []}
         total={sermons.meta?.total ?? 0}
@@ -34,6 +36,7 @@ export default async function SermonsPage({ params, searchParams }: SermonsPageP
         currentSearch={searchQuery}
         currentCategory={category}
       />
+      </div>
     </div>
   );
 }

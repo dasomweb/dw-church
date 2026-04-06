@@ -1,5 +1,6 @@
 import { getColumns } from '@/lib/api';
 import { ColumnListClient } from './ColumnListClient';
+import { PageHeroBanner } from '@/components/PageHeroBanner';
 import { buildTenantMetadata } from '@/lib/metadata';
 import type { Metadata } from 'next';
 
@@ -21,15 +22,17 @@ export default async function ColumnsPage({ params, searchParams }: ColumnsPageP
   const columns = await getColumns(slug, { page, perPage: 12 });
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-      <h1 className="mb-8 text-3xl font-bold font-heading">목회칼럼</h1>
-      <ColumnListClient
-        initialData={columns.data ?? []}
-        total={columns.meta?.total ?? 0}
-        totalPages={columns.meta?.totalPages ?? 1}
-        currentPage={page}
-        slug={slug}
-      />
+    <div>
+      <PageHeroBanner tenantSlug={slug} pageSlug="columns" fallbackTitle="목회칼럼" fallbackSubtitle="목사님의 글을 통해 은혜를 나눕니다" />
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
+        <ColumnListClient
+          initialData={columns.data ?? []}
+          total={columns.meta?.total ?? 0}
+          totalPages={columns.meta?.totalPages ?? 1}
+          currentPage={page}
+          slug={slug}
+        />
+      </div>
     </div>
   );
 }

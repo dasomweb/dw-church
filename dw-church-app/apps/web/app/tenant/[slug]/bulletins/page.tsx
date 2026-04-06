@@ -1,5 +1,6 @@
 import { getBulletins } from '@/lib/api';
 import { BulletinListClient } from './BulletinListClient';
+import { PageHeroBanner } from '@/components/PageHeroBanner';
 import { buildTenantMetadata } from '@/lib/metadata';
 import type { Metadata } from 'next';
 
@@ -21,15 +22,17 @@ export default async function BulletinsPage({ params, searchParams }: BulletinsP
   const bulletins = await getBulletins(slug, { page, perPage: 12 });
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-      <h1 className="mb-8 text-3xl font-bold font-heading">주보</h1>
-      <BulletinListClient
-        initialData={bulletins.data ?? []}
-        total={bulletins.meta?.total ?? 0}
-        totalPages={bulletins.meta?.totalPages ?? 1}
-        currentPage={page}
-        slug={slug}
-      />
+    <div>
+      <PageHeroBanner tenantSlug={slug} pageSlug="bulletins" fallbackTitle="주보" fallbackSubtitle="매주 교회 소식을 전합니다" />
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
+        <BulletinListClient
+          initialData={bulletins.data ?? []}
+          total={bulletins.meta?.total ?? 0}
+          totalPages={bulletins.meta?.totalPages ?? 1}
+          currentPage={page}
+          slug={slug}
+        />
+      </div>
     </div>
   );
 }

@@ -15,6 +15,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
 import { useToast } from '../components';
+import { ImageUpload, MultiImageUpload } from '../components/ImageUpload';
 
 // ═══════════════════════════════════════════════════════════
 // Block Registry — types, variants, metadata
@@ -33,20 +34,20 @@ interface BlockDef {
   description: string;
   variants: BlockVariant[];
   defaultProps: Record<string, unknown>;
-  editableFields: { key: string; label: string; type: 'text' | 'textarea' | 'number' | 'select' | 'image' | 'url' | 'array'; options?: { label: string; value: string }[] }[];
+  editableFields: { key: string; label: string; type: 'text' | 'textarea' | 'number' | 'select' | 'image' | 'images' | 'url' | 'array'; options?: { label: string; value: string }[]; max?: number }[];
 }
 
 const BLOCK_DEFS: BlockDef[] = [
   // ─── Hero ─────────────────────────────────────
   { type: 'hero_full_width', label: '풀 와이드 히어로', category: '히어로', icon: '🖼️', description: '전체 너비 배경 이미지 히어로', variants: [{ id: 'centered', label: '중앙' }, { id: 'left', label: '좌측' }, { id: 'overlay', label: '오버레이' }], defaultProps: { title: '환영합니다', subtitle: '', height: 'lg', textAlign: 'center' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'subtitle', label: '부제목', type: 'text' }, { key: 'backgroundImageUrl', label: '배경 이미지', type: 'image' }, { key: 'ctaLabel', label: 'CTA 버튼', type: 'text' }, { key: 'ctaUrl', label: 'CTA 링크', type: 'url' }, { key: 'height', label: '높이', type: 'select', options: [{ label: '작게', value: 'sm' }, { label: '보통', value: 'md' }, { label: '크게', value: 'lg' }, { label: '전체', value: 'full' }] }] },
   { type: 'banner_slider', label: '배너 슬라이더', category: '히어로', icon: '🎠', description: '배너 관리에서 등록한 배너 자동 슬라이드', variants: [], defaultProps: { category: 'main' }, editableFields: [{ key: 'category', label: '배너 카테고리', type: 'select', options: [{ label: '메인', value: 'main' }, { label: '서브', value: 'sub' }] }] },
-  { type: 'hero_image_slider', label: '이미지 슬라이더', category: '히어로', icon: '🎞️', description: '여러 이미지 자동 전환', variants: [{ id: 'full', label: '풀스크린' }, { id: 'contained', label: '컨테이너' }], defaultProps: { slides: [], height: 'lg' }, editableFields: [{ key: 'autoplayInterval', label: '자동 전환 (ms)', type: 'number' }] },
+  { type: 'hero_image_slider', label: '이미지 슬라이더', category: '히어로', icon: '🎞️', description: '여러 이미지 자동 전환', variants: [{ id: 'full', label: '풀스크린' }, { id: 'contained', label: '컨테이너' }], defaultProps: { images: [], height: 'lg' }, editableFields: [{ key: 'images', label: '슬라이드 이미지', type: 'images', max: 10 }, { key: 'autoplayInterval', label: '자동 전환 (ms)', type: 'number' }] },
   { type: 'hero_split', label: '분할 히어로', category: '히어로', icon: '⬛', description: '텍스트+이미지 분할', variants: [{ id: 'right', label: '이미지 우측' }, { id: 'left', label: '이미지 좌측' }], defaultProps: { title: '', imageUrl: '', imagePosition: 'right' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'subtitle', label: '부제목', type: 'text' }, { key: 'description', label: '설명', type: 'textarea' }, { key: 'imageUrl', label: '이미지', type: 'image' }] },
 
   // ─── About ────────────────────────────────────
   { type: 'pastor_message', label: '담임목사 인사', category: '소개', icon: '🙏', description: '담임목사 인사말', variants: [{ id: 'right', label: '사진 우측' }, { id: 'left', label: '사진 좌측' }], defaultProps: { pastorName: '', message: '', layout: 'right' }, editableFields: [{ key: 'title', label: '섹션 제목', type: 'text' }, { key: 'pastorName', label: '이름', type: 'text' }, { key: 'pastorTitle', label: '직함', type: 'text' }, { key: 'message', label: '인사말', type: 'textarea' }, { key: 'imageUrl', label: '사진', type: 'image' }] },
   { type: 'church_intro', label: '교회 소개', category: '소개', icon: '⛪', description: '교회 소개 텍스트', variants: [{ id: 'with-image', label: '이미지 포함' }, { id: 'text-only', label: '텍스트만' }], defaultProps: { description: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'description', label: '소개글', type: 'textarea' }, { key: 'imageUrl', label: '이미지', type: 'image' }] },
-  { type: 'mission_vision', label: '미션/비전', category: '소개', icon: '🎯', description: '미션, 비전, 핵심 가치', variants: [{ id: 'cards-3', label: '3열 카드' }, { id: 'cards-2', label: '2열 카드' }, { id: 'list', label: '리스트' }], defaultProps: { items: [] }, editableFields: [{ key: 'title', label: '제목', type: 'text' }] },
+  { type: 'mission_vision', label: '미션/비전', category: '소개', icon: '🎯', description: '미션, 비전, 핵심 가치', variants: [{ id: 'cards-3', label: '3열 카드' }, { id: 'cards-2', label: '2열 카드' }, { id: 'list', label: '리스트' }], defaultProps: { items: [] }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'imageUrl', label: '이미지', type: 'image' }] },
 
   // ─── Content ───────────────────────────────────
   { type: 'recent_sermons', label: '설교', category: '콘텐츠', icon: '🎤', description: '최근 설교 목록', variants: [{ id: 'grid-3', label: '3열 그리드' }, { id: 'grid-2', label: '2열 그리드' }, { id: 'list', label: '리스트' }], defaultProps: { limit: 6 }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'limit', label: '표시 개수', type: 'number' }] },
@@ -59,7 +60,7 @@ const BLOCK_DEFS: BlockDef[] = [
   // ─── Text ──────────────────────────────────────
   { type: 'text_image', label: '텍스트+이미지', category: '텍스트', icon: '📝', description: '텍스트와 이미지', variants: [{ id: 'right', label: '이미지 우측' }, { id: 'left', label: '이미지 좌측' }], defaultProps: { content: '', imageUrl: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'content', label: '내용', type: 'textarea' }, { key: 'imageUrl', label: '이미지', type: 'image' }] },
   { type: 'text_only', label: '텍스트', category: '텍스트', icon: '📃', description: '텍스트 전용', variants: [{ id: 'left', label: '좌측 정렬' }, { id: 'center', label: '중앙 정렬' }], defaultProps: { content: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'content', label: '내용', type: 'textarea' }] },
-  { type: 'quote_block', label: '인용/성경구절', category: '텍스트', icon: '✝️', description: '인용문 또는 성경 말씀', variants: [{ id: 'card', label: '카드' }, { id: 'simple', label: '심플' }, { id: 'highlight', label: '하이라이트' }], defaultProps: { quote: '' }, editableFields: [{ key: 'quote', label: '인용문', type: 'textarea' }, { key: 'source', label: '출처', type: 'text' }, { key: 'reference', label: '참조', type: 'text' }] },
+  { type: 'quote_block', label: '인용/성경구절', category: '텍스트', icon: '✝️', description: '인용문 또는 성경 말씀', variants: [{ id: 'card', label: '카드' }, { id: 'simple', label: '심플' }, { id: 'highlight', label: '하이라이트' }], defaultProps: { quote: '' }, editableFields: [{ key: 'quote', label: '인용문', type: 'textarea' }, { key: 'source', label: '출처', type: 'text' }, { key: 'reference', label: '참조', type: 'text' }, { key: 'backgroundImageUrl', label: '배경 이미지', type: 'image' }] },
 
   // ─── Church Info ───────────────────────────────
   { type: 'worship_times', label: '예배 시간', category: '교회 정보', icon: '⏰', description: '예배 시간 안내', variants: [{ id: 'cards', label: '카드' }, { id: 'table', label: '테이블' }], defaultProps: { services: [] }, editableFields: [{ key: 'title', label: '제목', type: 'text' }] },
@@ -69,7 +70,7 @@ const BLOCK_DEFS: BlockDef[] = [
   { type: 'first_time_guide', label: '처음 오시는 분', category: '교회 정보', icon: '🧭', description: '단계별 안내', variants: [{ id: 'numbered', label: '번호' }, { id: 'icons', label: '아이콘' }], defaultProps: { steps: [] }, editableFields: [{ key: 'title', label: '제목', type: 'text' }] },
 
   // ─── CTA ───────────────────────────────────────
-  { type: 'call_to_action', label: 'CTA 배너', category: 'CTA', icon: '🔔', description: '행동 유도 배너', variants: [{ id: 'centered', label: '중앙' }, { id: 'split', label: '분할' }, { id: 'banner', label: '배너' }], defaultProps: { title: '', ctaLabel: '', ctaUrl: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'description', label: '설명', type: 'text' }, { key: 'ctaLabel', label: '버튼 텍스트', type: 'text' }, { key: 'ctaUrl', label: '버튼 링크', type: 'url' }, { key: 'backgroundColor', label: '배경색', type: 'text' }] },
+  { type: 'call_to_action', label: 'CTA 배너', category: 'CTA', icon: '🔔', description: '행동 유도 배너', variants: [{ id: 'centered', label: '중앙' }, { id: 'split', label: '분할' }, { id: 'banner', label: '배너' }], defaultProps: { title: '', ctaLabel: '', ctaUrl: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'description', label: '설명', type: 'text' }, { key: 'backgroundImageUrl', label: '배경 이미지', type: 'image' }, { key: 'ctaLabel', label: '버튼 텍스트', type: 'text' }, { key: 'ctaUrl', label: '버튼 링크', type: 'url' }] },
   { type: 'newsletter_signup', label: '뉴스레터', category: 'CTA', icon: '✉️', description: '이메일 구독', variants: [{ id: 'inline', label: '인라인' }, { id: 'card', label: '카드' }], defaultProps: {}, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'description', label: '설명', type: 'text' }] },
 
   // ─── Layout ────────────────────────────────────
@@ -80,10 +81,10 @@ const BLOCK_DEFS: BlockDef[] = [
   { type: 'hero_banner', label: '히어로 배너', category: '레거시', icon: '🖼️', description: '기존 배너', variants: [], defaultProps: { title: '환영합니다', subtitle: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'subtitle', label: '부제목', type: 'text' }, { key: 'backgroundImageUrl', label: '배경 이미지', type: 'image' }] },
   { type: 'location_map', label: '지도/약도', category: '교회 정보', icon: '🗺️', description: '교회 위치 지도', variants: [{ id: 'default', label: '기본' }], defaultProps: { address: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'address', label: '주소', type: 'text' }, { key: 'lat', label: '위도', type: 'number' }, { key: 'lng', label: '경도', type: 'number' }] },
   { type: 'contact_info', label: '연락처 (자동)', category: '교회 정보', icon: '📱', description: '설정에서 자동 로드', variants: [], defaultProps: {}, editableFields: [] },
-  { type: 'newcomer_info', label: '새가족 안내 (레거시)', category: '교회 정보', icon: '🤝', description: '새가족 환영 메시지', variants: [], defaultProps: { title: '처음 오신 분들을 환영합니다' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'content', label: '내용', type: 'textarea' }] },
+  { type: 'newcomer_info', label: '새가족 안내 (레거시)', category: '교회 정보', icon: '🤝', description: '새가족 환영 메시지', variants: [], defaultProps: { title: '처음 오신 분들을 환영합니다' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'content', label: '내용', type: 'textarea' }, { key: 'imageUrl', label: '이미지', type: 'image' }] },
   { type: 'worship_schedule', label: '예배안내 (레거시)', category: '교회 정보', icon: '🕐', description: '예배 시간 안내', variants: [], defaultProps: { services: [] }, editableFields: [{ key: 'title', label: '제목', type: 'text' }] },
   { type: 'video', label: '비디오', category: '레거시', icon: '🎬', description: 'YouTube 영상', variants: [], defaultProps: {}, editableFields: [{ key: 'youtubeUrl', label: 'YouTube URL', type: 'url' }, { key: 'title', label: '제목', type: 'text' }] },
-  { type: 'image_gallery', label: '이미지 갤러리', category: '레거시', icon: '🎨', description: '이미지 목록', variants: [], defaultProps: {}, editableFields: [{ key: 'title', label: '제목', type: 'text' }] },
+  { type: 'image_gallery', label: '이미지 갤러리', category: '레거시', icon: '🎨', description: '이미지 목록', variants: [], defaultProps: { images: [] }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'images', label: '이미지', type: 'images', max: 20 }] },
 ];
 
 function getBlockDef(type: string): BlockDef | undefined {
@@ -273,6 +274,7 @@ function SectionCard({
   onToggleVisibility,
   onDelete,
   onVariantChange,
+  onUploadImage,
   onDragStart,
   onDragOver,
   onDrop,
@@ -290,6 +292,7 @@ function SectionCard({
   onToggleVisibility: () => void;
   onDelete: () => void;
   onVariantChange: (variant: string) => void;
+  onUploadImage: (file: File) => Promise<string>;
   onDragStart: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
@@ -388,12 +391,25 @@ function SectionCard({
                   onChange={(e) => set(field.key, parseInt(e.target.value) || 0)}
                   className="w-24 border rounded-lg px-2.5 py-1.5 text-xs"
                 />
+              ) : field.type === 'image' ? (
+                <ImageUpload
+                  value={(props[field.key] as string) || ''}
+                  onChange={(url) => set(field.key, url)}
+                  onUpload={onUploadImage}
+                  aspectRatio="16/9"
+                />
+              ) : field.type === 'images' ? (
+                <MultiImageUpload
+                  value={(props[field.key] as string[]) || []}
+                  onChange={(urls) => set(field.key, urls)}
+                  onUpload={onUploadImage}
+                  max={field.max || 10}
+                />
               ) : (
                 <input
                   type="text"
                   value={(props[field.key] as string) || ''}
                   onChange={(e) => set(field.key, e.target.value)}
-                  placeholder={field.type === 'image' ? 'https://...' : ''}
                   className="w-full border rounded-lg px-2.5 py-1.5 text-xs"
                 />
               )}
@@ -760,6 +776,10 @@ export default function PageEditor() {
                 onToggleVisibility={() => handleToggleVisibility(section)}
                 onDelete={() => handleDeleteSection(section)}
                 onVariantChange={(v) => handleVariantChange(section, v)}
+                onUploadImage={async (file: File) => {
+                  const res = await apiClient.uploadFile(file);
+                  return res.url;
+                }}
                 onDragStart={(e) => handleSectionDragStart(e, index)}
                 onDragOver={(e) => handleSectionDragOver(e, index)}
                 onDrop={(e) => handleSectionDrop(e, index)}

@@ -1,5 +1,6 @@
 import { getAlbums } from '@/lib/api';
 import { AlbumGalleryClient } from './AlbumGalleryClient';
+import { PageHeroBanner } from '@/components/PageHeroBanner';
 import { buildTenantMetadata } from '@/lib/metadata';
 import type { Metadata } from 'next';
 
@@ -21,15 +22,17 @@ export default async function AlbumsPage({ params, searchParams }: AlbumsPagePro
   const albums = await getAlbums(slug, { page, perPage: 12 });
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-      <h1 className="mb-8 text-3xl font-bold font-heading">앨범</h1>
-      <AlbumGalleryClient
-        initialData={albums.data ?? []}
-        total={albums.meta?.total ?? 0}
-        totalPages={albums.meta?.totalPages ?? 1}
-        currentPage={page}
-        slug={slug}
-      />
+    <div>
+      <PageHeroBanner tenantSlug={slug} pageSlug="albums" fallbackTitle="앨범" fallbackSubtitle="교회의 아름다운 순간들" />
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
+        <AlbumGalleryClient
+          initialData={albums.data ?? []}
+          total={albums.meta?.total ?? 0}
+          totalPages={albums.meta?.totalPages ?? 1}
+          currentPage={page}
+          slug={slug}
+        />
+      </div>
     </div>
   );
 }

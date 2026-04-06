@@ -1,5 +1,6 @@
 import { getEvents } from '@/lib/api';
 import { EventGridClient } from './EventGridClient';
+import { PageHeroBanner } from '@/components/PageHeroBanner';
 import { buildTenantMetadata } from '@/lib/metadata';
 import type { Metadata } from 'next';
 
@@ -21,15 +22,17 @@ export default async function EventsPage({ params, searchParams }: EventsPagePro
   const events = await getEvents(slug, { page, perPage: 12 });
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-      <h1 className="mb-8 text-3xl font-bold font-heading">행사/이벤트</h1>
-      <EventGridClient
-        initialData={events.data ?? []}
-        total={events.meta?.total ?? 0}
-        totalPages={events.meta?.totalPages ?? 1}
-        currentPage={page}
-        slug={slug}
-      />
+    <div>
+      <PageHeroBanner tenantSlug={slug} pageSlug="events" fallbackTitle="행사/이벤트" fallbackSubtitle="교회의 다양한 행사를 안내합니다" />
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
+        <EventGridClient
+          initialData={events.data ?? []}
+          total={events.meta?.total ?? 0}
+          totalPages={events.meta?.totalPages ?? 1}
+          currentPage={page}
+          slug={slug}
+        />
+      </div>
     </div>
   );
 }

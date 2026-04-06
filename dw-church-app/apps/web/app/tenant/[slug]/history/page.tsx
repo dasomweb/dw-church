@@ -1,5 +1,6 @@
 import { getHistory } from '@/lib/api';
 import { HistoryTimelineClient } from './HistoryTimelineClient';
+import { PageHeroBanner } from '@/components/PageHeroBanner';
 import { buildTenantMetadata } from '@/lib/metadata';
 import type { Metadata } from 'next';
 
@@ -17,9 +18,11 @@ export default async function HistoryPage({ params }: HistoryPageProps) {
   const history = await getHistory(slug);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-      <h1 className="mb-8 text-3xl font-bold font-heading">교회 연혁</h1>
-      <HistoryTimelineClient history={history} />
+    <div>
+      <PageHeroBanner tenantSlug={slug} pageSlug="history" fallbackTitle="교회 연혁" fallbackSubtitle="교회의 발자취를 돌아봅니다" />
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
+        <HistoryTimelineClient history={history} />
+      </div>
     </div>
   );
 }
