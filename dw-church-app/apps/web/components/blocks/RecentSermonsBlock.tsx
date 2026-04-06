@@ -8,6 +8,9 @@ interface RecentSermonsBlockProps {
 
 export async function RecentSermonsBlock({ props, slug }: RecentSermonsBlockProps) {
   const limit = (props.limit as number) ?? 6;
+  const title = (props.title as string) || '최근 설교';
+  const variant = (props.variant as string) || 'grid-3';
+  const columns = variant === 'grid-2' ? 2 : variant === 'list' ? 1 : variant === 'grid-4' ? 4 : 3;
 
   let sermons;
   try {
@@ -22,8 +25,8 @@ export async function RecentSermonsBlock({ props, slug }: RecentSermonsBlockProp
   return (
     <section className="px-4 py-10 sm:px-6 sm:py-16" style={{ backgroundColor: 'var(--dw-surface)' }}>
       <div className="mx-auto max-w-7xl">
-        <h2 className="mb-8 text-center text-3xl font-bold font-heading">최근 설교</h2>
-        <RecentSermonsClient sermons={sermons} slug={slug} />
+        <h2 className="mb-8 text-center text-3xl font-bold font-heading">{title}</h2>
+        <RecentSermonsClient sermons={sermons} slug={slug} columns={columns} />
       </div>
     </section>
   );
