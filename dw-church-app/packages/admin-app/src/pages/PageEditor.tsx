@@ -274,6 +274,8 @@ function SectionCard({
   onDelete,
   onVariantChange,
   onUploadImage,
+  onGenerateText,
+  onGenerateImage,
   onDragStart,
   onDragOver,
   onDrop,
