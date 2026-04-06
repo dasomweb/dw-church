@@ -21,6 +21,8 @@ interface BannerFormData {
   textHeading: string;
   textSubheading: string;
   textDescription: string;
+  textButtonText: string;
+  textButtonUrl: string;
   textPosition: BannerPosition;
   textAlign: BannerAlign;
   category: BannerCategory;
@@ -28,15 +30,15 @@ interface BannerFormData {
 }
 
 const POSITION_OPTIONS: { value: BannerPosition; label: string }[] = [
-  { value: 'left-top', label: '좌측 상단' },
-  { value: 'center-top', label: '중앙 상단' },
-  { value: 'right-top', label: '우측 상단' },
-  { value: 'left-center', label: '좌측 중앙' },
-  { value: 'center-center', label: '중앙' },
-  { value: 'right-center', label: '우측 중앙' },
-  { value: 'left-bottom', label: '좌측 하단' },
-  { value: 'center-bottom', label: '중앙 하단' },
-  { value: 'right-bottom', label: '우측 하단' },
+  { value: 'top-left', label: '좌측 상단' },
+  { value: 'top-center', label: '중앙 상단' },
+  { value: 'top-right', label: '우측 상단' },
+  { value: 'center-left', label: '좌측 중앙' },
+  { value: 'center', label: '중앙' },
+  { value: 'center-right', label: '우측 중앙' },
+  { value: 'bottom-left', label: '좌측 하단' },
+  { value: 'bottom-center', label: '중앙 하단' },
+  { value: 'bottom-right', label: '우측 하단' },
 ];
 
 const ALIGN_OPTIONS: { value: BannerAlign; label: string }[] = [
@@ -72,7 +74,9 @@ export default function BannerManagement() {
       textHeading: item.textOverlay?.heading || '',
       textSubheading: item.textOverlay?.subheading || '',
       textDescription: item.textOverlay?.description || '',
-      textPosition: item.textOverlay?.position || 'center-center',
+      textButtonText: (item.textOverlay as any)?.buttonText || '',
+      textButtonUrl: (item.textOverlay as any)?.buttonUrl || '',
+      textPosition: item.textOverlay?.position || 'center',
       textAlign: item.textOverlay?.align || 'center',
       category: item.category,
       status: item.status,
@@ -86,7 +90,8 @@ export default function BannerManagement() {
       title: '', pcImageUrl: '', mobileImageUrl: '', subImageUrl: '',
       linkUrl: '', linkTarget: '_self', startDate: '', endDate: '',
       textHeading: '', textSubheading: '', textDescription: '',
-      textPosition: 'center-center', textAlign: 'center',
+      textButtonText: '', textButtonUrl: '',
+      textPosition: 'center', textAlign: 'center',
       category: 'main', status: 'draft',
     });
     setView('edit');
@@ -119,6 +124,8 @@ export default function BannerManagement() {
         heading: formData.textHeading,
         subheading: formData.textSubheading,
         description: formData.textDescription,
+        buttonText: formData.textButtonText,
+        buttonUrl: formData.textButtonUrl,
         position: formData.textPosition,
         align: formData.textAlign,
         widths: { pc: '100%', laptop: '100%', tablet: '100%', mobile: '100%' },
@@ -237,6 +244,14 @@ export default function BannerManagement() {
             <FormField label="설명">
               <textarea {...register('textDescription')} rows={3} className={textareaClass} />
             </FormField>
+            <FormRow>
+              <FormField label="버튼 텍스트">
+                <input {...register('textButtonText')} placeholder="예: 자세히 보기" className={inputClass} />
+              </FormField>
+              <FormField label="버튼 링크">
+                <input {...register('textButtonUrl')} placeholder="/sermons" className={inputClass} />
+              </FormField>
+            </FormRow>
             <FormRow>
               <FormField label="위치">
                 <select {...register('textPosition')} className={selectClass}>
