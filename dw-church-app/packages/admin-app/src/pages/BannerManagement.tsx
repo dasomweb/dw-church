@@ -62,24 +62,27 @@ export default function BannerManagement() {
 
   const handleEdit = (item: Banner) => {
     setEditingItem(item);
+    // API returns snake_case — handle both formats
+    const raw = item as any;
+    const overlay = item.textOverlay || raw.text_overlay || {};
     reset({
       title: item.title,
-      pcImageUrl: item.pcImageUrl,
-      mobileImageUrl: item.mobileImageUrl,
-      subImageUrl: item.subImageUrl,
-      linkUrl: item.linkUrl,
-      linkTarget: item.linkTarget,
-      startDate: item.startDate,
-      endDate: item.endDate,
-      textHeading: item.textOverlay?.heading || '',
-      textSubheading: item.textOverlay?.subheading || '',
-      textDescription: item.textOverlay?.description || '',
-      textButtonText: (item.textOverlay as any)?.buttonText || '',
-      textButtonUrl: (item.textOverlay as any)?.buttonUrl || '',
-      textPosition: item.textOverlay?.position || 'center',
-      textAlign: item.textOverlay?.align || 'center',
-      category: item.category,
-      status: item.status,
+      pcImageUrl: item.pcImageUrl || raw.pc_image_url || '',
+      mobileImageUrl: item.mobileImageUrl || raw.mobile_image_url || '',
+      subImageUrl: item.subImageUrl || raw.sub_image_url || '',
+      linkUrl: item.linkUrl || raw.link_url || '',
+      linkTarget: item.linkTarget || raw.link_target || '_self',
+      startDate: item.startDate || raw.start_date || '',
+      endDate: item.endDate || raw.end_date || '',
+      textHeading: overlay.heading || '',
+      textSubheading: overlay.subheading || '',
+      textDescription: overlay.description || '',
+      textButtonText: overlay.buttonText || '',
+      textButtonUrl: overlay.buttonUrl || '',
+      textPosition: overlay.position || 'center',
+      textAlign: overlay.align || 'center',
+      category: item.category || raw.category || 'main',
+      status: item.status || raw.status || 'draft',
     });
     setView('edit');
   };
@@ -102,25 +105,27 @@ export default function BannerManagement() {
   };
 
   const isActive = (item: Banner): boolean => {
+    const raw = item as any;
     const now = new Date();
-    const start = item.startDate ? new Date(item.startDate) : null;
-    const end = item.endDate ? new Date(item.endDate) : null;
+    const start = (item.startDate || raw.start_date) ? new Date(item.startDate || raw.start_date) : null;
+    const end = (item.endDate || raw.end_date) ? new Date(item.endDate || raw.end_date) : null;
     if (start && now < start) return false;
     if (end && now > end) return false;
     return item.status === 'published';
   };
 
   const onSubmit = (formData: BannerFormData) => {
+    // Server expects snake_case field names
     const payload = {
       title: formData.title,
-      pcImageUrl: formData.pcImageUrl,
-      mobileImageUrl: formData.mobileImageUrl,
-      subImageUrl: formData.subImageUrl,
-      linkUrl: formData.linkUrl,
-      linkTarget: formData.linkTarget,
-      startDate: formData.startDate,
-      endDate: formData.endDate,
-      textOverlay: {
+      pc_image_url: formData.pcImageUrl || null,
+      mobile_image_url: formData.mobileImageUrl || null,
+      sub_image_url: formData.subImageUrl || null,
+      link_url: formData.linkUrl || null,
+      link_target: formData.linkTarget,
+      start_date: formData.startDate || null,
+      end_date: formData.endDate || null,
+      text_overlay: {
         heading: formData.textHeading,
         subheading: formData.textSubheading,
         description: formData.textDescription,
@@ -128,7 +133,6 @@ export default function BannerManagement() {
         buttonUrl: formData.textButtonUrl,
         position: formData.textPosition,
         align: formData.textAlign,
-        widths: { pc: '100%', laptop: '100%', tablet: '100%', mobile: '100%' },
       },
       category: formData.category,
       status: formData.status,
@@ -357,8 +361,8 @@ export default function BannerManagement() {
                         {item.category === 'main' ? '메인' : '서브'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm">{item.startDate || '-'}</td>
-                    <td className="px-4 py-3 text-sm">{item.endDate || '-'}</td>
+                    <td className="px-4 py-3 text-sm">{item.startDate || (item as any).start_date || '-'}</td>
+                    <td className="px-4 py-3 text-sm">{item.endDate || (item as any).end_date || '-'}</td>
                     <td className="px-4 py-3 text-sm">
                       {isActive(item) ? (
                         <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-800">활성</span>
