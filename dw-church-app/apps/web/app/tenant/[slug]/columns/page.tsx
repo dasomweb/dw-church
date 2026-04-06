@@ -1,4 +1,5 @@
 import { getColumns } from '@/lib/api';
+import { getBlockProps } from '@/lib/page-props';
 import { ColumnListClient } from './ColumnListClient';
 import { PageHeroBanner } from '@/components/PageHeroBanner';
 import { buildTenantMetadata } from '@/lib/metadata';
@@ -19,7 +20,12 @@ export default async function ColumnsPage({ params, searchParams }: ColumnsPageP
   const search = await searchParams;
   const page = parseInt(search.page ?? '1', 10);
 
-  const columns = await getColumns(slug, { page, perPage: 12 });
+  const [columns, blockProps] = await Promise.all([
+    getColumns(slug, { page, perPage: 12 }),
+    getBlockProps(slug, 'columns', 'text_only'),
+  ]);
+
+  const variant = (blockProps.variant as string) || 'left';
 
   return (
     <div>

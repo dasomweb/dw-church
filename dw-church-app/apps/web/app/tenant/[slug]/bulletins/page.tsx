@@ -1,4 +1,5 @@
 import { getBulletins } from '@/lib/api';
+import { getBlockProps } from '@/lib/page-props';
 import { BulletinListClient } from './BulletinListClient';
 import { PageHeroBanner } from '@/components/PageHeroBanner';
 import { buildTenantMetadata } from '@/lib/metadata';
@@ -19,7 +20,13 @@ export default async function BulletinsPage({ params, searchParams }: BulletinsP
   const search = await searchParams;
   const page = parseInt(search.page ?? '1', 10);
 
-  const bulletins = await getBulletins(slug, { page, perPage: 12 });
+  const [bulletins, blockProps] = await Promise.all([
+    getBulletins(slug, { page, perPage: 12 }),
+    getBlockProps(slug, 'bulletins', 'recent_bulletins'),
+  ]);
+
+  const variant = (blockProps.variant as string) || 'list';
+  const columns = variant === 'grid' ? 3 : 1;
 
   return (
     <div>
@@ -31,6 +38,7 @@ export default async function BulletinsPage({ params, searchParams }: BulletinsP
           totalPages={bulletins.meta?.totalPages ?? 1}
           currentPage={page}
           slug={slug}
+          columns={columns}
         />
       </div>
     </div>

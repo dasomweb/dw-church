@@ -1,4 +1,5 @@
 import { getHistory } from '@/lib/api';
+import { getBlockProps } from '@/lib/page-props';
 import { HistoryTimelineClient } from './HistoryTimelineClient';
 import { PageHeroBanner } from '@/components/PageHeroBanner';
 import { buildTenantMetadata } from '@/lib/metadata';
@@ -15,13 +16,19 @@ export async function generateMetadata({ params }: HistoryPageProps): Promise<Me
 
 export default async function HistoryPage({ params }: HistoryPageProps) {
   const { slug } = await params;
-  const history = await getHistory(slug);
+
+  const [history, blockProps] = await Promise.all([
+    getHistory(slug),
+    getBlockProps(slug, 'history', 'history_timeline'),
+  ]);
+
+  const variant = (blockProps.variant as string) || 'left';
 
   return (
     <div>
       <PageHeroBanner tenantSlug={slug} pageSlug="history" fallbackTitle="교회 연혁" fallbackSubtitle="교회의 발자취를 돌아봅니다" />
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-        <HistoryTimelineClient history={history} />
+        <HistoryTimelineClient history={history} variant={variant} />
       </div>
     </div>
   );

@@ -6,10 +6,11 @@ import type { Staff } from '@dw-church/api-client';
 
 interface StaffGridClientProps {
   staff: Staff[];
+  columns?: number;
 }
 
-export function StaffGridClient({ staff }: StaffGridClientProps) {
+export function StaffGridClient({ staff, columns = 4 }: StaffGridClientProps) {
   const router = useRouter();
 
-  return <StaffGrid data={staff} />;
+  return <StaffGrid data={staff} columns={columns} />;
 }

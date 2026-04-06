@@ -10,9 +10,10 @@ interface BulletinListClientProps {
   totalPages: number;
   currentPage: number;
   slug: string;
+  columns?: number;
 }
 
-export function BulletinListClient({ initialData, total, totalPages, currentPage, slug }: BulletinListClientProps) {
+export function BulletinListClient({ initialData, total, totalPages, currentPage, slug, columns = 1 }: BulletinListClientProps) {
   const router = useRouter();
 
   return (
