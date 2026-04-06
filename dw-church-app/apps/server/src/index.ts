@@ -121,6 +121,15 @@ async function main(): Promise<void> {
     uptime: Math.floor((Date.now() - serverStartTime) / 1000),
   }));
 
+  // --- One-time migration: fix hero banner props ---
+  try {
+    const { fixHeroBanners } = await import('./utils/fix-hero-banners.js');
+    const fixed = await fixHeroBanners();
+    if (fixed > 0) app.log.info(`Fixed ${fixed} hero banner section(s)`);
+  } catch (err) {
+    app.log.warn(`Hero banner migration skipped: ${err}`);
+  }
+
   // --- Start ---
   await app.listen({ port: env.PORT, host: '0.0.0.0' });
   app.log.info(`Server listening on port ${env.PORT} (${env.NODE_ENV})`);
