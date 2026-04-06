@@ -81,31 +81,31 @@ export async function seedDefaultData(slug: string): Promise<void> {
       { block_type: 'staff_grid', props: { title: '교역자', limit: 8 } },
     ]},
     { title: '설교', slug: 'sermons', is_home: false, sort_order: 1, sections: [
-      { block_type: 'hero_banner', props: { title: '설교', subtitle: '말씀을 통해 은혜를 나눕니다' } },
+      { block_type: 'hero_full_width', props: { title: '설교', subtitle: '말씀을 통해 은혜를 나눕니다', height: 'md', textAlign: 'center' } },
       { block_type: 'recent_sermons', props: { limit: 12 } },
     ]},
     { title: '주보', slug: 'bulletins', is_home: false, sort_order: 2, sections: [
-      { block_type: 'hero_banner', props: { title: '주보', subtitle: '매주 교회 소식을 전합니다' } },
+      { block_type: 'hero_full_width', props: { title: '주보', subtitle: '매주 교회 소식을 전합니다', height: 'md', textAlign: 'center' } },
       { block_type: 'recent_bulletins', props: { limit: 12 } },
     ]},
     { title: '앨범', slug: 'albums', is_home: false, sort_order: 3, sections: [
-      { block_type: 'hero_banner', props: { title: '앨범', subtitle: '교회의 아름다운 순간들' } },
+      { block_type: 'hero_full_width', props: { title: '앨범', subtitle: '교회의 아름다운 순간들', height: 'md', textAlign: 'center' } },
       { block_type: 'album_gallery', props: { limit: 12 } },
     ]},
     { title: '행사', slug: 'events', is_home: false, sort_order: 4, sections: [
-      { block_type: 'hero_banner', props: { title: '행사', subtitle: '함께하는 교회 행사' } },
+      { block_type: 'hero_full_width', props: { title: '행사', subtitle: '함께하는 교회 행사', height: 'md', textAlign: 'center' } },
       { block_type: 'event_grid', props: { limit: 12 } },
     ]},
     { title: '교역자', slug: 'staff', is_home: false, sort_order: 5, sections: [
-      { block_type: 'hero_banner', props: { title: '교역자', subtitle: '섬기는 사람들' } },
+      { block_type: 'hero_full_width', props: { title: '교역자', subtitle: '섬기는 사람들', height: 'md', textAlign: 'center' } },
       { block_type: 'staff_grid', props: { limit: 12 } },
     ]},
     { title: '칼럼', slug: 'columns', is_home: false, sort_order: 6, sections: [
-      { block_type: 'hero_banner', props: { title: '칼럼', subtitle: '목회자의 글' } },
+      { block_type: 'hero_full_width', props: { title: '칼럼', subtitle: '목회자의 글', height: 'md', textAlign: 'center' } },
       { block_type: 'text_only', props: { title: '칼럼' } },
     ]},
     { title: '연혁', slug: 'history', is_home: false, sort_order: 7, sections: [
-      { block_type: 'hero_banner', props: { title: '교회 연혁', subtitle: '하나님과 함께 걸어온 길' } },
+      { block_type: 'hero_full_width', props: { title: '교회 연혁', subtitle: '하나님과 함께 걸어온 길', height: 'md', textAlign: 'center' } },
       { block_type: 'history_timeline', props: {} },
     ]},
   ];
