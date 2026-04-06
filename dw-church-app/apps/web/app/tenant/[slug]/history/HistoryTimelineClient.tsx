@@ -5,9 +5,8 @@ import type { History } from '@dw-church/api-client';
 
 interface HistoryTimelineClientProps {
   history: History[];
-  variant?: string;
 }
 
-export function HistoryTimelineClient({ history, variant = 'left' }: HistoryTimelineClientProps) {
+export function HistoryTimelineClient({ history }: HistoryTimelineClientProps) {
   return <HistoryTimeline data={history} />;
 }

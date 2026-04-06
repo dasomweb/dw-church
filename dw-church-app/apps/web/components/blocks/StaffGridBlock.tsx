@@ -26,14 +26,9 @@ export async function StaffGridBlock({ props, slug }: StaffGridBlockProps) {
   return (
     <section className="px-4 py-10 sm:px-6 sm:py-16" style={{ backgroundColor: 'var(--dw-surface)' }}>
       <div className="mx-auto max-w-7xl">
-        {props.title && (
-          <h2 className="mb-8 text-center text-3xl font-bold font-heading">
-            {props.title as string}
-          </h2>
-        )}
-        {!props.title && (
-          <h2 className="mb-8 text-center text-3xl font-bold font-heading">교역자</h2>
-        )}
+        <h2 className="mb-8 text-center text-3xl font-bold font-heading">
+          {(props.title as string) || '교역자'}
+        </h2>
         <StaffGridBlockClient
           staff={staff}
           slug={slug}

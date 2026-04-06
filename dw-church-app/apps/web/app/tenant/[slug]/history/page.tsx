@@ -28,7 +28,7 @@ export default async function HistoryPage({ params }: HistoryPageProps) {
     <div>
       <PageHeroBanner tenantSlug={slug} pageSlug="history" fallbackTitle="교회 연혁" fallbackSubtitle="교회의 발자취를 돌아봅니다" />
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-        <HistoryTimelineClient history={history} variant={variant} />
+        <HistoryTimelineClient history={history} />
       </div>
     </div>
   );
