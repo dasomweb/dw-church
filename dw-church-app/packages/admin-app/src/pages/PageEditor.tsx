@@ -78,58 +78,64 @@ interface BlockDef {
   category: string;
   icon: string;
   description: string;
+  nature: 'static' | 'dynamic';
   variants: BlockVariant[];
   defaultProps: Record<string, unknown>;
   editableFields: { key: string; label: string; type: 'text' | 'textarea' | 'number' | 'select' | 'image' | 'images' | 'url' | 'array'; options?: { label: string; value: string }[]; max?: number }[];
 }
 
+const DYNAMIC_BLOCK_TYPES = new Set([
+  'banner_slider', 'hero_image_slider', 'recent_sermons', 'recent_bulletins',
+  'album_gallery', 'staff_grid', 'event_grid', 'history_timeline',
+]);
+
 const BLOCK_DEFS: BlockDef[] = [
   // ─── Hero ─────────────────────────────────────
-  { type: 'hero_banner', label: '히어로 배너', category: '히어로', icon: '🖼️', description: '배경 이미지 + 텍스트 오버레이 배너', variants: [{ id: 'centered', label: '중앙' }, { id: 'left', label: '좌측' }], defaultProps: { title: '환영합니다', subtitle: '', height: 'md', textAlign: 'center', layout: 'full', overlayColor: '#000000', overlayOpacity: 50 }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'subtitle', label: '부제목', type: 'text' }, { key: 'backgroundImageUrl', label: '배경 이미지', type: 'image' }, { key: 'overlayColor', label: '오버레이 색상', type: 'text' }, { key: 'overlayOpacity', label: '오버레이 투명도 (%)', type: 'number' }, { key: 'buttonText', label: '버튼 텍스트', type: 'text' }, { key: 'buttonUrl', label: '버튼 링크', type: 'url' }, { key: 'layout', label: '레이아웃', type: 'select', options: [{ label: '풀 와이드', value: 'full' }, { label: '컨테이너', value: 'contained' }] }, { key: 'height', label: '높이', type: 'select', options: [{ label: '작게', value: 'sm' }, { label: '보통', value: 'md' }, { label: '크게', value: 'lg' }, { label: '전체', value: 'full' }] }] },
-  { type: 'banner_slider', label: '배너 슬라이더', category: '히어로', icon: '🎠', description: '배너 관리에서 등록한 배너 자동 슬라이드', variants: [], defaultProps: { category: 'main' }, editableFields: [{ key: 'category', label: '배너 카테고리', type: 'select', options: [{ label: '메인', value: 'main' }, { label: '서브', value: 'sub' }] }] },
-  { type: 'hero_image_slider', label: '이미지 슬라이더', category: '히어로', icon: '🎞️', description: '여러 이미지 자동 전환', variants: [{ id: 'full', label: '풀스크린' }, { id: 'contained', label: '컨테이너' }], defaultProps: { images: [], height: 'lg' }, editableFields: [{ key: 'images', label: '슬라이드 이미지', type: 'images', max: 10 }, { key: 'autoplayInterval', label: '자동 전환 (ms)', type: 'number' }] },
-  { type: 'hero_split', label: '분할 히어로', category: '히어로', icon: '⬛', description: '텍스트+이미지 분할', variants: [{ id: 'right', label: '이미지 우측' }, { id: 'left', label: '이미지 좌측' }], defaultProps: { title: '', imageUrl: '', imagePosition: 'right' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'subtitle', label: '부제목', type: 'text' }, { key: 'description', label: '설명', type: 'textarea' }, { key: 'imageUrl', label: '이미지', type: 'image' }] },
+  { type: 'hero_banner', label: '히어로 배너', category: '히어로', icon: '🖼️', nature: 'static', description: '배경 이미지 + 텍스트 오버레이 배너', variants: [{ id: 'centered', label: '중앙' }, { id: 'left', label: '좌측' }], defaultProps: { title: '환영합니다', subtitle: '', height: 'md', textAlign: 'center', layout: 'full', overlayColor: '#000000', overlayOpacity: 50 }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'subtitle', label: '부제목', type: 'text' }, { key: 'backgroundImageUrl', label: '배경 이미지', type: 'image' }, { key: 'overlayColor', label: '오버레이 색상', type: 'text' }, { key: 'overlayOpacity', label: '오버레이 투명도 (%)', type: 'number' }, { key: 'buttonText', label: '버튼 텍스트', type: 'text' }, { key: 'buttonUrl', label: '버튼 링크', type: 'url' }, { key: 'layout', label: '레이아웃', type: 'select', options: [{ label: '풀 와이드', value: 'full' }, { label: '컨테이너', value: 'contained' }] }, { key: 'height', label: '높이', type: 'select', options: [{ label: '작게', value: 'sm' }, { label: '보통', value: 'md' }, { label: '크게', value: 'lg' }, { label: '전체', value: 'full' }] }] },
+  { type: 'banner_slider', label: '배너 슬라이더', category: '히어로', icon: '🎠', nature: 'dynamic', description: '배너 관리에서 등록한 배너 자동 슬라이드', variants: [], defaultProps: { category: 'main' }, editableFields: [{ key: 'category', label: '배너 카테고리', type: 'select', options: [{ label: '메인', value: 'main' }, { label: '서브', value: 'sub' }] }] },
+  { type: 'hero_image_slider', label: '이미지 슬라이더', category: '히어로', icon: '🎞️', nature: 'dynamic', description: '여러 이미지 자동 전환', variants: [{ id: 'full', label: '풀스크린' }, { id: 'contained', label: '컨테이너' }], defaultProps: { images: [], height: 'lg' }, editableFields: [{ key: 'images', label: '슬라이드 이미지', type: 'images', max: 10 }, { key: 'autoplayInterval', label: '자동 전환 (ms)', type: 'number' }] },
+  { type: 'hero_split', label: '분할 히어로', category: '히어로', icon: '⬛', nature: 'static', description: '텍스트+이미지 분할', variants: [{ id: 'right', label: '이미지 우측' }, { id: 'left', label: '이미지 좌측' }], defaultProps: { title: '', imageUrl: '', imagePosition: 'right' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'subtitle', label: '부제목', type: 'text' }, { key: 'description', label: '설명', type: 'textarea' }, { key: 'imageUrl', label: '이미지', type: 'image' }] },
 
   // ─── About ────────────────────────────────────
-  { type: 'pastor_message', label: '담임목사 인사', category: '소개', icon: '🙏', description: '담임목사 인사말', variants: [{ id: 'right', label: '사진 우측' }, { id: 'left', label: '사진 좌측' }], defaultProps: { pastorName: '', message: '', layout: 'right' }, editableFields: [{ key: 'title', label: '섹션 제목', type: 'text' }, { key: 'pastorName', label: '이름', type: 'text' }, { key: 'pastorTitle', label: '직함', type: 'text' }, { key: 'message', label: '인사말', type: 'textarea' }, { key: 'imageUrl', label: '사진', type: 'image' }] },
-  { type: 'church_intro', label: '교회 소개', category: '소개', icon: '⛪', description: '교회 소개 텍스트', variants: [{ id: 'with-image', label: '이미지 포함' }, { id: 'text-only', label: '텍스트만' }], defaultProps: { description: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'description', label: '소개글', type: 'textarea' }, { key: 'imageUrl', label: '이미지', type: 'image' }] },
-  { type: 'mission_vision', label: '미션/비전', category: '소개', icon: '🎯', description: '미션, 비전, 핵심 가치', variants: [{ id: 'cards-3', label: '3열 카드' }, { id: 'cards-2', label: '2열 카드' }, { id: 'list', label: '리스트' }], defaultProps: { items: [] }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'imageUrl', label: '이미지', type: 'image' }] },
+  { type: 'pastor_message', label: '담임목사 인사', category: '소개', icon: '🙏', nature: 'static', description: '담임목사 인사말', variants: [{ id: 'right', label: '사진 우측' }, { id: 'left', label: '사진 좌측' }], defaultProps: { pastorName: '', message: '', layout: 'right' }, editableFields: [{ key: 'title', label: '섹션 제목', type: 'text' }, { key: 'pastorName', label: '이름', type: 'text' }, { key: 'pastorTitle', label: '직함', type: 'text' }, { key: 'message', label: '인사말', type: 'textarea' }, { key: 'imageUrl', label: '사진', type: 'image' }] },
+  { type: 'church_intro', label: '교회 소개', category: '소개', icon: '⛪', nature: 'static', description: '교회 소개 텍스트', variants: [{ id: 'with-image', label: '이미지 포함' }, { id: 'text-only', label: '텍스트만' }], defaultProps: { description: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'description', label: '소개글', type: 'textarea' }, { key: 'imageUrl', label: '이미지', type: 'image' }] },
+  { type: 'mission_vision', label: '미션/비전', category: '소개', icon: '🎯', nature: 'static', description: '미션, 비전, 핵심 가치', variants: [{ id: 'cards-3', label: '3열 카드' }, { id: 'cards-2', label: '2열 카드' }, { id: 'list', label: '리스트' }], defaultProps: { items: [] }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'imageUrl', label: '이미지', type: 'image' }] },
 
   // ─── Content ───────────────────────────────────
-  { type: 'recent_sermons', label: '설교', category: '콘텐츠', icon: '🎤', description: '최근 설교 목록', variants: [{ id: 'grid-3', label: '3열 그리드' }, { id: 'grid-2', label: '2열 그리드' }, { id: 'list', label: '리스트' }], defaultProps: { limit: 6 }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'limit', label: '표시 개수', type: 'number' }] },
-  { type: 'recent_bulletins', label: '주보', category: '콘텐츠', icon: '📄', description: '최근 주보', variants: [{ id: 'list', label: '리스트' }, { id: 'grid', label: '그리드' }], defaultProps: { limit: 6 }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'limit', label: '표시 개수', type: 'number' }] },
-  { type: 'event_grid', label: '행사', category: '콘텐츠', icon: '📅', description: '교회 행사', variants: [{ id: 'cards-3', label: '3열 카드' }, { id: 'cards-2', label: '2열 카드' }], defaultProps: { limit: 4 }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'limit', label: '표시 개수', type: 'number' }] },
-  { type: 'album_gallery', label: '앨범', category: '콘텐츠', icon: '📷', description: '앨범 갤러리', variants: [{ id: 'grid-3', label: '3열' }, { id: 'grid-4', label: '4열' }, { id: 'masonry', label: '매이슨리' }], defaultProps: { limit: 6 }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'limit', label: '표시 개수', type: 'number' }] },
-  { type: 'staff_grid', label: '교역자', category: '콘텐츠', icon: '👥', description: '교역자 카드', variants: [{ id: 'grid-4', label: '4열' }, { id: 'grid-3', label: '3열' }, { id: 'featured', label: '피처드' }], defaultProps: { limit: 8 }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'limit', label: '표시 개수', type: 'number' }] },
-  { type: 'history_timeline', label: '교회 연혁', category: '콘텐츠', icon: '📜', description: '세로 타임라인', variants: [{ id: 'left', label: '좌측' }, { id: 'alternating', label: '교차' }], defaultProps: {}, editableFields: [{ key: 'title', label: '제목', type: 'text' }] },
+  { type: 'recent_sermons', label: '설교', category: '콘텐츠', icon: '🎤', nature: 'dynamic', description: '최근 설교 목록', variants: [{ id: 'grid-3', label: '3열 그리드' }, { id: 'grid-2', label: '2열 그리드' }, { id: 'list', label: '리스트' }], defaultProps: { limit: 6 }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'limit', label: '표시 개수', type: 'number' }] },
+  { type: 'recent_bulletins', label: '주보', category: '콘텐츠', icon: '📄', nature: 'dynamic', description: '최근 주보', variants: [{ id: 'list', label: '리스트' }, { id: 'grid', label: '그리드' }], defaultProps: { limit: 6 }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'limit', label: '표시 개수', type: 'number' }] },
+  { type: 'event_grid', label: '행사', category: '콘텐츠', icon: '📅', nature: 'dynamic', description: '교회 행사', variants: [{ id: 'cards-3', label: '3열 카드' }, { id: 'cards-2', label: '2열 카드' }], defaultProps: { limit: 4 }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'limit', label: '표시 개수', type: 'number' }] },
+  { type: 'album_gallery', label: '앨범', category: '콘텐츠', icon: '📷', nature: 'dynamic', description: '앨범 갤러리', variants: [{ id: 'grid-3', label: '3열' }, { id: 'grid-4', label: '4열' }, { id: 'masonry', label: '매이슨리' }], defaultProps: { limit: 6 }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'limit', label: '표시 개수', type: 'number' }] },
+  { type: 'staff_grid', label: '교역자', category: '콘텐츠', icon: '👥', nature: 'dynamic', description: '교역자 카드', variants: [{ id: 'grid-4', label: '4열' }, { id: 'grid-3', label: '3열' }, { id: 'featured', label: '피처드' }], defaultProps: { limit: 8 }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'limit', label: '표시 개수', type: 'number' }] },
+  { type: 'history_timeline', label: '교회 연혁', category: '콘텐츠', icon: '📜', nature: 'dynamic', description: '세로 타임라인', variants: [{ id: 'left', label: '좌측' }, { id: 'alternating', label: '교차' }], defaultProps: {}, editableFields: [{ key: 'title', label: '제목', type: 'text' }] },
 
   // ─── Text ──────────────────────────────────────
-  { type: 'text_image', label: '텍스트+이미지', category: '텍스트', icon: '📝', description: '텍스트와 이미지', variants: [{ id: 'right', label: '이미지 우측' }, { id: 'left', label: '이미지 좌측' }], defaultProps: { content: '', imageUrl: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'content', label: '내용', type: 'textarea' }, { key: 'imageUrl', label: '이미지', type: 'image' }] },
-  { type: 'text_only', label: '텍스트', category: '텍스트', icon: '📃', description: '텍스트 전용', variants: [{ id: 'left', label: '좌측 정렬' }, { id: 'center', label: '중앙 정렬' }], defaultProps: { content: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'content', label: '내용', type: 'textarea' }] },
-  { type: 'quote_block', label: '인용/성경구절', category: '텍스트', icon: '✝️', description: '인용문 또는 성경 말씀', variants: [{ id: 'card', label: '카드' }, { id: 'simple', label: '심플' }, { id: 'highlight', label: '하이라이트' }], defaultProps: { quote: '' }, editableFields: [{ key: 'quote', label: '인용문', type: 'textarea' }, { key: 'source', label: '출처', type: 'text' }, { key: 'reference', label: '참조', type: 'text' }, { key: 'backgroundImageUrl', label: '배경 이미지', type: 'image' }] },
+  { type: 'text_image', label: '텍스트+이미지', category: '텍스트', icon: '📝', nature: 'static', description: '텍스트와 이미지', variants: [{ id: 'right', label: '이미지 우측' }, { id: 'left', label: '이미지 좌측' }], defaultProps: { content: '', imageUrl: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'content', label: '내용', type: 'textarea' }, { key: 'imageUrl', label: '이미지', type: 'image' }] },
+  { type: 'text_only', label: '텍스트', category: '텍스트', icon: '📃', nature: 'static', description: '텍스트 전용', variants: [{ id: 'left', label: '좌측 정렬' }, { id: 'center', label: '중앙 정렬' }], defaultProps: { content: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'content', label: '내용', type: 'textarea' }] },
+  { type: 'quote_block', label: '인용/성경구절', category: '텍스트', icon: '✝️', nature: 'static', description: '인용문 또는 성경 말씀', variants: [{ id: 'card', label: '카드' }, { id: 'simple', label: '심플' }, { id: 'highlight', label: '하이라이트' }], defaultProps: { quote: '' }, editableFields: [{ key: 'quote', label: '인용문', type: 'textarea' }, { key: 'source', label: '출처', type: 'text' }, { key: 'reference', label: '참조', type: 'text' }, { key: 'backgroundImageUrl', label: '배경 이미지', type: 'image' }] },
 
   // ─── Church Info ───────────────────────────────
-  { type: 'worship_times', label: '예배 시간', category: '교회 정보', icon: '⏰', description: '예배 시간 안내', variants: [{ id: 'cards', label: '카드' }, { id: 'table', label: '테이블' }], defaultProps: { services: [] }, editableFields: [{ key: 'title', label: '제목', type: 'text' }] },
-  { type: 'map_embed', label: '약도', category: '교회 정보', icon: '📍', description: 'Google Maps', variants: [{ id: 'full', label: '전체 너비' }, { id: 'with-info', label: '정보 포함' }], defaultProps: { address: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'address', label: '주소', type: 'text' }] },
-  { type: 'address_info', label: '연락처', category: '교회 정보', icon: '📞', description: '주소, 전화, 이메일', variants: [{ id: 'cards', label: '카드' }, { id: 'inline', label: '인라인' }], defaultProps: {}, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'address', label: '주소', type: 'text' }, { key: 'phone', label: '전화', type: 'text' }, { key: 'email', label: '이메일', type: 'text' }] },
-  { type: 'visitor_welcome', label: '새가족 환영', category: '교회 정보', icon: '💝', description: '새가족 환영 메시지', variants: [{ id: 'split', label: '분할' }, { id: 'centered', label: '중앙' }], defaultProps: { message: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'message', label: '환영 메시지', type: 'textarea' }, { key: 'imageUrl', label: '이미지', type: 'image' }] },
-  { type: 'first_time_guide', label: '처음 오시는 분', category: '교회 정보', icon: '🧭', description: '단계별 안내', variants: [{ id: 'numbered', label: '번호' }, { id: 'icons', label: '아이콘' }], defaultProps: { steps: [] }, editableFields: [{ key: 'title', label: '제목', type: 'text' }] },
+  { type: 'worship_times', label: '예배 시간', category: '교회 정보', icon: '⏰', nature: 'static', description: '예배 시간 안내', variants: [{ id: 'cards', label: '카드' }, { id: 'table', label: '테이블' }], defaultProps: { services: [] }, editableFields: [{ key: 'title', label: '제목', type: 'text' }] },
+  { type: 'map_embed', label: '약도', category: '교회 정보', icon: '📍', nature: 'static', description: 'Google Maps', variants: [{ id: 'full', label: '전체 너비' }, { id: 'with-info', label: '정보 포함' }], defaultProps: { address: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'address', label: '주소', type: 'text' }] },
+  { type: 'address_info', label: '연락처', category: '교회 정보', icon: '📞', nature: 'static', description: '주소, 전화, 이메일', variants: [{ id: 'cards', label: '카드' }, { id: 'inline', label: '인라인' }], defaultProps: {}, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'address', label: '주소', type: 'text' }, { key: 'phone', label: '전화', type: 'text' }, { key: 'email', label: '이메일', type: 'text' }] },
+  { type: 'visitor_welcome', label: '새가족 환영', category: '교회 정보', icon: '💝', nature: 'static', description: '새가족 환영 메시지', variants: [{ id: 'split', label: '분할' }, { id: 'centered', label: '중앙' }], defaultProps: { message: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'message', label: '환영 메시지', type: 'textarea' }, { key: 'imageUrl', label: '이미지', type: 'image' }] },
+  { type: 'first_time_guide', label: '처음 오시는 분', category: '교회 정보', icon: '🧭', nature: 'static', description: '단계별 안내', variants: [{ id: 'numbered', label: '번호' }, { id: 'icons', label: '아이콘' }], defaultProps: { steps: [] }, editableFields: [{ key: 'title', label: '제목', type: 'text' }] },
 
   // ─── CTA ───────────────────────────────────────
-  { type: 'call_to_action', label: 'CTA 배너', category: 'CTA', icon: '🔔', description: '행동 유도 배너', variants: [{ id: 'centered', label: '중앙' }, { id: 'split', label: '분할' }, { id: 'banner', label: '배너' }], defaultProps: { title: '', ctaLabel: '', ctaUrl: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'description', label: '설명', type: 'text' }, { key: 'backgroundImageUrl', label: '배경 이미지', type: 'image' }, { key: 'ctaLabel', label: '버튼 텍스트', type: 'text' }, { key: 'ctaUrl', label: '버튼 링크', type: 'url' }] },
-  { type: 'newsletter_signup', label: '뉴스레터', category: 'CTA', icon: '✉️', description: '이메일 구독', variants: [{ id: 'inline', label: '인라인' }, { id: 'card', label: '카드' }], defaultProps: {}, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'description', label: '설명', type: 'text' }] },
+  { type: 'call_to_action', label: 'CTA 배너', category: 'CTA', icon: '🔔', nature: 'static', description: '행동 유도 배너', variants: [{ id: 'centered', label: '중앙' }, { id: 'split', label: '분할' }, { id: 'banner', label: '배너' }], defaultProps: { title: '', ctaLabel: '', ctaUrl: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'description', label: '설명', type: 'text' }, { key: 'backgroundImageUrl', label: '배경 이미지', type: 'image' }, { key: 'ctaLabel', label: '버튼 텍스트', type: 'text' }, { key: 'ctaUrl', label: '버튼 링크', type: 'url' }] },
+  { type: 'newsletter_signup', label: '뉴스레터', category: 'CTA', icon: '✉️', nature: 'static', description: '이메일 구독', variants: [{ id: 'inline', label: '인라인' }, { id: 'card', label: '카드' }], defaultProps: {}, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'description', label: '설명', type: 'text' }] },
 
   // ─── Layout ────────────────────────────────────
-  { type: 'divider', label: '구분선', category: '레이아웃', icon: '➖', description: '섹션 구분', variants: [{ id: 'line', label: '라인' }, { id: 'dots', label: '점' }, { id: 'gradient', label: '그래디언트' }], defaultProps: {}, editableFields: [] },
-  { type: 'section_header', label: '섹션 헤더', category: '레이아웃', icon: '🏷️', description: '제목+부제목', variants: [{ id: 'center', label: '중앙' }, { id: 'left', label: '좌측' }], defaultProps: { title: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'subtitle', label: '부제목', type: 'text' }] },
+  { type: 'divider', label: '구분선', category: '레이아웃', icon: '➖', nature: 'static', description: '섹션 구분', variants: [{ id: 'line', label: '라인' }, { id: 'dots', label: '점' }, { id: 'gradient', label: '그래디언트' }], defaultProps: {}, editableFields: [] },
+  { type: 'section_header', label: '섹션 헤더', category: '레이아웃', icon: '🏷️', nature: 'static', description: '제목+부제목', variants: [{ id: 'center', label: '중앙' }, { id: 'left', label: '좌측' }], defaultProps: { title: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'subtitle', label: '부제목', type: 'text' }] },
 
   // ─── Legacy ────────────────────────────────────
-  { type: 'location_map', label: '지도/약도', category: '교회 정보', icon: '🗺️', description: '교회 위치 지도', variants: [{ id: 'default', label: '기본' }], defaultProps: { address: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'address', label: '주소', type: 'text' }, { key: 'lat', label: '위도', type: 'number' }, { key: 'lng', label: '경도', type: 'number' }] },
-  { type: 'contact_info', label: '연락처 (자동)', category: '교회 정보', icon: '📱', description: '설정에서 자동 로드', variants: [], defaultProps: {}, editableFields: [] },
-  { type: 'newcomer_info', label: '새가족 안내 (레거시)', category: '교회 정보', icon: '🤝', description: '새가족 환영 메시지', variants: [], defaultProps: { title: '처음 오신 분들을 환영합니다' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'content', label: '내용', type: 'textarea' }, { key: 'imageUrl', label: '이미지', type: 'image' }] },
-  { type: 'worship_schedule', label: '예배안내 (레거시)', category: '교회 정보', icon: '🕐', description: '예배 시간 안내', variants: [], defaultProps: { services: [] }, editableFields: [{ key: 'title', label: '제목', type: 'text' }] },
-  { type: 'video', label: '비디오', category: '레거시', icon: '🎬', description: 'YouTube 영상', variants: [], defaultProps: {}, editableFields: [{ key: 'youtubeUrl', label: 'YouTube URL', type: 'url' }, { key: 'title', label: '제목', type: 'text' }] },
-  { type: 'image_gallery', label: '이미지 갤러리', category: '레거시', icon: '🎨', description: '이미지 목록', variants: [], defaultProps: { images: [] }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'images', label: '이미지', type: 'images', max: 20 }] },
+  { type: 'location_map', label: '지도/약도', category: '교회 정보', icon: '🗺️', nature: 'static', description: '교회 위치 지도', variants: [{ id: 'default', label: '기본' }], defaultProps: { address: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'address', label: '주소', type: 'text' }, { key: 'lat', label: '위도', type: 'number' }, { key: 'lng', label: '경도', type: 'number' }] },
+  { type: 'contact_info', label: '연락처 (자동)', category: '교회 정보', icon: '📱', nature: 'static', description: '설정에서 자동 로드', variants: [], defaultProps: {}, editableFields: [] },
+  { type: 'newcomer_info', label: '새가족 안내 (레거시)', category: '교회 정보', icon: '🤝', nature: 'static', description: '새가족 환영 메시지', variants: [], defaultProps: { title: '처음 오신 분들을 환영합니다' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'content', label: '내용', type: 'textarea' }, { key: 'imageUrl', label: '이미지', type: 'image' }] },
+  { type: 'worship_schedule', label: '예배안내 (레거시)', category: '교회 정보', icon: '🕐', nature: 'static', description: '예배 시간 안내', variants: [], defaultProps: { services: [] }, editableFields: [{ key: 'title', label: '제목', type: 'text' }] },
+  { type: 'video', label: '비디오', category: '레거시', icon: '🎬', nature: 'static', description: 'YouTube 영상', variants: [], defaultProps: {}, editableFields: [{ key: 'youtubeUrl', label: 'YouTube URL', type: 'url' }, { key: 'title', label: '제목', type: 'text' }] },
+  { type: 'image_gallery', label: '이미지 갤러리', category: '레거시', icon: '🎨', nature: 'static', description: '이미지 목록', variants: [], defaultProps: { images: [] }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'images', label: '이미지', type: 'images', max: 20 }] },
 ];
 
 function getBlockDef(type: string): BlockDef | undefined {
@@ -246,66 +252,155 @@ function useUndoStack<T>(initial: T) {
 // ═══════════════════════════════════════════════════════════
 // Block Palette (left sidebar — drag source)
 // ═══════════════════════════════════════════════════════════
+type NatureFilter = 'all' | 'static' | 'dynamic';
+type PaletteViewMode = 'list' | 'grid';
+
 function BlockPalette({ onAdd }: { onAdd: (type: string) => void }) {
   const [search, setSearch] = useState('');
+  const [viewMode, setViewMode] = useState<PaletteViewMode>('list');
+  const [natureFilter, setNatureFilter] = useState<NatureFilter>('all');
 
   const filtered = useMemo(() => {
-    if (!search) return BLOCK_CATEGORIES;
-    const q = search.toLowerCase();
     return BLOCK_CATEGORIES.map((c) => ({
       ...c,
-      blocks: c.blocks.filter((b) => b.label.includes(q) || b.description.includes(q)),
+      blocks: c.blocks.filter((b) => {
+        // Nature filter
+        if (natureFilter === 'static' && b.nature !== 'static') return false;
+        if (natureFilter === 'dynamic' && b.nature !== 'dynamic') return false;
+        // Search filter
+        if (search) {
+          const q = search.toLowerCase();
+          return b.label.includes(q) || b.description.includes(q) || b.type.includes(q);
+        }
+        return true;
+      }),
     })).filter((c) => c.blocks.length > 0);
-  }, [search]);
+  }, [search, natureFilter]);
 
   return (
     <div className="w-56 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col overflow-hidden">
-      <div className="px-3 py-2 border-b">
-        <input
-          type="text"
-          placeholder="블록 검색..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full border rounded-lg px-2.5 py-1.5 text-xs"
-        />
+      {/* Search + View Mode Toggle */}
+      <div className="px-3 py-2 border-b space-y-1.5">
+        <div className="flex items-center gap-1">
+          <div className="relative flex-1">
+            <input
+              type="text"
+              placeholder="블록 검색..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full border rounded-lg px-2.5 py-1.5 text-xs pr-6"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-sm leading-none"
+                title="검색 초기화"
+              >
+                &times;
+              </button>
+            )}
+          </div>
+          <div className="flex border rounded-lg overflow-hidden flex-shrink-0">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-1.5 text-xs transition-colors ${viewMode === 'list' ? 'bg-blue-100 text-blue-700' : 'bg-white text-gray-400 hover:bg-gray-50'}`}
+              title="리스트 보기"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-1.5 text-xs transition-colors ${viewMode === 'grid' ? 'bg-blue-100 text-blue-700' : 'bg-white text-gray-400 hover:bg-gray-50'}`}
+              title="그리드 보기"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" /></svg>
+            </button>
+          </div>
+        </div>
+        {/* Nature filter */}
+        <div className="flex gap-0.5 bg-gray-100 rounded-lg p-0.5">
+          {([['all', '전체'], ['static', '정적'], ['dynamic', '동적']] as const).map(([val, label]) => (
+            <button
+              key={val}
+              onClick={() => setNatureFilter(val)}
+              className={`flex-1 text-[10px] py-1 rounded-md transition-colors font-medium ${
+                natureFilter === val ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {val === 'static' && '📄 '}{val === 'dynamic' && '⚡ '}{label}
+            </button>
+          ))}
+        </div>
       </div>
       <div className="flex-1 overflow-y-auto p-2">
         {filtered.map((cat) => (
           <div key={cat.category} className="mb-3">
             <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-1 mb-1">{cat.category}</p>
-            <div className="space-y-0.5">
-              {cat.blocks.map((block) => (
-                <div
-                  key={block.type}
-                  draggable
-                  onDragStart={(e) => {
-                    e.dataTransfer.setData('application/x-block-type', block.type);
-                    e.dataTransfer.effectAllowed = 'copy';
-                  }}
-                  onClick={(e) => {
-                    // Prevent double-add: only handle click, not drag-end
-                    if (e.detail === 1) onAdd(block.type);
-                  }}
-                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs hover:bg-blue-50 cursor-grab active:cursor-grabbing transition-colors text-left group"
-                  title={block.description}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <span className="text-base">{block.icon}</span>
-                  <span className="truncate font-medium text-gray-700 group-hover:text-blue-700">{block.label}</span>
-                </div>
-              ))}
-            </div>
+            {viewMode === 'list' ? (
+              /* List view */
+              <div className="space-y-0.5">
+                {cat.blocks.map((block) => (
+                  <div
+                    key={block.type}
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData('application/x-block-type', block.type);
+                      e.dataTransfer.effectAllowed = 'copy';
+                    }}
+                    onClick={(e) => {
+                      if (e.detail === 1) onAdd(block.type);
+                    }}
+                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs hover:bg-blue-50 cursor-grab active:cursor-grabbing transition-colors text-left group"
+                    title={block.description}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <span className="text-base">{block.icon}</span>
+                    <span className="truncate font-medium text-gray-700 group-hover:text-blue-700 flex-1">{block.label}</span>
+                    <span className="text-[10px] flex-shrink-0" title={block.nature === 'dynamic' ? '동적 블록' : '정적 블록'}>
+                      {block.nature === 'dynamic' ? '⚡' : '📄'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              /* Grid view */
+              <div className="grid grid-cols-2 gap-1">
+                {cat.blocks.map((block) => (
+                  <div
+                    key={block.type}
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData('application/x-block-type', block.type);
+                      e.dataTransfer.effectAllowed = 'copy';
+                    }}
+                    onClick={(e) => {
+                      if (e.detail === 1) onAdd(block.type);
+                    }}
+                    className="flex flex-col items-center gap-1 p-2 rounded-lg text-xs hover:bg-blue-50 cursor-grab active:cursor-grabbing transition-colors text-center group border border-gray-100 hover:border-blue-200"
+                    title={block.description}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <span className="text-xl">{block.icon}</span>
+                    <span className="text-[10px] font-medium text-gray-700 group-hover:text-blue-700 leading-tight">{block.label}</span>
+                    <span className="text-[9px] flex-shrink-0" title={block.nature === 'dynamic' ? '동적 블록' : '정적 블록'}>
+                      {block.nature === 'dynamic' ? '⚡' : '📄'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ))}
+        {filtered.length === 0 && (
+          <p className="text-xs text-gray-400 text-center py-4">검색 결과가 없습니다</p>
+        )}
       </div>
     </div>
   );
 }
 
-// ═══════════════════════════════════════════════════════════
-// Section Card (draggable + inline editable)
-// ═══════════════════════════════════════════════════════════
 // ═══════════════════════════════════════════════════════════
 // Image Library Modal
 // ═══════════════════════════════════════════════════════════
@@ -375,6 +470,7 @@ function SectionCard({
   onMove,
   onToggleVisibility,
   onDelete,
+  onDuplicate,
   onVariantChange,
   onUploadImage,
   onGenerateText,
@@ -394,6 +490,7 @@ function SectionCard({
   onMove: (dir: 'up' | 'down') => void;
   onToggleVisibility: () => void;
   onDelete: () => void;
+  onDuplicate: () => void;
   onVariantChange: (variant: string) => void;
   onUploadImage: (file: File) => Promise<string>;
   onGenerateText: (prompt: string, context?: string) => Promise<string>;
@@ -406,7 +503,9 @@ function SectionCard({
   const props = localProps;
   const set = (key: string, value: unknown) => onPropsChange({ ...props, [key]: value });
   const [aiLoading, setAiLoading] = useState<string | null>(null);
+  const [collapsed, setCollapsed] = useState(true);
   const { showToast } = useToast();
+  const isDynamic = def?.nature === 'dynamic';
 
   const handleAiText = async (fieldKey: string, fieldLabel: string) => {
     setAiLoading(fieldKey);
@@ -427,29 +526,134 @@ function SectionCard({
 
   const [imageLibraryField, setImageLibraryField] = useState<string | null>(null);
 
+  // Find first image URL in props for thumbnail preview
+  const thumbnailUrl = useMemo(() => {
+    const imageFields = ['backgroundImageUrl', 'imageUrl', 'imageurl'];
+    for (const key of imageFields) {
+      if (props[key] && typeof props[key] === 'string') return props[key] as string;
+    }
+    // Check images array
+    if (Array.isArray(props.images) && props.images.length > 0) {
+      const first = props.images[0];
+      if (typeof first === 'string') return first;
+    }
+    return null;
+  }, [props]);
+
+  // Expand when editing starts
+  useEffect(() => {
+    if (isEditing) setCollapsed(false);
+  }, [isEditing]);
+
+  const handleHeaderClick = () => {
+    if (!isEditing) setCollapsed((c) => !c);
+  };
+
   return (
     <div
-      draggable
-      onDragStart={onDragStart}
-      onDragOver={onDragOver}
-      onDrop={onDrop}
-      className={`bg-white border rounded-xl overflow-hidden transition-all cursor-grab active:cursor-grabbing ${
-        !section.isVisible ? 'bg-gray-50' : ''
+      className={`bg-white border rounded-xl overflow-hidden transition-all ${
+        !section.isVisible ? 'opacity-60' : ''
       } ${isEditing ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-200 hover:border-gray-300'} ${
         dragOverIdx === index ? 'border-t-4 border-t-blue-500' : ''
       }`}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
     >
       {/* Header */}
-      <div className="flex items-center gap-2 px-3 py-2 bg-gray-50/80 border-b">
-        <span className="text-lg">{def?.icon || '?'}</span>
+      <div
+        className="flex items-center gap-1.5 px-1.5 py-2 bg-gray-50/80 border-b cursor-pointer select-none group/header"
+        onClick={handleHeaderClick}
+      >
+        {/* Drag handle */}
+        <div
+          draggable
+          onDragStart={(e) => {
+            e.stopPropagation();
+            onDragStart(e);
+          }}
+          className="flex-shrink-0 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-200 text-gray-300 hover:text-gray-500 transition-colors"
+          onClick={(e) => e.stopPropagation()}
+          title="드래그하여 이동"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="9" cy="5" r="1.5" /><circle cx="15" cy="5" r="1.5" />
+            <circle cx="9" cy="10" r="1.5" /><circle cx="15" cy="10" r="1.5" />
+            <circle cx="9" cy="15" r="1.5" /><circle cx="15" cy="15" r="1.5" />
+            <circle cx="9" cy="20" r="1.5" /><circle cx="15" cy="20" r="1.5" />
+          </svg>
+        </div>
+
+        <span className="text-lg flex-shrink-0">{def?.icon || '?'}</span>
         <div className="flex-1 min-w-0">
-          <span className="text-sm font-medium truncate block">{def?.label || section.blockType}</span>
+          <div className="flex items-center gap-1.5">
+            <span className={`text-sm font-medium truncate ${!section.isVisible ? 'line-through text-gray-400' : ''}`}>
+              {def?.label || section.blockType}
+            </span>
+            {isDynamic && (
+              <span className="text-[9px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium flex-shrink-0">
+                ⚡ 자동 로드
+              </span>
+            )}
+            {!section.isVisible && (
+              <span className="text-[9px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded-full font-medium flex-shrink-0">
+                숨김
+              </span>
+            )}
+          </div>
+          {/* Inline preview when collapsed */}
+          {collapsed && !isEditing && (
+            <div className="flex items-center gap-2 mt-0.5">
+              {props.title && (
+                <span className="text-[11px] text-gray-400 truncate max-w-[160px]">{props.title as string}</span>
+              )}
+              {thumbnailUrl && (
+                <img
+                  src={`${thumbnailUrl}${thumbnailUrl.includes('?') ? '&' : '?'}w=40&h=24&fit=crop`}
+                  alt=""
+                  className="w-8 h-5 object-cover rounded flex-shrink-0"
+                />
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
+          <button onClick={() => onMove('up')} disabled={index === 0} className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-200 rounded transition-colors disabled:opacity-20" title="위로">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M5 15l7-7 7 7" /></svg>
+          </button>
+          <button onClick={() => onMove('down')} disabled={index === totalSections - 1} className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-200 rounded transition-colors disabled:opacity-20" title="아래로">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 9l-7 7-7-7" /></svg>
+          </button>
+          <button onClick={onToggleVisibility} className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-200 rounded transition-colors" title={section.isVisible ? '숨기기' : '표시'}>
+            {section.isVisible ? '👁️' : '👁️‍🗨️'}
+          </button>
+          <button onClick={onDuplicate} className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="복제">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+          </button>
+          <button onClick={onToggleEdit} className={`p-1 rounded transition-colors ${isEditing ? 'text-blue-600 bg-blue-50' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-200'}`} title="편집">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+          </button>
+          <button onClick={onDelete} className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="삭제">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Expanded content (variants + preview) - shown when not collapsed and not editing */}
+      {!collapsed && !isEditing && (
+        <div className="px-3 py-2 space-y-1.5" onClick={(e) => e.stopPropagation()}>
+          {/* Title preview */}
+          {props.title && (
+            <p className="text-xs text-gray-500 truncate">{props.title as string}</p>
+          )}
+          {/* Variant selector */}
           {def?.variants && def.variants.length > 0 && (
-            <div className="flex gap-1 mt-0.5">
+            <div className="flex gap-1">
               {def.variants.map((v) => (
                 <button
                   key={v.id}
-                  onClick={(e) => { e.stopPropagation(); onVariantChange(v.id); }}
+                  onClick={() => onVariantChange(v.id)}
                   className={`text-[10px] px-1.5 py-0.5 rounded transition-colors ${
                     (props.variant || def.variants[0]?.id) === v.id
                       ? 'bg-blue-100 text-blue-700 font-medium'
@@ -462,117 +666,119 @@ function SectionCard({
             </div>
           )}
         </div>
-        <div className="flex items-center gap-0.5">
-          <button onClick={() => onMove('up')} disabled={index === 0} className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-20" title="위로">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M5 15l7-7 7 7" /></svg>
-          </button>
-          <button onClick={() => onMove('down')} disabled={index === totalSections - 1} className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-20" title="아래로">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 9l-7 7-7-7" /></svg>
-          </button>
-          <button onClick={onToggleVisibility} className="p-1 text-gray-400 hover:text-gray-700" title={section.isVisible ? '숨기기' : '표시'}>
-            {section.isVisible ? '👁️' : '👁️‍🗨️'}
-          </button>
-          <button onClick={onToggleEdit} className={`p-1 ${isEditing ? 'text-blue-600' : 'text-gray-400 hover:text-gray-700'}`} title="편집">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-          </button>
-          <button onClick={onDelete} className="p-1 text-gray-400 hover:text-red-600" title="삭제">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
-        </div>
-      </div>
-
-      {/* Inline preview (always show title if present) */}
-      {!isEditing && props.title && (
-        <div className="px-3 py-2 text-xs text-gray-500 truncate">
-          {props.title as string}
-        </div>
       )}
 
       {/* Edit panel */}
-      {isEditing && def && (
-        <div className="p-3 space-y-2 border-t bg-white">
-          {def.editableFields.map((field) => (
-            <div key={field.key}>
-              <div className="flex items-center justify-between mb-0.5">
-                <label className="text-[11px] font-medium text-gray-500">{field.label}</label>
-                {(field.type === 'text' || field.type === 'textarea') && (
+      <div
+        className="overflow-hidden transition-all duration-300 ease-in-out"
+        style={{
+          maxHeight: isEditing ? '2000px' : '0px',
+          opacity: isEditing ? 1 : 0,
+        }}
+      >
+        {isEditing && def && (
+          <div className="p-3 space-y-2 border-t bg-white">
+            {/* Variant selector in edit mode */}
+            {def.variants && def.variants.length > 0 && (
+              <div className="flex gap-1 pb-1">
+                {def.variants.map((v) => (
                   <button
-                    type="button"
-                    onClick={() => handleAiText(field.key, field.label)}
-                    disabled={aiLoading === field.key}
-                    className="flex items-center gap-0.5 text-[10px] text-purple-600 hover:text-purple-800 disabled:opacity-50"
-                    title="AI로 생성"
+                    key={v.id}
+                    onClick={() => onVariantChange(v.id)}
+                    className={`text-[10px] px-1.5 py-0.5 rounded transition-colors ${
+                      (props.variant || def.variants[0]?.id) === v.id
+                        ? 'bg-blue-100 text-blue-700 font-medium'
+                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                    }`}
                   >
-                    {aiLoading === field.key ? <span className="inline-block w-3 h-3 border border-purple-400 border-t-transparent rounded-full animate-spin" /> : <span>✨</span>}
-                    AI
+                    {v.label}
                   </button>
-                )}
-                {field.type === 'image' && (
-                  <button
-                    type="button"
-                    onClick={() => setImageLibraryField(field.key)}
-                    className="flex items-center gap-0.5 text-[10px] text-blue-600 hover:text-blue-800"
-                    title="이미지 라이브러리"
+                ))}
+              </div>
+            )}
+            {def.editableFields.map((field) => (
+              <div key={field.key}>
+                <div className="flex items-center justify-between mb-0.5">
+                  <label className="text-[11px] font-medium text-gray-500">{field.label}</label>
+                  {(field.type === 'text' || field.type === 'textarea') && (
+                    <button
+                      type="button"
+                      onClick={() => handleAiText(field.key, field.label)}
+                      disabled={aiLoading === field.key}
+                      className="flex items-center gap-0.5 text-[10px] text-purple-600 hover:text-purple-800 disabled:opacity-50"
+                      title="AI로 생성"
+                    >
+                      {aiLoading === field.key ? <span className="inline-block w-3 h-3 border border-purple-400 border-t-transparent rounded-full animate-spin" /> : <span>✨</span>}
+                      AI
+                    </button>
+                  )}
+                  {field.type === 'image' && (
+                    <button
+                      type="button"
+                      onClick={() => setImageLibraryField(field.key)}
+                      className="flex items-center gap-0.5 text-[10px] text-blue-600 hover:text-blue-800"
+                      title="이미지 라이브러리"
+                    >
+                      <span>🖼️</span> 라이브러리
+                    </button>
+                  )}
+                </div>
+                {field.type === 'textarea' ? (
+                  <textarea
+                    value={(props[field.key] as string) || ''}
+                    onChange={(e) => set(field.key, e.target.value)}
+                    rows={3}
+                    className="w-full border rounded-lg px-2.5 py-1.5 text-xs resize-none"
+                  />
+                ) : field.type === 'select' ? (
+                  <select
+                    value={(props[field.key] as string) || ''}
+                    onChange={(e) => set(field.key, e.target.value)}
+                    className="w-full border rounded-lg px-2.5 py-1.5 text-xs"
                   >
-                    <span>🖼️</span> 라이브러리
-                  </button>
+                    {field.options?.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                ) : field.type === 'number' ? (
+                  <input
+                    type="number"
+                    value={(props[field.key] as number) || 0}
+                    onChange={(e) => set(field.key, parseInt(e.target.value) || 0)}
+                    className="w-24 border rounded-lg px-2.5 py-1.5 text-xs"
+                  />
+                ) : field.type === 'image' ? (
+                  <ImageUpload
+                    value={(props[field.key] as string) || ''}
+                    onChange={(url) => set(field.key, url)}
+                    onUpload={onUploadImage}
+                    aspectRatio="16/9"
+                  />
+                ) : field.type === 'images' ? (
+                  <MultiImageUpload
+                    value={(props[field.key] as string[]) || []}
+                    onChange={(urls) => set(field.key, urls)}
+                    onUpload={onUploadImage}
+                    max={field.max || 10}
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    value={(props[field.key] as string) || ''}
+                    onChange={(e) => set(field.key, e.target.value)}
+                    className="w-full border rounded-lg px-2.5 py-1.5 text-xs"
+                  />
                 )}
               </div>
-              {field.type === 'textarea' ? (
-                <textarea
-                  value={(props[field.key] as string) || ''}
-                  onChange={(e) => set(field.key, e.target.value)}
-                  rows={3}
-                  className="w-full border rounded-lg px-2.5 py-1.5 text-xs resize-none"
-                />
-              ) : field.type === 'select' ? (
-                <select
-                  value={(props[field.key] as string) || ''}
-                  onChange={(e) => set(field.key, e.target.value)}
-                  className="w-full border rounded-lg px-2.5 py-1.5 text-xs"
-                >
-                  {field.options?.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-              ) : field.type === 'number' ? (
-                <input
-                  type="number"
-                  value={(props[field.key] as number) || 0}
-                  onChange={(e) => set(field.key, parseInt(e.target.value) || 0)}
-                  className="w-24 border rounded-lg px-2.5 py-1.5 text-xs"
-                />
-              ) : field.type === 'image' ? (
-                <ImageUpload
-                  value={(props[field.key] as string) || ''}
-                  onChange={(url) => set(field.key, url)}
-                  onUpload={onUploadImage}
-                  aspectRatio="16/9"
-                />
-              ) : field.type === 'images' ? (
-                <MultiImageUpload
-                  value={(props[field.key] as string[]) || []}
-                  onChange={(urls) => set(field.key, urls)}
-                  onUpload={onUploadImage}
-                  max={field.max || 10}
-                />
-              ) : (
-                <input
-                  type="text"
-                  value={(props[field.key] as string) || ''}
-                  onChange={(e) => set(field.key, e.target.value)}
-                  className="w-full border rounded-lg px-2.5 py-1.5 text-xs"
-                />
-              )}
+            ))}
+            {def.editableFields.length === 0 && (
+              <p className="text-xs text-gray-400">이 블록은 기본 설정으로 작동합니다.</p>
+            )}
+            <div className="flex gap-2 pt-1">
+              <button onClick={onSave} className="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors">저장</button>
+              <button onClick={onToggleEdit} className="px-3 py-1 bg-gray-100 text-xs rounded-lg hover:bg-gray-200 transition-colors">취소</button>
             </div>
-          ))}
-          {def.editableFields.length === 0 && (
-            <p className="text-xs text-gray-400">이 블록은 기본 설정으로 작동합니다.</p>
-          )}
-          <div className="flex gap-2 pt-1">
-            <button onClick={onSave} className="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700">저장</button>
-            <button onClick={onToggleEdit} className="px-3 py-1 bg-gray-100 text-xs rounded-lg hover:bg-gray-200">취소</button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Image Library Modal */}
       {imageLibraryField && (
@@ -679,7 +885,7 @@ export default function PageEditor() {
   };
 
   const handleCreatePage = () => {
-    setSelectedPageId(null); // Deselect so modal shows "새 페이지" title
+    setSelectedPageId(null);
     reset({ title: '', slug: '', status: 'draft', isHome: false });
     setShowPageForm(true);
   };
@@ -713,7 +919,7 @@ export default function PageEditor() {
   const handleAddBlock = (blockType: string, atIndex?: number) => {
     if (!selectedPageId || addingRef.current) return;
     addingRef.current = true;
-    setTimeout(() => { addingRef.current = false; }, 1000); // Debounce 1s
+    setTimeout(() => { addingRef.current = false; }, 1000);
     const def = getBlockDef(blockType);
     const insertIdx = atIndex ?? sortedSections.length;
     createSection.mutate({
@@ -727,12 +933,27 @@ export default function PageEditor() {
     });
   };
 
+  const handleDuplicateSection = (section: PageSection) => {
+    if (!selectedPageId || addingRef.current) return;
+    addingRef.current = true;
+    setTimeout(() => { addingRef.current = false; }, 1000);
+    const currentProps = sectionProps[section.id] ?? section.props;
+    createSection.mutate({
+      pageId: selectedPageId,
+      data: {
+        blockType: section.blockType as BlockType,
+        props: { ...currentProps },
+        sortOrder: section.sortOrder + 1,
+        isVisible: section.isVisible,
+      },
+    });
+    showToast('success', '섹션이 복제되었습니다.');
+  };
+
   const handleApplyTemplate = async (template: PageTemplate) => {
     if (!selectedPageId || !apiClient) return;
     setShowTemplateGallery(false);
     const baseOrder = sortedSections.length;
-    // Direct API calls to bypass React Query onSuccess invalidation
-    // which causes race conditions between sequential creates
     let successCount = 0;
     for (let i = 0; i < template.sections.length; i++) {
       const sec = template.sections[i];
@@ -748,7 +969,6 @@ export default function PageEditor() {
         // Continue with remaining sections
       }
     }
-    // Single refetch after all sections created
     queryClient.invalidateQueries({ queryKey: ['pages', 'sections', selectedPageId] });
     if (successCount === template.sections.length) {
       showToast('success', `"${template.name}" 템플릿이 적용되었습니다. (${successCount}개 블록)`);
@@ -782,7 +1002,6 @@ export default function PageEditor() {
   const handleDeleteSection = (section: PageSection) => {
     if (!selectedPageId || !window.confirm('이 섹션을 삭제하시겠습니까?')) return;
     if (editingSectionId === section.id) setEditingSectionId(null);
-    // Optimistic delete: remove from cache immediately, then sync with server
     const queryKey = ['pages', 'sections', selectedPageId];
     const prev = queryClient.getQueryData<PageSection[]>(queryKey);
     if (prev) {
@@ -818,14 +1037,12 @@ export default function PageEditor() {
     e.preventDefault();
     setDragOverIdx(null);
 
-    // Drop from palette (new block)
     const blockType = e.dataTransfer.getData('application/x-block-type');
     if (blockType) {
       handleAddBlock(blockType, targetIdx);
       return;
     }
 
-    // Reorder existing sections
     const fromIdxStr = e.dataTransfer.getData('application/x-section-idx');
     if (!fromIdxStr || !selectedPageId) return;
     const fromIdx = parseInt(fromIdxStr);
@@ -887,34 +1104,51 @@ export default function PageEditor() {
       </div>
 
       {/* Main Board */}
-      <div className="flex-1 overflow-y-auto bg-gray-50 p-4"
+      <div className="flex-1 overflow-y-auto bg-gray-100/50 p-5"
         onDragOver={handleBoardDragOver}
         onDrop={handleBoardDrop}
         onDragLeave={() => setDragOverIdx(null)}
       >
         {!selectedPage ? (
-          <div className="flex items-center justify-center h-full text-gray-400">
-            <div className="text-center">
-              <p className="text-4xl mb-3">📄</p>
-              <p className="text-sm">왼쪽에서 페이지를 선택하거나 새로 만드세요</p>
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center space-y-3">
+              <div className="w-16 h-16 mx-auto bg-gray-100 rounded-2xl flex items-center justify-center">
+                <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">페이지를 선택하세요</p>
+                <p className="text-xs text-gray-400 mt-1">왼쪽에서 페이지를 선택하거나 새로 만드세요</p>
+              </div>
             </div>
           </div>
         ) : (
-          <div className="max-w-2xl mx-auto space-y-2">
+          <div className="max-w-2xl mx-auto space-y-3">
             {/* Page header */}
-            <div className="bg-white border border-gray-200 rounded-xl p-3 flex items-center justify-between mb-4">
+            <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between mb-5 shadow-sm">
               <div>
-                <h2 className="text-base font-bold">{selectedPage.title}</h2>
-                <p className="text-xs text-gray-500">/{selectedPage.slug}</p>
+                <h2 className="text-lg font-bold text-gray-800">{selectedPage.title}</h2>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <p className="text-xs text-gray-400">/{selectedPage.slug}</p>
+                  {selectedPage.isHome && (
+                    <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-full font-medium">홈</span>
+                  )}
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                    selectedPage.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                  }`}>
+                    {selectedPage.status === 'published' ? '공개' : '임시저장'}
+                  </span>
+                </div>
               </div>
               <div className="flex gap-1.5">
-                <button onClick={() => setShowTemplateGallery(true)} className="text-xs px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200">
+                <button onClick={() => setShowTemplateGallery(true)} className="text-xs px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors font-medium">
                   템플릿
                 </button>
-                <button onClick={handleEditPage} className="text-xs px-2.5 py-1 bg-gray-100 rounded-lg hover:bg-gray-200">
+                <button onClick={handleEditPage} className="text-xs px-3 py-1.5 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors font-medium">
                   수정
                 </button>
-                <button onClick={handleDeletePage} className="text-xs px-2.5 py-1 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">
+                <button onClick={handleDeletePage} className="text-xs px-3 py-1.5 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors font-medium">
                   삭제
                 </button>
               </div>
@@ -935,6 +1169,7 @@ export default function PageEditor() {
                 onMove={(dir) => handleMoveSection(index, dir)}
                 onToggleVisibility={() => handleToggleVisibility(section)}
                 onDelete={() => handleDeleteSection(section)}
+                onDuplicate={() => handleDuplicateSection(section)}
                 onVariantChange={(v) => handleVariantChange(section, v)}
                 onUploadImage={async (file: File) => {
                   const res = await apiClient.uploadFile(file);
@@ -953,17 +1188,27 @@ export default function PageEditor() {
 
             {/* Drop zone at bottom */}
             <div
-              className={`border-2 border-dashed rounded-xl py-6 text-center text-xs transition-all ${
+              className={`border-2 border-dashed rounded-xl py-8 text-center text-xs transition-all ${
                 dragOverIdx === sortedSections.length
-                  ? 'border-blue-400 bg-blue-50 text-blue-600'
+                  ? 'border-blue-400 bg-blue-50/80 text-blue-600 animate-pulse'
                   : 'border-gray-300 text-gray-400 hover:border-gray-400'
               }`}
               onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; setDragOverIdx(sortedSections.length); }}
               onDrop={(e) => { handleBoardDrop(e); }}
             >
-              {sortedSections.length === 0
-                ? '왼쪽 팔레트에서 블록을 드래그하거나 템플릿을 선택하세요'
-                : '블록을 여기에 드롭하여 추가'}
+              {sortedSections.length === 0 ? (
+                <div className="space-y-2">
+                  <div className="w-10 h-10 mx-auto bg-gray-100 rounded-xl flex items-center justify-center">
+                    <svg className="w-5 h-5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path d="M12 4v16m8-8H4" />
+                    </svg>
+                  </div>
+                  <p>왼쪽 팔레트에서 블록을 드래그하거나 클릭하세요</p>
+                  <p className="text-gray-300">또는 상단의 "템플릿" 버튼으로 시작하세요</p>
+                </div>
+              ) : (
+                <p>블록을 여기에 드롭하여 추가</p>
+              )}
             </div>
           </div>
         )}
