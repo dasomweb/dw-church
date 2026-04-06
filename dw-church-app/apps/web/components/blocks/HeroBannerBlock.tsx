@@ -1,7 +1,7 @@
 /**
  * Unified hero banner — supports both full-width and contained layouts.
+ * Layer structure: Text (top) → Overlay (middle) → Background image (bottom)
  * Content from page editor props only.
- * For dynamic banner slider managed via admin "배너 관리", use BannerSliderBlock.
  */
 interface HeroBannerBlockProps {
   props: Record<string, unknown>;
@@ -21,6 +21,14 @@ const ALIGN_MAP: Record<string, string> = {
   right: 'text-right',
 };
 
+function hexToRgb(hex: string): string {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.substring(0, 2), 16) || 0;
+  const g = parseInt(h.substring(2, 4), 16) || 0;
+  const b = parseInt(h.substring(4, 6), 16) || 0;
+  return `${r}, ${g}, ${b}`;
+}
+
 export function HeroBannerBlock({ props }: HeroBannerBlockProps) {
   const title = (props.title as string) || '환영합니다';
   const subtitle = (props.subtitle as string) || '사랑과 은혜가 넘치는 교회';
@@ -28,6 +36,8 @@ export function HeroBannerBlock({ props }: HeroBannerBlockProps) {
   const height = (props.height as string) || 'md';
   const textAlign = (props.textAlign as string) || 'center';
   const layout = (props.layout as string) || 'full';
+  const overlayColor = (props.overlayColor as string) || '#000000';
+  const overlayOpacity = typeof props.overlayOpacity === 'number' ? props.overlayOpacity : 50;
   // Support both naming conventions
   const buttonText = (props.buttonText as string) || (props.ctaLabel as string) || undefined;
   const buttonUrl = (props.buttonUrl as string) || (props.ctaUrl as string) || undefined;
@@ -36,23 +46,28 @@ export function HeroBannerBlock({ props }: HeroBannerBlockProps) {
   const alignClass = ALIGN_MAP[textAlign] || ALIGN_MAP.center;
   const isContained = layout === 'contained';
 
+  // Overlay: configurable color + opacity (0-100)
+  const overlayAlpha = Math.min(100, Math.max(0, overlayOpacity)) / 100;
+  const overlayStyle = bgImage
+    ? { backgroundColor: `rgba(${hexToRgb(overlayColor)}, ${overlayAlpha})` }
+    : undefined;
+
   return (
-    <section
-      className={`relative ${isContained ? 'px-4 sm:px-6 py-8' : ''}`}
-    >
+    <section className={`relative ${isContained ? 'px-4 sm:px-6 py-8' : ''}`}>
+      {/* Background layer */}
       <div
         className={`relative flex ${heightClass} items-center justify-center ${isContained ? 'mx-auto max-w-7xl rounded-2xl overflow-hidden' : ''}`}
         style={bgImage ? { backgroundImage: `url(${bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
       >
+        {/* Overlay layer */}
         {bgImage ? (
-          <div className="absolute inset-0 bg-black/50" />
+          <div className={`absolute inset-0 ${isContained ? 'rounded-2xl' : ''}`} style={overlayStyle} />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-[var(--dw-primary)] to-[var(--dw-secondary)]" />
         )}
-        {isContained && !bgImage && (
-          <div className="absolute inset-0 rounded-2xl" />
-        )}
-        <div className={`relative px-6 ${alignClass} text-white ${textAlign === 'center' ? 'mx-auto max-w-3xl' : 'max-w-7xl w-full'}`}>
+
+        {/* Text layer (top) */}
+        <div className={`relative z-10 px-6 ${alignClass} text-white ${textAlign === 'center' ? 'mx-auto max-w-3xl' : 'max-w-7xl w-full'}`}>
           <h1 className="mb-4 text-3xl font-bold font-heading sm:text-4xl">{title}</h1>
           <p className="text-base opacity-90 sm:text-lg">{subtitle}</p>
           {buttonText && buttonUrl && (

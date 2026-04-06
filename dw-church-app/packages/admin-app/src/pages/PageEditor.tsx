@@ -39,7 +39,7 @@ interface BlockDef {
 
 const BLOCK_DEFS: BlockDef[] = [
   // ─── Hero ─────────────────────────────────────
-  { type: 'hero_banner', label: '히어로 배너', category: '히어로', icon: '🖼️', description: '배경 이미지 + 텍스트 오버레이 배너', variants: [{ id: 'centered', label: '중앙' }, { id: 'left', label: '좌측' }], defaultProps: { title: '환영합니다', subtitle: '', height: 'md', textAlign: 'center', layout: 'full' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'subtitle', label: '부제목', type: 'text' }, { key: 'backgroundImageUrl', label: '배경 이미지', type: 'image' }, { key: 'buttonText', label: '버튼 텍스트', type: 'text' }, { key: 'buttonUrl', label: '버튼 링크', type: 'url' }, { key: 'layout', label: '레이아웃', type: 'select', options: [{ label: '풀 와이드', value: 'full' }, { label: '컨테이너', value: 'contained' }] }, { key: 'height', label: '높이', type: 'select', options: [{ label: '작게', value: 'sm' }, { label: '보통', value: 'md' }, { label: '크게', value: 'lg' }, { label: '전체', value: 'full' }] }] },
+  { type: 'hero_banner', label: '히어로 배너', category: '히어로', icon: '🖼️', description: '배경 이미지 + 텍스트 오버레이 배너', variants: [{ id: 'centered', label: '중앙' }, { id: 'left', label: '좌측' }], defaultProps: { title: '환영합니다', subtitle: '', height: 'md', textAlign: 'center', layout: 'full', overlayColor: '#000000', overlayOpacity: 50 }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'subtitle', label: '부제목', type: 'text' }, { key: 'backgroundImageUrl', label: '배경 이미지', type: 'image' }, { key: 'overlayColor', label: '오버레이 색상', type: 'text' }, { key: 'overlayOpacity', label: '오버레이 투명도 (%)', type: 'number' }, { key: 'buttonText', label: '버튼 텍스트', type: 'text' }, { key: 'buttonUrl', label: '버튼 링크', type: 'url' }, { key: 'layout', label: '레이아웃', type: 'select', options: [{ label: '풀 와이드', value: 'full' }, { label: '컨테이너', value: 'contained' }] }, { key: 'height', label: '높이', type: 'select', options: [{ label: '작게', value: 'sm' }, { label: '보통', value: 'md' }, { label: '크게', value: 'lg' }, { label: '전체', value: 'full' }] }] },
   { type: 'banner_slider', label: '배너 슬라이더', category: '히어로', icon: '🎠', description: '배너 관리에서 등록한 배너 자동 슬라이드', variants: [], defaultProps: { category: 'main' }, editableFields: [{ key: 'category', label: '배너 카테고리', type: 'select', options: [{ label: '메인', value: 'main' }, { label: '서브', value: 'sub' }] }] },
   { type: 'hero_image_slider', label: '이미지 슬라이더', category: '히어로', icon: '🎞️', description: '여러 이미지 자동 전환', variants: [{ id: 'full', label: '풀스크린' }, { id: 'contained', label: '컨테이너' }], defaultProps: { images: [], height: 'lg' }, editableFields: [{ key: 'images', label: '슬라이드 이미지', type: 'images', max: 10 }, { key: 'autoplayInterval', label: '자동 전환 (ms)', type: 'number' }] },
   { type: 'hero_split', label: '분할 히어로', category: '히어로', icon: '⬛', description: '텍스트+이미지 분할', variants: [{ id: 'right', label: '이미지 우측' }, { id: 'left', label: '이미지 좌측' }], defaultProps: { title: '', imageUrl: '', imagePosition: 'right' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'subtitle', label: '부제목', type: 'text' }, { key: 'description', label: '설명', type: 'textarea' }, { key: 'imageUrl', label: '이미지', type: 'image' }] },
@@ -324,12 +324,25 @@ function SectionCard({
     }
   };
 
-  const handleAiImage = async (fieldKey: string, fieldLabel: string) => {
+  const [aiImageMenu, setAiImageMenu] = useState<string | null>(null);
+
+  const AI_IMAGE_PRESETS = [
+    { label: '자연', value: 'beautiful nature landscape, mountains, sky, peaceful' },
+    { label: '꽃', value: 'beautiful flowers, floral arrangement, soft colors' },
+    { label: '십자가', value: 'cross silhouette, spiritual, golden light, hope' },
+    { label: '교회', value: 'church building exterior, steeple, stained glass' },
+    { label: '예배', value: 'worship service, congregation, warm atmosphere' },
+    { label: '모던', value: 'modern minimalist abstract, clean lines, gradient' },
+    { label: '클래식', value: 'classic traditional painting style, warm tones, timeless' },
+    { label: '하늘', value: 'dramatic sky, clouds, sunrise, golden hour' },
+  ];
+
+  const handleAiImage = async (fieldKey: string, preset: string) => {
+    setAiImageMenu(null);
     setAiLoading(fieldKey);
     try {
-      const blockLabel = def?.label || section.blockType;
-      const title = (props.title as string) || blockLabel;
-      const prompt = `${title} - ${fieldLabel}, Korean church website`;
+      const title = (props.title as string) || def?.label || section.blockType;
+      const prompt = `${preset}, ${title}, Korean church website, high quality`;
       const url = await onGenerateImage(prompt);
       set(fieldKey, url);
     } catch (err) {
@@ -420,16 +433,33 @@ function SectionCard({
                   </button>
                 )}
                 {field.type === 'image' && (
-                  <button
-                    type="button"
-                    onClick={() => handleAiImage(field.key, field.label)}
-                    disabled={aiLoading === field.key}
-                    className="flex items-center gap-0.5 text-[10px] text-purple-600 hover:text-purple-800 disabled:opacity-50"
-                    title="AI로 이미지 생성"
-                  >
-                    {aiLoading === field.key ? <span className="inline-block w-3 h-3 border border-purple-400 border-t-transparent rounded-full animate-spin" /> : <span>🎨</span>}
-                    AI
-                  </button>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setAiImageMenu(aiImageMenu === field.key ? null : field.key)}
+                      disabled={aiLoading === field.key}
+                      className="flex items-center gap-0.5 text-[10px] text-purple-600 hover:text-purple-800 disabled:opacity-50"
+                      title="AI로 이미지 생성"
+                    >
+                      {aiLoading === field.key ? <span className="inline-block w-3 h-3 border border-purple-400 border-t-transparent rounded-full animate-spin" /> : <span>🎨</span>}
+                      AI
+                    </button>
+                    {aiImageMenu === field.key && (
+                      <div className="absolute right-0 top-5 z-20 bg-white border rounded-lg shadow-lg p-1.5 min-w-[140px]">
+                        <p className="text-[10px] text-gray-400 px-2 py-0.5 mb-0.5">스타일 선택</p>
+                        {AI_IMAGE_PRESETS.map((preset) => (
+                          <button
+                            key={preset.value}
+                            type="button"
+                            onClick={() => handleAiImage(field.key, preset.value)}
+                            className="block w-full text-left text-xs px-2 py-1 rounded hover:bg-purple-50 hover:text-purple-700"
+                          >
+                            {preset.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
               {field.type === 'textarea' ? (
