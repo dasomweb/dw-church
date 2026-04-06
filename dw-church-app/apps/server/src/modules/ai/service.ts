@@ -15,7 +15,7 @@ export async function generateText(prompt: string, context?: string): Promise<st
     : 'You are a helpful assistant for a Korean church website content editor. Write in Korean. Write concise, warm, and appropriate content for a church website.';
 
   const res = await fetch(
-    `${GEMINI_BASE}/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`,
+    `${GEMINI_BASE}/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -41,7 +41,7 @@ export async function generateText(prompt: string, context?: string): Promise<st
   return text;
 }
 
-// ─── Image Generation (Gemini Imagen) ─────────────────────
+// ─── Image Generation (Nano Banana) ──────────────────────
 
 export async function generateImage(
   prompt: string,
@@ -53,15 +53,14 @@ export async function generateImage(
   const fullPrompt = `High quality, professional photograph for a church website. ${prompt}. Clean, modern, warm lighting.`;
 
   const res = await fetch(
-    `${GEMINI_BASE}/models/imagen-3.0-generate-002:predict?key=${apiKey}`,
+    `${GEMINI_BASE}/models/nano-banana-pro-preview:generateContent?key=${apiKey}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        instances: [{ prompt: fullPrompt }],
-        parameters: {
-          sampleCount: 1,
-          aspectRatio: '16:9',
+        contents: [{ parts: [{ text: fullPrompt }] }],
+        generationConfig: {
+          responseModalities: ['IMAGE'],
         },
       }),
     },
@@ -69,17 +68,21 @@ export async function generateImage(
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Gemini image API error: ${res.status} ${err}`);
+    throw new Error(`Image generation API error: ${res.status} ${err}`);
   }
 
   const data = await res.json();
-  const b64 = data.predictions?.[0]?.bytesBase64Encoded;
-  if (!b64) throw new Error('No image generated');
+  const parts = data.candidates?.[0]?.content?.parts;
+  const imagePart = parts?.find((p: { inlineData?: { mimeType: string; data: string } }) => p.inlineData);
+  if (!imagePart?.inlineData?.data) throw new Error('No image generated');
+
+  const mimeType = imagePart.inlineData.mimeType || 'image/jpeg';
+  const ext = mimeType.includes('png') ? 'png' : 'jpg';
 
   // Upload to R2
-  const buffer = Buffer.from(b64, 'base64');
-  const key = `tenant_${tenantSlug}/ai/${randomUUID()}.png`;
-  const url = await r2.uploadFile(key, buffer, 'image/png');
+  const buffer = Buffer.from(imagePart.inlineData.data, 'base64');
+  const key = `tenant_${tenantSlug}/ai/${randomUUID()}.${ext}`;
+  const url = await r2.uploadFile(key, buffer, mimeType);
 
   return { url };
 }
