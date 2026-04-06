@@ -7,11 +7,18 @@ import { EventCard } from './EventCard';
 export interface EventGridProps {
   data?: Event[];
   limit?: number;
+  columns?: number;
   className?: string;
   onItemClick?: (id: string) => void;
 }
 
-export function EventGrid({ data, limit, className = '', onItemClick }: EventGridProps) {
+const GRID_COLS: Record<number, string> = {
+  2: 'grid-cols-1 sm:grid-cols-2',
+  3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
+  4: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4',
+};
+
+export function EventGrid({ data, limit, columns = 3, className = '', onItemClick }: EventGridProps) {
   const { data: fetchedData, isLoading } = useEvents();
   const allEvents = data ?? fetchedData?.data ?? [];
   const events = limit ? allEvents.slice(0, limit) : allEvents;
@@ -21,7 +28,7 @@ export function EventGrid({ data, limit, className = '', onItemClick }: EventGri
 
   return (
     <div
-      className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 ${className}`}
+      className={`grid ${GRID_COLS[columns] || GRID_COLS[3]} gap-6 ${className}`}
     >
       {events.map((event) => (
         <EventCard key={event.id} event={event} onClick={onItemClick} />

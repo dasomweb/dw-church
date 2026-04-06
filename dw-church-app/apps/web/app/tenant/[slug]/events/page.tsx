@@ -1,4 +1,5 @@
 import { getEvents } from '@/lib/api';
+import { getBlockProps, variantToColumns } from '@/lib/page-props';
 import { EventGridClient } from './EventGridClient';
 import { PageHeroBanner } from '@/components/PageHeroBanner';
 import { buildTenantMetadata } from '@/lib/metadata';
@@ -19,7 +20,13 @@ export default async function EventsPage({ params, searchParams }: EventsPagePro
   const search = await searchParams;
   const page = parseInt(search.page ?? '1', 10);
 
-  const events = await getEvents(slug, { page, perPage: 12 });
+  const [events, blockProps] = await Promise.all([
+    getEvents(slug, { page, perPage: 12 }),
+    getBlockProps(slug, 'events', 'event_grid'),
+  ]);
+
+  const variant = (blockProps.variant as string) || 'cards-3';
+  const columns = variantToColumns(variant, 3);
 
   return (
     <div>
@@ -31,6 +38,7 @@ export default async function EventsPage({ params, searchParams }: EventsPagePro
           totalPages={events.meta?.totalPages ?? 1}
           currentPage={page}
           slug={slug}
+          columns={columns}
         />
       </div>
     </div>

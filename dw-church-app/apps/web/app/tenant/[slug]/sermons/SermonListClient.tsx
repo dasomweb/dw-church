@@ -13,6 +13,7 @@ interface SermonListClientProps {
   slug: string;
   currentSearch?: string;
   currentCategory?: string;
+  columns?: number;
 }
 
 export function SermonListClient({
@@ -23,6 +24,7 @@ export function SermonListClient({
   slug,
   currentSearch,
   currentCategory,
+  columns = 4,
 }: SermonListClientProps) {
   const router = useRouter();
   const [searchInput, setSearchInput] = useState(currentSearch ?? '');
@@ -137,7 +139,7 @@ export function SermonListClient({
 
       {/* Sermon List */}
       {initialData.length > 0 ? (
-        <SermonList data={initialData} onItemClick={(id) => router.push(`/sermons/${id}`)} />
+        <SermonList data={initialData} onItemClick={(id) => router.push(`/sermons/${id}`)} columns={columns} />
       ) : (
         <div className="py-16 text-center text-gray-500">
           {hasActiveFilters

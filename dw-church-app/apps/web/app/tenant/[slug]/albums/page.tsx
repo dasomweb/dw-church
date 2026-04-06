@@ -1,4 +1,5 @@
 import { getAlbums } from '@/lib/api';
+import { getBlockProps, variantToColumns } from '@/lib/page-props';
 import { AlbumGalleryClient } from './AlbumGalleryClient';
 import { PageHeroBanner } from '@/components/PageHeroBanner';
 import { buildTenantMetadata } from '@/lib/metadata';
@@ -19,7 +20,13 @@ export default async function AlbumsPage({ params, searchParams }: AlbumsPagePro
   const search = await searchParams;
   const page = parseInt(search.page ?? '1', 10);
 
-  const albums = await getAlbums(slug, { page, perPage: 12 });
+  const [albums, blockProps] = await Promise.all([
+    getAlbums(slug, { page, perPage: 12 }),
+    getBlockProps(slug, 'albums', 'album_gallery'),
+  ]);
+
+  const variant = (blockProps.variant as string) || 'grid-3';
+  const columns = variantToColumns(variant, 3);
 
   return (
     <div>
@@ -31,6 +38,7 @@ export default async function AlbumsPage({ params, searchParams }: AlbumsPagePro
           totalPages={albums.meta?.totalPages ?? 1}
           currentPage={page}
           slug={slug}
+          columns={columns}
         />
       </div>
     </div>

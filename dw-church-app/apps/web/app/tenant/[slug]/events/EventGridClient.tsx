@@ -10,14 +10,15 @@ interface EventGridClientProps {
   totalPages: number;
   currentPage: number;
   slug: string;
+  columns?: number;
 }
 
-export function EventGridClient({ initialData, total, totalPages, currentPage, slug }: EventGridClientProps) {
+export function EventGridClient({ initialData, total, totalPages, currentPage, slug, columns = 3 }: EventGridClientProps) {
   const router = useRouter();
 
   return (
     <div>
-      <EventGrid data={initialData} onItemClick={(id) => router.push(`/events/${id}`)} />
+      <EventGrid data={initialData} onItemClick={(id) => router.push(`/events/${id}`)} columns={columns} />
       {totalPages > 1 && (
         <div className="mt-8 flex items-center justify-center gap-2">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
