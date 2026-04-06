@@ -1,31 +1,19 @@
-import { getBanners } from '@/lib/api';
-import { HeroBannerClient } from './HeroBannerClient';
-
+/**
+ * Static hero banner — content from page editor props only.
+ * For dynamic banner slider managed via admin "배너 관리", use BannerSliderBlock.
+ */
 interface HeroBannerBlockProps {
   props: Record<string, unknown>;
   slug: string;
 }
 
-export async function HeroBannerBlock({ props, slug }: HeroBannerBlockProps) {
+export function HeroBannerBlock({ props }: HeroBannerBlockProps) {
   const title = (props.title as string) || '환영합니다';
   const subtitle = (props.subtitle as string) || '사랑과 은혜가 넘치는 교회';
   const bgImage = props.backgroundImageUrl as string | undefined;
+  const buttonText = props.buttonText as string | undefined;
+  const buttonUrl = props.buttonUrl as string | undefined;
 
-  // Try to load banners from DB
-  let banners;
-  try {
-    const result = await getBanners(slug);
-    banners = Array.isArray(result) ? result : ((result as any)?.data ?? []);
-  } catch {
-    banners = [];
-  }
-
-  // If banners exist, use the slider
-  if (banners.length > 0) {
-    return <HeroBannerClient banners={banners} />;
-  }
-
-  // Otherwise show hero with props
   return (
     <section
       className="relative flex min-h-[300px] items-center justify-center px-4 sm:min-h-[400px]"
@@ -39,6 +27,13 @@ export async function HeroBannerBlock({ props, slug }: HeroBannerBlockProps) {
       <div className="relative text-center text-white">
         <h1 className="mb-4 text-3xl font-bold font-heading sm:text-4xl">{title}</h1>
         <p className="text-base opacity-90 sm:text-lg">{subtitle}</p>
+        {buttonText && buttonUrl && (
+          <div className="mt-6">
+            <a href={buttonUrl} className="inline-block rounded-lg bg-white px-6 py-2.5 text-sm font-semibold text-gray-900 shadow-lg hover:bg-gray-100 transition-colors">
+              {buttonText}
+            </a>
+          </div>
+        )}
       </div>
     </section>
   );

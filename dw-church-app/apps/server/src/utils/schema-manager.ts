@@ -74,7 +74,7 @@ export async function seedDefaultData(slug: string): Promise<void> {
   // 4. Default pages — each menu item has a corresponding page
   const defaultPages = [
     { title: '홈', slug: 'home', is_home: true, sort_order: 0, sections: [
-      { block_type: 'hero_banner', props: { title: '환영합니다', subtitle: '사랑과 은혜가 넘치는 교회' } },
+      { block_type: 'banner_slider', props: { category: 'main' } },
       { block_type: 'recent_sermons', props: { title: '최근 설교', limit: 6 } },
       { block_type: 'recent_bulletins', props: { title: '최근 주보', limit: 3 } },
       { block_type: 'event_grid', props: { title: '교회 행사', limit: 4 } },

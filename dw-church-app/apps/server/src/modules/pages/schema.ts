@@ -1,9 +1,11 @@
 import { z } from 'zod';
 
 export const blockTypes = [
-  // Hero
+  // Hero (static)
   'hero_banner',
   'hero_full_width',
+  // Banner slider (dynamic — linked to admin 배너 관리)
+  'banner_slider',
   'hero_image_slider',
   'hero_split',
   // About

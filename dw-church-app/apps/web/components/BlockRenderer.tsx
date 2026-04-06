@@ -1,5 +1,6 @@
 type PageSection = { id: string; blockType: string; props: Record<string, unknown>; sortOrder: number; isVisible: boolean };
 import { HeroBannerBlock } from './blocks/HeroBannerBlock';
+import { BannerSliderBlock } from './blocks/BannerSliderBlock';
 import { TextImageBlock } from './blocks/TextImageBlock';
 import { TextOnlyBlock } from './blocks/TextOnlyBlock';
 import { RecentSermonsBlock } from './blocks/RecentSermonsBlock';
@@ -19,10 +20,13 @@ import { NewcomerInfoBlock } from './blocks/NewcomerInfoBlock';
 type BlockComponent = React.FC<{ props: Record<string, unknown>; slug: string }>;
 
 const BLOCK_MAP: Record<string, BlockComponent> = {
-  // Hero variants → all render as HeroBannerBlock
+  // Hero (static — props from page editor)
   hero_banner: HeroBannerBlock,
   hero_full_width: HeroBannerBlock,
-  hero_image_slider: HeroBannerBlock,
+
+  // Banner slider (dynamic — data from admin 배너 관리)
+  banner_slider: BannerSliderBlock,
+  hero_image_slider: BannerSliderBlock,
   hero_split: TextImageBlock,        // Split hero = text + image side by side
 
   // About / Intro → render as TextImage or TextOnly
