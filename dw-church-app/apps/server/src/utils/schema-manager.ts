@@ -71,39 +71,67 @@ export async function seedDefaultData(slug: string): Promise<void> {
     }),
   );
 
-  // 4. Default home page
-  await prisma.$executeRawUnsafe(
-    `INSERT INTO "${schema}".pages (title, slug, is_home, status, sort_order)
-     VALUES ('홈', 'home', true, 'published', 0)
-     ON CONFLICT DO NOTHING`,
-  );
+  // 4. Default pages — each menu item has a corresponding page
+  const defaultPages = [
+    { title: '홈', slug: 'home', is_home: true, sort_order: 0, sections: [
+      { block_type: 'hero_banner', props: { title: '환영합니다', subtitle: '사랑과 은혜가 넘치는 교회' } },
+      { block_type: 'recent_sermons', props: { title: '최근 설교', limit: 6 } },
+      { block_type: 'recent_bulletins', props: { title: '최근 주보', limit: 3 } },
+      { block_type: 'event_grid', props: { title: '교회 행사', limit: 4 } },
+      { block_type: 'staff_grid', props: { title: '교역자', limit: 8 } },
+    ]},
+    { title: '설교', slug: 'sermons', is_home: false, sort_order: 1, sections: [
+      { block_type: 'hero_banner', props: { title: '설교', subtitle: '말씀을 통해 은혜를 나눕니다' } },
+      { block_type: 'recent_sermons', props: { limit: 12 } },
+    ]},
+    { title: '주보', slug: 'bulletins', is_home: false, sort_order: 2, sections: [
+      { block_type: 'hero_banner', props: { title: '주보', subtitle: '매주 교회 소식을 전합니다' } },
+      { block_type: 'recent_bulletins', props: { limit: 12 } },
+    ]},
+    { title: '앨범', slug: 'albums', is_home: false, sort_order: 3, sections: [
+      { block_type: 'hero_banner', props: { title: '앨범', subtitle: '교회의 아름다운 순간들' } },
+      { block_type: 'album_gallery', props: { limit: 12 } },
+    ]},
+    { title: '행사', slug: 'events', is_home: false, sort_order: 4, sections: [
+      { block_type: 'hero_banner', props: { title: '행사', subtitle: '함께하는 교회 행사' } },
+      { block_type: 'event_grid', props: { limit: 12 } },
+    ]},
+    { title: '교역자', slug: 'staff', is_home: false, sort_order: 5, sections: [
+      { block_type: 'hero_banner', props: { title: '교역자', subtitle: '섬기는 사람들' } },
+      { block_type: 'staff_grid', props: { limit: 12 } },
+    ]},
+    { title: '칼럼', slug: 'columns', is_home: false, sort_order: 6, sections: [
+      { block_type: 'hero_banner', props: { title: '칼럼', subtitle: '목회자의 글' } },
+      { block_type: 'text_only', props: { title: '칼럼' } },
+    ]},
+    { title: '연혁', slug: 'history', is_home: false, sort_order: 7, sections: [
+      { block_type: 'hero_banner', props: { title: '교회 연혁', subtitle: '하나님과 함께 걸어온 길' } },
+      { block_type: 'history_timeline', props: {} },
+    ]},
+  ];
 
-  // Get the home page ID for sections
-  const pages = await prisma.$queryRawUnsafe<[{ id: string }]>(
-    `SELECT id FROM "${schema}".pages WHERE slug = 'home' LIMIT 1`,
-  );
-  const homePageId = pages[0]?.id;
+  for (const page of defaultPages) {
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO "${schema}".pages (title, slug, is_home, status, sort_order)
+       VALUES ($1, $2, $3, 'published', $4)
+       ON CONFLICT DO NOTHING`,
+      page.title, page.slug, page.is_home, page.sort_order,
+    );
 
-  if (homePageId) {
-    // 5. Default home page sections
-    const sections = [
-      { block_type: 'hero_banner', props: { message: '환영합니다' }, sort_order: 0 },
-      { block_type: 'recent_sermons', props: { limit: 6 }, sort_order: 1 },
-      { block_type: 'recent_bulletins', props: { limit: 3 }, sort_order: 2 },
-      { block_type: 'event_grid', props: { limit: 4 }, sort_order: 3 },
-      { block_type: 'staff_grid', props: { limit: 8 }, sort_order: 4 },
-    ];
-
-    for (const sec of sections) {
-      await prisma.$executeRawUnsafe(
-        `INSERT INTO "${schema}".page_sections (page_id, block_type, props, sort_order, is_visible)
-         VALUES ($1::uuid, $2, $3::jsonb, $4, true)
-         ON CONFLICT DO NOTHING`,
-        homePageId,
-        sec.block_type,
-        JSON.stringify(sec.props),
-        sec.sort_order,
-      );
+    const pageRows = await prisma.$queryRawUnsafe<[{ id: string }]>(
+      `SELECT id FROM "${schema}".pages WHERE slug = $1 LIMIT 1`, page.slug,
+    );
+    const pageId = pageRows[0]?.id;
+    if (pageId) {
+      for (let i = 0; i < page.sections.length; i++) {
+        const sec = page.sections[i];
+        await prisma.$executeRawUnsafe(
+          `INSERT INTO "${schema}".page_sections (page_id, block_type, props, sort_order, is_visible)
+           VALUES ($1::uuid, $2, $3::jsonb, $4, true)
+           ON CONFLICT DO NOTHING`,
+          pageId, sec.block_type, JSON.stringify(sec.props), i,
+        );
+      }
     }
   }
 
