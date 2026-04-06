@@ -24,13 +24,16 @@ export const BLOCK_SCHEMAS: Record<string, BlockSchema> = {
   // ── Static blocks ──────────────────────────────────────────
 
   hero_banner: {
-    description: 'Full-width hero banner with background image and text overlay',
+    description: 'Hero banner with background image, text overlay, and layout options',
     props: {
       title: { type: 'string', description: 'Main heading text' },
       subtitle: { type: 'string', description: 'Subtitle or tagline' },
       backgroundImageUrl: { type: 'string', description: 'Background image URL' },
       buttonText: { type: 'string', description: 'CTA button text' },
       buttonUrl: { type: 'string', description: 'CTA button link' },
+      layout: { type: 'enum', options: ['full', 'contained'], description: 'full = full-width, contained = max-w container with rounded corners' },
+      height: { type: 'enum', options: ['sm', 'md', 'lg', 'full'], description: 'Banner height' },
+      textAlign: { type: 'enum', options: ['left', 'center', 'right'], description: 'Text alignment' },
     },
   },
 
