@@ -58,6 +58,16 @@ function BannerTextOverlay({ banner }: { banner: Banner }) {
           {textOverlay.description}
         </p>
       )}
+      {textOverlay.buttonText && textOverlay.buttonUrl && (
+        <div className="mt-4">
+          <a
+            href={textOverlay.buttonUrl}
+            className="inline-block rounded-lg bg-white px-6 py-2.5 text-sm font-semibold text-gray-900 shadow-lg transition-colors hover:bg-gray-100"
+          >
+            {textOverlay.buttonText}
+          </a>
+        </div>
+      )}
     </div>
   );
 }
