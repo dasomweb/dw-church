@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 interface ImageUploadProps {
   value: string;
@@ -24,6 +24,16 @@ export function ImageUpload({
   const [urlInput, setUrlInput] = useState(value || '');
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Sync mode when value changes externally (e.g. AI generation)
+  useEffect(() => {
+    if (value) {
+      setMode('preview');
+    } else {
+      setMode('url');
+      setUrlInput('');
+    }
+  }, [value]);
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
