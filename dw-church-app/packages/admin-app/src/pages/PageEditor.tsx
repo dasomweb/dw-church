@@ -303,6 +303,7 @@ function SectionCard({
   const props = localProps;
   const set = (key: string, value: unknown) => onPropsChange({ ...props, [key]: value });
   const [aiLoading, setAiLoading] = useState<string | null>(null);
+  const { showToast } = useToast();
 
   const handleAiText = async (fieldKey: string, fieldLabel: string) => {
     setAiLoading(fieldKey);
@@ -314,7 +315,9 @@ function SectionCard({
         : `교회 웹사이트의 "${blockLabel}" 블록에 들어갈 "${fieldLabel}" 내용을 작성해주세요. 내용만 출력하세요.`;
       const text = await onGenerateText(prompt, `블록: ${blockLabel}, 필드: ${fieldLabel}`);
       set(fieldKey, text.trim());
-    } catch { /* ignore */ } finally {
+    } catch (err) {
+      showToast('error', `AI 텍스트 생성 실패: ${err instanceof Error ? err.message : '알 수 없는 오류'}`);
+    } finally {
       setAiLoading(null);
     }
   };
@@ -327,7 +330,9 @@ function SectionCard({
       const prompt = `${title} - ${fieldLabel}, Korean church website`;
       const url = await onGenerateImage(prompt);
       set(fieldKey, url);
-    } catch { /* ignore */ } finally {
+    } catch (err) {
+      showToast('error', `AI 이미지 생성 실패: ${err instanceof Error ? err.message : '알 수 없는 오류'}`);
+    } finally {
       setAiLoading(null);
     }
   };
