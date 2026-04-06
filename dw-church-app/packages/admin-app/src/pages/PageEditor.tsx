@@ -292,6 +292,8 @@ function SectionCard({
   onDelete: () => void;
   onVariantChange: (variant: string) => void;
   onUploadImage: (file: File) => Promise<string>;
+  onGenerateText: (prompt: string, context?: string) => Promise<string>;
+  onGenerateImage: (prompt: string) => Promise<string>;
   onDragStart: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
@@ -300,6 +302,35 @@ function SectionCard({
   const def = getBlockDef(section.blockType);
   const props = localProps;
   const set = (key: string, value: unknown) => onPropsChange({ ...props, [key]: value });
+  const [aiLoading, setAiLoading] = useState<string | null>(null);
+
+  const handleAiText = async (fieldKey: string, fieldLabel: string) => {
+    setAiLoading(fieldKey);
+    try {
+      const blockLabel = def?.label || section.blockType;
+      const currentValue = (props[fieldKey] as string) || '';
+      const prompt = currentValue
+        ? `"${blockLabel}" 블록의 "${fieldLabel}" 내용을 개선해주세요. 현재 내용: "${currentValue}". 개선된 내용만 출력하세요.`
+        : `교회 웹사이트의 "${blockLabel}" 블록에 들어갈 "${fieldLabel}" 내용을 작성해주세요. 내용만 출력하세요.`;
+      const text = await onGenerateText(prompt, `블록: ${blockLabel}, 필드: ${fieldLabel}`);
+      set(fieldKey, text.trim());
+    } catch { /* ignore */ } finally {
+      setAiLoading(null);
+    }
+  };
+
+  const handleAiImage = async (fieldKey: string, fieldLabel: string) => {
+    setAiLoading(fieldKey);
+    try {
+      const blockLabel = def?.label || section.blockType;
+      const title = (props.title as string) || blockLabel;
+      const prompt = `${title} - ${fieldLabel}, Korean church website`;
+      const url = await onGenerateImage(prompt);
+      set(fieldKey, url);
+    } catch { /* ignore */ } finally {
+      setAiLoading(null);
+    }
+  };
 
   return (
     <div
@@ -367,7 +398,33 @@ function SectionCard({
         <div className="p-3 space-y-2 border-t bg-white">
           {def.editableFields.map((field) => (
             <div key={field.key}>
-              <label className="block text-[11px] font-medium text-gray-500 mb-0.5">{field.label}</label>
+              <div className="flex items-center justify-between mb-0.5">
+                <label className="text-[11px] font-medium text-gray-500">{field.label}</label>
+                {(field.type === 'text' || field.type === 'textarea') && (
+                  <button
+                    type="button"
+                    onClick={() => handleAiText(field.key, field.label)}
+                    disabled={aiLoading === field.key}
+                    className="flex items-center gap-0.5 text-[10px] text-purple-600 hover:text-purple-800 disabled:opacity-50"
+                    title="AI로 생성"
+                  >
+                    {aiLoading === field.key ? <span className="inline-block w-3 h-3 border border-purple-400 border-t-transparent rounded-full animate-spin" /> : <span>✨</span>}
+                    AI
+                  </button>
+                )}
+                {field.type === 'image' && (
+                  <button
+                    type="button"
+                    onClick={() => handleAiImage(field.key, field.label)}
+                    disabled={aiLoading === field.key}
+                    className="flex items-center gap-0.5 text-[10px] text-purple-600 hover:text-purple-800 disabled:opacity-50"
+                    title="AI로 이미지 생성"
+                  >
+                    {aiLoading === field.key ? <span className="inline-block w-3 h-3 border border-purple-400 border-t-transparent rounded-full animate-spin" /> : <span>🎨</span>}
+                    AI
+                  </button>
+                )}
+              </div>
               {field.type === 'textarea' ? (
                 <textarea
                   value={(props[field.key] as string) || ''}
@@ -777,6 +834,14 @@ export default function PageEditor() {
                 onVariantChange={(v) => handleVariantChange(section, v)}
                 onUploadImage={async (file: File) => {
                   const res = await apiClient.uploadFile(file);
+                  return res.url;
+                }}
+                onGenerateText={async (prompt: string, context?: string) => {
+                  const res = await apiClient.generateText(prompt, context);
+                  return res.text;
+                }}
+                onGenerateImage={async (prompt: string) => {
+                  const res = await apiClient.generateImage(prompt);
                   return res.url;
                 }}
                 onDragStart={(e) => handleSectionDragStart(e, index)}

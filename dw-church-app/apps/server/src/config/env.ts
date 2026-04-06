@@ -33,6 +33,9 @@ const envSchema = z.object({
   STRIPE_PRICE_BASIC: z.string().default(''),
   STRIPE_PRICE_PRO: z.string().default(''),
 
+  // AI (optional — Gemini for text/image generation)
+  GEMINI_API_KEY: z.string().default(''),
+
   // Monitoring (optional)
   SENTRY_DSN: z.string().default(''),
 

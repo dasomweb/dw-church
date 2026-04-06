@@ -646,6 +646,17 @@ export class DWChurchClient {
     return this.api.get(`${this.namespace}/files`);
   }
 
+  // ─── AI Generation ──────────────────────────────────────
+  async generateText(prompt: string, context?: string): Promise<{ text: string }> {
+    const res = await this.api.post(`${this.namespace}/ai/generate-text`, { prompt, context });
+    return (res as { data: { text: string } }).data ?? res;
+  }
+
+  async generateImage(prompt: string): Promise<{ url: string }> {
+    const res = await this.api.post(`${this.namespace}/ai/generate-image`, { prompt });
+    return (res as { data: { url: string } }).data ?? res;
+  }
+
   // ─── Domains ─────────────────────────────────────────────
   async getDomains(): Promise<{ id: string; domain: string; status: string; verified_at: string | null; created_at: string; updated_at: string }[]> {
     const res = await this.api.get(`${this.namespace}/domains`);
