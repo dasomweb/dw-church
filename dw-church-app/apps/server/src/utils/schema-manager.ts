@@ -124,7 +124,7 @@ export async function seedDefaultData(slug: string): Promise<void> {
     const pageId = pageRows[0]?.id;
     if (pageId) {
       for (let i = 0; i < page.sections.length; i++) {
-        const sec = page.sections[i];
+        const sec = page.sections[i]!;
         await prisma.$executeRawUnsafe(
           `INSERT INTO "${schema}".page_sections (page_id, block_type, props, sort_order, is_visible)
            VALUES ($1::uuid, $2, $3::jsonb, $4, true)
