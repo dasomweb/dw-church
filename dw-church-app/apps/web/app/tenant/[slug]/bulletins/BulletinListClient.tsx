@@ -1,7 +1,6 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { BulletinList } from '@dw-church/ui-components';
 import type { Bulletin } from '@dw-church/api-client';
 
 interface BulletinListClientProps {
@@ -13,12 +12,30 @@ interface BulletinListClientProps {
   columns?: number;
 }
 
+const GRID_COLS: Record<number, string> = {
+  1: 'space-y-3',
+  2: 'grid grid-cols-1 sm:grid-cols-2 gap-4',
+  3: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4',
+};
+
 export function BulletinListClient({ initialData, total, totalPages, currentPage, slug, columns = 1 }: BulletinListClientProps) {
   const router = useRouter();
+  const layoutClass = GRID_COLS[columns] || GRID_COLS[1];
 
   return (
     <div>
-      <BulletinList data={initialData} onItemClick={(id) => router.push(`/bulletins/${id}`)} />
+      <div className={layoutClass}>
+        {initialData.map((b: any) => (
+          <button
+            key={b.id}
+            onClick={() => router.push(`/bulletins/${b.id}`)}
+            className="group w-full text-left rounded-lg border border-gray-200 p-4 hover:shadow-md hover:border-[var(--dw-primary)] transition-all"
+          >
+            <h3 className="font-semibold text-sm">{b.title}</h3>
+            {(b.date || b.bulletinDate) && <p className="text-xs text-gray-400 mt-1">{b.date || b.bulletinDate}</p>}
+          </button>
+        ))}
+      </div>
       {totalPages > 1 && (
         <div className="mt-8 flex items-center justify-center gap-2">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (

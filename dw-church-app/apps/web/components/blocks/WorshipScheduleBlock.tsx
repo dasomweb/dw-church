@@ -11,13 +11,14 @@ interface WorshipScheduleBlockProps {
 
 export function WorshipScheduleBlock({ props }: WorshipScheduleBlockProps) {
   const services = (props.services as Service[]) ?? [];
+  const title = (props.title as string) || '예배 안내';
 
   if (services.length === 0) return null;
 
   return (
     <section className="px-4 py-10 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-4xl">
-        <h2 className="mb-8 text-center text-3xl font-bold font-heading">예배 안내</h2>
+        <h2 className="mb-8 text-center text-3xl font-bold font-heading">{title}</h2>
         <div className="overflow-x-auto rounded-xl border border-gray-200">
           <table className="w-full min-w-[480px]">
             <thead>

@@ -4,6 +4,7 @@ interface LocationMapBlockProps {
 }
 
 export function LocationMapBlock({ props }: LocationMapBlockProps) {
+  const title = (props.title as string) || '오시는 길';
   const address = (props.address as string) ?? '';
   const lat = props.lat as number | undefined;
   const lng = props.lng as number | undefined;
@@ -18,7 +19,7 @@ export function LocationMapBlock({ props }: LocationMapBlockProps) {
   return (
     <section className="px-4 py-10 sm:px-6 sm:py-16" style={{ backgroundColor: 'var(--dw-surface)' }}>
       <div className="mx-auto max-w-7xl">
-        <h2 className="mb-8 text-center text-3xl font-bold font-heading">오시는 길</h2>
+        <h2 className="mb-8 text-center text-3xl font-bold font-heading">{title}</h2>
         {mapSrc && (
           <div className="mb-6 overflow-hidden rounded-xl">
             <iframe

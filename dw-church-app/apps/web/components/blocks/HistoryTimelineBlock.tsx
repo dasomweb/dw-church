@@ -6,7 +6,9 @@ interface HistoryTimelineBlockProps {
   slug: string;
 }
 
-export async function HistoryTimelineBlock({ slug }: HistoryTimelineBlockProps) {
+export async function HistoryTimelineBlock({ props, slug }: HistoryTimelineBlockProps) {
+  const title = (props.title as string) || '교회 연혁';
+
   let history;
   try {
     history = await getHistory(slug);
@@ -19,7 +21,7 @@ export async function HistoryTimelineBlock({ slug }: HistoryTimelineBlockProps) 
   return (
     <section className="px-4 py-10 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-7xl">
-        <h2 className="mb-8 text-center text-3xl font-bold font-heading">교회 연혁</h2>
+        <h2 className="mb-8 text-center text-3xl font-bold font-heading">{title}</h2>
         <HistoryTimelineBlockClient history={history} slug={slug} />
       </div>
     </section>

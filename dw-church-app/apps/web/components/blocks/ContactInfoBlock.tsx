@@ -5,7 +5,8 @@ interface ContactInfoBlockProps {
   slug: string;
 }
 
-export async function ContactInfoBlock({ slug }: ContactInfoBlockProps) {
+export async function ContactInfoBlock({ props, slug }: ContactInfoBlockProps) {
+  const title = (props.title as string) || '연락처';
   let settings;
   try {
     settings = await getChurchSettings(slug);
@@ -23,7 +24,7 @@ export async function ContactInfoBlock({ slug }: ContactInfoBlockProps) {
   return (
     <section className="px-4 py-10 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-4xl">
-        <h2 className="mb-8 text-center text-3xl font-bold font-heading">연락처</h2>
+        <h2 className="mb-8 text-center text-3xl font-bold font-heading">{title}</h2>
         <div className="grid gap-6 sm:grid-cols-2">
           {settings.phone && (
             <div className="rounded-xl border border-gray-200 p-6 text-center">
