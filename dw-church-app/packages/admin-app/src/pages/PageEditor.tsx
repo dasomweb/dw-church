@@ -21,6 +21,52 @@ import { ImageUpload, MultiImageUpload } from '../components/ImageUpload';
 // Block Registry — types, variants, metadata
 // ═══════════════════════════════════════════════════════════
 
+// ─── Image Library ────────────────────────────────────────
+const IMAGE_LIBRARY: { category: string; images: { url: string; label: string }[] }[] = [
+  { category: '자연', images: [
+    { url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1920&q=85&auto=format', label: '산과 호수' },
+    { url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1920&q=85&auto=format', label: '숲속 안개' },
+    { url: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=85&auto=format', label: '푸른 숲' },
+    { url: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1920&q=85&auto=format', label: '초원과 하늘' },
+  ]},
+  { category: '꽃', images: [
+    { url: 'https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=1920&q=85&auto=format', label: '핑크 꽃' },
+    { url: 'https://images.unsplash.com/photo-1487530811176-3780de880c2d?w=1920&q=85&auto=format', label: '라벤더' },
+    { url: 'https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=1920&q=85&auto=format', label: '봄꽃' },
+    { url: 'https://images.unsplash.com/photo-1462275646964-a0e3c11f18a6?w=1920&q=85&auto=format', label: '들꽃' },
+  ]},
+  { category: '하늘', images: [
+    { url: 'https://images.unsplash.com/photo-1517483000871-1dbf64a6e1c6?w=1920&q=85&auto=format', label: '일출' },
+    { url: 'https://images.unsplash.com/photo-1534088568595-a066f410bcda?w=1920&q=85&auto=format', label: '구름' },
+    { url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1920&q=85&auto=format', label: '황금빛 하늘' },
+    { url: 'https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?w=1920&q=85&auto=format', label: '노을' },
+  ]},
+  { category: '십자가', images: [
+    { url: 'https://images.unsplash.com/photo-1507692049790-de58290a4334?w=1920&q=85&auto=format', label: '십자가 실루엣' },
+    { url: 'https://images.unsplash.com/photo-1445855743215-296f0ec091ef?w=1920&q=85&auto=format', label: '언덕 위 십자가' },
+    { url: 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=1920&q=85&auto=format', label: '빛과 십자가' },
+    { url: 'https://images.unsplash.com/photo-1474314170901-f351b68f544f?w=1920&q=85&auto=format', label: '나무 십자가' },
+  ]},
+  { category: '교회', images: [
+    { url: 'https://images.unsplash.com/photo-1438032005730-c779502df39b?w=1920&q=85&auto=format', label: '교회 건물' },
+    { url: 'https://images.unsplash.com/photo-1510936111840-65e151ad71bb?w=1920&q=85&auto=format', label: '스테인드 글라스' },
+    { url: 'https://images.unsplash.com/photo-1548625149-fc4a29cf7092?w=1920&q=85&auto=format', label: '예배당 내부' },
+    { url: 'https://images.unsplash.com/photo-1519491050282-cf00c82424cb?w=1920&q=85&auto=format', label: '교회 첨탑' },
+  ]},
+  { category: '모던', images: [
+    { url: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=85&auto=format', label: '블루 그래디언트' },
+    { url: 'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=1920&q=85&auto=format', label: '추상 웨이브' },
+    { url: 'https://images.unsplash.com/photo-1553356084-58ef4a67b2a7?w=1920&q=85&auto=format', label: '컬러 추상' },
+    { url: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1920&q=85&auto=format', label: '그래디언트' },
+  ]},
+  { category: '텍스처', images: [
+    { url: 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=1920&q=85&auto=format', label: '종이 텍스처' },
+    { url: 'https://images.unsplash.com/photo-1533628635777-112b2239b1c7?w=1920&q=85&auto=format', label: '대리석' },
+    { url: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1920&q=85&auto=format', label: '다크 텍스처' },
+    { url: 'https://images.unsplash.com/photo-1518655048521-f130df041f66?w=1920&q=85&auto=format', label: '나무결' },
+  ]},
+];
+
 interface BlockVariant {
   id: string;
   label: string;
@@ -260,6 +306,63 @@ function BlockPalette({ onAdd }: { onAdd: (type: string) => void }) {
 // ═══════════════════════════════════════════════════════════
 // Section Card (draggable + inline editable)
 // ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+// Image Library Modal
+// ═══════════════════════════════════════════════════════════
+function ImageLibraryModal({ onSelect, onClose }: { onSelect: (url: string) => void; onClose: () => void }) {
+  const [activeCategory, setActiveCategory] = useState(IMAGE_LIBRARY[0]?.category || '');
+  const activeImages = IMAGE_LIBRARY.find((c) => c.category === activeCategory)?.images || [];
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-xl w-full max-w-2xl max-h-[70vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-3 border-b">
+          <h3 className="text-base font-bold">이미지 라이브러리</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+        </div>
+        {/* Category tabs */}
+        <div className="flex gap-1 px-5 py-2 border-b overflow-x-auto">
+          {IMAGE_LIBRARY.map((cat) => (
+            <button
+              key={cat.category}
+              onClick={() => setActiveCategory(cat.category)}
+              className={`px-3 py-1 text-xs rounded-full whitespace-nowrap transition-colors ${
+                activeCategory === cat.category
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {cat.category}
+            </button>
+          ))}
+        </div>
+        {/* Image grid */}
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="grid grid-cols-2 gap-3">
+            {activeImages.map((img) => (
+              <button
+                key={img.url}
+                onClick={() => onSelect(img.url)}
+                className="group relative aspect-video rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-500 transition-all"
+              >
+                <img src={`${img.url}&w=400&q=60`} alt={img.label} className="w-full h-full object-cover" loading="lazy" />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-end">
+                  <span className="w-full text-white text-xs py-1.5 px-2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                    {img.label}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// Section Card (draggable + inline editable)
+// ═══════════════════════════════════════════════════════════
 function SectionCard({
   section,
   index,
@@ -275,7 +378,6 @@ function SectionCard({
   onVariantChange,
   onUploadImage,
   onGenerateText,
-  onGenerateImage,
   onDragStart,
   onDragOver,
   onDrop,
@@ -295,7 +397,6 @@ function SectionCard({
   onVariantChange: (variant: string) => void;
   onUploadImage: (file: File) => Promise<string>;
   onGenerateText: (prompt: string, context?: string) => Promise<string>;
-  onGenerateImage: (prompt: string) => Promise<string>;
   onDragStart: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
@@ -324,33 +425,7 @@ function SectionCard({
     }
   };
 
-  const [aiImageMenu, setAiImageMenu] = useState<string | null>(null);
-
-  const AI_IMAGE_PRESETS = [
-    { label: '자연', value: 'beautiful nature landscape, mountains, sky, peaceful' },
-    { label: '꽃', value: 'beautiful flowers, floral arrangement, soft colors' },
-    { label: '십자가', value: 'cross silhouette, spiritual, golden light, hope' },
-    { label: '교회', value: 'church building exterior, steeple, stained glass' },
-    { label: '예배', value: 'worship service, congregation, warm atmosphere' },
-    { label: '모던', value: 'modern minimalist abstract, clean lines, gradient' },
-    { label: '클래식', value: 'classic traditional painting style, warm tones, timeless' },
-    { label: '하늘', value: 'dramatic sky, clouds, sunrise, golden hour' },
-  ];
-
-  const handleAiImage = async (fieldKey: string, preset: string) => {
-    setAiImageMenu(null);
-    setAiLoading(fieldKey);
-    try {
-      const title = (props.title as string) || def?.label || section.blockType;
-      const prompt = `${preset}, ${title}, Korean church website, high quality`;
-      const url = await onGenerateImage(prompt);
-      set(fieldKey, url);
-    } catch (err) {
-      showToast('error', `AI 이미지 생성 실패: ${err instanceof Error ? err.message : '알 수 없는 오류'}`);
-    } finally {
-      setAiLoading(null);
-    }
-  };
+  const [imageLibraryField, setImageLibraryField] = useState<string | null>(null);
 
   return (
     <div
@@ -433,33 +508,14 @@ function SectionCard({
                   </button>
                 )}
                 {field.type === 'image' && (
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setAiImageMenu(aiImageMenu === field.key ? null : field.key)}
-                      disabled={aiLoading === field.key}
-                      className="flex items-center gap-0.5 text-[10px] text-purple-600 hover:text-purple-800 disabled:opacity-50"
-                      title="AI로 이미지 생성"
-                    >
-                      {aiLoading === field.key ? <span className="inline-block w-3 h-3 border border-purple-400 border-t-transparent rounded-full animate-spin" /> : <span>🎨</span>}
-                      AI
-                    </button>
-                    {aiImageMenu === field.key && (
-                      <div className="absolute right-0 top-5 z-20 bg-white border rounded-lg shadow-lg p-1.5 min-w-[140px]">
-                        <p className="text-[10px] text-gray-400 px-2 py-0.5 mb-0.5">스타일 선택</p>
-                        {AI_IMAGE_PRESETS.map((preset) => (
-                          <button
-                            key={preset.value}
-                            type="button"
-                            onClick={() => handleAiImage(field.key, preset.value)}
-                            className="block w-full text-left text-xs px-2 py-1 rounded hover:bg-purple-50 hover:text-purple-700"
-                          >
-                            {preset.label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setImageLibraryField(field.key)}
+                    className="flex items-center gap-0.5 text-[10px] text-blue-600 hover:text-blue-800"
+                    title="이미지 라이브러리"
+                  >
+                    <span>🖼️</span> 라이브러리
+                  </button>
                 )}
               </div>
               {field.type === 'textarea' ? (
@@ -516,6 +572,17 @@ function SectionCard({
             <button onClick={onToggleEdit} className="px-3 py-1 bg-gray-100 text-xs rounded-lg hover:bg-gray-200">취소</button>
           </div>
         </div>
+      )}
+
+      {/* Image Library Modal */}
+      {imageLibraryField && (
+        <ImageLibraryModal
+          onSelect={(url) => {
+            set(imageLibraryField, url);
+            setImageLibraryField(null);
+          }}
+          onClose={() => setImageLibraryField(null)}
+        />
       )}
     </div>
   );
@@ -876,10 +943,6 @@ export default function PageEditor() {
                 onGenerateText={async (prompt: string, context?: string) => {
                   const res = await apiClient.generateText(prompt, context);
                   return res.text;
-                }}
-                onGenerateImage={async (prompt: string) => {
-                  const res = await apiClient.generateImage(prompt);
-                  return res.url;
                 }}
                 onDragStart={(e) => handleSectionDragStart(e, index)}
                 onDragOver={(e) => handleSectionDragOver(e, index)}

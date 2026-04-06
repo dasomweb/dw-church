@@ -16,18 +16,4 @@ export async function aiRoutes(app: FastifyInstance) {
       return reply.status(500).send({ error: { code: 'AI_ERROR', message } });
     }
   });
-
-  // Generate image
-  app.post('/ai/generate-image', { preHandler: [requireAuth] }, async (request, reply) => {
-    const { prompt } = request.body as { prompt: string };
-    if (!prompt) return reply.status(400).send({ error: { code: 'BAD_REQUEST', message: 'prompt is required' } });
-
-    try {
-      const result = await aiService.generateImage(prompt, request.tenant!.slug);
-      return reply.send({ data: result });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'AI image generation failed';
-      return reply.status(500).send({ error: { code: 'AI_ERROR', message } });
-    }
-  });
 }

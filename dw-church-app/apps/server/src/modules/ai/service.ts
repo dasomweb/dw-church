@@ -1,6 +1,4 @@
 import { env } from '../../config/env.js';
-import * as r2 from '../../config/r2.js';
-import { randomUUID } from 'crypto';
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 
@@ -39,50 +37,4 @@ export async function generateText(prompt: string, context?: string): Promise<st
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) throw new Error('No text generated');
   return text;
-}
-
-// ─── Image Generation (Nano Banana) ──────────────────────
-
-export async function generateImage(
-  prompt: string,
-  tenantSlug: string,
-): Promise<{ url: string }> {
-  const apiKey = env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error('GEMINI_API_KEY not configured');
-
-  const fullPrompt = `High quality, professional photograph for a church website. ${prompt}. Clean, modern, warm lighting.`;
-
-  const res = await fetch(
-    `${GEMINI_BASE}/models/nano-banana-pro-preview:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: fullPrompt }] }],
-        generationConfig: {
-          responseModalities: ['IMAGE'],
-        },
-      }),
-    },
-  );
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Image generation API error: ${res.status} ${err}`);
-  }
-
-  const data = await res.json();
-  const parts = data.candidates?.[0]?.content?.parts;
-  const imagePart = parts?.find((p: { inlineData?: { mimeType: string; data: string } }) => p.inlineData);
-  if (!imagePart?.inlineData?.data) throw new Error('No image generated');
-
-  const mimeType = imagePart.inlineData.mimeType || 'image/jpeg';
-  const ext = mimeType.includes('png') ? 'png' : 'jpg';
-
-  // Upload to R2
-  const buffer = Buffer.from(imagePart.inlineData.data, 'base64');
-  const key = `tenant_${tenantSlug}/ai/${randomUUID()}.${ext}`;
-  const url = await r2.uploadFile(key, buffer, mimeType);
-
-  return { url };
 }
