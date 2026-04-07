@@ -4,7 +4,7 @@ import { validateSlug, validateSchemaName } from './validate-schema.js';
 /**
  * Clone the template schema and provision default data for a new tenant.
  */
-export async function createTenantSchema(slug: string): Promise<void> {
+export async function createTenantSchema(slug: string, churchName?: string): Promise<void> {
   validateSlug(slug);
   const schema = validateSchemaName(`tenant_${slug}`);
 
@@ -13,7 +13,7 @@ export async function createTenantSchema(slug: string): Promise<void> {
     `SELECT clone_schema('tenant_template', '${schema}')`,
   );
 
-  await seedDefaultData(slug);
+  await seedDefaultData(slug, churchName);
 }
 
 /**
@@ -28,7 +28,7 @@ export async function deleteTenantSchema(slug: string): Promise<void> {
 /**
  * Insert default rows a new tenant needs to function.
  */
-export async function seedDefaultData(slug: string): Promise<void> {
+export async function seedDefaultData(slug: string, churchName?: string): Promise<void> {
   validateSlug(slug);
   const schema = validateSchemaName(`tenant_${slug}`);
 
@@ -304,7 +304,7 @@ export async function seedDefaultData(slug: string): Promise<void> {
 
   // 7. Default settings
   const settings = [
-    { key: 'church_name', value: '' },
+    { key: 'church_name', value: churchName || '' },
     { key: 'church_address', value: '' },
     { key: 'church_phone', value: '' },
     { key: 'church_email', value: '' },

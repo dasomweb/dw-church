@@ -82,8 +82,8 @@ export async function register(input: RegisterInput) {
     },
   });
 
-  // Provision tenant schema
-  await createTenantSchema(slug);
+  // Provision tenant schema with church name for default settings
+  await createTenantSchema(slug, churchName);
 
   const tokens = buildTokenResponse({
     id: user.id,
