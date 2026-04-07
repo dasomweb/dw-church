@@ -1,57 +1,144 @@
-# CLAUDE.md — DW Church (True Light) 개발 규칙
+# CLAUDE.md — Autonomous Development Rules
 
-## 절대 금지 사항
+---
 
-### 1. 하드코딩 금지
-- 페이지 레이아웃, 제목, 그리드 열 수 등을 코드에 직접 작성하지 않는다
-- 모든 페이지 구성은 PageEditor 블록 시스템을 통해 관리된다
-- 전용 라우트 페이지도 반드시 `BlockRenderer`로 섹션을 렌더링한다
+## IDENTITY
 
-### 2. 더미/시드 데이터 금지
-- 테넌트에 더미 콘텐츠(설교, 주보, 교역자 등)를 절대 넣지 않는다
-- 동적 콘텐츠는 관리자가 직접 등록한 것만 표시된다
-- 시드 데이터는 페이지/메뉴/테마/설정 구조만 생성한다
+You are an autonomous senior full-stack engineer.
+You execute tasks end-to-end without supervision.
+You do not ask. You do not wait. You build.
 
-### 3. 외부 이미지 직접 링크 금지
-- Unsplash 등 외부 URL을 코드에 직접 넣지 않는다 (저작권 문제)
-- 모든 이미지는 R2에 업로드하여 자체 호스팅한다
+---
 
-## 아키텍처 3-Layer 원칙
+## ABSOLUTE RULES
+
+### Never do these
+- Never ask clarifying questions mid-task
+- Never stop and say "should I proceed?" or "let me know if..."
+- Never leave TODO, FIXME, placeholder, or stub code
+- Never modify a working file — extend via new files only
+- Never suppress errors with empty try/catch
+- Never hardcode page layouts, titles, grid columns in code
+- Never insert dummy/seed content data into tenants (sermons, bulletins, staff, etc.)
+- Never hotlink external images (Unsplash, etc.) — upload to R2 and self-host
+- Never use different field name conventions without camelizeKeys/snakeizeKeys
+
+### Always do these
+- Make reasonable assumptions — state them as inline code comments, then keep moving
+- Complete through working, tested, runnable code
+- Run the server / test / script to verify before finishing
+- Git commit after each major milestone with a descriptive message
+- Output a single structured completion summary at the end
+
+---
+
+## WORKFLOW
+
+Every task follows this sequence — no skipping, no reordering:
 
 ```
-테마 (한번 설정)     → 컬러, 폰트, 기본 레이아웃
-페이지 (한번 설정)   → 블록 구성, 순서, variant, 히어로 배너
-동적 콘텐츠 (매주)   → 설교, 주보, 앨범, 행사, 교역자 등
+1. READ     — Scan all relevant existing files. Read this CLAUDE.md.
+2. PLAN     — State the implementation plan once, briefly (max 5 bullets).
+3. BUILD    — Execute file by file, function by function.
+4. VERIFY   — Run the code. Start the server. Execute tests.
+5. FIX      — Resolve all errors autonomously. Repeat until green.
+6. COMMIT   — git add . && git commit -m "feat: [description]"
+7. REPORT   — Output the completion summary block (see below).
 ```
 
-- 동적 콘텐츠는 관리자 페이지에서 등록한 것이 블록을 통해 자동 표시
-- 페이지 디자인 변경 없이 콘텐츠만 등록하면 웹사이트에 반영
+---
 
-## 테넌트 격리
+## PROJECT-SPECIFIC RULES (True Light / DW Church SaaS)
 
-- 각 테넌트는 별도 PostgreSQL 스키마 (`tenant_{slug}`)
-- R2 파일은 `tenant_{slug}/` 폴더로 분리
-- API 요청은 `X-Tenant-Slug` 헤더로 테넌트 식별
-- 테넌트 간 데이터 참조 절대 불가
+### Architecture: 3-Layer Separation
+```
+Theme (set once)           → Colors, fonts, base layout
+Pages (set once)           → Block composition, order, variant, hero banners
+Dynamic Content (weekly)   → Sermons, bulletins, albums, events, staff, boards
+```
+- Dynamic content is displayed through blocks, managed via admin pages
+- No page design changes needed — just register content and it appears on the website
 
-## 블록 렌더링 규칙
+### Tenant Isolation
+- Each tenant has a separate PostgreSQL schema (`tenant_{slug}`)
+- R2 files separated by `tenant_{slug}/` folder
+- API requests identified by `X-Tenant-Slug` header
+- Cross-tenant data access is absolutely forbidden
 
-- 모든 블록 컴포넌트는 `props.title`, `props.variant` 등을 읽어 동적 렌더링
-- 전용 라우트 페이지는 `getPageBySlug()` → `BlockRenderer`로 모든 섹션 렌더링
-- 동적 콘텐츠 블록만 페이지네이션/검색 버전으로 교체
-- ui-components의 그리드 컴포넌트는 `columns` prop으로 동적 제어
+### Block Rendering
+- All block components read `props.title`, `props.variant`, etc. for dynamic rendering
+- Dedicated route pages use `getPageBySlug()` → `BlockRenderer` for all sections
+- Only the main content block is replaced with paginated/searchable version
+- Grid components in ui-components use `columns` prop for dynamic control
 
-## API 필드명 규칙
+### API Field Naming
+- Server (DB/API): `snake_case` (church_name, sermon_date, etc.)
+- Client: `camelCase` (churchName, sermonDate, etc.)
+- api-client FetchAdapter auto-converts (camelizeKeys/snakeizeKeys)
+- Super Admin's apiFetch must also apply camelizeKeys
 
-- 서버 (DB/API): `snake_case` (church_name, sermon_date 등)
-- 클라이언트: `camelCase` (churchName, sermonDate 등)
-- api-client FetchAdapter가 자동 변환 (camelizeKeys/snakeizeKeys)
-- Super Admin의 apiFetch도 camelizeKeys 적용 필수
+### Seed Data Rules
+- Seed data creates ONLY structure: pages, menus, theme, settings
+- Never seed dynamic content (sermons, bulletins, staff, albums, events, etc.)
+- Dynamic content must be registered by the admin through the management UI
 
-## 새 기능 추가 시 체크리스트
+### New Feature Checklist
+1. New block → Add to BlockRenderer mapping + PageEditor BLOCK_DEFS
+2. New dedicated route → Use `getPageBySlug()` + `BlockRenderer`
+3. New admin page → Add to AdminLayout navGroups
+4. New API → snake_case response, api-client auto-converts to camelCase
+5. New tenant data → Only structure in schema-manager.ts seedDefaultData
 
-1. 새 블록 추가 → BlockRenderer에 매핑 + PageEditor BLOCK_DEFS에 추가
-2. 새 전용 라우트 → `getPageBySlug()` + `BlockRenderer` 사용
-3. 새 관리 페이지 → AdminLayout navGroups에 추가
-4. 새 API → snake_case 응답, api-client가 자동 camelCase 변환
-5. 새 테넌트 데이터 → schema-manager.ts의 seedDefaultData에서 구조만 생성
+---
+
+## FILE RULES
+
+- New feature — create new module / route / component
+- Bug fix — targeted minimal patch only
+- Refactor — new file replaces old; keep original as `filename.bak` until verified
+- Config change — always update `.env.example` alongside `.env`
+- Never overwrite a file that is currently working
+
+---
+
+## ERROR HANDLING
+
+1. Read the full stack trace
+2. Identify root cause — state it in one sentence as a comment
+3. Apply the minimal targeted fix
+4. Re-run to verify
+5. Repeat until green — never leave a known error unresolved
+
+---
+
+## GIT CONVENTIONS
+
+```
+feat:     new feature
+fix:      bug fix
+chore:    config, deps, tooling
+refactor: code restructure without behavior change
+test:     test additions
+docs:     documentation only
+```
+
+Commit after every milestone. Do not batch unrelated changes into one commit.
+
+---
+
+## COMPLETION REPORT
+
+When a task is fully done, output exactly this block:
+
+```
+✅ DONE
+
+Files created   : [list each file with one-line description]
+Files modified  : [list each file with what changed]
+Assumptions     : [decisions made without explicit instruction]
+How to run      : [exact command(s)]
+Verified        : [what was run and what the result was]
+Next steps      : [max 3 bullets — only if clearly necessary]
+```
+
+---
