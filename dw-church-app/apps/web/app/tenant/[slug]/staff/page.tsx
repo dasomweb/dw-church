@@ -1,8 +1,7 @@
-import { getStaff, getPageBySlug } from '@/lib/api';
+import { getStaff, getPageBySlug, getChurchSettings } from '@/lib/api';
 import { BlockRenderer } from '@/components/BlockRenderer';
 import { StaffGridClient } from './StaffGridClient';
 import { buildTenantMetadata } from '@/lib/metadata';
-import { variantToColumns } from '@/lib/page-props';
 import type { Metadata } from 'next';
 
 interface StaffPageProps {
@@ -21,17 +20,22 @@ export default async function StaffPage({ params }: StaffPageProps) {
   try { page = await getPageBySlug(slug, 'staff'); } catch { page = null; }
   const sections = page?.sections?.filter((s: any) => s.isVisible).sort((a: any, b: any) => a.sortOrder - b.sortOrder) ?? [];
 
-  const staff = await getStaff(slug);
+  const [staff, settings] = await Promise.all([
+    getStaff(slug),
+    getChurchSettings(slug).catch(() => ({})),
+  ]);
+
+  const displaySettings = (settings as any)?.staffDisplay || {};
 
   return (
     <div>
       {sections.map((section: any) => {
         if (section.blockType === 'staff_grid') {
-          const variant = section.props?.variant || 'grid-4';
-          const columns = variantToColumns(variant, 4);
-          const grouped = variant === 'grouped';
-          const groupBy = section.props?.groupBy || 'role';
-          const customGroups = section.props?.customGroups || '';
+          const layout = displaySettings.layout || 'grid';
+          const grouped = layout === 'grouped';
+          const columns = grouped ? 4 : (displaySettings.columns || 4);
+          const groupBy = displaySettings.groupBy || 'role';
+          const customGroups = displaySettings.customGroups || '';
           return (
             <section key={section.id} className="px-4 py-10 sm:px-6 sm:py-16" style={{ backgroundColor: 'var(--dw-surface)' }}>
               <div className="mx-auto max-w-7xl">

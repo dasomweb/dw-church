@@ -8,6 +8,8 @@ import {
   useDeleteStaff,
   useStaffDepartments,
   useReorderStaff,
+  useChurchSettings,
+  useUpdateChurchSettings,
 } from '@dw-church/api-client';
 import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, ImageUpload, useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
 
@@ -27,7 +29,7 @@ interface StaffFormData {
 }
 
 export default function StaffManagement() {
-  const [view, setView] = useState<'list' | 'edit'>('list');
+  const [view, setView] = useState<'list' | 'edit' | 'display'>('list');
   const [editingItem, setEditingItem] = useState<Staff | null>(null);
   const [params, setParams] = useState<StaffListParams>({ search: '' });
   const [deleteTarget, setDeleteTarget] = useState<{id: string; name: string} | null>(null);
@@ -35,6 +37,8 @@ export default function StaffManagement() {
   const { showToast } = useToast();
   const { data: staffList, isLoading, error } = useStaff(params);
   const { data: departments } = useStaffDepartments();
+  const { data: settings } = useChurchSettings();
+  const updateSettings = useUpdateChurchSettings();
   const createMutation = useCreateStaff();
   const updateMutation = useUpdateStaff();
   const deleteMutation = useDeleteStaff();
@@ -260,6 +264,131 @@ export default function StaffManagement() {
     );
   }
 
+  // ─── Display Settings Tab ─────────────────────
+  if (view === 'display') {
+    const staffDisplay = (settings as any)?.staffDisplay || {};
+    const displayLayout = staffDisplay.layout || 'grid';
+    const displayColumns = staffDisplay.columns || 4;
+    const displayGroupBy = staffDisplay.groupBy || 'role';
+    const displayGroups: string[] = (staffDisplay.customGroups || '').split(',').map((s: string) => s.trim()).filter(Boolean);
+    const [localLayout, setLocalLayout] = useState(displayLayout);
+    const [localColumns, setLocalColumns] = useState(displayColumns);
+    const [localGroupBy, setLocalGroupBy] = useState(displayGroupBy);
+    const [localGroups, setLocalGroups] = useState<string[]>(displayGroups);
+    const [newGroup, setNewGroup] = useState('');
+
+    const handleSaveDisplay = () => {
+      updateSettings.mutate({
+        staffDisplay: {
+          layout: localLayout,
+          columns: localColumns,
+          groupBy: localGroupBy,
+          customGroups: localGroups.join(','),
+        },
+      } as any, {
+        onSuccess: () => showToast('success', '표시 설정이 저장되었습니다.'),
+        onError: () => showToast('error', '저장 중 오류가 발생했습니다.'),
+      });
+    };
+
+    const handleAddGroup = () => {
+      if (!newGroup.trim() || localGroups.includes(newGroup.trim())) return;
+      setLocalGroups([...localGroups, newGroup.trim()]);
+      setNewGroup('');
+    };
+
+    const handleMoveGroup = (index: number, dir: 'up' | 'down') => {
+      const swapIdx = dir === 'up' ? index - 1 : index + 1;
+      if (swapIdx < 0 || swapIdx >= localGroups.length) return;
+      const arr = [...localGroups];
+      [arr[index], arr[swapIdx]] = [arr[swapIdx], arr[index]];
+      setLocalGroups(arr);
+    };
+
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold">교역자 관리</h2>
+        </div>
+        <div className="flex gap-2 mb-6">
+          <button onClick={() => setView('list')} className="px-4 py-2 text-sm rounded-lg bg-gray-100 hover:bg-gray-200">교역자 목록</button>
+          <button className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white">표시 설정</button>
+        </div>
+
+        <div className="max-w-xl space-y-6">
+          <FormSection title="레이아웃">
+            <FormRow>
+              <FormField label="표시 방식">
+                <select value={localLayout} onChange={(e) => setLocalLayout(e.target.value)} className={selectClass}>
+                  <option value="grid">전체 그리드</option>
+                  <option value="grouped">직분별 그룹</option>
+                </select>
+              </FormField>
+              {localLayout === 'grid' && (
+                <FormField label="열 수">
+                  <select value={localColumns} onChange={(e) => setLocalColumns(Number(e.target.value))} className={selectClass}>
+                    <option value={2}>2열</option>
+                    <option value={3}>3열</option>
+                    <option value={4}>4열</option>
+                  </select>
+                </FormField>
+              )}
+            </FormRow>
+          </FormSection>
+
+          {localLayout === 'grouped' && (
+            <FormSection title="그룹 설정">
+              <FormField label="그룹 기준">
+                <select value={localGroupBy} onChange={(e) => setLocalGroupBy(e.target.value)} className={selectClass}>
+                  <option value="role">직분 (role)</option>
+                  <option value="department">부서 (department)</option>
+                </select>
+              </FormField>
+
+              <FormField label="그룹 순서">
+                <div className="space-y-1.5">
+                  {localGroups.length > 0 && (
+                    <div className="space-y-1">
+                      {localGroups.map((g, i) => (
+                        <div key={`${g}-${i}`} className="flex items-center gap-1 bg-gray-50 rounded-lg px-3 py-2">
+                          <span className="text-xs text-gray-400 w-5">{i + 1}</span>
+                          <span className="flex-1 text-sm font-medium">{g}</span>
+                          <button type="button" onClick={() => handleMoveGroup(i, 'up')} disabled={i === 0} className="text-gray-400 hover:text-gray-700 disabled:opacity-20 px-1">▲</button>
+                          <button type="button" onClick={() => handleMoveGroup(i, 'down')} disabled={i === localGroups.length - 1} className="text-gray-400 hover:text-gray-700 disabled:opacity-20 px-1">▼</button>
+                          <button type="button" onClick={() => setLocalGroups(localGroups.filter((_, j) => j !== i))} className="text-red-400 hover:text-red-600 px-1">×</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex gap-1">
+                    <input
+                      type="text"
+                      value={newGroup}
+                      onChange={(e) => setNewGroup(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddGroup(); } }}
+                      placeholder="그룹명 (예: 담임목사)"
+                      className={inputClass}
+                    />
+                    <button type="button" onClick={handleAddGroup} disabled={!newGroup.trim()} className="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50">추가</button>
+                  </div>
+                  <p className="text-xs text-gray-400">비어있으면 데이터에서 자동 분류됩니다</p>
+                </div>
+              </FormField>
+            </FormSection>
+          )}
+
+          <button
+            onClick={handleSaveDisplay}
+            disabled={updateSettings.isPending}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+          >
+            {updateSettings.isPending ? '저장 중...' : '저장'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
@@ -270,6 +399,11 @@ export default function StaffManagement() {
         >
           새 교역자
         </button>
+      </div>
+
+      <div className="flex gap-2 mb-4">
+        <button onClick={() => setView('list')} className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white">교역자 목록</button>
+        <button onClick={() => setView('display')} className="px-4 py-2 text-sm rounded-lg bg-gray-100 hover:bg-gray-200">표시 설정</button>
       </div>
 
       <div className="flex gap-3 mb-4 flex-wrap">
