@@ -1324,13 +1324,23 @@ function UsersTab() {
                     </td>
                     <td className="px-5 py-3 text-gray-700">{u.tenantName}</td>
                     <td className="px-5 py-3">
-                      {u.isLocked ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                          잠금
+                      {u.role === 'super_admin' ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                          활성
                         </span>
                       ) : (
-                        <StatusBadge active={u.isActive} />
+                        <button
+                          onClick={() => handleToggleActive(u)}
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium cursor-pointer transition-colors ${
+                            u.isActive
+                              ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                              : 'bg-red-100 text-red-700 hover:bg-red-200'
+                          }`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${u.isActive ? 'bg-green-500' : 'bg-red-500'}`} />
+                          {u.isActive ? '활성' : '비활성'}
+                        </button>
                       )}
                     </td>
                     <td className="px-5 py-3 text-gray-500 text-xs">{formatDate(u.createdAt)}</td>
@@ -1356,16 +1366,6 @@ function UsersTab() {
                         >
                           {u.isLocked ? '해제' : '잠금'}
                         </button>
-                        {u.role !== 'super_admin' && (
-                          <button
-                            onClick={() => handleToggleActive(u)}
-                            className={`px-2 py-1 text-xs rounded transition-colors ${
-                              u.isActive ? 'text-red-600 hover:bg-red-50' : 'text-green-600 hover:bg-green-50'
-                            }`}
-                          >
-                            {u.isActive ? '비활성화' : '활성화'}
-                          </button>
-                        )}
                         <button
                           onClick={() => setTenantTransferUser(u)}
                           className="px-2 py-1 text-xs text-purple-600 hover:bg-purple-50 rounded transition-colors"
