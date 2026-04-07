@@ -10,7 +10,7 @@ export async function RecentBulletinsBlock({ props, slug }: RecentBulletinsBlock
   const limit = (props.limit as number) ?? 4;
   const title = (props.title as string) || '최근 주보';
   const variant = (props.variant as string) || 'list';
-  const columns = variant === 'grid' ? 3 : 1;
+  const columns = variant === 'list' ? 1 : (parseInt(variant.replace('grid-', '')) || 3);
 
   let bulletins;
   try {

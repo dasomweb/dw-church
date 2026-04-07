@@ -16,6 +16,9 @@ const GRID_COLS: Record<number, string> = {
   1: 'space-y-3',
   2: 'grid grid-cols-1 sm:grid-cols-2 gap-4',
   3: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4',
+  4: 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4',
+  5: 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4',
+  6: 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3',
 };
 
 export function BulletinListClient({ initialData, total, totalPages, currentPage, slug, columns = 1 }: BulletinListClientProps) {

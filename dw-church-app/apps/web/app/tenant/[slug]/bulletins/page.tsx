@@ -26,7 +26,7 @@ export default async function BulletinsPage({ params, searchParams }: BulletinsP
   ]);
 
   const variant = (blockProps.variant as string) || 'list';
-  const columns = variant === 'grid' ? 3 : 1;
+  const columns = variant === 'list' ? 1 : (parseInt(variant.replace('grid-', '')) || 3);
 
   return (
     <div>
