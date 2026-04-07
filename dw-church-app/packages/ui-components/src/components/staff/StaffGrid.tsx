@@ -37,7 +37,7 @@ export function StaffGrid({
   showFilter = true,
   className = '',
   onItemClick,
-  layout = 'featured',
+  layout = 'grid',
   photoStyle = 'rect',
   columns = 3,
   showItems = 'name,role,department,bio',
@@ -138,9 +138,6 @@ export function StaffGrid({
           {/* Grid members */}
           {gridMembers.length > 0 && (
             <div>
-              {featured.length > 0 && (
-                <h3 className="mb-6 text-xl font-bold text-gray-900">교역자 소개</h3>
-              )}
               <div className={`grid gap-6 ${gridCols}`}>
                 {gridMembers.map((member) => (
                   <StaffCard
