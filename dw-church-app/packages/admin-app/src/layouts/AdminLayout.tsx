@@ -89,7 +89,7 @@ export function AdminLayout() {
   const session = useAuthStore((s) => s.session);
   const logout = useAuthStore((s) => s.logout);
   const { data: settings } = useChurchSettings();
-  const churchName = (settings as any)?.churchName || (settings as any)?.church_name || session?.user?.tenantSlug || 'DW Church';
+  const churchName = (settings as any)?.churchName || (settings as any)?.church_name || session?.user?.tenantSlug || 'True Light';
 
   const pageTitle = pageTitles[location.pathname] || '관리';
   const user = session?.user;

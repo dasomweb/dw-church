@@ -55,7 +55,7 @@ export default function LoginPage() {
           <svg className="w-12 h-12 text-blue-600 mx-auto mb-3" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18L19.35 7.5 12 10.82 4.65 7.5 12 4.18z" />
           </svg>
-          <h1 className="text-2xl font-bold text-gray-900">DW Church</h1>
+          <h1 className="text-2xl font-bold text-gray-900">True Light</h1>
           <p className="text-sm text-gray-500 mt-1">관리자 로그인</p>
         </div>
 

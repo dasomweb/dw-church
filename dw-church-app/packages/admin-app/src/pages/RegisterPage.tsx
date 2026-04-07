@@ -60,7 +60,7 @@ export default function RegisterPage() {
             <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18L19.35 7.5 12 10.82 4.65 7.5 12 4.18z" />
           </svg>
           <h1 className="text-2xl font-bold text-gray-900">교회 등록</h1>
-          <p className="text-sm text-gray-500 mt-1">DW Church 플랫폼에 교회를 등록하세요</p>
+          <p className="text-sm text-gray-500 mt-1">True Light 플랫폼에 교회를 등록하세요</p>
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
