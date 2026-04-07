@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { useLogout } from '@dw-church/api-client';
+import { useLogout, useChurchSettings } from '@dw-church/api-client';
 import { useAuthStore } from '../stores/auth';
 
 const navItems = [
@@ -212,6 +212,8 @@ export function AdminLayout() {
   const logoutMutation = useLogout();
   const session = useAuthStore((s) => s.session);
   const logout = useAuthStore((s) => s.logout);
+  const { data: settings } = useChurchSettings();
+  const churchName = (settings as any)?.churchName || (settings as any)?.church_name || session?.user?.tenantSlug || 'DW Church';
 
   const pageTitle = pageTitles[location.pathname] || '관리';
   const user = session?.user;
@@ -250,7 +252,7 @@ export function AdminLayout() {
           <svg className="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18L19.35 7.5 12 10.82 4.65 7.5 12 4.18z" />
           </svg>
-          <span className="text-lg font-bold text-gray-900">DW Church</span>
+          <span className="text-lg font-bold text-gray-900">{churchName}</span>
           {/* Mobile close button */}
           <button
             className="ml-auto lg:hidden p-1 text-gray-500 hover:text-gray-700"
