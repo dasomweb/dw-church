@@ -162,6 +162,15 @@ export interface ChurchSettings {
   churchPhone: string;
   churchEmail: string;
   churchWebsite: string;
+  // Branding
+  logoUrl: string;
+  faviconUrl: string;
+  // SEO
+  seoTitle: string;
+  seoDescription: string;
+  seoKeywords: string;
+  ogImageUrl: string;
+  // SNS
   socialYoutube: string;
   socialInstagram: string;
   socialFacebook: string;

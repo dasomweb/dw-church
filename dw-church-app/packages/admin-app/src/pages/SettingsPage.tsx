@@ -136,6 +136,51 @@ export default function SettingsPage() {
           </div>
         </section>
 
+        {/* Branding section */}
+        <section className="bg-white rounded-lg border border-gray-200 p-6">
+          <h2 className="text-base font-semibold text-gray-900 mb-1">브랜딩</h2>
+          <p className="text-xs text-gray-500 mb-4">로고와 파비콘은 사이트 헤더와 브라우저 탭에 표시됩니다.</p>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="logoUrl" className="block text-sm font-medium text-gray-700 mb-1">로고 이미지 URL</label>
+              <input id="logoUrl" type="url" {...register('logoUrl')} placeholder="https://example.com/logo.png" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" />
+              <p className="text-xs text-gray-400 mt-1">권장: 가로형 PNG, 높이 40~60px, 투명 배경</p>
+            </div>
+            <div>
+              <label htmlFor="faviconUrl" className="block text-sm font-medium text-gray-700 mb-1">파비콘 URL</label>
+              <input id="faviconUrl" type="url" {...register('faviconUrl')} placeholder="https://example.com/favicon.ico" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" />
+              <p className="text-xs text-gray-400 mt-1">권장: 32x32 또는 64x64 PNG/ICO</p>
+            </div>
+          </div>
+        </section>
+
+        {/* SEO section */}
+        <section className="bg-white rounded-lg border border-gray-200 p-6">
+          <h2 className="text-base font-semibold text-gray-900 mb-1">SEO (검색 엔진 최적화)</h2>
+          <p className="text-xs text-gray-500 mb-4">Google 등 검색 엔진에 표시되는 정보입니다.</p>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="seoTitle" className="block text-sm font-medium text-gray-700 mb-1">사이트 제목</label>
+              <input id="seoTitle" type="text" {...register('seoTitle')} placeholder="교회이름 - 사랑과 은혜의 교회" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" />
+              <p className="text-xs text-gray-400 mt-1">비워두면 교회 이름이 사용됩니다.</p>
+            </div>
+            <div>
+              <label htmlFor="seoDescription" className="block text-sm font-medium text-gray-700 mb-1">사이트 설명</label>
+              <textarea id="seoDescription" {...register('seoDescription')} rows={3} placeholder="교회를 소개하는 간단한 설명 (150자 이내 권장)" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" />
+            </div>
+            <div>
+              <label htmlFor="seoKeywords" className="block text-sm font-medium text-gray-700 mb-1">키워드</label>
+              <input id="seoKeywords" type="text" {...register('seoKeywords')} placeholder="교회, 예배, 설교, 지역명" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" />
+              <p className="text-xs text-gray-400 mt-1">쉼표로 구분</p>
+            </div>
+            <div>
+              <label htmlFor="ogImageUrl" className="block text-sm font-medium text-gray-700 mb-1">OG 이미지 URL</label>
+              <input id="ogImageUrl" type="url" {...register('ogImageUrl')} placeholder="https://example.com/og-image.jpg" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" />
+              <p className="text-xs text-gray-400 mt-1">SNS 공유 시 표시되는 이미지 (1200x630 권장)</p>
+            </div>
+          </div>
+        </section>
+
         {/* SNS section */}
         <section className="bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="text-base font-semibold text-gray-900 mb-4">SNS 링크</h2>

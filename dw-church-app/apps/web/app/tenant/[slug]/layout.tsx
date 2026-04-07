@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getChurchSettings, getMenuItems, getTheme } from '@/lib/api';
 import MobileMenu from '@/components/MobileMenu';
@@ -94,6 +95,42 @@ function getFooterStyle(style: string | undefined): React.CSSProperties {
   }
 }
 
+// ─── Metadata ────────────────────────────────────────────────
+
+export async function generateMetadata({ params }: TenantLayoutProps): Promise<Metadata> {
+  const { slug } = await params;
+  let settings: ChurchSettings | null = null;
+  try {
+    settings = await getChurchSettings(slug);
+  } catch { /* fallback */ }
+
+  const churchName = settings?.churchName ?? settings?.name ?? slug;
+  const seoTitle = settings?.seoTitle ?? settings?.seo_title ?? churchName;
+  const seoDescription = settings?.seoDescription ?? settings?.seo_description ?? `${churchName} - 교회 웹사이트`;
+  const seoKeywords = settings?.seoKeywords ?? settings?.seo_keywords ?? '';
+  const ogImageUrl = settings?.ogImageUrl ?? settings?.og_image_url ?? null;
+  const faviconUrl = settings?.faviconUrl ?? settings?.favicon_url ?? null;
+
+  return {
+    title: { default: seoTitle, template: `%s | ${churchName}` },
+    description: seoDescription,
+    keywords: seoKeywords ? seoKeywords.split(',').map((k: string) => k.trim()) : undefined,
+    openGraph: {
+      title: seoTitle,
+      description: seoDescription,
+      type: 'website',
+      ...(ogImageUrl ? { images: [{ url: ogImageUrl, width: 1200, height: 630 }] } : {}),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: seoTitle,
+      description: seoDescription,
+      ...(ogImageUrl ? { images: [ogImageUrl] } : {}),
+    },
+    icons: faviconUrl ? { icon: faviconUrl, apple: faviconUrl } : undefined,
+  };
+}
+
 // ─── Component ───────────────────────────────────────────────
 
 export default async function TenantLayout({ children, params }: TenantLayoutProps) {
@@ -147,7 +184,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
 
   const navLinkColor = isDarkHeader ? 'var(--dw-background)' : 'var(--dw-text)';
 
-  // Logo: settings.logoUrl or settings.logo_url, fallback to church name
+  // Branding (SEO/favicon handled in generateMetadata above)
   const logoUrl = settings?.logoUrl ?? settings?.logo_url ?? null;
   const churchName = settings?.name ?? settings?.churchName ?? slug;
 

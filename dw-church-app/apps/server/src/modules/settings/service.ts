@@ -6,6 +6,15 @@ const ALLOWED_KEYS = [
   'church_phone',
   'church_email',
   'church_website',
+  // Branding
+  'logo_url',
+  'favicon_url',
+  // SEO
+  'seo_title',
+  'seo_description',
+  'seo_keywords',
+  'og_image_url',
+  // SNS
   'social_youtube',
   'social_instagram',
   'social_facebook',
