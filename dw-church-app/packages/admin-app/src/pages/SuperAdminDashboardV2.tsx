@@ -2,6 +2,20 @@ import { useEffect, useState, useCallback } from 'react';
 import { useAuthStore } from '../stores/auth';
 import { useToast } from '../components';
 
+// snake_case → camelCase
+function toCamel(str: string): string {
+  return str.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+}
+function camelizeKeys(obj: unknown): unknown {
+  if (Array.isArray(obj)) return obj.map(camelizeKeys);
+  if (obj !== null && typeof obj === 'object' && !(obj instanceof Date)) {
+    return Object.fromEntries(
+      Object.entries(obj as Record<string, unknown>).map(([k, v]) => [toCamel(k), camelizeKeys(v)])
+    );
+  }
+  return obj;
+}
+
 // ─── Types ───────────────────────────────────────────────
 interface TenantStats {
   sermonCount: number;
@@ -138,7 +152,8 @@ function useAdminApi() {
         const err = await res.json().catch(() => ({ error: { message: res.statusText } }));
         throw new Error(err.error?.message || `HTTP ${res.status}`);
       }
-      return res.json();
+      const json = await res.json();
+      return camelizeKeys(json) as T;
     },
     [session?.accessToken],
   );
