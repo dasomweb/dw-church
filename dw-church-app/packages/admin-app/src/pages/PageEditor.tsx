@@ -86,7 +86,7 @@ interface BlockDef {
 
 const DYNAMIC_BLOCK_TYPES = new Set([
   'banner_slider', 'hero_image_slider', 'recent_sermons', 'recent_bulletins',
-  'album_gallery', 'staff_grid', 'event_grid', 'history_timeline', 'board',
+  'recent_columns', 'album_gallery', 'staff_grid', 'event_grid', 'history_timeline', 'board',
 ]);
 
 const BLOCK_DEFS: BlockDef[] = [
@@ -109,6 +109,7 @@ const BLOCK_DEFS: BlockDef[] = [
   { type: 'staff_grid', label: '교역자', category: '콘텐츠', icon: '👥', nature: 'dynamic', description: '교역자 카드', variants: [{ id: 'grid-4', label: '4열' }, { id: 'grid-3', label: '3열' }, { id: 'grid-2', label: '2열' }, { id: 'grouped', label: '직분별 그룹' }], defaultProps: { limit: 20 }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'limit', label: '표시 개수', type: 'number' }, { key: 'groupBy', label: '그룹 기준', type: 'select', options: [{ label: '직분 (role)', value: 'role' }, { label: '부서 (department)', value: 'department' }] }, { key: 'customGroups', label: '그룹 순서', type: 'tags' }] },
   { type: 'history_timeline', label: '교회 연혁', category: '콘텐츠', icon: '📜', nature: 'dynamic', description: '세로 타임라인', variants: [{ id: 'left', label: '좌측' }, { id: 'alternating', label: '교차' }], defaultProps: {}, editableFields: [{ key: 'title', label: '제목', type: 'text' }] },
 
+  { type: 'recent_columns', label: '목회칼럼', category: '콘텐츠', icon: '✍️', nature: 'dynamic', description: '최근 목회칼럼', variants: [{ id: 'grid-3', label: '3열' }, { id: 'grid-2', label: '2열' }, { id: 'grid-4', label: '4열' }, { id: 'list', label: '리스트' }], defaultProps: { limit: 6 }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'limit', label: '표시 개수', type: 'number' }] },
   { type: 'board', label: '게시판', category: '콘텐츠', icon: '📋', nature: 'dynamic', description: '게시판', variants: [{ id: 'list', label: '리스트' }, { id: 'grid-2', label: '2열' }, { id: 'grid-3', label: '3열' }], defaultProps: { boardSlug: '', limit: 10 }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'boardSlug', label: '게시판 슬러그', type: 'text' }, { key: 'limit', label: '표시 개수', type: 'number' }] },
 
   // ─── Text ──────────────────────────────────────

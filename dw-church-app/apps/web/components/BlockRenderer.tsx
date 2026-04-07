@@ -5,6 +5,7 @@ import { TextImageBlock } from './blocks/TextImageBlock';
 import { TextOnlyBlock } from './blocks/TextOnlyBlock';
 import { RecentSermonsBlock } from './blocks/RecentSermonsBlock';
 import { RecentBulletinsBlock } from './blocks/RecentBulletinsBlock';
+import { RecentColumnsBlock } from './blocks/RecentColumnsBlock';
 import { AlbumGalleryBlock } from './blocks/AlbumGalleryBlock';
 import { StaffGridBlock } from './blocks/StaffGridBlock';
 import { HistoryTimelineBlock } from './blocks/HistoryTimelineBlock';
@@ -42,6 +43,9 @@ const BLOCK_MAP: Record<string, BlockComponent> = {
   staff_grid: StaffGridBlock,
   history_timeline: HistoryTimelineBlock,
   event_grid: EventGridBlock,
+
+  // Columns (목회칼럼)
+  recent_columns: RecentColumnsBlock,
 
   // Text
   text_image: TextImageBlock,

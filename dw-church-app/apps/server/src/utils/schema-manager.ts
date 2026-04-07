@@ -124,7 +124,7 @@ export async function seedDefaultData(slug: string, churchName?: string): Promis
     ]},
     { title: '목회칼럼', slug: 'columns', is_home: false, sort_order: order++, sections: [
       heroBanner('목회칼럼', '목사님의 글을 통해 은혜를 나눕니다'),
-      { block_type: 'text_only', props: { title: '칼럼' } },
+      { block_type: 'recent_columns', props: { title: '목회칼럼', limit: 12, variant: 'grid-3' } },
     ]},
 
     // ─── 교육 (부서별 하위 페이지) ───
