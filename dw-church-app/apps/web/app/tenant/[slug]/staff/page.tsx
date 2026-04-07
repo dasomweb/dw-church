@@ -24,12 +24,21 @@ export default async function StaffPage({ params }: StaffPageProps) {
 
   const variant = (blockProps.variant as string) || 'grid-4';
   const columns = variantToColumns(variant, 4);
+  const grouped = variant === 'grouped';
+  const groupBy = (blockProps.groupBy as string) || 'role';
+  const customGroups = (blockProps.customGroups as string) || '';
 
   return (
     <div>
       <PageHeroBanner tenantSlug={slug} pageSlug="staff" fallbackTitle="교역자 소개" fallbackSubtitle="함께 섬기는 사역자들" />
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-        <StaffGridClient staff={staff} columns={columns} />
+        <StaffGridClient
+          staff={staff}
+          columns={columns}
+          grouped={grouped}
+          groupBy={groupBy}
+          customGroups={customGroups}
+        />
       </div>
     </div>
   );

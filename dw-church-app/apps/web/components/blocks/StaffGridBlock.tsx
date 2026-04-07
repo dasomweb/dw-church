@@ -7,11 +7,13 @@ interface StaffGridBlockProps {
 }
 
 export async function StaffGridBlock({ props, slug }: StaffGridBlockProps) {
-  const limit = (props.limit as number) ?? 8;
+  const limit = (props.limit as number) ?? 20;
   const variant = (props.variant as string) || 'grid-4';
-  const layout = variant === 'featured' ? 'featured' : (props.layout as 'featured' | 'grid' | 'list') ?? 'grid';
   const photoStyle = (props.photoStyle as 'rect' | 'circle') ?? 'rect';
-  const columns = variant.startsWith('grid-') ? parseInt(variant.replace('grid-', '')) || 3 : Number(props.columns ?? 3);
+  const columns = variant.startsWith('grid-') ? parseInt(variant.replace('grid-', '')) || 3 : 3;
+  const grouped = variant === 'grouped';
+  const groupBy = (props.groupBy as string) || 'role';
+  const customGroups = (props.customGroups as string) || '';
   const showItems = (props.showItems as string) ?? 'name,role,department,bio';
 
   let staff;
@@ -33,9 +35,11 @@ export async function StaffGridBlock({ props, slug }: StaffGridBlockProps) {
         <StaffGridBlockClient
           staff={staff}
           slug={slug}
-          layout={layout}
-          photoStyle={photoStyle}
           columns={columns}
+          grouped={grouped}
+          groupBy={groupBy}
+          customGroups={customGroups}
+          photoStyle={photoStyle}
           showItems={showItems}
         />
       </div>
