@@ -3,7 +3,7 @@ import type { Staff } from '@dw-church/api-client';
 import { useStaff, useStaffDepartments } from '@dw-church/api-client';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 import { EmptyState } from '../common/EmptyState';
-import { StaffCard, StaffFeatured } from './StaffCard';
+import { StaffCard } from './StaffCard';
 import { StaffDepartmentTabs } from './StaffDepartmentTabs';
 
 export interface StaffGridProps {
@@ -12,8 +12,6 @@ export interface StaffGridProps {
   showFilter?: boolean;
   className?: string;
   onItemClick?: (id: string) => void;
-  /** Layout mode: 'featured' (lead pastor large), 'grid', 'list' */
-  layout?: 'featured' | 'grid' | 'list';
   /** Photo style: 'rect' (rectangular) or 'circle' */
   photoStyle?: 'rect' | 'circle';
   /** Grid columns: 2, 3, or 4 */
@@ -21,9 +19,6 @@ export interface StaffGridProps {
   /** Comma-separated visible fields: name,role,department,bio,contact,sns */
   showItems?: string;
 }
-
-/** Roles that qualify for featured display */
-const FEATURED_ROLES = new Set(['담임목사', 'Senior Pastor', 'Lead Pastor']);
 
 const COLUMN_CLASSES: Record<number, string> = {
   2: 'grid-cols-1 sm:grid-cols-2',
@@ -34,10 +29,9 @@ const COLUMN_CLASSES: Record<number, string> = {
 export function StaffGrid({
   data,
   department,
-  showFilter = true,
+  showFilter = false,
   className = '',
   onItemClick,
-  layout = 'grid',
   photoStyle = 'rect',
   columns = 3,
   showItems = 'name,role,department,bio',
@@ -58,17 +52,6 @@ export function StaffGrid({
   if (!data && isLoading) return <LoadingSpinner />;
 
   const visibleFields = new Set(showItems.split(',').map((s) => s.trim()));
-
-  // Separate featured from grid (only in 'featured' layout)
-  const featured =
-    layout === 'featured'
-      ? filteredStaff.filter((s) => FEATURED_ROLES.has(s.role ?? ''))
-      : [];
-  const gridMembers =
-    layout === 'featured'
-      ? filteredStaff.filter((s) => !FEATURED_ROLES.has(s.role ?? ''))
-      : filteredStaff;
-
   const gridCols = COLUMN_CLASSES[columns] ?? COLUMN_CLASSES[3];
 
   return (
@@ -84,73 +67,17 @@ export function StaffGrid({
 
       {filteredStaff.length === 0 ? (
         <EmptyState title="교역자가 없습니다" />
-      ) : layout === 'list' ? (
-        /* List layout */
-        <div className="divide-y divide-gray-200 overflow-hidden rounded-xl bg-white">
-          {filteredStaff.map((member) => (
-            <div
-              key={member.id}
-              className="flex items-center gap-4 px-6 py-4 transition-colors hover:bg-gray-50"
-            >
-              {/* Photo */}
-              <div
-                className={`h-16 w-16 shrink-0 overflow-hidden ${
-                  photoStyle === 'circle' ? 'rounded-full' : 'rounded-lg'
-                } bg-gray-100`}
-              >
-                {member.photoUrl ? (
-                  <img
-                    src={member.photoUrl}
-                    alt={member.name}
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-xl font-semibold text-gray-300">
-                    {member.name?.charAt(0)}
-                  </div>
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                {visibleFields.has('name') && (
-                  <h3 className="font-semibold text-gray-900">{member.name}</h3>
-                )}
-                <div className="flex flex-wrap gap-2 text-sm text-gray-500">
-                  {visibleFields.has('role') && member.role && <span>{member.role}</span>}
-                  {visibleFields.has('department') && member.department && (
-                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
-                      {member.department}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
       ) : (
-        /* Featured + Grid layout */
-        <div className="space-y-12">
-          {/* Featured staff — large horizontal card */}
-          {featured.map((member) => (
-            <StaffFeatured key={member.id} staff={member} />
+        <div className={`grid gap-6 ${gridCols}`}>
+          {filteredStaff.map((member) => (
+            <StaffCard
+              key={member.id}
+              staff={member}
+              onClick={onItemClick}
+              photoStyle={photoStyle}
+              visibleFields={visibleFields}
+            />
           ))}
-
-          {/* Grid members */}
-          {gridMembers.length > 0 && (
-            <div>
-              <div className={`grid gap-6 ${gridCols}`}>
-                {gridMembers.map((member) => (
-                  <StaffCard
-                    key={member.id}
-                    staff={member}
-                    onClick={onItemClick}
-                    photoStyle={photoStyle}
-                    visibleFields={visibleFields}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       )}
     </div>

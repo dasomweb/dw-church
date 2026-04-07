@@ -7,9 +7,16 @@ import { DateBadge } from '../common/DateBadge';
 export interface ColumnGridProps {
   data?: Column[];
   limit?: number;
+  columns?: number;
   className?: string;
   onItemClick?: (id: string) => void;
 }
+
+const GRID_COLS: Record<number, string> = {
+  2: 'grid-cols-1 sm:grid-cols-2',
+  3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
+  4: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4',
+};
 
 function truncate(text: string, max: number): string {
   if (!text) return '';
@@ -17,7 +24,7 @@ function truncate(text: string, max: number): string {
   return plain.length > max ? `${plain.slice(0, max)}...` : plain;
 }
 
-export function ColumnGrid({ data, limit, className = '', onItemClick }: ColumnGridProps) {
+export function ColumnGrid({ data, limit, columns: gridColumns = 3, className = '', onItemClick }: ColumnGridProps) {
   const { data: response, isLoading } = useColumns(
     data ? undefined : { perPage: limit },
   );
@@ -30,7 +37,7 @@ export function ColumnGrid({ data, limit, className = '', onItemClick }: ColumnG
 
   return (
     <div
-      className={`grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 ${className}`}
+      className={`grid ${GRID_COLS[gridColumns] || GRID_COLS[3]} gap-6 ${className}`}
     >
       {items.map((column) => (
         <article
