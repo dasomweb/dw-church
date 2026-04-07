@@ -60,7 +60,7 @@ function HeroSlider() {
               <div className="mt-6 flex gap-3 sm:mt-8">
                 <a href="https://admin.truelight.app/register" className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg hover:bg-blue-700 sm:px-8 sm:text-base">
                   Get Started
-                </Link>
+                </a>
                 <a href="#plans" className="rounded-lg border border-white/30 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10 sm:px-8 sm:text-base">
                   See Plans
                 </a>
@@ -375,7 +375,7 @@ export default function LandingPage() {
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <a href="https://admin.truelight.app/register" className="rounded-xl bg-white px-8 py-3.5 text-sm font-bold text-blue-700 shadow-lg hover:bg-gray-50">
               Get Started Now
-            </Link>
+            </a>
             <a href="mailto:hello@truelight.app" className="rounded-xl border border-white/30 px-8 py-3.5 text-sm font-semibold text-white hover:bg-white/10">
               Contact Us
             </a>
