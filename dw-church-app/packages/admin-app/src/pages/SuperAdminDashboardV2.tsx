@@ -687,7 +687,7 @@ function PasswordResetModal({
     try {
       await apiFetch(`/users/${user.id}/password`, {
         method: 'PUT',
-        body: JSON.stringify({ newPassword }),
+        body: JSON.stringify({ password: newPassword }),
       });
       showToast('success', '비밀번호가 변경되었습니다.');
       onClose();
