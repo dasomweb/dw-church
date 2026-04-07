@@ -81,6 +81,7 @@ async function main(): Promise<void> {
 
   const { aiRoutes } = await import('./modules/ai/routes.js');
   const { default: billingRoutes } = await import('./modules/billing/routes.js');
+  const { default: migrationRoutes } = await import('./modules/migration/routes.js');
 
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(tenantRoutes, { prefix: '/api/v1/admin' });
@@ -102,6 +103,7 @@ async function main(): Promise<void> {
   await app.register(aiRoutes, { prefix: '/api/v1' });
   await app.register(boardRoutes, { prefix: '/api/v1' });
   await app.register(domainRoutes, { prefix: '/api/v1' });
+  await app.register(migrationRoutes, { prefix: '/api/v1/admin' });
 
   // --- Internal: resolve custom domain to tenant slug (used by Next.js middleware) ---
   app.get('/api/v1/admin/tenants/resolve-domain', async (request, reply) => {

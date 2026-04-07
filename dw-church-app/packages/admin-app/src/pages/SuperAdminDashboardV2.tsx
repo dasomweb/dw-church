@@ -97,7 +97,7 @@ const PLAN_COLORS: Record<string, string> = {
   free: 'bg-gray-100 text-gray-600',
 };
 
-type TabId = 'overview' | 'tenants' | 'domains' | 'users' | 'storage';
+type TabId = 'overview' | 'tenants' | 'domains' | 'users' | 'storage' | 'migration';
 
 const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'overview', label: '개요', icon: '📊' },
@@ -105,6 +105,7 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'domains', label: '도메인 관리', icon: '🌐' },
   { id: 'users', label: '사용자 관리', icon: '👥' },
   { id: 'storage', label: '저장공간', icon: '💾' },
+  { id: 'migration', label: '마이그레이션', icon: '🔄' },
 ];
 
 // ─── Helpers ─────────────────────────────────────────────
@@ -1571,6 +1572,221 @@ function StorageTab() {
   );
 }
 
+// ─── Tab: Migration ──────────────────────────────────────
+
+interface AnalyzedPage {
+  url: string;
+  title: string;
+  imageCount: number;
+  textPreview: string;
+}
+
+interface AnalyzedSite {
+  url: string;
+  title: string;
+  pageCount: number;
+  menu: { label: string; href: string; children: { label: string; href: string }[] }[];
+  pages: AnalyzedPage[];
+}
+
+function MigrationTab() {
+  const apiFetch = useAdminApi();
+  const { showToast } = useToast();
+
+  const [siteUrl, setSiteUrl] = useState('');
+  const [targetSlug, setTargetSlug] = useState('');
+  const [analyzing, setAnalyzing] = useState(false);
+  const [applying, setApplying] = useState(false);
+  const [site, setSite] = useState<AnalyzedSite | null>(null);
+  const [tenants, setTenants] = useState<{ slug: string; name: string }[]>([]);
+
+  // Fetch available tenants
+  useEffect(() => {
+    apiFetch<{ data: { slug: string; name: string }[] }>('/tenants?page=1&perPage=100')
+      .then((res) => setTenants(res.data))
+      .catch(() => {});
+  }, [apiFetch]);
+
+  const handleAnalyze = async () => {
+    if (!siteUrl.trim()) return;
+    setAnalyzing(true);
+    setSite(null);
+    try {
+      const res = await apiFetch<{ success: boolean; site: AnalyzedSite }>('/migration/analyze', {
+        method: 'POST',
+        body: JSON.stringify({ url: siteUrl.trim(), maxPages: 30 }),
+      });
+      setSite(res.site);
+      showToast('success', `${res.site.pageCount}개 페이지 분석 완료`);
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '사이트 분석 실패');
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  const handleApply = async () => {
+    if (!targetSlug || !site) return;
+    if (!window.confirm(`"${targetSlug}" 테넌트에 마이그레이션 데이터를 적용하시겠습니까?\n\n기존 데이터와 병합됩니다.`)) return;
+
+    setApplying(true);
+    try {
+      const res = await apiFetch<{ success: boolean; result: Record<string, number> }>('/migration/apply', {
+        method: 'POST',
+        body: JSON.stringify({
+          tenantSlug: targetSlug,
+          data: {
+            churchInfo: { name: site.title },
+            pages: site.pages.map((p) => ({
+              slug: p.url.replace(site.url, '').replace(/^\//, '') || 'home',
+              sections: [
+                { blockType: 'hero_banner', props: { title: p.title } },
+                { blockType: 'text_only', props: { title: p.title, content: p.textPreview } },
+              ],
+            })),
+          },
+        }),
+      });
+      const r = res.result;
+      showToast('success', `반영 완료: 설교 ${r.sermons || 0}, 교역자 ${r.staff || 0}, 페이지 ${r.pages || 0}`);
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '반영 실패');
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Step 1: Input URL */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h3 className="text-base font-semibold text-gray-900 mb-1">1단계: 사이트 분석</h3>
+        <p className="text-xs text-gray-500 mb-4">기존 교회 사이트 URL을 입력하면 페이지 구조와 콘텐츠를 분석합니다.</p>
+        <div className="flex gap-2">
+          <input
+            type="url"
+            value={siteUrl}
+            onChange={(e) => setSiteUrl(e.target.value)}
+            placeholder="https://example-church.com"
+            className="flex-1 border rounded-lg px-3 py-2 text-sm"
+            onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
+          />
+          <button
+            onClick={handleAnalyze}
+            disabled={analyzing || !siteUrl.trim()}
+            className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+          >
+            {analyzing ? '분석 중...' : '사이트 분석'}
+          </button>
+        </div>
+      </div>
+
+      {/* Step 2: Analysis Result */}
+      {site && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h3 className="text-base font-semibold text-gray-900 mb-4">2단계: 분석 결과</h3>
+
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="bg-blue-50 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-blue-600">{site.pageCount}</p>
+              <p className="text-xs text-blue-500">페이지</p>
+            </div>
+            <div className="bg-green-50 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-green-600">{site.menu.length}</p>
+              <p className="text-xs text-green-500">메뉴 항목</p>
+            </div>
+            <div className="bg-purple-50 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-purple-600">{site.pages.reduce((sum, p) => sum + p.imageCount, 0)}</p>
+              <p className="text-xs text-purple-500">이미지</p>
+            </div>
+          </div>
+
+          {/* Menu structure */}
+          {site.menu.length > 0 && (
+            <div className="mb-6">
+              <h4 className="text-sm font-semibold text-gray-700 mb-2">메뉴 구조</h4>
+              <div className="bg-gray-50 rounded-lg p-3 text-sm space-y-1">
+                {site.menu.map((m, i) => (
+                  <div key={i}>
+                    <span className="font-medium">{m.label}</span>
+                    {m.children.length > 0 && (
+                      <div className="ml-4 text-gray-500">
+                        {m.children.map((c, j) => (
+                          <div key={j}>└ {c.label}</div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Pages */}
+          <h4 className="text-sm font-semibold text-gray-700 mb-2">발견된 페이지</h4>
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            {site.pages.map((p, i) => (
+              <div key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate">{p.title || '(제목 없음)'}</p>
+                  <p className="text-xs text-gray-400 truncate">{p.url}</p>
+                  <p className="text-xs text-gray-500 mt-1 line-clamp-2">{p.textPreview}</p>
+                </div>
+                <span className="text-xs text-gray-400 flex-shrink-0">{p.imageCount}장</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Step 3: Apply */}
+      {site && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h3 className="text-base font-semibold text-gray-900 mb-4">3단계: 데이터 반영</h3>
+          <p className="text-xs text-gray-500 mb-4">
+            분석된 데이터를 어떤 테넌트에 반영할지 선택하세요.
+            동적 데이터(설교, 교역자 등)는 API로, 정적 콘텐츠는 페이지 섹션으로 반영됩니다.
+          </p>
+          <div className="flex gap-2">
+            <select
+              value={targetSlug}
+              onChange={(e) => setTargetSlug(e.target.value)}
+              className="border rounded-lg px-3 py-2 text-sm flex-1"
+            >
+              <option value="">테넌트 선택</option>
+              {tenants.map((t) => (
+                <option key={t.slug} value={t.slug}>{t.name} ({t.slug})</option>
+              ))}
+            </select>
+            <button
+              onClick={handleApply}
+              disabled={applying || !targetSlug}
+              className="bg-green-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50"
+            >
+              {applying ? '반영 중...' : '데이터 반영'}
+            </button>
+          </div>
+          <p className="text-xs text-amber-600 mt-2">
+            주의: 이 작업은 기존 데이터와 병합됩니다. 중복 데이터가 생길 수 있습니다.
+          </p>
+        </div>
+      )}
+
+      {/* Info */}
+      {!site && !analyzing && (
+        <div className="bg-gray-50 rounded-xl border border-gray-200 p-8 text-center">
+          <p className="text-4xl mb-3">🔄</p>
+          <p className="text-sm text-gray-500">기존 교회 웹사이트의 URL을 입력하면<br />페이지 구조와 콘텐츠를 자동으로 분석합니다.</p>
+          <div className="mt-4 text-xs text-gray-400 space-y-1">
+            <p>지원: 설교, 교역자, 행사, 연혁, 예배시간, 갤러리, 정적 페이지</p>
+            <p>이미지는 R2 스토리지로 자동 마이그레이션됩니다.</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════
 // ─── Main Dashboard Component ────────────────────────────
 // ═══════════════════════════════════════════════════════════
@@ -1686,6 +1902,7 @@ export default function SuperAdminDashboardV2() {
         {activeTab === 'domains' && <DomainsTab />}
         {activeTab === 'users' && <UsersTab />}
         {activeTab === 'storage' && <StorageTab />}
+        {activeTab === 'migration' && <MigrationTab />}
       </div>
 
       {/* Create Church Modal */}
