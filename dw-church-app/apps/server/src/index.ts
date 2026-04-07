@@ -142,6 +142,18 @@ async function main(): Promise<void> {
     });
   } catch { /* ignore */ }
 
+  // --- Ensure settings.key has UNIQUE constraint ---
+  try {
+    const schemas = await prisma.$queryRawUnsafe<{ schema_name: string }[]>(
+      "SELECT schema_name FROM information_schema.schemata WHERE schema_name LIKE 'tenant_%'"
+    );
+    for (const s of schemas) {
+      await prisma.$queryRawUnsafe(
+        `ALTER TABLE "${s.schema_name}".settings ADD CONSTRAINT IF NOT EXISTS settings_key_unique UNIQUE (key)`
+      ).catch(() => {});
+    }
+  } catch { /* ignore */ }
+
   // --- One-time migration: create boards tables ---
   try {
     const { migrateBoards } = await import('./utils/migrate-boards.js');
