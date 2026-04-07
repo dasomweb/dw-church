@@ -111,6 +111,25 @@ export default function MenuEditor() {
     }
   };
 
+  // Indent: increase depth (make child of previous sibling)
+  const handleIndent = (index: number) => {
+    if (index === 0) return;
+    const newList = flatList.map((n) => ({ ...n }));
+    const node = newList[index]!;
+    if (node.depth >= MAX_DEPTH) return;
+    node.depth++;
+    saveOrder(newList);
+  };
+
+  // Outdent: decrease depth
+  const handleOutdent = (index: number) => {
+    const newList = flatList.map((n) => ({ ...n }));
+    const node = newList[index]!;
+    if (node.depth === 0) return;
+    node.depth--;
+    saveOrder(newList);
+  };
+
   const handleToggleVisibility = (node: FlatNode) => {
     updateMenu.mutate({ id: node.id, data: { isVisible: !node.isVisible } });
   };
@@ -281,7 +300,15 @@ export default function MenuEditor() {
               </span>
 
               {/* Actions */}
-              <div className="flex gap-0.5 flex-shrink-0">
+              <div className="flex gap-0.5 flex-shrink-0 items-center">
+                {/* Indent/Outdent */}
+                <button onClick={(e) => { e.stopPropagation(); handleOutdent(index); }} disabled={node.depth === 0} className="p-1 text-gray-400 hover:text-blue-600 disabled:opacity-20" title="상위로 ←">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); handleIndent(index); }} disabled={index === 0 || node.depth >= MAX_DEPTH} className="p-1 text-gray-400 hover:text-blue-600 disabled:opacity-20" title="하위로 →">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M9 5l7 7-7 7" /></svg>
+                </button>
+                <span className="w-px h-4 bg-gray-200 mx-0.5" />
                 <button onClick={() => handleToggleVisibility(node)} className="p-1 text-gray-400 hover:text-gray-700" title={node.isVisible ? '숨기기' : '표시'}>
                   {node.isVisible ? (
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
