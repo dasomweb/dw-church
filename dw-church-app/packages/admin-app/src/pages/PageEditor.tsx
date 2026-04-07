@@ -81,7 +81,7 @@ interface BlockDef {
   nature: 'static' | 'dynamic';
   variants: BlockVariant[];
   defaultProps: Record<string, unknown>;
-  editableFields: { key: string; label: string; type: 'text' | 'textarea' | 'number' | 'select' | 'image' | 'images' | 'url' | 'array' | 'tags'; options?: { label: string; value: string }[]; max?: number }[];
+  editableFields: { key: string; label: string; type: 'text' | 'textarea' | 'number' | 'select' | 'image' | 'images' | 'url' | 'array' | 'tags' | 'services'; options?: { label: string; value: string }[]; max?: number }[];
 }
 
 const DYNAMIC_BLOCK_TYPES = new Set([
@@ -115,7 +115,7 @@ const BLOCK_DEFS: BlockDef[] = [
   { type: 'quote_block', label: '인용/성경구절', category: '텍스트', icon: '✝️', nature: 'static', description: '인용문 또는 성경 말씀', variants: [{ id: 'card', label: '카드' }, { id: 'simple', label: '심플' }, { id: 'highlight', label: '하이라이트' }], defaultProps: { quote: '' }, editableFields: [{ key: 'quote', label: '인용문', type: 'textarea' }, { key: 'source', label: '출처', type: 'text' }, { key: 'reference', label: '참조', type: 'text' }, { key: 'backgroundImageUrl', label: '배경 이미지', type: 'image' }] },
 
   // ─── Church Info ───────────────────────────────
-  { type: 'worship_times', label: '예배 시간', category: '교회 정보', icon: '⏰', nature: 'static', description: '예배 시간 안내', variants: [{ id: 'cards', label: '카드' }, { id: 'table', label: '테이블' }], defaultProps: { services: [] }, editableFields: [{ key: 'title', label: '제목', type: 'text' }] },
+  { type: 'worship_times', label: '예배 시간', category: '교회 정보', icon: '⏰', nature: 'static', description: '예배 시간 안내', variants: [{ id: 'table', label: '테이블' }], defaultProps: { services: [] }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'services', label: '예배/모임 목록', type: 'services' }] },
   { type: 'map_embed', label: '약도', category: '교회 정보', icon: '📍', nature: 'static', description: 'Google Maps', variants: [{ id: 'full', label: '전체 너비' }, { id: 'with-info', label: '정보 포함' }], defaultProps: { address: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'address', label: '주소', type: 'text' }] },
   { type: 'address_info', label: '연락처', category: '교회 정보', icon: '📞', nature: 'static', description: '주소, 전화, 이메일', variants: [{ id: 'cards', label: '카드' }, { id: 'inline', label: '인라인' }], defaultProps: {}, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'address', label: '주소', type: 'text' }, { key: 'phone', label: '전화', type: 'text' }, { key: 'email', label: '이메일', type: 'text' }] },
   { type: 'visitor_welcome', label: '새가족 환영', category: '교회 정보', icon: '💝', nature: 'static', description: '새가족 환영 메시지', variants: [{ id: 'split', label: '분할' }, { id: 'centered', label: '중앙' }], defaultProps: { message: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'message', label: '환영 메시지', type: 'textarea' }, { key: 'imageUrl', label: '이미지', type: 'image' }] },
@@ -483,6 +483,67 @@ function TagReorderList({ value, onChange }: { value: string; onChange: (val: st
   );
 }
 
+// ═══════════════════════════════════════════════════════════
+// Service List Editor (worship schedule: name/time/location)
+// ═══════════════════════════════════════════════════════════
+function ServiceListEditor({ value, onChange }: { value: { name: string; time: string; location: string }[]; onChange: (val: { name: string; time: string; location: string }[]) => void }) {
+  const [newName, setNewName] = useState('');
+  const [newTime, setNewTime] = useState('');
+  const [newLoc, setNewLoc] = useState('');
+
+  const handleAdd = () => {
+    if (!newName.trim()) return;
+    onChange([...value, { name: newName.trim(), time: newTime.trim(), location: newLoc.trim() }]);
+    setNewName(''); setNewTime(''); setNewLoc('');
+  };
+
+  const handleRemove = (index: number) => onChange(value.filter((_, i) => i !== index));
+
+  const handleMove = (index: number, dir: 'up' | 'down') => {
+    const swapIdx = dir === 'up' ? index - 1 : index + 1;
+    if (swapIdx < 0 || swapIdx >= value.length) return;
+    const arr = [...value];
+    [arr[index], arr[swapIdx]] = [arr[swapIdx], arr[index]];
+    onChange(arr);
+  };
+
+  const handleUpdate = (index: number, field: 'name' | 'time' | 'location', val: string) => {
+    const arr = [...value];
+    arr[index] = { ...arr[index], [field]: val };
+    onChange(arr);
+  };
+
+  return (
+    <div className="space-y-2">
+      {value.length > 0 && (
+        <div className="border rounded-lg overflow-hidden">
+          <div className="grid grid-cols-[1fr_80px_80px_60px] bg-gray-100 text-[10px] font-medium text-gray-500 px-2 py-1">
+            <span>구분</span><span>시간</span><span>장소</span><span></span>
+          </div>
+          {value.map((svc, i) => (
+            <div key={i} className="grid grid-cols-[1fr_80px_80px_60px] items-center px-2 py-1 border-t gap-1">
+              <input value={svc.name} onChange={(e) => handleUpdate(i, 'name', e.target.value)} className="border rounded px-1 py-0.5 text-xs w-full" />
+              <input value={svc.time} onChange={(e) => handleUpdate(i, 'time', e.target.value)} className="border rounded px-1 py-0.5 text-xs w-full" />
+              <input value={svc.location} onChange={(e) => handleUpdate(i, 'location', e.target.value)} className="border rounded px-1 py-0.5 text-xs w-full" />
+              <div className="flex gap-0.5">
+                <button type="button" onClick={() => handleMove(i, 'up')} disabled={i === 0} className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-[10px]">▲</button>
+                <button type="button" onClick={() => handleMove(i, 'down')} disabled={i === value.length - 1} className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-[10px]">▼</button>
+                <button type="button" onClick={() => handleRemove(i)} className="text-red-400 hover:text-red-600 text-[10px]">×</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="grid grid-cols-[1fr_80px_80px] gap-1">
+        <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="구분 (예: 주일 1부 예배)" className="border rounded px-2 py-1 text-xs" />
+        <input value={newTime} onChange={(e) => setNewTime(e.target.value)} placeholder="시간" className="border rounded px-2 py-1 text-xs" />
+        <input value={newLoc} onChange={(e) => setNewLoc(e.target.value)} placeholder="장소" className="border rounded px-2 py-1 text-xs" />
+      </div>
+      <button type="button" onClick={handleAdd} disabled={!newName.trim()} className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 disabled:opacity-50">추가</button>
+    </div>
+  );
+}
+
 function ImageLibraryModal({ onSelect, onClose }: { onSelect: (url: string) => void; onClose: () => void }) {
   const [activeCategory, setActiveCategory] = useState(IMAGE_LIBRARY[0]?.category || '');
   const activeImages = IMAGE_LIBRARY.find((c) => c.category === activeCategory)?.images || [];
@@ -841,6 +902,11 @@ function SectionCard({
                 ) : field.type === 'tags' ? (
                   <TagReorderList
                     value={(props[field.key] as string) || ''}
+                    onChange={(val) => set(field.key, val)}
+                  />
+                ) : field.type === 'services' ? (
+                  <ServiceListEditor
+                    value={(props[field.key] as { name: string; time: string; location: string }[]) || []}
                     onChange={(val) => set(field.key, val)}
                   />
                 ) : (

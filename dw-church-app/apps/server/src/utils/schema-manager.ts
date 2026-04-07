@@ -107,8 +107,9 @@ export async function seedDefaultData(slug: string): Promise<void> {
     ]},
     // ─── 예배 및 모임 ───
     { title: '예배안내', slug: 'worship', is_home: false, sort_order: 6, sections: [
-      heroBanner('예배안내', '하나님께 드리는 예배'),
-      { block_type: 'worship_times', props: { title: '예배 시간' } },
+      heroBanner('예배 및 모임안내', '하나님께 드리는 예배'),
+      { block_type: 'worship_times', props: { title: '주일예배 / 주일성경공부 및 모임', services: [] } },
+      { block_type: 'worship_times', props: { title: '주중예배 및 모임', services: [] } },
     ]},
     // ─── 설교 | 칼럼 ───
     { title: '설교', slug: 'sermons', is_home: false, sort_order: 7, sections: [
