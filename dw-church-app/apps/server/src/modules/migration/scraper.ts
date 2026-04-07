@@ -36,6 +36,23 @@ export interface ExtractedData {
     youtubeUrl: string;
     thumbnailUrl: string;
   }[];
+  bulletins: {
+    title: string;
+    date: string;
+    pdfUrl: string;
+    images: string[];
+  }[];
+  albums: {
+    title: string;
+    images: string[];
+    youtubeUrl: string;
+  }[];
+  columns: {
+    title: string;
+    content: string;
+    imageUrl: string;
+    youtubeUrl: string;
+  }[];
   staff: {
     name: string;
     role: string;
@@ -56,6 +73,15 @@ export interface ExtractedData {
     title: string;
     description: string;
   }[];
+  boards: {
+    boardSlug: string;  // mission-letters, edu-infant, smallgroup, etc.
+    posts: {
+      title: string;
+      content: string;
+      author: string;
+      date: string;
+    }[];
+  }[];
   pages: {
     title: string;
     slug: string;
@@ -70,7 +96,7 @@ export interface ExtractedData {
     time: string;
     location: string;
   }[];
-  images: string[];  // all unique image URLs to migrate to R2
+  images: string[];
 }
 
 /**

@@ -9,9 +9,13 @@ import { validateSchemaName } from '../../utils/validate-schema.js';
 
 interface MigrationResult {
   sermons: number;
+  bulletins: number;
+  albums: number;
   staff: number;
   events: number;
   history: number;
+  columns: number;
+  boards: number;
   pages: number;
   settings: number;
   worshipTimes: number;
@@ -25,9 +29,13 @@ export async function applyMigration(
   const schema = validateSchemaName(`tenant_${tenantSlug}`);
   const result: MigrationResult = {
     sermons: 0,
+    bulletins: 0,
+    albums: 0,
     staff: 0,
     events: 0,
     history: 0,
+    columns: 0,
+    boards: 0,
     pages: 0,
     settings: 0,
     worshipTimes: 0,
@@ -110,6 +118,76 @@ export async function applyMigration(
         e.location || '',
       );
       result.events++;
+    }
+  }
+
+  // ─── Bulletins (주보) ───────────────────────────────────
+  const bulletins = data.bulletins as Record<string, string>[] | undefined;
+  if (bulletins?.length) {
+    for (const b of bulletins) {
+      await prisma.$queryRawUnsafe(
+        `INSERT INTO "${schema}".bulletins (title, bulletin_date, pdf_url, images, status)
+         VALUES ($1, $2::date, $3, $4::jsonb, 'published')
+         ON CONFLICT DO NOTHING`,
+        b.title || '',
+        b.date || null,
+        b.pdfUrl || '',
+        JSON.stringify(b.images || []),
+      );
+      result.bulletins++;
+    }
+  }
+
+  // ─── Albums (앨범/갤러리) ──────────────────────────────
+  const albums = data.albums as Record<string, unknown>[] | undefined;
+  if (albums?.length) {
+    for (const a of albums) {
+      await prisma.$queryRawUnsafe(
+        `INSERT INTO "${schema}".albums (title, images, youtube_url, status)
+         VALUES ($1, $2::jsonb, $3, 'published')
+         ON CONFLICT DO NOTHING`,
+        (a.title as string) || '',
+        JSON.stringify(a.images || []),
+        (a.youtubeUrl as string) || '',
+      );
+      result.albums++;
+    }
+  }
+
+  // ─── Columns (목회칼럼) ────────────────────────────────
+  const columns = data.columns as Record<string, string>[] | undefined;
+  if (columns?.length) {
+    for (const c of columns) {
+      await prisma.$queryRawUnsafe(
+        `INSERT INTO "${schema}".columns_pastoral (title, content, top_image_url, youtube_url, status)
+         VALUES ($1, $2, $3, $4, 'published')
+         ON CONFLICT DO NOTHING`,
+        c.title || '',
+        c.content || '',
+        c.imageUrl || '',
+        c.youtubeUrl || '',
+      );
+      result.columns++;
+    }
+  }
+
+  // ─── Boards (게시판: 선교소식, 교육부, 목장 등) ─────────
+  const boards = data.boards as { boardSlug: string; posts: Record<string, string>[] }[] | undefined;
+  if (boards?.length) {
+    for (const board of boards) {
+      for (const post of board.posts) {
+        await prisma.$queryRawUnsafe(
+          `INSERT INTO "${schema}".boards (board_slug, title, content, author, status, created_at)
+           VALUES ($1, $2, $3, $4, 'published', COALESCE($5::timestamptz, NOW()))
+           ON CONFLICT DO NOTHING`,
+          board.boardSlug,
+          post.title || '',
+          post.content || '',
+          post.author || '',
+          post.date || null,
+        );
+        result.boards++;
+      }
     }
   }
 
