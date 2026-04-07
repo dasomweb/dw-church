@@ -1623,7 +1623,7 @@ export default function SuperAdminDashboardV2() {
       <header className="sticky top-0 z-50 border-b border-gray-200 bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
           <div className="flex items-center gap-3">
-            <span className="text-xl font-bold text-blue-600">DW Church</span>
+            <span className="text-xl font-bold text-blue-600">True Light</span>
             <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-600">Super Admin</span>
           </div>
           <div className="flex items-center gap-4 text-sm">
