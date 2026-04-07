@@ -7,6 +7,7 @@ import {
   useUpdateStaff,
   useDeleteStaff,
   useStaffDepartments,
+  useReorderStaff,
 } from '@dw-church/api-client';
 import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, ImageUpload, useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
 
@@ -37,6 +38,18 @@ export default function StaffManagement() {
   const createMutation = useCreateStaff();
   const updateMutation = useUpdateStaff();
   const deleteMutation = useDeleteStaff();
+  const reorderMutation = useReorderStaff();
+
+  const handleMoveStaff = (index: number, direction: 'up' | 'down') => {
+    if (!staffList) return;
+    const sorted = [...staffList];
+    const swapIdx = direction === 'up' ? index - 1 : index + 1;
+    if (swapIdx < 0 || swapIdx >= sorted.length) return;
+    [sorted[index], sorted[swapIdx]] = [sorted[swapIdx], sorted[index]];
+    reorderMutation.mutate(sorted.map((s) => s.id), {
+      onSuccess: () => showToast('success', '순서가 변경되었습니다.'),
+    });
+  };
 
   const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<StaffFormData>();
 
@@ -294,7 +307,7 @@ export default function StaffManagement() {
 
       {staffList && staffList.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {staffList.map((item) => (
+          {staffList.map((item, index) => (
             <div key={item.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
               <div className="aspect-square bg-gray-100 relative">
                 {item.photoUrl ? (
@@ -313,8 +326,25 @@ export default function StaffManagement() {
                     비활성
                   </span>
                 )}
-                <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded cursor-grab">
-                  순서: {item.order}
+                {/* 순서 변경 버튼 */}
+                <div className="absolute bottom-2 left-2 flex gap-1">
+                  <button
+                    onClick={() => handleMoveStaff(index, 'up')}
+                    disabled={index === 0 || reorderMutation.isPending}
+                    className="bg-black/60 text-white text-xs w-6 h-6 rounded flex items-center justify-center hover:bg-black/80 disabled:opacity-30"
+                    title="위로"
+                  >
+                    ◀
+                  </button>
+                  <span className="bg-black/60 text-white text-xs px-2 h-6 rounded flex items-center">{index + 1}</span>
+                  <button
+                    onClick={() => handleMoveStaff(index, 'down')}
+                    disabled={index === staffList.length - 1 || reorderMutation.isPending}
+                    className="bg-black/60 text-white text-xs w-6 h-6 rounded flex items-center justify-center hover:bg-black/80 disabled:opacity-30"
+                    title="아래로"
+                  >
+                    ▶
+                  </button>
                 </div>
               </div>
               <div className="p-3">
