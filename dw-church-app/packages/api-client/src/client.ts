@@ -31,6 +31,36 @@ import type {
 } from './types';
 
 // ─── Default HTTP Adapter (fetch-based) ─────────────────────
+// snake_case → camelCase converter for API responses
+function toCamel(str: string): string {
+  return str.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+}
+
+function camelizeKeys(obj: unknown): unknown {
+  if (Array.isArray(obj)) return obj.map(camelizeKeys);
+  if (obj !== null && typeof obj === 'object' && !(obj instanceof Date)) {
+    return Object.fromEntries(
+      Object.entries(obj as Record<string, unknown>).map(([k, v]) => [toCamel(k), camelizeKeys(v)])
+    );
+  }
+  return obj;
+}
+
+// camelCase → snake_case converter for API requests
+function toSnake(str: string): string {
+  return str.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
+}
+
+function snakeizeKeys(obj: unknown): unknown {
+  if (Array.isArray(obj)) return obj.map(snakeizeKeys);
+  if (obj !== null && typeof obj === 'object' && !(obj instanceof Date) && !(obj instanceof FormData)) {
+    return Object.fromEntries(
+      Object.entries(obj as Record<string, unknown>).map(([k, v]) => [toSnake(k), snakeizeKeys(v)])
+    );
+  }
+  return obj;
+}
+
 class FetchAdapter implements ApiAdapter {
   private headers: Record<string, string>;
 
@@ -79,7 +109,7 @@ class FetchAdapter implements ApiAdapter {
       body: data
         ? data instanceof FormData
           ? data
-          : JSON.stringify(data)
+          : JSON.stringify(snakeizeKeys(data))
         : undefined,
     });
 
@@ -93,7 +123,8 @@ class FetchAdapter implements ApiAdapter {
       return undefined as T;
     }
 
-    const json = await response.json();
+    const rawJson = await response.json();
+    const json = camelizeKeys(rawJson);
 
     // Handle paginated responses
     const totalHeader = response.headers.get('X-Total-Count');
