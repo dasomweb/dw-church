@@ -136,7 +136,7 @@ export default function MenuEditor() {
 
   const saveOrder = useCallback((newList: FlatNode[]) => {
     const reordered = recalcParents(newList);
-    reorderMenus.mutate(reordered.map((r) => r.id), {
+    reorderMenus.mutate(reordered, {
       onSuccess: () => showToast('success', '순서가 변경되었습니다.'),
     });
   }, [reorderMenus, showToast]);

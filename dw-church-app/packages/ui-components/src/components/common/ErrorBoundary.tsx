@@ -21,7 +21,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('[DW Church] Component error:', error, errorInfo);
+    console.error('[True Light] Component error:', error, errorInfo);
   }
 
   render() {

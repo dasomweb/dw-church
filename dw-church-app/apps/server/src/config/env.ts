@@ -25,7 +25,7 @@ const envSchema = z.object({
   SMTP_PORT: z.coerce.number().default(465),
   SMTP_USER: z.string().default(''),
   SMTP_PASS: z.string().default(''),
-  EMAIL_FROM: z.string().default('DW Church <mailer@truelight.app>'),
+  EMAIL_FROM: z.string().default('True Light <mailer@truelight.app>'),
 
   // Stripe billing (optional — only required if billing is enabled)
   STRIPE_SECRET_KEY: z.string().default(''),

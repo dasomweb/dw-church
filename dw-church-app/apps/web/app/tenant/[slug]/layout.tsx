@@ -330,7 +330,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
         {footerStyle === 'minimal' ? (
           /* Minimal footer: just copyright */
           <div className="mx-auto max-w-7xl px-4 py-6 text-center text-xs text-gray-400 sm:px-6">
-            {settings?.name ? `\u00A9 ${settings.name}. ` : ''}Powered by DW Church
+            {settings?.name ? `\u00A9 ${settings.name}. ` : ''}Powered by True Light
           </div>
         ) : footerStyle === 'centered' ? (
           /* Centered footer: all content centered */
@@ -365,7 +365,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
               )}
             </div>
             <div className="mt-8 border-t border-gray-200 pt-6 text-xs text-gray-400">
-              Powered by DW Church
+              Powered by True Light
             </div>
           </div>
         ) : (
@@ -408,7 +408,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
               </div>
             </div>
             <div className={`mt-8 border-t pt-6 text-center text-xs ${isDarkFooter ? 'border-gray-700 text-gray-500' : 'border-gray-200 text-gray-400'}`}>
-              Powered by DW Church
+              Powered by True Light
             </div>
           </div>
         )}

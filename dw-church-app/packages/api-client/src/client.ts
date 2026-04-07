@@ -682,8 +682,8 @@ export class DWChurchClient {
     return this.api.delete(`${this.namespace}/menus/${id}`);
   }
 
-  async reorderMenus(orderedIds: string[]): Promise<void> {
-    return this.api.post(`${this.namespace}/menus/reorder`, { ids: orderedIds });
+  async reorderMenus(items: { id: string; parentId: string | null; sortOrder: number }[]): Promise<void> {
+    return this.api.post(`${this.namespace}/menus/reorder`, { items });
   }
 
   // ─── Theme ──────────────────────────────────────────────

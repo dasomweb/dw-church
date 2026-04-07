@@ -22,6 +22,7 @@ import { ImageUpload, MultiImageUpload } from '../components/ImageUpload';
 // ═══════════════════════════════════════════════════════════
 
 // ─── Image Library ────────────────────────────────────────
+// TODO: migrate to R2 storage
 const IMAGE_LIBRARY: { category: string; images: { url: string; label: string }[] }[] = [
   { category: '자연', images: [
     { url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1920&q=85&auto=format', label: '산과 호수' },
@@ -1018,17 +1019,6 @@ export default function PageEditor() {
 
   const selectedPage = pages?.find((p) => p.id === selectedPageId) ?? null;
   const sortedSections = [...(sections || [])].sort((a, b) => a.sortOrder - b.sortOrder);
-
-  // Keyboard shortcut: Ctrl+Z undo (TODO: connect to undo stack when sections are local)
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
-        // placeholder for future undo
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, []);
 
   // ─── Handlers ────────────────────────────────────
   const handleSelectPage = (page: Page) => {

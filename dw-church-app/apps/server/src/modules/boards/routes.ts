@@ -87,9 +87,10 @@ export async function boardRoutes(app: FastifyInstance) {
     const schema = getSchema(request);
     const post = await boardService.getPost(schema, postId);
     if (!post) return reply.status(404).send({ error: { code: 'NOT_FOUND', message: 'Post not found' } });
-    // Increment view count in background
+    // Increment view count and return updated post
     await boardService.incrementViewCount(schema, postId);
-    return reply.send({ data: { ...post, view_count: ((post.view_count as number) || 0) + 1 } });
+    const updatedPost = await boardService.getPost(schema, postId);
+    return reply.send({ data: updatedPost });
   });
 
   // Update post (auth required)

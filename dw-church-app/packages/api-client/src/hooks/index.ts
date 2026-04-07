@@ -993,7 +993,7 @@ export function useReorderMenus() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (orderedIds: string[]) => client!.reorderMenus(orderedIds),
+    mutationFn: (items: { id: string; parentId: string | null; sortOrder: number }[]) => client!.reorderMenus(items),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.menus.all }),
   });
 }

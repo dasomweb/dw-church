@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Embed Widgets - DW Church',
+  title: 'Embed Widgets - True Light',
   description: '교회 콘텐츠를 외부 웹사이트에 쉽게 삽입하세요. 설교, 주보, 앨범, 행사, 교역자 위젯을 제공합니다.',
 };
 
@@ -72,7 +72,7 @@ function CodeBlock({ code, language = 'html' }: { code: string; language?: strin
 }
 
 export default function EmbedPage() {
-  const fullExample = `<!-- DW Church 위젯 -->
+  const fullExample = `<!-- True Light 위젯 -->
 <div
   data-tenant="your-tenant-slug"
   data-type="sermons"
@@ -115,7 +115,7 @@ export default function EmbedPage() {
       <header className="border-b border-gray-100">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <a href="/" className="text-xl font-bold text-blue-600">
-            DW Church
+            True Light
           </a>
           <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
             Embed Docs
@@ -130,7 +130,7 @@ export default function EmbedPage() {
             Embed Widgets
           </h1>
           <p className="max-w-2xl text-lg text-gray-600">
-            DW Church 위젯을 외부 웹사이트에 간단하게 삽입할 수 있습니다.
+            True Light 위젯을 외부 웹사이트에 간단하게 삽입할 수 있습니다.
             WordPress, Wix, Squarespace, 또는 일반 HTML 사이트 어디서든 사용 가능합니다.
           </p>
         </div>
@@ -284,7 +284,7 @@ export default function EmbedPage() {
       {/* Footer */}
       <footer className="border-t border-gray-200 bg-gray-50 px-6 py-8">
         <div className="mx-auto max-w-5xl text-center text-sm text-gray-500">
-          &copy; {new Date().getFullYear()} DW Church. All rights reserved.
+          &copy; {new Date().getFullYear()} True Light. All rights reserved.
         </div>
       </footer>
     </div>

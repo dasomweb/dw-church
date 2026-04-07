@@ -46,7 +46,7 @@ export const strings = {
   home: '홈',
   welcome: '환영합니다',
   welcomeSubtitle: '사랑과 은혜가 넘치는 교회',
-  poweredBy: 'Powered by DW Church',
+  poweredBy: 'Powered by True Light',
   skipToContent: '본문으로 건너뛰기',
   mainMenu: '주 메뉴',
   openMenu: '메뉴 열기',
