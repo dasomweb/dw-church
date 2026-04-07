@@ -192,10 +192,10 @@ export async function seedDefaultData(slug: string): Promise<void> {
 
   // 1단계: 메인 메뉴
   const menuChurchInfo = await insertMenu('교회안내', null, null, 0);
-  const menuWorship = await insertMenu('예배 및 모임', 'worship', null, 1);
+  await insertMenu('예배 및 모임', 'worship', null, 1);
   const menuSermonCol = await insertMenu('설교 | 칼럼', null, null, 2);
-  const menuEducation = await insertMenu('교육', 'education', null, 3);
-  const menuMission = await insertMenu('선교', 'mission', null, 4);
+  await insertMenu('교육', 'education', null, 3);
+  await insertMenu('선교', 'mission', null, 4);
   const menuNews = await insertMenu('교회소식', null, null, 5);
 
   // 2단계: 교회안내 하위
