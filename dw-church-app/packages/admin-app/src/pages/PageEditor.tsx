@@ -81,7 +81,7 @@ interface BlockDef {
   nature: 'static' | 'dynamic';
   variants: BlockVariant[];
   defaultProps: Record<string, unknown>;
-  editableFields: { key: string; label: string; type: 'text' | 'textarea' | 'number' | 'select' | 'image' | 'images' | 'url' | 'array'; options?: { label: string; value: string }[]; max?: number }[];
+  editableFields: { key: string; label: string; type: 'text' | 'textarea' | 'number' | 'select' | 'image' | 'images' | 'url' | 'array' | 'tags'; options?: { label: string; value: string }[]; max?: number }[];
 }
 
 const DYNAMIC_BLOCK_TYPES = new Set([
@@ -106,7 +106,7 @@ const BLOCK_DEFS: BlockDef[] = [
   { type: 'recent_bulletins', label: '주보', category: '콘텐츠', icon: '📄', nature: 'dynamic', description: '최근 주보', variants: [{ id: 'list', label: '리스트' }, { id: 'grid-2', label: '2열' }, { id: 'grid-3', label: '3열' }, { id: 'grid-4', label: '4열' }, { id: 'grid-5', label: '5열' }, { id: 'grid-6', label: '6열' }], defaultProps: { limit: 6 }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'limit', label: '표시 개수', type: 'number' }] },
   { type: 'event_grid', label: '행사', category: '콘텐츠', icon: '📅', nature: 'dynamic', description: '교회 행사', variants: [{ id: 'cards-4', label: '4열' }, { id: 'cards-3', label: '3열' }, { id: 'cards-2', label: '2열' }], defaultProps: { limit: 4 }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'limit', label: '표시 개수', type: 'number' }] },
   { type: 'album_gallery', label: '앨범', category: '콘텐츠', icon: '📷', nature: 'dynamic', description: '앨범 갤러리', variants: [{ id: 'grid-4', label: '4열' }, { id: 'grid-3', label: '3열' }, { id: 'grid-2', label: '2열' }], defaultProps: { limit: 6 }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'limit', label: '표시 개수', type: 'number' }] },
-  { type: 'staff_grid', label: '교역자', category: '콘텐츠', icon: '👥', nature: 'dynamic', description: '교역자 카드', variants: [{ id: 'grid-4', label: '4열' }, { id: 'grid-3', label: '3열' }, { id: 'grid-2', label: '2열' }, { id: 'grouped', label: '직분별 그룹' }], defaultProps: { limit: 20 }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'limit', label: '표시 개수', type: 'number' }, { key: 'groupBy', label: '그룹 기준', type: 'select', options: [{ label: '직분 (role)', value: 'role' }, { label: '부서 (department)', value: 'department' }] }, { key: 'customGroups', label: '커스텀 그룹 순서 (쉼표 구분)', type: 'text' }] },
+  { type: 'staff_grid', label: '교역자', category: '콘텐츠', icon: '👥', nature: 'dynamic', description: '교역자 카드', variants: [{ id: 'grid-4', label: '4열' }, { id: 'grid-3', label: '3열' }, { id: 'grid-2', label: '2열' }, { id: 'grouped', label: '직분별 그룹' }], defaultProps: { limit: 20 }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'limit', label: '표시 개수', type: 'number' }, { key: 'groupBy', label: '그룹 기준', type: 'select', options: [{ label: '직분 (role)', value: 'role' }, { label: '부서 (department)', value: 'department' }] }, { key: 'customGroups', label: '그룹 순서', type: 'tags' }] },
   { type: 'history_timeline', label: '교회 연혁', category: '콘텐츠', icon: '📜', nature: 'dynamic', description: '세로 타임라인', variants: [{ id: 'left', label: '좌측' }, { id: 'alternating', label: '교차' }], defaultProps: {}, editableFields: [{ key: 'title', label: '제목', type: 'text' }] },
 
   // ─── Text ──────────────────────────────────────
@@ -404,6 +404,85 @@ function BlockPalette({ onAdd }: { onAdd: (type: string) => void }) {
 // ═══════════════════════════════════════════════════════════
 // Image Library Modal
 // ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+// Tag Reorder List (comma-separated string with up/down/add/remove)
+// ═══════════════════════════════════════════════════════════
+function TagReorderList({ value, onChange }: { value: string; onChange: (val: string) => void }) {
+  const [newTag, setNewTag] = useState('');
+  const tags = value.split(',').map((s) => s.trim()).filter(Boolean);
+
+  const update = (newTags: string[]) => onChange(newTags.join(','));
+
+  const handleAdd = () => {
+    if (!newTag.trim() || tags.includes(newTag.trim())) return;
+    update([...tags, newTag.trim()]);
+    setNewTag('');
+  };
+
+  const handleRemove = (index: number) => {
+    update(tags.filter((_, i) => i !== index));
+  };
+
+  const handleMove = (index: number, direction: 'up' | 'down') => {
+    const swapIdx = direction === 'up' ? index - 1 : index + 1;
+    if (swapIdx < 0 || swapIdx >= tags.length) return;
+    const newTags = [...tags];
+    [newTags[index], newTags[swapIdx]] = [newTags[swapIdx], newTags[index]];
+    update(newTags);
+  };
+
+  return (
+    <div className="space-y-1.5">
+      {tags.length > 0 && (
+        <div className="space-y-1">
+          {tags.map((tag, i) => (
+            <div key={`${tag}-${i}`} className="flex items-center gap-1 bg-gray-50 rounded-lg px-2 py-1">
+              <span className="text-[10px] text-gray-400 w-4">{i + 1}</span>
+              <span className="flex-1 text-xs font-medium">{tag}</span>
+              <button
+                type="button"
+                onClick={() => handleMove(i, 'up')}
+                disabled={i === 0}
+                className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-xs px-1"
+              >▲</button>
+              <button
+                type="button"
+                onClick={() => handleMove(i, 'down')}
+                disabled={i === tags.length - 1}
+                className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-xs px-1"
+              >▼</button>
+              <button
+                type="button"
+                onClick={() => handleRemove(i)}
+                className="text-red-400 hover:text-red-600 text-xs px-1"
+              >×</button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="flex gap-1">
+        <input
+          type="text"
+          value={newTag}
+          onChange={(e) => setNewTag(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAdd(); } }}
+          placeholder="그룹명 입력 (예: 담임목사)"
+          className="flex-1 border rounded-lg px-2 py-1 text-xs"
+        />
+        <button
+          type="button"
+          onClick={handleAdd}
+          disabled={!newTag.trim()}
+          className="text-xs bg-blue-600 text-white px-2 py-1 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+        >추가</button>
+      </div>
+      {tags.length === 0 && (
+        <p className="text-[10px] text-gray-400">그룹을 추가하지 않으면 자동으로 분류됩니다</p>
+      )}
+    </div>
+  );
+}
+
 function ImageLibraryModal({ onSelect, onClose }: { onSelect: (url: string) => void; onClose: () => void }) {
   const [activeCategory, setActiveCategory] = useState(IMAGE_LIBRARY[0]?.category || '');
   const activeImages = IMAGE_LIBRARY.find((c) => c.category === activeCategory)?.images || [];
@@ -758,6 +837,11 @@ function SectionCard({
                     onChange={(urls) => set(field.key, urls)}
                     onUpload={onUploadImage}
                     max={field.max || 10}
+                  />
+                ) : field.type === 'tags' ? (
+                  <TagReorderList
+                    value={(props[field.key] as string) || ''}
+                    onChange={(val) => set(field.key, val)}
                   />
                 ) : (
                   <input
