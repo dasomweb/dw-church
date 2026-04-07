@@ -4,6 +4,10 @@ export { MockAdapter } from './mock';
 
 // Types
 export type {
+  Board,
+  BoardPost,
+  BoardPostAttachment,
+  BoardPostListParams,
   Bulletin,
   Sermon,
   Column,
@@ -119,6 +123,17 @@ export {
   useCreateHistory,
   useUpdateHistory,
   useDeleteHistory,
+  // Boards
+  useBoards,
+  useBoard,
+  useCreateBoard,
+  useUpdateBoard,
+  useDeleteBoard,
+  useBoardPosts,
+  useBoardPost,
+  useCreateBoardPost,
+  useUpdateBoardPost,
+  useDeleteBoardPost,
   // Settings
   useChurchSettings,
   useUpdateChurchSettings,

@@ -3,6 +3,8 @@ import type { DWChurchClient } from '../client';
 import type {
   AuthSession,
   AuthUser,
+  Board,
+  BoardPost,
   Bulletin,
   Sermon,
   Column,
@@ -86,6 +88,13 @@ export const queryKeys = {
     list: (params?: HistoryListParams) => ['history', 'list', params] as const,
     detail: (id: string) => ['history', 'detail', id] as const,
     years: ['history', 'years'] as const,
+  },
+  boards: {
+    all: ['boards'] as const,
+    list: () => ['boards', 'list'] as const,
+    detail: (id: string) => ['boards', 'detail', id] as const,
+    posts: (boardId: string, params?: ListParams) => ['boards', 'posts', boardId, params] as const,
+    post: (boardId: string, postId: string) => ['boards', 'post', boardId, postId] as const,
   },
   settings: ['settings'] as const,
   taxonomies: {
@@ -655,6 +664,105 @@ export function useDeleteHistory() {
   return useMutation({
     mutationFn: (id: string) => client!.deleteHistory(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.history.all }),
+  });
+}
+
+// ─── Board Hooks ────────────────────────────────────────────
+export function useBoards() {
+  const client = useDWChurchClient();
+  return useQuery<Board[]>({
+    queryKey: queryKeys.boards.list(),
+    queryFn: () => client!.getBoards(),
+    enabled: !!client,
+    staleTime: STALE_TIME,
+  });
+}
+
+export function useBoard(id: string) {
+  const client = useDWChurchClient();
+  return useQuery<Board>({
+    queryKey: queryKeys.boards.detail(id),
+    queryFn: () => client!.getBoard(id),
+    enabled: !!client && !!id,
+    staleTime: STALE_TIME,
+  });
+}
+
+export function useCreateBoard() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Omit<Board, 'id' | 'postCount' | 'createdAt' | 'updatedAt'>) => client!.createBoard(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.boards.all }),
+  });
+}
+
+export function useUpdateBoard() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Board> }) =>
+      client!.updateBoard(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.boards.all }),
+  });
+}
+
+export function useDeleteBoard() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => client!.deleteBoard(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.boards.all }),
+  });
+}
+
+export function useBoardPosts(boardId: string, params?: ListParams) {
+  const client = useDWChurchClient();
+  return useQuery<PaginatedResponse<BoardPost>>({
+    queryKey: queryKeys.boards.posts(boardId, params),
+    queryFn: () => client!.getBoardPosts(boardId, params),
+    enabled: !!client && !!boardId,
+    staleTime: STALE_TIME,
+  });
+}
+
+export function useBoardPost(boardId: string, postId: string) {
+  const client = useDWChurchClient();
+  return useQuery<BoardPost>({
+    queryKey: queryKeys.boards.post(boardId, postId),
+    queryFn: () => client!.getBoardPost(boardId, postId),
+    enabled: !!client && !!boardId && !!postId,
+    staleTime: STALE_TIME,
+  });
+}
+
+export function useCreateBoardPost() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ boardId, data }: { boardId: string; data: Omit<BoardPost, 'id' | 'boardId' | 'viewCount' | 'createdAt' | 'updatedAt'> }) =>
+      client!.createBoardPost(boardId, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.boards.all }),
+  });
+}
+
+export function useUpdateBoardPost() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ boardId, postId, data }: { boardId: string; postId: string; data: Partial<BoardPost> }) =>
+      client!.updateBoardPost(boardId, postId, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.boards.all }),
+  });
+}
+
+export function useDeleteBoardPost() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ boardId, postId }: { boardId: string; postId: string }) =>
+      client!.deleteBoardPost(boardId, postId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.boards.all }),
   });
 }
 

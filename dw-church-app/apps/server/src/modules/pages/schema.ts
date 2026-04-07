@@ -46,6 +46,8 @@ export const blockTypes = [
   'three_columns',
   'tabs',
   'accordion',
+  // Board
+  'board',
 ] as const;
 
 export type BlockType = (typeof blockTypes)[number];

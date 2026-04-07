@@ -5,6 +5,9 @@ import type {
   AuthUser,
   Banner,
   BannerListParams,
+  Board,
+  BoardPost,
+  BoardPostListParams,
   Bulletin,
   ChurchSettings,
   ClientConfig,
@@ -495,6 +498,54 @@ export class DWChurchClient {
 
   async deleteHistory(id: string): Promise<void> {
     return this.api.delete(`${this.namespace}/history/${id}`);
+  }
+
+  // ─── Boards (게시판) ───���──────────────────────────────────
+  async getBoards(): Promise<Board[]> {
+    const res = await this.api.get(`${this.namespace}/boards`);
+    return (res as { data: Board[] }).data ?? res;
+  }
+
+  async getBoard(id: string): Promise<Board> {
+    const res = await this.api.get(`${this.namespace}/boards/${id}`);
+    return (res as { data: Board }).data ?? res;
+  }
+
+  async createBoard(data: Omit<Board, 'id' | 'postCount' | 'createdAt' | 'updatedAt'>): Promise<Board> {
+    const res = await this.api.post(`${this.namespace}/boards`, data);
+    return (res as { data: Board }).data ?? res;
+  }
+
+  async updateBoard(id: string, data: Partial<Board>): Promise<Board> {
+    const res = await this.api.put(`${this.namespace}/boards/${id}`, data);
+    return (res as { data: Board }).data ?? res;
+  }
+
+  async deleteBoard(id: string): Promise<void> {
+    return this.api.delete(`${this.namespace}/boards/${id}`);
+  }
+
+  async getBoardPosts(boardId: string, params?: ListParams): Promise<PaginatedResponse<BoardPost>> {
+    return this.api.get(`${this.namespace}/boards/${boardId}/posts`, toQueryParams(params));
+  }
+
+  async getBoardPost(boardId: string, postId: string): Promise<BoardPost> {
+    const res = await this.api.get(`${this.namespace}/boards/${boardId}/posts/${postId}`);
+    return (res as { data: BoardPost }).data ?? res;
+  }
+
+  async createBoardPost(boardId: string, data: Omit<BoardPost, 'id' | 'boardId' | 'viewCount' | 'createdAt' | 'updatedAt'>): Promise<BoardPost> {
+    const res = await this.api.post(`${this.namespace}/boards/${boardId}/posts`, data);
+    return (res as { data: BoardPost }).data ?? res;
+  }
+
+  async updateBoardPost(boardId: string, postId: string, data: Partial<BoardPost>): Promise<BoardPost> {
+    const res = await this.api.put(`${this.namespace}/boards/${boardId}/posts/${postId}`, data);
+    return (res as { data: BoardPost }).data ?? res;
+  }
+
+  async deleteBoardPost(boardId: string, postId: string): Promise<void> {
+    return this.api.delete(`${this.namespace}/boards/${boardId}/posts/${postId}`);
   }
 
   // ─── Settings ───────────────────────────────────────────

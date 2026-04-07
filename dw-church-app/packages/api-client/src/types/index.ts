@@ -171,6 +171,44 @@ export interface ChurchSettings {
   socialKakaotalkChannel: string;
 }
 
+// ─── Board (게시판) ──────────────────────────────────────���──
+export interface Board {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  sortOrder: number;
+  isActive: boolean;
+  postCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BoardPostAttachment {
+  url: string;
+  filename: string;
+  size?: number;
+  type?: string;
+}
+
+export interface BoardPost {
+  id: string;
+  boardId: string;
+  title: string;
+  authorName: string;
+  content: string;
+  attachments: BoardPostAttachment[];
+  viewCount: number;
+  isPinned: boolean;
+  status: PostStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BoardPostListParams extends ListParams {
+  boardId: string;
+}
+
 // ─── Common Types ───────────────────────────────────────────
 export type PostStatus = 'published' | 'draft' | 'archived';
 

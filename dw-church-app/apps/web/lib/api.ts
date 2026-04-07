@@ -282,6 +282,25 @@ export async function getEvent(slug: string, id: string): Promise<any> {
   return unwrap(res);
 }
 
+// ─── Boards (게시판) ──────────────────────────────────────────
+
+export async function getBoardBySlug(slug: string, boardSlug: string): Promise<any> {
+  const res = await apiFetch(slug, `/api/v1/boards/${boardSlug}`, { revalidate: false });
+  return unwrap(res);
+}
+
+export async function getBoardPosts(
+  slug: string,
+  boardId: string,
+  params?: { page?: number; perPage?: number },
+): Promise<any> {
+  const p = new URLSearchParams();
+  if (params?.page) p.set('page', String(params.page));
+  if (params?.perPage) p.set('perPage', String(params.perPage));
+  const qs = p.toString();
+  return apiFetch(slug, `/api/v1/boards/${boardId}/posts${qs ? '?' + qs : ''}`, { revalidate: false });
+}
+
 // ─── Banners ─────────────────────────────────────────────────
 
 export async function getBanners(slug: string): Promise<any[]> {

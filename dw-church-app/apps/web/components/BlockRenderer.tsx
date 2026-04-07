@@ -16,6 +16,7 @@ import { DividerBlock } from './blocks/DividerBlock';
 import { ImageGalleryBlock } from './blocks/ImageGalleryBlock';
 import { VideoBlock } from './blocks/VideoBlock';
 import { NewcomerInfoBlock } from './blocks/NewcomerInfoBlock';
+import { BoardBlock } from './blocks/BoardBlock';
 
 type BlockComponent = React.FC<{ props: Record<string, unknown>; slug: string }>;
 
@@ -65,6 +66,9 @@ const BLOCK_MAP: Record<string, BlockComponent> = {
   // CTA → render as hero-style banner
   call_to_action: HeroBannerBlock,
   newsletter_signup: TextOnlyBlock,
+
+  // Board (게시판)
+  board: BoardBlock,
 
   // Layout
   divider: DividerBlock,

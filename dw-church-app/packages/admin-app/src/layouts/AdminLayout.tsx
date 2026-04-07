@@ -90,6 +90,15 @@ const navItems = [
     ),
   },
   {
+    to: '/boards',
+    label: '게시판',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+      </svg>
+    ),
+  },
+  {
     to: '/pages',
     label: '페이지 편집',
     icon: (
@@ -178,6 +187,7 @@ const pageTitles: Record<string, string> = {
   '/events': '이벤트 관리',
   '/staff': '교역자 관리',
   '/history': '연혁 관리',
+  '/boards': '게시판 관리',
   '/pages': '페이지 편집',
   '/menus': '메뉴 관리',
   '/theme': '테마 설정',

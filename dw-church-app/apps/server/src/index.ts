@@ -76,6 +76,7 @@ async function main(): Promise<void> {
   const { categoryRoutes } = await import('./modules/categories/routes.js');
   const { settingsRoutes } = await import('./modules/settings/routes.js');
   const { fileRoutes } = await import('./modules/files/routes.js');
+  const { boardRoutes } = await import('./modules/boards/routes.js');
   const { domainRoutes } = await import('./modules/domains/routes.js');
 
   const { aiRoutes } = await import('./modules/ai/routes.js');
@@ -99,6 +100,7 @@ async function main(): Promise<void> {
   await app.register(settingsRoutes, { prefix: '/api/v1' });
   await app.register(fileRoutes, { prefix: '/api/v1' });
   await app.register(aiRoutes, { prefix: '/api/v1' });
+  await app.register(boardRoutes, { prefix: '/api/v1' });
   await app.register(domainRoutes, { prefix: '/api/v1' });
 
   // --- Internal: resolve custom domain to tenant slug (used by Next.js middleware) ---
@@ -128,6 +130,15 @@ async function main(): Promise<void> {
     if (fixed > 0) app.log.info(`Fixed ${fixed} hero banner section(s)`);
   } catch (err) {
     app.log.warn(`Hero banner migration skipped: ${err}`);
+  }
+
+  // --- One-time migration: create boards tables ---
+  try {
+    const { migrateBoards } = await import('./utils/migrate-boards.js');
+    const migrated = await migrateBoards();
+    if (migrated > 0) app.log.info(`Board tables ensured for ${migrated} schema(s)`);
+  } catch (err) {
+    app.log.warn(`Board migration skipped: ${err}`);
   }
 
   // --- Start ---

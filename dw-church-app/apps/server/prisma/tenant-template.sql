@@ -218,7 +218,34 @@ CREATE TABLE tenant_template.files (
     created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ─── Settings (Key-Value) ───────────────────────────────────
+-- ─── Boards (게시판) ───��──────────────────────────────────────
+CREATE TABLE tenant_template.boards (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title       VARCHAR(255) NOT NULL,
+    slug        VARCHAR(255) NOT NULL,
+    description TEXT DEFAULT '',
+    sort_order  INT DEFAULT 0,
+    is_active   BOOLEAN DEFAULT true,
+    created_at  TIMESTAMPTZ DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE tenant_template.board_posts (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    board_id    UUID NOT NULL REFERENCES tenant_template.boards(id) ON DELETE CASCADE,
+    title       VARCHAR(500) NOT NULL,
+    author_name VARCHAR(100) NOT NULL DEFAULT '',
+    content     TEXT DEFAULT '',
+    attachments JSONB DEFAULT '[]',
+    view_count  INT DEFAULT 0,
+    is_pinned   BOOLEAN DEFAULT false,
+    status      VARCHAR(20) DEFAULT 'published',
+    created_at  TIMESTAMPTZ DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_board_posts_board ON tenant_template.board_posts(board_id, created_at DESC);
+
+-- ─── Settings (Key-Value) ──────────────────────────��────────
 CREATE TABLE tenant_template.settings (
     key         VARCHAR(100) PRIMARY KEY,
     value       TEXT,

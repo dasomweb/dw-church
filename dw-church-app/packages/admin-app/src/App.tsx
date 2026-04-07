@@ -21,6 +21,7 @@ const BannerManagement = lazy(() => import('./pages/BannerManagement'));
 const EventManagement = lazy(() => import('./pages/EventManagement'));
 const StaffManagement = lazy(() => import('./pages/StaffManagement'));
 const HistoryManagement = lazy(() => import('./pages/HistoryManagement'));
+const BoardManagement = lazy(() => import('./pages/BoardManagement'));
 const PageEditor = lazy(() => import('./pages/PageEditor'));
 const MenuEditor = lazy(() => import('./pages/MenuEditor'));
 const ThemeEditor = lazy(() => import('./pages/ThemeEditor'));
@@ -262,6 +263,7 @@ export function App({ config }: { config: AppConfig }) {
               <Route path="events" element={<EventManagement />} />
               <Route path="staff" element={<StaffManagement />} />
               <Route path="history" element={<HistoryManagement />} />
+              <Route path="boards" element={<BoardManagement />} />
               <Route path="pages" element={<PageEditor />} />
               <Route path="menus" element={<MenuEditor />} />
               <Route path="theme" element={<ThemeEditor />} />
