@@ -1589,6 +1589,38 @@ interface AnalyzedSite {
   pages: AnalyzedPage[];
 }
 
+interface MigrationSummary {
+  pages: number;
+  posts: number;
+  sermons: number;
+  bulletins: number;
+  columns: number;
+  events: number;
+  staff: number;
+  albums: number;
+  history: number;
+  boards: number;
+  boardPosts: number;
+  images: number;
+  worshipTimes: number;
+}
+
+// Minimal type for the extracted data returned by the WP mapper
+interface ExtractedPreview {
+  churchInfo: { name: string; address: string; phone: string; email: string; description: string; logoUrl: string };
+  sermons: { title: string; date: string; youtubeUrl: string }[];
+  bulletins: { title: string; date: string }[];
+  columns: { title: string }[];
+  staff: { name: string; role: string }[];
+  events: { title: string; date: string }[];
+  albums: { title: string; images: string[] }[];
+  history: { year: string; title: string }[];
+  boards: { boardSlug: string; posts: { title: string }[] }[];
+  pages: { title: string; slug: string }[];
+  worshipTimes: { name: string; day: string; time: string }[];
+  images: string[];
+}
+
 function MigrationTab() {
   const apiFetch = useAdminApi();
   const { showToast } = useToast();
@@ -1598,6 +1630,11 @@ function MigrationTab() {
   const [analyzing, setAnalyzing] = useState(false);
   const [applying, setApplying] = useState(false);
   const [site, setSite] = useState<AnalyzedSite | null>(null);
+  const [isWordPress, setIsWordPress] = useState<boolean | null>(null);
+  const [extracted, setExtracted] = useState<ExtractedPreview | null>(null);
+  const [summary, setSummary] = useState<MigrationSummary | null>(null);
+  const [previewSection, setPreviewSection] = useState<string | null>(null);
+  const [confirmApply, setConfirmApply] = useState(false);
   const [tenants, setTenants] = useState<{ slug: string; name: string }[]>([]);
 
   // Fetch available tenants
@@ -1611,13 +1648,28 @@ function MigrationTab() {
     if (!siteUrl.trim()) return;
     setAnalyzing(true);
     setSite(null);
+    setIsWordPress(null);
+    setExtracted(null);
+    setSummary(null);
+    setPreviewSection(null);
+    setConfirmApply(false);
     try {
-      const res = await apiFetch<{ success: boolean; site: AnalyzedSite }>('/migration/analyze', {
+      const res = await apiFetch<{
+        success: boolean;
+        isWordPress: boolean;
+        site: AnalyzedSite;
+        extracted: ExtractedPreview | null;
+        summary: MigrationSummary | null;
+      }>('/migration/analyze', {
         method: 'POST',
         body: JSON.stringify({ url: siteUrl.trim(), maxPages: 30 }),
       });
       setSite(res.site);
-      showToast('success', `${res.site.pageCount}개 페이지 분석 완료`);
+      setIsWordPress(res.isWordPress);
+      setExtracted(res.extracted ?? null);
+      setSummary(res.summary ?? null);
+      const method = res.isWordPress ? 'WordPress REST API' : 'HTML 스크래핑';
+      showToast('success', `분석 완료 (${method}) - ${res.site.pageCount}개 페이지`);
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : '사이트 분석 실패');
     } finally {
@@ -1627,15 +1679,17 @@ function MigrationTab() {
 
   const handleApply = async () => {
     if (!targetSlug || !site) return;
-    if (!window.confirm(`"${targetSlug}" 테넌트에 마이그레이션 데이터를 적용하시겠습니까?\n\n기존 데이터와 병합됩니다.`)) return;
+    if (!confirmApply) {
+      setConfirmApply(true);
+      return;
+    }
 
     setApplying(true);
     try {
-      const res = await apiFetch<{ success: boolean; result: Record<string, number> }>('/migration/apply', {
-        method: 'POST',
-        body: JSON.stringify({
-          tenantSlug: targetSlug,
-          data: {
+      // If we have WP extracted data, use it directly. Otherwise fallback to basic page data.
+      const applyData = extracted
+        ? extracted
+        : {
             churchInfo: { name: site.title },
             pages: site.pages.map((p) => ({
               slug: p.url.replace(site.url, '').replace(/^\//, '') || 'home',
@@ -1644,11 +1698,25 @@ function MigrationTab() {
                 { blockType: 'text_only', props: { title: p.title, content: p.textPreview } },
               ],
             })),
-          },
-        }),
+          };
+
+      const res = await apiFetch<{ success: boolean; result: Record<string, number> }>('/migration/apply', {
+        method: 'POST',
+        body: JSON.stringify({ tenantSlug: targetSlug, data: applyData }),
       });
       const r = res.result;
-      showToast('success', `반영 완료: 설교 ${r.sermons || 0}, 교역자 ${r.staff || 0}, 페이지 ${r.pages || 0}`);
+      const parts = [
+        r.sermons ? `설교 ${r.sermons}` : '',
+        r.staff ? `교역자 ${r.staff}` : '',
+        r.events ? `행사 ${r.events}` : '',
+        r.bulletins ? `주보 ${r.bulletins}` : '',
+        r.columns ? `칼럼 ${r.columns}` : '',
+        r.albums ? `앨범 ${r.albums}` : '',
+        r.pages ? `페이지 ${r.pages}` : '',
+        r.settings ? `설정 ${r.settings}` : '',
+      ].filter(Boolean);
+      showToast('success', `반영 완료: ${parts.join(', ') || '변경 없음'}`);
+      setConfirmApply(false);
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : '반영 실패');
     } finally {
@@ -1656,12 +1724,30 @@ function MigrationTab() {
     }
   };
 
+  // Summary stat items for display
+  const summaryItems = summary
+    ? [
+        { label: '페이지', value: summary.pages, color: 'blue' },
+        { label: '설교', value: summary.sermons, color: 'indigo' },
+        { label: '교역자', value: summary.staff, color: 'green' },
+        { label: '행사', value: summary.events, color: 'orange' },
+        { label: '주보', value: summary.bulletins, color: 'pink' },
+        { label: '칼럼', value: summary.columns, color: 'purple' },
+        { label: '앨범', value: summary.albums, color: 'teal' },
+        { label: '연혁', value: summary.history, color: 'gray' },
+        { label: '게시판', value: summary.boardPosts, color: 'yellow' },
+        { label: '이미지', value: summary.images, color: 'red' },
+      ].filter((item) => item.value > 0)
+    : [];
+
   return (
     <div className="space-y-6">
       {/* Step 1: Input URL */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h3 className="text-base font-semibold text-gray-900 mb-1">1단계: 사이트 분석</h3>
-        <p className="text-xs text-gray-500 mb-4">기존 교회 사이트 URL을 입력하면 페이지 구조와 콘텐츠를 분석합니다.</p>
+        <p className="text-xs text-gray-500 mb-4">
+          기존 교회 사이트 URL을 입력하면 자동으로 WordPress를 감지하고 페이지 구조와 콘텐츠를 분석합니다.
+        </p>
         <div className="flex gap-2">
           <input
             type="url"
@@ -1681,25 +1767,142 @@ function MigrationTab() {
         </div>
       </div>
 
+      {/* WordPress Detection Badge */}
+      {isWordPress !== null && site && (
+        <div className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${
+          isWordPress
+            ? 'bg-blue-50 border border-blue-200 text-blue-700'
+            : 'bg-gray-50 border border-gray-200 text-gray-600'
+        }`}>
+          <span>{isWordPress ? 'WP' : 'HTML'}</span>
+          <span>
+            {isWordPress
+              ? 'WordPress REST API 감지 - 구조화된 데이터 추출 가능'
+              : 'WordPress 미감지 - HTML 스크래핑 모드'}
+          </span>
+        </div>
+      )}
+
       {/* Step 2: Analysis Result */}
       {site && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h3 className="text-base font-semibold text-gray-900 mb-4">2단계: 분석 결과</h3>
 
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="bg-blue-50 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-blue-600">{site.pageCount}</p>
-              <p className="text-xs text-blue-500">페이지</p>
+          {/* Summary stats grid - WP mode shows detailed breakdown */}
+          {summaryItems.length > 0 ? (
+            <div className="grid grid-cols-5 gap-3 mb-6">
+              {summaryItems.map((item) => (
+                <button
+                  key={item.label}
+                  onClick={() => setPreviewSection(previewSection === item.label ? null : item.label)}
+                  className={`rounded-lg p-3 text-center transition-colors cursor-pointer ${
+                    previewSection === item.label
+                      ? 'bg-blue-100 border-2 border-blue-400'
+                      : 'bg-gray-50 border border-gray-200 hover:bg-gray-100'
+                  }`}
+                >
+                  <p className="text-xl font-bold text-gray-800">{item.value}</p>
+                  <p className="text-xs text-gray-500">{item.label}</p>
+                </button>
+              ))}
             </div>
-            <div className="bg-green-50 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-green-600">{site.menu.length}</p>
-              <p className="text-xs text-green-500">메뉴 항목</p>
+          ) : (
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="bg-blue-50 rounded-lg p-4 text-center">
+                <p className="text-2xl font-bold text-blue-600">{site.pageCount}</p>
+                <p className="text-xs text-blue-500">페이지</p>
+              </div>
+              <div className="bg-green-50 rounded-lg p-4 text-center">
+                <p className="text-2xl font-bold text-green-600">{site.menu.length}</p>
+                <p className="text-xs text-green-500">메뉴 항목</p>
+              </div>
+              <div className="bg-purple-50 rounded-lg p-4 text-center">
+                <p className="text-2xl font-bold text-purple-600">{site.pages.reduce((sum, p) => sum + p.imageCount, 0)}</p>
+                <p className="text-xs text-purple-500">이미지</p>
+              </div>
             </div>
-            <div className="bg-purple-50 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-purple-600">{site.pages.reduce((sum, p) => sum + p.imageCount, 0)}</p>
-              <p className="text-xs text-purple-500">이미지</p>
+          )}
+
+          {/* Detailed preview per category (WP mode) */}
+          {previewSection && extracted && (
+            <div className="mb-6 border border-gray-200 rounded-lg overflow-hidden">
+              <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <h4 className="text-sm font-semibold text-gray-700">{previewSection} 미리보기</h4>
+              </div>
+              <div className="max-h-64 overflow-y-auto p-3 space-y-2 text-sm">
+                {previewSection === '설교' && extracted.sermons.map((s, i) => (
+                  <div key={i} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <span className="font-medium truncate flex-1">{s.title}</span>
+                    <span className="text-xs text-gray-400 ml-2">{s.date}</span>
+                    {s.youtubeUrl && <span className="text-xs text-red-400 ml-2">YT</span>}
+                  </div>
+                ))}
+                {previewSection === '교역자' && extracted.staff.map((s, i) => (
+                  <div key={i} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <span className="font-medium">{s.name}</span>
+                    <span className="text-xs text-gray-400">{s.role}</span>
+                  </div>
+                ))}
+                {previewSection === '행사' && extracted.events.map((e, i) => (
+                  <div key={i} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <span className="font-medium truncate flex-1">{e.title}</span>
+                    <span className="text-xs text-gray-400 ml-2">{e.date}</span>
+                  </div>
+                ))}
+                {previewSection === '주보' && extracted.bulletins.map((b, i) => (
+                  <div key={i} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <span className="font-medium truncate flex-1">{b.title}</span>
+                    <span className="text-xs text-gray-400 ml-2">{b.date}</span>
+                  </div>
+                ))}
+                {previewSection === '칼럼' && extracted.columns.map((c, i) => (
+                  <div key={i} className="p-2 bg-gray-50 rounded">
+                    <span className="font-medium">{c.title}</span>
+                  </div>
+                ))}
+                {previewSection === '앨범' && extracted.albums.map((a, i) => (
+                  <div key={i} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <span className="font-medium truncate flex-1">{a.title}</span>
+                    <span className="text-xs text-gray-400 ml-2">{a.images.length}장</span>
+                  </div>
+                ))}
+                {previewSection === '연혁' && extracted.history.map((h, i) => (
+                  <div key={i} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <span className="font-medium truncate flex-1">{h.title}</span>
+                    <span className="text-xs text-gray-400 ml-2">{h.year}</span>
+                  </div>
+                ))}
+                {previewSection === '게시판' && extracted.boards.map((board, i) => (
+                  <div key={i} className="mb-2">
+                    <p className="text-xs font-semibold text-gray-500 mb-1">{board.boardSlug} ({board.posts.length})</p>
+                    {board.posts.slice(0, 5).map((p, j) => (
+                      <div key={j} className="p-1 pl-3 text-gray-600">{p.title}</div>
+                    ))}
+                    {board.posts.length > 5 && (
+                      <p className="pl-3 text-xs text-gray-400">... 외 {board.posts.length - 5}건</p>
+                    )}
+                  </div>
+                ))}
+                {previewSection === '페이지' && extracted.pages.map((p, i) => (
+                  <div key={i} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <span className="font-medium truncate flex-1">{p.title}</span>
+                    <span className="text-xs text-gray-400 ml-2">/{p.slug}</span>
+                  </div>
+                ))}
+                {previewSection === '이미지' && (
+                  <div>
+                    <p className="text-gray-500 mb-2">{extracted.images.length}개 이미지 발견 (R2 업로드 대기)</p>
+                    {extracted.images.slice(0, 10).map((url, i) => (
+                      <p key={i} className="text-xs text-gray-400 truncate">{url}</p>
+                    ))}
+                    {extracted.images.length > 10 && (
+                      <p className="text-xs text-gray-400 mt-1">... 외 {extracted.images.length - 10}개</p>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Menu structure */}
           {site.menu.length > 0 && (
@@ -1739,33 +1942,75 @@ function MigrationTab() {
         </div>
       )}
 
-      {/* Step 3: Apply */}
+      {/* Step 3: Apply with confirmation */}
       {site && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h3 className="text-base font-semibold text-gray-900 mb-4">3단계: 데이터 반영</h3>
           <p className="text-xs text-gray-500 mb-4">
             분석된 데이터를 어떤 테넌트에 반영할지 선택하세요.
-            동적 데이터(설교, 교역자 등)는 API로, 정적 콘텐츠는 페이지 섹션으로 반영됩니다.
+            {isWordPress
+              ? ' WordPress API에서 추출한 구조화된 데이터(설교, 교역자, 행사 등)가 직접 반영됩니다.'
+              : ' 동적 데이터(설교, 교역자 등)는 API로, 정적 콘텐츠는 페이지 섹션으로 반영됩니다.'}
           </p>
-          <div className="flex gap-2">
-            <select
-              value={targetSlug}
-              onChange={(e) => setTargetSlug(e.target.value)}
-              className="border rounded-lg px-3 py-2 text-sm flex-1"
-            >
-              <option value="">테넌트 선택</option>
-              {tenants.map((t) => (
-                <option key={t.slug} value={t.slug}>{t.name} ({t.slug})</option>
-              ))}
-            </select>
-            <button
-              onClick={handleApply}
-              disabled={applying || !targetSlug}
-              className="bg-green-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50"
-            >
-              {applying ? '반영 중...' : '데이터 반영'}
-            </button>
-          </div>
+
+          {/* Confirmation summary */}
+          {confirmApply && summary && (
+            <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-sm font-semibold text-amber-800 mb-2">반영 확인</p>
+              <p className="text-xs text-amber-700 mb-2">
+                아래 데이터가 "{targetSlug}" 테넌트에 반영됩니다:
+              </p>
+              <div className="grid grid-cols-4 gap-2 text-xs text-amber-700">
+                {summary.sermons > 0 && <span>설교 {summary.sermons}건</span>}
+                {summary.staff > 0 && <span>교역자 {summary.staff}명</span>}
+                {summary.events > 0 && <span>행사 {summary.events}건</span>}
+                {summary.bulletins > 0 && <span>주보 {summary.bulletins}건</span>}
+                {summary.columns > 0 && <span>칼럼 {summary.columns}건</span>}
+                {summary.albums > 0 && <span>앨범 {summary.albums}건</span>}
+                {summary.pages > 0 && <span>페이지 {summary.pages}건</span>}
+                {summary.history > 0 && <span>연혁 {summary.history}건</span>}
+                {summary.boardPosts > 0 && <span>게시글 {summary.boardPosts}건</span>}
+                {summary.images > 0 && <span>이미지 {summary.images}개 (R2 업로드 대기)</span>}
+              </div>
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={handleApply}
+                  disabled={applying}
+                  className="bg-green-600 text-white px-4 py-1.5 rounded-lg text-xs font-medium hover:bg-green-700 disabled:opacity-50"
+                >
+                  {applying ? '반영 중...' : '확인, 반영합니다'}
+                </button>
+                <button
+                  onClick={() => setConfirmApply(false)}
+                  className="bg-gray-200 text-gray-700 px-4 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-300"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!confirmApply && (
+            <div className="flex gap-2">
+              <select
+                value={targetSlug}
+                onChange={(e) => setTargetSlug(e.target.value)}
+                className="border rounded-lg px-3 py-2 text-sm flex-1"
+              >
+                <option value="">테넌트 선택</option>
+                {tenants.map((t) => (
+                  <option key={t.slug} value={t.slug}>{t.name} ({t.slug})</option>
+                ))}
+              </select>
+              <button
+                onClick={handleApply}
+                disabled={applying || !targetSlug}
+                className="bg-green-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50"
+              >
+                {applying ? '반영 중...' : '데이터 반영'}
+              </button>
+            </div>
+          )}
           <p className="text-xs text-amber-600 mt-2">
             주의: 이 작업은 기존 데이터와 병합됩니다. 중복 데이터가 생길 수 있습니다.
           </p>
@@ -1778,7 +2023,8 @@ function MigrationTab() {
           <p className="text-4xl mb-3">🔄</p>
           <p className="text-sm text-gray-500">기존 교회 웹사이트의 URL을 입력하면<br />페이지 구조와 콘텐츠를 자동으로 분석합니다.</p>
           <div className="mt-4 text-xs text-gray-400 space-y-1">
-            <p>지원: 설교, 교역자, 행사, 연혁, 예배시간, 갤러리, 정적 페이지</p>
+            <p>WordPress 사이트는 REST API로 구조화된 데이터를 자동 추출합니다.</p>
+            <p>지원: 설교, 교역자, 행사, 연혁, 예배시간, 갤러리, 주보, 칼럼, 정적 페이지</p>
             <p>이미지는 R2 스토리지로 자동 마이그레이션됩니다.</p>
           </div>
         </div>
