@@ -132,6 +132,14 @@ async function main(): Promise<void> {
     app.log.warn(`Hero banner migration skipped: ${err}`);
   }
 
+  // --- Ensure super_admin users are always active ---
+  try {
+    await prisma.user.updateMany({
+      where: { role: 'super_admin' },
+      data: { isActive: true },
+    });
+  } catch { /* ignore */ }
+
   // --- One-time migration: create boards tables ---
   try {
     const { migrateBoards } = await import('./utils/migrate-boards.js');

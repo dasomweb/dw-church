@@ -1240,6 +1240,25 @@ function UsersTab() {
     }
   };
 
+  const handleToggleActive = async (user: User) => {
+    if (user.role === 'super_admin') {
+      showToast('error', 'Super Admin은 비활성화할 수 없습니다.');
+      return;
+    }
+    const action = user.isActive ? '비활성화' : '활성화';
+    if (!window.confirm(`"${user.name}" 사용자를 ${action}하시겠습니까?`)) return;
+    try {
+      await apiFetch(`/users/${user.id}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ isActive: !user.isActive }),
+      });
+      showToast('success', `${action}되었습니다.`);
+      void fetchUsers();
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : `${action} 실패`);
+    }
+  };
+
   const filteredUsers = search
     ? users.filter(
         (u) =>
@@ -1337,6 +1356,16 @@ function UsersTab() {
                         >
                           {u.isLocked ? '해제' : '잠금'}
                         </button>
+                        {u.role !== 'super_admin' && (
+                          <button
+                            onClick={() => handleToggleActive(u)}
+                            className={`px-2 py-1 text-xs rounded transition-colors ${
+                              u.isActive ? 'text-red-600 hover:bg-red-50' : 'text-green-600 hover:bg-green-50'
+                            }`}
+                          >
+                            {u.isActive ? '비활성화' : '활성화'}
+                          </button>
+                        )}
                         <button
                           onClick={() => setTenantTransferUser(u)}
                           className="px-2 py-1 text-xs text-purple-600 hover:bg-purple-50 rounded transition-colors"

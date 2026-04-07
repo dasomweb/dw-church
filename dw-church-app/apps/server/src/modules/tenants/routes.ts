@@ -257,6 +257,32 @@ export default async function tenantRoutes(app: FastifyInstance): Promise<void> 
     },
   );
 
+  // PUT /admin/users/:userId/status — Toggle user active status
+  app.put<{ Params: { userId: string } }>(
+    '/users/:userId/status',
+    async (request, reply) => {
+      const { userId } = request.params;
+      const { isActive, is_active } = request.body as { isActive?: boolean; is_active?: boolean };
+      const active = isActive ?? is_active;
+      if (active === undefined) {
+        throw new AppError('VALIDATION_ERROR', 400, 'isActive is required');
+      }
+
+      // Prevent deactivating super_admin
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
+      if (user?.role === 'super_admin' && !active) {
+        throw new AppError('FORBIDDEN', 403, 'Super Admin cannot be deactivated');
+      }
+
+      await prisma.user.update({
+        where: { id: userId },
+        data: { isActive: active },
+      });
+
+      return reply.send({ success: true, message: `User ${active ? 'activated' : 'deactivated'}` });
+    },
+  );
+
   // GET /admin/users — List all users
   app.get('/users', async (_request, reply) => {
     const users = await prisma.user.findMany({
