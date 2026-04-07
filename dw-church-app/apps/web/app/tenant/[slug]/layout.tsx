@@ -151,9 +151,18 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   const logoUrl = settings?.logoUrl ?? settings?.logo_url ?? null;
   const churchName = settings?.name ?? settings?.churchName ?? slug;
 
-  const sortedVisibleItems = navItems
-    .filter((item) => item.isVisible)
-    .sort((a, b) => a.sortOrder - b.sortOrder);
+  // Build tree: top-level items with children
+  const topLevelItems = navItems
+    .filter((item) => item.isVisible && !item.parentId)
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .map((item) => ({
+      ...item,
+      children: navItems
+        .filter((child) => child.isVisible && child.parentId === item.id)
+        .sort((a, b) => a.sortOrder - b.sortOrder),
+    }));
+  // Flat list for backward compat (only top-level shown in header)
+  const sortedVisibleItems = topLevelItems;
 
   return (
     <div
@@ -186,16 +195,35 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                   </span>
                 )}
               </Link>
-              <nav aria-label="주 메뉴" className="hidden gap-6 md:flex">
+              <nav aria-label="주 메뉴" className="hidden gap-5 md:flex items-center">
                 {sortedVisibleItems.map((item) => (
-                  <Link
-                    key={item.id}
-                    href={item.externalUrl ?? (item.pageSlug ? `/${item.pageSlug}` : '/')}
-                    className="text-sm font-medium transition-colors hover:opacity-80"
-                    style={{ color: navLinkColor }}
-                  >
-                    {item.label}
-                  </Link>
+                  <div key={item.id} className="relative group">
+                    <Link
+                      href={item.externalUrl ?? (item.pageSlug ? `/${item.pageSlug}` : '#')}
+                      className="text-sm font-medium transition-colors hover:opacity-80 py-2 inline-flex items-center gap-0.5"
+                      style={{ color: navLinkColor }}
+                    >
+                      {item.label}
+                      {item.children && item.children.length > 0 && (
+                        <svg className="w-3 h-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 9l-7 7-7-7" /></svg>
+                      )}
+                    </Link>
+                    {item.children && item.children.length > 0 && (
+                      <div className="absolute left-0 top-full pt-1 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-150 z-50">
+                        <div className="bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[160px]">
+                          {item.children.map((child) => (
+                            <Link
+                              key={child.id}
+                              href={child.externalUrl ?? (child.pageSlug ? `/${child.pageSlug}` : '/')}
+                              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[var(--dw-primary)] transition-colors"
+                            >
+                              {child.label}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ))}
               </nav>
             </div>
@@ -215,16 +243,35 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                 </span>
               )}
             </Link>
-            <nav aria-label="주 메뉴" className="hidden gap-6 md:flex">
+            <nav aria-label="주 메뉴" className="hidden gap-5 md:flex items-center">
               {sortedVisibleItems.map((item) => (
-                <Link
-                  key={item.id}
-                  href={item.externalUrl ?? (item.pageSlug ? `/${item.pageSlug}` : '/')}
-                  className="text-sm font-medium transition-colors hover:opacity-80"
-                  style={{ color: navLinkColor }}
-                >
-                  {item.label}
-                </Link>
+                <div key={item.id} className="relative group">
+                  <Link
+                    href={item.externalUrl ?? (item.pageSlug ? `/${item.pageSlug}` : '#')}
+                    className="text-sm font-medium transition-colors hover:opacity-80 py-2 inline-flex items-center gap-0.5"
+                    style={{ color: navLinkColor }}
+                  >
+                    {item.label}
+                    {item.children && item.children.length > 0 && (
+                      <svg className="w-3 h-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 9l-7 7-7-7" /></svg>
+                    )}
+                  </Link>
+                  {item.children && item.children.length > 0 && (
+                    <div className="absolute left-0 top-full pt-1 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-150 z-50">
+                      <div className="bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[160px]">
+                        {item.children.map((child) => (
+                          <Link
+                            key={child.id}
+                            href={child.externalUrl ?? (child.pageSlug ? `/${child.pageSlug}` : '/')}
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[var(--dw-primary)] transition-colors"
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               ))}
             </nav>
             <MobileMenu navItems={navItems} />
