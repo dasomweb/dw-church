@@ -163,11 +163,6 @@ export function StaffCard({ staff, onClick, className = '', photoStyle = 'rect',
         </div>
       ) : (
         <div className={`relative aspect-[4/5] w-full overflow-hidden ${bgColor}`}>
-          {show('role') && staff.role && (
-            <span className="absolute left-3 top-3 z-10 rounded bg-white/90 px-2.5 py-1 text-xs font-semibold text-gray-700 shadow-sm backdrop-blur-sm">
-              {staff.role}
-            </span>
-          )}
           {staff.photoUrl ? (
             <img src={staff.photoUrl} alt={staff.name} className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105" loading="lazy" />
           ) : (
@@ -184,8 +179,8 @@ export function StaffCard({ staff, onClick, className = '', photoStyle = 'rect',
           </h3>
         )}
 
-        {/* Role (shown below name for circle style, or skip if shown as badge) */}
-        {photoStyle === 'circle' && show('role') && staff.role && (
+        {/* Role */}
+        {show('role') && staff.role && (
           <p className="mt-1 text-[13px] text-gray-500">{staff.role}</p>
         )}
 
