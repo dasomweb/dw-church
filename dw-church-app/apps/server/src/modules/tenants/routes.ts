@@ -307,6 +307,7 @@ export default async function tenantRoutes(app: FastifyInstance): Promise<void> 
       role: u.role,
       tenantSlug: u.tenantSlug ?? '',
       tenantId: u.tenantId ?? '',
+      isActive: u.isActive,
       createdAt: u.createdAt.toISOString(),
       lastSignIn: null,
     }));
