@@ -76,70 +76,133 @@ export async function seedDefaultData(slug: string): Promise<void> {
     block_type: 'hero_banner', props: { title, subtitle, height: 'md', textAlign: 'center', layout: 'full' },
   });
 
+  let order = 0;
   const defaultPages = [
     // ─── Home ───
-    { title: '홈', slug: 'home', is_home: true, sort_order: 0, sections: [
+    { title: '홈', slug: 'home', is_home: true, sort_order: order++, sections: [
       { block_type: 'banner_slider', props: { category: 'main' } },
       { block_type: 'recent_sermons', props: { title: '최근 설교', limit: 4, variant: 'grid-4' } },
       { block_type: 'event_grid', props: { title: '교회 행사', limit: 4, variant: 'cards-4' } },
     ]},
+
     // ─── 교회안내 ───
-    { title: '환영인사말', slug: 'welcome', is_home: false, sort_order: 1, sections: [
+    { title: '환영인사말', slug: 'welcome', is_home: false, sort_order: order++, sections: [
       heroBanner('환영인사말', '사랑과 은혜가 넘치는 교회'),
       { block_type: 'pastor_message', props: { title: '담임목사 인사' } },
     ]},
-    { title: '교회비전', slug: 'vision', is_home: false, sort_order: 2, sections: [
+    { title: '교회비전', slug: 'vision', is_home: false, sort_order: order++, sections: [
       heroBanner('교회비전', '하나님의 뜻을 이루어가는 교회'),
       { block_type: 'mission_vision', props: { title: '비전과 사명' } },
     ]},
-    { title: '교회연혁', slug: 'history', is_home: false, sort_order: 3, sections: [
+    { title: '교회연혁', slug: 'history', is_home: false, sort_order: order++, sections: [
       heroBanner('교회연혁', '하나님과 함께 걸어온 길'),
       { block_type: 'history_timeline', props: { title: '연혁' } },
     ]},
-    { title: '섬기는사람들', slug: 'staff', is_home: false, sort_order: 4, sections: [
+    { title: '섬기는사람들', slug: 'staff', is_home: false, sort_order: order++, sections: [
       heroBanner('섬기는사람들', '함께 섬기는 사역자들'),
       { block_type: 'staff_grid', props: { title: '교역자', limit: 20, variant: 'grid-4' } },
     ]},
-    { title: '오시는 길', slug: 'directions', is_home: false, sort_order: 5, sections: [
+    { title: '오시는 길', slug: 'directions', is_home: false, sort_order: order++, sections: [
       heroBanner('오시는 길', '교회 위치 안내'),
       { block_type: 'location_map', props: { title: '약도' } },
       { block_type: 'contact_info', props: { title: '연락처' } },
     ]},
+
     // ─── 예배 및 모임 ───
-    { title: '예배안내', slug: 'worship', is_home: false, sort_order: 6, sections: [
+    { title: '예배안내', slug: 'worship', is_home: false, sort_order: order++, sections: [
       heroBanner('예배 및 모임안내', '하나님께 드리는 예배'),
       { block_type: 'worship_times', props: { title: '주일예배 / 주일성경공부 및 모임', services: [] } },
       { block_type: 'worship_times', props: { title: '주중예배 및 모임', services: [] } },
     ]},
+
     // ─── 설교 | 칼럼 ───
-    { title: '설교', slug: 'sermons', is_home: false, sort_order: 7, sections: [
+    { title: '설교', slug: 'sermons', is_home: false, sort_order: order++, sections: [
       heroBanner('설교', '말씀을 통해 은혜를 나눕니다'),
       { block_type: 'recent_sermons', props: { limit: 12, variant: 'grid-4' } },
     ]},
-    { title: '목회칼럼', slug: 'columns', is_home: false, sort_order: 8, sections: [
+    { title: '목회칼럼', slug: 'columns', is_home: false, sort_order: order++, sections: [
       heroBanner('목회칼럼', '목사님의 글을 통해 은혜를 나눕니다'),
       { block_type: 'text_only', props: { title: '칼럼' } },
     ]},
-    // ─── 교육 ───
-    { title: '교육부', slug: 'education', is_home: false, sort_order: 9, sections: [
-      heroBanner('교육부', '다음 세대를 세우는 교육'),
-      { block_type: 'text_image', props: { title: '교육부 소개' } },
+
+    // ─── 교육 (부서별 하위 페이지) ───
+    { title: '영유아부', slug: 'edu-infant', is_home: false, sort_order: order++, sections: [
+      heroBanner('영유아부', '사랑으로 키우는 믿음의 씨앗'),
+      { block_type: 'text_image', props: { title: '영유아부 소개' } },
     ]},
+    { title: '유초등부', slug: 'edu-children', is_home: false, sort_order: order++, sections: [
+      heroBanner('유초등부', '하나님의 자녀로 자라나는 아이들'),
+      { block_type: 'text_image', props: { title: '유초등부 소개' } },
+    ]},
+    { title: '중고등부', slug: 'edu-youth', is_home: false, sort_order: order++, sections: [
+      heroBanner('중고등부', '믿음 위에 세워가는 청소년'),
+      { block_type: 'text_image', props: { title: '중고등부 소개' } },
+    ]},
+    { title: '대학부', slug: 'edu-college', is_home: false, sort_order: order++, sections: [
+      heroBanner('대학부', '캠퍼스에서 빛나는 믿음'),
+      { block_type: 'text_image', props: { title: '대학부 소개' } },
+    ]},
+    { title: '청년부', slug: 'edu-youngadult', is_home: false, sort_order: order++, sections: [
+      heroBanner('청년부', '세상 속에서 하나님과 동행하는 청년'),
+      { block_type: 'text_image', props: { title: '청년부 소개' } },
+    ]},
+    { title: 'English Ministry', slug: 'edu-english', is_home: false, sort_order: order++, sections: [
+      heroBanner('English Ministry', 'Worship and fellowship in English'),
+      { block_type: 'text_image', props: { title: 'English Ministry' } },
+    ]},
+    { title: '시니어', slug: 'edu-senior', is_home: false, sort_order: order++, sections: [
+      heroBanner('시니어', '은혜로운 동행의 세월'),
+      { block_type: 'text_image', props: { title: '시니어 소개' } },
+    ]},
+
     // ─── 선교 ───
-    { title: '선교', slug: 'mission', is_home: false, sort_order: 10, sections: [
-      heroBanner('선교', '세계를 품는 선교'),
-      { block_type: 'text_only', props: { title: '선교 사역' } },
+    { title: '선교사역', slug: 'mission-work', is_home: false, sort_order: order++, sections: [
+      heroBanner('선교사역', '세계를 품는 선교'),
+      { block_type: 'text_only', props: { title: '선교 사역 소개' } },
     ]},
+    { title: '선교편지', slug: 'mission-letters', is_home: false, sort_order: order++, sections: [
+      heroBanner('선교편지', '선교지에서 보내는 소식'),
+      { block_type: 'board', props: { title: '선교편지', boardSlug: 'mission-letters' } },
+    ]},
+
+    // ─── 새가족 ───
+    { title: '새가족 안내', slug: 'newcomer-info', is_home: false, sort_order: order++, sections: [
+      heroBanner('새가족 안내', '새가족을 환영합니다'),
+      { block_type: 'newcomer_info', props: { title: '새가족 안내' } },
+    ]},
+    { title: '새가족 등록신청', slug: 'newcomer-register', is_home: false, sort_order: order++, sections: [
+      heroBanner('새가족 등록신청', '등록을 통해 교회 가족이 되세요'),
+      { block_type: 'contact_form', props: { title: '새가족 등록신청' } },
+    ]},
+
+    // ─── 목장 ───
+    { title: '목장교회 소개', slug: 'smallgroup-intro', is_home: false, sort_order: order++, sections: [
+      heroBanner('목장교회', '함께 나누고 성장하는 소그룹'),
+      { block_type: 'text_image', props: { title: '목장교회 소개' } },
+    ]},
+    { title: '목자/목녀', slug: 'smallgroup-leaders', is_home: false, sort_order: order++, sections: [
+      heroBanner('목자/목녀', '목장을 섬기는 리더들'),
+      { block_type: 'staff_grid', props: { title: '목자/목녀', limit: 30, variant: 'grid-4', department: 'smallgroup' } },
+    ]},
+    { title: '목장 게시판', slug: 'smallgroup-board', is_home: false, sort_order: order++, sections: [
+      heroBanner('목장 게시판', '목장 소식과 나눔'),
+      { block_type: 'board', props: { title: '목장 게시판', boardSlug: 'smallgroup' } },
+    ]},
+
     // ─── 교회소식 ───
-    { title: '교회소식', slug: 'news', is_home: false, sort_order: 11, sections: [
-      heroBanner('교회소식', '교회의 다양한 소식'),
-      { block_type: 'recent_bulletins', props: { title: '주보', limit: 12, variant: 'grid-4' } },
+    { title: '교회주보', slug: 'bulletins', is_home: false, sort_order: order++, sections: [
+      heroBanner('교회주보', '한 주간의 교회 소식'),
+      { block_type: 'recent_bulletins', props: { title: '교회주보', limit: 12, variant: 'grid-4' } },
     ]},
-    { title: '포토갤러리', slug: 'albums', is_home: false, sort_order: 12, sections: [
+    { title: '교회소식', slug: 'news', is_home: false, sort_order: order++, sections: [
+      heroBanner('교회소식', '교회의 다양한 소식'),
+      { block_type: 'event_grid', props: { title: '교회소식', limit: 12, variant: 'cards-4' } },
+    ]},
+    { title: '포토갤러리', slug: 'albums', is_home: false, sort_order: order++, sections: [
       heroBanner('포토갤러리', '교회의 아름다운 순간들'),
       { block_type: 'album_gallery', props: { limit: 12, variant: 'grid-4' } },
     ]},
-    { title: '행사', slug: 'events', is_home: false, sort_order: 13, sections: [
+    { title: '행사', slug: 'events', is_home: false, sort_order: order++, sections: [
       heroBanner('행사', '함께하는 교회 행사'),
       { block_type: 'event_grid', props: { limit: 12, variant: 'cards-4' } },
     ]},
@@ -194,9 +257,11 @@ export async function seedDefaultData(slug: string): Promise<void> {
   const menuChurchInfo = await insertMenu('교회안내', null, null, 0);
   await insertMenu('예배 및 모임', 'worship', null, 1);
   const menuSermonCol = await insertMenu('설교 | 칼럼', null, null, 2);
-  await insertMenu('교육', 'education', null, 3);
-  await insertMenu('선교', 'mission', null, 4);
-  const menuNews = await insertMenu('교회소식', null, null, 5);
+  const menuEducation = await insertMenu('교육', null, null, 3);
+  const menuMission = await insertMenu('선교', null, null, 4);
+  const menuNewcomer = await insertMenu('새가족', null, null, 5);
+  const menuSmallGroup = await insertMenu('목장', null, null, 6);
+  const menuNews = await insertMenu('교회소식', null, null, 7);
 
   // 2단계: 교회안내 하위
   await insertMenu('환영인사말', 'welcome', menuChurchInfo, 0);
@@ -209,10 +274,33 @@ export async function seedDefaultData(slug: string): Promise<void> {
   await insertMenu('설교', 'sermons', menuSermonCol, 0);
   await insertMenu('목회칼럼', 'columns', menuSermonCol, 1);
 
+  // 2단계: 교육 하위
+  await insertMenu('영유아부', 'edu-infant', menuEducation, 0);
+  await insertMenu('유초등부', 'edu-children', menuEducation, 1);
+  await insertMenu('중고등부', 'edu-youth', menuEducation, 2);
+  await insertMenu('대학부', 'edu-college', menuEducation, 3);
+  await insertMenu('청년부', 'edu-youngadult', menuEducation, 4);
+  await insertMenu('English Ministry', 'edu-english', menuEducation, 5);
+  await insertMenu('시니어', 'edu-senior', menuEducation, 6);
+
+  // 2단계: 선교 하위
+  await insertMenu('선교사역', 'mission-work', menuMission, 0);
+  await insertMenu('선교편지', 'mission-letters', menuMission, 1);
+
+  // 2단계: 새가족 하위
+  await insertMenu('새가족 안내', 'newcomer-info', menuNewcomer, 0);
+  await insertMenu('새가족 등록신청', 'newcomer-register', menuNewcomer, 1);
+
+  // 2단계: 목장 하위
+  await insertMenu('목장교회 소개', 'smallgroup-intro', menuSmallGroup, 0);
+  await insertMenu('목자/목녀', 'smallgroup-leaders', menuSmallGroup, 1);
+  await insertMenu('목장 게시판', 'smallgroup-board', menuSmallGroup, 2);
+
   // 2단계: 교회소식 하위
-  await insertMenu('교회소식', 'news', menuNews, 0);
-  await insertMenu('포토갤러리', 'albums', menuNews, 1);
-  await insertMenu('행사', 'events', menuNews, 2);
+  await insertMenu('교회주보', 'bulletins', menuNews, 0);
+  await insertMenu('교회소식', 'news', menuNews, 1);
+  await insertMenu('포토갤러리', 'albums', menuNews, 2);
+  await insertMenu('행사', 'events', menuNews, 3);
 
   // 7. Default settings
   const settings = [
