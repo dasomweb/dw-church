@@ -81,7 +81,7 @@ export default function SettingsPage() {
               <input
                 id="name"
                 type="text"
-                {...register('name')}
+                {...register('churchName')}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
               />
             </div>
@@ -93,7 +93,7 @@ export default function SettingsPage() {
               <input
                 id="address"
                 type="text"
-                {...register('address')}
+                {...register('churchAddress')}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
               />
             </div>
@@ -105,7 +105,7 @@ export default function SettingsPage() {
               <input
                 id="phone"
                 type="tel"
-                {...register('phone')}
+                {...register('churchPhone')}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
               />
             </div>
@@ -117,7 +117,7 @@ export default function SettingsPage() {
               <input
                 id="email"
                 type="email"
-                {...register('email')}
+                {...register('churchEmail')}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
               />
             </div>
@@ -129,7 +129,7 @@ export default function SettingsPage() {
               <input
                 id="website"
                 type="url"
-                {...register('website')}
+                {...register('churchWebsite')}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
               />
             </div>

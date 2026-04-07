@@ -13,6 +13,7 @@ const ALLOWED_KEYS = [
   'social_tiktok',
   'social_kakaotalk',
   'social_kakaotalk_channel',
+  'staff_display',
 ] as const;
 
 export type SettingKey = (typeof ALLOWED_KEYS)[number];
@@ -36,8 +37,9 @@ export async function upsertSettings(
   schema: string,
   settings: Record<string, string | null>,
 ): Promise<Record<string, string>> {
-  for (const [key, value] of Object.entries(settings)) {
+  for (const [key, rawValue] of Object.entries(settings)) {
     if (!isValidKey(key)) continue;
+    const value = typeof rawValue === 'object' && rawValue !== null ? JSON.stringify(rawValue) : rawValue;
 
     if (value === null || value === '') {
       await prisma.$queryRawUnsafe(

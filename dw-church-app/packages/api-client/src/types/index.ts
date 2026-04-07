@@ -157,11 +157,11 @@ export interface History {
 
 // ─── Church Settings ────────────────────────────────────────
 export interface ChurchSettings {
-  name: string;
-  address: string;
-  phone: string;
-  email: string;
-  website: string;
+  churchName: string;
+  churchAddress: string;
+  churchPhone: string;
+  churchEmail: string;
+  churchWebsite: string;
   socialYoutube: string;
   socialInstagram: string;
   socialFacebook: string;
@@ -169,6 +169,7 @@ export interface ChurchSettings {
   socialTiktok: string;
   socialKakaotalk: string;
   socialKakaotalkChannel: string;
+  [key: string]: unknown;
 }
 
 // ─── Board (게시판) ──────────────────────────────────────���──
