@@ -51,7 +51,7 @@ export default function LoginPage() {
       {/* Left — Image */}
       <div className="hidden lg:flex lg:w-1/2 relative">
         <img
-          src="https://images.unsplash.com/photo-1438032005730-c779502df39b?w=1920&q=85&auto=format"
+          src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1920&q=85&auto=format"
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
         />
