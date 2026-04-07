@@ -1,7 +1,6 @@
-import { getHistory } from '@/lib/api';
-import { getBlockProps } from '@/lib/page-props';
+import { getHistory, getPageBySlug } from '@/lib/api';
+import { BlockRenderer } from '@/components/BlockRenderer';
 import { HistoryTimelineClient } from './HistoryTimelineClient';
-import { PageHeroBanner } from '@/components/PageHeroBanner';
 import { buildTenantMetadata } from '@/lib/metadata';
 import type { Metadata } from 'next';
 
@@ -17,19 +16,27 @@ export async function generateMetadata({ params }: HistoryPageProps): Promise<Me
 export default async function HistoryPage({ params }: HistoryPageProps) {
   const { slug } = await params;
 
-  const [history, blockProps] = await Promise.all([
-    getHistory(slug),
-    getBlockProps(slug, 'history', 'history_timeline'),
-  ]);
+  let page;
+  try { page = await getPageBySlug(slug, 'history'); } catch { page = null; }
+  const sections = page?.sections?.filter((s: any) => s.isVisible).sort((a: any, b: any) => a.sortOrder - b.sortOrder) ?? [];
 
-  const variant = (blockProps.variant as string) || 'left';
+  const history = await getHistory(slug);
 
   return (
     <div>
-      <PageHeroBanner tenantSlug={slug} pageSlug="history" fallbackTitle="교회 연혁" fallbackSubtitle="교회의 발자취를 돌아봅니다" />
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-        <HistoryTimelineClient history={history} />
-      </div>
+      {sections.map((section: any) => {
+        if (section.blockType === 'history_timeline') {
+          return (
+            <section key={section.id} className="px-4 py-10 sm:px-6 sm:py-16">
+              <div className="mx-auto max-w-7xl">
+                {section.props?.title && <h2 className="mb-8 text-center text-3xl font-bold font-heading">{section.props.title}</h2>}
+                <HistoryTimelineClient history={history} />
+              </div>
+            </section>
+          );
+        }
+        return <BlockRenderer key={section.id} section={section} slug={slug} />;
+      })}
     </div>
   );
 }

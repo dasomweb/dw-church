@@ -1,8 +1,8 @@
-import { getStaff } from '@/lib/api';
-import { getBlockProps, variantToColumns } from '@/lib/page-props';
+import { getStaff, getPageBySlug } from '@/lib/api';
+import { BlockRenderer } from '@/components/BlockRenderer';
 import { StaffGridClient } from './StaffGridClient';
-import { PageHeroBanner } from '@/components/PageHeroBanner';
 import { buildTenantMetadata } from '@/lib/metadata';
+import { variantToColumns } from '@/lib/page-props';
 import type { Metadata } from 'next';
 
 interface StaffPageProps {
@@ -17,29 +17,38 @@ export async function generateMetadata({ params }: StaffPageProps): Promise<Meta
 export default async function StaffPage({ params }: StaffPageProps) {
   const { slug } = await params;
 
-  const [staff, blockProps] = await Promise.all([
-    getStaff(slug),
-    getBlockProps(slug, 'staff', 'staff_grid'),
-  ]);
+  let page;
+  try { page = await getPageBySlug(slug, 'staff'); } catch { page = null; }
+  const sections = page?.sections?.filter((s: any) => s.isVisible).sort((a: any, b: any) => a.sortOrder - b.sortOrder) ?? [];
 
-  const variant = (blockProps.variant as string) || 'grid-4';
-  const columns = variantToColumns(variant, 4);
-  const grouped = variant === 'grouped';
-  const groupBy = (blockProps.groupBy as string) || 'role';
-  const customGroups = (blockProps.customGroups as string) || '';
+  const staff = await getStaff(slug);
 
   return (
     <div>
-      <PageHeroBanner tenantSlug={slug} pageSlug="staff" fallbackTitle="교역자 소개" fallbackSubtitle="함께 섬기는 사역자들" />
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-        <StaffGridClient
-          staff={staff}
-          columns={columns}
-          grouped={grouped}
-          groupBy={groupBy}
-          customGroups={customGroups}
-        />
-      </div>
+      {sections.map((section: any) => {
+        if (section.blockType === 'staff_grid') {
+          const variant = section.props?.variant || 'grid-4';
+          const columns = variantToColumns(variant, 4);
+          const grouped = variant === 'grouped';
+          const groupBy = section.props?.groupBy || 'role';
+          const customGroups = section.props?.customGroups || '';
+          return (
+            <section key={section.id} className="px-4 py-10 sm:px-6 sm:py-16" style={{ backgroundColor: 'var(--dw-surface)' }}>
+              <div className="mx-auto max-w-7xl">
+                {section.props?.title && <h2 className="mb-8 text-center text-3xl font-bold font-heading">{section.props.title}</h2>}
+                <StaffGridClient
+                  staff={staff}
+                  columns={columns}
+                  grouped={grouped}
+                  groupBy={groupBy}
+                  customGroups={customGroups}
+                />
+              </div>
+            </section>
+          );
+        }
+        return <BlockRenderer key={section.id} section={section} slug={slug} />;
+      })}
     </div>
   );
 }

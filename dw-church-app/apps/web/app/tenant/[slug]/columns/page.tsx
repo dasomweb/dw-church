@@ -1,7 +1,6 @@
-import { getColumns } from '@/lib/api';
-import { getBlockProps } from '@/lib/page-props';
+import { getColumns, getPageBySlug } from '@/lib/api';
+import { BlockRenderer } from '@/components/BlockRenderer';
 import { ColumnListClient } from './ColumnListClient';
-import { PageHeroBanner } from '@/components/PageHeroBanner';
 import { buildTenantMetadata } from '@/lib/metadata';
 import type { Metadata } from 'next';
 
@@ -18,27 +17,35 @@ export async function generateMetadata({ params }: ColumnsPageProps): Promise<Me
 export default async function ColumnsPage({ params, searchParams }: ColumnsPageProps) {
   const { slug } = await params;
   const search = await searchParams;
-  const page = parseInt(search.page ?? '1', 10);
+  const currentPage = parseInt(search.page ?? '1', 10);
 
-  const [columns, blockProps] = await Promise.all([
-    getColumns(slug, { page, perPage: 12 }),
-    getBlockProps(slug, 'columns', 'text_only'),
-  ]);
+  let page;
+  try { page = await getPageBySlug(slug, 'columns'); } catch { page = null; }
+  const sections = page?.sections?.filter((s: any) => s.isVisible).sort((a: any, b: any) => a.sortOrder - b.sortOrder) ?? [];
 
-  const variant = (blockProps.variant as string) || 'left';
+  const columns = await getColumns(slug, { page: currentPage, perPage: 12 });
 
   return (
     <div>
-      <PageHeroBanner tenantSlug={slug} pageSlug="columns" fallbackTitle="목회칼럼" fallbackSubtitle="목사님의 글을 통해 은혜를 나눕니다" />
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-        <ColumnListClient
-          initialData={columns.data ?? []}
-          total={columns.meta?.total ?? 0}
-          totalPages={columns.meta?.totalPages ?? 1}
-          currentPage={page}
-          slug={slug}
-        />
-      </div>
+      {sections.map((section: any) => {
+        if (section.blockType === 'text_only' || section.blockType === 'recent_columns') {
+          return (
+            <section key={section.id} className="px-4 py-10 sm:px-6 sm:py-16">
+              <div className="mx-auto max-w-7xl">
+                {section.props?.title && <h2 className="mb-8 text-center text-3xl font-bold font-heading">{section.props.title}</h2>}
+                <ColumnListClient
+                  initialData={columns.data ?? []}
+                  total={columns.meta?.total ?? 0}
+                  totalPages={columns.meta?.totalPages ?? 1}
+                  currentPage={currentPage}
+                  slug={slug}
+                />
+              </div>
+            </section>
+          );
+        }
+        return <BlockRenderer key={section.id} section={section} slug={slug} />;
+      })}
     </div>
   );
 }

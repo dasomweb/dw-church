@@ -1,8 +1,8 @@
-import { getAlbums } from '@/lib/api';
-import { getBlockProps, variantToColumns } from '@/lib/page-props';
+import { getAlbums, getPageBySlug } from '@/lib/api';
+import { BlockRenderer } from '@/components/BlockRenderer';
 import { AlbumGalleryClient } from './AlbumGalleryClient';
-import { PageHeroBanner } from '@/components/PageHeroBanner';
 import { buildTenantMetadata } from '@/lib/metadata';
+import { variantToColumns } from '@/lib/page-props';
 import type { Metadata } from 'next';
 
 interface AlbumsPageProps {
@@ -18,29 +18,38 @@ export async function generateMetadata({ params }: AlbumsPageProps): Promise<Met
 export default async function AlbumsPage({ params, searchParams }: AlbumsPageProps) {
   const { slug } = await params;
   const search = await searchParams;
-  const page = parseInt(search.page ?? '1', 10);
+  const currentPage = parseInt(search.page ?? '1', 10);
 
-  const [albums, blockProps] = await Promise.all([
-    getAlbums(slug, { page, perPage: 12 }),
-    getBlockProps(slug, 'albums', 'album_gallery'),
-  ]);
+  let page;
+  try { page = await getPageBySlug(slug, 'albums'); } catch { page = null; }
+  const sections = page?.sections?.filter((s: any) => s.isVisible).sort((a: any, b: any) => a.sortOrder - b.sortOrder) ?? [];
 
-  const variant = (blockProps.variant as string) || 'grid-3';
-  const columns = variantToColumns(variant, 3);
+  const albums = await getAlbums(slug, { page: currentPage, perPage: 12 });
 
   return (
     <div>
-      <PageHeroBanner tenantSlug={slug} pageSlug="albums" fallbackTitle="앨범" fallbackSubtitle="교회의 아름다운 순간들" />
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-        <AlbumGalleryClient
-          initialData={albums.data ?? []}
-          total={albums.meta?.total ?? 0}
-          totalPages={albums.meta?.totalPages ?? 1}
-          currentPage={page}
-          slug={slug}
-          columns={columns}
-        />
-      </div>
+      {sections.map((section: any) => {
+        if (section.blockType === 'album_gallery') {
+          const variant = section.props?.variant || 'grid-3';
+          const columns = variantToColumns(variant, 3);
+          return (
+            <section key={section.id} className="px-4 py-10 sm:px-6 sm:py-16">
+              <div className="mx-auto max-w-7xl">
+                {section.props?.title && <h2 className="mb-8 text-center text-3xl font-bold font-heading">{section.props.title}</h2>}
+                <AlbumGalleryClient
+                  initialData={albums.data ?? []}
+                  total={albums.meta?.total ?? 0}
+                  totalPages={albums.meta?.totalPages ?? 1}
+                  currentPage={currentPage}
+                  slug={slug}
+                  columns={columns}
+                />
+              </div>
+            </section>
+          );
+        }
+        return <BlockRenderer key={section.id} section={section} slug={slug} />;
+      })}
     </div>
   );
 }

@@ -1,8 +1,8 @@
-import { getEvents } from '@/lib/api';
-import { getBlockProps, variantToColumns } from '@/lib/page-props';
+import { getEvents, getPageBySlug } from '@/lib/api';
+import { BlockRenderer } from '@/components/BlockRenderer';
 import { EventGridClient } from './EventGridClient';
-import { PageHeroBanner } from '@/components/PageHeroBanner';
 import { buildTenantMetadata } from '@/lib/metadata';
+import { variantToColumns } from '@/lib/page-props';
 import type { Metadata } from 'next';
 
 interface EventsPageProps {
@@ -18,29 +18,38 @@ export async function generateMetadata({ params }: EventsPageProps): Promise<Met
 export default async function EventsPage({ params, searchParams }: EventsPageProps) {
   const { slug } = await params;
   const search = await searchParams;
-  const page = parseInt(search.page ?? '1', 10);
+  const currentPage = parseInt(search.page ?? '1', 10);
 
-  const [events, blockProps] = await Promise.all([
-    getEvents(slug, { page, perPage: 12 }),
-    getBlockProps(slug, 'events', 'event_grid'),
-  ]);
+  let page;
+  try { page = await getPageBySlug(slug, 'events'); } catch { page = null; }
+  const sections = page?.sections?.filter((s: any) => s.isVisible).sort((a: any, b: any) => a.sortOrder - b.sortOrder) ?? [];
 
-  const variant = (blockProps.variant as string) || 'cards-3';
-  const columns = variantToColumns(variant, 3);
+  const events = await getEvents(slug, { page: currentPage, perPage: 12 });
 
   return (
     <div>
-      <PageHeroBanner tenantSlug={slug} pageSlug="events" fallbackTitle="행사/이벤트" fallbackSubtitle="교회의 다양한 행사를 안내합니다" />
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-        <EventGridClient
-          initialData={events.data ?? []}
-          total={events.meta?.total ?? 0}
-          totalPages={events.meta?.totalPages ?? 1}
-          currentPage={page}
-          slug={slug}
-          columns={columns}
-        />
-      </div>
+      {sections.map((section: any) => {
+        if (section.blockType === 'event_grid') {
+          const variant = section.props?.variant || 'cards-3';
+          const columns = variantToColumns(variant, 3);
+          return (
+            <section key={section.id} className="px-4 py-10 sm:px-6 sm:py-16" style={{ backgroundColor: 'var(--dw-surface)' }}>
+              <div className="mx-auto max-w-7xl">
+                {section.props?.title && <h2 className="mb-8 text-center text-3xl font-bold font-heading">{section.props.title}</h2>}
+                <EventGridClient
+                  initialData={events.data ?? []}
+                  total={events.meta?.total ?? 0}
+                  totalPages={events.meta?.totalPages ?? 1}
+                  currentPage={currentPage}
+                  slug={slug}
+                  columns={columns}
+                />
+              </div>
+            </section>
+          );
+        }
+        return <BlockRenderer key={section.id} section={section} slug={slug} />;
+      })}
     </div>
   );
 }
