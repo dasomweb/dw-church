@@ -55,7 +55,7 @@ export default function LoginPage() {
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/70 to-indigo-900/70" />
+        <div className="absolute inset-0 bg-black/20" />
         <div className="relative z-10 flex flex-col justify-end p-12 text-white">
           <h2 className="text-4xl font-bold mb-3">True Light</h2>
           <p className="text-lg opacity-90 max-w-md">교회 웹사이트를 쉽고 빠르게 관리하세요</p>
