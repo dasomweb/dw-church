@@ -58,7 +58,7 @@ function HeroSlider() {
                 {slide.subline}
               </p>
               <div className="mt-6 flex gap-3 sm:mt-8">
-                <Link href="/register" className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg hover:bg-blue-700 sm:px-8 sm:text-base">
+                <a href="https://admin.truelight.app/register" className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg hover:bg-blue-700 sm:px-8 sm:text-base">
                   Get Started
                 </Link>
                 <a href="#plans" className="rounded-lg border border-white/30 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10 sm:px-8 sm:text-base">
@@ -193,12 +193,12 @@ export default function LandingPage() {
             <a href="#plans" className="text-sm text-gray-600 hover:text-gray-900">Plans</a>
           </nav>
           <div className="flex items-center gap-3">
-            <Link href="/login" className="text-sm text-gray-600 hover:text-gray-900">
+            <a href="https://admin.truelight.app" className="text-sm text-gray-600 hover:text-gray-900">
               Sign In
-            </Link>
-            <Link href="/register" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+            </a>
+            <a href="https://admin.truelight.app/register" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
               Get Started
-            </Link>
+            </a>
           </div>
         </div>
       </header>
@@ -309,8 +309,8 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <Link
-                  href={plan.name === 'Enterprise' ? 'mailto:hello@truelight.app' : '/register'}
+                <a
+                  href={plan.name === 'Enterprise' ? 'mailto:hello@truelight.app' : 'https://admin.truelight.app/register'}
                   className={`block w-full rounded-xl py-3.5 text-center text-sm font-bold transition-colors ${
                     plan.highlighted
                       ? 'bg-blue-600 text-white hover:bg-blue-700'
@@ -318,7 +318,7 @@ export default function LandingPage() {
                   }`}
                 >
                   {plan.cta}
-                </Link>
+                </a>
               </div>
             ))}
           </div>
@@ -373,7 +373,7 @@ export default function LandingPage() {
             Join churches across the U.S. using TRUE LIGHT to connect with their communities online.
           </p>
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Link href="/register" className="rounded-xl bg-white px-8 py-3.5 text-sm font-bold text-blue-700 shadow-lg hover:bg-gray-50">
+            <a href="https://admin.truelight.app/register" className="rounded-xl bg-white px-8 py-3.5 text-sm font-bold text-blue-700 shadow-lg hover:bg-gray-50">
               Get Started Now
             </Link>
             <a href="mailto:hello@truelight.app" className="rounded-xl border border-white/30 px-8 py-3.5 text-sm font-semibold text-white hover:bg-white/10">
@@ -403,7 +403,7 @@ export default function LandingPage() {
               <h4 className="mb-3 text-sm font-bold text-gray-900">Support</h4>
               <ul className="space-y-2 text-sm text-gray-500">
                 <li><a href="mailto:hello@truelight.app" className="hover:text-gray-700">Contact Us</a></li>
-                <li><Link href="/login" className="hover:text-gray-700">Admin Login</Link></li>
+                <li><a href="https://admin.truelight.app" className="hover:text-gray-700">Admin Login</a></li>
               </ul>
             </div>
             <div>
