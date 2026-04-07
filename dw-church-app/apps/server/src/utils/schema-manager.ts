@@ -195,9 +195,6 @@ export async function seedDefaultData(slug: string, churchName?: string): Promis
     { title: '새가족 안내', slug: 'newcomer-info', is_home: false, sort_order: order++, sections: [
       heroBanner('새가족 안내', '새가족을 환영합니다'),
       { block_type: 'newcomer_info', props: { title: '새가족 안내' } },
-      { block_type: 'worship_times', props: { title: '예배 시간 안내', services: [] } },
-      { block_type: 'location_map', props: { title: '오시는 길' } },
-      { block_type: 'contact_info', props: { title: '연락처' } },
     ]},
     { title: '새가족 등록신청', slug: 'newcomer-register', is_home: false, sort_order: order++, sections: [
       heroBanner('새가족 등록신청', '등록을 통해 교회 가족이 되세요'),
