@@ -1870,43 +1870,72 @@ function MigrationTab() {
     <div className="space-y-6">
       {/* Step 1: Input URL */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h3 className="text-base font-semibold text-gray-900 mb-1">1단계: 사이트 분석</h3>
-        <p className="text-xs text-gray-500 mb-4">기존 교회 사이트 URL을 입력하고 사이트 유형을 선택하세요.</p>
-        <div className="flex gap-2 mb-3">
-          <input
-            type="url"
-            value={siteUrl}
-            onChange={(e) => setSiteUrl(e.target.value)}
-            placeholder="https://example-church.com"
-            className="flex-1 border rounded-lg px-3 py-2 text-sm"
-            onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
-          />
-        </div>
-        <div className="flex gap-2 items-center">
-          <div className="flex bg-gray-100 rounded-lg p-0.5">
-            <button
-              type="button"
-              onClick={() => setIsWordPress(true)}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${isWordPress === true ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-gray-900'}`}
-            >
-              WordPress
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsWordPress(false)}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${isWordPress === false ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-gray-900'}`}
-            >
-              일반 사이트
-            </button>
-          </div>
+        <h3 className="text-base font-semibold text-gray-900 mb-1">사이트 마이그레이션</h3>
+        <p className="text-xs text-gray-500 mb-4">사이트 유형을 선택하세요.</p>
+        <div className="flex bg-gray-100 rounded-lg p-0.5 mb-4 w-fit">
           <button
-            onClick={isWordPress === false ? handleAiAnalyze : handleAnalyze}
-            disabled={analyzing || aiAnalyzing || !siteUrl.trim() || isWordPress === null}
-            className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+            type="button"
+            onClick={() => setIsWordPress(true)}
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${isWordPress === true ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-gray-900'}`}
           >
-            {analyzing || aiAnalyzing ? '분석 중...' : '사이트 분석'}
+            WordPress
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsWordPress(false)}
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${isWordPress === false ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-gray-900'}`}
+          >
+            일반 사이트
           </button>
         </div>
+
+        {isWordPress === true && (
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">WordPress REST API URL</label>
+            <div className="flex gap-2">
+              <input
+                type="url"
+                value={siteUrl}
+                onChange={(e) => setSiteUrl(e.target.value)}
+                placeholder="https://example-church.com/wp-json/wp/v2"
+                className="flex-1 border rounded-lg px-3 py-2 text-sm"
+                onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
+              />
+              <button
+                onClick={handleAnalyze}
+                disabled={analyzing || !siteUrl.trim()}
+                className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+              >
+                {analyzing ? '가져오는 중...' : '데이터 가져오기'}
+              </button>
+            </div>
+            <p className="text-[10px] text-gray-400 mt-1">예: https://bethelfaith.com 또는 https://bethelfaith.com/wp-json/wp/v2</p>
+          </div>
+        )}
+
+        {isWordPress === false && (
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">사이트 URL</label>
+            <div className="flex gap-2">
+              <input
+                type="url"
+                value={siteUrl}
+                onChange={(e) => setSiteUrl(e.target.value)}
+                placeholder="https://example-church.com"
+                className="flex-1 border rounded-lg px-3 py-2 text-sm"
+                onKeyDown={(e) => e.key === 'Enter' && handleAiAnalyze()}
+              />
+              <button
+                onClick={handleAiAnalyze}
+                disabled={aiAnalyzing || !siteUrl.trim()}
+                className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+              >
+                {aiAnalyzing ? 'AI 분석 중...' : 'AI 사이트 분석'}
+              </button>
+            </div>
+            <p className="text-[10px] text-gray-400 mt-1">AI가 페이지를 분석하여 정적/동적 콘텐츠를 자동 분류합니다</p>
+          </div>
+        )}
       </div>
 
       {/* WordPress Detection Badge */}
