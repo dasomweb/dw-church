@@ -32,6 +32,10 @@ function useAdminApi() {
 interface ScrapedPage {
   url: string;
   title: string;
+  subtitle: string;
+  shortDescription: string;
+  description: string;
+  heroImage: string;
   imageCount: number;
   images: string[];
   textPreview: string;
@@ -162,8 +166,8 @@ export default function MigrationTab() {
       // Rule-based block suggestions based on content analysis
       const blocks: PagePlan['blocks'] = [];
 
-      // Every page gets a hero banner
-      blocks.push({ blockType: 'hero_banner', label: blockLabel('hero_banner'), props: { title, subtitle: '', height: 'md' } });
+      // Every page gets a hero banner with structured data
+      blocks.push({ blockType: 'hero_banner', label: blockLabel('hero_banner'), props: { title, subtitle: page.subtitle || '', backgroundImageUrl: page.heroImage || '', height: 'md', layout: 'full' } });
 
       // Detect content type from URL slug ONLY (not body text — body contains nav/footer noise)
       const s = slug.toLowerCase();
@@ -349,9 +353,18 @@ export default function MigrationTab() {
           {/* Pages list */}
           <div className="space-y-1 max-h-60 overflow-y-auto">
             {site.pages.map((p, i) => (
-              <div key={i} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg text-xs">
-                <span className="font-medium flex-1 truncate">{p.title || '(제목 없음)'}</span>
-                <span className="text-gray-400">{p.imageCount}장</span>
+              <div key={i} className="p-3 bg-gray-50 rounded-lg text-xs space-y-1">
+                <div className="flex items-center gap-2">
+                  {p.heroImage && <img src={p.heroImage} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm truncate">{p.title || '(제목 없음)'}</p>
+                    {p.subtitle && <p className="text-gray-500 truncate">{p.subtitle}</p>}
+                  </div>
+                  <span className="text-gray-400 flex-shrink-0">{p.imageCount}장</span>
+                </div>
+                {p.shortDescription && (
+                  <p className="text-gray-500 line-clamp-2">{p.shortDescription}</p>
+                )}
               </div>
             ))}
           </div>

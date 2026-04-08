@@ -6,9 +6,13 @@
 interface ScrapedPage {
   url: string;
   title: string;
-  content: string;         // raw HTML body
-  textContent: string;     // plain text
-  images: string[];        // all image URLs
+  subtitle: string;            // first h2 or h3
+  shortDescription: string;    // meta description or first paragraph (max 200 chars)
+  description: string;         // main content text (max 2000 chars)
+  heroImage: string;           // first large image or og:image
+  content: string;             // raw HTML body
+  textContent: string;         // plain text
+  images: string[];            // all image URLs
   links: { text: string; href: string }[];
 }
 
@@ -154,7 +158,37 @@ export async function fetchPage(url: string): Promise<ScrapedPage> {
     }
   }
 
-  return { url, title, content: bodyHtml, textContent, images, links };
+  // Extract subtitle (first h2 or h3 in main content)
+  const mainContent = bodyHtml
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<nav[\s\S]*?<\/nav>/gi, '')
+    .replace(/<footer[\s\S]*?<\/footer>/gi, '')
+    .replace(/<header[\s\S]*?<\/header>/gi, '');
+
+  const subtitleMatch = mainContent.match(/<h[23][^>]*>([\s\S]*?)<\/h[23]>/i);
+  const subtitle = subtitleMatch ? (subtitleMatch[1] ?? '').replace(/<[^>]+>/g, '').trim() : '';
+
+  // Extract meta description or og:description
+  const metaDescMatch = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)
+    || html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i);
+  const metaDesc = metaDescMatch?.[1]?.trim() ?? '';
+
+  // Short description: meta description or first paragraph
+  let shortDescription = metaDesc;
+  if (!shortDescription) {
+    const firstPMatch = mainContent.match(/<p[^>]*>([\s\S]*?)<\/p>/i);
+    shortDescription = firstPMatch ? (firstPMatch[1] ?? '').replace(/<[^>]+>/g, '').trim().slice(0, 200) : textContent.slice(0, 200);
+  }
+
+  // Description: main text content (max 2000 chars)
+  const description = textContent.slice(0, 2000);
+
+  // Hero image: og:image or first large image
+  const ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
+  const heroImage = ogImageMatch ? resolveUrl(url, ogImageMatch[1] ?? '') : (images[0] || '');
+
+  return { url, title, subtitle, shortDescription, description, heroImage, content: bodyHtml, textContent, images, links };
 }
 
 /**

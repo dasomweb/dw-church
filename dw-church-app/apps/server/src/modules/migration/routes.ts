@@ -37,6 +37,10 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
         pages: site.pages.map((p) => ({
           url: p.url,
           title: p.title,
+          subtitle: p.subtitle,
+          shortDescription: p.shortDescription,
+          description: p.description,
+          heroImage: p.heroImage,
           imageCount: p.images.length,
           images: p.images.slice(0, 20),
           textPreview: p.textContent.slice(0, 500),
