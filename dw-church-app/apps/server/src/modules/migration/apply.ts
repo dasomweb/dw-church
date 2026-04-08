@@ -67,6 +67,25 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+/** Clean HTML: keep text structure (p, h, ul, li, br) but remove styles, scripts, classes */
+export function cleanHtml(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<nav[\s\S]*?<\/nav>/gi, '')
+    .replace(/<footer[\s\S]*?<\/footer>/gi, '')
+    .replace(/<header[\s\S]*?<\/header>/gi, '')
+    .replace(/\s*(class|style|id|data-[\w-]+|onclick|onload)="[^"]*"/gi, '')
+    .replace(/\s*(class|style|id|data-[\w-]+|onclick|onload)='[^']*'/gi, '')
+    .replace(/<div[^>]*>/gi, '<p>')
+    .replace(/<\/div>/gi, '</p>')
+    .replace(/<span[^>]*>/gi, '')
+    .replace(/<\/span>/gi, '')
+    .replace(/(<p>\s*<\/p>\s*)+/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 /** Extract image URLs from HTML */
 function extractImagesFromHtml(html: string): string[] {
   const imgs: string[] = [];
