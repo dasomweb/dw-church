@@ -1745,7 +1745,7 @@ function MigrationTab() {
 
       // Auto-match by slug/title similarity
       const matches: AiPageMatch[] = wpPages.map((src) => {
-        const match = (tenantRes.data || []).find((tp: AiTenantPage) =>
+        const match = tenantPages.find((tp: AiTenantPage) =>
           tp.slug === src.url || tp.title === src.title
         );
         return {
