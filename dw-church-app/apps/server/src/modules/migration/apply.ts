@@ -596,15 +596,32 @@ export async function applyMigration(
   }
 
   // ─── Static Page Content → page_sections props ─────────
-  const pages = data.pages as { slug: string; sections: { blockType: string; props: Record<string, unknown> }[] }[] | undefined;
+  const pages = data.pages as { title?: string; slug: string; sections: { blockType: string; props: Record<string, unknown> }[] }[] | undefined;
   if (pages?.length) {
     for (const page of pages) {
-      // Find existing page
-      const existing = await prisma.$queryRawUnsafe<{ id: string }[]>(
+      // Find existing page or create new
+      let existing = await prisma.$queryRawUnsafe<{ id: string }[]>(
         `SELECT id FROM "${schema}".pages WHERE slug = $1 LIMIT 1`,
         page.slug,
       );
-      if (existing.length === 0) continue;
+
+      if (existing.length === 0) {
+        // Create new page
+        const maxOrder = await prisma.$queryRawUnsafe<{ max: number | null }[]>(
+          `SELECT MAX(sort_order) as max FROM "${schema}".pages`,
+        );
+        const nextOrder = ((maxOrder[0]?.max) ?? 0) + 1;
+        const pageTitle = page.title || page.slug;
+        existing = await prisma.$queryRawUnsafe<{ id: string }[]>(
+          `INSERT INTO "${schema}".pages (title, slug, status, sort_order)
+           VALUES ($1, $2, 'published', $3)
+           RETURNING id`,
+          pageTitle,
+          page.slug,
+          nextOrder,
+        );
+      }
+
       const pageId = existing[0]!.id;
 
       // Update or insert sections
