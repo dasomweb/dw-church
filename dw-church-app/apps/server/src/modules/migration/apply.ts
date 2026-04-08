@@ -596,7 +596,15 @@ export async function applyMigration(
   }
 
   // ─── Static Page Content → page_sections props ─────────
-  const pages = data.pages as { title?: string; slug: string; sections: { blockType: string; props: Record<string, unknown> }[] }[] | undefined;
+  const pages = data.pages as {
+    title?: string;
+    slug: string;
+    textContent?: string;
+    images?: string[];
+    heroImage?: string;
+    description?: string;
+    sections: { blockType: string; props: Record<string, unknown> }[];
+  }[] | undefined;
   if (pages?.length) {
     for (const page of pages) {
       // Find existing page or create new
@@ -624,36 +632,36 @@ export async function applyMigration(
 
       const pageId = existing[0]!.id;
 
-      // Update or insert sections
+      // Build WpContent for prop enrichment
+      const wpContent: WpContent = {
+        title: page.title || page.slug,
+        slug: page.slug,
+        htmlContent: page.textContent || '',
+        images: page.images || [],
+      };
+
+      // Delete existing sections for this page, then insert fresh
+      await prisma.$queryRawUnsafe(
+        `DELETE FROM "${schema}".page_sections WHERE page_id = $1::uuid`,
+        pageId,
+      );
+
+      // Insert sections with enriched props + R2 image migration
       for (let i = 0; i < page.sections.length; i++) {
         const sec = page.sections[i]!;
-        // Check if section exists at this position
-        const existingSec = await prisma.$queryRawUnsafe<{ id: string }[]>(
-          `SELECT id FROM "${schema}".page_sections
-           WHERE page_id = $1::uuid AND sort_order = $2 LIMIT 1`,
+        // Enrich props using scraped content
+        const enrichedProps = buildBlockProps(sec.blockType, sec.props, wpContent);
+        // Migrate external images to R2
+        const finalProps = await migratePropsImages(enrichedProps, tenantSlug);
+
+        await prisma.$queryRawUnsafe(
+          `INSERT INTO "${schema}".page_sections (page_id, block_type, props, sort_order, is_visible)
+           VALUES ($1::uuid, $2, $3::jsonb, $4, true)`,
           pageId,
+          sec.blockType,
+          JSON.stringify(finalProps),
           i,
         );
-        if (existingSec.length > 0) {
-          // Update existing section props (merge)
-          await prisma.$queryRawUnsafe(
-            `UPDATE "${schema}".page_sections
-             SET props = props || $1::jsonb, block_type = $2
-             WHERE id = $3::uuid`,
-            JSON.stringify(sec.props),
-            sec.blockType,
-            existingSec[0]!.id,
-          );
-        } else {
-          await prisma.$queryRawUnsafe(
-            `INSERT INTO "${schema}".page_sections (page_id, block_type, props, sort_order, is_visible)
-             VALUES ($1::uuid, $2, $3::jsonb, $4, true)`,
-            pageId,
-            sec.blockType,
-            JSON.stringify(sec.props),
-            i,
-          );
-        }
       }
       result.pages++;
     }

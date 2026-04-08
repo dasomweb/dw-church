@@ -13,7 +13,16 @@ export function WorshipScheduleBlock({ props }: WorshipScheduleBlockProps) {
   const services = (props.services as Service[]) ?? [];
   const title = (props.title as string) || '예배 안내';
 
-  if (services.length === 0) return null;
+  if (services.length === 0) {
+    return (
+      <section className="px-4 py-10 sm:px-6 sm:py-16">
+        <div className="mx-auto max-w-4xl text-center">
+          <h2 className="mb-4 text-3xl font-bold font-heading">{title}</h2>
+          <p className="text-gray-400 text-sm">예배 시간이 등록되지 않았습니다.</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="px-4 py-10 sm:px-6 sm:py-16">

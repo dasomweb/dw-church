@@ -20,7 +20,16 @@ export async function RecentSermonsBlock({ props, slug }: RecentSermonsBlockProp
     sermons = [];
   }
 
-  if (sermons.length === 0) return null;
+  if (sermons.length === 0) {
+    return (
+      <section className="px-4 py-10 sm:px-6 sm:py-16" style={{ backgroundColor: 'var(--dw-surface)' }}>
+        <div className="mx-auto max-w-7xl text-center">
+          <h2 className="mb-4 text-3xl font-bold font-heading">{title}</h2>
+          <p className="text-gray-400 text-sm">등록된 설교가 없습니다.</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="px-4 py-10 sm:px-6 sm:py-16" style={{ backgroundColor: 'var(--dw-surface)' }}>

@@ -171,45 +171,60 @@ export default function MigrationTab() {
 
       // Detect content type from URL slug ONLY (not body text — body contains nav/footer noise)
       const s = slug.toLowerCase();
+      const contentText = page.description || page.textPreview || '';
+      const firstImage = page.images?.[0] || page.heroImage || '';
 
       if (s === 'home' || s === '' || s === '#') {
-        blocks.push({ blockType: 'recent_sermons', label: blockLabel('recent_sermons'), props: { title, limit: 4, variant: 'grid-4' } });
-        blocks.push({ blockType: 'recent_bulletins', label: blockLabel('recent_bulletins'), props: { title, limit: 4, variant: 'grid-4' } });
-        blocks.push({ blockType: 'event_grid', label: blockLabel('event_grid'), props: { title, limit: 4, variant: 'cards-4' } });
+        blocks.push({ blockType: 'recent_sermons', label: blockLabel('recent_sermons'), props: { title: '최근 설교', limit: 4, variant: 'grid-4' } });
+        blocks.push({ blockType: 'recent_bulletins', label: blockLabel('recent_bulletins'), props: { title: '주보', limit: 4, variant: 'grid-4' } });
+        blocks.push({ blockType: 'event_grid', label: blockLabel('event_grid'), props: { title: '교회 소식', limit: 4, variant: 'cards-4' } });
+        // Also add scraped content as text block
+        if (contentText) {
+          blocks.push({ blockType: 'text_image', label: blockLabel('text_image'), props: { title: '교회 소개', content: contentText.slice(0, 2000), imageUrl: firstImage } });
+        }
       } else if (/sermon|preaching/.test(s)) {
-        blocks.push({ blockType: 'recent_sermons', label: blockLabel('recent_sermons'), props: { limit: 12, variant: 'grid-4' } });
+        blocks.push({ blockType: 'recent_sermons', label: blockLabel('recent_sermons'), props: { title: title || '설교', limit: 12, variant: 'grid-4' } });
       } else if (/bulletin|weekly/.test(s)) {
-        blocks.push({ blockType: 'recent_bulletins', label: blockLabel('recent_bulletins'), props: { limit: 12, variant: 'grid-4' } });
+        blocks.push({ blockType: 'recent_bulletins', label: blockLabel('recent_bulletins'), props: { title: title || '주보', limit: 12, variant: 'grid-4' } });
       } else if (/column|pastoral/.test(s)) {
-        blocks.push({ blockType: 'recent_columns', label: blockLabel('recent_columns'), props: { limit: 12, variant: 'grid-3' } });
+        blocks.push({ blockType: 'recent_columns', label: blockLabel('recent_columns'), props: { title: title || '목회칼럼', limit: 12, variant: 'grid-3' } });
       } else if (/staff|people|pastor|leader/.test(s)) {
-        blocks.push({ blockType: 'staff_grid', label: blockLabel('staff_grid'), props: { title, limit: 20, variant: 'grid-4' } });
+        blocks.push({ blockType: 'staff_grid', label: blockLabel('staff_grid'), props: { title: title || '교역자 소개', limit: 20, variant: 'grid-4' } });
       } else if (/gallery|album|photo/.test(s)) {
-        blocks.push({ blockType: 'album_gallery', label: blockLabel('album_gallery'), props: { limit: 12, variant: 'grid-4' } });
+        blocks.push({ blockType: 'album_gallery', label: blockLabel('album_gallery'), props: { title: title || '앨범', limit: 12, variant: 'grid-4' } });
       } else if (/event|announcement|news/.test(s)) {
-        blocks.push({ blockType: 'event_grid', label: blockLabel('event_grid'), props: { limit: 12, variant: 'cards-4' } });
+        blocks.push({ blockType: 'event_grid', label: blockLabel('event_grid'), props: { title: title || '교회 소식', limit: 12, variant: 'cards-4' } });
       } else if (/history|timeline/.test(s)) {
-        blocks.push({ blockType: 'history_timeline', label: blockLabel('history_timeline'), props: { title } });
+        blocks.push({ blockType: 'history_timeline', label: blockLabel('history_timeline'), props: { title: title || '교회 연혁' } });
       } else if (/worship|service/.test(s)) {
-        blocks.push({ blockType: 'worship_times', label: blockLabel('worship_times'), props: { title, services: [] } });
+        blocks.push({ blockType: 'worship_times', label: blockLabel('worship_times'), props: { title: title || '예배 안내', services: [] } });
       } else if (/direction|location|map/.test(s)) {
-        blocks.push({ blockType: 'location_map', label: blockLabel('location_map'), props: { title } });
-        blocks.push({ blockType: 'contact_info', label: blockLabel('contact_info'), props: { title } });
+        blocks.push({ blockType: 'location_map', label: blockLabel('location_map'), props: { title: title || '오시는 길' } });
+        blocks.push({ blockType: 'contact_info', label: blockLabel('contact_info'), props: { title: '연락처' } });
       } else if (/newcomer|welcome/.test(s)) {
-        blocks.push({ blockType: 'newcomer_info', label: blockLabel('newcomer_info'), props: { title } });
+        blocks.push({ blockType: 'newcomer_info', label: blockLabel('newcomer_info'), props: { title: title || '새가족 안내' } });
       } else if (/vision|mission/.test(s)) {
-        blocks.push({ blockType: 'mission_vision', label: blockLabel('mission_vision'), props: { title } });
+        blocks.push({ blockType: 'mission_vision', label: blockLabel('mission_vision'), props: { title: title || '비전' } });
       } else if (/about|greet|intro|cpstory/.test(s)) {
-        blocks.push({ blockType: 'pastor_message', label: blockLabel('pastor_message'), props: { title } });
+        blocks.push({ blockType: 'pastor_message', label: blockLabel('pastor_message'), props: { title: title || '인사말' } });
       } else if (/edu|school|youth|children/.test(s)) {
-        blocks.push({ blockType: 'text_image', label: blockLabel('text_image'), props: { title, content: page.textPreview } });
+        blocks.push({ blockType: 'text_image', label: blockLabel('text_image'), props: { title, content: contentText.slice(0, 2000), imageUrl: firstImage } });
         blocks.push({ blockType: 'board', label: blockLabel('board'), props: { title, boardSlug: slug } });
       } else {
         // Default: text block with images if available
         if (hasImages) {
-          blocks.push({ blockType: 'text_image', label: blockLabel('text_image'), props: { title, content: page.textPreview, imageUrl: page.images?.[0] || '' } });
+          blocks.push({ blockType: 'text_image', label: blockLabel('text_image'), props: { title, content: contentText.slice(0, 2000), imageUrl: firstImage } });
         } else {
-          blocks.push({ blockType: 'text_only', label: blockLabel('text_only'), props: { title, content: page.textPreview } });
+          blocks.push({ blockType: 'text_only', label: blockLabel('text_only'), props: { title, content: contentText.slice(0, 2000) } });
+        }
+      }
+
+      // Always add scraped content as text block for non-home pages if there's meaningful content
+      // (Dynamic blocks may be empty, this ensures pages aren't blank)
+      if (s !== 'home' && s !== '' && s !== '#' && contentText.length > 50) {
+        const hasDynamic = blocks.some((b) => ['recent_sermons', 'recent_bulletins', 'recent_columns', 'album_gallery', 'staff_grid', 'event_grid', 'history_timeline'].includes(b.blockType));
+        if (hasDynamic) {
+          blocks.push({ blockType: 'text_image', label: '수집된 콘텐츠', props: { title: `${title} - 원본 콘텐츠`, content: contentText.slice(0, 2000), imageUrl: firstImage } });
         }
       }
 
@@ -240,11 +255,19 @@ export default function MigrationTab() {
     try {
       const data = {
         churchInfo: { name: site?.title || '' },
-        pages: includedPlans.map((p) => ({
-          title: p.targetTitle,
-          slug: p.targetSlug,
-          sections: p.blocks.map((b, i) => ({ blockType: b.blockType, props: b.props, sortOrder: i })),
-        })),
+        pages: includedPlans.map((p) => {
+          // Find matching scraped page to pass content for enrichment + R2 image migration
+          const scrapedPage = site?.pages.find((sp) => sp.url === p.sourceUrl);
+          return {
+            title: p.targetTitle,
+            slug: p.targetSlug,
+            textContent: scrapedPage?.textContent || '',
+            images: scrapedPage?.images || [],
+            heroImage: scrapedPage?.heroImage || '',
+            description: scrapedPage?.description || '',
+            sections: p.blocks.map((b, i) => ({ blockType: b.blockType, props: b.props, sortOrder: i })),
+          };
+        }),
       };
 
       const res = await apiFetch<{ success: boolean; result: Record<string, number> }>('/apply', {

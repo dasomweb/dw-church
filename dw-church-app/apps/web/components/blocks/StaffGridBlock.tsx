@@ -32,7 +32,16 @@ export async function StaffGridBlock({ props, slug }: StaffGridBlockProps) {
     staff = [];
   }
 
-  if (staff.length === 0) return null;
+  if (staff.length === 0) {
+    return (
+      <section className="px-4 py-10 sm:px-6 sm:py-16" style={{ backgroundColor: 'var(--dw-surface)' }}>
+        <div className="mx-auto max-w-7xl text-center">
+          <h2 className="mb-4 text-3xl font-bold font-heading">교역자 소개</h2>
+          <p className="text-gray-400 text-sm">등록된 교역자가 없습니다.</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="px-4 py-10 sm:px-6 sm:py-16" style={{ backgroundColor: 'var(--dw-surface)' }}>
