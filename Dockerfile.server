@@ -18,9 +18,12 @@ COPY dw-church-app/packages/wp-plugin/package.json packages/wp-plugin/
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Copy server source
-COPY dw-church-app/apps/server/ apps/server/
-RUN cd apps/server && rm -rf dist && pnpm db:generate && pnpm build && echo "build:20260408v1"
+# Copy server source (split to ensure cache invalidation on any file change)
+COPY dw-church-app/apps/server/src/ apps/server/src/
+COPY dw-church-app/apps/server/prisma/ apps/server/prisma/
+COPY dw-church-app/apps/server/tsconfig.json apps/server/
+COPY dw-church-app/apps/server/vitest.config.ts apps/server/
+RUN cd apps/server && rm -rf dist && pnpm db:generate && pnpm build
 
 EXPOSE 3000
 CMD ["node", "apps/server/dist/index.js"]
