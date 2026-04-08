@@ -7,6 +7,298 @@
 import { prisma } from '../../config/database.js';
 import { validateSchemaName } from '../../utils/validate-schema.js';
 
+// ─── Helpers ───────────────────────────────────────────────
+
+/** Strip HTML tags and collapse whitespace */
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+/** Extract image URLs from HTML */
+function extractImagesFromHtml(html: string): string[] {
+  const imgs: string[] = [];
+  const regex = /<img[^>]+src=["']([^"']+)["']/gi;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(html)) !== null) {
+    if (match[1]) imgs.push(match[1]);
+  }
+  return imgs;
+}
+
+/** Try to parse simple table rows from HTML */
+function parseTablesFromHtml(html: string): { name: string; day: string; time: string; location: string }[] {
+  const services: { name: string; day: string; time: string; location: string }[] = [];
+  // Match <tr> rows with <td> cells
+  const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+  let rowMatch: RegExpExecArray | null;
+  while ((rowMatch = rowRegex.exec(html)) !== null) {
+    const cellRegex = /<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi;
+    const cells: string[] = [];
+    let cellMatch: RegExpExecArray | null;
+    while ((cellMatch = cellRegex.exec(rowMatch[1] ?? '')) !== null) {
+      cells.push(stripHtml(cellMatch[1] ?? ''));
+    }
+    if (cells.length >= 2) {
+      services.push({
+        name: cells[0] ?? '',
+        day: cells[1] ?? '',
+        time: cells[2] ?? cells[1] ?? '',
+        location: cells[3] ?? '',
+      });
+    }
+  }
+  return services;
+}
+
+/** Extract phone numbers from text */
+function extractPhone(text: string): string {
+  const phoneMatch = text.match(/(\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{4})/);
+  return phoneMatch?.[1] ?? '';
+}
+
+/** Extract address-like text (line containing common address words) */
+function extractAddress(text: string): string {
+  const lines = text.split(/[.\n]/);
+  for (const line of lines) {
+    const trimmed = line.trim();
+    // Korean address patterns
+    if (/[시도구군읍면동로길번지]/.test(trimmed) && trimmed.length > 5 && trimmed.length < 200) {
+      return trimmed;
+    }
+    // English address patterns
+    if (/\d+\s+\w+\s+(st|ave|rd|blvd|dr|ln|way|ct)/i.test(trimmed) && trimmed.length < 200) {
+      return trimmed;
+    }
+  }
+  return '';
+}
+
+// ─── Block Props Builder ───────────────────────────────────
+
+interface WpContent {
+  title: string;
+  slug: string;
+  htmlContent: string;
+  images: string[];
+}
+
+function buildBlockProps(
+  blockType: string,
+  existingProps: Record<string, unknown>,
+  wp: WpContent,
+): Record<string, unknown> {
+  const plainText = stripHtml(wp.htmlContent);
+  const htmlImages = extractImagesFromHtml(wp.htmlContent);
+  const allImages = [...new Set([...wp.images, ...htmlImages])];
+
+  switch (blockType) {
+    case 'hero_banner':
+      return {
+        ...existingProps,
+        title: existingProps.title || wp.title,
+        backgroundImageUrl: existingProps.backgroundImageUrl || allImages[0] || '',
+      };
+
+    case 'text_image':
+      return {
+        ...existingProps,
+        title: existingProps.title || wp.title,
+        content: plainText.slice(0, 2000),
+        imageUrl: existingProps.imageUrl || allImages[0] || '',
+        images: allImages.length > 0 ? allImages : undefined,
+      };
+
+    case 'text_only':
+      return {
+        ...existingProps,
+        title: existingProps.title || wp.title,
+        content: plainText.slice(0, 2000),
+      };
+
+    case 'church_intro':
+      return {
+        ...existingProps,
+        title: existingProps.title || wp.title,
+        content: plainText.slice(0, 2000),
+        imageUrl: existingProps.imageUrl || allImages[0] || '',
+      };
+
+    case 'pastor_message': {
+      // Try to extract pastor name from first line or title
+      const firstLine = plainText.split(/[.\n]/)[0] ?? '';
+      return {
+        ...existingProps,
+        title: existingProps.title || wp.title,
+        name: existingProps.name || firstLine.slice(0, 50),
+        message: plainText.slice(0, 2000),
+        photoUrl: existingProps.photoUrl || allImages[0] || '',
+      };
+    }
+
+    case 'mission_vision':
+      return {
+        ...existingProps,
+        title: existingProps.title || wp.title,
+        content: plainText.slice(0, 2000),
+        imageUrl: existingProps.imageUrl || allImages[0] || '',
+      };
+
+    case 'staff_grid':
+      // Data comes from staff table — just place the block
+      return {
+        ...existingProps,
+        title: existingProps.title || wp.title || '교역자 소개',
+      };
+
+    case 'worship_times': {
+      const services = parseTablesFromHtml(wp.htmlContent);
+      return {
+        ...existingProps,
+        title: existingProps.title || wp.title || '예배 안내',
+        services: services.length > 0 ? services : (existingProps.services || []),
+      };
+    }
+
+    case 'location_map': {
+      const address = extractAddress(plainText);
+      return {
+        ...existingProps,
+        title: existingProps.title || wp.title || '오시는 길',
+        address: existingProps.address || address,
+      };
+    }
+
+    case 'contact_info': {
+      const phone = extractPhone(plainText);
+      const address = extractAddress(plainText);
+      return {
+        ...existingProps,
+        title: existingProps.title || wp.title || '연락처',
+        phone: existingProps.phone || phone,
+        address: existingProps.address || address,
+      };
+    }
+
+    case 'history_timeline':
+      return {
+        ...existingProps,
+        title: existingProps.title || wp.title || '교회 연혁',
+        content: plainText.slice(0, 2000),
+      };
+
+    case 'newcomer_info':
+      return {
+        ...existingProps,
+        title: existingProps.title || wp.title || '새가족 안내',
+        content: plainText.slice(0, 2000),
+        imageUrl: existingProps.imageUrl || allImages[0] || '',
+      };
+
+    case 'image_gallery':
+      return {
+        ...existingProps,
+        title: existingProps.title || wp.title,
+        images: allImages,
+      };
+
+    case 'quote_block':
+      return {
+        ...existingProps,
+        title: existingProps.title || wp.title,
+        content: plainText.slice(0, 500),
+      };
+
+    case 'video': {
+      // Try to find YouTube URL
+      const ytMatch = wp.htmlContent.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]+)/);
+      return {
+        ...existingProps,
+        title: existingProps.title || wp.title,
+        youtubeUrl: ytMatch ? `https://www.youtube.com/watch?v=${ytMatch[1]}` : (existingProps.youtubeUrl || ''),
+      };
+    }
+
+    // Dynamic blocks — just place with defaults, data is in DB tables
+    case 'recent_sermons':
+    case 'recent_bulletins':
+    case 'recent_columns':
+    case 'album_gallery':
+    case 'event_grid':
+    case 'board':
+      return {
+        ...existingProps,
+        title: existingProps.title || wp.title,
+      };
+
+    default:
+      return {
+        ...existingProps,
+        title: existingProps.title || wp.title,
+        content: plainText.slice(0, 2000),
+      };
+  }
+}
+
+// ─── Apply Page Content ────────────────────────────────────
+
+export async function applyPageContent(
+  tenantSlug: string,
+  pageId: string | null,
+  wpContent: WpContent,
+  suggestedBlocks: { blockType: string; props: Record<string, unknown> }[],
+): Promise<{ pageId: string; sectionsCreated: number }> {
+  const schema = validateSchemaName(`tenant_${tenantSlug}`);
+  let targetPageId = pageId;
+
+  // If no pageId, create the page
+  if (!targetPageId) {
+    const maxOrder = await prisma.$queryRawUnsafe<{ max: number | null }[]>(
+      `SELECT MAX(sort_order) as max FROM "${schema}".pages`,
+    );
+    const nextOrder = ((maxOrder[0]?.max) ?? 0) + 1;
+
+    const newPage = await prisma.$queryRawUnsafe<{ id: string }[]>(
+      `INSERT INTO "${schema}".pages (title, slug, sort_order, is_visible)
+       VALUES ($1, $2, $3, true)
+       RETURNING id`,
+      wpContent.title,
+      wpContent.slug,
+      nextOrder,
+    );
+    if (newPage.length === 0) {
+      throw new Error(`Failed to create page: ${wpContent.slug}`);
+    }
+    targetPageId = newPage[0]!.id;
+  }
+
+  // Clear existing page_sections for this page
+  await prisma.$queryRawUnsafe(
+    `DELETE FROM "${schema}".page_sections WHERE page_id = $1::uuid`,
+    targetPageId,
+  );
+
+  // Insert new sections from suggestedBlocks with enriched props
+  let sectionsCreated = 0;
+  for (let i = 0; i < suggestedBlocks.length; i++) {
+    const block = suggestedBlocks[i]!;
+    const enrichedProps = buildBlockProps(block.blockType, block.props, wpContent);
+
+    await prisma.$queryRawUnsafe(
+      `INSERT INTO "${schema}".page_sections (page_id, block_type, props, sort_order, is_visible)
+       VALUES ($1::uuid, $2, $3::jsonb, $4, true)`,
+      targetPageId,
+      block.blockType,
+      JSON.stringify(enrichedProps),
+      i,
+    );
+    sectionsCreated++;
+  }
+
+  return { pageId: targetPageId, sectionsCreated };
+}
+
+// ─── Migration Result ──────────────────────────────────────
+
 interface MigrationResult {
   sermons: number;
   bulletins: number;

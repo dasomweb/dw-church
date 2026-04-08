@@ -5,7 +5,8 @@ import { env } from '../../config/env.js';
 import { prisma } from '../../config/database.js';
 import { validateSchemaName } from '../../utils/validate-schema.js';
 import { scrapeSite } from './scraper.js';
-import { applyMigration } from './apply.js';
+import { applyMigration, applyPageContent } from './apply.js';
+import { classifyWPPages } from './wp-block-classifier.js';
 import { detectWordPress, fetchWPSiteData } from './wp-api.js';
 import { mapWPDataToExtracted, generateSummary } from './wp-mapper.js';
 import { analyzePages } from './ai-analyzer.js';
@@ -232,6 +233,7 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
   /**
    * POST /admin/migration/apply-matched
    * Apply manually-confirmed page matches and dynamic content to a tenant.
+   * Uses WP page content from dynamicContent.pages to enrich block props.
    * Body: {
    *   tenantSlug: string,
    *   matches: { sourceUrl: string, targetPageId: string | null, targetSlug: string, blocks: [...] }[],
@@ -243,6 +245,7 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
       tenantSlug: string;
       matches: {
         sourceUrl: string;
+        sourceTitle?: string;
         targetPageId: string | null;
         targetSlug: string;
         blocks: { blockType: string; props: Record<string, unknown> }[];
@@ -254,80 +257,105 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
       throw new AppError('VALIDATION_ERROR', 400, 'tenantSlug is required');
     }
 
-    const schema = validateSchemaName(`tenant_${tenantSlug}`);
     let pagesApplied = 0;
+    const pageErrors: { slug: string; error: string }[] = [];
 
     try {
+      // Build a lookup of WP page content from dynamicContent.pages by slug
+      const wpPages = (dynamicContent?.pages as { title: string; slug: string; sections: { blockType: string; props: Record<string, unknown> }[] }[] | undefined) ?? [];
+      const wpPageBySlug = new Map<string, { title: string; slug: string; sections: { blockType: string; props: Record<string, unknown> }[] }>();
+      for (const p of wpPages) {
+        wpPageBySlug.set(p.slug, p);
+      }
+
       // Apply page section matches
       if (matches?.length) {
+        // Collect pages that need AI classification (no blocks provided)
+        const needsClassification: { index: number; slug: string; title: string; content: string; images: string[] }[] = [];
+
+        for (let idx = 0; idx < matches.length; idx++) {
+          const match = matches[idx]!;
+          if (!match.blocks?.length) {
+            // Find WP content for this page by slug
+            const slug = match.targetSlug || slugFromSourceUrl(match.sourceUrl);
+            const wpPage = wpPageBySlug.get(slug);
+            if (wpPage) {
+              // Reconstruct content from sections props
+              const content = wpPage.sections.map((s) => String(s.props.content || '')).join('\n');
+              const images = wpPage.sections.flatMap((s) => {
+                const imgs = s.props.images as string[] | undefined;
+                const img = s.props.imageUrl as string | undefined;
+                const bgImg = s.props.backgroundImageUrl as string | undefined;
+                return [...(imgs ?? []), ...(img ? [img] : []), ...(bgImg ? [bgImg] : [])];
+              }).filter(Boolean);
+              needsClassification.push({ index: idx, slug, title: wpPage.title || match.sourceTitle || slug, content, images });
+            }
+          }
+        }
+
+        // Run AI classification for pages without blocks
+        if (needsClassification.length > 0) {
+          try {
+            const classified = await classifyWPPages(needsClassification);
+            for (let i = 0; i < classified.length; i++) {
+              const cls = classified[i]!;
+              const nc = needsClassification[i]!;
+              const match = matches[nc.index]!;
+              // Assign AI-classified blocks to the match
+              match.blocks = cls.suggestedBlocks;
+            }
+          } catch {
+            // AI classification failed — assign default blocks
+            for (const nc of needsClassification) {
+              const match = matches[nc.index]!;
+              match.blocks = [
+                { blockType: 'hero_banner', props: { title: nc.title } },
+                { blockType: 'text_only', props: { title: nc.title } },
+              ];
+            }
+          }
+        }
+
+        // Now apply each match using applyPageContent
         for (const match of matches) {
-          if (!match.targetPageId) {
-            // Create new page — skip if no blocks to apply
-            if (!match.blocks?.length) continue;
+          if (!match.blocks?.length) continue;
 
-            // Determine next sort_order
-            const maxOrder = await prisma.$queryRawUnsafe<{ max: number | null }[]>(
-              `SELECT MAX(sort_order) as max FROM "${schema}".pages`,
-            );
-            const nextOrder = ((maxOrder[0]?.max) ?? 0) + 1;
+          const slug = match.targetSlug || slugFromSourceUrl(match.sourceUrl);
 
-            // Create page
-            const newPage = await prisma.$queryRawUnsafe<{ id: string }[]>(
-              `INSERT INTO "${schema}".pages (title, slug, sort_order, is_visible)
-               VALUES ($1, $2, $3, true)
-               RETURNING id`,
-              match.blocks[0]?.props?.title || match.targetSlug,
-              match.targetSlug,
-              nextOrder,
-            );
+          try {
+            // Find WP content for this page
+            const wpPage = wpPageBySlug.get(slug);
+            let htmlContent = '';
+            let images: string[] = [];
+            let title = match.sourceTitle || slug;
 
-            if (newPage.length > 0) {
-              const pageId = newPage[0]!.id;
-              for (let i = 0; i < match.blocks.length; i++) {
-                const block = match.blocks[i]!;
-                await prisma.$queryRawUnsafe(
-                  `INSERT INTO "${schema}".page_sections (page_id, block_type, props, sort_order, is_visible)
-                   VALUES ($1::uuid, $2, $3::jsonb, $4, true)`,
-                  pageId,
-                  block.blockType,
-                  JSON.stringify(block.props),
-                  i,
-                );
-              }
-              pagesApplied++;
+            if (wpPage) {
+              title = wpPage.title || title;
+              // Reconstruct HTML content and images from sections
+              htmlContent = wpPage.sections.map((s) => String(s.props.content || '')).join('\n');
+              images = wpPage.sections.flatMap((s) => {
+                const imgs = s.props.images as string[] | undefined;
+                const img = s.props.imageUrl as string | undefined;
+                const bgImg = s.props.backgroundImageUrl as string | undefined;
+                return [...(imgs ?? []), ...(img ? [img] : []), ...(bgImg ? [bgImg] : [])];
+              }).filter(Boolean);
+            } else {
+              // No WP page data — use title from blocks
+              title = (match.blocks[0]?.props?.title as string) || title;
             }
-          } else {
-            // Update existing page sections
-            for (let i = 0; i < (match.blocks?.length ?? 0); i++) {
-              const block = match.blocks[i]!;
-              // Check if section exists at this sort_order
-              const existing = await prisma.$queryRawUnsafe<{ id: string }[]>(
-                `SELECT id FROM "${schema}".page_sections
-                 WHERE page_id = $1::uuid AND sort_order = $2 LIMIT 1`,
-                match.targetPageId,
-                i,
-              );
-              if (existing.length > 0) {
-                await prisma.$queryRawUnsafe(
-                  `UPDATE "${schema}".page_sections
-                   SET props = props || $1::jsonb, block_type = $2
-                   WHERE id = $3::uuid`,
-                  JSON.stringify(block.props),
-                  block.blockType,
-                  existing[0]!.id,
-                );
-              } else {
-                await prisma.$queryRawUnsafe(
-                  `INSERT INTO "${schema}".page_sections (page_id, block_type, props, sort_order, is_visible)
-                   VALUES ($1::uuid, $2, $3::jsonb, $4, true)`,
-                  match.targetPageId,
-                  block.blockType,
-                  JSON.stringify(block.props),
-                  i,
-                );
-              }
-            }
+
+            await applyPageContent(
+              tenantSlug,
+              match.targetPageId,
+              { title, slug, htmlContent, images },
+              match.blocks,
+            );
             pagesApplied++;
+          } catch (err) {
+            pageErrors.push({
+              slug,
+              error: err instanceof Error ? err.message : 'Unknown error',
+            });
           }
         }
       }
@@ -348,6 +376,7 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
           ...dynamicResult,
           pages: pagesApplied,
         },
+        ...(pageErrors.length > 0 ? { pageErrors } : {}),
       });
     } catch (err) {
       throw new AppError(
@@ -357,4 +386,15 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
       );
     }
   });
+}
+
+// ─── Helpers ──────────────────────────────────────────────
+
+function slugFromSourceUrl(url: string): string {
+  try {
+    const pathname = new URL(url).pathname;
+    return pathname.replace(/^\//, '').replace(/\/$/, '').replace(/\//g, '-') || 'home';
+  } catch {
+    return 'page';
+  }
 }
