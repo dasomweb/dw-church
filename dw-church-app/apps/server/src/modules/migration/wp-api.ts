@@ -101,7 +101,8 @@ async function rateLimitedFetch(url: string, init?: RequestInit): Promise<Respon
 export async function detectWordPress(
   siteUrl: string,
 ): Promise<{ isWordPress: boolean; apiUrl: string; siteName: string }> {
-  const normalizedUrl = siteUrl.replace(/\/+$/, '');
+  // Strip /wp-json/... if user accidentally included it
+  const normalizedUrl = siteUrl.replace(/\/wp-json.*$/i, '').replace(/\/+$/, '');
 
   // Try standard WP REST API endpoint
   const candidates = [

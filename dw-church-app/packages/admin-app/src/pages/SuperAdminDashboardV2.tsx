@@ -1940,17 +1940,15 @@ function MigrationTab() {
         {isWordPress !== null && (
           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                {isWordPress ? 'WordPress 사이트 URL' : '사이트 URL'}
-              </label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">사이트 URL</label>
               <input
                 type="url"
                 value={siteUrl}
                 onChange={(e) => setSiteUrl(e.target.value)}
-                placeholder={isWordPress ? 'https://example-church.com' : 'https://example-church.com'}
+                placeholder="https://example-church.com"
                 className="w-full border rounded-lg px-3 py-2 text-sm"
               />
-              {isWordPress && <p className="text-[10px] text-gray-400 mt-1">WordPress REST API를 통해 데이터를 가져옵니다</p>}
+              {isWordPress && <p className="text-[10px] text-gray-400 mt-1">사이트 주소만 입력하세요. REST API는 자동으로 연결됩니다.</p>}
               {!isWordPress && <p className="text-[10px] text-gray-400 mt-1">AI가 페이지를 분석하여 정적/동적 콘텐츠를 자동 분류합니다</p>}
             </div>
             <div>
