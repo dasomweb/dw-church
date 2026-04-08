@@ -16,7 +16,7 @@ function useAdminApi() {
         ...(options?.headers as Record<string, string>),
       };
       if (options?.body) headers['Content-Type'] = 'application/json';
-      const res = await fetch(`${baseUrl}/api/v1/admin${path}`, { ...options, headers });
+      const res = await fetch(`${baseUrl}/api/v1/migration${path}`, { ...options, headers });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: { message: res.statusText } }));
         throw new Error(err.error?.message || `HTTP ${res.status}`);
@@ -106,19 +106,27 @@ export default function MigrationTab() {
   const [pagePlans, setPagePlans] = useState<PagePlan[]>([]);
   const [applyResult, setApplyResult] = useState<Record<string, number> | null>(null);
 
-  // Fetch tenants on mount
+  // Fetch tenants on mount (tenants API is under /admin, not /migration)
   useEffect(() => {
-    apiFetch<{ data: { slug: string; name: string }[] }>('/tenants?page=1&perPage=100')
-      .then((res) => setTenants(res.data))
+    const host = window.location.hostname;
+    const baseUrl = host.startsWith('admin.')
+      ? `https://api.${host.replace('admin.', '')}`
+      : (import.meta.env.VITE_API_BASE_URL as string) || '';
+    const token = useAuthStore.getState().session?.accessToken || '';
+    fetch(`${baseUrl}/api/v1/admin/tenants?page=1&perPage=100`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((d) => setTenants(d.data || []))
       .catch(() => {});
-  }, [apiFetch]);
+  }, []);
 
   // ─── Step 1: Scrape ──────────────────────────────────
   const handleScrape = async () => {
     if (!siteUrl.trim()) return;
     setScraping(true);
     try {
-      const res = await apiFetch<{ success: boolean; site: ScrapedSite }>('/migration/scrape', {
+      const res = await apiFetch<{ success: boolean; site: ScrapedSite }>('/scrape', {
         method: 'POST',
         body: JSON.stringify({ url: siteUrl.trim(), maxPages: 30 }),
       });
@@ -226,7 +234,7 @@ export default function MigrationTab() {
         })),
       };
 
-      const res = await apiFetch<{ success: boolean; result: Record<string, number> }>('/migration/apply', {
+      const res = await apiFetch<{ success: boolean; result: Record<string, number> }>('/apply', {
         method: 'POST',
         body: JSON.stringify({ tenantSlug: targetSlug, data }),
       });

@@ -103,7 +103,7 @@ async function main(): Promise<void> {
   await app.register(aiRoutes, { prefix: '/api/v1' });
   await app.register(boardRoutes, { prefix: '/api/v1' });
   await app.register(domainRoutes, { prefix: '/api/v1' });
-  await app.register(migrationRoutes, { prefix: '/api/v1/admin' });
+  await app.register(migrationRoutes, { prefix: '/api/v1/migration' });
 
   // --- Internal: resolve custom domain to tenant slug (used by Next.js middleware) ---
   app.get('/api/v1/admin/tenants/resolve-domain', async (request, reply) => {

@@ -23,7 +23,7 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
    * POST /admin/migration/scrape
    * Step 1: Scrape a site and return raw page data for AI analysis.
    */
-  app.post('/migration/scrape', async (request, reply) => {
+  app.post('/scrape', async (request, reply) => {
     const { url, maxPages } = request.body as { url: string; maxPages?: number };
     if (!url) throw new AppError('VALIDATION_ERROR', 400, 'url is required');
 
@@ -51,7 +51,7 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
    * GET /admin/migration/tenant-pages/:slug
    * Get existing pages for a tenant (for matching).
    */
-  app.get<{ Params: { slug: string } }>('/migration/tenant-pages/:slug', async (request, reply) => {
+  app.get<{ Params: { slug: string } }>('/tenant-pages/:slug', async (request, reply) => {
     const schema = validateSchemaName(`tenant_${request.params.slug}`);
     try {
       const pages = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
@@ -68,7 +68,7 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
    * Step 3: Apply approved migration plan to tenant.
    * Body: { tenantSlug, data: ExtractedData }
    */
-  app.post('/migration/apply', async (request, reply) => {
+  app.post('/apply', async (request, reply) => {
     const { tenantSlug, data } = request.body as { tenantSlug: string; data: Record<string, unknown> };
     if (!tenantSlug || !data) throw new AppError('VALIDATION_ERROR', 400, 'tenantSlug and data required');
 
