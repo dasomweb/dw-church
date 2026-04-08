@@ -1912,30 +1912,43 @@ function MigrationTab() {
     if (!targetSlug || !aiMatches.length) return;
     setAiApplying(true);
     try {
+      // Derive WP site URL from the first match sourceUrl (strip path to get base)
+      const firstSourceUrl = aiMatches[0]?.sourceUrl || '';
+      let wpSiteUrlForApply = '';
+      try {
+        const parsed = new URL(firstSourceUrl);
+        wpSiteUrlForApply = `${parsed.protocol}//${parsed.host}`;
+      } catch {
+        // Fallback: use siteUrl state directly
+        wpSiteUrlForApply = siteUrl.trim();
+      }
+
+      // Helper: extract WP page slug from sourceUrl (last path segment)
+      const extractSlug = (url: string): string => {
+        try {
+          const pathname = new URL(url).pathname;
+          return pathname.replace(/^\//, '').replace(/\/$/, '').replace(/\//g, '-') || 'home';
+        } catch {
+          return url;
+        }
+      };
+
       const res = await apiFetch<{ success: boolean; result: Record<string, number> }>('/migration/apply-matched', {
         method: 'POST',
         body: JSON.stringify({
           tenantSlug: targetSlug,
+          wpSiteUrl: wpSiteUrlForApply || undefined,
           matches: aiMatches
             .filter((m) => !(m as any)._excluded)
             .filter((m) => m.targetPageId !== null || m.blocks.length > 0 || m.blockType)
-            .map((m) => {
-              const selectedBlockType = m.blockType || 'text_only';
-              const blocks = [
-                { blockType: 'hero_banner', props: {} },
-                {
-                  blockType: selectedBlockType,
-                  props: m.blocks.find((b) => b.blockType === selectedBlockType)?.props || {},
-                },
-              ];
-              return {
-                sourceUrl: m.sourceUrl,
-                targetPageId: m.targetPageId,
-                targetSlug: m.targetPageSlug,
-                blocks,
-              };
-            }),
-          dynamicContent: aiExtracted,
+            .map((m) => ({
+              sourceUrl: m.sourceUrl,
+              sourceSlug: extractSlug(m.sourceUrl),
+              targetPageId: m.targetPageId,
+              targetSlug: m.targetPageSlug,
+              blockType: m.blockType || 'text_only',
+            })),
+          dynamicContent: wpSiteUrlForApply ? undefined : aiExtracted,
         }),
       });
       const r = res.result;
@@ -1944,6 +1957,8 @@ function MigrationTab() {
         r.staff ? `교역자 ${r.staff}` : '',
         r.events ? `행사 ${r.events}` : '',
         r.bulletins ? `주보 ${r.bulletins}` : '',
+        r.columns ? `칼럼 ${r.columns}` : '',
+        r.boards ? `게시판 ${r.boards}` : '',
         r.pages ? `페이지 ${r.pages}` : '',
       ].filter(Boolean);
       showToast('success', `마이그레이션 완료: ${parts.join(', ') || '변경 없음'}`);
