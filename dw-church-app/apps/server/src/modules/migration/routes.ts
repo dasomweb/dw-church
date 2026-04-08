@@ -17,12 +17,11 @@ async function requireSuperAdmin(request: FastifyRequest, reply: FastifyReply): 
 }
 
 export default async function migrationRoutes(app: FastifyInstance): Promise<void> {
+  // Health check for this plugin (no auth)
+  app.get('/health', async () => ({ status: 'migration-ok' }));
+
   app.addHook('preHandler', requireSuperAdmin);
 
-  /**
-   * POST /admin/migration/scrape
-   * Step 1: Scrape a site and return raw page data for AI analysis.
-   */
   app.post('/scrape', async (request, reply) => {
     const { url, maxPages } = request.body as { url: string; maxPages?: number };
     if (!url) throw new AppError('VALIDATION_ERROR', 400, 'url is required');
