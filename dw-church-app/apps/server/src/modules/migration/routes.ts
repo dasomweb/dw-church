@@ -56,6 +56,14 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
       const pages = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
         `SELECT id, title, slug, sort_order FROM "${schema}".pages ORDER BY sort_order`,
       );
+      // Include sections/blocks for each page
+      for (const page of pages) {
+        const sections = await prisma.$queryRawUnsafe<{ block_type: string; sort_order: number }[]>(
+          `SELECT block_type, sort_order FROM "${schema}".page_sections WHERE page_id = $1::uuid ORDER BY sort_order`,
+          page.id,
+        );
+        (page as any).blocks = sections.map((s) => s.block_type);
+      }
       return reply.send({ data: pages });
     } catch {
       return reply.send({ data: [] });
