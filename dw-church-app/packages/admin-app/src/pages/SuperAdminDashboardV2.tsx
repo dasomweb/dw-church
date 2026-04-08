@@ -1689,13 +1689,20 @@ function MigrationTab() {
   }, [apiFetch]);
 
   const handleAnalyze = async () => {
-    if (!siteUrl.trim()) return;
+    if (!siteUrl.trim() || !targetSlug) {
+      showToast('error', '사이트 URL과 테넌트를 선택하세요');
+      return;
+    }
     setAnalyzing(true);
     setSite(null);
     setExtracted(null);
     setSummary(null);
     setPreviewSection(null);
     setConfirmApply(false);
+    // Reset AI flow state for unified matching
+    setAiPages(null);
+    setAiMatches([]);
+    setAiStep(1);
     try {
       const res = await apiFetch<{
         success: boolean;
@@ -1710,9 +1717,50 @@ function MigrationTab() {
       setSite(res.site);
       setExtracted(res.extracted ?? null);
       setSummary(res.summary ?? null);
-      showToast('success', `WordPress 분석 완료 - ${res.site.pageCount}개 페이지`);
+
+      // After WP data fetch, proceed to matching step (same as AI flow)
+      // Convert WP pages to AI page format for unified matching UI
+      const wpPages: AiAnalyzedPage[] = (res.extracted?.pages || []).map((p: any) => ({
+        url: p.slug || '',
+        title: p.title || p.slug || '',
+        type: 'static' as const,
+        category: 'other' as const,
+        confidence: 0.8,
+        suggestedBlocks: p.sections || [],
+      }));
+      setAiPages(wpPages);
+      setAiExtracted(res.extracted ?? null);
+      setAiSummary(res.summary ? {
+        sermons: res.summary.sermons, staff: res.summary.staff, events: res.summary.events,
+        bulletins: res.summary.bulletins, columns: res.summary.columns, albums: res.summary.albums,
+      } : null);
+
+      // Fetch tenant pages for matching
+      const tenantRes = await apiFetch<{ data: AiTenantPage[] }>(`/tenants/${targetSlug}/pages`).catch(() => ({ data: [] as AiTenantPage[] }));
+      setAiTenantPages(tenantRes.data || []);
+
+      // Auto-match by slug/title similarity
+      const matches: AiPageMatch[] = wpPages.map((src) => {
+        const match = (tenantRes.data || []).find((tp: AiTenantPage) =>
+          tp.slug === src.url || tp.title === src.title
+        );
+        return {
+          sourceUrl: src.url,
+          sourceTitle: src.title,
+          targetPageId: match?.id || null,
+          targetPageTitle: match?.title || src.title,
+          targetPageSlug: match?.slug || src.url,
+          confidence: match ? 0.9 : 0.3,
+          blocks: src.suggestedBlocks || [],
+          action: match ? 'match' as const : 'create' as const,
+        };
+      });
+      setAiMatches(matches);
+      setAiStep(2);
+
+      showToast('success', `WordPress 데이터 가져오기 완료 - ${res.site.pageCount}개 페이지`);
     } catch (err) {
-      showToast('error', err instanceof Error ? err.message : '사이트 분석 실패');
+      showToast('error', err instanceof Error ? err.message : 'WordPress 데이터 가져오기 실패');
     } finally {
       setAnalyzing(false);
     }
@@ -1889,51 +1937,36 @@ function MigrationTab() {
           </button>
         </div>
 
-        {isWordPress === true && (
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">WordPress REST API URL</label>
-            <div className="flex gap-2">
+        {isWordPress !== null && (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                {isWordPress ? 'WordPress 사이트 URL' : '사이트 URL'}
+              </label>
               <input
                 type="url"
                 value={siteUrl}
                 onChange={(e) => setSiteUrl(e.target.value)}
-                placeholder="https://example-church.com/wp-json/wp/v2"
-                className="flex-1 border rounded-lg px-3 py-2 text-sm"
-                onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
+                placeholder={isWordPress ? 'https://example-church.com' : 'https://example-church.com'}
+                className="w-full border rounded-lg px-3 py-2 text-sm"
               />
-              <button
-                onClick={handleAnalyze}
-                disabled={analyzing || !siteUrl.trim()}
-                className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
-              >
-                {analyzing ? '가져오는 중...' : '데이터 가져오기'}
-              </button>
+              {isWordPress && <p className="text-[10px] text-gray-400 mt-1">WordPress REST API를 통해 데이터를 가져옵니다</p>}
+              {!isWordPress && <p className="text-[10px] text-gray-400 mt-1">AI가 페이지를 분석하여 정적/동적 콘텐츠를 자동 분류합니다</p>}
             </div>
-            <p className="text-[10px] text-gray-400 mt-1">예: https://bethelfaith.com 또는 https://bethelfaith.com/wp-json/wp/v2</p>
-          </div>
-        )}
-
-        {isWordPress === false && (
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">사이트 URL</label>
-            <div className="flex gap-2">
-              <input
-                type="url"
-                value={siteUrl}
-                onChange={(e) => setSiteUrl(e.target.value)}
-                placeholder="https://example-church.com"
-                className="flex-1 border rounded-lg px-3 py-2 text-sm"
-                onKeyDown={(e) => e.key === 'Enter' && handleAiAnalyze()}
-              />
-              <button
-                onClick={handleAiAnalyze}
-                disabled={aiAnalyzing || !siteUrl.trim()}
-                className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
-              >
-                {aiAnalyzing ? 'AI 분석 중...' : 'AI 사이트 분석'}
-              </button>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">마이그레이션 대상 테넌트</label>
+              <select value={targetSlug} onChange={(e) => setTargetSlug(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm">
+                <option value="">테넌트 선택</option>
+                {tenants.map((t) => <option key={t.slug} value={t.slug}>{t.name} ({t.slug})</option>)}
+              </select>
             </div>
-            <p className="text-[10px] text-gray-400 mt-1">AI가 페이지를 분석하여 정적/동적 콘텐츠를 자동 분류합니다</p>
+            <button
+              onClick={isWordPress ? handleAnalyze : handleAiAnalyze}
+              disabled={analyzing || aiAnalyzing || !siteUrl.trim() || !targetSlug}
+              className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+            >
+              {analyzing || aiAnalyzing ? '진행 중...' : isWordPress ? 'WordPress 데이터 가져오기' : 'AI 사이트 분석'}
+            </button>
           </div>
         )}
       </div>
