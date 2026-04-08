@@ -1607,7 +1607,42 @@ interface AiPageMatch {
   targetPageSlug: string;
   confidence: number;
   blocks: { blockType: string; props: Record<string, unknown> }[];
+  blockType?: string;
 }
+
+const BLOCK_TYPE_OPTIONS: { group: string; types: { value: string; label: string }[] }[] = [
+  {
+    group: '정적',
+    types: [
+      { value: 'hero_banner', label: 'hero_banner' },
+      { value: 'text_image', label: 'text_image' },
+      { value: 'text_only', label: 'text_only' },
+      { value: 'pastor_message', label: 'pastor_message' },
+      { value: 'church_intro', label: 'church_intro' },
+      { value: 'mission_vision', label: 'mission_vision' },
+      { value: 'worship_times', label: 'worship_times' },
+      { value: 'location_map', label: 'location_map' },
+      { value: 'contact_info', label: 'contact_info' },
+      { value: 'newcomer_info', label: 'newcomer_info' },
+      { value: 'image_gallery', label: 'image_gallery' },
+      { value: 'video', label: 'video' },
+      { value: 'quote_block', label: 'quote_block' },
+    ],
+  },
+  {
+    group: '동적',
+    types: [
+      { value: 'recent_sermons', label: 'recent_sermons' },
+      { value: 'recent_bulletins', label: 'recent_bulletins' },
+      { value: 'recent_columns', label: 'recent_columns' },
+      { value: 'album_gallery', label: 'album_gallery' },
+      { value: 'event_grid', label: 'event_grid' },
+      { value: 'staff_grid', label: 'staff_grid' },
+      { value: 'history_timeline', label: 'history_timeline' },
+      { value: 'board', label: 'board' },
+    ],
+  },
+];
 
 interface AiTenantPage {
   id: string;
@@ -1748,6 +1783,8 @@ function MigrationTab() {
         const match = tenantPages.find((tp: AiTenantPage) =>
           tp.slug === src.url || tp.title === src.title
         );
+        const suggestedBlocks: { blockType: string; props: Record<string, unknown> }[] = src.suggestedBlocks || [];
+        const mainBlock = suggestedBlocks.find((b) => b.blockType !== 'hero_banner');
         return {
           sourceUrl: src.url,
           sourceTitle: src.title,
@@ -1755,7 +1792,8 @@ function MigrationTab() {
           targetPageTitle: match?.title || src.title,
           targetPageSlug: match?.slug || src.url,
           confidence: match ? 0.9 : 0.3,
-          blocks: src.suggestedBlocks || [],
+          blocks: suggestedBlocks,
+          blockType: mainBlock?.blockType || 'text_only',
           action: match ? 'match' as const : 'create' as const,
         };
       });
@@ -1839,7 +1877,11 @@ function MigrationTab() {
         body: JSON.stringify({ siteUrl: siteUrl.trim(), tenantSlug: targetSlug }),
       });
       setAiPages(res.pages);
-      setAiMatches(res.suggestedMatches);
+      setAiMatches(res.suggestedMatches.map((m) => {
+        if (m.blockType) return m;
+        const mainBlock = m.blocks.find((b) => b.blockType !== 'hero_banner');
+        return { ...m, blockType: mainBlock?.blockType || 'text_only' };
+      }));
       setAiExtracted(res.extracted);
       setAiSummary(res.summary);
       setAiTenantPages(res.tenantPages);
@@ -1876,13 +1918,23 @@ function MigrationTab() {
           tenantSlug: targetSlug,
           matches: aiMatches
             .filter((m) => !(m as any)._excluded)
-            .filter((m) => m.targetPageId !== null || m.blocks.length > 0)
-            .map((m) => ({
-              sourceUrl: m.sourceUrl,
-              targetPageId: m.targetPageId,
-              targetSlug: m.targetPageSlug,
-              blocks: m.blocks,
-            })),
+            .filter((m) => m.targetPageId !== null || m.blocks.length > 0 || m.blockType)
+            .map((m) => {
+              const selectedBlockType = m.blockType || 'text_only';
+              const blocks = [
+                { blockType: 'hero_banner', props: {} },
+                {
+                  blockType: selectedBlockType,
+                  props: m.blocks.find((b) => b.blockType === selectedBlockType)?.props || {},
+                },
+              ];
+              return {
+                sourceUrl: m.sourceUrl,
+                targetPageId: m.targetPageId,
+                targetSlug: m.targetPageSlug,
+                blocks,
+              };
+            }),
           dynamicContent: aiExtracted,
         }),
       });
@@ -2119,10 +2171,11 @@ function MigrationTab() {
           </p>
 
           {/* Column headers */}
-          <div className="grid grid-cols-[1fr_40px_1fr_36px] gap-2 mb-2 px-3">
+          <div className="grid grid-cols-[1fr_40px_1fr_140px_36px] gap-2 mb-2 px-3">
             <span className="text-[10px] font-semibold text-gray-500 uppercase">소스 (WordPress)</span>
             <span />
             <span className="text-[10px] font-semibold text-gray-500 uppercase">대상 (테넌트)</span>
+            <span className="text-[10px] font-semibold text-gray-500 uppercase">콘텐츠 블록</span>
             <span />
           </div>
 
@@ -2130,7 +2183,7 @@ function MigrationTab() {
             {aiMatches.map((m, i) => {
               const excluded = (m as any)._excluded;
               return (
-                <div key={i} className={`grid grid-cols-[1fr_40px_1fr_36px] gap-2 items-center p-2.5 rounded-lg border transition-all ${
+                <div key={i} className={`grid grid-cols-[1fr_40px_1fr_140px_36px] gap-2 items-center p-2.5 rounded-lg border transition-all ${
                   excluded ? 'bg-gray-100 border-gray-200 opacity-40' :
                   m.targetPageId ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'
                 }`}>
@@ -2159,6 +2212,31 @@ function MigrationTab() {
                         <option value="__new__">+ 새 페이지 생성</option>
                         {aiTenantPages.map((tp) => (
                           <option key={tp.id} value={tp.id}>{tp.title} (/{tp.slug})</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+
+                  {/* Block type selector */}
+                  <div>
+                    {excluded ? (
+                      <span />
+                    ) : (
+                      <select
+                        value={m.blockType || 'text_only'}
+                        onChange={(e) => {
+                          setAiMatches((prev) => prev.map((item, idx) =>
+                            idx === i ? { ...item, blockType: e.target.value } : item
+                          ));
+                        }}
+                        className="w-full border rounded-lg px-1.5 py-1.5 text-xs bg-white"
+                      >
+                        {BLOCK_TYPE_OPTIONS.map((g) => (
+                          <optgroup key={g.group} label={g.group}>
+                            {g.types.map((t) => (
+                              <option key={t.value} value={t.value}>{t.label}</option>
+                            ))}
+                          </optgroup>
                         ))}
                       </select>
                     )}
