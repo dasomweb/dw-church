@@ -61,9 +61,9 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
               ),
               pages: wpData.pages.map((p) => ({
                 url: `${wpData.siteUrl}/${p.slug}`,
-                title: p.title.rendered.replace(/<[^>]+>/g, ''),
-                imageCount: (p.content.rendered.match(/<img/gi) ?? []).length,
-                textPreview: p.content.rendered.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 300),
+                title: (p.title?.rendered || p.title || '').replace(/<[^>]+>/g, ''),
+                imageCount: (((p.content as any)?.rendered || p.content || "").match(/<img/gi) ?? []).length,
+                textPreview: ((p.content as any)?.rendered || p.content || "").replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 300),
               })),
             },
             extracted,

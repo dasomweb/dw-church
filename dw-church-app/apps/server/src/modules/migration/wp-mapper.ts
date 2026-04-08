@@ -163,7 +163,7 @@ function classifyPost(post: WPPost, catLookup: CategoryLookup): PostType {
   }
 
   // Check slug/title for Korean patterns
-  const titleSlug = `${stripHtml(post.title.rendered)} ${post.slug}`;
+  const titleSlug = `${stripHtml(((post.title as any)?.rendered || post.title || ""))} ${post.slug}`;
   if (matchesPatterns(titleSlug, SERMON_PATTERNS)) return 'sermon';
   if (matchesPatterns(titleSlug, BULLETIN_PATTERNS)) return 'bulletin';
   if (matchesPatterns(titleSlug, COLUMN_PATTERNS)) return 'column';
@@ -174,9 +174,9 @@ function classifyPost(post: WPPost, catLookup: CategoryLookup): PostType {
 // ─── Page Block Type Detection ────────────────────────────
 
 function detectPageBlockType(page: WPPage): string {
-  const content = page.content.rendered;
+  const content = ((page.content as any)?.rendered || page.content || "");
   const slug = page.slug;
-  const title = stripHtml(page.title.rendered);
+  const title = stripHtml(((page.title as any)?.rendered || page.title || ""));
   const combined = `${title} ${slug}`;
 
   // Detect specific page types by slug/title patterns
@@ -231,28 +231,28 @@ export function mapWPDataToExtracted(wpData: WPSiteData): ExtractedData {
   // ─── Map Pages ──────────────────────────────────────
   for (const page of wpData.pages) {
     const blockType = detectPageBlockType(page);
-    const content = page.content.rendered;
+    const content = ((page.content as any)?.rendered || page.content || "");
     const images = extractImagesFromHtml(content);
     images.forEach((img) => allImageUrls.add(img));
 
     const featuredUrl = page.featured_media ? (mediaLookup.get(page.featured_media) ?? '') : '';
 
     result.pages.push({
-      title: stripHtml(page.title.rendered),
+      title: stripHtml(((page.title as any)?.rendered || page.title || "")),
       slug: page.slug,
       sections: [
         {
           blockType: 'hero_banner',
           props: {
-            title: stripHtml(page.title.rendered),
+            title: stripHtml(((page.title as any)?.rendered || page.title || "")),
             backgroundImageUrl: featuredUrl,
           },
         },
         {
           blockType,
           props: {
-            title: stripHtml(page.title.rendered),
-            content: stripHtml(page.content.rendered),
+            title: stripHtml(((page.title as any)?.rendered || page.title || "")),
+            content: stripHtml(((page.content as any)?.rendered || page.content || "")),
             images,
           },
         },
@@ -265,7 +265,7 @@ export function mapWPDataToExtracted(wpData: WPSiteData): ExtractedData {
 
   for (const post of wpData.posts) {
     const type = classifyPost(post, catLookup);
-    const content = post.content.rendered;
+    const content = ((post.content as any)?.rendered || post.content || "");
     const featuredUrl = post.featured_media ? (mediaLookup.get(post.featured_media) ?? '') : '';
     const images = extractImagesFromHtml(content);
     images.forEach((img) => allImageUrls.add(img));
@@ -275,7 +275,7 @@ export function mapWPDataToExtracted(wpData: WPSiteData): ExtractedData {
       case 'sermon': {
         const youtubeUrl = extractYoutubeUrl(content);
         result.sermons.push({
-          title: stripHtml(post.title.rendered),
+          title: stripHtml(((post.title as any)?.rendered || post.title || "")),
           scripture: '', // WP doesn't have a standard scripture field
           preacher: '',
           date: post.date ? post.date.split('T')[0] ?? '' : '',
@@ -287,7 +287,7 @@ export function mapWPDataToExtracted(wpData: WPSiteData): ExtractedData {
       case 'bulletin': {
         const pdfUrl = extractPdfUrl(content);
         result.bulletins.push({
-          title: stripHtml(post.title.rendered),
+          title: stripHtml(((post.title as any)?.rendered || post.title || "")),
           date: post.date ? post.date.split('T')[0] ?? '' : '',
           pdfUrl,
           images,
@@ -296,7 +296,7 @@ export function mapWPDataToExtracted(wpData: WPSiteData): ExtractedData {
       }
       case 'column': {
         result.columns.push({
-          title: stripHtml(post.title.rendered),
+          title: stripHtml(((post.title as any)?.rendered || post.title || "")),
           content: stripHtml(content),
           imageUrl: featuredUrl || images[0] || '',
           youtubeUrl: extractYoutubeUrl(content),
@@ -305,7 +305,7 @@ export function mapWPDataToExtracted(wpData: WPSiteData): ExtractedData {
       }
       case 'event': {
         result.events.push({
-          title: stripHtml(post.title.rendered),
+          title: stripHtml(((post.title as any)?.rendered || post.title || "")),
           description: stripHtml(content),
           date: post.date ? post.date.split('T')[0] ?? '' : '',
           location: '',
@@ -315,7 +315,7 @@ export function mapWPDataToExtracted(wpData: WPSiteData): ExtractedData {
       }
       case 'staff': {
         result.staff.push({
-          name: stripHtml(post.title.rendered),
+          name: stripHtml(((post.title as any)?.rendered || post.title || "")),
           role: '',
           department: '',
           photoUrl: featuredUrl || images[0] || '',
@@ -331,14 +331,14 @@ export function mapWPDataToExtracted(wpData: WPSiteData): ExtractedData {
         result.history.push({
           year,
           month,
-          title: stripHtml(post.title.rendered),
+          title: stripHtml(((post.title as any)?.rendered || post.title || "")),
           description: stripHtml(content),
         });
         break;
       }
       case 'album': {
         result.albums.push({
-          title: stripHtml(post.title.rendered),
+          title: stripHtml(((post.title as any)?.rendered || post.title || "")),
           images,
           youtubeUrl: extractYoutubeUrl(content),
         });
@@ -364,8 +364,8 @@ export function mapWPDataToExtracted(wpData: WPSiteData): ExtractedData {
         boardMap.set(boardSlug, []);
       }
       boardMap.get(boardSlug)!.push({
-        title: stripHtml(post.title.rendered),
-        content: stripHtml(post.content.rendered),
+        title: stripHtml(((post.title as any)?.rendered || post.title || "")),
+        content: stripHtml(((post.content as any)?.rendered || post.content || "")),
         author: '',
         date: post.date ? post.date.split('T')[0] ?? '' : '',
       });
