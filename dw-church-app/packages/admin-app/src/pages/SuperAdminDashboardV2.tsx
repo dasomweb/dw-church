@@ -1872,6 +1872,7 @@ function MigrationTab() {
         body: JSON.stringify({
           tenantSlug: targetSlug,
           matches: aiMatches
+            .filter((m) => !(m as any)._excluded)
             .filter((m) => m.targetPageId !== null || m.blocks.length > 0)
             .map((m) => ({
               sourceUrl: m.sourceUrl,
@@ -2111,52 +2112,77 @@ function MigrationTab() {
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h3 className="text-base font-semibold text-gray-900 mb-1">페이지 매칭</h3>
           <p className="text-xs text-gray-500 mb-4">
-            소스 페이지와 대상 테넌트 페이지를 매칭하세요. 자동 매칭된 항목을 확인하고 필요 시 수정하세요.
+            소스 페이지와 대상 페이지를 비교하여 매칭하세요. 불필요한 항목은 &times; 로 제외할 수 있습니다.
           </p>
 
-          <div className="space-y-2 max-h-96 overflow-y-auto mb-4">
-            {aiMatches.map((m, i) => (
-              <div key={i} className={`flex items-center gap-3 p-3 rounded-lg border ${
-                m.targetPageId ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
-              }`}>
-                {/* Source page */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 truncate">{m.sourceTitle}</p>
-                  <p className="text-xs text-gray-400 truncate">{m.sourceUrl}</p>
-                </div>
+          {/* Column headers */}
+          <div className="grid grid-cols-[1fr_40px_1fr_36px] gap-2 mb-2 px-3">
+            <span className="text-[10px] font-semibold text-gray-500 uppercase">소스 (WordPress)</span>
+            <span />
+            <span className="text-[10px] font-semibold text-gray-500 uppercase">대상 (테넌트)</span>
+            <span />
+          </div>
 
-                <span className="text-gray-300 text-lg flex-shrink-0">&rarr;</span>
-
-                {/* Target page selector */}
-                <div className="flex-1">
-                  <select
-                    value={m.targetPageId || '__new__'}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      handleAiMatchChange(m.sourceUrl, val === '__new__' ? null : val);
-                    }}
-                    className={`w-full border rounded-lg px-2 py-1.5 text-sm ${
-                      m.targetPageId ? 'border-green-300 bg-white' : 'border-gray-300 bg-white'
-                    }`}
-                  >
-                    <option value="__new__">+ 새 페이지 생성</option>
-                    {aiTenantPages.map((tp) => (
-                      <option key={tp.id} value={tp.id}>
-                        {tp.title} (/{tp.slug})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Confidence badge */}
-                <span className={`text-xs font-medium flex-shrink-0 w-10 text-center ${
-                  m.confidence >= 0.6 ? 'text-green-600' :
-                  m.confidence >= 0.3 ? 'text-amber-600' : 'text-gray-400'
+          <div className="space-y-1.5 max-h-[500px] overflow-y-auto mb-4">
+            {aiMatches.map((m, i) => {
+              const excluded = (m as any)._excluded;
+              return (
+                <div key={i} className={`grid grid-cols-[1fr_40px_1fr_36px] gap-2 items-center p-2.5 rounded-lg border transition-all ${
+                  excluded ? 'bg-gray-100 border-gray-200 opacity-40' :
+                  m.targetPageId ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'
                 }`}>
-                  {Math.round(m.confidence * 100)}%
-                </span>
-              </div>
-            ))}
+                  {/* Source page */}
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-800 truncate">{m.sourceTitle}</p>
+                    <p className="text-[10px] text-gray-400 truncate">{m.sourceUrl}</p>
+                  </div>
+
+                  {/* Arrow */}
+                  <span className="text-gray-300 text-center">&rarr;</span>
+
+                  {/* Target page selector */}
+                  <div>
+                    {excluded ? (
+                      <span className="text-xs text-gray-400 italic">제외됨</span>
+                    ) : (
+                      <select
+                        value={m.targetPageId || '__new__'}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          handleAiMatchChange(m.sourceUrl, val === '__new__' ? null : val);
+                        }}
+                        className="w-full border rounded-lg px-2 py-1.5 text-sm bg-white"
+                      >
+                        <option value="__new__">+ 새 페이지 생성</option>
+                        {aiTenantPages.map((tp) => (
+                          <option key={tp.id} value={tp.id}>{tp.title} (/{tp.slug})</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+
+                  {/* Exclude / Restore button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAiMatches((prev) => prev.map((item, idx) =>
+                        idx === i ? { ...item, _excluded: !excluded } as any : item
+                      ));
+                    }}
+                    className={`p-1 rounded text-xs transition-colors ${
+                      excluded ? 'text-green-600 hover:bg-green-50' : 'text-red-400 hover:bg-red-50 hover:text-red-600'
+                    }`}
+                    title={excluded ? '복원' : '제외'}
+                  >
+                    {excluded ? '↩' : '✕'}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+            <span>매칭: {aiMatches.filter((m) => !(m as any)._excluded && m.targetPageId).length}개 · 새 페이지: {aiMatches.filter((m) => !(m as any)._excluded && !m.targetPageId).length}개 · 제외: {aiMatches.filter((m) => (m as any)._excluded).length}개</span>
           </div>
 
           {/* Dynamic content summary */}
