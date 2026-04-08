@@ -3,7 +3,7 @@ import { prisma } from '../config/database.js';
 import { AppError } from './error-handler.js';
 import { validateSchemaName } from '../utils/validate-schema.js';
 
-const SKIP_PREFIXES = ['/api/v1/auth/', '/api/v1/admin', '/api/v1/billing', '/health'];
+const SKIP_PREFIXES = ['/api/v1/auth/', '/api/v1/admin', '/api/v1/billing', '/api/v1/migration', '/health'];
 
 const SYSTEM_SUBDOMAINS = new Set(['api', 'admin', 'www', 'mail', 'ftp', 'staging', 'dev']);
 
