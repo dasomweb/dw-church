@@ -6,6 +6,59 @@
 
 import { prisma } from '../../config/database.js';
 import { validateSchemaName } from '../../utils/validate-schema.js';
+import { uploadFile as r2Upload } from '../../config/r2.js';
+import { randomUUID } from 'crypto';
+
+/**
+ * Download an external image and upload to R2.
+ * Returns the R2 URL, or the original URL if download fails.
+ */
+async function migrateImageToR2(imageUrl: string, tenantSlug: string): Promise<string> {
+  if (!imageUrl || imageUrl.startsWith('data:')) return imageUrl;
+  // Already on R2
+  if (imageUrl.includes('r2.dev/') || imageUrl.includes('r2.cloudflarestorage.com')) return imageUrl;
+
+  try {
+    const res = await fetch(imageUrl, { redirect: 'follow', headers: { 'User-Agent': 'TrueLight-Migration/1.0' } });
+    if (!res.ok) return imageUrl;
+
+    const contentType = res.headers.get('content-type') || 'image/jpeg';
+    const buffer = Buffer.from(await res.arrayBuffer());
+
+    // Max 5MB
+    if (buffer.length > 5 * 1024 * 1024) return imageUrl;
+
+    const ext = contentType.includes('png') ? '.png' : contentType.includes('webp') ? '.webp' : '.jpg';
+    const key = `tenant_${tenantSlug}/migration/${randomUUID()}${ext}`;
+    const r2Url = await r2Upload(key, buffer, contentType);
+    return r2Url;
+  } catch {
+    return imageUrl; // Keep original URL on failure
+  }
+}
+
+/**
+ * Migrate all image URLs in a props object to R2.
+ */
+async function migratePropsImages(props: Record<string, unknown>, tenantSlug: string): Promise<Record<string, unknown>> {
+  const migrated = { ...props };
+
+  // Single image fields
+  for (const key of ['backgroundImageUrl', 'imageUrl', 'photoUrl', 'thumbnailUrl']) {
+    if (typeof migrated[key] === 'string' && migrated[key]) {
+      migrated[key] = await migrateImageToR2(migrated[key] as string, tenantSlug);
+    }
+  }
+
+  // Image array fields
+  if (Array.isArray(migrated.images)) {
+    migrated.images = await Promise.all(
+      (migrated.images as string[]).map((url) => migrateImageToR2(url, tenantSlug))
+    );
+  }
+
+  return migrated;
+}
 
 // ─── Helpers ───────────────────────────────────────────────
 
@@ -277,18 +330,19 @@ export async function applyPageContent(
     targetPageId,
   );
 
-  // Insert new sections from suggestedBlocks with enriched props
+  // Insert new sections from suggestedBlocks with enriched props + R2 image migration
   let sectionsCreated = 0;
   for (let i = 0; i < suggestedBlocks.length; i++) {
     const block = suggestedBlocks[i]!;
     const enrichedProps = buildBlockProps(block.blockType, block.props, wpContent);
+    const finalProps = await migratePropsImages(enrichedProps, tenantSlug);
 
     await prisma.$queryRawUnsafe(
       `INSERT INTO "${schema}".page_sections (page_id, block_type, props, sort_order, is_visible)
        VALUES ($1::uuid, $2, $3::jsonb, $4, true)`,
       targetPageId,
       block.blockType,
-      JSON.stringify(enrichedProps),
+      JSON.stringify(finalProps),
       i,
     );
     sectionsCreated++;
@@ -364,6 +418,7 @@ export async function applyMigration(
   const sermons = data.sermons as Record<string, string>[] | undefined;
   if (sermons?.length) {
     for (const s of sermons) {
+      const thumb = await migrateImageToR2(s.thumbnailUrl || '', tenantSlug);
       await prisma.$queryRawUnsafe(
         `INSERT INTO "${schema}".sermons (title, scripture, youtube_url, sermon_date, thumbnail_url, status)
          VALUES ($1, $2, $3, $4::date, $5, 'published')
@@ -372,7 +427,7 @@ export async function applyMigration(
         s.scripture || '',
         s.youtubeUrl || '',
         s.date || null,
-        s.thumbnailUrl || '',
+        thumb,
       );
       result.sermons++;
     }
@@ -382,6 +437,7 @@ export async function applyMigration(
   const staff = data.staff as Record<string, string>[] | undefined;
   if (staff?.length) {
     for (const s of staff) {
+      const photo = await migrateImageToR2(s.photoUrl || '', tenantSlug);
       await prisma.$queryRawUnsafe(
         `INSERT INTO "${schema}".staff (name, role, department, photo_url, bio, is_active)
          VALUES ($1, $2, $3, $4, $5, true)
@@ -389,7 +445,7 @@ export async function applyMigration(
         s.name || '',
         s.role || '',
         s.department || '',
-        s.photoUrl || '',
+        photo,
         s.bio || '',
       );
       result.staff++;
