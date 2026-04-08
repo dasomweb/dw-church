@@ -1692,7 +1692,6 @@ function MigrationTab() {
     if (!siteUrl.trim()) return;
     setAnalyzing(true);
     setSite(null);
-    setIsWordPress(null);
     setExtracted(null);
     setSummary(null);
     setPreviewSection(null);
@@ -1706,14 +1705,12 @@ function MigrationTab() {
         summary: MigrationSummary | null;
       }>('/migration/analyze', {
         method: 'POST',
-        body: JSON.stringify({ url: siteUrl.trim(), maxPages: 30 }),
+        body: JSON.stringify({ url: siteUrl.trim(), maxPages: 30, forceWordPress: true }),
       });
       setSite(res.site);
-      setIsWordPress(res.isWordPress);
       setExtracted(res.extracted ?? null);
       setSummary(res.summary ?? null);
-      const method = res.isWordPress ? 'WordPress REST API' : 'HTML 스크래핑';
-      showToast('success', `분석 완료 (${method}) - ${res.site.pageCount}개 페이지`);
+      showToast('success', `WordPress 분석 완료 - ${res.site.pageCount}개 페이지`);
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : '사이트 분석 실패');
     } finally {
@@ -1874,10 +1871,8 @@ function MigrationTab() {
       {/* Step 1: Input URL */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h3 className="text-base font-semibold text-gray-900 mb-1">1단계: 사이트 분석</h3>
-        <p className="text-xs text-gray-500 mb-4">
-          기존 교회 사이트 URL을 입력하면 자동으로 WordPress를 감지하고 페이지 구조와 콘텐츠를 분석합니다.
-        </p>
-        <div className="flex gap-2">
+        <p className="text-xs text-gray-500 mb-4">기존 교회 사이트 URL을 입력하고 사이트 유형을 선택하세요.</p>
+        <div className="flex gap-2 mb-3">
           <input
             type="url"
             value={siteUrl}
@@ -1886,12 +1881,30 @@ function MigrationTab() {
             className="flex-1 border rounded-lg px-3 py-2 text-sm"
             onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
           />
+        </div>
+        <div className="flex gap-2 items-center">
+          <div className="flex bg-gray-100 rounded-lg p-0.5">
+            <button
+              type="button"
+              onClick={() => setIsWordPress(true)}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${isWordPress === true ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-gray-900'}`}
+            >
+              WordPress
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsWordPress(false)}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${isWordPress === false ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-gray-900'}`}
+            >
+              일반 사이트
+            </button>
+          </div>
           <button
-            onClick={handleAnalyze}
-            disabled={analyzing || !siteUrl.trim()}
+            onClick={isWordPress === false ? handleAiAnalyze : handleAnalyze}
+            disabled={analyzing || aiAnalyzing || !siteUrl.trim() || isWordPress === null}
             className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
           >
-            {analyzing ? '분석 중...' : '사이트 분석'}
+            {analyzing || aiAnalyzing ? '분석 중...' : '사이트 분석'}
           </button>
         </div>
       </div>
