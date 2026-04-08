@@ -1581,6 +1581,40 @@ interface AnalyzedPage {
   textPreview: string;
 }
 
+// AI analysis types for non-WP sites
+interface AiAnalyzedPage {
+  url: string;
+  title: string;
+  type: 'static' | 'dynamic';
+  category: string;
+  suggestedBlocks: { blockType: string; props: Record<string, unknown> }[];
+  extractedContent: {
+    title?: string;
+    textContent?: string;
+    images?: string[];
+    staffMembers?: { name: string; role: string; photoUrl: string; bio: string }[];
+    sermons?: { title: string; date: string; scripture: string; youtubeUrl: string }[];
+    events?: { title: string; date: string; description: string }[];
+  };
+  confidence: number;
+}
+
+interface AiPageMatch {
+  sourceUrl: string;
+  sourceTitle: string;
+  targetPageId: string | null;
+  targetPageTitle: string;
+  targetPageSlug: string;
+  confidence: number;
+  blocks: { blockType: string; props: Record<string, unknown> }[];
+}
+
+interface AiTenantPage {
+  id: string;
+  title: string;
+  slug: string;
+}
+
 interface AnalyzedSite {
   url: string;
   title: string;
@@ -1636,6 +1670,16 @@ function MigrationTab() {
   const [previewSection, setPreviewSection] = useState<string | null>(null);
   const [confirmApply, setConfirmApply] = useState(false);
   const [tenants, setTenants] = useState<{ slug: string; name: string }[]>([]);
+
+  // AI analysis state (non-WP flow)
+  const [aiAnalyzing, setAiAnalyzing] = useState(false);
+  const [aiPages, setAiPages] = useState<AiAnalyzedPage[] | null>(null);
+  const [aiMatches, setAiMatches] = useState<AiPageMatch[]>([]);
+  const [aiTenantPages, setAiTenantPages] = useState<AiTenantPage[]>([]);
+  const [aiExtracted, setAiExtracted] = useState<ExtractedPreview | null>(null);
+  const [aiSummary, setAiSummary] = useState<Record<string, number> | null>(null);
+  const [aiStep, setAiStep] = useState<1 | 2 | 3 | 4>(1);
+  const [aiApplying, setAiApplying] = useState(false);
 
   // Fetch available tenants
   useEffect(() => {
@@ -1724,6 +1768,91 @@ function MigrationTab() {
     }
   };
 
+  // ─── AI Analysis (non-WP) handlers ──────────────────────
+  const handleAiAnalyze = async () => {
+    if (!siteUrl.trim() || !targetSlug) return;
+    setAiAnalyzing(true);
+    setAiPages(null);
+    setAiMatches([]);
+    setAiExtracted(null);
+    setAiSummary(null);
+    setAiStep(1);
+    try {
+      const res = await apiFetch<{
+        success: boolean;
+        pages: AiAnalyzedPage[];
+        suggestedMatches: AiPageMatch[];
+        extracted: ExtractedPreview;
+        summary: Record<string, number>;
+        tenantPages: AiTenantPage[];
+      }>('/migration/analyze-ai', {
+        method: 'POST',
+        body: JSON.stringify({ siteUrl: siteUrl.trim(), tenantSlug: targetSlug }),
+      });
+      setAiPages(res.pages);
+      setAiMatches(res.suggestedMatches);
+      setAiExtracted(res.extracted);
+      setAiSummary(res.summary);
+      setAiTenantPages(res.tenantPages);
+      setAiStep(2);
+      showToast('success', `AI 분석 완료 - ${res.pages.length}개 페이지 분류됨`);
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : 'AI 분석 실패');
+    } finally {
+      setAiAnalyzing(false);
+    }
+  };
+
+  const handleAiMatchChange = (sourceUrl: string, targetPageId: string | null) => {
+    setAiMatches((prev) =>
+      prev.map((m) => {
+        if (m.sourceUrl !== sourceUrl) return m;
+        if (targetPageId === null) {
+          return { ...m, targetPageId: null, targetPageTitle: m.sourceTitle, targetPageSlug: '' };
+        }
+        const tp = aiTenantPages.find((p) => p.id === targetPageId);
+        if (!tp) return m;
+        return { ...m, targetPageId: tp.id, targetPageTitle: tp.title, targetPageSlug: tp.slug };
+      }),
+    );
+  };
+
+  const handleAiApply = async () => {
+    if (!targetSlug || !aiMatches.length) return;
+    setAiApplying(true);
+    try {
+      const res = await apiFetch<{ success: boolean; result: Record<string, number> }>('/migration/apply-matched', {
+        method: 'POST',
+        body: JSON.stringify({
+          tenantSlug: targetSlug,
+          matches: aiMatches
+            .filter((m) => m.targetPageId !== null || m.blocks.length > 0)
+            .map((m) => ({
+              sourceUrl: m.sourceUrl,
+              targetPageId: m.targetPageId,
+              targetSlug: m.targetPageSlug,
+              blocks: m.blocks,
+            })),
+          dynamicContent: aiExtracted,
+        }),
+      });
+      const r = res.result;
+      const parts = [
+        r.sermons ? `설교 ${r.sermons}` : '',
+        r.staff ? `교역자 ${r.staff}` : '',
+        r.events ? `행사 ${r.events}` : '',
+        r.bulletins ? `주보 ${r.bulletins}` : '',
+        r.pages ? `페이지 ${r.pages}` : '',
+      ].filter(Boolean);
+      showToast('success', `마이그레이션 완료: ${parts.join(', ') || '변경 없음'}`);
+      setAiStep(4);
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '마이그레이션 반영 실패');
+    } finally {
+      setAiApplying(false);
+    }
+  };
+
   // Summary stat items for display
   const summaryItems = summary
     ? [
@@ -1772,19 +1901,251 @@ function MigrationTab() {
         <div className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${
           isWordPress
             ? 'bg-blue-50 border border-blue-200 text-blue-700'
-            : 'bg-gray-50 border border-gray-200 text-gray-600'
+            : 'bg-amber-50 border border-amber-200 text-amber-700'
         }`}>
-          <span>{isWordPress ? 'WP' : 'HTML'}</span>
+          <span>{isWordPress ? 'WP' : 'AI'}</span>
           <span>
             {isWordPress
               ? 'WordPress REST API 감지 - 구조화된 데이터 추출 가능'
-              : 'WordPress 미감지 - HTML 스크래핑 모드'}
+              : 'WordPress 미감지 - AI 분석 모드 사용 가능'}
           </span>
+          {!isWordPress && !aiPages && (
+            <button
+              onClick={handleAiAnalyze}
+              disabled={aiAnalyzing || !targetSlug}
+              className="ml-auto bg-amber-600 text-white px-4 py-1 rounded-lg text-xs font-medium hover:bg-amber-700 disabled:opacity-50"
+            >
+              {aiAnalyzing ? 'AI 분석 중...' : 'AI 분석 시작'}
+            </button>
+          )}
         </div>
       )}
 
-      {/* Step 2: Analysis Result */}
-      {site && (
+      {/* AI tenant selector (needed before AI analysis) */}
+      {isWordPress === false && site && !aiPages && !aiAnalyzing && (
+        <div className="bg-white rounded-xl border border-amber-200 p-4">
+          <p className="text-xs text-gray-500 mb-2">AI 분석을 위해 대상 테넌트를 먼저 선택하세요 (페이지 매칭에 사용됩니다):</p>
+          <select
+            value={targetSlug}
+            onChange={(e) => setTargetSlug(e.target.value)}
+            className="border rounded-lg px-3 py-2 text-sm w-full"
+          >
+            <option value="">테넌트 선택</option>
+            {tenants.map((t) => (
+              <option key={t.slug} value={t.slug}>{t.name} ({t.slug})</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* AI Analyzing Progress */}
+      {aiAnalyzing && (
+        <div className="bg-white rounded-xl border border-amber-200 p-8 text-center">
+          <div className="animate-pulse">
+            <p className="text-2xl mb-2">AI</p>
+            <p className="text-sm text-amber-700 font-medium">AI 분석 중...</p>
+            <p className="text-xs text-gray-400 mt-2">Gemini AI가 각 페이지를 분류하고 콘텐츠를 추출하고 있습니다.</p>
+            <p className="text-xs text-gray-400">페이지 수에 따라 1~2분 소요될 수 있습니다.</p>
+          </div>
+        </div>
+      )}
+
+      {/* AI Step 2: Analysis Results */}
+      {aiPages && aiStep >= 2 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h3 className="text-base font-semibold text-gray-900 mb-1">AI 분석 결과</h3>
+          <p className="text-xs text-gray-500 mb-4">
+            {aiPages.length}개 페이지 분석 완료 |
+            정적: {aiPages.filter((p) => p.type === 'static').length}개,
+            동적: {aiPages.filter((p) => p.type === 'dynamic').length}개
+          </p>
+
+          {/* Category summary chips */}
+          {aiSummary && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {aiSummary.static > 0 && (
+                <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-700 text-xs">정적 {aiSummary.static}</span>
+              )}
+              {aiSummary.dynamic > 0 && (
+                <span className="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs">동적 {aiSummary.dynamic}</span>
+              )}
+              {aiSummary.sermons > 0 && (
+                <span className="px-2 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs">설교 {aiSummary.sermons}</span>
+              )}
+              {aiSummary.staff > 0 && (
+                <span className="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs">교역자 {aiSummary.staff}</span>
+              )}
+              {aiSummary.events > 0 && (
+                <span className="px-2 py-1 rounded-full bg-orange-100 text-orange-700 text-xs">행사 {aiSummary.events}</span>
+              )}
+            </div>
+          )}
+
+          {/* Pages table */}
+          <div className="border border-gray-200 rounded-lg overflow-hidden mb-4">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="text-left px-3 py-2 text-xs font-medium text-gray-500">페이지</th>
+                  <th className="text-center px-3 py-2 text-xs font-medium text-gray-500 w-20">유형</th>
+                  <th className="text-center px-3 py-2 text-xs font-medium text-gray-500 w-24">카테고리</th>
+                  <th className="text-center px-3 py-2 text-xs font-medium text-gray-500 w-20">확신도</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {aiPages.map((p, i) => (
+                  <tr key={i} className="hover:bg-gray-50">
+                    <td className="px-3 py-2">
+                      <p className="font-medium text-gray-800 truncate">{p.title || '(제목 없음)'}</p>
+                      <p className="text-xs text-gray-400 truncate">{p.url}</p>
+                    </td>
+                    <td className="px-3 py-2 text-center">
+                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                        p.type === 'static'
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-green-100 text-green-700'
+                      }`}>
+                        {p.type === 'static' ? '정적' : '동적'}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 text-center text-xs text-gray-600">{p.category}</td>
+                    <td className="px-3 py-2 text-center">
+                      <span className={`text-xs font-medium ${
+                        p.confidence >= 0.7 ? 'text-green-600' :
+                        p.confidence >= 0.4 ? 'text-amber-600' : 'text-red-500'
+                      }`}>
+                        {Math.round(p.confidence * 100)}%
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <button
+            onClick={() => setAiStep(3)}
+            className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
+          >
+            페이지 매칭 확인 &rarr;
+          </button>
+        </div>
+      )}
+
+      {/* AI Step 3: Page Matching */}
+      {aiPages && aiStep >= 3 && aiStep < 4 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h3 className="text-base font-semibold text-gray-900 mb-1">페이지 매칭</h3>
+          <p className="text-xs text-gray-500 mb-4">
+            소스 페이지와 대상 테넌트 페이지를 매칭하세요. 자동 매칭된 항목을 확인하고 필요 시 수정하세요.
+          </p>
+
+          <div className="space-y-2 max-h-96 overflow-y-auto mb-4">
+            {aiMatches.map((m, i) => (
+              <div key={i} className={`flex items-center gap-3 p-3 rounded-lg border ${
+                m.targetPageId ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
+              }`}>
+                {/* Source page */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-800 truncate">{m.sourceTitle}</p>
+                  <p className="text-xs text-gray-400 truncate">{m.sourceUrl}</p>
+                </div>
+
+                <span className="text-gray-300 text-lg flex-shrink-0">&rarr;</span>
+
+                {/* Target page selector */}
+                <div className="flex-1">
+                  <select
+                    value={m.targetPageId || '__new__'}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      handleAiMatchChange(m.sourceUrl, val === '__new__' ? null : val);
+                    }}
+                    className={`w-full border rounded-lg px-2 py-1.5 text-sm ${
+                      m.targetPageId ? 'border-green-300 bg-white' : 'border-gray-300 bg-white'
+                    }`}
+                  >
+                    <option value="__new__">+ 새 페이지 생성</option>
+                    {aiTenantPages.map((tp) => (
+                      <option key={tp.id} value={tp.id}>
+                        {tp.title} (/{tp.slug})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Confidence badge */}
+                <span className={`text-xs font-medium flex-shrink-0 w-10 text-center ${
+                  m.confidence >= 0.6 ? 'text-green-600' :
+                  m.confidence >= 0.3 ? 'text-amber-600' : 'text-gray-400'
+                }`}>
+                  {Math.round(m.confidence * 100)}%
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Dynamic content summary */}
+          {aiExtracted && (
+            <div className="bg-gray-50 rounded-lg p-3 mb-4">
+              <p className="text-xs font-semibold text-gray-600 mb-2">추출된 동적 콘텐츠:</p>
+              <div className="flex flex-wrap gap-2 text-xs">
+                {aiExtracted.sermons.length > 0 && (
+                  <span className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded">설교 {aiExtracted.sermons.length}건</span>
+                )}
+                {aiExtracted.staff.length > 0 && (
+                  <span className="px-2 py-1 bg-green-100 text-green-700 rounded">교역자 {aiExtracted.staff.length}명</span>
+                )}
+                {aiExtracted.events.length > 0 && (
+                  <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded">행사 {aiExtracted.events.length}건</span>
+                )}
+                {aiExtracted.bulletins.length > 0 && (
+                  <span className="px-2 py-1 bg-pink-100 text-pink-700 rounded">주보 {aiExtracted.bulletins.length}건</span>
+                )}
+                {aiExtracted.albums.length > 0 && (
+                  <span className="px-2 py-1 bg-teal-100 text-teal-700 rounded">앨범 {aiExtracted.albums.length}건</span>
+                )}
+                {aiExtracted.pages.length > 0 && (
+                  <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded">정적 페이지 {aiExtracted.pages.length}건</span>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => setAiStep(2)}
+              className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300"
+            >
+              &larr; 뒤로
+            </button>
+            <button
+              onClick={handleAiApply}
+              disabled={aiApplying}
+              className="bg-green-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50"
+            >
+              {aiApplying ? '반영 중...' : '마이그레이션 적용'}
+            </button>
+          </div>
+          <p className="text-xs text-amber-600 mt-2">
+            주의: 매칭된 페이지의 섹션 콘텐츠가 덮어씌워지고, 동적 콘텐츠가 추가됩니다.
+          </p>
+        </div>
+      )}
+
+      {/* AI Step 4: Result */}
+      {aiStep === 4 && (
+        <div className="bg-white rounded-xl border border-green-200 p-6">
+          <h3 className="text-base font-semibold text-green-800 mb-2">마이그레이션 완료</h3>
+          <p className="text-sm text-green-700">AI 기반 마이그레이션이 성공적으로 완료되었습니다.</p>
+          <p className="text-xs text-gray-500 mt-2">
+            대상 테넌트: {targetSlug} | 이미지는 원본 URL을 유지합니다 (R2 업로드는 별도 진행).
+          </p>
+        </div>
+      )}
+
+      {/* Step 2: Analysis Result (WP or basic HTML mode) */}
+      {site && !aiPages && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h3 className="text-base font-semibold text-gray-900 mb-4">2단계: 분석 결과</h3>
 
@@ -1942,8 +2303,8 @@ function MigrationTab() {
         </div>
       )}
 
-      {/* Step 3: Apply with confirmation */}
-      {site && (
+      {/* Step 3: Apply with confirmation (WP or basic HTML mode — hidden during AI flow) */}
+      {site && !aiPages && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h3 className="text-base font-semibold text-gray-900 mb-4">3단계: 데이터 반영</h3>
           <p className="text-xs text-gray-500 mb-4">
