@@ -36,36 +36,44 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
       throw new AppError('VALIDATION_ERROR', 400, 'url is required');
     }
 
-    // Try WordPress REST API first
+    // Try WordPress REST API — fetch pages and posts directly (fast, no full site data)
     try {
-      const wpData = await fetchWPSiteData(url);
-      if (wpData && wpData.pages.length > 0) {
-        const extracted = mapWPDataToExtracted(wpData);
-        const summary = generateSummary(extracted);
-        return reply.send({
-          success: true,
-          isWordPress: true,
-          site: {
-            url: wpData.siteUrl,
-            title: wpData.siteName,
-            pageCount: wpData.pages.length + (wpData.posts?.length || 0),
-            menu: (wpData.menus || []).flatMap((m: any) =>
-              (m.items || []).map((item: any) => ({
-                label: item.title || '',
-                href: item.url || '',
-                children: (item.children ?? []).map((c: any) => ({ label: c.title || '', href: c.url || '' })),
+      const { detectWordPress, fetchWPPages, fetchWPPosts, fetchWPCategories } = await import('./wp-api.js');
+      const detection = await detectWordPress(url);
+      if (detection.isWordPress) {
+        const apiUrl = detection.apiUrl;
+        const siteUrl = url.replace(/\/wp-json.*$/i, '').replace(/\/+$/, '');
+
+        // Fetch pages and posts in parallel (skip media/menus/custom types for speed)
+        const [pages, posts, categories] = await Promise.all([
+          fetchWPPages(apiUrl).catch(() => []),
+          fetchWPPosts(apiUrl).catch(() => []),
+          fetchWPCategories(apiUrl).catch(() => []),
+        ]);
+
+        if (pages.length > 0 || posts.length > 0) {
+          const wpData = { siteName: detection.siteName, siteUrl, pages, posts, media: [], categories, menus: [], customPosts: [] };
+          const extracted = mapWPDataToExtracted(wpData as any);
+          const summary = generateSummary(extracted);
+          return reply.send({
+            success: true,
+            isWordPress: true,
+            site: {
+              url: siteUrl,
+              title: detection.siteName,
+              pageCount: pages.length + posts.length,
+              menu: [],
+              pages: pages.map((p: any) => ({
+                url: `${siteUrl}/${p.slug}`,
+                title: String((p.title as any)?.rendered ?? p.title ?? '').replace(/<[^>]+>/g, ''),
+                imageCount: 0,
+                textPreview: String((p.content as any)?.rendered ?? p.content ?? '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 300),
               })),
-            ),
-            pages: wpData.pages.map((p: any) => ({
-              url: `${wpData.siteUrl}/${p.slug}`,
-              title: String((p.title as any)?.rendered ?? p.title ?? '').replace(/<[^>]+>/g, ''),
-              imageCount: (String((p.content as any)?.rendered ?? p.content ?? '').match(/<img/gi) ?? []).length,
-              textPreview: String((p.content as any)?.rendered ?? p.content ?? '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 300),
-            })),
-          },
-          extracted,
-          summary,
-        });
+            },
+            extracted,
+            summary,
+          });
+        }
       }
     } catch {
       // WP API failed, will try scraping below
