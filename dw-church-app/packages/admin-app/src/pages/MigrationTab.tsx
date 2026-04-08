@@ -158,43 +158,45 @@ export default function MigrationTab() {
       // Every page gets a hero banner
       blocks.push({ blockType: 'hero_banner', label: blockLabel('hero_banner'), props: { title, subtitle: '', height: 'md' } });
 
-      // Detect content type from URL patterns and text
-      const lowerSlug = slug.toLowerCase();
-      const lowerText = text.toLowerCase();
+      // Detect content type from URL slug ONLY (not body text — body contains nav/footer noise)
+      const s = slug.toLowerCase();
 
-      if (lowerSlug === 'home' || lowerSlug === '') {
-        blocks.push({ blockType: 'recent_sermons', label: blockLabel('recent_sermons'), props: { title: '최근 설교', limit: 4, variant: 'grid-4' } });
-        blocks.push({ blockType: 'recent_bulletins', label: blockLabel('recent_bulletins'), props: { title: '최근 주보', limit: 4, variant: 'grid-4' } });
-        blocks.push({ blockType: 'event_grid', label: blockLabel('event_grid'), props: { title: '교회 행사', limit: 4, variant: 'cards-4' } });
-      } else if (/sermon|설교|preaching/i.test(lowerSlug + lowerText)) {
+      if (s === 'home' || s === '' || s === '#') {
+        blocks.push({ blockType: 'recent_sermons', label: blockLabel('recent_sermons'), props: { title, limit: 4, variant: 'grid-4' } });
+        blocks.push({ blockType: 'recent_bulletins', label: blockLabel('recent_bulletins'), props: { title, limit: 4, variant: 'grid-4' } });
+        blocks.push({ blockType: 'event_grid', label: blockLabel('event_grid'), props: { title, limit: 4, variant: 'cards-4' } });
+      } else if (/sermon|preaching/.test(s)) {
         blocks.push({ blockType: 'recent_sermons', label: blockLabel('recent_sermons'), props: { limit: 12, variant: 'grid-4' } });
-      } else if (/bulletin|주보|weekly/i.test(lowerSlug + lowerText)) {
+      } else if (/bulletin|weekly/.test(s)) {
         blocks.push({ blockType: 'recent_bulletins', label: blockLabel('recent_bulletins'), props: { limit: 12, variant: 'grid-4' } });
-      } else if (/column|칼럼|pastoral/i.test(lowerSlug + lowerText)) {
+      } else if (/column|pastoral/.test(s)) {
         blocks.push({ blockType: 'recent_columns', label: blockLabel('recent_columns'), props: { limit: 12, variant: 'grid-3' } });
-      } else if (/staff|교역|pastor|섬기는|사역자/i.test(lowerSlug + lowerText)) {
-        blocks.push({ blockType: 'staff_grid', label: blockLabel('staff_grid'), props: { title: '교역자', limit: 20, variant: 'grid-4' } });
-      } else if (/gallery|album|앨범|갤러리|photo/i.test(lowerSlug + lowerText)) {
+      } else if (/staff|people|pastor|leader/.test(s)) {
+        blocks.push({ blockType: 'staff_grid', label: blockLabel('staff_grid'), props: { title, limit: 20, variant: 'grid-4' } });
+      } else if (/gallery|album|photo/.test(s)) {
         blocks.push({ blockType: 'album_gallery', label: blockLabel('album_gallery'), props: { limit: 12, variant: 'grid-4' } });
-      } else if (/event|행사|소식|news/i.test(lowerSlug + lowerText)) {
+      } else if (/event|announcement|news/.test(s)) {
         blocks.push({ blockType: 'event_grid', label: blockLabel('event_grid'), props: { limit: 12, variant: 'cards-4' } });
-      } else if (/history|연혁|역사/i.test(lowerSlug + lowerText)) {
-        blocks.push({ blockType: 'history_timeline', label: blockLabel('history_timeline'), props: { title: '교회 연혁' } });
-      } else if (/worship|예배|service/i.test(lowerSlug + lowerText)) {
-        blocks.push({ blockType: 'worship_times', label: blockLabel('worship_times'), props: { title: '예배 안내', services: [] } });
-      } else if (/direction|오시는|location|map|약도/i.test(lowerSlug + lowerText)) {
-        blocks.push({ blockType: 'location_map', label: blockLabel('location_map'), props: { title: '오시는 길' } });
-        blocks.push({ blockType: 'contact_info', label: blockLabel('contact_info'), props: { title: '연락처' } });
-      } else if (/newcomer|새가족|welcome|환영/i.test(lowerSlug + lowerText)) {
-        blocks.push({ blockType: 'newcomer_info', label: blockLabel('newcomer_info'), props: { title: '새가족 안내' } });
-      } else if (/vision|비전|mission|사명/i.test(lowerSlug + lowerText)) {
-        blocks.push({ blockType: 'mission_vision', label: blockLabel('mission_vision'), props: { title: '비전과 사명' } });
-      } else if (/about|소개|greet|인사/i.test(lowerSlug + lowerText)) {
+      } else if (/history|timeline/.test(s)) {
+        blocks.push({ blockType: 'history_timeline', label: blockLabel('history_timeline'), props: { title } });
+      } else if (/worship|service/.test(s)) {
+        blocks.push({ blockType: 'worship_times', label: blockLabel('worship_times'), props: { title, services: [] } });
+      } else if (/direction|location|map/.test(s)) {
+        blocks.push({ blockType: 'location_map', label: blockLabel('location_map'), props: { title } });
+        blocks.push({ blockType: 'contact_info', label: blockLabel('contact_info'), props: { title } });
+      } else if (/newcomer|welcome/.test(s)) {
+        blocks.push({ blockType: 'newcomer_info', label: blockLabel('newcomer_info'), props: { title } });
+      } else if (/vision|mission/.test(s)) {
+        blocks.push({ blockType: 'mission_vision', label: blockLabel('mission_vision'), props: { title } });
+      } else if (/about|greet|intro|cpstory/.test(s)) {
         blocks.push({ blockType: 'pastor_message', label: blockLabel('pastor_message'), props: { title } });
+      } else if (/edu|school|youth|children/.test(s)) {
+        blocks.push({ blockType: 'text_image', label: blockLabel('text_image'), props: { title, content: page.textPreview } });
+        blocks.push({ blockType: 'board', label: blockLabel('board'), props: { title, boardSlug: slug } });
       } else {
         // Default: text block with images if available
         if (hasImages) {
-          blocks.push({ blockType: 'text_image', label: blockLabel('text_image'), props: { title, content: page.textPreview, imageUrl: page.images[0] || '' } });
+          blocks.push({ blockType: 'text_image', label: blockLabel('text_image'), props: { title, content: page.textPreview, imageUrl: page.images?.[0] || '' } });
         } else {
           blocks.push({ blockType: 'text_only', label: blockLabel('text_only'), props: { title, content: page.textPreview } });
         }
