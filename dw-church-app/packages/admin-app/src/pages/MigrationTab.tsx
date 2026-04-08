@@ -103,6 +103,7 @@ export default function MigrationTab() {
 
   const [site, setSite] = useState<ScrapedSite | null>(null);
   const [tenants, setTenants] = useState<{ slug: string; name: string }[]>([]);
+  const [tenantPages, setTenantPages] = useState<{ id: string; title: string; slug: string; blocks: string[] }[]>([]);
   const [pagePlans, setPagePlans] = useState<PagePlan[]>([]);
   const [applyResult, setApplyResult] = useState<Record<string, number> | null>(null);
 
@@ -141,10 +142,16 @@ export default function MigrationTab() {
   };
 
   // ─── Step 2: Generate Plan ───────────────────────────
-  // This generates a suggested block plan for each scraped page.
-  // In the future, this could call an AI endpoint. For now, rule-based.
-  const generatePlan = () => {
+  const generatePlan = async () => {
     if (!site) return;
+
+    // Fetch tenant pages with their blocks for context
+    if (targetSlug) {
+      try {
+        const res = await apiFetch<{ data: { id: string; title: string; slug: string; blocks: string[] }[] }>(`/tenant-pages/${targetSlug}`);
+        setTenantPages(res.data || []);
+      } catch { setTenantPages([]); }
+    }
 
     const plans: PagePlan[] = site.pages.map((page) => {
       const slug = page.url.replace(site.url, '').replace(/^\//, '').replace(/\/$/, '') || 'home';
@@ -387,6 +394,28 @@ export default function MigrationTab() {
           <p className="text-xs text-gray-500 mb-4">
             각 페이지별 블록 구성을 검토하세요. 불필요한 페이지는 체크 해제, 블록은 X로 제거할 수 있습니다.
           </p>
+
+          {/* Tenant pages reference */}
+          {tenantPages.length > 0 && (
+            <details className="mb-4 border border-blue-200 rounded-lg bg-blue-50/50">
+              <summary className="px-4 py-2 text-xs font-semibold text-blue-700 cursor-pointer">
+                📋 대상 테넌트 페이지 블록 구성 ({tenantPages.length}개 페이지)
+              </summary>
+              <div className="px-4 pb-3 pt-1 space-y-1 max-h-48 overflow-y-auto">
+                {tenantPages.map((tp) => (
+                  <div key={tp.id} className="flex items-center gap-2 text-xs">
+                    <span className="font-medium text-gray-700 w-28 truncate">{tp.title}</span>
+                    <span className="text-gray-400">/{tp.slug}</span>
+                    <div className="flex gap-1 flex-1 justify-end">
+                      {tp.blocks?.map((b, i) => (
+                        <span key={i} className="text-[10px] bg-gray-200 text-gray-600 px-1 py-0.5 rounded">{b}</span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
 
           <div className="space-y-3 max-h-[500px] overflow-y-auto">
             {pagePlans.map((plan, pi) => (
