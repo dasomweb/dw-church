@@ -283,6 +283,19 @@ export default async function tenantRoutes(app: FastifyInstance): Promise<void> 
     },
   );
 
+  // GET /admin/tenants/:slug/pages — List pages for a tenant (for migration matching)
+  app.get<{ Params: { slug: string } }>('/tenants/:slug/pages', async (request, reply) => {
+    const schema = `tenant_${request.params.slug}`;
+    try {
+      const pages = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
+        `SELECT id, title, slug, is_home, status, sort_order FROM "${schema}".pages ORDER BY sort_order ASC`
+      );
+      return reply.send({ data: pages });
+    } catch {
+      return reply.send({ data: [] });
+    }
+  });
+
   // GET /admin/users — List all users
   app.get('/users', async (_request, reply) => {
     const users = await prisma.user.findMany({

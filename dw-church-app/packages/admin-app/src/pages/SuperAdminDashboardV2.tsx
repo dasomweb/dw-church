@@ -1737,8 +1737,11 @@ function MigrationTab() {
       } : null);
 
       // Fetch tenant pages for matching
-      const tenantRes = await apiFetch<{ data: AiTenantPage[] }>(`/tenants/${targetSlug}/pages`).catch(() => ({ data: [] as AiTenantPage[] }));
-      setAiTenantPages(tenantRes.data || []);
+      const tenantPagesRes = await apiFetch<{ data: AiTenantPage[] } | AiTenantPage[]>(
+        `/tenants/${targetSlug}/pages`
+      ).catch(() => ({ data: [] as AiTenantPage[] }));
+      const tenantPages = Array.isArray(tenantPagesRes) ? tenantPagesRes : (tenantPagesRes.data || []);
+      setAiTenantPages(tenantPages);
 
       // Auto-match by slug/title similarity
       const matches: AiPageMatch[] = wpPages.map((src) => {
