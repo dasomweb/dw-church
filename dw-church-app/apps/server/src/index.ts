@@ -52,8 +52,13 @@ async function main(): Promise<void> {
   app.setErrorHandler(errorHandler);
 
   // --- Tenant resolution for API routes ---
+  // Skip auth, admin, billing, migration routes — they handle tenant themselves
   app.addHook('preHandler', async (request, reply) => {
-    if (request.url.startsWith('/api/v1/')) {
+    if (request.url.startsWith('/api/v1/') &&
+        !request.url.startsWith('/api/v1/auth/') &&
+        !request.url.startsWith('/api/v1/admin') &&
+        !request.url.startsWith('/api/v1/billing') &&
+        !request.url.startsWith('/api/v1/migration')) {
       await tenantMiddleware(request, reply);
     }
   });

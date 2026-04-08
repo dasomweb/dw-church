@@ -20,7 +20,7 @@ RUN pnpm install --frozen-lockfile
 
 # Copy server source
 COPY dw-church-app/apps/server/ apps/server/
-RUN cd apps/server && rm -rf dist && pnpm db:generate && pnpm build && echo "build:20260407v2"
+RUN cd apps/server && rm -rf dist && pnpm db:generate && pnpm build && echo "build:20260408v1"
 
 EXPOSE 3000
 CMD ["node", "apps/server/dist/index.js"]
