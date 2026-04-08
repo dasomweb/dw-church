@@ -36,43 +36,43 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
       throw new AppError('VALIDATION_ERROR', 400, 'url is required');
     }
 
+    // Try WordPress REST API first
     try {
-      // Auto-detect WordPress and use REST API if available
-      const wpDetection = await detectWordPress(url);
-
-      if (wpDetection.isWordPress) {
-        const wpData = await fetchWPSiteData(url);
-        if (wpData) {
-          const extracted = mapWPDataToExtracted(wpData);
-          const summary = generateSummary(extracted);
-          return reply.send({
-            success: true,
-            isWordPress: true,
-            site: {
-              url: wpData.siteUrl,
-              title: wpData.siteName,
-              pageCount: wpData.pages.length,
-              menu: wpData.menus.flatMap((m) =>
-                m.items.map((item) => ({
-                  label: item.title,
-                  href: item.url,
-                  children: (item.children ?? []).map((c) => ({ label: c.title, href: c.url })),
-                })),
-              ),
-              pages: wpData.pages.map((p) => ({
-                url: `${wpData.siteUrl}/${p.slug}`,
-                title: String((p.title as any)?.rendered ?? p.title ?? '').replace(/<[^>]+>/g, ''),
-                imageCount: (String((p.content as any)?.rendered ?? p.content ?? '').match(/<img/gi) ?? []).length,
-                textPreview: String((p.content as any)?.rendered ?? p.content ?? '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 300),
+      const wpData = await fetchWPSiteData(url);
+      if (wpData && wpData.pages.length > 0) {
+        const extracted = mapWPDataToExtracted(wpData);
+        const summary = generateSummary(extracted);
+        return reply.send({
+          success: true,
+          isWordPress: true,
+          site: {
+            url: wpData.siteUrl,
+            title: wpData.siteName,
+            pageCount: wpData.pages.length + (wpData.posts?.length || 0),
+            menu: (wpData.menus || []).flatMap((m: any) =>
+              (m.items || []).map((item: any) => ({
+                label: item.title || '',
+                href: item.url || '',
+                children: (item.children ?? []).map((c: any) => ({ label: c.title || '', href: c.url || '' })),
               })),
-            },
-            extracted,
-            summary,
-          });
-        }
+            ),
+            pages: wpData.pages.map((p: any) => ({
+              url: `${wpData.siteUrl}/${p.slug}`,
+              title: String((p.title as any)?.rendered ?? p.title ?? '').replace(/<[^>]+>/g, ''),
+              imageCount: (String((p.content as any)?.rendered ?? p.content ?? '').match(/<img/gi) ?? []).length,
+              textPreview: String((p.content as any)?.rendered ?? p.content ?? '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 300),
+            })),
+          },
+          extracted,
+          summary,
+        });
       }
+    } catch {
+      // WP API failed, will try scraping below
+    }
 
-      // Fallback: HTML scraping
+    // Fallback: HTML scraping
+    try {
       const site = await scrapeSite(url, maxPages ?? 30);
       return reply.send({
         success: true,
@@ -85,8 +85,8 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
           pages: site.pages.map((p) => ({
             url: p.url,
             title: p.title,
-            imageCount: p.images.length,
-            textPreview: p.textContent.slice(0, 300),
+            imageCount: p.images?.length ?? 0,
+            textPreview: (p.textContent || '').slice(0, 300),
           })),
         },
         extracted: null,
