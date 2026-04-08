@@ -81,8 +81,8 @@ let lastRequestTime = 0;
 async function rateLimitedFetch(url: string, init?: RequestInit): Promise<Response> {
   const now = Date.now();
   const elapsed = now - lastRequestTime;
-  if (elapsed < 500) {
-    await new Promise((resolve) => setTimeout(resolve, 500 - elapsed));
+  if (elapsed < 100) {
+    await new Promise((resolve) => setTimeout(resolve, 100 - elapsed));
   }
   lastRequestTime = Date.now();
   return fetch(url, {
@@ -292,29 +292,25 @@ export async function fetchWPSiteData(siteUrl: string): Promise<WPSiteData | nul
   const { apiUrl, siteName } = detection;
 
   // Fetch all data types. Each fetch handles its own errors gracefully.
-  const [pages, posts, media, categories, menus] = await Promise.all([
+  const [pages, posts, categories, menus] = await Promise.all([
     fetchWPPages(apiUrl).catch(() => [] as WPPage[]),
     fetchWPPosts(apiUrl).catch(() => [] as WPPost[]),
-    fetchWPMedia(apiUrl).catch(() => [] as WPMedia[]),
     fetchWPCategories(apiUrl).catch(() => [] as WPCategory[]),
     fetchWPMenus(apiUrl).catch(() => [] as WPMenu[]),
   ]);
+  // Skip media fetch (slow, not critical for migration)
+  const media: WPMedia[] = [];
 
-  // Also try common custom post types for church sites
+  // Try common custom post types in parallel
   const customTypes = ['sermon', 'sermons', 'staff', 'event', 'events'];
-  const customPosts: WPPost[] = [];
-  for (const cpt of customTypes) {
-    try {
-      const cptPosts = await fetchWPCustomPostType(apiUrl, cpt);
-      // Tag them so the mapper knows the source post type
-      for (const post of cptPosts) {
-        (post as unknown as Record<string, unknown>)._customPostType = cpt;
-      }
-      customPosts.push(...cptPosts);
-    } catch {
-      // Custom post type not registered — skip
-    }
-  }
+  const cptResults = await Promise.all(
+    customTypes.map((cpt) =>
+      fetchWPCustomPostType(apiUrl, cpt)
+        .then((posts) => posts.map((p) => ({ ...p, _customPostType: cpt } as WPPost)))
+        .catch(() => [] as WPPost[])
+    )
+  );
+  const customPosts = cptResults.flat();
 
   return {
     siteName,
