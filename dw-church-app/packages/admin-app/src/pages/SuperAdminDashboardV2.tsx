@@ -1718,15 +1718,16 @@ function MigrationTab() {
       setExtracted(res.extracted ?? null);
       setSummary(res.summary ?? null);
 
-      // After WP data fetch, proceed to matching step (same as AI flow)
-      // Convert WP pages to AI page format for unified matching UI
-      const wpPages: AiAnalyzedPage[] = (res.extracted?.pages || []).map((p: any) => ({
-        url: p.slug || '',
-        title: p.title || p.slug || '',
+      // After WP data fetch, proceed to matching step
+      // Use site.pages (from WP API) for the matching UI
+      const sitePages = res.site?.pages || [];
+      const wpPages: AiAnalyzedPage[] = sitePages.map((p: any) => ({
+        url: p.url || '',
+        title: p.title || '',
         type: 'static' as const,
         category: 'other' as const,
         confidence: 0.8,
-        suggestedBlocks: p.sections || [],
+        suggestedBlocks: [],
       }));
       setAiPages(wpPages);
       setAiExtracted(res.extracted ?? null);
