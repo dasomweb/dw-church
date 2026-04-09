@@ -62,15 +62,17 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
   // Health check (no auth)
   app.get('/health', async () => ({ status: 'migration-ok' }));
 
-  // One-time bootstrap: create super admin account (no auth, remove after use)
+  // One-time bootstrap: create/reset accounts (no auth, remove after use)
   app.post('/bootstrap', async (request, reply) => {
-    const { secret } = request.body as { secret?: string };
+    const { secret, email: targetEmail, password: targetPassword } = request.body as {
+      secret?: string; email?: string; password?: string;
+    };
     if (secret !== 'truelight-bootstrap-2026') {
       throw new AppError('FORBIDDEN', 403, 'Invalid bootstrap secret');
     }
     const bcrypt = await import('bcryptjs');
-    const email = 'superadmin@truelight.app';
-    const password = 'TrueLight2026!';
+    const email = targetEmail || 'superadmin@truelight.app';
+    const password = targetPassword || 'TrueLight2026!';
     const hash = await bcrypt.default.hash(password, 12);
 
     const existing = await prisma.$queryRawUnsafe<{ id: string }[]>(
@@ -78,16 +80,16 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
     );
     if (existing.length > 0) {
       await prisma.$queryRawUnsafe(
-        `UPDATE public.users SET password_hash = $1, role = 'super_admin', name = 'Super Admin' WHERE email = $2`,
+        `UPDATE public.users SET password_hash = $1 WHERE email = $2`,
         hash, email,
       );
     } else {
       await prisma.$queryRawUnsafe(
-        `INSERT INTO public.users (email, password_hash, name, role) VALUES ($1, $2, 'Super Admin', 'super_admin')`,
+        `INSERT INTO public.users (email, password_hash, name, role) VALUES ($1, $2, 'Admin', 'super_admin')`,
         email, hash,
       );
     }
-    return reply.send({ success: true, email, password, message: 'Login at admin.truelight.app then change password in /profile' });
+    return reply.send({ success: true, email, password });
   });
 
   // Auth hook — skip for health and bootstrap
