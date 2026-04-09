@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '../stores/auth';
 import { useToast } from '../components';
 
-// ─── API Helper (same pattern as SuperAdminDashboardV2) ──
+// ─── API Helper ─────────────────────────────────────────────
+
 function useAdminApi() {
   const session = useAuthStore((s) => s.session);
   return useCallback(
@@ -27,73 +28,44 @@ function useAdminApi() {
   );
 }
 
-// ─── Types ───────────────────────────────────────────────
+// ─── Types ──────────────────────────────────────────────────
 
-interface ScrapedPage {
-  url: string;
-  title: string;
-  subtitle: string;
-  shortDescription: string;
-  description: string;
-  heroImage: string;
-  imageCount: number;
+interface MigrationJob {
+  id: string;
+  tenantSlug: string;
+  sourceUrl: string | null;
+  youtubeChannelUrl: string | null;
+  status: string;
+  rawData: {
+    source: { url: string; type: string; scrapedAt: string };
+    pages: { url: string; title: string; textContent: string; images: string[] }[];
+    youtubeVideos: { title: string; videoId: string; date: string; thumbnailUrl: string }[];
+  };
+  classifiedData: ClassifiedData;
+  applyResult: Record<string, number>;
+  errorMessage: string | null;
+  createdAt: string;
+}
+
+interface ClassifiedData {
+  churchInfo: { name: string; address: string; phone: string; email: string; description: string };
+  sermons: { title: string; scripture: string; preacher: string; date: string; youtubeUrl: string; thumbnailUrl: string }[];
+  bulletins: { title: string; date: string; pdfUrl: string; images: string[] }[];
+  columns: { title: string; content: string; topImageUrl: string; youtubeUrl: string }[];
+  events: { title: string; description: string; date: string; location: string; imageUrl: string }[];
+  albums: { title: string; images: string[]; youtubeUrl: string }[];
+  boards: { boardSlug: string; boardTitle: string; posts: { title: string; content: string; author: string; date: string }[] }[];
+  staff: { name: string; role: string; department: string; photoUrl: string; bio: string }[];
+  history: { year: number; month: string; title: string; description: string }[];
+  worshipTimes: { name: string; day: string; time: string; location: string }[];
+  menus: { label: string; pageSlug: string; parentLabel: string | null; sortOrder: number }[];
+  pageContents: { pageSlug: string; blocks: { blockType: string; props: Record<string, unknown> }[] }[];
   images: string[];
-  textPreview: string;
-  textContent: string;
 }
 
-interface ScrapedSite {
-  url: string;
-  title: string;
-  pageCount: number;
-  menu: { label: string; href: string; children: { label: string; href: string }[] }[];
-  pages: ScrapedPage[];
-}
+type Step = 'input' | 'extracting' | 'extracted' | 'classified' | 'applying' | 'done';
 
-interface PagePlan {
-  sourceUrl: string;
-  sourceTitle: string;
-  targetSlug: string;
-  targetTitle: string;
-  blocks: { blockType: string; label: string; props: Record<string, unknown> }[];
-  included: boolean;
-}
-
-type Step = 'input' | 'scraped' | 'plan' | 'applying' | 'done';
-
-// ─── Block Label Map ─────────────────────────────────────
-
-const BLOCK_LABELS: Record<string, string> = {
-  hero_banner: '히어로 배너',
-  banner_slider: '배너 슬라이더',
-  text_image: '텍스트+이미지',
-  text_only: '텍스트',
-  pastor_message: '담임목사 인사',
-  church_intro: '교회 소개',
-  mission_vision: '미션/비전',
-  recent_sermons: '설교 목록',
-  recent_bulletins: '주보 목록',
-  recent_columns: '목회칼럼',
-  album_gallery: '앨범 갤러리',
-  event_grid: '행사',
-  staff_grid: '교역자',
-  history_timeline: '교회 연혁',
-  worship_times: '예배 시간',
-  location_map: '약도',
-  contact_info: '연락처',
-  newcomer_info: '새가족 안내',
-  board: '게시판',
-  divider: '구분선',
-  quote_block: '인용/성경구절',
-};
-
-function blockLabel(type: string): string {
-  return BLOCK_LABELS[type] || type;
-}
-
-// ═══════════════════════════════════════════════════════════
-// Main Component
-// ═══════════════════════════════════════════════════════════
+// ─── Component ──────────────────────────────────────────────
 
 export default function MigrationTab() {
   const apiFetch = useAdminApi();
@@ -101,17 +73,14 @@ export default function MigrationTab() {
 
   const [step, setStep] = useState<Step>('input');
   const [siteUrl, setSiteUrl] = useState('');
+  const [youtubeUrl, setYoutubeUrl] = useState('');
   const [targetSlug, setTargetSlug] = useState('');
-  const [scraping, setScraping] = useState(false);
-  const [applying, setApplying] = useState(false);
-
-  const [site, setSite] = useState<ScrapedSite | null>(null);
   const [tenants, setTenants] = useState<{ slug: string; name: string }[]>([]);
-  const [tenantPages, setTenantPages] = useState<{ id: string; title: string; slug: string; blocks: string[] }[]>([]);
-  const [pagePlans, setPagePlans] = useState<PagePlan[]>([]);
-  const [applyResult, setApplyResult] = useState<Record<string, number> | null>(null);
+  const [job, setJob] = useState<MigrationJob | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [jobs, setJobs] = useState<MigrationJob[]>([]);
 
-  // Fetch tenants on mount (tenants API is under /admin, not /migration)
+  // Fetch tenants on mount
   useEffect(() => {
     const host = window.location.hostname;
     const baseUrl = host.startsWith('admin.')
@@ -126,432 +95,396 @@ export default function MigrationTab() {
       .catch(() => {});
   }, []);
 
-  // ─── Step 1: Scrape ──────────────────────────────────
-  const handleScrape = async () => {
-    if (!siteUrl.trim()) return;
-    setScraping(true);
+  // Fetch existing jobs on mount
+  useEffect(() => {
+    apiFetch<{ data: MigrationJob[] }>('/jobs')
+      .then((res) => setJobs(res.data || []))
+      .catch(() => {});
+  }, [apiFetch]);
+
+  // ─── Actions ──────────────────────────────────────────────
+
+  const handleCreateAndExtract = async () => {
+    if (!targetSlug) { showToast('error', '대상 테넌트를 선택하세요'); return; }
+    if (!siteUrl && !youtubeUrl) { showToast('error', 'URL을 입력하세요'); return; }
+
+    setLoading(true);
+    setStep('extracting');
     try {
-      const res = await apiFetch<{ success: boolean; site: ScrapedSite }>('/scrape', {
+      // Create job
+      const { data: newJob } = await apiFetch<{ data: MigrationJob }>('/jobs', {
         method: 'POST',
-        body: JSON.stringify({ url: siteUrl.trim(), maxPages: 30 }),
+        body: JSON.stringify({ tenantSlug: targetSlug, sourceUrl: siteUrl, youtubeChannelUrl: youtubeUrl }),
       });
-      setSite(res.site);
-      setStep('scraped');
-      showToast('success', `${res.site.pageCount}개 페이지 수집 완료`);
+      setJob(newJob);
+
+      // Extract
+      const { data: extracted } = await apiFetch<{ data: MigrationJob }>(`/jobs/${newJob.id}/extract`, { method: 'POST' });
+      setJob(extracted);
+
+      // Classify
+      const { data: classified } = await apiFetch<{ data: MigrationJob }>(`/jobs/${extracted.id}/classify`, { method: 'POST' });
+      setJob(classified);
+      setStep('classified');
+      showToast('success', '추출 및 분류 완료');
     } catch (err) {
-      showToast('error', err instanceof Error ? err.message : '사이트 수집 실패');
+      showToast('error', err instanceof Error ? err.message : '추출 실패');
+      setStep('input');
     } finally {
-      setScraping(false);
+      setLoading(false);
     }
   };
 
-  // ─── Step 2: Generate Plan ───────────────────────────
-  const generatePlan = async () => {
-    if (!site) return;
-
-    // Fetch tenant pages with their blocks for context
-    if (targetSlug) {
-      try {
-        const res = await apiFetch<{ data: { id: string; title: string; slug: string; blocks: string[] }[] }>(`/tenant-pages/${targetSlug}`);
-        setTenantPages(res.data || []);
-      } catch { setTenantPages([]); }
-    }
-
-    const plans: PagePlan[] = site.pages.map((page) => {
-      const slug = page.url.replace(site.url, '').replace(/^\//, '').replace(/\/$/, '') || 'home';
-      const title = page.title || slug;
-      const hasImages = page.imageCount > 0;
-      const text = page.textContent || '';
-
-      // Rule-based block suggestions based on content analysis
-      const blocks: PagePlan['blocks'] = [];
-
-      // Every page gets a hero banner with structured data
-      blocks.push({ blockType: 'hero_banner', label: blockLabel('hero_banner'), props: { title, subtitle: page.subtitle || '', backgroundImageUrl: page.heroImage || '', height: 'md', layout: 'full' } });
-
-      // Detect content type from URL slug ONLY (not body text — body contains nav/footer noise)
-      const s = slug.toLowerCase();
-      const contentText = page.description || page.textPreview || '';
-      const firstImage = page.images?.[0] || page.heroImage || '';
-
-      if (s === 'home' || s === '' || s === '#') {
-        blocks.push({ blockType: 'recent_sermons', label: blockLabel('recent_sermons'), props: { title: '최근 설교', limit: 4, variant: 'grid-4' } });
-        blocks.push({ blockType: 'recent_bulletins', label: blockLabel('recent_bulletins'), props: { title: '주보', limit: 4, variant: 'grid-4' } });
-        blocks.push({ blockType: 'event_grid', label: blockLabel('event_grid'), props: { title: '교회 소식', limit: 4, variant: 'cards-4' } });
-        // Also add scraped content as text block
-        if (contentText) {
-          blocks.push({ blockType: 'text_image', label: blockLabel('text_image'), props: { title: '교회 소개', content: contentText.slice(0, 2000), imageUrl: firstImage } });
-        }
-      } else if (/sermon|preaching/.test(s)) {
-        blocks.push({ blockType: 'recent_sermons', label: blockLabel('recent_sermons'), props: { title: title || '설교', limit: 12, variant: 'grid-4' } });
-      } else if (/bulletin|weekly/.test(s)) {
-        blocks.push({ blockType: 'recent_bulletins', label: blockLabel('recent_bulletins'), props: { title: title || '주보', limit: 12, variant: 'grid-4' } });
-      } else if (/column|pastoral/.test(s)) {
-        blocks.push({ blockType: 'recent_columns', label: blockLabel('recent_columns'), props: { title: title || '목회칼럼', limit: 12, variant: 'grid-3' } });
-      } else if (/staff|people|pastor|leader/.test(s)) {
-        blocks.push({ blockType: 'staff_grid', label: blockLabel('staff_grid'), props: { title: title || '교역자 소개', limit: 20, variant: 'grid-4' } });
-      } else if (/gallery|album|photo/.test(s)) {
-        blocks.push({ blockType: 'album_gallery', label: blockLabel('album_gallery'), props: { title: title || '앨범', limit: 12, variant: 'grid-4' } });
-      } else if (/event|announcement|news/.test(s)) {
-        blocks.push({ blockType: 'event_grid', label: blockLabel('event_grid'), props: { title: title || '교회 소식', limit: 12, variant: 'cards-4' } });
-      } else if (/history|timeline/.test(s)) {
-        blocks.push({ blockType: 'history_timeline', label: blockLabel('history_timeline'), props: { title: title || '교회 연혁' } });
-      } else if (/worship|service/.test(s)) {
-        blocks.push({ blockType: 'worship_times', label: blockLabel('worship_times'), props: { title: title || '예배 안내', services: [] } });
-      } else if (/direction|location|map/.test(s)) {
-        blocks.push({ blockType: 'location_map', label: blockLabel('location_map'), props: { title: title || '오시는 길' } });
-        blocks.push({ blockType: 'contact_info', label: blockLabel('contact_info'), props: { title: '연락처' } });
-      } else if (/newcomer|welcome/.test(s)) {
-        blocks.push({ blockType: 'newcomer_info', label: blockLabel('newcomer_info'), props: { title: title || '새가족 안내' } });
-      } else if (/vision|mission/.test(s)) {
-        blocks.push({ blockType: 'mission_vision', label: blockLabel('mission_vision'), props: { title: title || '비전' } });
-      } else if (/about|greet|intro|cpstory/.test(s)) {
-        blocks.push({ blockType: 'pastor_message', label: blockLabel('pastor_message'), props: { title: title || '인사말' } });
-      } else if (/edu|school|youth|children/.test(s)) {
-        blocks.push({ blockType: 'text_image', label: blockLabel('text_image'), props: { title, content: contentText.slice(0, 2000), imageUrl: firstImage } });
-        blocks.push({ blockType: 'board', label: blockLabel('board'), props: { title, boardSlug: slug } });
-      } else {
-        // Default: text block with images if available
-        if (hasImages) {
-          blocks.push({ blockType: 'text_image', label: blockLabel('text_image'), props: { title, content: contentText.slice(0, 2000), imageUrl: firstImage } });
-        } else {
-          blocks.push({ blockType: 'text_only', label: blockLabel('text_only'), props: { title, content: contentText.slice(0, 2000) } });
-        }
-      }
-
-      // Always add scraped content as text block for non-home pages if there's meaningful content
-      // (Dynamic blocks may be empty, this ensures pages aren't blank)
-      if (s !== 'home' && s !== '' && s !== '#' && contentText.length > 50) {
-        const hasDynamic = blocks.some((b) => ['recent_sermons', 'recent_bulletins', 'recent_columns', 'album_gallery', 'staff_grid', 'event_grid', 'history_timeline'].includes(b.blockType));
-        if (hasDynamic) {
-          blocks.push({ blockType: 'text_image', label: '수집된 콘텐츠', props: { title: `${title} - 원본 콘텐츠`, content: contentText.slice(0, 2000), imageUrl: firstImage } });
-        }
-      }
-
-      return { sourceUrl: page.url, sourceTitle: title, targetSlug: slug, targetTitle: title, blocks, included: true };
-    });
-
-    setPagePlans(plans);
-    setStep('plan');
-  };
-
-  // ─── Step 3: Apply ──────────────────────────────────
   const handleApply = async () => {
-    if (!targetSlug) {
-      showToast('error', '대상 테넌트를 선택하세요');
-      return;
-    }
+    if (!job) return;
+    if (!window.confirm(`"${job.tenantSlug}" 테넌트에 마이그레이션을 적용하시겠습니까?`)) return;
 
-    const includedPlans = pagePlans.filter((p) => p.included);
-    if (includedPlans.length === 0) {
-      showToast('error', '적용할 페이지가 없습니다');
-      return;
-    }
-
-    if (!window.confirm(`"${targetSlug}" 테넌트에 ${includedPlans.length}개 페이지를 적용하시겠습니까?`)) return;
-
-    setApplying(true);
+    setLoading(true);
     setStep('applying');
     try {
-      const data = {
-        churchInfo: { name: site?.title || '' },
-        pages: includedPlans.map((p) => {
-          // Find matching scraped page to pass content for enrichment + R2 image migration
-          const scrapedPage = site?.pages.find((sp) => sp.url === p.sourceUrl);
-          return {
-            title: p.targetTitle,
-            slug: p.targetSlug,
-            textContent: scrapedPage?.textContent || '',
-            images: scrapedPage?.images || [],
-            heroImage: scrapedPage?.heroImage || '',
-            description: scrapedPage?.description || '',
-            sections: p.blocks.map((b, i) => ({ blockType: b.blockType, props: b.props, sortOrder: i })),
-          };
-        }),
-      };
-
-      const res = await apiFetch<{ success: boolean; result: Record<string, number> }>('/apply', {
-        method: 'POST',
-        body: JSON.stringify({ tenantSlug: targetSlug, data }),
+      // Save reviewed data first
+      await apiFetch(`/jobs/${job.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ classifiedData: job.classifiedData }),
       });
 
-      setApplyResult(res.result);
+      // Apply
+      const { data: applied } = await apiFetch<{ data: MigrationJob }>(`/jobs/${job.id}/apply`, { method: 'POST' });
+      setJob(applied);
       setStep('done');
       showToast('success', '마이그레이션 완료');
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : '적용 실패');
-      setStep('plan');
+      setStep('classified');
     } finally {
-      setApplying(false);
+      setLoading(false);
     }
   };
 
-  // ─── Toggle page inclusion ──────────────────────────
-  const togglePage = (idx: number) => {
-    setPagePlans((prev) => prev.map((p, i) => i === idx ? { ...p, included: !p.included } : p));
-  };
-
-  // ─── Remove a block from a page plan ────────────────
-  const removeBlock = (pageIdx: number, blockIdx: number) => {
-    setPagePlans((prev) => prev.map((p, i) => i === pageIdx ? { ...p, blocks: p.blocks.filter((_, bi) => bi !== blockIdx) } : p));
-  };
-
-  // ─── Reset ──────────────────────────────────────────
   const handleReset = () => {
     setStep('input');
-    setSite(null);
-    setPagePlans([]);
-    setApplyResult(null);
+    setJob(null);
     setSiteUrl('');
+    setYoutubeUrl('');
     setTargetSlug('');
   };
 
-  // ═══════════════════════════════════════════════════════
-  // Render
-  // ═══════════════════════════════════════════════════════
+  const loadJob = async (jobId: string) => {
+    try {
+      const { data } = await apiFetch<{ data: MigrationJob }>(`/jobs/${jobId}`);
+      setJob(data);
+      setTargetSlug(data.tenantSlug);
+      if (data.status === 'done') setStep('done');
+      else if (['classified', 'approved'].includes(data.status)) setStep('classified');
+      else if (data.status === 'extracted') setStep('extracted');
+      else setStep('input');
+    } catch (err) {
+      showToast('error', '작업 불러오기 실패');
+    }
+  };
+
+  // ─── Classified data editor helpers ───────────────────────
+
+  const cd = job?.classifiedData;
+
+  const updateField = <K extends keyof ClassifiedData>(key: K, value: ClassifiedData[K]) => {
+    if (!job) return;
+    setJob({ ...job, classifiedData: { ...job.classifiedData, [key]: value } });
+  };
+
+  // ─── Render ───────────────────────────────────────────────
 
   return (
     <div className="space-y-6">
-
-      {/* ─── Step 1: URL Input ─────────────────────────── */}
+      {/* ── Step 1: Input ── */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-lg">🔍</span>
-          <h3 className="text-base font-semibold text-gray-900">1단계: 사이트 수집</h3>
-        </div>
-        <p className="text-xs text-gray-500 mb-4">마이그레이션할 교회 웹사이트 URL을 입력하세요.</p>
-        <div className="flex gap-2">
-          <input
-            type="url"
-            value={siteUrl}
-            onChange={(e) => setSiteUrl(e.target.value)}
-            placeholder="https://example-church.com"
-            className="flex-1 border rounded-lg px-3 py-2 text-sm"
-            onKeyDown={(e) => e.key === 'Enter' && handleScrape()}
-            disabled={scraping}
-          />
-          <button
-            onClick={handleScrape}
-            disabled={scraping || !siteUrl.trim()}
-            className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
-          >
-            {scraping ? '수집 중...' : '사이트 수집'}
-          </button>
+        <h3 className="text-base font-semibold text-gray-900 mb-1">1단계: 소스 입력</h3>
+        <p className="text-xs text-gray-500 mb-4">마이그레이션할 사이트 URL과 대상 테넌트를 선택하세요.</p>
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            <input type="url" value={siteUrl} onChange={(e) => setSiteUrl(e.target.value)}
+              placeholder="웹사이트 URL (예: https://example-church.com)" disabled={loading}
+              className="flex-1 border rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div className="flex gap-2">
+            <input type="url" value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)}
+              placeholder="YouTube 채널 URL (선택)" disabled={loading}
+              className="flex-1 border rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div className="flex gap-2">
+            <select value={targetSlug} onChange={(e) => setTargetSlug(e.target.value)}
+              className="border rounded-lg px-3 py-2 text-sm flex-1" disabled={loading}>
+              <option value="">대상 테넌트 선택</option>
+              {tenants.map((t) => (
+                <option key={t.slug} value={t.slug}>{t.name || t.slug}</option>
+              ))}
+            </select>
+            <button onClick={handleCreateAndExtract}
+              disabled={loading || (!siteUrl && !youtubeUrl) || !targetSlug}
+              className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+              {loading && step === 'extracting' ? '추출 중...' : '추출 시작'}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* ─── Step 2: Scraped Result ────────────────────── */}
-      {site && step !== 'input' && (
+      {/* ── Previous jobs ── */}
+      {jobs.length > 0 && step === 'input' && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">📄</span>
-              <h3 className="text-base font-semibold text-gray-900">2단계: 수집 결과</h3>
-            </div>
-            <div className="flex items-center gap-4 text-sm">
-              <span className="text-gray-500">{site.pageCount}개 페이지</span>
-              <span className="text-gray-500">{site.pages.reduce((s, p) => s + p.imageCount, 0)}개 이미지</span>
-            </div>
-          </div>
-
-          {/* Menu structure */}
-          {site.menu.length > 0 && (
-            <div className="mb-4">
-              <h4 className="text-xs font-semibold text-gray-500 mb-2">메뉴 구조</h4>
-              <div className="bg-gray-50 rounded-lg p-3 text-xs space-y-0.5">
-                {site.menu.map((m, i) => (
-                  <div key={i}>
-                    <span className="font-medium">{m.label}</span>
-                    {m.children.length > 0 && (
-                      <span className="text-gray-400 ml-2">
-                        ({m.children.map((c) => c.label).join(', ')})
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Pages list */}
-          <div className="space-y-1 max-h-60 overflow-y-auto">
-            {site.pages.map((p, i) => (
-              <div key={i} className="p-3 bg-gray-50 rounded-lg text-xs space-y-1">
-                <div className="flex items-center gap-2">
-                  {p.heroImage && <img src={p.heroImage} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm truncate">{p.title || '(제목 없음)'}</p>
-                    {p.subtitle && <p className="text-gray-500 truncate">{p.subtitle}</p>}
-                  </div>
-                  <span className="text-gray-400 flex-shrink-0">{p.imageCount}장</span>
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">이전 작업</h3>
+          <div className="space-y-1 max-h-40 overflow-y-auto">
+            {jobs.map((j) => (
+              <div key={j.id} className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg text-xs">
+                <div>
+                  <span className="font-medium">{j.tenantSlug}</span>
+                  <span className="text-gray-400 ml-2">{j.sourceUrl || j.youtubeChannelUrl}</span>
                 </div>
-                {p.shortDescription && (
-                  <p className="text-gray-500 line-clamp-2">{p.shortDescription}</p>
-                )}
+                <div className="flex items-center gap-2">
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${
+                    j.status === 'done' ? 'bg-green-100 text-green-700'
+                    : j.status === 'failed' ? 'bg-red-100 text-red-700'
+                    : 'bg-yellow-100 text-yellow-700'
+                  }`}>{j.status}</span>
+                  <button onClick={() => loadJob(j.id)} className="text-blue-600 hover:underline">열기</button>
+                </div>
               </div>
             ))}
-          </div>
-
-          {/* Tenant selector + Generate plan button */}
-          <div className="flex gap-2 mt-4 pt-4 border-t">
-            <select
-              value={targetSlug}
-              onChange={(e) => setTargetSlug(e.target.value)}
-              className="border rounded-lg px-3 py-2 text-sm flex-1"
-            >
-              <option value="">대상 테넌트 선택</option>
-              {tenants.map((t) => (
-                <option key={t.slug} value={t.slug}>{t.name} ({t.slug})</option>
-              ))}
-            </select>
-            <button
-              onClick={generatePlan}
-              disabled={!targetSlug}
-              className="bg-indigo-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
-            >
-              블록 구성 제안 생성
-            </button>
           </div>
         </div>
       )}
 
-      {/* ─── Step 3: Block Plan Review ─────────────────── */}
-      {pagePlans.length > 0 && (step === 'plan' || step === 'applying') && (
+      {/* ── Step 2/3: Classification Review ── */}
+      {cd && (step === 'classified' || step === 'extracted') && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">🧩</span>
-              <h3 className="text-base font-semibold text-gray-900">3단계: 블록 구성 검토</h3>
-            </div>
-            <div className="text-xs text-gray-500">
-              {pagePlans.filter((p) => p.included).length}/{pagePlans.length} 페이지 선택됨
-            </div>
+            <h3 className="text-base font-semibold text-gray-900">2단계: 분류 결과 검토</h3>
+            <span className="text-xs text-gray-400">
+              {job?.rawData?.pages?.length || 0}페이지, {job?.rawData?.youtubeVideos?.length || 0}영상 수집됨
+            </span>
           </div>
-          <p className="text-xs text-gray-500 mb-4">
-            각 페이지별 블록 구성을 검토하세요. 불필요한 페이지는 체크 해제, 블록은 X로 제거할 수 있습니다.
-          </p>
 
-          {/* Tenant pages reference */}
-          {tenantPages.length > 0 && (
-            <details className="mb-4 border border-blue-200 rounded-lg bg-blue-50/50">
-              <summary className="px-4 py-2 text-xs font-semibold text-blue-700 cursor-pointer">
-                📋 대상 테넌트 페이지 블록 구성 ({tenantPages.length}개 페이지)
-              </summary>
-              <div className="px-4 pb-3 pt-1 space-y-1 max-h-48 overflow-y-auto">
-                {tenantPages.map((tp) => (
-                  <div key={tp.id} className="flex items-center gap-2 text-xs">
-                    <span className="font-medium text-gray-700 w-28 truncate">{tp.title}</span>
-                    <span className="text-gray-400">/{tp.slug}</span>
-                    <div className="flex gap-1 flex-1 justify-end">
-                      {tp.blocks?.map((b, i) => (
-                        <span key={i} className="text-[10px] bg-gray-200 text-gray-600 px-1 py-0.5 rounded">{b}</span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </details>
-          )}
+          {/* Church Info */}
+          <Section title="교회 기본정보" count={cd.churchInfo.name ? 1 : 0}>
+            <div className="grid grid-cols-2 gap-2">
+              <Input label="교회 이름" value={cd.churchInfo.name}
+                onChange={(v) => updateField('churchInfo', { ...cd.churchInfo, name: v })} />
+              <Input label="전화번호" value={cd.churchInfo.phone}
+                onChange={(v) => updateField('churchInfo', { ...cd.churchInfo, phone: v })} />
+              <Input label="주소" value={cd.churchInfo.address}
+                onChange={(v) => updateField('churchInfo', { ...cd.churchInfo, address: v })} />
+              <Input label="이메일" value={cd.churchInfo.email}
+                onChange={(v) => updateField('churchInfo', { ...cd.churchInfo, email: v })} />
+            </div>
+          </Section>
 
-          <div className="space-y-3 max-h-[500px] overflow-y-auto">
-            {pagePlans.map((plan, pi) => (
-              <div
-                key={pi}
-                className={`border rounded-xl overflow-hidden ${plan.included ? 'border-gray-200' : 'border-gray-100 opacity-50'}`}
-              >
-                {/* Page header */}
-                <div className="flex items-center gap-3 px-4 py-2.5 bg-gray-50 border-b">
-                  <input
-                    type="checkbox"
-                    checked={plan.included}
-                    onChange={() => togglePage(pi)}
-                    className="rounded"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm font-medium">{plan.sourceTitle}</span>
-                    <span className="text-xs text-gray-400 ml-2">→ /{plan.targetSlug}</span>
-                  </div>
-                  <span className="text-xs text-gray-400">{plan.blocks.length}개 블록</span>
+          {/* Sermons */}
+          <Section title="설교" count={cd.sermons.length}>
+            <div className="max-h-48 overflow-y-auto space-y-1">
+              {cd.sermons.map((s, i) => (
+                <div key={i} className="flex items-center gap-2 px-2 py-1 bg-gray-50 rounded text-xs">
+                  <input type="checkbox" defaultChecked className="rounded"
+                    onChange={(e) => {
+                      if (!e.target.checked) {
+                        updateField('sermons', cd.sermons.filter((_, idx) => idx !== i));
+                      }
+                    }} />
+                  <span className="flex-1 truncate">{s.title || s.youtubeUrl}</span>
+                  <span className="text-gray-400">{s.date}</span>
                 </div>
+              ))}
+            </div>
+          </Section>
 
-                {/* Blocks */}
-                {plan.included && (
-                  <div className="p-3 space-y-1.5">
-                    {plan.blocks.map((block, bi) => (
-                      <div key={bi} className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg">
-                        <span className="text-xs font-mono text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
-                          {block.blockType}
-                        </span>
-                        <span className="text-xs text-gray-600 flex-1 truncate">{block.label}</span>
-                        <button
-                          onClick={() => removeBlock(pi, bi)}
-                          className="text-gray-400 hover:text-red-500 text-xs"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+          {/* Staff */}
+          <Section title="교역자" count={cd.staff.length}>
+            <div className="max-h-48 overflow-y-auto space-y-1">
+              {cd.staff.map((s, i) => (
+                <div key={i} className="flex items-center gap-2 px-2 py-1 bg-gray-50 rounded text-xs">
+                  <span className="font-medium">{s.name}</span>
+                  <span className="text-gray-400">{s.role}</span>
+                  {s.photoUrl && <span className="text-green-500">사진</span>}
+                </div>
+              ))}
+            </div>
+          </Section>
+
+          {/* Bulletins */}
+          <Section title="주보" count={cd.bulletins.length}>
+            <ItemList items={cd.bulletins} render={(b) => `${b.title} (${b.date})`} />
+          </Section>
+
+          {/* Events */}
+          <Section title="행사/소식" count={cd.events.length}>
+            <ItemList items={cd.events} render={(e) => `${e.title} (${e.date})`} />
+          </Section>
+
+          {/* Albums */}
+          <Section title="앨범" count={cd.albums.length}>
+            <ItemList items={cd.albums} render={(a) => `${a.title} (${a.images.length}장)`} />
+          </Section>
+
+          {/* Columns */}
+          <Section title="칼럼" count={cd.columns.length}>
+            <ItemList items={cd.columns} render={(c) => c.title} />
+          </Section>
+
+          {/* History */}
+          <Section title="연혁" count={cd.history.length}>
+            <ItemList items={cd.history} render={(h) => `${h.year}년 ${h.month ? h.month + '월' : ''} ${h.title}`} />
+          </Section>
+
+          {/* Worship Times */}
+          <Section title="예배시간" count={cd.worshipTimes.length}>
+            <ItemList items={cd.worshipTimes} render={(w) => `${w.name} ${w.day} ${w.time} ${w.location}`} />
+          </Section>
+
+          {/* Page Contents */}
+          <Section title="페이지 콘텐츠" count={cd.pageContents.length}>
+            {cd.pageContents.map((p, i) => (
+              <div key={i} className="flex items-center gap-2 px-2 py-1 bg-gray-50 rounded text-xs">
+                <span className="font-medium text-gray-700">/{p.pageSlug}</span>
+                <div className="flex gap-1 flex-1 justify-end">
+                  {p.blocks.map((b, bi) => (
+                    <span key={bi} className="text-[10px] bg-blue-100 text-blue-700 px-1 py-0.5 rounded">{b.blockType}</span>
+                  ))}
+                </div>
               </div>
             ))}
+          </Section>
+
+          {/* Images */}
+          <Section title="이미지 (R2 업로드 대상)" count={cd.images.length}>
+            <p className="text-xs text-gray-500">{cd.images.length}개 이미지가 R2로 마이그레이션됩니다.</p>
+          </Section>
+
+          {/* Excluded notice */}
+          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700">
+            <strong>자동 적용 제외 항목</strong> (관리자 직접 세팅 필요):
+            hero_banner 배경 이미지, banner_slider, 테마/색상/폰트, 로고
           </div>
 
           {/* Apply button */}
-          <div className="flex gap-2 mt-4 pt-4 border-t">
-            <button
-              onClick={handleReset}
-              className="px-4 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200"
-            >
+          <div className="flex gap-2 mt-6">
+            <button onClick={handleReset}
+              className="px-4 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200">
               처음으로
             </button>
-            <button
-              onClick={handleApply}
-              disabled={applying || pagePlans.filter((p) => p.included).length === 0}
-              className="flex-1 bg-green-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50"
-            >
-              {applying ? '적용 중...' : `승인 및 적용 (${pagePlans.filter((p) => p.included).length}개 페이지)`}
+            <button onClick={handleApply}
+              disabled={loading}
+              className="flex-1 bg-green-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50">
+              {loading ? '적용 중...' : '승인 및 적용'}
             </button>
           </div>
         </div>
       )}
 
-      {/* ─── Step 4: Done ──────────────────────────────── */}
-      {step === 'done' && applyResult && (
+      {/* ── Step 4: Applying ── */}
+      {step === 'applying' && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6 text-center">
+          <div className="animate-pulse text-4xl mb-4">⏳</div>
+          <h3 className="text-base font-semibold text-gray-900 mb-2">마이그레이션 적용 중...</h3>
+          <p className="text-sm text-gray-500">이미지 업로드, 데이터 등록, 페이지 업데이트를 진행하고 있습니다.</p>
+        </div>
+      )}
+
+      {/* ── Step 5: Done ── */}
+      {step === 'done' && job?.applyResult && (
         <div className="bg-white rounded-xl border border-green-200 p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-lg">✅</span>
-            <h3 className="text-base font-semibold text-green-800">마이그레이션 완료</h3>
-          </div>
+          <h3 className="text-base font-semibold text-green-800 mb-4">마이그레이션 완료</h3>
           <div className="grid grid-cols-3 gap-3 mb-4">
-            {Object.entries(applyResult).filter(([, v]) => v > 0).map(([key, val]) => (
+            {Object.entries(job.applyResult).filter(([, v]) => v > 0).map(([key, val]) => (
               <div key={key} className="bg-green-50 rounded-lg p-3 text-center">
                 <p className="text-xl font-bold text-green-700">{val}</p>
-                <p className="text-xs text-green-600">{key}</p>
+                <p className="text-xs text-green-600">{RESULT_LABELS[key] || key}</p>
               </div>
             ))}
           </div>
-          <button
-            onClick={handleReset}
-            className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg text-sm font-medium hover:bg-gray-200"
-          >
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700 mb-4">
+            <strong>직접 세팅이 필요합니다:</strong>
+            <ul className="mt-1 list-disc list-inside">
+              <li>hero_banner 배경 이미지</li>
+              <li>banner_slider 슬라이드</li>
+              <li>테마 (색상/폰트)</li>
+              <li>로고</li>
+            </ul>
+          </div>
+          <button onClick={handleReset}
+            className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg text-sm font-medium hover:bg-gray-200">
             새 마이그레이션 시작
           </button>
         </div>
       )}
 
-      {/* ─── Empty state ───────────────────────────────── */}
-      {step === 'input' && !scraping && (
+      {/* ── Empty state ── */}
+      {step === 'input' && !loading && (
         <div className="bg-gray-50 rounded-xl border border-gray-200 p-8 text-center">
           <p className="text-3xl mb-3">🔄</p>
           <p className="text-sm font-medium text-gray-700 mb-2">사이트 마이그레이션</p>
           <p className="text-xs text-gray-500">
-            기존 교회 웹사이트 URL을 입력하면 페이지를 수집하고,<br />
-            각 페이지별 블록 구성을 제안합니다.<br />
-            검토 후 승인하면 선택한 테넌트에 자동 적용됩니다.
+            웹사이트 URL과 YouTube 채널을 입력하면 이미지와 텍스트를 추출하고,<br />
+            우리 데이터 구조에 맞게 자동 분류합니다.<br />
+            검토 후 승인하면 테넌트에 자동 적용됩니다.
           </p>
         </div>
       )}
     </div>
   );
 }
+
+// ─── Sub-components ─────────────────────────────────────────
+
+function Section({ title, count, children }: { title: string; count: number; children: React.ReactNode }) {
+  const [open, setOpen] = useState(count > 0);
+  return (
+    <div className="border border-gray-100 rounded-lg mb-3">
+      <button onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-gray-50">
+        <span className="text-sm font-medium text-gray-800">{title}</span>
+        <div className="flex items-center gap-2">
+          <span className={`text-xs px-2 py-0.5 rounded-full ${count > 0 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400'}`}>
+            {count}건
+          </span>
+          <span className="text-gray-400 text-xs">{open ? '▲' : '▼'}</span>
+        </div>
+      </button>
+      {open && <div className="px-4 pb-3">{children}</div>}
+    </div>
+  );
+}
+
+function Input({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div>
+      <label className="text-[10px] text-gray-500">{label}</label>
+      <input type="text" value={value} onChange={(e) => onChange(e.target.value)}
+        className="w-full border rounded px-2 py-1 text-xs" />
+    </div>
+  );
+}
+
+function ItemList<T>({ items, render }: { items: T[]; render: (item: T) => string }) {
+  if (items.length === 0) return <p className="text-xs text-gray-400">없음</p>;
+  return (
+    <div className="max-h-32 overflow-y-auto space-y-0.5">
+      {items.map((item, i) => (
+        <div key={i} className="px-2 py-1 bg-gray-50 rounded text-xs truncate">{render(item)}</div>
+      ))}
+    </div>
+  );
+}
+
+const RESULT_LABELS: Record<string, string> = {
+  images: '이미지',
+  settings: '설정',
+  staff: '교역자',
+  sermons: '설교',
+  bulletins: '주보',
+  columns: '칼럼',
+  events: '행사',
+  albums: '앨범',
+  history: '연혁',
+  boards: '게시판',
+  pages: '페이지',
+  worshipTimes: '예배시간',
+  menus: '메뉴',
+};
