@@ -52,8 +52,12 @@ async function requireSuperAdmin(request: FastifyRequest, reply: FastifyReply): 
 // ─── Routes ─────────────────────────────────────────────────
 
 export default async function migrationRoutes(app: FastifyInstance): Promise<void> {
-  // Ensure migration_jobs table exists on startup
-  await ensureMigrationJobsTable();
+  // Ensure migration_jobs table exists on startup (non-blocking)
+  try {
+    await ensureMigrationJobsTable();
+  } catch (err) {
+    console.error('[migration] Failed to create migration_jobs table:', err instanceof Error ? err.message : err);
+  }
 
   // Public routes (no auth) — registered in separate scope to avoid preHandler hook
   app.register(async (pub) => {
