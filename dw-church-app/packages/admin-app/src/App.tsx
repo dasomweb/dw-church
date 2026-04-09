@@ -243,6 +243,16 @@ export function App({ config }: { config: AppConfig }) {
               }
             />
 
+            {/* Profile — accessible by all authenticated users including super admin */}
+            <Route
+              path="profile"
+              element={
+                <RequireAuth>
+                  <ProfilePage />
+                </RequireAuth>
+              }
+            />
+
             {/* Tenant Admin routes — standard sidebar layout */}
             {/* Super admins are redirected to /super-admin unless ?tenant= switch */}
             <Route
@@ -271,7 +281,6 @@ export function App({ config }: { config: AppConfig }) {
               <Route path="domains" element={<DomainSettings />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="billing" element={<BillingPage />} />
-              <Route path="profile" element={<ProfilePage />} />
             </Route>
 
             {/* Catch-all */}
