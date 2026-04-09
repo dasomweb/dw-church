@@ -16,22 +16,9 @@ import { emptyRawData, emptyClassifiedData, emptyApplyResult } from './types.js'
 // ─── Ensure table exists ────────────────────────────────────
 
 export async function ensureMigrationJobsTable(): Promise<void> {
-  await prisma.$executeRawUnsafe(`
-    CREATE TABLE IF NOT EXISTS migration_jobs (
-      id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      tenant_slug     VARCHAR(100) NOT NULL,
-      source_url      VARCHAR(500),
-      youtube_channel_url VARCHAR(500),
-      status          VARCHAR(20) DEFAULT 'draft',
-      raw_data        JSONB DEFAULT '{}',
-      classified_data JSONB DEFAULT '{}',
-      apply_result    JSONB DEFAULT '{}',
-      error_message   TEXT,
-      created_by      UUID,
-      created_at      TIMESTAMPTZ DEFAULT NOW(),
-      updated_at      TIMESTAMPTZ DEFAULT NOW()
-    )
-  `);
+  await prisma.$executeRawUnsafe(
+    `CREATE TABLE IF NOT EXISTS migration_jobs (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), tenant_slug VARCHAR(100) NOT NULL, source_url VARCHAR(500), youtube_channel_url VARCHAR(500), status VARCHAR(20) DEFAULT 'draft', raw_data JSONB DEFAULT '{}', classified_data JSONB DEFAULT '{}', apply_result JSONB DEFAULT '{}', error_message TEXT, created_by UUID, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW())`
+  );
 }
 
 // ─── Row → MigrationJob mapper ──────────────────────────────
