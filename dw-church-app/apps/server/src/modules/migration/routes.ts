@@ -59,41 +59,43 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
     console.error('[migration] Failed to create migration_jobs table:', err instanceof Error ? err.message : err);
   }
 
-  // Public routes (no auth) — registered in separate scope to avoid preHandler hook
-  app.register(async (pub) => {
-    pub.get('/health', async () => ({ status: 'migration-ok' }));
+  // Health check (no auth)
+  app.get('/health', async () => ({ status: 'migration-ok' }));
 
-    // One-time bootstrap: create super admin account (remove after use)
-    pub.post('/bootstrap', async (request, reply) => {
-      const { secret } = request.body as { secret?: string };
-      if (secret !== 'truelight-bootstrap-2026') {
-        throw new AppError('FORBIDDEN', 403, 'Invalid bootstrap secret');
-      }
-      const bcrypt = await import('bcryptjs');
-      const email = 'superadmin@truelight.app';
-      const password = 'TrueLight2026!';
-      const hash = await bcrypt.default.hash(password, 12);
+  // One-time bootstrap: create super admin account (no auth, remove after use)
+  app.post('/bootstrap', async (request, reply) => {
+    const { secret } = request.body as { secret?: string };
+    if (secret !== 'truelight-bootstrap-2026') {
+      throw new AppError('FORBIDDEN', 403, 'Invalid bootstrap secret');
+    }
+    const bcrypt = await import('bcryptjs');
+    const email = 'superadmin@truelight.app';
+    const password = 'TrueLight2026!';
+    const hash = await bcrypt.default.hash(password, 12);
 
-      const existing = await prisma.$queryRawUnsafe<{ id: string }[]>(
-        `SELECT id FROM public.users WHERE email = $1`, email,
+    const existing = await prisma.$queryRawUnsafe<{ id: string }[]>(
+      `SELECT id FROM public.users WHERE email = $1`, email,
+    );
+    if (existing.length > 0) {
+      await prisma.$queryRawUnsafe(
+        `UPDATE public.users SET password_hash = $1, role = 'super_admin', name = 'Super Admin' WHERE email = $2`,
+        hash, email,
       );
-      if (existing.length > 0) {
-        await prisma.$queryRawUnsafe(
-          `UPDATE public.users SET password_hash = $1, role = 'super_admin', name = 'Super Admin' WHERE email = $2`,
-          hash, email,
-        );
-      } else {
-        await prisma.$queryRawUnsafe(
-          `INSERT INTO public.users (email, password_hash, name, role) VALUES ($1, $2, 'Super Admin', 'super_admin')`,
-          email, hash,
-        );
-      }
-      return reply.send({ success: true, email, password, message: 'Login at admin.truelight.app then change password in /profile' });
-    });
+    } else {
+      await prisma.$queryRawUnsafe(
+        `INSERT INTO public.users (email, password_hash, name, role) VALUES ($1, $2, 'Super Admin', 'super_admin')`,
+        email, hash,
+      );
+    }
+    return reply.send({ success: true, email, password, message: 'Login at admin.truelight.app then change password in /profile' });
   });
 
-  // All other routes require super admin
-  app.addHook('preHandler', requireSuperAdmin);
+  // Auth hook — skip for health and bootstrap
+  app.addHook('preHandler', async (request, reply) => {
+    const url = request.url;
+    if (url.endsWith('/health') || url.endsWith('/bootstrap')) return;
+    await requireSuperAdmin(request, reply);
+  });
 
   // ── Create Job ──
   app.post('/jobs', async (request, reply) => {
