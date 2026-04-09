@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuthStore } from '../stores/auth';
 import { useToast } from '../components';
-import MigrationTab from './MigrationTab';
+// import MigrationTab from './MigrationTab';  // 보류
 
 // snake_case → camelCase
 function toCamel(str: string): string {
@@ -98,7 +98,7 @@ const PLAN_COLORS: Record<string, string> = {
   free: 'bg-gray-100 text-gray-600',
 };
 
-type TabId = 'overview' | 'tenants' | 'domains' | 'users' | 'storage' | 'migration';
+type TabId = 'overview' | 'tenants' | 'domains' | 'users' | 'storage';
 
 const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'overview', label: '개요', icon: '📊' },
@@ -106,7 +106,7 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'domains', label: '도메인 관리', icon: '🌐' },
   { id: 'users', label: '사용자 관리', icon: '👥' },
   { id: 'storage', label: '저장공간', icon: '💾' },
-  { id: 'migration', label: '마이그레이션', icon: '🔄' },
+  // { id: 'migration', label: '마이그레이션', icon: '🔄' },  // 보류
 ];
 
 // ─── Helpers ─────────────────────────────────────────────
@@ -1690,7 +1690,7 @@ export default function SuperAdminDashboardV2() {
         {activeTab === 'domains' && <DomainsTab />}
         {activeTab === 'users' && <UsersTab />}
         {activeTab === 'storage' && <StorageTab />}
-        {activeTab === 'migration' && <MigrationTab />}
+        {/* {activeTab === 'migration' && <MigrationTab />} */}
       </div>
 
       {/* Create Church Modal */}
