@@ -1631,7 +1631,7 @@ export default function SuperAdminDashboardV2() {
             <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-600">Super Admin</span>
           </div>
           <div className="flex items-center gap-4 text-sm">
-            <span className="text-gray-500">{session?.user?.email}</span>
+            <a href="/profile" className="text-gray-500 hover:text-blue-600 transition-colors">{session?.user?.email}</a>
             <button
               onClick={handleLogout}
               className="text-gray-500 hover:text-gray-700 transition-colors"
