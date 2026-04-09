@@ -8,6 +8,7 @@ import { useToast } from '../components';
 
 const profileSchema = z.object({
   name: z.string().min(1, '이름을 입력해주세요'),
+  email: z.string().email('올바른 이메일을 입력해주세요'),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -26,6 +27,7 @@ const passwordSchema = z
 type PasswordFormData = z.infer<typeof passwordSchema>;
 
 const ROLE_LABELS: Record<string, string> = {
+  super_admin: '슈퍼 관리자',
   owner: '소유자',
   admin: '관리자',
   editor: '편집자',
@@ -60,18 +62,18 @@ export default function ProfilePage() {
   // Populate profile form when user data is available
   useEffect(() => {
     if (user) {
-      resetProfile({ name: user.name });
+      resetProfile({ name: user.name, email: user.email });
     }
   }, [user, resetProfile]);
 
   const onProfileSubmit = async (data: ProfileFormData) => {
     try {
-      const updated = await updateProfile.mutateAsync({ name: data.name });
-      // Update the local session with the new name
+      const updated = await updateProfile.mutateAsync({ name: data.name, email: data.email });
+      // Update the local session with new name/email
       if (session) {
         setSession({
           ...session,
-          user: { ...session.user, name: updated.name },
+          user: { ...session.user, name: updated.name, email: updated.email || session.user.email },
         });
       }
       showToast('success', '프로필이 업데이트되었습니다.');
@@ -144,14 +146,20 @@ export default function ProfilePage() {
             )}
           </div>
 
-          {/* Email (read-only) */}
+          {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
               이메일
             </label>
-            <div className="block w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500">
-              {user.email}
-            </div>
+            <input
+              id="email"
+              type="email"
+              {...registerProfile('email')}
+              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            />
+            {profileErrors.email && (
+              <p className="mt-1 text-sm text-red-600">{profileErrors.email.message}</p>
+            )}
           </div>
 
           {/* Role (read-only) */}
