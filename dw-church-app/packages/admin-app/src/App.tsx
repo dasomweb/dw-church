@@ -23,6 +23,7 @@ const StaffManagement = lazy(() => import('./pages/StaffManagement'));
 const HistoryManagement = lazy(() => import('./pages/HistoryManagement'));
 const BoardManagement = lazy(() => import('./pages/BoardManagement'));
 const PageEditor = lazy(() => import('./pages/PageEditor'));
+const PageWizard = lazy(() => import('./pages/PageWizard'));
 const MenuEditor = lazy(() => import('./pages/MenuEditor'));
 const ThemeEditor = lazy(() => import('./pages/ThemeEditor'));
 const UserManagement = lazy(() => import('./pages/UserManagement'));
@@ -275,6 +276,7 @@ export function App({ config }: { config: AppConfig }) {
               <Route path="history" element={<HistoryManagement />} />
               <Route path="boards" element={<BoardManagement />} />
               <Route path="pages" element={<PageEditor />} />
+              <Route path="page-wizard" element={<PageWizard />} />
               <Route path="menus" element={<MenuEditor />} />
               <Route path="theme" element={<ThemeEditor />} />
               <Route path="users" element={<UserManagement />} />

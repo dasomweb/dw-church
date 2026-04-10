@@ -29,6 +29,7 @@ const navGroups: (NavItem | NavGroup)[] = [
   { label: '디자인', items: [
     { to: '/theme', label: '테마', icon: I('M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01') },
     { to: '/pages', label: '페이지', icon: I('M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z') },
+    { to: '/page-wizard', label: '페이지 마법사', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg> },
     { to: '/menus', label: '메뉴', icon: I('M4 6h16M4 12h16M4 18h16') },
   ]},
 
@@ -65,6 +66,7 @@ const pageTitles: Record<string, string> = {
   '/history': '연혁 관리',
   '/boards': '게시판 관리',
   '/pages': '페이지 편집',
+  '/page-wizard': '페이지 마법사',
   '/menus': '메뉴 관리',
   '/theme': '테마 설정',
   '/users': '사용자 관리',
