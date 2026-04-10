@@ -40,11 +40,19 @@ Every task follows this sequence — no skipping, no reordering:
 1. READ     — Scan all relevant existing files. Read this CLAUDE.md.
 2. PLAN     — State the implementation plan once, briefly (max 5 bullets).
 3. BUILD    — Execute file by file, function by function.
-4. VERIFY   — Run the code. Start the server. Execute tests.
-5. FIX      — Resolve all errors autonomously. Repeat until green.
-6. COMMIT   — git add . && git commit -m "feat: [description]"
-7. REPORT   — Output the completion summary block (see below).
+4. TEST     — Run `pnpm test` (server + api-client). ALL tests must pass.
+5. VERIFY   — Run the code. Start the server. Execute tests.
+6. FIX      — Resolve all errors autonomously. Repeat until green.
+7. COMMIT   — Only after ALL tests pass. git add + git commit.
+8. REPORT   — Output the completion summary block (see below).
 ```
+
+### Test Rules (MANDATORY)
+- **Never commit without running tests first** — `pnpm test` must pass
+- New API endpoint → add route integration test (`__tests__/routes/`)
+- New Zod schema → add schema validation test (`__tests__/modules/`)
+- New feature affecting frontend → verify E2E tests still pass
+- See TEST.md for full test guide and current coverage
 
 ---
 
