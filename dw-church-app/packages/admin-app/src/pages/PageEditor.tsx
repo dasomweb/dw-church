@@ -647,26 +647,81 @@ function SectionCard({
   const props = localProps;
   const set = (key: string, value: unknown) => onPropsChange({ ...props, [key]: value });
   const [aiLoading, setAiLoading] = useState<string | null>(null);
+  const [aiSuggestions, setAiSuggestions] = useState<{ field: string; label: string; samples: string[] } | null>(null);
   const [collapsed, setCollapsed] = useState(true);
   const { showToast } = useToast();
   const isDynamic = def?.nature === 'dynamic';
 
-  const handleAiText = async (fieldKey: string, fieldLabel: string) => {
+  // Block-specific prompt templates
+  const blockPrompts: Record<string, Record<string, string>> = {
+    pastor_message: {
+      name: '담임목사의 이름을 한국 이름 형식(예: 홍길동 목사)으로',
+      message: '담임목사가 교인들에게 보내는 따뜻한 인사말을 300자 내외로. 은혜롭고 격려하는 내용으로',
+      title: '"담임목사 인사말" 섹션의 제목을',
+    },
+    church_intro: {
+      title: '교회 소개 섹션 제목을',
+      content: '교회 소개 글을 300자 내외로. 교회의 특색, 공동체 분위기, 지향점을 포함',
+    },
+    mission_vision: {
+      title: '교회 비전/미션 섹션 제목을',
+      content: '교회의 비전과 미션 선언문을 200자 내외로. 성경적 근거와 함께',
+    },
+    newcomer_info: {
+      title: '새가족 환영 섹션 제목을',
+      content: '새가족에게 보내는 환영 메시지를 200자 내외로. 따뜻하고 편안한 분위기로',
+    },
+    quote_block: {
+      title: '인용구의 출처를 (예: 요한복음 3:16)',
+      content: '교회 웹사이트에 어울리는 성경구절이나 교회 표어를',
+    },
+    hero_banner: {
+      title: '히어로 배너의 메인 타이틀을. 간결하고 임팩트있게',
+      subtitle: '히어로 배너의 부제목을. 교회의 슬로건이나 환영 문구로',
+    },
+  };
+
+  // AI recommend — generates 3 samples for user to choose
+  const handleAiSuggest = async (fieldKey: string, fieldLabel: string, keyword?: string) => {
     setAiLoading(fieldKey);
+    setAiSuggestions(null);
     try {
       const blockLabel = def?.label || section.blockType;
-      const currentValue = (props[fieldKey] as string) || '';
-      const prompt = currentValue
-        ? `"${blockLabel}" 블록의 "${fieldLabel}" 내용을 개선해주세요. 현재 내용: "${currentValue}". 개선된 내용만 출력하세요.`
-        : `교회 웹사이트의 "${blockLabel}" 블록에 들어갈 "${fieldLabel}" 내용을 작성해주세요. 내용만 출력하세요.`;
-      const text = await onGenerateText(prompt, `블록: ${blockLabel}, 필드: ${fieldLabel}`);
-      set(fieldKey, text.trim());
+      const blockType = section.blockType;
+      const basePrompt = blockPrompts[blockType]?.[fieldKey] || `교회 웹사이트의 "${blockLabel}" 블록에 들어갈 "${fieldLabel}" 내용을`;
+
+      const keywordPart = keyword ? ` 키워드 "${keyword}"를 중심으로` : '';
+      const prompt = `${basePrompt}${keywordPart} 작성해주세요.
+서로 다른 스타일로 3가지 버전을 만들어주세요.
+각 버전을 "---" 구분자로 분리해서 출력하세요.
+내용만 출력하고 번호나 설명은 붙이지 마세요.`;
+
+      const text = await onGenerateText(prompt, `한국 교회 웹사이트, 블록: ${blockLabel}, 필드: ${fieldLabel}`);
+
+      const samples = text.split(/---+/).map(s => s.trim()).filter(s => s.length > 0).slice(0, 3);
+
+      if (samples.length === 0) {
+        set(fieldKey, text.trim());
+      } else {
+        setAiSuggestions({ field: fieldKey, label: fieldLabel, samples });
+      }
     } catch (err) {
-      showToast('error', `AI 텍스트 생성 실패: ${err instanceof Error ? err.message : '알 수 없는 오류'}`);
+      showToast('error', `AI 추천 실패: ${err instanceof Error ? err.message : '알 수 없는 오류'}`);
     } finally {
       setAiLoading(null);
     }
   };
+
+  const handleSelectSuggestion = (text: string) => {
+    if (aiSuggestions) {
+      set(aiSuggestions.field, text);
+      setAiSuggestions(null);
+    }
+  };
+
+  // AI keyword input state
+  const [aiKeywordField, setAiKeywordField] = useState<string | null>(null);
+  const [aiKeyword, setAiKeyword] = useState('');
 
   const [imageLibraryField, setImageLibraryField] = useState<string | null>(null);
 
@@ -845,16 +900,41 @@ function SectionCard({
                 <div className="flex items-center justify-between mb-0.5">
                   <label className="text-[11px] font-medium text-gray-500">{field.label}</label>
                   {(field.type === 'text' || field.type === 'textarea') && (
-                    <button
-                      type="button"
-                      onClick={() => handleAiText(field.key, field.label)}
-                      disabled={aiLoading === field.key}
-                      className="flex items-center gap-0.5 text-[10px] text-purple-600 hover:text-purple-800 disabled:opacity-50"
-                      title="AI로 생성"
-                    >
-                      {aiLoading === field.key ? <span className="inline-block w-3 h-3 border border-purple-400 border-t-transparent rounded-full animate-spin" /> : <span>✨</span>}
-                      AI
-                    </button>
+                    <div className="flex items-center gap-1">
+                      {aiKeywordField === field.key ? (
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="text"
+                            value={aiKeyword}
+                            onChange={(e) => setAiKeyword(e.target.value)}
+                            placeholder="키워드 (선택)"
+                            className="w-20 border rounded px-1 py-0.5 text-[10px]"
+                            onKeyDown={(e) => { if (e.key === 'Enter') { handleAiSuggest(field.key, field.label, aiKeyword || undefined); setAiKeywordField(null); setAiKeyword(''); } if (e.key === 'Escape') { setAiKeywordField(null); setAiKeyword(''); } }}
+                            autoFocus
+                          />
+                          <button
+                            type="button"
+                            onClick={() => { handleAiSuggest(field.key, field.label, aiKeyword || undefined); setAiKeywordField(null); setAiKeyword(''); }}
+                            disabled={!!aiLoading}
+                            className="text-[10px] bg-purple-600 text-white px-1.5 py-0.5 rounded disabled:opacity-50"
+                          >
+                            {aiLoading === field.key ? '...' : '생성'}
+                          </button>
+                          <button type="button" onClick={() => { setAiKeywordField(null); setAiKeyword(''); }} className="text-[10px] text-gray-400">✕</button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setAiKeywordField(field.key)}
+                          disabled={!!aiLoading}
+                          className="flex items-center gap-0.5 text-[10px] bg-purple-50 text-purple-600 hover:bg-purple-100 px-1.5 py-0.5 rounded disabled:opacity-50 transition-colors"
+                          title="AI 추천 (3개 샘플)"
+                        >
+                          {aiLoading === field.key ? <span className="inline-block w-3 h-3 border border-purple-400 border-t-transparent rounded-full animate-spin" /> : <span>✨</span>}
+                          AI 추천
+                        </button>
+                      )}
+                    </div>
                   )}
                   {field.type === 'image' && (
                     <button
@@ -920,6 +1000,27 @@ function SectionCard({
                     onChange={(e) => set(field.key, e.target.value)}
                     className="w-full border rounded-lg px-2.5 py-1.5 text-xs"
                   />
+                )}
+
+                {/* AI Suggestion Samples */}
+                {aiSuggestions?.field === field.key && (
+                  <div className="mt-1.5 border border-purple-200 rounded-lg bg-purple-50/50 p-2 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-medium text-purple-600">✨ AI 추천 — 클릭하여 선택</span>
+                      <button type="button" onClick={() => setAiSuggestions(null)} className="text-[10px] text-gray-400 hover:text-gray-600">닫기</button>
+                    </div>
+                    {aiSuggestions.samples.map((sample, si) => (
+                      <button
+                        key={si}
+                        type="button"
+                        onClick={() => handleSelectSuggestion(sample)}
+                        className="w-full text-left px-2.5 py-2 bg-white border border-purple-100 rounded-lg text-xs text-gray-700 hover:border-purple-400 hover:bg-purple-50 transition-colors"
+                      >
+                        <span className="text-[10px] text-purple-400 font-medium">#{si + 1}</span>
+                        <p className="mt-0.5 line-clamp-3">{sample}</p>
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
             ))}
