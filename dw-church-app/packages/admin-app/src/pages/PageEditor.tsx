@@ -1502,22 +1502,73 @@ export default function PageEditor() {
                 </div>
               )}
 
-              {/* Examples */}
+              {/* Page Guide */}
               {!aiPreview && (
-                <div className="text-xs text-gray-400 space-y-1">
-                  <p className="font-medium text-gray-500">예시 프롬프트:</p>
-                  {[
-                    '교회 소개 페이지 (담임목사 인사말 + 비전 + 연혁)',
-                    '예배 안내 페이지 (예배 시간표 + 오시는 길 + 연락처)',
-                    '새가족 환영 페이지',
-                    '선교 소식 페이지 (게시판 포함)',
-                    '교육부 소개 페이지 (유초등부, 중고등부)',
-                  ].map((ex) => (
-                    <button key={ex} onClick={() => setAiPrompt(ex)}
-                      className="block w-full text-left px-2 py-1 rounded hover:bg-gray-100 transition-colors">
-                      {ex}
-                    </button>
-                  ))}
+                <div className="text-xs space-y-3">
+                  <p className="font-medium text-gray-500">페이지별 가이드 (클릭하면 프롬프트에 입력)</p>
+
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">교회안내</p>
+                    {[
+                      { label: '교회 소개', prompt: '교회 소개 페이지를 만들어줘. 교회 소개 텍스트, 비전/미션, 교회 표어 성경구절을 포함해줘' },
+                      { label: '담임목사 인사말', prompt: '담임목사 인사말 페이지를 만들어줘. 목사님 사진과 인사말, 좋아하는 성경구절을 포함해줘' },
+                      { label: '비전/미션', prompt: '교회 비전과 미션 페이지를 만들어줘. 비전 선언문, 핵심가치, 비전 성경구절을 포함해줘' },
+                      { label: '교회 연혁', prompt: '교회 연혁 페이지를 만들어줘. 연혁 타임라인과 교회 사진을 포함해줘' },
+                      { label: '교역자 소개', prompt: '교역자 소개 페이지를 만들어줘. 교역자 그리드(4열)를 포함해줘' },
+                      { label: '오시는 길', prompt: '오시는 길 페이지를 만들어줘. 지도, 주소, 연락처, 주차 안내를 포함해줘' },
+                    ].map((item) => (
+                      <button key={item.label} onClick={() => setAiPrompt(item.prompt)}
+                        className="block w-full text-left px-2 py-1 rounded hover:bg-purple-50 text-gray-600 transition-colors">
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">예배 및 모임</p>
+                    {[
+                      { label: '예배 안내', prompt: '예배 안내 페이지를 만들어줘. 예배 시간표(주일1부, 주일2부, 수요예배, 금요기도), 예배 안내, 오시는 길을 포함해줘' },
+                      { label: '새가족 안내', prompt: '새가족 안내 페이지를 만들어줘. 환영 메시지, 등록 절차, 예배 시간, 오시는 길을 포함해줘' },
+                    ].map((item) => (
+                      <button key={item.label} onClick={() => setAiPrompt(item.prompt)}
+                        className="block w-full text-left px-2 py-1 rounded hover:bg-purple-50 text-gray-600 transition-colors">
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">콘텐츠</p>
+                    {[
+                      { label: '설교', prompt: '설교 페이지를 만들어줘. 설교 목록(12개, 4열 그리드)을 포함해줘' },
+                      { label: '주보', prompt: '주보 페이지를 만들어줘. 주보 목록(12개, 4열 그리드)을 포함해줘' },
+                      { label: '목회칼럼', prompt: '목회칼럼 페이지를 만들어줘. 칼럼 목록(12개, 3열 그리드)을 포함해줘' },
+                      { label: '앨범/갤러리', prompt: '앨범 갤러리 페이지를 만들어줘. 앨범 목록(12개, 4열 그리드)을 포함해줘' },
+                      { label: '교회 소식', prompt: '교회 소식 페이지를 만들어줘. 행사/소식 목록(12개, 3열 카드)을 포함해줘' },
+                    ].map((item) => (
+                      <button key={item.label} onClick={() => setAiPrompt(item.prompt)}
+                        className="block w-full text-left px-2 py-1 rounded hover:bg-purple-50 text-gray-600 transition-colors">
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">교육/선교</p>
+                    {[
+                      { label: '교육부', prompt: '교육부 소개 페이지를 만들어줘. 부서 소개, 교육 목표, 게시판을 포함해줘' },
+                      { label: '선교', prompt: '선교 페이지를 만들어줘. 선교 비전 소개, 선교 소식 게시판을 포함해줘' },
+                    ].map((item) => (
+                      <button key={item.label} onClick={() => setAiPrompt(item.prompt)}
+                        className="block w-full text-left px-2 py-1 rounded hover:bg-purple-50 text-gray-600 transition-colors">
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="mt-2 p-2 bg-gray-50 rounded-lg text-[10px] text-gray-400">
+                    위 가이드 외에도 자유롭게 요청할 수 있습니다. 예: "청년부 소개 페이지에 활동 사진 갤러리와 게시판을 추가해줘"
+                  </div>
                 </div>
               )}
             </div>

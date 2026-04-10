@@ -51,6 +51,68 @@ DYNAMIC BLOCKS (data from DB, props control display):
 - banner_slider: { title }
 `;
 
+// Page composition guidelines — typical Korean church page structures
+const PAGE_GUIDELINES = `
+CHURCH PAGE COMPOSITION GUIDELINES (Korean church standard):
+
+홈 (home):
+  hero_banner → banner_slider → recent_sermons(limit:4) → recent_bulletins(limit:4) → event_grid(limit:4)
+
+교회 소개 (about):
+  hero_banner → church_intro(교회 소개 텍스트+이미지) → mission_vision(비전/미션) → quote_block(교회 표어/성경구절)
+
+담임목사 인사말 (pastor-greeting):
+  hero_banner → pastor_message(목사 이름+인사말+사진) → quote_block(좋아하는 말씀)
+
+비전/미션 (vision):
+  hero_banner → mission_vision(비전 선언문) → text_image(핵심가치) → quote_block(비전 성경구절)
+
+교회 연혁 (history):
+  hero_banner → history_timeline → text_image(교회 사진+설명)
+
+교역자 소개 (staff):
+  hero_banner → staff_grid(variant:grid-4)
+
+오시는 길 (directions):
+  hero_banner → location_map(주소) → contact_info(전화/이메일) → text_image(주차 안내 등)
+
+예배 안내 (worship):
+  hero_banner → worship_times(예배 시간표) → text_image(예배 안내 상세) → location_map
+
+새가족 안내 (newcomer):
+  hero_banner → newcomer_info(환영 메시지) → text_image(등록 절차) → worship_times → location_map
+
+설교 (sermons):
+  hero_banner → recent_sermons(limit:12, variant:grid-4)
+
+주보 (bulletins):
+  hero_banner → recent_bulletins(limit:12, variant:grid-4)
+
+목회칼럼 (columns):
+  hero_banner → recent_columns(limit:12, variant:grid-3)
+
+앨범/갤러리 (albums):
+  hero_banner → album_gallery(limit:12, variant:grid-4)
+
+교회 소식 (events):
+  hero_banner → event_grid(limit:12, variant:cards-3)
+
+교육부 (edu-children, edu-youth, edu-young-adult):
+  hero_banner → text_image(부서 소개) → text_image(교육 목표) → board(boardSlug: 해당 부서 slug)
+
+선교 (mission):
+  hero_banner → text_image(선교 비전) → board(boardSlug: mission)
+
+게시판 (custom board page):
+  hero_banner → board(boardSlug: 해당 게시판)
+
+RULES:
+- hero_banner는 항상 첫 블록
+- 정적 블록 content에는 실제 교회에서 사용할 수 있는 자연스러운 한국어 문구 작성
+- worship_times의 services에는 실제 교회 예배 형태 반영 (주일1부, 주일2부, 수요, 금요 등)
+- 동적 블록(recent_sermons 등)은 표시 설정만 (실제 데이터는 관리자가 등록)
+`;
+
 /**
  * Generate a page structure from a natural language prompt.
  * Returns the generated page definition without saving.
@@ -61,7 +123,9 @@ Given a user's request, generate a page with appropriate blocks.
 
 ${BLOCK_DESCRIPTIONS}
 
-RULES:
+${PAGE_GUIDELINES}
+
+ADDITIONAL RULES:
 - Output ONLY valid JSON, no markdown, no explanation
 - Use Korean for all content (titles, text)
 - Choose blocks that best match the user's intent
