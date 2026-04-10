@@ -1000,6 +1000,10 @@ export default function PageEditor() {
   const [sectionProps, setSectionProps] = useState<Record<string, Record<string, unknown>>>({});
   const [showPageForm, setShowPageForm] = useState(false);
   const [showTemplateGallery, setShowTemplateGallery] = useState(false);
+  const [showAiGenerator, setShowAiGenerator] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiPreview, setAiPreview] = useState<{ title: string; slug: string; blocks: { blockType: string; props: Record<string, unknown> }[] } | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
   const { showToast } = useToast();
@@ -1031,6 +1035,39 @@ export default function PageEditor() {
     setSelectedPageId(null);
     reset({ title: '', slug: '', status: 'draft', isHome: false });
     setShowPageForm(true);
+  };
+
+  // ─── AI Page Generation ──────────────────────────
+  const handleAiPreview = async () => {
+    if (!aiPrompt.trim()) return;
+    setAiLoading(true);
+    setAiPreview(null);
+    try {
+      const res = await apiClient.adapter.post<{ data: { title: string; slug: string; blocks: { blockType: string; props: Record<string, unknown> }[] } }>('/ai/generate-page/preview', { prompt: aiPrompt });
+      setAiPreview(res.data);
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : 'AI 페이지 생성 실패');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleAiCreate = async () => {
+    if (!aiPrompt.trim()) return;
+    setAiLoading(true);
+    try {
+      const res = await apiClient.adapter.post<{ data: { page: { id: string; title: string; slug: string }; sections: number } }>('/ai/generate-page', { prompt: aiPrompt });
+      showToast('success', `"${res.data.page.title}" 페이지가 생성되었습니다 (${res.data.sections}개 블록)`);
+      queryClient.invalidateQueries({ queryKey: ['pages'] });
+      setSelectedPageId(res.data.page.id);
+      setShowAiGenerator(false);
+      setAiPrompt('');
+      setAiPreview(null);
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : 'AI 페이지 생성 실패');
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const handleEditPage = () => {
@@ -1224,7 +1261,10 @@ export default function PageEditor() {
       <div className="w-56 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col overflow-hidden">
         <div className="flex items-center justify-between px-3 py-2 border-b bg-gray-50">
           <h3 className="text-xs font-semibold">페이지</h3>
-          <button onClick={handleCreatePage} className="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded hover:bg-blue-700">+ 추가</button>
+          <div className="flex gap-1">
+            <button onClick={() => setShowAiGenerator(true)} className="text-[10px] bg-purple-600 text-white px-2 py-0.5 rounded hover:bg-purple-700">AI</button>
+            <button onClick={handleCreatePage} className="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded hover:bg-blue-700">+ 추가</button>
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto">
           {pagesLoading && <p className="p-3 text-xs text-gray-500">로딩 중...</p>}
@@ -1397,6 +1437,90 @@ export default function PageEditor() {
                 <button type="button" onClick={() => setShowPageForm(false)} className="px-4 py-2 bg-gray-100 text-sm rounded-lg hover:bg-gray-200">취소</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* AI Page Generator Modal */}
+      {showAiGenerator && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => { setShowAiGenerator(false); setAiPreview(null); }}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <h3 className="text-base font-bold">AI 페이지 생성</h3>
+              <button onClick={() => { setShowAiGenerator(false); setAiPreview(null); }} className="text-gray-400 hover:text-gray-600 text-lg">&times;</button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">어떤 페이지를 만들까요?</label>
+                <textarea
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  placeholder="예: 교회 소개 페이지를 만들어줘. 담임목사 인사말, 교회 비전, 오시는 길 정보를 포함해줘"
+                  className="w-full border rounded-lg px-3 py-2 text-sm h-24 resize-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAiPreview(); } }}
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={handleAiPreview}
+                  disabled={aiLoading || !aiPrompt.trim()}
+                  className="flex-1 bg-purple-100 text-purple-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-200 disabled:opacity-50"
+                >
+                  {aiLoading && !aiPreview ? '생성 중...' : '미리보기'}
+                </button>
+                {aiPreview && (
+                  <button
+                    onClick={handleAiCreate}
+                    disabled={aiLoading}
+                    className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 disabled:opacity-50"
+                  >
+                    {aiLoading ? '저장 중...' : '이대로 생성'}
+                  </button>
+                )}
+              </div>
+
+              {/* Preview */}
+              {aiPreview && (
+                <div className="border border-purple-200 rounded-lg p-4 bg-purple-50/50">
+                  <div className="flex items-center gap-2 mb-3">
+                    <h4 className="text-sm font-bold text-purple-800">{aiPreview.title}</h4>
+                    <span className="text-[10px] text-purple-500 bg-purple-100 px-1.5 py-0.5 rounded">/{aiPreview.slug}</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {aiPreview.blocks.map((block, i) => (
+                      <div key={i} className="flex items-start gap-2 px-3 py-2 bg-white rounded-lg border border-purple-100">
+                        <span className="text-[10px] font-mono bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded flex-shrink-0 mt-0.5">{block.blockType}</span>
+                        <div className="text-xs text-gray-600 min-w-0">
+                          {block.props.title && <span className="font-medium">{String(block.props.title)}</span>}
+                          {block.props.content && <p className="text-gray-400 truncate mt-0.5">{String(block.props.content).slice(0, 80)}...</p>}
+                          {block.props.subtitle && <p className="text-gray-400">{String(block.props.subtitle)}</p>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Examples */}
+              {!aiPreview && (
+                <div className="text-xs text-gray-400 space-y-1">
+                  <p className="font-medium text-gray-500">예시 프롬프트:</p>
+                  {[
+                    '교회 소개 페이지 (담임목사 인사말 + 비전 + 연혁)',
+                    '예배 안내 페이지 (예배 시간표 + 오시는 길 + 연락처)',
+                    '새가족 환영 페이지',
+                    '선교 소식 페이지 (게시판 포함)',
+                    '교육부 소개 페이지 (유초등부, 중고등부)',
+                  ].map((ex) => (
+                    <button key={ex} onClick={() => setAiPrompt(ex)}
+                      className="block w-full text-left px-2 py-1 rounded hover:bg-gray-100 transition-colors">
+                      {ex}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
