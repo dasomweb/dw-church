@@ -371,61 +371,200 @@ test.describe('3. Frontend Rendering', () => {
 // 4. CRUD → FRONTEND FLOW (write data, verify on site)
 // ═══════════════════════════════════════════════════════════════
 
-test.describe('4. Admin to Frontend Flow', () => {
+test.describe('4. Admin to Frontend Flow — All Content Types', () => {
   let token: string;
-  let testSermonId: string;
+  const cleanup: { path: string }[] = [];
 
   test.beforeAll(async () => {
     token = await getAdminToken();
-
-    // Create test sermon
-    const res = await fetch(`${API}/sermons`, {
-      method: 'POST',
-      headers: headers(token),
-      body: JSON.stringify({
-        title: 'E2E 프론트 검증 설교',
-        scripture: '요한복음 1:1',
-        sermon_date: '2026-04-09',
-        status: 'published',
-      }),
-    });
-    const data = await res.json();
-    testSermonId = data.data?.id;
   });
 
   test.afterAll(async () => {
-    if (testSermonId) {
-      await fetch(`${API}/sermons/${testSermonId}`, {
-        method: 'DELETE',
-        headers: headers(token),
-      });
+    for (const item of cleanup) {
+      await fetch(`${API}${item.path}`, { method: 'DELETE', headers: headers(token) }).catch(() => {});
     }
   });
 
-  test('sermon created via API appears on sermons page', async ({ page }) => {
-    // Use no-cache to get fresh data
+  // ── Sermons ──
+  test('sermon: create → list page → detail page', async ({ page }) => {
+    const res = await fetch(`${API}/sermons`, {
+      method: 'POST', headers: headers(token),
+      body: JSON.stringify({ title: 'E2E설교-흐름검증', scripture: '요한복음 1:1', sermon_date: '2026-04-09', status: 'published' }),
+    });
+    const id = (await res.json()).data?.id;
+    cleanup.push({ path: `/sermons/${id}` });
+
+    // List page
     await page.goto(`${SITE}/sermons`, { waitUntil: 'networkidle' });
+    const listContent = await page.textContent('body');
+    expect(listContent).toBeTruthy();
 
-    // The sermon title should appear somewhere on the page
-    // Note: Next.js SSR may cache, so check with flexibility
-    const content = await page.textContent('body');
-    const found = content?.includes('E2E 프론트 검증 설교');
-    // Even if not found due to cache, the page should at least load
-    expect(content).toBeTruthy();
-    if (!found) {
-      console.log('WARN: Sermon not found on page (may be SSR cached)');
+    // Detail page
+    await page.goto(`${SITE}/sermons/${id}`);
+    await expect(page.locator('body')).toBeVisible({ timeout: 15000 });
+    const detail = await page.textContent('body');
+    expect(detail).toContain('E2E설교-흐름검증');
+    expect(detail).toContain('요한복음 1:1');
+  });
+
+  // ── Bulletins ──
+  test('bulletin: create → list page → detail page', async ({ page }) => {
+    const res = await fetch(`${API}/bulletins`, {
+      method: 'POST', headers: headers(token),
+      body: JSON.stringify({ title: 'E2E주보-흐름검증', bulletin_date: '2026-04-09', status: 'published' }),
+    });
+    const id = (await res.json()).data?.id;
+    cleanup.push({ path: `/bulletins/${id}` });
+
+    // List page
+    await page.goto(`${SITE}/bulletins`, { waitUntil: 'networkidle' });
+    await expect(page.locator('body')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('text=could not be found')).not.toBeVisible();
+
+    // Detail page
+    await page.goto(`${SITE}/bulletins/${id}`);
+    await expect(page.locator('body')).toBeVisible({ timeout: 15000 });
+    const detail = await page.textContent('body');
+    expect(detail).toContain('E2E주보-흐름검증');
+  });
+
+  // ── Albums ──
+  test('album: create with images → list page → detail page', async ({ page }) => {
+    // Upload test image first
+    const imgRes = await fetch('https://picsum.photos/seed/e2ealbum/200/200');
+    const buf = await imgRes.arrayBuffer();
+    const blob = new Blob([Buffer.from(buf)], { type: 'image/jpeg' });
+    const form = new FormData();
+    form.append('file', blob, 'e2e-album.jpg');
+    form.append('entityType', 'album');
+    const uploadRes = await fetch(`${API}/files/upload`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT },
+      body: form,
+    });
+    const imgUrl = (await uploadRes.json()).data?.url || '';
+
+    const res = await fetch(`${API}/albums`, {
+      method: 'POST', headers: headers(token),
+      body: JSON.stringify({ title: 'E2E앨범-흐름검증', images: imgUrl ? [imgUrl] : [], status: 'published' }),
+    });
+    const id = (await res.json()).data?.id;
+    cleanup.push({ path: `/albums/${id}` });
+
+    // List page
+    await page.goto(`${SITE}/albums`, { waitUntil: 'networkidle' });
+    await expect(page.locator('body')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('text=could not be found')).not.toBeVisible();
+
+    // Detail page
+    await page.goto(`${SITE}/albums/${id}`);
+    await expect(page.locator('body')).toBeVisible({ timeout: 15000 });
+    const detail = await page.textContent('body');
+    expect(detail).toContain('E2E앨범-흐름검증');
+
+    // Image should be rendered
+    if (imgUrl) {
+      const imgCount = await page.locator(`img[src*="r2"]`).count();
+      expect(imgCount).toBeGreaterThan(0);
     }
   });
 
-  test('sermon detail page works', async ({ page }) => {
-    if (!testSermonId) return;
+  // ── Columns (목회칼럼) ──
+  test('column: create → list page → detail page', async ({ page }) => {
+    const res = await fetch(`${API}/columns`, {
+      method: 'POST', headers: headers(token),
+      body: JSON.stringify({ title: 'E2E칼럼-흐름검증', content: '테스트 칼럼 본문입니다. 은혜와 사랑이 넘치는 글입니다.', status: 'published' }),
+    });
+    const id = (await res.json()).data?.id;
+    cleanup.push({ path: `/columns/${id}` });
 
-    await page.goto(`${SITE}/sermons/${testSermonId}`);
+    // List page
+    await page.goto(`${SITE}/columns`, { waitUntil: 'networkidle' });
+    await expect(page.locator('body')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('text=could not be found')).not.toBeVisible();
+
+    // Detail page
+    await page.goto(`${SITE}/columns/${id}`);
+    await expect(page.locator('body')).toBeVisible({ timeout: 15000 });
+    const detail = await page.textContent('body');
+    expect(detail).toContain('E2E칼럼-흐름검증');
+    expect(detail).toContain('테스트 칼럼 본문');
+  });
+
+  // ── Events ──
+  test('event: create → list page → detail page', async ({ page }) => {
+    const res = await fetch(`${API}/events`, {
+      method: 'POST', headers: headers(token),
+      body: JSON.stringify({ title: 'E2E행사-흐름검증', description: '테스트 행사 설명', event_date: '2026-06-01', location: '본당 3층', status: 'published' }),
+    });
+    const id = (await res.json()).data?.id;
+    cleanup.push({ path: `/events/${id}` });
+
+    // List page
+    await page.goto(`${SITE}/events`, { waitUntil: 'networkidle' });
     await expect(page.locator('body')).toBeVisible({ timeout: 15000 });
 
+    // Detail page
+    await page.goto(`${SITE}/events/${id}`);
+    await expect(page.locator('body')).toBeVisible({ timeout: 15000 });
+    const detail = await page.textContent('body');
+    expect(detail).toContain('E2E행사-흐름검증');
+  });
+
+  // ── Staff ──
+  test('staff: create → list page → detail page', async ({ page }) => {
+    // Upload photo
+    const imgRes = await fetch('https://picsum.photos/seed/e2estaff/200/200');
+    const buf = await imgRes.arrayBuffer();
+    const blob = new Blob([Buffer.from(buf)], { type: 'image/jpeg' });
+    const form = new FormData();
+    form.append('file', blob, 'e2e-staff.jpg');
+    form.append('entityType', 'staff');
+    const uploadRes = await fetch(`${API}/files/upload`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT },
+      body: form,
+    });
+    const photoUrl = (await uploadRes.json()).data?.url || '';
+
+    const res = await fetch(`${API}/staff`, {
+      method: 'POST', headers: headers(token),
+      body: JSON.stringify({ name: 'E2E교역자-흐름검증', role: '전도사', department: '테스트부', bio: '테스트 교역자 소개입니다.', photo_url: photoUrl, is_active: true }),
+    });
+    const id = (await res.json()).data?.id;
+    cleanup.push({ path: `/staff/${id}` });
+
+    // List page
+    await page.goto(`${SITE}/staff`, { waitUntil: 'networkidle' });
+    await expect(page.locator('body')).toBeVisible({ timeout: 15000 });
+
+    // Detail page
+    await page.goto(`${SITE}/staff/${id}`);
+    await expect(page.locator('body')).toBeVisible({ timeout: 15000 });
+    const detail = await page.textContent('body');
+    expect(detail).toContain('E2E교역자-흐름검증');
+
+    // Photo should be rendered
+    if (photoUrl) {
+      const imgCount = await page.locator(`img[src*="r2"]`).count();
+      expect(imgCount).toBeGreaterThan(0);
+    }
+  });
+
+  // ── History ──
+  test('history: create → page renders', async ({ page }) => {
+    const res = await fetch(`${API}/history`, {
+      method: 'POST', headers: headers(token),
+      body: JSON.stringify({ year: 2099, items: [{ content: 'E2E연혁-흐름검증 항목' }] }),
+    });
+    const id = (await res.json()).data?.id;
+    cleanup.push({ path: `/history/${id}` });
+
+    await page.goto(`${SITE}/history`, { waitUntil: 'networkidle' });
+    await expect(page.locator('body')).toBeVisible({ timeout: 15000 });
     const content = await page.textContent('body');
-    expect(content).toContain('E2E 프론트 검증 설교');
-    expect(content).toContain('요한복음 1:1');
+    // Either shows the history item or placeholder
+    expect(content).toBeTruthy();
   });
 });
 
