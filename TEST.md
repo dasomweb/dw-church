@@ -73,15 +73,14 @@ npx playwright test e2e/full-user-journey.spec.ts --project=desktop
 | client.test.ts | 18 | FetchAdapter + MockAdapter + 에러 핸들링 |
 | types.test.ts | 17 | 타입 구조 검증 |
 
-### E2E 테스트 (Playwright, 운영환경) — 5파일, 96테스트
+### E2E 테스트 (Playwright, 운영환경) — 2파일, 31테스트
 
 | 파일 | 테스트 수 | 검증 내용 |
 |------|----------|----------|
 | **full-user-journey.spec.ts** | **13** | **사용자 여정 관통 테스트 (아래 상세)** |
-| crud-lifecycle.spec.ts | 36 | 6개 콘텐츠 × (생성→확인→수정→반영확인→삭제→사라짐확인) |
-| tenant-lifecycle.spec.ts | 25 | 테넌트 구조 + CRUD + 프론트 렌더링 + 이미지 업로드 |
-| tenant-isolation.spec.ts | 9 | 테넌트 간 데이터 격리 (ID 겹침 없음, 크로스 접근 차단) |
-| user-flow.spec.ts | 13 | 로그인 흐름 + 콘텐츠 생성→프론트 + 설정→프론트 + 네비게이션 |
+| **platform.spec.ts** | **18** | **테넌트 구조 + 격리 + 6개 콘텐츠 CRUD 전체 라이프사이클 + 이미지** |
+
+둘 다 자체 테넌트를 생성 → 테스트 → 정리. 외부 데이터에 의존 없음.
 
 ### 사용자 여정 관통 테스트 (full-user-journey.spec.ts)
 
@@ -112,9 +111,9 @@ Step 13: 테넌트 정리 (삭제)
 ```
 서버 유닛/통합:     26파일,  425테스트
 API 클라이언트:      3파일,   56테스트
-E2E (운영환경):      5파일,   96테스트
+E2E (운영환경):      2파일,   31테스트
 ────────────────────────────────────────
-합계:               34파일,  577테스트
+합계:               31파일,  512테스트
 ```
 
 ---
