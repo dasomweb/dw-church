@@ -1255,20 +1255,30 @@ export default function PageEditor() {
 
   const addingRef = useRef(false);
   const handleAddBlock = (blockType: string, atIndex?: number) => {
-    if (!selectedPageId || addingRef.current) return;
+    if (!selectedPageId) {
+      showToast('error', '먼저 페이지를 선택하세요');
+      return;
+    }
+    if (addingRef.current) return;
     addingRef.current = true;
     setTimeout(() => { addingRef.current = false; }, 1000);
     const def = getBlockDef(blockType);
     const insertIdx = atIndex ?? sortedSections.length;
-    createSection.mutate({
-      pageId: selectedPageId,
-      data: {
-        blockType: blockType as BlockType,
-        props: { ...def?.defaultProps, variant: def?.variants[0]?.id },
-        sortOrder: insertIdx,
-        isVisible: true,
+    createSection.mutate(
+      {
+        pageId: selectedPageId,
+        data: {
+          blockType: blockType as BlockType,
+          props: { ...def?.defaultProps, variant: def?.variants[0]?.id },
+          sortOrder: insertIdx,
+          isVisible: true,
+        },
       },
-    });
+      {
+        onSuccess: () => showToast('success', `${def?.label || blockType} 블록이 추가되었습니다`),
+        onError: (err) => showToast('error', `블록 추가 실패: ${err instanceof Error ? err.message : '알 수 없는 오류'}`),
+      },
+    );
   };
 
   const handleDuplicateSection = (section: PageSection) => {
