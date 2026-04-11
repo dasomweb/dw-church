@@ -14,6 +14,7 @@ import { WorshipScheduleBlock } from './blocks/WorshipScheduleBlock';
 import { LocationMapBlock } from './blocks/LocationMapBlock';
 import { ContactInfoBlock } from './blocks/ContactInfoBlock';
 import { DividerBlock } from './blocks/DividerBlock';
+import { LayoutBlock } from './blocks/LayoutBlock';
 import { ImageGalleryBlock } from './blocks/ImageGalleryBlock';
 import { VideoBlock } from './blocks/VideoBlock';
 import { NewcomerInfoBlock } from './blocks/NewcomerInfoBlock';
@@ -77,7 +78,16 @@ const BLOCK_MAP: Record<string, BlockComponent> = {
   // Contact form → render as contact info block
   contact_form: ContactInfoBlock,
 
-  // Layout
+  // Layout Block — container with child blocks
+  layout_row: LayoutBlock,
+  layout_columns: LayoutBlock,
+  layout_section: LayoutBlock,
+  two_columns: LayoutBlock,
+  three_columns: LayoutBlock,
+  tabs: LayoutBlock,
+  accordion: LayoutBlock,
+
+  // Layout helpers
   divider: DividerBlock,
   section_header: TextOnlyBlock,       // Section header = title text
 };

@@ -67,6 +67,32 @@ Dynamic Content (weekly)   → Sermons, bulletins, albums, events, staff, boards
 - Dynamic content is displayed through blocks, managed via admin pages
 - No page design changes needed — just register content and it appears on the website
 
+### Block Terminology (MUST follow)
+```
+Page (페이지)          → 블록들의 조합 + 순서
+│
+├── Static Block       → 페이지에 직접 입력하는 콘텐츠 블록
+│   (스태틱 블록)        hero_banner, text_image, pastor_message,
+│                       worship_times, location_map, contact_info,
+│                       quote_block, newcomer_info, image_gallery, video
+│                       저장: page_sections.props
+│
+├── Data Block         → CRUD로 관리하는 데이터를 카드/그리드로 표시하는 블록
+│   (데이터 블록)        recent_sermons, recent_bulletins, staff_grid,
+│                       album_gallery, event_grid, history_timeline,
+│                       recent_columns, board, banner_slider
+│                       설정: page_sections.props (title, limit, variant)
+│                       데이터: 각 DB 테이블 (sermons, staff, albums ...)
+│
+└── Layout Block       → 행/열 구조를 만들고 자식 블록을 배치하는 컨테이너 블록
+    (레이아웃 블록)      row, columns, tabs, accordion
+                        속성: divide, padding, margin, lineColor, overlay, link
+                        자식: children[] (Static Block 또는 Data Block)
+
+Block Config           → 블록의 표시 설정 (title, limit, variant 등)
+(블록 설정)              page_sections.props에 저장
+```
+
 ### Tenant Isolation
 - Each tenant has a separate PostgreSQL schema (`tenant_{slug}`)
 - R2 files separated by `tenant_{slug}/` folder
@@ -78,6 +104,8 @@ Dynamic Content (weekly)   → Sermons, bulletins, albums, events, staff, boards
 - Dedicated route pages use `getPageBySlug()` → `BlockRenderer` for all sections
 - Only the main content block is replaced with paginated/searchable version
 - Grid components in ui-components use `columns` prop for dynamic control
+- Layout Blocks render children recursively via `BlockRenderer`
+- Use "Static Block", "Data Block", "Layout Block" terminology in all code/comments
 
 ### API Field Naming
 - Server (DB/API): `snake_case` (church_name, sermon_date, etc.)

@@ -39,7 +39,10 @@ export const blockTypes = [
   // CTA
   'call_to_action',
   'newsletter_signup',
-  // Layout
+  // Layout Block — container with children blocks
+  'layout_row',
+  'layout_columns',
+  'layout_section',
   'divider',
   'section_header',
   'two_columns',
