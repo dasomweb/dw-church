@@ -48,6 +48,8 @@ export const blockTypes = [
   'accordion',
   // Board
   'board',
+  // Contact form (새가족 등록 등)
+  'contact_form',
 ] as const;
 
 export type BlockType = (typeof blockTypes)[number];

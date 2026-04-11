@@ -187,7 +187,7 @@ describe('Block type consistency (schema ↔ renderer)', () => {
     'image_gallery', 'video',
     'call_to_action', 'newsletter_signup',
     'divider', 'section_header', 'two_columns', 'three_columns', 'tabs', 'accordion',
-    'board',
+    'board', 'contact_form',
   ];
 
   // From BlockRenderer.tsx BLOCK_MAP keys
@@ -201,7 +201,7 @@ describe('Block type consistency (schema ↔ renderer)', () => {
     'contact_info', 'address_info', 'newcomer_info', 'visitor_welcome', 'first_time_guide',
     'image_gallery', 'video',
     'call_to_action', 'newsletter_signup',
-    'board',
+    'board', 'contact_form',
     'divider', 'section_header',
   ];
 
@@ -212,7 +212,7 @@ describe('Block type consistency (schema ↔ renderer)', () => {
       'mission_vision', 'recent_sermons', 'recent_bulletins', 'album_gallery',
       'staff_grid', 'history_timeline', 'event_grid', 'worship_times',
       'location_map', 'contact_info', 'newcomer_info', 'image_gallery', 'video',
-      'quote_block', 'divider', 'board', 'banner_slider',
+      'quote_block', 'divider', 'board', 'banner_slider', 'contact_form',
     ];
 
     const rendererSet = new Set(RENDERER_BLOCK_TYPES);

@@ -74,6 +74,9 @@ const BLOCK_MAP: Record<string, BlockComponent> = {
   // Board (게시판)
   board: BoardBlock,
 
+  // Contact form → render as contact info block
+  contact_form: ContactInfoBlock,
+
   // Layout
   divider: DividerBlock,
   section_header: TextOnlyBlock,       // Section header = title text
