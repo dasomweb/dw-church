@@ -126,6 +126,63 @@ Content (콘텐츠)
             └── Content (개별 설교 항목들)
 ```
 
+### Element Terminology (MUST follow)
+```
+Element (엘리먼트)
+  "블록 안에 들어가는 세부 요소 — 텍스트, 이미지, 버튼 등"
+
+  계층:
+    Page → Block → Element
+          (구조)   (세부 요소)
+
+  Element 타입:
+    - Text Element       짧은 텍스트 (제목, 이름, 부제목, 버튼 텍스트)
+    - RichText Element   긴 본문 텍스트 (인사말, 소개글, 칼럼 본문)
+    - Image Element      단일 이미지 (배경 이미지, 프로필 사진)
+    - Gallery Element    이미지 배열 (앨범 사진들)
+    - Button Element     버튼 (텍스트 + 링크)
+    - Link Element       URL + 타겟
+    - Video Element      YouTube/영상
+    - Date Element       날짜 (설교 날짜, 행사 일자)
+    - List Element       배열 데이터 (예배 시간표, 연혁 항목)
+    - Color Element      색상 (오버레이 색상, 테두리 색상)
+    - Number Element     숫자 (padding, gap, opacity)
+    - Select Element     선택지 (layout, variant, height)
+
+  예시:
+    hero_banner (Static Block)
+      ├── title              → Text Element
+      ├── subtitle           → Text Element
+      ├── backgroundImageUrl → Image Element
+      ├── buttonText         → Text Element
+      ├── buttonUrl          → Link Element
+      ├── overlayColor       → Color Element
+      └── overlayOpacity     → Number Element
+
+    text_image (Static Block)
+      ├── title    → Text Element
+      ├── content  → RichText Element
+      └── imageUrl → Image Element
+
+    recent_sermons (Data Block)
+      ├── title   → Text Element       (Block Config)
+      ├── limit   → Number Element     (Block Config)
+      └── variant → Select Element     (Block Config)
+      (실제 설교 데이터는 Content Module의 DB에서 fetch)
+```
+
+### 전체 계층 요약
+```
+Tenant (테넌트)
+  └── Page (페이지)
+        └── Block (블록: Static/Data/Layout)
+              └── Element (엘리먼트: Text/Image/Button ...)
+
+Content Module (콘텐츠 모듈)
+  └── Data Block (이 모듈 데이터를 표시하는 블록)
+        └── Content (개별 콘텐츠 항목)
+```
+
 ### Tenant Isolation
 - Each tenant has a separate PostgreSQL schema (`tenant_{slug}`)
 - R2 files separated by `tenant_{slug}/` folder
