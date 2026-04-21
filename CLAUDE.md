@@ -77,12 +77,12 @@ Page (페이지)          → 블록들의 조합 + 순서
 │                       quote_block, newcomer_info, image_gallery, video
 │                       저장: page_sections.props
 │
-├── Data Block         → CRUD로 관리하는 데이터를 카드/그리드로 표시하는 블록
+├── Data Block         → Content Module의 데이터를 카드/그리드로 표시하는 블록
 │   (데이터 블록)        recent_sermons, recent_bulletins, staff_grid,
 │                       album_gallery, event_grid, history_timeline,
 │                       recent_columns, board, banner_slider
 │                       설정: page_sections.props (title, limit, variant)
-│                       데이터: 각 DB 테이블 (sermons, staff, albums ...)
+│                       데이터: Content Module의 DB 테이블에서 fetch
 │
 └── Layout Block       → 행/열 구조를 만들고 자식 블록을 배치하는 컨테이너 블록
     (레이아웃 블록)      row, columns, tabs, accordion
@@ -91,6 +91,39 @@ Page (페이지)          → 블록들의 조합 + 순서
 
 Block Config           → 블록의 표시 설정 (title, limit, variant 등)
 (블록 설정)              page_sections.props에 저장
+```
+
+### Content Module Terminology (MUST follow)
+```
+Content Module (콘텐츠 모듈)
+  "기능 단위 전체 묶음" — 관리 페이지 + API + DB + Data Block + 상세 페이지
+
+  현재 Content Modules:
+    - 설교 (Sermon)          → sermons 테이블 + /api/v1/sermons
+    - 주보 (Bulletin)        → bulletins 테이블 + /api/v1/bulletins
+    - 칼럼 (Column)          → columns_pastoral 테이블 + /api/v1/columns
+    - 앨범 (Album)           → albums 테이블 + /api/v1/albums
+    - 행사 (Event)           → events 테이블 + /api/v1/events
+    - 교역자 (Staff)         → staff 테이블 + /api/v1/staff
+    - 연혁 (History)         → history 테이블 + /api/v1/history
+    - 게시판 (Board)         → boards + board_posts 테이블 + /api/v1/boards
+    - 배너 (Banner)          → banners 테이블 + /api/v1/banners
+
+  각 Content Module의 구성요소:
+    ├── 관리 페이지 (Admin CRUD UI)    → packages/admin-app/src/pages/
+    ├── API 엔드포인트                 → /api/v1/{resource}
+    ├── DB 테이블                      → tenant_{slug}.{table}
+    ├── Data Block (프론트 표시)       → apps/web/components/blocks/
+    └── 상세 페이지                    → apps/web/app/tenant/[slug]/{resource}/[id]
+
+Content (콘텐츠)
+  "Data Block에 담기는 개별 항목"
+  예: 하나의 설교글, 하나의 칼럼글, 한 명의 교역자
+
+  관계:
+    Content Module (설교 모듈)
+      └── Data Block (recent_sermons — 최근 설교 목록 블록)
+            └── Content (개별 설교 항목들)
 ```
 
 ### Tenant Isolation
