@@ -69,8 +69,13 @@ Dynamic Content (weekly)   → Sermons, bulletins, albums, events, staff, boards
 
 ### Block Terminology (MUST follow)
 ```
-Page (페이지)          → 블록들의 조합 + 순서
+Page (페이지)          → 여러 섹션을 담는 컨테이너
 │
+└── Section (섹션)     → 페이지 위의 "슬롯" (page_sections 테이블의 row)
+                         속성: sort_order, is_visible, block_type, props
+     │
+     └── Block (블록)  → Section이 렌더링하는 UI 컴포넌트 (block_type이 결정)
+         │
 ├── Static Block       → 페이지에 직접 입력하는 콘텐츠 블록
 │   (스태틱 블록)        hero_banner, text_image, pastor_message,
 │                       worship_times, location_map, contact_info,
@@ -175,13 +180,23 @@ Element (엘리먼트)
 ```
 Tenant (테넌트)
   └── Page (페이지)
-        └── Block (블록: Static/Data/Layout)
-              └── Element (엘리먼트: Text/Image/Button ...)
+        └── Section (섹션 — 페이지 위의 슬롯)
+              └── Block (블록: Static/Data/Layout)
+                    └── Element (엘리먼트: Text/Image/Button ...)
 
-Content Module (콘텐츠 모듈)
-  └── Data Block (이 모듈 데이터를 표시하는 블록)
-        └── Content (개별 콘텐츠 항목)
+Content Module (콘텐츠 모듈 — 페이지 시스템과 독립)
+  ├── 관리 페이지 (Admin CRUD)
+  ├── API (/api/v1/{resource})
+  ├── DB 테이블 (sermons, staff, albums ...)
+  ├── Data Block (Page에 노출할 때 사용) ← 여기서 Page와 연결
+  └── Content (개별 항목들)
 ```
+
+### 용어 사용 규칙
+- **Section ≠ Block**: Section은 "위치(슬롯)", Block은 "그 슬롯에 담긴 컴포넌트"
+- **Content Module ↔ Data Block**: 모듈의 데이터를 페이지에 꺼내올 때 Data Block을 씀
+- **Layout Block만 자식 블록을 가질 수 있음**: props.children[]
+- 코드 주석/문서에서 위 용어를 혼용하지 말 것
 
 ### Tenant Isolation
 - Each tenant has a separate PostgreSQL schema (`tenant_{slug}`)

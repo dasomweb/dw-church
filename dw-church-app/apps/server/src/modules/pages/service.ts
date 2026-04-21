@@ -8,9 +8,26 @@ import type {
 } from './schema.js';
 import type { TemplateSection } from './templates.js';
 
-// ──────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// Terminology (MUST follow — see /CLAUDE.md)
+// ══════════════════════════════════════════════════════════════
+//
+//   Tenant → Page → Section → Block → Element
+//
+//   - Page        : pages 테이블의 row = 페이지 하나
+//   - Section     : page_sections 테이블의 row = 페이지 위의 "슬롯"
+//                   (sort_order, is_visible, block_type, props를 가짐)
+//   - Block       : Section이 렌더링하는 UI 컴포넌트 (block_type이 결정)
+//                   - Static Block  : 콘텐츠를 props에 직접 저장
+//                   - Data Block    : Content Module 데이터를 표시
+//                   - Layout Block  : 자식 블록을 배치하는 컨테이너 (props.children)
+//   - Element     : 블록 안의 개별 입력 필드 (제목, 이미지, 버튼 등)
+//
+//   이 서비스는 Section 레벨의 CRUD를 담당 — Block 타입과 props를 다룬다.
+//
+// ══════════════════════════════════════════════════════════════
 // Pages
-// ──────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
 
 interface PageRow {
   id: string;
@@ -23,6 +40,16 @@ interface PageRow {
   updated_at: Date;
 }
 
+/**
+ * SectionRow = page_sections 테이블의 row = Section (페이지 위의 "슬롯")
+ *
+ * - block_type : 이 슬롯에 렌더링할 Block 타입 (hero_banner, recent_sermons 등)
+ * - props      : Block의 설정값 + 콘텐츠 (JSONB)
+ *                - Static Block : 콘텐츠 직접 저장 (title, content, imageUrl 등)
+ *                - Data Block   : 표시 설정만 저장 (title, limit, variant)
+ *                - Layout Block : 스타일 + children[] 자식 블록 배열
+ * - sort_order : 페이지 내 순서
+ */
 interface SectionRow {
   id: string;
   page_id: string;

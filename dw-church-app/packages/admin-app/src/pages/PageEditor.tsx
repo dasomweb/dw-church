@@ -259,7 +259,7 @@ function useUndoStack<T>(initial: T) {
 // ═══════════════════════════════════════════════════════════
 // Block Palette (left sidebar — drag source)
 // ═══════════════════════════════════════════════════════════
-type NatureFilter = 'all' | 'static' | 'dynamic';
+type NatureFilter = 'all' | 'static' | 'dynamic' | 'layout';
 type PaletteViewMode = 'list' | 'grid';
 
 function BlockPalette({ onAdd }: { onAdd: (type: string) => void }) {
@@ -274,6 +274,7 @@ function BlockPalette({ onAdd }: { onAdd: (type: string) => void }) {
         // Nature filter
         if (natureFilter === 'static' && b.nature !== 'static') return false;
         if (natureFilter === 'dynamic' && b.nature !== 'dynamic') return false;
+        if (natureFilter === 'layout' && b.nature !== 'layout') return false;
         // Search filter
         if (search) {
           const q = search.toLowerCase();
@@ -326,7 +327,7 @@ function BlockPalette({ onAdd }: { onAdd: (type: string) => void }) {
         </div>
         {/* Nature filter */}
         <div className="flex gap-0.5 bg-gray-100 rounded-lg p-0.5">
-          {([['all', '전체'], ['static', '정적'], ['dynamic', '동적']] as const).map(([val, label]) => (
+          {([['all', '전체'], ['static', '스태틱'], ['dynamic', '데이터'], ['layout', '레이아웃']] as const).map(([val, label]) => (
             <button
               key={val}
               onClick={() => setNatureFilter(val)}
@@ -334,7 +335,7 @@ function BlockPalette({ onAdd }: { onAdd: (type: string) => void }) {
                 natureFilter === val ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              {val === 'static' && '📄 '}{val === 'dynamic' && '⚡ '}{label}
+              {val === 'static' && '📄 '}{val === 'dynamic' && '⚡ '}{val === 'layout' && '📦 '}{label}
             </button>
           ))}
         </div>
@@ -365,7 +366,7 @@ function BlockPalette({ onAdd }: { onAdd: (type: string) => void }) {
                     <span className="text-base">{block.icon}</span>
                     <span className="truncate font-medium text-gray-700 group-hover:text-blue-700 flex-1">{block.label}</span>
                     <span className="text-[10px] flex-shrink-0" title={block.nature === 'dynamic' ? '동적 블록' : '정적 블록'}>
-                      {block.nature === 'dynamic' ? '⚡' : '📄'}
+                      {block.nature === 'dynamic' ? '⚡' : block.nature === 'layout' ? '📦' : '📄'}
                     </span>
                   </div>
                 ))}
@@ -392,7 +393,7 @@ function BlockPalette({ onAdd }: { onAdd: (type: string) => void }) {
                     <span className="text-xl">{block.icon}</span>
                     <span className="text-[10px] font-medium text-gray-700 group-hover:text-blue-700 leading-tight">{block.label}</span>
                     <span className="text-[9px] flex-shrink-0" title={block.nature === 'dynamic' ? '동적 블록' : '정적 블록'}>
-                      {block.nature === 'dynamic' ? '⚡' : '📄'}
+                      {block.nature === 'dynamic' ? '⚡' : block.nature === 'layout' ? '📦' : '📄'}
                     </span>
                   </div>
                 ))}
@@ -603,6 +604,203 @@ function ImageLibraryModal({ onSelect, onClose }: { onSelect: (url: string) => v
 }
 
 // ═══════════════════════════════════════════════════════════
+// Child Block Picker — for Layout Blocks
+// ═══════════════════════════════════════════════════════════
+function ChildBlockPicker({ onSelect, onClose }: { onSelect: (type: string) => void; onClose: () => void }) {
+  // Exclude Layout Blocks from children picker to prevent deep nesting
+  const availableBlocks = BLOCK_DEFS.filter((b) => b.nature !== 'layout');
+  const categories = (() => {
+    const order = ['히어로', '소개', '콘텐츠', '텍스트', '교회 정보', 'CTA'];
+    const groups: { category: string; blocks: BlockDef[] }[] = [];
+    for (const cat of order) {
+      const blocks = availableBlocks.filter((b) => b.category === cat);
+      if (blocks.length > 0) groups.push({ category: cat, blocks });
+    }
+    return groups;
+  })();
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-xl w-full max-w-lg max-h-[70vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-3 border-b">
+          <div>
+            <h3 className="text-sm font-bold">자식 블록 선택</h3>
+            <p className="text-[10px] text-gray-400 mt-0.5">Layout Block 안에 넣을 블록을 선택하세요</p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-3">
+          {categories.map((cat) => (
+            <div key={cat.category} className="mb-3">
+              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-1 mb-1">{cat.category}</p>
+              <div className="grid grid-cols-2 gap-1.5">
+                {cat.blocks.map((b) => (
+                  <button
+                    key={b.type}
+                    onClick={() => onSelect(b.type)}
+                    className="flex flex-col items-center gap-1 p-2 rounded-lg border border-gray-200 hover:border-indigo-400 hover:bg-indigo-50 transition-colors"
+                  >
+                    <span className="text-lg">{b.icon}</span>
+                    <span className="text-[10px] font-medium text-gray-700">{b.label}</span>
+                    <span className="text-[9px] text-gray-400">{b.nature === 'dynamic' ? '⚡ 데이터' : '📄 스태틱'}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// Layout Child Editor — edit a single child inside a Layout Block
+// ═══════════════════════════════════════════════════════════
+function LayoutChildEditor({
+  child, childDef, index, totalChildren, onUpdate, onRemove, onMoveUp, onMoveDown, onUploadImage,
+}: {
+  child: { blockType: string; props: Record<string, unknown> };
+  childDef: BlockDef | undefined;
+  index: number;
+  totalChildren: number;
+  onUpdate: (newChild: { blockType: string; props: Record<string, unknown> }) => void;
+  onRemove: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onUploadImage: (file: File) => Promise<string>;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const set = (key: string, value: unknown) => onUpdate({ ...child, props: { ...child.props, [key]: value } });
+
+  if (!childDef) {
+    return (
+      <div className="p-2 border border-red-200 rounded-lg bg-red-50 text-xs text-red-600">
+        알 수 없는 블록 타입: {child.blockType}
+        <button onClick={onRemove} className="ml-2 text-red-800 underline">삭제</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border border-indigo-200 rounded-lg bg-white overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center gap-2 px-2 py-1.5 bg-indigo-50/50 border-b border-indigo-100">
+        <button
+          type="button"
+          onClick={() => setExpanded(!expanded)}
+          className="text-[10px] text-indigo-600 hover:text-indigo-800"
+        >
+          {expanded ? '▼' : '▶'}
+        </button>
+        <span className="text-xs">{childDef.icon}</span>
+        <span className="text-xs font-medium text-gray-700 flex-1 truncate">
+          {childDef.label}
+          {child.props.title && <span className="text-gray-400 ml-1">— {String(child.props.title).slice(0, 20)}</span>}
+        </span>
+        <div className="flex items-center gap-0.5">
+          <button
+            type="button"
+            onClick={onMoveUp}
+            disabled={index === 0}
+            className="text-[10px] text-gray-400 hover:text-gray-700 disabled:opacity-30 px-1"
+            title="위로"
+          >↑</button>
+          <button
+            type="button"
+            onClick={onMoveDown}
+            disabled={index === totalChildren - 1}
+            className="text-[10px] text-gray-400 hover:text-gray-700 disabled:opacity-30 px-1"
+            title="아래로"
+          >↓</button>
+          <button
+            type="button"
+            onClick={onRemove}
+            className="text-[10px] text-red-400 hover:text-red-700 px-1"
+            title="삭제"
+          >✕</button>
+        </div>
+      </div>
+
+      {/* Expanded editor */}
+      {expanded && (
+        <div className="p-2.5 space-y-2">
+          {/* Variant selector */}
+          {childDef.variants.length > 0 && (
+            <div>
+              <label className="text-[10px] font-medium text-gray-500 block mb-0.5">스타일</label>
+              <div className="flex flex-wrap gap-1">
+                {childDef.variants.map((v) => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    onClick={() => set('variant', v.id)}
+                    className={`text-[10px] px-2 py-0.5 rounded ${
+                      child.props.variant === v.id
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Editable fields */}
+          {childDef.editableFields.map((field) => (
+            <div key={field.key}>
+              <label className="text-[10px] font-medium text-gray-500 block mb-0.5">{field.label}</label>
+              {field.type === 'textarea' ? (
+                <textarea
+                  value={(child.props[field.key] as string) || ''}
+                  onChange={(e) => set(field.key, e.target.value)}
+                  rows={2}
+                  className="w-full border rounded px-2 py-1 text-xs resize-none"
+                />
+              ) : field.type === 'select' ? (
+                <select
+                  value={(child.props[field.key] as string) || ''}
+                  onChange={(e) => set(field.key, e.target.value)}
+                  className="w-full border rounded px-2 py-1 text-xs"
+                >
+                  {field.options?.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              ) : field.type === 'number' ? (
+                <input
+                  type="number"
+                  value={(child.props[field.key] as number) || 0}
+                  onChange={(e) => set(field.key, parseInt(e.target.value) || 0)}
+                  className="w-24 border rounded px-2 py-1 text-xs"
+                />
+              ) : field.type === 'image' ? (
+                <ImageUpload
+                  value={(child.props[field.key] as string) || ''}
+                  onChange={(url) => set(field.key, url)}
+                  onUpload={onUploadImage}
+                  aspectRatio="16/9"
+                />
+              ) : (
+                <input
+                  type="text"
+                  value={(child.props[field.key] as string) || ''}
+                  onChange={(e) => set(field.key, e.target.value)}
+                  className="w-full border rounded px-2 py-1 text-xs"
+                />
+              )}
+            </div>
+          ))}
+          {childDef.editableFields.length === 0 && (
+            <p className="text-[10px] text-gray-400">설정 없음</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
 // Section Card (draggable + inline editable)
 // ═══════════════════════════════════════════════════════════
 function SectionCard({
@@ -652,8 +850,40 @@ function SectionCard({
   const [aiLoading, setAiLoading] = useState<string | null>(null);
   const [aiSuggestions, setAiSuggestions] = useState<{ field: string; label: string; samples: string[] } | null>(null);
   const [collapsed, setCollapsed] = useState(true);
+  const [showChildPicker, setShowChildPicker] = useState(false);
   const { showToast } = useToast();
   const isDynamic = def?.nature === 'dynamic';
+  const isLayoutBlock = def?.nature === 'layout';
+  const layoutChildren = (props.children as { blockType: string; props: Record<string, unknown> }[]) || [];
+
+  // Layout Block: child management
+  const addChild = (blockType: string) => {
+    const childDef = getBlockDef(blockType);
+    const newChild = {
+      blockType,
+      props: { ...(childDef?.defaultProps || {}), variant: childDef?.variants[0]?.id },
+    };
+    set('children', [...layoutChildren, newChild]);
+    setShowChildPicker(false);
+  };
+
+  const updateChild = (idx: number, newChild: { blockType: string; props: Record<string, unknown> }) => {
+    const newChildren = [...layoutChildren];
+    newChildren[idx] = newChild;
+    set('children', newChildren);
+  };
+
+  const removeChild = (idx: number) => {
+    set('children', layoutChildren.filter((_, i) => i !== idx));
+  };
+
+  const moveChild = (idx: number, dir: 'up' | 'down') => {
+    const targetIdx = dir === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= layoutChildren.length) return;
+    const newChildren = [...layoutChildren];
+    [newChildren[idx], newChildren[targetIdx]] = [newChildren[targetIdx]!, newChildren[idx]!];
+    set('children', newChildren);
+  };
 
   // Block-specific prompt templates
   const blockPrompts: Record<string, Record<string, string>> = {
@@ -727,6 +957,36 @@ function SectionCard({
   const [aiKeyword, setAiKeyword] = useState('');
 
   const [imageLibraryField, setImageLibraryField] = useState<string | null>(null);
+
+  // Element type mapping — groups editable fields by Element type
+  // (Text / Image / Link / Config)
+  const getElementCategory = (fieldKey: string, fieldType: string): 'text' | 'image' | 'link' | 'config' => {
+    if (fieldType === 'image' || fieldType === 'images') return 'image';
+    if (fieldType === 'url' || fieldKey.toLowerCase().includes('url') && fieldType !== 'text') return 'link';
+    if (fieldType === 'select' || fieldType === 'number') return 'config';
+    if (fieldType === 'text' || fieldType === 'textarea' || fieldType === 'tags' || fieldType === 'services') return 'text';
+    return 'config';
+  };
+
+  const elementGroupMeta: Record<string, { icon: string; label: string; color: string }> = {
+    text: { icon: '📝', label: '텍스트 엘리먼트', color: 'text-blue-600' },
+    image: { icon: '🖼️', label: '이미지 엘리먼트', color: 'text-green-600' },
+    link: { icon: '🔗', label: '링크 엘리먼트', color: 'text-purple-600' },
+    config: { icon: '⚙️', label: '설정', color: 'text-gray-500' },
+  };
+
+  // Group fields by element category
+  type EditableField = NonNullable<BlockDef['editableFields']>[number];
+  const groupedFields = useMemo<Record<string, EditableField[]>>(() => {
+    const groups: Record<string, EditableField[]> = { text: [], image: [], link: [], config: [] };
+    if (!def) return groups;
+    for (const f of def.editableFields) {
+      const cat = getElementCategory(f.key, f.type);
+      groups[cat]!.push(f);
+    }
+    return groups;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [def]);
 
   // Find first image URL in props for thumbnail preview
   const thumbnailUrl = useMemo(() => {
@@ -898,7 +1158,18 @@ function SectionCard({
                 ))}
               </div>
             )}
-            {def.editableFields.map((field) => (
+            {(['text', 'image', 'link', 'config'] as const).map((cat) => {
+              const fields = groupedFields[cat] || [];
+              if (fields.length === 0) return null;
+              const meta = elementGroupMeta[cat]!;
+              return (
+                <div key={cat} className="space-y-1.5">
+                  {/* Element group header */}
+                  <div className={`flex items-center gap-1 pt-1.5 ${cat === 'text' ? '' : 'mt-1.5 pt-2 border-t border-gray-100'}`}>
+                    <span className="text-[10px]">{meta.icon}</span>
+                    <span className={`text-[10px] font-bold uppercase tracking-wide ${meta.color}`}>{meta.label}</span>
+                  </div>
+                  {fields.map((field) => (
               <div key={field.key}>
                 <div className="flex items-center justify-between mb-0.5">
                   <label className="text-[11px] font-medium text-gray-500">{field.label}</label>
@@ -1026,10 +1297,57 @@ function SectionCard({
                   </div>
                 )}
               </div>
-            ))}
+                  ))}
+                </div>
+              );
+            })}
             {def.editableFields.length === 0 && (
               <p className="text-xs text-gray-400">이 블록은 기본 설정으로 작동합니다.</p>
             )}
+
+            {/* Layout Block — Child Blocks Editor */}
+            {isLayoutBlock && (
+              <div className="mt-3 pt-3 border-t border-indigo-100">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-xs font-bold text-indigo-700">📦 자식 블록 ({layoutChildren.length})</h4>
+                  <button
+                    type="button"
+                    onClick={() => setShowChildPicker(true)}
+                    className="text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded hover:bg-indigo-700"
+                  >
+                    + 블록 추가
+                  </button>
+                </div>
+
+                {layoutChildren.length === 0 ? (
+                  <div className="text-center py-6 border-2 border-dashed border-indigo-200 rounded-lg bg-indigo-50/30">
+                    <p className="text-xs text-indigo-400">자식 블록이 없습니다</p>
+                    <p className="text-[10px] text-gray-400 mt-1">위 "+ 블록 추가"로 블록을 넣으세요</p>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    {layoutChildren.map((child, idx) => {
+                      const childDef = getBlockDef(child.blockType);
+                      return (
+                        <LayoutChildEditor
+                          key={idx}
+                          child={child}
+                          childDef={childDef}
+                          index={idx}
+                          totalChildren={layoutChildren.length}
+                          onUpdate={(newChild) => updateChild(idx, newChild)}
+                          onRemove={() => removeChild(idx)}
+                          onMoveUp={() => moveChild(idx, 'up')}
+                          onMoveDown={() => moveChild(idx, 'down')}
+                          onUploadImage={onUploadImage}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="flex gap-2 pt-1">
               <button onClick={onSave} className="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors">저장</button>
               <button onClick={onToggleEdit} className="px-3 py-1 bg-gray-100 text-xs rounded-lg hover:bg-gray-200 transition-colors">취소</button>
@@ -1037,6 +1355,14 @@ function SectionCard({
           </div>
         )}
       </div>
+
+      {/* Child Block Picker */}
+      {showChildPicker && (
+        <ChildBlockPicker
+          onSelect={addChild}
+          onClose={() => setShowChildPicker(false)}
+        />
+      )}
 
       {/* Image Library Modal */}
       {imageLibraryField && (
