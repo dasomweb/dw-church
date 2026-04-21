@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useNavigate } from 'react-router-dom';
 import { useUpdateProfile } from '@dw-church/api-client';
 import { useAuthStore } from '../stores/auth';
 import { useToast } from '../components';
@@ -40,6 +41,8 @@ export default function ProfilePage() {
   const user = session?.user;
   const updateProfile = useUpdateProfile();
   const { showToast } = useToast();
+  const navigate = useNavigate();
+  const homePath = user?.isSuperAdmin ? '/super-admin' : '/';
 
   const {
     register: registerProfile,
@@ -108,6 +111,8 @@ export default function ProfilePage() {
 
       showToast('success', '비밀번호가 변경되었습니다.');
       resetPassword();
+      // Navigate back to home after successful password change
+      setTimeout(() => navigate(homePath), 800);
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : '비밀번호 변경에 실패했습니다.');
     }
@@ -125,6 +130,20 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-2xl space-y-8">
+      {/* Back navigation */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => navigate(homePath)}
+          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          {user?.isSuperAdmin ? '슈퍼 관리자로 돌아가기' : '대시보드로 돌아가기'}
+        </button>
+        <h1 className="text-lg font-bold text-gray-800">내 정보</h1>
+      </div>
+
       {/* Profile Section */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-6">기본 정보</h2>
