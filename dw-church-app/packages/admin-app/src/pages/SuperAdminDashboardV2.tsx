@@ -485,11 +485,32 @@ function TenantDetailModal({
     let cancelled = false;
     (async () => {
       try {
-        const data = await apiFetch<TenantDetail>(`/tenants/${tenantId}/stats`);
-        if (!cancelled) {
-          setDetail(data);
-          setEditName(data.name);
-        }
+        // API returns { tenant, stats, users, domains } — flatten into the
+        // shape the modal reads. Field renames: storageUsedBytes → storageUsed,
+        // dbSizeBytes → dbSize. `verified` stays as `verified` on domains.
+        type ApiResponse = {
+          tenant: { id: string; slug: string; name: string; plan: string; isActive: boolean; createdAt: string };
+          stats: {
+            sermonCount: number; userCount: number; fileCount: number;
+            storageUsedBytes: number; dbSizeBytes: number;
+          };
+          users: TenantDetail['users'];
+          domains: { id: string; domain: string; isVerified: boolean }[];
+        };
+        const data = await apiFetch<ApiResponse>(`/tenants/${tenantId}/stats`);
+        if (cancelled) return;
+        const flat: TenantDetail = {
+          ...data.tenant,
+          sermonCount: data.stats.sermonCount,
+          userCount: data.stats.userCount,
+          fileCount: data.stats.fileCount,
+          storageUsed: data.stats.storageUsedBytes,
+          dbSize: data.stats.dbSizeBytes,
+          users: data.users,
+          domains: data.domains.map((d) => ({ id: d.id, domain: d.domain, verified: d.isVerified })),
+        };
+        setDetail(flat);
+        setEditName(flat.name);
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : '상세 정보를 불러올 수 없습니다.');
       } finally {
