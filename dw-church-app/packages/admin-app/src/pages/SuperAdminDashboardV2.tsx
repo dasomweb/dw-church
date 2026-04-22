@@ -557,6 +557,9 @@ function TenantDetailModal({
   };
 
   const siteUrl = detail ? `https://${detail.slug}.truelight.app` : '#';
+  // Same-origin: opening /?tenant=<slug> triggers SwitchTenantPage, which calls
+  // /api/v1/auth/switch-tenant and drops the super admin into that tenant's admin.
+  const tenantAdminUrl = detail ? `/?tenant=${detail.slug}` : '#';
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
@@ -699,12 +702,18 @@ function TenantDetailModal({
                 사이트 방문
               </a>
               <a
+                href={tenantAdminUrl}
+                className="flex-1 text-center bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+              >
+                관리자 페이지
+              </a>
+              <a
                 href={`${siteUrl}/sermons`}
                 target="_blank"
                 rel="noreferrer"
                 className="px-4 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200 transition-colors"
               >
-                설교 페이지
+                설교
               </a>
             </div>
           </div>
