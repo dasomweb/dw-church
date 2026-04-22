@@ -261,9 +261,48 @@ function CreateChurchModal({
     ownerName: '',
     plan: 'free',
   });
+  const [slugCheck, setSlugCheck] = useState<
+    { state: 'idle' } | { state: 'checking' } | { state: 'ok' } | { state: 'bad'; reason: string }
+  >({ state: 'idle' });
+
+  // Debounced slug availability lookup.
+  useEffect(() => {
+    if (!form.slug) { setSlugCheck({ state: 'idle' }); return; }
+    setSlugCheck({ state: 'checking' });
+    const handle = setTimeout(async () => {
+      try {
+        const result = await apiFetch<{ available: boolean; reason?: string }>(
+          `/tenants/check-slug?slug=${encodeURIComponent(form.slug)}`,
+        );
+        if (result.available) setSlugCheck({ state: 'ok' });
+        else setSlugCheck({ state: 'bad', reason: result.reason ?? 'invalid_format' });
+      } catch {
+        setSlugCheck({ state: 'idle' });
+      }
+    }, 350);
+    return () => clearTimeout(handle);
+  }, [form.slug, apiFetch]);
+
+  const slugMessage = (() => {
+    if (slugCheck.state === 'checking') return { text: '확인 중…', cls: 'text-gray-500' };
+    if (slugCheck.state === 'ok')       return { text: '사용 가능합니다', cls: 'text-green-600' };
+    if (slugCheck.state === 'bad') {
+      const map: Record<string, string> = {
+        taken: '이미 사용 중인 slug입니다',
+        reserved: '시스템 예약어입니다 (admin, api, www 등)',
+        invalid_format: '소문자/숫자/하이픈/언더스코어만 사용, 2글자 이상',
+        empty: 'slug를 입력하세요',
+      };
+      return { text: map[slugCheck.reason] ?? '사용할 수 없습니다', cls: 'text-red-600' };
+    }
+    return null;
+  })();
+
+  const canSubmit = slugCheck.state === 'ok' && !loading;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canSubmit) return;
     setLoading(true);
     try {
       await apiFetch('/tenants', {
@@ -302,14 +341,25 @@ function CreateChurchModal({
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Slug *</label>
-            <input
-              required
-              value={form.slug}
-              onChange={(e) => set('slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-              placeholder="bethelfaith"
-            />
-            <p className="text-xs text-gray-400 mt-0.5">{form.slug || 'slug'}.truelight.app</p>
+            <div className="relative">
+              <input
+                required
+                value={form.slug}
+                onChange={(e) => set('slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                className={`w-full border rounded-lg px-3 py-2 pr-8 text-sm font-mono outline-none focus:ring-2 ${
+                  slugCheck.state === 'ok'  ? 'border-green-400 focus:ring-green-500 focus:border-green-500' :
+                  slugCheck.state === 'bad' ? 'border-red-400 focus:ring-red-500 focus:border-red-500' :
+                                              'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                }`}
+                placeholder="bethelfaith"
+              />
+              {slugCheck.state === 'ok'  && <span className="absolute right-2 top-1/2 -translate-y-1/2 text-green-600">✓</span>}
+              {slugCheck.state === 'bad' && <span className="absolute right-2 top-1/2 -translate-y-1/2 text-red-600">✗</span>}
+            </div>
+            <div className="flex items-center justify-between text-xs mt-0.5">
+              <span className="text-gray-400">{form.slug || 'slug'}.truelight.app</span>
+              {slugMessage && <span className={slugMessage.cls}>{slugMessage.text}</span>}
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">관리자 이메일 *</label>
@@ -345,8 +395,8 @@ function CreateChurchModal({
           <div className="flex gap-2 pt-2">
             <button
               type="submit"
-              disabled={loading}
-              className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              disabled={!canSubmit}
+              className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? '생성 중...' : '교회 생성'}
             </button>
