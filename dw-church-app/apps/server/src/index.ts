@@ -139,6 +139,18 @@ async function main(): Promise<void> {
     app.log.warn(`Hero banner migration skipped: ${err}`);
   }
 
+  // --- One-time migration: add password_expires_at column to users table ---
+  // Must run BEFORE any Prisma query against User — the generated client
+  // includes the column in SELECT statements and would fail on an older DB.
+  // Safe to run repeatedly (IF NOT EXISTS).
+  try {
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "password_expires_at" TIMESTAMPTZ`,
+    );
+  } catch (err) {
+    app.log.warn(`password_expires_at column migration skipped: ${err}`);
+  }
+
   // --- Ensure super_admin users are always active ---
   try {
     await prisma.user.updateMany({
