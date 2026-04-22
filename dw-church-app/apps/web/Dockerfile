@@ -30,7 +30,7 @@ COPY --from=deps /app/packages/ui-components/node_modules ./packages/ui-componen
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 
 # Copy source for workspace packages needed by web
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.base.json ./
 COPY packages/api-client/ packages/api-client/
 COPY packages/ui-components/ packages/ui-components/
 COPY apps/web/ apps/web/
