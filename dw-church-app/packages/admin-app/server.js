@@ -16,11 +16,11 @@ if (!API_TARGET) {
 const app = express();
 
 app.use(
-  '/api',
   createProxyMiddleware({
     target: API_TARGET,
     changeOrigin: true,
     xfwd: true,
+    pathFilter: '/api',
   }),
 );
 

@@ -47,7 +47,10 @@ ENV PORT=3000
 
 COPY --from=builder /app/packages/admin-app/dist ./dist
 COPY --from=builder /app/packages/admin-app/server.js ./server.js
-COPY --from=builder /app/packages/admin-app/node_modules ./node_modules
+
+# Install only the runtime deps needed by server.js — avoids pnpm workspace
+# symlink gymnastics. Two packages, pinned to major versions.
+RUN npm install --omit=dev --no-package-lock express@4 http-proxy-middleware@3
 
 EXPOSE 3000
 CMD ["node", "server.js"]

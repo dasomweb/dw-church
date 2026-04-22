@@ -16,7 +16,7 @@ import { describe, it, expect, vi } from 'vitest';
 describe('CORS config', () => {
   it('is allow-all with credentials disabled', async () => {
     const { corsOptions } = await import('../../cors.js');
-    expect(corsOptions.origin).toBe(true);
+    expect(corsOptions.origin).toBe('*');
     expect(corsOptions.credentials).toBe(false);
   });
 });
