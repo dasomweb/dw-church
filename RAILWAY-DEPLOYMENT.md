@@ -82,18 +82,15 @@ Railway 프로젝트 → New Service → GitHub Repo → dasomweb/dw-church
 - **Dockerfile Path**: `dw-church-app/packages/admin-app/Dockerfile`
 - **Build Context**: `dw-church-app/`
 
-### 3단계: Build Args
-Railway Service → Settings → Variables → Build Variables
-```
-VITE_API_BASE_URL=https://api.truelight.app
-```
-⚠️ Vite는 빌드 타임에 환경변수를 번들에 주입합니다. Runtime 변수 아님.
-
-### 4단계: Runtime Env Vars
+### 3단계: Runtime Env Vars
 ```
 NODE_ENV=production
 PORT=3000
+API_SERVER_URL=http://api-server.railway.internal:3000
 ```
+⚠️ admin 서비스는 정적 파일 + `/api/*` 프록시를 겸하는 Node 서버입니다.
+브라우저는 admin과 같은 origin으로 API를 호출하므로 CORS가 필요 없습니다.
+`VITE_API_BASE_URL`은 빌드 시에 필요 없음 — 프런트엔드는 `window.location.origin`을 기본값으로 사용.
 
 ### 5단계: Custom Domain
 ```
@@ -142,7 +139,8 @@ SENTRY_DSN=https://...
 # Runtime
 PORT=3000
 NODE_ENV=production
-CORS_ORIGINS=https://admin.truelight.app,https://truelight.app
+# CORS_ORIGINS 제거됨 — api-server는 origin: '*' (embed.js용). admin/web은
+# same-origin 프록시로 호출하므로 CORS 자체가 불필요.
 ```
 
 ---
