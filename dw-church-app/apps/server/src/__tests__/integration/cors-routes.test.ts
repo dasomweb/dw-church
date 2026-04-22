@@ -10,49 +10,14 @@
 import { describe, it, expect, vi } from 'vitest';
 
 // ═══════════════════════════════════════════════════════════
-// 1. CORS origin validation
+// 1. CORS — allow-all (admin/web are same-origin; embed.js is public read-only)
 // ═══════════════════════════════════════════════════════════
 
-describe('CORS origin validation', () => {
-  // Re-implement CORS origin check from cors.ts
-  function isOriginAllowed(origin: string | undefined, corsOrigins: string[] = []): boolean {
-    if (!origin) return true; // server-to-server
-    if (origin.endsWith('.truelight.app')) return true;
-    if (origin === 'https://truelight.app') return true;
-    if (origin.startsWith('http://localhost')) return true;
-    if (corsOrigins.includes(origin)) return true;
-    return false;
-  }
-
-  it('allows *.truelight.app subdomains', () => {
-    expect(isOriginAllowed('https://admin.truelight.app')).toBe(true);
-    expect(isOriginAllowed('https://grace.truelight.app')).toBe(true);
-    expect(isOriginAllowed('https://bethelfaith.truelight.app')).toBe(true);
-    expect(isOriginAllowed('https://api.truelight.app')).toBe(true);
-  });
-
-  it('allows bare truelight.app', () => {
-    expect(isOriginAllowed('https://truelight.app')).toBe(true);
-  });
-
-  it('allows localhost (any port)', () => {
-    expect(isOriginAllowed('http://localhost:3000')).toBe(true);
-    expect(isOriginAllowed('http://localhost:3001')).toBe(true);
-    expect(isOriginAllowed('http://localhost')).toBe(true);
-  });
-
-  it('allows env-configured origins', () => {
-    expect(isOriginAllowed('https://custom.com', ['https://custom.com'])).toBe(true);
-  });
-
-  it('blocks unknown origins', () => {
-    expect(isOriginAllowed('https://evil-site.com')).toBe(false);
-    expect(isOriginAllowed('https://truelight.app.evil.com')).toBe(false);
-    expect(isOriginAllowed('https://nottruelight.app')).toBe(false);
-  });
-
-  it('allows requests without origin (server-to-server)', () => {
-    expect(isOriginAllowed(undefined)).toBe(true);
+describe('CORS config', () => {
+  it('is allow-all with credentials disabled', async () => {
+    const { corsOptions } = await import('../../cors.js');
+    expect(corsOptions.origin).toBe(true);
+    expect(corsOptions.credentials).toBe(false);
   });
 });
 

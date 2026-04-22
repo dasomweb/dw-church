@@ -125,12 +125,7 @@ function TenantSwitcher() {
     const tenantSlug = params.get('tenant');
     if (!tenantSlug || !session?.accessToken) return;
 
-    const host = window.location.hostname;
-    const baseUrl = host.startsWith('admin.')
-      ? `https://api.${host.replace('admin.', '')}`
-      : (import.meta.env.VITE_API_BASE_URL as string) || '';
-
-    fetch(`${baseUrl}/api/v1/auth/switch-tenant`, {
+    fetch(`/api/v1/auth/switch-tenant`, {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${session.accessToken}`,

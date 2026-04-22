@@ -43,10 +43,6 @@ const envSchema = z.object({
   NODE_ENV: z
     .enum(['development', 'production', 'test'])
     .default('development'),
-  CORS_ORIGINS: z
-    .string()
-    .default('http://localhost:3000')
-    .transform((val) => val.split(',').map((s) => s.trim())),
 });
 
 export type Env = z.infer<typeof envSchema>;

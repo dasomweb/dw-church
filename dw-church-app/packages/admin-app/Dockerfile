@@ -1,6 +1,6 @@
 # ──────────────────────────────────────────────
 # Admin App (Vite SPA) — Railway Deployment
-# Serves admin.truelight.app
+# Serves admin.truelight.app with same-origin /api proxy
 # ──────────────────────────────────────────────
 
 FROM node:20-slim AS base
@@ -17,7 +17,6 @@ COPY packages/api-client/package.json packages/api-client/
 COPY packages/ui-components/package.json packages/ui-components/
 COPY packages/admin-app/package.json packages/admin-app/
 COPY packages/wp-plugin/package.json packages/wp-plugin/
-# wp-connector is a WordPress plugin (PHP), not a workspace package
 
 RUN pnpm install --frozen-lockfile
 
@@ -33,31 +32,22 @@ COPY packages/api-client/ packages/api-client/
 COPY packages/ui-components/ packages/ui-components/
 COPY packages/admin-app/ packages/admin-app/
 
-# Build workspace dependencies (JS only — skip tsc type declaration step
-# which has pre-existing type errors that don't affect runtime)
 RUN cd packages/api-client && pnpm build:js
 RUN cd packages/ui-components && pnpm build:js
 
-# Build the Vite SPA (dist/)
-# Accept VITE_API_BASE_URL at build time (Vite embeds it into the bundle)
-ARG VITE_API_BASE_URL=https://api.truelight.app
-ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+# Build Vite SPA — no VITE_API_BASE_URL needed, frontend uses same-origin /api
 RUN cd packages/admin-app && pnpm build
 
-# ─── Production (static server) ───────────────
+# ─── Production (static + proxy) ──────────────
 FROM node:20-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Lightweight static file server with SPA fallback
-RUN npm install -g serve@14
-
 COPY --from=builder /app/packages/admin-app/dist ./dist
+COPY --from=builder /app/packages/admin-app/server.js ./server.js
+COPY --from=builder /app/packages/admin-app/node_modules ./node_modules
 
 EXPOSE 3000
-
-# -s = SPA mode (all routes fallback to index.html)
-# -l = listen on port
-CMD ["serve", "-s", "dist", "-l", "3000"]
+CMD ["node", "server.js"]

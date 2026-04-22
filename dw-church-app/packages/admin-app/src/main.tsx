@@ -9,13 +9,12 @@ const rootEl =
   document.getElementById('root');
 
 if (rootEl) {
-  // API base URL: env var → data attribute → production default → current origin
+  // API base URL: WordPress embed → env override (dev only) → same-origin (prod)
+  // Production: admin service proxies /api/* to api-server via Railway internal network.
   const resolveBaseUrl = (): string => {
     if (rootEl.dataset.restUrl) return rootEl.dataset.restUrl;
-    if (import.meta.env.VITE_API_BASE_URL) return import.meta.env.VITE_API_BASE_URL as string;
-    // Production fallback: admin.truelight.app → api.truelight.app
-    if (window.location.hostname.startsWith('admin.')) {
-      return window.location.origin.replace('admin.', 'api.');
+    if (import.meta.env.DEV && import.meta.env.VITE_API_BASE_URL) {
+      return import.meta.env.VITE_API_BASE_URL as string;
     }
     return window.location.origin;
   };
