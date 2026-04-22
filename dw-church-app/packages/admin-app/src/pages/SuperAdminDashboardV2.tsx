@@ -466,21 +466,30 @@ function EditTenantModal({
 function TenantDetailModal({
   tenantId,
   onClose,
+  onUpdated,
 }: {
   tenantId: string;
   onClose: () => void;
+  onUpdated?: () => void;
 }) {
   const apiFetch = useAdminApi();
+  const { showToast } = useToast();
   const [detail, setDetail] = useState<TenantDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [savingPlan, setSavingPlan] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [savingName, setSavingName] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         const data = await apiFetch<TenantDetail>(`/tenants/${tenantId}/stats`);
-        if (!cancelled) setDetail(data);
+        if (!cancelled) {
+          setDetail(data);
+          setEditName(data.name);
+        }
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : '상세 정보를 불러올 수 없습니다.');
       } finally {
@@ -489,6 +498,42 @@ function TenantDetailModal({
     })();
     return () => { cancelled = true; };
   }, [apiFetch, tenantId]);
+
+  const handlePlanChange = async (newPlan: string) => {
+    if (!detail || savingPlan) return;
+    setSavingPlan(true);
+    try {
+      await apiFetch(`/tenants/${tenantId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ plan: newPlan }),
+      });
+      setDetail({ ...detail, plan: newPlan });
+      showToast('success', `플랜이 ${newPlan.toUpperCase()}로 변경되었습니다.`);
+      onUpdated?.();
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '플랜 변경 실패');
+    } finally {
+      setSavingPlan(false);
+    }
+  };
+
+  const handleNameSave = async () => {
+    if (!detail || savingName || editName === detail.name || !editName.trim()) return;
+    setSavingName(true);
+    try {
+      await apiFetch(`/tenants/${tenantId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ name: editName.trim() }),
+      });
+      setDetail({ ...detail, name: editName.trim() });
+      showToast('success', '교회 이름이 변경되었습니다.');
+      onUpdated?.();
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '이름 변경 실패');
+    } finally {
+      setSavingName(false);
+    }
+  };
 
   const siteUrl = detail ? `https://${detail.slug}.truelight.app` : '#';
 
@@ -505,17 +550,53 @@ function TenantDetailModal({
 
         {detail && (
           <div className="space-y-5">
-            {/* Basic Info */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+            {/* Editable: Church Name */}
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">교회 이름</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="flex-1 border rounded-lg px-3 py-2 text-sm"
+                />
+                <button
+                  onClick={handleNameSave}
+                  disabled={savingName || editName === detail.name || !editName.trim()}
+                  className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {savingName ? '저장 중...' : '저장'}
+                </button>
+              </div>
+            </div>
+
+            {/* Editable: Plan */}
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">플랜</label>
+              <div className="flex gap-2">
+                {['free', 'basic', 'pro', 'enterprise'].map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => handlePlanChange(p)}
+                    disabled={savingPlan || detail.plan === p}
+                    className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                      detail.plan === p
+                        ? 'bg-blue-600 text-white ring-2 ring-blue-300'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    } disabled:opacity-50`}
+                  >
+                    {p.toUpperCase()}
+                    {detail.plan === p && <span className="ml-1">✓</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Basic Info (readonly) */}
+            <div className="grid grid-cols-3 gap-3 text-sm">
               <div className="bg-gray-50 rounded-lg p-3">
                 <p className="text-gray-500 text-xs">Slug</p>
                 <p className="font-mono font-medium">{detail.slug}</p>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-gray-500 text-xs">플랜</p>
-                <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${PLAN_COLORS[detail.plan] || 'bg-gray-100'}`}>
-                  {detail.plan.toUpperCase()}
-                </span>
               </div>
               <div className="bg-gray-50 rounded-lg p-3">
                 <p className="text-gray-500 text-xs">상태</p>
@@ -1028,26 +1109,23 @@ function TenantsTab() {
                     <td className="px-5 py-3 text-gray-500 text-xs">{t.lastActivityAt ? formatDate(t.lastActivityAt) : '-'}</td>
                     <td className="px-5 py-3">
                       <div className="flex gap-1">
+                        {/* 보기 — 테넌트 상세 정보 모달 */}
                         <button
                           onClick={() => setViewingTenantId(t.id)}
                           className="px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                          title="테넌트 상세 정보"
                         >
-                          상세
+                          보기
                         </button>
+                        {/* 관리 — 해당 tenant 어드민 페이지로 이동 */}
                         <button
                           onClick={() => {
-                            // Open tenant admin page in new window (switch-tenant then redirect)
-                            window.open(`${window.location.origin}/?tenant=${t.slug}`, '_blank');
+                            window.location.href = `${window.location.origin}/?tenant=${t.slug}`;
                           }}
-                          className="px-2 py-1 text-xs text-indigo-600 hover:bg-indigo-50 rounded transition-colors font-medium"
+                          className="px-2.5 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors font-medium"
+                          title={`${t.name} 관리자 페이지로 이동`}
                         >
                           관리
-                        </button>
-                        <button
-                          onClick={() => setEditingTenant(t)}
-                          className="px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                        >
-                          수정
                         </button>
                         <button
                           onClick={() => handleToggleActive(t)}
@@ -1098,7 +1176,7 @@ function TenantsTab() {
 
       {/* Modals */}
       {viewingTenantId && (
-        <TenantDetailModal tenantId={viewingTenantId} onClose={() => setViewingTenantId(null)} />
+        <TenantDetailModal tenantId={viewingTenantId} onClose={() => setViewingTenantId(null)} onUpdated={() => void fetchTenants()} />
       )}
       {editingTenant && (
         <EditTenantModal
