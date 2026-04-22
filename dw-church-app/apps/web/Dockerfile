@@ -35,8 +35,10 @@ COPY packages/api-client/ packages/api-client/
 COPY packages/ui-components/ packages/ui-components/
 COPY apps/web/ apps/web/
 
-# Note: apps/web uses Next.js `transpilePackages` to consume workspace
-# packages directly from source — no prebuild needed for api-client / ui-components.
+# Build workspace dependencies first (dist/ required by package.json exports)
+# Skip tsc declarations (build:js) — type errors in source don't affect runtime
+RUN cd packages/api-client && pnpm build:js
+RUN cd packages/ui-components && pnpm build:js
 
 # Build Next.js (standalone output)
 ENV NEXT_TELEMETRY_DISABLED=1
