@@ -1,0 +1,18 @@
+# Railway config for Next.js web app
+# Deploy: railway up --service web
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "apps/web/Dockerfile"
+# Build from the monorepo root so Dockerfile has access to workspace packages
+
+[deploy]
+startCommand = "node apps/web/server.js"
+healthcheckPath = "/"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+
+# Custom domains configured in Railway dashboard:
+#   - truelight.app (root)
+#   - *.truelight.app (wildcard — tenant subdomains)

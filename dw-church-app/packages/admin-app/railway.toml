@@ -1,0 +1,16 @@
+# Railway config for Admin SPA (Vite)
+# Deploy: railway up --service admin
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "packages/admin-app/Dockerfile"
+
+[deploy]
+startCommand = "serve -s dist -l 3000"
+healthcheckPath = "/"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+
+# Custom domain: admin.truelight.app
+# Build-time env var VITE_API_BASE_URL embedded during Docker build (ARG)

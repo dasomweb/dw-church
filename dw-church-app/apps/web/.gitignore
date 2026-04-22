@@ -1,0 +1,18 @@
+# Next.js build output
+.next/
+out/
+
+# Vercel
+.vercel/
+
+# Local env
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
