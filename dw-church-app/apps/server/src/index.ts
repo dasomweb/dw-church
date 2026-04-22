@@ -147,6 +147,23 @@ async function main(): Promise<void> {
     });
   } catch { /* ignore */ }
 
+  // --- Backfill support user for any tenant that's missing one ---
+  try {
+    const { ensureSupportUser } = await import('./modules/tenants/support-user.js');
+    const tenants = await prisma.tenant.findMany({ select: { id: true, slug: true } });
+    let created = 0;
+    for (const t of tenants) {
+      const before = await prisma.user.count({ where: { email: `support-${t.slug}@truelight.app` } });
+      if (before === 0) {
+        await ensureSupportUser(t.id, t.slug);
+        created++;
+      }
+    }
+    if (created > 0) app.log.info(`Support user backfilled for ${created} tenant(s)`);
+  } catch (err) {
+    app.log.warn(`Support user backfill skipped: ${err}`);
+  }
+
   // --- Ensure settings.key has UNIQUE constraint ---
   try {
     const schemas = await prisma.$queryRawUnsafe<{ schema_name: string }[]>(

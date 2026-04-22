@@ -26,4 +26,7 @@ COPY dw-church-app/apps/server/vitest.config.ts apps/server/
 RUN cd apps/server && rm -rf dist && pnpm db:generate && pnpm build
 
 EXPOSE 3000
-CMD ["node", "apps/server/dist/index.js"]
+# Run pending migrations before booting the server. Prisma's `migrate deploy`
+# is idempotent — it only applies migrations that aren't yet in the
+# _prisma_migrations table. Fails fast (&&) if migration step errors.
+CMD ["sh", "-c", "cd apps/server && pnpm db:migrate:deploy && cd /app && node apps/server/dist/index.js"]

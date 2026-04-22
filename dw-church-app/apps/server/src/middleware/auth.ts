@@ -67,7 +67,9 @@ export async function requireAuth(
 }
 
 /**
- * Require admin or owner role. super_admin has all permissions.
+ * Require admin, owner, or support role. super_admin has all permissions.
+ * support = per-tenant maintenance account provisioned for the super admin;
+ * same content-edit scope as admin, but requireOwner excludes it.
  */
 export async function requireAdmin(
   request: FastifyRequest,
@@ -75,7 +77,7 @@ export async function requireAdmin(
 ): Promise<void> {
   await requireAuth(request, reply);
   const role = request.user?.role;
-  if (role !== 'admin' && role !== 'owner' && role !== 'super_admin') {
+  if (role !== 'admin' && role !== 'owner' && role !== 'support' && role !== 'super_admin') {
     throw new AppError('FORBIDDEN', 403, 'Admin access required');
   }
 }

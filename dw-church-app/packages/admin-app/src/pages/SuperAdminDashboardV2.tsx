@@ -480,6 +480,9 @@ function TenantDetailModal({
   const [savingPlan, setSavingPlan] = useState(false);
   const [editName, setEditName] = useState('');
   const [savingName, setSavingName] = useState(false);
+  const [supportInfo, setSupportInfo] = useState<{ email: string; active: boolean; expiresAt: string | null } | null>(null);
+  const [rotatedPassword, setRotatedPassword] = useState<{ password: string; expiresAt: string } | null>(null);
+  const [rotating, setRotating] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -553,6 +556,49 @@ function TenantDetailModal({
       showToast('error', err instanceof Error ? err.message : '이름 변경 실패');
     } finally {
       setSavingName(false);
+    }
+  };
+
+  // Load support-user status whenever the modal opens for a tenant.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const info = await apiFetch<{ email: string; active: boolean; expiresAt: string | null }>(
+          `/tenants/${tenantId}/support-info`,
+        );
+        if (!cancelled) setSupportInfo(info);
+      } catch {
+        // non-fatal — section just won't render
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [apiFetch, tenantId]);
+
+  const handleRotatePassword = async () => {
+    if (rotating) return;
+    setRotating(true);
+    try {
+      const result = await apiFetch<{ email: string; password: string; expiresAt: string }>(
+        `/tenants/${tenantId}/rotate-support-password`,
+        { method: 'POST' },
+      );
+      setRotatedPassword({ password: result.password, expiresAt: result.expiresAt });
+      setSupportInfo({ email: result.email, active: true, expiresAt: result.expiresAt });
+      showToast('success', '임시 비밀번호가 발급되었습니다. 지금 복사해두세요.');
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '비밀번호 발급 실패');
+    } finally {
+      setRotating(false);
+    }
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('success', '클립보드에 복사되었습니다.');
+    } catch {
+      showToast('error', '복사에 실패했습니다.');
     }
   };
 
@@ -688,6 +734,60 @@ function TenantDetailModal({
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Support access — per-tenant maintenance account */}
+            {supportInfo && (
+              <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold text-indigo-900">지원 계정 (유지보수용)</h4>
+                  {supportInfo.active && supportInfo.expiresAt ? (
+                    <span className="text-xs text-indigo-700">
+                      만료: {new Date(supportInfo.expiresAt).toLocaleString('ko-KR')}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-gray-500">비밀번호 미발급</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 bg-white border border-indigo-200 rounded px-2 py-1.5 text-xs font-mono text-indigo-900">
+                    {supportInfo.email}
+                  </code>
+                  <button
+                    onClick={() => copyToClipboard(supportInfo.email)}
+                    className="px-2 py-1.5 text-xs bg-white border border-indigo-200 rounded hover:bg-indigo-100"
+                  >
+                    복사
+                  </button>
+                </div>
+                {rotatedPassword && (
+                  <div className="flex items-center gap-2 rounded bg-amber-50 border border-amber-300 p-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] text-amber-800 font-semibold mb-0.5">⚠ 지금만 표시됩니다 — 24시간 후 자동 만료</p>
+                      <code className="block truncate text-xs font-mono text-amber-900">
+                        {rotatedPassword.password}
+                      </code>
+                    </div>
+                    <button
+                      onClick={() => copyToClipboard(rotatedPassword.password)}
+                      className="shrink-0 px-2 py-1 text-xs bg-amber-600 text-white rounded hover:bg-amber-700 font-medium"
+                    >
+                      복사
+                    </button>
+                  </div>
+                )}
+                <button
+                  onClick={handleRotatePassword}
+                  disabled={rotating}
+                  className="w-full py-1.5 text-xs font-medium bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
+                >
+                  {rotating ? '발급 중...' : supportInfo.active ? '새 비밀번호 재발급 (이전 무효화)' : '임시 비밀번호 발급 (24시간 유효)'}
+                </button>
+                <p className="text-[11px] text-indigo-700 leading-tight">
+                  위 계정으로 로그인하면 이 교회의 관리자 페이지에 접근할 수 있습니다.
+                  슈퍼어드민 계정과 분리되어 각 교회별로 작업 이력이 남습니다.
+                </p>
               </div>
             )}
 

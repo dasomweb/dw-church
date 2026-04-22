@@ -123,6 +123,12 @@ export async function login(input: LoginInput) {
     throw new AppError('LOGIN_FAILED', 401, 'Invalid email or password');
   }
 
+  // Time-boxed credentials (e.g. tenant support users). A null value means
+  // "never expires" (all normal users). Non-null + past = reject.
+  if (user.passwordExpiresAt && user.passwordExpiresAt.getTime() < Date.now()) {
+    throw new AppError('LOGIN_FAILED', 401, 'Invalid email or password');
+  }
+
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) {
     throw new AppError('LOGIN_FAILED', 401, 'Invalid email or password');

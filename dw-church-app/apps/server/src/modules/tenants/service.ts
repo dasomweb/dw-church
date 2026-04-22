@@ -6,6 +6,7 @@ import {
   deleteTenantSchema,
 } from '../../utils/schema-manager.js';
 import { deleteFilesByPrefix } from '../../config/r2.js';
+import { ensureSupportUser } from './support-user.js';
 import type { CreateTenantInput, UpdateTenantInput } from './schema.js';
 
 const BCRYPT_ROUNDS = 12;
@@ -114,6 +115,10 @@ export async function createTenant(input: CreateTenantInput) {
 
   // Provision schema
   await createTenantSchemaFn(slug);
+
+  // Per-tenant support user for super admin maintenance access (disabled until
+  // a password is rotated by the super admin from the detail modal).
+  await ensureSupportUser(tenant.id, slug);
 
   return tenant;
 }

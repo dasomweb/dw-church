@@ -81,6 +81,49 @@ export default async function tenantRoutes(app: FastifyInstance): Promise<void> 
     },
   );
 
+  // ─── Per-tenant support user (super admin maintenance access) ────
+
+  // GET /admin/tenants/:id/support-info — email + active password status
+  app.get<{ Params: { id: string } }>(
+    '/tenants/:id/support-info',
+    async (request, reply) => {
+      const tenant = await prisma.tenant.findUnique({ where: { id: request.params.id } });
+      if (!tenant) throw new AppError('NOT_FOUND', 404, 'Tenant not found');
+      const { supportEmailFor, ensureSupportUser } = await import('./support-user.js');
+      await ensureSupportUser(tenant.id, tenant.slug);
+      const email = supportEmailFor(tenant.slug);
+      const user = await prisma.user.findUnique({
+        where: { email },
+        select: { passwordExpiresAt: true },
+      });
+      const now = Date.now();
+      const expiresAt = user?.passwordExpiresAt ?? null;
+      const active = expiresAt !== null && expiresAt.getTime() > now;
+      return reply.send({ email, active, expiresAt: expiresAt?.toISOString() ?? null });
+    },
+  );
+
+  // POST /admin/tenants/:id/rotate-support-password — generate 24h password
+  app.post<{ Params: { id: string } }>(
+    '/tenants/:id/rotate-support-password',
+    async (request, reply) => {
+      const tenant = await prisma.tenant.findUnique({ where: { id: request.params.id } });
+      if (!tenant) throw new AppError('NOT_FOUND', 404, 'Tenant not found');
+      const { ensureSupportUser, rotateSupportPassword } = await import('./support-user.js');
+      await ensureSupportUser(tenant.id, tenant.slug);
+      const creds = await rotateSupportPassword(tenant.slug);
+      request.log.info(
+        { superAdminEmail: request.user?.email, tenantSlug: tenant.slug },
+        'support password rotated',
+      );
+      return reply.send({
+        email: creds.email,
+        password: creds.password,
+        expiresAt: creds.expiresAt.toISOString(),
+      });
+    },
+  );
+
   // ─── Domain management ───────────────────────────────────────
 
   // GET /admin/domains — List all domains across all tenants
