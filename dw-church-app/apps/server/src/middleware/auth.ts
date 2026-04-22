@@ -33,6 +33,23 @@ async function resolveUser(
     role: payload.role ?? 'member',
   };
 
+  // Cross-tenant protection:
+  // tenantMiddleware (global preHandler) may have resolved request.tenant
+  // from the X-Tenant-Slug header BEFORE auth ran. For authenticated users,
+  // the JWT's tenantSlug is the source of truth — if the header-resolved
+  // tenant disagrees, the user was trying to read a tenant they don't own.
+  // Override with the JWT's tenant, or 403 for role 'support' (the narrow
+  // per-tenant maintenance role must never cross tenants, even by accident).
+  if (payload.tenantSlug && request.tenant && request.tenant.slug !== payload.tenantSlug) {
+    if (payload.role === 'support') {
+      throw new AppError('FORBIDDEN', 403, 'Support session cannot access another tenant');
+    }
+    // super_admin and other cross-tenant-capable roles get silently rebound
+    // to their JWT tenant; the mismatched header was either stale or hostile.
+    request.tenant = undefined;
+    request.tenantSchema = undefined;
+  }
+
   // If tenant middleware didn't resolve tenant (e.g. api.truelight.app),
   // fill it from JWT token
   if (!request.tenant && payload.tenantSlug) {

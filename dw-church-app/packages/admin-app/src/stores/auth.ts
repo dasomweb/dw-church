@@ -7,6 +7,23 @@ const SESSION_KEY = 'dw-church-session';
 /** 5 minutes in milliseconds */
 const REFRESH_THRESHOLD_MS = 5 * 60 * 1000;
 
+// Per-tab session storage. Using sessionStorage (not localStorage) means:
+//   - Super admin, tenant A admin, tenant B support access, etc. can all be
+//     logged in simultaneously in different tabs without overwriting each other.
+//   - Closing a tab drops its session (stricter security model, acceptable
+//     tradeoff — refresh tokens are still available for same-tab reloads).
+// One-time migration: if a legacy localStorage session exists, copy it into
+// sessionStorage so the current tab doesn't appear logged out on first load.
+if (typeof window !== 'undefined') {
+  try {
+    const legacy = localStorage.getItem(SESSION_KEY);
+    if (legacy && !sessionStorage.getItem(SESSION_KEY)) {
+      sessionStorage.setItem(SESSION_KEY, legacy);
+    }
+    localStorage.removeItem(SESSION_KEY);
+  } catch { /* storage unavailable */ }
+}
+
 interface AuthState {
   session: AuthSession | null;
   isAuthenticated: boolean;
@@ -24,21 +41,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   setSession: (session) => {
     if (session) {
-      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
     } else {
-      localStorage.removeItem(SESSION_KEY);
+      sessionStorage.removeItem(SESSION_KEY);
     }
     set({ session, isAuthenticated: !!session, isLoading: false });
   },
 
   logout: () => {
-    localStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
     set({ session: null, isAuthenticated: false, isLoading: false });
   },
 
   hydrate: () => {
     try {
-      const raw = localStorage.getItem(SESSION_KEY);
+      const raw = sessionStorage.getItem(SESSION_KEY);
       if (raw) {
         const session: AuthSession = JSON.parse(raw);
         const now = Date.now();
@@ -61,7 +78,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch {
       // corrupted data
     }
-    localStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
     set({ session: null, isAuthenticated: false, isLoading: false });
   },
 
@@ -71,11 +88,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     try {
       const newSession = await client.refreshToken(session.refreshToken);
-      localStorage.setItem(SESSION_KEY, JSON.stringify(newSession));
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(newSession));
       set({ session: newSession, isAuthenticated: true, isLoading: false });
     } catch {
       // Refresh failed — clear session
-      localStorage.removeItem(SESSION_KEY);
+      sessionStorage.removeItem(SESSION_KEY);
       set({ session: null, isAuthenticated: false, isLoading: false });
     }
   },

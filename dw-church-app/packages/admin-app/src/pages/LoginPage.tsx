@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useLogin, DWChurchApiError } from '@dw-church/api-client';
 import { useAuthStore } from '../stores/auth';
 
@@ -13,13 +13,25 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const loginMutation = useLogin();
   const setSession = useAuthStore((s) => s.setSession);
+  const [searchParams] = useSearchParams();
+  const prefillEmail = searchParams.get('email') ?? '';
   const [errorMsg, setErrorMsg] = useState('');
+
+  // When the super admin opens this page from the tenant detail modal
+  // (url has ?email=support-<slug>@truelight.app), drop any existing session
+  // so the login form shows instead of redirecting to /super-admin.
+  useEffect(() => {
+    if (prefillEmail) {
+      localStorage.removeItem('dw-church-session');
+      setSession(null);
+    }
+  }, [prefillEmail, setSession]);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginFormData>();
+  } = useForm<LoginFormData>({ defaultValues: { email: prefillEmail } });
 
   const onSubmit = async (data: LoginFormData) => {
     setErrorMsg('');

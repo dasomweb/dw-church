@@ -74,7 +74,12 @@ function PublicOnly({ children }: { children: React.ReactNode }) {
     return <PageLoader />;
   }
 
-  if (isAuthenticated) {
+  // Super admin opens /login?email=support-<slug>@... to switch into a tenant
+  // support session. Don't redirect — let LoginPage clear the current session
+  // and show the form with the email pre-filled.
+  const wantsLoginForm = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('email');
+
+  if (isAuthenticated && !wantsLoginForm) {
     const user = useAuthStore.getState().session?.user;
     return <Navigate to={user?.isSuperAdmin ? '/super-admin' : '/'} replace />;
   }

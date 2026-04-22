@@ -653,9 +653,14 @@ function TenantDetailModal({
   };
 
   const siteUrl = detail ? `https://${detail.slug}.truelight.app` : '#';
-  // Same-origin: opening /?tenant=<slug> triggers SwitchTenantPage, which calls
-  // /api/v1/auth/switch-tenant and drops the super admin into that tenant's admin.
-  const tenantAdminUrl = detail ? `/?tenant=${detail.slug}` : '#';
+  // Opens the login page in a new tab pre-filled with the tenant's support
+  // email. LoginPage detects the `email` query param, clears any existing
+  // session, and shows the login form so the super admin can paste the
+  // just-rotated support password. This keeps audit trails separated: the
+  // tenant admin session is the support user, not the super admin.
+  const tenantAdminUrl = detail
+    ? `/login?email=${encodeURIComponent(`support-${detail.slug}@truelight.app`)}`
+    : '#';
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
@@ -853,6 +858,8 @@ function TenantDetailModal({
               </a>
               <a
                 href={tenantAdminUrl}
+                target="_blank"
+                rel="noreferrer"
                 className="flex-1 text-center bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
               >
                 관리자 페이지
