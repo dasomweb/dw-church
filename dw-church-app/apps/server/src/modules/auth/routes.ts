@@ -22,6 +22,15 @@ export default async function authRoutes(app: FastifyInstance): Promise<void> {
     return reply.status(201).send(result);
   });
 
+  // GET /auth/check-slug?slug=... — public availability check for the self-service
+  // registration form. Same logic as the super-admin-scoped endpoint under
+  // /admin/tenants/check-slug. Only surfaces yes/no + reason, no tenant details.
+  app.get<{ Querystring: { slug?: string } }>('/check-slug', async (request, reply) => {
+    const { checkSlugAvailability } = await import('../tenants/service.js');
+    const result = await checkSlugAvailability(request.query.slug ?? '');
+    return reply.send(result);
+  });
+
   // POST /auth/login
   app.post('/login', async (request, reply) => {
     const body = loginSchema.parse(request.body);

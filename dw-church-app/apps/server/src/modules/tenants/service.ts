@@ -11,6 +11,28 @@ import type { CreateTenantInput, UpdateTenantInput } from './schema.js';
 
 const BCRYPT_ROUNDS = 12;
 
+const SLUG_FORMAT = /^[a-z0-9][a-z0-9_-]{1,62}$/;
+const RESERVED_SLUGS = new Set(['admin', 'api', 'www', 'app', 'support', 'mail', 'billing']);
+
+export type SlugCheckResult =
+  | { available: true }
+  | { available: false; reason: 'empty' | 'invalid_format' | 'reserved' | 'taken' };
+
+/**
+ * Validate a slug against format, reserved words, and uniqueness. Pure DB
+ * lookup + string checks, safe for unauthenticated callers (surface just
+ * yes/no + reason).
+ */
+export async function checkSlugAvailability(raw: string): Promise<SlugCheckResult> {
+  const slug = (raw ?? '').trim().toLowerCase();
+  if (!slug) return { available: false, reason: 'empty' };
+  if (!SLUG_FORMAT.test(slug)) return { available: false, reason: 'invalid_format' };
+  if (RESERVED_SLUGS.has(slug)) return { available: false, reason: 'reserved' };
+  const existing = await prisma.tenant.findFirst({ where: { slug }, select: { id: true } });
+  if (existing) return { available: false, reason: 'taken' };
+  return { available: true };
+}
+
 export async function listTenants(page: number, perPage: number) {
   const skip = (page - 1) * perPage;
 

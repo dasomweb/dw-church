@@ -81,22 +81,13 @@ export default async function tenantRoutes(app: FastifyInstance): Promise<void> 
     },
   );
 
-  // GET /admin/tenants/check-slug?slug=... — live availability check for the create form.
-  // Returns { available, reason? } where reason is one of:
-  //   'empty' | 'invalid_format' | 'reserved' | 'taken'
+  // GET /admin/tenants/check-slug?slug=... — super-admin-scoped live check
+  // (delegates to the shared service helper).
   app.get<{ Querystring: { slug?: string } }>(
     '/tenants/check-slug',
     async (request, reply) => {
-      const raw = (request.query.slug ?? '').trim().toLowerCase();
-      if (!raw) return reply.send({ available: false, reason: 'empty' });
-      const SLUG_FORMAT = /^[a-z0-9][a-z0-9_-]{1,62}$/;
-      if (!SLUG_FORMAT.test(raw)) return reply.send({ available: false, reason: 'invalid_format' });
-      // Reserved — collide with platform hostnames. middleware.ts uses these directly.
-      const RESERVED = new Set(['admin', 'api', 'www', 'app', 'support', 'mail', 'billing']);
-      if (RESERVED.has(raw)) return reply.send({ available: false, reason: 'reserved' });
-      const existing = await prisma.tenant.findFirst({ where: { slug: raw }, select: { id: true } });
-      if (existing) return reply.send({ available: false, reason: 'taken' });
-      return reply.send({ available: true });
+      const result = await tenantService.checkSlugAvailability(request.query.slug ?? '');
+      return reply.send(result);
     },
   );
 

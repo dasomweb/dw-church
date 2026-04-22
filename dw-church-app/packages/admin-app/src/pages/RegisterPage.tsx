@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { useRegister } from '@dw-church/api-client';
@@ -29,10 +29,51 @@ export default function RegisterPage() {
   const watchSlug = watch('slug', '');
   const watchPassword = watch('password');
 
+  // Live slug availability — public /auth/check-slug endpoint, debounced 350ms.
+  const [slugCheck, setSlugCheck] = useState<
+    { state: 'idle' } | { state: 'checking' } | { state: 'ok' } | { state: 'bad'; reason: string }
+  >({ state: 'idle' });
+
+  useEffect(() => {
+    if (!watchSlug) { setSlugCheck({ state: 'idle' }); return; }
+    setSlugCheck({ state: 'checking' });
+    const handle = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/v1/auth/check-slug?slug=${encodeURIComponent(watchSlug)}`);
+        if (!res.ok) { setSlugCheck({ state: 'idle' }); return; }
+        const data = (await res.json()) as { available: boolean; reason?: string };
+        if (data.available) setSlugCheck({ state: 'ok' });
+        else setSlugCheck({ state: 'bad', reason: data.reason ?? 'invalid_format' });
+      } catch {
+        setSlugCheck({ state: 'idle' });
+      }
+    }, 350);
+    return () => clearTimeout(handle);
+  }, [watchSlug]);
+
+  const slugMessage = (() => {
+    if (slugCheck.state === 'checking') return { text: '확인 중…', cls: 'text-gray-500' };
+    if (slugCheck.state === 'ok')       return { text: '사용 가능합니다', cls: 'text-green-600' };
+    if (slugCheck.state === 'bad') {
+      const map: Record<string, string> = {
+        taken: '이미 사용 중입니다',
+        reserved: '시스템 예약어입니다',
+        invalid_format: '소문자/숫자/하이픈/언더스코어만, 2글자 이상',
+        empty: 'slug를 입력하세요',
+      };
+      return { text: map[slugCheck.reason] ?? '사용할 수 없습니다', cls: 'text-red-600' };
+    }
+    return null;
+  })();
+
   const onSubmit = async (data: RegisterFormData) => {
     setErrorMsg('');
     if (data.password !== data.passwordConfirm) {
       setErrorMsg('비밀번호가 일치하지 않습니다.');
+      return;
+    }
+    if (slugCheck.state !== 'ok') {
+      setErrorMsg('사용할 수 없는 slug입니다.');
       return;
     }
     try {
@@ -84,27 +125,36 @@ export default function RegisterPage() {
                 사이트 주소 (slug)
               </label>
               <div className="flex items-center">
-                <input
-                  {...register('slug', {
-                    required: 'slug를 입력하세요',
-                    pattern: {
-                      value: /^[a-z0-9-]+$/,
-                      message: '영문 소문자, 숫자, 하이픈만 사용 가능합니다',
-                    },
-                    minLength: { value: 3, message: '3자 이상 입력하세요' },
-                  })}
-                  className="flex-1 rounded-l-lg border border-r-0 border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-                  placeholder="my-church"
-                />
+                <div className="relative flex-1">
+                  <input
+                    {...register('slug', {
+                      required: 'slug를 입력하세요',
+                      pattern: {
+                        value: /^[a-z0-9-]+$/,
+                        message: '영문 소문자, 숫자, 하이픈만 사용 가능합니다',
+                      },
+                      minLength: { value: 2, message: '2자 이상 입력하세요' },
+                    })}
+                    className={`w-full rounded-l-lg border border-r-0 px-3 py-2 pr-7 text-sm outline-none focus:ring-1 ${
+                      slugCheck.state === 'ok'  ? 'border-green-400 focus:border-green-500 focus:ring-green-500' :
+                      slugCheck.state === 'bad' ? 'border-red-400 focus:border-red-500 focus:ring-red-500' :
+                                                  'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                    }`}
+                    placeholder="my-church"
+                  />
+                  {slugCheck.state === 'ok'  && <span className="absolute right-2 top-1/2 -translate-y-1/2 text-green-600">✓</span>}
+                  {slugCheck.state === 'bad' && <span className="absolute right-2 top-1/2 -translate-y-1/2 text-red-600">✗</span>}
+                </div>
                 <span className="bg-gray-100 border border-gray-300 rounded-r-lg px-3 py-2 text-sm text-gray-500 whitespace-nowrap">
-                  .dw-church.app
+                  .truelight.app
                 </span>
               </div>
-              {watchSlug && (
-                <p className="text-xs text-gray-400 mt-1">
-                  https://{watchSlug}.dw-church.app
-                </p>
-              )}
+              <div className="flex items-center justify-between mt-1">
+                <span className="text-xs text-gray-400">
+                  {watchSlug ? `https://${watchSlug}.truelight.app` : ''}
+                </span>
+                {slugMessage && <span className={`text-xs ${slugMessage.cls}`}>{slugMessage.text}</span>}
+              </div>
               {errors.slug && (
                 <p className="text-red-500 text-sm mt-1">{errors.slug.message}</p>
               )}
@@ -187,8 +237,8 @@ export default function RegisterPage() {
 
             <button
               type="submit"
-              disabled={registerMutation.isPending}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              disabled={registerMutation.isPending || slugCheck.state !== 'ok'}
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {registerMutation.isPending ? '등록 중...' : '교회 등록'}
             </button>
