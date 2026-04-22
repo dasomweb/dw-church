@@ -18,7 +18,7 @@ COPY packages/api-client/package.json packages/api-client/
 COPY packages/ui-components/package.json packages/ui-components/
 COPY packages/admin-app/package.json packages/admin-app/
 COPY packages/wp-plugin/package.json packages/wp-plugin/
-COPY packages/wp-connector/package.json packages/wp-connector/
+# wp-connector is a WordPress plugin (PHP), not a workspace package
 
 RUN pnpm install --frozen-lockfile
 
