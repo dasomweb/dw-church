@@ -19,6 +19,8 @@ import { ImageGalleryBlock } from './blocks/ImageGalleryBlock';
 import { VideoBlock } from './blocks/VideoBlock';
 import { NewcomerInfoBlock } from './blocks/NewcomerInfoBlock';
 import { BoardBlock } from './blocks/BoardBlock';
+import { PastorMessageBlock } from './blocks/PastorMessageBlock';
+import { QuoteBlock } from './blocks/QuoteBlock';
 
 type BlockComponent = React.FC<{ props: Record<string, unknown>; slug: string }>;
 
@@ -32,10 +34,10 @@ const BLOCK_MAP: Record<string, BlockComponent> = {
   hero_image_slider: BannerSliderBlock,
   hero_split: TextImageBlock,        // Split hero = text + image side by side
 
-  // About / Intro → render as TextImage or TextOnly
-  pastor_message: TextImageBlock,     // Pastor photo + message
-  church_intro: TextImageBlock,       // Church intro with image
-  mission_vision: TextOnlyBlock,      // Mission/vision text blocks
+  // About / Intro
+  pastor_message: PastorMessageBlock, // Pastor name/title/message + photo (dedicated fields)
+  church_intro: TextImageBlock,       // title + content + imageUrl (reuses TextImageBlock)
+  mission_vision: TextOnlyBlock,      // title + content (reuses TextOnlyBlock)
 
   // Content (dynamic widgets)
   recent_sermons: RecentSermonsBlock,
@@ -51,7 +53,7 @@ const BLOCK_MAP: Record<string, BlockComponent> = {
   // Text
   text_image: TextImageBlock,
   text_only: TextOnlyBlock,
-  quote_block: TextOnlyBlock,         // Quote renders as text block
+  quote_block: QuoteBlock,            // quote + source + reference + backgroundImageUrl
 
   // Church Info
   worship_schedule: WorshipScheduleBlock,

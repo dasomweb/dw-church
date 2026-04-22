@@ -717,7 +717,15 @@ export class DWChurchClient {
   async uploadFile(file: File): Promise<UploadedFile> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.api.post(`${this.namespace}/files/upload`, formData);
+    // Server returns { data: UploadedFile } — unwrap so callers get { id, url } directly.
+    const response = await this.api.post<{ data: UploadedFile } | UploadedFile>(
+      `${this.namespace}/files/upload`,
+      formData,
+    );
+    if (response && typeof response === 'object' && 'data' in response) {
+      return (response as { data: UploadedFile }).data;
+    }
+    return response as UploadedFile;
   }
 
   async deleteFile(id: string): Promise<void> {
