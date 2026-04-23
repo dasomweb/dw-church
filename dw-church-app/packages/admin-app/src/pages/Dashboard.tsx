@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   useBulletins,
   useSermons,
@@ -137,6 +137,8 @@ export default function Dashboard() {
   const apiClient = useDWChurchClient();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { slug = '' } = useParams<{ slug: string }>();
+  const tPath = (p: string) => (p ? `/t/${slug}/${p}` : `/t/${slug}`);
   const { showToast } = useToast();
 
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -150,7 +152,7 @@ export default function Dashboard() {
       showToast('success', `"${res.data.page.title}" 페이지가 생성되었습니다 (${res.data.sections}개 블록)`);
       queryClient.invalidateQueries({ queryKey: ['pages'] });
       setWizardOpen(false);
-      navigate('/pages');
+      navigate(tPath('pages'));
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : '페이지 생성 실패');
     } finally {
@@ -180,36 +182,11 @@ export default function Dashboard() {
       <section>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">현황</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <StatCard
-            label="주보"
-            count={bulletins.data?.total ?? 0}
-            loading={bulletins.isLoading}
-            to="/bulletins"
-          />
-          <StatCard
-            label="설교"
-            count={sermons.data?.total ?? 0}
-            loading={sermons.isLoading}
-            to="/sermons"
-          />
-          <StatCard
-            label="앨범"
-            count={albums.data?.total ?? 0}
-            loading={albums.isLoading}
-            to="/albums"
-          />
-          <StatCard
-            label="이벤트"
-            count={events.data?.total ?? 0}
-            loading={events.isLoading}
-            to="/events"
-          />
-          <StatCard
-            label="교역자"
-            count={Array.isArray(staff.data) ? staff.data.length : 0}
-            loading={staff.isLoading}
-            to="/staff"
-          />
+          <StatCard label="주보"   count={bulletins.data?.total ?? 0} loading={bulletins.isLoading} to={tPath('bulletins')} />
+          <StatCard label="설교"   count={sermons.data?.total ?? 0}   loading={sermons.isLoading}   to={tPath('sermons')} />
+          <StatCard label="앨범"   count={albums.data?.total ?? 0}    loading={albums.isLoading}    to={tPath('albums')} />
+          <StatCard label="이벤트" count={events.data?.total ?? 0}    loading={events.isLoading}    to={tPath('events')} />
+          <StatCard label="교역자" count={Array.isArray(staff.data) ? staff.data.length : 0} loading={staff.isLoading} to={tPath('staff')} />
         </div>
       </section>
 
@@ -221,7 +198,7 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg border border-gray-200 p-5">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-gray-900">최근 주보</h3>
-              <Link to="/bulletins" className="text-xs text-blue-600 hover:text-blue-800">
+              <Link to={tPath('bulletins')} className="text-xs text-blue-600 hover:text-blue-800">
                 전체 보기
               </Link>
             </div>
@@ -238,7 +215,7 @@ export default function Dashboard() {
                     key={b.id}
                     title={b.title}
                     date={formatDate(b.date)}
-                    editLink={`/bulletins?edit=${b.id}`}
+                    editLink={`${tPath('bulletins')}?edit=${b.id}`}
                   />
                 ))}
                 {(!bulletins.data?.data.length) && (
@@ -252,7 +229,7 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg border border-gray-200 p-5">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-gray-900">최근 설교</h3>
-              <Link to="/sermons" className="text-xs text-blue-600 hover:text-blue-800">
+              <Link to={tPath('sermons')} className="text-xs text-blue-600 hover:text-blue-800">
                 전체 보기
               </Link>
             </div>
@@ -269,7 +246,7 @@ export default function Dashboard() {
                     key={s.id}
                     title={s.title}
                     date={formatDate(s.date)}
-                    editLink={`/sermons?edit=${s.id}`}
+                    editLink={`${tPath('sermons')}?edit=${s.id}`}
                   />
                 ))}
                 {(!sermons.data?.data.length) && (
@@ -283,7 +260,7 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg border border-gray-200 p-5">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-gray-900">최근 앨범</h3>
-              <Link to="/albums" className="text-xs text-blue-600 hover:text-blue-800">
+              <Link to={tPath('albums')} className="text-xs text-blue-600 hover:text-blue-800">
                 전체 보기
               </Link>
             </div>
@@ -300,7 +277,7 @@ export default function Dashboard() {
                     key={a.id}
                     title={a.title}
                     date={formatDate(a.createdAt)}
-                    editLink={`/albums?edit=${a.id}`}
+                    editLink={`${tPath('albums')}?edit=${a.id}`}
                   />
                 ))}
                 {(!albums.data?.data.length) && (

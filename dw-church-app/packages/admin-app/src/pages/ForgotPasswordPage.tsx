@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useForgotPassword } from '@dw-church/api-client';
 
 interface ForgotPasswordFormData {
@@ -8,6 +8,8 @@ interface ForgotPasswordFormData {
 }
 
 export default function ForgotPasswordPage() {
+  const { slug } = useParams<{ slug?: string }>();
+  const loginPath = slug ? `/t/${slug}/login` : '/login';
   const forgotMutation = useForgotPassword();
   const [sent, setSent] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -58,7 +60,7 @@ export default function ForgotPasswordPage() {
                 메일함을 확인해 주세요.
               </p>
               <Link
-                to="/login"
+                to={loginPath}
                 className="text-sm text-blue-600 hover:text-blue-800"
               >
                 로그인으로 돌아가기
@@ -100,7 +102,7 @@ export default function ForgotPasswordPage() {
               </form>
 
               <div className="mt-4 text-center text-sm">
-                <Link to="/login" className="text-blue-600 hover:text-blue-800">
+                <Link to={loginPath} className="text-blue-600 hover:text-blue-800">
                   로그인으로 돌아가기
                 </Link>
               </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useLogin, DWChurchApiError } from '@dw-church/api-client';
 import { useAuthStore } from '../stores/auth';
 
@@ -14,15 +14,17 @@ export default function LoginPage() {
   const loginMutation = useLogin();
   const setSession = useAuthStore((s) => s.setSession);
   const [searchParams] = useSearchParams();
+  const { slug: urlSlug } = useParams<{ slug?: string }>();
   const prefillEmail = searchParams.get('email') ?? '';
+  const redirectParam = searchParams.get('redirect');
   const [errorMsg, setErrorMsg] = useState('');
 
   // When the super admin opens this page from the tenant detail modal
-  // (url has ?email=support-<slug>@truelight.app), drop any existing session
-  // so the login form shows instead of redirecting to /super-admin.
+  // (?email=support-<slug>@truelight.app), drop any existing session so the
+  // form shows instead of PublicOnly redirecting back to /super-admin.
   useEffect(() => {
     if (prefillEmail) {
-      localStorage.removeItem('dw-church-session');
+      sessionStorage.removeItem('dw-church-session');
       setSession(null);
     }
   }, [prefillEmail, setSession]);
@@ -33,17 +35,24 @@ export default function LoginPage() {
     formState: { errors },
   } = useForm<LoginFormData>({ defaultValues: { email: prefillEmail } });
 
+  const postLoginDestination = (session: { user?: { isSuperAdmin?: boolean; tenantSlug?: string } }) => {
+    // Explicit redirect param wins (set when auth gate kicked us here).
+    if (redirectParam) return redirectParam;
+    // Super admin always lands on the platform dashboard.
+    if (session.user?.isSuperAdmin) return '/super-admin';
+    // Prefer the URL slug (so support logins land inside the tenant they
+    // signed in for), fall back to the user's own tenant slug.
+    const slug = urlSlug || session.user?.tenantSlug;
+    return slug ? `/t/${slug}` : '/';
+  };
+
   const onSubmit = async (data: LoginFormData) => {
     setErrorMsg('');
-    localStorage.removeItem('dw-church-session');
+    sessionStorage.removeItem('dw-church-session');
     try {
       const session = await loginMutation.mutateAsync(data);
       setSession(session);
-      if (session.user?.isSuperAdmin) {
-        navigate('/super-admin');
-      } else {
-        navigate('/');
-      }
+      navigate(postLoginDestination(session), { replace: true });
     } catch (err: unknown) {
       if (err instanceof DWChurchApiError) {
         if (err.status === 401) {
@@ -136,7 +145,10 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-6 flex items-center justify-between text-sm">
-            <Link to="/forgot-password" className="text-gray-500 hover:text-blue-600 transition-colors">
+            <Link
+              to={urlSlug ? `/t/${urlSlug}/forgot-password` : '/forgot-password'}
+              className="text-gray-500 hover:text-blue-600 transition-colors"
+            >
               비밀번호를 잊으셨나요?
             </Link>
             <Link to="/register" className="text-blue-600 font-medium hover:text-blue-800 transition-colors">

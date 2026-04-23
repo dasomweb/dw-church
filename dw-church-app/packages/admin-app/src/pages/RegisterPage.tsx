@@ -85,7 +85,8 @@ export default function RegisterPage() {
         password: data.password,
       });
       setSession(session);
-      navigate('/');
+      // Fresh tenant — drop the owner into their own admin.
+      navigate(`/t/${data.slug}`);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '등록에 실패했습니다.';
       setErrorMsg(message);

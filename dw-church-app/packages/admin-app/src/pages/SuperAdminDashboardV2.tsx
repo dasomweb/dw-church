@@ -653,13 +653,12 @@ function TenantDetailModal({
   };
 
   const siteUrl = detail ? `https://${detail.slug}.truelight.app` : '#';
-  // Opens the login page in a new tab pre-filled with the tenant's support
-  // email. LoginPage detects the `email` query param, clears any existing
-  // session, and shows the login form so the super admin can paste the
-  // just-rotated support password. This keeps audit trails separated: the
-  // tenant admin session is the support user, not the super admin.
+  // Tenant-scoped login URL: /t/<slug>/login?email=support-<slug>@...
+  // Opens in a new tab, LoginPage clears any prior session (via ?email=),
+  // and post-login drops the support user into /t/<slug>. URL-scoped login
+  // keeps the super admin's own tab intact.
   const tenantAdminUrl = detail
-    ? `/login?email=${encodeURIComponent(`support-${detail.slug}@truelight.app`)}`
+    ? `/t/${detail.slug}/login?email=${encodeURIComponent(`support-${detail.slug}@truelight.app`)}`
     : '#';
 
   return (
@@ -1304,10 +1303,10 @@ function TenantsTab() {
                         >
                           보기
                         </button>
-                        {/* 관리 — 해당 tenant 어드민 페이지로 이동 */}
+                        {/* 관리 — 해당 tenant 어드민 페이지로 이동 (super admin은 URL만으로 접근 가능) */}
                         <button
                           onClick={() => {
-                            window.location.href = `${window.location.origin}/?tenant=${t.slug}`;
+                            window.location.href = `${window.location.origin}/t/${t.slug}`;
                           }}
                           className="px-2.5 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors font-medium"
                           title={`${t.name} 관리자 페이지로 이동`}

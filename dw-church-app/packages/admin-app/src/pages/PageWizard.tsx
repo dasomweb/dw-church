@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useDWChurchClient } from '@dw-church/api-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '../components';
@@ -218,6 +218,7 @@ type WizardStep = 'select' | 'preview' | 'creating';
 
 export default function PageWizard() {
   const navigate = useNavigate();
+  const { slug = '' } = useParams<{ slug: string }>();
   const apiClient = useDWChurchClient();
   const queryClient = useQueryClient();
   const { showToast } = useToast();
@@ -252,7 +253,7 @@ export default function PageWizard() {
       const res = await apiClient.adapter.post<{ data: { page: { id: string; title: string; slug: string }; sections: number } }>('/ai/generate-page', { prompt: selectedPrompt });
       showToast('success', `"${res.data.page.title}" 페이지가 생성되었습니다`);
       queryClient.invalidateQueries({ queryKey: ['pages'] });
-      navigate('/pages');
+      navigate(`/t/${slug}/pages`);
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : '페이지 생성 실패');
       setStep('preview');

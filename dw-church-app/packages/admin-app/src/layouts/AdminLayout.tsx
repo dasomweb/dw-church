@@ -1,44 +1,43 @@
 import { useState } from 'react';
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useLogout, useChurchSettings } from '@dw-church/api-client';
 import { useAuthStore } from '../stores/auth';
 
+// Nav item paths are relative to the current tenant root (/t/:slug). An empty
+// string means the tenant dashboard (/t/:slug), "sermons" becomes
+// /t/:slug/sermons, etc.
 interface NavItem { to: string; label: string; icon: JSX.Element }
 interface NavGroup { label: string; items: NavItem[] }
 
 const I = (d: string) => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d={d} /></svg>;
 
 const navGroups: (NavItem | NavGroup)[] = [
-  // ─── 대시보드 (단독) ───
-  { to: '/', label: '대시보드', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg> },
+  { to: '', label: '대시보드', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg> },
 
-  // ─── 콘텐츠 ───
   { label: '콘텐츠', items: [
-    { to: '/sermons', label: '설교', icon: I('M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m-4-1h8M12 4a3 3 0 00-3 3v4a3 3 0 006 0V7a3 3 0 00-3-3z') },
-    { to: '/bulletins', label: '주보', icon: I('M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z') },
-    { to: '/columns', label: '목회칼럼', icon: I('M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z') },
-    { to: '/albums', label: '앨범', icon: I('M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z') },
-    { to: '/events', label: '행사', icon: I('M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z') },
-    { to: '/banners', label: '배너', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><rect x="2" y="6" width="20" height="12" rx="2" /><path d="M6 10h12M6 14h8" /></svg> },
-    { to: '/staff', label: '교역자', icon: I('M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z') },
-    { to: '/history', label: '연혁', icon: I('M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z') },
-    { to: '/boards', label: '게시판', icon: I('M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01') },
+    { to: 'sermons', label: '설교', icon: I('M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m-4-1h8M12 4a3 3 0 00-3 3v4a3 3 0 006 0V7a3 3 0 00-3-3z') },
+    { to: 'bulletins', label: '주보', icon: I('M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z') },
+    { to: 'columns', label: '목회칼럼', icon: I('M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z') },
+    { to: 'albums', label: '앨범', icon: I('M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z') },
+    { to: 'events', label: '행사', icon: I('M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z') },
+    { to: 'banners', label: '배너', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><rect x="2" y="6" width="20" height="12" rx="2" /><path d="M6 10h12M6 14h8" /></svg> },
+    { to: 'staff', label: '교역자', icon: I('M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z') },
+    { to: 'history', label: '연혁', icon: I('M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z') },
+    { to: 'boards', label: '게시판', icon: I('M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01') },
   ]},
 
-  // ─── 디자인 ───
   { label: '디자인', items: [
-    { to: '/theme', label: '테마', icon: I('M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01') },
-    { to: '/pages', label: '페이지', icon: I('M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z') },
-    { to: '/page-wizard', label: '페이지 마법사', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg> },
-    { to: '/menus', label: '메뉴', icon: I('M4 6h16M4 12h16M4 18h16') },
+    { to: 'theme', label: '테마', icon: I('M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01') },
+    { to: 'pages', label: '페이지', icon: I('M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z') },
+    { to: 'page-wizard', label: '페이지 마법사', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg> },
+    { to: 'menus', label: '메뉴', icon: I('M4 6h16M4 12h16M4 18h16') },
   ]},
 
-  // ─── 설정 ───
   { label: '설정', items: [
-    { to: '/settings', label: '기본 설정', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><circle cx="12" cy="12" r="3" /></svg> },
-    { to: '/domains', label: '도메인', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" /></svg> },
-    { to: '/users', label: '사용자', icon: I('M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z') },
-    { to: '/billing', label: '결제', icon: I('M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z') },
+    { to: 'settings', label: '기본 설정', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><circle cx="12" cy="12" r="3" /></svg> },
+    { to: 'domains', label: '도메인', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" /></svg> },
+    { to: 'users', label: '사용자', icon: I('M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z') },
+    { to: 'billing', label: '결제', icon: I('M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z') },
   ]},
 ];
 
@@ -54,27 +53,27 @@ const superAdminNavItem = {
 
 // Super admin access is determined by the server via isSuperAdmin flag in login response
 
-const pageTitles: Record<string, string> = {
-  '/': '대시보드',
-  '/bulletins': '주보 관리',
-  '/sermons': '설교 관리',
-  '/columns': '목회컬럼 관리',
-  '/albums': '앨범 관리',
-  '/banners': '배너 관리',
-  '/events': '이벤트 관리',
-  '/staff': '교역자 관리',
-  '/history': '연혁 관리',
-  '/boards': '게시판 관리',
-  '/pages': '페이지 편집',
-  '/page-wizard': '페이지 마법사',
-  '/menus': '메뉴 관리',
-  '/theme': '테마 설정',
-  '/users': '사용자 관리',
-  '/domains': '도메인 설정',
-  '/billing': '결제 관리',
-  '/settings': '설정',
-  '/super-admin': 'Super Admin',
-  '/profile': '내 정보',
+// Keyed by the last non-slug path segment. Tenant admin URLs look like
+// /t/:slug/sermons — we match on "sermons". Empty key = tenant root.
+const pageTitlesByLeaf: Record<string, string> = {
+  '': '대시보드',
+  bulletins: '주보 관리',
+  sermons: '설교 관리',
+  columns: '목회컬럼 관리',
+  albums: '앨범 관리',
+  banners: '배너 관리',
+  events: '이벤트 관리',
+  staff: '교역자 관리',
+  history: '연혁 관리',
+  boards: '게시판 관리',
+  pages: '페이지 편집',
+  'page-wizard': '페이지 마법사',
+  menus: '메뉴 관리',
+  theme: '테마 설정',
+  users: '사용자 관리',
+  domains: '도메인 설정',
+  billing: '결제 관리',
+  settings: '설정',
 };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -87,15 +86,25 @@ export function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { slug = '' } = useParams<{ slug: string }>();
   const logoutMutation = useLogout();
   const session = useAuthStore((s) => s.session);
   const logout = useAuthStore((s) => s.logout);
   const { data: settings } = useChurchSettings();
-  const churchName = (settings as any)?.churchName || (settings as any)?.church_name || session?.user?.tenantSlug || 'True Light';
+  const churchName = (settings as any)?.churchName || (settings as any)?.church_name || slug || 'True Light';
 
-  const pageTitle = pageTitles[location.pathname] || '관리';
+  // Absolute tenant paths — each sidebar link lives under /t/:slug.
+  const tenantRoot = `/t/${slug}`;
+  const pathFor = (to: string) => (to ? `${tenantRoot}/${to}` : tenantRoot);
+
+  // Page title lookup: strip "/t/:slug/" prefix, use the next segment.
+  const leaf = location.pathname.startsWith(tenantRoot)
+    ? location.pathname.slice(tenantRoot.length).replace(/^\/+/, '').split('/')[0]
+    : '';
+  const pageTitle = pageTitlesByLeaf[leaf ?? ''] || '관리';
   const user = session?.user;
   const isSuperAdmin = !!user?.isSuperAdmin;
+  void isSuperAdmin;
 
   const handleLogout = async () => {
     try {
@@ -104,7 +113,7 @@ export function AdminLayout() {
       // ignore logout API errors
     }
     logout();
-    navigate('/login');
+    navigate(`/t/${slug}/login`);
   };
 
   return (
@@ -147,11 +156,12 @@ export function AdminLayout() {
           {navGroups.map((entry, i) => {
             if ('to' in entry) {
               // Single nav item (대시보드)
+              const dest = pathFor(entry.to);
               return (
                 <NavLink
-                  key={entry.to}
-                  to={entry.to}
-                  end={entry.to === '/'}
+                  key={dest}
+                  to={dest}
+                  end
                   onClick={() => setSidebarOpen(false)}
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -164,26 +174,28 @@ export function AdminLayout() {
                 </NavLink>
               );
             }
-            // Group with label + children
             return (
               <div key={entry.label} className={i > 0 ? 'mt-4' : 'mt-2'}>
                 <p className="px-3 py-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{entry.label}</p>
                 <div className="space-y-0.5">
-                  {entry.items.map((item) => (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      onClick={() => setSidebarOpen(false)}
-                      className={({ isActive }) =>
-                        `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          isActive ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
-                        }`
-                      }
-                    >
-                      {item.icon}
-                      {item.label}
-                    </NavLink>
-                  ))}
+                  {entry.items.map((item) => {
+                    const dest = pathFor(item.to);
+                    return (
+                      <NavLink
+                        key={dest}
+                        to={dest}
+                        onClick={() => setSidebarOpen(false)}
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            isActive ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
+                          }`
+                        }
+                      >
+                        {item.icon}
+                        {item.label}
+                      </NavLink>
+                    );
+                  })}
                 </div>
               </div>
             );

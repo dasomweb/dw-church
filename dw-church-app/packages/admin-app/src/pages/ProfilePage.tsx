@@ -42,7 +42,9 @@ export default function ProfilePage() {
   const updateProfile = useUpdateProfile();
   const { showToast } = useToast();
   const navigate = useNavigate();
-  const homePath = user?.isSuperAdmin ? '/super-admin' : '/';
+  const homePath = user?.isSuperAdmin
+    ? '/super-admin'
+    : user?.tenantSlug ? `/t/${user.tenantSlug}` : '/login';
 
   const {
     register: registerProfile,

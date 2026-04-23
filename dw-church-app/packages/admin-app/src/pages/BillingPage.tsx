@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { useBillingStatus, useBillingCheckout, useBillingPortal } from '@dw-church/api-client';
 
 interface PlanFeature {
@@ -41,6 +42,8 @@ function XIcon() {
 }
 
 export default function BillingPage() {
+  const { slug = '' } = useParams<{ slug: string }>();
+  const billingPath = `/t/${slug}/billing`;
   const { data: billing, isLoading, error } = useBillingStatus();
   const checkoutMutation = useBillingCheckout();
   const portalMutation = useBillingPortal();
@@ -93,8 +96,8 @@ export default function BillingPage() {
       const baseUrl = window.location.origin;
       const result = await checkoutMutation.mutateAsync({
         plan,
-        successUrl: `${baseUrl}/billing?success=true`,
-        cancelUrl: `${baseUrl}/billing?canceled=true`,
+        successUrl: `${baseUrl}${billingPath}?success=true`,
+        cancelUrl: `${baseUrl}${billingPath}?canceled=true`,
       });
       window.location.href = result.url;
     } catch (err) {
@@ -109,7 +112,7 @@ export default function BillingPage() {
   const handleManageSubscription = async () => {
     try {
       const result = await portalMutation.mutateAsync(
-        `${window.location.origin}/billing`,
+        `${window.location.origin}${billingPath}`,
       );
       window.location.href = result.url;
     } catch (err) {

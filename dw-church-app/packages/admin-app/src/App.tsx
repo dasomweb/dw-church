@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import { DWChurchClient } from '@dw-church/api-client';
 import { DWChurchProvider } from '@dw-church/ui-components';
 import { AdminLayout } from './layouts/AdminLayout';
@@ -48,116 +48,99 @@ function PageLoader() {
   );
 }
 
-/** Redirect to /login if not authenticated */
+/** Auth gate: redirect to /login if not authenticated. */
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isLoading = useAuthStore((s) => s.isLoading);
   const location = useLocation();
 
-  if (isLoading) {
-    return <PageLoader />;
-  }
+  if (isLoading) return <PageLoader />;
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    const redirect = encodeURIComponent(location.pathname + location.search);
+    return <Navigate to={`/login?redirect=${redirect}`} state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
 }
 
-/** Redirect to / if already authenticated */
+/**
+ * Tenant gate: user's JWT tenantSlug must match the URL's :slug, or they must
+ * be a super admin (which is allowed into any tenant). Mismatches indicate
+ * either a copy-pasted URL for another org or a stale session — kick them to
+ * the tenant-scoped login so the correct credentials can be entered.
+ */
+function RequireTenantAccess({ children }: { children: React.ReactNode }) {
+  const { slug = '' } = useParams<{ slug: string }>();
+  const session = useAuthStore((s) => s.session);
+  const location = useLocation();
+
+  const isSuper = !!session?.user?.isSuperAdmin;
+  const userSlug = session?.user?.tenantSlug ?? '';
+
+  if (isSuper) return <>{children}</>;
+  if (slug && userSlug === slug) return <>{children}</>;
+
+  const redirect = encodeURIComponent(location.pathname + location.search);
+  return <Navigate to={`/t/${slug}/login?redirect=${redirect}`} replace />;
+}
+
+/** Already authed? Bounce away from login/register unless intentionally forcing the form. */
 function PublicOnly({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isLoading = useAuthStore((s) => s.isLoading);
 
-  if (isLoading) {
-    return <PageLoader />;
-  }
+  if (isLoading) return <PageLoader />;
 
-  // Super admin opens /login?email=support-<slug>@... to switch into a tenant
-  // support session. Don't redirect — let LoginPage clear the current session
-  // and show the form with the email pre-filled.
-  const wantsLoginForm = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('email');
+  // ?email= on the login URL signals "I'm switching identity" (super admin
+  // entering a tenant as its support user). LoginPage handles the clearing.
+  const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const wantsLoginForm = !!params?.has('email');
 
   if (isAuthenticated && !wantsLoginForm) {
     const user = useAuthStore.getState().session?.user;
-    return <Navigate to={user?.isSuperAdmin ? '/super-admin' : '/'} replace />;
+    const fallback = user?.isSuperAdmin
+      ? '/super-admin'
+      : user?.tenantSlug ? `/t/${user.tenantSlug}` : '/login';
+    return <Navigate to={fallback} replace />;
   }
 
   return <>{children}</>;
 }
 
-/** Block non-super-admin from /super-admin */
 function RequireSuperAdmin({ children }: { children: React.ReactNode }) {
   const session = useAuthStore((s) => s.session);
-  if (!session?.user?.isSuperAdmin) {
-    return <Navigate to="/" replace />;
-  }
+  if (!session?.user?.isSuperAdmin) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
 
-/** Block super-admin from tenant admin pages */
-function BlockSuperAdmin({ children }: { children: React.ReactNode }) {
+/** Landing route: send users to their natural home. */
+function RoleHomeRedirect() {
   const session = useAuthStore((s) => s.session);
-  if (session?.user?.isSuperAdmin) {
-    return <Navigate to="/super-admin" replace />;
-  }
-  return <>{children}</>;
+  const isLoading = useAuthStore((s) => s.isLoading);
+  if (isLoading) return <PageLoader />;
+  const user = session?.user;
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.isSuperAdmin) return <Navigate to="/super-admin" replace />;
+  if (user.tenantSlug) return <Navigate to={`/t/${user.tenantSlug}`} replace />;
+  return <Navigate to="/login" replace />;
 }
-
-/** Catch-all: redirect based on role */
-function CatchAllRedirect() {
-  const session = useAuthStore((s) => s.session);
-  if (session?.user?.isSuperAdmin) {
-    return <Navigate to="/super-admin" replace />;
-  }
-  return <Navigate to="/" replace />;
-}
-
-/** Interval in ms for proactive token refresh checks (4 minutes). */
-const REFRESH_CHECK_INTERVAL_MS = 4 * 60 * 1000;
 
 /**
- * Handle ?tenant=slug query param: switch the current user's tenant context
- * and reload the dashboard. Used by Super Admin "관리" button.
+ * Layout wrapper that wires the current URL's :slug into the API client so
+ * every data call picks up the right X-Tenant-Slug header. Without this, a
+ * super admin visiting /t/grace/sermons would still send the old session's
+ * tenantSlug header and read the wrong schema.
  */
-function TenantSwitcher() {
-  const session = useAuthStore((s) => s.session);
-  const hydrate = useAuthStore((s) => s.hydrate);
-
+function TenantAdminLayout({ client }: { client: DWChurchClient }) {
+  const { slug = '' } = useParams<{ slug: string }>();
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const tenantSlug = params.get('tenant');
-    if (!tenantSlug || !session?.accessToken) return;
-
-    fetch(`/api/v1/auth/switch-tenant`, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ tenantSlug }),
-    })
-      .then((res) => res.ok ? res.json() : Promise.reject())
-      .then((data) => {
-        // Server returns new tokens with updated tenant context
-        const newSession = {
-          accessToken: data.accessToken ?? session.accessToken,
-          refreshToken: data.refreshToken ?? session.refreshToken,
-          expiresAt: data.expiresAt ?? session.expiresAt,
-          user: data.user ?? { ...session.user, tenantSlug },
-        };
-        localStorage.setItem('dw-church-session', JSON.stringify(newSession));
-        // Remove query param and reload
-        window.location.href = '/';
-      })
-      .catch(() => {
-        window.location.href = '/';
-      });
-  }, [session, hydrate]);
-
-  return <PageLoader />;
+    if (slug) client.setTenantSlug(slug);
+  }, [slug, client]);
+  return <AdminLayout />;
 }
+
+const REFRESH_CHECK_INTERVAL_MS = 4 * 60 * 1000;
 
 export function App({ config }: { config: AppConfig }) {
   const session = useAuthStore((s) => s.session);
@@ -165,132 +148,104 @@ export function App({ config }: { config: AppConfig }) {
   const refresh = useAuthStore((s) => s.refresh);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
-  // Hydrate auth state from localStorage on mount
-  useEffect(() => {
-    hydrate();
-  }, [hydrate]);
+  useEffect(() => { hydrate(); }, [hydrate]);
 
   const client = useMemo(() => {
-    const c = new DWChurchClient({
+    return new DWChurchClient({
       baseUrl: config.baseUrl,
       token: session?.accessToken,
       tenantSlug: session?.user?.tenantSlug,
     });
-    return c;
   }, [config.baseUrl, session?.accessToken, session?.user?.tenantSlug]);
 
-  // After hydrate, if session exists but is expired, attempt a refresh
   useEffect(() => {
-    if (session?.refreshToken && !isAuthenticated) {
-      refresh(client);
-    }
+    if (session?.refreshToken && !isAuthenticated) refresh(client);
   }, [session?.refreshToken, isAuthenticated, refresh, client]);
 
-  // Proactively refresh token every 4 minutes if close to expiry
   useEffect(() => {
     if (!isAuthenticated) return;
-
     const interval = setInterval(() => {
       const currentSession = useAuthStore.getState().session;
-      if (isTokenExpiringSoon(currentSession)) {
-        refresh(client);
-      }
+      if (isTokenExpiringSoon(currentSession)) refresh(client);
     }, REFRESH_CHECK_INTERVAL_MS);
-
     return () => clearInterval(interval);
   }, [isAuthenticated, refresh, client]);
 
   return (
     <ToastProvider>
-    <DWChurchProvider client={client}>
-      <BrowserRouter>
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            {/* Public routes */}
-            <Route
-              path="/login"
-              element={
-                <PublicOnly>
-                  <LoginPage />
-                </PublicOnly>
-              }
-            />
-            <Route
-              path="/register"
-              element={
-                <PublicOnly>
-                  <RegisterPage />
-                </PublicOnly>
-              }
-            />
-            <Route
-              path="/forgot-password"
-              element={
-                <PublicOnly>
-                  <ForgotPasswordPage />
-                </PublicOnly>
-              }
-            />
+      <DWChurchProvider client={client}>
+        <BrowserRouter>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              {/* Public */}
+              <Route path="/login" element={<PublicOnly><LoginPage /></PublicOnly>} />
+              <Route path="/register" element={<PublicOnly><RegisterPage /></PublicOnly>} />
+              <Route path="/forgot-password" element={<PublicOnly><ForgotPasswordPage /></PublicOnly>} />
 
-            {/* Super Admin — only accessible by super_admin role */}
-            <Route
-              path="super-admin"
-              element={
-                <RequireAuth>
-                  <RequireSuperAdmin>
-                    <SuperAdminDashboard />
-                  </RequireSuperAdmin>
-                </RequireAuth>
-              }
-            />
+              {/* Tenant-scoped login (support account sign-in, direct tenant links) */}
+              <Route path="/t/:slug/login" element={<PublicOnly><LoginPage /></PublicOnly>} />
+              <Route path="/t/:slug/forgot-password" element={<PublicOnly><ForgotPasswordPage /></PublicOnly>} />
 
-            {/* Profile — accessible by all authenticated users including super admin */}
-            <Route
-              path="profile"
-              element={
-                <RequireAuth>
-                  <ProfilePage />
-                </RequireAuth>
-              }
-            />
+              {/* Super admin */}
+              <Route
+                path="/super-admin"
+                element={
+                  <RequireAuth>
+                    <RequireSuperAdmin>
+                      <SuperAdminDashboard />
+                    </RequireSuperAdmin>
+                  </RequireAuth>
+                }
+              />
 
-            {/* Tenant Admin routes — standard sidebar layout */}
-            {/* Super admins are redirected to /super-admin unless ?tenant= switch */}
-            <Route
-              element={
-                <RequireAuth>
-                  <BlockSuperAdmin>
-                    <AdminLayout />
-                  </BlockSuperAdmin>
-                </RequireAuth>
-              }
-            >
-              <Route index element={<Dashboard />} />
-              <Route path="bulletins" element={<BulletinManagement />} />
-              <Route path="sermons" element={<SermonManagement />} />
-              <Route path="columns" element={<ColumnManagement />} />
-              <Route path="albums" element={<AlbumManagement />} />
-              <Route path="banners" element={<BannerManagement />} />
-              <Route path="events" element={<EventManagement />} />
-              <Route path="staff" element={<StaffManagement />} />
-              <Route path="history" element={<HistoryManagement />} />
-              <Route path="boards" element={<BoardManagement />} />
-              <Route path="pages" element={<PageEditor />} />
-              <Route path="page-wizard" element={<PageWizard />} />
-              <Route path="menus" element={<MenuEditor />} />
-              <Route path="theme" element={<ThemeEditor />} />
-              <Route path="users" element={<UserManagement />} />
-              <Route path="domains" element={<DomainSettings />} />
-              <Route path="settings" element={<SettingsPage />} />
-              <Route path="billing" element={<BillingPage />} />
-            </Route>
+              {/* Profile — any authenticated user */}
+              <Route
+                path="/profile"
+                element={
+                  <RequireAuth>
+                    <ProfilePage />
+                  </RequireAuth>
+                }
+              />
 
-            {/* Catch-all */}
-            <Route path="*" element={<CatchAllRedirect />} />
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
-    </DWChurchProvider>
+              {/* Tenant admin — URL slug is source of truth */}
+              <Route
+                path="/t/:slug"
+                element={
+                  <RequireAuth>
+                    <RequireTenantAccess>
+                      <TenantAdminLayout client={client} />
+                    </RequireTenantAccess>
+                  </RequireAuth>
+                }
+              >
+                <Route index element={<Dashboard />} />
+                <Route path="bulletins" element={<BulletinManagement />} />
+                <Route path="sermons" element={<SermonManagement />} />
+                <Route path="columns" element={<ColumnManagement />} />
+                <Route path="albums" element={<AlbumManagement />} />
+                <Route path="banners" element={<BannerManagement />} />
+                <Route path="events" element={<EventManagement />} />
+                <Route path="staff" element={<StaffManagement />} />
+                <Route path="history" element={<HistoryManagement />} />
+                <Route path="boards" element={<BoardManagement />} />
+                <Route path="pages" element={<PageEditor />} />
+                <Route path="page-wizard" element={<PageWizard />} />
+                <Route path="menus" element={<MenuEditor />} />
+                <Route path="theme" element={<ThemeEditor />} />
+                <Route path="users" element={<UserManagement />} />
+                <Route path="domains" element={<DomainSettings />} />
+                <Route path="settings" element={<SettingsPage />} />
+                <Route path="billing" element={<BillingPage />} />
+              </Route>
+
+              {/* Root: role-based redirect */}
+              <Route path="/" element={<RoleHomeRedirect />} />
+              <Route path="*" element={<RoleHomeRedirect />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </DWChurchProvider>
     </ToastProvider>
   );
 }
