@@ -175,6 +175,21 @@ async function main(): Promise<void> {
     app.log.warn(`shared_images table migration skipped: ${err}`);
   }
 
+  // --- One-time seed of curated stock images into the shared library ---
+  // Re-hosts a starter set on R2 (the editor used to hotlink these); only
+  // runs when the table is empty. Subsequent deploys are no-ops.
+  try {
+    const { seedSharedImages } = await import('./utils/seed-shared-images.js');
+    const seedResult = await seedSharedImages();
+    if (seedResult) {
+      app.log.info(
+        `Seeded ${seedResult.succeeded}/${seedResult.attempted} shared images (failed=${seedResult.failed})`,
+      );
+    }
+  } catch (err) {
+    app.log.warn(`Shared-images seed skipped: ${err}`);
+  }
+
   // --- Ensure super_admin users are always active ---
   try {
     await prisma.user.updateMany({
