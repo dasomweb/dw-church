@@ -9,6 +9,7 @@ CREATE SCHEMA IF NOT EXISTS tenant_template;
 CREATE TABLE tenant_template.preachers (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name        VARCHAR(100) NOT NULL,
+    title       VARCHAR(200),
     is_default  BOOLEAN DEFAULT false,
     created_at  TIMESTAMPTZ DEFAULT NOW()
 );

@@ -153,6 +153,33 @@ async function main(): Promise<void> {
     app.log.warn(`password_expires_at column migration skipped: ${err}`);
   }
 
+  // --- One-time migration: add `title` column to preachers in every tenant ---
+  // service.createPreacher INSERTs (name, title, is_default) but the original
+  // tenant_template.sql shipped preachers without a `title` column. Add it
+  // everywhere — tenant_template for future clones, plus every existing
+  // tenant_<slug> schema. IF NOT EXISTS keeps this idempotent.
+  try {
+    const schemas = await prisma.$queryRawUnsafe<{ schema_name: string }[]>(
+      `SELECT schema_name FROM information_schema.schemata
+       WHERE schema_name = 'tenant_template'
+          OR schema_name LIKE 'tenant_%'`,
+    );
+    let patched = 0;
+    for (const s of schemas) {
+      try {
+        await prisma.$executeRawUnsafe(
+          `ALTER TABLE "${s.schema_name}".preachers ADD COLUMN IF NOT EXISTS "title" VARCHAR(200)`,
+        );
+        patched++;
+      } catch {
+        // schema may not have preachers table yet; skip
+      }
+    }
+    if (patched > 0) app.log.info(`preachers.title column ensured in ${patched} schema(s)`);
+  } catch (err) {
+    app.log.warn(`preachers.title migration skipped: ${err}`);
+  }
+
   // --- shared_images table (platform-wide gallery curated by super admin) ---
   try {
     await prisma.$executeRawUnsafe(`
