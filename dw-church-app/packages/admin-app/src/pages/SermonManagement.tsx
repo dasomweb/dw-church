@@ -8,7 +8,9 @@ import {
   useDeleteSermon,
   useSermonCategories,
   useSermonPreachers,
+  useDWChurchClient,
 } from '@dw-church/api-client';
+import { useQueryClient } from '@tanstack/react-query';
 import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
 
 // ─── YouTube 썸네일 유틸 ──────────────────────────────────
@@ -18,12 +20,10 @@ function extractYouTubeId(url: string): string | null {
   return match?.[1] ?? null;
 }
 
-const YOUTUBE_THUMBS = [
-  { key: 'maxresdefault', label: '최고 화질 (1280x720)', suffix: '_max' },
-  { key: 'sddefault', label: '표준 화질 (640x480)', suffix: '_sd' },
-  { key: 'hqdefault', label: '고화질 (480x360)', suffix: '_large' },
-  { key: 'mqdefault', label: '중간 화질 (320x180)', suffix: '_medium' },
-] as const;
+// Priority list for auto-picking the best available thumbnail. YouTube serves
+// a 120x90 grey "placeholder" when a given resolution doesn't exist, so we
+// probe in order and take the first real image.
+const YOUTUBE_THUMB_PRIORITY = ['maxresdefault', 'sddefault', 'hqdefault', 'mqdefault'] as const;
 
 function getYouTubeThumbnailUrl(videoId: string, quality: string = 'maxresdefault'): string {
   return `https://img.youtube.com/vi/${videoId}/${quality}.jpg`;
@@ -40,53 +40,42 @@ function YouTubeMediaSection({ register, watch, setValue }: YouTubeMediaSectionP
   const youtubeUrl = watch('youtubeUrl') || '';
   const thumbnailUrl = watch('thumbnailUrl') || '';
   const videoId = extractYouTubeId(youtubeUrl);
+  const [picking, setPicking] = useState(false);
 
-  type ThumbStatus = 'loading' | 'ok' | 'error';
-  const [thumbStatuses, setThumbStatuses] = useState<Record<string, ThumbStatus>>({});
-
-  // 썸네일 존재 여부 확인 (YouTube는 없는 해상도에 120x90 기본 이미지를 반환)
+  // Automatically choose the best available thumbnail when the user enters a
+  // YouTube URL (single image, highest quality). YouTube returns a 120x90
+  // placeholder for missing resolutions, so we probe in priority order and
+  // use the first real image. No per-quality picker UI.
   useEffect(() => {
-    if (!videoId) {
-      setThumbStatuses({});
-      return;
-    }
-    setThumbStatuses({});
-    YOUTUBE_THUMBS.forEach(({ key }) => {
-      const url = getYouTubeThumbnailUrl(videoId, key);
-      setThumbStatuses((prev: Record<string, ThumbStatus>) => ({ ...prev, [key]: 'loading' }));
+    if (!videoId || thumbnailUrl) { setPicking(false); return; }
+    let cancelled = false;
+    setPicking(true);
+
+    const probe = (key: string): Promise<boolean> => new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
-        // maxresdefault가 없으면 YouTube가 120x90 fallback 이미지를 줌
         const isPlaceholder = img.naturalWidth === 120 && img.naturalHeight === 90;
-        setThumbStatuses((prev: Record<string, ThumbStatus>) => ({ ...prev, [key]: isPlaceholder ? 'error' : 'ok' }));
+        resolve(!isPlaceholder);
       };
-      img.onerror = () => {
-        setThumbStatuses((prev: Record<string, ThumbStatus>) => ({ ...prev, [key]: 'error' }));
-      };
-      img.src = url;
+      img.onerror = () => resolve(false);
+      img.src = getYouTubeThumbnailUrl(videoId, key);
     });
-  }, [videoId]);
 
-  // YouTube URL 입력 시 썸네일이 비어있으면 자동으로 최고화질 설정
-  useEffect(() => {
-    if (!videoId || thumbnailUrl) return;
-    const bestKey = YOUTUBE_THUMBS[0].key;
-    if (thumbStatuses[bestKey] === 'ok') {
-      setValue('thumbnailUrl', getYouTubeThumbnailUrl(videoId, bestKey));
-    } else if (thumbStatuses[bestKey] === 'error') {
-      // maxresdefault 실패 시 다음 화질로 폴백
-      for (const { key } of YOUTUBE_THUMBS) {
-        if (thumbStatuses[key] === 'ok') {
+    (async () => {
+      for (const key of YOUTUBE_THUMB_PRIORITY) {
+        const ok = await probe(key);
+        if (cancelled) return;
+        if (ok) {
           setValue('thumbnailUrl', getYouTubeThumbnailUrl(videoId, key));
-          break;
+          setPicking(false);
+          return;
         }
       }
-    }
-  }, [videoId, thumbStatuses, thumbnailUrl, setValue]);
+      if (!cancelled) setPicking(false);
+    })();
 
-  const handleSelectThumb = (url: string) => {
-    setValue('thumbnailUrl', url);
-  };
+    return () => { cancelled = true; };
+  }, [videoId, thumbnailUrl, setValue]);
 
   const handleRemoveThumb = () => {
     setValue('thumbnailUrl', '');
@@ -104,54 +93,12 @@ function YouTubeMediaSection({ register, watch, setValue }: YouTubeMediaSectionP
           <p className="text-red-500 text-sm mt-1">유효한 YouTube URL이 아닙니다.</p>
         )}
         {videoId && (
-          <p className="text-green-600 text-sm mt-1">영상 ID: {videoId}</p>
+          <p className="text-green-600 text-sm mt-1">
+            영상 ID: {videoId}
+            {picking && <span className="ml-2 text-gray-500">· 최고 화질 썸네일 찾는 중…</span>}
+          </p>
         )}
       </FormField>
-
-      {/* 썸네일 선택 영역 */}
-      {videoId && (
-        <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">YouTube 썸네일 선택</p>
-          <div className="grid grid-cols-2 gap-3">
-            {YOUTUBE_THUMBS.map(({ key, label }) => {
-              const url = getYouTubeThumbnailUrl(videoId, key);
-              const status = thumbStatuses[key];
-              const isSelected = thumbnailUrl === url;
-
-              if (status === 'error') return null;
-
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => handleSelectThumb(url)}
-                  className={`relative rounded-lg overflow-hidden border-2 transition-all text-left ${
-                    isSelected
-                      ? 'border-blue-500 ring-2 ring-blue-200'
-                      : 'border-gray-200 hover:border-gray-400'
-                  }`}
-                >
-                  <div className="aspect-video bg-gray-100 relative">
-                    {status === 'loading' ? (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600" />
-                      </div>
-                    ) : (
-                      <img src={url} alt={label} className="w-full h-full object-cover" />
-                    )}
-                  </div>
-                  <div className="px-2 py-1.5 flex items-center justify-between">
-                    <span className="text-xs text-gray-600">{label}</span>
-                    {isSelected && (
-                      <span className="text-xs font-medium text-blue-600">선택됨</span>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* 현재 선택된 썸네일 미리보기 */}
       <div>
@@ -222,8 +169,37 @@ export default function SermonManagement() {
   const createMutation = useCreateSermon();
   const updateMutation = useUpdateSermon();
   const deleteMutation = useDeleteSermon();
+  const apiClient = useDWChurchClient();
+  const queryClient = useQueryClient();
+
+  const [newPreacherOpen, setNewPreacherOpen] = useState(false);
+  const [newPreacherName, setNewPreacherName] = useState('');
+  const [savingPreacher, setSavingPreacher] = useState(false);
 
   const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<SermonFormData>();
+
+  // Save an inline-added preacher (from the "+ 설교자 등록" button), then
+  // refresh the dropdown and auto-select the newcomer.
+  const handleSavePreacher = async () => {
+    const name = newPreacherName.trim();
+    if (!name || savingPreacher) return;
+    setSavingPreacher(true);
+    try {
+      await apiClient.adapter.post<{ data: { id: string; name: string } }>(
+        '/api/v1/preachers',
+        { name },
+      );
+      await queryClient.invalidateQueries({ queryKey: ['taxonomies', 'sermon_preacher'] });
+      setValue('preacher', name);
+      setNewPreacherName('');
+      setNewPreacherOpen(false);
+      showToast('success', `설교자 "${name}" 등록됨`);
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '설교자 등록 실패');
+    } finally {
+      setSavingPreacher(false);
+    }
+  };
 
   const handleEdit = (item: Sermon) => {
     setEditingItem(item);
@@ -301,12 +277,42 @@ export default function SermonManagement() {
             </FormField>
             <FormRow>
               <FormField label="설교자">
-                <select {...register('preacher')} className={selectClass}>
-                  <option value="">선택하세요</option>
-                  {preachers?.map((p) => (
-                    <option key={p.id} value={p.name}>{p.name}</option>
-                  ))}
-                </select>
+                <div className="flex gap-2">
+                  <select {...register('preacher')} className={`${selectClass} flex-1`}>
+                    <option value="">선택하세요</option>
+                    {preachers?.map((p) => (
+                      <option key={p.id} value={p.name}>{p.name}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setNewPreacherOpen((v) => !v)}
+                    className="whitespace-nowrap px-3 py-1.5 text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg hover:bg-indigo-100"
+                  >
+                    {newPreacherOpen ? '닫기' : '+ 설교자 등록'}
+                  </button>
+                </div>
+                {newPreacherOpen && (
+                  <div className="mt-2 flex gap-2 items-center rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2">
+                    <input
+                      type="text"
+                      value={newPreacherName}
+                      onChange={(e) => setNewPreacherName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void handleSavePreacher(); } }}
+                      placeholder="예: 김요한 목사"
+                      className="flex-1 border border-indigo-300 rounded px-2 py-1 text-sm"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={() => void handleSavePreacher()}
+                      disabled={!newPreacherName.trim() || savingPreacher}
+                      className="px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
+                    >
+                      {savingPreacher ? '저장 중...' : '저장'}
+                    </button>
+                  </div>
+                )}
               </FormField>
               <FormField label="성경구절">
                 <input
