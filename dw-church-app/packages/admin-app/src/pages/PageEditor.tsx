@@ -149,6 +149,30 @@ function getBlockDef(type: string): BlockDef | undefined {
   return BLOCK_DEFS.find((b) => b.type === type);
 }
 
+// Palette color mapping — gives each block nature a distinct tint so the
+// user can visually spot Data (dynamic) vs Static vs Layout blocks at a glance.
+function natureTone(nature: BlockDef['nature']): { list: string; grid: string; label: string } {
+  if (nature === 'dynamic') {
+    return {
+      list: 'bg-amber-50 border-amber-200 hover:bg-amber-100 hover:border-amber-400',
+      grid: 'bg-amber-50 border-amber-200 hover:bg-amber-100 hover:border-amber-400',
+      label: 'text-amber-900 group-hover:text-amber-900',
+    };
+  }
+  if (nature === 'layout') {
+    return {
+      list: 'bg-purple-50 border-purple-200 hover:bg-purple-100 hover:border-purple-400',
+      grid: 'bg-purple-50 border-purple-200 hover:bg-purple-100 hover:border-purple-400',
+      label: 'text-purple-900 group-hover:text-purple-900',
+    };
+  }
+  return {
+    list: 'border-transparent hover:bg-blue-50 hover:border-blue-200',
+    grid: 'border-gray-100 hover:bg-blue-50 hover:border-blue-200',
+    label: 'text-gray-700 group-hover:text-blue-700',
+  };
+}
+
 const BLOCK_CATEGORIES = (() => {
   const order = ['히어로', '소개', '콘텐츠', '텍스트', '교회 정보', 'CTA', '레이아웃'];
   const groups: { category: string; blocks: BlockDef[] }[] = [];
@@ -347,56 +371,62 @@ function BlockPalette({ onAdd }: { onAdd: (type: string) => void }) {
             {viewMode === 'list' ? (
               /* List view */
               <div className="space-y-0.5">
-                {cat.blocks.map((block) => (
-                  <div
-                    key={block.type}
-                    draggable
-                    onDragStart={(e) => {
-                      e.dataTransfer.setData('application/x-block-type', block.type);
-                      e.dataTransfer.effectAllowed = 'copy';
-                    }}
-                    onClick={(e) => {
-                      if (e.detail === 1) onAdd(block.type);
-                    }}
-                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs hover:bg-blue-50 cursor-grab active:cursor-grabbing transition-colors text-left group"
-                    title={block.description}
-                    role="button"
-                    tabIndex={0}
-                  >
-                    <span className="text-base">{block.icon}</span>
-                    <span className="truncate font-medium text-gray-700 group-hover:text-blue-700 flex-1">{block.label}</span>
-                    <span className="text-[10px] flex-shrink-0" title={block.nature === 'dynamic' ? '동적 블록' : '정적 블록'}>
-                      {block.nature === 'dynamic' ? '⚡' : block.nature === 'layout' ? '📦' : '📄'}
-                    </span>
-                  </div>
-                ))}
+                {cat.blocks.map((block) => {
+                  const tone = natureTone(block.nature);
+                  return (
+                    <div
+                      key={block.type}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData('application/x-block-type', block.type);
+                        e.dataTransfer.effectAllowed = 'copy';
+                      }}
+                      onClick={(e) => {
+                        if (e.detail === 1) onAdd(block.type);
+                      }}
+                      className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs cursor-grab active:cursor-grabbing transition-colors text-left group border ${tone.list}`}
+                      title={block.description}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <span className="text-base">{block.icon}</span>
+                      <span className={`truncate font-medium flex-1 ${tone.label}`}>{block.label}</span>
+                      <span className="text-[10px] flex-shrink-0" title={block.nature === 'dynamic' ? '데이터 블록' : block.nature === 'layout' ? '레이아웃 블록' : '스태틱 블록'}>
+                        {block.nature === 'dynamic' ? '⚡' : block.nature === 'layout' ? '📦' : '📄'}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               /* Grid view */
               <div className="grid grid-cols-2 gap-1">
-                {cat.blocks.map((block) => (
-                  <div
-                    key={block.type}
-                    draggable
-                    onDragStart={(e) => {
-                      e.dataTransfer.setData('application/x-block-type', block.type);
-                      e.dataTransfer.effectAllowed = 'copy';
-                    }}
-                    onClick={(e) => {
-                      if (e.detail === 1) onAdd(block.type);
-                    }}
-                    className="flex flex-col items-center gap-1 p-2 rounded-lg text-xs hover:bg-blue-50 cursor-grab active:cursor-grabbing transition-colors text-center group border border-gray-100 hover:border-blue-200"
-                    title={block.description}
-                    role="button"
-                    tabIndex={0}
-                  >
-                    <span className="text-xl">{block.icon}</span>
-                    <span className="text-[10px] font-medium text-gray-700 group-hover:text-blue-700 leading-tight">{block.label}</span>
-                    <span className="text-[9px] flex-shrink-0" title={block.nature === 'dynamic' ? '동적 블록' : '정적 블록'}>
-                      {block.nature === 'dynamic' ? '⚡' : block.nature === 'layout' ? '📦' : '📄'}
-                    </span>
-                  </div>
-                ))}
+                {cat.blocks.map((block) => {
+                  const tone = natureTone(block.nature);
+                  return (
+                    <div
+                      key={block.type}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData('application/x-block-type', block.type);
+                        e.dataTransfer.effectAllowed = 'copy';
+                      }}
+                      onClick={(e) => {
+                        if (e.detail === 1) onAdd(block.type);
+                      }}
+                      className={`flex flex-col items-center gap-1 p-2 rounded-lg text-xs cursor-grab active:cursor-grabbing transition-colors text-center group border ${tone.grid}`}
+                      title={block.description}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <span className="text-xl">{block.icon}</span>
+                      <span className={`text-[10px] font-medium leading-tight ${tone.label}`}>{block.label}</span>
+                      <span className="text-[9px] flex-shrink-0" title={block.nature === 'dynamic' ? '데이터 블록' : block.nature === 'layout' ? '레이아웃 블록' : '스태틱 블록'}>
+                        {block.nature === 'dynamic' ? '⚡' : block.nature === 'layout' ? '📦' : '📄'}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -756,8 +786,8 @@ function LayoutChildEditor({
                 <textarea
                   value={(child.props[field.key] as string) || ''}
                   onChange={(e) => set(field.key, e.target.value)}
-                  rows={2}
-                  className="w-full border rounded px-2 py-1 text-xs resize-none"
+                  rows={5}
+                  className="w-full border rounded px-2 py-1.5 text-xs leading-relaxed resize-y min-h-[90px]"
                 />
               ) : field.type === 'select' ? (
                 <select
@@ -915,7 +945,12 @@ function SectionCard({
   };
 
   // AI recommend — generates 3 samples for user to choose
-  const handleAiSuggest = async (fieldKey: string, fieldLabel: string, keyword?: string) => {
+  const handleAiSuggest = async (
+    fieldKey: string,
+    fieldLabel: string,
+    keyword?: string,
+    length: 'sentence' | 'paragraph' = 'paragraph',
+  ) => {
     setAiLoading(fieldKey);
     setAiSuggestions(null);
     try {
@@ -924,7 +959,10 @@ function SectionCard({
       const basePrompt = blockPrompts[blockType]?.[fieldKey] || `교회 웹사이트의 "${blockLabel}" 블록에 들어갈 "${fieldLabel}" 내용을`;
 
       const keywordPart = keyword ? ` 키워드 "${keyword}"를 중심으로` : '';
-      const prompt = `${basePrompt}${keywordPart} 작성해주세요.
+      const lengthHint = length === 'sentence'
+        ? ' 간결하게 한두 문장으로'
+        : ' 200자 이상의 충분한 분량의 한 문단으로 자연스럽고 풍부하게';
+      const prompt = `${basePrompt}${keywordPart}${lengthHint} 작성해주세요.
 서로 다른 스타일로 3가지 버전을 만들어주세요.
 각 버전을 "---" 구분자로 분리해서 출력하세요.
 내용만 출력하고 번호나 설명은 붙이지 마세요.`;
@@ -955,6 +993,9 @@ function SectionCard({
   // AI keyword input state
   const [aiKeywordField, setAiKeywordField] = useState<string | null>(null);
   const [aiKeyword, setAiKeyword] = useState('');
+  // Per-field AI length preference — "문장" (short) or "문단" (paragraph, default).
+  const [aiLengthByField, setAiLengthByField] = useState<Record<string, 'sentence' | 'paragraph'>>({});
+  const lengthFor = (key: string): 'sentence' | 'paragraph' => aiLengthByField[key] ?? 'paragraph';
 
   const [imageLibraryField, setImageLibraryField] = useState<string | null>(null);
 
@@ -1175,6 +1216,24 @@ function SectionCard({
                   <label className="text-[11px] font-medium text-gray-500">{field.label}</label>
                   {(field.type === 'text' || field.type === 'textarea') && (
                     <div className="flex items-center gap-1">
+                      {/* Length selector — only meaningful for textarea (longer content) */}
+                      {field.type === 'textarea' && (
+                        <div className="inline-flex rounded border border-gray-200 overflow-hidden text-[10px]" title="AI 추천 길이">
+                          {(['sentence', 'paragraph'] as const).map((opt) => {
+                            const selected = lengthFor(field.key) === opt;
+                            return (
+                              <button
+                                key={opt}
+                                type="button"
+                                onClick={() => setAiLengthByField((prev) => ({ ...prev, [field.key]: opt }))}
+                                className={`px-1.5 py-0.5 transition-colors ${selected ? 'bg-purple-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                              >
+                                {opt === 'sentence' ? '문장' : '문단'}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                       {aiKeywordField === field.key ? (
                         <div className="flex items-center gap-1">
                           <input
@@ -1183,12 +1242,12 @@ function SectionCard({
                             onChange={(e) => setAiKeyword(e.target.value)}
                             placeholder="키워드 (선택)"
                             className="w-20 border rounded px-1 py-0.5 text-[10px]"
-                            onKeyDown={(e) => { if (e.key === 'Enter') { handleAiSuggest(field.key, field.label, aiKeyword || undefined); setAiKeywordField(null); setAiKeyword(''); } if (e.key === 'Escape') { setAiKeywordField(null); setAiKeyword(''); } }}
+                            onKeyDown={(e) => { if (e.key === 'Enter') { handleAiSuggest(field.key, field.label, aiKeyword || undefined, lengthFor(field.key)); setAiKeywordField(null); setAiKeyword(''); } if (e.key === 'Escape') { setAiKeywordField(null); setAiKeyword(''); } }}
                             autoFocus
                           />
                           <button
                             type="button"
-                            onClick={() => { handleAiSuggest(field.key, field.label, aiKeyword || undefined); setAiKeywordField(null); setAiKeyword(''); }}
+                            onClick={() => { handleAiSuggest(field.key, field.label, aiKeyword || undefined, lengthFor(field.key)); setAiKeywordField(null); setAiKeyword(''); }}
                             disabled={!!aiLoading}
                             className="text-[10px] bg-purple-600 text-white px-1.5 py-0.5 rounded disabled:opacity-50"
                           >
@@ -1225,8 +1284,8 @@ function SectionCard({
                   <textarea
                     value={(props[field.key] as string) || ''}
                     onChange={(e) => set(field.key, e.target.value)}
-                    rows={3}
-                    className="w-full border rounded-lg px-2.5 py-1.5 text-xs resize-none"
+                    rows={7}
+                    className="w-full border rounded-lg px-2.5 py-2 text-sm leading-relaxed resize-y min-h-[120px]"
                   />
                 ) : field.type === 'select' ? (
                   <select

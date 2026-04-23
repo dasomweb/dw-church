@@ -106,13 +106,17 @@ class FetchAdapter implements ApiAdapter {
       headers['Content-Type'] = 'application/json';
     }
 
+    // Server Zod schemas accept camelCase. We used to snakeize on send, but
+    // that broke any required camelCase field (e.g. createSection.blockType)
+    // because Zod couldn't find the field under its snake_case alias. Send
+    // the camelCase payload as-is; incoming responses are still camelized.
     const response = await fetch(fullUrl, {
       method,
       headers,
       body: data
         ? data instanceof FormData
           ? data
-          : JSON.stringify(snakeizeKeys(data))
+          : JSON.stringify(data)
         : undefined,
     });
 

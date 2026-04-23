@@ -22,7 +22,10 @@ export async function generateText(prompt: string, context?: string): Promise<st
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
           temperature: 0.8,
-          maxOutputTokens: 1024,
+          // Korean text uses ~1.5 tokens/char. The editor asks for 3 variants
+          // at ~300 chars each (pastor greeting, intro, etc.), so budget
+          // generously to avoid mid-sentence truncation.
+          maxOutputTokens: 4096,
         },
       }),
     },
