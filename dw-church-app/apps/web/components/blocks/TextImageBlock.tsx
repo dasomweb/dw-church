@@ -9,7 +9,8 @@ export function TextImageBlock({ props }: TextImageBlockProps) {
   const title = (props.title as string) ?? '';
   const content = (props.content as string) ?? '';
   const imageUrl = (props.imageUrl as string) ?? '';
-  const layout = (props.layout as 'left' | 'right' | 'center') ?? 'right';
+  // Editor variant buttons write `variant`; older data may use `layout`.
+  const layout = ((props.variant as string) || (props.layout as string) || 'right') as 'left' | 'right' | 'center';
 
   if (layout === 'center') {
     return (

@@ -11,8 +11,10 @@ export function PastorMessageBlock({ props }: PastorMessageBlockProps) {
   const pastorTitle = (props.pastorTitle as string) ?? '';
   const message = (props.message as string) ?? '';
   const imageUrl = (props.imageUrl as string) ?? '';
-  const layout = (props.layout as 'left' | 'right') ?? 'right';
-  const imageFirst = layout === 'left';
+  // Editor's 사진 좌측/우측 buttons write `variant` (id: 'left'|'right').
+  // Fall back to `layout` for any older saved sections.
+  const pos = (props.variant as string) || (props.layout as string) || 'right';
+  const imageFirst = pos === 'left';
 
   return (
     <section className="px-4 py-10 sm:px-6 sm:py-16">
