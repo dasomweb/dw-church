@@ -48,6 +48,14 @@ const envSchema = z.object({
   // domain. Points to the Railway web service's public hostname so their
   // traffic reaches us. Defaults to the current production web service.
   WEB_CNAME_TARGET: z.string().default('web-production-1f18f.up.railway.app'),
+
+  // Railway public API — used to programmatically register verified custom
+  // domains on the web service so the edge issues SSL + routes traffic.
+  // All optional; if any is missing the auto-registration step is skipped
+  // and the domain stays in 'verified' status pending manual setup.
+  RAILWAY_API_TOKEN: z.string().default(''),
+  RAILWAY_WEB_SERVICE_ID: z.string().default(''),
+  RAILWAY_ENVIRONMENT_ID: z.string().default(''),
 });
 
 export type Env = z.infer<typeof envSchema>;

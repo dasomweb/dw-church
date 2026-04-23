@@ -3,12 +3,14 @@ import crypto from 'node:crypto';
 import { prisma } from '../../config/database.js';
 import { env } from '../../config/env.js';
 import { AppError } from '../../middleware/error-handler.js';
+import * as railway from '../../config/railway.js';
 
 export interface CustomDomain {
   id: string;
   domain: string;
-  status: 'pending' | 'verified' | 'active' | 'failed' | string;
+  status: 'pending' | 'verified' | 'pending_ssl' | 'active' | 'failed' | string;
   verification_token: string | null;
+  railway_domain_id: string | null;
   verified_at: Date | null;
   created_at: Date;
   updated_at: Date;
@@ -61,7 +63,7 @@ function validateDomain(domain: string): string {
 /** List every domain registered to this tenant. */
 export async function getDomains(schema: string): Promise<CustomDomain[]> {
   return prisma.$queryRawUnsafe<CustomDomain[]>(
-    `SELECT id, domain, status, verification_token, verified_at, created_at, updated_at
+    `SELECT id, domain, status, verification_token, railway_domain_id, verified_at, created_at, updated_at
      FROM "${schema}".custom_domains
      ORDER BY created_at DESC`,
   );
@@ -97,11 +99,11 @@ export async function addDomain(
      ON CONFLICT (domain) DO UPDATE
        SET verification_token = EXCLUDED.verification_token,
            status = CASE
-             WHEN "${schema}".custom_domains.status IN ('verified', 'active') THEN "${schema}".custom_domains.status
+             WHEN "${schema}".custom_domains.status IN ('verified', 'pending_ssl', 'active') THEN "${schema}".custom_domains.status
              ELSE 'pending'
            END,
            updated_at = NOW()
-     RETURNING id, domain, status, verification_token, verified_at, created_at, updated_at`,
+     RETURNING id, domain, status, verification_token, railway_domain_id, verified_at, created_at, updated_at`,
     domain, token,
   );
 
@@ -131,7 +133,7 @@ export async function verifyDomain(
   errorMessage?: string;
 }> {
   const rows = await prisma.$queryRawUnsafe<CustomDomain[]>(
-    `SELECT id, domain, status, verification_token, verified_at, created_at, updated_at
+    `SELECT id, domain, status, verification_token, railway_domain_id, verified_at, created_at, updated_at
      FROM "${schema}".custom_domains WHERE id = $1::uuid`,
     domainId,
   );
@@ -160,15 +162,34 @@ export async function verifyDomain(
     // legitimately fails. Only TXT is required to confirm ownership.
   }
 
-  const nextStatus = txtFound ? 'verified' : 'pending';
+  // After TXT verification, register the domain on Railway so the edge starts
+  // routing it + Let's Encrypt issues SSL. If Railway env vars aren't set,
+  // we leave status='verified' and surface a hint that manual setup is needed.
+  let railwayId: string | null = current.railway_domain_id;
+  let railwayError: string | undefined;
+  let nextStatus: string = txtFound ? 'verified' : 'pending';
+
+  if (txtFound) {
+    try {
+      const result = await railway.addCustomDomain(current.domain);
+      if (result) {
+        railwayId = result.id || railwayId;
+        nextStatus = result.status === 'active' ? 'active' : 'pending_ssl';
+      }
+      // result === null means Railway env vars not configured — keep 'verified'
+    } catch (err) {
+      railwayError = err instanceof Error ? err.message : String(err);
+    }
+  }
+
   const verifiedAtSql = txtFound ? 'NOW()' : 'verified_at';
 
   const updated = await prisma.$queryRawUnsafe<CustomDomain[]>(
     `UPDATE "${schema}".custom_domains
-     SET status = $1, verified_at = ${verifiedAtSql}, updated_at = NOW()
-     WHERE id = $2::uuid
-     RETURNING id, domain, status, verification_token, verified_at, created_at, updated_at`,
-    nextStatus, domainId,
+     SET status = $1, verified_at = ${verifiedAtSql}, railway_domain_id = $2, updated_at = NOW()
+     WHERE id = $3::uuid
+     RETURNING id, domain, status, verification_token, railway_domain_id, verified_at, created_at, updated_at`,
+    nextStatus, railwayId, domainId,
   );
 
   if (txtFound) {
@@ -185,9 +206,11 @@ export async function verifyDomain(
     txtFound,
     cnameOk,
     errorCode: txtFound ? undefined : (txtErrorCode ?? 'TXT_MISMATCH'),
-    errorMessage: txtFound ? undefined : (txtErrorCode === 'ENOTFOUND'
-      ? 'TXT 레코드를 찾을 수 없습니다. DNS 전파에 최대 수 분이 걸릴 수 있습니다.'
-      : 'TXT 레코드 값이 일치하지 않습니다. 아래 표시된 값을 다시 확인해주세요.'),
+    errorMessage: txtFound
+      ? (railwayError ? `Railway 등록 실패: ${railwayError}. 슈퍼어드민이 수동 등록해야 합니다.` : undefined)
+      : (txtErrorCode === 'ENOTFOUND'
+        ? 'TXT 레코드를 찾을 수 없습니다. DNS 전파에 최대 수 분이 걸릴 수 있습니다.'
+        : 'TXT 레코드 값이 일치하지 않습니다. 아래 표시된 값을 다시 확인해주세요.'),
   };
 }
 
@@ -201,8 +224,9 @@ export async function removeDomain(
   tenantId: string,
   domainId: string,
 ): Promise<void> {
-  const rows = await prisma.$queryRawUnsafe<{ domain: string }[]>(
-    `DELETE FROM "${schema}".custom_domains WHERE id = $1::uuid RETURNING domain`,
+  const rows = await prisma.$queryRawUnsafe<{ domain: string; railway_domain_id: string | null }[]>(
+    `DELETE FROM "${schema}".custom_domains WHERE id = $1::uuid
+     RETURNING domain, railway_domain_id`,
     domainId,
   );
   if (rows.length === 0) {
@@ -212,6 +236,10 @@ export async function removeDomain(
     `UPDATE public.tenants SET custom_domain = NULL WHERE id = $1 AND custom_domain = $2`,
     tenantId, rows[0]!.domain,
   );
+  // Best-effort: also remove from Railway so the slot frees up.
+  if (rows[0]!.railway_domain_id) {
+    await railway.removeCustomDomain(rows[0]!.railway_domain_id);
+  }
 }
 
 /** Return the DNS instructions for a pending domain (for the wizard UI). */
@@ -220,7 +248,7 @@ export async function getInstructions(
   domainId: string,
 ): Promise<{ domain: CustomDomain; instructions: DnsInstruction[] }> {
   const rows = await prisma.$queryRawUnsafe<CustomDomain[]>(
-    `SELECT id, domain, status, verification_token, verified_at, created_at, updated_at
+    `SELECT id, domain, status, verification_token, railway_domain_id, verified_at, created_at, updated_at
      FROM "${schema}".custom_domains WHERE id = $1::uuid`,
     domainId,
   );

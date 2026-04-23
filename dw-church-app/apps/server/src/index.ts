@@ -238,6 +238,11 @@ async function main(): Promise<void> {
         await prisma.$executeRawUnsafe(
           `ALTER TABLE "${schema}".custom_domains ADD COLUMN IF NOT EXISTS "verification_token" VARCHAR(64)`,
         );
+        // Railway-side domain id, populated after Railway customDomainCreate
+        // succeeds — lets us look up SSL state and remove the domain later.
+        await prisma.$executeRawUnsafe(
+          `ALTER TABLE "${schema}".custom_domains ADD COLUMN IF NOT EXISTS "railway_domain_id" VARCHAR(64)`,
+        );
         createHits++;
       } catch { /* skip */ }
     }

@@ -22,10 +22,11 @@ interface DnsInstruction {
 }
 
 const STATUS_META: Record<string, { label: string; cls: string; hint: string }> = {
-  pending:  { label: 'DNS 대기',    cls: 'bg-yellow-100 text-yellow-800', hint: 'DNS 레코드를 아직 인식하지 못했습니다' },
-  verified: { label: 'DNS 확인',    cls: 'bg-blue-100 text-blue-800',    hint: '소유권 확인 완료 — SSL 발급 진행 중' },
-  active:   { label: '활성',        cls: 'bg-green-100 text-green-800',  hint: '연결 완료' },
-  failed:   { label: '실패',        cls: 'bg-red-100 text-red-800',      hint: 'DNS 설정을 확인하세요' },
+  pending:     { label: 'DNS 대기',  cls: 'bg-yellow-100 text-yellow-800', hint: 'DNS 레코드를 아직 인식하지 못했습니다' },
+  verified:    { label: 'DNS 확인',  cls: 'bg-blue-100 text-blue-800',    hint: '소유권 확인 완료 — Railway 등록 대기 중' },
+  pending_ssl: { label: 'SSL 발급 중', cls: 'bg-blue-100 text-blue-800',  hint: 'Railway에 등록 완료 — Let\'s Encrypt SSL 발급 진행 중 (보통 1~5분)' },
+  active:      { label: '활성',      cls: 'bg-green-100 text-green-800',  hint: '연결 완료 — HTTPS로 접속 가능' },
+  failed:      { label: '실패',      cls: 'bg-red-100 text-red-800',      hint: 'DNS 설정을 확인하세요' },
 };
 
 export default function DomainSettings() {
