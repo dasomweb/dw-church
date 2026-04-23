@@ -1170,7 +1170,7 @@ function OverviewTab({
 // ═══════════════════════════════════════════════════════════
 // ─── Tab: Tenants ────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════
-function TenantsTab() {
+function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) {
   const apiFetch = useAdminApi();
   const { showToast } = useToast();
 
@@ -1186,6 +1186,7 @@ function TenantsTab() {
   const fetchTenants = useCallback(async () => {
     setLoading(true);
     try {
+      // Newest-first so a just-created church appears at the top.
       const res = await apiFetch<TenantsResponse>(`/tenants?page=${currentPage}&perPage=20`);
       setTenants(res.data);
       setTotalPages(res.meta.totalPages);
@@ -1198,7 +1199,9 @@ function TenantsTab() {
 
   useEffect(() => {
     void fetchTenants();
-  }, [fetchTenants]);
+    // Parent bumps refreshKey after creating a new tenant — this dependency
+    // triggers an immediate refetch so the new row shows up without reload.
+  }, [fetchTenants, refreshKey]);
 
   const handleToggleActive = async (tenant: Tenant) => {
     const action = tenant.isActive ? '비활성화' : '활성화';
@@ -1725,6 +1728,9 @@ function GalleryTab() {
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('nature');
   const [showUpload, setShowUpload] = useState(false);
+  const [showGenerate, setShowGenerate] = useState(false);
+  const [uploadingCount, setUploadingCount] = useState(0);
+  const [dragOver, setDragOver] = useState(false);
   const session = useAuthStore((s) => s.session);
   const token = session?.accessToken;
 
@@ -1744,6 +1750,35 @@ function GalleryTab() {
   };
 
   useEffect(() => { void reload(); }, [token]);
+
+  // Drag-drop or batch file select — every file goes up with category=auto
+  // (server runs Gemini vision to pick a category).
+  const handleFiles = async (files: FileList | File[]) => {
+    const list = Array.from(files).filter((f) => f.type.startsWith('image/'));
+    if (list.length === 0) return;
+    setUploadingCount(list.length);
+    let succeeded = 0;
+    for (const file of list) {
+      try {
+        const qs = new URLSearchParams({ title: file.name, category: 'auto' }).toString();
+        const body = new FormData();
+        body.append('file', file);
+        const res = await fetch(`/api/v1/admin/shared-images/upload?${qs}`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token || ''}` },
+          body,
+        });
+        if (!res.ok) throw new Error('upload failed');
+        succeeded++;
+        setUploadingCount((n) => n - 1);
+      } catch {
+        setUploadingCount((n) => n - 1);
+      }
+    }
+    showToast(succeeded === list.length ? 'success' : 'error',
+      `${succeeded}/${list.length}개 업로드 완료 (AI가 자동 분류했습니다)`);
+    void reload();
+  };
 
   const byCategory = images.filter((i) => i.category === activeCategory);
 
@@ -1777,20 +1812,37 @@ function GalleryTab() {
   };
 
   return (
-    <div className="space-y-4">
+    <div
+      className="space-y-4"
+      onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setDragOver(false);
+        if (e.dataTransfer.files.length > 0) void handleFiles(e.dataTransfer.files);
+      }}
+    >
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-base font-bold">공용 이미지 라이브러리</h3>
           <p className="text-xs text-gray-500 mt-0.5">
-            모든 교회가 페이지 편집에서 선택할 수 있는 공유 이미지. 자연/풍경 중심으로 큐레이션.
+            드래그&드롭으로 여러 장 업로드 — AI가 카테고리를 자동 판별합니다. AI로 직접 생성할 수도 있어요.
           </p>
         </div>
-        <button
-          onClick={() => setShowUpload(true)}
-          className="bg-indigo-600 text-white px-3 py-1.5 text-sm rounded-lg hover:bg-indigo-700"
-        >
-          + 이미지 업로드
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowGenerate(true)}
+            className="bg-purple-600 text-white px-3 py-1.5 text-sm rounded-lg hover:bg-purple-700"
+          >
+            ✨ AI로 생성
+          </button>
+          <button
+            onClick={() => setShowUpload(true)}
+            className="bg-indigo-600 text-white px-3 py-1.5 text-sm rounded-lg hover:bg-indigo-700"
+          >
+            + 이미지 업로드
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-1 overflow-x-auto">
@@ -1810,39 +1862,46 @@ function GalleryTab() {
         })}
       </div>
 
-      {loading ? (
-        <div className="text-sm text-gray-400 py-10 text-center">불러오는 중...</div>
-      ) : byCategory.length === 0 ? (
-        <div className="text-sm text-gray-400 py-10 text-center">이 카테고리에 등록된 이미지가 없습니다.</div>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {byCategory.map((img) => (
-            <div key={img.id} className={`group relative aspect-video rounded-lg overflow-hidden border ${img.isActive ? 'border-gray-200' : 'border-red-300 opacity-60'}`}>
-              <img src={img.url} alt={img.title} className="w-full h-full object-cover" loading="lazy" />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-colors flex flex-col justify-between p-2 opacity-0 group-hover:opacity-100">
-                <p className="text-white text-xs font-medium truncate">{img.title}</p>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => handleToggleActive(img)}
-                    className="flex-1 text-[10px] bg-white/90 text-gray-800 py-1 rounded hover:bg-white"
-                  >
-                    {img.isActive ? '비활성' : '활성'}
-                  </button>
-                  <button
-                    onClick={() => handleDelete(img.id, img.title)}
-                    className="flex-1 text-[10px] bg-red-500 text-white py-1 rounded hover:bg-red-600"
-                  >
-                    삭제
-                  </button>
+      {/* Drop zone shell — wraps grid so drop works on the entire area */}
+      <div className={`relative rounded-lg border-2 border-dashed transition-colors ${
+        dragOver ? 'border-indigo-500 bg-indigo-50/40' : 'border-transparent'
+      }`}>
+        {uploadingCount > 0 && (
+          <div className="absolute top-2 right-2 z-10 bg-white shadow px-2.5 py-1 rounded-full text-xs text-indigo-700 border border-indigo-200">
+            업로드 중 {uploadingCount}장...
+          </div>
+        )}
+        {loading ? (
+          <div className="text-sm text-gray-400 py-10 text-center">불러오는 중...</div>
+        ) : byCategory.length === 0 ? (
+          <div className="text-sm text-gray-400 py-14 text-center">
+            이 카테고리에 등록된 이미지가 없습니다.
+            <br />이미지 파일을 여기로 드래그해서 추가하세요.
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 p-1">
+            {byCategory.map((img) => (
+              <div key={img.id} className={`group relative aspect-video rounded-lg overflow-hidden border ${img.isActive ? 'border-gray-200' : 'border-red-300 opacity-60'}`}>
+                <img src={img.url} alt={img.title} className="w-full h-full object-cover" loading="lazy" />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-colors flex flex-col justify-between p-2 opacity-0 group-hover:opacity-100">
+                  <p className="text-white text-xs font-medium truncate">{img.title}</p>
+                  <div className="flex gap-1">
+                    <button onClick={() => handleToggleActive(img)} className="flex-1 text-[10px] bg-white/90 text-gray-800 py-1 rounded hover:bg-white">
+                      {img.isActive ? '비활성' : '활성'}
+                    </button>
+                    <button onClick={() => handleDelete(img.id, img.title)} className="flex-1 text-[10px] bg-red-500 text-white py-1 rounded hover:bg-red-600">
+                      삭제
+                    </button>
+                  </div>
                 </div>
+                {!img.isActive && (
+                  <span className="absolute top-1 right-1 text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded">비활성</span>
+                )}
               </div>
-              {!img.isActive && (
-                <span className="absolute top-1 right-1 text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded">비활성</span>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
 
       {showUpload && (
         <GalleryUploadModal
@@ -1852,6 +1911,133 @@ function GalleryTab() {
           token={token}
         />
       )}
+      {showGenerate && (
+        <GalleryGenerateModal
+          onClose={() => setShowGenerate(false)}
+          onGenerated={() => { setShowGenerate(false); void reload(); }}
+          token={token}
+        />
+      )}
+    </div>
+  );
+}
+
+// AI generation modal — prompt + aspect-ratio multi-select. Server fans out
+// across the chosen ratios, auto-classifies each result, and inserts rows.
+const ASPECT_RATIO_OPTIONS: { id: '16:9' | '4:3' | '3:2' | '1:1' | '3:4' | '9:16'; label: string; hint: string }[] = [
+  { id: '16:9', label: '16:9', hint: '히어로/배너' },
+  { id: '4:3',  label: '4:3',  hint: '표준 와이드' },
+  { id: '3:2',  label: '3:2',  hint: '카드' },
+  { id: '1:1',  label: '1:1',  hint: '정사각/썸네일' },
+  { id: '3:4',  label: '3:4',  hint: '세로 인물' },
+  { id: '9:16', label: '9:16', hint: '모바일 전체화면' },
+];
+
+function GalleryGenerateModal({
+  onClose,
+  onGenerated,
+  token,
+}: {
+  onClose: () => void;
+  onGenerated: () => void;
+  token?: string;
+}) {
+  const { showToast } = useToast();
+  const [prompt, setPrompt] = useState('');
+  const [ratios, setRatios] = useState<Record<string, boolean>>({ '16:9': true });
+  const [generating, setGenerating] = useState(false);
+
+  const toggle = (r: string) => setRatios((prev) => ({ ...prev, [r]: !prev[r] }));
+  const selected = Object.entries(ratios).filter(([, v]) => v).map(([k]) => k);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!prompt.trim()) { showToast('error', '프롬프트를 입력하세요'); return; }
+    if (selected.length === 0) { showToast('error', '비율을 하나 이상 선택하세요'); return; }
+    setGenerating(true);
+    try {
+      const res = await fetch('/api/v1/admin/shared-images/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token || ''}` },
+        body: JSON.stringify({ prompt: prompt.trim(), aspectRatios: selected }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as any)?.error?.message || '생성 실패');
+      }
+      const json = await res.json() as { data: unknown[]; failures?: string[] };
+      showToast('success',
+        `${json.data.length}장 생성 완료${json.failures?.length ? ` (실패: ${json.failures.join(', ')})` : ''}`);
+      onGenerated();
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '생성 실패');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
+      <form onSubmit={submit} className="bg-white rounded-xl w-full max-w-lg p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-bold">✨ AI로 이미지 생성</h3>
+          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">프롬프트 *</label>
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            rows={4}
+            placeholder="예: 봄꽃이 만개한 공원의 아침 햇살, 파스텔톤, 부드러운 빛"
+            className="w-full border rounded-lg px-3 py-2 text-sm leading-relaxed resize-y min-h-[100px]"
+          />
+          <p className="text-[11px] text-gray-400 mt-1">
+            자연 · 풍경 · 빛 · 꽃 중심으로 묘사해주세요. 세부 분위기·색감을 함께 적으면 결과가 더 일관됩니다.
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1.5">비율 (복수 선택 가능)</label>
+          <div className="grid grid-cols-3 gap-2">
+            {ASPECT_RATIO_OPTIONS.map((opt) => {
+              const checked = !!ratios[opt.id];
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => toggle(opt.id)}
+                  className={`rounded-lg border px-2 py-2 text-left transition-colors ${
+                    checked ? 'border-purple-500 bg-purple-50' : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <p className={`text-xs font-semibold ${checked ? 'text-purple-700' : 'text-gray-700'}`}>
+                    {opt.label} {checked && '✓'}
+                  </p>
+                  <p className="text-[10px] text-gray-500">{opt.hint}</p>
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-[11px] text-gray-400 mt-1">
+            선택한 비율만큼 이미지가 생성됩니다 (비율당 1장). 각각 R2에 저장되고 AI가 카테고리를 자동 분류합니다.
+          </p>
+        </div>
+
+        <div className="flex gap-2 pt-2">
+          <button
+            type="submit"
+            disabled={generating || !prompt.trim() || selected.length === 0}
+            className="flex-1 bg-purple-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-purple-700 disabled:opacity-50"
+          >
+            {generating ? '생성 중... (최대 1~2분)' : `${selected.length || 0}장 생성`}
+          </button>
+          <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200">
+            취소
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
@@ -2117,6 +2303,9 @@ export default function SuperAdminDashboardV2() {
   const [statsLoading, setStatsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  // Bumped after a successful create — TenantsTab watches this and refetches
+  // so the new church shows up immediately without a page reload.
+  const [tenantsRefreshKey, setTenantsRefreshKey] = useState(0);
 
   const fetchStats = useCallback(async () => {
     setStatsLoading(true);
@@ -2215,7 +2404,7 @@ export default function SuperAdminDashboardV2() {
             onCreateChurch={() => setShowCreateModal(true)}
           />
         )}
-        {activeTab === 'tenants' && <TenantsTab />}
+        {activeTab === 'tenants' && <TenantsTab refreshKey={tenantsRefreshKey} />}
         {activeTab === 'gallery' && <GalleryTab />}
         {activeTab === 'domains' && <DomainsTab />}
         {activeTab === 'users' && <UsersTab />}
@@ -2229,6 +2418,8 @@ export default function SuperAdminDashboardV2() {
           onClose={() => setShowCreateModal(false)}
           onCreated={() => {
             void fetchStats();
+            setTenantsRefreshKey((n) => n + 1);
+            setActiveTab('tenants'); // jump to the list so the new row is visible
           }}
         />
       )}

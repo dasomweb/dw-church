@@ -186,7 +186,10 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
 
   // Branding (SEO/favicon handled in generateMetadata above)
   const logoUrl = settings?.logoUrl ?? settings?.logo_url ?? null;
-  const churchName = settings?.name ?? settings?.churchName ?? slug;
+  // church_name is now populated server-side from tenants.name when the admin
+  // hasn't set it explicitly — so churchName almost always resolves to the
+  // human-readable name, and we only fall back to slug as a last resort.
+  const churchName = settings?.churchName ?? settings?.church_name ?? settings?.name ?? slug;
 
   // Build tree: top-level items with children
   const topLevelItems = navItems

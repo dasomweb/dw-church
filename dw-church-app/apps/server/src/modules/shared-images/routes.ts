@@ -6,6 +6,7 @@ import { env } from '../../config/env.js';
 import { requireAuth } from '../../middleware/auth.js';
 import { AppError } from '../../middleware/error-handler.js';
 import { uploadFile, deleteFile } from '../../config/r2.js';
+import { generateImage, classifyImage } from '../ai/service.js';
 
 /**
  * Shared image gallery — curated platform-wide by super admins, picked by
@@ -50,6 +51,7 @@ export default async function sharedImageRoutes(app: FastifyInstance): Promise<v
   );
 
   // POST /admin/shared-images/upload  — multipart, super admin only
+  // `category=auto` (or omitted) triggers Gemini vision auto-classification.
   app.post(
     '/admin/shared-images/upload',
     { preHandler: [requireSuperAdmin] },
@@ -68,16 +70,67 @@ export default async function sharedImageRoutes(app: FastifyInstance): Promise<v
 
       const meta = multipart.query;
       const tags = meta.tags ? meta.tags.split(',').map((t) => t.trim()).filter(Boolean) : [];
+      const requestedCategory = meta.category;
+      const category = (!requestedCategory || requestedCategory === 'auto')
+        ? await classifyImage(buffer, data.mimetype)
+        : requestedCategory;
+
       const image = await prisma.sharedImage.create({
         data: {
           url,
           r2Key,
           title: meta.title || data.filename,
-          category: meta.category || 'nature',
+          category,
           tags,
         },
       });
       return reply.status(201).send({ data: image });
+    },
+  );
+
+  // POST /admin/shared-images/generate — AI image generation
+  // Body: { prompt, aspectRatios: string[], titlePrefix?: string }
+  // For each ratio: generate → R2 → classify → insert row. Returns all rows.
+  const generateBodySchema = z.object({
+    prompt: z.string().min(1),
+    aspectRatios: z.array(z.enum(['16:9', '4:3', '3:2', '1:1', '3:4', '9:16'])).min(1).max(6),
+    titlePrefix: z.string().optional(),
+    category: z.string().optional(),
+  });
+
+  app.post(
+    '/admin/shared-images/generate',
+    { preHandler: [requireSuperAdmin] },
+    async (request, reply) => {
+      const body = generateBodySchema.parse(request.body);
+      const created: Array<{ id: string; url: string; category: string; title: string }> = [];
+      const failures: string[] = [];
+
+      for (const ratio of body.aspectRatios) {
+        try {
+          const { buffer, mimeType } = await generateImage(body.prompt, ratio);
+          const ext = mimeType.includes('png') ? 'png' : 'jpg';
+          const r2Key = `shared/gallery/ai-${crypto.randomUUID()}.${ext}`;
+          const url = await uploadFile(r2Key, buffer, mimeType);
+          const category = body.category && body.category !== 'auto'
+            ? body.category
+            : await classifyImage(buffer, mimeType);
+          const title = `${body.titlePrefix ?? body.prompt.slice(0, 40)} (${ratio})`;
+          const image = await prisma.sharedImage.create({
+            data: { url, r2Key, title, category, tags: ['ai', ratio] },
+          });
+          created.push({ id: image.id, url: image.url, category: image.category, title: image.title });
+        } catch (err) {
+          request.log.warn({ ratio, err: err instanceof Error ? err.message : err }, 'image generation failed');
+          failures.push(ratio);
+        }
+      }
+
+      if (created.length === 0) {
+        throw new AppError('GENERATION_FAILED', 502, `Image generation failed: ${failures.join(', ')}`);
+      }
+
+      return reply.status(201).send({ data: created, failures });
     },
   );
 

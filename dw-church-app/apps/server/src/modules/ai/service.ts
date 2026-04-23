@@ -52,6 +52,104 @@ Korean church website imagery:
   old manuscripts, dramatic cinematic lighting.
 `.trim();
 
+// ─── Image Generation (Gemini 2.5 Flash Image) ───────────
+// Returns raw image bytes plus MIME type, ready to upload to R2.
+
+export async function generateImage(
+  prompt: string,
+  aspectRatio: '16:9' | '4:3' | '3:2' | '1:1' | '3:4' | '9:16' = '16:9',
+): Promise<{ buffer: Buffer; mimeType: string }> {
+  const apiKey = env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error('GEMINI_API_KEY not configured');
+
+  // Embed the image-tone guide + aspect ratio directly in the prompt — the
+  // image model doesn't take a separate system instruction.
+  const fullPrompt = `${CHURCH_IMAGE_GUIDE}
+
+Aspect ratio: ${aspectRatio}. Produce a photorealistic image.
+
+Subject: ${prompt}`;
+
+  const res = await fetch(
+    `${GEMINI_BASE}/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: fullPrompt }] }],
+        generationConfig: { responseModalities: ['IMAGE'] },
+      }),
+    },
+  );
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Gemini image API error: ${res.status} ${err}`);
+  }
+
+  const data = await res.json();
+  const parts = data.candidates?.[0]?.content?.parts ?? [];
+  const imagePart = parts.find((p: Record<string, unknown>) => (p as { inlineData?: unknown }).inlineData);
+  const inlineData = (imagePart as { inlineData?: { mimeType: string; data: string } } | undefined)?.inlineData;
+  if (!inlineData?.data) throw new Error('No image returned from Gemini');
+
+  return {
+    buffer: Buffer.from(inlineData.data, 'base64'),
+    mimeType: inlineData.mimeType || 'image/png',
+  };
+}
+
+// ─── Image Classification (Gemini vision) ────────────────
+// Classifies an uploaded image into one of our gallery categories.
+// Returns a category id from the fixed set; falls back to 'nature' if the
+// model response doesn't parse cleanly.
+
+const KNOWN_CATEGORIES = ['nature', 'flower', 'sky', 'park', 'cross', 'church', 'bible', 'abstract'] as const;
+export type SharedImageCategory = typeof KNOWN_CATEGORIES[number];
+
+export async function classifyImage(imageBuffer: Buffer, mimeType: string): Promise<SharedImageCategory> {
+  const apiKey = env.GEMINI_API_KEY;
+  if (!apiKey) return 'nature';
+
+  const prompt = `Classify this image into exactly one of these categories for a Korean church website gallery:
+- nature: landscapes, mountains, forests, water
+- flower: any flower or plant close-up
+- sky: clouds, sunrise, sunset, stars
+- park: urban greenery, benches, playgrounds
+- cross: cross imagery (silhouette, wood, light)
+- church: buildings, sanctuaries, steeples
+- bible: books, scripture, reading
+- abstract: gradients, textures, non-representational
+
+Respond with exactly one lowercase word from that list. No punctuation, no explanation.`;
+
+  try {
+    const res = await fetch(
+      `${GEMINI_BASE}/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { inlineData: { mimeType, data: imageBuffer.toString('base64') } },
+              { text: prompt },
+            ],
+          }],
+          generationConfig: { temperature: 0.1, maxOutputTokens: 16 },
+        }),
+      },
+    );
+    if (!res.ok) return 'nature';
+    const data = await res.json();
+    const text = (data.candidates?.[0]?.content?.parts?.[0]?.text ?? '').trim().toLowerCase();
+    const match = KNOWN_CATEGORIES.find((c) => text === c || text.startsWith(c));
+    return match ?? 'nature';
+  } catch {
+    return 'nature';
+  }
+}
+
 // ─── Text Generation (Gemini 2.5 Flash) ──────────────────
 
 export async function generateText(prompt: string, context?: string): Promise<string> {
