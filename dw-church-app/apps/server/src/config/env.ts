@@ -43,6 +43,11 @@ const envSchema = z.object({
   NODE_ENV: z
     .enum(['development', 'production', 'test'])
     .default('development'),
+
+  // Custom-domain CNAME target shown to tenants when they connect their own
+  // domain. Points to the Railway web service's public hostname so their
+  // traffic reaches us. Defaults to the current production web service.
+  WEB_CNAME_TARGET: z.string().default('web-production-1f18f.up.railway.app'),
 });
 
 export type Env = z.infer<typeof envSchema>;

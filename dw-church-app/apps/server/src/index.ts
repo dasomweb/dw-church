@@ -220,19 +220,24 @@ async function main(): Promise<void> {
       } catch { /* skip */ }
 
       // 4. custom_domains — per-tenant record of registered custom domains.
-      //    Service writes/reads (domain, status, verified_at, created_at,
-      //    updated_at). Not in tenant_template.sql.
+      //    Service writes/reads (domain, status, verification_token,
+      //    verified_at, created_at, updated_at).
       try {
         await prisma.$executeRawUnsafe(`
           CREATE TABLE IF NOT EXISTS "${schema}".custom_domains (
-            "id"          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-            "domain"      VARCHAR(255) NOT NULL UNIQUE,
-            "status"      VARCHAR(20)  NOT NULL DEFAULT 'pending',
-            "verified_at" TIMESTAMPTZ,
-            "created_at"  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-            "updated_at"  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+            "id"                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "domain"             VARCHAR(255) NOT NULL UNIQUE,
+            "status"             VARCHAR(20)  NOT NULL DEFAULT 'pending',
+            "verification_token" VARCHAR(64),
+            "verified_at"        TIMESTAMPTZ,
+            "created_at"         TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+            "updated_at"         TIMESTAMPTZ  NOT NULL DEFAULT NOW()
           )
         `);
+        // Older tenants may have the table without verification_token — add it
+        await prisma.$executeRawUnsafe(
+          `ALTER TABLE "${schema}".custom_domains ADD COLUMN IF NOT EXISTS "verification_token" VARCHAR(64)`,
+        );
         createHits++;
       } catch { /* skip */ }
     }
