@@ -198,6 +198,8 @@ CREATE TABLE tenant_template.menus (
 );
 
 -- ─── Theme Settings ─────────────────────────────────────────
+-- Kept for reference; runtime code uses `themes` (see below) with a JSONB
+-- settings blob. Fresh tenants should look at `themes` not `theme`.
 CREATE TABLE tenant_template.theme (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     template_name   VARCHAR(50) DEFAULT 'modern',
@@ -205,6 +207,39 @@ CREATE TABLE tenant_template.theme (
     fonts           JSONB DEFAULT '{"heading":"Pretendard","body":"Pretendard"}',
     custom_css      TEXT DEFAULT '',
     updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ─── Themes (live, used by themes/service.ts) ────────────────
+CREATE TABLE tenant_template.themes (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name        VARCHAR(100) NOT NULL DEFAULT 'modern',
+    is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+    settings    JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ─── Unified Categories (sermon + album via `type` discriminator) ──
+CREATE TABLE tenant_template.categories (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name        VARCHAR(200) NOT NULL,
+    slug        VARCHAR(200) NOT NULL,
+    type        VARCHAR(50) NOT NULL,
+    sort_order  INT NOT NULL DEFAULT 0,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (type, slug)
+);
+CREATE INDEX idx_categories_type ON tenant_template.categories(type);
+
+-- ─── Custom Domains (per tenant) ─────────────────────────────
+CREATE TABLE tenant_template.custom_domains (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    domain      VARCHAR(255) NOT NULL UNIQUE,
+    status      VARCHAR(20) NOT NULL DEFAULT 'pending',
+    verified_at TIMESTAMPTZ,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- ─── Files ──────────────────────────────────────────────────

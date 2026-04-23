@@ -153,31 +153,94 @@ async function main(): Promise<void> {
     app.log.warn(`password_expires_at column migration skipped: ${err}`);
   }
 
-  // --- One-time migration: add `title` column to preachers in every tenant ---
-  // service.createPreacher INSERTs (name, title, is_default) but the original
-  // tenant_template.sql shipped preachers without a `title` column. Add it
-  // everywhere — tenant_template for future clones, plus every existing
-  // tenant_<slug> schema. IF NOT EXISTS keeps this idempotent.
+  // --- Tenant schema drift repair ---
+  // The tenant_template.sql shipped with a few tables in shapes that the
+  // service code doesn't match. Rather than rewrite the services (which
+  // encode more structure than the raw tables currently do), create the
+  // missing/mismatched tables via raw SQL across every tenant_* schema.
+  // All statements are idempotent (IF NOT EXISTS), so this runs safely on
+  // every deploy.
   try {
     const schemas = await prisma.$queryRawUnsafe<{ schema_name: string }[]>(
       `SELECT schema_name FROM information_schema.schemata
        WHERE schema_name = 'tenant_template'
           OR schema_name LIKE 'tenant_%'`,
     );
-    let patched = 0;
+
+    let alterHits = 0;
+    let createHits = 0;
+
     for (const s of schemas) {
+      const schema = s.schema_name;
+
+      // 1. preachers.title — code INSERTs (name, title, is_default)
       try {
         await prisma.$executeRawUnsafe(
-          `ALTER TABLE "${s.schema_name}".preachers ADD COLUMN IF NOT EXISTS "title" VARCHAR(200)`,
+          `ALTER TABLE "${schema}".preachers ADD COLUMN IF NOT EXISTS "title" VARCHAR(200)`,
         );
-        patched++;
-      } catch {
-        // schema may not have preachers table yet; skip
-      }
+        alterHits++;
+      } catch { /* preachers table may not exist; skip */ }
+
+      // 2. categories — unified table for sermon + album (code references
+      //    `categories` with a `type` discriminator, not the separate
+      //    sermon_categories / album_categories tables in the template).
+      try {
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".categories (
+            "id"         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "name"       VARCHAR(200) NOT NULL,
+            "slug"       VARCHAR(200) NOT NULL,
+            "type"       VARCHAR(50)  NOT NULL,
+            "sort_order" INT          NOT NULL DEFAULT 0,
+            "created_at" TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+            "updated_at" TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+            UNIQUE ("type", "slug")
+          )
+        `);
+        await prisma.$executeRawUnsafe(
+          `CREATE INDEX IF NOT EXISTS "categories_type_idx" ON "${schema}".categories ("type")`,
+        );
+        createHits++;
+      } catch { /* skip */ }
+
+      // 3. themes — code reads (id, name, is_active, settings JSONB) but the
+      //    template defined a `theme` (singular) with a different shape.
+      try {
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".themes (
+            "id"         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "name"       VARCHAR(100) NOT NULL DEFAULT 'modern',
+            "is_active"  BOOLEAN      NOT NULL DEFAULT TRUE,
+            "settings"   JSONB        NOT NULL DEFAULT '{}'::jsonb,
+            "created_at" TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+            "updated_at" TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+          )
+        `);
+        createHits++;
+      } catch { /* skip */ }
+
+      // 4. custom_domains — per-tenant record of registered custom domains.
+      //    Service writes/reads (domain, status, verified_at, created_at,
+      //    updated_at). Not in tenant_template.sql.
+      try {
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".custom_domains (
+            "id"          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "domain"      VARCHAR(255) NOT NULL UNIQUE,
+            "status"      VARCHAR(20)  NOT NULL DEFAULT 'pending',
+            "verified_at" TIMESTAMPTZ,
+            "created_at"  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+            "updated_at"  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+          )
+        `);
+        createHits++;
+      } catch { /* skip */ }
     }
-    if (patched > 0) app.log.info(`preachers.title column ensured in ${patched} schema(s)`);
+    if (alterHits || createHits) {
+      app.log.info(`Tenant schema drift repair — ALTER: ${alterHits}, CREATE: ${createHits}`);
+    }
   } catch (err) {
-    app.log.warn(`preachers.title migration skipped: ${err}`);
+    app.log.warn(`Tenant schema drift repair skipped: ${err}`);
   }
 
   // --- shared_images table (platform-wide gallery curated by super admin) ---
