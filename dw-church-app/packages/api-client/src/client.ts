@@ -210,6 +210,11 @@ export class DWChurchClient {
   private fetchAdapter?: FetchAdapter;
   private namespace = '/api/v1';
 
+  /** Raw adapter for ad-hoc requests (e.g. AI endpoints without a typed method). */
+  get adapter(): ApiAdapter {
+    return this.api;
+  }
+
   constructor(config: ClientConfig) {
     if (config.adapter) {
       this.api = config.adapter;

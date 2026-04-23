@@ -250,7 +250,7 @@ export default function PageWizard() {
     setStep('creating');
     setLoading(true);
     try {
-      const res = await apiClient.adapter.post<{ data: { page: { id: string; title: string; slug: string }; sections: number } }>('/ai/generate-page', { prompt: selectedPrompt });
+      const res = await apiClient.adapter.post<{ data: { page: { id: string; title: string; slug: string }; sections: number } }>('/api/v1/ai/generate-page', { prompt: selectedPrompt });
       showToast('success', `"${res.data.page.title}" 페이지가 생성되었습니다`);
       queryClient.invalidateQueries({ queryKey: ['pages'] });
       navigate(`/t/${slug}/pages`);

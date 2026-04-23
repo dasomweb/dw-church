@@ -148,7 +148,7 @@ export default function Dashboard() {
   const handleWizardCreate = async (prompt: string, label: string) => {
     setWizardLoading(label);
     try {
-      const res = await apiClient.adapter.post<{ data: { page: { id: string; title: string; slug: string }; sections: number } }>('/ai/generate-page', { prompt });
+      const res = await apiClient.adapter.post<{ data: { page: { id: string; title: string; slug: string }; sections: number } }>('/api/v1/ai/generate-page', { prompt });
       showToast('success', `"${res.data.page.title}" 페이지가 생성되었습니다 (${res.data.sections}개 블록)`);
       queryClient.invalidateQueries({ queryKey: ['pages'] });
       setWizardOpen(false);

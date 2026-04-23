@@ -1599,7 +1599,7 @@ export default function PageEditor() {
     if (!aiPrompt.trim()) return;
     setAiLoading(true);
     try {
-      const res = await apiClient.adapter.post<{ data: { page: { id: string; title: string; slug: string }; sections: number } }>('/ai/generate-page', { prompt: aiPrompt });
+      const res = await apiClient.adapter.post<{ data: { page: { id: string; title: string; slug: string }; sections: number } }>('/api/v1/ai/generate-page', { prompt: aiPrompt });
       showToast('success', `"${res.data.page.title}" 페이지가 생성되었습니다 (${res.data.sections}개 블록)`);
       queryClient.invalidateQueries({ queryKey: ['pages'] });
       setSelectedPageId(res.data.page.id);
