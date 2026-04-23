@@ -98,15 +98,15 @@ const PLAN_COLORS: Record<string, string> = {
   free: 'bg-gray-100 text-gray-600',
 };
 
-type TabId = 'overview' | 'tenants' | 'domains' | 'users' | 'storage';
+type TabId = 'overview' | 'tenants' | 'domains' | 'users' | 'storage' | 'gallery';
 
 const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'overview', label: '개요', icon: '📊' },
   { id: 'tenants', label: '교회 관리', icon: '⛪' },
+  { id: 'gallery', label: '이미지 라이브러리', icon: '🖼️' },
   { id: 'domains', label: '도메인 관리', icon: '🌐' },
   { id: 'users', label: '사용자 관리', icon: '👥' },
   { id: 'storage', label: '저장공간', icon: '💾' },
-  // { id: 'migration', label: '마이그레이션', icon: '🔄' },  // 보류
 ];
 
 // ─── Helpers ─────────────────────────────────────────────
@@ -1699,6 +1699,271 @@ interface StorageTenant {
   dbSize: number;
 }
 
+interface SharedImage {
+  id: string;
+  url: string;
+  title: string;
+  category: string;
+  tags: string[];
+  isActive: boolean;
+}
+
+const GALLERY_CATEGORIES = [
+  { id: 'nature', label: '자연' },
+  { id: 'flower', label: '꽃' },
+  { id: 'sky', label: '하늘' },
+  { id: 'park', label: '공원' },
+  { id: 'cross', label: '십자가' },
+  { id: 'church', label: '교회' },
+  { id: 'bible', label: '성경' },
+  { id: 'abstract', label: '추상' },
+];
+
+function GalleryTab() {
+  const { showToast } = useToast();
+  const [images, setImages] = useState<SharedImage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState('nature');
+  const [showUpload, setShowUpload] = useState(false);
+  const session = useAuthStore((s) => s.session);
+  const token = session?.accessToken;
+
+  const reload = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/v1/shared-images?active=all', {
+        headers: { Authorization: `Bearer ${token || ''}` },
+      });
+      const json = (await res.json()) as { data: SharedImage[] };
+      setImages(json.data ?? []);
+    } catch {
+      showToast('error', '이미지를 불러오지 못했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { void reload(); }, [token]);
+
+  const byCategory = images.filter((i) => i.category === activeCategory);
+
+  const handleDelete = async (id: string, title: string) => {
+    if (!confirm(`"${title}" 이미지를 삭제하시겠습니까?`)) return;
+    try {
+      const res = await fetch(`/api/v1/admin/shared-images/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token || ''}` },
+      });
+      if (!res.ok) throw new Error('delete failed');
+      showToast('success', '삭제되었습니다.');
+      void reload();
+    } catch {
+      showToast('error', '삭제 실패');
+    }
+  };
+
+  const handleToggleActive = async (img: SharedImage) => {
+    try {
+      const res = await fetch(`/api/v1/admin/shared-images/${img.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token || ''}` },
+        body: JSON.stringify({ isActive: !img.isActive }),
+      });
+      if (!res.ok) throw new Error('update failed');
+      void reload();
+    } catch {
+      showToast('error', '상태 변경 실패');
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-base font-bold">공용 이미지 라이브러리</h3>
+          <p className="text-xs text-gray-500 mt-0.5">
+            모든 교회가 페이지 편집에서 선택할 수 있는 공유 이미지. 자연/풍경 중심으로 큐레이션.
+          </p>
+        </div>
+        <button
+          onClick={() => setShowUpload(true)}
+          className="bg-indigo-600 text-white px-3 py-1.5 text-sm rounded-lg hover:bg-indigo-700"
+        >
+          + 이미지 업로드
+        </button>
+      </div>
+
+      <div className="flex gap-1 overflow-x-auto">
+        {GALLERY_CATEGORIES.map((c) => {
+          const count = images.filter((i) => i.category === c.id).length;
+          return (
+            <button
+              key={c.id}
+              onClick={() => setActiveCategory(c.id)}
+              className={`px-3 py-1 text-xs rounded-full whitespace-nowrap transition-colors ${
+                activeCategory === c.id ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {c.label} {count > 0 && <span className="opacity-70">({count})</span>}
+            </button>
+          );
+        })}
+      </div>
+
+      {loading ? (
+        <div className="text-sm text-gray-400 py-10 text-center">불러오는 중...</div>
+      ) : byCategory.length === 0 ? (
+        <div className="text-sm text-gray-400 py-10 text-center">이 카테고리에 등록된 이미지가 없습니다.</div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {byCategory.map((img) => (
+            <div key={img.id} className={`group relative aspect-video rounded-lg overflow-hidden border ${img.isActive ? 'border-gray-200' : 'border-red-300 opacity-60'}`}>
+              <img src={img.url} alt={img.title} className="w-full h-full object-cover" loading="lazy" />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-colors flex flex-col justify-between p-2 opacity-0 group-hover:opacity-100">
+                <p className="text-white text-xs font-medium truncate">{img.title}</p>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => handleToggleActive(img)}
+                    className="flex-1 text-[10px] bg-white/90 text-gray-800 py-1 rounded hover:bg-white"
+                  >
+                    {img.isActive ? '비활성' : '활성'}
+                  </button>
+                  <button
+                    onClick={() => handleDelete(img.id, img.title)}
+                    className="flex-1 text-[10px] bg-red-500 text-white py-1 rounded hover:bg-red-600"
+                  >
+                    삭제
+                  </button>
+                </div>
+              </div>
+              {!img.isActive && (
+                <span className="absolute top-1 right-1 text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded">비활성</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showUpload && (
+        <GalleryUploadModal
+          defaultCategory={activeCategory}
+          onClose={() => setShowUpload(false)}
+          onUploaded={() => { setShowUpload(false); void reload(); }}
+          token={token}
+        />
+      )}
+    </div>
+  );
+}
+
+function GalleryUploadModal({
+  defaultCategory,
+  onClose,
+  onUploaded,
+  token,
+}: {
+  defaultCategory: string;
+  onClose: () => void;
+  onUploaded: () => void;
+  token?: string;
+}) {
+  const { showToast } = useToast();
+  const [file, setFile] = useState<File | null>(null);
+  const [title, setTitle] = useState('');
+  const [category, setCategory] = useState(defaultCategory);
+  const [tags, setTags] = useState('');
+  const [uploading, setUploading] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!file) { showToast('error', '파일을 선택하세요'); return; }
+    setUploading(true);
+    try {
+      const qs = new URLSearchParams({
+        title: title || file.name,
+        category,
+        ...(tags.trim() ? { tags } : {}),
+      }).toString();
+      const body = new FormData();
+      body.append('file', file);
+      const res = await fetch(`/api/v1/admin/shared-images/upload?${qs}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token || ''}` },
+        body,
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as any)?.error?.message || '업로드 실패');
+      }
+      showToast('success', '업로드 완료');
+      onUploaded();
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '업로드 실패');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
+      <form onSubmit={submit} className="bg-white rounded-xl w-full max-w-md p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-bold">공용 이미지 업로드</h3>
+          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">파일 *</label>
+          <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} required />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">제목</label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="예: 봄꽃이 핀 공원"
+            className="w-full border rounded-lg px-3 py-1.5 text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">카테고리</label>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="w-full border rounded-lg px-3 py-1.5 text-sm"
+          >
+            {GALLERY_CATEGORIES.map((c) => (
+              <option key={c.id} value={c.id}>{c.label}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">태그 (쉼표 구분, 선택)</label>
+          <input
+            type="text"
+            value={tags}
+            onChange={(e) => setTags(e.target.value)}
+            placeholder="봄, 꽃, 따뜻한"
+            className="w-full border rounded-lg px-3 py-1.5 text-sm"
+          />
+        </div>
+        <div className="flex gap-2 pt-2">
+          <button
+            type="submit"
+            disabled={uploading || !file}
+            className="flex-1 bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
+          >
+            {uploading ? '업로드 중...' : '업로드'}
+          </button>
+          <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200">
+            취소
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 function StorageTab() {
   const apiFetch = useAdminApi();
   const { showToast } = useToast();
@@ -1951,6 +2216,7 @@ export default function SuperAdminDashboardV2() {
           />
         )}
         {activeTab === 'tenants' && <TenantsTab />}
+        {activeTab === 'gallery' && <GalleryTab />}
         {activeTab === 'domains' && <DomainsTab />}
         {activeTab === 'users' && <UsersTab />}
         {activeTab === 'storage' && <StorageTab />}

@@ -87,6 +87,7 @@ async function main(): Promise<void> {
   const { aiRoutes } = await import('./modules/ai/routes.js');
   const { default: billingRoutes } = await import('./modules/billing/routes.js');
   const { default: migrationRoutes } = await import('./modules/migration/routes.js');
+  const { default: sharedImageRoutes } = await import('./modules/shared-images/routes.js');
 
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(tenantRoutes, { prefix: '/api/v1/admin' });
@@ -109,6 +110,7 @@ async function main(): Promise<void> {
   await app.register(boardRoutes, { prefix: '/api/v1' });
   await app.register(domainRoutes, { prefix: '/api/v1' });
   await app.register(migrationRoutes, { prefix: '/api/v1/migration' });
+  await app.register(sharedImageRoutes, { prefix: '/api/v1' });
 
   // --- Internal: resolve custom domain to tenant slug (used by Next.js middleware) ---
   app.get('/api/v1/admin/tenants/resolve-domain', async (request, reply) => {
@@ -149,6 +151,28 @@ async function main(): Promise<void> {
     );
   } catch (err) {
     app.log.warn(`password_expires_at column migration skipped: ${err}`);
+  }
+
+  // --- shared_images table (platform-wide gallery curated by super admin) ---
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "shared_images" (
+        "id"         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+        "url"        VARCHAR(500) NOT NULL,
+        "r2_key"     VARCHAR(500),
+        "title"      VARCHAR(200) NOT NULL DEFAULT '',
+        "category"   VARCHAR(50)  NOT NULL DEFAULT 'nature',
+        "tags"       TEXT[]       NOT NULL DEFAULT ARRAY[]::TEXT[],
+        "is_active"  BOOLEAN      NOT NULL DEFAULT TRUE,
+        "created_at" TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+        "updated_at" TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+      )
+    `);
+    await prisma.$executeRawUnsafe(
+      `CREATE INDEX IF NOT EXISTS "shared_images_category_active_idx" ON "shared_images" ("category", "is_active")`,
+    );
+  } catch (err) {
+    app.log.warn(`shared_images table migration skipped: ${err}`);
   }
 
   // --- Ensure super_admin users are always active ---

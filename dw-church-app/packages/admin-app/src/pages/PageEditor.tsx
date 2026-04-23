@@ -16,57 +16,15 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
 import { useToast } from '../components';
 import { ImageUpload, MultiImageUpload } from '../components/ImageUpload';
+import { useAuthStore } from '../stores/auth';
 
 // ═══════════════════════════════════════════════════════════
 // Block Registry — types, variants, metadata
 // ═══════════════════════════════════════════════════════════
 
-// ─── Image Library ────────────────────────────────────────
-// TODO: migrate to R2 storage
-const IMAGE_LIBRARY: { category: string; images: { url: string; label: string }[] }[] = [
-  { category: '자연', images: [
-    { url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1920&q=85&auto=format', label: '산과 호수' },
-    { url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1920&q=85&auto=format', label: '숲속 안개' },
-    { url: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=85&auto=format', label: '푸른 숲' },
-    { url: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1920&q=85&auto=format', label: '초원과 하늘' },
-  ]},
-  { category: '꽃', images: [
-    { url: 'https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=1920&q=85&auto=format', label: '핑크 꽃' },
-    { url: 'https://images.unsplash.com/photo-1487530811176-3780de880c2d?w=1920&q=85&auto=format', label: '라벤더' },
-    { url: 'https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=1920&q=85&auto=format', label: '봄꽃' },
-    { url: 'https://images.unsplash.com/photo-1462275646964-a0e3c11f18a6?w=1920&q=85&auto=format', label: '들꽃' },
-  ]},
-  { category: '하늘', images: [
-    { url: 'https://images.unsplash.com/photo-1517483000871-1dbf64a6e1c6?w=1920&q=85&auto=format', label: '일출' },
-    { url: 'https://images.unsplash.com/photo-1534088568595-a066f410bcda?w=1920&q=85&auto=format', label: '구름' },
-    { url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1920&q=85&auto=format', label: '황금빛 하늘' },
-    { url: 'https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?w=1920&q=85&auto=format', label: '노을' },
-  ]},
-  { category: '십자가', images: [
-    { url: 'https://images.unsplash.com/photo-1507692049790-de58290a4334?w=1920&q=85&auto=format', label: '십자가 실루엣' },
-    { url: 'https://images.unsplash.com/photo-1445855743215-296f0ec091ef?w=1920&q=85&auto=format', label: '언덕 위 십자가' },
-    { url: 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=1920&q=85&auto=format', label: '빛과 십자가' },
-    { url: 'https://images.unsplash.com/photo-1474314170901-f351b68f544f?w=1920&q=85&auto=format', label: '나무 십자가' },
-  ]},
-  { category: '교회', images: [
-    { url: 'https://images.unsplash.com/photo-1438032005730-c779502df39b?w=1920&q=85&auto=format', label: '교회 건물' },
-    { url: 'https://images.unsplash.com/photo-1510936111840-65e151ad71bb?w=1920&q=85&auto=format', label: '스테인드 글라스' },
-    { url: 'https://images.unsplash.com/photo-1548625149-fc4a29cf7092?w=1920&q=85&auto=format', label: '예배당 내부' },
-    { url: 'https://images.unsplash.com/photo-1519491050282-cf00c82424cb?w=1920&q=85&auto=format', label: '교회 첨탑' },
-  ]},
-  { category: '모던', images: [
-    { url: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=85&auto=format', label: '블루 그래디언트' },
-    { url: 'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=1920&q=85&auto=format', label: '추상 웨이브' },
-    { url: 'https://images.unsplash.com/photo-1553356084-58ef4a67b2a7?w=1920&q=85&auto=format', label: '컬러 추상' },
-    { url: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1920&q=85&auto=format', label: '그래디언트' },
-  ]},
-  { category: '텍스처', images: [
-    { url: 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=1920&q=85&auto=format', label: '종이 텍스처' },
-    { url: 'https://images.unsplash.com/photo-1533628635777-112b2239b1c7?w=1920&q=85&auto=format', label: '대리석' },
-    { url: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1920&q=85&auto=format', label: '다크 텍스처' },
-    { url: 'https://images.unsplash.com/photo-1518655048521-f130df041f66?w=1920&q=85&auto=format', label: '나무결' },
-  ]},
-];
+// Image library is now fetched from the server's shared_images table, which
+// super admins curate under "이미지 라이브러리" in the super admin console.
+// No hard-coded Unsplash links — CLAUDE.md rule: self-host through R2.
 
 interface BlockVariant {
   id: string;
@@ -582,9 +540,57 @@ function ServiceListEditor({ value, onChange }: { value: { name: string; time: s
   );
 }
 
+// Category display labels. Ids must match what super admin uploads under.
+const LIBRARY_CATEGORY_LABELS: Record<string, string> = {
+  nature: '자연',
+  flower: '꽃',
+  sky: '하늘',
+  park: '공원',
+  cross: '십자가',
+  church: '교회',
+  bible: '성경',
+  abstract: '추상',
+};
+
+interface SharedLibraryImage {
+  id: string;
+  url: string;
+  title: string;
+  category: string;
+}
+
 function ImageLibraryModal({ onSelect, onClose }: { onSelect: (url: string) => void; onClose: () => void }) {
-  const [activeCategory, setActiveCategory] = useState(IMAGE_LIBRARY[0]?.category || '');
-  const activeImages = IMAGE_LIBRARY.find((c) => c.category === activeCategory)?.images || [];
+  const session = useAuthStore((s) => s.session);
+  const token = session?.accessToken;
+  const [images, setImages] = useState<SharedLibraryImage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState<string>('');
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/v1/shared-images', {
+          headers: { Authorization: `Bearer ${token || ''}` },
+        });
+        if (!res.ok) throw new Error('load failed');
+        const json = (await res.json()) as { data: SharedLibraryImage[] };
+        if (cancelled) return;
+        const list = json.data ?? [];
+        setImages(list);
+        if (list.length > 0 && !activeCategory) setActiveCategory(list[0]!.category);
+      } catch {
+        if (!cancelled) setImages([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [token]);
+
+  // Unique categories present in the returned library.
+  const categories = Array.from(new Set(images.map((i) => i.category)));
+  const activeImages = images.filter((i) => i.category === activeCategory);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
@@ -593,41 +599,49 @@ function ImageLibraryModal({ onSelect, onClose }: { onSelect: (url: string) => v
           <h3 className="text-base font-bold">이미지 라이브러리</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
         </div>
-        {/* Category tabs */}
-        <div className="flex gap-1 px-5 py-2 border-b overflow-x-auto">
-          {IMAGE_LIBRARY.map((cat) => (
-            <button
-              key={cat.category}
-              onClick={() => setActiveCategory(cat.category)}
-              className={`px-3 py-1 text-xs rounded-full whitespace-nowrap transition-colors ${
-                activeCategory === cat.category
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {cat.category}
-            </button>
-          ))}
-        </div>
-        {/* Image grid */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="grid grid-cols-2 gap-3">
-            {activeImages.map((img) => (
-              <button
-                key={img.url}
-                onClick={() => onSelect(img.url)}
-                className="group relative aspect-video rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-500 transition-all"
-              >
-                <img src={`${img.url}&w=400&q=60`} alt={img.label} className="w-full h-full object-cover" loading="lazy" />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-end">
-                  <span className="w-full text-white text-xs py-1.5 px-2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                    {img.label}
-                  </span>
-                </div>
-              </button>
-            ))}
+
+        {loading ? (
+          <div className="flex-1 flex items-center justify-center text-sm text-gray-400">불러오는 중...</div>
+        ) : images.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center px-6 text-sm text-gray-400 text-center">
+            아직 등록된 공용 이미지가 없습니다. <br />
+            슈퍼어드민에서 이미지 라이브러리에 이미지를 추가할 수 있습니다.
           </div>
-        </div>
+        ) : (
+          <>
+            <div className="flex gap-1 px-5 py-2 border-b overflow-x-auto">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  className={`px-3 py-1 text-xs rounded-full whitespace-nowrap transition-colors ${
+                    activeCategory === cat ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {LIBRARY_CATEGORY_LABELS[cat] ?? cat}
+                </button>
+              ))}
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="grid grid-cols-2 gap-3">
+                {activeImages.map((img) => (
+                  <button
+                    key={img.id}
+                    onClick={() => onSelect(img.url)}
+                    className="group relative aspect-video rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-500 transition-all"
+                  >
+                    <img src={img.url} alt={img.title} className="w-full h-full object-cover" loading="lazy" />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-end">
+                      <span className="w-full text-white text-xs py-1.5 px-2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                        {img.title}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
