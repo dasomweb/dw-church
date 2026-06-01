@@ -18,6 +18,11 @@ COPY packages/api-client/package.json packages/api-client/
 COPY packages/ui-components/package.json packages/ui-components/
 COPY packages/admin-app/package.json packages/admin-app/
 COPY packages/wp-plugin/package.json packages/wp-plugin/
+# Phase 0 — apps/web doesn't yet import design-tokens/blocks, but pnpm
+# install --frozen-lockfile fails on missing workspace members listed in
+# the lock file. Include them so the install resolves.
+COPY packages/design-tokens/package.json packages/design-tokens/
+COPY packages/blocks/package.json packages/blocks/
 # wp-connector is a WordPress plugin (PHP), not a workspace package
 
 RUN pnpm install --frozen-lockfile

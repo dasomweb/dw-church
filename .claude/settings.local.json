@@ -24,7 +24,22 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(git tag:*)"
+      "Bash(git tag:*)",
+      "Bash(pnpm --filter @dw-church/design-tokens test)",
+      "Bash(pnpm --filter @dw-church/design-tokens build)",
+      "Bash(pnpm --filter @dw-church/blocks test)",
+      "Bash(pnpm --filter @dw-church/server test theme-tokens)",
+      "Bash(pnpm --filter @dw-church/admin-app typecheck)",
+      "Bash(pnpm --filter @dw-church/server test)",
+      "Bash(pnpm --filter @dw-church/api-client test)",
+      "Bash(git ls-remote *)",
+      "Bash(git checkout *)",
+      "Bash(git merge --no-ff feature/b2bsmart-design-engine -m ' *)",
+      "Bash(command -v railway)",
+      "Bash(curl -sI https://admin.truelight.app/super-admin)",
+      "Bash(curl -sI https://admin.truelight.app/)",
+      "Bash(railway --help)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" https://api.truelight.app/api/v1/theme/tokens -H \"X-Tenant-Slug: korus\")"
     ]
   }
 }

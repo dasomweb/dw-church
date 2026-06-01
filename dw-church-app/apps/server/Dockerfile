@@ -12,6 +12,12 @@ COPY packages/ui-components/package.json packages/ui-components/
 COPY packages/wp-plugin/package.json packages/wp-plugin/
 COPY packages/admin-app/package.json packages/admin-app/
 COPY packages/wp-connector/package.json packages/wp-connector/
+# Phase 0 — design-tokens is now a server dep (themes/service.ts imports
+# legacyThemeToTokens / designTokensSchema). Without this pnpm install
+# --frozen-lockfile fails because the lock file references the workspace
+# package but the package.json isn't on disk.
+COPY packages/design-tokens/package.json packages/design-tokens/
+COPY packages/blocks/package.json packages/blocks/
 COPY apps/demo/package.json apps/demo/
 COPY apps/web/package.json apps/web/
 
@@ -20,6 +26,9 @@ RUN pnpm install --frozen-lockfile
 
 # Copy server source
 COPY apps/server/ apps/server/
+# design-tokens source — server's tsc resolves @dw-church/design-tokens
+# through the package's `default` export which points at src/index.ts.
+COPY packages/design-tokens/ packages/design-tokens/
 
 # Generate Prisma client and build
 RUN cd apps/server && pnpm db:generate && pnpm build
