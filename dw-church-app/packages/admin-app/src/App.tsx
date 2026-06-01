@@ -33,6 +33,15 @@ const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboardV2'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const BillingPage = lazy(() => import('./pages/BillingPage'));
 
+// Super-admin per-tenant console (Phase 2). Lives at /super-admin/t/:slug/*
+// — a distinct surface from the tenant-admin /t/:slug, with its own
+// 14-section sidebar. Placeholders fill out the routes that get real UIs
+// in later phases (theme editor in Phase 3, page builder inspector in
+// Phase 4, etc.).
+const SuperAdminTenantLayout = lazy(() => import('./super-admin/SuperAdminTenantLayout').then((m) => ({ default: m.SuperAdminTenantLayout })));
+const TenantOverview = lazy(() => import('./super-admin/pages/TenantOverview'));
+const SuperAdminPlaceholder = lazy(() => import('./super-admin/pages/Placeholder'));
+
 export interface AppConfig {
   baseUrl: string;
   nonce?: string;
@@ -197,6 +206,33 @@ export function App({ config }: { config: AppConfig }) {
                   </RequireAuth>
                 }
               />
+
+              {/* Super admin — per-tenant console (Phase 2 shell + placeholders) */}
+              <Route
+                path="/super-admin/t/:slug"
+                element={
+                  <RequireAuth>
+                    <RequireSuperAdmin>
+                      <SuperAdminTenantLayout />
+                    </RequireSuperAdmin>
+                  </RequireAuth>
+                }
+              >
+                <Route index element={<TenantOverview />} />
+                <Route path="pages" element={<SuperAdminPlaceholder label="페이지 빌더" phase="Phase 4" />} />
+                <Route path="templates" element={<SuperAdminPlaceholder label="템플릿" phase="Phase 7b" />} />
+                <Route path="menus" element={<SuperAdminPlaceholder label="메뉴" phase="Phase 7b" />} />
+                <Route path="theme" element={<SuperAdminPlaceholder label="테마" phase="Phase 3" />} />
+                <Route path="ai-context" element={<SuperAdminPlaceholder label="AI 컨텍스트" phase="Phase 7b" />} />
+                <Route path="reference-photos" element={<SuperAdminPlaceholder label="참조 사진" phase="Phase 7b" />} />
+                <Route path="media" element={<SuperAdminPlaceholder label="미디어" phase="Phase 7b" />} />
+                <Route path="domains" element={<SuperAdminPlaceholder label="도메인" phase="Phase 7a" />} />
+                <Route path="settings" element={<SuperAdminPlaceholder label="설정" phase="Phase 7a" />} />
+                <Route path="users" element={<SuperAdminPlaceholder label="사용자" phase="Phase 7a" />} />
+                <Route path="billing" element={<SuperAdminPlaceholder label="결제" phase="Phase 7a" />} />
+                <Route path="feature-permissions" element={<SuperAdminPlaceholder label="기능 권한" phase="Phase 7a" />} />
+                <Route path="danger" element={<SuperAdminPlaceholder label="위험구역" phase="Phase 7a" />} />
+              </Route>
 
               {/* Profile — any authenticated user */}
               <Route
