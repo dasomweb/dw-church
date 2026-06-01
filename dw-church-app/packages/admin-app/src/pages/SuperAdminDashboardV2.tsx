@@ -1298,25 +1298,27 @@ function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) {
                     <td className="px-5 py-3 text-gray-500 text-xs">{t.lastActivityAt ? formatDate(t.lastActivityAt) : '-'}</td>
                     <td className="px-5 py-3">
                       <div className="flex gap-1">
-                        {/* 보기 — 테넌트 상세 정보 모달 */}
+                        {/* 요약 — 테넌트 상세 모달 (빠른 트리아지: 통계 + 이름/플랜 편집 +
+                            지원 계정 발급 + 사이트 방문). 일상 운영의 메인 surface. */}
                         <button
                           onClick={() => setViewingTenantId(t.id)}
                           className="px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                          title="테넌트 상세 정보"
+                          title={`${t.name} — 빠른 요약 + 지원 계정`}
                         >
-                          보기
+                          요약
                         </button>
-                        {/* 관리 — 슈퍼어드민 per-tenant 콘솔 (/super-admin/t/:slug).
-                            테넌트 어드민 (/t/:slug) 과 분리된 surface로 14섹션 사이드바를 가짐.
-                            이전엔 /t/:slug 직행이라 두 어드민이 같은 UI를 봤음 (Phase 2 에서 분리). */}
+                        {/* 콘솔 — 슈퍼어드민 per-tenant 깊은 편집 콘솔 (/super-admin/t/:slug).
+                            테넌트 어드민 (/t/:slug) 과 분리된 14섹션 surface. 테마/페이지 빌더/
+                            AI 컨텍스트/기능 권한 등 깊은 작업용. 이전 "관리" 명칭은 모달 안의
+                            동작들과 혼동되어 (이름/플랜 편집도 "관리"인데?) "콘솔" 로 변경. */}
                         <button
                           onClick={() => {
                             window.location.href = `${window.location.origin}/super-admin/t/${t.slug}`;
                           }}
                           className="px-2.5 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors font-medium"
-                          title={`${t.name} 슈퍼어드민 콘솔로 이동`}
+                          title={`${t.name} — 14섹션 슈퍼어드민 콘솔`}
                         >
-                          관리
+                          콘솔
                         </button>
                         <button
                           onClick={() => handleToggleActive(t)}
