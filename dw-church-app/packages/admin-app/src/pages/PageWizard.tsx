@@ -210,7 +210,9 @@ const CATEGORIES = [
   ]},
 ];
 
-type WizardStep = 'select' | 'preview' | 'creating';
+// 'mode' (신규 2-카드 chooser, default) → 'select' (AI 카테고리) → 'preview' → 'creating'
+// 또는 'mode' → 'template' (테마셋 템플릿 — 곧 출시 placeholder, Phase 10 에서 활성).
+type WizardStep = 'mode' | 'select' | 'preview' | 'creating' | 'template';
 
 // ═══════════════════════════════════════════════════════════
 // Main Component
@@ -223,7 +225,7 @@ export default function PageWizard() {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
 
-  const [step, setStep] = useState<WizardStep>('select');
+  const [step, setStep] = useState<WizardStep>('mode');
   const [loading, setLoading] = useState(false);
   const [selectedPrompt, setSelectedPrompt] = useState('');
   const [selectedLabel, setSelectedLabel] = useState('');
@@ -270,14 +272,78 @@ export default function PageWizard() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">페이지 마법사</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          {step === 'select' && '추가할 페이지를 선택하세요. AI가 블록을 자동 구성합니다.'}
-          {step === 'preview' && '블록 구성을 확인하고 생성하세요.'}
-          {step === 'creating' && '페이지를 생성하고 있습니다...'}
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">새 페이지 추가</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            {step === 'mode' && '페이지를 어떻게 만들지 선택하세요.'}
+            {step === 'select' && '추가할 페이지를 선택하세요. AI가 블록을 자동 구성합니다.'}
+            {step === 'preview' && '블록 구성을 확인하고 생성하세요.'}
+            {step === 'creating' && '페이지를 생성하고 있습니다...'}
+            {step === 'template' && '테마셋의 기본 페이지 템플릿에서 선택합니다.'}
+          </p>
+        </div>
+        {step !== 'mode' && (
+          <button
+            onClick={() => setStep('mode')}
+            className="text-sm text-gray-500 hover:text-gray-900"
+          >
+            ‹ 처음으로
+          </button>
+        )}
       </div>
+
+      {/* Step: Mode (Phase 7c — 2-카드 chooser).
+          Basic plan 사용자에게도 두 카드 모두 노출하지만, 동작 시 server 가
+          plan gate 로 403 반환 → 카드 클릭 시 paywall toast (Phase 11). */}
+      {step === 'mode' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Card 1 — AI 자유 모드 (현재 흐름) */}
+          <button
+            onClick={() => setStep('select')}
+            className="text-left p-6 rounded-xl border-2 border-purple-200 bg-purple-50 hover:border-purple-400 hover:shadow-md transition"
+          >
+            <div className="text-3xl mb-2">✨</div>
+            <h3 className="text-lg font-bold text-gray-900">AI 로 자유롭게 만들기</h3>
+            <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+              원하는 페이지의 종류나 내용을 알려주시면, AI 가 블록을 자동 구성해 페이지를 만들어드립니다. 자유도 높음.
+            </p>
+            <div className="mt-3 text-xs text-purple-700 font-semibold">
+              현재 사용 가능 →
+            </div>
+          </button>
+
+          {/* Card 2 — 테마셋 템플릿 (Phase 10 placeholder).
+              테마셋 시스템이 안 올라간 동안은 disabled + "곧 출시" 배지.
+              사용자에게 product 방향성을 명시적으로 보여주는 surface. */}
+          <button
+            disabled
+            className="text-left p-6 rounded-xl border-2 border-gray-200 bg-gray-50 cursor-not-allowed opacity-75 relative"
+          >
+            <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold">
+              곧 출시
+            </div>
+            <div className="text-3xl mb-2 grayscale">⚡</div>
+            <h3 className="text-lg font-bold text-gray-500">템플릿에서 선택</h3>
+            <p className="mt-2 text-sm text-gray-500 leading-relaxed">
+              적용된 테마셋의 추천 페이지 구조 (비전·연혁·교역자·새소식 등) 에서 선택하고 내용만 채워 빠르게 만듭니다.
+            </p>
+            <div className="mt-3 text-xs text-gray-400">
+              테마셋 시스템 활성화 후 사용 가능 →
+            </div>
+          </button>
+        </div>
+      )}
+
+      {/* Step: Template placeholder (only reachable in future) */}
+      {step === 'template' && (
+        <div className="p-8 rounded-xl border border-dashed border-amber-300 bg-amber-50 text-center">
+          <div className="text-3xl mb-3">🚧</div>
+          <p className="text-sm text-amber-900">
+            테마셋 기반 페이지 템플릿은 Phase 10 에서 활성화됩니다.
+          </p>
+        </div>
+      )}
 
       {/* Step: Select */}
       {step === 'select' && (

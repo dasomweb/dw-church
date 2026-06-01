@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { requireAuth, optionalAuth } from '../../middleware/auth.js';
+import { requireAuth, optionalAuth, requirePlan } from '../../middleware/auth.js';
 import { AppError } from '../../middleware/error-handler.js';
 import {
   createPageSchema,
@@ -56,8 +56,9 @@ export default async function pageRoutes(app: FastifyInstance): Promise<void> {
     },
   );
 
-  // POST /pages — auth required
-  app.post('/', { preHandler: [requireAuth] }, async (request, reply) => {
+  // POST /pages — auth + Pro/Enterprise 플랜 필요 (Basic = 페이지 추가 금지).
+  // super_admin 은 requirePlan 우회 (어떤 테넌트든 가능).
+  app.post('/', { preHandler: [requireAuth, requirePlan(['pro', 'enterprise'])] }, async (request, reply) => {
     const schema = request.tenantSchema;
     if (!schema) {
       throw new AppError('TENANT_NOT_FOUND', 404, 'Tenant not resolved');
@@ -101,7 +102,8 @@ export default async function pageRoutes(app: FastifyInstance): Promise<void> {
   );
 
   // POST /pages/from-template — auth required, create page from template
-  app.post('/from-template', { preHandler: [requireAuth] }, async (request, reply) => {
+  // POST /pages/from-template — 페이지 생성이라 Pro+ gate.
+  app.post('/from-template', { preHandler: [requireAuth, requirePlan(['pro', 'enterprise'])] }, async (request, reply) => {
     const schema = request.tenantSchema;
     if (!schema) {
       throw new AppError('TENANT_NOT_FOUND', 404, 'Tenant not resolved');
@@ -131,7 +133,8 @@ export default async function pageRoutes(app: FastifyInstance): Promise<void> {
   });
 
   // POST /pages/generate — auth required, accepts prompt + templateType, returns sections JSON
-  app.post('/generate', { preHandler: [requireAuth] }, async (request, reply) => {
+  // POST /pages/generate — AI 페이지 생성도 페이지 생성이라 Pro+ gate.
+  app.post('/generate', { preHandler: [requireAuth, requirePlan(['pro', 'enterprise'])] }, async (request, reply) => {
     const body = z
       .object({
         prompt: z.string().min(1).max(2000),
@@ -172,10 +175,11 @@ export default async function pageRoutes(app: FastifyInstance): Promise<void> {
     },
   );
 
-  // POST /pages/:id/sections
+  // POST /pages/:id/sections — Pro+ 만 새 섹션 추가. Basic 은 기존 섹션의
+  // PUT (콘텐츠 수정) 과 reorder/delete 는 가능하지만 새로 만드는 건 금지.
   app.post<{ Params: { id: string } }>(
     '/:id/sections',
-    { preHandler: [requireAuth] },
+    { preHandler: [requireAuth, requirePlan(['pro', 'enterprise'])] },
     async (request, reply) => {
       const schema = request.tenantSchema;
       if (!schema) {

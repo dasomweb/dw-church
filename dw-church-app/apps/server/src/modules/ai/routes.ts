@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { requireAuth } from '../../middleware/auth.js';
+import { requireAuth, requirePlan } from '../../middleware/auth.js';
 import { getSchema } from '../../utils/get-schema.js';
 import * as aiService from './service.js';
 import { generatePageFromPrompt, createPageFromPrompt } from './page-generator.js';
@@ -19,8 +19,9 @@ export async function aiRoutes(app: FastifyInstance) {
     }
   });
 
-  // Preview page generation (returns block structure without saving)
-  app.post('/ai/generate-page/preview', { preHandler: [requireAuth] }, async (request, reply) => {
+  // Preview page generation (returns block structure without saving).
+  // Pro+ gate — preview only makes sense if user can save the page after.
+  app.post('/ai/generate-page/preview', { preHandler: [requireAuth, requirePlan(['pro', 'enterprise'])] }, async (request, reply) => {
     const { prompt } = request.body as { prompt: string };
     if (!prompt) return reply.status(400).send({ error: { code: 'BAD_REQUEST', message: 'prompt is required' } });
 
@@ -33,8 +34,8 @@ export async function aiRoutes(app: FastifyInstance) {
     }
   });
 
-  // Generate and save page (creates page + sections)
-  app.post('/ai/generate-page', { preHandler: [requireAuth] }, async (request, reply) => {
+  // Generate and save page (creates page + sections). Pro+ gate.
+  app.post('/ai/generate-page', { preHandler: [requireAuth, requirePlan(['pro', 'enterprise'])] }, async (request, reply) => {
     const { prompt } = request.body as { prompt: string };
     if (!prompt) return reply.status(400).send({ error: { code: 'BAD_REQUEST', message: 'prompt is required' } });
 

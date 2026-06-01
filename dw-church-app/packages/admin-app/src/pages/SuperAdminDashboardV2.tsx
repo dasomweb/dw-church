@@ -91,8 +91,12 @@ interface TenantDetail {
 }
 
 // ─── Constants ───────────────────────────────────────────
-const PLAN_PRICES: Record<string, number> = { basic: 29, pro: 79, free: 0 };
+// 결제 모델 (2026-06-01 확정): Free 없음. Basic = 콘텐츠 편집만, Pro = + 페이지 추가,
+// Enterprise = 별도 협의 (가격 노출 안 함, MRR 계산은 0 처리).
+// "free" 키는 기존 데이터 호환용으로 남겨두지만 가격 0 + 회색 처리.
+const PLAN_PRICES: Record<string, number> = { basic: 99, pro: 149, enterprise: 0, free: 0 };
 const PLAN_COLORS: Record<string, string> = {
+  enterprise: 'bg-amber-100 text-amber-700',
   pro: 'bg-purple-100 text-purple-700',
   basic: 'bg-blue-100 text-blue-700',
   free: 'bg-gray-100 text-gray-600',
@@ -259,7 +263,8 @@ function CreateChurchModal({
     slug: '',
     ownerEmail: '',
     ownerName: '',
-    plan: 'free',
+    // 2026-06-01 변경: 기본 plan free → basic. Free 티어 없음.
+    plan: 'basic',
   });
   const [slugCheck, setSlugCheck] = useState<
     { state: 'idle' } | { state: 'checking' } | { state: 'ok' } | { state: 'bad'; reason: string }
@@ -387,9 +392,9 @@ function CreateChurchModal({
               onChange={(e) => set('plan', e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             >
-              <option value="free">Free</option>
-              <option value="basic">Basic ($29/월)</option>
-              <option value="pro">Pro ($79/월)</option>
+              <option value="basic">Basic ($99/월) — 콘텐츠 편집</option>
+              <option value="pro">Pro ($149/월) — + 페이지 추가</option>
+              <option value="enterprise">Enterprise — 별도 협의</option>
             </select>
           </div>
           <div className="flex gap-2 pt-2">
@@ -474,9 +479,9 @@ function EditTenantModal({
               onChange={(e) => setForm((f) => ({ ...f, plan: e.target.value }))}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             >
-              <option value="free">Free</option>
-              <option value="basic">Basic ($29/월)</option>
-              <option value="pro">Pro ($79/월)</option>
+              <option value="basic">Basic ($99/월) — 콘텐츠 편집</option>
+              <option value="pro">Pro ($149/월) — + 페이지 추가</option>
+              <option value="enterprise">Enterprise — 별도 협의</option>
             </select>
           </div>
           <div>
@@ -698,7 +703,9 @@ function TenantDetailModal({
             <div>
               <label className="block text-xs text-gray-500 mb-1">플랜</label>
               <div className="flex gap-2">
-                {['free', 'basic', 'pro', 'enterprise'].map((p) => (
+                {/* free 는 신규 plan 으로는 노출 안 하지만, 기존에 free 로 생성된
+                    테넌트가 있으면 그대로 표시되도록 array 에는 남겨둠. */}
+                {['basic', 'pro', 'enterprise', 'free'].map((p) => (
                   <button
                     key={p}
                     onClick={() => handlePlanChange(p)}

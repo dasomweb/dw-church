@@ -114,6 +114,38 @@ export async function requireOwner(
 }
 
 /**
+ * Plan gate — return a preHandler that requires the tenant's plan to be
+ * one of the allowed values. super_admin bypasses (they can do anything
+ * on any tenant). Use as a per-route preHandler stacked after
+ * requireAuth/requireOwner, e.g.
+ *
+ *   app.post('/', { preHandler: [requireAuth, requirePlan(['pro', 'enterprise'])] }, ...)
+ *
+ * Pricing model (2026-06-01): Basic = content editing only, Pro = + page
+ * addition. So POST /pages and POST /pages/:id/sections are gated to
+ * pro/enterprise. PATCH/PUT to existing sections stays open to Basic.
+ */
+export function requirePlan(allowed: string[]) {
+  return async function planGate(
+    request: FastifyRequest,
+    _reply: FastifyReply,
+  ): Promise<void> {
+    // super_admin always bypasses the plan check — they may need to make
+    // structural changes on any tenant regardless of that tenant's plan.
+    if (request.user?.role === 'super_admin') return;
+
+    const plan = request.tenant?.plan ?? '';
+    if (!allowed.includes(plan)) {
+      throw new AppError(
+        'PLAN_UPGRADE_REQUIRED',
+        403,
+        `이 기능은 ${allowed.join(' 또는 ')} 플랜에서 사용할 수 있습니다. (현재: ${plan || 'unknown'})`,
+      );
+    }
+  };
+}
+
+/**
  * Optionally authenticate — sets request.user if a valid token is present,
  * otherwise continues without error.
  */
