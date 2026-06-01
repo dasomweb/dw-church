@@ -33,6 +33,20 @@ const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboardV2'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const BillingPage = lazy(() => import('./pages/BillingPage'));
 
+// Super-admin per-tenant console (Phase 2). Lives at /super-admin/t/:slug/*
+// — a distinct surface from the tenant-admin /t/:slug, with its own
+// 14-section sidebar. Placeholders fill out the routes that get real UIs
+// in later phases (theme editor in Phase 3, page builder inspector in
+// Phase 4, etc.).
+const SuperAdminTenantLayout = lazy(() => import('./super-admin/SuperAdminTenantLayout').then((m) => ({ default: m.SuperAdminTenantLayout })));
+const TenantOverview = lazy(() => import('./super-admin/pages/TenantOverview'));
+const TenantThemeEditor = lazy(() => import('./super-admin/pages/TenantThemeEditor'));
+const TenantPageEditor = lazy(() => import('./super-admin/pages/TenantPageEditor'));
+const TenantFeaturePermissions = lazy(() => import('./super-admin/pages/TenantFeaturePermissions'));
+const TenantDangerZone = lazy(() => import('./super-admin/pages/TenantDangerZone'));
+const TenantAIContext = lazy(() => import('./super-admin/pages/TenantAIContext'));
+const SuperAdminPlaceholder = lazy(() => import('./super-admin/pages/Placeholder'));
+
 export interface AppConfig {
   baseUrl: string;
   nonce?: string;
@@ -197,6 +211,37 @@ export function App({ config }: { config: AppConfig }) {
                   </RequireAuth>
                 }
               />
+
+              {/* Super admin — per-tenant console (Phase 2 shell + placeholders) */}
+              <Route
+                path="/super-admin/t/:slug"
+                element={
+                  <RequireAuth>
+                    <RequireSuperAdmin>
+                      <SuperAdminTenantLayout />
+                    </RequireSuperAdmin>
+                  </RequireAuth>
+                }
+              >
+                <Route index element={<TenantOverview />} />
+                <Route path="pages" element={<TenantPageEditor />} />
+                <Route path="templates" element={<SuperAdminPlaceholder label="템플릿" phase="Phase 7b" />} />
+                <Route path="menus" element={<MenuEditor />} />
+                <Route path="theme" element={<TenantThemeEditor />} />
+                <Route path="ai-context" element={<TenantAIContext />} />
+                <Route path="reference-photos" element={<SuperAdminPlaceholder label="참조 사진" phase="Phase 7b" />} />
+                <Route path="media" element={<SuperAdminPlaceholder label="미디어" phase="Phase 7b" />} />
+                {/* Phase 7a — reuse the existing tenant-admin pages for the
+                    settings group. They already read the URL :slug param and
+                    the api-client header that SuperAdminTenantLayout sets,
+                    so they "just work" mounted under the super-admin route. */}
+                <Route path="domains" element={<DomainSettings />} />
+                <Route path="settings" element={<SettingsPage />} />
+                <Route path="users" element={<UserManagement />} />
+                <Route path="billing" element={<BillingPage />} />
+                <Route path="feature-permissions" element={<TenantFeaturePermissions />} />
+                <Route path="danger" element={<TenantDangerZone />} />
+              </Route>
 
               {/* Profile — any authenticated user */}
               <Route

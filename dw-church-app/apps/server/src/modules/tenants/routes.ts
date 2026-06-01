@@ -72,6 +72,25 @@ export default async function tenantRoutes(app: FastifyInstance): Promise<void> 
     return reply.send(stats);
   });
 
+  // GET /admin/tenants/by-slug/:slug — light summary keyed by slug rather
+  // than id. Used by SuperAdminTenantLayout to populate its header before
+  // any of the sidebar destinations have loaded. Returns the same row
+  // shape as the list endpoint so the layout doesn't have to special-case.
+  app.get<{ Params: { slug: string } }>(
+    '/tenants/by-slug/:slug',
+    async (request, reply) => {
+      const tenant = await prisma.tenant.findFirst({
+        where: { slug: request.params.slug },
+        select: {
+          id: true, slug: true, name: true, plan: true,
+          isActive: true, customDomain: true, createdAt: true,
+        },
+      });
+      if (!tenant) throw new AppError('NOT_FOUND', 404, 'Tenant not found');
+      return reply.send({ data: tenant });
+    },
+  );
+
   // GET /admin/tenants/:id/stats — Detailed stats for a single tenant
   app.get<{ Params: { id: string } }>(
     '/tenants/:id/stats',

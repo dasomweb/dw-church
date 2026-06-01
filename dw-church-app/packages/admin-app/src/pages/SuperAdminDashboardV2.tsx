@@ -1306,13 +1306,15 @@ function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) {
                         >
                           보기
                         </button>
-                        {/* 관리 — 해당 tenant 어드민 페이지로 이동 (super admin은 URL만으로 접근 가능) */}
+                        {/* 관리 — 슈퍼어드민 per-tenant 콘솔 (/super-admin/t/:slug).
+                            테넌트 어드민 (/t/:slug) 과 분리된 surface로 14섹션 사이드바를 가짐.
+                            이전엔 /t/:slug 직행이라 두 어드민이 같은 UI를 봤음 (Phase 2 에서 분리). */}
                         <button
                           onClick={() => {
-                            window.location.href = `${window.location.origin}/t/${t.slug}`;
+                            window.location.href = `${window.location.origin}/super-admin/t/${t.slug}`;
                           }}
                           className="px-2.5 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors font-medium"
-                          title={`${t.name} 관리자 페이지로 이동`}
+                          title={`${t.name} 슈퍼어드민 콘솔로 이동`}
                         >
                           관리
                         </button>
