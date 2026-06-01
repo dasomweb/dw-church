@@ -41,6 +41,7 @@ const BillingPage = lazy(() => import('./pages/BillingPage'));
 const SuperAdminTenantLayout = lazy(() => import('./super-admin/SuperAdminTenantLayout').then((m) => ({ default: m.SuperAdminTenantLayout })));
 const TenantOverview = lazy(() => import('./super-admin/pages/TenantOverview'));
 const TenantThemeEditor = lazy(() => import('./super-admin/pages/TenantThemeEditor'));
+const TenantPageEditor = lazy(() => import('./super-admin/pages/TenantPageEditor'));
 const SuperAdminPlaceholder = lazy(() => import('./super-admin/pages/Placeholder'));
 
 export interface AppConfig {
@@ -220,7 +221,7 @@ export function App({ config }: { config: AppConfig }) {
                 }
               >
                 <Route index element={<TenantOverview />} />
-                <Route path="pages" element={<SuperAdminPlaceholder label="페이지 빌더" phase="Phase 4" />} />
+                <Route path="pages" element={<TenantPageEditor />} />
                 <Route path="templates" element={<SuperAdminPlaceholder label="템플릿" phase="Phase 7b" />} />
                 <Route path="menus" element={<SuperAdminPlaceholder label="메뉴" phase="Phase 7b" />} />
                 <Route path="theme" element={<TenantThemeEditor />} />
