@@ -42,6 +42,8 @@ const SuperAdminTenantLayout = lazy(() => import('./super-admin/SuperAdminTenant
 const TenantOverview = lazy(() => import('./super-admin/pages/TenantOverview'));
 const TenantThemeEditor = lazy(() => import('./super-admin/pages/TenantThemeEditor'));
 const TenantPageEditor = lazy(() => import('./super-admin/pages/TenantPageEditor'));
+const TenantFeaturePermissions = lazy(() => import('./super-admin/pages/TenantFeaturePermissions'));
+const TenantDangerZone = lazy(() => import('./super-admin/pages/TenantDangerZone'));
 const SuperAdminPlaceholder = lazy(() => import('./super-admin/pages/Placeholder'));
 
 export interface AppConfig {
@@ -228,12 +230,16 @@ export function App({ config }: { config: AppConfig }) {
                 <Route path="ai-context" element={<SuperAdminPlaceholder label="AI 컨텍스트" phase="Phase 7b" />} />
                 <Route path="reference-photos" element={<SuperAdminPlaceholder label="참조 사진" phase="Phase 7b" />} />
                 <Route path="media" element={<SuperAdminPlaceholder label="미디어" phase="Phase 7b" />} />
-                <Route path="domains" element={<SuperAdminPlaceholder label="도메인" phase="Phase 7a" />} />
-                <Route path="settings" element={<SuperAdminPlaceholder label="설정" phase="Phase 7a" />} />
-                <Route path="users" element={<SuperAdminPlaceholder label="사용자" phase="Phase 7a" />} />
-                <Route path="billing" element={<SuperAdminPlaceholder label="결제" phase="Phase 7a" />} />
-                <Route path="feature-permissions" element={<SuperAdminPlaceholder label="기능 권한" phase="Phase 7a" />} />
-                <Route path="danger" element={<SuperAdminPlaceholder label="위험구역" phase="Phase 7a" />} />
+                {/* Phase 7a — reuse the existing tenant-admin pages for the
+                    settings group. They already read the URL :slug param and
+                    the api-client header that SuperAdminTenantLayout sets,
+                    so they "just work" mounted under the super-admin route. */}
+                <Route path="domains" element={<DomainSettings />} />
+                <Route path="settings" element={<SettingsPage />} />
+                <Route path="users" element={<UserManagement />} />
+                <Route path="billing" element={<BillingPage />} />
+                <Route path="feature-permissions" element={<TenantFeaturePermissions />} />
+                <Route path="danger" element={<TenantDangerZone />} />
               </Route>
 
               {/* Profile — any authenticated user */}
