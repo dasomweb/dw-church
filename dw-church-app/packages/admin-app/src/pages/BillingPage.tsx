@@ -1,293 +1,309 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useBillingStatus, useBillingCheckout, useBillingPortal } from '@dw-church/api-client';
+import { useAuthStore } from '../stores/auth';
+import { useToast } from '../components';
 
-interface PlanFeature {
-  label: string;
-  free: string | boolean;
-  basic: string | boolean;
-  pro: string | boolean;
+interface SubscriptionInfo {
+  status: string;
+  interval: 'month' | 'year' | null;
+  amountCents: number;
+  currency: string;
+  currentPeriodEnd: string;
+  cancelAtPeriodEnd: boolean;
+  productName: string | null;
 }
 
-const PLAN_FEATURES: PlanFeature[] = [
-  { label: '페이지', free: '1개', basic: '무제한', pro: '무제한' },
-  { label: '설교', free: '50개', basic: '무제한', pro: '무제한' },
-  { label: '앨범', free: '10개', basic: '무제한', pro: '무제한' },
-  { label: '테마', free: '기본', basic: '전체', pro: '전체' },
-  { label: '커스텀 도메인', free: false, basic: true, pro: true },
-  { label: '우선 지원', free: false, basic: false, pro: true },
-  { label: '고급 분석', free: false, basic: false, pro: true },
-];
+interface InvoiceItem {
+  id: string;
+  date: string;
+  description: string;
+  status: string;
+  amountCents: number;
+  currency: string;
+  hostedInvoiceUrl: string | null;
+  invoicePdf: string | null;
+}
 
-const PLAN_INFO: Record<string, { name: string; price: string; description: string }> = {
-  free: { name: 'Free', price: '무료', description: '시작하기 좋은 기본 플랜' },
-  basic: { name: 'Basic', price: '$19/월', description: '성장하는 교회를 위한 플랜' },
-  pro: { name: 'Pro', price: '$49/월', description: '모든 기능을 활용하는 프로 플랜' },
+interface BillingInfo {
+  plan: string;
+  isActive: boolean;
+  hasStripeCustomer: boolean;
+  subscription: SubscriptionInfo | null;
+  invoices: InvoiceItem[];
+}
+
+const PLAN_META: Record<string, { name: string; tagline: string }> = {
+  free:       { name: 'Free',       tagline: '시작하기 좋은 무료 플랜' },
+  basic:      { name: 'Basic',      tagline: '소규모 교회를 위한 기본 기능' },
+  pro:        { name: 'Pro',        tagline: '중대형 교회용 — 무제한 콘텐츠 + AI' },
+  enterprise: { name: 'Enterprise', tagline: '맞춤 계약 플랜' },
 };
 
-function CheckIcon() {
-  return (
-    <svg className="w-5 h-5 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-    </svg>
-  );
+const STATUS_BADGES: Record<string, { label: string; cls: string }> = {
+  paid:           { label: '결제 완료', cls: 'bg-green-100 text-green-700' },
+  open:           { label: '미결제',    cls: 'bg-amber-100 text-amber-700' },
+  draft:          { label: '초안',      cls: 'bg-gray-100 text-gray-700' },
+  void:           { label: '취소',      cls: 'bg-gray-100 text-gray-500' },
+  uncollectible:  { label: '회수불가',  cls: 'bg-red-100 text-red-700' },
+};
+
+function formatMoney(amountCents: number, currency: string): string {
+  const amount = amountCents / 100;
+  // Most users will be in USD; fall back to plain number if currency unknown.
+  try {
+    return new Intl.NumberFormat('ko-KR', { style: 'currency', currency }).format(amount);
+  } catch {
+    return `${amount.toFixed(2)} ${currency}`;
+  }
 }
 
-function XIcon() {
-  return (
-    <svg className="w-5 h-5 text-gray-300 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-    </svg>
-  );
+function formatDate(iso: string): string {
+  try {
+    return new Date(iso).toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' });
+  } catch {
+    return iso;
+  }
 }
 
 export default function BillingPage() {
+  const { showToast } = useToast();
+  const session = useAuthStore((s) => s.session);
+  const token = session?.accessToken;
   const { slug = '' } = useParams<{ slug: string }>();
+
+  const [info, setInfo] = useState<BillingInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [redirecting, setRedirecting] = useState(false);
+  const [invoiceMonth, setInvoiceMonth] = useState<string>('all');
+
+  const headers = { Authorization: `Bearer ${token || ''}` };
   const billingPath = `/t/${slug}/billing`;
-  const { data: billing, isLoading, error } = useBillingStatus();
-  const checkoutMutation = useBillingCheckout();
-  const portalMutation = useBillingPortal();
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  // Auto-dismiss toast
   useEffect(() => {
-    if (!toast) return;
-    const timer = setTimeout(() => setToast(null), 4000);
-    return () => clearTimeout(timer);
-  }, [toast]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/v1/billing/info', { headers });
+        if (!res.ok) throw new Error('billing info load failed');
+        const json = (await res.json()) as { data: BillingInfo };
+        if (!cancelled) setInfo(json.data);
+      } catch {
+        if (!cancelled) showToast('error', '결제 정보를 불러오지 못했습니다.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, [token]);
 
-  // If the billing API returns 503 (not configured), show graceful message
-  const isNotConfigured =
-    error && 'status' in error && (error as { status: number }).status === 503;
-
-  if (isNotConfigured) {
-    return (
-      <div className="max-w-3xl mx-auto">
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-8 text-center">
-          <svg className="w-12 h-12 text-yellow-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-          </svg>
-          <h2 className="text-lg font-semibold text-yellow-800 mb-2">
-            결제 시스템 준비 중
-          </h2>
-          <p className="text-yellow-700">
-            결제 시스템이 아직 설정되지 않았습니다. 관리자에게 문의해 주세요.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="h-32 bg-gray-100 rounded-xl animate-pulse" />
-        <div className="h-96 bg-gray-100 rounded-xl animate-pulse" />
-      </div>
-    );
-  }
-
-  const currentPlan = billing?.plan ?? 'free';
-  const subscriptionStatus = billing?.subscriptionStatus;
-  const currentPeriodEnd = billing?.currentPeriodEnd;
-
-  const handleUpgrade = async (plan: string) => {
+  const handleManageInStripe = async () => {
+    if (!info?.hasStripeCustomer) {
+      showToast('error', '먼저 플랜을 구독해주세요.');
+      return;
+    }
+    setRedirecting(true);
     try {
-      const baseUrl = window.location.origin;
-      const result = await checkoutMutation.mutateAsync({
-        plan,
-        successUrl: `${baseUrl}${billingPath}?success=true`,
-        cancelUrl: `${baseUrl}${billingPath}?canceled=true`,
+      const res = await fetch('/api/v1/billing/portal', {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ returnUrl: `${window.location.origin}${billingPath}` }),
       });
-      window.location.href = result.url;
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as any)?.error?.message || 'Portal 생성 실패');
+      }
+      const json = await res.json() as { url: string };
+      window.location.href = json.url;
     } catch (err) {
-      const message =
-        err && typeof err === 'object' && 'body' in err
-          ? String((err as { body: string }).body)
-          : '결제 세션을 생성하지 못했습니다.';
-      setToast({ message, type: 'error' });
+      showToast('error', err instanceof Error ? err.message : 'Portal 열기 실패');
+      setRedirecting(false);
     }
   };
 
-  const handleManageSubscription = async () => {
-    try {
-      const result = await portalMutation.mutateAsync(
-        `${window.location.origin}${billingPath}`,
-      );
-      window.location.href = result.url;
-    } catch (err) {
-      const message =
-        err && typeof err === 'object' && 'body' in err
-          ? String((err as { body: string }).body)
-          : '구독 관리 페이지를 열 수 없습니다.';
-      setToast({ message, type: 'error' });
+  // Group invoices by month for the dropdown filter (descending — newest first)
+  const invoiceMonths = useMemo(() => {
+    if (!info?.invoices) return [];
+    const set = new Set<string>();
+    for (const inv of info.invoices) {
+      const d = new Date(inv.date);
+      const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      set.add(ym);
     }
-  };
+    return Array.from(set).sort().reverse();
+  }, [info]);
 
-  // Check for success/cancel query params
-  const params = new URLSearchParams(window.location.search);
-  const showSuccess = params.get('success') === 'true';
-  const showCanceled = params.get('canceled') === 'true';
+  const visibleInvoices = useMemo(() => {
+    if (!info?.invoices) return [];
+    if (invoiceMonth === 'all') return info.invoices;
+    return info.invoices.filter((inv) => inv.date.startsWith(invoiceMonth));
+  }, [info, invoiceMonth]);
+
+  if (loading) {
+    return <div className="max-w-4xl mx-auto py-12 text-sm text-gray-400 text-center">불러오는 중...</div>;
+  }
+  if (!info) {
+    return <div className="max-w-4xl mx-auto py-12 text-sm text-gray-400 text-center">결제 정보를 표시할 수 없습니다.</div>;
+  }
+
+  const planMeta = PLAN_META[info.plan] ?? { name: info.plan, tagline: '' };
+  const sub = info.subscription;
+  const isMonthly = sub?.interval === 'month';
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Toast */}
-      {toast && (
-        <div
-          className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-sm font-medium ${
-            toast.type === 'success'
-              ? 'bg-green-50 text-green-800 border border-green-200'
-              : 'bg-red-50 text-red-800 border border-red-200'
-          }`}
-        >
-          {toast.message}
+    <div className="max-w-4xl mx-auto space-y-5">
+      {/* Top banner: annual switch CTA — only shown on monthly active subs */}
+      {sub && isMonthly && !sub.cancelAtPeriodEnd && (
+        <div className="rounded-xl border border-indigo-200 bg-gradient-to-r from-indigo-50 to-purple-50 p-4 flex items-center justify-between">
+          <div className="text-sm">
+            <p className="font-semibold text-indigo-900">연간 결제로 전환하면 20% 할인</p>
+            <p className="text-xs text-indigo-700 mt-0.5">"Manage in Stripe"에서 청구 주기를 연간으로 변경할 수 있습니다.</p>
+          </div>
+          <button
+            onClick={handleManageInStripe}
+            disabled={redirecting}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 whitespace-nowrap"
+          >
+            {redirecting ? '이동 중...' : '업그레이드'}
+          </button>
         </div>
       )}
 
-      {/* Success / Cancel banners */}
-      {showSuccess && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
-          <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <p className="text-green-800 text-sm">구독이 완료되었습니다! 잠시 후 반영됩니다.</p>
-        </div>
-      )}
-      {showCanceled && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center gap-3">
-          <svg className="w-5 h-5 text-yellow-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-          </svg>
-          <p className="text-yellow-800 text-sm">결제가 취소되었습니다.</p>
-        </div>
-      )}
-
-      {/* Current plan card */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <div className="flex items-center justify-between">
+      {/* Section 1: Current Plan */}
+      <section className="bg-white border rounded-xl p-5">
+        <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">현재 플랜</h2>
-            <div className="mt-1 flex items-center gap-3">
-              <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${
-                currentPlan === 'pro'
-                  ? 'bg-purple-100 text-purple-700'
-                  : currentPlan === 'basic'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-gray-100 text-gray-700'
-              }`}>
-                {PLAN_INFO[currentPlan]?.name ?? currentPlan}
-              </span>
-              {subscriptionStatus && (
-                <span className={`text-sm ${
-                  subscriptionStatus === 'active' || subscriptionStatus === 'trialing'
-                    ? 'text-green-600'
-                    : 'text-yellow-600'
-                }`}>
-                  {subscriptionStatus === 'active' ? '활성' :
-                    subscriptionStatus === 'trialing' ? '체험 중' :
-                      subscriptionStatus === 'past_due' ? '결제 연체' :
-                        subscriptionStatus}
-                </span>
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">현재 플랜</h3>
+            <div className="flex items-baseline gap-3">
+              <p className="text-2xl font-bold text-gray-900">{planMeta.name}</p>
+              {sub && sub.amountCents > 0 && (
+                <p className="text-sm text-gray-500">
+                  {formatMoney(sub.amountCents, sub.currency)} / {sub.interval === 'year' ? '년' : '월'}
+                </p>
               )}
             </div>
-            {currentPeriodEnd && (
-              <p className="mt-1 text-sm text-gray-500">
-                다음 결제일: {new Date(currentPeriodEnd).toLocaleDateString('ko-KR')}
+            <p className="text-xs text-gray-500 mt-1">{planMeta.tagline}</p>
+            {sub && (
+              <p className="text-xs text-gray-600 mt-3">
+                {sub.cancelAtPeriodEnd
+                  ? <>다음 갱신일에 해지 예정 — <span className="font-medium">{formatDate(sub.currentPeriodEnd)}</span></>
+                  : <>다음 갱신일: <span className="font-medium">{formatDate(sub.currentPeriodEnd)}</span></>}
               </p>
             )}
           </div>
-          {currentPlan !== 'free' && (
-            <button
-              onClick={handleManageSubscription}
-              disabled={portalMutation.isPending}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
+          <button
+            onClick={handleManageInStripe}
+            disabled={redirecting || !info.hasStripeCustomer}
+            className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 whitespace-nowrap"
+          >
+            플랜 변경
+          </button>
+        </div>
+      </section>
+
+      {/* Section 2: Payment */}
+      <section className="bg-white border rounded-xl p-5">
+        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">결제 수단</h3>
+        <div className="flex items-center justify-between gap-4">
+          <p className="text-sm text-gray-700">결제 카드, 영수증 이메일 등은 Stripe Customer Portal에서 관리합니다.</p>
+          <button
+            onClick={handleManageInStripe}
+            disabled={redirecting || !info.hasStripeCustomer}
+            className="border border-gray-300 bg-white text-gray-800 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50 whitespace-nowrap"
+          >
+            Stripe에서 관리
+          </button>
+        </div>
+        {!info.hasStripeCustomer && (
+          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2 mt-3">
+            아직 결제 수단이 없습니다. 유료 플랜을 선택하면 자동으로 등록됩니다.
+          </p>
+        )}
+      </section>
+
+      {/* Section 3: Invoices */}
+      <section className="bg-white border rounded-xl overflow-hidden">
+        <div className="flex items-center justify-between p-5 pb-3">
+          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">청구 내역</h3>
+          {invoiceMonths.length > 0 && (
+            <select
+              value={invoiceMonth}
+              onChange={(e) => setInvoiceMonth(e.target.value)}
+              className="text-xs border border-gray-200 rounded-lg px-2 py-1.5"
             >
-              {portalMutation.isPending ? '이동 중...' : '구독 관리'}
-            </button>
+              <option value="all">전체</option>
+              {invoiceMonths.map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
           )}
         </div>
-      </div>
+        {visibleInvoices.length === 0 ? (
+          <div className="px-5 pb-5 text-sm text-gray-400">청구된 인보이스가 없습니다.</div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-xs text-gray-500">
+              <tr>
+                <th className="text-left px-5 py-2 font-medium">날짜</th>
+                <th className="text-left px-5 py-2 font-medium">설명</th>
+                <th className="text-left px-5 py-2 font-medium">상태</th>
+                <th className="text-right px-5 py-2 font-medium">금액</th>
+                <th className="text-right px-5 py-2 font-medium">인보이스</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibleInvoices.map((inv) => {
+                const badge = STATUS_BADGES[inv.status] ?? { label: inv.status, cls: 'bg-gray-100 text-gray-600' };
+                return (
+                  <tr key={inv.id} className="border-t hover:bg-gray-50">
+                    <td className="px-5 py-3 text-gray-700">{formatDate(inv.date)}</td>
+                    <td className="px-5 py-3 text-gray-700 truncate max-w-xs">{inv.description}</td>
+                    <td className="px-5 py-3">
+                      <span className={`inline-block text-xs px-2 py-0.5 rounded ${badge.cls}`}>{badge.label}</span>
+                    </td>
+                    <td className="px-5 py-3 text-right font-medium">{formatMoney(inv.amountCents, inv.currency)}</td>
+                    <td className="px-5 py-3 text-right">
+                      {inv.hostedInvoiceUrl ? (
+                        <a
+                          href={inv.hostedInvoiceUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-indigo-600 hover:text-indigo-800 text-xs"
+                        >
+                          보기
+                        </a>
+                      ) : (
+                        <span className="text-xs text-gray-300">—</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </section>
 
-      {/* Plan comparison table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">플랜 비교</h2>
-          <p className="text-sm text-gray-500 mt-1">교회에 맞는 플랜을 선택하세요</p>
-        </div>
-
-        {/* Plan headers */}
-        <div className="grid grid-cols-4 border-b border-gray-100">
-          <div className="p-4" />
-          {(['free', 'basic', 'pro'] as const).map((plan) => (
-            <div key={plan} className={`p-4 text-center ${currentPlan === plan ? 'bg-blue-50' : ''}`}>
-              <h3 className="font-semibold text-gray-900">{PLAN_INFO[plan].name}</h3>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{PLAN_INFO[plan].price}</p>
-              <p className="text-xs text-gray-500 mt-1">{PLAN_INFO[plan].description}</p>
+      {/* Section 4: Cancel */}
+      {sub && !sub.cancelAtPeriodEnd && (
+        <section className="bg-white border rounded-xl p-5">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">구독 해지</h3>
+              <p className="text-sm text-gray-600 mt-2">
+                떠나신다면 아쉽습니다. 해지는 Stripe 포털에서 처리되며, 다음 결제일까지는 모든 기능을 계속 사용할 수 있습니다.
+              </p>
             </div>
-          ))}
-        </div>
-
-        {/* Feature rows */}
-        {PLAN_FEATURES.map((feature, idx) => (
-          <div
-            key={feature.label}
-            className={`grid grid-cols-4 ${idx < PLAN_FEATURES.length - 1 ? 'border-b border-gray-100' : ''}`}
-          >
-            <div className="p-4 text-sm font-medium text-gray-700">{feature.label}</div>
-            {(['free', 'basic', 'pro'] as const).map((plan) => {
-              const value = feature[plan];
-              return (
-                <div
-                  key={plan}
-                  className={`p-4 text-center text-sm ${currentPlan === plan ? 'bg-blue-50' : ''}`}
-                >
-                  {typeof value === 'boolean' ? (
-                    value ? <CheckIcon /> : <XIcon />
-                  ) : (
-                    <span className="text-gray-700">{value}</span>
-                  )}
-                </div>
-              );
-            })}
+            <button
+              onClick={handleManageInStripe}
+              disabled={redirecting}
+              className="border border-red-300 text-red-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-50 disabled:opacity-50 whitespace-nowrap"
+            >
+              구독 해지
+            </button>
           </div>
-        ))}
-
-        {/* Action row */}
-        <div className="grid grid-cols-4 border-t border-gray-200 bg-gray-50">
-          <div className="p-4" />
-          {(['free', 'basic', 'pro'] as const).map((plan) => (
-            <div key={plan} className="p-4 text-center">
-              {currentPlan === plan ? (
-                <span className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-500 bg-gray-200 rounded-lg cursor-default">
-                  현재 플랜
-                </span>
-              ) : plan === 'free' ? (
-                currentPlan !== 'free' ? (
-                  <button
-                    onClick={handleManageSubscription}
-                    disabled={portalMutation.isPending}
-                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
-                  >
-                    다운그레이드
-                  </button>
-                ) : null
-              ) : (
-                <button
-                  onClick={() => handleUpgrade(plan)}
-                  disabled={checkoutMutation.isPending}
-                  className={`inline-flex items-center px-4 py-2 text-sm font-medium text-white rounded-lg disabled:opacity-50 transition-colors ${
-                    plan === 'pro'
-                      ? 'bg-purple-600 hover:bg-purple-700'
-                      : 'bg-blue-600 hover:bg-blue-700'
-                  }`}
-                >
-                  {checkoutMutation.isPending ? '처리 중...' : '업그레이드'}
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
+        </section>
+      )}
     </div>
   );
 }

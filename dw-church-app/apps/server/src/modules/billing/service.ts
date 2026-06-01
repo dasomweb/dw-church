@@ -231,3 +231,101 @@ export async function getSubscriptionStatus(tenantId: string) {
     currentPeriodEnd,
   };
 }
+
+export interface BillingInfo {
+  plan: string;
+  isActive: boolean;
+  hasStripeCustomer: boolean;
+  subscription: {
+    status: string;
+    interval: 'month' | 'year' | null;
+    amountCents: number;
+    currency: string;
+    currentPeriodEnd: string;
+    cancelAtPeriodEnd: boolean;
+    productName: string | null;
+  } | null;
+  invoices: Array<{
+    id: string;
+    date: string;
+    description: string;
+    status: string;
+    amountCents: number;
+    currency: string;
+    hostedInvoiceUrl: string | null;
+    invoicePdf: string | null;
+  }>;
+}
+
+/**
+ * Combined billing info for the Billing page — current plan + recent invoices
+ * in one round trip. Stripe API is the source of truth (DB just stores ids).
+ */
+export async function getBillingInfo(tenantId: string): Promise<BillingInfo> {
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: {
+      plan: true,
+      isActive: true,
+      stripeCustomerId: true,
+      stripeSubscriptionId: true,
+    },
+  });
+  if (!tenant) throw new AppError('NOT_FOUND', 404, 'Tenant not found');
+
+  const out: BillingInfo = {
+    plan: tenant.plan,
+    isActive: tenant.isActive,
+    hasStripeCustomer: !!tenant.stripeCustomerId,
+    subscription: null,
+    invoices: [],
+  };
+
+  if (!tenant.stripeCustomerId || !stripe) return out;
+
+  // Subscription details
+  if (tenant.stripeSubscriptionId) {
+    try {
+      const sub = await stripe.subscriptions.retrieve(
+        tenant.stripeSubscriptionId as string,
+        { expand: ['items.data.price.product'] },
+      );
+      const item = sub.items.data[0];
+      const price = item?.price;
+      const product = price?.product as Stripe.Product | undefined;
+      out.subscription = {
+        status: sub.status,
+        interval: (price?.recurring?.interval as 'month' | 'year' | undefined) ?? null,
+        amountCents: price?.unit_amount ?? 0,
+        currency: (price?.currency ?? 'usd').toUpperCase(),
+        currentPeriodEnd: new Date(sub.current_period_end * 1000).toISOString(),
+        cancelAtPeriodEnd: sub.cancel_at_period_end,
+        productName: product?.name ?? null,
+      };
+    } catch {
+      // Subscription may have been deleted on Stripe — keep subscription = null
+    }
+  }
+
+  // Recent invoices
+  try {
+    const invoices = await stripe.invoices.list({
+      customer: tenant.stripeCustomerId as string,
+      limit: 12,
+    });
+    out.invoices = invoices.data.map((inv) => ({
+      id: inv.id,
+      date: new Date(inv.created * 1000).toISOString(),
+      description: inv.lines.data[0]?.description ?? `Invoice ${inv.number ?? inv.id}`,
+      status: inv.status ?? 'unknown',
+      amountCents: inv.amount_paid || inv.amount_due || inv.total || 0,
+      currency: (inv.currency ?? 'usd').toUpperCase(),
+      hostedInvoiceUrl: inv.hosted_invoice_url ?? null,
+      invoicePdf: inv.invoice_pdf ?? null,
+    }));
+  } catch {
+    // Listing may fail; leave invoices empty
+  }
+
+  return out;
+}
