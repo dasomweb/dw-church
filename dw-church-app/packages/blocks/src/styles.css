@@ -1,0 +1,251 @@
+/**
+ * Design tokens scoped to the admin block-preview wrapper. Mirrors
+ * apps/web/app/globals.css :root so block components render identically
+ * inside the editor and on the storefront.
+ *
+ * Apply this stylesheet by importing it from anywhere that needs to
+ * render @dw-church/blocks components outside the storefront's Tailwind +
+ * globals.css context (i.e. the admin PageBuilder preview pane).
+ *
+ * The wrapper class `.b2b-blocks-preview` keeps these vars from leaking
+ * into the rest of the admin SPA. Per-tenant theme overrides cascade
+ * inside this scope through inline `style={{ '--accent': ... }}` props
+ * the editor sets.
+ */
+
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css');
+
+/* ─── Phase-4 WCAG AA fg utility classes ────────────────────────────────
+   Block components opt into auto-paired foregrounds by adding these
+   classes alongside their background. Both the storefront tenant layout
+   and the PageBuilder preview now emit `--brand-{slot}-fg` from the
+   tokens cascade, so a button with bg = primary picks up text =
+   primary-fg automatically — even on garish primaries (yellow, lime).
+
+   Usage:
+     <button class="b2b-bg-primary b2b-text-on-primary">  ← AA-safe
+   The `b2b-bg-primary` class is purely a background convenience; existing
+   blocks already use Tailwind utilities (bg-[var(--accent)]) and can
+   layer `b2b-text-on-primary` for the fg without touching their bg. */
+.b2b-text-on-primary    { color: var(--brand-primary-fg, #ffffff); }
+.b2b-text-on-secondary  { color: var(--brand-secondary-fg, #ffffff); }
+.b2b-text-on-accent     { color: var(--brand-accent-fg, #ffffff); }
+.b2b-text-on-surface    { color: var(--brand-surface-fg, #1A1A1A); }
+.b2b-text-on-background { color: var(--brand-background-fg, #1A1A1A); }
+.b2b-text-on-muted      { color: var(--brand-muted-fg, #ffffff); }
+
+.b2b-bg-primary    { background-color: var(--brand-primary, #2563eb); }
+.b2b-bg-secondary  { background-color: var(--brand-secondary, #7c3aed); }
+.b2b-bg-accent     { background-color: var(--brand-accent, #06b6d4); }
+.b2b-bg-surface    { background-color: var(--brand-surface, #f1f5f9); }
+
+/* Convenience "CTA" combo — bg + AA fg in a single class. */
+.b2b-cta-primary {
+  background-color: var(--brand-primary, #2563eb);
+  color: var(--brand-primary-fg, #ffffff);
+}
+.b2b-cta-accent {
+  background-color: var(--brand-accent, #06b6d4);
+  color: var(--brand-accent-fg, #ffffff);
+}
+
+.b2b-blocks-preview {
+  /* Surface */
+  --bg:               #ffffff;
+  --bg-subtle:        #f7f7f5;
+  --bg-muted:         #efece7;
+  --surface:          #ffffff;
+  --surface-elevated: #ffffff;
+
+  /* Text */
+  --text-primary:     #1a1a1a;
+  --text-secondary:   #4a4a4a;
+  --text-muted:       #767676;
+  --text-on-accent:   #ffffff;
+
+  /* Border */
+  --border:           #e5e3de;
+  --border-strong:    #c9c6bf;
+
+  /* Accent */
+  --accent:           #2563eb;
+  --accent-hover:     #1d4ed8;
+  --accent-soft:      #eff6ff;
+
+  /* State */
+  --success:          #4a7c6f;
+  --warning:          #d4a017;
+  --danger:           #c0392b;
+  --info:             #4a6fa5;
+
+  /* Container & gutters */
+  --container-narrow:  768px;
+  --container-default: 1200px;
+  --container-wide:    1440px;
+  --gap-grid:          clamp(1rem, 2vw, 1.5rem);
+
+  /* Section vertical rhythm */
+  --section-py-sm:    clamp(3rem, 6vw, 4rem);
+  --section-py-md:    clamp(4rem, 8vw, 6rem);
+  --section-py-lg:    clamp(5rem, 10vw, 8rem);
+  --section-py-xl:    clamp(6rem, 12vw, 10rem);
+
+  /* Typography scale. Each --fs-* resolves to the operator-set
+   * --brand-* token (from BrandTokensStyle) and falls back to the
+   * static modular-scale value when no tenant theme is loaded
+   * (admin preview before tenant context, etc.). Keeps blocks
+   * agnostic of the brand-token system while still inheriting
+   * operator edits from the 타이포그래피 panel. */
+  --fs-display: var(--brand-h1, clamp(2rem, 3vw + 1rem, 3rem));
+  --fs-h1:      var(--brand-h1, clamp(2rem, 3vw + 1rem, 3rem));
+  --fs-h2:      var(--brand-h2, clamp(1.75rem, 2vw + 1rem, 2.25rem));
+  --fs-h3:      var(--brand-h3, clamp(1.375rem, 1vw + 1rem, 1.75rem));
+  --fs-h4:      var(--brand-h4, clamp(1.125rem, 0.5vw + 1rem, 1.25rem));
+  --fs-lg:      var(--brand-h5, 1.125rem);
+  --fs-base:    var(--brand-body, 1rem);
+  --fs-sm:      var(--brand-label, 0.875rem);
+  --fs-xs:      var(--brand-caption, 0.75rem);
+
+  /* Radius */
+  --r-sm:   4px;
+  --r-md:   8px;
+  --r-lg:   16px;
+  --r-xl:   24px;
+  --r-full: 9999px;
+
+  /* Shadow */
+  --shadow-xs: 0 1px 2px rgba(0,0,0,.04);
+  --shadow-sm: 0 2px 4px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,.10), 0 4px 8px rgba(0,0,0,.06);
+  --shadow-xl: 0 24px 64px rgba(0,0,0,.12), 0 8px 16px rgba(0,0,0,.08);
+
+  /* Motion */
+  --ease-out:        cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out:     cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast:   150ms;
+  --duration-base:   250ms;
+  --duration-slow:   400ms;
+
+  /* Legacy dw-* aliases */
+  --dw-primary:       var(--accent);
+  --dw-secondary:     #64748b;
+  --dw-accent:        #f59e0b;
+  --dw-background:    var(--bg);
+  --dw-surface:       var(--bg-subtle);
+  --dw-text:          var(--text-primary);
+  --dw-font-heading:  'Pretendard Variable', 'Pretendard', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+  --dw-font-body:     'Pretendard Variable', 'Pretendard', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+  --dw-radius:        var(--r-md);
+  --dw-content-width: var(--container-default);
+  --dw-card-shadow:   var(--shadow-sm);
+  --dw-card-border:   none;
+  --dw-sermon-grid:   4;
+
+  font-family: var(--dw-font-body);
+  font-size:   var(--fs-base);
+  line-height: 1.6;
+  color:       var(--text-primary);
+  background:  var(--bg);
+
+  word-break:    keep-all;
+  overflow-wrap: break-word;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ─── Container-query layout primitives ────────────────────────────────
+   The PageBuilder preview is a fixed-width <div> (375 / 768 / full), NOT
+   an iframe — so Tailwind's viewport media queries (sm:/md:/lg:) react to
+   the *browser* width, not the device frame. A 4-col grid therefore stayed
+   4-col inside the 375px "mobile" preview.
+
+   These classes use @container instead, so layout responds to the section's
+   own rendered width: ≈375px in the mobile preview frame, viewport-width on
+   the live storefront. Same CSS works in both because the host <section>
+   carries `container-type: inline-size`.
+
+   Column counts are data-driven via CSS vars the block sets inline:
+     --cq-base : columns under a ~640px container (mobile)
+     --cq-sm   : columns at ≥640px container
+     --cq-lg   : columns at ≥1024px container (desktop) */
+.b2b-cq-host { container-type: inline-size; }
+
+.b2b-cq-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cq-base, 1), minmax(0, 1fr));
+  gap: 1rem;
+}
+@container (min-width: 640px) {
+  .b2b-cq-grid { gap: 1.5rem; }
+}
+@container (min-width: 640px) {
+  .b2b-cq-grid { grid-template-columns: repeat(var(--cq-sm, 2), minmax(0, 1fr)); }
+}
+@container (min-width: 1024px) {
+  .b2b-cq-grid { grid-template-columns: repeat(var(--cq-lg, 3), minmax(0, 1fr)); }
+}
+
+/* Text+Image 50:50 split. Stacks to one column under a 768px container.
+   Desktop side (image-left / image-right) and mobile stack order
+   (image-first / text-first) are independent, driven by data attributes
+   so the operator controls both axes separately. */
+.b2b-cq-split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+@container (min-width: 768px) {
+  .b2b-cq-split { gap: 4rem; }
+}
+.b2b-cq-split > .b2b-ti-text { order: 1; }
+.b2b-cq-split > .b2b-ti-img  { order: 2; }
+.b2b-cq-split[data-mobile-order='image-first'] > .b2b-ti-img  { order: 1; }
+.b2b-cq-split[data-mobile-order='image-first'] > .b2b-ti-text { order: 2; }
+@container (min-width: 768px) {
+  .b2b-cq-split { grid-template-columns: 1fr 1fr; }
+  .b2b-cq-split[data-desktop='image-left']  > .b2b-ti-img  { order: 1; }
+  .b2b-cq-split[data-desktop='image-left']  > .b2b-ti-text { order: 2; }
+  .b2b-cq-split[data-desktop='image-right'] > .b2b-ti-img  { order: 2; }
+  .b2b-cq-split[data-desktop='image-right'] > .b2b-ti-text { order: 1; }
+}
+
+/* ─── Hero background video (YouTube) ──────────────────────────────────
+   Full-bleed autoplay/mute/loop YouTube embed behind the hero overlay.
+   The iframe is a fixed 16:9; this cover technique scales+centres it so
+   it fills any hero box without letterboxing, using only container-
+   relative units (no vh/vw — works inside a contained hero too).
+   pointer-events:none so the CTA stays clickable. On reduced-motion the
+   video layer is hidden and the poster <img> beneath shows through. */
+.b2b-hero-video {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+/* width/height/left/top are all set in px by HeroVideoBackground's
+   ResizeObserver to an exact, whole-pixel 16:9 cover — CSS only marks it
+   absolute and clips the overflow. No transform: a fractional translate
+   on a playing video surface adds per-frame compositing cost. */
+.b2b-hero-video iframe {
+  position: absolute;
+  border: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .b2b-hero-video { display: none; }
+}
+
+/* Edit-mode visual affordances — element hover ring + click highlight.
+ * Storefront never adds these classes (they live under .b2b-blocks-preview
+ * scoped to the admin) so visitors never see them. */
+.b2b-blocks-preview [data-element]:hover {
+  outline: 2px dashed var(--accent);
+  outline-offset: 2px;
+  cursor: pointer;
+}
+.b2b-blocks-preview [data-element-selected="true"] {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

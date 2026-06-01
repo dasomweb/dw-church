@@ -1,0 +1,715 @@
+{
+  "version": 1,
+  "groups": {
+    "hero": "히어로",
+    "content": "컨텐츠",
+    "media": "미디어",
+    "data": "데이터 블록",
+    "conversion": "컨버전",
+    "layout": "레이아웃",
+    "catalog": "카탈로그",
+    "product": "제품",
+    "blog": "블로그"
+  },
+  "blocks": {
+    "hero_banner": {
+      "label": "히어로 배너",
+      "group": "hero",
+      "flags": {},
+      "defaultProps": {
+        "variant": "image-overlay",
+        "height": "md",
+        "width": "full-bleed"
+      },
+      "description": "페이지 최상단 첫인상 섹션. 배경 이미지 + 헤드라인 + 부제목 + CTA로 방문자의 시선을 잡는 above-the-fold 영역.",
+      "tags": ["hero", "above-fold", "landing", "first-impression", "headline", "cta", "title", "background-image", "page-top"],
+      "useCases": ["랜딩 페이지 첫 화면", "About 페이지 상단", "캠페인 페이지 상단"],
+      "aiHint": "Page hero — title/subtitle/CTA on image overlay or split-image. Always emit as the first block of a page."
+    },
+    "hero_full_width": {
+      "label": "히어로 (풀폭)",
+      "group": "hero",
+      "flags": { "isAlias": true },
+      "aliasOf": "hero_banner",
+      "defaultProps": { "variant": "image-overlay", "width": "full-bleed", "height": "lg" },
+      "description": "hero_banner의 풀폭+큰높이 프리셋. 화면 전체를 채우는 임팩트가 필요할 때.",
+      "tags": ["hero", "above-fold", "full-bleed", "large", "impact"],
+      "aiHint": "Legacy alias of hero_banner with width=full-bleed and height=lg."
+    },
+    "hero_split": {
+      "label": "히어로 (분할)",
+      "group": "hero",
+      "flags": { "isAlias": true },
+      "aliasOf": "hero_banner",
+      "defaultProps": { "variant": "split-image", "imageSide": "right", "height": "md" },
+      "description": "좌우 분할형 히어로. 한쪽엔 이미지, 반대쪽엔 텍스트+CTA. 제품/서비스 시각화에 적합.",
+      "tags": ["hero", "above-fold", "split", "side-by-side", "product-shot"],
+      "aiHint": "Legacy alias of hero_banner with variant=split-image."
+    },
+    "hero_image_slider": {
+      "label": "히어로 슬라이더",
+      "group": "hero",
+      "flags": { "isAlias": true, "isDataBlock": true },
+      "aliasOf": "banner_slider",
+      "defaultProps": { "category": "main" },
+      "description": "여러 캠페인/프로모션을 자동 회전 슬라이더로 보여주는 히어로. 콘텐츠는 운영자가 /banners 메뉴에서 관리.",
+      "tags": ["hero", "above-fold", "slider", "carousel", "rotating", "campaign", "data-driven"],
+      "aiHint": "Legacy alias of banner_slider — pulls from /api/v1/banners?category=main."
+    },
+    "banner_slider": {
+      "label": "배너 슬라이더",
+      "group": "data",
+      "flags": { "isDataBlock": true },
+      "defaultProps": { "category": "main" },
+      "description": "자동 회전 배너 캐러셀. 여러 프로모션·캠페인을 순환 표시. 데이터는 /api/v1/banners에서 자동 로드.",
+      "tags": ["slider", "carousel", "campaign", "promo", "rotating", "data-driven", "banner"],
+      "aiHint": "Auto-rotating banner carousel — pulls from /api/v1/banners. category=main for landing, sub for inner pages."
+    },
+    "business_intro": {
+      "label": "회사 소개",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "imageUrl": "" },
+      "description": "회사 또는 브랜드 소개 섹션. 제목 + 본문 HTML + 옆 이미지. 'About Us' 페이지의 핵심 블록.",
+      "tags": ["about", "story", "company", "intro", "narrative", "side-image"],
+      "useCases": ["회사소개 페이지", "랜딩 페이지 중반 'Who we are'"],
+      "aiHint": "Company introduction block — title + HTML content + side image. Use for the about/company page."
+    },
+    "mission_vision": {
+      "label": "미션 & 비전",
+      "group": "content",
+      "flags": {},
+      "defaultProps": {},
+      "description": "회사의 미션·비전·핵심가치를 강조하는 텍스트 카드. 브랜드 정체성을 한 문장으로 표현할 때.",
+      "tags": ["mission", "vision", "values", "purpose", "brand-identity", "statement"],
+      "useCases": ["About 페이지", "회사 소개 하단 '우리가 추구하는 것'"],
+      "aiHint": "Mission/vision statement card — emphasizes core values."
+    },
+    "text_image": {
+      "label": "텍스트 + 이미지",
+      "group": "content",
+      "flags": {},
+      "defaultProps": {
+        "title": "",
+        "content": "",
+        "imageUrl": "",
+        "layout": "left"
+      },
+      "description": "한쪽에 이미지, 반대쪽에 제목+본문을 배치한 범용 콘텐츠 블록. 서비스 설명·CEO 인사말·기능 소개 등에 가장 자주 쓰임.",
+      "tags": ["side-by-side", "split", "text-and-image", "feature-spotlight", "service-intro", "story"],
+      "useCases": ["서비스 상세 페이지", "CEO 인사말", "단일 기능 강조"],
+      "aiHint": "Side-by-side text and image. Use for service intros, CEO greetings, feature spotlights."
+    },
+    "text_only": {
+      "label": "텍스트만",
+      "group": "content",
+      "flags": {},
+      "defaultProps": {
+        "title": "",
+        "content": ""
+      },
+      "description": "이미지 없이 제목 + HTML 본문만 있는 단순 텍스트 블록. 약관·운영시간·정책 등 줄글 콘텐츠용.",
+      "tags": ["text", "copy", "long-form", "policy", "terms", "legal", "html"],
+      "useCases": ["이용약관·개인정보처리방침", "운영시간 <ul>", "FAQ 도입 문구"],
+      "aiHint": "Plain HTML content block. Use for legal copy, hours of operation as <ul>, FAQ-style intro."
+    },
+    "quote_block": {
+      "label": "인용구",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "title": "", "content": "" },
+      "description": "강조하고 싶은 한 줄을 큰 따옴표 스타일로 꺼내 보여주는 풀쿼트. 단일 고객 후기, 브랜드 슬로건에 적합.",
+      "tags": ["quote", "pull-quote", "slogan", "single-testimonial", "callout", "tagline"],
+      "useCases": ["랜딩 페이지 중간 분위기 전환", "About 페이지 '우리의 약속'"],
+      "aiHint": "Pull quote — customer testimonial single or brand slogan callout."
+    },
+    "section_header": {
+      "label": "섹션 헤더",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "title": "", "subtitle": "" },
+      "description": "다음 섹션 그룹의 이름표 역할. 제목 + 짧은 부제목만으로 페이지를 시각적으로 구분.",
+      "tags": ["heading", "divider", "section-title", "label", "intro"],
+      "useCases": ["여러 콘텐츠 블록을 묶는 카테고리 헤더", "장(章) 구분"],
+      "aiHint": "Standalone section title + subtitle for separating major page regions."
+    },
+    "image_gallery": {
+      "label": "이미지 갤러리",
+      "group": "media",
+      "flags": {},
+      "defaultProps": { "title": "", "images": [] },
+      "description": "운영자가 직접 업로드한 이미지를 그리드/라이트박스로 보여주는 정적 갤러리. /albums 데이터를 쓰지 않는 단순 케이스.",
+      "tags": ["gallery", "images", "grid", "lightbox", "portfolio", "static-media"],
+      "useCases": ["포트폴리오 일부", "행사 사진 모음", "제품 라인업 미리보기"],
+      "aiHint": "Static image gallery — content is in props.images (URL list), not fetched from albums."
+    },
+    "video": {
+      "label": "비디오",
+      "group": "media",
+      "flags": {},
+      "defaultProps": { "title": "", "youtubeUrl": "" },
+      "description": "YouTube URL을 입력하면 임베드 플레이어를 렌더링. 회사 소개 영상, 제품 데모, 인터뷰에 적합.",
+      "tags": ["video", "youtube", "embed", "media", "demo", "interview"],
+      "useCases": ["회사 소개 영상", "제품 데모", "고객 사례 영상"],
+      "aiHint": "YouTube embed by URL."
+    },
+    "recent_blog_posts": {
+      "label": "최근 블로그 글",
+      "group": "blog",
+      "flags": { "isDataBlock": true },
+      "defaultProps": { "limit": 6, "variant": "grid-3" },
+      "description": "/api/v1/blog에서 최신 N개를 그리드로 표시하는 데이터 블록. 콘텐츠는 운영자가 블로그 메뉴에서 추가.",
+      "tags": ["blog", "news", "articles", "data-driven", "grid", "recent", "feed"],
+      "useCases": ["홈 페이지 하단 '최근 소식'", "블로그 인덱스 페이지 상단"],
+      "aiHint": "Latest blog posts grid — pulls from /api/v1/blog. variant: grid-2/grid-3/grid-4/list."
+    },
+    "album_gallery": {
+      "label": "앨범 갤러리",
+      "group": "data",
+      "flags": { "isDataBlock": true },
+      "defaultProps": { "title": "", "limit": 6, "variant": "grid-3" },
+      "description": "/api/v1/albums에서 앨범 커버를 그리드로 표시. 운영자가 앨범 메뉴에서 사진을 묶어 관리.",
+      "tags": ["albums", "gallery", "data-driven", "grid", "photos", "portfolio"],
+      "useCases": ["프로젝트 갤러리", "이벤트 사진 인덱스"],
+      "aiHint": "Album cover grid — pulls from /api/v1/albums. variant: grid-2/grid-3/grid-4/masonry."
+    },
+    "board": {
+      "label": "게시판",
+      "group": "data",
+      "flags": { "isDataBlock": true },
+      "defaultProps": { "title": "", "boardSlug": "notices", "limit": 10 },
+      "description": "게시판 목록 위젯. /api/v1/boards/{slug}/posts에서 최신 글을 표시. 공지·FAQ·채용 등 slug별 분리.",
+      "tags": ["board", "forum", "notices", "announcements", "data-driven", "list"],
+      "useCases": ["공지사항 (notices)", "자주 묻는 질문 (faq)", "채용 공고 (careers)"],
+      "aiHint": "Board/forum widget — pulls from /api/v1/boards/{boardSlug}/posts. Use boardSlug like notices/faq/careers/resources."
+    },
+    "products_showcase": {
+      "label": "제품 카탈로그 (그리드/포트폴리오/매거진)",
+      "group": "product",
+      "flags": { "isDataBlock": true },
+      "defaultProps": { "variant": "grid", "source": "recent", "limit": 12 },
+      "variants": ["grid", "portfolio", "magazine"],
+      "description": "제품/서비스 카탈로그. variant=grid는 균일 카드, portfolio는 변동 크기, magazine은 좌우 교차. 소스는 최신·추천·카테고리·수동.",
+      "tags": ["products", "catalog", "portfolio", "grid", "data-driven", "ecommerce", "services"],
+      "useCases": ["제품 일람 페이지", "추천 제품 섹션", "포트폴리오 페이지"],
+      "aiHint": "Products catalog block — variant: grid/portfolio/magazine. source: recent/featured."
+    },
+    "application_form_embed": {
+      "label": "신청서 양식",
+      "group": "data",
+      "flags": { "isDataBlock": true },
+      "defaultProps": { "formSlug": "", "displayMode": "inline", "eyebrow": "", "title": "", "subtitle": "", "ctaLabel": "Apply", "successMessage": "", "ctaAfterUrl": "", "ctaAfterLabel": "" },
+      "description": "application-forms 모듈에서 만든 양식을 페이지에 임베드. inline (페이지에 form 전체) 또는 cta-modal (요약 카드 + 클릭 시 모달).",
+      "tags": ["form", "application", "conversion", "modal", "embed", "lead"],
+      "useCases": ["랜딩 페이지의 wholesale/inquiry form", "About 페이지에 신청 CTA 모달"],
+      "aiHint": "Embed an application form by slug. displayMode: inline (full form on page) or cta-modal (CTA → modal)."
+    },
+    "form_split": {
+      "label": "Form + Text (2 columns)",
+      "group": "data",
+      "flags": { "isDataBlock": true },
+      "defaultProps": { "formSlug": "", "layout": "form-left", "title": "", "subtitle": "", "content": "" },
+      "description": "Two-column section: a tenant application form on one side, title/subtitle/content text on the other. layout: form-left | form-right.",
+      "tags": ["form", "contact", "lead", "split", "two-column", "inquiry"],
+      "useCases": ["Contact / inquiry section with copy beside the form", "Wholesale signup with intro text"],
+      "aiHint": "Two-column block: application form (by formSlug) on one side, title+subtitle+content text on the other. layout form-left or form-right."
+    },
+    "product_detail_view": {
+      "label": "제품 상세 뷰",
+      "group": "product",
+      "flags": { "isDataBlock": true },
+      "defaultProps": { "productSlug": "", "variant": "commerce", "showSku": true, "showSpecs": true, "showGallery": true, "showPrice": true, "specsTitle": "Product details", "priceFieldKey": "price", "showQuantity": false, "galleryLayout": "thumbnails", "contentPlacement": "section", "benefits": "", "showCta": true, "ctaLabel": "Inquire", "ctaHref": "/contact" },
+      "description": "제품 상세 페이지. variant 4 종: commerce (2컬럼 커머스 — 이미지 갤러리 + 사양·가격·CTA·혜택박스) / editorial / minimal / spec-sheet. 토큰 + HeadingElement/TextBodyElement/ButtonElement 통과로 elementStyles 자동 적용.",
+      "tags": ["product", "detail", "single", "commerce", "spec"],
+      "useCases": ["운영자 정의 /products/<slug> 커머스 템플릿", "랜딩 페이지 대표 제품 임베드"],
+      "aiHint": "Single product detail view. variant: commerce (2-col gallery + info/spec/price/cta) / editorial / minimal / spec-sheet."
+    },
+    "blog_post_view": {
+      "label": "블로그 글 뷰",
+      "group": "blog",
+      "flags": { "isDataBlock": true },
+      "defaultProps": { "showBackLink": true, "showMeta": true, "showCover": true, "showContent": true, "showBottom": true, "showYoutube": true, "listHref": "/blog", "listLabel": "← Blog" },
+      "description": "블로그 글 1 편의 상세 뷰. /blog/<글slug> storefront 라우트가 page.post 로 현재 글을 inject 하면 그 데이터로 렌더. 운영자 정의 blog_post 템플릿 페이지의 기본 sections.",
+      "tags": ["blog", "post", "detail", "single", "article"],
+      "useCases": ["운영자 정의 /blog/<slug> 템플릿"],
+      "aiHint": "Single blog post detail view. title + meta + cover + HTML content + bottom image + youtube embed."
+    },
+    "recent_products": {
+      "label": "최근 제품",
+      "group": "product",
+      "flags": { "isDataBlock": true },
+      "defaultProps": { "limit": 6 },
+      "description": "products_showcase의 가장 단순한 형태 (source=recent). '최근 N개 제품'을 보여줄 때 빠른 선택.",
+      "tags": ["products", "recent", "grid", "shortcut", "data-driven"],
+      "aiHint": "Shortcut for products_showcase with source=recent. Use when the AI wants the simplest 'newest N products' list."
+    },
+    "staff_grid": {
+      "label": "직원 그리드",
+      "group": "data",
+      "flags": { "isDataBlock": true, "isHidden": true },
+      "defaultProps": { "limit": 8, "layout": "featured", "photoStyle": "rect", "columns": 3, "showItems": "name,role,department,bio" },
+      "description": "/api/v1/staff에서 직원 카드 그리드. 스토어프론트 컴포넌트 대기 중이라 팔레트에서 숨김. 일반 케이스는 team_members 사용.",
+      "tags": ["staff", "team", "people", "data-driven", "grid", "hidden"],
+      "aiHint": "Staff/team data block — pulls from /api/v1/staff. Hidden from palette pending storefront component."
+    },
+    "history_timeline": {
+      "label": "회사 연혁 (자동)",
+      "group": "data",
+      "flags": { "isDataBlock": true, "isHidden": true },
+      "defaultProps": {},
+      "description": "/api/v1/history에서 회사 연혁 데이터 자동 표시. 스토어프론트 대기 중. 정적 연혁은 timeline 블록 사용.",
+      "tags": ["history", "timeline", "milestones", "data-driven", "hidden"],
+      "aiHint": "History timeline data block — pulls from /api/v1/history. Hidden from palette pending storefront component."
+    },
+    "event_grid": {
+      "label": "행사 그리드",
+      "group": "data",
+      "flags": { "isDataBlock": true, "isHidden": true },
+      "defaultProps": { "limit": 6 },
+      "description": "/api/v1/events에서 행사 카드 그리드. 스토어프론트 대기 중이라 팔레트에서 숨김.",
+      "tags": ["events", "calendar", "data-driven", "grid", "hidden"],
+      "aiHint": "Events data block — pulls from /api/v1/events. Hidden from palette pending storefront component."
+    },
+    "location_map": {
+      "label": "지도",
+      "group": "conversion",
+      "flags": {},
+      "defaultProps": { "address": "", "zoom": 15 },
+      "description": "주소 또는 위경도로 지도를 임베드. 오시는 길·매장 위치 안내에 필수. contact_info와 같이 쓰면 효과적.",
+      "tags": ["map", "location", "address", "embed", "directions", "contact"],
+      "useCases": ["문의/연락처 페이지", "매장 위치 안내", "Footer 위 '오시는 길'"],
+      "aiHint": "Map embed by address or lat/lng. Pair with contact_info on the contact page."
+    },
+    "map_embed": {
+      "label": "지도 (임베드)",
+      "group": "conversion",
+      "flags": { "isAlias": true },
+      "aliasOf": "location_map",
+      "defaultProps": { "address": "" },
+      "description": "location_map의 별칭. 호환성 유지용.",
+      "tags": ["map", "embed", "alias"],
+      "aiHint": "Legacy alias of location_map."
+    },
+    "contact_info": {
+      "label": "연락처 정보",
+      "group": "data",
+      "flags": { "isDataBlock": true },
+      "defaultProps": {},
+      "description": "테넌트 설정의 전화·이메일·주소·SNS를 자동으로 표시. Footer 위, 문의 페이지, CTA 보조 정보로 사용.",
+      "tags": ["contact", "phone", "email", "address", "social", "footer", "auto"],
+      "useCases": ["문의 페이지 헤더", "Footer 위 연락처 블록", "회사 정보 섹션"],
+      "aiHint": "Contact info auto-pulled from tenant settings (phone/email/address/social)."
+    },
+    "address_info": {
+      "label": "주소 정보",
+      "group": "conversion",
+      "flags": { "isAlias": true, "isDataBlock": true },
+      "aliasOf": "contact_info",
+      "defaultProps": {},
+      "description": "contact_info의 별칭으로 주소 라인을 강조. 호환성 유지용.",
+      "tags": ["address", "contact", "alias"],
+      "aiHint": "Legacy alias of contact_info that emphasizes the address/map line."
+    },
+    "contact_form": {
+      "label": "문의 폼",
+      "group": "conversion",
+      "flags": {},
+      "defaultProps": {},
+      "description": "리드 캡처용 일반 문의 폼. 이름·이메일·메시지 등을 받아 내부 contact 엔드포인트로 제출. 전환 핵심 블록.",
+      "tags": ["form", "lead-capture", "inquiry", "conversion", "contact", "submit"],
+      "useCases": ["문의/Contact 페이지", "랜딩 페이지 하단 '문의하기'", "서비스 페이지 끝 CTA 대체"],
+      "aiHint": "Lead-capture / general inquiry form. Submits to internal contact endpoint."
+    },
+    "newsletter_signup": {
+      "label": "뉴스레터 신청",
+      "group": "conversion",
+      "flags": { "isAlias": true },
+      "aliasOf": "subscribe_form",
+      "defaultProps": {},
+      "description": "subscribe_form의 별칭. 호환성 유지용.",
+      "tags": ["newsletter", "subscribe", "email", "alias"],
+      "aiHint": "Legacy alias of subscribe_form."
+    },
+    "subscribe_form": {
+      "label": "뉴스레터 구독",
+      "group": "conversion",
+      "flags": {},
+      "defaultProps": { "bgMode": "subtle" },
+      "description": "이메일 한 줄 + 구독 버튼의 인라인 폼. 페이지 하단 또는 블로그 인덱스에서 마케팅 리스트 확보용.",
+      "tags": ["newsletter", "email-capture", "subscribe", "inline-form", "marketing", "list-building"],
+      "useCases": ["Footer 직전 구독 유도", "블로그 사이드/하단", "About 페이지 끝"],
+      "aiHint": "Inline email newsletter form. POST { email } to submitEndpoint."
+    },
+    "call_to_action": {
+      "label": "CTA (구버전)",
+      "group": "conversion",
+      "flags": { "isAlias": true },
+      "aliasOf": "cta_section",
+      "defaultProps": { "title": "", "buttonText": "", "buttonUrl": "" },
+      "description": "cta_section의 별칭 (variant=boxed-card). 호환성 유지용.",
+      "tags": ["cta", "alias"],
+      "aiHint": "Legacy alias of cta_section (variant=boxed-card)."
+    },
+    "cta_section": {
+      "label": "CTA (행동 유도)",
+      "group": "conversion",
+      "flags": {},
+      "defaultProps": {
+        "title": "",
+        "buttonText": "",
+        "buttonUrl": "",
+        "variant": "boxed-card"
+      },
+      "variants": ["inline-banner", "boxed-card", "image-overlay", "split-image", "stats-strip", "contact-info"],
+      "description": "행동 유도(CTA) 섹션. 페이지 끝/중간에서 방문자를 다음 단계로 이끄는 핵심 전환 블록. 6가지 variant로 톤·임팩트 조절.",
+      "tags": ["cta", "conversion", "end-of-page", "call-to-action", "button", "lead-driver"],
+      "useCases": ["페이지 끝 '지금 시작하기'", "섹션 사이 중간 CTA", "이미지 임팩트 강한 마감 CTA"],
+      "aiHint": "Conversion CTA. Pick variant: inline-banner=full-width strip, boxed-card=highlighted box, image-overlay=hero-style full-bleed background image with eyebrow+title+subtitle+CTA centered on top (best for impactful end-of-page calls), split-image=image+text+button, stats-strip=numbers+CTA, contact-info=phone/email/CTA."
+    },
+    "stats_counter": {
+      "label": "통계 카운터",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "title": "", "columns": "3", "items": [], "align": "center", "bgMode": "none" },
+      "description": "큰 숫자 + 라벨을 N열 그리드로 보여주는 신뢰도/성과 지표. '고객 N만 명', '프로젝트 N건' 등 사회적 증거.",
+      "tags": ["stats", "kpi", "numbers", "metrics", "social-proof", "trust", "achievements"],
+      "useCases": ["About 페이지 '성과 지표'", "서비스 페이지 신뢰도 강화", "Hero 직후 'Why us' 보조"],
+      "aiHint": "N-column number+label grid for KPIs / 회사 성과 지표."
+    },
+    "pricing_table": {
+      "label": "가격표",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "title": "", "items": [], "currency": "$", "showToggle": false },
+      "description": "2~4개 플랜 가격표 카드. featured=true 플랜이 강조됨. SaaS·구독·서비스 패키지 비교에 필수.",
+      "tags": ["pricing", "plans", "tiers", "subscription", "comparison", "saas", "packages"],
+      "useCases": ["가격 페이지", "서비스 페이지 'Plans'", "랜딩 페이지 '요금제 한눈에'"],
+      "aiHint": "2/3/4 plan tier cards side-by-side. Set featured=true on the recommended plan."
+    },
+    "team_members": {
+      "label": "팀 멤버",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "title": "", "columns": "3", "items": [], "photoStyle": "circle" },
+      "description": "팀원 사진+이름+역할 그리드. items[]에 직접 입력하는 정적 구조. 실제 직원 DB 연동은 staff_grid 사용.",
+      "tags": ["team", "people", "members", "about", "leadership", "grid", "static"],
+      "useCases": ["About 페이지 '함께하는 사람들'", "리더십 소개", "프로젝트 팀 소개"],
+      "aiHint": "Team avatar grid (manual items) — for AI-generated content not pulled from /staff."
+    },
+    "logo_bar": {
+      "label": "로고 바",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "items": [], "grayscale": true, "align": "center" },
+      "description": "파트너/고객사 로고 띠. grayscale=true는 회색조로 통일감, hover 시 컬러 복원. 신뢰도 즉시 인식 효과.",
+      "tags": ["logos", "trusted-by", "partners", "clients", "social-proof", "brands", "trust"],
+      "useCases": ["Hero 직후 'Trusted by'", "About 페이지 '주요 고객사'", "Footer 위 파트너 띠"],
+      "aiHint": "Partner / customer logo strip. grayscale=true with hover restore."
+    },
+    "faq_accordion": {
+      "label": "FAQ",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "items": [], "columns": "1", "defaultOpen": -1 },
+      "description": "자주 묻는 질문 아코디언. <details><summary>로 JS 없이 동작. 구매 망설임 해소·고객 지원 부담 감소.",
+      "tags": ["faq", "accordion", "questions", "support", "objection-handling", "expandable"],
+      "useCases": ["가격 페이지 하단", "지원/Help 페이지", "랜딩 페이지 끝 '궁금한 점'"],
+      "aiHint": "FAQ accordion using <details><summary> — no JS required."
+    },
+    "testimonials": {
+      "label": "고객 후기",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "title": "", "items": [], "layout": "grid-3", "bgMode": "subtle" },
+      "description": "고객 후기·추천사 카드. 인용구+작성자+회사/역할+아바타. 사회적 증거의 핵심 블록.",
+      "tags": ["testimonials", "reviews", "social-proof", "quotes", "customers", "trust", "endorsements"],
+      "useCases": ["랜딩 페이지 중하단 신뢰도 부스트", "가격 페이지 직전 망설임 해소", "About 페이지 '고객의 목소리'"],
+      "aiHint": "Quote + author + role/company cards. layout: grid-2/grid-3/single."
+    },
+    "features_grid": {
+      "label": "기능 그리드",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "title": "", "items": [], "columns": "3", "cardStyle": "outline", "align": "left" },
+      "description": "아이콘/이미지 + 제목 + 설명 카드를 N열 그리드로. 제품 기능·서비스 혜택·핵심 차별점 정리에 가장 자주 쓰임.",
+      "tags": ["features", "benefits", "capabilities", "value-prop", "grid", "icons", "differentiation"],
+      "useCases": ["서비스 페이지 'Key Features'", "랜딩 페이지 'Why us'", "제품 페이지 '주요 기능'"],
+      "aiHint": "Icon + title + description cards in a grid. columns: 2/3/4."
+    },
+    "check_list": {
+      "label": "체크 리스트",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "title": "", "items": [], "columns": "1", "iconStyle": "check" },
+      "description": "체크/화살표/점 아이콘이 붙은 글머리 리스트. '포함 사항', '가능한 것/불가능한 것' 등 짧고 단정적인 정리.",
+      "tags": ["checklist", "list", "features", "bullets", "includes", "benefits", "scannable"],
+      "useCases": ["가격 플랜 카드 안 '포함 사항'", "서비스 페이지 '제공 항목'", "Hero 보조 '왜 우리인가' 3줄"],
+      "aiHint": "Bulleted feature list with check/arrow/dot icons."
+    },
+    "steps_list": {
+      "label": "단계별 안내",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "title": "", "items": [], "layout": "vertical", "bgMode": "none" },
+      "description": "프로세스/'어떻게 일하나' 단계 안내. layout=vertical은 풀폭 세로, grid는 3단 가로. 신청 절차 안내에도 유용.",
+      "tags": ["steps", "process", "how-it-works", "workflow", "guide", "onboarding"],
+      "useCases": ["서비스 페이지 'How we work'", "신청·결제 절차 안내", "제품 사용 시작 가이드"],
+      "aiHint": "Process / 'How we work' steps. layout: vertical (full-width rows) or grid (3-up overview)."
+    },
+    "process_steps": {
+      "label": "프로세스 단계",
+      "group": "content",
+      "flags": { "isAlias": true },
+      "aliasOf": "steps_list",
+      "defaultProps": { "items": [], "layout": "vertical" },
+      "description": "steps_list의 별칭. 호환성 유지용.",
+      "tags": ["process", "steps", "alias"],
+      "aiHint": "Legacy alias of steps_list."
+    },
+    "category_tabs": {
+      "label": "카테고리 탭",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "title": "", "tabs": [], "cards": [], "bgMode": "none" },
+      "description": "탭 + 카드 그리드. 탭으로 카테고리를 골라 cards[]를 필터링. Stanislav Bau식 'Unsere Kategorien' 패턴.",
+      "tags": ["tabs", "filter", "category", "grid", "interactive", "browse"],
+      "useCases": ["서비스 페이지 카테고리 탐색", "제품 라인업 분류 보기", "리소스 페이지 'By topic'"],
+      "aiHint": "Tabbed category filter + card grid (Stanislav-style 'Unsere Kategorien'). cards belong to a tab via tab field."
+    },
+    "tabs_filter": {
+      "label": "카테고리 탭 (alias)",
+      "group": "content",
+      "flags": { "isAlias": true },
+      "aliasOf": "category_tabs",
+      "defaultProps": { "tabs": [], "cards": [] },
+      "description": "category_tabs의 별칭. 호환성 유지용.",
+      "tags": ["tabs", "filter", "alias"],
+      "aiHint": "Legacy alias of category_tabs."
+    },
+    "timeline": {
+      "label": "타임라인",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "title": "", "subtitle": "", "variant": "left", "items": [] },
+      "variants": ["left", "center"],
+      "description": "날짜 + 마일스톤 타임라인. variant=left는 한쪽 레일, center는 좌우 교차. 회사 연혁이 정적일 때 사용.",
+      "tags": ["timeline", "history", "milestones", "story", "evolution", "story-arc"],
+      "useCases": ["About 페이지 '우리의 발자취'", "회사 연혁 (정적)", "프로젝트 진행 기록"],
+      "aiHint": "Dated milestone timeline. Use for 회사 연혁 (company history) when items are static (not pulled from /history)."
+    },
+    "comparison_table": {
+      "label": "비교표",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "title": "", "columns": [], "rows": [] },
+      "description": "기능 비교 그리드. 컬럼 하나를 강조해 '우리 vs 그들' 또는 플랜 비교에 사용. 가격표보다 항목별 상세 비교에 적합.",
+      "tags": ["comparison", "table", "vs", "competitors", "feature-matrix", "decision-aid"],
+      "useCases": ["가격 페이지 '플랜 상세 비교'", "랜딩 페이지 'Why us vs Others'", "경쟁사 비교 차트"],
+      "aiHint": "Feature parity grid with one highlighted column. Use for plan comparisons or 'us vs them' charts."
+    },
+    "before_after": {
+      "label": "비포 / 애프터",
+      "group": "media",
+      "flags": {},
+      "defaultProps": { "beforeImageUrl": "", "afterImageUrl": "", "labelBefore": "Before", "labelAfter": "After" },
+      "description": "두 이미지를 핸들로 비교하는 슬라이더. 변환 효과 시연(리모델링·미용·시공·디자인)에 강력.",
+      "tags": ["before-after", "comparison", "slider", "transformation", "results", "case-study"],
+      "useCases": ["인테리어/리모델링 사례", "디자인 리뉴얼 비교", "제품 사용 전후"],
+      "aiHint": "Image-comparison slider with draggable handle."
+    },
+    "hotspot_image": {
+      "label": "핫스팟 이미지",
+      "group": "media",
+      "flags": {},
+      "defaultProps": { "imageUrl": "", "hotspots": [] },
+      "description": "이미지 위에 번호 표시 + 팝오버. 제품 부위별 기능 안내, 도면, 매장 안내 등 인터랙티브 시각 설명.",
+      "tags": ["hotspots", "annotations", "interactive", "product-anatomy", "floor-plan", "labeled-image"],
+      "useCases": ["제품 부위별 기능 설명", "매장/시설 안내도", "도면 주요 지점 표시"],
+      "aiHint": "Annotated image with numbered popovers — for product features / floor plans."
+    },
+    "shoppable_image": {
+      "label": "쇼퍼블 이미지",
+      "group": "media",
+      "flags": {},
+      "defaultProps": { "title": "", "subtitle": "", "imageUrl": "", "items": [] },
+      "description": "연출 사진 위 핫스팟이 제품 상세로 연결되는 카탈로그용 블록. 각 핫스팟에 제품을 지정하면 스토어프론트에서 제품 카드 팝오버 + 링크로 렌더.",
+      "tags": ["shoppable", "catalog", "hotspots", "product-link", "lookbook", "editorial"],
+      "useCases": ["룩북 연출컷에서 제품으로 이동", "공간 코디 사진의 개별 상품 안내"],
+      "aiHint": "Editorial photo with hotspots that link to product detail pages. hotspots: [{x,y,productId}]."
+    },
+    "lookbook_slider": {
+      "label": "룩북 슬라이더",
+      "group": "media",
+      "flags": {},
+      "defaultProps": { "title": "", "subtitle": "", "items": [], "bgMode": "none" },
+      "description": "가로 스냅 스크롤 룩북. 공간 연출컷·시즌 룩·소품 컷을 좌우로 넘겨 보는 에디토리얼 레일. 각 컷에 링크 지정 가능.",
+      "tags": ["lookbook", "catalog", "horizontal-scroll", "slider", "editorial", "gallery"],
+      "useCases": ["시즌 룩북", "공간 스타일링 갤러리", "신상품 컬렉션 소개"],
+      "aiHint": "Horizontal scroll-snap rail of editorial images, optional per-item link."
+    },
+    "countdown_sale": {
+      "label": "카운트다운 세일",
+      "group": "conversion",
+      "flags": {},
+      "defaultProps": { "title": "", "subtitle": "", "endAt": "", "buttonText": "", "buttonUrl": "", "expiredText": "", "bgMode": "accent" },
+      "description": "마감 시각까지 일/시/분/초가 실시간으로 줄어드는 프로모션 배너. 마감되면 안내 문구로 전환. 시즌 세일·런칭 카운트다운에 사용.",
+      "tags": ["countdown", "sale", "promo", "urgency", "timer", "conversion"],
+      "useCases": ["시즌 세일 마감 카운트다운", "신제품 런칭 D-day", "한정 프로모션"],
+      "aiHint": "Live countdown to endAt (ISO datetime); switches to expiredText when passed."
+    },
+    "catalog_archive": {
+      "label": "카탈로그 아카이브",
+      "group": "catalog",
+      "flags": { "isDataBlock": true },
+      "defaultProps": { "title": "", "limit": 0, "variant": "grid-3" },
+      "description": "/api/v1/catalogs에서 발행됨/지난 호 카탈로그를 매거진 랙 그리드로 표시하는 데이터 블록. 임시저장/예약 호는 노출 안 함.",
+      "tags": ["catalog", "archive", "data-driven", "grid", "back-issues", "magazine-rack"],
+      "useCases": ["지난 호 모아보기 섹션", "카탈로그 인덱스 페이지"],
+      "aiHint": "Published/archived catalog issues grid — pulls from /api/v1/catalogs. variant: grid-2/grid-3/grid-4."
+    },
+    "catalog_showcase": {
+      "label": "카탈로그 쇼케이스",
+      "group": "catalog",
+      "flags": { "isDataBlock": true },
+      "defaultProps": { "catalogSlug": "", "displayStyle": "card", "title": "", "subtitle": "", "ctaLabel": "View Catalog", "imagePosition": "left" },
+      "description": "지정한 카탈로그 1권을 cover 이미지 카드 + CTA 형태로 페이지에 임베드. CTA 클릭 시 모달 안에서 CatalogReader 가 동작해 페이지 단위 탐색 가능.",
+      "tags": ["catalog", "showcase", "modal", "cta", "feature", "embed"],
+      "useCases": ["랜딩 페이지에 신규 시즌 카탈로그 노출", "About 페이지에 회사 카탈로그 임베드"],
+      "aiHint": "Single catalog cover card + CTA → modal with full reader. Set catalogSlug to the target catalog."
+    },
+    "catalog_cover": {
+      "label": "카탈로그 표지",
+      "group": "catalog",
+      "flags": {},
+      "defaultProps": { "title": "", "tagline": "", "year": "", "imageUrl": "", "brandName": "" },
+      "description": "인쇄형 카탈로그의 첫 페이지(A5 가로). 큰 표지 이미지 + 카탈로그 제목 + 부제목 + 연도/브랜드. 페이지 넘김 카탈로그 시퀀스의 시작.",
+      "tags": ["catalog", "cover", "title-page", "print", "magazine"],
+      "useCases": ["카탈로그 발행물 표지", "시즌 카탈로그 첫 페이지"],
+      "aiHint": "A5 landscape catalog cover page. Title + tagline + year + cover image + brand."
+    },
+    "catalog_toc": {
+      "label": "카탈로그 목차",
+      "group": "catalog",
+      "flags": {},
+      "defaultProps": {},
+      "description": "카탈로그 내 페이지(섹션) 목록을 번호와 함께 자동 표시. 다음 페이지들의 제목/제품을 인덱싱해 보여줌.",
+      "tags": ["catalog", "toc", "table-of-contents", "index", "print"],
+      "useCases": ["카탈로그 두 번째 페이지", "긴 카탈로그의 빠른 탐색"],
+      "aiHint": "Auto-generated table of contents for a catalog issue."
+    },
+    "catalog_product_page": {
+      "label": "카탈로그 제품 페이지",
+      "group": "catalog",
+      "flags": { "isDataBlock": true },
+      "defaultProps": { "productId": "", "show": { "sku": true, "description": true, "price": false } },
+      "description": "A5 가로 1페이지에 제품 1개를 상세히 진열. 대표 이미지 + 보조 사진 + 제목 + 설명 + SKU/변형 + (선택) 가격. 한 페이지씩 넘기는 잡지 형식의 핵심 블록.",
+      "tags": ["catalog", "product-detail", "spread", "print", "magazine", "page"],
+      "useCases": ["제품 한 개당 한 페이지의 상세 진열", "라인업 매거진"],
+      "aiHint": "Single-product A5 landscape spread: hero image + secondary images + title + description + SKU/variant. props.productId selects which product."
+    },
+    "catalog_product_gallery": {
+      "label": "카탈로그 제품 화보",
+      "group": "catalog",
+      "flags": { "isDataBlock": true },
+      "defaultProps": { "productId": "", "rangeStart": 1, "galleryLayout": "auto", "style": "editorial" },
+      "description": "같은 제품의 추가 사진들 (images[1..N]) 을 mosaic / grid spread 로 펼치는 화보 페이지. catalog_product_page 다음에 자동 inject 되며 운영자가 layout / range 를 인스펙터에서 조정.",
+      "tags": ["catalog", "product-gallery", "magazine", "spread", "print", "photo-grid"],
+      "useCases": ["제품 추가 사진의 잡지식 진열", "포트폴리오 풀-블리드 사진 페이지"],
+      "aiHint": "Magazine-style photo spread of product.images[rangeStart..]. galleryLayout: auto / mosaic variant. style follows the catalog starter."
+    },
+    "catalog_back_cover": {
+      "label": "카탈로그 뒷표지",
+      "group": "catalog",
+      "flags": {},
+      "defaultProps": { "title": "", "message": "", "contactLine": "", "imageUrl": "" },
+      "description": "인쇄형 카탈로그의 마지막 페이지. 감사 메시지 + 연락처 + 선택적 이미지. 카탈로그 시퀀스의 마무리.",
+      "tags": ["catalog", "back-cover", "thank-you", "print", "contact"],
+      "useCases": ["카탈로그 마지막 페이지", "주문 안내 + 연락처"],
+      "aiHint": "A5 landscape catalog back cover. Thank-you message + contact line + optional image."
+    },
+    "divider": {
+      "label": "구분선",
+      "group": "layout",
+      "flags": {},
+      "defaultProps": { "spacing": "md" },
+      "description": "섹션 사이 수평선 + 여백. 시각적 호흡 + 콘텐츠 그룹 구분.",
+      "tags": ["divider", "rule", "separator", "spacing", "horizontal-line"],
+      "useCases": ["다른 톤의 섹션 사이 전환", "긴 페이지의 시각적 휴식점"],
+      "aiHint": "Visual divider between sections. spacing: sm/md/lg."
+    },
+    "spacer": {
+      "label": "여백",
+      "group": "layout",
+      "flags": {},
+      "defaultProps": { "size": "md" },
+      "variants": ["xs", "sm", "md", "lg", "xl"],
+      "description": "세로 빈 공간. 섹션 간 미세 간격 조정용. 선택적으로 구분선 표시 가능.",
+      "tags": ["spacer", "spacing", "gap", "vertical-space", "padding"],
+      "useCases": ["섹션 사이 간격 미세 조정", "Hero와 다음 섹션 사이 호흡 추가"],
+      "aiHint": "Empty vertical spacer with optional divider line. Use for fine-grained section spacing."
+    },
+    "layout_row": {
+      "label": "행 (레이아웃)",
+      "group": "layout",
+      "flags": { "isLayoutBlock": true, "isHidden": true },
+      "defaultProps": { "children": [] },
+      "description": "자식 블록을 가로로 배치하는 컨테이너. 팔레트에서 숨김 — 다른 레이아웃 안에서만 사용.",
+      "tags": ["layout", "container", "row", "horizontal", "hidden"],
+      "aiHint": "Layout container — horizontal row of child blocks. Hidden from palette; only added inside another layout."
+    },
+    "layout_columns": {
+      "label": "컬럼 (레이아웃)",
+      "group": "layout",
+      "flags": { "isLayoutBlock": true, "isHidden": true },
+      "defaultProps": { "columns": 2, "children": [] },
+      "description": "자식 블록을 N열 컬럼으로 배치. 팔레트에서 숨김.",
+      "tags": ["layout", "container", "columns", "grid", "hidden"],
+      "aiHint": "Layout container — N columns of child blocks. Hidden from palette."
+    },
+    "layout_section": {
+      "label": "섹션 (레이아웃)",
+      "group": "layout",
+      "flags": { "isLayoutBlock": true, "isHidden": true },
+      "defaultProps": { "children": [] },
+      "description": "자식 블록을 섹션 padding으로 감싸는 단순 컨테이너. 팔레트에서 숨김.",
+      "tags": ["layout", "container", "wrapper", "hidden"],
+      "aiHint": "Layout container — wraps children with section padding. Hidden from palette."
+    },
+    "two_columns": {
+      "label": "2단 컬럼",
+      "group": "layout",
+      "flags": { "isLayoutBlock": true, "isHidden": true },
+      "defaultProps": { "children": [] },
+      "description": "2단 컬럼 레이아웃. 팔레트에서 숨김 — 에이전트는 layout_columns columns:2 사용.",
+      "tags": ["layout", "columns", "two-up", "hidden"],
+      "aiHint": "Two-column layout. Hidden from palette; agent uses layout_columns with columns:2 instead."
+    },
+    "three_columns": {
+      "label": "3단 컬럼",
+      "group": "layout",
+      "flags": { "isLayoutBlock": true, "isHidden": true },
+      "defaultProps": { "children": [] },
+      "description": "3단 컬럼 레이아웃. 팔레트에서 숨김 — 에이전트는 layout_columns columns:3 사용.",
+      "tags": ["layout", "columns", "three-up", "hidden"],
+      "aiHint": "Three-column layout. Hidden from palette; agent uses layout_columns with columns:3 instead."
+    },
+    "tabs": {
+      "label": "탭",
+      "group": "layout",
+      "flags": { "isLayoutBlock": true, "isHidden": true },
+      "defaultProps": { "tabs": [], "children": [] },
+      "description": "탭 컨테이너 (자식 블록을 탭별로). 팔레트에서 숨김.",
+      "tags": ["tabs", "layout", "container", "hidden"],
+      "aiHint": "Tabbed container. Hidden from palette."
+    },
+    "accordion": {
+      "label": "아코디언",
+      "group": "layout",
+      "flags": { "isLayoutBlock": true, "isHidden": true },
+      "defaultProps": { "items": [], "children": [] },
+      "description": "아코디언 컨테이너. 팔레트에서 숨김 — FAQ 형태는 faq_accordion 사용.",
+      "tags": ["accordion", "layout", "container", "hidden"],
+      "aiHint": "Accordion container. Hidden from palette; for FAQ-style stacks use faq_accordion instead."
+    }
+  }
+}
