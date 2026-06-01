@@ -1,5 +1,10 @@
 import { prisma } from '../../config/database.js';
 import { AppError } from '../../middleware/error-handler.js';
+import {
+  legacyThemeToTokens,
+  type DesignTokens,
+  type LegacyThemeBlob,
+} from '@dw-church/design-tokens';
 import type { UpdateThemeInput } from './schema.js';
 
 interface ThemeRow {
@@ -59,6 +64,58 @@ export async function getTheme(schema: string): Promise<ThemeResponse> {
   }
 
   return mapThemeRow(rows[0]!);
+}
+
+/**
+ * Return the DesignTokens (b2bsmart-shaped) for the active theme. Reads the
+ * same `themes.settings` JSONB the legacy editor wrote into and projects it
+ * through `legacyThemeToTokens()` — so tenants that never touched the new
+ * editor still get a valid token snapshot built from their existing
+ * colors/fonts. If the row already carries `tokensV2`, that wins.
+ */
+export async function getThemeTokens(schema: string): Promise<DesignTokens> {
+  const rows = await prisma.$queryRawUnsafe<ThemeRow[]>(
+    `SELECT id, name, is_active, settings, created_at, updated_at
+     FROM "${schema}".themes
+     WHERE is_active = true
+     LIMIT 1`,
+  );
+  const settings = (rows[0]?.settings ?? {}) as LegacyThemeBlob;
+  return legacyThemeToTokens(settings);
+}
+
+/**
+ * Persist a full DesignTokens snapshot under `settings.tokensV2`. The legacy
+ * colors/fonts/customCss fields are left untouched so the old editor
+ * continues to render — the next read of getThemeTokens will prefer
+ * tokensV2 over the legacy projection.
+ */
+export async function updateThemeTokens(
+  schema: string,
+  tokens: DesignTokens,
+): Promise<DesignTokens> {
+  const existing = await prisma.$queryRawUnsafe<ThemeRow[]>(
+    `SELECT id, settings FROM "${schema}".themes WHERE is_active = true LIMIT 1`,
+  );
+  const current = (existing[0]?.settings ?? {}) as Record<string, unknown>;
+  const merged = { ...current, tokensV2: tokens };
+
+  if (existing.length > 0) {
+    await prisma.$executeRawUnsafe(
+      `UPDATE "${schema}".themes
+       SET settings = $1::jsonb, updated_at = NOW()
+       WHERE id = $2`,
+      JSON.stringify(merged),
+      existing[0]!.id,
+    );
+  } else {
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO "${schema}".themes (name, is_active, settings)
+       VALUES ('modern', true, $1::jsonb)`,
+      JSON.stringify(merged),
+    );
+  }
+  return tokens;
 }
 
 export async function updateTheme(
