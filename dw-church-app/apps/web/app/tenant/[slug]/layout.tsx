@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getChurchSettings, getMenuItems, getTheme } from '@/lib/api';
+import { getChurchSettings, getMenuItems, getTheme, getThemeTokens } from '@/lib/api';
 import MobileMenu from '@/components/MobileMenu';
+import { BrandTokensStyle } from '@/components/BrandTokensStyle';
+import { DEFAULT_DESIGN_TOKENS, type DesignTokens } from '@dw-church/design-tokens';
 // Types inlined to avoid importing @dw-church/api-client in server components
 type ChurchSettings = Record<string, string>;
 type MenuItem = { id: string; label: string; pageId?: string; pageSlug?: string; externalUrl?: string; parentId?: string; sortOrder: number; isVisible: boolean; children?: MenuItem[] };
@@ -139,13 +141,22 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   let settings: ChurchSettings | null = null;
   let menuItems: MenuItem[] = [];
   let theme: Theme | null = null;
+  let tokens: DesignTokens = DEFAULT_DESIGN_TOKENS;
 
   try {
-    [settings, menuItems, theme] = await Promise.all([
+    // Tokens are the new source of truth; the legacy `getTheme` blob
+    // still feeds the layout switches (header/footer/cardStyle) until
+    // those move under `tokens.layout` in a follow-up phase.
+    const [s, m, t, tk] = await Promise.all([
       getChurchSettings(slug),
       getMenuItems(slug),
       getTheme(slug),
+      getThemeTokens(slug),
     ]);
+    settings = s;
+    menuItems = m;
+    theme = t;
+    if (tk) tokens = tk as DesignTokens;
   } catch {
     // Fallback: render with defaults if API unavailable
   }
@@ -206,9 +217,15 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
 
   return (
     <div
+      // data-tenant scopes BrandTokensStyle's `--brand-*` CSS so multiple
+      // tenants SSR'd in the same request don't bleed into each other.
+      // Legacy `--dw-*` vars remain via cssVars as a fallback for storefront
+      // chunks not yet migrated to `--brand-*`.
+      data-tenant={slug}
       style={cssVars as React.CSSProperties}
       data-template={theme?.templateName ?? 'modern'}
     >
+      <BrandTokensStyle tenantSlug={slug} tokens={tokens} />
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--dw-primary)]"

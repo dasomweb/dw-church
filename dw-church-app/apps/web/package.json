@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@dw-church/api-client": "workspace:*",
+    "@dw-church/design-tokens": "workspace:*",
     "@dw-church/ui-components": "workspace:*",
     "@tanstack/react-query": "^5.75.5",
     "next": "^15.3.3",

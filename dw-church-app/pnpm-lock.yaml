@@ -136,6 +136,9 @@ importers:
       '@dw-church/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
+      '@dw-church/design-tokens':
+        specifier: workspace:*
+        version: link:../../packages/design-tokens
       '@dw-church/ui-components':
         specifier: workspace:*
         version: link:../../packages/ui-components

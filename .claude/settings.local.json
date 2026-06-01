@@ -39,7 +39,13 @@
       "Bash(curl -sI https://admin.truelight.app/super-admin)",
       "Bash(curl -sI https://admin.truelight.app/)",
       "Bash(railway --help)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" https://api.truelight.app/api/v1/theme/tokens -H \"X-Tenant-Slug: korus\")"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" https://api.truelight.app/api/v1/theme/tokens -H \"X-Tenant-Slug: korus\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://api.truelight.app/api/v1/theme/tokens\" -H \"X-Tenant-Slug: korus\")",
+      "Bash(curl -s https://admin.truelight.app/)",
+      "Bash(curl -s https://admin.truelight.app/assets/admin-Bto6dFfO.js)",
+      "Bash(curl -s \"https://backboard.railway.com\" -o /dev/null -w \"Railway API: %{http_code}\\\\n\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" https://api.truelight.app/api/v1/theme/tokens -H \"X-Tenant-Slug: bethelfaith\")",
+      "Bash(curl -s https://admin.truelight.app/assets/admin-C60GuoGx.js)"
     ]
   }
 }

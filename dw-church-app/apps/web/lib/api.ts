@@ -111,6 +111,20 @@ export async function getTheme(slug: string): Promise<any> {
   return unwrap(res);
 }
 
+/**
+ * Fetch the full DesignTokens snapshot for a tenant. The server endpoint
+ * projects legacy `settings.colors/fonts` through `legacyThemeToTokens()`
+ * when `settings.tokensV2` isn't set, so this always returns a valid
+ * shape even for tenants that never touched the new ThemeEditor.
+ *
+ * Used by tenant layout to emit `--brand-*` CSS variables — the single
+ * source of truth across storefront + admin live preview + AI Designer.
+ */
+export async function getThemeTokens(slug: string): Promise<any> {
+  const res = await apiFetch(slug, `/api/v1/theme/tokens`, { revalidate: false });
+  return unwrap(res);
+}
+
 // ─── Pages ───────────────────────────────────────────────────
 
 export async function getPages(slug: string): Promise<any[]> {

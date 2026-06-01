@@ -27,14 +27,38 @@ interface ThemeResponse {
   updatedAt: Date;
 }
 
+/**
+ * Project the row into the legacy colors/fonts shape, but compute the
+ * effective values through `legacyThemeToTokens()` first. This is the
+ * single-source-of-truth contract: regardless of which editor (super-
+ * admin's tokens UI or the legacy form) wrote last, callers of GET
+ * /theme see the SAME effective values that GET /theme/tokens emits.
+ * Without this projection, a tenant whose super-admin set primary=red
+ * in tokensV2 would still see the stale primary=blue in any UI that
+ * reads the legacy shape.
+ */
 function mapThemeRow(row: ThemeRow): ThemeResponse {
-  const settings = (row.settings ?? {}) as Record<string, unknown>;
+  const settings = (row.settings ?? {}) as LegacyThemeBlob & Record<string, unknown>;
+  const tokens = legacyThemeToTokens(settings);
   return {
     id: row.id,
-    templateName: (settings.templateName as string) ?? row.name ?? 'modern',
-    colors: (settings.colors as Record<string, unknown>) ?? {},
-    fonts: (settings.fonts as Record<string, unknown>) ?? {},
-    customCss: (settings.customCss as string) ?? '',
+    templateName: (settings.templateName as string | undefined) ?? row.name ?? 'modern',
+    colors: {
+      primary: tokens.colors.system.primary,
+      secondary: tokens.colors.system.secondary,
+      accent: tokens.colors.system.accent,
+      background: tokens.colors.system.background,
+      surface: tokens.colors.system.surface,
+      text: tokens.colors.system.text,
+      muted: tokens.colors.system.muted,
+      border: tokens.colors.system.border,
+    },
+    fonts: {
+      heading: tokens.typography.families.heading,
+      body: tokens.typography.families.body,
+      korean: tokens.typography.families.korean,
+    },
+    customCss: (settings.customCss as string | undefined) ?? '',
     isActive: row.is_active,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
