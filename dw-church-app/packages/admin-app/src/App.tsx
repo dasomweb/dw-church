@@ -44,6 +44,7 @@ const TenantThemeEditor = lazy(() => import('./super-admin/pages/TenantThemeEdit
 const TenantPageEditor = lazy(() => import('./super-admin/pages/TenantPageEditor'));
 const TenantFeaturePermissions = lazy(() => import('./super-admin/pages/TenantFeaturePermissions'));
 const TenantDangerZone = lazy(() => import('./super-admin/pages/TenantDangerZone'));
+const TenantAIContext = lazy(() => import('./super-admin/pages/TenantAIContext'));
 const SuperAdminPlaceholder = lazy(() => import('./super-admin/pages/Placeholder'));
 
 export interface AppConfig {
@@ -225,9 +226,9 @@ export function App({ config }: { config: AppConfig }) {
                 <Route index element={<TenantOverview />} />
                 <Route path="pages" element={<TenantPageEditor />} />
                 <Route path="templates" element={<SuperAdminPlaceholder label="템플릿" phase="Phase 7b" />} />
-                <Route path="menus" element={<SuperAdminPlaceholder label="메뉴" phase="Phase 7b" />} />
+                <Route path="menus" element={<MenuEditor />} />
                 <Route path="theme" element={<TenantThemeEditor />} />
-                <Route path="ai-context" element={<SuperAdminPlaceholder label="AI 컨텍스트" phase="Phase 7b" />} />
+                <Route path="ai-context" element={<TenantAIContext />} />
                 <Route path="reference-photos" element={<SuperAdminPlaceholder label="참조 사진" phase="Phase 7b" />} />
                 <Route path="media" element={<SuperAdminPlaceholder label="미디어" phase="Phase 7b" />} />
                 {/* Phase 7a — reuse the existing tenant-admin pages for the
