@@ -34,6 +34,19 @@ COPY dw-church-app/apps/server/vitest.config.ts apps/server/
 # through their `default` export which falls back to src/index.ts.
 COPY dw-church-app/packages/design-tokens/ packages/design-tokens/
 COPY dw-church-app/packages/theme-sets/ packages/theme-sets/
+
+# Phase 11 fix (2026-06-02): build workspace packages BEFORE the server
+# build. Without this step the server's runtime fails with
+# ERR_MODULE_NOT_FOUND on `/packages/design-tokens/dist/index.js` —
+# because the package.json exports field's `import` condition points
+# to dist/index.js, and Node ESM at runtime ONLY checks that condition
+# (it doesn't fall back to `default: src/index.ts` like tsc does at
+# build time). The server's `pnpm build` succeeded because tsc with
+# bundler resolution found the src/index.ts via `default`, but Node
+# at runtime expects the dist. Same applies to theme-sets.
+RUN cd packages/design-tokens && pnpm build
+RUN cd packages/theme-sets && pnpm build
+
 RUN cd apps/server && rm -rf dist && pnpm db:generate && pnpm build
 
 EXPOSE 3000

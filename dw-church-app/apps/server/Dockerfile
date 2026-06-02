@@ -32,6 +32,11 @@ COPY apps/server/ apps/server/
 COPY packages/design-tokens/ packages/design-tokens/
 COPY packages/theme-sets/ packages/theme-sets/
 
+# Phase 11 fix (2026-06-02): build workspace packages BEFORE the server
+# build. See root-level Dockerfile.server for the full reasoning.
+RUN cd packages/design-tokens && pnpm build
+RUN cd packages/theme-sets && pnpm build
+
 # Generate Prisma client and build
 RUN cd apps/server && pnpm db:generate && pnpm build
 
