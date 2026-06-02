@@ -25,6 +25,17 @@ const mockSermonNoThumb: Sermon = {
   thumbnailUrl: '',
 };
 
+// SermonCard.getThumbnailUrl() 의 우선순위: YouTube videoId > thumbnailUrl.
+// 운영 결정: 운영자 업로드 이미지보다 YouTube 의 hqdefault 가 일관된 품질을
+// 보장한다 (mockSermon 은 둘 다 있어서 YouTube 결과 반환).
+// thumbnailUrl-only 경로 테스트엔 별도 mock 필요.
+const mockSermonThumbOnly: Sermon = {
+  ...mockSermon,
+  id: 12,
+  title: 'Sermon With Thumbnail Only',
+  youtubeUrl: '',
+};
+
 describe('SermonCard', () => {
   it('renders title', () => {
     render(<SermonCard sermon={mockSermon} />);
@@ -46,9 +57,18 @@ describe('SermonCard', () => {
     expect(screen.getByText(/2024\.\d+\.\d+/)).toBeInTheDocument();
   });
 
-  it('renders thumbnail image when thumbnailUrl is provided', () => {
+  it('uses YouTube thumbnail when youtubeUrl is set (preferred over thumbnailUrl)', () => {
+    // mockSermon 은 youtubeUrl + thumbnailUrl 둘 다 있음. 컴포넌트의
+    // 우선순위에 따라 YouTube hqdefault 가 노출되어야 함.
     render(<SermonCard sermon={mockSermon} />);
     const img = screen.getByAltText('The Good Shepherd');
+    expect(img).toBeInTheDocument();
+    expect(img.getAttribute('src')).toContain('img.youtube.com/vi/abc123');
+  });
+
+  it('uses thumbnailUrl when youtubeUrl is empty', () => {
+    render(<SermonCard sermon={mockSermonThumbOnly} />);
+    const img = screen.getByAltText('Sermon With Thumbnail Only');
     expect(img).toBeInTheDocument();
     expect(img).toHaveAttribute('src', 'https://example.com/sermon-thumb.jpg');
   });

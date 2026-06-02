@@ -23,6 +23,7 @@ COPY packages/wp-plugin/package.json packages/wp-plugin/
 # the lock file. Include them so the install resolves.
 COPY packages/design-tokens/package.json packages/design-tokens/
 COPY packages/blocks/package.json packages/blocks/
+COPY packages/theme-sets/package.json packages/theme-sets/
 # wp-connector is a WordPress plugin (PHP), not a workspace package
 
 RUN pnpm install --frozen-lockfile

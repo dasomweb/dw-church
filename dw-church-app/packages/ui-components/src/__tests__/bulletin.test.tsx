@@ -26,8 +26,10 @@ describe('BulletinCard', () => {
   it('renders title and date', () => {
     render(<BulletinCard bulletin={mockBulletin} />);
     expect(screen.getByText('Weekly Bulletin - January 7')).toBeInTheDocument();
-    // DateBadge uses new Date() which may shift the date depending on timezone
-    expect(screen.getByText(/2024\.\d+\.\d+/)).toBeInTheDocument();
+    // 컴포넌트가 "YYYY년 M월 D일" 한국식 포맷으로 출력 (BulletinCard.formatDate
+    // 참조). 옛 regex 는 "2024.1.7" 같은 dot-separated 포맷에 맞춰져 있었음.
+    // TZ 영향으로 day 는 6~7 변동 가능.
+    expect(screen.getByText(/2024년 \d+월 \d+일/)).toBeInTheDocument();
   });
 
   it('calls onClick when clicked', () => {
@@ -50,11 +52,13 @@ describe('BulletinCard', () => {
     expect(screen.queryByText('PDF')).not.toBeInTheDocument();
   });
 
-  it('renders thumbnail image', () => {
+  it('does not render thumbnail image (card is text-only)', () => {
+    // BulletinCard 의 현재 디자인: 좌측 날짜+제목, 우측 PDF 다운로드 버튼.
+    // 썸네일 이미지는 SingleBulletin (상세 페이지) 에서만 사용. 카드는
+    // 리스트 row 형태로 텍스트 중심. 이 테스트는 컴포넌트가 img 를
+    // 렌더하지 않음을 명시적으로 보장.
     render(<BulletinCard bulletin={mockBulletin} />);
-    const img = screen.getByAltText('Weekly Bulletin - January 7');
-    expect(img).toBeInTheDocument();
-    expect(img).toHaveAttribute('src', 'https://example.com/img1.jpg');
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
   });
 
   it('has button role when onClick is provided', () => {

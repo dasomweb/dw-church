@@ -69,6 +69,7 @@ async function main(): Promise<void> {
   const { default: pageRoutes } = await import('./modules/pages/routes.js');
   const { default: menuRoutes } = await import('./modules/menus/routes.js');
   const { default: themeRoutes } = await import('./modules/themes/routes.js');
+  const { default: themeSetsRoutes } = await import('./modules/theme-sets/routes.js');
 
   const { sermonRoutes } = await import('./modules/sermons/routes.js');
   const { bulletinRoutes } = await import('./modules/bulletins/routes.js');
@@ -95,6 +96,7 @@ async function main(): Promise<void> {
   await app.register(pageRoutes, { prefix: '/api/v1/pages' });
   await app.register(menuRoutes, { prefix: '/api/v1/menus' });
   await app.register(themeRoutes, { prefix: '/api/v1/theme' });
+  await app.register(themeSetsRoutes, { prefix: '/api/v1' });
   await app.register(sermonRoutes, { prefix: '/api/v1' });
   await app.register(bulletinRoutes, { prefix: '/api/v1' });
   await app.register(columnRoutes, { prefix: '/api/v1' });
@@ -151,6 +153,18 @@ async function main(): Promise<void> {
     );
   } catch (err) {
     app.log.warn(`password_expires_at column migration skipped: ${err}`);
+  }
+
+  // --- Phase 10-α: selected_theme_set_id on tenants (theme-set system) ---
+  // Tenants pick one ThemeSet from @dw-church/theme-sets; that drives
+  // tokens + layout + page templates. Column is plain VARCHAR (no FK to
+  // a theme_sets table yet — theme sets are code-defined in v1).
+  try {
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE "tenants" ADD COLUMN IF NOT EXISTS "selected_theme_set_id" VARCHAR(64)`,
+    );
+  } catch (err) {
+    app.log.warn(`selected_theme_set_id column migration skipped: ${err}`);
   }
 
   // --- Tenant schema drift repair ---

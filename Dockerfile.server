@@ -17,8 +17,10 @@ COPY dw-church-app/packages/wp-plugin/package.json packages/wp-plugin/
 # Phase 0 — design-tokens is a server dep (themes/service.ts imports
 # legacyThemeToTokens + designTokensSchema). blocks is also a workspace
 # member that pnpm install would fail on if missing.
+# Phase 10-α — theme-sets added (server reads ALL_THEME_SETS for picker API).
 COPY dw-church-app/packages/design-tokens/package.json packages/design-tokens/
 COPY dw-church-app/packages/blocks/package.json packages/blocks/
+COPY dw-church-app/packages/theme-sets/package.json packages/theme-sets/
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
@@ -28,9 +30,10 @@ COPY dw-church-app/apps/server/src/ apps/server/src/
 COPY dw-church-app/apps/server/prisma/ apps/server/prisma/
 COPY dw-church-app/apps/server/tsconfig.json apps/server/
 COPY dw-church-app/apps/server/vitest.config.ts apps/server/
-# design-tokens source — server's tsc resolves @dw-church/design-tokens
-# through the package's `default` export which falls back to src/index.ts.
+# design-tokens + theme-sets source — server tsc resolves both packages
+# through their `default` export which falls back to src/index.ts.
 COPY dw-church-app/packages/design-tokens/ packages/design-tokens/
+COPY dw-church-app/packages/theme-sets/ packages/theme-sets/
 RUN cd apps/server && rm -rf dist && pnpm db:generate && pnpm build
 
 EXPOSE 3000

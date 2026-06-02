@@ -25,7 +25,9 @@ const BoardManagement = lazy(() => import('./pages/BoardManagement'));
 const PageEditor = lazy(() => import('./pages/PageEditor'));
 const PageWizard = lazy(() => import('./pages/PageWizard'));
 const MenuEditor = lazy(() => import('./pages/MenuEditor'));
-const ThemeEditor = lazy(() => import('./pages/ThemeEditor'));
+// ThemeEditor (tenant-admin) deprecated — friendly notice 로 대체.
+// 2026-06-01: 테마 = 슈퍼어드민 owned (테마셋 라이브러리 기반).
+const ThemeDeprecatedNotice = lazy(() => import('./pages/ThemeDeprecatedNotice'));
 const UserManagement = lazy(() => import('./pages/UserManagement'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const DomainSettings = lazy(() => import('./pages/DomainSettings'));
@@ -277,7 +279,7 @@ export function App({ config }: { config: AppConfig }) {
                 <Route path="pages" element={<PageEditor />} />
                 <Route path="page-wizard" element={<PageWizard />} />
                 <Route path="menus" element={<MenuEditor />} />
-                <Route path="theme" element={<ThemeEditor />} />
+                <Route path="theme" element={<ThemeDeprecatedNotice />} />
                 <Route path="users" element={<UserManagement />} />
                 <Route path="domains" element={<DomainSettings />} />
                 <Route path="settings" element={<SettingsPage />} />

@@ -5,3 +5,4 @@ export { TableSkeleton, CardSkeleton, FormSkeleton } from './Skeleton';
 export { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass } from './FormField';
 export { ImageUpload, MultiImageUpload } from './ImageUpload';
 export { RichEditor } from './RichEditor';
+export { PlanUpgradeModal, isPlanUpgradeError } from './PlanUpgradeModal';

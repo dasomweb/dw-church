@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDWChurchClient } from '@dw-church/api-client';
 import { useQueryClient } from '@tanstack/react-query';
-import { useToast } from '../components';
+import { useToast, PlanUpgradeModal, isPlanUpgradeError } from '../components';
 
 // ─── Block visual preview components ────────────────────────
 
@@ -231,6 +231,12 @@ export default function PageWizard() {
   const [selectedLabel, setSelectedLabel] = useState('');
   const [customPrompt, setCustomPrompt] = useState('');
   const [preview, setPreview] = useState<{ title: string; slug: string; blocks: { blockType: string; props: Record<string, unknown> }[] } | null>(null);
+  // Paywall — opens when server returns 403 PLAN_UPGRADE_REQUIRED (Basic
+  // 사용자가 AI 페이지 생성을 시도한 경우). Current plan 은 모달에서 안
+  // 보여주고 server 에러 메시지의 강조 부분만 활용 — JWT 에 plan 필드가
+  // 없어서 추가 API 호출 없이 가져올 수 없음 (정확한 plan 표시가 필요해지면
+  // /billing/info 호출 추가).
+  const [paywallOpen, setPaywallOpen] = useState(false);
 
   const handleSelect = async (prompt: string, label: string) => {
     setSelectedPrompt(prompt);
@@ -241,8 +247,13 @@ export default function PageWizard() {
       const res = await apiClient.adapter.post<{ data: { title: string; slug: string; blocks: { blockType: string; props: Record<string, unknown> }[] } }>('/ai/generate-page/preview', { prompt });
       setPreview(res.data);
     } catch (err) {
-      showToast('error', err instanceof Error ? err.message : 'AI 생성 실패');
-      setStep('select');
+      if (isPlanUpgradeError(err)) {
+        setPaywallOpen(true);
+        setStep('mode');
+      } else {
+        showToast('error', err instanceof Error ? err.message : 'AI 생성 실패');
+        setStep('select');
+      }
     } finally {
       setLoading(false);
     }
@@ -257,8 +268,13 @@ export default function PageWizard() {
       queryClient.invalidateQueries({ queryKey: ['pages'] });
       navigate(`/t/${slug}/pages`);
     } catch (err) {
-      showToast('error', err instanceof Error ? err.message : '페이지 생성 실패');
-      setStep('preview');
+      if (isPlanUpgradeError(err)) {
+        setPaywallOpen(true);
+        setStep('mode');
+      } else {
+        showToast('error', err instanceof Error ? err.message : '페이지 생성 실패');
+        setStep('preview');
+      }
     } finally {
       setLoading(false);
     }
@@ -271,6 +287,12 @@ export default function PageWizard() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      <PlanUpgradeModal
+        open={paywallOpen}
+        onClose={() => setPaywallOpen(false)}
+        feature="AI 페이지 생성"
+        requiredPlans={['pro', 'enterprise']}
+      />
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>

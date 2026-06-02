@@ -21,6 +21,7 @@ COPY packages/wp-plugin/package.json packages/wp-plugin/
 # pnpm install --frozen-lockfile fails (admin-app depends on them).
 COPY packages/design-tokens/package.json packages/design-tokens/
 COPY packages/blocks/package.json packages/blocks/
+COPY packages/theme-sets/package.json packages/theme-sets/
 
 RUN pnpm install --frozen-lockfile
 

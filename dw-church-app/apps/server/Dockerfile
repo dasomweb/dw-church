@@ -18,6 +18,7 @@ COPY packages/wp-connector/package.json packages/wp-connector/
 # package but the package.json isn't on disk.
 COPY packages/design-tokens/package.json packages/design-tokens/
 COPY packages/blocks/package.json packages/blocks/
+COPY packages/theme-sets/package.json packages/theme-sets/
 COPY apps/demo/package.json apps/demo/
 COPY apps/web/package.json apps/web/
 
@@ -26,9 +27,10 @@ RUN pnpm install --frozen-lockfile
 
 # Copy server source
 COPY apps/server/ apps/server/
-# design-tokens source — server's tsc resolves @dw-church/design-tokens
-# through the package's `default` export which points at src/index.ts.
+# design-tokens + theme-sets source — server tsc resolves both packages
+# through their `default` export which points at src/index.ts.
 COPY packages/design-tokens/ packages/design-tokens/
+COPY packages/theme-sets/ packages/theme-sets/
 
 # Generate Prisma client and build
 RUN cd apps/server && pnpm db:generate && pnpm build
