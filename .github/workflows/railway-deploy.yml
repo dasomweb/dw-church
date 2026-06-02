@@ -1,0 +1,159 @@
+# GitHub Actions — Railway 자동 배포 (4개 서비스).
+#
+# Why this workflow exists
+#   Railway 의 자체 GitHub auto-deploy hook 이 간헐적으로 실패해서 main
+#   에 push 해도 빌드가 트리거되지 않는 사례가 반복됨 (2026-06-01,
+#   2026-06-02). 매번 `railway up --service X --detach` 를 로컬에서
+#   수동 호출하는 건 휴먼 에러가 잦고 어디까지 배포됐는지 추적도 어려움.
+#   이 워크플로우가 main 의 모든 push 에 대해 결정적으로 4개 서비스를
+#   배포해서 그 사이클을 단단하게 만든다.
+#
+# Required secrets (Settings → Secrets and variables → Actions):
+#   RAILWAY_TOKEN_ADMIN       admin 서비스 전용 토큰
+#   RAILWAY_TOKEN_API_SERVER  api-server 서비스 전용 토큰
+#   RAILWAY_TOKEN_WEB         web 서비스 전용 토큰
+#   RAILWAY_TOKEN_AGENTS      agents 서비스 전용 토큰 (Phase 11-A3 부터)
+#
+#   각 토큰은 Railway dashboard → Project → 해당 service → Tokens 에서
+#   "Service token" 으로 만든다. 하나의 환경 token 으로 4개 다 배포해도
+#   되지만 서비스별로 분리하면 누출 시 영향 범위가 작아진다.
+#
+# Path-filter behavior
+#   각 서비스 job 은 자기와 관련된 파일이 변경됐을 때만 실행. 예를 들어
+#   apps/web 만 바뀌면 api-server / admin / agents 는 skip → 무관한
+#   서비스에 헛 배포가 안 들어감. 변경 감지는 dorny/paths-filter@v3 가
+#   각 commit 의 diff 를 보고 결정.
+#
+# Triggering manually
+#   workflow_dispatch 로 수동 트리거 가능. service 입력으로 특정 서비스만
+#   강제 재배포할 수도 있음 (Railway 빌드가 stuck 됐을 때 유용).
+
+name: Deploy to Railway
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      service:
+        description: '특정 서비스만 강제 재배포 (admin / api-server / web / agents). 비워두면 모두 검토.'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  # 1. 변경된 경로 식별 — 어느 서비스가 배포되어야 하는지 결정.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      admin: ${{ steps.filter.outputs.admin }}
+      api_server: ${{ steps.filter.outputs.api_server }}
+      web: ${{ steps.filter.outputs.web }}
+      agents: ${{ steps.filter.outputs.agents }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          # Workflow_dispatch 의 force-deploy 입력 시 항상 true 처리하기
+          # 위해 별도 list-files 옵션 없이 단순 filter. job-level if 가
+          # 그 케이스를 처리한다.
+          filters: |
+            admin:
+              - 'dw-church-app/packages/admin-app/**'
+              - 'dw-church-app/packages/api-client/**'
+              - 'dw-church-app/packages/ui-components/**'
+              - 'dw-church-app/packages/design-tokens/**'
+              - 'dw-church-app/packages/blocks/**'
+              - 'dw-church-app/packages/theme-sets/**'
+              - 'dw-church-app/package.json'
+              - 'dw-church-app/pnpm-lock.yaml'
+              - 'dw-church-app/pnpm-workspace.yaml'
+            api_server:
+              - 'dw-church-app/apps/server/**'
+              - 'dw-church-app/packages/design-tokens/**'
+              - 'dw-church-app/packages/blocks/**'
+              - 'dw-church-app/packages/theme-sets/**'
+              - 'Dockerfile.server'
+              - 'dw-church-app/pnpm-lock.yaml'
+              - 'dw-church-app/pnpm-workspace.yaml'
+            web:
+              - 'dw-church-app/apps/web/**'
+              - 'dw-church-app/packages/api-client/**'
+              - 'dw-church-app/packages/ui-components/**'
+              - 'dw-church-app/packages/design-tokens/**'
+              - 'dw-church-app/packages/blocks/**'
+              - 'dw-church-app/packages/theme-sets/**'
+              - 'dw-church-app/pnpm-lock.yaml'
+              - 'dw-church-app/pnpm-workspace.yaml'
+            agents:
+              - 'dw-church-app/apps/agents/**'
+              - 'dw-church-app/packages/agents-adapter/**'
+              - 'dw-church-app/packages/blocks/src/registry.json'
+
+  # 2. 각 서비스 배포 (병렬). Railway CLI 가 dockerfile/builder 를 가지고
+  # 실제 빌드 — Actions runner 는 트리거 + 폴링만 한다.
+
+  deploy-admin:
+    needs: changes
+    if: ${{ needs.changes.outputs.admin == 'true' || github.event.inputs.service == 'admin' || github.event.inputs.service == '' && github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+      - name: Deploy admin
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_ADMIN }}
+        working-directory: dw-church-app
+        run: railway up --service admin --ci
+
+  deploy-api-server:
+    needs: changes
+    if: ${{ needs.changes.outputs.api_server == 'true' || github.event.inputs.service == 'api-server' || github.event.inputs.service == '' && github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+      - name: Deploy api-server
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_API_SERVER }}
+        # api-server 의 build context 는 repo root (Dockerfile.server 가
+        # 거기 있음). 다른 서비스들과 달리 dw-church-app 안에 들어가지
+        # 않는다.
+        run: railway up --service api-server --ci
+
+  deploy-web:
+    needs: changes
+    if: ${{ needs.changes.outputs.web == 'true' || github.event.inputs.service == 'web' || github.event.inputs.service == '' && github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+      - name: Deploy web
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_WEB }}
+        working-directory: dw-church-app
+        run: railway up --service web --ci
+
+  deploy-agents:
+    needs: changes
+    if: ${{ needs.changes.outputs.agents == 'true' || github.event.inputs.service == 'agents' || github.event.inputs.service == '' && github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+      - name: Deploy agents (Phase 11-A3 — Railway 서비스 신규 등록 필요)
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_AGENTS }}
+        # apps/agents/railway.toml 이 dockerfilePath = "apps/agents/Dockerfile"
+        # 을 가리키므로 build context 는 dw-church-app.
+        working-directory: dw-church-app
+        run: railway up --service agents --ci

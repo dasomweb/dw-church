@@ -102,25 +102,30 @@ class BusinessParseAgent(BaseAgent[BusinessParseInput, BusinessParseOutput]):
 # consistent and one operator request to "make brand keywords longer"
 # touches one block. Each template gets the relevant business-info
 # context interpolated at call time.
+# Phase 11-A4 (dw-church): "비즈니스" → "교회" 로 terminology 정리.
+# field key 는 frontend wizard 와 공유 (camelCase) 라서 그대로 유지.
 _TEXT_SUGGEST_PROMPTS: dict[str, str] = {
     "targetAudience": (
-        "'{biz}' ({ind}) 비즈니스의 타겟 고객층을 10가지 제안하세요.\n"
-        "사업 설명: {desc}\n"
+        "'{biz}' ({ind}) 교회의 타겟 성도/방문자층을 10가지 제안하세요.\n"
+        "교회 소개: {desc}\n"
+        "예: '30-40대 가정', '청년층', '새가족', '시니어' 등.\n"
         "각각 한 줄(25자 이내), 번호 없이, 줄바꿈 구분."
     ),
     "services": (
-        "'{biz}' ({ind}) 비즈니스가 제공하는 주요 서비스/제품을 10가지 제안하세요.\n"
-        "사업 설명: {desc}\n"
+        "'{biz}' ({ind}) 교회의 주요 사역과 활동을 10가지 제안하세요.\n"
+        "교회 소개: {desc}\n"
+        "예: '주일예배', '청년부', '주일학교', '전도사역', '구역모임' 등.\n"
         "각각 한 줄(20자 이내), 번호 없이, 줄바꿈 구분."
     ),
     "brandKeywords": (
-        "'{biz}' ({ind}) 브랜드의 디자인 키워드/무드를 10가지 제안하세요.\n"
-        "사업 설명: {desc}\n"
+        "'{biz}' ({ind}) 교회의 디자인 분위기/무드 키워드를 10가지 제안하세요.\n"
+        "교회 소개: {desc}\n"
+        "예: '따뜻한', '경건한', '현대적인', '가정적인' 등.\n"
         "각각 한 단어~짧은 구, 번호 없이, 줄바꿈 구분."
     ),
     "businessDescription": (
-        "'{biz}' ({ind}) 비즈니스의 소개 문구를 3가지 제안하세요.\n"
-        "웹사이트 About 페이지에 사용할 2-3문장짜리 사업 설명문.\n"
+        "'{biz}' ({ind}) 교회의 소개 문구를 3가지 제안하세요.\n"
+        "교회 웹사이트의 메인 또는 비전 페이지에 사용할 2-3문장짜리 소개문.\n"
         "각 제안은 줄바꿈으로 구분, 번호나 라벨 없이."
     ),
 }
@@ -194,9 +199,11 @@ class PageListSuggestAgent(BaseAgent[SuggestInput, PageListSuggestOutput]):
 
     def system_prompt(self) -> str:
         return (
-            "You design website information architecture for B2B SMBs. "
+            "You design website information architecture for Korean churches. "
             "Output ONLY valid JSON. No prose, no markdown fences. "
-            "Hierarchy matters — group related pages under shared parents."
+            "Hierarchy matters — group related pages under shared parents. "
+            "Standard church site structure: 홈 / 교회 소개 (비전·연혁·교역자) / "
+            "예배·말씀 (설교·주보·칼럼) / 공동체 (사역·행사·갤러리·게시판) / 오시는 길."
         )
 
     def build_prompt(self, input: SuggestInput) -> str:
@@ -207,18 +214,18 @@ class PageListSuggestAgent(BaseAgent[SuggestInput, PageListSuggestOutput]):
         services = ctx.get("services", "") or "(미정)"
         ta = ctx.get("targetAudience", "") or "(미정)"
         return (
-            f"'{biz}' ({ind}) 웹사이트의 사이트맵을 제안하세요.\n"
-            f"사업 설명: {desc}\n"
-            f"서비스: {services}\n"
-            f"타겟 고객: {ta}\n"
+            f"'{biz}' ({ind}) 교회 웹사이트의 사이트맵을 제안하세요.\n"
+            f"교회 소개: {desc}\n"
+            f"사역: {services}\n"
+            f"타겟 성도/방문자: {ta}\n"
             "\n"
             "규칙:\n"
             "- 상위 메뉴 slug는 #name (라벨용 메뉴 그룹), 하위 페이지는 "
             "parent 포함\n"
             "- 10-20페이지\n"
-            "- 같은 주제 페이지가 3개 이상이면 부모 카테고리 아래로 묶을 것\n"
-            "- 자식은 nested slug 사용 (부모 '/products' → 자식 "
-            "'/products/widget-a')\n"
+            "- 표준 카테고리 우선 적용: 교회 소개 / 예배·말씀 / 공동체 / 오시는 길\n"
+            "- 자식은 nested slug 사용 (부모 '/about' → 자식 "
+            "'/about/vision')\n"
             "\n"
             "Return ONLY this JSON shape (no markdown fences):\n"
             '{"suggestions": ['

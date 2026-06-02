@@ -1,6 +1,6 @@
 """True Light agents adapter — bridges DW-AI agents to apps/server."""
 
-from dw_church_adapter.adapter import DWChurchAdapter, DWChurchAdapter
+from dw_church_adapter.adapter import DWChurchAdapter
 from dw_church_adapter.block_registry import (
     BLOCK_GROUPS,
     BLOCK_REGISTRY,
@@ -25,7 +25,6 @@ __all__ = [
     "BLOCK_GROUPS",
     "BLOCK_REGISTRY",
     "BLOCK_TYPES",
-    "DWChurchAdapter",  # backward-compat alias for DWChurchAdapter
     "ExpandedSection",
     "InternalApiClient",
     "PALETTE_BLOCKS",

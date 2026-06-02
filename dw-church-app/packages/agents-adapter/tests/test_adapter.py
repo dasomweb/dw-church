@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from dw_church_adapter import DWChurchAdapter, DWChurchAdapter, InternalApiClient
+from dw_church_adapter import DWChurchAdapter, InternalApiClient
 
 
 def make_adapter(client: InternalApiClient | None = None) -> tuple[DWChurchAdapter, AsyncMock]:
@@ -20,9 +20,10 @@ def make_adapter(client: InternalApiClient | None = None) -> tuple[DWChurchAdapt
     return adapter, client  # type: ignore[return-value]
 
 
-def test_dwchurch_adapter_alias_points_to_b2b_smart_adapter() -> None:
-    """The legacy DWChurchAdapter export is an alias for DWChurchAdapter."""
-    assert DWChurchAdapter is DWChurchAdapter
+# (Removed legacy DWChurchAdapter alias test — the previous b2bsmart code
+# kept a `DWChurchAdapter` alias for backward compat with an earlier
+# DW-AI rename. After Phase 11-A3 the canonical name IS DWChurchAdapter,
+# so the alias-identity test became `assert X is X`. Dropped.)
 
 
 # ── delegation: pages ────────────────────────────────────────

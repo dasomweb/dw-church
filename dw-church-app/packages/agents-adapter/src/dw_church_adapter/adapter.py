@@ -175,4 +175,3 @@ class DWChurchAdapter:
 
 # Backward-compatible alias. Older code imports DWChurchAdapter; new code
 # should use DWChurchAdapter. Both refer to the same class.
-DWChurchAdapter = DWChurchAdapter

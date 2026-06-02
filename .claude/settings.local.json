@@ -45,7 +45,10 @@
       "Bash(curl -s https://admin.truelight.app/assets/admin-Bto6dFfO.js)",
       "Bash(curl -s \"https://backboard.railway.com\" -o /dev/null -w \"Railway API: %{http_code}\\\\n\")",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" https://api.truelight.app/api/v1/theme/tokens -H \"X-Tenant-Slug: bethelfaith\")",
-      "Bash(curl -s https://admin.truelight.app/assets/admin-C60GuoGx.js)"
+      "Bash(curl -s https://admin.truelight.app/assets/admin-C60GuoGx.js)",
+      "Bash(pnpm --filter @dw-church/theme-sets test)",
+      "Bash(pnpm --filter @dw-church/ui-components test)",
+      "Bash(pnpm --filter @dw-church/web build)"
     ]
   }
 }
