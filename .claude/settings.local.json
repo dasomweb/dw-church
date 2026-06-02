@@ -48,7 +48,9 @@
       "Bash(curl -s https://admin.truelight.app/assets/admin-C60GuoGx.js)",
       "Bash(pnpm --filter @dw-church/theme-sets test)",
       "Bash(pnpm --filter @dw-church/ui-components test)",
-      "Bash(pnpm --filter @dw-church/web build)"
+      "Bash(pnpm --filter @dw-church/web build)",
+      "Bash(git ls-tree *)",
+      "Bash(git rm *)"
     ]
   }
 }
