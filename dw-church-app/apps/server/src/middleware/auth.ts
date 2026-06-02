@@ -114,6 +114,26 @@ export async function requireOwner(
 }
 
 /**
+ * Require super_admin role exclusively. Used by AI builder endpoints
+ * (planner-proxy / build-pages / builder-routes / jobs) — these create
+ * pages/sections/menus on a target tenant's schema as a privileged op
+ * and must never be reachable by regular tenant owners.
+ *
+ * (Phase 11-A2 — added when porting b2bsmart's AI builder which used
+ * the same gate. Different from requireOwner which also accepts the
+ * owner role.)
+ */
+export async function requireSuperAdmin(
+  request: FastifyRequest,
+  reply: FastifyReply,
+): Promise<void> {
+  await requireAuth(request, reply);
+  if (request.user?.role !== 'super_admin') {
+    throw new AppError('FORBIDDEN', 403, 'Super admin access required');
+  }
+}
+
+/**
  * Plan gate — return a preHandler that requires the tenant's plan to be
  * one of the allowed values. super_admin bypasses (they can do anything
  * on any tenant). Use as a per-route preHandler stacked after

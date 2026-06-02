@@ -36,6 +36,15 @@ const envSchema = z.object({
   // AI (optional — Gemini for text/image generation)
   GEMINI_API_KEY: z.string().default(''),
 
+  // AI Builder — Phase 11-A2 (apps/agents Python 서비스 연동).
+  // AGENTS_BASE_URL    = Railway 의 apps/agents 내부 URL
+  //                      (예: agents-production-xxxx.up.railway.app)
+  // INTERNAL_SERVICE_TOKEN = server ↔ agents 양쪽이 공유하는 bearer.
+  //                          기본 빈값 → planner-proxy 가 503 'AI builder
+  //                          not configured' 응답. AI 빌더 비활성.
+  AGENTS_BASE_URL: z.string().default(''),
+  INTERNAL_SERVICE_TOKEN: z.string().default(''),
+
   // Monitoring (optional)
   SENTRY_DSN: z.string().default(''),
 

@@ -179,6 +179,15 @@ export async function updateTheme(
   if (input.customCss !== undefined) {
     newSettings.customCss = input.customCss;
   }
+  // Phase 11-A2 (2026-06-02): AI builder의 applyDesignToTheme 가 typography
+  // 와 tokensV2 를 같은 PUT /theme 으로 보냄. 단순 merge 로 처리하고
+  // legacyThemeToTokens() 가 read 시 합성하도록 위임.
+  if ((input as { typography?: unknown }).typography !== undefined) {
+    newSettings.typography = (input as { typography?: unknown }).typography;
+  }
+  if ((input as { tokensV2?: unknown }).tokensV2 !== undefined) {
+    newSettings.tokensV2 = (input as { tokensV2?: unknown }).tokensV2;
+  }
 
   let rows: ThemeRow[];
 

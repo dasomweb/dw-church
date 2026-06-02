@@ -70,6 +70,11 @@ async function main(): Promise<void> {
   const { default: menuRoutes } = await import('./modules/menus/routes.js');
   const { default: themeRoutes } = await import('./modules/themes/routes.js');
   const { default: themeSetsRoutes } = await import('./modules/theme-sets/routes.js');
+  // Phase 11-A2 — b2bsmart AI 빌더 서버 모듈 포트.
+  const { default: plannerProxyRoutes } = await import('./modules/ai/planner-proxy/routes.js');
+  const { default: buildPagesRoutes } = await import('./modules/ai/build-pages/routes.js');
+  const { default: builderRoutesModule } = await import('./modules/ai/builder-routes/routes.js');
+  const { default: jobsRoutes } = await import('./modules/ai/jobs/routes.js');
 
   const { sermonRoutes } = await import('./modules/sermons/routes.js');
   const { bulletinRoutes } = await import('./modules/bulletins/routes.js');
@@ -97,6 +102,11 @@ async function main(): Promise<void> {
   await app.register(menuRoutes, { prefix: '/api/v1/menus' });
   await app.register(themeRoutes, { prefix: '/api/v1/theme' });
   await app.register(themeSetsRoutes, { prefix: '/api/v1' });
+  // Phase 11-A2 — AI 빌더 서버 routes. 모두 super_admin gate (각 route 안에서).
+  await app.register(plannerProxyRoutes, { prefix: '/api/v1' });   // /ai/planner/*
+  await app.register(buildPagesRoutes,    { prefix: '/api/v1' });  // /ai/build-pages
+  await app.register(builderRoutesModule, { prefix: '/api/v1' });  // /ai/builder/*
+  await app.register(jobsRoutes,          { prefix: '/api/v1' });  // /ai/jobs/*
   await app.register(sermonRoutes, { prefix: '/api/v1' });
   await app.register(bulletinRoutes, { prefix: '/api/v1' });
   await app.register(columnRoutes, { prefix: '/api/v1' });

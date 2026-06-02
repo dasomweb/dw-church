@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuthStore } from '../stores/auth';
 import { useToast } from '../components';
+import { AIBuilderModal } from '../components/super-admin/AIBuilderModal';
 // import MigrationTab from './MigrationTab';  // 보류
 
 // snake_case → camelCase
@@ -1189,6 +1190,9 @@ function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) {
 
   const [viewingTenantId, setViewingTenantId] = useState<string | null>(null);
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
+  // Phase 11-A1: AI 빌더 modal — ✨ row 버튼이 누르면 이 modal 열림. PlannerWizard
+  // (8-step) 가 modal 안에서 동작 → 완료 시 buildPages 호출. b2bsmart 의 UX 동일.
+  const [aiBuilderTenant, setAiBuilderTenant] = useState<Tenant | null>(null);
 
   const fetchTenants = useCallback(async () => {
     setLoading(true);
@@ -1325,16 +1329,14 @@ function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) {
                         >
                           요약
                         </button>
-                        {/* ✨ AI 빌더 — 행의 메인 CTA. B2BSmart 와 동일 위치/스타일.
-                            바로 PageBuilder (/super-admin/t/:slug/pages) 로 진입 →
-                            AI 페이지 생성 + 인스펙터 편집. 슈퍼어드민이 신규 테넌트의
-                            사이트 구축을 시작하는 가장 빠른 동선. */}
+                        {/* ✨ AI 빌더 — Phase 11-A1: AIBuilderModal (PlannerWizard 8-step)
+                            을 inline 으로 열기. b2bsmart 와 동일 동작. 페이지 이동
+                            대신 wizard 가 현재 페이지 위에서 실행 → 완료 시
+                            buildPages 호출로 사이트 자동 구축. */}
                         <button
-                          onClick={() => {
-                            window.location.href = `${window.location.origin}/super-admin/t/${t.slug}/pages`;
-                          }}
+                          onClick={() => setAiBuilderTenant(t)}
                           className="px-2.5 py-1 text-xs bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded hover:from-violet-600 hover:to-purple-700 transition-colors font-semibold shadow-sm"
-                          title={`${t.name} AI 빌더로 진입`}
+                          title={`${t.name} AI 빌더 시작`}
                         >
                           ✨ AI 빌더
                         </button>
@@ -1400,6 +1402,13 @@ function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) {
       {/* Modals */}
       {viewingTenantId && (
         <TenantDetailModal tenantId={viewingTenantId} onClose={() => setViewingTenantId(null)} onUpdated={() => void fetchTenants()} />
+      )}
+      {aiBuilderTenant && (
+        <AIBuilderModal
+          tenant={{ id: aiBuilderTenant.id, slug: aiBuilderTenant.slug, name: aiBuilderTenant.name }}
+          onClose={() => setAiBuilderTenant(null)}
+          onCompleted={() => void fetchTenants()}
+        />
       )}
       {editingTenant && (
         <EditTenantModal

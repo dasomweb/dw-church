@@ -1,0 +1,28 @@
+# Railway config — apps/agents (FastAPI AI agent pipeline).
+# Service: dw-church-agents
+# Service Config Path: apps/agents/railway.toml
+
+[build]
+# dockerfilePath is repo-root-relative.
+builder = "DOCKERFILE"
+dockerfilePath = "apps/agents/Dockerfile"
+watchPatterns = [
+  "apps/agents/**",
+  "packages/agents-adapter/**",
+  # registry.json is bundled into the adapter wheel by the Dockerfile
+  # — rebuild agents whenever the canonical block taxonomy changes so
+  # production picks up new block_types without a manual restart.
+  "packages/blocks/src/registry.json",
+  "apps/agents/railway.toml",
+]
+
+[deploy]
+healthcheckPath = "/health"
+# Bumped from 60 → 180s after a deploy failed network healthcheck. The
+# FastAPI cold start pulls in fastapi + httpx + anthropic + sqlalchemy +
+# playwright shims; a constrained Railway pod can take 30-60s before /health
+# becomes responsive. 180s gives headroom for cold starts without masking
+# real crashes (the container would still exit + restart on real errors).
+healthcheckTimeout = 180
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5
