@@ -1304,20 +1304,43 @@ function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) {
                     <td className="px-5 py-3 text-gray-500">{t.stats?.userCount ?? '-'}</td>
                     <td className="px-5 py-3 text-gray-500 text-xs">{t.lastActivityAt ? formatDate(t.lastActivityAt) : '-'}</td>
                     <td className="px-5 py-3">
-                      <div className="flex gap-1">
+                      <div className="flex gap-1 flex-wrap">
+                        {/* 사이트 — 스토어프론트를 새 탭에서 열기. 가장 가벼운 액션.
+                            B2BSmart 의 row 순서 (사이트/보기/AI빌더/수정) 와 동일. */}
+                        <a
+                          href={t.customDomain ? `https://${t.customDomain}` : `https://${t.slug}.truelight.app`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2 py-1 text-xs text-gray-600 border border-gray-200 hover:bg-gray-50 rounded transition-colors"
+                          title={`${t.name} 스토어프론트 새 탭`}
+                        >
+                          사이트
+                        </a>
                         {/* 요약 — 테넌트 상세 모달 (빠른 트리아지: 통계 + 이름/플랜 편집 +
                             지원 계정 발급 + 사이트 방문). 일상 운영의 메인 surface. */}
                         <button
                           onClick={() => setViewingTenantId(t.id)}
-                          className="px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                          className="px-2 py-1 text-xs text-blue-600 border border-blue-200 hover:bg-blue-50 rounded transition-colors"
                           title={`${t.name} — 빠른 요약 + 지원 계정`}
                         >
                           요약
                         </button>
+                        {/* ✨ AI 빌더 — 행의 메인 CTA. B2BSmart 와 동일 위치/스타일.
+                            바로 PageBuilder (/super-admin/t/:slug/pages) 로 진입 →
+                            AI 페이지 생성 + 인스펙터 편집. 슈퍼어드민이 신규 테넌트의
+                            사이트 구축을 시작하는 가장 빠른 동선. */}
+                        <button
+                          onClick={() => {
+                            window.location.href = `${window.location.origin}/super-admin/t/${t.slug}/pages`;
+                          }}
+                          className="px-2.5 py-1 text-xs bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded hover:from-violet-600 hover:to-purple-700 transition-colors font-semibold shadow-sm"
+                          title={`${t.name} AI 빌더로 진입`}
+                        >
+                          ✨ AI 빌더
+                        </button>
                         {/* 콘솔 — 슈퍼어드민 per-tenant 깊은 편집 콘솔 (/super-admin/t/:slug).
                             테넌트 어드민 (/t/:slug) 과 분리된 14섹션 surface. 테마/페이지 빌더/
-                            AI 컨텍스트/기능 권한 등 깊은 작업용. 이전 "관리" 명칭은 모달 안의
-                            동작들과 혼동되어 (이름/플랜 편집도 "관리"인데?) "콘솔" 로 변경. */}
+                            AI 컨텍스트/기능 권한 등 깊은 작업용. */}
                         <button
                           onClick={() => {
                             window.location.href = `${window.location.origin}/super-admin/t/${t.slug}`;
