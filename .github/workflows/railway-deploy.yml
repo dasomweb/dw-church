@@ -9,14 +9,13 @@
 #   배포해서 그 사이클을 단단하게 만든다.
 #
 # Required secrets (Settings → Secrets and variables → Actions):
-#   RAILWAY_TOKEN_ADMIN       admin 서비스 전용 토큰
-#   RAILWAY_TOKEN_API_SERVER  api-server 서비스 전용 토큰
-#   RAILWAY_TOKEN_WEB         web 서비스 전용 토큰
-#   RAILWAY_TOKEN_AGENTS      agents 서비스 전용 토큰 (Phase 11-A3 부터)
-#
-#   각 토큰은 Railway dashboard → Project → 해당 service → Tokens 에서
-#   "Service token" 으로 만든다. 하나의 환경 token 으로 4개 다 배포해도
-#   되지만 서비스별로 분리하면 누출 시 영향 범위가 작아진다.
+#   RAILWAY_TOKEN — Project token, 1개. Railway → Project Settings →
+#                   Tokens 탭에서 발급. production 환경 선택.
+#                   하나의 토큰으로 프로젝트 내 모든 서비스 배포 가능.
+#                   서비스별로 따로 만들 필요 없음.
+#   RAILWAY_PROJECT_ID — Railway project UUID. Project Settings → General
+#                       의 Project ID 또는 URL 에서 확인.
+#                       railway.com/project/<여기/>...
 #
 # Path-filter behavior
 #   각 서비스 job 은 자기와 관련된 파일이 변경됐을 때만 실행. 예를 들어
@@ -42,6 +41,11 @@ on:
 
 permissions:
   contents: read
+
+env:
+  # Project token 1개로 모든 서비스 배포. railway up --service 가 그 안에서
+  # 어느 서비스에 배포할지 결정.
+  RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
 jobs:
   # 1. 변경된 경로 식별 — 어느 서비스가 배포되어야 하는지 결정.
@@ -106,9 +110,12 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Railway CLI
         run: npm install -g @railway/cli
+      - name: Link to project
+        # Project token 사용 시 `railway link` 필요 — 어느 프로젝트에
+        # 배포할지 명시. 토큰만 있으면 인증은 되지만 프로젝트 컨텍스트는
+        # 별도 지정 필요.
+        run: railway link --project ${{ secrets.RAILWAY_PROJECT_ID }} --environment production
       - name: Deploy admin
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_ADMIN }}
         working-directory: dw-church-app
         run: railway up --service admin --ci
 
@@ -120,9 +127,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Railway CLI
         run: npm install -g @railway/cli
+      - name: Link to project
+        run: railway link --project ${{ secrets.RAILWAY_PROJECT_ID }} --environment production
       - name: Deploy api-server
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_API_SERVER }}
         # api-server 의 build context 는 repo root (Dockerfile.server 가
         # 거기 있음). 다른 서비스들과 달리 dw-church-app 안에 들어가지
         # 않는다.
@@ -136,9 +143,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Railway CLI
         run: npm install -g @railway/cli
+      - name: Link to project
+        run: railway link --project ${{ secrets.RAILWAY_PROJECT_ID }} --environment production
       - name: Deploy web
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_WEB }}
         working-directory: dw-church-app
         run: railway up --service web --ci
 
@@ -150,9 +157,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Railway CLI
         run: npm install -g @railway/cli
+      - name: Link to project
+        run: railway link --project ${{ secrets.RAILWAY_PROJECT_ID }} --environment production
       - name: Deploy agents (Phase 11-A3 — Railway 서비스 신규 등록 필요)
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_AGENTS }}
         # apps/agents/railway.toml 이 dockerfilePath = "apps/agents/Dockerfile"
         # 을 가리키므로 build context 는 dw-church-app.
         working-directory: dw-church-app
