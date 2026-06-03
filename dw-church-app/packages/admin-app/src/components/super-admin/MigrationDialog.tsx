@@ -180,13 +180,31 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
               </p>
             </div>
 
-            <div className="p-3 rounded-lg bg-gray-50 border border-gray-200 text-xs space-y-2">
+            <div className="p-3 rounded-lg bg-gray-50 border border-gray-200 text-xs space-y-3">
+              {/* 자동 포함 — 정적 콘텐츠 (사용자에게 무엇이 들어오는지 명시) */}
               <div>
-                <div className="font-semibold text-gray-900 mb-1">📦 가져올 콘텐츠 선택</div>
+                <div className="font-semibold text-gray-900 mb-1">✅ 자동 포함 (정적 콘텐츠)</div>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px] text-gray-700">
+                  <span>• 교회 기본정보 (이름·주소·전화·SEO)</span>
+                  <span>• 메뉴 구조</span>
+                  <span>• 담임목사 인사말</span>
+                  <span>• 교회 비전·소개</span>
+                  <span>• 예배 시간 안내</span>
+                  <span>• 오시는 길·연락처</span>
+                  <span>• 새가족 안내</span>
+                  <span>• 선교·교육·훈련</span>
+                  <span>• 연혁 / 교회 역사</span>
+                  <span>• 그 외 일반 페이지</span>
+                </div>
+                <div className="text-[10px] text-gray-500 mt-1">
+                  AI가 각 페이지를 분석해서 위 카테고리로 자동 분류·저장합니다.
+                </div>
+              </div>
+
+              <div className="border-t border-gray-200 pt-2">
+                <div className="font-semibold text-gray-900 mb-1">📦 추가 선택 (동적 콘텐츠)</div>
                 <div className="text-[11px] text-gray-600 mb-2">
-                  정적 콘텐츠 (교회 정보·페이지·예배 시간·연혁·메뉴) 는 항상 포함됩니다.
-                  동적 콘텐츠는 필요한 것만 선택하세요 — 안 가져온 항목은 운영자가
-                  직접 등록할 수 있습니다.
+                  필요한 것만 선택하세요 — 안 가져온 항목은 운영자가 직접 등록할 수 있습니다.
                 </div>
                 <div className="grid grid-cols-2 gap-1.5">
                   {([
