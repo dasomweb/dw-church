@@ -3,9 +3,122 @@
  * No CSS, no styles, no layout — only raw content.
  */
 
-import type { RawExtractedData, RawPage } from '../types.js';
+import type { RawExtractedData, RawPage, RawPageSeo } from '../types.js';
+import { emptyRawPageSeo } from '../types.js';
+import { detectPlatform } from './platform-detector.js';
 
 const USER_AGENT = 'TrueLight-Migration/2.0';
+
+/**
+ * Phase 12-γ.2 (2026-06-03) — SEO/head metadata extraction.
+ * Captures every signal a downstream classifier could use to seed the
+ * tenant's church_info + site_settings. All matchers are conservative
+ * (return '' on no match) so a missing tag never throws.
+ */
+function extractSeoFromHead(html: string, pageUrl: string): RawPageSeo {
+  const seo = emptyRawPageSeo();
+
+  // <head>…</head>. If parsing fails we use the whole document — meta
+  // tags before <body> still match.
+  const headMatch = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+  const head = headMatch?.[1] ?? html;
+
+  seo.titleTag = (head.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // <meta name="…" content="…">  +  <meta content="…" name="…"> (order varies)
+  const metaByName = (name: string): string => {
+    const re1 = new RegExp(`<meta[^>]+name=["']${name}["'][^>]+content=["']([^"']*)["']`, 'i');
+    const re2 = new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]+name=["']${name}["']`, 'i');
+    return (head.match(re1)?.[1] ?? head.match(re2)?.[1] ?? '').trim();
+  };
+  const metaByProperty = (prop: string): string => {
+    const re1 = new RegExp(`<meta[^>]+property=["']${prop}["'][^>]+content=["']([^"']*)["']`, 'i');
+    const re2 = new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]+property=["']${prop}["']`, 'i');
+    return (head.match(re1)?.[1] ?? head.match(re2)?.[1] ?? '').trim();
+  };
+
+  seo.metaDescription = metaByName('description');
+  seo.metaKeywords    = metaByName('keywords');
+  seo.metaAuthor      = metaByName('author');
+  seo.metaGenerator   = metaByName('generator');
+
+  seo.ogTitle        = metaByProperty('og:title');
+  seo.ogDescription  = metaByProperty('og:description');
+  seo.ogImage        = metaByProperty('og:image');
+  seo.ogUrl          = metaByProperty('og:url');
+  seo.ogSiteName     = metaByProperty('og:site_name');
+  seo.ogType         = metaByProperty('og:type');
+  seo.ogLocale       = metaByProperty('og:locale');
+
+  seo.twitterTitle       = metaByName('twitter:title')       || metaByProperty('twitter:title');
+  seo.twitterDescription = metaByName('twitter:description') || metaByProperty('twitter:description');
+  seo.twitterImage       = metaByName('twitter:image')       || metaByProperty('twitter:image');
+  seo.twitterCard        = metaByName('twitter:card')        || metaByProperty('twitter:card');
+
+  // <link rel="canonical|icon|apple-touch-icon" href="…">
+  const linkByRel = (rel: string): string => {
+    const re1 = new RegExp(`<link[^>]+rel=["']${rel}["'][^>]+href=["']([^"']*)["']`, 'i');
+    const re2 = new RegExp(`<link[^>]+href=["']([^"']*)["'][^>]+rel=["']${rel}["']`, 'i');
+    return (head.match(re1)?.[1] ?? head.match(re2)?.[1] ?? '').trim();
+  };
+  seo.canonical          = resolveUrl(pageUrl, linkByRel('canonical'));
+  const favHref          = linkByRel('shortcut icon') || linkByRel('icon');
+  seo.faviconUrl         = favHref ? resolveUrl(pageUrl, favHref) : '';
+  const appleHref        = linkByRel('apple-touch-icon');
+  seo.appleTouchIconUrl  = appleHref ? resolveUrl(pageUrl, appleHref) : '';
+
+  // WordPress signal — REST API discovery link or generator meta containing 'WordPress'.
+  seo.isWordPress =
+    /https:\/\/api\.w\.org\//i.test(head) ||
+    /WordPress/i.test(seo.metaGenerator);
+
+  // JSON-LD blocks. Iterate all <script type="application/ld+json">…</script>
+  // and pull the first Organization/Church/LocalBusiness-shaped object.
+  const ldRegex = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let ldMatch: RegExpExecArray | null;
+  while ((ldMatch = ldRegex.exec(head)) !== null) {
+    const raw = (ldMatch[1] ?? '').trim();
+    if (!raw) continue;
+    try {
+      const parsed = JSON.parse(raw);
+      const candidates = Array.isArray(parsed)
+        ? parsed
+        : parsed['@graph'] && Array.isArray(parsed['@graph'])
+          ? parsed['@graph']
+          : [parsed];
+      for (const node of candidates) {
+        if (!node || typeof node !== 'object') continue;
+        const t = node['@type'];
+        const types = Array.isArray(t) ? t.join(',') : String(t ?? '');
+        if (!/Organization|Church|LocalBusiness|WebSite/i.test(types)) continue;
+        if (node.name && !seo.ldName) seo.ldName = String(node.name);
+        if (node.url && !seo.ldUrl) seo.ldUrl = String(node.url);
+        if (node.logo && !seo.ldLogo) {
+          seo.ldLogo = typeof node.logo === 'string' ? node.logo : String(node.logo?.url ?? '');
+        }
+        if (node.telephone && !seo.ldTelephone) seo.ldTelephone = String(node.telephone);
+        if (node.email && !seo.ldEmail) seo.ldEmail = String(node.email);
+        if (node.address && !seo.ldAddress) {
+          if (typeof node.address === 'string') {
+            seo.ldAddress = node.address;
+          } else {
+            const a = node.address;
+            seo.ldAddress = [a.streetAddress, a.addressLocality, a.addressRegion, a.postalCode, a.addressCountry]
+              .filter(Boolean)
+              .join(' ')
+              .trim();
+          }
+        }
+      }
+    } catch {
+      // Malformed JSON-LD — skip silently.
+    }
+  }
+
+  return seo;
+}
 
 // ─── Fetch a single page ────────────────────────────────────
 
@@ -21,6 +134,9 @@ async function fetchPage(url: string): Promise<RawPage> {
   // Extract title
   const titleMatch = html.match(/<title[^>]*>(.*?)<\/title>/is);
   const title = titleMatch?.[1]?.replace(/<[^>]+>/g, '').trim() ?? '';
+
+  // SEO/head metadata — captured before body strip so we still see meta tags.
+  const seo = extractSeoFromHead(html, url);
 
   // Extract body
   const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
@@ -61,7 +177,7 @@ async function fetchPage(url: string): Promise<RawPage> {
     }
   }
 
-  return { url, title, textContent, images, links };
+  return { url, title, textContent, images, links, seo };
 }
 
 // ─── Discover navigation links ──────────────────────────────
@@ -94,6 +210,15 @@ export async function extractFromHtml(
   const fullHtml = await bodyRes.text();
   const navUrls = discoverNavLinks(fullHtml, baseUrl);
 
+  // Phase 12-γ.2: detect source CMS so downstream classifier /
+  // applier can pick platform-specific shortcuts. See
+  // [[project_migration_source_platforms]].
+  const platformResult = detectPlatform({
+    html: fullHtml,
+    url: siteUrl,
+    headers: bodyRes.headers,
+  });
+
   const urlsToFetch = new Set<string>(navUrls);
   for (const link of mainPage.links) {
     if (link.href.startsWith(baseUrl) && urlsToFetch.size < maxPages) {
@@ -121,6 +246,8 @@ export async function extractFromHtml(
       url: siteUrl,
       type: 'html',
       scrapedAt: new Date().toISOString(),
+      platform: platformResult.platform,
+      platformConfidence: platformResult.confidence,
     },
     pages,
     youtubeVideos: [],

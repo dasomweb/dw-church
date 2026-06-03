@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
+import { resizeImage } from '../utils/resize-image.js';
+import type { ResizePreset, ResizeResult } from '../utils/resize-image.js';
 
 interface ImageUploadProps {
   value: string;
@@ -9,6 +11,10 @@ interface ImageUploadProps {
   accept?: string;
   aspectRatio?: string;
   placeholder?: string;
+  /** Phase 12-γ.2: resize preset before R2 upload. See [[feedback_image_resize]].
+   *  Defaults to 'block' (1600px). Use 'hero' for banner images,
+   *  'avatar' for staff/profile photos. */
+  resize?: ResizePreset;
 }
 
 export function ImageUpload({
@@ -19,10 +25,13 @@ export function ImageUpload({
   accept = 'image/*',
   aspectRatio = '16/9',
   placeholder = '이미지를 선택하거나 URL을 입력하세요',
+  resize = 'block',
 }: ImageUploadProps) {
   const [mode, setMode] = useState<'url' | 'preview'>(value ? 'preview' : 'url');
   const [urlInput, setUrlInput] = useState(value || '');
   const [uploading, setUploading] = useState(false);
+  const [resizeInfo, setResizeInfo] = useState<ResizeResult | null>(null);
+  const [resizeError, setResizeError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Sync mode when value changes externally (e.g. AI generation)
@@ -38,12 +47,28 @@ export function ImageUpload({
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setResizeError(null);
+    setResizeInfo(null);
+
+    // Phase 12-γ.2: client-side resize before R2 upload.
+    // See [[feedback_image_resize]] — R2 storage cost is the constraint.
+    let toUpload: File = file;
+    try {
+      const result = await resizeImage(file, resize);
+      toUpload = result.file;
+      setResizeInfo(result);
+    } catch (err) {
+      // Hard reject path — file > 20 MB. Surface the error and abort.
+      setResizeError(err instanceof Error ? err.message : '이미지 처리 실패');
+      if (fileRef.current) fileRef.current.value = '';
+      return;
+    }
 
     if (onUpload) {
       // Upload to server and get URL
       setUploading(true);
       try {
-        const url = await onUpload(file);
+        const url = await onUpload(toUpload);
         onChange(url);
         setMode('preview');
       } catch {
@@ -53,18 +78,18 @@ export function ImageUpload({
           onChange(reader.result as string);
           setMode('preview');
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(toUpload);
       } finally {
         setUploading(false);
       }
     } else {
-      // Fallback: base64 DataURL
+      // Fallback: base64 DataURL (still uses resized blob)
       const reader = new FileReader();
       reader.onload = () => {
         onChange(reader.result as string);
         setMode('preview');
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(toUpload);
     }
   };
 
@@ -105,6 +130,12 @@ export function ImageUpload({
             </button>
           </div>
         </div>
+        {resizeInfo && !resizeInfo.skipped && (
+          <p className="mt-1 text-[10px] text-gray-400">
+            최적화: {formatBytes(resizeInfo.originalBytes)} → {formatBytes(resizeInfo.resizedBytes)}
+            {' '}({Math.round((1 - resizeInfo.resizedBytes / resizeInfo.originalBytes) * 100)}% 절감)
+          </p>
+        )}
       </div>
     );
   }
@@ -150,8 +181,17 @@ export function ImageUpload({
           적용
         </button>
       </div>
+      {resizeError && (
+        <p className="mt-1 text-xs text-red-600">{resizeError}</p>
+      )}
     </div>
   );
+}
+
+function formatBytes(n: number): string {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
+  return `${(n / 1024 / 1024).toFixed(1)} MB`;
 }
 
 interface MultiImageUploadProps {
@@ -161,31 +201,62 @@ interface MultiImageUploadProps {
   onUpload?: (file: File) => Promise<string>;
   max?: number;
   label?: string;
+  /** Phase 12-γ.2: resize preset before R2 upload. Defaults to 'thumb'
+   *  (800px) — galleries usually display ≤ 400px. */
+  resize?: ResizePreset;
 }
 
-export function MultiImageUpload({ value = [], onChange, onUpload, max = 15, label }: MultiImageUploadProps) {
+export function MultiImageUpload({ value = [], onChange, onUpload, max = 15, label, resize = 'thumb' }: MultiImageUploadProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [urlInput, setUrlInput] = useState('');
   const [uploading, setUploading] = useState(false);
+  // Phase 12-γ.2: surface per-batch resize savings + reject errors.
+  const [resizeError, setResizeError] = useState<string | null>(null);
+  const [batchSaved, setBatchSaved] = useState<{ original: number; resized: number } | null>(null);
 
   const handleFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
     const remaining = max - value.length;
     const toAdd = Array.from(files).slice(0, remaining);
+    setResizeError(null);
+    setBatchSaved(null);
+
+    // Phase 12-γ.2: resize each file sequentially (memory pressure if
+    // parallel — phone batch upload of 20 photos would balloon). See
+    // [[feedback_image_resize]] §3.
+    const resized: File[] = [];
+    let totalOriginal = 0;
+    let totalResized = 0;
+    for (const file of toAdd) {
+      try {
+        const r = await resizeImage(file, resize);
+        resized.push(r.file);
+        totalOriginal += r.originalBytes;
+        totalResized += r.resizedBytes;
+      } catch (err) {
+        // Reject path — file too large. Stop the batch and surface error.
+        setResizeError(err instanceof Error ? err.message : '이미지 처리 실패');
+        if (fileRef.current) fileRef.current.value = '';
+        return;
+      }
+    }
+    if (totalOriginal > totalResized) {
+      setBatchSaved({ original: totalOriginal, resized: totalResized });
+    }
 
     if (onUpload) {
       setUploading(true);
       try {
         const urls: string[] = [];
-        for (const file of toAdd) {
+        for (const file of resized) {
           const url = await onUpload(file);
           urls.push(url);
         }
         onChange([...value, ...urls]);
       } catch {
-        // Fallback to base64
-        const promises = toAdd.map((file) =>
+        // Fallback to base64 (still using resized files)
+        const promises = resized.map((file) =>
           new Promise<string>((resolve) => {
             const reader = new FileReader();
             reader.onload = () => resolve(reader.result as string);
@@ -198,7 +269,7 @@ export function MultiImageUpload({ value = [], onChange, onUpload, max = 15, lab
         setUploading(false);
       }
     } else {
-      const promises = toAdd.map((file) =>
+      const promises = resized.map((file) =>
         new Promise<string>((resolve) => {
           const reader = new FileReader();
           reader.onload = () => resolve(reader.result as string);
@@ -291,6 +362,15 @@ export function MultiImageUpload({ value = [], onChange, onUpload, max = 15, lab
       )}
       {value.length >= max && (
         <p className="text-amber-600 text-xs mt-1">최대 {max}개까지 업로드 가능합니다.</p>
+      )}
+      {resizeError && (
+        <p className="mt-1 text-xs text-red-600">{resizeError}</p>
+      )}
+      {batchSaved && (
+        <p className="mt-1 text-[10px] text-gray-400">
+          일괄 최적화: {formatBytes(batchSaved.original)} → {formatBytes(batchSaved.resized)}
+          {' '}({Math.round((1 - batchSaved.resized / batchSaved.original) * 100)}% 절감)
+        </p>
       )}
     </div>
   );

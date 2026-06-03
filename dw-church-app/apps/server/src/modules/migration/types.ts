@@ -35,12 +35,68 @@ export interface MigrationJob {
 
 // ─── Raw Extracted Data (output of extractors) ──────────────
 
+/**
+ * SEO metadata captured from a page's <head>. All fields optional —
+ * absence simply means the source page didn't set it. Used by
+ * classifier.ts to seed church_info + site_settings so the migrated
+ * tenant carries the source site's SEO posture (see
+ * project_migration_seo_extraction).
+ */
+export interface RawPageSeo {
+  titleTag: string;            // <title>
+  metaDescription: string;     // <meta name="description">
+  metaKeywords: string;        // <meta name="keywords">
+  metaAuthor: string;          // <meta name="author">
+  metaGenerator: string;       // <meta name="generator">  (WordPress signal)
+  canonical: string;           // <link rel="canonical">
+  faviconUrl: string;          // <link rel="icon|shortcut icon">
+  appleTouchIconUrl: string;   // <link rel="apple-touch-icon">
+  ogTitle: string;
+  ogDescription: string;
+  ogImage: string;
+  ogUrl: string;
+  ogSiteName: string;
+  ogType: string;
+  ogLocale: string;
+  twitterTitle: string;
+  twitterDescription: string;
+  twitterImage: string;
+  twitterCard: string;
+  // JSON-LD Organization-like blocks (Yoast usually emits these on WordPress).
+  // Parsed but kept as flat strings so downstream classifier need not
+  // re-parse.
+  ldName: string;
+  ldUrl: string;
+  ldLogo: string;
+  ldTelephone: string;
+  ldEmail: string;
+  ldAddress: string;
+  // WordPress hint: presence of `<link rel="https://api.w.org/">`.
+  isWordPress: boolean;
+}
+
+export function emptyRawPageSeo(): RawPageSeo {
+  return {
+    titleTag: '', metaDescription: '', metaKeywords: '', metaAuthor: '',
+    metaGenerator: '', canonical: '', faviconUrl: '', appleTouchIconUrl: '',
+    ogTitle: '', ogDescription: '', ogImage: '', ogUrl: '', ogSiteName: '',
+    ogType: '', ogLocale: '',
+    twitterTitle: '', twitterDescription: '', twitterImage: '', twitterCard: '',
+    ldName: '', ldUrl: '', ldLogo: '', ldTelephone: '', ldEmail: '', ldAddress: '',
+    isWordPress: false,
+  };
+}
+
 export interface RawPage {
   url: string;
   title: string;
   textContent: string;
   images: string[];
   links: { text: string; href: string }[];
+  /** Phase 12-γ.2 (2026-06-03) — head/SEO metadata. Optional for
+   *  backwards-compat with already-persisted jobs; new scrapes always
+   *  populate it via emptyRawPageSeo(). */
+  seo?: RawPageSeo;
 }
 
 export interface RawYouTubeVideo {
@@ -55,6 +111,11 @@ export interface RawExtractedData {
     url: string;
     type: 'html' | 'youtube' | 'manual';
     scrapedAt: string;
+    /** Phase 12-γ.2 — detected CMS / site builder. Open string (not a
+     *  closed union) so new detectors can register without touching
+     *  this type. See project_migration_source_platforms. */
+    platform?: string;
+    platformConfidence?: number;
   };
   pages: RawPage[];
   youtubeVideos: RawYouTubeVideo[];
@@ -68,6 +129,16 @@ export interface ChurchInfo {
   phone: string;
   email: string;
   description: string;
+  // Phase 12-γ.2 — SEO fields harvested from source <head>. Applied to
+  // tenant settings so migrated site retains source's SEO posture
+  // (project_migration_seo_extraction).
+  seoTitle: string;
+  seoDescription: string;
+  seoKeywords: string;
+  ogImageUrl: string;
+  logoUrl: string;
+  locale: string;
+  slogan: string;     // og:site_name short or homepage subtitle
 }
 
 export interface ClassifiedSermon {
@@ -203,7 +274,11 @@ export function emptyRawData(): RawExtractedData {
 
 export function emptyClassifiedData(): ClassifiedData {
   return {
-    churchInfo: { name: '', address: '', phone: '', email: '', description: '' },
+    churchInfo: {
+      name: '', address: '', phone: '', email: '', description: '',
+      seoTitle: '', seoDescription: '', seoKeywords: '', ogImageUrl: '',
+      logoUrl: '', locale: '', slogan: '',
+    },
     sermons: [],
     bulletins: [],
     columns: [],

@@ -8,6 +8,7 @@ import type {
   RawExtractedData,
   RawPage,
   ClassifiedData,
+  ChurchInfo,
   ClassifiedWorshipTime,
   ClassifiedHistoryItem,
   ClassifiedPageContent,
@@ -274,6 +275,76 @@ function extractMenusFromPage(page: RawPage, siteBaseUrl: string): ClassifiedMen
   return out;
 }
 
+/**
+ * Phase 12-γ.2 (2026-06-03) — SEO → ChurchInfo mapping.
+ *
+ * Reads RawPageSeo (head metadata) from the home page and seeds
+ * churchInfo with title/description/og:image/JSON-LD signals. Other
+ * pages can also contribute (e.g. an Organization JSON-LD might only
+ * exist on /about), so we accept an array and merge with first-wins
+ * semantics — the home page is checked first.
+ *
+ * See [[project_migration_seo_extraction]] for motivation.
+ */
+function extractChurchInfoFromSeo(
+  pages: { page: RawPage; isHome: boolean }[],
+): Partial<ChurchInfo> {
+  const out: Partial<ChurchInfo> = {};
+  // Home page first, then the rest in document order. First non-empty
+  // value wins per field — keeps signals from the home page (highest
+  // signal-to-noise) ahead of deep pages.
+  const ordered = [...pages].sort((a, b) => Number(b.isHome) - Number(a.isHome));
+
+  const take = (key: keyof ChurchInfo, val: string | undefined | null) => {
+    if (!val) return;
+    const v = String(val).trim();
+    if (!v) return;
+    if (!out[key]) (out as Record<string, string>)[key] = v;
+  };
+
+  // Clean up a title: drop " | Site Name" / " - Subtitle" suffixes.
+  const cleanTitle = (t: string): string =>
+    t.replace(/\s*[|–-]\s*[^|–-]{2,}$/, '').trim();
+
+  for (const { page } of ordered) {
+    const seo = page.seo;
+    if (!seo) continue;
+
+    // Church name candidates (priority: ldName > ogSiteName > clean title > meta author).
+    take('name', seo.ldName);
+    take('name', seo.ogSiteName);
+    take('name', cleanTitle(seo.ogTitle) || cleanTitle(seo.titleTag));
+    take('name', seo.metaAuthor);
+
+    // SEO fields.
+    take('seoTitle', seo.ogTitle || seo.titleTag);
+    take('seoDescription', seo.metaDescription || seo.ogDescription || seo.twitterDescription);
+    take('seoKeywords', seo.metaKeywords);
+
+    // Visual / branding.
+    take('ogImageUrl', seo.ogImage || seo.twitterImage);
+    take('logoUrl', seo.ldLogo || seo.appleTouchIconUrl || seo.faviconUrl);
+    take('locale', seo.ogLocale);
+
+    // Contact (JSON-LD is more reliable than text scrape).
+    take('phone', seo.ldTelephone);
+    take('email', seo.ldEmail);
+    take('address', seo.ldAddress);
+
+    // Description fallback for greeting blocks.
+    take('description', seo.metaDescription || seo.ogDescription);
+
+    // Slogan candidate: the part of title that got stripped off in
+    // cleanTitle (e.g. "선한교회 - 사랑이 흐르는 교회" → slogan
+    // "사랑이 흐르는 교회").
+    const fullTitle = seo.ogTitle || seo.titleTag;
+    const tailMatch = fullTitle.match(/\s*[|–-]\s*([^|–-]{2,80})$/);
+    if (tailMatch) take('slogan', tailMatch[1]);
+  }
+
+  return out;
+}
+
 function extractHistoryItems(text: string): ClassifiedHistoryItem[] {
   const items: ClassifiedHistoryItem[] = [];
   // Pattern: "1990년 3월 교회 설립" or "1990 - Church founded"
@@ -310,6 +381,23 @@ export function classify(raw: RawExtractedData): ClassifiedData {
       youtubeUrl: `https://www.youtube.com/watch?v=${v.videoId}`,
       thumbnailUrl: v.thumbnailUrl,
     });
+  }
+
+  // ── Phase 12-γ.2: harvest SEO/head metadata across pages → churchInfo.
+  //    Done BEFORE per-page text scraping so JSON-LD-sourced phone/email/
+  //    address (high-signal) wins over body-text regex (low-signal).
+  const homeUrl = `${baseUrl}/`;
+  const seoSeed = extractChurchInfoFromSeo(
+    raw.pages.map((p) => ({
+      page: p,
+      isHome: p.url === baseUrl || p.url === homeUrl || mapSlug(p.url, baseUrl) === 'home',
+    })),
+  );
+  // Merge — only fill fields the seed actually provided. emptyClassifiedData()
+  // gave us '' defaults; SEO overrides empties only.
+  const ci = data.churchInfo as unknown as Record<string, string>;
+  for (const [k, v] of Object.entries(seoSeed)) {
+    if (v && !ci[k]) ci[k] = v;
   }
 
   // ── Process each page ──

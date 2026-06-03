@@ -281,7 +281,16 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
             pages: classified.pageContents.length,
             images: classified.images.length,
             youtubeVideos: rawData.youtubeVideos.length,
+            // Phase 12-γ.2: count of SEO fields populated (out of 7).
+            // Operator can see at-a-glance whether source site had usable
+            // meta. See project_migration_seo_extraction.
+            seoFieldsFilled: countSeoFields(classified.churchInfo),
           },
+          // Phase 12-γ.2: detected source CMS so the dialog can show a
+          // "워드프레스 감지" / "Wix 감지 — JS 렌더링 콘텐츠는 누락될 수 있습니다"
+          // badge. See project_migration_source_platforms.
+          sourcePlatform: rawData.source.platform ?? 'unknown',
+          sourcePlatformConfidence: rawData.source.platformConfidence ?? 0,
         },
       });
     } catch (err) {
@@ -334,4 +343,17 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
       return reply.send({ data: [] });
     }
   });
+}
+
+/**
+ * Count of SEO-derived ChurchInfo fields that got filled.
+ * Used by MigrationDialog to tell operator at-a-glance whether the
+ * source site had usable head metadata. See project_migration_seo_extraction.
+ */
+function countSeoFields(info: ClassifiedData['churchInfo']): number {
+  const fields: (keyof ClassifiedData['churchInfo'])[] = [
+    'seoTitle', 'seoDescription', 'seoKeywords',
+    'ogImageUrl', 'logoUrl', 'locale', 'slogan',
+  ];
+  return fields.filter((k) => Boolean(info[k])).length;
 }

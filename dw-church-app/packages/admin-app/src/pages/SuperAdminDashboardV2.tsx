@@ -1280,46 +1280,46 @@ function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-50 text-left text-gray-500 font-medium text-xs">
-                  <th className="px-5 py-3">교회명</th>
-                  <th className="px-5 py-3">Slug</th>
-                  <th className="px-5 py-3">플랜</th>
-                  <th className="px-5 py-3">상태</th>
-                  <th className="px-5 py-3">설교수</th>
-                  <th className="px-5 py-3">저장공간</th>
-                  <th className="px-5 py-3">DB크기</th>
-                  <th className="px-5 py-3">사용자수</th>
-                  <th className="px-5 py-3">마지막활동</th>
-                  <th className="px-5 py-3">관리</th>
+                <tr className="bg-gray-50 text-left text-gray-500 font-medium text-xs whitespace-nowrap">
+                  <th className="px-4 py-3 min-w-[140px]">교회명</th>
+                  <th className="px-3 py-3">Slug</th>
+                  <th className="px-3 py-3">플랜</th>
+                  <th className="px-3 py-3">상태</th>
+                  <th className="px-3 py-3 text-right">설교</th>
+                  <th className="px-3 py-3 text-right">저장</th>
+                  <th className="px-3 py-3 text-right">DB</th>
+                  <th className="px-3 py-3 text-right">사용자</th>
+                  <th className="px-3 py-3">마지막</th>
+                  <th className="px-4 py-3 text-right">관리</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filteredTenants.map((t, idx) => (
                   <tr key={t.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
-                    <td className="px-5 py-3 font-medium text-gray-900">{t.name}</td>
-                    <td className="px-5 py-3 text-gray-500 font-mono text-xs">{t.slug}</td>
-                    <td className="px-5 py-3">
+                    <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{t.name}</td>
+                    <td className="px-3 py-3 text-gray-500 font-mono text-xs whitespace-nowrap">{t.slug}</td>
+                    <td className="px-3 py-3 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${PLAN_COLORS[t.plan] || 'bg-gray-100'}`}>
                         {t.plan}
                       </span>
                     </td>
-                    <td className="px-5 py-3">
+                    <td className="px-3 py-3 whitespace-nowrap">
                       <StatusBadge active={t.isActive} />
                     </td>
-                    <td className="px-5 py-3 text-gray-500">{t.stats?.sermonCount ?? '-'}</td>
-                    <td className="px-5 py-3 text-gray-500 text-xs">{t.stats ? formatBytes(t.stats.storageUsed) : '-'}</td>
-                    <td className="px-5 py-3 text-gray-500 text-xs">{t.dbSize != null ? formatBytes(t.dbSize) : '-'}</td>
-                    <td className="px-5 py-3 text-gray-500">{t.stats?.userCount ?? '-'}</td>
-                    <td className="px-5 py-3 text-gray-500 text-xs">{t.lastActivityAt ? formatDate(t.lastActivityAt) : '-'}</td>
-                    <td className="px-5 py-3">
-                      <div className="flex gap-1 flex-wrap">
+                    <td className="px-3 py-3 text-gray-500 text-right tabular-nums">{t.stats?.sermonCount ?? '-'}</td>
+                    <td className="px-3 py-3 text-gray-500 text-xs text-right whitespace-nowrap tabular-nums">{t.stats ? formatBytes(t.stats.storageUsed) : '-'}</td>
+                    <td className="px-3 py-3 text-gray-500 text-xs text-right whitespace-nowrap tabular-nums">{t.dbSize != null ? formatBytes(t.dbSize) : '-'}</td>
+                    <td className="px-3 py-3 text-gray-500 text-right tabular-nums">{t.stats?.userCount ?? '-'}</td>
+                    <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">{t.lastActivityAt ? formatDate(t.lastActivityAt) : '-'}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-1 flex-nowrap items-center justify-end">
                         {/* 사이트 — 스토어프론트를 새 탭에서 열기. 가장 가벼운 액션.
                             B2BSmart 의 row 순서 (사이트/보기/AI빌더/수정) 와 동일. */}
                         <a
                           href={t.customDomain ? `https://${t.customDomain}` : `https://${t.slug}.truelight.app`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-2 py-1 text-xs text-gray-600 border border-gray-200 hover:bg-gray-50 rounded transition-colors"
+                          className="px-2 py-1 text-xs text-gray-600 border border-gray-200 hover:bg-gray-50 rounded transition-colors whitespace-nowrap"
                           title={`${t.name} 스토어프론트 새 탭`}
                         >
                           사이트
@@ -1328,58 +1328,66 @@ function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) {
                             지원 계정 발급 + 사이트 방문). 일상 운영의 메인 surface. */}
                         <button
                           onClick={() => setViewingTenantId(t.id)}
-                          className="px-2 py-1 text-xs text-blue-600 border border-blue-200 hover:bg-blue-50 rounded transition-colors"
+                          className="px-2 py-1 text-xs text-blue-600 border border-blue-200 hover:bg-blue-50 rounded transition-colors whitespace-nowrap"
                           title={`${t.name} — 빠른 요약 + 지원 계정`}
                         >
                           요약
                         </button>
-                        {/* 📥 가져오기 — Phase 12-δ: 기존 사이트 URL 입력으로 자동
-                            마이그레이션 (사이트 분석 → 콘텐츠 분류 → 테넌트 DB 일괄
-                            저장). AI 빌더와 별개 진입점. */}
+                        {/* 가져오기 — Phase 12-δ: 기존 사이트 URL 입력으로 자동
+                            마이그레이션. 이모지 제거로 헤더 공간 절약. */}
                         <button
                           onClick={() => setMigrateTenant(t)}
-                          className="px-2 py-1 text-xs text-emerald-700 border border-emerald-200 hover:bg-emerald-50 rounded transition-colors"
+                          className="px-2 py-1 text-xs text-emerald-700 border border-emerald-200 hover:bg-emerald-50 rounded transition-colors whitespace-nowrap"
                           title={`${t.name} 기존 사이트 가져오기`}
                         >
-                          📥 가져오기
+                          가져오기
                         </button>
-                        {/* ✨ AI 빌더 — Phase 11-A1: AIBuilderModal (PlannerWizard 8-step)
-                            을 inline 으로 열기. b2bsmart 와 동일 동작. 페이지 이동
-                            대신 wizard 가 현재 페이지 위에서 실행 → 완료 시
-                            buildPages 호출로 사이트 자동 구축. */}
+                        {/* AI 빌더 — Phase 11-A1: AIBuilderModal (PlannerWizard 8-step).
+                            기존 ✨ 이모지 제거 + 한 줄 유지. */}
                         <button
                           onClick={() => setAiBuilderTenant(t)}
-                          className="px-2.5 py-1 text-xs bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded hover:from-violet-600 hover:to-purple-700 transition-colors font-semibold shadow-sm"
+                          className="px-2.5 py-1 text-xs bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded hover:from-violet-600 hover:to-purple-700 transition-colors font-semibold shadow-sm whitespace-nowrap"
                           title={`${t.name} AI 빌더 시작`}
                         >
-                          ✨ AI 빌더
+                          AI 빌더
                         </button>
-                        {/* 콘솔 — 슈퍼어드민 per-tenant 깊은 편집 콘솔 (/super-admin/t/:slug).
-                            테넌트 어드민 (/t/:slug) 과 분리된 14섹션 surface. 테마/페이지 빌더/
-                            AI 컨텍스트/기능 권한 등 깊은 작업용. */}
+                        {/* 콘솔 — 슈퍼어드민 per-tenant 깊은 편집 콘솔 (/super-admin/t/:slug). */}
                         <button
                           onClick={() => {
                             window.location.href = `${window.location.origin}/super-admin/t/${t.slug}`;
                           }}
-                          className="px-2.5 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors font-medium"
+                          className="px-2.5 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors font-medium whitespace-nowrap"
                           title={`${t.name} — 14섹션 슈퍼어드민 콘솔`}
                         >
                           콘솔
                         </button>
-                        <button
-                          onClick={() => handleToggleActive(t)}
-                          className={`px-2 py-1 text-xs rounded transition-colors ${
-                            t.isActive ? 'text-amber-600 hover:bg-amber-50' : 'text-green-600 hover:bg-green-50'
-                          }`}
-                        >
-                          {t.isActive ? '비활성화' : '활성화'}
-                        </button>
-                        <button
-                          onClick={() => handleDelete(t)}
-                          className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded transition-colors"
-                        >
-                          삭제
-                        </button>
+                        {/* ⋮ 더보기 — 비활성화/삭제 (드물게 쓰는 destructive). 한 줄
+                            유지 + 실수로 누를 위험 낮추기. CSS-only dropdown은
+                            blur 처리 까다로워서 details/summary 의 native toggle 사용. */}
+                        <details className="relative">
+                          <summary
+                            className="list-none cursor-pointer px-2 py-1 text-xs text-gray-500 border border-gray-200 hover:bg-gray-50 rounded whitespace-nowrap select-none"
+                            title="더보기"
+                          >
+                            ⋮
+                          </summary>
+                          <div className="absolute right-0 mt-1 z-20 w-36 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                            <button
+                              onClick={() => handleToggleActive(t)}
+                              className={`block w-full px-3 py-2 text-left text-xs transition-colors ${
+                                t.isActive ? 'text-amber-600 hover:bg-amber-50' : 'text-green-600 hover:bg-green-50'
+                              }`}
+                            >
+                              {t.isActive ? '비활성화' : '활성화'}
+                            </button>
+                            <button
+                              onClick={() => handleDelete(t)}
+                              className="block w-full px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
+                            >
+                              삭제
+                            </button>
+                          </div>
+                        </details>
                       </div>
                     </td>
                   </tr>
