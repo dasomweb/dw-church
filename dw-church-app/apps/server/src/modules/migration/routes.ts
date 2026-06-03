@@ -267,7 +267,9 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
     try {
       // 1. Extract
       await updateJobStatus(job.id, 'extracting');
+      const extractStart = Date.now();
       let rawData: RawExtractedData = await extractFromHtml(sourceUrl, 30);
+      request.log.info({ migrationStep: 'extract', tookMs: Date.now() - extractStart, pagesFound: rawData.pages.length, sourceUrl }, 'Migration: HTML crawl complete');
       if (body.youtubeChannelUrl) {
         rawData.youtubeVideos = await extractFromYouTubeChannel(body.youtubeChannelUrl, 100);
       }
@@ -276,15 +278,18 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
       // 2a. Rule-based classify (fast, free)
       await updateJobStatus(job.id, 'classifying');
       const classified = classify(rawData);
+      request.log.info({ migrationStep: 'classify', churchName: classified.churchInfo.name, ytVideos: rawData.youtubeVideos.length }, 'Migration: thin classify complete');
 
       // 2b. Phase 12-γ.4 — LLM enrichment pass. Reads every page +
       // every WP post, sends to Gemini for structured classification,
       // merges into ClassifiedData without overwriting rule-based hits.
       // Silent skip if GEMINI_API_KEY isn't configured OR useLlm=false.
       // See [[project_migration_ai_classifier]].
+      const llmStart = Date.now();
       const llmStats = useLlm
         ? await applyLlmClassification(classified, rawData)
         : { pagesProcessed: 0, llmAdded: 0 };
+      request.log.info({ migrationStep: 'llm', tookMs: Date.now() - llmStart, useLlm, ...llmStats }, 'Migration: LLM classification complete');
 
       await updateJobClassifiedData(job.id, classified);
 
