@@ -106,6 +106,61 @@ export interface RawYouTubeVideo {
   thumbnailUrl: string;
 }
 
+/**
+ * Phase 12-γ.3 (2026-06-03) — structured WordPress post.
+ * Captured via /wp-json/wp/v2/posts when the source is detected as
+ * WordPress. Categories are pre-resolved (id → name) so the classifier
+ * can route purely by name without a second REST call. See
+ * [[project_migration_wp_rest_kboard]].
+ */
+export interface RawWpPost {
+  id: number;
+  postType: 'post' | 'page';
+  slug: string;
+  title: string;
+  /** Full rendered HTML body of the post (post.content.rendered). */
+  contentHtml: string;
+  /** Plaintext body — content stripped of tags. */
+  contentText: string;
+  excerpt: string;
+  /** ISO-ish date string. */
+  date: string;
+  link: string;
+  /** Resolved category names (lower-cased) — e.g. ['설교', 'sermon']. */
+  categories: string[];
+  /** Resolved tag names. */
+  tags: string[];
+  /** Resolved featured-media URL (full size). */
+  featuredImage: string;
+  /** Image URLs scraped from the rendered body — for R2 batch upload. */
+  bodyImages: string[];
+  /** PDF / non-image attachment URLs from the body — bulletins often have these. */
+  attachments: string[];
+  /** Resolved author name. */
+  author: string;
+}
+
+/**
+ * Phase 12-γ.3 — KBoard row. Captured by scraping the rendered
+ * `<table class="kboard-list">` on a WP page containing the KBoard
+ * shortcode. We don't have access to the KBoard plugin's DB tables, so
+ * this is HTML-derived (limited fields).
+ */
+export interface RawKBoardRow {
+  /** Board slug — usually parsed from board_name= URL parameter. */
+  boardSlug: string;
+  /** Human-readable board title (the host WP page's title). */
+  boardTitle: string;
+  /** Post title text. */
+  title: string;
+  /** Detail page URL — used for follow-up scrape to pull body / PDF. */
+  detailUrl: string;
+  date: string;
+  author: string;
+  /** Optional: PDF link discovered from a quick detail-page sniff. */
+  pdfUrl?: string;
+}
+
 export interface RawExtractedData {
   source: {
     url: string;
@@ -119,6 +174,10 @@ export interface RawExtractedData {
   };
   pages: RawPage[];
   youtubeVideos: RawYouTubeVideo[];
+  /** Phase 12-γ.3 — populated only when WP REST is accessible. */
+  wpPosts?: RawWpPost[];
+  /** Phase 12-γ.3 — KBoard rows discovered on WP pages. */
+  kboardRows?: RawKBoardRow[];
 }
 
 // ─── Classified Data (mapped to our data structure) ─────────

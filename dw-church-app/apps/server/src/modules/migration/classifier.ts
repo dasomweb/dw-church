@@ -7,6 +7,7 @@
 import type {
   RawExtractedData,
   RawPage,
+  RawWpPost,
   ClassifiedData,
   ChurchInfo,
   ClassifiedWorshipTime,
@@ -19,6 +20,8 @@ import type {
   ClassifiedBoard,
   ClassifiedBoardPost,
   ClassifiedMenu,
+  ClassifiedSermon,
+  ClassifiedBulletin,
 } from './types.js';
 import { emptyClassifiedData } from './types.js';
 import { extractVideoId, thumbnailUrl, extractYouTubeUrlsFromPage } from './extractors/youtube.js';
@@ -345,6 +348,196 @@ function extractChurchInfoFromSeo(
   return out;
 }
 
+/**
+ * Phase 12-γ.3 (2026-06-03) — route WordPress posts to content modules
+ * by category name. Korean + English aliases. See
+ * [[project_migration_wp_rest_kboard]].
+ */
+type WpRoute = 'sermon' | 'bulletin' | 'column' | 'event' | 'history' | 'staff' | 'album' | 'other';
+
+const WP_CATEGORY_PATTERNS: { route: WpRoute; pattern: RegExp }[] = [
+  { route: 'sermon',   pattern: /sermon|message|preach|설교|주일.?예배|주일.?말씀|수요.?예배|새벽.?예배|special.?service/i },
+  { route: 'bulletin', pattern: /bulletin|weekly|jubo|주보/i },
+  { route: 'column',   pattern: /column|pastoral|devotion|칼럼|목회|기고|묵상/i },
+  { route: 'event',    pattern: /event|notice|news|announce|공지|행사|소식|이벤트|뉴스/i },
+  { route: 'history',  pattern: /history|chronicle|연혁|역사/i },
+  { route: 'staff',    pattern: /staff|leader|minister|pastor|교역자|사역자|리더/i },
+  { route: 'album',    pattern: /album|gallery|photo|앨범|갤러리|사진/i },
+];
+
+function routeWpPost(post: RawWpPost): WpRoute {
+  const haystack = [
+    ...post.categories,
+    ...post.tags,
+    post.slug,
+    post.link.toLowerCase(),
+  ].join(' ');
+  for (const { route, pattern } of WP_CATEGORY_PATTERNS) {
+    if (pattern.test(haystack)) return route;
+  }
+  return 'other';
+}
+
+/**
+ * Fold WP posts + KBoard rows into ClassifiedData. Mutates `data`
+ * in-place. Idempotent on the categories — dedup by post id +
+ * KBoard detail URL so re-running the classifier doesn't double-count.
+ */
+function applyWpPosts(data: ClassifiedData, raw: RawExtractedData): void {
+  const wpPosts = raw.wpPosts ?? [];
+  const kboardRows = raw.kboardRows ?? [];
+  const seenSermonKeys = new Set<string>(data.sermons.map((s) => s.youtubeUrl || s.title));
+
+  for (const post of wpPosts) {
+    const route = routeWpPost(post);
+    const dateOnly = (post.date || '').slice(0, 10);
+
+    switch (route) {
+      case 'sermon': {
+        const key = (post.title + '|' + dateOnly).toLowerCase();
+        if (seenSermonKeys.has(key)) continue;
+        seenSermonKeys.add(key);
+        const youtubeMatch = post.contentHtml.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})/);
+        const sermon: ClassifiedSermon = {
+          title: post.title,
+          scripture: '',
+          preacher: post.author,
+          date: dateOnly,
+          youtubeUrl: youtubeMatch ? `https://www.youtube.com/watch?v=${youtubeMatch[1]}` : '',
+          thumbnailUrl: post.featuredImage,
+        };
+        data.sermons.push(sermon);
+        break;
+      }
+      case 'bulletin': {
+        const bulletin: ClassifiedBulletin = {
+          title: post.title,
+          date: dateOnly,
+          pdfUrl: post.attachments.find((a) => /\.pdf$/i.test(a)) ?? '',
+          images: post.bodyImages.length ? post.bodyImages : (post.featuredImage ? [post.featuredImage] : []),
+        };
+        data.bulletins.push(bulletin);
+        break;
+      }
+      case 'column': {
+        data.columns.push({
+          title: post.title,
+          content: post.contentText.slice(0, 5000),
+          topImageUrl: post.featuredImage || post.bodyImages[0] || '',
+          youtubeUrl: '',
+        });
+        break;
+      }
+      case 'event': {
+        data.events.push({
+          title: post.title,
+          description: post.excerpt || post.contentText.slice(0, 500),
+          date: dateOnly,
+          location: '',
+          imageUrl: post.featuredImage || post.bodyImages[0] || '',
+        });
+        break;
+      }
+      case 'history': {
+        const year = parseInt(dateOnly.slice(0, 4), 10);
+        if (year >= 1900 && year <= 2100) {
+          data.history.push({
+            year,
+            month: dateOnly.slice(5, 7),
+            title: post.title,
+            description: post.contentText.slice(0, 500),
+          });
+        }
+        break;
+      }
+      case 'staff': {
+        data.staff.push({
+          name: post.title,
+          role: post.categories[0] || '',
+          department: '',
+          photoUrl: post.featuredImage,
+          bio: post.contentText.slice(0, 1000),
+        });
+        break;
+      }
+      case 'album': {
+        if (post.bodyImages.length >= 2) {
+          data.albums.push({
+            title: post.title,
+            images: post.bodyImages,
+            youtubeUrl: '',
+          });
+        }
+        break;
+      }
+      case 'other':
+      default: {
+        // Uncategorized blog post → generic blog board. Keeps the content
+        // around so operator can re-classify by hand instead of losing it.
+        let blog = data.boards.find((b) => b.boardSlug === 'blog');
+        if (!blog) {
+          blog = { boardSlug: 'blog', boardTitle: '블로그', posts: [] };
+          data.boards.push(blog);
+        }
+        blog.posts.push({
+          title: post.title,
+          content: post.contentText.slice(0, 5000),
+          author: post.author,
+          date: dateOnly,
+        });
+        break;
+      }
+    }
+  }
+
+  // ── KBoard rows → ClassifiedBoard or ClassifiedBulletin ──
+  const boardBySlug = new Map<string, ClassifiedBoard>();
+  for (const row of kboardRows) {
+    // Bulletin-shaped boards: route rows straight to ClassifiedBulletin.
+    // Match on board name signals (jubo / bulletin / 주보).
+    if (/jubo|bulletin|주보/i.test(row.boardSlug) || /주보|bulletin/i.test(row.boardTitle)) {
+      data.bulletins.push({
+        title: row.title,
+        date: row.date,
+        pdfUrl: row.pdfUrl ?? '',
+        images: [],
+      });
+      continue;
+    }
+    // Notice-shaped boards: route to events instead of a generic board
+    // so the storefront's event grid surfaces them.
+    if (/notice|news|공지|소식|행사/i.test(row.boardSlug + ' ' + row.boardTitle)) {
+      data.events.push({
+        title: row.title,
+        description: '',
+        date: row.date,
+        location: '',
+        imageUrl: '',
+      });
+      continue;
+    }
+    // Everything else: generic board.
+    let board = boardBySlug.get(row.boardSlug);
+    if (!board) {
+      board = { boardSlug: row.boardSlug, boardTitle: row.boardTitle, posts: [] };
+      boardBySlug.set(row.boardSlug, board);
+      data.boards.push(board);
+    }
+    board.posts.push({
+      title: row.title,
+      content: '',
+      author: row.author,
+      date: row.date,
+    });
+  }
+
+  // ── WP-derived images for R2 batch upload ──
+  for (const p of wpPosts) {
+    if (p.featuredImage) data.images.push(p.featuredImage);
+    data.images.push(...p.bodyImages);
+  }
+}
+
 function extractHistoryItems(text: string): ClassifiedHistoryItem[] {
   const items: ClassifiedHistoryItem[] = [];
   // Pattern: "1990년 3월 교회 설립" or "1990 - Church founded"
@@ -518,8 +711,16 @@ export function classify(raw: RawExtractedData): ClassifiedData {
     }
   }
 
-  // Collect all unique images for R2 upload
-  data.images = [...new Set(allImages)];
+  // ── Phase 12-γ.3 — WP REST posts + KBoard rows ──
+  // When platform = wordpress and REST was accessible, html-scraper populated
+  // raw.wpPosts and raw.kboardRows. These give us structured content the
+  // HTML nav-walk would miss (categorized posts live outside <nav>; KBoard
+  // data lives in a separate plugin table). See [[project_migration_wp_rest_kboard]].
+  applyWpPosts(data, raw);
+
+  // Collect all unique images for R2 upload — includes WP body images
+  // pushed by applyWpPosts.
+  data.images = [...new Set([...allImages, ...data.images])];
 
   return data;
 }
