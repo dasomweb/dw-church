@@ -49,8 +49,6 @@ interface ResultCounts {
 
 interface MigrationResult {
   counts: ResultCounts;
-  platform: string;
-  platformConfidence: number;
 }
 
 interface MigrationResponse {
@@ -58,30 +56,8 @@ interface MigrationResponse {
     jobId: string;
     applyResult: Record<string, number>;
     classifiedCounts: ResultCounts;
-    sourcePlatform?: string;
-    sourcePlatformConfidence?: number;
   };
 }
-
-const PLATFORM_LABELS: Record<string, string> = {
-  wordpress: '워드프레스',
-  wix: 'Wix',
-  churchlovenet: '교회사랑넷',
-  squarespace: 'Squarespace',
-  webflow: 'Webflow',
-  imweb: 'Imweb',
-  modoo: '네이버 모두',
-  tistory: '티스토리',
-  cafe24: 'Cafe24',
-  gnuboard: 'GnuBoard',
-  unknown: '알 수 없음',
-};
-
-const PLATFORM_NOTES: Record<string, string> = {
-  wix: 'JS 렌더링 콘텐츠는 누락될 수 있습니다. 결과를 검토해 주세요.',
-  modoo: '네이버 모두는 외부 스크래핑을 제한합니다. 일부 항목은 누락될 수 있습니다.',
-  unknown: '플랫폼을 자동 인식하지 못해 일반 추출 방식을 사용했습니다.',
-};
 
 export function MigrationDialog({ tenant, open, onClose, onCompleted }: MigrationDialogProps) {
   const session = useAuthStore((s) => s.session);
@@ -148,8 +124,6 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
       const body = await res.json() as MigrationResponse;
       const finalResult: MigrationResult = {
         counts: body.data.classifiedCounts,
-        platform: body.data.sourcePlatform ?? 'unknown',
-        platformConfidence: body.data.sourcePlatformConfidence ?? 0,
       };
       setResult(finalResult);
       onCompleted?.(finalResult);
@@ -282,11 +256,10 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
             <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-900 leading-relaxed">
               <strong>처리 과정 (정적만: 1~2분 / 동적 포함: 3~8분):</strong>
               <ol className="mt-1.5 space-y-0.5 list-decimal list-inside">
-                <li>플랫폼 자동 감지 (워드프레스 / Wix / 교회사랑넷 등)</li>
-                <li>사이트 페이지 트리 스캔 (최대 30개) + WP REST / KBoard 직접 추출</li>
-                <li>SEO·OG·JSON-LD 메타데이터 추출 → 교회 기본정보</li>
-                <li>룰베이스 1차 분류 (설교·교역자·연혁·게시판 등)</li>
-                <li><strong>AI 분석</strong>: Gemini 가 모든 서브페이지를 검토해서 룰베이스가 놓친 콘텐츠 보강</li>
+                <li>사이트 페이지 크롤 (최대 30개 — sitemap.xml + 메뉴 링크)</li>
+                <li>각 페이지의 텍스트·이미지·YouTube·PDF 링크 추출 (CSS/JS 무시)</li>
+                <li>SEO·OG·JSON-LD 메타데이터 → 교회 기본정보</li>
+                <li><strong>🤖 AI 분석</strong>: Gemini 가 각 페이지를 보고 "어떤 페이지인지 + 무엇이 담겼는지" 판단·추출</li>
                 <li>이미지/PDF R2 업로드</li>
                 <li>테넌트 DB 일괄 저장</li>
               </ol>
@@ -324,13 +297,7 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
         {result && (
           <div className="space-y-3">
             <div className="p-4 rounded-lg bg-green-50 border border-green-200">
-              <div className="flex items-center justify-between gap-2">
-                <h4 className="text-sm font-bold text-green-900">✅ 가져오기 완료</h4>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-white border border-green-300 text-green-700 whitespace-nowrap">
-                  {PLATFORM_LABELS[result.platform] || result.platform} 감지
-                  {result.platformConfidence > 0 && ` (${Math.round(result.platformConfidence * 100)}%)`}
-                </span>
-              </div>
+              <h4 className="text-sm font-bold text-green-900">✅ 가져오기 완료</h4>
               <div className="mt-2 grid grid-cols-2 gap-1.5 text-xs text-green-900">
                 <ResultRow label="페이지" value={result.counts.pages} />
                 <ResultRow label="설교" value={result.counts.sermons} />
@@ -353,11 +320,6 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
                 </p>
               )}
             </div>
-            {PLATFORM_NOTES[result.platform] && (
-              <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-900">
-                <strong>참고:</strong> {PLATFORM_NOTES[result.platform]}
-              </div>
-            )}
             <div className="p-2.5 rounded-lg bg-blue-50 border border-blue-200 text-[11px] text-blue-900">
               <strong>배너 슬라이더는 가져오지 않았습니다.</strong>{' '}
               좌측 메뉴 [배너 관리]에서 직접 등록해 주세요.

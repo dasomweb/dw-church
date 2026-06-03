@@ -3,10 +3,14 @@
  * No CSS, no styles, no layout — only raw content.
  */
 
+/**
+ * HTML Scraper — generic crawler (no platform-specific paths).
+ * See [[feedback_migration_ai_only]] — migration is AI-only, so this
+ * file does ONE job: discover URLs + fetch raw text + image URLs +
+ * head metadata. Nothing CMS-specific.
+ */
 import type { RawExtractedData, RawPage, RawPageSeo } from '../types.js';
 import { emptyRawPageSeo } from '../types.js';
-import { detectPlatform } from './platform-detector.js';
-import { extractFromWordPressRest } from './wordpress-rest.js';
 
 const USER_AGENT = 'TrueLight-Migration/2.0';
 
@@ -211,14 +215,6 @@ export async function extractFromHtml(
   const fullHtml = await bodyRes.text();
   const navUrls = discoverNavLinks(fullHtml, baseUrl);
 
-  // Phase 12-γ.2: detect source CMS so downstream classifier /
-  // applier can pick platform-specific shortcuts. See
-  // [[project_migration_source_platforms]].
-  const platformResult = detectPlatform({
-    html: fullHtml,
-    url: siteUrl,
-    headers: bodyRes.headers,
-  });
 
   const urlsToFetch = new Set<string>(navUrls);
   for (const link of mainPage.links) {
@@ -242,36 +238,14 @@ export async function extractFromHtml(
     }
   }
 
-  // Phase 12-γ.3: when source is WordPress, also try the REST API. It
-  // gives us structured posts + categories + media that nav-walk would
-  // miss. Silent fall-back when REST is locked down. See
-  // [[project_migration_wp_rest_kboard]] (라그란지한인침례교회 test case).
-  let wpPosts: RawExtractedData['wpPosts'] = undefined;
-  let kboardRows: RawExtractedData['kboardRows'] = undefined;
-  if (platformResult.platform === 'wordpress') {
-    try {
-      const wp = await extractFromWordPressRest(siteUrl);
-      if (wp) {
-        wpPosts = wp.posts;
-        kboardRows = wp.kboardRows;
-      }
-    } catch {
-      // silent — fall back to HTML scrape only
-    }
-  }
-
   return {
     source: {
       url: siteUrl,
       type: 'html',
       scrapedAt: new Date().toISOString(),
-      platform: platformResult.platform,
-      platformConfidence: platformResult.confidence,
     },
     pages,
     youtubeVideos: [],
-    wpPosts,
-    kboardRows,
   };
 }
 

@@ -50,7 +50,14 @@
       "Bash(pnpm --filter @dw-church/ui-components test)",
       "Bash(pnpm --filter @dw-church/web build)",
       "Bash(git ls-tree *)",
-      "Bash(git rm *)"
+      "Bash(git rm *)",
+      "Bash(git -C h:/GitHub/dw-church grep -l \"anthropic\\\\|@anthropic\\\\|claude-haiku\\\\|claude-sonnet\\\\|ANTHROPIC\" -- 'dw-church-app/apps/server/**')",
+      "Bash(pnpm -C h:/GitHub/dw-church/dw-church-app/apps/server build)",
+      "Bash(gh workflow *)",
+      "Bash(railway connect *)",
+      "Bash(git -C h:/GitHub/dw-church add dw-church-app/apps/server/src/modules/migration/appliers/posts.ts)",
+      "Bash(git -C h:/GitHub/dw-church commit -m \"fix\\(migration\\): self-heal boards table in applyBoards \\(P42P01 on old tenants\\)\")",
+      "Bash(git -C h:/GitHub/dw-church push origin main)"
     ]
   }
 }

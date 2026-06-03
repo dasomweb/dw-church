@@ -82,30 +82,15 @@ export async function applyLlmClassification(
     return { pagesProcessed: 0, llmAdded: 0 };
   }
 
-  // Build the work list: every HTML page + every WP post → one LLM call.
-  type Work =
-    | { kind: 'page'; url: string; title: string; bodyText: string; headSummary: string }
-    | { kind: 'wpPost'; url: string; title: string; bodyText: string; headSummary: string };
+  // Build the work list: one LLM call per crawled page.
+  type Work = { url: string; title: string; bodyText: string; headSummary: string };
 
-  const work: Work[] = [];
-  for (const p of raw.pages) {
-    work.push({
-      kind: 'page',
-      url: p.url,
-      title: p.title,
-      bodyText: p.textContent.slice(0, PER_PAGE_INPUT_CAP),
-      headSummary: summarizeSeo(p.seo),
-    });
-  }
-  for (const wp of raw.wpPosts ?? []) {
-    work.push({
-      kind: 'wpPost',
-      url: wp.link,
-      title: wp.title,
-      bodyText: (wp.contentText || wp.excerpt).slice(0, PER_PAGE_INPUT_CAP),
-      headSummary: `categories=${wp.categories.join(',')} tags=${wp.tags.join(',')} author=${wp.author}`,
-    });
-  }
+  const work: Work[] = raw.pages.map((p) => ({
+    url: p.url,
+    title: p.title,
+    bodyText: p.textContent.slice(0, PER_PAGE_INPUT_CAP),
+    headSummary: summarizeSeo(p.seo),
+  }));
 
   const total = work.length;
   let done = 0;
