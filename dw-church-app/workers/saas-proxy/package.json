@@ -1,0 +1,14 @@
+{
+  "name": "@dw-church/saas-proxy-worker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cloudflare Worker that rewrites SNI for Cloudflare-for-SaaS tenant traffic so Railway accepts it without per-tenant custom domain registration.",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "secret:put": "wrangler secret put SAAS_PROXY_SECRET"
+  },
+  "devDependencies": {
+    "wrangler": "^3.78.0"
+  }
+}

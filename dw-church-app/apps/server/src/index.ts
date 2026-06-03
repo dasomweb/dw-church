@@ -269,6 +269,12 @@ async function main(): Promise<void> {
         await prisma.$executeRawUnsafe(
           `ALTER TABLE "${schema}".custom_domains ADD COLUMN IF NOT EXISTS "railway_domain_id" VARCHAR(64)`,
         );
+        // Cloudflare for SaaS — Custom Hostname id. Phase 12-δ migration
+        // (2026-06-03): becomes the authoritative pointer for per-tenant
+        // SSL + routing. railway_domain_id kept for rollback safety.
+        await prisma.$executeRawUnsafe(
+          `ALTER TABLE "${schema}".custom_domains ADD COLUMN IF NOT EXISTS "cf_hostname_id" VARCHAR(64)`,
+        );
         createHits++;
       } catch { /* skip */ }
     }

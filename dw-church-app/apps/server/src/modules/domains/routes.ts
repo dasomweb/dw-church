@@ -19,6 +19,7 @@ export async function domainRoutes(app: FastifyInstance) {
     return reply.status(201).send({
       data: result.domain,
       instructions: result.instructions,
+      additionalSteps: result.additionalSteps,
     });
   });
 
@@ -31,9 +32,17 @@ export async function domainRoutes(app: FastifyInstance) {
       return reply.send({
         data: result.domain,
         instructions: result.instructions,
+        additionalSteps: result.additionalSteps,
       });
     },
   );
+
+  // GET /domains/diagnostics — Cloudflare for SaaS integration health
+  // (super-admin only — read-only, no tenant context required)
+  app.get('/domains/diagnostics', { preHandler: [requireAuth] }, async (_request, reply) => {
+    const data = await domainService.getDiagnostics();
+    return reply.send({ data });
+  });
 
   // POST /domains/:id/verify — probe TXT, update status, wire into public.tenants
   app.post<{ Params: { id: string } }>(

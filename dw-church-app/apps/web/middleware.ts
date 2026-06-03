@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 
 /** Known platform hostnames (not custom domains) */
 const PLATFORM_HOSTS = new Set([
-  'dw-church.app',
-  'www.dw-church.app',
+  'truelight.app',
+  'www.truelight.app',
+  'customers.truelight.app',  // SaaS proxy fallback origin — internal
   'localhost:3002',
 ]);
 
@@ -17,8 +18,31 @@ function isPlatformHost(hostname: string): boolean {
   return false;
 }
 
+/**
+ * Resolve the originating hostname. The saas-proxy Worker stamps
+ * X-Tenant-Host (original tenant hostname) and X-Tenant-Verify (shared
+ * secret) when it re-issues a request to customers.truelight.app. When
+ * both check out we trust X-Tenant-Host so the custom-domain branch
+ * below sees the real tenant hostname (www.korean-church.com) instead
+ * of the proxy destination (customers.truelight.app).
+ *
+ * Custom header names (not X-Forwarded-Host) are required because
+ * Cloudflare overwrites X-Forwarded-Host with its routing destination
+ * when the Worker's outbound fetch re-enters the edge.
+ */
+function resolveIncomingHostname(request: NextRequest): string {
+  const directHost = (request.headers.get('host') || '').toLowerCase();
+  const forwardedHost = request.headers.get('x-tenant-host')?.toLowerCase();
+  const incomingSecret = request.headers.get('x-tenant-verify');
+  const expectedSecret = process.env.SAAS_PROXY_SECRET;
+  if (forwardedHost && expectedSecret && incomingSecret === expectedSecret) {
+    return forwardedHost;
+  }
+  return directHost;
+}
+
 export async function middleware(request: NextRequest) {
-  const hostname = request.headers.get('host') || '';
+  const hostname = resolveIncomingHostname(request);
   const pathname = request.nextUrl.pathname;
 
   // API subdomain → proxy to Railway
@@ -32,12 +56,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Custom domain handling — if the host is not a platform host, it may be a custom domain
+  // Custom domain handling — host is not a platform host (= tenant's
+  // own domain reached via Cloudflare for SaaS + Worker, OR a direct
+  // hit if DNS is mis-set). Look up via API to find the tenant slug.
   if (!isPlatformHost(hostname)) {
     try {
       const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api-server-production-c612.up.railway.app';
       const res = await fetch(
-        `${apiBase}/api/v1/admin/tenants/resolve-domain?domain=${encodeURIComponent(hostname.split(':')[0])}`,
+        `${apiBase}/api/v1/admin/tenants/resolve-domain?domain=${encodeURIComponent(hostname.split(':')[0] ?? hostname)}`,
         { headers: { 'x-internal': '1' }, next: { revalidate: 60 } },
       );
       if (res.ok) {
@@ -54,9 +80,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Extract tenant slug from subdomain
+  // Extract tenant slug from subdomain (e.g. lagrangechurch.truelight.app)
   const slug = hostname.split('.')[0];
-  if (slug && slug !== 'www' && slug !== 'admin' && slug !== 'api') {
+  if (slug && slug !== 'www' && slug !== 'admin' && slug !== 'api' && slug !== 'customers') {
     // Verify tenant exists via API
     try {
       const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api-server-production-c612.up.railway.app';

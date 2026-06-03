@@ -53,15 +53,33 @@ const envSchema = z.object({
     .enum(['development', 'production', 'test'])
     .default('development'),
 
-  // Custom-domain CNAME target shown to tenants when they connect their own
-  // domain. Points to the Railway web service's public hostname so their
-  // traffic reaches us. Defaults to the current production web service.
-  WEB_CNAME_TARGET: z.string().default('web-production-1f18f.up.railway.app'),
+  // Custom-domain CNAME target shown to tenants when they connect their
+  // own domain. With Cloudflare for SaaS, this is customers.truelight.app
+  // (our orange-cloud proxied origin entry). Tenants add CNAME @/www to
+  // this value. See docs/multitenant-domains/.
+  WEB_CNAME_TARGET: z.string().default('customers.truelight.app'),
 
-  // Railway public API — used to programmatically register verified custom
-  // domains on the web service so the edge issues SSL + routes traffic.
-  // All optional; if any is missing the auto-registration step is skipped
-  // and the domain stays in 'verified' status pending manual setup.
+  // Cloudflare for SaaS — multi-tenant custom domain stack.
+  // CF_API_TOKEN  = bearer token (Zone.SSL & Certificates: Edit,
+  //                 Zone.Custom Hostnames: Edit, Account.SSL: Edit)
+  // CF_ZONE_ID    = truelight.app zone id (Cloudflare dashboard sidebar)
+  // CF_FALLBACK_ORIGIN = the host Cloudflare for SaaS routes Custom
+  //                      Hostname traffic to. With Worker (saas-proxy)
+  //                      enabled, set this to saas-proxy.truelight.app.
+  // SAAS_PROXY_SECRET = shared secret between the Worker and middleware,
+  //                     stamped as X-Tenant-Verify so middleware can
+  //                     trust X-Tenant-Host. Must match the Worker's
+  //                     SAAS_PROXY_SECRET secret exactly.
+  // All optional; if missing, domain registration falls back to a
+  // "not configured" error message in the admin UI.
+  CF_API_TOKEN: z.string().default(''),
+  CF_ZONE_ID: z.string().default(''),
+  CF_FALLBACK_ORIGIN: z.string().default('customers.truelight.app'),
+  SAAS_PROXY_SECRET: z.string().default(''),
+
+  // Legacy Railway customDomainCreate path — kept for backward compat
+  // during transition. To be removed once all tenants are on Cloudflare
+  // for SaaS path.
   RAILWAY_API_TOKEN: z.string().default(''),
   RAILWAY_WEB_SERVICE_ID: z.string().default(''),
   RAILWAY_ENVIRONMENT_ID: z.string().default(''),
