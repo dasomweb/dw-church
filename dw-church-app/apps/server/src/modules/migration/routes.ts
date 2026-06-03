@@ -213,6 +213,84 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
     }
   });
 
+  // ── Phase 12-γ: One-shot URL migration ──
+  // The wizard's "Existing Site" step calls this single endpoint with
+  // just a URL + target tenant slug. Server runs the full pipeline
+  // (extract → classify → apply) end-to-end and returns the result
+  // counts. Operator gets a single spinner instead of 4 round-trips.
+  //
+  // Body: { sourceUrl: string, tenantSlug: string, youtubeChannelUrl?: string }
+  // Response: { jobId, applyResult, classifiedCounts }
+  app.post('/migrate-url', { preHandler: [requireSuperAdmin] }, async (request, reply) => {
+    const body = request.body as {
+      sourceUrl?: string;
+      tenantSlug?: string;
+      youtubeChannelUrl?: string;
+    };
+    const sourceUrl = (body.sourceUrl ?? '').trim();
+    const tenantSlug = (body.tenantSlug ?? '').trim();
+    if (!sourceUrl || !tenantSlug) {
+      throw new AppError('VALIDATION_ERROR', 400, 'sourceUrl + tenantSlug required');
+    }
+
+    // Confirm the tenant exists before running anything expensive.
+    const tenant = await prisma.tenant.findFirst({ where: { slug: tenantSlug } });
+    if (!tenant) throw new AppError('NOT_FOUND', 404, `Tenant "${tenantSlug}" not found`);
+
+    // Create a job so the wizard can later look up history / retry.
+    const job = await createJob(
+      tenantSlug,
+      sourceUrl,
+      body.youtubeChannelUrl ?? null,
+      request.user?.id ?? null,
+    );
+
+    try {
+      // 1. Extract
+      await updateJobStatus(job.id, 'extracting');
+      let rawData: RawExtractedData = await extractFromHtml(sourceUrl, 30);
+      if (body.youtubeChannelUrl) {
+        rawData.youtubeVideos = await extractFromYouTubeChannel(body.youtubeChannelUrl, 100);
+      }
+      await updateJobRawData(job.id, rawData);
+
+      // 2. Classify
+      await updateJobStatus(job.id, 'classifying');
+      const classified = classify(rawData);
+      await updateJobClassifiedData(job.id, classified);
+
+      // 3. Apply
+      await updateJobStatus(job.id, 'applying');
+      const result = await applyAll(tenantSlug, classified);
+      await updateJobApplyResult(job.id, result);
+
+      return reply.send({
+        data: {
+          jobId: job.id,
+          applyResult: result,
+          classifiedCounts: {
+            sermons: classified.sermons.length,
+            bulletins: classified.bulletins.length,
+            columns: classified.columns.length,
+            events: classified.events.length,
+            albums: classified.albums.length,
+            staff: classified.staff.length,
+            history: classified.history.length,
+            boards: classified.boards.length,
+            menus: classified.menus.length,
+            pages: classified.pageContents.length,
+            images: classified.images.length,
+            youtubeVideos: rawData.youtubeVideos.length,
+          },
+        },
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Migration failed';
+      await updateJobStatus(job.id, 'failed', msg);
+      throw new AppError('INTERNAL_ERROR', 500, msg);
+    }
+  });
+
   // ── Apply ──
   app.post<{ Params: { id: string } }>('/jobs/:id/apply', async (request, reply) => {
     const job = await getJob(request.params.id);
