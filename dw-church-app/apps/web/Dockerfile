@@ -39,12 +39,19 @@ COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.base.json ./
 COPY packages/api-client/ packages/api-client/
 COPY packages/ui-components/ packages/ui-components/
+# Phase 6-A added BrandTokensStyle.tsx that imports @dw-church/design-tokens.
+# Phase 10-α added theme-sets imports. Both packages need to be copied AND built
+# before the Next.js build so webpack can resolve them via package.json exports.
+COPY packages/design-tokens/ packages/design-tokens/
+COPY packages/theme-sets/ packages/theme-sets/
 COPY apps/web/ apps/web/
 
 # Build workspace dependencies first (dist/ required by package.json exports)
 # Skip tsc declarations (build:js) — type errors in source don't affect runtime
 RUN cd packages/api-client && pnpm build:js
 RUN cd packages/ui-components && pnpm build:js
+RUN cd packages/design-tokens && pnpm build
+RUN cd packages/theme-sets && pnpm build
 
 # Build Next.js (standalone output)
 ENV NEXT_TELEMETRY_DISABLED=1
