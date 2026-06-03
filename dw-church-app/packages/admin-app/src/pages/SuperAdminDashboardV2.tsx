@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useAuthStore } from '../stores/auth';
 import { useToast } from '../components';
 import { AIBuilderModal } from '../components/super-admin/AIBuilderModal';
+import { MigrationDialog } from '../components/super-admin/MigrationDialog';
 // import MigrationTab from './MigrationTab';  // 보류
 
 // snake_case → camelCase
@@ -1193,6 +1194,9 @@ function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) {
   // Phase 11-A1: AI 빌더 modal — ✨ row 버튼이 누르면 이 modal 열림. PlannerWizard
   // (8-step) 가 modal 안에서 동작 → 완료 시 buildPages 호출. b2bsmart 의 UX 동일.
   const [aiBuilderTenant, setAiBuilderTenant] = useState<Tenant | null>(null);
+  // Phase 12-δ: MigrationDialog — 행의 "📥 가져오기" 버튼이 누르면 열림.
+  // URL 입력 → /migrate-url 호출 → 결과 카운트 표시.
+  const [migrateTenant, setMigrateTenant] = useState<Tenant | null>(null);
 
   const fetchTenants = useCallback(async () => {
     setLoading(true);
@@ -1329,6 +1333,16 @@ function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) {
                         >
                           요약
                         </button>
+                        {/* 📥 가져오기 — Phase 12-δ: 기존 사이트 URL 입력으로 자동
+                            마이그레이션 (사이트 분석 → 콘텐츠 분류 → 테넌트 DB 일괄
+                            저장). AI 빌더와 별개 진입점. */}
+                        <button
+                          onClick={() => setMigrateTenant(t)}
+                          className="px-2 py-1 text-xs text-emerald-700 border border-emerald-200 hover:bg-emerald-50 rounded transition-colors"
+                          title={`${t.name} 기존 사이트 가져오기`}
+                        >
+                          📥 가져오기
+                        </button>
                         {/* ✨ AI 빌더 — Phase 11-A1: AIBuilderModal (PlannerWizard 8-step)
                             을 inline 으로 열기. b2bsmart 와 동일 동작. 페이지 이동
                             대신 wizard 가 현재 페이지 위에서 실행 → 완료 시
@@ -1410,6 +1424,12 @@ function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) {
           onCompleted={() => void fetchTenants()}
         />
       )}
+      <MigrationDialog
+        tenant={migrateTenant ? { id: migrateTenant.id, slug: migrateTenant.slug, name: migrateTenant.name } : { id: '', slug: '', name: '' }}
+        open={!!migrateTenant}
+        onClose={() => setMigrateTenant(null)}
+        onCompleted={() => void fetchTenants()}
+      />
       {editingTenant && (
         <EditTenantModal
           tenant={editingTenant}
