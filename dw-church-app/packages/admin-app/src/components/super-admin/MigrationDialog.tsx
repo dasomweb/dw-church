@@ -41,6 +41,10 @@ interface ResultCounts {
    *  Out of 7: seoTitle, seoDescription, seoKeywords, ogImageUrl,
    *  logoUrl, locale, slogan. See [[project_migration_seo_extraction]]. */
   seoFieldsFilled?: number;
+  /** Phase 12-γ.4 — pages the LLM examined + items it contributed
+   *  beyond the rule-based pass. */
+  llmPagesAnalyzed?: number;
+  llmItemsAdded?: number;
 }
 
 interface MigrationResult {
@@ -185,12 +189,13 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
             </div>
 
             <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-900 leading-relaxed">
-              <strong>처리 과정 (1~5분 소요):</strong>
+              <strong>처리 과정 (2~8분 소요):</strong>
               <ol className="mt-1.5 space-y-0.5 list-decimal list-inside">
                 <li>플랫폼 자동 감지 (워드프레스 / Wix / 교회사랑넷 등)</li>
-                <li>사이트 페이지 트리 스캔 (최대 30개)</li>
+                <li>사이트 페이지 트리 스캔 (최대 30개) + WP REST / KBoard 직접 추출</li>
                 <li>SEO·OG·JSON-LD 메타데이터 추출 → 교회 기본정보</li>
-                <li>콘텐츠 자동 분류 (설교·교역자·연혁·게시판 등)</li>
+                <li>룰베이스 1차 분류 (설교·교역자·연혁·게시판 등)</li>
+                <li><strong>AI 분석</strong>: Gemini 가 모든 서브페이지를 검토해서 룰베이스가 놓친 콘텐츠 보강</li>
                 <li>이미지/PDF R2 업로드</li>
                 <li>테넌트 DB 일괄 저장</li>
               </ol>
@@ -250,6 +255,12 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
                 <ResultRow label="YouTube" value={result.counts.youtubeVideos} />
                 <ResultRow label="SEO 정보" value={`${result.counts.seoFieldsFilled ?? 0} / 7`} />
               </div>
+              {(result.counts.llmPagesAnalyzed ?? 0) > 0 && (
+                <p className="mt-2 text-[11px] text-green-800">
+                  🤖 AI 분석: {result.counts.llmPagesAnalyzed} 페이지 검토 →{' '}
+                  <strong>+{result.counts.llmItemsAdded ?? 0}건</strong> 추가 발견
+                </p>
+              )}
             </div>
             {PLATFORM_NOTES[result.platform] && (
               <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-900">

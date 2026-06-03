@@ -35,6 +35,7 @@ import {
 import { extractFromHtml } from './extractors/html-scraper.js';
 import { extractFromYouTubeChannel } from './extractors/youtube.js';
 import { classify } from './classifier.js';
+import { applyLlmClassification } from './llm-classifier.js';
 import { applyAll } from './appliers/index.js';
 import type { ClassifiedData, RawExtractedData } from './types.js';
 
@@ -254,9 +255,17 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
       }
       await updateJobRawData(job.id, rawData);
 
-      // 2. Classify
+      // 2a. Rule-based classify (fast, free)
       await updateJobStatus(job.id, 'classifying');
       const classified = classify(rawData);
+
+      // 2b. Phase 12-γ.4 — LLM enrichment pass. Reads every page +
+      // every WP post, sends to Gemini for structured classification,
+      // merges into ClassifiedData without overwriting rule-based hits.
+      // Silent skip if GEMINI_API_KEY isn't configured. See
+      // [[project_migration_ai_classifier]].
+      const llmStats = await applyLlmClassification(classified, rawData);
+
       await updateJobClassifiedData(job.id, classified);
 
       // 3. Apply
@@ -285,6 +294,11 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
             // Operator can see at-a-glance whether source site had usable
             // meta. See project_migration_seo_extraction.
             seoFieldsFilled: countSeoFields(classified.churchInfo),
+            // Phase 12-γ.4: AI analysis stats. pagesAnalyzed = total
+            // pages LLM examined; llmAdded = items LLM contributed
+            // beyond rule-based output.
+            llmPagesAnalyzed: llmStats.pagesProcessed,
+            llmItemsAdded: llmStats.llmAdded,
           },
           // Phase 12-γ.2: detected source CMS so the dialog can show a
           // "워드프레스 감지" / "Wix 감지 — JS 렌더링 콘텐츠는 누락될 수 있습니다"
