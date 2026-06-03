@@ -225,6 +225,36 @@ export async function applyBoards(
   const schema = validateSchemaName(`tenant_${tenantSlug}`);
   let count = 0;
 
+  // Phase 12-γ.5 (2026-06-03): self-heal — some older tenants were cloned
+  // from tenant_template BEFORE the boards/board_posts tables were added
+  // to the template (라그란지한인침례교회 hit P42P01). Create them now if
+  // missing so migration never fails for that reason.
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "${schema}".boards (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      title VARCHAR(255) NOT NULL,
+      slug VARCHAR(255) NOT NULL,
+      description TEXT DEFAULT '',
+      sort_order INT DEFAULT 0,
+      is_active BOOLEAN DEFAULT true,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS "${schema}".board_posts (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      board_id UUID NOT NULL REFERENCES "${schema}".boards(id) ON DELETE CASCADE,
+      title VARCHAR(500) NOT NULL,
+      author_name VARCHAR(100) NOT NULL DEFAULT '',
+      content TEXT DEFAULT '',
+      attachments JSONB DEFAULT '[]',
+      view_count INT DEFAULT 0,
+      is_pinned BOOLEAN DEFAULT false,
+      status VARCHAR(20) DEFAULT 'published',
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
   for (const board of boards) {
     // Find or create board
     let boardRows = await prisma.$queryRawUnsafe<{ id: string }[]>(
