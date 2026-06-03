@@ -33,6 +33,14 @@ FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/packages/api-client/node_modules ./packages/api-client/node_modules
 COPY --from=deps /app/packages/ui-components/node_modules ./packages/ui-components/node_modules
+# Phase 10-α / 11 fix (2026-06-03): design-tokens + theme-sets are now built
+# in this stage (pnpm build), and their node_modules (zod for design-tokens,
+# zod + workspace ref for theme-sets) must be present or tsc fails with
+# "Cannot find module 'zod'". Missing these COPYs is what caused the cascading
+# unknown-type errors in contrast.ts and to-css-vars.ts — zod types disappeared
+# so the schema types degraded to unknown.
+COPY --from=deps /app/packages/design-tokens/node_modules ./packages/design-tokens/node_modules
+COPY --from=deps /app/packages/theme-sets/node_modules ./packages/theme-sets/node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 
 # Copy source for workspace packages needed by web
