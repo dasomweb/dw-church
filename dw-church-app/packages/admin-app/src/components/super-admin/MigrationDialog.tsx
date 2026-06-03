@@ -91,6 +91,16 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<MigrationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Phase 12-γ.5 — selective import. Static content always included
+  // (fast, low risk). Dynamic content checked per operator preference.
+  // Default: no dynamic selected (= static-only first run).
+  const [dynamicSelections, setDynamicSelections] = useState<Record<string, boolean>>({
+    sermons: false, bulletins: false, columns: false, events: false,
+    albums: false, staff: false, boards: false,
+  });
+  const [useLlm, setUseLlm] = useState(true);
+  const toggleDynamic = (key: string) =>
+    setDynamicSelections((prev) => ({ ...prev, [key]: !prev[key] }));
 
   if (!open) return null;
 
@@ -111,6 +121,12 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
     setResult(null);
     setError(null);
     try {
+      // Static is always included; dynamic only if explicitly checked.
+      const STATIC_KEYS = ['settings', 'pages', 'worshipTimes', 'history', 'menus'];
+      const include = [
+        ...STATIC_KEYS,
+        ...Object.entries(dynamicSelections).filter(([, v]) => v).map(([k]) => k),
+      ];
       const res = await fetch(`${baseUrl}/api/v1/migration/migrate-url`, {
         method: 'POST',
         headers: {
@@ -121,6 +137,8 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
           sourceUrl: url,
           tenantSlug: tenant.slug,
           youtubeChannelUrl: youtubeUrl.trim() || undefined,
+          include,
+          useLlm,
         }),
       });
       if (!res.ok) {
@@ -188,8 +206,81 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
               </p>
             </div>
 
+            <div className="p-3 rounded-lg bg-gray-50 border border-gray-200 text-xs space-y-2">
+              <div>
+                <div className="font-semibold text-gray-900 mb-1">📦 가져올 콘텐츠 선택</div>
+                <div className="text-[11px] text-gray-600 mb-2">
+                  정적 콘텐츠 (교회 정보·페이지·예배 시간·연혁·메뉴) 는 항상 포함됩니다.
+                  동적 콘텐츠는 필요한 것만 선택하세요 — 안 가져온 항목은 운영자가
+                  직접 등록할 수 있습니다.
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {([
+                    { key: 'sermons',   label: '설교',     hint: '워드프레스 카테고리 + YouTube' },
+                    { key: 'bulletins', label: '주보',     hint: 'PDF 첨부 + KBoard' },
+                    { key: 'columns',   label: '칼럼',     hint: '본문 텍스트 포함' },
+                    { key: 'events',    label: '행사',     hint: '공지·소식' },
+                    { key: 'albums',    label: '앨범',     hint: '갤러리 이미지 (R2 업로드)' },
+                    { key: 'staff',     label: '교역자',   hint: '이름·직책·사진' },
+                    { key: 'boards',    label: '게시판',   hint: '자유게시판·Q&A' },
+                  ] as const).map((item) => (
+                    <label key={item.key} className="flex items-start gap-1.5 p-1.5 rounded hover:bg-white cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={dynamicSelections[item.key] ?? false}
+                        onChange={() => toggleDynamic(item.key)}
+                        disabled={running}
+                        className="mt-0.5"
+                      />
+                      <span>
+                        <div className="font-medium text-gray-800">{item.label}</div>
+                        <div className="text-[10px] text-gray-500">{item.hint}</div>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                <div className="mt-2 flex gap-2 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => setDynamicSelections({
+                      sermons: true, bulletins: true, columns: true, events: true,
+                      albums: true, staff: true, boards: true,
+                    })}
+                    disabled={running}
+                    className="px-2 py-0.5 rounded border border-gray-300 hover:bg-gray-100"
+                  >
+                    모두 선택
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDynamicSelections({
+                      sermons: false, bulletins: false, columns: false, events: false,
+                      albums: false, staff: false, boards: false,
+                    })}
+                    disabled={running}
+                    className="px-2 py-0.5 rounded border border-gray-300 hover:bg-gray-100"
+                  >
+                    모두 해제 (정적만)
+                  </button>
+                </div>
+              </div>
+
+              <label className="flex items-center gap-1.5 pt-2 border-t border-gray-200 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={useLlm}
+                  onChange={(e) => setUseLlm(e.target.checked)}
+                  disabled={running}
+                />
+                <span className="text-[11px] text-gray-700">
+                  🤖 AI 분석 사용 (Gemini) — 모든 페이지를 검토해 룰베이스가 놓친 콘텐츠를 보강.
+                  해제하면 더 빠르지만 정확도가 낮아집니다.
+                </span>
+              </label>
+            </div>
+
             <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-900 leading-relaxed">
-              <strong>처리 과정 (2~8분 소요):</strong>
+              <strong>처리 과정 (정적만: 1~2분 / 동적 포함: 3~8분):</strong>
               <ol className="mt-1.5 space-y-0.5 list-decimal list-inside">
                 <li>플랫폼 자동 감지 (워드프레스 / Wix / 교회사랑넷 등)</li>
                 <li>사이트 페이지 트리 스캔 (최대 30개) + WP REST / KBoard 직접 추출</li>

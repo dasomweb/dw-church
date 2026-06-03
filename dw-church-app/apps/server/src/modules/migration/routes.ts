@@ -36,7 +36,8 @@ import { extractFromHtml } from './extractors/html-scraper.js';
 import { extractFromYouTubeChannel } from './extractors/youtube.js';
 import { classify } from './classifier.js';
 import { applyLlmClassification } from './llm-classifier.js';
-import { applyAll } from './appliers/index.js';
+import { applyAll, STATIC_INCLUDE, DYNAMIC_INCLUDE, ALL_INCLUDE } from './appliers/index.js';
+import type { IncludeKey } from './appliers/index.js';
 import type { ClassifiedData, RawExtractedData } from './types.js';
 
 // ─── Auth ──────────────────────────────────────���────────────
@@ -227,12 +228,29 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
       sourceUrl?: string;
       tenantSlug?: string;
       youtubeChannelUrl?: string;
+      // Phase 12-γ.5 — selective import. Pass any subset of:
+      //   settings, pages, worshipTimes, history, menus  (static)
+      //   sermons, bulletins, columns, events, albums, staff, boards  (dynamic)
+      // Or use preset string 'static' | 'dynamic' | 'all'. Default: 'static'.
+      include?: IncludeKey[] | 'static' | 'dynamic' | 'all';
+      // Optional speed lever — skip the LLM enrichment pass when operator
+      // just wants a fast structural import. Defaults to true.
+      useLlm?: boolean;
     };
     const sourceUrl = (body.sourceUrl ?? '').trim();
     const tenantSlug = (body.tenantSlug ?? '').trim();
     if (!sourceUrl || !tenantSlug) {
       throw new AppError('VALIDATION_ERROR', 400, 'sourceUrl + tenantSlug required');
     }
+
+    // Resolve include list.
+    let includeList: IncludeKey[];
+    if (body.include === 'all') includeList = ALL_INCLUDE;
+    else if (body.include === 'dynamic') includeList = DYNAMIC_INCLUDE;
+    else if (body.include === 'static' || body.include === undefined) includeList = STATIC_INCLUDE;
+    else includeList = body.include;
+
+    const useLlm = body.useLlm !== false;
 
     // Confirm the tenant exists before running anything expensive.
     const tenant = await prisma.tenant.findFirst({ where: { slug: tenantSlug } });
@@ -262,15 +280,17 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
       // 2b. Phase 12-γ.4 — LLM enrichment pass. Reads every page +
       // every WP post, sends to Gemini for structured classification,
       // merges into ClassifiedData without overwriting rule-based hits.
-      // Silent skip if GEMINI_API_KEY isn't configured. See
-      // [[project_migration_ai_classifier]].
-      const llmStats = await applyLlmClassification(classified, rawData);
+      // Silent skip if GEMINI_API_KEY isn't configured OR useLlm=false.
+      // See [[project_migration_ai_classifier]].
+      const llmStats = useLlm
+        ? await applyLlmClassification(classified, rawData)
+        : { pagesProcessed: 0, llmAdded: 0 };
 
       await updateJobClassifiedData(job.id, classified);
 
-      // 3. Apply
+      // 3. Apply — selective per `include`.
       await updateJobStatus(job.id, 'applying');
-      const result = await applyAll(tenantSlug, classified);
+      const result = await applyAll(tenantSlug, classified, { include: includeList });
       await updateJobApplyResult(job.id, result);
 
       return reply.send({
@@ -300,6 +320,9 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
             llmPagesAnalyzed: llmStats.pagesProcessed,
             llmItemsAdded: llmStats.llmAdded,
           },
+          // Phase 12-γ.5 — echo back what was actually applied vs skipped.
+          appliedTypes: includeList,
+          usedLlm: useLlm,
           // Phase 12-γ.2: detected source CMS so the dialog can show a
           // "워드프레스 감지" / "Wix 감지 — JS 렌더링 콘텐츠는 누락될 수 있습니다"
           // badge. See project_migration_source_platforms.
