@@ -129,12 +129,20 @@ function extractSeoFromHead(html: string, pageUrl: string): RawPageSeo {
 
 async function fetchPage(url: string): Promise<RawPage> {
   const res = await fetch(url, {
-    headers: { 'User-Agent': USER_AGENT },
+    headers: {
+      // Use a realistic browser UA — many CDN-fronted sites (Cloudflare,
+      // SiteGround, etc.) serve a JS challenge or empty body to non-browser
+      // UAs. Even WordPress with security plugins blocks bot-shaped UAs.
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Language': 'ko-KR,ko;q=0.9,en;q=0.8',
+    },
     redirect: 'follow',
   });
   if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.status}`);
 
   const html = await res.text();
+  console.log(`[fetchPage] ${url} → HTTP ${res.status}, html.length=${html.length}, content-type=${res.headers.get('content-type')}`);
 
   // Extract title
   const titleMatch = html.match(/<title[^>]*>(.*?)<\/title>/is);
