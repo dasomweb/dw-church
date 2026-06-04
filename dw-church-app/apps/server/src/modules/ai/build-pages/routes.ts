@@ -970,9 +970,10 @@ function variantToSectionType(variant: string): string {
  * using humanizeSlug() so 5 sibling pages don't all sit at the top.
  */
 function inferParentSlug(
-  entry: { slug: string },
+  entry: { slug?: string },
   _siblings: Set<string>,
 ): string | null {
+  if (!entry.slug) return null;
   const slug = entry.slug;
   if (!slug || slug === '/' || slug.startsWith('#')) return null;
   if (!slug.startsWith('/')) return null;
