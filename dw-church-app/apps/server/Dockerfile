@@ -2,8 +2,11 @@ FROM node:20-slim AS base
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
-# Copy workspace root files
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+# Copy workspace root files. tsconfig.base.json is required — apps/server/
+# tsconfig.json extends "../../tsconfig.base.json"; without it tsc can't
+# resolve the strict settings, infers every zod schema as partial, and
+# emits cascading TS2345 errors (build-pages/routes.ts pageSpec etc.).
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.base.json ./
 
 # Copy only the packages needed by server
 COPY apps/server/package.json apps/server/
