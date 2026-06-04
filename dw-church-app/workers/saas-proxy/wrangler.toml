@@ -3,13 +3,13 @@ main = "worker.js"
 compatibility_date = "2026-01-01"
 workers_dev = false
 
-# account_id — set explicitly so wrangler skips the /memberships lookup
+# account_id ??set explicitly so wrangler skips the /memberships lookup
 # which needs User->User Details:Read token permission we don't grant.
 # Non-secret (visible in any Cloudflare URL for the account).
 # REPLACE with your Cloudflare account ID before first deploy.
-account_id = "REPLACE_WITH_CLOUDFLARE_ACCOUNT_ID"
+account_id = "82d66e1b8a35e668a2d4eec7401f6c83"
 
-# Zone-level wildcard route — required to capture Custom Hostname
+# Zone-level wildcard route ??required to capture Custom Hostname
 # (Cloudflare for SaaS) traffic. A hostname-restricted pattern like
 # "saas-proxy.truelight.app/*" only matches direct traffic to that
 # host and never matches tenant Custom Hostname requests that arrive
@@ -20,12 +20,12 @@ routes = [
   { pattern = "*/*", zone_name = "truelight.app" },
 ]
 
-# FALLBACK_ORIGIN is the host that actually serves traffic — Railway's
+# FALLBACK_ORIGIN is the host that actually serves traffic ??Railway's
 # web service custom domain (already proxied through Cloudflare). The
 # Worker rewrites every incoming request to fetch from this host,
 # which is what fixes the SNI mismatch with Railway.
 [vars]
 FALLBACK_ORIGIN = "customers.truelight.app"
 
-# Secrets — set via `wrangler secret put SAAS_PROXY_SECRET`
+# Secrets ??set via `wrangler secret put SAAS_PROXY_SECRET`
 # (do NOT commit; see README.md for the matching api-server + web env var).
