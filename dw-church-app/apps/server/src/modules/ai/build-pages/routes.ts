@@ -168,7 +168,11 @@ async function buildPages(input: BuildPagesInput, tenantSchema: string): Promise
   const pageIdByWizardSlug: Record<string, string> = {};
 
   for (let pageIdx = 0; pageIdx < realPages.length; pageIdx++) {
-    const pageSpec = realPages[pageIdx]!;
+    // Cast — zod's schema (name: z.string().min(1), slug: z.string().min(1))
+    // guarantees these are present at runtime, but tsc on Railway sometimes
+    // infers them as optional (depends on tsconfig resolution). Cast keeps
+    // the build deterministic; helpers below depend on required strings.
+    const pageSpec = realPages[pageIdx]! as { name: string; slug: string; parent?: string };
     const normalizedSlug = normalizeSlug(pageSpec.slug);
 
     try {
