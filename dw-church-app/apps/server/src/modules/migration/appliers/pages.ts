@@ -23,12 +23,25 @@ export async function applyPageContents(
   for (const page of pageContents) {
     if (page.blocks.length === 0) continue;
 
-    // Find existing page by slug
-    const pages = await prisma.$queryRawUnsafe<{ id: string }[]>(
+    // Find existing page by slug. If the tenant doesn't have it yet
+    // (new tenants from URL-only migration don't have pages pre-created),
+    // create one so the imported static content actually lands. Was
+    // silently skipping pre-2026-06-04, which made migration appear to
+    // succeed but no static content visible.
+    let pages = await prisma.$queryRawUnsafe<{ id: string }[]>(
       `SELECT id FROM "${schema}".pages WHERE slug = $1 LIMIT 1`,
       page.pageSlug,
     );
-    if (pages.length === 0) continue; // Page doesn't exist — skip, don't create
+    if (pages.length === 0) {
+      const title = inferPageTitle(page.pageSlug);
+      pages = await prisma.$queryRawUnsafe<{ id: string }[]>(
+        `INSERT INTO "${schema}".pages (slug, title, sort_order, is_visible)
+         VALUES ($1, $2, COALESCE((SELECT MAX(sort_order) + 1 FROM "${schema}".pages), 0), true)
+         RETURNING id`,
+        page.pageSlug,
+        title,
+      );
+    }
 
     const pageId = pages[0]!.id;
 
@@ -79,4 +92,28 @@ export async function applyPageContents(
   }
 
   return count;
+}
+
+/** Friendly Korean page title for an auto-created page slug. Used only
+ *  when migration creates a page that wasn't seeded by the tenant
+ *  template. The operator can rename later in the admin UI. */
+function inferPageTitle(slug: string): string {
+  const map: Record<string, string> = {
+    'home': '홈',
+    'about': '교회 소개',
+    'pastor-greeting': '담임목사 인사말',
+    'vision': '비전',
+    'directions': '오시는 길',
+    'newcomer': '새가족 안내',
+    'mission': '선교',
+    'worship': '예배 안내',
+    'history': '교회 연혁',
+    'sermons': '설교',
+    'columns': '목회칼럼',
+    'bulletins': '주보',
+    'albums': '갤러리',
+    'events': '행사',
+    'staff': '교역자',
+  };
+  return map[slug] ?? slug;
 }

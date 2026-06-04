@@ -131,14 +131,17 @@ export async function applyColumns(
   for (const c of columns) {
     const topImg = urlMap.get(c.topImageUrl) || c.topImageUrl;
     try {
+      // created_at preserves source publish order. When the source page
+      // gave us a date, COALESCE picks it; null falls back to NOW().
       await prisma.$queryRawUnsafe(
-        `INSERT INTO "${schema}".columns_pastoral (title, content, top_image_url, youtube_url, status)
-         VALUES ($1, $2, $3, $4, 'published')
+        `INSERT INTO "${schema}".columns_pastoral (title, content, top_image_url, youtube_url, status, created_at)
+         VALUES ($1, $2, $3, $4, 'published', COALESCE($5::timestamptz, NOW()))
          ON CONFLICT DO NOTHING`,
         c.title || '',
         c.content || '',
         topImg,
         c.youtubeUrl || '',
+        c.date || null,
       );
       count++;
     } catch {

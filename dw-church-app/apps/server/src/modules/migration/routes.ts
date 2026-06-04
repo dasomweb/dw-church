@@ -288,8 +288,20 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
       const llmStart = Date.now();
       const llmStats = useLlm
         ? await applyLlmClassification(classified, rawData)
-        : { pagesProcessed: 0, llmAdded: 0 };
-      request.log.info({ migrationStep: 'llm', tookMs: Date.now() - llmStart, useLlm, ...llmStats }, 'Migration: LLM classification complete');
+        : { pagesProcessed: 0, llmAdded: 0, breakdown: {}, warnings: [] };
+      request.log.info({
+        migrationStep: 'llm',
+        tookMs: Date.now() - llmStart,
+        useLlm,
+        pagesProcessed: llmStats.pagesProcessed,
+        llmAdded: llmStats.llmAdded,
+        breakdown: llmStats.breakdown,
+        warningCount: llmStats.warnings?.length ?? 0,
+      }, 'Migration: LLM classification complete');
+      // Per-warning log lines so we can see them at a glance.
+      for (const w of (llmStats.warnings ?? []).slice(0, 30)) {
+        request.log.warn({ migrationStep: 'llm-warn' }, w);
+      }
 
       await updateJobClassifiedData(job.id, classified);
 
@@ -324,6 +336,8 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
             // beyond rule-based output.
             llmPagesAnalyzed: llmStats.pagesProcessed,
             llmItemsAdded: llmStats.llmAdded,
+            llmBreakdown: llmStats.breakdown ?? {},
+            llmWarnings: (llmStats.warnings ?? []).slice(0, 10),
           },
           // Phase 12-γ.5 — echo back what was actually applied vs skipped.
           appliedTypes: includeList,

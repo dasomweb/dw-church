@@ -157,6 +157,11 @@ export interface ClassifiedColumn {
   content: string;
   topImageUrl: string;
   youtubeUrl: string;
+  /** Publication / creation date from source site. ISO-ish (YYYY-MM-DD).
+   *  Maps to columns_pastoral.created_at on apply so the migrated
+   *  post keeps its original publish order. Empty string when not
+   *  extractable. */
+  date: string;
 }
 
 export interface ClassifiedEvent {

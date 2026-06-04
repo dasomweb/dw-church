@@ -34,7 +34,7 @@ const TIMEOUT_MS = 30_000;
  */
 interface LlmPageResult {
   classification: 'sermon' | 'bulletin' | 'column' | 'event' | 'album' | 'staff'
-    | 'history' | 'pastor_greeting' | 'about' | 'worship' | 'directions'
+    | 'history' | 'pastor_greeting' | 'about' | 'vision' | 'worship' | 'directions'
     | 'newcomer' | 'mission' | 'home' | 'board' | 'other';
   confidence: number; // 0..1
   reason: string;     // model's short rationale (logged for debug, not stored)
@@ -50,7 +50,7 @@ interface LlmPageResult {
   };
   sermons?: { title: string; preacher?: string; date?: string; scripture?: string; youtubeUrl?: string; thumbnailUrl?: string; }[];
   bulletins?: { title: string; date?: string; pdfUrl?: string; }[];
-  columns?: { title: string; content?: string; topImageUrl?: string; }[];
+  columns?: { title: string; content?: string; topImageUrl?: string; date?: string; }[];
   events?: { title: string; date?: string; description?: string; location?: string; imageUrl?: string; }[];
   albums?: { title: string; images?: string[]; }[];
   staff?: { name: string; role?: string; department?: string; photoUrl?: string; bio?: string; }[];
@@ -76,10 +76,18 @@ export async function applyLlmClassification(
   data: ClassifiedData,
   raw: RawExtractedData,
   onProgress?: (done: number, total: number) => void,
-): Promise<{ pagesProcessed: number; llmAdded: number }> {
+): Promise<{
+  pagesProcessed: number;
+  llmAdded: number;
+  /** Count per classification — lets the operator see "5 column pages,
+   *  2 about pages, etc." so they know what the LLM did. */
+  breakdown?: Record<string, number>;
+  /** Per-page warnings (LLM gave empty blocks, exception, etc.). */
+  warnings?: string[];
+}> {
   if (!env.GEMINI_API_KEY) {
     // No key → silently skip. Caller already has rule-based output.
-    return { pagesProcessed: 0, llmAdded: 0 };
+    return { pagesProcessed: 0, llmAdded: 0, breakdown: {}, warnings: ['GEMINI_API_KEY 미설정'] };
   }
 
   // Build the work list: one LLM call per crawled page.
@@ -96,6 +104,12 @@ export async function applyLlmClassification(
   let done = 0;
   const beforeCounts = countTotals(data);
 
+  // Per-classification tallies + warnings so we can SEE what the LLM
+  // produced for each page (vs. silently swallowing per-page errors).
+  // Surfaced in the return so /migrate-url can log them server-side.
+  const breakdown: Record<string, number> = {};
+  const warnings: string[] = [];
+
   // Simple concurrency limiter.
   const queue = [...work];
   const workers: Promise<void>[] = [];
@@ -106,9 +120,22 @@ export async function applyLlmClassification(
         if (!job) break;
         try {
           const result = await classifyOnePage(job.url, job.title, job.bodyText, job.headSummary);
-          if (result) mergeIntoData(data, result);
-        } catch {
-          // ignore per-page errors
+          if (result) {
+            breakdown[result.classification] = (breakdown[result.classification] ?? 0) + 1;
+            // Static-page classifications must populate pageContent.
+            // If LLM classified the page but returned no blocks, the
+            // page content is lost. Surface this so we can diagnose.
+            const isStatic = ['pastor_greeting', 'about', 'vision', 'directions',
+              'newcomer', 'mission', 'home', 'history'].includes(result.classification);
+            if (isStatic && (!result.pageContent || result.pageContent.length === 0)) {
+              warnings.push(`${result.classification} 분류이나 pageContent 비어있음: ${job.url}`);
+            }
+            mergeIntoData(data, result);
+          } else {
+            warnings.push(`LLM 응답 실패: ${job.url}`);
+          }
+        } catch (err) {
+          warnings.push(`예외: ${job.url} — ${err instanceof Error ? err.message : String(err)}`);
         }
         done++;
         onProgress?.(done, total);
@@ -118,7 +145,12 @@ export async function applyLlmClassification(
   await Promise.all(workers);
 
   const afterCounts = countTotals(data);
-  return { pagesProcessed: total, llmAdded: afterCounts - beforeCounts };
+  return {
+    pagesProcessed: total,
+    llmAdded: afterCounts - beforeCounts,
+    breakdown,
+    warnings,
+  };
 }
 
 // ─── one page → Gemini structured output ────────────────────
@@ -144,7 +176,8 @@ Content type taxonomy (pick the most specific that fits):
 - staff: 교역자 / pastor list / ministry leader list
 - history: 연혁 / chronicle / timeline (year-tagged events)
 - pastor_greeting: 담임목사 인사말 / pastor message / greeting
-- about: 교회 소개 / introduction / vision / mission
+- about: 교회 소개 / introduction
+- vision: 비전 / 사명 / mission statement (separate from about/mission)
 - worship: 예배 안내 / worship times / service schedule
 - directions: 오시는 길 / location / contact / 찾아오는 길
 - newcomer: 새가족 안내 / welcome
@@ -162,6 +195,53 @@ For Korean church terminology:
 - "장로/권사/집사" = elder/deaconess/deacon (also "staff" in our model)
 - "주일예배" = Sunday service; "수요예배" = Wednesday service; "새벽기도" = dawn prayer
 - "주보" = weekly bulletin; "설교" = sermon; "칼럼" = column
+
+CRITICAL — pageContent extraction (for static pages):
+When you classify a page as one of {pastor_greeting, about, vision,
+directions, newcomer, mission, worship, home}, you MUST also populate
+pageContent[] with the page body translated into structured blocks.
+Without this, the static page content is lost.
+
+For each page classification, use these exact blockType values + props:
+
+- pastor_greeting → blockType="pastor_message", props={ title, name, message, photoUrl }
+    title = page heading (default "담임목사 인사말")
+    name = pastor's name extracted from body (e.g. "김아무개 목사")
+    message = full greeting body text (preserve paragraphs as \n\n)
+    photoUrl = URL of any pastor photo in the page
+
+- about → blockType="church_intro", props={ title, content, imageUrl }
+    title = page heading (default "교회 소개")
+    content = full intro body text
+    imageUrl = main image URL if present
+
+- vision → blockType="mission_vision", props={ title, content, imageUrl }
+    title = page heading (default "비전")
+    content = full vision statement text
+    imageUrl = main image URL if present
+
+- directions → TWO blocks:
+    blockType="location_map", props={ title="오시는 길", address }
+    blockType="contact_info", props={ title="연락처", phone, email, address }
+
+- newcomer → blockType="newcomer_info", props={ title, content, imageUrl }
+    title = page heading (default "새가족 안내")
+    content = full newcomer info text
+    imageUrl = main image URL if present
+
+- mission → blockType="text_image", props={ title, content, imageUrl }
+    title = page heading (default "선교")
+    content = full mission text
+    imageUrl = main image URL if present
+
+- worship → leave pageContent empty (worship times go into worshipTimes[] field)
+
+- home → blockType="text_image" only if home page has substantial intro text
+    title, content, imageUrl as above
+
+For OTHER pages with substantial body text (not in above list), if you
+still want to preserve content, use blockType="text_image" or
+"text_only" — but only when classification is one of the above types.
 
 Output STRICT JSON matching the schema. If the page doesn't fit any
 category, return {"classification":"other","confidence":0.1,"reason":"..."}.`;
@@ -264,6 +344,7 @@ function mergeIntoData(data: ClassifiedData, r: LlmPageResult): void {
       content: c.content ?? '',
       topImageUrl: c.topImageUrl ?? '',
       youtubeUrl: '',
+      date: c.date ?? '',
     });
   }
 
@@ -394,10 +475,12 @@ function inferSlugFromClassification(c: LlmPageResult['classification']): string
     case 'home': return 'home';
     case 'about': return 'about';
     case 'pastor_greeting': return 'pastor-greeting';
+    case 'vision': return 'vision';
     case 'directions': return 'directions';
     case 'newcomer': return 'newcomer';
     case 'mission': return 'mission';
     case 'worship': return 'worship';
+    case 'history': return 'history';
     default: return null;
   }
 }
@@ -410,7 +493,7 @@ const PAGE_RESULT_SCHEMA = {
     classification: {
       type: 'string',
       enum: ['sermon', 'bulletin', 'column', 'event', 'album', 'staff', 'history',
-        'pastor_greeting', 'about', 'worship', 'directions', 'newcomer',
+        'pastor_greeting', 'about', 'vision', 'worship', 'directions', 'newcomer',
         'mission', 'home', 'board', 'other'],
     },
     confidence: { type: 'number' },
@@ -449,7 +532,12 @@ const PAGE_RESULT_SCHEMA = {
       type: 'array',
       items: {
         type: 'object',
-        properties: { title: { type: 'string' }, content: { type: 'string' }, topImageUrl: { type: 'string' } },
+        properties: {
+          title: { type: 'string' },
+          content: { type: 'string' },
+          topImageUrl: { type: 'string' },
+          date: { type: 'string' },
+        },
         required: ['title'],
       },
     },
