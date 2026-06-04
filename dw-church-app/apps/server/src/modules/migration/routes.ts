@@ -35,7 +35,7 @@ import {
 import { extractFromHtml } from './extractors/html-scraper.js';
 import { extractFromYouTubeChannel } from './extractors/youtube.js';
 import { classify } from './classifier.js';
-import { applyLlmClassification } from './llm-classifier.js';
+import { runMigrationAgent } from './migration-agent.js';
 import { applyAll, STATIC_INCLUDE, DYNAMIC_INCLUDE, ALL_INCLUDE } from './appliers/index.js';
 import type { IncludeKey } from './appliers/index.js';
 import type { ClassifiedData, RawExtractedData } from './types.js';
@@ -265,43 +265,89 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
     );
 
     try {
-      // 1. Extract
+      // Phase 12-γ.6 (2026-06-04) — AGENT-DRIVEN migration.
+      // User mandate: AI orchestrates, crawler is a tool. Gemini receives
+      // the URL + goal, then chooses among fetch_url / fetch_sitemap /
+      // try_wp_rest / try_youtube_channel / commit_result tools to
+      // investigate the site and extract content. The agent decides
+      // strategy + when to stop.
       await updateJobStatus(job.id, 'extracting');
-      const extractStart = Date.now();
-      let rawData: RawExtractedData = await extractFromHtml(sourceUrl, 30);
-      request.log.info({ migrationStep: 'extract', tookMs: Date.now() - extractStart, pagesFound: rawData.pages.length, sourceUrl }, 'Migration: HTML crawl complete');
+
+      let classified: ClassifiedData;
+      let agentIterations = 0;
+      let agentToolCalls: { name: string; ok: boolean }[] = [];
+      let agentWarnings: string[] = [];
+
+      if (useLlm) {
+        const agentStart = Date.now();
+        const agentResult = await runMigrationAgent(
+          sourceUrl,
+          body.youtubeChannelUrl ?? null,
+          (msg) => request.log.info({ migrationStep: 'agent' }, msg),
+        );
+        classified = agentResult.data;
+        agentIterations = agentResult.iterations;
+        agentToolCalls = agentResult.toolCalls.map(({ name, ok }) => ({ name, ok }));
+        agentWarnings = agentResult.warnings;
+        request.log.info({
+          migrationStep: 'agent-done',
+          tookMs: Date.now() - agentStart,
+          iterations: agentIterations,
+          toolCallCount: agentToolCalls.length,
+          warningCount: agentWarnings.length,
+        }, 'Migration: agent complete');
+        for (const w of agentWarnings.slice(0, 20)) {
+          request.log.warn({ migrationStep: 'agent-warn' }, w);
+        }
+      } else {
+        // Legacy crawler+LLM path — kept for the useLlm=false case so
+        // the operator can still get a fast structural import without
+        // AI. With useLlm=true (default) we go through the agent.
+        const extractStart = Date.now();
+        const rawData: RawExtractedData = await extractFromHtml(sourceUrl, 30);
+        request.log.info({ migrationStep: 'extract', tookMs: Date.now() - extractStart, pagesFound: rawData.pages.length, sourceUrl }, 'Migration: HTML crawl complete');
+        if (body.youtubeChannelUrl) {
+          rawData.youtubeVideos = await extractFromYouTubeChannel(body.youtubeChannelUrl, 100);
+        }
+        await updateJobRawData(job.id, rawData);
+        classified = classify(rawData);
+        // Skip LLM enrichment when explicitly off.
+      }
+
+      // Still pull the YouTube channel videos via the dedicated extractor
+      // — the agent can't realistically walk a channel's RSS, and the
+      // operator-supplied channel URL is reliable when set.
       if (body.youtubeChannelUrl) {
-        rawData.youtubeVideos = await extractFromYouTubeChannel(body.youtubeChannelUrl, 100);
+        try {
+          const videos = await extractFromYouTubeChannel(body.youtubeChannelUrl, 100);
+          for (const v of videos) {
+            classified.sermons.push({
+              title: v.title,
+              scripture: '',
+              preacher: '',
+              date: v.date,
+              youtubeUrl: `https://www.youtube.com/watch?v=${v.videoId}`,
+              thumbnailUrl: v.thumbnailUrl,
+            });
+          }
+        } catch (err) {
+          request.log.warn(`YouTube channel extract failed: ${err instanceof Error ? err.message : String(err)}`);
+        }
       }
-      await updateJobRawData(job.id, rawData);
 
-      // 2a. Rule-based classify (fast, free)
-      await updateJobStatus(job.id, 'classifying');
-      const classified = classify(rawData);
-      request.log.info({ migrationStep: 'classify', churchName: classified.churchInfo.name, ytVideos: rawData.youtubeVideos.length }, 'Migration: thin classify complete');
-
-      // 2b. Phase 12-γ.4 — LLM enrichment pass. Reads every page +
-      // every WP post, sends to Gemini for structured classification,
-      // merges into ClassifiedData without overwriting rule-based hits.
-      // Silent skip if GEMINI_API_KEY isn't configured OR useLlm=false.
-      // See [[project_migration_ai_classifier]].
-      const llmStart = Date.now();
-      const llmStats = useLlm
-        ? await applyLlmClassification(classified, rawData)
-        : { pagesProcessed: 0, llmAdded: 0, breakdown: {}, warnings: [] };
-      request.log.info({
-        migrationStep: 'llm',
-        tookMs: Date.now() - llmStart,
-        useLlm,
-        pagesProcessed: llmStats.pagesProcessed,
-        llmAdded: llmStats.llmAdded,
-        breakdown: llmStats.breakdown,
-        warningCount: llmStats.warnings?.length ?? 0,
-      }, 'Migration: LLM classification complete');
-      // Per-warning log lines so we can see them at a glance.
-      for (const w of (llmStats.warnings ?? []).slice(0, 30)) {
-        request.log.warn({ migrationStep: 'llm-warn' }, w);
-      }
+      // Surface the same fields the dialog used to read so its UI stays
+      // backwards-compatible.
+      const llmStats = {
+        pagesProcessed: agentIterations,
+        llmAdded: 0,
+        breakdown: Object.fromEntries(
+          agentToolCalls.reduce<Map<string, number>>((acc, t) => {
+            acc.set(t.name, (acc.get(t.name) ?? 0) + 1);
+            return acc;
+          }, new Map()).entries(),
+        ),
+        warnings: agentWarnings,
+      };
 
       await updateJobClassifiedData(job.id, classified);
 
@@ -326,7 +372,7 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
             menus: classified.menus.length,
             pages: classified.pageContents.length,
             images: classified.images.length,
-            youtubeVideos: rawData.youtubeVideos.length,
+            youtubeVideos: body.youtubeChannelUrl ? classified.sermons.filter((s) => s.youtubeUrl).length : 0,
             // Phase 12-γ.2: count of SEO fields populated (out of 7).
             // Operator can see at-a-glance whether source site had usable
             // meta. See project_migration_seo_extraction.
