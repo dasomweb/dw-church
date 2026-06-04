@@ -215,6 +215,11 @@ export async function extractFromHtml(
   const fullHtml = await bodyRes.text();
   const navUrls = discoverNavLinks(fullHtml, baseUrl);
 
+  // Phase 12-γ.6 (2026-06-04) — diagnostic: surface crawler stats so we
+  // can see why migration runs that should have 19 pages end up with 1.
+  // Was silently swallowing per-page fetch failures in the loop below.
+  console.log(`[crawler] mainPage.links=${mainPage.links.length}, navUrls=${navUrls.length}, mainPage.textContent.length=${mainPage.textContent.length}`);
+
 
   const urlsToFetch = new Set<string>(navUrls);
   for (const link of mainPage.links) {
@@ -227,16 +232,22 @@ export async function extractFromHtml(
 
   // Fetch sub-pages with rate limiting
   const pages: RawPage[] = [mainPage];
+  console.log(`[crawler] urlsToFetch=${urlsToFetch.size} candidates after dedup`);
+  let fetched = 0;
+  let failed = 0;
   for (const url of urlsToFetch) {
     if (pages.length >= maxPages) break;
     try {
       await sleep(500);
       const page = await fetchPage(url);
       pages.push(page);
-    } catch {
-      // Skip failed pages
+      fetched++;
+    } catch (err) {
+      failed++;
+      console.log(`[crawler] fetch failed: ${url} - ${err instanceof Error ? err.message : String(err)}`);
     }
   }
+  console.log(`[crawler] total pages=${pages.length} (mainPage + ${fetched} sub-pages, ${failed} failed)`);
 
   return {
     source: {

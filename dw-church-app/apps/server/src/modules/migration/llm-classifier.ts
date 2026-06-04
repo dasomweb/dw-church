@@ -275,13 +275,21 @@ ${bodyText}`;
         signal: ctrl.signal,
       },
     );
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      console.log(`[llm] ${url} HTTP ${res.status}: ${errBody.slice(0, 500)}`);
+      return null;
+    }
     const data = await res.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) return null;
+    if (!text) {
+      console.log(`[llm] ${url} empty response: ${JSON.stringify(data).slice(0, 500)}`);
+      return null;
+    }
     const parsed = JSON.parse(text) as LlmPageResult;
     return parsed;
-  } catch {
+  } catch (err) {
+    console.log(`[llm] ${url} exception: ${err instanceof Error ? err.message : String(err)}`);
     return null;
   } finally {
     clearTimeout(timer);
