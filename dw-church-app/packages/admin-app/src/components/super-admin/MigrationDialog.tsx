@@ -13,7 +13,7 @@
  * "초기 1회" 작업이라 모든 plan 에서 슈퍼어드민이 실행 가능. Basic 의
  * page-add gate 와 무관.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuthStore } from '../../stores/auth';
 import { useToast } from '../index';
 
@@ -77,6 +77,22 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
   const [useLlm, setUseLlm] = useState(true);
   const toggleDynamic = (key: string) =>
     setDynamicSelections((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  // Reset state whenever the dialog opens for a different tenant.
+  // Without this, switching tenants kept the previous tenant's URL /
+  // YouTube / selections — bethelfaith inputs showed up in lagrangechurch.
+  useEffect(() => {
+    if (!open) return;
+    setSourceUrl('');
+    setYoutubeUrl('');
+    setResult(null);
+    setError(null);
+    setDynamicSelections({
+      sermons: false, bulletins: false, columns: false, events: false,
+      albums: false, staff: false, boards: false,
+    });
+    setUseLlm(true);
+  }, [open, tenant.id]);
 
   if (!open) return null;
 
