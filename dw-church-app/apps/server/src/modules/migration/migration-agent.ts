@@ -266,12 +266,12 @@ You have at most ${MAX_ITERATIONS} tool calls. Use them. Don't give up early.`,
       let parsedText = false;
       for (const part of response.parts) {
         if ('text' in part && part.text) {
-          try {
-            const parsed = JSON.parse(stripJsonFence(part.text));
+          const parsed = parseAgentJson(part.text);
+          if (parsed) {
             mergeAgentResult(data, parsed);
             committed = true;
             parsedText = true;
-          } catch {
+          } else {
             warnings.push(`agent ended without commit; final text: ${part.text.slice(0, 200)}`);
           }
         }
@@ -501,7 +501,12 @@ async function callGemini(history: Array<{ role: string; parts: unknown[] }>): P
         body: JSON.stringify({
           contents: history,
           tools: TOOL_DECLARATIONS,
-          generationConfig: { temperature: 0.2, maxOutputTokens: 4096 },
+          // A full-site ClassifiedData payload (churchInfo + pageContents
+          // blocks + worshipTimes + menus + …) easily exceeds 4096 tokens.
+          // At 4096 the commit_result args / final JSON got truncated →
+          // empty commit or unparseable text. gemini-2.5-flash allows far
+          // more, so give it ample room.
+          generationConfig: { temperature: 0.2, maxOutputTokens: 16384 },
         }),
       },
     );
@@ -565,6 +570,29 @@ function countIncoming(payload: Record<string, unknown> | undefined): number {
 
 function stripJsonFence(s: string): string {
   return s.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
+}
+
+// Gemini sometimes returns the ClassifiedData as text instead of a
+// commit_result function call — wrapped in a ```json fence, occasionally with
+// leading prose ("Here is the data:"). Parse defensively: try the fence-strip
+// first, then fall back to the widest {…} substring. Returns null if neither
+// yields valid JSON (e.g. truncated output).
+function parseAgentJson(text: string): Record<string, unknown> | null {
+  const candidates: string[] = [];
+  const fenced = stripJsonFence(text);
+  candidates.push(fenced);
+  const first = text.indexOf('{');
+  const last = text.lastIndexOf('}');
+  if (first !== -1 && last > first) candidates.push(text.slice(first, last + 1));
+  for (const c of candidates) {
+    try {
+      const parsed = JSON.parse(c);
+      if (parsed && typeof parsed === 'object') return parsed as Record<string, unknown>;
+    } catch {
+      /* try next candidate */
+    }
+  }
+  return null;
 }
 
 function resolveUrl(base: string, relative: string): string {
