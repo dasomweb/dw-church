@@ -150,16 +150,22 @@ You have at most ${MAX_ITERATIONS} tool calls. Use them. Don't give up early.`,
     if (name === 'fetch_url') {
       const url = String(args.url ?? '');
       if (!url) return { error: 'url required' };
-      return await fetchUrl(url);
+      const result = await fetchUrl(url);
+      onProgress?.(`result:fetch_url status=${result.status} textLen=${result.textLength} linkCount=${Array.isArray(result.links) ? result.links.length : 0}`);
+      return result;
     }
     if (name === 'fetch_sitemap') {
       const baseUrl = String(args.baseUrl ?? sourceUrl);
-      return await fetchSitemap(baseUrl);
+      const result = await fetchSitemap(baseUrl);
+      onProgress?.(`result:fetch_sitemap count=${result.count ?? 0} err=${result.error ?? 'none'}`);
+      return result;
     }
     if (name === 'try_wp_rest') {
       const baseUrl = String(args.baseUrl ?? sourceUrl);
       const endpoint = String(args.endpoint ?? '/wp-json/wp/v2/posts');
-      return await tryWpRest(baseUrl, endpoint);
+      const result = await tryWpRest(baseUrl, endpoint);
+      onProgress?.(`result:try_wp_rest endpoint=${endpoint} status=${result.status ?? 'fail'} total=${result.total ?? 0}`);
+      return result;
     }
     if (name === 'try_youtube_channel') {
       const channelUrl = String(args.channelUrl ?? youtubeChannelUrl ?? '');
@@ -167,8 +173,16 @@ You have at most ${MAX_ITERATIONS} tool calls. Use them. Don't give up early.`,
       return await tryYoutubeChannel(channelUrl);
     }
     if (name === 'commit_result') {
-      mergeAgentResult(data, args.classifiedData as Record<string, unknown>);
-      return { ok: true, committed: countTotals(data) };
+      const payload = args.classifiedData as Record<string, unknown>;
+      // Count incoming items so we can see whether Gemini built a real
+      // payload or just empty arrays (the silent-failure path).
+      const itemCount = countIncoming(payload);
+      onProgress?.(`commit_result.payload itemCount=${itemCount} keys=${Object.keys(payload ?? {}).join(',')}`);
+      if (itemCount === 0) {
+        warnings.push(`commit_result with 0 items — Gemini gave up. Keys it emitted: ${Object.keys(payload ?? {}).join(',')}`);
+      }
+      mergeAgentResult(data, payload);
+      return { ok: true, committed: countTotals(data), itemCountInPayload: itemCount };
     }
     return { error: `unknown tool: ${name}` };
   }
@@ -499,6 +513,18 @@ function countTotals(data: ClassifiedData): number {
     + data.events.length + data.albums.length + data.staff.length
     + data.history.length + data.worshipTimes.length + data.pageContents.length
     + data.boards.reduce((s, b) => s + b.posts.length, 0);
+}
+
+/** Sum of array lengths across whatever payload Gemini sent. Used to
+ *  detect 'agent gave up with empty arrays' as opposed to 'agent
+ *  extracted real data'. */
+function countIncoming(payload: Record<string, unknown> | undefined): number {
+  if (!payload) return 0;
+  let count = 0;
+  for (const v of Object.values(payload)) {
+    if (Array.isArray(v)) count += v.length;
+  }
+  return count;
 }
 
 function stripJsonFence(s: string): string {
