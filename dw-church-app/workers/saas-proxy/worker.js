@@ -77,15 +77,34 @@ export default {
       }
       const targetUrl = incoming.searchParams.get('url');
       if (!targetUrl) return new Response('missing url param', { status: 400 });
+      // UA fallback: sites split into two camps —
+      //   (a) block bots/datacenter, allow real browsers (Cloudflare/Sucuri)
+      //   (b) block generic browsers, allow Googlebot (verified live on
+      //       lagrangechurch.org — WPMU DEV hosting returns a static 403 to
+      //       every non-crawler UA, including residential IPs, but 200 to
+      //       Googlebot since it does NOT reverse-DNS-verify the crawler).
+      // Try the browser UA first; if the origin hard-blocks it (403/401/429),
+      // retry as Googlebot. Whichever returns a non-block status wins.
+      const UAS = [
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+      ];
+      const BLOCK_STATUSES = new Set([401, 403, 429]);
       try {
-        const upstreamRes = await fetch(targetUrl, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,application/json;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'ko-KR,ko;q=0.9,en;q=0.8',
-          },
-          redirect: 'follow',
-        });
+        let upstreamRes = null;
+        let usedUa = '';
+        for (const ua of UAS) {
+          usedUa = ua;
+          upstreamRes = await fetch(targetUrl, {
+            headers: {
+              'User-Agent': ua,
+              Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,application/json;q=0.9,*/*;q=0.8',
+              'Accept-Language': 'ko-KR,ko;q=0.9,en;q=0.8',
+            },
+            redirect: 'follow',
+          });
+          if (!BLOCK_STATUSES.has(upstreamRes.status)) break; // success → stop
+        }
         const ct = upstreamRes.headers.get('content-type') || 'text/plain';
         return new Response(upstreamRes.body, {
           status: upstreamRes.status,
@@ -93,6 +112,7 @@ export default {
             'content-type': ct,
             'x-proxy-source': new URL(targetUrl).host,
             'x-proxy-upstream-status': String(upstreamRes.status),
+            'x-proxy-ua': usedUa.includes('Googlebot') ? 'googlebot' : 'browser',
           },
         });
       } catch (err) {

@@ -4,7 +4,24 @@
 
 ---
 
-## ⚠️ 2026-06-05 정정 (이전 진단이 틀렸음 — 먼저 읽을 것)
+## ✅ 2026-06-05 해결됨 (egress 블로커 제거)
+
+**원인:** lagrangechurch.org (WPMU DEV Hosting) 는 IP 가 아니라 **User-Agent 문자열**로 차단. 일반 브라우저 UA = 403, **Googlebot UA = 200** (역방향 DNS 검증 안 함 → residential·데이터센터 무관하게 UA만 보면 통과).
+
+**수정:** Cloudflare Worker `/__migration_proxy` 에 **UA 폴백** 추가 — 브라우저 UA 먼저 시도, 403/401/429 면 Googlebot UA 로 재시도. (worker.js, 배포 완료 Version `4a511c12`)
+
+**검증 (배포 후 라이브):**
+```
+proxy → lagrangechurch.org/                       200  112174b  x-proxy-ua: googlebot
+proxy → lagrangechurch.org/wp-json/wp/v2/posts    200   51975b  x-proxy-ua: googlebot
+proxy → example.com (대조군, 회귀 없음)            200     528b  x-proxy-ua: browser
+```
+
+→ ScraperAPI/ZenRows/BrightData (옵션 A~C) **불필요**. 이제 agent 파이프라인을 실제 사이트로 검증 가능. **다음 세션 첫 작업: lagrangechurch.org 로 전체 마이그레이션 end-to-end 최초 실행 + 적용 결과 검증.**
+
+---
+
+## ⚠️ 2026-06-05 정정 (이전 IP-WAF 진단이 틀렸음 — 위 해결 내역과 함께 읽을 것)
 
 이전 세션의 "SiteGround WAF가 데이터센터 IP 차단" 진단은 **틀렸습니다.** 다음 세션에서 라이브로 재검증한 결과:
 
