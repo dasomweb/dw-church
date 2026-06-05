@@ -89,13 +89,17 @@ export default {
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
       ];
-      const BLOCK_STATUSES = new Set([401, 403, 429]);
       try {
+        // Success = HTTP 200 ONLY. Anti-bot layers return not just 403/401/429
+        // but also 202 with an empty body (an async-challenge stub) from some
+        // egress IPs — treating 202 as success returns an empty page and skips
+        // the Googlebot fallback. So we retry on anything that is not a 200,
+        // and keep the first 200 we get (else the last response we saw).
         let upstreamRes = null;
+        let firstResp = null;
         let usedUa = '';
         for (const ua of UAS) {
-          usedUa = ua;
-          upstreamRes = await fetch(targetUrl, {
+          const resp = await fetch(targetUrl, {
             headers: {
               'User-Agent': ua,
               Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,application/json;q=0.9,*/*;q=0.8',
@@ -103,8 +107,11 @@ export default {
             },
             redirect: 'follow',
           });
-          if (!BLOCK_STATUSES.has(upstreamRes.status)) break; // success → stop
+          if (!firstResp) firstResp = resp; // remember fallback to return
+          if (resp.status === 200) { upstreamRes = resp; usedUa = ua; break; }
+          usedUa = ua;
         }
+        if (!upstreamRes) upstreamRes = firstResp; // no 200 from any UA
         const ct = upstreamRes.headers.get('content-type') || 'text/plain';
         return new Response(upstreamRes.body, {
           status: upstreamRes.status,

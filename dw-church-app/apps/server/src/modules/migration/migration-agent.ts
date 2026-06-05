@@ -220,6 +220,12 @@ You have at most ${MAX_ITERATIONS} tool calls. Use them. Don't give up early.`,
   // ── The agent loop ──
   let iterations = 0;
   let committed = false;
+  // Gemini sometimes returns an empty turn (no functionCall, no text) before
+  // it has committed — especially after a long crawl. Rather than give up and
+  // discard everything gathered so far, nudge it to commit. Capped so a model
+  // that refuses can't spin the loop forever.
+  let forcedCommitNudges = 0;
+  const MAX_FORCED_COMMIT_NUDGES = 2;
   while (iterations < MAX_ITERATIONS && !committed) {
     iterations++;
     const response = await callGemini(history);
@@ -257,16 +263,30 @@ You have at most ${MAX_ITERATIONS} tool calls. Use them. Don't give up early.`,
 
     if (!hadFunctionCall) {
       // No tool call — Gemini's done, try to parse text as final result.
+      let parsedText = false;
       for (const part of response.parts) {
         if ('text' in part && part.text) {
           try {
             const parsed = JSON.parse(stripJsonFence(part.text));
             mergeAgentResult(data, parsed);
             committed = true;
+            parsedText = true;
           } catch {
             warnings.push(`agent ended without commit; final text: ${part.text.slice(0, 200)}`);
           }
         }
+      }
+      // Empty/non-JSON turn without a commit → don't discard the crawl.
+      // Force a commit_result and keep looping (bounded).
+      if (!committed && !parsedText && forcedCommitNudges < MAX_FORCED_COMMIT_NUDGES) {
+        forcedCommitNudges++;
+        history.push({
+          role: 'user',
+          parts: [{
+            text: `STOP investigating. You have already fetched the source pages — their full text is in this conversation above. Call commit_result NOW with a populated ClassifiedData built from what you gathered: map page bodies into pageContents (담임목사 인사말 → pastor_message, 교회 소개/비전 → church_intro/mission_vision, 오시는 길 → location_map, 연락처 → contact_info), worshipTimes from any 예배 시간표, churchInfo (name/address/phone), and menus from the nav links. Use empty arrays ONLY for content types that genuinely do not exist on this site. Do not reply with prose — emit the commit_result function call.`,
+          }],
+        });
+        continue;
       }
       break;
     }
