@@ -2,9 +2,31 @@
 
 > 다른 세션에서 이어 작업할 때 이 문서부터 읽고 시작.
 
-## 한 줄 요약
+---
 
-Agent 아키텍처 + Cloudflare Worker 프록시까지 모두 구현 완료. **유일한 남은 블로커: 한국 교회 사이트(SiteGround 호스팅)의 WAF가 데이터센터 IP를 전부 차단** — Railway + Cloudflare Worker 출고 IP 모두 403. 운영자가 우회 경로 선택 필요.
+## ⚠️ 2026-06-05 정정 (이전 진단이 틀렸음 — 먼저 읽을 것)
+
+이전 세션의 "SiteGround WAF가 데이터센터 IP 차단" 진단은 **틀렸습니다.** 다음 세션에서 라이브로 재검증한 결과:
+
+- 403 페이지는 **WPMU DEV Hosting** 플랫폼의 잠금 페이지 ("Access to this page is forbidden", cloud-blue 자물쇠 일러스트). SiteGround 아님.
+- `lagrangechurch.org` 와 `bethelfaith.com` 이 **바이트 단위로 동일한** 403 반환 (`Host-Header: 8441280b0c35cbc1147f8ba998a563a7`, `Content-Length: 75193`, `Server: nginx`). 두 사이트의 WAF가 아니라 **한 플랫폼의 catch-all 403**.
+- DNS → `35.212.42.219` (Google Cloud = WPMU DEV 인프라).
+- **개발 PC의 가정용(residential) IP + 브라우저 UA 로도 동일한 403.** → IP 기반 차단이 아님. 실제 사람이 브라우저로 봐도 이 403이 나옴.
+- lagrangechurch.org 의 Wayback 최신 스냅샷은 **2014년**.
+
+**결론:** 이 테스트 URL들은 *누구에게도* 콘텐츠를 서빙하지 않음 (parked/suspended/잠금 상태로 추정). 따라서:
+
+- ❌ **ScraperAPI / ZenRows / BrightData (옵션 A~C) 사면 안 됨** — residential 출고도 동일하게 403. 돈 낭비 ($최대 150/mo).
+- ❌ worker.js 에 브라우저 헤더 추가해도 소용 없음 (residential+브라우저UA 이미 403).
+- ✅ 진짜 블로커: **도달 가능한 실제 마이그레이션 대상 사이트가 없음.** Agent 파이프라인은 코드만 있고 한 번도 실제 사이트로 검증 못 함.
+
+**다음 세션 첫 행동:** 운영자에게 *실제로 살아있는* 소스 URL 받기 → 그걸로 agent 파이프라인 최초 검증. (재현: `curl -sI https://lagrangechurch.org` → `403 ... Host-Header: 8441280b...`)
+
+---
+
+## 한 줄 요약 (이전 세션 작성 — ⚠️ 위 정정 참고)
+
+Agent 아키텍처 + Cloudflare Worker 프록시까지 모두 구현 완료. ~~유일한 남은 블로커: 한국 교회 사이트(SiteGround 호스팅)의 WAF가 데이터센터 IP를 전부 차단~~ (← 틀림, 위 정정 참고).
 
 ## 현재 동작 상태
 
