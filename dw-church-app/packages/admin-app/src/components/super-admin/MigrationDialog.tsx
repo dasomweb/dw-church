@@ -96,8 +96,22 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
 
   if (!open) return null;
 
+  // migrate-url runs extract → classify → apply synchronously and takes
+  // 60-120s (waits on the LLM agent). Cloudflare's proxy enforces a ~100s
+  // origin timeout → the browser request is dropped mid-flight and surfaces
+  // as "Failed to fetch". So this one call must SKIP Cloudflare and hit
+  // Railway directly. Resolution: explicit override → Railway-direct domain
+  // for prod admin → legacy api.{tail} fallback (dev / other hosts).
   const baseUrl = (() => {
+    const override = (import.meta.env.VITE_MIGRATION_DIRECT_BASE_URL as string)
+      || (import.meta.env.VITE_PLANNER_DIRECT_BASE_URL as string) || '';
+    if (override) return override;
     const host = typeof window !== 'undefined' ? window.location.hostname : '';
+    // Production admin → api-server's Railway-direct domain (no Cloudflare edge,
+    // verified to carry 100s+ requests without a 524). Server: railway-hikari.
+    if (host === 'admin.truelight.app') {
+      return 'https://api-server-production-c612.up.railway.app';
+    }
     return host.startsWith('admin.')
       ? `https://api.${host.replace('admin.', '')}`
       : (import.meta.env.VITE_API_BASE_URL as string) || '';
