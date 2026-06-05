@@ -329,9 +329,10 @@ export async function applyPageContent(
     );
     const nextOrder = ((maxOrder[0]?.max) ?? 0) + 1;
 
+    // pages has no is_visible column — visibility is the status field.
     const newPage = await prisma.$queryRawUnsafe<{ id: string }[]>(
-      `INSERT INTO "${schema}".pages (title, slug, sort_order, is_visible)
-       VALUES ($1, $2, $3, true)
+      `INSERT INTO "${schema}".pages (title, slug, sort_order, status)
+       VALUES ($1, $2, $3, 'published')
        RETURNING id`,
       wpContent.title,
       wpContent.slug,

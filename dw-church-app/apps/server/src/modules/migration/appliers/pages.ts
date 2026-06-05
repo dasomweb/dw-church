@@ -34,9 +34,11 @@ export async function applyPageContents(
     );
     if (pages.length === 0) {
       const title = inferPageTitle(page.pageSlug);
+      // pages has no is_visible column — visibility is controlled by status
+      // ('published'). is_visible belongs to page_sections (see below).
       pages = await prisma.$queryRawUnsafe<{ id: string }[]>(
-        `INSERT INTO "${schema}".pages (slug, title, sort_order, is_visible)
-         VALUES ($1, $2, COALESCE((SELECT MAX(sort_order) + 1 FROM "${schema}".pages), 0), true)
+        `INSERT INTO "${schema}".pages (slug, title, sort_order, status)
+         VALUES ($1, $2, COALESCE((SELECT MAX(sort_order) + 1 FROM "${schema}".pages), 0), 'published')
          RETURNING id`,
         page.pageSlug,
         title,
