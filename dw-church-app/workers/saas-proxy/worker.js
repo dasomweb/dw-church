@@ -56,6 +56,50 @@ export default {
     const incoming = new URL(request.url);
     const fallbackOrigin = env.FALLBACK_ORIGIN || 'customers.truelight.app';
 
+    // ── Migration egress proxy (added 2026-06-05) ──────────────
+    // Many Korean church sites (SiteGround / Sucuri / Cloudflare-fronted
+    // WordPress) block AWS / Railway IP ranges. Our api-server can't
+    // fetch them directly. This endpoint lets api-server bounce its
+    // outbound through Cloudflare's IPs (which are essentially never
+    // blocked because they're the CDN-of-record for those very sites).
+    //
+    // Auth: X-Tenant-Verify header must equal SAAS_PROXY_SECRET — same
+    // secret used for tenant-host trust. Without it the endpoint becomes
+    // an open proxy (abuse vector); with it, only our api-server (which
+    // shares the secret) can use it.
+    //
+    // Usage: GET https://api.truelight.app/__migration_proxy?url=<encoded>
+    //        Headers: X-Tenant-Verify: <SAAS_PROXY_SECRET>
+    // Response: pass-through of upstream status + body + content-type.
+    if (incoming.pathname === '/__migration_proxy' && incoming.hostname === 'api.truelight.app') {
+      if (request.headers.get('x-tenant-verify') !== env.SAAS_PROXY_SECRET) {
+        return new Response('unauthorized', { status: 401 });
+      }
+      const targetUrl = incoming.searchParams.get('url');
+      if (!targetUrl) return new Response('missing url param', { status: 400 });
+      try {
+        const upstreamRes = await fetch(targetUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,application/json;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'ko-KR,ko;q=0.9,en;q=0.8',
+          },
+          redirect: 'follow',
+        });
+        const ct = upstreamRes.headers.get('content-type') || 'text/plain';
+        return new Response(upstreamRes.body, {
+          status: upstreamRes.status,
+          headers: {
+            'content-type': ct,
+            'x-proxy-source': new URL(targetUrl).host,
+            'x-proxy-upstream-status': String(upstreamRes.status),
+          },
+        });
+      } catch (err) {
+        return new Response(`proxy error: ${String(err)}`, { status: 502 });
+      }
+    }
+
     // Platform hosts pass through unchanged — Railway has certs for them.
     // Required also to prevent infinite loop on customers.truelight.app
     // (where the proxied outbound lands).

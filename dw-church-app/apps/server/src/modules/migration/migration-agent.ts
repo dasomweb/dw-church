@@ -32,6 +32,36 @@ const FETCH_TIMEOUT_MS = 25_000;
 const BROWSER_UA =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 ' +
   '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+// Cloudflare Worker proxy endpoint — when SAAS_PROXY_SECRET is set,
+// outbound fetches go through here instead of direct. Cloudflare's
+// IPs are essentially never blocked by the SiteGround / Sucuri /
+// Cloudflare-fronted WordPress installs that block Railway's AWS IPs.
+const PROXY_ENDPOINT = 'https://api.truelight.app/__migration_proxy';
+
+/**
+ * Fetch through the Cloudflare Worker proxy when configured, else
+ * direct. Returns the response object — caller reads .text() / .json().
+ */
+async function proxiedFetch(targetUrl: string, init: RequestInit & { signal?: AbortSignal } = {}): Promise<Response> {
+  const secret = env.SAAS_PROXY_SECRET;
+  if (!secret) {
+    // No proxy configured — direct fetch with browser headers.
+    return await fetch(targetUrl, {
+      ...init,
+      headers: {
+        'User-Agent': BROWSER_UA,
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,application/json;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'ko-KR,ko;q=0.9,en;q=0.8',
+        ...(init.headers ?? {}),
+      },
+    });
+  }
+  const proxyUrl = `${PROXY_ENDPOINT}?url=${encodeURIComponent(targetUrl)}`;
+  return await fetch(proxyUrl, {
+    ...init,
+    headers: { 'X-Tenant-Verify': secret, ...(init.headers ?? {}) },
+  });
+}
 
 interface AgentResult {
   data: ClassifiedData;
@@ -259,15 +289,7 @@ async function fetchUrl(url: string): Promise<Record<string, unknown>> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
   try {
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': BROWSER_UA,
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'ko-KR,ko;q=0.9,en;q=0.8',
-      },
-      redirect: 'follow',
-      signal: ctrl.signal,
-    });
+    const res = await proxiedFetch(url, { redirect: 'follow', signal: ctrl.signal });
     const html = await res.text();
     const headers = Object.fromEntries(res.headers.entries());
     // Extract a digest that's small enough to pass back to Gemini.
@@ -326,10 +348,7 @@ async function fetchSitemap(baseUrl: string): Promise<Record<string, unknown>> {
     try {
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 10_000);
-      const res = await fetch(url, {
-        headers: { 'User-Agent': BROWSER_UA },
-        signal: ctrl.signal,
-      });
+      const res = await proxiedFetch(url, { signal: ctrl.signal });
       clearTimeout(timer);
       if (!res.ok) continue;
       const xml = await res.text();
@@ -354,10 +373,7 @@ async function tryWpRest(baseUrl: string, endpoint: string): Promise<Record<stri
   try {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 15_000);
-    const res = await fetch(url, {
-      headers: { 'User-Agent': BROWSER_UA, Accept: 'application/json' },
-      signal: ctrl.signal,
-    });
+    const res = await proxiedFetch(url, { signal: ctrl.signal });
     clearTimeout(timer);
     if (!res.ok) return { url, status: res.status, error: `HTTP ${res.status}` };
     const json = await res.json();
