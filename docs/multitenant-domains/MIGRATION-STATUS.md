@@ -4,6 +4,36 @@
 
 ---
 
+## 🎉 2026-06-05 END-TO-END 작동 (실제 사이트 최초 검증 완료)
+
+lagrangechurch.org 기준 fetch → AI 추출 → commit_result → applyAll 전 과정 성공:
+```
+applyResult:     pages 4, settings 10, worshipTimes 9, images 3
+classifiedCounts: columns 26, events 4, staff 2, pages 4, seoFieldsFilled 4
+llmBreakdown:    commit_result 1   llmWarnings: []   (경고 0)
+```
+(columns/events/staff는 추출됐지만 include:static이라 미적용 — 동적은 opt-in.)
+
+여기까지 오는 데 고친 것 (모두 main에 커밋, 라이브):
+1. Worker UA 폴백 (202/Googlebot) — 200만 성공으로 인정, 그 외 Googlebot 재시도
+2. Agent: 빈 응답 시 commit 강제 넛지 (크롤 결과 폐기 방지)
+3. Gemini maxOutputTokens 4096→16384 + parseAgentJson (잘린/펜스 JSON 복구)
+4. pages applier: 없는 컬럼 is_visible → status='published' (Postgres 42703 해결)
+
+### ⚙️ 배포 방법 (중요 — 다음 세션 반드시 숙지)
+- api-server 서비스 **Root Directory = `dw-church-app`** (대시보드 설정됨)
+- 따라서 빌드 컨텍스트는 repo 안의 `dw-church-app/` 하위폴더여야 함
+- **CLI 배포는 반드시 repo 루트에서**: `cd h:/GitHub/dw-church && railway up --service api-server --ci`
+  (dw-church-app 안에서 railway up 하면 아카이브에 dw-church-app/ 폴더가 없어
+   "lstat .../dw-church-app: no such file or directory"로 실패함)
+- GitHub 네이티브 통합도 켜져 있으나 **BuildKit 캐시 결함으로 간헐 실패**
+  ("failed to calculate checksum ... /apps/demo/package.json: not found" —
+   파일은 git에 정상 존재, Railway 빌더 캐시 문제). 재시도하면 통과하지만
+   불안정. 확실히 올리려면 위 CLI 방법 사용.
+- RAILWAY_TOKEN 기반 GitHub Actions 배포는 **폐기**(토큰 만료 반복).
+
+---
+
 ## ✅ 2026-06-05 해결됨 (egress 블로커 제거)
 
 **원인:** lagrangechurch.org (WPMU DEV Hosting) 는 IP 가 아니라 **User-Agent 문자열**로 차단. 일반 브라우저 UA = 403, **Googlebot UA = 200** (역방향 DNS 검증 안 함 → residential·데이터센터 무관하게 UA만 보면 통과).
