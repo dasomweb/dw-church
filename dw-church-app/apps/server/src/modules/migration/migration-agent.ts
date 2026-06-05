@@ -69,34 +69,78 @@ export async function runMigrationAgent(
   const history: Content[] = [{
     role: 'user',
     parts: [{
-      text: `You are a Korean-church website migration agent. Your job: given
-the source URL ${sourceUrl}${youtubeChannelUrl ? ` and YouTube channel ${youtubeChannelUrl}` : ''},
-investigate the site using the provided tools and accumulate
-ClassifiedData (pastor greeting, vision, worship times, sermons,
-bulletins, columns, events, albums, staff, history, board posts, etc.).
+      text: `You are a Korean-church website migration agent. Source: ${sourceUrl}${youtubeChannelUrl ? `, YouTube channel: ${youtubeChannelUrl}` : ''}.
 
-Strategy hints (you decide):
-  - Start broad: try fetch_sitemap; if successful, use the URLs to pick
-    pages worth fetching. If sitemap is missing, fetch_url the homepage
-    and read its links.
-  - If the homepage HTML mentions wp-json or /wp-content, the site is
-    likely WordPress — try_wp_rest can pull /wp-json/wp/v2/posts directly.
-  - When you have enough material, call the final tool 'commit_result'
-    with the full ClassifiedData JSON. Don't keep fetching forever.
-  - You have at most ${MAX_ITERATIONS} tool calls total.
+GOAL: investigate the source and call commit_result with a populated
+ClassifiedData JSON.
 
-Korean church content type cues:
-  - 설교/sermon: page lists sermons with date + speaker
-  - 주보/jubo/bulletin: weekly PDF or post
-  - 칼럼/column: pastoral writing
-  - 행사/notice/news: announcements, events
-  - 교역자/staff: pastors / leaders
-  - 인사말/greeting: pastor's welcome message
-  - 비전/vision: church's mission statement
-  - 예배/worship: service times
-  - 연혁/history: timeline of church milestones
+CRITICAL RULES — follow these or migration fails:
 
-When you commit_result, you're done. Don't ask for confirmation.`,
+1. NEVER commit_result with empty arrays unless you have EXHAUSTED all
+   fetch strategies. Empty result = failure.
+
+2. ALWAYS try multiple strategies before giving up. If fetch_url returns
+   small text (textLength < 500), HTTP 202/403/429, or 'no body', the
+   site is fronted by a CDN/anti-bot AND you MUST try:
+     (a) try_wp_rest with endpoint '/wp-json/wp/v2/posts?per_page=50'
+     (b) try_wp_rest with endpoint '/wp-json/wp/v2/pages?per_page=50'
+     (c) try_wp_rest with endpoint '/wp-json/wp/v2/media?per_page=30'
+     (d) try_wp_rest with endpoint '/wp-json/wp/v2/categories'
+   WP REST often works even when the front-end HTML is blocked.
+
+3. ALWAYS try fetch_sitemap early. If it returns URLs, fetch_url several
+   that look like content pages (greeting/, vision/, jubo/, etc.).
+
+4. Use AT LEAST 8 tool calls before commit_result, unless you've
+   definitively gathered all content.
+
+ClassifiedData EXACT field shape (use these field names — NOT pastorGreeting,
+NOT boardPosts):
+{
+  "churchInfo": { "name": "", "address": "", "phone": "", "email": "",
+    "description": "", "seoTitle": "", "seoDescription": "", "seoKeywords": "",
+    "ogImageUrl": "", "logoUrl": "", "locale": "", "slogan": "" },
+  "sermons": [{ "title": "", "scripture": "", "preacher": "", "date": "",
+    "youtubeUrl": "", "thumbnailUrl": "" }],
+  "bulletins": [{ "title": "", "date": "", "pdfUrl": "", "images": [] }],
+  "columns": [{ "title": "", "content": "", "topImageUrl": "",
+    "youtubeUrl": "", "date": "" }],
+  "events": [{ "title": "", "description": "", "date": "",
+    "location": "", "imageUrl": "" }],
+  "albums": [{ "title": "", "images": [], "youtubeUrl": "" }],
+  "staff": [{ "name": "", "role": "", "department": "", "photoUrl": "",
+    "bio": "" }],
+  "history": [{ "year": 0, "month": "", "title": "", "description": "" }],
+  "worshipTimes": [{ "name": "", "day": "", "time": "", "location": "" }],
+  "menus": [{ "label": "", "pageSlug": "", "parentLabel": null,
+    "sortOrder": 0 }],
+  "pageContents": [{
+    "pageSlug": "pastor-greeting" | "about" | "vision" | "directions" |
+      "newcomer" | "mission" | "worship" | "history" | "home",
+    "blocks": [{
+      "blockType": "pastor_message" | "church_intro" | "mission_vision" |
+        "location_map" | "contact_info" | "newcomer_info" | "text_image",
+      "props": { ... block-specific ... }
+    }]
+  }],
+  "images": ["url1", "url2"]
+}
+
+Page-content blockType templates (use exact keys):
+  pastor_message → { title, name, message, photoUrl }
+  church_intro   → { title, content, imageUrl }
+  mission_vision → { title, content, imageUrl }
+  location_map   → { title, address }
+  contact_info   → { title, phone, email, address }
+  newcomer_info  → { title, content, imageUrl }
+  text_image     → { title, content, imageUrl }
+
+Korean content type cues for classifying WP posts:
+  설교/sermon, 주보/jubo/bulletin, 칼럼/column, 행사/공지/notice → events,
+  교역자/staff, 인사말/greeting → pastor_greeting page, 비전/vision page,
+  예배/worship → worshipTimes, 연혁/history.
+
+You have at most ${MAX_ITERATIONS} tool calls. Use them. Don't give up early.`,
     }],
   }];
 
