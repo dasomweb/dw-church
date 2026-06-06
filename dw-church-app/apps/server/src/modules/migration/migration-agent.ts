@@ -316,23 +316,41 @@ You have at most ${MAX_ITERATIONS} tool calls. Use them. Don't give up early.`,
   // mode=ANY/commit_result makes Gemini emit commit_result from the page text
   // already in context — it cannot fetch or reply with prose.
   if (!committed) {
-    history.push({
-      role: 'user',
-      parts: [{
-        text: `You are out of investigation turns. Do NOT fetch anything else. Call commit_result NOW with a populated ClassifiedData built from the page text already in this conversation: map page bodies into pageContents (담임목사 인사말 → pastor_message, 교회 소개/비전 → church_intro/mission_vision, 오시는 길 → location_map, 연락처 → contact_info, 새가족 → newcomer_info), worshipTimes from any 예배 시간표, churchInfo (name/address/phone/email), menus from the nav links, and any sermons/columns/events/staff you saw. Empty arrays ONLY for content that genuinely does not exist.`,
-      }],
-    });
-    for (let attempt = 0; attempt < 2 && !committed; attempt++) {
+    // mode=ANY forces the call but Gemini sometimes emits an EMPTY
+    // classifiedData ({}). Reject empty commits and retry with an explicit
+    // checklist of the pages it already fetched, so it has a concrete list to
+    // turn into pageContents instead of giving up.
+    const fetchedUrls = [...new Set(
+      toolCalls
+        .filter((t) => t.name === 'fetch_url')
+        .map((t) => String((t.args as { url?: string }).url ?? ''))
+        .filter(Boolean),
+    )];
+    const checklist = fetchedUrls.slice(0, 25).map((u, i) => `${i + 1}. ${u}`).join('\n');
+    for (let attempt = 0; attempt < 3 && !committed; attempt++) {
+      history.push({
+        role: 'user',
+        parts: [{
+          text: `STOP. Output commit_result NOW with a POPULATED ClassifiedData — an empty {} is a FAILURE and will be rejected. You already fetched these pages (their text is in this conversation above):
+${checklist || '(see the fetched page text above)'}
+
+For EACH content page, add a pageContents entry whose blocks reproduce the layout in order: a hero_banner first (page heading → title, the small line under it → subtitle, the banner background photo → backgroundImageUrl), then one text_image per section (its heading → title, body → content, side image → imageUrl, alternating layout left/right), and image_gallery for image grids. Also fill churchInfo (name/address/phone/email), worshipTimes, menus, and every sermon/column/event/staff/album/bulletin you saw. Do NOT return an empty classifiedData.`,
+        }],
+      });
       const response = await callGemini(history, { forceCommit: true });
       if (!response) break;
       history.push({ role: 'model', parts: response.parts });
       for (const part of response.parts) {
         if ('functionCall' in part && part.functionCall.name === 'commit_result') {
           try {
-            const result = await execTool('commit_result', part.functionCall.args);
-            toolCalls.push({ name: 'commit_result', args: part.functionCall.args, ok: !('error' in result) });
-            committed = true;
-            onProgress?.(`result:forced_commit items=${countTotals(data)}`);
+            const result = await execTool('commit_result', part.functionCall.args) as { itemCountInPayload?: number };
+            toolCalls.push({ name: 'commit_result', args: part.functionCall.args, ok: true });
+            if ((result.itemCountInPayload ?? 0) > 0) {
+              committed = true;
+              onProgress?.(`result:forced_commit items=${countTotals(data)}`);
+            } else {
+              onProgress?.(`result:forced_commit empty (attempt ${attempt + 1})`);
+            }
           } catch (err) {
             warnings.push(`forced commit_result threw: ${err instanceof Error ? err.message : String(err)}`);
           }
