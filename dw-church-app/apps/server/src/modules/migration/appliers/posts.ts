@@ -199,13 +199,18 @@ export async function applyAlbums(
 
   for (const a of albums) {
     const images = (a.images || []).map((url) => urlMap.get(url) || url);
+    // Cover/featured image: gallery cards render thumbnail_url. Without it
+    // they show a placeholder even though images[] is populated. Default it
+    // to the first migrated image.
+    const thumbnail = images[0] || '';
     try {
       await prisma.$queryRawUnsafe(
-        `INSERT INTO "${schema}".albums (title, images, youtube_url, status)
-         VALUES ($1, $2::jsonb, $3, 'published')
+        `INSERT INTO "${schema}".albums (title, images, thumbnail_url, youtube_url, status)
+         VALUES ($1, $2::jsonb, $3, $4, 'published')
          ON CONFLICT DO NOTHING`,
         a.title || '',
         JSON.stringify(images),
+        thumbnail,
         a.youtubeUrl || '',
       );
       count++;
