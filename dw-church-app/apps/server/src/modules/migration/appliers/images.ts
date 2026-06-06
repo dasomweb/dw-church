@@ -32,8 +32,9 @@ async function resizeForR2(
       .webp({ quality: 82 })
       .toBuffer();
     return { buffer: out, contentType: 'image/webp', ext: '.webp' };
-  } catch {
+  } catch (err) {
     // Unreadable/corrupt image — fall back to the original bytes.
+    console.log(`[migration] sharp resize failed (${contentType}): ${err instanceof Error ? err.message : String(err)}`);
     const ext = ct.includes('png') ? '.png' : ct.includes('webp') ? '.webp' : '.jpg';
     return { buffer, contentType, ext };
   }
