@@ -50,46 +50,23 @@ export async function applyPageContents(
 
     const pageId = pages[0]!.id;
 
-    // Get existing sections for this page
-    const sections = await prisma.$queryRawUnsafe<{ id: string; block_type: string; sort_order: number }[]>(
-      `SELECT id, block_type, sort_order FROM "${schema}".page_sections
-       WHERE page_id = $1::uuid ORDER BY sort_order`,
+    // Idempotent re-import: replace the page's sections with the freshly
+    // extracted blocks. Without this, every re-run appended duplicate
+    // hero/text_image sections on top of the previous run. Migration is a
+    // setup step — the operator customizes after — so a clean replace is the
+    // right semantic and keeps repeated 가져오기 runs stable.
+    await prisma.$executeRawUnsafe(
+      `DELETE FROM "${schema}".page_sections WHERE page_id = $1::uuid`,
       pageId,
     );
 
     // Insert the page's blocks IN ORDER so the source layout is reproduced
-    // (hero_banner first, then each image+text / gallery section). hero_banner
-    // and the repeatable layout blocks always create their own section; the
-    // page-level singletons (pastor_message / location_map / contact_info /
-    // newcomer_info) update a pre-seeded section of the same type if one
-    // exists. Track a running sort_order — the old code recomputed max() off
-    // the initial section list every time, so multiple inserted blocks all
-    // collapsed onto the same order.
-    let nextOrder = sections.length > 0
-      ? Math.max(...sections.map((s) => s.sort_order)) + 1
-      : 0;
-    const usedSectionIds = new Set<string>();
-    const REPEATABLE = new Set(['hero_banner', 'text_image', 'image_gallery']);
-
+    // (hero_banner first, then each image+text / gallery section).
+    let nextOrder = 0;
     for (const block of page.blocks) {
       // Replace image URLs (imageUrl/photoUrl/backgroundImageUrl/images…) → R2.
       const props = replaceImageUrls(block.props, urlMap);
-
-      const existing = !REPEATABLE.has(block.blockType)
-        ? sections.find((s) => s.block_type === block.blockType && !usedSectionIds.has(s.id))
-        : undefined;
-
-      if (existing) {
-        await prisma.$queryRawUnsafe(
-          `UPDATE "${schema}".page_sections
-           SET props = props || $1::jsonb, updated_at = NOW()
-           WHERE id = $2::uuid`,
-          JSON.stringify(props),
-          existing.id,
-        );
-        usedSectionIds.add(existing.id);
-        count++;
-      } else {
+      {
         await prisma.$queryRawUnsafe(
           `INSERT INTO "${schema}".page_sections (page_id, block_type, props, sort_order, is_visible)
            VALUES ($1::uuid, $2, $3::jsonb, $4, true)`,
