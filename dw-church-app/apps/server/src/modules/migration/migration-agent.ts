@@ -416,12 +416,35 @@ async function fetchUrl(url: string): Promise<Record<string, unknown>> {
         links.push({ text: linkText, href: resolveUrl(url, href) });
       }
     }
-    const images: string[] = [];
-    const imgRe = /<img[^>]+src=["']([^"']+)["']/gi;
-    while ((m = imgRe.exec(bodyHtml)) !== null && images.length < 40) {
-      const src = m[1] ?? '';
-      if (src && !src.startsWith('data:')) images.push(resolveUrl(url, src));
+    // Comprehensive, GENERIC image discovery so the agent can SEE every image
+    // on the page and decide where each belongs (hero background vs content vs
+    // gallery) — NOT a hardcoded per-theme rule. Source sites are usually
+    // Elementor/WordPress where real images hide in srcset, lazy-load
+    // data-attributes, CSS background-image, and Elementor data-settings JSON
+    // — `<img src>` alone misses hero backgrounds and gallery photos.
+    const imageSet = new Set<string>();
+    const addImg = (raw: string | undefined) => {
+      if (!raw) return;
+      const u = raw.trim().replace(/&amp;/g, '&').replace(/\\\//g, '/');
+      if (!u || u.startsWith('data:') || /\.svg(\?|$)/i.test(u)) return;
+      imageSet.add(resolveUrl(url, u));
+    };
+    // 1. src + lazy-load variants
+    const attrRe = /(?:\bsrc|data-src|data-lazy-src|data-large_image|data-bg|data-background|data-thumb)\s*=\s*["']([^"']+)["']/gi;
+    while ((m = attrRe.exec(html)) !== null) addImg(m[1]);
+    // 2. srcset — each candidate URL (drop the descriptor)
+    const srcsetRe = /srcset\s*=\s*["']([^"']+)["']/gi;
+    while ((m = srcsetRe.exec(html)) !== null) {
+      for (const cand of (m[1] ?? '').split(',')) addImg(cand.trim().split(/\s+/)[0]);
     }
+    // 3. CSS background-image: url(...) in inline styles
+    const bgRe = /background(?:-image)?\s*:\s*[^;"']*url\(\s*['"]?([^'")]+)['"]?\s*\)/gi;
+    while ((m = bgRe.exec(html)) !== null) addImg(m[1]);
+    // 4. Catch-all: any image-extension URL anywhere in the markup. Picks up
+    //    Elementor data-settings JSON ("url":"...jpg"), generated CSS refs, etc.
+    const anyImgRe = /https?:\/\/[^\s"'()<>\\]+\.(?:jpe?g|png|webp|gif)/gi;
+    while ((m = anyImgRe.exec(html)) !== null) addImg(m[0]);
+    const images = [...imageSet];
     return {
       url,
       status: res.status,
@@ -430,7 +453,7 @@ async function fetchUrl(url: string): Promise<Record<string, unknown>> {
       textLength: text.length,
       text,
       links: links.slice(0, 50),
-      images: images.slice(0, 20),
+      images: images.slice(0, 40),
       isWordPress: /wp-content|wp-json|wp-includes/.test(html),
     };
   } catch (err) {
