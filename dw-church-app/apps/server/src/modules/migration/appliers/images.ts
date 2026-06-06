@@ -5,8 +5,39 @@
 
 import { uploadFile as r2Upload } from '../../../config/r2.js';
 import { randomUUID } from 'crypto';
+import sharp from 'sharp';
 
 const USER_AGENT = 'TrueLight-Migration/2.0';
+
+// Max width for migrated raster images. Hero/background photos must come down
+// to 1920px (full-bleed banner width) instead of self-hosting phone-camera
+// originals — storage waste is a hard constraint. Smaller images are left as
+// is (withoutEnlargement). SVG/GIF are passed through untouched (vector /
+// animation would be degraded by a raster+webp re-encode).
+const MAX_WIDTH = 1920;
+
+async function resizeForR2(
+  buffer: Buffer,
+  contentType: string,
+): Promise<{ buffer: Buffer; contentType: string; ext: string }> {
+  const ct = contentType.toLowerCase();
+  if (ct.includes('svg') || ct.includes('gif')) {
+    const ext = ct.includes('svg') ? '.svg' : '.gif';
+    return { buffer, contentType, ext };
+  }
+  try {
+    const out = await sharp(buffer)
+      .rotate() // respect EXIF orientation before stripping metadata
+      .resize({ width: MAX_WIDTH, withoutEnlargement: true })
+      .webp({ quality: 82 })
+      .toBuffer();
+    return { buffer: out, contentType: 'image/webp', ext: '.webp' };
+  } catch {
+    // Unreadable/corrupt image — fall back to the original bytes.
+    const ext = ct.includes('png') ? '.png' : ct.includes('webp') ? '.webp' : '.jpg';
+    return { buffer, contentType, ext };
+  }
+}
 
 export type ImageUrlMap = Map<string, string>;
 
@@ -27,16 +58,15 @@ export async function migrateImageToR2(
     });
     if (!res.ok) return imageUrl;
 
-    const contentType = res.headers.get('content-type') || 'image/jpeg';
-    const buffer = Buffer.from(await res.arrayBuffer());
+    const srcContentType = res.headers.get('content-type') || 'image/jpeg';
+    const srcBuffer = Buffer.from(await res.arrayBuffer());
 
-    // Skip files > 5MB
-    if (buffer.length > 5 * 1024 * 1024) return imageUrl;
+    // Skip originals > 15MB (raised from 5MB — we downscale, so large source
+    // photos still end up small in R2 after the 1920px/webp pass).
+    if (srcBuffer.length > 15 * 1024 * 1024) return imageUrl;
 
-    const ext = contentType.includes('png') ? '.png'
-      : contentType.includes('webp') ? '.webp'
-      : contentType.includes('gif') ? '.gif'
-      : '.jpg';
+    // Resize to ≤1920px + webp before upload (backgrounds, content, all).
+    const { buffer, contentType, ext } = await resizeForR2(srcBuffer, srcContentType);
     const key = `tenant_${tenantSlug}/migration/${randomUUID()}${ext}`;
     return await r2Upload(key, buffer, contentType);
   } catch {
