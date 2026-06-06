@@ -26,7 +26,11 @@ import type { ClassifiedData } from './types.js';
 import { emptyClassifiedData } from './types.js';
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta';
-const MODEL = 'gemini-2.5-flash';
+// gemini-2.5-pro, not flash: building the full ClassifiedData payload from a
+// long crawl is at the edge of flash's reliability — same input gave 7 pages
+// one run and an empty {} the next. Migration is a one-time setup step, so the
+// extra latency/cost of pro is worth the consistency.
+const MODEL = 'gemini-2.5-pro';
 const MAX_ITERATIONS = 20;        // hard cap on agent loop
 const FETCH_TIMEOUT_MS = 25_000;
 const BROWSER_UA =
