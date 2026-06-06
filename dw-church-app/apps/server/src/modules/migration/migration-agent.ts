@@ -226,7 +226,14 @@ You have at most ${MAX_ITERATIONS} tool calls. Use them. Don't give up early.`,
       const itemCount = countIncoming(payload);
       onProgress?.(`commit_result.payload itemCount=${itemCount} keys=${Object.keys(payload ?? {}).join(',')}`);
       if (itemCount === 0) {
-        warnings.push(`commit_result with 0 items — Gemini gave up. Keys it emitted: ${Object.keys(payload ?? {}).join(',')}`);
+        // REJECT empty commits — don't let Gemini "give up" with empty arrays.
+        // The functionResponse below feeds this message back so it retries.
+        return {
+          ok: false,
+          rejected: true,
+          itemCountInPayload: 0,
+          error: 'REJECTED: classifiedData was empty. You already fetched real pages — their text is in this conversation. Build a real payload now: for each content page add a pageContents entry (hero_banner first using the page heading + banner image, then text_image blocks per section with their heading/body/image), plus churchInfo (name/address/phone/email), worshipTimes, menus, and every sermon/column/event/staff/album/bulletin you saw. Then call commit_result again. Do NOT submit empty arrays.',
+        };
       }
       mergeAgentResult(data, payload);
       return { ok: true, committed: countTotals(data), itemCountInPayload: itemCount };
@@ -266,7 +273,10 @@ You have at most ${MAX_ITERATIONS} tool calls. Use them. Don't give up early.`,
             role: 'function',
             parts: [{ functionResponse: { name, response: result } }],
           });
-          if (name === 'commit_result') committed = true;
+          // Only a NON-empty commit counts. An empty commit is rejected
+          // (result.rejected) and fed back so Gemini retries instead of
+          // "giving up" with empty arrays.
+          if (name === 'commit_result' && !('rejected' in result)) committed = true;
         } catch (err) {
           toolCalls.push({ name, args, ok: false });
           warnings.push(`tool ${name} threw: ${err instanceof Error ? err.message : String(err)}`);
