@@ -2,6 +2,7 @@ import {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
+  DeleteObjectsCommand,
   GetObjectCommand,
   ListObjectsV2Command,
 } from '@aws-sdk/client-s3';
@@ -64,18 +65,21 @@ export async function deleteFilesByPrefix(prefix: string): Promise<number> {
       }),
     );
 
-    if (list.Contents) {
-      for (const obj of list.Contents) {
-        if (obj.Key) {
-          await s3.send(
-            new DeleteObjectCommand({
-              Bucket: env.R2_BUCKET_NAME,
-              Key: obj.Key,
-            }),
-          );
-          deleted++;
-        }
-      }
+    const keys = (list.Contents ?? [])
+      .map((obj) => obj.Key)
+      .filter((k): k is string => Boolean(k));
+    if (keys.length > 0) {
+      // Batch delete (up to 1000 keys per call) instead of one request per
+      // file — deleting a tenant with hundreds of images used to take ~40s
+      // one-by-one, which made operators think the delete had hung and click
+      // again (causing a duplicate-delete P2025 error).
+      await s3.send(
+        new DeleteObjectsCommand({
+          Bucket: env.R2_BUCKET_NAME,
+          Delete: { Objects: keys.map((Key) => ({ Key })), Quiet: true },
+        }),
+      );
+      deleted += keys.length;
     }
 
     continuationToken = list.IsTruncated ? list.NextContinuationToken : undefined;

@@ -186,8 +186,11 @@ export async function deleteTenant(id: string) {
   // 3. Delete associated users
   await prisma.user.deleteMany({ where: { tenantId: id } });
 
-  // 4. Delete the tenant record
-  await prisma.tenant.delete({ where: { id } });
+  // 4. Delete the tenant record. deleteMany (not delete) so a concurrent /
+  //    retried delete doesn't throw P2025 "record not found" — the operator
+  //    double-clicking while the slow R2 cleanup ran used to surface that as a
+  //    spurious "delete failed".
+  await prisma.tenant.deleteMany({ where: { id } });
 
   return { message: `Tenant '${tenant.slug}' permanently deleted` };
 }
