@@ -292,6 +292,38 @@ You have at most ${MAX_ITERATIONS} tool calls. Use them. Don't give up early.`,
     }
   }
 
+  // Final guarantee: the most common 0-item failure is the agent burning all
+  // its turns on fetch_url and hitting the iteration cap mid-crawl, never
+  // committing. The empty-turn nudge above never fires in that case (every
+  // turn had a functionCall). So here we force the issue: function-calling
+  // mode=ANY/commit_result makes Gemini emit commit_result from the page text
+  // already in context — it cannot fetch or reply with prose.
+  if (!committed) {
+    history.push({
+      role: 'user',
+      parts: [{
+        text: `You are out of investigation turns. Do NOT fetch anything else. Call commit_result NOW with a populated ClassifiedData built from the page text already in this conversation: map page bodies into pageContents (담임목사 인사말 → pastor_message, 교회 소개/비전 → church_intro/mission_vision, 오시는 길 → location_map, 연락처 → contact_info, 새가족 → newcomer_info), worshipTimes from any 예배 시간표, churchInfo (name/address/phone/email), menus from the nav links, and any sermons/columns/events/staff you saw. Empty arrays ONLY for content that genuinely does not exist.`,
+      }],
+    });
+    for (let attempt = 0; attempt < 2 && !committed; attempt++) {
+      const response = await callGemini(history, { forceCommit: true });
+      if (!response) break;
+      history.push({ role: 'model', parts: response.parts });
+      for (const part of response.parts) {
+        if ('functionCall' in part && part.functionCall.name === 'commit_result') {
+          try {
+            const result = await execTool('commit_result', part.functionCall.args);
+            toolCalls.push({ name: 'commit_result', args: part.functionCall.args, ok: !('error' in result) });
+            committed = true;
+            onProgress?.(`result:forced_commit items=${countTotals(data)}`);
+          } catch (err) {
+            warnings.push(`forced commit_result threw: ${err instanceof Error ? err.message : String(err)}`);
+          }
+        }
+      }
+    }
+  }
+
   if (!committed) {
     warnings.push(`agent stopped after ${iterations} iterations without commit_result`);
   }
@@ -491,7 +523,10 @@ interface GeminiResponse {
   >;
 }
 
-async function callGemini(history: Array<{ role: string; parts: unknown[] }>): Promise<GeminiResponse | null> {
+async function callGemini(
+  history: Array<{ role: string; parts: unknown[] }>,
+  opts: { forceCommit?: boolean } = {},
+): Promise<GeminiResponse | null> {
   try {
     const res = await fetch(
       `${GEMINI_BASE}/models/${MODEL}:generateContent?key=${env.GEMINI_API_KEY}`,
@@ -501,6 +536,12 @@ async function callGemini(history: Array<{ role: string; parts: unknown[] }>): P
         body: JSON.stringify({
           contents: history,
           tools: TOOL_DECLARATIONS,
+          // forceCommit: make Gemini MANDATORILY emit commit_result (no more
+          // fetching, no prose) — used as the final guarantee when the agent
+          // explored but never committed within the iteration budget.
+          ...(opts.forceCommit
+            ? { toolConfig: { functionCallingConfig: { mode: 'ANY', allowedFunctionNames: ['commit_result'] } } }
+            : {}),
           // A full-site ClassifiedData payload (churchInfo + pageContents
           // blocks + worshipTimes + menus + …) easily exceeds 4096 tokens.
           // At 4096 the commit_result args / final JSON got truncated →
