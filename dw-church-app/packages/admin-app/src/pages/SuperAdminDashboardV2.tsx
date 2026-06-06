@@ -1198,6 +1198,12 @@ function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) {
   // URL 입력 → /migrate-url 호출 → 결과 카운트 표시.
   const [migrateTenant, setMigrateTenant] = useState<Tenant | null>(null);
 
+  // Delete safeguard — GitHub/Railway 방식. 단순 confirm 대신 slug 를 직접
+  // 타이핑해야 삭제 버튼이 활성화됨 (되돌릴 수 없는 작업이라 오삭제 방지).
+  const [deleteTarget, setDeleteTarget] = useState<Tenant | null>(null);
+  const [deleteText, setDeleteText] = useState('');
+  const [deleting, setDeleting] = useState(false);
+
   const fetchTenants = useCallback(async () => {
     setLoading(true);
     try {
@@ -1233,14 +1239,24 @@ function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) {
     }
   };
 
-  const handleDelete = async (tenant: Tenant) => {
-    if (!window.confirm(`"${tenant.name}" 교회를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없으며, 해당 교회의 모든 데이터가 삭제됩니다.`)) return;
+  // Opens the type-to-confirm modal instead of an easily-dismissed confirm().
+  const handleDelete = (tenant: Tenant) => {
+    setDeleteText('');
+    setDeleteTarget(tenant);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget || deleteText !== deleteTarget.slug || deleting) return;
+    setDeleting(true);
     try {
-      await apiFetch(`/tenants/${tenant.id}`, { method: 'DELETE' });
-      showToast('success', '삭제되었습니다.');
+      await apiFetch(`/tenants/${deleteTarget.id}`, { method: 'DELETE' });
+      showToast('success', `"${deleteTarget.name}" 교회가 삭제되었습니다.`);
+      setDeleteTarget(null);
       void fetchTenants();
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : '삭제 실패');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -1444,6 +1460,51 @@ function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) {
           onClose={() => setEditingTenant(null)}
           onSaved={() => void fetchTenants()}
         />
+      )}
+      {deleteTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => !deleting && setDeleteTarget(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold text-red-700">⚠️ 교회(테넌트) 삭제</h3>
+            <p className="mt-3 text-sm text-gray-700">
+              <strong>"{deleteTarget.name}"</strong> 의 모든 데이터(페이지·콘텐츠·이미지·사용자)가
+              <strong className="text-red-700"> 영구 삭제</strong>되며 되돌릴 수 없습니다.
+            </p>
+            <p className="mt-4 text-sm text-gray-700">
+              계속하려면 아래에 <code className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-red-700">{deleteTarget.slug}</code> 를 입력하세요.
+            </p>
+            <input
+              autoFocus
+              type="text"
+              value={deleteText}
+              onChange={(e) => setDeleteText(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') void confirmDelete(); }}
+              placeholder={deleteTarget.slug}
+              className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+            />
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                취소
+              </button>
+              <button
+                onClick={() => void confirmDelete()}
+                disabled={deleteText !== deleteTarget.slug || deleting}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+              >
+                {deleting ? '삭제 중…' : '영구 삭제'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
