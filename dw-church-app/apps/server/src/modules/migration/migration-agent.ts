@@ -148,22 +148,39 @@ NOT boardPosts):
     "pageSlug": "pastor-greeting" | "about" | "vision" | "directions" |
       "newcomer" | "mission" | "worship" | "history" | "home",
     "blocks": [{
-      "blockType": "pastor_message" | "church_intro" | "mission_vision" |
-        "location_map" | "contact_info" | "newcomer_info" | "text_image",
+      "blockType": "hero_banner" | "pastor_message" | "church_intro" |
+        "mission_vision" | "location_map" | "contact_info" |
+        "newcomer_info" | "text_image" | "image_gallery",
       "props": { ... block-specific ... }
     }]
   }],
   "images": ["url1", "url2"]
 }
 
+REPRODUCE THE PAGE LAYOUT AS ORDERED BLOCKS — don't flatten a page into one
+text dump. For each page, walk the page top-to-bottom and emit blocks IN ORDER:
+  1. FIRST block is ALWAYS a hero_banner built from the page's top banner /
+     header section (its big heading = title, the small line under it =
+     subtitle, the banner background photo = backgroundImageUrl).
+  2. Then one block per visible section. A heading + paragraph + a side image
+     (e.g. "Explore the Bible" logo + description) → a text_image block with
+     that section's title, content, imageUrl, and layout alternating
+     "left"/"right" down the page. A heading + paragraph with NO image →
+     text_image with imageUrl "". A grid/row of images → image_gallery.
+  3. Keep the source's sub-headings and scripture lines inside content
+     (preserve line breaks with \n). Capture EVERY <img> src you see on the
+     page into the relevant block's imageUrl / images and also into "images".
+
 Page-content blockType templates (use exact keys):
+  hero_banner    → { title, subtitle, backgroundImageUrl, buttonText, buttonUrl }
   pastor_message → { title, name, message, photoUrl }
   church_intro   → { title, content, imageUrl }
   mission_vision → { title, content, imageUrl }
   location_map   → { title, address }
   contact_info   → { title, phone, email, address }
   newcomer_info  → { title, content, imageUrl }
-  text_image     → { title, content, imageUrl }
+  text_image     → { title, subtitle, content, imageUrl, layout }
+  image_gallery  → { title, images }
 
 Korean content type cues for classifying WP posts:
   설교/sermon, 주보/jubo/bulletin, 칼럼/column, 행사/공지/notice → events,

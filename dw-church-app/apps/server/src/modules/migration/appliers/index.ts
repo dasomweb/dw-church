@@ -145,6 +145,9 @@ function collectImagesForInclude(data: ClassifiedData, include: Set<IncludeKey>)
       for (const b of p.blocks) {
         if (typeof b.props.imageUrl === 'string') urls.push(b.props.imageUrl);
         if (typeof b.props.photoUrl === 'string') urls.push(b.props.photoUrl);
+        // hero_banner background must self-host too (was being skipped → hero
+        // hotlinked the source image, which broke once the source died).
+        if (typeof b.props.backgroundImageUrl === 'string') urls.push(b.props.backgroundImageUrl);
         if (Array.isArray(b.props.images)) urls.push(...(b.props.images as string[]));
       }
     }

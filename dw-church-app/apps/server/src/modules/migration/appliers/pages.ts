@@ -1,8 +1,11 @@
 /**
- * Pages Applier — updates page_sections.props with classified content.
- * Does NOT create new pages or change block structure.
- * Only updates props of existing blocks that match the classified content.
- * hero_banner is excluded (admin sets it manually).
+ * Pages Applier — reproduces each source page as ordered page_sections.
+ * Creates the page if the tenant doesn't have it yet, inserts the classified
+ * blocks in order (hero_banner first, then image+text / gallery sections),
+ * and migrates every block image to R2. Page-level singleton blocks
+ * (pastor_message / location_map / contact_info / newcomer_info) update a
+ * matching pre-seeded section in place; hero_banner / text_image /
+ * image_gallery always create their own section so the layout is preserved.
  */
 
 import { prisma } from '../../../config/database.js';
@@ -54,18 +57,29 @@ export async function applyPageContents(
       pageId,
     );
 
-    for (const block of page.blocks) {
-      // Skip hero_banner — admin sets it manually
-      if (block.blockType === 'hero_banner') continue;
+    // Insert the page's blocks IN ORDER so the source layout is reproduced
+    // (hero_banner first, then each image+text / gallery section). hero_banner
+    // and the repeatable layout blocks always create their own section; the
+    // page-level singletons (pastor_message / location_map / contact_info /
+    // newcomer_info) update a pre-seeded section of the same type if one
+    // exists. Track a running sort_order — the old code recomputed max() off
+    // the initial section list every time, so multiple inserted blocks all
+    // collapsed onto the same order.
+    let nextOrder = sections.length > 0
+      ? Math.max(...sections.map((s) => s.sort_order)) + 1
+      : 0;
+    const usedSectionIds = new Set<string>();
+    const REPEATABLE = new Set(['hero_banner', 'text_image', 'image_gallery']);
 
-      // Replace image URLs with R2 URLs
+    for (const block of page.blocks) {
+      // Replace image URLs (imageUrl/photoUrl/backgroundImageUrl/images…) → R2.
       const props = replaceImageUrls(block.props, urlMap);
 
-      // Find matching existing section by block_type
-      const existing = sections.find((s) => s.block_type === block.blockType);
+      const existing = !REPEATABLE.has(block.blockType)
+        ? sections.find((s) => s.block_type === block.blockType && !usedSectionIds.has(s.id))
+        : undefined;
 
       if (existing) {
-        // Merge props into existing section (new props override)
         await prisma.$queryRawUnsafe(
           `UPDATE "${schema}".page_sections
            SET props = props || $1::jsonb, updated_at = NOW()
@@ -73,21 +87,18 @@ export async function applyPageContents(
           JSON.stringify(props),
           existing.id,
         );
+        usedSectionIds.add(existing.id);
         count++;
       } else {
-        // Insert new section at the end (after existing blocks)
-        const maxOrder = sections.length > 0
-          ? Math.max(...sections.map((s) => s.sort_order)) + 1
-          : 0;
-
         await prisma.$queryRawUnsafe(
           `INSERT INTO "${schema}".page_sections (page_id, block_type, props, sort_order, is_visible)
            VALUES ($1::uuid, $2, $3::jsonb, $4, true)`,
           pageId,
           block.blockType,
           JSON.stringify(props),
-          maxOrder,
+          nextOrder,
         );
+        nextOrder++;
         count++;
       }
     }
