@@ -323,17 +323,15 @@ You have at most ${MAX_ITERATIONS} tool calls. Use them. Don't give up early.`,
     }
   }
 
-  // Final guarantee: the most common 0-item failure is the agent burning all
-  // its turns on fetch_url and hitting the iteration cap mid-crawl, never
-  // committing. The empty-turn nudge above never fires in that case (every
-  // turn had a functionCall). So here we force the issue: function-calling
-  // mode=ANY/commit_result makes Gemini emit commit_result from the page text
-  // already in context — it cannot fetch or reply with prose.
+  // Final guarantee when the loop ended without a populated commit (it
+  // exhausted iterations mid-crawl, or kept committing empty). We do NOT use
+  // function-calling mode=ANY here: forcing the call makes Gemini emit
+  // commit_result with EMPTY args every time (observed keys= blank x3). Instead
+  // we stay in AUTO mode and hand it an explicit checklist of the pages it
+  // fetched, then accept EITHER a populated commit_result functionCall OR a
+  // text reply containing the JSON (parseAgentJson). Empty payloads are
+  // rejected and retried.
   if (!committed) {
-    // mode=ANY forces the call but Gemini sometimes emits an EMPTY
-    // classifiedData ({}). Reject empty commits and retry with an explicit
-    // checklist of the pages it already fetched, so it has a concrete list to
-    // turn into pageContents instead of giving up.
     const fetchedUrls = [...new Set(
       toolCalls
         .filter((t) => t.name === 'fetch_url')
@@ -345,13 +343,13 @@ You have at most ${MAX_ITERATIONS} tool calls. Use them. Don't give up early.`,
       history.push({
         role: 'user',
         parts: [{
-          text: `STOP. Output commit_result NOW with a POPULATED ClassifiedData — an empty {} is a FAILURE and will be rejected. You already fetched these pages (their text is in this conversation above):
+          text: `STOP fetching. Build the result NOW. You already fetched these pages (their text is above in this conversation):
 ${checklist || '(see the fetched page text above)'}
 
-For EACH content page, add a pageContents entry whose blocks reproduce the layout in order: a hero_banner first (page heading → title, the small line under it → subtitle, the banner background photo → backgroundImageUrl), then one text_image per section (its heading → title, body → content, side image → imageUrl, alternating layout left/right), and image_gallery for image grids. Also fill churchInfo (name/address/phone/email), worshipTimes, menus, and every sermon/column/event/staff/album/bulletin you saw. Do NOT return an empty classifiedData.`,
+Emit a commit_result whose classifiedData is POPULATED — an empty object is a failure. For EACH content page add a pageContents entry whose blocks reproduce the layout in order: a hero_banner first (page heading → title, the small line under it → subtitle, the banner background photo → backgroundImageUrl), then one text_image per section (heading → title, body → content, side image → imageUrl, alternating layout left/right), and image_gallery for image grids. Also fill churchInfo (name/address/phone/email), worshipTimes, menus, and every sermon/column/event/staff/album/bulletin you saw.`,
         }],
       });
-      const response = await callGemini(history, { forceCommit: true });
+      const response = await callGemini(history);
       if (!response) break;
       history.push({ role: 'model', parts: response.parts });
       for (const part of response.parts) {
@@ -359,17 +357,20 @@ For EACH content page, add a pageContents entry whose blocks reproduce the layou
           try {
             const result = await execTool('commit_result', part.functionCall.args) as { itemCountInPayload?: number };
             toolCalls.push({ name: 'commit_result', args: part.functionCall.args, ok: true });
-            if ((result.itemCountInPayload ?? 0) > 0) {
-              committed = true;
-              onProgress?.(`result:forced_commit items=${countTotals(data)}`);
-            } else {
-              onProgress?.(`result:forced_commit empty (attempt ${attempt + 1})`);
-            }
+            if ((result.itemCountInPayload ?? 0) > 0) committed = true;
           } catch (err) {
             warnings.push(`forced commit_result threw: ${err instanceof Error ? err.message : String(err)}`);
           }
+        } else if ('text' in part && part.text) {
+          // Gemini answered with the JSON as text instead of a function call.
+          const parsed = parseAgentJson(part.text);
+          if (parsed && countIncoming(parsed) > 0) {
+            mergeAgentResult(data, parsed);
+            committed = true;
+          }
         }
       }
+      onProgress?.(`result:final_commit attempt=${attempt + 1} items=${countTotals(data)} committed=${committed}`);
     }
   }
 
