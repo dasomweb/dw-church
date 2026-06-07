@@ -7,7 +7,7 @@ import {
   type DynamicRef,
   type DynamicContext,
   type DynamicSourceOption,
-} from '@dw-church/blocks';
+} from '@dw-church/blocks/builder';
 // STAGE-1 STUB — product field schema is b2b-specific; church dynamic field
 // schema arrives in the dynamic-source stage.
 const useProductFieldSchema = (): { data: unknown; isLoading: boolean } => ({ data: undefined, isLoading: false });

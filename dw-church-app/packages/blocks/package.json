@@ -9,7 +9,8 @@
     ".": "./src/index.ts",
     "./registry": "./src/registry.ts",
     "./registry.json": "./src/registry.json",
-    "./styles.css": "./src/styles.css"
+    "./styles.css": "./src/styles.css",
+    "./builder": "./src/builder-exports.ts"
   },
   "dependencies": {
     "@dw-church/design-tokens": "workspace:*",

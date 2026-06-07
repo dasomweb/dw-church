@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useUpdateSection, type PageSection } from '@dw-church/api-client';
-import type { ElementStyle } from '@dw-church/blocks';
-import { Icon, ICON_NAMES, ICONS } from '@dw-church/blocks';
+import type { ElementStyle } from '@dw-church/blocks/builder';
+import { Icon, ICON_NAMES, ICONS } from '@dw-church/blocks/builder';
 import type { BlockStyle } from '@dw-church/design-tokens';
 import {
   ELEMENT_REGISTRY,
@@ -14,7 +14,7 @@ import {
 import { ImageField, useImageFieldApi, LinkField, ColorField, SpacingField, MediaPicker, LabeledField, CollapsibleGroup, TypographyTokenField, OverlayField, BorderField, LinkButtonField, LayoutField, DesignField } from './property-fields';
 import { RichEditor } from '../RichEditor';
 import { DynamicSourcePicker, DynamicChip } from './property-fields/DynamicSourcePicker';
-import { isDynamicRef, dynamicContextsForPageKind, type DynamicContext } from '@dw-church/blocks';
+import { isDynamicRef, dynamicContextsForPageKind, type DynamicContext } from '@dw-church/blocks/builder';
 import type { OverlayFieldValue, BorderFieldValue, LinkButtonFieldValue, LayoutFieldValue, DesignFieldValue } from './property-fields';
 import { BlockStyleInspector } from './BlockStyleInspector';
 import { useToast } from '../Toast';
