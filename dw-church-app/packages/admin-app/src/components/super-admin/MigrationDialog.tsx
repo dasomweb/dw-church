@@ -67,16 +67,8 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<MigrationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // Phase 12-γ.5 — selective import. Static content always included
-  // (fast, low risk). Dynamic content checked per operator preference.
-  // Default: no dynamic selected (= static-only first run).
-  const [dynamicSelections, setDynamicSelections] = useState<Record<string, boolean>>({
-    sermons: false, bulletins: false, columns: false, events: false,
-    albums: false, staff: false, boards: false,
-  });
+  // 가져오기 = 정적 페이지 전용. 동적 콘텐츠는 각 관리 페이지에서 별도 마이그레이션.
   const [useLlm, setUseLlm] = useState(true);
-  const toggleDynamic = (key: string) =>
-    setDynamicSelections((prev) => ({ ...prev, [key]: !prev[key] }));
 
   // Reset state whenever the dialog opens for a different tenant.
   // Without this, switching tenants kept the previous tenant's URL /
@@ -127,12 +119,9 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
     setResult(null);
     setError(null);
     try {
-      // Static is always included; dynamic only if explicitly checked.
-      const STATIC_KEYS = ['settings', 'pages', 'worshipTimes', 'history', 'menus'];
-      const include = [
-        ...STATIC_KEYS,
-        ...Object.entries(dynamicSelections).filter(([, v]) => v).map(([k]) => k),
-      ];
+      // 가져오기 = STATIC PAGES ONLY (hero/blocks/layout/images). Dynamic
+      // content (sermons/bulletins/columns/albums/…) is migrated separately
+      // from each content module's own admin page.
       const res = await fetch(`${baseUrl}/api/v1/migration/migrate-url`, {
         method: 'POST',
         headers: {
@@ -143,7 +132,7 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
           sourceUrl: url,
           tenantSlug: tenant.slug,
           youtubeChannelUrl: youtubeUrl.trim() || undefined,
-          include,
+          include: 'static',
           useLlm,
         }),
       });
@@ -232,58 +221,16 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
               </div>
 
               <div className="border-t border-gray-200 pt-2">
-                <div className="font-semibold text-gray-900 mb-1">📦 추가 선택 (동적 콘텐츠)</div>
-                <div className="text-[11px] text-gray-600 mb-2">
-                  필요한 것만 선택하세요 — 안 가져온 항목은 운영자가 직접 등록할 수 있습니다.
+                <div className="font-semibold text-gray-900 mb-1">📄 가져오는 항목 — 정적 페이지</div>
+                <div className="text-[11px] text-gray-600">
+                  페이지 레이아웃(hero 배너·이미지+텍스트 블록·갤러리), 교회 기본정보,
+                  예배시간, 메뉴를 원본 사이트에서 그대로 재현합니다. 모든 이미지는 R2에
+                  자동 업로드됩니다.
                 </div>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {([
-                    { key: 'sermons',   label: '설교',     hint: '워드프레스 카테고리 + YouTube' },
-                    { key: 'bulletins', label: '주보',     hint: 'PDF 첨부 + KBoard' },
-                    { key: 'columns',   label: '칼럼',     hint: '본문 텍스트 포함' },
-                    { key: 'events',    label: '행사',     hint: '공지·소식' },
-                    { key: 'albums',    label: '앨범',     hint: '갤러리 이미지 (R2 업로드)' },
-                    { key: 'staff',     label: '교역자',   hint: '이름·직책·사진' },
-                    { key: 'boards',    label: '게시판',   hint: '자유게시판·Q&A' },
-                  ] as const).map((item) => (
-                    <label key={item.key} className="flex items-start gap-1.5 p-1.5 rounded hover:bg-white cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={dynamicSelections[item.key] ?? false}
-                        onChange={() => toggleDynamic(item.key)}
-                        disabled={running}
-                        className="mt-0.5"
-                      />
-                      <span>
-                        <div className="font-medium text-gray-800">{item.label}</div>
-                        <div className="text-[10px] text-gray-500">{item.hint}</div>
-                      </span>
-                    </label>
-                  ))}
-                </div>
-                <div className="mt-2 flex gap-2 text-[11px]">
-                  <button
-                    type="button"
-                    onClick={() => setDynamicSelections({
-                      sermons: true, bulletins: true, columns: true, events: true,
-                      albums: true, staff: true, boards: true,
-                    })}
-                    disabled={running}
-                    className="px-2 py-0.5 rounded border border-gray-300 hover:bg-gray-100"
-                  >
-                    모두 선택
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDynamicSelections({
-                      sermons: false, bulletins: false, columns: false, events: false,
-                      albums: false, staff: false, boards: false,
-                    })}
-                    disabled={running}
-                    className="px-2 py-0.5 rounded border border-gray-300 hover:bg-gray-100"
-                  >
-                    모두 해제 (정적만)
-                  </button>
+                <div className="mt-2 rounded-md bg-blue-50 px-2.5 py-2 text-[11px] text-blue-800">
+                  설교·주보·칼럼·앨범·행사·교역자·게시판 등 <strong>콘텐츠</strong>는
+                  좌측 메뉴의 각 관리 페이지에서 <strong>"URL에서 가져오기"</strong>로 별도
+                  마이그레이션합니다. (타입별로 가져와야 더 정확합니다)
                 </div>
               </div>
 
