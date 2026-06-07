@@ -8,6 +8,7 @@ import {
   useDeleteColumn,
 } from '@dw-church/api-client';
 import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, ImageUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
+import { ContentMigrationButton } from '../components/ContentMigrationButton';
 
 interface ColumnFormData {
   title: string;
@@ -26,7 +27,7 @@ export default function ColumnManagement() {
   const [deleteTarget, setDeleteTarget] = useState<{id: string; name: string} | null>(null);
 
   const { showToast } = useToast();
-  const { data, isLoading, error } = useColumns(params);
+  const { data, isLoading, error, refetch } = useColumns(params);
   const createMutation = useCreateColumn();
   const updateMutation = useUpdateColumn();
   const deleteMutation = useDeleteColumn();
@@ -166,12 +167,15 @@ export default function ColumnManagement() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold">칼럼 관리</h2>
-        <button
-          onClick={handleCreate}
-          className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-        >
-          새 칼럼
-        </button>
+        <div className="flex items-center gap-2">
+          <ContentMigrationButton contentType="columns" label="칼럼" onDone={() => refetch()} />
+          <button
+            onClick={handleCreate}
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+          >
+            새 칼럼
+          </button>
+        </div>
       </div>
 
       <div className="mb-4">

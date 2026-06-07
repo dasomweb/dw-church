@@ -406,13 +406,24 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
   // a source site, triggered from that module's admin page. The agent is scoped
   // to just this type → small, reliable extraction. Re-import is idempotent via
   // each item's source_url.
-  app.post('/migrate-content', { preHandler: [requireSuperAdmin] }, async (request, reply) => {
+  app.post('/migrate-content', { preHandler: [requireAuth] }, async (request, reply) => {
     const body = request.body as { sourceUrl?: string; tenantSlug?: string; contentType?: string };
     const sourceUrl = (body.sourceUrl ?? '').trim();
     const tenantSlug = (body.tenantSlug ?? '').trim();
     const contentType = (body.contentType ?? '').trim() as IncludeKey;
     if (!sourceUrl || !tenantSlug || !contentType) {
       throw new AppError('VALIDATION_ERROR', 400, 'sourceUrl + tenantSlug + contentType required');
+    }
+    // Triggered from a content module's admin page → tenant admins (admin /
+    // owner / support) may migrate into THEIR OWN tenant; super_admin → any.
+    const role = request.user?.role ?? '';
+    if (role !== 'super_admin') {
+      if (!['admin', 'owner', 'support'].includes(role)) {
+        throw new AppError('FORBIDDEN', 403, 'Admin access required');
+      }
+      if (request.user?.tenantSlug !== tenantSlug) {
+        throw new AppError('FORBIDDEN', 403, '본인 교회의 콘텐츠만 가져올 수 있습니다');
+      }
     }
     if (!DYNAMIC_INCLUDE.includes(contentType)) {
       throw new AppError('VALIDATION_ERROR', 400, `contentType must be one of: ${DYNAMIC_INCLUDE.join(', ')}`);
