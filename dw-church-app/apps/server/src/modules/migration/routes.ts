@@ -280,10 +280,14 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
 
       if (useLlm) {
         const agentStart = Date.now();
+        // Static-only import → focus the agent on page layouts (more reliable);
+        // it won't waste turns chasing individual posts (those migrate per-module).
+        const staticOnly = includeList.every((k) => STATIC_INCLUDE.includes(k));
         const agentResult = await runMigrationAgent(
           sourceUrl,
           body.youtubeChannelUrl ?? null,
           (msg) => request.log.info({ migrationStep: 'agent' }, msg),
+          staticOnly ? 'static' : 'all',
         );
         classified = agentResult.data;
         agentIterations = agentResult.iterations;

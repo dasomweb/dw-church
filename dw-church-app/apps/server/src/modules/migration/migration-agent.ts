@@ -79,10 +79,13 @@ interface AgentResult {
  * whatever the agent could extract, plus per-tool diagnostics so the
  * dialog can show "agent ran 12 tool calls, 3 failed".
  */
+export type MigrationFocus = 'all' | 'static' | { content: string };
+
 export async function runMigrationAgent(
   sourceUrl: string,
   youtubeChannelUrl: string | null,
   onProgress?: (msg: string) => void,
+  focus: MigrationFocus = 'all',
 ): Promise<AgentResult> {
   const data = emptyClassifiedData();
   const toolCalls: AgentResult['toolCalls'] = [];
@@ -92,6 +95,16 @@ export async function runMigrationAgent(
     warnings.push('GEMINI_API_KEY 미설정 — agent 비활성');
     return { data, iterations: 0, toolCalls, warnings };
   }
+
+  // Focus narrows the agent's task — a smaller, well-scoped extraction is far
+  // more reliable than the all-in-one crawl. 'static' = page layouts only;
+  // {content} = one content type only (per-module migration).
+  const focusDirective =
+    focus === 'static'
+      ? `\nSCOPE — STATIC PAGES ONLY: Extract ONLY pageContents (each page's hero_banner + text_image / image_gallery blocks in order, with images), churchInfo, worshipTimes, and menus. Do NOT open or extract individual sermon / bulletin / column / board posts — leave sermons, bulletins, columns, events, albums, staff, history, boards as EMPTY arrays. Spend every turn on the main navigation pages' layouts and their images. Those content types are migrated separately.`
+      : typeof focus === 'object'
+        ? `\nSCOPE — "${focus.content}" CONTENT ONLY: Extract ONLY the "${focus.content}" items. Find that section's list page and its WordPress REST endpoint (/wp-json/wp/v2/...), page through ALL items, and capture each item's fields + images. Leave pageContents and every OTHER content type as EMPTY. Do not waste turns on unrelated pages.`
+        : '';
 
   // Conversation history (Gemini "contents" format).
   type Content = { role: 'user' | 'model' | 'function'; parts: Part[] };
@@ -106,7 +119,7 @@ export async function runMigrationAgent(
       text: `You are a Korean-church website migration agent. Source: ${sourceUrl}${youtubeChannelUrl ? `, YouTube channel: ${youtubeChannelUrl}` : ''}.
 
 GOAL: investigate the source and call commit_result with a populated
-ClassifiedData JSON.
+ClassifiedData JSON.${focusDirective}
 
 CRITICAL RULES — follow these or migration fails:
 
