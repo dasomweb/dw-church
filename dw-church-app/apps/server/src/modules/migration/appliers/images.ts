@@ -76,6 +76,34 @@ export async function migrateImageToR2(
 }
 
 /**
+ * Migrate a non-image FILE (e.g. a bulletin PDF) to R2 — downloaded and
+ * re-hosted as-is (no image processing). Never hotlink the source: the
+ * original site can disappear or block hotlinking. Returns the R2 URL, or the
+ * original URL on failure.
+ */
+export async function migrateFileToR2(
+  fileUrl: string,
+  tenantSlug: string,
+): Promise<string> {
+  if (!fileUrl || fileUrl.startsWith('data:')) return fileUrl;
+  if (fileUrl.includes('r2.dev/') || fileUrl.includes('r2.cloudflarestorage.com')) return fileUrl;
+  try {
+    const res = await fetch(fileUrl, { redirect: 'follow', headers: { 'User-Agent': USER_AGENT } });
+    if (!res.ok) return fileUrl;
+    const contentType = res.headers.get('content-type') || 'application/octet-stream';
+    const buffer = Buffer.from(await res.arrayBuffer());
+    if (buffer.length > 50 * 1024 * 1024) return fileUrl; // 50MB cap
+    // Preserve the file extension from the URL path; fall back to content-type.
+    const urlExt = ((fileUrl.split('?')[0]?.match(/\.([a-z0-9]{2,5})$/i)?.[1]) || '').toLowerCase();
+    const ext = urlExt ? `.${urlExt}` : contentType.includes('pdf') ? '.pdf' : '.bin';
+    const key = `tenant_${tenantSlug}/migration/${randomUUID()}${ext}`;
+    return await r2Upload(key, buffer, contentType);
+  } catch {
+    return fileUrl;
+  }
+}
+
+/**
  * Migrate a batch of images to R2.
  * Returns a map of original URL → R2 URL.
  */

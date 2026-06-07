@@ -98,6 +98,9 @@ export async function applyBulletins(
 
   for (const b of bulletins) {
     const images = (b.images || []).map((url) => urlMap.get(url) || url);
+    // pdfUrl is migrated to R2 too (mapped in urlMap) — never store the source
+    // hotlink. Falls back to the original only if migration failed.
+    const pdf = (b.pdfUrl && urlMap.get(b.pdfUrl)) || b.pdfUrl || '';
     try {
       await prisma.$queryRawUnsafe(
         `INSERT INTO "${schema}".bulletins (title, bulletin_date, pdf_url, images, status)
@@ -105,7 +108,7 @@ export async function applyBulletins(
          ON CONFLICT DO NOTHING`,
         b.title || '',
         b.date || null,
-        b.pdfUrl || '',
+        pdf,
         JSON.stringify(images),
       );
       count++;

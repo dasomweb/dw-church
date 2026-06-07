@@ -18,7 +18,7 @@
 
 import type { ClassifiedData, ApplyResult } from '../types.js';
 import { emptyApplyResult } from '../types.js';
-import { migrateImages } from './images.js';
+import { migrateImages, migrateFileToR2 } from './images.js';
 import { applySettings } from './settings.js';
 import { applySermons, applyBulletins, applyColumns, applyEvents, applyAlbums, applyBoards } from './posts.js';
 import { applyStaff, applyHistory, applyWorshipTimes, applyMenus } from './config.js';
@@ -62,6 +62,14 @@ export async function applyAll(
   onProgress?.('이미지 R2 업로드', false);
   const allImages = collectImagesForInclude(data, include);
   const urlMap = await migrateImages(allImages, tenantSlug);
+  // Non-image files — bulletin PDFs — must self-host on R2 too (never hotlink).
+  if (include.has('bulletins')) {
+    for (const b of data.bulletins) {
+      if (b.pdfUrl && !urlMap.has(b.pdfUrl)) {
+        urlMap.set(b.pdfUrl, await migrateFileToR2(b.pdfUrl, tenantSlug));
+      }
+    }
+  }
   result.images = urlMap.size;
   onProgress?.('이미지 R2 업로드', true);
 
