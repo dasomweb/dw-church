@@ -207,6 +207,21 @@ async function main(): Promise<void> {
         alterHits++;
       } catch { /* preachers table may not exist; skip */ }
 
+      // 1b. source_url — per-module content migration dedup. Each migrated item
+      //     records its original source post URL so a re-import UPDATEs the same
+      //     row instead of inserting a duplicate (true idempotency).
+      for (const tbl of ['columns_pastoral', 'sermons', 'albums', 'bulletins', 'events', 'staff', 'history']) {
+        try {
+          await prisma.$executeRawUnsafe(
+            `ALTER TABLE "${schema}".${tbl} ADD COLUMN IF NOT EXISTS "source_url" TEXT`,
+          );
+          await prisma.$executeRawUnsafe(
+            `CREATE UNIQUE INDEX IF NOT EXISTS "${tbl}_source_url_key" ON "${schema}".${tbl} ("source_url") WHERE "source_url" IS NOT NULL`,
+          );
+          alterHits++;
+        } catch { /* table may not exist; skip */ }
+      }
+
       // 2. categories — unified table for sermon + album (code references
       //    `categories` with a `type` discriminator, not the separate
       //    sermon_categories / album_categories tables in the template).

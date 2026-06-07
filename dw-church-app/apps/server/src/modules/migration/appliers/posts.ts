@@ -130,18 +130,25 @@ export async function applyColumns(
 
   for (const c of columns) {
     const topImg = urlMap.get(c.topImageUrl) || c.topImageUrl;
+    const sourceUrl = (c.sourceUrl || '').trim() || null;
     try {
       // created_at preserves source publish order. When the source page
       // gave us a date, COALESCE picks it; null falls back to NOW().
+      // Idempotent on source_url: re-importing the same post UPDATEs the row
+      // (refreshing content/image) instead of inserting a duplicate.
       await prisma.$queryRawUnsafe(
-        `INSERT INTO "${schema}".columns_pastoral (title, content, top_image_url, youtube_url, status, created_at)
-         VALUES ($1, $2, $3, $4, 'published', COALESCE($5::timestamptz, NOW()))
-         ON CONFLICT DO NOTHING`,
+        `INSERT INTO "${schema}".columns_pastoral (title, content, top_image_url, youtube_url, status, created_at, source_url)
+         VALUES ($1, $2, $3, $4, 'published', COALESCE($5::timestamptz, NOW()), $6)
+         ON CONFLICT (source_url) WHERE source_url IS NOT NULL
+         DO UPDATE SET title = EXCLUDED.title, content = EXCLUDED.content,
+                       top_image_url = EXCLUDED.top_image_url, youtube_url = EXCLUDED.youtube_url,
+                       updated_at = NOW()`,
         c.title || '',
         c.content || '',
         topImg,
         c.youtubeUrl || '',
         c.date || null,
+        sourceUrl,
       );
       count++;
     } catch {

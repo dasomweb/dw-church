@@ -401,6 +401,54 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
     }
   });
 
+  // ── Per-content migration (per-module) ──
+  // Migrate ONE dynamic content type (sermons/bulletins/columns/albums/…) from
+  // a source site, triggered from that module's admin page. The agent is scoped
+  // to just this type → small, reliable extraction. Re-import is idempotent via
+  // each item's source_url.
+  app.post('/migrate-content', { preHandler: [requireSuperAdmin] }, async (request, reply) => {
+    const body = request.body as { sourceUrl?: string; tenantSlug?: string; contentType?: string };
+    const sourceUrl = (body.sourceUrl ?? '').trim();
+    const tenantSlug = (body.tenantSlug ?? '').trim();
+    const contentType = (body.contentType ?? '').trim() as IncludeKey;
+    if (!sourceUrl || !tenantSlug || !contentType) {
+      throw new AppError('VALIDATION_ERROR', 400, 'sourceUrl + tenantSlug + contentType required');
+    }
+    if (!DYNAMIC_INCLUDE.includes(contentType)) {
+      throw new AppError('VALIDATION_ERROR', 400, `contentType must be one of: ${DYNAMIC_INCLUDE.join(', ')}`);
+    }
+    const tenant = await prisma.tenant.findFirst({ where: { slug: tenantSlug } });
+    if (!tenant) throw new AppError('NOT_FOUND', 404, `Tenant "${tenantSlug}" not found`);
+
+    const agentStart = Date.now();
+    const agentResult = await runMigrationAgent(
+      sourceUrl,
+      null,
+      (msg) => request.log.info({ migrationStep: 'agent-content' }, msg),
+      { content: contentType },
+    );
+    request.log.info({
+      migrationStep: 'agent-content-done',
+      tookMs: Date.now() - agentStart,
+      iterations: agentResult.iterations,
+      contentType,
+    }, 'Migration(content): agent complete');
+    for (const w of agentResult.warnings.slice(0, 20)) {
+      request.log.warn({ migrationStep: 'agent-content-warn' }, w);
+    }
+
+    const result = await applyAll(tenantSlug, agentResult.data, { include: [contentType] });
+    return reply.send({
+      data: {
+        contentType,
+        applyResult: result,
+        applied: (result as unknown as Record<string, number>)[contentType] ?? 0,
+        iterations: agentResult.iterations,
+        warnings: agentResult.warnings.slice(0, 10),
+      },
+    });
+  });
+
   // ── Apply ──
   app.post<{ Params: { id: string } }>('/jobs/:id/apply', async (request, reply) => {
     const job = await getJob(request.params.id);

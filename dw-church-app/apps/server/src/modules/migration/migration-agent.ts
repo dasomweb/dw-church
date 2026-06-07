@@ -151,7 +151,7 @@ NOT boardPosts):
     "youtubeUrl": "", "thumbnailUrl": "" }],
   "bulletins": [{ "title": "", "date": "", "pdfUrl": "", "images": [] }],
   "columns": [{ "title": "", "content": "", "topImageUrl": "",
-    "youtubeUrl": "", "date": "" }],
+    "youtubeUrl": "", "date": "", "sourceUrl": "" }],
   "events": [{ "title": "", "description": "", "date": "",
     "location": "", "imageUrl": "" }],
   "albums": [{ "title": "", "images": [], "youtubeUrl": "" }],

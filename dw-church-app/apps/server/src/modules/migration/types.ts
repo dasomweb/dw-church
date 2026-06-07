@@ -162,6 +162,10 @@ export interface ClassifiedColumn {
    *  post keeps its original publish order. Empty string when not
    *  extractable. */
   date: string;
+  /** Original source post URL (WP REST `link`). Used as the idempotency key on
+   *  re-import (UPDATE the same row instead of inserting a duplicate). Optional
+   *  — empty when not available. */
+  sourceUrl?: string;
 }
 
 export interface ClassifiedEvent {
