@@ -6,6 +6,8 @@ import Link from 'next/link';
 interface NavItem {
   id: string;
   label: string;
+  pageId?: string;
+  pageSlug?: string;
   externalUrl?: string;
   isVisible: boolean;
   sortOrder: number;
@@ -166,7 +168,7 @@ export default function MobileMenu({ navItems }: MobileMenuProps) {
             {visibleItems.map((item) => (
               <li key={item.id}>
                 <Link
-                  href={item.externalUrl ?? '#'}
+                  href={item.externalUrl ?? (item.pageSlug ? `/${item.pageSlug}` : '#')}
                   onClick={close}
                   className="block rounded-md px-3 py-3 text-base font-medium text-[var(--dw-text)] hover:bg-gray-100 hover:text-[var(--dw-primary)] transition-colors"
                 >
