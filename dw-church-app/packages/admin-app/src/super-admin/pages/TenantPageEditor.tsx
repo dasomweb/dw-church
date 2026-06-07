@@ -24,9 +24,11 @@
  *     packages/blocks/property-fields verbatim.
  */
 import { useEffect, useMemo, useState } from 'react';
+import type { PageSection } from '@dw-church/api-client';
 import { useAuthStore } from '../../stores/auth';
 import { useToast } from '../../components';
 import { useSuperAdminTenant } from '../SuperAdminTenantLayout';
+import { ElementInspector } from '../../components/builder/ElementInspector';
 
 interface PageRow {
   id: string;
@@ -134,6 +136,30 @@ export default function TenantPageEditor() {
     }
   };
 
+  // ElementInspector callbacks — route its debounced props / block-style writes
+  // through this console's raw fetch (carries X-Tenant-Slug for the target
+  // tenant). Block-style is stored in props.blockStyle (dw-church PageSection
+  // has no styleOverrides field).
+  const handlePropsChange = (sectionId: string, next: Record<string, unknown>) => {
+    void (async () => {
+      if (!selectedPageId) return;
+      try {
+        const res = await fetch(`${baseUrl}/api/v1/pages/${selectedPageId}/sections/${sectionId}`, {
+          method: 'PUT', headers, body: JSON.stringify({ props: next }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const updated = await res.json() as Section;
+        setSections((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+      } catch (err) {
+        showToast('error', err instanceof Error ? err.message : '저장 실패');
+      }
+    })();
+  };
+  const handleStyleChange = (sectionId: string, blockStyle: unknown) => {
+    const sec = sections.find((s) => s.id === sectionId);
+    handlePropsChange(sectionId, { ...(sec?.props ?? {}), blockStyle });
+  };
+
   return (
     <div className="flex h-[calc(100vh-3.5rem)]">
       {/* Pane 1 — Pages */}
@@ -199,7 +225,17 @@ export default function TenantPageEditor() {
           {saving && <span className="text-[10px] text-gray-500">저장 중...</span>}
         </div>
         {selectedSection ? (
-          <Inspector key={selectedSection.id} section={selectedSection} onChange={updateSectionProps} saving={saving} />
+          <ElementInspector
+            key={selectedSection.id}
+            pageId={selectedPageId ?? ''}
+            sections={sections.map((s) => ({ ...s, pageId: selectedPageId ?? '' })) as unknown as PageSection[]}
+            sectionId={selectedSection.id}
+            elementKey=""
+            onClose={() => setSelectedSectionId(null)}
+            onPropsChange={handlePropsChange}
+            onStyleOverridesChange={handleStyleChange}
+            pageKind={undefined}
+          />
         ) : (
           <div className="p-6 text-sm text-gray-400 text-center">섹션을 선택하세요</div>
         )}
