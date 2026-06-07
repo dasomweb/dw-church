@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth';
 import { useToast } from './index';
 
@@ -23,12 +24,15 @@ export function ContentMigrationButton({
 }) {
   const session = useAuthStore((s) => s.session);
   const { showToast } = useToast();
+  const { slug: urlSlug } = useParams<{ slug: string }>();
   const [open, setOpen] = useState(false);
   const [sourceUrl, setSourceUrl] = useState('');
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<number | null>(null);
 
-  const tenantSlug = session?.user?.tenantSlug ?? '';
+  // A super admin who entered via /t/:slug has no tenantSlug on their session —
+  // the slug is in the URL. Tenant admins have both; URL wins.
+  const tenantSlug = urlSlug || session?.user?.tenantSlug || '';
 
   const baseUrl = (() => {
     const override = (import.meta.env.VITE_MIGRATION_DIRECT_BASE_URL as string)
