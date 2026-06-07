@@ -12,6 +12,7 @@ import {
   useUpdateChurchSettings,
 } from '@dw-church/api-client';
 import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, ImageUpload, useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
+import { useBulkDelete } from '../components/useBulkDelete';
 
 interface StaffFormData {
   name: string;
@@ -35,13 +36,14 @@ export default function StaffManagement() {
   const [deleteTarget, setDeleteTarget] = useState<{id: string; name: string} | null>(null);
 
   const { showToast } = useToast();
-  const { data: staffList, isLoading, error } = useStaff(params);
+  const { data: staffList, isLoading, error, refetch } = useStaff(params);
   const { data: departments } = useStaffDepartments();
   const { data: settings } = useChurchSettings();
   const updateSettings = useUpdateChurchSettings();
   const createMutation = useCreateStaff();
   const updateMutation = useUpdateStaff();
   const deleteMutation = useDeleteStaff();
+  const bulk = useBulkDelete<Staff>({ deleteOne: (id) => deleteMutation.mutateAsync(id), onDone: () => refetch() });
   const reorderMutation = useReorderStaff();
 
   const handleMoveStaff = (index: number, direction: 'up' | 'down') => {
@@ -393,12 +395,26 @@ export default function StaffManagement() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold">교역자 관리</h2>
-        <button
-          onClick={handleCreate}
-          className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-        >
-          새 교역자
-        </button>
+        <div className="flex items-center gap-2">
+          {staffList && staffList.length > 0 && (
+            <button onClick={() => bulk.toggleAll(staffList)}
+              className="text-sm text-gray-600 border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-50">
+              {bulk.isAllSelected(staffList) ? '선택 해제' : '전체 선택'}
+            </button>
+          )}
+          {bulk.count > 0 && (
+            <button onClick={() => void bulk.deleteSelected()} disabled={bulk.busy}
+              className="bg-red-600 hover:bg-red-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50">
+              선택 삭제 ({bulk.count})
+            </button>
+          )}
+          <button
+            onClick={handleCreate}
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+          >
+            새 교역자
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-2 mb-4">
@@ -442,8 +458,15 @@ export default function StaffManagement() {
       {staffList && staffList.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {staffList.map((item, index) => (
-            <div key={item.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+            <div key={item.id} className={`border rounded-lg overflow-hidden hover:shadow-md transition-shadow ${bulk.has(item.id) ? 'ring-2 ring-red-500' : ''}`}>
               <div className="aspect-square bg-gray-100 relative">
+                <input
+                  type="checkbox"
+                  checked={bulk.has(item.id)}
+                  onChange={() => bulk.toggle(item.id)}
+                  aria-label={`${item.name} 선택`}
+                  className="absolute top-2 left-2 z-10 h-5 w-5 accent-red-600 cursor-pointer"
+                />
                 {item.photoUrl ? (
                   <img
                     src={item.photoUrl}

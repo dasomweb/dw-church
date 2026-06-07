@@ -8,6 +8,7 @@ import {
   useDeleteHistory,
 } from '@dw-church/api-client';
 import { FormField, FormSection, inputClass, selectClass, useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
+import { useBulkDelete } from '../components/useBulkDelete';
 
 interface HistoryFormData {
   year: number;
@@ -28,10 +29,11 @@ export default function HistoryManagement() {
   const [deleteTarget, setDeleteTarget] = useState<{id: string; name: string} | null>(null);
 
   const { showToast } = useToast();
-  const { data: historyList, isLoading, error } = useHistory();
+  const { data: historyList, isLoading, error, refetch } = useHistory();
   const createMutation = useCreateHistory();
   const updateMutation = useUpdateHistory();
   const deleteMutation = useDeleteHistory();
+  const bulk = useBulkDelete<History>({ deleteOne: (id) => deleteMutation.mutateAsync(id), onDone: () => refetch() });
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<HistoryFormData>();
   const {
@@ -309,12 +311,26 @@ export default function HistoryManagement() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold">연혁 관리</h2>
-        <button
-          onClick={handleCreate}
-          className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-        >
-          새 연혁
-        </button>
+        <div className="flex items-center gap-2">
+          {historyList && historyList.length > 0 && (
+            <button onClick={() => bulk.toggleAll(historyList)}
+              className="text-sm text-gray-600 border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-50">
+              {bulk.isAllSelected(historyList) ? '선택 해제' : '전체 선택'}
+            </button>
+          )}
+          {bulk.count > 0 && (
+            <button onClick={() => void bulk.deleteSelected()} disabled={bulk.busy}
+              className="bg-red-600 hover:bg-red-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50">
+              선택 삭제 ({bulk.count})
+            </button>
+          )}
+          <button
+            onClick={handleCreate}
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+          >
+            새 연혁
+          </button>
+        </div>
       </div>
 
       {isLoading && <CardSkeleton />}
@@ -333,7 +349,14 @@ export default function HistoryManagement() {
       {historyList && historyList.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {historyList.map((entry) => (
-            <div key={entry.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+            <div key={entry.id} className={`border rounded-lg p-4 hover:shadow-md transition-shadow relative ${bulk.has(entry.id) ? 'ring-2 ring-red-500' : ''}`}>
+              <input
+                type="checkbox"
+                checked={bulk.has(entry.id)}
+                onChange={() => bulk.toggle(entry.id)}
+                aria-label={`${entry.year}년 선택`}
+                className="absolute top-3 right-3 h-5 w-5 accent-red-600 cursor-pointer"
+              />
               <div className="text-3xl font-bold text-gray-800">{entry.year}</div>
               <p className="text-sm text-gray-500 mt-1">
                 {entry.items?.length ?? 0}개 항목
