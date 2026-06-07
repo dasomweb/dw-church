@@ -21,6 +21,9 @@ interface Props {
   onSelect?: (item: MediaItem) => void;
   onSelectMulti?: (items: MediaItem[]) => void;
   multi?: boolean;
+  // accepted for caller compatibility (ignored by the stub)
+  preferredRatio?: string;
+  preferredKind?: string;
 }
 
 export function MediaPicker({ onClose }: Props) {
