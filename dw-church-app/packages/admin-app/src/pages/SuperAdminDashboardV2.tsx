@@ -1367,6 +1367,19 @@ function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) {
                         >
                           AI 빌더
                         </button>
+                        {/* 진입 — 슈퍼어드민 세션으로 테넌트 관리자 화면(/t/:slug)에 바로
+                            진입. 게이트가 super_admin 을 통과시키고, AdminLayout 이
+                            X-Tenant-Slug 를 이 테넌트로 맞춰 콘텐츠 모듈(설교/주보/칼럼…)을
+                            그대로 운영할 수 있음. 지원 계정 로그인 불필요. */}
+                        <button
+                          onClick={() => {
+                            window.location.href = `${window.location.origin}/t/${t.slug}`;
+                          }}
+                          className="px-2.5 py-1 text-xs bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors font-medium whitespace-nowrap"
+                          title={`${t.name} 관리자 화면으로 진입`}
+                        >
+                          진입
+                        </button>
                         {/* 콘솔 — 슈퍼어드민 per-tenant 깊은 편집 콘솔 (/super-admin/t/:slug). */}
                         <button
                           onClick={() => {
