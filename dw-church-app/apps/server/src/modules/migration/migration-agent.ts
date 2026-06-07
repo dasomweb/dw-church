@@ -101,7 +101,7 @@ export async function runMigrationAgent(
   // {content} = one content type only (per-module migration).
   const focusDirective =
     focus === 'static'
-      ? `\nSCOPE — STATIC PAGES ONLY: Extract ONLY pageContents (each page's hero_banner + text_image / image_gallery blocks in order, with images), churchInfo, worshipTimes, and menus. Do NOT open or extract individual sermon / bulletin / column / board posts — leave sermons, bulletins, columns, events, albums, staff, history, boards as EMPTY arrays. Spend every turn on the main navigation pages' layouts and their images. Those content types are migrated separately.`
+      ? `\nSCOPE — STATIC PAGES ONLY: Extract ONLY pageContents (each page's hero_banner + text_image / image_gallery blocks in order, with images), churchInfo, worshipTimes, and menus. Do NOT open or extract individual sermon / bulletin / column / board posts — leave sermons, bulletins, columns, events, albums, staff, history, boards as EMPTY arrays. Spend every turn on the main navigation pages' layouts and their images. Those content types are migrated separately.\nEach fetch_url result has a "backgroundImages" array (hero/section background photos pulled from the page's CSS) — set the hero_banner's backgroundImageUrl to the page's backgroundImages[0] when present, and use "images" for inline content/gallery pictures.`
       : typeof focus === 'object'
         ? `\nSCOPE — "${focus.content}" CONTENT ONLY: Extract ONLY the "${focus.content}" items. Find that section's list page and its WordPress REST endpoint (/wp-json/wp/v2/...), page through ALL items, and capture each item's fields + images. Leave pageContents and every OTHER content type as EMPTY. Do not waste turns on unrelated pages.`
         : '';
@@ -436,11 +436,12 @@ async function fetchUrl(url: string): Promise<Record<string, unknown>> {
     // data-attributes, CSS background-image, and Elementor data-settings JSON
     // — `<img src>` alone misses hero backgrounds and gallery photos.
     const imageSet = new Set<string>();
-    const addImg = (raw: string | undefined) => {
-      if (!raw) return;
-      const u = raw.trim().replace(/&amp;/g, '&').replace(/\\\//g, '/');
-      if (!u || u.startsWith('data:') || /\.svg(\?|$)/i.test(u)) return;
-      imageSet.add(resolveUrl(url, u));
+    const bgSet = new Set<string>(); // likely hero/section backgrounds
+    const norm = (raw: string) => raw.trim().replace(/&amp;/g, '&').replace(/\\\//g, '/');
+    const ok = (u: string) => u && !u.startsWith('data:') && !/\.svg(\?|$)/i.test(u);
+    const addImg = (raw: string | undefined) => { if (raw && ok(norm(raw))) imageSet.add(resolveUrl(url, norm(raw))); };
+    const addBg = (raw: string | undefined) => {
+      if (raw && ok(norm(raw))) { const r = resolveUrl(url, norm(raw)); bgSet.add(r); imageSet.add(r); }
     };
     // 1. src + lazy-load variants
     const attrRe = /(?:\bsrc|data-src|data-lazy-src|data-large_image|data-bg|data-background|data-thumb)\s*=\s*["']([^"']+)["']/gi;
@@ -450,13 +451,34 @@ async function fetchUrl(url: string): Promise<Record<string, unknown>> {
     while ((m = srcsetRe.exec(html)) !== null) {
       for (const cand of (m[1] ?? '').split(',')) addImg(cand.trim().split(/\s+/)[0]);
     }
-    // 3. CSS background-image: url(...) in inline styles
+    // 3. CSS background-image: url(...) in inline styles → background candidates
     const bgRe = /background(?:-image)?\s*:\s*[^;"']*url\(\s*['"]?([^'")]+)['"]?\s*\)/gi;
-    while ((m = bgRe.exec(html)) !== null) addImg(m[1]);
+    while ((m = bgRe.exec(html)) !== null) addBg(m[1]);
     // 4. Catch-all: any image-extension URL anywhere in the markup. Picks up
     //    Elementor data-settings JSON ("url":"...jpg"), generated CSS refs, etc.
     const anyImgRe = /https?:\/\/[^\s"'()<>\\]+\.(?:jpe?g|png|webp|gif)/gi;
     while ((m = anyImgRe.exec(html)) !== null) addImg(m[0]);
+    // 5. Elementor/theme generate per-page CSS where section & hero
+    //    background-image lives (not in the HTML). Fetch those stylesheets and
+    //    extract their backgrounds — generic, works for any Elementor site.
+    const cssLinks: string[] = [];
+    const linkRe2 = /<link[^>]+href=["']([^"']+\.css[^"']*)["']/gi;
+    while ((m = linkRe2.exec(html)) !== null) {
+      const href = m[1] ?? '';
+      if (/elementor\/css\/post-|elementor\/css\/global|\/uploads\/.*\.css/i.test(href)) {
+        cssLinks.push(resolveUrl(url, href));
+      }
+    }
+    for (const cssUrl of cssLinks.slice(0, 4)) {
+      try {
+        const cssRes = await proxiedFetch(cssUrl, { signal: ctrl.signal });
+        if (!cssRes.ok) continue;
+        const css = await cssRes.text();
+        let cm: RegExpExecArray | null;
+        const cssBgRe = /background(?:-image)?\s*:\s*[^;}]*url\(\s*['"]?([^'")]+)['"]?\s*\)/gi;
+        while ((cm = cssBgRe.exec(css)) !== null) addBg(cm[1]);
+      } catch { /* skip css */ }
+    }
     const images = [...imageSet];
     return {
       url,
@@ -467,6 +489,7 @@ async function fetchUrl(url: string): Promise<Record<string, unknown>> {
       text,
       links: links.slice(0, 50),
       images: images.slice(0, 40),
+      backgroundImages: [...bgSet].slice(0, 15),
       isWordPress: /wp-content|wp-json|wp-includes/.test(html),
     };
   } catch (err) {
