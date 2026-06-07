@@ -9,6 +9,7 @@ import {
   useAlbumCategories,
 } from '@dw-church/api-client';
 import { FormField, FormSection, FormRow, inputClass, selectClass, ImageUpload, MultiImageUpload, useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
+import { useBulkDelete } from '../components/useBulkDelete';
 
 interface AlbumFormData {
   title: string;
@@ -25,11 +26,12 @@ export default function AlbumManagement() {
   const [deleteTarget, setDeleteTarget] = useState<{id: string; name: string} | null>(null);
 
   const { showToast } = useToast();
-  const { data, isLoading, error } = useAlbums(params);
+  const { data, isLoading, error, refetch } = useAlbums(params);
   const { data: categories } = useAlbumCategories();
   const createMutation = useCreateAlbum();
   const updateMutation = useUpdateAlbum();
   const deleteMutation = useDeleteAlbum();
+  const bulk = useBulkDelete<Album>({ deleteOne: (id) => deleteMutation.mutateAsync(id), onDone: () => refetch() });
   const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<AlbumFormData>();
 
   const handleEdit = (item: Album) => {
@@ -154,12 +156,26 @@ export default function AlbumManagement() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold">앨범 관리</h2>
-        <button
-          onClick={handleCreate}
-          className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-        >
-          새 앨범
-        </button>
+        <div className="flex items-center gap-2">
+          {data && data.data.length > 0 && (
+            <button onClick={() => bulk.toggleAll(data.data)}
+              className="text-sm text-gray-600 border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-50">
+              {bulk.isAllSelected(data.data) ? '선택 해제' : '전체 선택'}
+            </button>
+          )}
+          {bulk.count > 0 && (
+            <button onClick={() => void bulk.deleteSelected()} disabled={bulk.busy}
+              className="bg-red-600 hover:bg-red-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50">
+              선택 삭제 ({bulk.count})
+            </button>
+          )}
+          <button
+            onClick={handleCreate}
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+          >
+            새 앨범
+          </button>
+        </div>
       </div>
 
       <div className="mb-4">
@@ -189,8 +205,15 @@ export default function AlbumManagement() {
         <>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {data.data.map((item) => (
-              <div key={item.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+              <div key={item.id} className={`border rounded-lg overflow-hidden hover:shadow-md transition-shadow ${bulk.has(item.id) ? 'ring-2 ring-red-500' : ''}`}>
                 <div className="aspect-video bg-gray-100 relative">
+                  <input
+                    type="checkbox"
+                    checked={bulk.has(item.id)}
+                    onChange={() => bulk.toggle(item.id)}
+                    aria-label={`${item.title} 선택`}
+                    className="absolute top-2 left-2 z-10 h-5 w-5 accent-red-600 cursor-pointer"
+                  />
                   {(item.images?.[0] || item.thumbnailUrl) ? (
                     <img
                       src={item.images?.[0] || item.thumbnailUrl}

@@ -8,6 +8,7 @@ import {
   useDeleteBulletin,
 } from '@dw-church/api-client';
 import { FormField, FormSection, FormRow, inputClass, selectClass, MultiImageUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
+import { useBulkDelete } from '../components/useBulkDelete';
 
 interface BulletinFormData {
   title: string;
@@ -24,10 +25,11 @@ export default function BulletinManagement() {
   const [deleteTarget, setDeleteTarget] = useState<{id: string; name: string} | null>(null);
 
   const { showToast } = useToast();
-  const { data, isLoading, error } = useBulletins(params);
+  const { data, isLoading, error, refetch } = useBulletins(params);
   const createMutation = useCreateBulletin();
   const updateMutation = useUpdateBulletin();
   const deleteMutation = useDeleteBulletin();
+  const bulk = useBulkDelete<Bulletin>({ deleteOne: (id) => deleteMutation.mutateAsync(id), onDone: () => refetch() });
 
   const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<BulletinFormData>();
 
@@ -161,12 +163,20 @@ export default function BulletinManagement() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold">주보 관리</h2>
-        <button
-          onClick={handleCreate}
-          className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-        >
-          새 주보
-        </button>
+        <div className="flex items-center gap-2">
+          {bulk.count > 0 && (
+            <button onClick={() => void bulk.deleteSelected()} disabled={bulk.busy}
+              className="bg-red-600 hover:bg-red-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50">
+              선택 삭제 ({bulk.count})
+            </button>
+          )}
+          <button
+            onClick={handleCreate}
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+          >
+            새 주보
+          </button>
+        </div>
       </div>
 
       <div className="mb-4">
@@ -198,6 +208,9 @@ export default function BulletinManagement() {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-gray-50 border-b">
+                  <th className="px-4 py-3 w-10">
+                    <input type="checkbox" checked={bulk.isAllSelected(data.data)} onChange={() => bulk.toggleAll(data.data)} aria-label="전체 선택" />
+                  </th>
                   <th className="text-left px-4 py-3 text-sm font-medium">날짜</th>
                   <th className="text-left px-4 py-3 text-sm font-medium">제목</th>
                   <th className="text-left px-4 py-3 text-sm font-medium">PDF</th>
@@ -209,6 +222,9 @@ export default function BulletinManagement() {
               <tbody>
                 {data.data.map((item) => (
                   <tr key={item.id} className="border-b hover:bg-gray-50">
+                    <td className="px-4 py-3">
+                      <input type="checkbox" checked={bulk.has(item.id)} onChange={() => bulk.toggle(item.id)} aria-label={`${item.title} 선택`} />
+                    </td>
                     <td className="px-4 py-3 text-sm">{item.date}</td>
                     <td className="px-4 py-3 text-sm font-medium">{item.title}</td>
                     <td className="px-4 py-3 text-sm">

@@ -8,6 +8,7 @@ import {
   useDeleteEvent,
 } from '@dw-church/api-client';
 import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, ImageUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
+import { useBulkDelete } from '../components/useBulkDelete';
 
 interface EventFormData {
   title: string;
@@ -30,10 +31,11 @@ export default function EventManagement() {
   const [deleteTarget, setDeleteTarget] = useState<{id: string; name: string} | null>(null);
 
   const { showToast } = useToast();
-  const { data, isLoading, error } = useEvents(params);
+  const { data, isLoading, error, refetch } = useEvents(params);
   const createMutation = useCreateEvent();
   const updateMutation = useUpdateEvent();
   const deleteMutation = useDeleteEvent();
+  const bulk = useBulkDelete<Event>({ deleteOne: (id) => deleteMutation.mutateAsync(id), onDone: () => refetch() });
   const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<EventFormData>();
 
   const handleEdit = (item: Event) => {
@@ -190,12 +192,20 @@ export default function EventManagement() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold">이벤트 관리</h2>
-        <button
-          onClick={handleCreate}
-          className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-        >
-          새 이벤트
-        </button>
+        <div className="flex items-center gap-2">
+          {bulk.count > 0 && (
+            <button onClick={() => void bulk.deleteSelected()} disabled={bulk.busy}
+              className="bg-red-600 hover:bg-red-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50">
+              선택 삭제 ({bulk.count})
+            </button>
+          )}
+          <button
+            onClick={handleCreate}
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+          >
+            새 이벤트
+          </button>
+        </div>
       </div>
 
       <div className="mb-4">
@@ -227,6 +237,9 @@ export default function EventManagement() {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-gray-50 border-b">
+                  <th className="px-4 py-3 w-10">
+                    <input type="checkbox" checked={bulk.isAllSelected(data.data)} onChange={() => bulk.toggleAll(data.data)} aria-label="전체 선택" />
+                  </th>
                   <th className="text-left px-4 py-3 text-sm font-medium">제목</th>
                   <th className="text-left px-4 py-3 text-sm font-medium">날짜</th>
                   <th className="text-left px-4 py-3 text-sm font-medium">위치</th>
@@ -237,6 +250,9 @@ export default function EventManagement() {
               <tbody>
                 {data.data.map((item) => (
                   <tr key={item.id} className="border-b hover:bg-gray-50">
+                    <td className="px-4 py-3">
+                      <input type="checkbox" checked={bulk.has(item.id)} onChange={() => bulk.toggle(item.id)} aria-label={`${item.title} 선택`} />
+                    </td>
                     <td className="px-4 py-3 text-sm font-medium">{item.title}</td>
                     <td className="px-4 py-3 text-sm">{item.eventDate || '-'}</td>
                     <td className="px-4 py-3 text-sm">{item.location || '-'}</td>

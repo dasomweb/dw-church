@@ -12,6 +12,7 @@ import {
 } from '@dw-church/api-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
+import { useBulkDelete } from '../components/useBulkDelete';
 
 // ─── YouTube 썸네일 유틸 ──────────────────────────────────
 function extractYouTubeId(url: string): string | null {
@@ -163,12 +164,13 @@ export default function SermonManagement() {
   const [deleteTarget, setDeleteTarget] = useState<{id: string; name: string} | null>(null);
 
   const { showToast } = useToast();
-  const { data, isLoading, error } = useSermons(params);
+  const { data, isLoading, error, refetch } = useSermons(params);
   const { data: categories } = useSermonCategories();
   const { data: preachers } = useSermonPreachers();
   const createMutation = useCreateSermon();
   const updateMutation = useUpdateSermon();
   const deleteMutation = useDeleteSermon();
+  const bulk = useBulkDelete<Sermon>({ deleteOne: (id) => deleteMutation.mutateAsync(id), onDone: () => refetch() });
   const apiClient = useDWChurchClient();
   const queryClient = useQueryClient();
 
@@ -385,12 +387,20 @@ export default function SermonManagement() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold">설교 관리</h2>
-        <button
-          onClick={handleCreate}
-          className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-        >
-          새 설교
-        </button>
+        <div className="flex items-center gap-2">
+          {bulk.count > 0 && (
+            <button onClick={() => void bulk.deleteSelected()} disabled={bulk.busy}
+              className="bg-red-600 hover:bg-red-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50">
+              선택 삭제 ({bulk.count})
+            </button>
+          )}
+          <button
+            onClick={handleCreate}
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+          >
+            새 설교
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-3 mb-4 flex-wrap">
@@ -442,6 +452,9 @@ export default function SermonManagement() {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-gray-50 border-b">
+                  <th className="px-4 py-3 w-10">
+                    <input type="checkbox" checked={bulk.isAllSelected(data.data)} onChange={() => bulk.toggleAll(data.data)} aria-label="전체 선택" />
+                  </th>
                   <th className="text-left px-4 py-3 text-sm font-medium">제목</th>
                   <th className="text-left px-4 py-3 text-sm font-medium">설교자</th>
                   <th className="text-left px-4 py-3 text-sm font-medium">성경구절</th>
@@ -454,6 +467,9 @@ export default function SermonManagement() {
               <tbody>
                 {data.data.map((item) => (
                   <tr key={item.id} className="border-b hover:bg-gray-50">
+                    <td className="px-4 py-3">
+                      <input type="checkbox" checked={bulk.has(item.id)} onChange={() => bulk.toggle(item.id)} aria-label={`${item.title} 선택`} />
+                    </td>
                     <td className="px-4 py-3 text-sm font-medium">{item.title}</td>
                     <td className="px-4 py-3 text-sm">{item.preacher}</td>
                     <td className="px-4 py-3 text-sm">{item.scripture}</td>
