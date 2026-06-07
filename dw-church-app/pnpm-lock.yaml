@@ -194,6 +194,9 @@ importers:
       '@dw-church/api-client':
         specifier: workspace:*
         version: link:../api-client
+      '@dw-church/blocks':
+        specifier: workspace:*
+        version: link:../blocks
       '@dw-church/design-tokens':
         specifier: workspace:*
         version: link:../design-tokens
@@ -239,7 +242,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitejs/plugin-react':
         specifier: ^4.4.1
-        version: 4.7.0(vite@6.4.1(@types/node@22.19.15)(jiti@2.6.1)(tsx@4.21.0))
+        version: 4.7.0(vite@6.4.1(@types/node@22.19.15)(jiti@1.21.7)(tsx@4.21.0))
       autoprefixer:
         specifier: ^10.4.21
         version: 10.4.27(postcss@8.5.8)
@@ -251,10 +254,10 @@ importers:
         version: 3.4.19(tsx@4.21.0)
       vite:
         specifier: ^6.3.5
-        version: 6.4.1(@types/node@22.19.15)(jiti@2.6.1)(tsx@4.21.0)
+        version: 6.4.1(@types/node@22.19.15)(jiti@1.21.7)(tsx@4.21.0)
       vitest:
         specifier: ^3.1.4
-        version: 3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@25.0.1)(tsx@4.21.0)
+        version: 3.2.4(@types/node@22.19.15)(jiti@1.21.7)(jsdom@25.0.1)(tsx@4.21.0)
 
   packages/api-client:
     devDependencies:
@@ -351,7 +354,7 @@ importers:
         version: 8.6.18(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(storybook@8.6.18(prettier@3.8.1))(typescript@5.9.3)
       '@storybook/react-vite':
         specifier: ^8.6.14
-        version: 8.6.18(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.59.0)(storybook@8.6.18(prettier@3.8.1))(typescript@5.9.3)(vite@6.4.1(@types/node@22.19.15)(jiti@1.21.7)(tsx@4.21.0))
+        version: 8.6.18(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.59.0)(storybook@8.6.18(prettier@3.8.1))(typescript@5.9.3)(vite@6.4.1(@types/node@22.19.15)(jiti@2.6.1)(tsx@4.21.0))
       '@testing-library/jest-dom':
         specifier: ^6.6.3
         version: 6.9.1
@@ -366,7 +369,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitejs/plugin-react':
         specifier: ^4.4.1
-        version: 4.7.0(vite@6.4.1(@types/node@22.19.15)(jiti@1.21.7)(tsx@4.21.0))
+        version: 4.7.0(vite@6.4.1(@types/node@22.19.15)(jiti@2.6.1)(tsx@4.21.0))
       autoprefixer:
         specifier: ^10.4.21
         version: 10.4.27(postcss@8.5.8)
@@ -390,10 +393,10 @@ importers:
         version: 3.4.19(tsx@4.21.0)
       vite:
         specifier: ^6.3.5
-        version: 6.4.1(@types/node@22.19.15)(jiti@1.21.7)(tsx@4.21.0)
+        version: 6.4.1(@types/node@22.19.15)(jiti@2.6.1)(tsx@4.21.0)
       vitest:
         specifier: ^3.1.4
-        version: 3.2.4(@types/node@22.19.15)(jiti@1.21.7)(jsdom@25.0.1)(tsx@4.21.0)
+        version: 3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@25.0.1)(tsx@4.21.0)
 
   packages/wp-plugin: {}
 
@@ -5313,12 +5316,12 @@ snapshots:
       wrap-ansi: 8.1.0
       wrap-ansi-cjs: wrap-ansi@7.0.0
 
-  '@joshwooding/vite-plugin-react-docgen-typescript@0.5.0(typescript@5.9.3)(vite@6.4.1(@types/node@22.19.15)(jiti@1.21.7)(tsx@4.21.0))':
+  '@joshwooding/vite-plugin-react-docgen-typescript@0.5.0(typescript@5.9.3)(vite@6.4.1(@types/node@22.19.15)(jiti@2.6.1)(tsx@4.21.0))':
     dependencies:
       glob: 10.5.0
       magic-string: 0.27.0
       react-docgen-typescript: 2.4.0(typescript@5.9.3)
-      vite: 6.4.1(@types/node@22.19.15)(jiti@1.21.7)(tsx@4.21.0)
+      vite: 6.4.1(@types/node@22.19.15)(jiti@2.6.1)(tsx@4.21.0)
     optionalDependencies:
       typescript: 5.9.3
 
@@ -6334,13 +6337,13 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@storybook/builder-vite@8.6.18(storybook@8.6.18(prettier@3.8.1))(vite@6.4.1(@types/node@22.19.15)(jiti@1.21.7)(tsx@4.21.0))':
+  '@storybook/builder-vite@8.6.18(storybook@8.6.18(prettier@3.8.1))(vite@6.4.1(@types/node@22.19.15)(jiti@2.6.1)(tsx@4.21.0))':
     dependencies:
       '@storybook/csf-plugin': 8.6.18(storybook@8.6.18(prettier@3.8.1))
       browser-assert: 1.2.1
       storybook: 8.6.18(prettier@3.8.1)
       ts-dedent: 2.2.0
-      vite: 6.4.1(@types/node@22.19.15)(jiti@1.21.7)(tsx@4.21.0)
+      vite: 6.4.1(@types/node@22.19.15)(jiti@2.6.1)(tsx@4.21.0)
 
   '@storybook/components@8.6.18(storybook@8.6.18(prettier@3.8.1))':
     dependencies:
@@ -6404,11 +6407,11 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
       storybook: 8.6.18(prettier@3.8.1)
 
-  '@storybook/react-vite@8.6.18(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.59.0)(storybook@8.6.18(prettier@3.8.1))(typescript@5.9.3)(vite@6.4.1(@types/node@22.19.15)(jiti@1.21.7)(tsx@4.21.0))':
+  '@storybook/react-vite@8.6.18(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.59.0)(storybook@8.6.18(prettier@3.8.1))(typescript@5.9.3)(vite@6.4.1(@types/node@22.19.15)(jiti@2.6.1)(tsx@4.21.0))':
     dependencies:
-      '@joshwooding/vite-plugin-react-docgen-typescript': 0.5.0(typescript@5.9.3)(vite@6.4.1(@types/node@22.19.15)(jiti@1.21.7)(tsx@4.21.0))
+      '@joshwooding/vite-plugin-react-docgen-typescript': 0.5.0(typescript@5.9.3)(vite@6.4.1(@types/node@22.19.15)(jiti@2.6.1)(tsx@4.21.0))
       '@rollup/pluginutils': 5.3.0(rollup@4.59.0)
-      '@storybook/builder-vite': 8.6.18(storybook@8.6.18(prettier@3.8.1))(vite@6.4.1(@types/node@22.19.15)(jiti@1.21.7)(tsx@4.21.0))
+      '@storybook/builder-vite': 8.6.18(storybook@8.6.18(prettier@3.8.1))(vite@6.4.1(@types/node@22.19.15)(jiti@2.6.1)(tsx@4.21.0))
       '@storybook/react': 8.6.18(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(storybook@8.6.18(prettier@3.8.1))(typescript@5.9.3)
       find-up: 5.0.0
       magic-string: 0.30.21
@@ -6418,7 +6421,7 @@ snapshots:
       resolve: 1.22.11
       storybook: 8.6.18(prettier@3.8.1)
       tsconfig-paths: 4.2.0
-      vite: 6.4.1(@types/node@22.19.15)(jiti@1.21.7)(tsx@4.21.0)
+      vite: 6.4.1(@types/node@22.19.15)(jiti@2.6.1)(tsx@4.21.0)
     transitivePeerDependencies:
       - rollup
       - supports-color
