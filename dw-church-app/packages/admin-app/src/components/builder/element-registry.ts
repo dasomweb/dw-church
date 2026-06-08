@@ -1325,7 +1325,262 @@ export function getElementKindForPath(blockType: string, path: string): ElementK
   return null;
 }
 
+// ─── dw-church domain blocks ─────────────────────────────────────────
+// The registry above was ported from b2bsmart (product/catalog domain).
+// These entries cover dw-church's church-specific blocks so the
+// super-admin inspector renders proper controls — not the "No editor
+// registered" dead-end — for every block in PageEditor BLOCK_DEFS.
+//
+// Field paths/kinds mirror packages/admin-app/src/pages/PageEditor.tsx
+// BLOCK_DEFS verbatim so the inspector reads/writes exactly the keys the
+// block renderers (apps/web/components/blocks + BlockRenderer) consume.
+// BLOCK_DEFS stays the single source of truth; when it changes, mirror
+// here. Structured-array fields (services / images / steps / tags) are
+// edited via their dedicated widgets in the tenant PageEditor and are
+// intentionally omitted from the scalar inspector.
+type ChurchFieldType = 'text' | 'textarea' | 'image' | 'url' | 'number' | 'select' | 'color';
+interface ChurchField {
+  key: string;
+  label: string;
+  type: ChurchFieldType;
+  choices?: { value: string; label: string }[];
+  hint?: string;
+}
+const CHURCH_KIND: Record<ChurchFieldType, ElementKind> = {
+  text: 'text', textarea: 'html', image: 'image', url: 'url', number: 'number', select: 'select', color: 'color',
+};
+function churchBlock(...sections: { title: string; fields: ChurchField[] }[]): BlockElementRegistry {
+  return {
+    sections: sections.map((s) => ({
+      title: s.title,
+      elements: s.fields.map((f) => {
+        const spec: ElementSpec = { label: f.label, path: f.key, kind: CHURCH_KIND[f.type] };
+        if (f.choices) spec.choices = f.choices;
+        if (f.hint) spec.hint = f.hint;
+        return spec;
+      }),
+    })),
+  };
+}
+// Layout Block container style — the scalar props every Layout Block
+// (row / columns / section) renders from. Children are arranged in the
+// canvas, not here.
+const LAYOUT_CONTAINER_FIELDS: ChurchField[] = [
+  { key: 'padding', label: '패딩 (CSS)', type: 'text', hint: '예: 24px 또는 40px 24px' },
+  { key: 'margin', label: '마진 (CSS)', type: 'text' },
+  { key: 'backgroundColor', label: '배경색', type: 'color' },
+  { key: 'backgroundImageUrl', label: '배경 이미지', type: 'image' },
+  { key: 'overlayColor', label: '오버레이 색상', type: 'color' },
+  { key: 'overlayOpacity', label: '오버레이 투명도 (%)', type: 'number' },
+  { key: 'borderColor', label: '테두리 색상', type: 'color' },
+  { key: 'borderWidth', label: '테두리 두께 (px)', type: 'number' },
+  { key: 'borderRadius', label: '모서리 둥글기 (px)', type: 'number' },
+  { key: 'linkUrl', label: '링크 URL', type: 'url' },
+  { key: 'linkTarget', label: '링크 타겟', type: 'select', choices: [
+    { value: '_self', label: '현재 창' }, { value: '_blank', label: '새 창' },
+  ]},
+];
+
+const PASTOR_MESSAGE = churchBlock(
+  { title: 'Content', fields: [
+    { key: 'title', label: '섹션 제목', type: 'text' },
+    { key: 'pastorName', label: '이름', type: 'text' },
+    { key: 'pastorTitle', label: '직함', type: 'text' },
+    { key: 'message', label: '인사말', type: 'textarea' },
+    { key: 'imageUrl', label: '사진', type: 'image' },
+  ]},
+  { title: 'Design', fields: [
+    { key: 'variant', label: '레이아웃', type: 'select', choices: [
+      { value: 'right', label: '사진 우측' }, { value: 'left', label: '사진 좌측' },
+    ]},
+  ]},
+);
+const CHURCH_INTRO = churchBlock(
+  { title: 'Content', fields: [
+    { key: 'title', label: '제목', type: 'text' },
+    { key: 'content', label: '소개글', type: 'textarea' },
+    { key: 'imageUrl', label: '이미지', type: 'image' },
+  ]},
+  { title: 'Design', fields: [
+    { key: 'variant', label: '레이아웃', type: 'select', choices: [
+      { value: 'with-image', label: '이미지 포함' }, { value: 'text-only', label: '텍스트만' },
+    ]},
+  ]},
+);
+const RECENT_SERMONS = churchBlock(
+  { title: 'Header', fields: [{ key: 'title', label: '제목', type: 'text' }]},
+  { title: 'Data', fields: [
+    { key: 'limit', label: '표시 개수', type: 'number', hint: '기본 6' },
+    { key: 'variant', label: 'Columns', type: 'select', choices: [
+      { value: 'grid-4', label: '4 columns' }, { value: 'grid-3', label: '3 columns' },
+      { value: 'grid-2', label: '2 columns' }, { value: 'list', label: 'List' },
+    ]},
+  ]},
+);
+const RECENT_BULLETINS = churchBlock(
+  { title: 'Header', fields: [{ key: 'title', label: '제목', type: 'text' }]},
+  { title: 'Data', fields: [
+    { key: 'limit', label: '표시 개수', type: 'number', hint: '기본 6' },
+    { key: 'variant', label: 'Columns', type: 'select', choices: [
+      { value: 'list', label: 'List' }, { value: 'grid-2', label: '2 columns' },
+      { value: 'grid-3', label: '3 columns' }, { value: 'grid-4', label: '4 columns' },
+      { value: 'grid-5', label: '5 columns' }, { value: 'grid-6', label: '6 columns' },
+    ]},
+  ]},
+);
+const RECENT_COLUMNS = churchBlock(
+  { title: 'Header', fields: [{ key: 'title', label: '제목', type: 'text' }]},
+  { title: 'Data', fields: [
+    { key: 'limit', label: '표시 개수', type: 'number', hint: '기본 6' },
+    { key: 'variant', label: 'Columns', type: 'select', choices: [
+      { value: 'grid-3', label: '3 columns' }, { value: 'grid-2', label: '2 columns' },
+      { value: 'grid-4', label: '4 columns' }, { value: 'list', label: 'List' },
+    ]},
+  ]},
+);
+const EVENT_GRID = churchBlock(
+  { title: 'Header', fields: [{ key: 'title', label: '제목', type: 'text' }]},
+  { title: 'Data', fields: [
+    { key: 'limit', label: '표시 개수', type: 'number', hint: '기본 4' },
+    { key: 'variant', label: 'Columns', type: 'select', choices: [
+      { value: 'cards-4', label: '4 columns' }, { value: 'cards-3', label: '3 columns' },
+      { value: 'cards-2', label: '2 columns' },
+    ]},
+  ]},
+);
+const STAFF_GRID = churchBlock(
+  { title: 'Header', fields: [{ key: 'title', label: '제목', type: 'text' }]},
+  { title: 'Data', fields: [
+    { key: 'limit', label: '표시 개수', type: 'number', hint: '기본 20' },
+    { key: 'variant', label: 'Columns', type: 'select', choices: [
+      { value: 'grid-4', label: '4 columns' }, { value: 'grid-3', label: '3 columns' },
+      { value: 'grid-2', label: '2 columns' }, { value: 'grouped', label: '직분별 그룹' },
+    ]},
+    { key: 'groupBy', label: '그룹 기준', type: 'select', choices: [
+      { value: 'role', label: '직분 (role)' }, { value: 'department', label: '부서 (department)' },
+    ], hint: 'grouped 변형에서만 사용' },
+  ]},
+);
+const HISTORY_TIMELINE = churchBlock(
+  { title: 'Header', fields: [{ key: 'title', label: '제목', type: 'text' }]},
+  { title: 'Design', fields: [
+    { key: 'variant', label: '레이아웃', type: 'select', choices: [
+      { value: 'left', label: '좌측' }, { value: 'alternating', label: '교차' },
+    ]},
+  ]},
+);
+const WORSHIP_TIMES = churchBlock(
+  { title: 'Content', fields: [
+    { key: 'title', label: '제목', type: 'text', hint: '예배/모임 목록은 콘텐츠 관리에서 편집합니다' },
+  ]},
+);
+const MAP_EMBED = churchBlock(
+  { title: 'Location', fields: [
+    { key: 'title', label: '제목', type: 'text' },
+    { key: 'address', label: '주소', type: 'text' },
+  ]},
+  { title: 'Design', fields: [
+    { key: 'variant', label: '레이아웃', type: 'select', choices: [
+      { value: 'full', label: '전체 너비' }, { value: 'with-info', label: '정보 포함' },
+    ]},
+  ]},
+);
+const ADDRESS_INFO = churchBlock(
+  { title: 'Contact', fields: [
+    { key: 'title', label: '제목', type: 'text' },
+    { key: 'address', label: '주소', type: 'text' },
+    { key: 'phone', label: '전화', type: 'text' },
+    { key: 'email', label: '이메일', type: 'text' },
+  ]},
+  { title: 'Design', fields: [
+    { key: 'variant', label: '레이아웃', type: 'select', choices: [
+      { value: 'cards', label: '카드' }, { value: 'inline', label: '인라인' },
+    ]},
+  ]},
+);
+const VISITOR_WELCOME = churchBlock(
+  { title: 'Content', fields: [
+    { key: 'title', label: '제목', type: 'text' },
+    { key: 'message', label: '환영 메시지', type: 'textarea' },
+    { key: 'imageUrl', label: '이미지', type: 'image' },
+  ]},
+  { title: 'Design', fields: [
+    { key: 'variant', label: '레이아웃', type: 'select', choices: [
+      { value: 'split', label: '분할' }, { value: 'centered', label: '중앙' },
+    ]},
+  ]},
+);
+const FIRST_TIME_GUIDE = churchBlock(
+  { title: 'Content', fields: [
+    { key: 'title', label: '제목', type: 'text', hint: '단계 항목은 콘텐츠 관리에서 편집합니다' },
+  ]},
+  { title: 'Design', fields: [
+    { key: 'variant', label: '레이아웃', type: 'select', choices: [
+      { value: 'numbered', label: '번호' }, { value: 'icons', label: '아이콘' },
+    ]},
+  ]},
+);
+const NEWCOMER_INFO = churchBlock(
+  { title: 'Content', fields: [
+    { key: 'title', label: '제목', type: 'text' },
+    { key: 'content', label: '내용', type: 'textarea' },
+    { key: 'imageUrl', label: '이미지', type: 'image' },
+  ]},
+);
+const WORSHIP_SCHEDULE = churchBlock(
+  { title: 'Content', fields: [
+    { key: 'title', label: '제목', type: 'text', hint: '예배 시간은 콘텐츠 관리에서 편집합니다' },
+  ]},
+);
+const LAYOUT_ROW = churchBlock(
+  { title: 'Layout', fields: [
+    { key: 'gap', label: '간격 (px)', type: 'number' },
+    { key: 'divider', label: '구분선 표시', type: 'select', choices: [
+      { value: '', label: '없음' }, { value: 'true', label: '있음' },
+    ]},
+    { key: 'dividerColor', label: '구분선 색상', type: 'color' },
+  ]},
+  { title: 'Container', fields: LAYOUT_CONTAINER_FIELDS },
+);
+const LAYOUT_COLUMNS = churchBlock(
+  { title: 'Layout', fields: [
+    { key: 'layout', label: '열 수', type: 'select', choices: [
+      { value: 'columns-2', label: '2열' }, { value: 'columns-3', label: '3열' }, { value: 'columns-4', label: '4열' },
+    ]},
+    { key: 'gap', label: '간격 (px)', type: 'number' },
+  ]},
+  { title: 'Container', fields: LAYOUT_CONTAINER_FIELDS },
+);
+const LAYOUT_SECTION = churchBlock(
+  { title: 'Layout', fields: [
+    { key: 'maxWidth', label: '최대 너비', type: 'select', choices: [
+      { value: '7xl', label: '7xl (기본)' }, { value: '5xl', label: '5xl (좁게)' }, { value: 'full', label: '전체' },
+    ]},
+  ]},
+  { title: 'Container', fields: LAYOUT_CONTAINER_FIELDS },
+);
+
 export const ELEMENT_REGISTRY: Record<string, BlockElementRegistry> = {
+  // ─── dw-church domain blocks ───────────────────────────────────────
+  pastor_message:   PASTOR_MESSAGE,
+  church_intro:     CHURCH_INTRO,
+  recent_sermons:   RECENT_SERMONS,
+  recent_bulletins: RECENT_BULLETINS,
+  recent_columns:   RECENT_COLUMNS,
+  event_grid:       EVENT_GRID,
+  staff_grid:       STAFF_GRID,
+  history_timeline: HISTORY_TIMELINE,
+  worship_times:    WORSHIP_TIMES,
+  worship_schedule: WORSHIP_SCHEDULE,
+  map_embed:        MAP_EMBED,
+  address_info:     ADDRESS_INFO,
+  visitor_welcome:  VISITOR_WELCOME,
+  first_time_guide: FIRST_TIME_GUIDE,
+  newcomer_info:    NEWCOMER_INFO,
+  layout_row:       LAYOUT_ROW,
+  layout_columns:   LAYOUT_COLUMNS,
+  layout_section:   LAYOUT_SECTION,
+
   hero_banner:     HERO_BANNER,
   hero_full_width: HERO_BANNER,
 

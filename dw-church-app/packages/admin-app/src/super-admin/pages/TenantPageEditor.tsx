@@ -1,27 +1,14 @@
 /**
- * Super-admin PageBuilder (Phase 4 — minimal viable).
+ * Super-admin PageBuilder. Mounts at /super-admin/t/:slug/pages.
  *
- * Mounts at /super-admin/t/:slug/pages. The full b2bsmart inspector
- * (17 property fields × 3-tab Layout/Style/Advanced × element-registry
- * driven specs) is ~4800 lines of source plus contexts (DynamicSource,
- * AIImageGenerate, MediaPicker) that depend on tenant nav state and
- * apps/agents which dw-church doesn't ship. Porting that wholesale in
- * one go would either fail at runtime or eat days of mechanical work.
- *
- * This file ships a focused subset that exercises the new path
- * end-to-end:
- *   - 3-pane shell — page list / sections / inspector — same layout
- *     b2bsmart will eventually replace
- *   - Sections render through @dw-church/blocks' BlockRenderer so the
- *     new SectionShell + element primitives + block-style-resolver
- *     pipeline is actually exercised
- *   - The inspector reads/writes section.props through the existing
- *     PUT /pages/:id/sections/:sectionId endpoint (no API churn)
- *   - 6 essential property fields are inline: text, textarea, image
- *     URL, color, number, select. These are the operator-set values
- *     that drive 80% of block configuration. The b2bsmart 17-field
- *     pack lands in a follow-up Phase 4b that ports
- *     packages/blocks/property-fields verbatim.
+ * 3-pane shell — page list / section list / inspector. The inspector is
+ * the full ported b2bsmart ElementInspector (3-tab Content/Style/Advanced,
+ * element-registry-driven property fields), wired to write section.props
+ * (and props.blockStyle for per-block style) through the existing
+ * PUT /pages/:id/sections/:sectionId endpoint with an X-Tenant-Slug header
+ * for the target tenant. The element-registry (element-registry.ts) covers
+ * every dw-church block_type in PageEditor BLOCK_DEFS, so the operator gets
+ * the same rich controls here as the tenant-side PageEditor.
  */
 import { useEffect, useMemo, useState } from 'react';
 import type { PageSection } from '@dw-church/api-client';
@@ -117,25 +104,6 @@ export default function TenantPageEditor() {
 
   const selectedSection = sections.find((s) => s.id === selectedSectionId) ?? null;
 
-  const updateSectionProps = async (next: Record<string, unknown>) => {
-    if (!selectedPageId || !selectedSection) return;
-    setSaving(true);
-    try {
-      const res = await fetch(`${baseUrl}/api/v1/pages/${selectedPageId}/sections/${selectedSection.id}`, {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify({ props: next }),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const updated = await res.json() as Section;
-      setSections((prev) => prev.map((s) => s.id === updated.id ? updated : s));
-    } catch (err) {
-      showToast('error', err instanceof Error ? err.message : '저장 실패');
-    } finally {
-      setSaving(false);
-    }
-  };
-
   // ElementInspector callbacks — route its debounced props / block-style writes
   // through this console's raw fetch (carries X-Tenant-Slug for the target
   // tenant). Block-style is stored in props.blockStyle (dw-church PageSection
@@ -143,6 +111,7 @@ export default function TenantPageEditor() {
   const handlePropsChange = (sectionId: string, next: Record<string, unknown>) => {
     void (async () => {
       if (!selectedPageId) return;
+      setSaving(true);
       try {
         const res = await fetch(`${baseUrl}/api/v1/pages/${selectedPageId}/sections/${sectionId}`, {
           method: 'PUT', headers, body: JSON.stringify({ props: next }),
@@ -152,6 +121,8 @@ export default function TenantPageEditor() {
         setSections((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
       } catch (err) {
         showToast('error', err instanceof Error ? err.message : '저장 실패');
+      } finally {
+        setSaving(false);
       }
     })();
   };
@@ -240,148 +211,6 @@ export default function TenantPageEditor() {
           <div className="p-6 text-sm text-gray-400 text-center">섹션을 선택하세요</div>
         )}
       </section>
-    </div>
-  );
-}
-
-// ─── Inspector ───────────────────────────────────────────────────────
-function Inspector({ section, onChange, saving }: { section: Section; onChange: (next: Record<string, unknown>) => void; saving: boolean }) {
-  // Local draft state — only commits on blur to avoid hammering the
-  // server every keystroke.
-  const [draft, setDraft] = useState<Record<string, unknown>>(section.props);
-  useEffect(() => { setDraft(section.props); }, [section.id, section.props]);
-
-  const commit = (key: string, value: unknown) => {
-    const next = { ...draft, [key]: value };
-    setDraft(next);
-    onChange(next);
-  };
-
-  return (
-    <div className="p-4 space-y-4">
-      <div className="text-xs text-gray-400 font-mono mb-2">
-        block_type: <span className="text-gray-700">{section.blockType}</span>
-      </div>
-
-      {/* Field rendering — block-type-agnostic. Inspect the props shape
-          and render a field per top-level key. Future Phase 4b will
-          replace this with the element-registry spec-driven inspector. */}
-      {Object.entries(draft).map(([key, value]) => (
-        <Field
-          key={key}
-          name={key}
-          value={value}
-          onChange={(v) => commit(key, v)}
-          disabled={saving}
-        />
-      ))}
-    </div>
-  );
-}
-
-function Field({ name, value, onChange, disabled }: { name: string; value: unknown; onChange: (v: unknown) => void; disabled: boolean }) {
-  // Field type inference — by key name suffix + value type. Crude but
-  // covers the dw-church block prop shapes. Phase 4b replaces with
-  // explicit per-block specs from element-registry.
-  const isImage = /imageUrl|image|backgroundImageUrl|thumbnailUrl|logoUrl|photoUrl/i.test(name);
-  const isColor = /color|background|fill/i.test(name) && typeof value === 'string' && /^#/.test(value);
-  const isLongText = typeof value === 'string' && (value.length > 80 || /content|description|message|html|body/i.test(name));
-  const isNumber = typeof value === 'number';
-  const isBool = typeof value === 'boolean';
-  const isUrl = typeof value === 'string' && /url|href|link/i.test(name);
-  const isShortText = typeof value === 'string';
-
-  const label = name
-    .replace(/([A-Z])/g, ' $1')
-    .replace(/^./, (s) => s.toUpperCase())
-    .replace(/Url/g, 'URL');
-
-  if (isBool) {
-    return (
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={Boolean(value)}
-          onChange={(e) => onChange(e.target.checked)}
-          disabled={disabled}
-        />
-        <span className="font-medium text-gray-700">{label}</span>
-      </label>
-    );
-  }
-
-  return (
-    <div>
-      <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
-      {isImage ? (
-        <div className="space-y-1">
-          <input
-            type="text"
-            value={(value as string) ?? ''}
-            onChange={(e) => onChange(e.target.value)}
-            disabled={disabled}
-            placeholder="https://..."
-            className="w-full px-2 py-1.5 text-xs border rounded disabled:opacity-50"
-          />
-          {typeof value === 'string' && value && (
-            <img src={value} alt="" className="w-full h-24 object-cover rounded border" />
-          )}
-        </div>
-      ) : isColor ? (
-        <div className="flex items-center gap-2">
-          <input
-            type="color"
-            value={(value as string) ?? '#000000'}
-            onChange={(e) => onChange(e.target.value)}
-            disabled={disabled}
-            className="w-8 h-8 rounded cursor-pointer disabled:opacity-50"
-          />
-          <input
-            type="text"
-            value={(value as string) ?? ''}
-            onChange={(e) => onChange(e.target.value)}
-            disabled={disabled}
-            className="flex-1 px-2 py-1.5 text-xs font-mono border rounded disabled:opacity-50"
-          />
-        </div>
-      ) : isUrl ? (
-        <input
-          type="url"
-          value={(value as string) ?? ''}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={disabled}
-          placeholder="https://..."
-          className="w-full px-2 py-1.5 text-xs border rounded disabled:opacity-50"
-        />
-      ) : isNumber ? (
-        <input
-          type="number"
-          value={value as number}
-          onChange={(e) => onChange(Number(e.target.value))}
-          disabled={disabled}
-          className="w-full px-2 py-1.5 text-sm border rounded disabled:opacity-50"
-        />
-      ) : isLongText ? (
-        <textarea
-          value={(value as string) ?? ''}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={disabled}
-          rows={4}
-          className="w-full px-2 py-1.5 text-sm border rounded disabled:opacity-50"
-        />
-      ) : isShortText ? (
-        <input
-          type="text"
-          value={(value as string) ?? ''}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={disabled}
-          className="w-full px-2 py-1.5 text-sm border rounded disabled:opacity-50"
-        />
-      ) : (
-        <div className="text-xs text-gray-400 italic">
-          {Array.isArray(value) ? `Array(${value.length})` : typeof value === 'object' && value !== null ? 'Object' : '(unsupported)'}
-        </div>
-      )}
     </div>
   );
 }
