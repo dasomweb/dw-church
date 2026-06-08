@@ -43,7 +43,10 @@
      - web: 설교/칼럼/주보 상세 라우트가 매칭 `*_detail` 템플릿 조회 → 있으면 `BlockRenderer`+`resolveDynamicProps(item)`로 렌더(`apps/web/lib/dynamic.ts`에 resolver 인라인 — `@dw-church/blocks` 의존 없음), 없으면 기존 고정 레이아웃(템플릿 없으면 동작 무변).
      - **배포·검증**: api-server(repo root에서 `railway up --service api-server`)·web·admin 3개. api `/pages`에 `kind` 노출 확인, admin 청크에 `페이지 종류`/`sermon_detail` 확인, web home 200(무회귀).
      - 참고: `DynamicSourcePicker`의 유일한 잔여 스텁은 `useProductFieldSchema`(b2b 제품 커스텀필드)뿐 — 교회 도메인 불필요.
-   - ⏭️ (옵션) 상세 템플릿 **빠른 생성 UI**: 현재는 기존 페이지의 '페이지 종류'를 바꿔 템플릿화. 전용 "새 상세 템플릿" 버튼은 후속 개선 여지.
+   - ✅ **에디터 데이터/블록 관리 보강** (커밋 `6308f8f6`, `8c6bfec8`):
+     - **snake_case 버그 수정(인스펙터가 안 떴던 핵심 원인)**: TenantPageEditor는 raw fetch라 `/pages`·`/sections` 응답이 snake_case(`block_type`/`is_visible`/`is_home`)로 옴 → 에디터가 camelCase로 읽어 `blockType` 빈값 → 인스펙터 "No editor registered ()" + 전부 "숨김". 모든 raw-fetch read에 `normalizeSection`/`normalizePage` 적용해 해결. **이 파일에 raw-fetch read 추가 시 반드시 normalize.**
+     - **전용 '+ 템플릿' 버튼**(페이지 패널): 빈 페이지를 선택한 *_detail kind로 생성+선택. 목록 페이지 재활용 불필요.
+     - **'+ 블록' 버튼**(섹션 패널): 큐레이션된 블록셋(section_header/hero/text/text_image/gallery/quote/video/divider) POST. **섹션 × 삭제**(hover) DELETE. super_admin이 POST/DELETE sections의 Pro+ 게이트 우회.
    - ✅ **element-click 포커스 선택** (커밋 `1e692d11`) — 프리뷰에서 섹션 클릭 → 인스펙터 포커스 + 프리뷰에 선택 윤곽선. `postMessage` 브리지:
      - web: `BlockRenderer`가 최상위 섹션을 `data-dw-section`으로 래핑. 신규 `PreviewBridge`(테넌트 layout에 마운트, `?preview=1` + iframe 임베드일 때만 활성) — 클릭→`postMessage('dw-preview:select')` + hover/선택 윤곽. 일반 방문자엔 무영향(null 렌더).
      - admin: `LivePreviewPane`이 `preview=1` 추가, origin 검증 후 선택 메시지 수신→`onSelectSection`, 선택 변경 시 `dw-preview:highlight` 푸시. `TenantPageEditor`가 `selectedSectionId`↔`setSelectedSectionId` 연결.
