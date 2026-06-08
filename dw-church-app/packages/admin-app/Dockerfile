@@ -32,6 +32,13 @@ COPY --from=deps /app/packages/api-client/node_modules ./packages/api-client/nod
 COPY --from=deps /app/packages/ui-components/node_modules ./packages/ui-components/node_modules
 COPY --from=deps /app/packages/admin-app/node_modules ./packages/admin-app/node_modules
 COPY --from=deps /app/packages/design-tokens/node_modules ./packages/design-tokens/node_modules
+# admin-app's super-admin page builder imports @dw-church/blocks/builder,
+# which pulls blocks/src/utilities/* — those import @dw-church/design-tokens.
+# Without the blocks package's own node_modules (where pnpm symlinks that
+# workspace dep), Rollup can't resolve the import and the vite build fails:
+#   Rollup failed to resolve import "@dw-church/design-tokens" from
+#   "/app/packages/blocks/src/utilities/block-style-resolver.ts"
+COPY --from=deps /app/packages/blocks/node_modules ./packages/blocks/node_modules
 
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.base.json ./
 COPY packages/api-client/ packages/api-client/
