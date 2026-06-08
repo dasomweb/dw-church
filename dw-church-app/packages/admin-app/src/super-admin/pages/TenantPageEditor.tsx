@@ -141,7 +141,9 @@ export default function TenantPageEditor() {
   const previewTimer = useRef<number | null>(null);
   const schedulePreviewReload = () => {
     if (previewTimer.current) clearTimeout(previewTimer.current);
-    previewTimer.current = window.setTimeout(() => setPreviewNonce((n) => n + 1), 800);
+    // Short debounce — the double-buffered preview swaps without a flash, so
+    // we can refresh soon after the operator pauses.
+    previewTimer.current = window.setTimeout(() => setPreviewNonce((n) => n + 1), 350);
   };
   useEffect(() => () => { if (previewTimer.current) clearTimeout(previewTimer.current); }, []);
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
