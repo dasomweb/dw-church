@@ -450,7 +450,10 @@ export default function TenantPageEditor() {
             pageId={selectedPageId ?? ''}
             sections={sections.map((s) => ({ ...s, pageId: selectedPageId ?? '' })) as unknown as PageSection[]}
             sectionId={selectedSection.id}
-            elementKey=""
+            // '__section__' = edit the whole block (all fields). An empty
+            // string would put the inspector in single-element focus mode
+            // and only show the "comes from content" placeholder.
+            elementKey="__section__"
             onClose={() => setSelectedSectionId(null)}
             onPropsChange={handlePropsChange}
             onStyleOverridesChange={handleStyleChange}
