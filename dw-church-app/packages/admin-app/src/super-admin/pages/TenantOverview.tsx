@@ -5,10 +5,7 @@
  * just deep-link into the existing sidebar destinations — operators
  * land here, scan the grid, click in.
  */
-import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAuthStore } from '../../stores/auth';
-import { useToast } from '../../components';
 import { useSuperAdminTenant } from '../SuperAdminTenantLayout';
 
 interface Card { to: string; icon: string; title: string; subtitle: string }
@@ -35,37 +32,14 @@ export default function TenantOverview() {
   const { slug = '' } = useParams<{ slug: string }>();
   const { tenant, loading } = useSuperAdminTenant();
   const navigate = useNavigate();
-  const session = useAuthStore((s) => s.session);
-  const { showToast } = useToast();
-  const [rotating, setRotating] = useState(false);
 
-  // "고객 어드민으로 진입" — issues a 24-hour `support` JWT for this
-  // tenant in a NEW tab so the super-admin's own session stays intact.
-  // Same flow that's already wired into SuperAdminDashboardV2's modal,
-  // exposed here as a direct button per the screenshot.
-  const enterAsSupport = async () => {
-    if (!session?.accessToken || rotating) return;
-    setRotating(true);
-    try {
-      const host = window.location.hostname;
-      const baseUrl = host.startsWith('admin.')
-        ? `https://api.${host.replace('admin.', '')}`
-        : (import.meta.env.VITE_API_BASE_URL as string) || '';
-      const res = await fetch(`${baseUrl}/api/v1/admin/tenants/${tenant?.id}/rotate-support-password`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${session.accessToken}` },
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json() as { email?: string };
-      const email = json.email ?? `support-${slug}@truelight.app`;
-      const url = `/t/${slug}/login?email=${encodeURIComponent(email)}`;
-      window.open(url, '_blank', 'noopener');
-      showToast('success', '지원 세션 발급. 새 탭에서 로그인하세요.');
-    } catch (err) {
-      showToast('error', err instanceof Error ? err.message : '발급 실패');
-    } finally {
-      setRotating(false);
-    }
+  // "어드민 진입" — open the tenant admin directly in a new tab. The
+  // super_admin's existing session passes RequireTenantAccess (it returns
+  // children for isSuper), and the api-client rebinds X-Tenant-Slug from the
+  // URL, so no temp password / re-login is needed.
+  const enterAdmin = () => {
+    if (!slug) return;
+    window.open(`/t/${slug}`, '_blank', 'noopener');
   };
 
   const siteUrl = tenant?.customDomain
@@ -160,20 +134,20 @@ export default function TenantOverview() {
         </a>
       </div>
 
-      {/* Enter as customer admin row */}
+      {/* Enter customer admin row */}
       <div className="bg-white rounded-xl border border-gray-100 p-4 flex items-center justify-between">
         <div>
-          <div className="text-sm font-semibold text-gray-900">고객 어드민으로 진입</div>
+          <div className="text-sm font-semibold text-gray-900">테넌트 어드민으로 진입</div>
           <div className="text-xs text-gray-500 mt-0.5">
-            support 권한의 임시 세션이 새 탭에서 발급됩니다. 원래 super-admin 탭은 그대로 유지됩니다.
+            현재 super-admin 세션 그대로 새 탭에서 이 테넌트의 어드민이 열립니다 (재로그인 불필요).
           </div>
         </div>
         <button
-          onClick={enterAsSupport}
-          disabled={rotating || !tenant}
+          onClick={enterAdmin}
+          disabled={!tenant}
           className="px-3 py-1.5 rounded-md bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
         >
-          {rotating ? '발급 중...' : '어드민 진입 ↗'}
+          어드민 진입 ↗
         </button>
       </div>
     </div>
