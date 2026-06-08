@@ -5,6 +5,7 @@ import { requireAdmin } from '../../../middleware/auth.js';
 import { AppError } from '../../../middleware/error-handler.js';
 import { validateSlug } from '../../../utils/validate-schema.js';
 import { profileFor, modeFor } from './block-tag-map.js';
+import { generateAndStoreImage, directImageGenAvailable } from './image-gen.js';
 
 /**
  * Builder-scoped AI endpoints — accessible to any tenant admin (not just
@@ -171,8 +172,8 @@ export async function aiBuilderRoutes(app: FastifyInstance): Promise<void> {
   });
 
   app.post('/ai/builder/image/generate', { preHandler: [requireAdmin] }, async (request, reply) => {
-    if (!env.INTERNAL_SERVICE_TOKEN) {
-      throw new AppError('CONFIG_ERROR', 503, 'INTERNAL_SERVICE_TOKEN not configured');
+    if (!env.INTERNAL_SERVICE_TOKEN && !directImageGenAvailable()) {
+      throw new AppError('CONFIG_ERROR', 503, '이미지 생성이 설정되지 않았습니다 (GEMINI_API_KEY 또는 agents 서비스 필요)');
     }
     const upstream = `${env.AGENTS_BASE_URL.replace(/\/$/, '')}/api/planner/image/generate`;
 
@@ -222,44 +223,40 @@ export async function aiBuilderRoutes(app: FastifyInstance): Promise<void> {
         `Tenant '${headerSlug}' not found or inactive`,
       );
     }
-    const enrichedBody = {
-      ...(request.body as Record<string, unknown> ?? {}),
-      tenantSlug: tenantRow.slug,
-      tenantId: tenantRow.id,
-    };
+    const reqBody = (request.body as Record<string, unknown>) ?? {};
 
+    // Direct Imagen generation (no agents service needed).
+    if (directImageGenAvailable()) {
+      const prompt = String(reqBody.prompt ?? '').trim();
+      if (!prompt) throw new AppError('BAD_REQUEST', 400, 'prompt is required');
+      try {
+        const result = await generateAndStoreImage({
+          prompt, variant: reqBody.variant as string | undefined, tenantSlug: tenantRow.slug,
+        });
+        return reply.code(200).send({ url: result.url, model: result.model });
+      } catch (err) {
+        throw new AppError('IMAGE_GEN_FAILED', 502, err instanceof Error ? err.message : '이미지 생성 실패');
+      }
+    }
+
+    const enrichedBody = { ...reqBody, tenantSlug: tenantRow.slug, tenantId: tenantRow.id };
     let response: Response;
     try {
       response = await fetch(upstream, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${env.INTERNAL_SERVICE_TOKEN}`,
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.INTERNAL_SERVICE_TOKEN}` },
         body: JSON.stringify(enrichedBody),
       });
     } catch (err) {
-      throw new AppError(
-        'AGENTS_UNREACHABLE',
-        503,
-        `Agents service unreachable: ${err instanceof Error ? err.message : String(err)}`,
-      );
+      throw new AppError('AGENTS_UNREACHABLE', 503, `Agents service unreachable: ${err instanceof Error ? err.message : String(err)}`);
     }
-
     const text = await response.text();
     if (!response.ok) {
       let detail = `agents responded ${response.status}`;
-      try {
-        const j = JSON.parse(text) as { detail?: unknown };
-        if (j.detail) detail = String(j.detail);
-      } catch { /* not JSON */ }
+      try { const j = JSON.parse(text) as { detail?: unknown }; if (j.detail) detail = String(j.detail); } catch { /* not JSON */ }
       throw new AppError('AGENTS_ERROR', response.status, detail);
     }
-
-    return reply
-      .code(200)
-      .header('content-type', 'application/json; charset=utf-8')
-      .send(text);
+    return reply.code(200).header('content-type', 'application/json; charset=utf-8').send(text);
   });
 
   // POST /api/v1/ai/builder/image/analyze — vision analyze for
@@ -539,8 +536,10 @@ export async function aiBuilderRoutes(app: FastifyInstance): Promise<void> {
    * unfetchable references and policy prefix injection.
    */
   app.post('/ai/builder/section-image/auto-generate', { preHandler: [requireAdmin] }, async (request, reply) => {
-    if (!env.INTERNAL_SERVICE_TOKEN) {
-      throw new AppError('CONFIG_ERROR', 503, 'INTERNAL_SERVICE_TOKEN not configured');
+    // Prefer the agents microservice when configured; otherwise generate
+    // directly via Imagen (GEMINI_API_KEY). 503 only if neither is available.
+    if (!env.INTERNAL_SERVICE_TOKEN && !directImageGenAvailable()) {
+      throw new AppError('CONFIG_ERROR', 503, '이미지 생성이 설정되지 않았습니다 (GEMINI_API_KEY 또는 agents 서비스 필요)');
     }
     const body = (request.body ?? {}) as {
       pageId?: unknown;
@@ -688,45 +687,37 @@ export async function aiBuilderRoutes(app: FastifyInstance): Promise<void> {
 
     const finalPrompt = lines.join('\n');
 
-    // ── 7. Forward to agents image_service ──────────────────────────
+    // ── 7. Generate ─────────────────────────────────────────────────
+    // Direct Imagen generation (no agents microservice needed). Falls back to
+    // the agents proxy only if direct gen isn't available but agents is.
+    if (directImageGenAvailable()) {
+      try {
+        const result = await generateAndStoreImage({
+          prompt: finalPrompt, variant: profile.variant, tenantSlug: tenantRow.slug,
+        });
+        return reply.code(200).send({ url: result.url, model: result.model, prompt: finalPrompt });
+      } catch (err) {
+        throw new AppError('IMAGE_GEN_FAILED', 502, err instanceof Error ? err.message : '이미지 생성 실패');
+      }
+    }
+
     const upstream = `${env.AGENTS_BASE_URL.replace(/\/$/, '')}/api/planner/image/generate`;
-    const enrichedBody = {
-      prompt: finalPrompt,
-      variant: profile.variant,
-      referenceUrls,
-      mode: generationMode,
-      tenantSlug: tenantRow.slug,
-      tenantId: tenantRow.id,
-    };
     let response: Response;
     try {
       response = await fetch(upstream, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${env.INTERNAL_SERVICE_TOKEN}`,
-        },
-        body: JSON.stringify(enrichedBody),
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.INTERNAL_SERVICE_TOKEN}` },
+        body: JSON.stringify({ prompt: finalPrompt, variant: profile.variant, referenceUrls, mode: generationMode, tenantSlug: tenantRow.slug, tenantId: tenantRow.id }),
       });
     } catch (err) {
-      throw new AppError(
-        'AGENTS_UNREACHABLE', 503,
-        `Agents service unreachable: ${err instanceof Error ? err.message : String(err)}`,
-      );
+      throw new AppError('AGENTS_UNREACHABLE', 503, `Agents service unreachable: ${err instanceof Error ? err.message : String(err)}`);
     }
     const text = await response.text();
     if (!response.ok) {
       let detail = `agents responded ${response.status}`;
-      try {
-        const j = JSON.parse(text) as { detail?: unknown };
-        if (j.detail) detail = String(j.detail);
-      } catch { /* not JSON */ }
+      try { const j = JSON.parse(text) as { detail?: unknown }; if (j.detail) detail = String(j.detail); } catch { /* not JSON */ }
       throw new AppError('AGENTS_ERROR', response.status, detail);
     }
-
-    return reply
-      .code(200)
-      .header('content-type', 'application/json; charset=utf-8')
-      .send(text);
+    return reply.code(200).header('content-type', 'application/json; charset=utf-8').send(text);
   });
 }
