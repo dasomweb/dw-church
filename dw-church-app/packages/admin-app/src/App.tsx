@@ -47,6 +47,7 @@ const TenantPageEditor = lazy(() => import('./super-admin/pages/TenantPageEditor
 const TenantFeaturePermissions = lazy(() => import('./super-admin/pages/TenantFeaturePermissions'));
 const TenantDangerZone = lazy(() => import('./super-admin/pages/TenantDangerZone'));
 const TenantAIContext = lazy(() => import('./super-admin/pages/TenantAIContext'));
+const TenantMediaLibrary = lazy(() => import('./super-admin/pages/TenantMediaLibrary'));
 const SuperAdminPlaceholder = lazy(() => import('./super-admin/pages/Placeholder'));
 
 export interface AppConfig {
@@ -232,7 +233,7 @@ export function App({ config }: { config: AppConfig }) {
                 <Route path="theme" element={<TenantThemeEditor />} />
                 <Route path="ai-context" element={<TenantAIContext />} />
                 <Route path="reference-photos" element={<SuperAdminPlaceholder label="참조 사진" phase="Phase 7b" />} />
-                <Route path="media" element={<SuperAdminPlaceholder label="미디어" phase="Phase 7b" />} />
+                <Route path="media" element={<TenantMediaLibrary />} />
                 {/* Phase 7a — reuse the existing tenant-admin pages for the
                     settings group. They already read the URL :slug param and
                     the api-client header that SuperAdminTenantLayout sets,
