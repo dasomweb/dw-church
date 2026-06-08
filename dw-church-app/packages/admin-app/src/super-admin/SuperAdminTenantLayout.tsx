@@ -51,6 +51,7 @@ interface NavEntry { to: string; label: string; icon: string }
 const NAV: NavEntry[] = [
   { to: '',                  label: '개요',              icon: '📊' },
   { to: 'pages',             label: '페이지',            icon: '📄' },
+  { to: 'content',           label: '콘텐츠',            icon: '🧩' },
   { to: 'templates',         label: '템플릿',            icon: '✨' },
   { to: 'menus',             label: '메뉴',              icon: '🧭' },
   { to: 'theme',             label: '테마',              icon: '🎨' },
