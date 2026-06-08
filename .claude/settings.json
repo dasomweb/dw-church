@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s \"https://lagrangechurch.org\" -H \"User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0.0.0 Safari/537.36\" --max-time 30 -o \"h:/GitHub/dw-church/sg.html\")",
+      "Bash(curl -sI \"https://lagrangechurch.org\" -H \"User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0.0.0 Safari/537.36\" --max-time 30)",
+      "Bash(grep -oiE \"\\(powered by|server|reference|ray id|error id|incident|blocked|security|please contact|support\\)[^<]{0,80}\" \"h:/GitHub/dw-church/sg.html\")"
+    ]
+  }
+}
