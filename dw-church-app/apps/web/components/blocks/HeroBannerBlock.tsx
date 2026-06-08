@@ -1,7 +1,9 @@
 /**
- * Unified hero banner — supports both full-width and contained layouts.
- * Layer structure: Text (top) → Overlay (middle) → Background image (bottom)
- * Content from page editor props only.
+ * Hero banner — CONTENT only. Section design (background image/color, overlay,
+ * height, width, border, padding) is applied by BlockRenderer's wrapper from
+ * the flat Style-tab props (resolveSectionDesign), so this component renders
+ * just the headline / subtitle / button. A gradient fallback fills the section
+ * when the operator hasn't set any background.
  */
 import { getElementStyle } from '@/lib/element-style';
 
@@ -10,76 +12,39 @@ interface HeroBannerBlockProps {
   slug: string;
 }
 
-const HEIGHT_MAP: Record<string, string> = {
-  sm: 'min-h-[200px] sm:min-h-[250px]',
-  md: 'min-h-[300px] sm:min-h-[400px]',
-  lg: 'min-h-[400px] sm:min-h-[500px]',
-  full: 'min-h-screen',
-};
-
 const ALIGN_MAP: Record<string, string> = {
   left: 'text-left',
   center: 'text-center',
   right: 'text-right',
 };
 
-function hexToRgb(hex: string): string {
-  const h = hex.replace('#', '');
-  const r = parseInt(h.substring(0, 2), 16) || 0;
-  const g = parseInt(h.substring(2, 4), 16) || 0;
-  const b = parseInt(h.substring(4, 6), 16) || 0;
-  return `${r}, ${g}, ${b}`;
-}
-
 export function HeroBannerBlock({ props }: HeroBannerBlockProps) {
   const title = (props.title as string) || '환영합니다';
   const subtitle = (props.subtitle as string) || '사랑과 은혜가 넘치는 교회';
-  const bgImage = (props.backgroundImageUrl as string) || undefined;
-  const height = (props.height as string) || 'md';
   const textAlign = (props.textAlign as string) || 'center';
-  const layout = (props.layout as string) || 'full';
-  const overlayColor = (props.overlayColor as string) || '#000000';
-  const overlayOpacity = typeof props.overlayOpacity === 'number' ? props.overlayOpacity : 50;
-  // Support both naming conventions
   const buttonText = (props.buttonText as string) || (props.ctaLabel as string) || undefined;
   const buttonUrl = (props.buttonUrl as string) || (props.ctaUrl as string) || undefined;
 
-  const heightClass = HEIGHT_MAP[height] || HEIGHT_MAP.md;
   const alignClass = ALIGN_MAP[textAlign] || ALIGN_MAP.center;
-  const isContained = layout === 'contained';
-
-  // Overlay: configurable color + opacity (0-100)
-  const overlayAlpha = Math.min(100, Math.max(0, overlayOpacity)) / 100;
-  const overlayStyle = bgImage
-    ? { backgroundColor: `rgba(${hexToRgb(overlayColor)}, ${overlayAlpha})` }
-    : undefined;
+  // Fallback gradient only when no background was configured on the section.
+  const hasBg = Boolean(props.backgroundImageUrl || props.backgroundColor);
 
   return (
-    <section className={`relative ${isContained ? 'px-4 sm:px-6 py-8' : ''}`}>
-      {/* Background layer */}
-      <div
-        className={`relative flex ${heightClass} items-center justify-center ${isContained ? 'mx-auto max-w-7xl rounded-2xl overflow-hidden' : ''}`}
-        style={bgImage ? { backgroundImage: `url(${bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
-      >
-        {/* Overlay layer */}
-        {bgImage ? (
-          <div className={`absolute inset-0 ${isContained ? 'rounded-2xl' : ''}`} style={overlayStyle} />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-[var(--dw-primary)] to-[var(--dw-secondary)]" />
+    <section
+      className={`relative flex min-h-[300px] items-center justify-center px-6 py-16 ${
+        !hasBg ? 'bg-gradient-to-br from-[var(--dw-primary)] to-[var(--dw-secondary)]' : ''
+      }`}
+    >
+      <div className={`${alignClass} text-white ${textAlign === 'center' ? 'mx-auto max-w-3xl' : 'w-full max-w-7xl'}`}>
+        <h1 className="mb-4 text-3xl font-bold font-heading sm:text-4xl" style={getElementStyle(props, 'title')}>{title}</h1>
+        <p className="text-base opacity-90 sm:text-lg" style={getElementStyle(props, 'subtitle')}>{subtitle}</p>
+        {buttonText && buttonUrl && (
+          <div className="mt-6">
+            <a href={buttonUrl} className="inline-block rounded-lg bg-white px-6 py-2.5 text-sm font-semibold text-gray-900 shadow-lg transition-colors hover:bg-gray-100">
+              {buttonText}
+            </a>
+          </div>
         )}
-
-        {/* Text layer (top) */}
-        <div className={`relative z-10 px-6 ${alignClass} text-white ${textAlign === 'center' ? 'mx-auto max-w-3xl' : 'max-w-7xl w-full'}`}>
-          <h1 className="mb-4 text-3xl font-bold font-heading sm:text-4xl" style={getElementStyle(props, 'title')}>{title}</h1>
-          <p className="text-base opacity-90 sm:text-lg" style={getElementStyle(props, 'subtitle')}>{subtitle}</p>
-          {buttonText && buttonUrl && (
-            <div className="mt-6">
-              <a href={buttonUrl} className="inline-block rounded-lg bg-white px-6 py-2.5 text-sm font-semibold text-gray-900 shadow-lg hover:bg-gray-100 transition-colors">
-                {buttonText}
-              </a>
-            </div>
-          )}
-        </div>
       </div>
     </section>
   );
