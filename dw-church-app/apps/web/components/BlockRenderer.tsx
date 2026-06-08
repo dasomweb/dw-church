@@ -1,9 +1,16 @@
-type PageSection = { id: string; blockType: string; props: Record<string, unknown>; sortOrder: number; isVisible: boolean };
-import { resolveSectionDesign } from '@/lib/section-design';
-import { HeroBannerBlock } from './blocks/HeroBannerBlock';
-import { BannerSliderBlock } from './blocks/BannerSliderBlock';
-import { TextImageBlock } from './blocks/TextImageBlock';
-import { TextOnlyBlock } from './blocks/TextOnlyBlock';
+// Storefront block renderer — single block architecture shared with the
+// super-admin builder. The static/design blocks come from @dw-church/blocks
+// (the b2bsmart block set: SectionShell + elements + design tokens, reads the
+// SAME props the inspector writes → no editor↔renderer drift). dw-church's
+// CONTENT MODULES (sermons/bulletins/columns/albums/staff/history/events/
+// board/banners) stay as storefront-only data blocks that fetch from
+// /api/v1/... and override the shared map by block_type.
+import type * as React from 'react';
+import { BLOCK_MAP as SHARED_BLOCK_MAP } from '@dw-church/blocks';
+import { blockStyleToCss } from '@dw-church/blocks';
+import type { BlockStyle } from '@dw-church/design-tokens';
+
+// ── Content-module data blocks (fetch from REST API) ──────────────────
 import { RecentSermonsBlock } from './blocks/RecentSermonsBlock';
 import { RecentBulletinsBlock } from './blocks/RecentBulletinsBlock';
 import { RecentColumnsBlock } from './blocks/RecentColumnsBlock';
@@ -11,92 +18,43 @@ import { AlbumGalleryBlock } from './blocks/AlbumGalleryBlock';
 import { StaffGridBlock } from './blocks/StaffGridBlock';
 import { HistoryTimelineBlock } from './blocks/HistoryTimelineBlock';
 import { EventGridBlock } from './blocks/EventGridBlock';
-import { WorshipScheduleBlock } from './blocks/WorshipScheduleBlock';
-import { LocationMapBlock } from './blocks/LocationMapBlock';
-import { ContactInfoBlock } from './blocks/ContactInfoBlock';
-import { DividerBlock } from './blocks/DividerBlock';
-import { LayoutBlock } from './blocks/LayoutBlock';
-import { ImageGalleryBlock } from './blocks/ImageGalleryBlock';
-import { VideoBlock } from './blocks/VideoBlock';
-import { NewcomerInfoBlock } from './blocks/NewcomerInfoBlock';
 import { BoardBlock } from './blocks/BoardBlock';
+import { BannerSliderBlock } from './blocks/BannerSliderBlock';
+// ── Church-specific static blocks not in the shared set ───────────────
 import { PastorMessageBlock } from './blocks/PastorMessageBlock';
-import { QuoteBlock } from './blocks/QuoteBlock';
+import { NewcomerInfoBlock } from './blocks/NewcomerInfoBlock';
+import { ContactInfoBlock } from './blocks/ContactInfoBlock';
+import { WorshipScheduleBlock } from './blocks/WorshipScheduleBlock';
 
-type BlockComponent = React.FC<{ props: Record<string, unknown>; slug: string }>;
+type PageSection = { id: string; blockType: string; props: Record<string, unknown>; sortOrder: number; isVisible: boolean };
+type AnyBlock = (p: { props: Record<string, unknown>; slug: string }) => React.ReactNode | Promise<React.ReactNode>;
 
-const BLOCK_MAP: Record<string, BlockComponent> = {
-  // Hero (static — props from page editor)
-  hero_banner: HeroBannerBlock,
-  hero_full_width: HeroBannerBlock,
-
-  // Banner slider (dynamic — data from admin 배너 관리)
-  banner_slider: BannerSliderBlock,
-  hero_image_slider: BannerSliderBlock,
-  hero_split: TextImageBlock,        // Split hero = text + image side by side
-
-  // About / Intro
-  pastor_message: PastorMessageBlock, // Pastor name/title/message + photo (dedicated fields)
-  church_intro: TextImageBlock,       // title + content + imageUrl (reuses TextImageBlock)
-  mission_vision: TextOnlyBlock,      // title + content (reuses TextOnlyBlock)
-
-  // Content (dynamic widgets)
-  recent_sermons: RecentSermonsBlock,
-  recent_bulletins: RecentBulletinsBlock,
-  album_gallery: AlbumGalleryBlock,
-  staff_grid: StaffGridBlock,
-  history_timeline: HistoryTimelineBlock,
-  event_grid: EventGridBlock,
-
-  // Columns (목회칼럼)
-  recent_columns: RecentColumnsBlock,
-
-  // Text
-  text_image: TextImageBlock,
-  text_only: TextOnlyBlock,
-  quote_block: QuoteBlock,            // quote + source + reference + backgroundImageUrl
-
-  // Church Info
-  worship_schedule: WorshipScheduleBlock,
-  worship_times: WorshipScheduleBlock, // Alias
-  location_map: LocationMapBlock,
-  map_embed: LocationMapBlock,         // Alias
-  contact_info: ContactInfoBlock,
-  address_info: ContactInfoBlock,      // Alias
-  newcomer_info: NewcomerInfoBlock,
-  visitor_welcome: NewcomerInfoBlock,  // Alias
-  first_time_guide: TextOnlyBlock,     // Steps rendered as text
-
-  // Media
-  image_gallery: ImageGalleryBlock,
-  video: VideoBlock,
-
-  // CTA → render as hero-style banner
-  call_to_action: HeroBannerBlock,
-  newsletter_signup: TextOnlyBlock,
-
-  // Board (게시판)
-  board: BoardBlock,
-
-  // Contact form → render as contact info block
-  contact_form: ContactInfoBlock,
-
-  // Layout Block — container with child blocks
-  layout_row: LayoutBlock,
-  layout_columns: LayoutBlock,
-  layout_section: LayoutBlock,
-  two_columns: LayoutBlock,
-  three_columns: LayoutBlock,
-  tabs: LayoutBlock,
-  accordion: LayoutBlock,
-
-  // Layout helpers
-  divider: DividerBlock,
-  section_header: TextOnlyBlock,       // Section header = title text
+// Church blocks override the shared map by block_type.
+const CHURCH_BLOCKS: Record<string, AnyBlock> = {
+  recent_sermons: RecentSermonsBlock as AnyBlock,
+  recent_bulletins: RecentBulletinsBlock as AnyBlock,
+  recent_columns: RecentColumnsBlock as AnyBlock,
+  album_gallery: AlbumGalleryBlock as AnyBlock,
+  staff_grid: StaffGridBlock as AnyBlock,
+  history_timeline: HistoryTimelineBlock as AnyBlock,
+  event_grid: EventGridBlock as AnyBlock,
+  board: BoardBlock as AnyBlock,
+  banner_slider: BannerSliderBlock as AnyBlock,
+  hero_image_slider: BannerSliderBlock as AnyBlock,
+  pastor_message: PastorMessageBlock as AnyBlock,
+  church_intro: PastorMessageBlock as AnyBlock,
+  newcomer_info: NewcomerInfoBlock as AnyBlock,
+  visitor_welcome: NewcomerInfoBlock as AnyBlock,
+  contact_info: ContactInfoBlock as AnyBlock,
+  address_info: ContactInfoBlock as AnyBlock,
+  worship_schedule: WorshipScheduleBlock as AnyBlock,
+  worship_times: WorshipScheduleBlock as AnyBlock,
 };
 
-// Blocks that own their full section design (variants/bg/overlay/height).
-const SELF_DESIGNED = new Set(['hero_banner', 'hero_full_width', 'hero_split', 'banner_slider', 'hero_image_slider']);
+const BLOCK_MAP: Record<string, AnyBlock> = {
+  ...(SHARED_BLOCK_MAP as unknown as Record<string, AnyBlock>),
+  ...CHURCH_BLOCKS,
+};
 
 interface BlockRendererProps {
   section: PageSection;
@@ -109,7 +67,8 @@ export function BlockRenderer({ section, slug }: BlockRendererProps) {
   if (!Component) {
     if (process.env.NODE_ENV === 'development') {
       return (
-        <div className="mx-auto max-w-7xl border border-dashed border-yellow-400 bg-yellow-50 px-6 py-4 text-sm text-yellow-700">
+        <div data-dw-section={section.id} data-dw-blocktype={section.blockType}
+          className="mx-auto max-w-7xl border border-dashed border-yellow-400 bg-yellow-50 px-6 py-4 text-sm text-yellow-700">
           Unknown block type: <code>{section.blockType}</code>
         </div>
       );
@@ -117,43 +76,18 @@ export function BlockRenderer({ section, slug }: BlockRendererProps) {
     return null;
   }
 
-  // data-dw-section tags the section boundary so the super-admin page builder's
-  // preview (PreviewBridge, ?preview=1) can map a click back to this section.
-  //
-  // Section design — the Style tab writes FLAT props (backgroundColor /
-  // overlay* / border* / height / width / contentWidth …); resolveSectionDesign
-  // turns them into the wrapper style + overlay layer + content container, so
-  // design applies uniformly to EVERY block (one system, read from the same
-  // flat props the inspector writes). Untouched sections (no design props)
-  // render with no extra markup.
-  // Blocks that render their OWN section design (variant layout, background
-  // image, overlay, height) read the flat props themselves — the wrapper must
-  // not also apply them or they'd double up. Other blocks get the generic
-  // section-design wrapper.
-  const design = SELF_DESIGNED.has(section.blockType)
-    ? { wrapper: {}, overlay: null, content: {}, active: false }
-    : resolveSectionDesign(section.props);
+  // Section-level design override — the Style/Advanced tabs save a structured
+  // BlockStyle to props.blockStyle. Applied at the wrapper (the block reads its
+  // own in-content props like eyebrow/bgMode/overlay via SectionShell).
+  const overrideStyle = blockStyleToCss(section.props.blockStyle as BlockStyle | null | undefined);
 
-  if (!design.active) {
-    return (
-      <div data-dw-section={section.id} data-dw-blocktype={section.blockType}>
-        <Component props={section.props} slug={slug} />
-      </div>
-    );
-  }
+  // Cast to a sync element — storefront data blocks may be async Server
+  // Components; Next.js renders them fine, but tsc's JSX checker needs the cast.
+  const Render = Component as (p: { props: Record<string, unknown>; slug: string }) => React.ReactNode;
 
   return (
-    <div
-      data-dw-section={section.id}
-      data-dw-blocktype={section.blockType}
-      style={{ position: 'relative', ...design.wrapper }}
-    >
-      {design.overlay && (
-        <div aria-hidden style={{ position: 'absolute', inset: 0, background: design.overlay, zIndex: 0, pointerEvents: 'none' }} />
-      )}
-      <div style={{ position: 'relative', zIndex: 1, width: '100%', ...design.content }}>
-        <Component props={section.props} slug={slug} />
-      </div>
+    <div data-dw-section={section.id} data-dw-blocktype={section.blockType} style={overrideStyle}>
+      <Render props={section.props} slug={slug} />
     </div>
   );
 }

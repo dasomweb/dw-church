@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
-  transpilePackages: ['@dw-church/api-client', '@dw-church/ui-components'],
+  transpilePackages: ['@dw-church/api-client', '@dw-church/ui-components', '@dw-church/blocks', '@dw-church/design-tokens'],
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '**.dw-church.app' },

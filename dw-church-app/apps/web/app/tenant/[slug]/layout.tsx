@@ -1,3 +1,4 @@
+import '@dw-church/blocks/styles.css';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getChurchSettings, getMenuItems, getTheme, getThemeTokens } from '@/lib/api';

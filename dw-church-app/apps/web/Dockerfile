@@ -41,6 +41,9 @@ COPY --from=deps /app/packages/ui-components/node_modules ./packages/ui-componen
 # so the schema types degraded to unknown.
 COPY --from=deps /app/packages/design-tokens/node_modules ./packages/design-tokens/node_modules
 COPY --from=deps /app/packages/theme-sets/node_modules ./packages/theme-sets/node_modules
+# @dw-church/blocks is now the storefront block set (transpilePackages). Its
+# node_modules holds the symlinks to ui-components/design-tokens it imports.
+COPY --from=deps /app/packages/blocks/node_modules ./packages/blocks/node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 
 # Copy source for workspace packages needed by web
@@ -52,6 +55,7 @@ COPY packages/ui-components/ packages/ui-components/
 # before the Next.js build so webpack can resolve them via package.json exports.
 COPY packages/design-tokens/ packages/design-tokens/
 COPY packages/theme-sets/ packages/theme-sets/
+COPY packages/blocks/ packages/blocks/
 COPY apps/web/ apps/web/
 
 # Build workspace dependencies first (dist/ required by package.json exports)
