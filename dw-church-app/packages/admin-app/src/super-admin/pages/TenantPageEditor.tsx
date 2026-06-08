@@ -16,6 +16,7 @@ import { useAuthStore } from '../../stores/auth';
 import { useToast } from '../../components';
 import { useSuperAdminTenant } from '../SuperAdminTenantLayout';
 import { ElementInspector } from '../../components/builder/ElementInspector';
+import { LivePreviewPane } from '../../components/builder/LivePreviewPane';
 
 interface PageRow {
   id: string;
@@ -44,6 +45,9 @@ export default function TenantPageEditor() {
   const [loadingPages, setLoadingPages] = useState(true);
   const [loadingSections, setLoadingSections] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Bumped after every successful section save so the live preview iframe
+  // reloads and reflects the edit (public page fetches with no-store).
+  const [previewNonce, setPreviewNonce] = useState(0);
 
   const baseUrl = useMemo(() => {
     const host = typeof window !== 'undefined' ? window.location.hostname : '';
@@ -51,6 +55,19 @@ export default function TenantPageEditor() {
       ? `https://api.${host.replace('admin.', '')}`
       : (import.meta.env.VITE_API_BASE_URL as string) || '';
   }, []);
+
+  // Public origin for the live preview — the tenant subdomain on the web
+  // app's root domain. admin.truelight.app → {slug}.truelight.app. In dev
+  // (no admin. host) fall back to VITE_WEB_BASE_URL or the same host.
+  const tenantOrigin = useMemo(() => {
+    if (!tenant?.slug) return '';
+    const host = typeof window !== 'undefined' ? window.location.hostname : '';
+    if (host.startsWith('admin.')) {
+      return `https://${tenant.slug}.${host.replace('admin.', '')}`;
+    }
+    const webBase = (import.meta.env.VITE_WEB_BASE_URL as string) || '';
+    return webBase ? `${webBase.replace(/\/+$/, '')}/tenant/${tenant.slug}` : '';
+  }, [tenant?.slug]);
 
   const headers = useMemo(() => ({
     Authorization: `Bearer ${session?.accessToken ?? ''}`,
@@ -103,6 +120,9 @@ export default function TenantPageEditor() {
   }, [selectedPageId, baseUrl, headers, showToast]);
 
   const selectedSection = sections.find((s) => s.id === selectedSectionId) ?? null;
+  const selectedPage = pages.find((p) => p.id === selectedPageId) ?? null;
+  // Home page renders at the origin root; other pages at /{slug}.
+  const previewPath = selectedPage ? (selectedPage.isHome ? '' : selectedPage.slug) : '';
 
   // ElementInspector callbacks — route its debounced props / block-style writes
   // through this console's raw fetch (carries X-Tenant-Slug for the target
@@ -119,6 +139,7 @@ export default function TenantPageEditor() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const updated = await res.json() as Section;
         setSections((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+        setPreviewNonce((n) => n + 1); // reflect the edit in the live preview
       } catch (err) {
         showToast('error', err instanceof Error ? err.message : '저장 실패');
       } finally {
@@ -134,7 +155,7 @@ export default function TenantPageEditor() {
   return (
     <div className="flex h-[calc(100vh-3.5rem)]">
       {/* Pane 1 — Pages */}
-      <aside className="w-56 border-r bg-white overflow-y-auto">
+      <aside className="w-48 shrink-0 border-r bg-white overflow-y-auto">
         <div className="p-3 border-b">
           <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider">페이지</h2>
         </div>
@@ -159,7 +180,7 @@ export default function TenantPageEditor() {
       </aside>
 
       {/* Pane 2 — Sections */}
-      <section className="w-72 border-r bg-gray-50 overflow-y-auto">
+      <section className="w-60 shrink-0 border-r bg-gray-50 overflow-y-auto">
         <div className="p-3 border-b bg-white">
           <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider">섹션</h2>
         </div>
@@ -189,8 +210,23 @@ export default function TenantPageEditor() {
         )}
       </section>
 
-      {/* Pane 3 — Inspector */}
-      <section className="flex-1 overflow-y-auto bg-white">
+      {/* Pane 3 — Live preview (center) */}
+      <section className="flex-1 min-w-0 overflow-hidden">
+        {selectedPage && tenantOrigin ? (
+          <LivePreviewPane
+            tenantOrigin={tenantOrigin}
+            pagePath={previewPath}
+            reloadNonce={previewNonce}
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center bg-gray-100 text-sm text-gray-400">
+            페이지를 선택하면 미리보기가 표시됩니다
+          </div>
+        )}
+      </section>
+
+      {/* Pane 4 — Inspector (right) */}
+      <section className="w-96 shrink-0 border-l overflow-y-auto bg-white">
         <div className="p-3 border-b flex items-center justify-between">
           <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider">인스펙터</h2>
           {saving && <span className="text-[10px] text-gray-500">저장 중...</span>}
