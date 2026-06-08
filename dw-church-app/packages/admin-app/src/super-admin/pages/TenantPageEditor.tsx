@@ -147,6 +147,8 @@ export default function TenantPageEditor() {
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const baseUrl = useMemo(() => {
     const host = typeof window !== 'undefined' ? window.location.hostname : '';
@@ -352,6 +354,32 @@ export default function TenantPageEditor() {
     }
   };
 
+  // Drag & drop reorder of sections. Reorders locally, then persists the new
+  // order via POST /sections/reorder { ids } and refreshes the preview.
+  const reorderSections = (from: number, to: number) => {
+    if (from === to || !selectedPageId) return;
+    setSections((prev) => {
+      const next = prev.slice();
+      const [moved] = next.splice(from, 1);
+      if (!moved) return prev;
+      next.splice(to, 0, moved);
+      const withOrder = next.map((s, i) => ({ ...s, sortOrder: i }));
+      const ids = withOrder.map((s) => s.id);
+      void (async () => {
+        try {
+          const res = await fetch(`${baseUrl}/api/v1/pages/${selectedPageId}/sections/reorder`, {
+            method: 'POST', headers, body: JSON.stringify({ ids }),
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          schedulePreviewReload();
+        } catch (err) {
+          showToast('error', err instanceof Error ? err.message : '순서 변경 실패');
+        }
+      })();
+      return withOrder;
+    });
+  };
+
   const hasChanges = dirty.size > 0;
   const canPublish = !publishing && (hasChanges || (selectedPage != null && selectedPage.status !== 'published'));
 
@@ -502,19 +530,31 @@ export default function TenantPageEditor() {
           <div className="p-3 text-xs text-gray-400">섹션 없음</div>
         ) : (
           <ul>
-            {sections.map((s) => (
-              <li key={s.id} className={`group relative border-b border-gray-200 ${selectedSectionId === s.id ? 'bg-blue-50' : 'hover:bg-white'}`}>
+            {sections.map((s, idx) => (
+              <li
+                key={s.id}
+                draggable
+                onDragStart={(e) => { setDragIndex(idx); e.dataTransfer.effectAllowed = 'move'; }}
+                onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (dragOverIndex !== idx) setDragOverIndex(idx); }}
+                onDragLeave={() => { if (dragOverIndex === idx) setDragOverIndex(null); }}
+                onDrop={(e) => { e.preventDefault(); if (dragIndex !== null) reorderSections(dragIndex, idx); setDragIndex(null); setDragOverIndex(null); }}
+                onDragEnd={() => { setDragIndex(null); setDragOverIndex(null); }}
+                className={`group relative border-b border-gray-200 ${selectedSectionId === s.id ? 'bg-blue-50' : 'hover:bg-white'} ${dragOverIndex === idx && dragIndex !== idx ? 'border-t-2 border-t-blue-500' : ''} ${dragIndex === idx ? 'opacity-40' : ''}`}
+              >
                 <button
                   onClick={() => setSelectedSectionId(s.id)}
-                  className="w-full text-left px-3 py-2 pr-7 text-sm"
+                  className="flex w-full items-start gap-1.5 px-2 py-2 pr-7 text-left text-sm"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs text-gray-600">{s.blockType}</span>
-                    {!s.isVisible && <span className="text-[10px] text-gray-400">숨김</span>}
-                  </div>
-                  <div className="text-[10px] text-gray-400 mt-0.5 truncate">
-                    {(s.props.title as string) ?? (s.props.heading as string) ?? '(no title)'}
-                  </div>
+                  <span className="mt-0.5 cursor-grab select-none text-gray-300 group-hover:text-gray-400" title="드래그하여 순서 변경">⠿</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center justify-between">
+                      <span className="font-mono text-xs text-gray-600">{s.blockType}</span>
+                      {!s.isVisible && <span className="text-[10px] text-gray-400">숨김</span>}
+                    </span>
+                    <span className="mt-0.5 block truncate text-[10px] text-gray-400">
+                      {(s.props.title as string) ?? (s.props.heading as string) ?? '(no title)'}
+                    </span>
+                  </span>
                 </button>
                 <button
                   type="button"
