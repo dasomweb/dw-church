@@ -146,7 +146,7 @@ export async function listFiles(schema: string, params: ListParams) {
     values.push(kind);
   }
 
-  const [rows, countResult] = await Promise.all([
+  const [rawRows, countResult] = await Promise.all([
     prisma.$queryRawUnsafe<Record<string, unknown>[]>(
       `SELECT * FROM "${schema}".files ${whereClause} ORDER BY created_at DESC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`,
       ...values, perPage, offset,
@@ -157,5 +157,15 @@ export async function listFiles(schema: string, params: ListParams) {
     ),
   ]);
 
-  return { data: rows, total: countResult[0].total };
+  // size_bytes is BIGINT → Prisma returns it as BigInt, which JSON.stringify
+  // can't serialize → 500. Convert any BigInt fields to Number.
+  const data = rawRows.map((row) => {
+    const out: Record<string, unknown> = { ...row };
+    for (const k of Object.keys(out)) {
+      if (typeof out[k] === 'bigint') out[k] = Number(out[k]);
+    }
+    return out;
+  });
+
+  return { data, total: countResult[0].total };
 }

@@ -177,6 +177,13 @@ export default function TenantPageEditor() {
     'X-Tenant-Slug': tenant?.slug ?? '',
     'Content-Type': 'application/json',
   }), [session?.accessToken, tenant?.slug]);
+  // Headers for body-less requests (DELETE): Fastify rejects a request with
+  // Content-Type: application/json but an empty body ("Body cannot be empty")
+  // → 400. So omit Content-Type when there's no body.
+  const noBodyHeaders = useMemo(() => ({
+    Authorization: `Bearer ${session?.accessToken ?? ''}`,
+    'X-Tenant-Slug': tenant?.slug ?? '',
+  }), [session?.accessToken, tenant?.slug]);
 
   // Load pages list
   useEffect(() => {
@@ -235,6 +242,12 @@ export default function TenantPageEditor() {
   // reflects them (debounced reload, no flicker). `dirty` tracks "edited since
   // last publish" to drive the Publish (visibility) button.
   const handlePropsChange = (sectionId: string, next: Record<string, unknown>) => {
+    // Guard: ignore empty/undefined props (e.g. an inspector unmount-flush
+    // after the section was deleted) — PUT { props: {} } would 400 with
+    // "No fields to update" and could wipe the section. Also skip if the
+    // section is no longer present locally (already deleted).
+    if (!next || typeof next !== 'object' || Object.keys(next).length === 0) return;
+    if (!sections.some((s) => s.id === sectionId)) return;
     setSections((prev) => prev.map((s) => (s.id === sectionId ? { ...s, props: next } : s)));
     setDirty((prev) => new Set(prev).add(sectionId));
     void (async () => {
@@ -243,10 +256,13 @@ export default function TenantPageEditor() {
         const res = await fetch(`${baseUrl}/api/v1/pages/${selectedPageId}/sections/${sectionId}`, {
           method: 'PUT', headers, body: JSON.stringify({ props: next }),
         });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) {
+          const body = await res.json().catch(() => null) as { error?: { message?: string } } | null;
+          throw new Error(body?.error?.message || `HTTP ${res.status}`);
+        }
         schedulePreviewReload();
       } catch (err) {
-        showToast('error', err instanceof Error ? err.message : '저장 실패');
+        showToast('error', err instanceof Error ? `저장 실패: ${err.message}` : '저장 실패');
       }
     })();
   };
@@ -342,17 +358,23 @@ export default function TenantPageEditor() {
 
   const deleteSection = async (sectionId: string) => {
     if (!selectedPageId) return;
+    // Deselect FIRST so the inspector unmounts and flushes any pending edit to
+    // the section while it still exists (avoids a PUT to a just-deleted section
+    // that would error). Then drop it locally and DELETE on the server.
+    setSelectedSectionId((cur) => (cur === sectionId ? null : cur));
+    setSections((prev) => prev.filter((s) => s.id !== sectionId));
+    setDirty((prev) => { const n = new Set(prev); n.delete(sectionId); return n; });
     try {
       const res = await fetch(`${baseUrl}/api/v1/pages/${selectedPageId}/sections/${sectionId}`, {
-        method: 'DELETE', headers,
+        method: 'DELETE', headers: noBodyHeaders,
       });
-      if (!res.ok && res.status !== 204) throw new Error(`HTTP ${res.status}`);
-      setSections((prev) => prev.filter((s) => s.id !== sectionId));
-      setSelectedSectionId((cur) => (cur === sectionId ? null : cur));
-      setDirty((prev) => { const n = new Set(prev); n.delete(sectionId); return n; });
+      if (!res.ok && res.status !== 204) {
+        const body = await res.json().catch(() => null) as { error?: { message?: string } } | null;
+        throw new Error(body?.error?.message || `HTTP ${res.status}`);
+      }
       setPreviewNonce((n) => n + 1);
     } catch (err) {
-      showToast('error', err instanceof Error ? err.message : '블록 삭제 실패');
+      showToast('error', err instanceof Error ? `블록 삭제 실패: ${err.message}` : '블록 삭제 실패');
     }
   };
 
