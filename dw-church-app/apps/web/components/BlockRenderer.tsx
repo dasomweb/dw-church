@@ -1,4 +1,6 @@
 type PageSection = { id: string; blockType: string; props: Record<string, unknown>; sortOrder: number; isVisible: boolean };
+import type { BlockStyle } from '@dw-church/design-tokens';
+import { blockStyleToCss } from '@/lib/block-style';
 import { HeroBannerBlock } from './blocks/HeroBannerBlock';
 import { BannerSliderBlock } from './blocks/BannerSliderBlock';
 import { TextImageBlock } from './blocks/TextImageBlock';
@@ -115,12 +117,18 @@ export function BlockRenderer({ section, slug }: BlockRendererProps) {
 
   // data-dw-section tags the section boundary so the super-admin page
   // builder's preview (PreviewBridge, active only when embedded with
-  // ?preview=1) can map a click back to this section's id. The wrapper is
-  // a layout-neutral block element (no class/style) so normal visitors see
-  // no change. Layout Block children don't pass through here, so only
-  // top-level page sections get tagged — matching the inspector's scope.
+  // ?preview=1) can map a click back to this section's id. Layout Block
+  // children don't pass through here, so only top-level page sections get
+  // tagged — matching the inspector's scope.
+  //
+  // blockStyle: the Style/Advanced tabs save a structured BlockStyle to
+  // props.blockStyle (spacing/여백, background, border, shadow, size,
+  // typography color). Apply it to the wrapper so those edits render —
+  // without this the Style tab silently does nothing on the public page.
+  const wrapperStyle = blockStyleToCss(section.props.blockStyle as BlockStyle | undefined);
+
   return (
-    <div data-dw-section={section.id} data-dw-blocktype={section.blockType}>
+    <div data-dw-section={section.id} data-dw-blocktype={section.blockType} style={wrapperStyle}>
       <Component props={section.props} slug={slug} />
     </div>
   );

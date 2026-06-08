@@ -45,6 +45,22 @@ const CONTENT_WIDTH_MAP: Record<string, string> = {
   full: '100%',
 };
 
+// Build a Google Fonts stylesheet URL for the operator-selected heading/body
+// fonts. Without this the layout only sets the font-family NAME in a CSS var
+// but the webfont file is never loaded, so the browser falls back to a system
+// font and the chosen font never visually applies. Pretendard (the Korean
+// default) is loaded separately from its CDN since it isn't on Google Fonts.
+function googleFontsHref(fonts: Record<string, string> | undefined): string | null {
+  const families = [fonts?.heading, fonts?.body]
+    .filter((f): f is string => Boolean(f) && f !== 'Pretendard')
+    .filter((f, i, arr) => arr.indexOf(f) === i);
+  if (families.length === 0) return null;
+  const q = families
+    .map((f) => `family=${encodeURIComponent(f)}:wght@400;500;600;700`)
+    .join('&');
+  return `https://fonts.googleapis.com/css2?${q}&display=swap`;
+}
+
 const CARD_SHADOW_MAP: Record<string, string> = {
   shadow: '0 1px 3px 0 rgba(0,0,0,.1), 0 1px 2px -1px rgba(0,0,0,.1)',
   border: 'none',
@@ -227,6 +243,14 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
       data-template={theme?.templateName ?? 'modern'}
     >
       <BrandTokensStyle tenantSlug={slug} tokens={tokens} />
+      {/* Load the actual webfont files so the operator-selected fonts render
+          (CSS vars only set the family NAME). Pretendard = Korean default. */}
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+      {googleFontsHref(fonts) && (
+        <link rel="stylesheet" href={googleFontsHref(fonts)!} />
+      )}
       <PreviewBridge />
       <a
         href="#main-content"
