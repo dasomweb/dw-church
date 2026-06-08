@@ -19,10 +19,18 @@ interface UploadParams {
   filename: string;
   contentType: string;
   buffer: Buffer;
+  /** 'upload' (default media) | 'reference' (AI-builder reference photo). */
+  kind?: string;
+  /** Reference-photo tags that drive AI image matching. */
+  tags?: string[];
+  description?: string;
 }
 
 export async function upload(params: UploadParams) {
   const { tenantSlug, schema, entityType, filename, contentType, buffer } = params;
+  const kind = params.kind ?? 'upload';
+  const tags = params.tags ?? null;
+  const description = params.description ?? null;
 
   // File size check
   if (buffer.length > MAX_FILE_SIZE) {
@@ -40,14 +48,19 @@ export async function upload(params: UploadParams) {
   const url = await uploadFile(storageKey, buffer, contentType);
 
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-    `INSERT INTO "${schema}".files (original_name, storage_key, url, mime_type, size_bytes)
-     VALUES ($1, $2, $3, $4, $5)
+    `INSERT INTO "${schema}".files
+       (original_name, storage_key, url, mime_type, size_bytes, entity_type, kind, tags, description)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
      RETURNING *`,
     filename,
     storageKey,
     url,
     contentType,
     buffer.length,
+    entityType,
+    kind,
+    tags,
+    description,
   );
 
   // Convert BigInt values to Number for JSON serialization
@@ -113,10 +126,11 @@ interface ListParams {
   page: number;
   perPage: number;
   entityType?: string;
+  kind?: string;
 }
 
 export async function listFiles(schema: string, params: ListParams) {
-  const { page, perPage, entityType } = params;
+  const { page, perPage, entityType, kind } = params;
   const offset = (page - 1) * perPage;
 
   let whereClause = 'WHERE 1=1';
@@ -126,6 +140,10 @@ export async function listFiles(schema: string, params: ListParams) {
   if (entityType) {
     whereClause += ` AND entity_type = $${paramIndex++}`;
     values.push(entityType);
+  }
+  if (kind) {
+    whereClause += ` AND kind = $${paramIndex++}`;
+    values.push(kind);
   }
 
   const [rows, countResult] = await Promise.all([

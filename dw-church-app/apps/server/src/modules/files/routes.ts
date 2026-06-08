@@ -12,7 +12,12 @@ export async function fileRoutes(app: FastifyInstance) {
     }
 
     const buffer = await data.toBuffer();
-    const entityType = (request.query as Record<string, string>).entityType || 'general';
+    const q = request.query as Record<string, string>;
+    const entityType = q.entityType || 'general';
+    // kind=reference marks an AI-builder reference photo; tags (comma list)
+    // drive image matching.
+    const kind = q.kind === 'reference' ? 'reference' : 'upload';
+    const tags = q.tags ? q.tags.split(',').map((t) => t.trim()).filter(Boolean) : undefined;
 
     const file = await fileService.upload({
       tenantSlug: request.tenant!.slug,
@@ -21,6 +26,9 @@ export async function fileRoutes(app: FastifyInstance) {
       filename: data.filename,
       contentType: data.mimetype,
       buffer,
+      kind,
+      tags,
+      description: q.description || undefined,
     });
 
     return reply.status(201).send({ data: file });
@@ -37,9 +45,10 @@ export async function fileRoutes(app: FastifyInstance) {
     const query = request.query as Record<string, unknown>;
     const { page, perPage } = parsePagination(query);
     const entityType = query.entityType as string | undefined;
+    const kind = query.kind as string | undefined;
 
     const { data, total } = await fileService.listFiles(getSchema(request), {
-      page, perPage, entityType,
+      page, perPage, entityType, kind,
     });
     return reply.send(paginatedResponse(data, total, page, perPage));
   });

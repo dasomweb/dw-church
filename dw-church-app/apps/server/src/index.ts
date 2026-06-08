@@ -234,6 +234,21 @@ async function main(): Promise<void> {
         alterHits++;
       } catch { /* pages table may not exist; skip */ }
 
+      // 1d. files.kind / tags — reference-photo support. 'upload' (default)
+      //     is a normal media file; 'reference' marks an operator-uploaded
+      //     reference photo the AI builder reads (kind='reference') to match
+      //     generated images. tags/description drive that matching. Without
+      //     these columns the AI auto-generate query (WHERE kind='reference')
+      //     errors and the Reference Photos page has nowhere to store kind.
+      try {
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".files ADD COLUMN IF NOT EXISTS "kind" TEXT NOT NULL DEFAULT 'upload'`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".files ADD COLUMN IF NOT EXISTS "description" TEXT`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".files ADD COLUMN IF NOT EXISTS "tag" TEXT`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".files ADD COLUMN IF NOT EXISTS "tags" TEXT[]`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".files ADD COLUMN IF NOT EXISTS "entity_type" TEXT`);
+        alterHits++;
+      } catch { /* files table may not exist; skip */ }
+
       // 2. categories — unified table for sermon + album (code references
       //    `categories` with a `type` discriminator, not the separate
       //    sermon_categories / album_categories tables in the template).
