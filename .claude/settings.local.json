@@ -69,7 +69,16 @@
       "Bash(grep -nE \"from '../components'|posts\\\\.|postsData|useBoardPosts|useDeleteBoardPost|deletePost|\\\\.map\\\\\\(\\\\\\(post|<tr key=\\\\{post|선택|게시글|posts\\\\?\\\\.|selectedBoard\" BoardManagement.tsx)",
       "Bash(cd \"/h/GitHub/dw-church/dw-church-app\" && echo \"=== admin Dockerfile: ui-components/blocks 빌드·COPY 순서 ===\" && grep -nE \"COPY packages/\\(ui-components|blocks|design-tokens|api-client\\)|RUN cd packages|build:js|pnpm build|RUN.*build\" packages/admin-app/Dockerfile | head -25)",
       "Bash(cd \"/h/GitHub/dw-church/dw-church-app\" && sed -n '38,56p' packages/blocks/src/index.ts)",
-      "Bash(curl -s -o /dev/null -w \"admin.truelight.app -> %{http_code}\\\\n\" https://admin.truelight.app/)"
+      "Bash(curl -s -o /dev/null -w \"admin.truelight.app -> %{http_code}\\\\n\" https://admin.truelight.app/)",
+      "Bash(sed -n '117,135p' apps/server/src/middleware/auth.js)",
+      "Bash(sed -n '117,135p' apps/server/src/middleware/auth.ts)",
+      "Bash(pnpm --filter @dw-church/server exec vitest run src/__tests__/routes/ai-build-pages-routes.test.ts)",
+      "Bash(curl -s -D - -o /dev/null \"https://lagrangechurch.truelight.app/?preview=1&__pv=test1\")",
+      "Bash(curl -s -D - -o /dev/null \"https://lagrangechurch.truelight.app/?preview=1&__pv=test2\")",
+      "Bash(node -e \"console.log\\(require\\(require\\('os'\\).homedir\\(\\)+'/.railway/config.json'\\).user.accessToken\\)\")",
+      "Bash(curl -s -X POST https://backboard.railway.com/graphql/v2 -H 'Authorization: Bearer __TRACKED_VAR__' -H 'Content-Type: application/json' -d '{\"query\":\"query\\($id:String!\\){ project\\(id:$id\\){ services{ edges{ node{ name } } } } }\",\"variables\":{\"id\":\"811df8a3-80fe-4297-a55d-65f193192fb3\"}}')",
+      "Bash(sed -n '538,548p' apps/server/src/modules/ai/builder-routes/routes.ts)",
+      "Bash(sed -n '1,15p' apps/server/src/modules/ai/builder-routes/routes.ts)"
     ]
   }
 }
