@@ -5,8 +5,9 @@
 > **상태: 1~4단계 + 5단계(LivePreview·MediaPicker·element-click) 완료 + 프로덕션 배포·검증 완료.**
 > 슈퍼어드민 `/super-admin/t/:slug/pages` = 4-pane(페이지|섹션|라이브 프리뷰|인스펙터).
 > 풀 ElementInspector(3-tab)가 모든 dw-church 블록 커버, 중앙에 테넌트 공개 페이지 iframe
-> 라이브 프리뷰(클릭→인스펙터 포커스 + 선택 윤곽), 라이브러리 버튼은 실 R2 MediaPicker.
-> **사실상 b2bsmart 페이지 에디터 패리티 달성.** 남은 것: DynamicSource(우선순위 낮음, 아래).
+> 라이브 프리뷰(클릭→인스펙터 포커스 + 선택 윤곽), 라이브러리 버튼은 실 R2 MediaPicker,
+> **DynamicSource 콘텐츠 상세 템플릿(설교/칼럼/주보를 빌더로 디자인 + 현재 항목 바인딩) 완료.**
+> **b2bsmart 페이지 에디터 패리티 달성.** 남은 것: (옵션) 상세 템플릿 빠른 생성 UI 정도.
 
 ## 목표
 슈퍼어드민의 페이지 디자인 편집기(`/super-admin/t/:slug/pages`)를 b2bsmart의 풀 인스펙터 수준으로 끌어올린다. 현재 dw-church 버전(`packages/admin-app/src/super-admin/pages/TenantPageEditor.tsx`, 351줄)은 의도적으로 간소화된 "Phase 4 minimal" — 6개 인라인 필드뿐. b2bsmart는 17-field × 3-tab(Layout/Style/Advanced) × element-registry 기반 인스펙터 + 라이브 프리뷰.
@@ -35,7 +36,14 @@
 5. **진행 중 — LivePreviewPane + MediaPicker 완료, DynamicSource/element-click 남음**:
    - ✅ **LivePreviewPane** (커밋 `bc410ce6`) — 중앙 패널이 테넌트 공개 페이지를 iframe(`https://{slug}.truelight.app/{pageSlug}`)으로 렌더. 데스크탑/태블릿/모바일 폭 토글 + 새로고침 + 새 탭. 공개 페이지가 `cache:'no-store'`라 저장 시 `previewNonce` bump → 즉시 반영. BlockRenderer를 admin 번들에 넣지 않음(ui-components 회피). 레이아웃: 페이지 | 섹션 | 라이브 프리뷰 | 인스펙터(우측 고정 w-96).
    - ✅ **MediaPicker 실 구현** (커밋 `9610b76d`) — `GET /api/v1/files`(`client.adapter.get`, camelize+tenant 헤더) 이미지 그리드 + 인라인 업로드(`client.uploadFile` = 클라 리사이즈+R2+DB). 단일/다중 선택. SuperAdminTenantLayout이 `client.setTenantSlug(slug)` 하므로 대상 테넌트로 정확히 조회/업로드.
-   - ⏭️ **유일하게 남은 항목 — DynamicSourcePicker**: `useProductFieldSchema` 스텁(b2b 제품 도메인). 교회용 DynamicSource(설교/주보/교역자 등 Content Module 바인딩)로 교체. 단, dw-church Data Block은 이미 `recent_sermons` 등 전용 블록이 데이터를 직접 fetch하므로, b2b식 "필드를 동적 소스에 바인딩"이 교회 도메인에 꼭 필요한지 재검토 필요(**우선순위 낮음 — 대표님께 필요성 확인 후 진행 권장**).
+   - ✅ **DynamicSource 콘텐츠 상세 템플릿** (커밋 `4aab6106`) — b2bsmart식 "콘텐츠 블록" 완성. 운영자가 설교/칼럼/주보 **상세 페이지를 페이지 빌더로 디자인**하고 블록 필드를 현재 항목 데이터에 바인딩.
+     - server: `pages.kind` 컬럼(startup ALTER, 기본 'static') + service SELECT/INSERT/UPDATE + zod enum(`static|sermon_detail|column_detail|bulletin_detail`).
+     - blocks: `dynamicContextsForPageKind`가 3개 교회 kind → `'post'` context 매핑(title/content/topImageUrl/youtubeUrl/thumbnailUrl/createdAt).
+     - admin: `TenantPageEditor`에 '페이지 종류' selector 추가 + 실제 `pageKind`를 ElementInspector에 전달 → **이미 구현돼 있던** DynamicSourcePicker ⚙ 버튼이 text/image/url/html 필드에 활성화.
+     - web: 설교/칼럼/주보 상세 라우트가 매칭 `*_detail` 템플릿 조회 → 있으면 `BlockRenderer`+`resolveDynamicProps(item)`로 렌더(`apps/web/lib/dynamic.ts`에 resolver 인라인 — `@dw-church/blocks` 의존 없음), 없으면 기존 고정 레이아웃(템플릿 없으면 동작 무변).
+     - **배포·검증**: api-server(repo root에서 `railway up --service api-server`)·web·admin 3개. api `/pages`에 `kind` 노출 확인, admin 청크에 `페이지 종류`/`sermon_detail` 확인, web home 200(무회귀).
+     - 참고: `DynamicSourcePicker`의 유일한 잔여 스텁은 `useProductFieldSchema`(b2b 제품 커스텀필드)뿐 — 교회 도메인 불필요.
+   - ⏭️ (옵션) 상세 템플릿 **빠른 생성 UI**: 현재는 기존 페이지의 '페이지 종류'를 바꿔 템플릿화. 전용 "새 상세 템플릿" 버튼은 후속 개선 여지.
    - ✅ **element-click 포커스 선택** (커밋 `1e692d11`) — 프리뷰에서 섹션 클릭 → 인스펙터 포커스 + 프리뷰에 선택 윤곽선. `postMessage` 브리지:
      - web: `BlockRenderer`가 최상위 섹션을 `data-dw-section`으로 래핑. 신규 `PreviewBridge`(테넌트 layout에 마운트, `?preview=1` + iframe 임베드일 때만 활성) — 클릭→`postMessage('dw-preview:select')` + hover/선택 윤곽. 일반 방문자엔 무영향(null 렌더).
      - admin: `LivePreviewPane`이 `preview=1` 추가, origin 검증 후 선택 메시지 수신→`onSelectSection`, 선택 변경 시 `dw-preview:highlight` 푸시. `TenantPageEditor`가 `selectedSectionId`↔`setSelectedSectionId` 연결.
