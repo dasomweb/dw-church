@@ -45,17 +45,31 @@ const CONTENT_WIDTH_MAP: Record<string, string> = {
   full: '100%',
 };
 
+// Fonts already available without a Google Fonts request (Pretendard via CDN,
+// generic system stacks). Everything else is loaded from Google Fonts.
+const PRELOADED_FONTS = new Set([
+  'Pretendard', 'system-ui', 'sans-serif', 'serif', 'monospace',
+  'Noto Sans KR', '-apple-system', 'BlinkMacSystemFont',
+]);
+
+/** Extract the primary family name from a font-family stack string. */
+function firstFamily(stack: string | undefined): string | null {
+  if (!stack) return null;
+  const first = stack.split(',')[0]?.trim().replace(/^['"]|['"]$/g, '');
+  return first || null;
+}
+
 // Build a Google Fonts stylesheet URL for the operator-selected heading/body
 // fonts. Without this the layout only sets the font-family NAME in a CSS var
 // but the webfont file is never loaded, so the browser falls back to a system
-// font and the chosen font never visually applies. Pretendard (the Korean
-// default) is loaded separately from its CDN since it isn't on Google Fonts.
-function googleFontsHref(fonts: Record<string, string> | undefined): string | null {
-  const families = [fonts?.heading, fonts?.body]
-    .filter((f): f is string => Boolean(f) && f !== 'Pretendard')
+// font and the chosen font never visually applies.
+function googleFontsHref(stacks: (string | undefined)[]): string | null {
+  const names = stacks
+    .map(firstFamily)
+    .filter((f): f is string => f != null && !PRELOADED_FONTS.has(f))
     .filter((f, i, arr) => arr.indexOf(f) === i);
-  if (families.length === 0) return null;
-  const q = families
+  if (names.length === 0) return null;
+  const q = names
     .map((f) => `family=${encodeURIComponent(f)}:wght@400;500;600;700`)
     .join('&');
   return `https://fonts.googleapis.com/css2?${q}&display=swap`;
@@ -189,15 +203,24 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   const headerStyle = layout?.headerStyle ?? 'default';
   const footerStyle = layout?.footerStyle ?? 'default';
 
+  // The super-admin theme editor saves to the DESIGN TOKENS (--brand-*), but
+  // dw-church block components read the legacy --dw-* vars. Bridge them so
+  // theme edits actually reflect: take colors/fonts from tokens first, falling
+  // back to the legacy /theme blob, then hardcoded defaults.
+  const sys = (tokens?.colors?.system ?? {}) as Record<string, string>;
+  const fam = (tokens?.typography?.families ?? {}) as Record<string, string>;
+  const headingFamily = fam.heading || fonts?.heading || "'Pretendard', sans-serif";
+  const bodyFamily = fam.body || fonts?.body || "'Pretendard', sans-serif";
+
   const cssVars: Record<string, string> = {
-    '--dw-primary': colors?.primary ?? '#2563eb',
-    '--dw-secondary': colors?.secondary ?? '#64748b',
-    '--dw-accent': colors?.accent ?? '#f59e0b',
-    '--dw-background': colors?.background ?? '#ffffff',
-    '--dw-surface': colors?.surface ?? '#f8fafc',
-    '--dw-text': colors?.text ?? '#0f172a',
-    '--dw-font-heading': fonts?.heading ?? 'Pretendard',
-    '--dw-font-body': fonts?.body ?? 'Pretendard',
+    '--dw-primary': sys.primary || colors?.primary || '#2563eb',
+    '--dw-secondary': sys.secondary || colors?.secondary || '#64748b',
+    '--dw-accent': sys.accent || colors?.accent || '#f59e0b',
+    '--dw-background': sys.background || colors?.background || '#ffffff',
+    '--dw-surface': sys.surface || colors?.surface || '#f8fafc',
+    '--dw-text': sys.text || colors?.text || '#0f172a',
+    '--dw-font-heading': headingFamily,
+    '--dw-font-body': bodyFamily,
     // Layout-derived variables
     '--dw-radius': BORDER_RADIUS_MAP[layout?.borderRadius ?? 'lg'] ?? '12px',
     '--dw-content-width': CONTENT_WIDTH_MAP[layout?.contentWidth ?? 'default'] ?? '1024px',
@@ -248,8 +271,8 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
-      {googleFontsHref(fonts) && (
-        <link rel="stylesheet" href={googleFontsHref(fonts)!} />
+      {googleFontsHref([headingFamily, bodyFamily]) && (
+        <link rel="stylesheet" href={googleFontsHref([headingFamily, bodyFamily])!} />
       )}
       <PreviewBridge />
       <a
