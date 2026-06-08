@@ -95,6 +95,9 @@ const BLOCK_MAP: Record<string, BlockComponent> = {
   section_header: TextOnlyBlock,       // Section header = title text
 };
 
+// Blocks that own their full section design (variants/bg/overlay/height).
+const SELF_DESIGNED = new Set(['hero_banner', 'hero_full_width', 'hero_split', 'banner_slider', 'hero_image_slider']);
+
 interface BlockRendererProps {
   section: PageSection;
   slug: string;
@@ -123,7 +126,13 @@ export function BlockRenderer({ section, slug }: BlockRendererProps) {
   // design applies uniformly to EVERY block (one system, read from the same
   // flat props the inspector writes). Untouched sections (no design props)
   // render with no extra markup.
-  const design = resolveSectionDesign(section.props);
+  // Blocks that render their OWN section design (variant layout, background
+  // image, overlay, height) read the flat props themselves — the wrapper must
+  // not also apply them or they'd double up. Other blocks get the generic
+  // section-design wrapper.
+  const design = SELF_DESIGNED.has(section.blockType)
+    ? { wrapper: {}, overlay: null, content: {}, active: false }
+    : resolveSectionDesign(section.props);
 
   if (!design.active) {
     return (
