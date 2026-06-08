@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { getElementStyle } from '@/lib/element-style';
 
 interface TextImageBlockProps {
   props: Record<string, unknown>;
@@ -6,6 +7,8 @@ interface TextImageBlockProps {
 }
 
 export function TextImageBlock({ props }: TextImageBlockProps) {
+  const ts = getElementStyle(props, 'title');
+  const cs = getElementStyle(props, 'content');
   const title = (props.title as string) ?? '';
   const content = (props.content as string) ?? '';
   const imageUrl = (props.imageUrl as string) ?? '';
@@ -16,7 +19,7 @@ export function TextImageBlock({ props }: TextImageBlockProps) {
     return (
       <section className="px-4 py-10 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-4xl text-center">
-          {title && <h2 className="mb-6 text-3xl font-bold font-heading">{title}</h2>}
+          {title && <h2 className="mb-6 text-3xl font-bold font-heading" style={ts}>{title}</h2>}
           {imageUrl && (
             <div className="relative mx-auto mb-6 aspect-video max-w-2xl overflow-hidden rounded-xl">
               <Image
@@ -29,7 +32,7 @@ export function TextImageBlock({ props }: TextImageBlockProps) {
             </div>
           )}
           {content && (
-            <div className="prose prose-lg mx-auto" dangerouslySetInnerHTML={{ __html: content }} />
+            <div className="prose prose-lg mx-auto" style={cs} dangerouslySetInnerHTML={{ __html: content }} />
           )}
         </div>
       </section>
@@ -42,9 +45,9 @@ export function TextImageBlock({ props }: TextImageBlockProps) {
     <section className="px-4 py-10 sm:px-6 sm:py-16">
       <div className={`mx-auto grid max-w-7xl items-center gap-12 md:grid-cols-2 ${imageFirst ? '' : ''}`}>
         <div className={imageFirst ? 'order-2' : 'order-1'}>
-          {title && <h2 className="mb-6 text-3xl font-bold font-heading">{title}</h2>}
+          {title && <h2 className="mb-6 text-3xl font-bold font-heading" style={ts}>{title}</h2>}
           {content && (
-            <div className="prose prose-lg" dangerouslySetInnerHTML={{ __html: content }} />
+            <div className="prose prose-lg" style={cs} dangerouslySetInnerHTML={{ __html: content }} />
           )}
         </div>
         {imageUrl && (

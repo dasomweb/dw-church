@@ -1,3 +1,5 @@
+import { getElementStyle } from '@/lib/element-style';
+
 interface TextOnlyBlockProps {
   props: Record<string, unknown>;
   slug: string;
@@ -11,11 +13,12 @@ export function TextOnlyBlock({ props }: TextOnlyBlockProps) {
     <section className="px-4 py-10 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-4xl">
         {title && (
-          <h2 className="mb-6 text-center text-3xl font-bold font-heading">{title}</h2>
+          <h2 className="mb-6 text-center text-3xl font-bold font-heading" style={getElementStyle(props, 'title')}>{title}</h2>
         )}
         {content && (
           <div
             className="prose prose-lg mx-auto"
+            style={getElementStyle(props, 'content')}
             dangerouslySetInnerHTML={{ __html: content }}
           />
         )}

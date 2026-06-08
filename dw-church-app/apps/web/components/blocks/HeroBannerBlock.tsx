@@ -3,6 +3,8 @@
  * Layer structure: Text (top) → Overlay (middle) → Background image (bottom)
  * Content from page editor props only.
  */
+import { getElementStyle } from '@/lib/element-style';
+
 interface HeroBannerBlockProps {
   props: Record<string, unknown>;
   slug: string;
@@ -68,8 +70,8 @@ export function HeroBannerBlock({ props }: HeroBannerBlockProps) {
 
         {/* Text layer (top) */}
         <div className={`relative z-10 px-6 ${alignClass} text-white ${textAlign === 'center' ? 'mx-auto max-w-3xl' : 'max-w-7xl w-full'}`}>
-          <h1 className="mb-4 text-3xl font-bold font-heading sm:text-4xl">{title}</h1>
-          <p className="text-base opacity-90 sm:text-lg">{subtitle}</p>
+          <h1 className="mb-4 text-3xl font-bold font-heading sm:text-4xl" style={getElementStyle(props, 'title')}>{title}</h1>
+          <p className="text-base opacity-90 sm:text-lg" style={getElementStyle(props, 'subtitle')}>{subtitle}</p>
           {buttonText && buttonUrl && (
             <div className="mt-6">
               <a href={buttonUrl} className="inline-block rounded-lg bg-white px-6 py-2.5 text-sm font-semibold text-gray-900 shadow-lg hover:bg-gray-100 transition-colors">
