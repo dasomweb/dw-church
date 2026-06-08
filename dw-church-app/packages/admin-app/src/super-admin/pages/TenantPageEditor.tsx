@@ -16,7 +16,7 @@ import { useAuthStore } from '../../stores/auth';
 import { useToast } from '../../components';
 import { useSuperAdminTenant } from '../SuperAdminTenantLayout';
 import { ElementInspector } from '../../components/builder/ElementInspector';
-import { LivePreviewPane } from '../../components/builder/LivePreviewPane';
+import { BuilderCanvas } from '../../components/builder/BuilderCanvas';
 import { ContentEntryPanel } from './ContentEntryPanel';
 
 interface PageRow {
@@ -594,13 +594,16 @@ export default function TenantPageEditor() {
         )}
       </section>
 
-      {/* Pane 3 — Live preview (center) */}
+      {/* Pane 3 — Live preview (center) — in-process @dw-church/blocks render.
+          Edits update `sections` state synchronously, so the canvas reflects
+          every change instantly (b2bsmart-identical, no save→reload round trip). */}
       <section className="flex-1 min-w-0 overflow-hidden">
-        {selectedPage && tenantOrigin ? (
-          <LivePreviewPane
-            tenantOrigin={tenantOrigin}
-            pagePath={previewPath}
-            reloadNonce={previewNonce}
+        {selectedPage ? (
+          <BuilderCanvas
+            sections={sections}
+            slug={tenant?.slug ?? ''}
+            baseUrl={baseUrl}
+            headers={headers}
             selectedSectionId={selectedSectionId}
             onSelectSection={setSelectedSectionId}
           />
