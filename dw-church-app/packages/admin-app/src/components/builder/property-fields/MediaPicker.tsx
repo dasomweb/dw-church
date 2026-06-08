@@ -1,12 +1,16 @@
-// MediaPicker — STAGE-1 STUB (b2bsmart port).
+// MediaPicker — tenant media-library browser for the builder inspector.
 //
-// b2bsmart's MediaPicker browses the tenant media library via
-// useMediaLibrary(); dw-church's api-client doesn't expose that hook yet, so
-// this is a minimal placeholder that keeps the interface (onClose / onSelect /
-// onSelectMulti + MediaItem) intact for ImageField + ElementInspector. The
-// real R2-backed media browser lands in the later media stage; for now the
-// operator uploads via ImageField's upload button.
-import { useEffect } from 'react';
+// Browses the tenant's uploaded files via GET /api/v1/files (paginated,
+// tenant-schema isolated) and lets the operator pick an existing image or
+// upload a new one inline. The api-client carries the target tenant's
+// X-Tenant-Slug — SuperAdminTenantLayout calls client.setTenantSlug(slug),
+// so under /super-admin/t/:slug this lists / uploads to the right tenant.
+//
+// Uploads go through client.uploadFile (client-side resize + R2 + DB row),
+// honoring the project rule that all images are self-hosted on R2 and
+// recorded in the DB — never hotlinked.
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useDWChurchClient } from '@dw-church/api-client';
 
 export interface MediaItem {
   id: string;
@@ -16,36 +20,186 @@ export interface MediaItem {
   height?: number;
 }
 
+interface FileRow {
+  id: string;
+  url: string;
+  originalName?: string;
+  mimeType?: string;
+  createdAt?: string;
+}
+
 interface Props {
   onClose: () => void;
   onSelect?: (item: MediaItem) => void;
   onSelectMulti?: (items: MediaItem[]) => void;
   multi?: boolean;
-  // accepted for caller compatibility (ignored by the stub)
+  // accepted for caller compatibility; used only as soft display hints
   preferredRatio?: string;
   preferredKind?: string;
 }
 
-export function MediaPicker({ onClose }: Props) {
+const PER_PAGE = 60;
+
+export function MediaPicker({ onClose, onSelect, onSelectMulti, multi }: Props) {
+  const client = useDWChurchClient();
+  const [items, setItems] = useState<FileRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const load = useCallback(async () => {
+    if (!client) return;
+    setLoading(true);
+    setError(null);
+    try {
+      // client.adapter.get camelizes the response + carries the tenant
+      // header; query params pass through as-is so perPage is honored.
+      const res = await client.adapter.get<{ data: FileRow[] }>('/api/v1/files', { perPage: PER_PAGE, page: 1 });
+      const all = res?.data ?? [];
+      // Images only — the library also stores PDFs (bulletins) etc.
+      setItems(all.filter((f) => !f.mimeType || f.mimeType.startsWith('image/')));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '미디어를 불러오지 못했습니다');
+    } finally {
+      setLoading(false);
+    }
+  }, [client]);
+
+  useEffect(() => { void load(); }, [load]);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+  const toItem = (f: FileRow): MediaItem => ({ id: f.id, url: f.url, filename: f.originalName });
+
+  const choose = (f: FileRow) => {
+    if (multi) {
+      setPicked((prev) => {
+        const next = new Set(prev);
+        if (next.has(f.id)) next.delete(f.id); else next.add(f.id);
+        return next;
+      });
+      return;
+    }
+    onSelect?.(toItem(f));
+  };
+
+  const confirmMulti = () => {
+    const chosen = items.filter((f) => picked.has(f.id)).map(toItem);
+    onSelectMulti?.(chosen);
+  };
+
+  const handleUpload = async (file: File) => {
+    if (!client) return;
+    setUploading(true);
+    setError(null);
+    try {
+      const result = await client.uploadFile(file);
+      if (!result?.url) throw new Error('업로드 응답에 URL이 없습니다');
+      // Newly uploaded image jumps to the front; single-pick mode selects
+      // it immediately (operator's intent on upload is "use this one").
+      const row: FileRow = { id: result.id ?? result.url, url: result.url, originalName: file.name, mimeType: file.type };
+      setItems((prev) => [row, ...prev]);
+      if (!multi) onSelect?.(toItem(row));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '업로드 실패');
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <h3 className="text-base font-bold text-gray-900">미디어 라이브러리</h3>
-        <p className="mt-2 text-sm text-gray-600">
-          미디어 브라우저는 준비 중입니다. 지금은 이미지 필드의 <strong>업로드</strong> 버튼으로
-          파일을 올려주세요. (R2 미디어 브라우저는 다음 단계에서 연결됩니다.)
-        </p>
-        <div className="mt-5 flex justify-end">
-          <button onClick={onClose} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-            닫기
-          </button>
+      <div
+        className="flex max-h-[80vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between border-b px-5 py-3">
+          <h3 className="text-base font-bold text-gray-900">미디어 라이브러리</h3>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-500 disabled:opacity-50"
+            >
+              {uploading ? '업로드 중…' : '↑ 업로드'}
+            </button>
+            <button type="button" onClick={load} className="rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs text-gray-600 hover:bg-gray-50" title="새로고침">
+              ↻
+            </button>
+            <button onClick={onClose} className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50">
+              닫기
+            </button>
+          </div>
         </div>
+
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleUpload(f); }}
+        />
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-4">
+          {loading ? (
+            <div className="py-16 text-center text-sm text-gray-500">불러오는 중…</div>
+          ) : error ? (
+            <div className="py-16 text-center text-sm text-red-600">{error}</div>
+          ) : items.length === 0 ? (
+            <div className="py-16 text-center text-sm text-gray-400">
+              아직 업로드된 이미지가 없습니다. 위의 <strong>업로드</strong> 버튼으로 추가하세요.
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
+              {items.map((f) => {
+                const isPicked = picked.has(f.id);
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => choose(f)}
+                    title={f.originalName ?? ''}
+                    className={`group relative aspect-square overflow-hidden rounded-lg border-2 bg-gray-50 transition-colors ${
+                      isPicked ? 'border-blue-500 ring-2 ring-blue-200' : 'border-transparent hover:border-blue-300'
+                    }`}
+                  >
+                    <img src={f.url} alt={f.originalName ?? ''} className="h-full w-full object-cover" loading="lazy" />
+                    {isPicked && (
+                      <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[11px] font-bold text-white">
+                        ✓
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Footer (multi-select) */}
+        {multi && (
+          <div className="flex items-center justify-between border-t px-5 py-3">
+            <span className="text-xs text-gray-500">{picked.size}개 선택됨</span>
+            <button
+              type="button"
+              onClick={confirmMulti}
+              disabled={picked.size === 0}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-50"
+            >
+              선택 적용
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
