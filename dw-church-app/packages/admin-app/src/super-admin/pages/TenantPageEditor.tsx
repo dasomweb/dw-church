@@ -17,6 +17,7 @@ import { useToast } from '../../components';
 import { useSuperAdminTenant } from '../SuperAdminTenantLayout';
 import { ElementInspector } from '../../components/builder/ElementInspector';
 import { LivePreviewPane } from '../../components/builder/LivePreviewPane';
+import { ContentEntryPanel } from './ContentEntryPanel';
 
 interface PageRow {
   id: string;
@@ -548,6 +549,13 @@ export default function TenantPageEditor() {
           {hasChanges && <span className="text-[10px] text-amber-600">미게시 변경</span>}
         </div>
         {selectedSection ? (
+          <>
+          <ContentEntryPanel
+            baseUrl={baseUrl}
+            headers={headers}
+            section={selectedSection}
+            onChangeProps={handlePropsChange}
+          />
           <ElementInspector
             key={selectedSection.id}
             pageId={selectedPageId ?? ''}
@@ -562,6 +570,7 @@ export default function TenantPageEditor() {
             onStyleOverridesChange={handleStyleChange}
             pageKind={selectedPage?.kind}
           />
+          </>
         ) : (
           <div className="p-6 text-sm text-gray-400 text-center">섹션을 선택하세요</div>
         )}

@@ -132,6 +132,35 @@ export async function getPages(slug: string): Promise<any[]> {
   return unwrap(res) ?? [];
 }
 
+/** Fetch a single reusable content entry (CONTENT layer). */
+export async function getContentEntry(slug: string, id: string): Promise<any> {
+  const res = await apiFetch(slug, `/api/v1/content-entries/${id}`, { revalidate: false });
+  return unwrap(res);
+}
+
+/**
+ * Resolve Sections that reference a content entry (props.contentEntryId):
+ * merge the entry's CONTENT over the section, while DESIGN (blockStyle /
+ * elementStyles) stays from the section. Sections that inline their content
+ * (no contentEntryId) pass through untouched — fully backward compatible.
+ */
+async function resolveSectionEntries(slug: string, sections: any[]): Promise<any[]> {
+  return Promise.all(sections.map(async (s: any) => {
+    const entryId = s?.props?.contentEntryId;
+    if (!entryId) return s;
+    try {
+      const entry = await getContentEntry(slug, entryId);
+      const data = (entry?.data ?? {}) as Record<string, unknown>;
+      return {
+        ...s,
+        props: { ...s.props, ...data, blockStyle: s.props?.blockStyle, elementStyles: s.props?.elementStyles },
+      };
+    } catch {
+      return s; // entry deleted/unavailable — fall back to inline props
+    }
+  }));
+}
+
 export async function getHomePage(slug: string): Promise<any> {
   const pages = await getPages(slug);
   const home = pages.find((p: any) => p.isHome || p.slug === 'home');
@@ -143,13 +172,13 @@ export async function getHomePage(slug: string): Promise<any> {
 
   return {
     ...home,
-    sections: sections.map((s: any) => ({
+    sections: await resolveSectionEntries(slug, sections.map((s: any) => ({
       id: s.id,
       blockType: s.blockType,
       props: s.props ?? {},
       sortOrder: s.sortOrder ?? 0,
       isVisible: s.isVisible ?? true,
-    })),
+    }))),
   };
 }
 
@@ -163,13 +192,13 @@ export async function getPageBySlug(tenantSlug: string, pageSlug: string): Promi
 
   return {
     ...page,
-    sections: sections.map((s: any) => ({
+    sections: await resolveSectionEntries(tenantSlug, sections.map((s: any) => ({
       id: s.id,
       blockType: s.blockType,
       props: s.props ?? {},
       sortOrder: s.sortOrder ?? 0,
       isVisible: s.isVisible ?? true,
-    })),
+    }))),
   };
 }
 
@@ -194,7 +223,7 @@ export async function getDetailTemplate(
 
   const sectionsRes = await apiFetch(tenantSlug, `/api/v1/pages/${template.id}/sections`, { revalidate: false });
   const sections = (unwrap(sectionsRes) ?? []) as any[];
-  return sections
+  const mapped = sections
     .map((s: any) => ({
       id: s.id,
       blockType: s.blockType,
@@ -204,6 +233,7 @@ export async function getDetailTemplate(
     }))
     .filter((s) => s.isVisible)
     .sort((a, b) => a.sortOrder - b.sortOrder);
+  return resolveSectionEntries(tenantSlug, mapped);
 }
 
 // ─── Sermons ─────────────────────────────────────────────────

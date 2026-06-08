@@ -89,6 +89,7 @@ async function main(): Promise<void> {
   const { categoryRoutes } = await import('./modules/categories/routes.js');
   const { settingsRoutes } = await import('./modules/settings/routes.js');
   const { fileRoutes } = await import('./modules/files/routes.js');
+  const { contentEntryRoutes } = await import('./modules/content-entries/routes.js');
   const { boardRoutes } = await import('./modules/boards/routes.js');
   const { domainRoutes } = await import('./modules/domains/routes.js');
 
@@ -120,6 +121,7 @@ async function main(): Promise<void> {
   await app.register(categoryRoutes, { prefix: '/api/v1' });
   await app.register(settingsRoutes, { prefix: '/api/v1' });
   await app.register(fileRoutes, { prefix: '/api/v1' });
+  await app.register(contentEntryRoutes, { prefix: '/api/v1' }); // /content-entries
   await app.register(aiRoutes, { prefix: '/api/v1' });
   await app.register(boardRoutes, { prefix: '/api/v1' });
   await app.register(domainRoutes, { prefix: '/api/v1' });
@@ -248,6 +250,27 @@ async function main(): Promise<void> {
         await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".files ADD COLUMN IF NOT EXISTS "entity_type" TEXT`);
         alterHits++;
       } catch { /* files table may not exist; skip */ }
+
+      // 1e. content_entries — the CONTENT layer, separated from page_sections
+      //     (DESIGN layer). Reusable content bags a Static Block section can
+      //     reference via props.contentEntryId. Additive: existing sections
+      //     that inline content keep working untouched.
+      try {
+        await prisma.$executeRawUnsafe(
+          `CREATE TABLE IF NOT EXISTS "${schema}".content_entries (
+             id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+             type       TEXT NOT NULL,
+             name       TEXT NOT NULL,
+             data       JSONB NOT NULL DEFAULT '{}'::jsonb,
+             created_at TIMESTAMPTZ DEFAULT NOW(),
+             updated_at TIMESTAMPTZ DEFAULT NOW()
+           )`,
+        );
+        await prisma.$executeRawUnsafe(
+          `CREATE INDEX IF NOT EXISTS "content_entries_type_idx" ON "${schema}".content_entries ("type")`,
+        );
+        alterHits++;
+      } catch { /* skip on error */ }
 
       // 2. categories — unified table for sermon + album (code references
       //    `categories` with a `type` discriminator, not the separate
