@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getChurchSettings, getMenuItems, getTheme, getThemeTokens } from '@/lib/api';
 import MobileMenu from '@/components/MobileMenu';
 import { BrandTokensStyle } from '@/components/BrandTokensStyle';
+import { PreviewBridge } from '@/components/PreviewBridge';
 import { DEFAULT_DESIGN_TOKENS, type DesignTokens } from '@dw-church/design-tokens';
 // Types inlined to avoid importing @dw-church/api-client in server components
 type ChurchSettings = Record<string, string>;
@@ -226,6 +227,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
       data-template={theme?.templateName ?? 'modern'}
     >
       <BrandTokensStyle tenantSlug={slug} tokens={tokens} />
+      <PreviewBridge />
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--dw-primary)]"

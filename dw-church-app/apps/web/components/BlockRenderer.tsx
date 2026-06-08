@@ -113,5 +113,15 @@ export function BlockRenderer({ section, slug }: BlockRendererProps) {
     return null;
   }
 
-  return <Component props={section.props} slug={slug} />;
+  // data-dw-section tags the section boundary so the super-admin page
+  // builder's preview (PreviewBridge, active only when embedded with
+  // ?preview=1) can map a click back to this section's id. The wrapper is
+  // a layout-neutral block element (no class/style) so normal visitors see
+  // no change. Layout Block children don't pass through here, so only
+  // top-level page sections get tagged — matching the inspector's scope.
+  return (
+    <div data-dw-section={section.id} data-dw-blocktype={section.blockType}>
+      <Component props={section.props} slug={slug} />
+    </div>
+  );
 }

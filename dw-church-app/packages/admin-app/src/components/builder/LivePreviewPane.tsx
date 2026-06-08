@@ -11,7 +11,7 @@
 // mobile. The web app sets no X-Frame-Options / CSP frame-ancestors, so
 // cross-subdomain embedding (admin.truelight.app → {slug}.truelight.app)
 // is allowed.
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 interface Props {
   /** Public web origin for the tenant subdomain, e.g. https://lagrangechurch.truelight.app */
@@ -20,24 +20,62 @@ interface Props {
   pagePath: string;
   /** Bump to force a fresh iframe reload (e.g. after a section save). */
   reloadNonce: number;
+  /** Currently selected section — pushed to the preview to outline it. */
+  selectedSectionId?: string | null;
+  /** Fired when the operator clicks a section inside the preview. */
+  onSelectSection?: (sectionId: string) => void;
 }
 
 type Device = 'desktop' | 'tablet' | 'mobile';
 const DEVICE_WIDTH: Record<Device, number | null> = { desktop: null, tablet: 834, mobile: 390 };
 const DEVICE_LABEL: Record<Device, string> = { desktop: '데스크탑', tablet: '태블릿', mobile: '모바일' };
 
-export function LivePreviewPane({ tenantOrigin, pagePath, reloadNonce }: Props) {
+export function LivePreviewPane({ tenantOrigin, pagePath, reloadNonce, selectedSectionId, onSelectSection }: Props) {
   const [device, setDevice] = useState<Device>('desktop');
   // Local refresh counter is folded into the same nonce the parent
   // controls, so the manual 새로고침 button and post-save reloads share
   // one cache-busting param.
   const [manualBump, setManualBump] = useState(0);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [bridgeReady, setBridgeReady] = useState(false);
+
+  const frameOrigin = useMemo(() => {
+    try { return new URL(tenantOrigin).origin; } catch { return ''; }
+  }, [tenantOrigin]);
 
   const src = useMemo(() => {
     const path = pagePath ? `/${pagePath.replace(/^\/+/, '')}` : '/';
-    // __pv cache-busts the iframe document (new URL → fresh navigation).
-    return `${tenantOrigin}${path}?__pv=${reloadNonce}-${manualBump}`;
+    // __pv cache-busts the iframe document (new URL → fresh navigation);
+    // preview=1 activates the in-page PreviewBridge (click→select).
+    return `${tenantOrigin}${path}?preview=1&__pv=${reloadNonce}-${manualBump}`;
   }, [tenantOrigin, pagePath, reloadNonce, manualBump]);
+
+  // Receive section clicks from the embedded preview. Origin-checked: only
+  // trust messages from the tenant's own frame (or any *.truelight.app).
+  useEffect(() => {
+    const onMsg = (e: MessageEvent) => {
+      if (e.origin !== frameOrigin && !/\.truelight\.app$/.test(new URL(e.origin || 'http://x').host)) return;
+      const d = e.data as { type?: string; sectionId?: string } | null;
+      if (!d || typeof d !== 'object') return;
+      if (d.type === 'dw-preview:ready') setBridgeReady(true);
+      if (d.type === 'dw-preview:select' && d.sectionId) onSelectSection?.(d.sectionId);
+    };
+    window.addEventListener('message', onMsg);
+    return () => window.removeEventListener('message', onMsg);
+  }, [frameOrigin, onSelectSection]);
+
+  // Reset bridge readiness whenever the frame reloads (new src).
+  useEffect(() => { setBridgeReady(false); }, [src]);
+
+  // Push the current selection into the preview so it outlines the section
+  // (on select, and once the bridge announces readiness after a reload).
+  useEffect(() => {
+    if (!frameOrigin) return;
+    iframeRef.current?.contentWindow?.postMessage(
+      { type: 'dw-preview:highlight', sectionId: selectedSectionId ?? null },
+      frameOrigin,
+    );
+  }, [selectedSectionId, bridgeReady, frameOrigin]);
 
   const width = DEVICE_WIDTH[device];
 
@@ -91,6 +129,7 @@ export function LivePreviewPane({ tenantOrigin, pagePath, reloadNonce }: Props) 
         >
           <iframe
             key={src}
+            ref={iframeRef}
             src={src}
             title="페이지 미리보기"
             className="h-full w-full"

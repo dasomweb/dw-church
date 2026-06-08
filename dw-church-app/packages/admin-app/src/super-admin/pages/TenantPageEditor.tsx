@@ -217,6 +217,8 @@ export default function TenantPageEditor() {
             tenantOrigin={tenantOrigin}
             pagePath={previewPath}
             reloadNonce={previewNonce}
+            selectedSectionId={selectedSectionId}
+            onSelectSection={setSelectedSectionId}
           />
         ) : (
           <div className="flex h-full items-center justify-center bg-gray-100 text-sm text-gray-400">
