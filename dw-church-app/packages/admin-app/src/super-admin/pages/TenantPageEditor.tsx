@@ -131,16 +131,19 @@ export default function TenantPageEditor() {
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [loadingPages, setLoadingPages] = useState(true);
   const [loadingSections, setLoadingSections] = useState(false);
-  // No auto-save (b2bsmart-style): inspector edits are held locally and the
-  // public iframe preview is NOT reloaded per keystroke (which flickered).
-  // Edits accumulate in `dirty`; the Publish button persists them in one go.
+  // b2bsmart model: edits auto-save immediately (so the live preview reflects
+  // them) — the Publish button controls page visibility (draft → published).
+  // The preview iframe reload is debounced (not per keystroke) and the iframe
+  // is not remounted, so there's no flicker.
   const [previewNonce, setPreviewNonce] = useState(0);
-  const [dirty, setDirty] = useState<Set<string>>(new Set());
+  const [dirty, setDirty] = useState<Set<string>>(new Set()); // edited since last publish (drives the button)
   const [publishing, setPublishing] = useState(false);
-  // Holds props edited locally but not yet PUBLISHed, keyed by section id, so
-  // they survive even if `sections` is reloaded; the inspector reads from
-  // `sections` which we also patch in place.
-  const draftPropsRef = useRef<Map<string, Record<string, unknown>>>(new Map());
+  const previewTimer = useRef<number | null>(null);
+  const schedulePreviewReload = () => {
+    if (previewTimer.current) clearTimeout(previewTimer.current);
+    previewTimer.current = window.setTimeout(() => setPreviewNonce((n) => n + 1), 800);
+  };
+  useEffect(() => () => { if (previewTimer.current) clearTimeout(previewTimer.current); }, []);
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
@@ -197,7 +200,6 @@ export default function TenantPageEditor() {
   // Load sections for selected page. Switching pages discards any unpublished
   // local edits from the previous page (operator should Publish first).
   useEffect(() => {
-    draftPropsRef.current.clear();
     setDirty(new Set());
     if (!selectedPageId) { setSections([]); return; }
     let cancelled = false;
@@ -225,41 +227,44 @@ export default function TenantPageEditor() {
   // Home page renders at the origin root; other pages at /{slug}.
   const previewPath = selectedPage ? (selectedPage.isHome ? '' : selectedPage.slug) : '';
 
-  // ElementInspector edits — held LOCALLY (no PUT, no preview reload), so the
-  // operator can edit without the iframe flickering. The change is recorded in
-  // `dirty`; the Publish button persists everything at once.
+  // ElementInspector edits — auto-saved immediately so the live preview
+  // reflects them (debounced reload, no flicker). `dirty` tracks "edited since
+  // last publish" to drive the Publish (visibility) button.
   const handlePropsChange = (sectionId: string, next: Record<string, unknown>) => {
-    draftPropsRef.current.set(sectionId, next);
     setSections((prev) => prev.map((s) => (s.id === sectionId ? { ...s, props: next } : s)));
     setDirty((prev) => new Set(prev).add(sectionId));
+    void (async () => {
+      if (!selectedPageId) return;
+      try {
+        const res = await fetch(`${baseUrl}/api/v1/pages/${selectedPageId}/sections/${sectionId}`, {
+          method: 'PUT', headers, body: JSON.stringify({ props: next }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        schedulePreviewReload();
+      } catch (err) {
+        showToast('error', err instanceof Error ? err.message : '저장 실패');
+      }
+    })();
   };
   const handleStyleChange = (sectionId: string, blockStyle: unknown) => {
     const sec = sections.find((s) => s.id === sectionId);
     handlePropsChange(sectionId, { ...(sec?.props ?? {}), blockStyle });
   };
 
-  // Publish — persist all locally-held section edits, mark the page published,
-  // then reload the preview ONCE to reflect everything.
+  // Publish — make the page publicly visible (status=published). Edits are
+  // already saved (auto-save), so this just flips visibility + clears the
+  // pending-changes flag and refreshes the preview.
   const publishChanges = async () => {
     if (!selectedPageId || publishing) return;
     setPublishing(true);
     try {
-      const ids = Array.from(dirty);
-      for (const id of ids) {
-        const props = draftPropsRef.current.get(id) ?? sections.find((s) => s.id === id)?.props ?? {};
-        const res = await fetch(`${baseUrl}/api/v1/pages/${selectedPageId}/sections/${id}`, {
-          method: 'PUT', headers, body: JSON.stringify({ props }),
-        });
-        if (!res.ok) throw new Error(`섹션 저장 실패 (HTTP ${res.status})`);
-      }
-      // Flip the page to published if it isn't already.
       if (selectedPage && selectedPage.status !== 'published') {
         const res = await fetch(`${baseUrl}/api/v1/pages/${selectedPageId}`, {
           method: 'PUT', headers, body: JSON.stringify({ status: 'published' }),
         });
-        if (res.ok) setPages((prev) => prev.map((p) => (p.id === selectedPageId ? { ...p, status: 'published' } : p)));
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        setPages((prev) => prev.map((p) => (p.id === selectedPageId ? { ...p, status: 'published' } : p)));
       }
-      draftPropsRef.current.clear();
       setDirty(new Set());
       setPreviewNonce((n) => n + 1);
       showToast('success', '게시되었습니다');
@@ -340,7 +345,6 @@ export default function TenantPageEditor() {
       if (!res.ok && res.status !== 204) throw new Error(`HTTP ${res.status}`);
       setSections((prev) => prev.filter((s) => s.id !== sectionId));
       setSelectedSectionId((cur) => (cur === sectionId ? null : cur));
-      draftPropsRef.current.delete(sectionId);
       setDirty((prev) => { const n = new Set(prev); n.delete(sectionId); return n; });
       setPreviewNonce((n) => n + 1);
     } catch (err) {
@@ -365,7 +369,8 @@ export default function TenantPageEditor() {
       <div className="flex items-center justify-between border-b bg-white px-4 py-1.5 shrink-0">
         <span className="text-xs text-gray-500 truncate">
           {selectedPage ? selectedPage.title : tenant?.name ?? ''}
-          {hasChanges && <span className="ml-2 text-amber-600">● 저장되지 않은 변경 {dirty.size}개</span>}
+          <span className="ml-2 text-green-600">자동 저장됨</span>
+          {hasChanges && <span className="ml-2 text-amber-600">· 미게시 변경 {dirty.size}개</span>}
         </span>
         <button
           type="button"
