@@ -37,6 +37,30 @@ const PAGE_KINDS: { value: string; label: string }[] = [
   { value: 'bulletin_detail', label: '주보 상세 템플릿' },
 ];
 
+// This console uses raw fetch (not the api-client), so responses arrive in
+// the server's snake_case. Normalize to the camelCase the UI/inspector
+// expect — without this, blockType/isVisible are undefined → the inspector
+// shows "No editor registered ()" and every section reads as 숨김.
+function normalizeSection(s: Record<string, unknown>): Section {
+  return {
+    id: String(s.id),
+    blockType: String(s.blockType ?? s.block_type ?? ''),
+    sortOrder: Number(s.sortOrder ?? s.sort_order ?? 0),
+    isVisible: (s.isVisible ?? s.is_visible ?? true) as boolean,
+    props: (s.props ?? {}) as Record<string, unknown>,
+  };
+}
+function normalizePage(p: Record<string, unknown>): PageRow {
+  return {
+    id: String(p.id),
+    slug: String(p.slug ?? ''),
+    title: String(p.title ?? ''),
+    isHome: (p.isHome ?? p.is_home ?? false) as boolean,
+    status: String(p.status ?? 'draft'),
+    kind: (p.kind as string) ?? 'static',
+  };
+}
+
 interface Section {
   id: string;
   blockType: string;
@@ -95,10 +119,11 @@ export default function TenantPageEditor() {
       try {
         const res = await fetch(`${baseUrl}/api/v1/pages`, { headers });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const body = await res.json() as { data: PageRow[] };
+        const body = await res.json() as { data: Record<string, unknown>[] };
         if (cancelled) return;
-        setPages(body.data);
-        if (body.data.length > 0 && !selectedPageId) setSelectedPageId(body.data[0]!.id);
+        const rows = body.data.map(normalizePage);
+        setPages(rows);
+        if (rows.length > 0 && !selectedPageId) setSelectedPageId(rows[0]!.id);
       } catch (err) {
         if (!cancelled) showToast('error', err instanceof Error ? err.message : '페이지 로딩 실패');
       } finally {
@@ -117,10 +142,11 @@ export default function TenantPageEditor() {
       try {
         const res = await fetch(`${baseUrl}/api/v1/pages/${selectedPageId}/sections`, { headers });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const body = await res.json() as { data: Section[] };
+        const body = await res.json() as { data: Record<string, unknown>[] };
         if (cancelled) return;
-        setSections(body.data.sort((a, b) => a.sortOrder - b.sortOrder));
-        setSelectedSectionId(body.data[0]?.id ?? null);
+        const rows = body.data.map(normalizeSection).sort((a, b) => a.sortOrder - b.sortOrder);
+        setSections(rows);
+        setSelectedSectionId(rows[0]?.id ?? null);
       } catch (err) {
         if (!cancelled) showToast('error', err instanceof Error ? err.message : '섹션 로딩 실패');
       } finally {
@@ -148,7 +174,7 @@ export default function TenantPageEditor() {
           method: 'PUT', headers, body: JSON.stringify({ props: next }),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const updated = await res.json() as Section;
+        const updated = normalizeSection(await res.json() as Record<string, unknown>);
         setSections((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
         setPreviewNonce((n) => n + 1); // reflect the edit in the live preview
       } catch (err) {

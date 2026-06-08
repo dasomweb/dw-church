@@ -863,8 +863,9 @@ export function ElementInspector({
 
       {!registry ? (
         <div className="p-4 text-sm text-gray-500">
-          No editor registered for this block type ({section.blockType}).
-          Switch to editor mode and use the sketchboard instead.
+          {section.blockType
+            ? <>이 블록 유형(<code className="font-mono text-gray-700">{section.blockType}</code>)은 아직 인스펙터 편집을 지원하지 않습니다.</>
+            : '이 섹션의 블록 유형을 불러오지 못했습니다. 페이지를 새로고침하거나 다른 섹션을 선택해 보세요.'}
         </div>
       ) : (
         <>
