@@ -1,6 +1,7 @@
 'use client';
 
 import { ImageGallery } from '@dw-church/ui-components';
+import { getElementStyle } from '@/lib/element-style';
 
 interface ImageGalleryBlockProps {
   props: Record<string, unknown>;
@@ -17,7 +18,7 @@ export function ImageGalleryBlock({ props }: ImageGalleryBlockProps) {
     <section className="px-4 py-10 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-7xl">
         {title && (
-          <h2 className="mb-8 text-center text-3xl font-bold font-heading">{title}</h2>
+          <h2 className="mb-8 text-center text-3xl font-bold font-heading" style={getElementStyle(props, 'title')}>{title}</h2>
         )}
         <ImageGallery images={images} />
       </div>

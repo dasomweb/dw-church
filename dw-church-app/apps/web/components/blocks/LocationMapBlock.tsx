@@ -1,3 +1,4 @@
+import { getElementStyle } from '@/lib/element-style';
 interface LocationMapBlockProps {
   props: Record<string, unknown>;
   slug: string;
@@ -19,7 +20,7 @@ export function LocationMapBlock({ props }: LocationMapBlockProps) {
   return (
     <section className="px-4 py-10 sm:px-6 sm:py-16" style={{ backgroundColor: 'var(--dw-surface)' }}>
       <div className="mx-auto max-w-7xl">
-        <h2 className="mb-8 text-center text-3xl font-bold font-heading">{title}</h2>
+        <h2 className="mb-8 text-center text-3xl font-bold font-heading" style={getElementStyle(props, 'title')}>{title}</h2>
         {mapSrc && (
           <div className="mb-6 overflow-hidden rounded-xl">
             <iframe

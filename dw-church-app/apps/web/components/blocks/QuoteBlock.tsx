@@ -1,3 +1,4 @@
+import { getElementStyle } from '@/lib/element-style';
 interface QuoteBlockProps {
   props: Record<string, unknown>;
   slug: string;
@@ -32,7 +33,7 @@ export function QuoteBlock({ props }: QuoteBlockProps) {
         </svg>
         <p
           className="text-2xl font-medium leading-relaxed sm:text-3xl"
-          dangerouslySetInnerHTML={{ __html: quote }}
+          style={getElementStyle(props, 'quote')} dangerouslySetInnerHTML={{ __html: quote }}
         />
         {(source || reference) && (
           <footer className="mt-6 text-sm opacity-80">

@@ -1,4 +1,5 @@
 import { getChurchSettings } from '@/lib/api';
+import { getElementStyle } from '@/lib/element-style';
 
 interface ContactInfoBlockProps {
   props: Record<string, unknown>;
@@ -24,7 +25,7 @@ export async function ContactInfoBlock({ props, slug }: ContactInfoBlockProps) {
   return (
     <section className="px-4 py-10 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-4xl">
-        <h2 className="mb-8 text-center text-3xl font-bold font-heading">{title}</h2>
+        <h2 className="mb-8 text-center text-3xl font-bold font-heading" style={getElementStyle(props, 'title')}>{title}</h2>
         <div className="grid gap-6 sm:grid-cols-2">
           {settings.phone && (
             <div className="rounded-xl border border-gray-200 p-6 text-center">

@@ -1,4 +1,5 @@
 import { getColumns } from '@/lib/api';
+import { getElementStyle } from '@/lib/element-style';
 import Link from 'next/link';
 
 interface RecentColumnsBlockProps {
@@ -36,7 +37,7 @@ export async function RecentColumnsBlock({ props, slug }: RecentColumnsBlockProp
     return (
       <section className="px-4 py-10 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-7xl text-center">
-          <h2 className="mb-4 text-3xl font-bold font-heading">{title}</h2>
+          <h2 className="mb-4 text-3xl font-bold font-heading" style={getElementStyle(props, 'title')}>{title}</h2>
           <p className="text-gray-400 text-sm">등록된 칼럼이 없습니다.</p>
         </div>
       </section>
@@ -54,7 +55,7 @@ export async function RecentColumnsBlock({ props, slug }: RecentColumnsBlockProp
   return (
     <section className="px-4 py-10 sm:px-6 sm:py-16" style={{ backgroundColor: 'var(--dw-background)' }}>
       <div className="mx-auto max-w-7xl">
-        <h2 className="mb-8 text-center text-3xl font-bold font-heading">{title}</h2>
+        <h2 className="mb-8 text-center text-3xl font-bold font-heading" style={getElementStyle(props, 'title')}>{title}</h2>
         <div className={`grid ${gridClass} gap-6`}>
           {data.map((col: any) => {
             const colTitle = col.title ?? '';

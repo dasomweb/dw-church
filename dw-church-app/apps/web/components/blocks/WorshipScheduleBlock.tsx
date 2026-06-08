@@ -1,3 +1,4 @@
+import { getElementStyle } from '@/lib/element-style';
 interface Service {
   name: string;
   time: string;
@@ -17,7 +18,7 @@ export function WorshipScheduleBlock({ props }: WorshipScheduleBlockProps) {
     return (
       <section className="px-4 py-10 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-4xl text-center">
-          <h2 className="mb-4 text-3xl font-bold font-heading">{title}</h2>
+          <h2 className="mb-4 text-3xl font-bold font-heading" style={getElementStyle(props, 'title')}>{title}</h2>
           <p className="text-gray-400 text-sm">예배 시간이 등록되지 않았습니다.</p>
         </div>
       </section>
@@ -27,7 +28,7 @@ export function WorshipScheduleBlock({ props }: WorshipScheduleBlockProps) {
   return (
     <section className="px-4 py-10 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-4xl">
-        <h2 className="mb-8 text-center text-3xl font-bold font-heading">{title}</h2>
+        <h2 className="mb-8 text-center text-3xl font-bold font-heading" style={getElementStyle(props, 'title')}>{title}</h2>
         <div className="overflow-x-auto rounded-xl border border-gray-200">
           <table className="w-full min-w-[480px]">
             <thead>

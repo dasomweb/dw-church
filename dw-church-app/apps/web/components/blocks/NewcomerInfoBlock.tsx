@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { getElementStyle } from '@/lib/element-style';
 
 interface NewcomerInfoBlockProps {
   props: Record<string, unknown>;
@@ -27,11 +28,11 @@ export function NewcomerInfoBlock({ props }: NewcomerInfoBlockProps) {
             </svg>
           </div>
         )}
-        <h2 className="mb-4 text-3xl font-bold font-heading">{title}</h2>
+        <h2 className="mb-4 text-3xl font-bold font-heading" style={getElementStyle(props, 'title')}>{title}</h2>
         {content && (
           <div
             className="prose prose-lg mx-auto"
-            dangerouslySetInnerHTML={{ __html: content }}
+            style={getElementStyle(props, 'content')} dangerouslySetInnerHTML={{ __html: content }}
           />
         )}
       </div>
