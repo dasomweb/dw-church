@@ -127,8 +127,11 @@ export function LivePreviewPane({ tenantOrigin, pagePath, reloadNonce, selectedS
           className="mx-auto h-full overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm transition-[max-width] duration-200"
           style={{ maxWidth: width ? `${width}px` : '100%' }}
         >
+          {/* No key={src}: updating src navigates the existing iframe in
+              place (browser keeps the old document painted until the new one
+              is ready) instead of React remounting it — which caused a white
+              flash on every edit. */}
           <iframe
-            key={src}
             ref={iframeRef}
             src={src}
             title="페이지 미리보기"

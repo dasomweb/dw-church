@@ -10,7 +10,7 @@
  * every dw-church block_type in PageEditor BLOCK_DEFS, so the operator gets
  * the same rich controls here as the tenant-side PageEditor.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { PageSection } from '@dw-church/api-client';
 import { useAuthStore } from '../../stores/auth';
 import { useToast } from '../../components';
@@ -37,19 +37,55 @@ const PAGE_KINDS: { value: string; label: string }[] = [
   { value: 'bulletin_detail', label: '주보 상세 템플릿' },
 ];
 
-// Blocks offered by the "+ 블록" picker. A focused set of static blocks that
-// make sense on a content-detail template (each supports DynamicSource
-// binding on its text/image fields). Block types must exist in the server's
-// blockTypes enum (pages/schema.ts).
-const ADD_BLOCKS: { value: string; label: string }[] = [
-  { value: 'section_header', label: '섹션 헤더' },
-  { value: 'hero_banner', label: '히어로 배너' },
-  { value: 'text_only', label: '텍스트' },
-  { value: 'text_image', label: '텍스트 + 이미지' },
-  { value: 'image_gallery', label: '이미지 갤러리' },
-  { value: 'quote_block', label: '인용 / 말씀' },
-  { value: 'video', label: '비디오' },
-  { value: 'divider', label: '구분선' },
+// Full block catalog for the "+ 블록" picker, grouped by category. Each entry
+// carries sensible default props so a freshly added block renders with
+// placeholder content instead of an empty box. Block `value`s must exist in
+// the server's blockTypes enum (pages/schema.ts) and have a BlockRenderer
+// mapping (apps/web/components/BlockRenderer.tsx).
+interface AddBlock { value: string; label: string; props?: Record<string, unknown> }
+const ADD_BLOCK_CATALOG: { category: string; blocks: AddBlock[] }[] = [
+  { category: '히어로', blocks: [
+    { value: 'hero_banner', label: '히어로 배너', props: { title: '제목', subtitle: '', height: 'md', layout: 'full', textAlign: 'center', overlayColor: '#000000', overlayOpacity: 50 } },
+    { value: 'banner_slider', label: '배너 슬라이더', props: { category: 'main' } },
+    { value: 'hero_split', label: '분할 히어로', props: { title: '', imagePosition: 'right' } },
+  ]},
+  { category: '소개', blocks: [
+    { value: 'pastor_message', label: '담임목사 인사', props: { title: '담임목사 인사', pastorName: '', message: '', layout: 'right' } },
+    { value: 'church_intro', label: '교회 소개', props: { title: '', content: '' } },
+    { value: 'mission_vision', label: '미션 / 비전', props: { title: '', content: '' } },
+  ]},
+  { category: '콘텐츠', blocks: [
+    { value: 'recent_sermons', label: '설교 목록', props: { title: '최근 설교', limit: 6 } },
+    { value: 'recent_bulletins', label: '주보 목록', props: { title: '주보', limit: 6 } },
+    { value: 'recent_columns', label: '칼럼 목록', props: { title: '목회칼럼', limit: 6 } },
+    { value: 'album_gallery', label: '앨범', props: { title: '앨범', limit: 6 } },
+    { value: 'staff_grid', label: '교역자', props: { title: '섬기는 사람들', limit: 20 } },
+    { value: 'event_grid', label: '행사', props: { title: '교회 행사', limit: 4 } },
+    { value: 'history_timeline', label: '교회 연혁', props: { title: '교회 연혁' } },
+    { value: 'board', label: '게시판', props: { title: '게시판', boardSlug: '', limit: 10 } },
+  ]},
+  { category: '텍스트', blocks: [
+    { value: 'section_header', label: '섹션 헤더', props: { title: '' } },
+    { value: 'text_only', label: '텍스트', props: { title: '', content: '' } },
+    { value: 'text_image', label: '텍스트 + 이미지', props: { title: '', content: '', imageUrl: '' } },
+    { value: 'quote_block', label: '인용 / 말씀', props: { quote: '' } },
+  ]},
+  { category: '교회 정보', blocks: [
+    { value: 'worship_times', label: '예배 시간', props: { title: '예배 안내', services: [] } },
+    { value: 'location_map', label: '지도 / 약도', props: { title: '오시는 길', address: '' } },
+    { value: 'contact_info', label: '연락처', props: { title: '연락처' } },
+    { value: 'newcomer_info', label: '새가족 안내', props: { title: '처음 오신 분들을 환영합니다' } },
+  ]},
+  { category: 'CTA / 미디어', blocks: [
+    { value: 'call_to_action', label: 'CTA 배너', props: { title: '', ctaLabel: '', ctaUrl: '' } },
+    { value: 'image_gallery', label: '이미지 갤러리', props: { title: '', images: [] } },
+    { value: 'video', label: '비디오', props: {} },
+  ]},
+  { category: '레이아웃', blocks: [
+    { value: 'layout_section', label: '섹션 컨테이너', props: { layout: 'section', padding: '40px 24px', children: [] } },
+    { value: 'layout_columns', label: '컬럼 (2열)', props: { layout: 'columns-2', gap: 24, padding: '24px', children: [] } },
+    { value: 'divider', label: '구분선', props: {} },
+  ]},
 ];
 
 // This console uses raw fetch (not the api-client), so responses arrive in
@@ -98,6 +134,14 @@ export default function TenantPageEditor() {
   // Bumped after every successful section save so the live preview iframe
   // reloads and reflects the edit (public page fetches with no-store).
   const [previewNonce, setPreviewNonce] = useState(0);
+  // Debounce the live-preview reload so it refreshes once the operator pauses
+  // editing — reloading on every keystroke-save made the iframe flicker.
+  const previewTimer = useRef<number | null>(null);
+  const schedulePreviewReload = () => {
+    if (previewTimer.current) clearTimeout(previewTimer.current);
+    previewTimer.current = window.setTimeout(() => setPreviewNonce((n) => n + 1), 900);
+  };
+  useEffect(() => () => { if (previewTimer.current) clearTimeout(previewTimer.current); }, []);
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
@@ -194,7 +238,7 @@ export default function TenantPageEditor() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const updated = normalizeSection(await res.json() as Record<string, unknown>);
         setSections((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
-        setPreviewNonce((n) => n + 1); // reflect the edit in the live preview
+        schedulePreviewReload(); // debounced — reflect the edit once typing pauses
       } catch (err) {
         showToast('error', err instanceof Error ? err.message : '저장 실패');
       } finally {
@@ -250,13 +294,13 @@ export default function TenantPageEditor() {
 
   // Add a new block (section) to the selected page. super_admin bypasses the
   // Pro+ plan gate on POST /sections, so this works on any tenant.
-  const addBlock = async (blockType: string) => {
+  const addBlock = async (blockType: string, props: Record<string, unknown> = {}) => {
     if (!selectedPageId) return;
     setAddMenuOpen(false);
     try {
       const res = await fetch(`${baseUrl}/api/v1/pages/${selectedPageId}/sections`, {
         method: 'POST', headers,
-        body: JSON.stringify({ blockType, props: {}, sortOrder: sections.length, isVisible: true }),
+        body: JSON.stringify({ blockType, props, sortOrder: sections.length, isVisible: true }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const created = normalizeSection(await res.json() as Record<string, unknown>);
@@ -351,16 +395,23 @@ export default function TenantPageEditor() {
                   + 블록
                 </button>
                 {addMenuOpen && (
-                  <div className="absolute right-0 top-full z-20 mt-1 max-h-72 w-40 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
-                    {ADD_BLOCKS.map((b) => (
-                      <button
-                        key={b.value}
-                        type="button"
-                        onClick={() => addBlock(b.value)}
-                        className="block w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50"
-                      >
-                        {b.label}
-                      </button>
+                  <div className="absolute right-0 top-full z-20 mt-1 max-h-[28rem] w-48 overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+                    {ADD_BLOCK_CATALOG.map((group) => (
+                      <div key={group.category}>
+                        <div className="px-3 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                          {group.category}
+                        </div>
+                        {group.blocks.map((b) => (
+                          <button
+                            key={b.value}
+                            type="button"
+                            onClick={() => addBlock(b.value, b.props ?? {})}
+                            className="block w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-blue-50"
+                          >
+                            {b.label}
+                          </button>
+                        ))}
+                      </div>
                     ))}
                   </div>
                 )}
