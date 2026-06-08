@@ -1,5 +1,6 @@
-import { getColumn } from '@/lib/api';
+import { getColumn, getDetailTemplate } from '@/lib/api';
 import { SingleColumnClient } from './SingleColumnClient';
+import { DetailTemplateRenderer } from '@/components/DetailTemplateRenderer';
 import { notFound } from 'next/navigation';
 import { buildTenantMetadata } from '@/lib/metadata';
 import type { Metadata } from 'next';
@@ -30,6 +31,11 @@ export default async function ColumnDetailPage({ params }: ColumnDetailProps) {
     column = await getColumn(slug, id);
   } catch {
     notFound();
+  }
+
+  const template = await getDetailTemplate(slug, 'column_detail');
+  if (template && template.length > 0) {
+    return <DetailTemplateRenderer sections={template} slug={slug} item={column} />;
   }
 
   return (

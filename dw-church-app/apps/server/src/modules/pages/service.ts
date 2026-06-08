@@ -35,6 +35,7 @@ interface PageRow {
   slug: string;
   is_home: boolean;
   status: string;
+  kind: string;
   sort_order: number;
   created_at: Date;
   updated_at: Date;
@@ -63,7 +64,7 @@ interface SectionRow {
 
 export async function listPages(schema: string): Promise<PageRow[]> {
   return prisma.$queryRawUnsafe<PageRow[]>(
-    `SELECT id, title, slug, is_home, status, sort_order, created_at, updated_at
+    `SELECT id, title, slug, is_home, status, kind, sort_order, created_at, updated_at
      FROM "${schema}".pages
      ORDER BY sort_order ASC, created_at ASC`,
   );
@@ -74,7 +75,7 @@ export async function getPageBySlug(
   slug: string,
 ): Promise<{ page: PageRow; sections: SectionRow[] }> {
   const pages = await prisma.$queryRawUnsafe<PageRow[]>(
-    `SELECT id, title, slug, is_home, status, sort_order, created_at, updated_at
+    `SELECT id, title, slug, is_home, status, kind, sort_order, created_at, updated_at
      FROM "${schema}".pages
      WHERE slug = $1
      LIMIT 1`,
@@ -110,13 +111,14 @@ export async function createPage(
   }
 
   const rows = await prisma.$queryRawUnsafe<PageRow[]>(
-    `INSERT INTO "${schema}".pages (title, slug, is_home, status, sort_order)
-     VALUES ($1, $2, $3, $4, $5)
-     RETURNING id, title, slug, is_home, status, sort_order, created_at, updated_at`,
+    `INSERT INTO "${schema}".pages (title, slug, is_home, status, kind, sort_order)
+     VALUES ($1, $2, $3, $4, $5, $6)
+     RETURNING id, title, slug, is_home, status, kind, sort_order, created_at, updated_at`,
     input.title,
     input.slug,
     input.isHome,
     input.status,
+    input.kind ?? 'static',
     input.sortOrder,
   );
 
@@ -165,6 +167,10 @@ export async function updatePage(
     setClauses.push(`status = $${paramIndex++}`);
     params.push(input.status);
   }
+  if (input.kind !== undefined) {
+    setClauses.push(`kind = $${paramIndex++}`);
+    params.push(input.kind);
+  }
   if (input.sortOrder !== undefined) {
     setClauses.push(`sort_order = $${paramIndex++}`);
     params.push(input.sortOrder);
@@ -181,7 +187,7 @@ export async function updatePage(
     `UPDATE "${schema}".pages
      SET ${setClauses.join(', ')}
      WHERE id = $${paramIndex}::uuid
-     RETURNING id, title, slug, is_home, status, sort_order, created_at, updated_at`,
+     RETURNING id, title, slug, is_home, status, kind, sort_order, created_at, updated_at`,
     ...params,
   );
 

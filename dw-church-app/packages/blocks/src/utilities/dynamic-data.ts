@@ -216,6 +216,12 @@ export function dynamicContextsForPageKind(
     case 'single_product':
       return ['product'];
     case 'blog_post':
+    // dw-church content-detail templates — sermons / columns / bulletins all
+    // share the 'post' field shape (title / content / topImageUrl /
+    // youtubeUrl / thumbnailUrl / createdAt), so they bind to the same context.
+    case 'sermon_detail':
+    case 'column_detail':
+    case 'bulletin_detail':
       return ['post'];
     case 'catalog_detail':
       return ['catalog'];

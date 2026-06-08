@@ -24,7 +24,18 @@ interface PageRow {
   title: string;
   isHome: boolean;
   status: string;
+  kind?: string;
 }
+
+// Page kinds the operator can assign. *_detail pages are templates rendered
+// for each item of that content type, where blocks bind to the current item
+// via DynamicSource (the ⚙ button on text/image/url fields).
+const PAGE_KINDS: { value: string; label: string }[] = [
+  { value: 'static', label: '일반 페이지' },
+  { value: 'sermon_detail', label: '설교 상세 템플릿' },
+  { value: 'column_detail', label: '칼럼 상세 템플릿' },
+  { value: 'bulletin_detail', label: '주보 상세 템플릿' },
+];
 
 interface Section {
   id: string;
@@ -152,6 +163,23 @@ export default function TenantPageEditor() {
     handlePropsChange(sectionId, { ...(sec?.props ?? {}), blockStyle });
   };
 
+  // Change a page's kind (static ↔ a *_detail template). Marking a page as a
+  // detail template activates DynamicSource binding in the inspector.
+  const handleKindChange = (kind: string) => {
+    if (!selectedPageId) return;
+    setPages((prev) => prev.map((p) => (p.id === selectedPageId ? { ...p, kind } : p)));
+    void (async () => {
+      try {
+        const res = await fetch(`${baseUrl}/api/v1/pages/${selectedPageId}`, {
+          method: 'PUT', headers, body: JSON.stringify({ kind }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      } catch (err) {
+        showToast('error', err instanceof Error ? err.message : '페이지 종류 저장 실패');
+      }
+    })();
+  };
+
   return (
     <div className="flex h-[calc(100vh-3.5rem)]">
       {/* Pane 1 — Pages */}
@@ -181,8 +209,27 @@ export default function TenantPageEditor() {
 
       {/* Pane 2 — Sections */}
       <section className="w-60 shrink-0 border-r bg-gray-50 overflow-y-auto">
-        <div className="p-3 border-b bg-white">
+        <div className="p-3 border-b bg-white space-y-2">
           <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider">섹션</h2>
+          {selectedPage && (
+            <label className="block">
+              <span className="text-[10px] text-gray-400">페이지 종류</span>
+              <select
+                value={selectedPage.kind ?? 'static'}
+                onChange={(e) => handleKindChange(e.target.value)}
+                className="mt-0.5 w-full rounded border border-gray-300 px-2 py-1 text-xs"
+              >
+                {PAGE_KINDS.map((k) => (
+                  <option key={k.value} value={k.value}>{k.label}</option>
+                ))}
+              </select>
+              {selectedPage.kind && selectedPage.kind !== 'static' && (
+                <span className="mt-1 block text-[10px] leading-tight text-blue-600">
+                  상세 템플릿: 블록 필드의 ⚙ 로 "현재 항목" 데이터를 연결하세요
+                </span>
+              )}
+            </label>
+          )}
         </div>
         {loadingSections ? (
           <div className="p-3 text-xs text-gray-500">로딩 중...</div>
@@ -243,7 +290,7 @@ export default function TenantPageEditor() {
             onClose={() => setSelectedSectionId(null)}
             onPropsChange={handlePropsChange}
             onStyleOverridesChange={handleStyleChange}
-            pageKind={undefined}
+            pageKind={selectedPage?.kind}
           />
         ) : (
           <div className="p-6 text-sm text-gray-400 text-center">섹션을 선택하세요</div>

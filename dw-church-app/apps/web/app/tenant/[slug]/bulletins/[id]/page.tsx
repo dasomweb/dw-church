@@ -1,5 +1,6 @@
-import { getBulletin } from '@/lib/api';
+import { getBulletin, getDetailTemplate } from '@/lib/api';
 import { SingleBulletinClient } from './SingleBulletinClient';
+import { DetailTemplateRenderer } from '@/components/DetailTemplateRenderer';
 import { notFound } from 'next/navigation';
 import { buildTenantMetadata } from '@/lib/metadata';
 import type { Metadata } from 'next';
@@ -30,6 +31,11 @@ export default async function BulletinDetailPage({ params }: BulletinDetailProps
     bulletin = await getBulletin(slug, id);
   } catch {
     notFound();
+  }
+
+  const template = await getDetailTemplate(slug, 'bulletin_detail');
+  if (template && template.length > 0) {
+    return <DetailTemplateRenderer sections={template} slug={slug} item={bulletin} />;
   }
 
   return (

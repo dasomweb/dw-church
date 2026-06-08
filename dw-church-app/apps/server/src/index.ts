@@ -222,6 +222,18 @@ async function main(): Promise<void> {
         } catch { /* table may not exist; skip */ }
       }
 
+      // 1c. pages.kind — content-detail templates. 'static' (default) is a
+      //     normal page; 'sermon_detail' / 'column_detail' / 'bulletin_detail'
+      //     mark a page as the builder-designed layout for that content type's
+      //     detail view, where blocks bind fields to the current item via
+      //     DynamicSource (resolveDynamicProps on the public detail route).
+      try {
+        await prisma.$executeRawUnsafe(
+          `ALTER TABLE "${schema}".pages ADD COLUMN IF NOT EXISTS "kind" TEXT NOT NULL DEFAULT 'static'`,
+        );
+        alterHits++;
+      } catch { /* pages table may not exist; skip */ }
+
       // 2. categories — unified table for sermon + album (code references
       //    `categories` with a `type` discriminator, not the separate
       //    sermon_categories / album_categories tables in the template).

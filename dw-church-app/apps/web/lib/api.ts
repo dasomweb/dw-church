@@ -173,6 +173,39 @@ export async function getPageBySlug(tenantSlug: string, pageSlug: string): Promi
   };
 }
 
+/**
+ * Find a content-detail template page by its `kind`
+ * (sermon_detail / column_detail / bulletin_detail) and return its visible
+ * sections, sorted. Returns null when the tenant hasn't designed one — the
+ * caller then falls back to the built-in fixed detail layout.
+ */
+export async function getDetailTemplate(
+  tenantSlug: string,
+  kind: string,
+): Promise<{ id: string; blockType: string; props: any; sortOrder: number; isVisible: boolean }[] | null> {
+  let pages: any[];
+  try {
+    pages = await getPages(tenantSlug);
+  } catch {
+    return null;
+  }
+  const template = pages.find((p: any) => p.kind === kind && (p.status === 'published' || p.status === undefined));
+  if (!template) return null;
+
+  const sectionsRes = await apiFetch(tenantSlug, `/api/v1/pages/${template.id}/sections`, { revalidate: false });
+  const sections = (unwrap(sectionsRes) ?? []) as any[];
+  return sections
+    .map((s: any) => ({
+      id: s.id,
+      blockType: s.blockType,
+      props: s.props ?? {},
+      sortOrder: s.sortOrder ?? 0,
+      isVisible: s.isVisible ?? true,
+    }))
+    .filter((s) => s.isVisible)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
 // ─── Sermons ─────────────────────────────────────────────────
 
 export async function getSermons(

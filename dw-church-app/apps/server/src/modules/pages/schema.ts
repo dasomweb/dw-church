@@ -57,11 +57,17 @@ export const blockTypes = [
 
 export type BlockType = (typeof blockTypes)[number];
 
+// Page kind — 'static' is a normal page; the *_detail kinds mark a page as
+// the builder-designed template for a content type's detail view (blocks
+// bind to the current item via DynamicSource).
+export const pageKindSchema = z.enum(['static', 'sermon_detail', 'column_detail', 'bulletin_detail']);
+
 export const createPageSchema = z.object({
   title: z.string().min(1).max(200),
   slug: z.string().min(1).max(200),
   isHome: z.boolean().default(false),
   status: z.enum(['draft', 'published']).default('draft'),
+  kind: pageKindSchema.optional(),  // createPage defaults to 'static'
   sortOrder: z.number().int().default(0),
 });
 
@@ -70,6 +76,7 @@ export const updatePageSchema = z.object({
   slug: z.string().min(1).max(200).optional(),
   isHome: z.boolean().optional(),
   status: z.enum(['draft', 'published']).optional(),
+  kind: pageKindSchema.optional(),
   sortOrder: z.number().int().optional(),
 });
 
