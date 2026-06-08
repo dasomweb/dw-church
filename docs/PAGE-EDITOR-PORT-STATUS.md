@@ -2,10 +2,12 @@
 
 > 다음 세션은 이 문서부터 읽고 **5단계(LivePreviewPane + 실 MediaPicker/DynamicSource)** 부터 진행.
 >
-> **상태: 1~4단계 완료 + 프로덕션 배포·검증 완료.** 슈퍼어드민 `/super-admin/t/:slug/pages`
-> 에 풀 ElementInspector(3-tab Content/Style/Advanced)가 라이브. element-registry가 dw-church
-> 의 모든 BLOCK_DEFS 블록을 커버(아래 참고). admin.truelight.app 서빙 중
-> (entry `admin-veOsNiVS.js`, chunk `TenantPageEditor-UC34XBYr.js`, 레지스트리 마커 확인됨).
+> **상태: 1~4단계 + 5단계(LivePreviewPane·MediaPicker) 완료 + 프로덕션 배포·검증 완료.**
+> 슈퍼어드민 `/super-admin/t/:slug/pages` = 4-pane(페이지|섹션|라이브 프리뷰|인스펙터).
+> 풀 ElementInspector(3-tab Content/Style/Advanced)가 모든 dw-church 블록 커버, 중앙에
+> 테넌트 공개 페이지 iframe 라이브 프리뷰, 라이브러리 버튼은 실 R2 MediaPicker.
+> admin.truelight.app 서빙 중(검증: entry `admin-DIZdTEem.js`, chunk `TenantPageEditor-CLZYi1ig.js`,
+> 마커 `미디어 라이브러리`·`/api/v1/files`·`페이지 미리보기` 확인). 남은 것: DynamicSource·element-click(아래).
 
 ## 목표
 슈퍼어드민의 페이지 디자인 편집기(`/super-admin/t/:slug/pages`)를 b2bsmart의 풀 인스펙터 수준으로 끌어올린다. 현재 dw-church 버전(`packages/admin-app/src/super-admin/pages/TenantPageEditor.tsx`, 351줄)은 의도적으로 간소화된 "Phase 4 minimal" — 6개 인라인 필드뿐. b2bsmart는 17-field × 3-tab(Layout/Style/Advanced) × element-registry 기반 인스펙터 + 라이브 프리뷰.
@@ -31,11 +33,11 @@
 3. ✅ **ElementInspector 포팅** (커밋 `d477b484`) — 3-tab + element-registry 구동. 어댑터: `useUpdateSectionDraft`(=`PUT /pages/:id/sections/:sectionId`), `blockStyle`는 `props.blockStyle`에 저장(dw-church PageSection엔 styleOverrides 필드 없음).
 4. ✅ **빌더 셸 연결 + 배포** (커밋 `df4b432c` 연결, `4ffd4d74` blocks/builder 서브패스, `e42b96db` Docker 수정). `TenantPageEditor` 3-pane(페이지/섹션/인스펙터)에 ElementInspector 연결, raw fetch + X-Tenant-Slug. **LivePreviewPane은 아직 없음**(섹션 리스트만, 라이브 렌더 미연결).
    - ⚠️ **Docker 함정(해결됨)**: admin Dockerfile builder 스테이지가 `packages/blocks/node_modules`를 복사 안 해서, vite가 `blocks/src/utilities/block-style-resolver.ts`의 `@dw-church/design-tokens` import를 Rollup이 해석 못 함 → 빌드 실패. 로컬은 pnpm install이 만들어 둬서 통과(가려짐). `COPY --from=deps /app/packages/blocks/node_modules` 추가로 해결. **앞으로 blocks 소스를 더 끌어오면 같은 패턴 주의.**
-5. ⏭️ **NEXT — LivePreviewPane + 실 MediaPicker(R2 브라우저) + 교회 DynamicSource**. 현재 미연결/스텁:
-   - **LivePreviewPane**: 중앙에 BlockRenderer 라이브 프리뷰 없음. 단, BlockRenderer는 `@dw-church/ui-components`에 의존 → admin 번들에 직접 넣으면 깨짐(4단계 builder 서브패스가 ui-components 회피한 이유). 대안: 테넌트 공개 페이지를 iframe(`https://{slug}.truelight.app/{pageSlug}`)으로 띄우고 저장 시 리로드 — ui-components 재번들 회피 + 프로덕션 렌더와 동일.
-   - **MediaPicker** (`builder/property-fields/MediaPicker.tsx`) 스텁 — R2 미디어 브라우저 미구현(지금은 ImageField 업로드 버튼만).
-   - **DynamicSourcePicker** — `useProductFieldSchema` 스텁(b2b 제품 도메인). 교회용 DynamicSource(설교/주보/교역자 등)로 교체 필요.
-   - element-click 포커스 선택(프리뷰에서 엘리먼트 클릭→인스펙터 포커스)도 5단계.
+5. **진행 중 — LivePreviewPane + MediaPicker 완료, DynamicSource/element-click 남음**:
+   - ✅ **LivePreviewPane** (커밋 `bc410ce6`) — 중앙 패널이 테넌트 공개 페이지를 iframe(`https://{slug}.truelight.app/{pageSlug}`)으로 렌더. 데스크탑/태블릿/모바일 폭 토글 + 새로고침 + 새 탭. 공개 페이지가 `cache:'no-store'`라 저장 시 `previewNonce` bump → 즉시 반영. BlockRenderer를 admin 번들에 넣지 않음(ui-components 회피). 레이아웃: 페이지 | 섹션 | 라이브 프리뷰 | 인스펙터(우측 고정 w-96).
+   - ✅ **MediaPicker 실 구현** (커밋 `9610b76d`) — `GET /api/v1/files`(`client.adapter.get`, camelize+tenant 헤더) 이미지 그리드 + 인라인 업로드(`client.uploadFile` = 클라 리사이즈+R2+DB). 단일/다중 선택. SuperAdminTenantLayout이 `client.setTenantSlug(slug)` 하므로 대상 테넌트로 정확히 조회/업로드.
+   - ⏭️ **NEXT — DynamicSourcePicker**: `useProductFieldSchema` 스텁(b2b 제품 도메인). 교회용 DynamicSource(설교/주보/교역자 등 Content Module 바인딩)로 교체. 단, dw-church Data Block은 이미 `recent_sermons` 등 전용 블록이 데이터를 직접 fetch하므로, b2b식 "필드를 동적 소스에 바인딩"이 교회 도메인에 꼭 필요한지 재검토 필요(우선순위 낮음).
+   - ⏭️ **element-click 포커스 선택**: 프리뷰 iframe에서 엘리먼트 클릭→인스펙터 포커스. web 앱이 preview 모드에서 섹션 클릭 시 `postMessage`로 sectionId 송신 → admin이 수신해 선택. 양쪽(apps/web + admin) 변경 필요.
 
 ## 배포 방법 (중요)
 - admin: 임시 `dw-church-app/railway.toml`(`[build] dockerfilePath="packages/admin-app/Dockerfile"`) 만들고 `cd dw-church-app && railway up --service admin --ci` → 임시파일 삭제. (자세히는 [[project_railway_deploy_method]])
