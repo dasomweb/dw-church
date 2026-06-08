@@ -48,6 +48,7 @@ const TenantFeaturePermissions = lazy(() => import('./super-admin/pages/TenantFe
 const TenantDangerZone = lazy(() => import('./super-admin/pages/TenantDangerZone'));
 const TenantAIContext = lazy(() => import('./super-admin/pages/TenantAIContext'));
 const TenantMediaLibrary = lazy(() => import('./super-admin/pages/TenantMediaLibrary'));
+const TenantTemplates = lazy(() => import('./super-admin/pages/TenantTemplates'));
 const SuperAdminPlaceholder = lazy(() => import('./super-admin/pages/Placeholder'));
 
 export interface AppConfig {
@@ -228,7 +229,7 @@ export function App({ config }: { config: AppConfig }) {
               >
                 <Route index element={<TenantOverview />} />
                 <Route path="pages" element={<TenantPageEditor />} />
-                <Route path="templates" element={<SuperAdminPlaceholder label="템플릿" phase="Phase 7b" />} />
+                <Route path="templates" element={<TenantTemplates />} />
                 <Route path="menus" element={<MenuEditor />} />
                 <Route path="theme" element={<TenantThemeEditor />} />
                 <Route path="ai-context" element={<TenantAIContext />} />
