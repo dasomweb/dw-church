@@ -7,6 +7,8 @@ import { DividerBlock } from '../static/DividerBlock';
 import { ImageGalleryBlock } from '../static/ImageGalleryBlock';
 import { VideoBlock } from '../static/VideoBlock';
 import { QuoteBlock } from '../static/QuoteBlock';
+import { LogoTitleBlock } from '../static/LogoTitleBlock';
+import { ButtonGroupBlock } from '../static/ButtonGroupBlock';
 import { SubscribeFormBlock } from '../static/SubscribeFormBlock';
 import { ContactFormBlock } from '../static/ContactFormBlock';
 import { SpacerBlock } from '../static/SpacerBlock';
@@ -133,6 +135,8 @@ export const BLOCK_MAP: Record<string, SyncBlockComponent> = {
   text_image:   TextImageBlock,
   text_only:    TextOnlyBlock,
   quote_block:  QuoteBlock,
+  logo_title:   LogoTitleBlock,
+  button_group: ButtonGroupBlock,
 
   location_map:  LocationMapBlock,
   map_embed:     LocationMapBlock,
