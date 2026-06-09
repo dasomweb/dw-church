@@ -28,22 +28,25 @@ interface FlatNode {
   depth: number;
 }
 
+// Recursive tree node: children carry the same augmented shape (not bare MenuItem[]).
+type TreeNode = MenuItem & { children: TreeNode[] };
+
 function buildFlatList(items: MenuItem[]): FlatNode[] {
-  const map = new Map<string, MenuItem & { children: MenuItem[] }>();
-  const roots: (MenuItem & { children: MenuItem[] })[] = [];
+  const map = new Map<string, TreeNode>();
+  const roots: TreeNode[] = [];
   for (const item of items) map.set(item.id, { ...item, children: [] });
   for (const item of items) {
     const node = map.get(item.id)!;
     if (item.parentId && map.has(item.parentId)) map.get(item.parentId)!.children.push(node);
     else roots.push(node);
   }
-  const sortNodes = (nodes: (MenuItem & { children: MenuItem[] })[]) => {
+  const sortNodes = (nodes: TreeNode[]) => {
     nodes.sort((a, b) => a.sortOrder - b.sortOrder);
     for (const n of nodes) sortNodes(n.children);
   };
   sortNodes(roots);
   const flat: FlatNode[] = [];
-  const walk = (nodes: (MenuItem & { children: MenuItem[] })[], depth: number) => {
+  const walk = (nodes: TreeNode[], depth: number) => {
     for (const node of nodes) {
       flat.push({ id: node.id, label: node.label, parentId: node.parentId || null, pageId: node.pageId || null, externalUrl: node.externalUrl || null, isVisible: node.isVisible, depth });
       walk(node.children, depth + 1);

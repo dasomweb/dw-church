@@ -3,7 +3,7 @@ import type { Staff } from '@dw-church/api-client';
 import { StaffCard } from './StaffCard';
 
 const mockStaff: Staff = {
-  id: 1,
+  id: '1',
   name: '김철수',
   role: '담임목사',
   department: '목회실',
@@ -16,7 +16,7 @@ const mockStaff: Staff = {
   isActive: true,
 };
 
-const meta = {
+const meta: Meta<typeof StaffCard> = {
   title: 'Staff/StaffCard',
   component: StaffCard,
   tags: ['autodocs'],
@@ -41,7 +41,7 @@ export const WithSns: Story = {
   args: {
     staff: {
       ...mockStaff,
-      id: 2,
+      id: '2',
       name: '박영희',
       role: '교육전도사',
       department: '교육부',
@@ -58,7 +58,7 @@ export const Inactive: Story = {
   args: {
     staff: {
       ...mockStaff,
-      id: 3,
+      id: '3',
       name: '이민수',
       role: '부목사',
       department: '선교부',

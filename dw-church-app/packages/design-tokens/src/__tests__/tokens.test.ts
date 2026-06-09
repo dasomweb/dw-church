@@ -251,7 +251,11 @@ describe('legacyThemeToTokens', () => {
     expect(out).not.toBe(DEFAULT_DESIGN_TOKENS);
   });
 
-  it('overlays legacy typography on top of tokensV2', () => {
+  it('tokensV2 typography wins; legacy typography is ignored when tokensV2 is present', () => {
+    // Regression: the legacy `typography` overlay used to clobber tokensV2 on
+    // every read, reverting the super-admin editor's saved scale edits to the
+    // stale seed value ("변경전 내용이 그대로"). tokensV2 is authoritative — the
+    // legacy overlay applies ONLY when tokensV2 is absent.
     const customV2: typeof DEFAULT_DESIGN_TOKENS = {
       ...DEFAULT_DESIGN_TOKENS,
       typography: {
@@ -266,10 +270,15 @@ describe('legacyThemeToTokens', () => {
       tokensV2: customV2,
       typography: { h1: { fontSize: '90px' } },
     });
-    // Legacy per-level edit wins on its specific scale.
-    expect(out.typography.scales.h1!.size.desktop).toBe(90);
+    // tokensV2 h1 (64) wins — the legacy 90px is ignored.
+    expect(out.typography.scales.h1!.size.desktop).toBe(64);
     // Other scales come from tokensV2 untouched.
     expect(out.typography.scales.h2).toEqual(customV2.typography.scales.h2);
+  });
+
+  it('legacy typography overlays defaults when there is NO tokensV2', () => {
+    const out = legacyThemeToTokens({ typography: { h1: { fontSize: '90px' } } });
+    expect(out.typography.scales.h1!.size.desktop).toBe(90);
   });
 
   it('overlays legacy colors onto defaults', () => {

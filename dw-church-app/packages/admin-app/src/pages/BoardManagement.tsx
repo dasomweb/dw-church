@@ -401,7 +401,8 @@ export default function BoardManagement() {
             <EmptyState
               title="게시판이 없습니다"
               description="새 게시판을 추가하여 시작하세요."
-              action={{ label: '게시판 추가', onClick: handleCreateBoard }}
+              actionLabel="게시판 추가"
+              onAction={handleCreateBoard}
             />
           ) : (
             <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
@@ -462,7 +463,8 @@ export default function BoardManagement() {
             <EmptyState
               title="게시글이 없습니다"
               description="새 게시글을 작성하세요."
-              action={{ label: '게시글 작성', onClick: handleCreatePost }}
+              actionLabel="게시글 작성"
+              onAction={handleCreatePost}
             />
           ) : (
             <>
@@ -543,7 +545,7 @@ export default function BoardManagement() {
 
       {/* Delete Confirmation */}
       <ConfirmDialog
-        isOpen={!!deleteTarget}
+        open={!!deleteTarget}
         title={`${deleteTarget?.type === 'board' ? '게시판' : '게시글'} 삭제`}
         message={`"${deleteTarget?.name}"을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
         onConfirm={handleDeleteConfirm}

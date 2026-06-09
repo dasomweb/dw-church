@@ -8,7 +8,7 @@ import {
   useDeleteAlbum,
   useAlbumCategories,
 } from '@dw-church/api-client';
-import { FormField, FormSection, FormRow, inputClass, selectClass, ImageUpload, MultiImageUpload, useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
+import { FormField, FormSection, FormRow, inputClass, selectClass, MultiImageUpload, useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
 import { useBulkDelete } from '../components/useBulkDelete';
 
 interface AlbumFormData {

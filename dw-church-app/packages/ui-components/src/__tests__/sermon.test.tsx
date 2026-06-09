@@ -4,23 +4,23 @@ import { SermonCard } from '../components/sermon/SermonCard';
 import type { Sermon } from '@dw-church/api-client';
 
 const mockSermon: Sermon = {
-  id: 10,
+  id: '10',
   title: 'The Good Shepherd',
   youtubeUrl: 'https://www.youtube.com/watch?v=abc123',
   scripture: 'John 10:11-18',
   preacher: 'Pastor Kim',
   date: '2024-01-07',
   thumbnailUrl: 'https://example.com/sermon-thumb.jpg',
-  categoryIds: [1],
+  categoryIds: ['1'],
   category: 'Sunday',
-  status: 'publish',
+  status: 'published',
   createdAt: '2024-01-07T00:00:00Z',
   modifiedAt: '2024-01-07T00:00:00Z',
 };
 
 const mockSermonNoThumb: Sermon = {
   ...mockSermon,
-  id: 11,
+  id: '11',
   title: 'Sermon Without Thumbnail',
   thumbnailUrl: '',
 };
@@ -31,7 +31,7 @@ const mockSermonNoThumb: Sermon = {
 // thumbnailUrl-only 경로 테스트엔 별도 mock 필요.
 const mockSermonThumbOnly: Sermon = {
   ...mockSermon,
-  id: 12,
+  id: '12',
   title: 'Sermon With Thumbnail Only',
   youtubeUrl: '',
 };

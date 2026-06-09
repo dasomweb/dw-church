@@ -4,7 +4,7 @@ import { HistoryTimeline } from './HistoryTimeline';
 
 const mockHistory: History[] = [
   {
-    id: 1,
+    id: '1',
     year: 2024,
     items: [
       { id: '1-1', month: 3, day: 10, content: '교회 창립 50주년 기념 예배', photoUrl: '' },
@@ -13,7 +13,7 @@ const mockHistory: History[] = [
     ],
   },
   {
-    id: 2,
+    id: '2',
     year: 2023,
     items: [
       { id: '2-1', month: 1, day: 1, content: '신년 특별 새벽기도회', photoUrl: '' },
@@ -23,7 +23,7 @@ const mockHistory: History[] = [
     ],
   },
   {
-    id: 3,
+    id: '3',
     year: 2022,
     items: [
       { id: '3-1', month: 4, day: 17, content: '부활절 특별 예배', photoUrl: '' },
@@ -56,7 +56,7 @@ export const Horizontal: Story = {
 
 export const SingleYear: Story = {
   args: {
-    data: [mockHistory[0]],
+    data: [mockHistory[0]!],
     layout: 'vertical',
   },
 };

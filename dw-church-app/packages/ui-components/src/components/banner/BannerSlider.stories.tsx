@@ -4,7 +4,7 @@ import { BannerSlider } from './BannerSlider';
 
 const mockBanners: Banner[] = [
   {
-    id: 1,
+    id: '1',
     title: '부활절 특별 예배',
     pcImageUrl: 'https://placehold.co/1920x768/1e3a5f/ffffff?text=Easter+Service',
     mobileImageUrl: 'https://placehold.co/768x768/1e3a5f/ffffff?text=Easter+Service',
@@ -17,17 +17,17 @@ const mockBanners: Banner[] = [
       heading: '부활절 특별 예배',
       subheading: '2025년 4월 20일 주일',
       description: '예수 그리스도의 부활을 함께 기념합니다.',
-      position: 'center',
+      position: 'center-center',
       align: 'center',
       widths: { pc: '60%', laptop: '70%', tablet: '80%', mobile: '90%' },
     },
     category: 'main',
-    status: 'publish',
+    status: 'published',
     createdAt: '2025-03-01T00:00:00Z',
     modifiedAt: '2025-03-01T00:00:00Z',
   },
   {
-    id: 2,
+    id: '2',
     title: '여름 성경학교',
     pcImageUrl: 'https://placehold.co/1920x768/2d6a4f/ffffff?text=Summer+Bible+School',
     mobileImageUrl: 'https://placehold.co/768x768/2d6a4f/ffffff?text=Summer+Bible+School',
@@ -40,12 +40,12 @@ const mockBanners: Banner[] = [
       heading: '여름 성경학교',
       subheading: '7월 21일 - 25일',
       description: '어린이부터 청소년까지 함께하는 여름 성경학교',
-      position: 'bottom-left',
+      position: 'left-bottom',
       align: 'left',
       widths: { pc: '50%', laptop: '60%', tablet: '70%', mobile: '90%' },
     },
     category: 'main',
-    status: 'publish',
+    status: 'published',
     createdAt: '2025-03-01T00:00:00Z',
     modifiedAt: '2025-03-01T00:00:00Z',
   },
@@ -71,6 +71,6 @@ export const Default: Story = {
 
 export const SingleBanner: Story = {
   args: {
-    data: [mockBanners[0]],
+    data: [mockBanners[0]!],
   },
 };

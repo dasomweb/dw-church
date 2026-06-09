@@ -12,7 +12,7 @@ function HeroBannerPreview({ props }: BlockProps) {
   return (
     <div className="bg-gradient-to-br from-indigo-600 to-purple-700 text-white rounded-lg px-8 py-12 text-center">
       <h2 className="text-2xl font-bold">{String(props.title || '히어로 배너')}</h2>
-      {props.subtitle && <p className="text-sm opacity-80 mt-2">{String(props.subtitle)}</p>}
+      {!!props.subtitle && <p className="text-sm opacity-80 mt-2">{String(props.subtitle)}</p>}
     </div>
   );
 }
@@ -44,7 +44,7 @@ function PastorMessagePreview({ props }: BlockProps) {
       <div className="w-16 h-20 bg-gray-200 rounded flex-shrink-0 flex items-center justify-center text-gray-400 text-[10px]">사진</div>
       <div className="flex-1">
         <h3 className="text-sm font-bold text-gray-800">{String(props.title || '담임목사 인사말')}</h3>
-        {props.name && <p className="text-xs text-purple-600 font-medium">{String(props.name)}</p>}
+        {!!props.name && <p className="text-xs text-purple-600 font-medium">{String(props.name)}</p>}
         <p className="text-xs text-gray-500 mt-1 line-clamp-3">{String(props.message || props.content || '인사말 내용')}</p>
       </div>
     </div>
@@ -89,7 +89,7 @@ function LocationPreview({ props }: BlockProps) {
     <div className="p-4 bg-white border rounded-lg">
       <h3 className="text-sm font-bold text-gray-800 mb-2">{String(props.title || '오시는 길')}</h3>
       <div className="bg-gray-200 rounded h-24 flex items-center justify-center text-xs text-gray-400">Google Maps</div>
-      {props.address && <p className="text-xs text-gray-500 mt-2">{String(props.address)}</p>}
+      {!!props.address && <p className="text-xs text-gray-500 mt-2">{String(props.address)}</p>}
     </div>
   );
 }
@@ -99,9 +99,9 @@ function ContactPreview({ props }: BlockProps) {
     <div className="p-4 bg-white border rounded-lg">
       <h3 className="text-sm font-bold text-gray-800 mb-2">{String(props.title || '연락처')}</h3>
       <div className="space-y-1 text-xs text-gray-500">
-        {props.phone && <p>{String(props.phone)}</p>}
-        {props.email && <p>{String(props.email)}</p>}
-        {props.address && <p>{String(props.address)}</p>}
+        {!!props.phone && <p>{String(props.phone)}</p>}
+        {!!props.email && <p>{String(props.email)}</p>}
+        {!!props.address && <p>{String(props.address)}</p>}
       </div>
     </div>
   );
@@ -131,7 +131,7 @@ function QuotePreview({ props }: BlockProps) {
   return (
     <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-center">
       <p className="text-xs text-amber-800 italic line-clamp-2">{String(props.content || '성경구절이 여기에 표시됩니다')}</p>
-      {props.title && <p className="text-[10px] text-amber-600 mt-1">— {String(props.title)}</p>}
+      {!!props.title && <p className="text-[10px] text-amber-600 mt-1">— {String(props.title)}</p>}
     </div>
   );
 }
@@ -140,7 +140,7 @@ function GenericPreview({ props, blockType }: BlockProps & { blockType: string }
   return (
     <div className="p-3 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
       <span className="text-[10px] font-mono text-gray-400">{blockType}</span>
-      {props.title && <p className="text-xs text-gray-600 mt-1">{String(props.title)}</p>}
+      {!!props.title && <p className="text-xs text-gray-600 mt-1">{String(props.title)}</p>}
     </div>
   );
 }
@@ -244,7 +244,7 @@ export default function PageWizard() {
     setLoading(true);
     setStep('preview');
     try {
-      const res = await apiClient.adapter.post<{ data: { title: string; slug: string; blocks: { blockType: string; props: Record<string, unknown> }[] } }>('/ai/generate-page/preview', { prompt });
+      const res = await apiClient!.adapter.post<{ data: { title: string; slug: string; blocks: { blockType: string; props: Record<string, unknown> }[] } }>('/ai/generate-page/preview', { prompt });
       setPreview(res.data);
     } catch (err) {
       if (isPlanUpgradeError(err)) {
@@ -263,7 +263,7 @@ export default function PageWizard() {
     setStep('creating');
     setLoading(true);
     try {
-      const res = await apiClient.adapter.post<{ data: { page: { id: string; title: string; slug: string }; sections: number } }>('/api/v1/ai/generate-page', { prompt: selectedPrompt });
+      const res = await apiClient!.adapter.post<{ data: { page: { id: string; title: string; slug: string }; sections: number } }>('/api/v1/ai/generate-page', { prompt: selectedPrompt });
       showToast('success', `"${res.data.page.title}" 페이지가 생성되었습니다`);
       queryClient.invalidateQueries({ queryKey: ['pages'] });
       navigate(`/t/${slug}/pages`);

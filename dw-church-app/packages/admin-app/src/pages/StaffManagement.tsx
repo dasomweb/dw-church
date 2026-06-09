@@ -51,7 +51,10 @@ export default function StaffManagement() {
     const sorted = [...staffList];
     const swapIdx = direction === 'up' ? index - 1 : index + 1;
     if (swapIdx < 0 || swapIdx >= sorted.length) return;
-    [sorted[index], sorted[swapIdx]] = [sorted[swapIdx], sorted[index]];
+    // Both indices are in-bounds (swapIdx is range-checked above; index is a valid item index).
+    const tmp = sorted[index]!;
+    sorted[index] = sorted[swapIdx]!;
+    sorted[swapIdx] = tmp;
     reorderMutation.mutate(sorted.map((s) => s.id), {
       onSuccess: () => showToast('success', '순서가 변경되었습니다.'),
     });
@@ -303,7 +306,10 @@ export default function StaffManagement() {
       const swapIdx = dir === 'up' ? index - 1 : index + 1;
       if (swapIdx < 0 || swapIdx >= localGroups.length) return;
       const arr = [...localGroups];
-      [arr[index], arr[swapIdx]] = [arr[swapIdx], arr[index]];
+      // Both indices are in-bounds (swapIdx is range-checked above; index is a valid item index).
+      const tmp = arr[index]!;
+      arr[index] = arr[swapIdx]!;
+      arr[swapIdx] = tmp;
       setLocalGroups(arr);
     };
 

@@ -64,7 +64,17 @@ export type BannerPosition =
   | 'right-center'
   | 'left-bottom'
   | 'center-bottom'
-  | 'right-bottom';
+  | 'right-bottom'
+  // Position-first aliases used by the admin banner editor (additive — keeps existing literals valid)
+  | 'top-left'
+  | 'top-center'
+  | 'top-right'
+  | 'center-left'
+  | 'center'
+  | 'center-right'
+  | 'bottom-left'
+  | 'bottom-center'
+  | 'bottom-right';
 
 export type BannerAlign = 'left' | 'center' | 'right';
 export type BannerCategory = 'main' | 'sub';
@@ -74,9 +84,14 @@ export interface BannerTextOverlay {
   heading: string;
   subheading: string;
   description: string;
+  // Optional CTA button — written by the admin banner editor, read by BannerSlider.
+  buttonText?: string;
+  buttonUrl?: string;
   position: BannerPosition;
   align: BannerAlign;
-  widths: {
+  // Optional — the admin banner editor doesn't author per-breakpoint widths;
+  // BannerSlider falls back to defaults when absent.
+  widths?: {
     pc: string;
     laptop: string;
     tablet: string;
@@ -87,13 +102,15 @@ export interface BannerTextOverlay {
 export interface Banner {
   id: string;
   title: string;
-  pcImageUrl: string;
-  mobileImageUrl: string;
-  subImageUrl: string;
-  linkUrl: string;
+  // Empty image / link / date fields are sent as null by the admin editor
+  // (formData.x || null) and cleared as null server-side — nullable, not ''.
+  pcImageUrl: string | null;
+  mobileImageUrl: string | null;
+  subImageUrl: string | null;
+  linkUrl: string | null;
   linkTarget: LinkTarget;
-  startDate: string;
-  endDate: string;
+  startDate: string | null;
+  endDate: string | null;
   textOverlay: BannerTextOverlay;
   category: BannerCategory;
   status: PostStatus;

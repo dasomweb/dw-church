@@ -4,20 +4,20 @@ import { BulletinCard } from '../components/bulletin/BulletinCard';
 import type { Bulletin } from '@dw-church/api-client';
 
 const mockBulletin: Bulletin = {
-  id: 1,
+  id: '1',
   title: 'Weekly Bulletin - January 7',
   date: '2024-01-07',
   pdfUrl: 'https://example.com/bulletin.pdf',
   images: ['https://example.com/img1.jpg'],
   thumbnailUrl: 'https://example.com/thumb.jpg',
-  status: 'publish',
+  status: 'published',
   createdAt: '2024-01-07T00:00:00Z',
   modifiedAt: '2024-01-07T00:00:00Z',
 };
 
 const mockBulletinNoPdf: Bulletin = {
   ...mockBulletin,
-  id: 2,
+  id: '2',
   title: 'Bulletin Without PDF',
   pdfUrl: '',
 };
@@ -36,7 +36,7 @@ describe('BulletinCard', () => {
     const handleClick = vi.fn();
     render(<BulletinCard bulletin={mockBulletin} onClick={handleClick} />);
     fireEvent.click(screen.getByRole('button'));
-    expect(handleClick).toHaveBeenCalledWith(1);
+    expect(handleClick).toHaveBeenCalledWith('1');
   });
 
   it('shows PDF download button when pdfUrl exists', () => {

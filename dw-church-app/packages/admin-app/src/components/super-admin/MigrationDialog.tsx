@@ -79,10 +79,9 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
     setYoutubeUrl('');
     setResult(null);
     setError(null);
-    setDynamicSelections({
-      sermons: false, bulletins: false, columns: false, events: false,
-      albums: false, staff: false, boards: false,
-    });
+    // (dynamic-content selections were removed — migration is static-pages-only;
+    // dynamic content is migrated per management page. The orphaned
+    // setDynamicSelections reset call here threw ReferenceError on open.)
     setUseLlm(true);
   }, [open, tenant.id]);
 

@@ -2315,10 +2315,10 @@ function StorageTab() {
         if (cancelled) return;
 
         setTotalStorage(statsRes.totalStorage ?? 0);
-        setTotalDbSize((statsRes as Record<string, unknown>).dbSizeBytes as number ?? 0);
+        setTotalDbSize((statsRes as unknown as Record<string, unknown>).dbSizeBytes as number ?? 0);
 
         // Build storage list from tenants, sorted by total size descending
-        const storageList: StorageTenant[] = (tenantsRes.data ?? [])
+        const storageList: StorageTenant[] = ((tenantsRes.data ?? []) as unknown as Record<string, unknown>[])
           .map((t: Record<string, unknown>) => ({
             id: t.id as string,
             name: t.name as string,
@@ -2441,7 +2441,6 @@ function StorageTab() {
 export default function SuperAdminDashboardV2() {
   const apiFetch = useAdminApi();
   const session = useAuthStore((s) => s.session);
-  const { showToast } = useToast();
 
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [stats, setStats] = useState<GlobalStats | null>(null);

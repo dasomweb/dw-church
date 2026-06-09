@@ -51,7 +51,6 @@ const TenantMediaLibrary = lazy(() => import('./super-admin/pages/TenantMediaLib
 const TenantTemplates = lazy(() => import('./super-admin/pages/TenantTemplates'));
 const TenantReferencePhotos = lazy(() => import('./super-admin/pages/TenantReferencePhotos'));
 const TenantContentEntries = lazy(() => import('./super-admin/pages/TenantContentEntries'));
-const SuperAdminPlaceholder = lazy(() => import('./super-admin/pages/Placeholder'));
 
 export interface AppConfig {
   baseUrl: string;

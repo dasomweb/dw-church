@@ -11,7 +11,7 @@ import {
   useDWChurchClient,
 } from '@dw-church/api-client';
 import { useQueryClient } from '@tanstack/react-query';
-import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
+import { FormField, FormSection, FormRow, inputClass, selectClass, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
 import { useBulkDelete } from '../components/useBulkDelete';
 
 // ─── YouTube 썸네일 유틸 ──────────────────────────────────
@@ -187,7 +187,7 @@ export default function SermonManagement() {
     if (!name || savingPreacher) return;
     setSavingPreacher(true);
     try {
-      await apiClient.adapter.post<{ data: { id: string; name: string } }>(
+      await apiClient!.adapter.post<{ data: { id: string; name: string } }>(
         '/api/v1/preachers',
         { name },
       );

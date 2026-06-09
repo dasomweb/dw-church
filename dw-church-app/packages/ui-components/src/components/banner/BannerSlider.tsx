@@ -107,9 +107,9 @@ export function BannerSlider({
   const slideContent = (
     <div className="relative w-full overflow-hidden" style={{ paddingBottom: '40%' }}>
       <picture>
-        <source media="(max-width: 768px)" srcSet={banner.mobileImageUrl} />
+        <source media="(max-width: 768px)" srcSet={banner.mobileImageUrl ?? undefined} />
         <img
-          src={banner.pcImageUrl}
+          src={banner.pcImageUrl ?? undefined}
           alt={banner.title}
           className="absolute inset-0 h-full w-full object-cover transition-opacity duration-500"
         />

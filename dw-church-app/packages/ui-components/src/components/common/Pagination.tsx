@@ -27,10 +27,11 @@ function getPageNumbers(current: number, total: number): (number | null)[] {
   const result: (number | null)[] = [];
 
   for (let i = 0; i < sorted.length; i++) {
-    if (i > 0 && sorted[i] - sorted[i - 1] > 1) {
+    const value = sorted[i]!; // i is always a valid index within the loop bounds
+    if (i > 0 && value - sorted[i - 1]! > 1) {
       result.push(null); // ellipsis
     }
-    result.push(sorted[i]);
+    result.push(value);
   }
 
   return result;

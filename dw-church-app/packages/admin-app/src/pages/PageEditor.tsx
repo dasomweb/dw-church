@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import type { Page, PageSection, BlockType } from '@dw-church/api-client';
 import {
@@ -42,11 +42,6 @@ interface BlockDef {
   defaultProps: Record<string, unknown>;
   editableFields: { key: string; label: string; type: 'text' | 'textarea' | 'number' | 'select' | 'image' | 'images' | 'url' | 'array' | 'tags' | 'services'; options?: { label: string; value: string }[]; max?: number }[];
 }
-
-const DYNAMIC_BLOCK_TYPES = new Set([
-  'banner_slider', 'hero_image_slider', 'recent_sermons', 'recent_bulletins',
-  'recent_columns', 'album_gallery', 'staff_grid', 'event_grid', 'history_timeline', 'board',
-]);
 
 const BLOCK_DEFS: BlockDef[] = [
   // ─── Hero ─────────────────────────────────────
@@ -199,45 +194,6 @@ const TEMPLATES: PageTemplate[] = [
 // ═══════════════════════════════════════════════════════════
 // Undo Stack
 // ═══════════════════════════════════════════════════════════
-const MAX_UNDO = 20;
-
-function useUndoStack<T>(initial: T) {
-  const [state, setState] = useState(initial);
-  const undoStack = useRef<T[]>([]);
-  const redoStack = useRef<T[]>([]);
-
-  const push = useCallback((next: T) => {
-    undoStack.current.push(state);
-    if (undoStack.current.length > MAX_UNDO) undoStack.current.shift();
-    redoStack.current = [];
-    setState(next);
-  }, [state]);
-
-  const undo = useCallback(() => {
-    const prev = undoStack.current.pop();
-    if (prev !== undefined) {
-      redoStack.current.push(state);
-      setState(prev);
-    }
-  }, [state]);
-
-  const redo = useCallback(() => {
-    const next = redoStack.current.pop();
-    if (next !== undefined) {
-      undoStack.current.push(state);
-      setState(next);
-    }
-  }, [state]);
-
-  const reset = useCallback((val: T) => {
-    undoStack.current = [];
-    redoStack.current = [];
-    setState(val);
-  }, []);
-
-  return { state, push, undo, redo, reset, canUndo: undoStack.current.length > 0, canRedo: redoStack.current.length > 0 };
-}
-
 // ═══════════════════════════════════════════════════════════
 // Block Palette (left sidebar — drag source)
 // ═══════════════════════════════════════════════════════════
@@ -423,7 +379,10 @@ function TagReorderList({ value, onChange }: { value: string; onChange: (val: st
     const swapIdx = direction === 'up' ? index - 1 : index + 1;
     if (swapIdx < 0 || swapIdx >= tags.length) return;
     const newTags = [...tags];
-    [newTags[index], newTags[swapIdx]] = [newTags[swapIdx], newTags[index]];
+    // Both indices are in-bounds (swapIdx is range-checked above; index is a valid item index).
+    const tmp = newTags[index]!;
+    newTags[index] = newTags[swapIdx]!;
+    newTags[swapIdx] = tmp;
     update(newTags);
   };
 
@@ -499,13 +458,17 @@ function ServiceListEditor({ value, onChange }: { value: { name: string; time: s
     const swapIdx = dir === 'up' ? index - 1 : index + 1;
     if (swapIdx < 0 || swapIdx >= value.length) return;
     const arr = [...value];
-    [arr[index], arr[swapIdx]] = [arr[swapIdx], arr[index]];
+    // Both indices are in-bounds (swapIdx is range-checked above; index is a valid item index).
+    const tmp = arr[index]!;
+    arr[index] = arr[swapIdx]!;
+    arr[swapIdx] = tmp;
     onChange(arr);
   };
 
   const handleUpdate = (index: number, field: 'name' | 'time' | 'location', val: string) => {
     const arr = [...value];
-    arr[index] = { ...arr[index], [field]: val };
+    // index references an existing rendered row, so arr[index] is defined.
+    arr[index] = { ...arr[index]!, [field]: val };
     onChange(arr);
   };
 
@@ -740,7 +703,7 @@ function LayoutChildEditor({
         <span className="text-xs">{childDef.icon}</span>
         <span className="text-xs font-medium text-gray-700 flex-1 truncate">
           {childDef.label}
-          {child.props.title && <span className="text-gray-400 ml-1">— {String(child.props.title).slice(0, 20)}</span>}
+          {!!child.props.title && <span className="text-gray-400 ml-1">— {String(child.props.title).slice(0, 20)}</span>}
         </span>
         <div className="flex items-center gap-0.5">
           <button
@@ -1121,7 +1084,7 @@ function SectionCard({
           {/* Inline preview when collapsed */}
           {collapsed && !isEditing && (
             <div className="flex items-center gap-2 mt-0.5">
-              {props.title && (
+              {!!props.title && (
                 <span className="text-[11px] text-gray-400 truncate max-w-[160px]">{props.title as string}</span>
               )}
               {thumbnailUrl && (
@@ -1162,7 +1125,7 @@ function SectionCard({
       {!collapsed && !isEditing && (
         <div className="px-3 py-2 space-y-1.5" onClick={(e) => e.stopPropagation()}>
           {/* Title preview */}
-          {props.title && (
+          {!!props.title && (
             <p className="text-xs text-gray-500 truncate">{props.title as string}</p>
           )}
           {/* Variant selector */}
@@ -1587,7 +1550,7 @@ export default function PageEditor() {
     setAiPreview(null);
     setAiPrompt(prompt);
     try {
-      const res = await apiClient.adapter.post<{ data: { title: string; slug: string; blocks: { blockType: string; props: Record<string, unknown> }[] } }>('/ai/generate-page/preview', { prompt });
+      const res = await apiClient!.adapter.post<{ data: { title: string; slug: string; blocks: { blockType: string; props: Record<string, unknown> }[] } }>('/ai/generate-page/preview', { prompt });
       setAiPreview(res.data);
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : 'AI 페이지 생성 실패');
@@ -1601,7 +1564,7 @@ export default function PageEditor() {
     setAiLoading(true);
     setAiPreview(null);
     try {
-      const res = await apiClient.adapter.post<{ data: { title: string; slug: string; blocks: { blockType: string; props: Record<string, unknown> }[] } }>('/ai/generate-page/preview', { prompt: aiPrompt });
+      const res = await apiClient!.adapter.post<{ data: { title: string; slug: string; blocks: { blockType: string; props: Record<string, unknown> }[] } }>('/ai/generate-page/preview', { prompt: aiPrompt });
       setAiPreview(res.data);
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : 'AI 페이지 생성 실패');
@@ -1614,7 +1577,7 @@ export default function PageEditor() {
     if (!aiPrompt.trim()) return;
     setAiLoading(true);
     try {
-      const res = await apiClient.adapter.post<{ data: { page: { id: string; title: string; slug: string }; sections: number } }>('/api/v1/ai/generate-page', { prompt: aiPrompt });
+      const res = await apiClient!.adapter.post<{ data: { page: { id: string; title: string; slug: string }; sections: number } }>('/api/v1/ai/generate-page', { prompt: aiPrompt });
       showToast('success', `"${res.data.page.title}" 페이지가 생성되었습니다 (${res.data.sections}개 블록)`);
       queryClient.invalidateQueries({ queryKey: ['pages'] });
       setSelectedPageId(res.data.page.id);
@@ -1704,7 +1667,7 @@ export default function PageEditor() {
     const baseOrder = sortedSections.length;
     let successCount = 0;
     for (let i = 0; i < template.sections.length; i++) {
-      const sec = template.sections[i];
+      const sec = template.sections[i]!; // i is bounded by the loop condition
       try {
         await apiClient.createSection(selectedPageId, {
           blockType: sec.blockType as BlockType,
@@ -1730,7 +1693,10 @@ export default function PageEditor() {
     const sorted = [...sortedSections];
     const swapIdx = direction === 'up' ? index - 1 : index + 1;
     if (swapIdx < 0 || swapIdx >= sorted.length) return;
-    [sorted[index], sorted[swapIdx]] = [sorted[swapIdx], sorted[index]];
+    // Both indices are in-bounds (swapIdx is range-checked above; index is a valid item index).
+    const tmp = sorted[index]!;
+    sorted[index] = sorted[swapIdx]!;
+    sorted[swapIdx] = tmp;
     reorderSections.mutate({ pageId: selectedPageId, orderedIds: sorted.map((s) => s.id) });
   };
 
@@ -1798,6 +1764,7 @@ export default function PageEditor() {
 
     const sorted = [...sortedSections];
     const [moved] = sorted.splice(fromIdx, 1);
+    if (!moved) return; // fromIdx came from a real drag source, so this is always defined in practice
     sorted.splice(targetIdx, 0, moved);
     reorderSections.mutate({ pageId: selectedPageId, orderedIds: sorted.map((s) => s.id) });
   };
@@ -1927,11 +1894,11 @@ export default function PageEditor() {
                   // already client-side resizes (its `resize` prop) before
                   // calling here — do NOT resize again (double-encode). New
                   // direct (non-ImageUpload) callers must resize themselves.
-                  const res = await apiClient.uploadFile(file);
+                  const res = await apiClient!.uploadFile(file);
                   return res.url;
                 }}
                 onGenerateText={async (prompt: string, context?: string) => {
-                  const res = await apiClient.generateText(prompt, context);
+                  const res = await apiClient!.generateText(prompt, context);
                   return res.text;
                 }}
                 onDragStart={(e) => handleSectionDragStart(e, index)}
@@ -2042,10 +2009,10 @@ export default function PageEditor() {
                         <div key={i} className="flex items-start gap-2 px-3 py-2 bg-white rounded-lg border border-purple-100">
                           <span className="text-[10px] font-mono bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded flex-shrink-0 mt-0.5">{block.blockType}</span>
                           <div className="text-xs text-gray-600 min-w-0 flex-1">
-                            {block.props.title && <span className="font-medium">{String(block.props.title)}</span>}
-                            {block.props.content && <p className="text-gray-400 truncate mt-0.5">{String(block.props.content).slice(0, 100)}</p>}
-                            {block.props.subtitle && <p className="text-gray-400">{String(block.props.subtitle)}</p>}
-                            {block.props.name && <p className="text-gray-500">{String(block.props.name)}</p>}
+                            {!!block.props.title && <span className="font-medium">{String(block.props.title)}</span>}
+                            {!!block.props.content && <p className="text-gray-400 truncate mt-0.5">{String(block.props.content).slice(0, 100)}</p>}
+                            {!!block.props.subtitle && <p className="text-gray-400">{String(block.props.subtitle)}</p>}
+                            {!!block.props.name && <p className="text-gray-500">{String(block.props.name)}</p>}
                             {Array.isArray(block.props.services) && <p className="text-gray-400">{(block.props.services as { name: string }[]).map(s => s.name).join(', ')}</p>}
                           </div>
                         </div>

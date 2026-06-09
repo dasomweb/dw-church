@@ -175,7 +175,10 @@ export function BuilderCanvas({ sections, slug, baseUrl, headers, selectedSectio
   useEffect(() => {
     if (!baseUrl || !headers['X-Tenant-Slug']) return;
     let cancelled = false;
-    const h = { Authorization: headers.Authorization, 'X-Tenant-Slug': headers['X-Tenant-Slug'] };
+    // `?? ''` — noUncheckedIndexedAccess types the indexed header as
+    // string|undefined, which fetch's HeadersInit rejects. The effect already
+    // guards on a present X-Tenant-Slug above.
+    const h = { Authorization: headers.Authorization ?? '', 'X-Tenant-Slug': headers['X-Tenant-Slug'] ?? '' };
     (async () => {
       try {
         const [tRes, tokRes] = await Promise.all([

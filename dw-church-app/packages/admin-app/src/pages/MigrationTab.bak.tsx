@@ -161,7 +161,6 @@ export default function MigrationTab() {
       const slug = page.url.replace(site.url, '').replace(/^\//, '').replace(/\/$/, '') || 'home';
       const title = page.title || slug;
       const hasImages = page.imageCount > 0;
-      const text = page.textContent || '';
 
       // Rule-based block suggestions based on content analysis
       const blocks: PagePlan['blocks'] = [];

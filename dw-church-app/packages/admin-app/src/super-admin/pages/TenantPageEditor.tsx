@@ -10,7 +10,7 @@
  * every dw-church block_type in PageEditor BLOCK_DEFS, so the operator gets
  * the same rich controls here as the tenant-side PageEditor.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { PageSection } from '@dw-church/api-client';
 import { useAuthStore } from '../../stores/auth';
 import { useToast } from '../../components';
@@ -136,21 +136,12 @@ export default function TenantPageEditor() {
   const [selectedElementKey, setSelectedElementKey] = useState<string>('__section__');
   const [loadingPages, setLoadingPages] = useState(true);
   const [loadingSections, setLoadingSections] = useState(false);
-  // b2bsmart model: edits auto-save immediately (so the live preview reflects
-  // them) — the Publish button controls page visibility (draft → published).
-  // The preview iframe reload is debounced (not per keystroke) and the iframe
-  // is not remounted, so there's no flicker.
-  const [previewNonce, setPreviewNonce] = useState(0);
-  const [dirty, setDirty] = useState<Set<string>>(new Set()); // edited since last publish (drives the button)
+  // NO auto-save: edits update local `sections` (the in-process canvas reflects
+  // them instantly) + `dirty` (drives the 저장/게시 buttons). The old iframe-
+  // preview reload machinery is gone — the canvas renders @dw-church/blocks in
+  // process, so there's nothing to reload.
+  const [dirty, setDirty] = useState<Set<string>>(new Set()); // edited since last save (drives the button)
   const [publishing, setPublishing] = useState(false);
-  const previewTimer = useRef<number | null>(null);
-  const schedulePreviewReload = () => {
-    if (previewTimer.current) clearTimeout(previewTimer.current);
-    // Short debounce — the double-buffered preview swaps without a flash, so
-    // we can refresh soon after the operator pauses.
-    previewTimer.current = window.setTimeout(() => setPreviewNonce((n) => n + 1), 350);
-  };
-  useEffect(() => () => { if (previewTimer.current) clearTimeout(previewTimer.current); }, []);
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
@@ -164,18 +155,6 @@ export default function TenantPageEditor() {
       : (import.meta.env.VITE_API_BASE_URL as string) || '';
   }, []);
 
-  // Public origin for the live preview — the tenant subdomain on the web
-  // app's root domain. admin.truelight.app → {slug}.truelight.app. In dev
-  // (no admin. host) fall back to VITE_WEB_BASE_URL or the same host.
-  const tenantOrigin = useMemo(() => {
-    if (!tenant?.slug) return '';
-    const host = typeof window !== 'undefined' ? window.location.hostname : '';
-    if (host.startsWith('admin.')) {
-      return `https://${tenant.slug}.${host.replace('admin.', '')}`;
-    }
-    const webBase = (import.meta.env.VITE_WEB_BASE_URL as string) || '';
-    return webBase ? `${webBase.replace(/\/+$/, '')}/tenant/${tenant.slug}` : '';
-  }, [tenant?.slug]);
 
   const headers = useMemo(() => ({
     Authorization: `Bearer ${session?.accessToken ?? ''}`,
@@ -241,8 +220,6 @@ export default function TenantPageEditor() {
 
   const selectedSection = sections.find((s) => s.id === selectedSectionId) ?? null;
   const selectedPage = pages.find((p) => p.id === selectedPageId) ?? null;
-  // Home page renders at the origin root; other pages at /{slug}.
-  const previewPath = selectedPage ? (selectedPage.isHome ? '' : selectedPage.slug) : '';
 
   // ElementInspector edits — auto-saved immediately so the live preview
   // reflects them (debounced reload, no flicker). `dirty` tracks "edited since
@@ -379,7 +356,6 @@ export default function TenantPageEditor() {
       const created = normalizeSection(await res.json() as Record<string, unknown>);
       setSections((prev) => [...prev, created]);
       setSelectedSectionId(created.id);
-      setPreviewNonce((n) => n + 1);
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : '블록 추가 실패');
     }
@@ -401,14 +377,14 @@ export default function TenantPageEditor() {
         const body = await res.json().catch(() => null) as { error?: { message?: string } } | null;
         throw new Error(body?.error?.message || `HTTP ${res.status}`);
       }
-      setPreviewNonce((n) => n + 1);
     } catch (err) {
       showToast('error', err instanceof Error ? `블록 삭제 실패: ${err.message}` : '블록 삭제 실패');
     }
   };
 
-  // Drag & drop reorder of sections. Reorders locally, then persists the new
-  // order via POST /sections/reorder { ids } and refreshes the preview.
+  // Drag & drop reorder of sections. Reorders locally (the in-process canvas
+  // reflects it immediately), then persists the new order via
+  // POST /sections/reorder { ids }.
   const reorderSections = (from: number, to: number) => {
     if (from === to || !selectedPageId) return;
     setSections((prev) => {
@@ -424,7 +400,6 @@ export default function TenantPageEditor() {
             method: 'POST', headers, body: JSON.stringify({ ids }),
           });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          schedulePreviewReload();
         } catch (err) {
           showToast('error', err instanceof Error ? err.message : '순서 변경 실패');
         }

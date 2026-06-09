@@ -34,7 +34,7 @@ export function BannerGrid({ data, category, limit, className = '' }: BannerGrid
         >
           <div className="relative w-full overflow-hidden" style={{ paddingBottom: '56.25%' }}>
             <img
-              src={banner.pcImageUrl}
+              src={banner.pcImageUrl ?? undefined}
               alt={banner.title}
               className="absolute inset-0 h-full w-full object-cover transition-transform group-hover:scale-105"
               loading="lazy"

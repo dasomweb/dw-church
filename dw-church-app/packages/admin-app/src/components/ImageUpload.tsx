@@ -295,7 +295,10 @@ export function MultiImageUpload({ value = [], onChange, onUpload, max = 15, lab
   const handleMove = (from: number, to: number) => {
     if (to < 0 || to >= value.length) return;
     const arr = [...value];
-    [arr[from], arr[to]] = [arr[to], arr[from]];
+    // Both indices are in-bounds (to is range-checked above; from is a valid item index), so values are non-null.
+    const tmp = arr[from]!;
+    arr[from] = arr[to]!;
+    arr[to] = tmp;
     onChange(arr);
   };
 
