@@ -129,6 +129,11 @@ export default function TenantPageEditor() {
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
   const [sections, setSections] = useState<Section[]>([]);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
+  // Which element inside the selected section the inspector focuses.
+  // '__section__' = whole-block mode; a real key (e.g. 'title', 'content')
+  // = focus mode, which shows that element's applied font/color (read from
+  // the in-process canvas DOM via the design-token CSS cascade).
+  const [selectedElementKey, setSelectedElementKey] = useState<string>('__section__');
   const [loadingPages, setLoadingPages] = useState(true);
   const [loadingSections, setLoadingSections] = useState(false);
   // b2bsmart model: edits auto-save immediately (so the live preview reflects
@@ -224,6 +229,7 @@ export default function TenantPageEditor() {
         const rows = body.data.map(normalizeSection).sort((a, b) => a.sortOrder - b.sortOrder);
         setSections(rows);
         setSelectedSectionId(rows[0]?.id ?? null);
+        setSelectedElementKey('__section__');
       } catch (err) {
         if (!cancelled) showToast('error', err instanceof Error ? err.message : '섹션 로딩 실패');
       } finally {
@@ -269,6 +275,15 @@ export default function TenantPageEditor() {
   const handleStyleChange = (sectionId: string, blockStyle: unknown) => {
     const sec = sections.find((s) => s.id === sectionId);
     handlePropsChange(sectionId, { ...(sec?.props ?? {}), blockStyle });
+  };
+
+  // Canvas click → select a section + the clicked element. A bare section
+  // click reports '__section__' (whole-block mode); clicking title/subtitle/
+  // content/etc. reports that element key so the inspector enters focus mode
+  // and shows the element's design-token-applied font/color.
+  const selectElement = (sectionId: string, elementKey: string) => {
+    setSelectedSectionId(sectionId);
+    setSelectedElementKey(elementKey || '__section__');
   };
 
   // Publish — make the page publicly visible (status=published). Edits are
@@ -566,7 +581,7 @@ export default function TenantPageEditor() {
                 className={`group relative border-b border-gray-200 ${selectedSectionId === s.id ? 'bg-blue-50' : 'hover:bg-white'} ${dragOverIndex === idx && dragIndex !== idx ? 'border-t-2 border-t-blue-500' : ''} ${dragIndex === idx ? 'opacity-40' : ''}`}
               >
                 <button
-                  onClick={() => setSelectedSectionId(s.id)}
+                  onClick={() => selectElement(s.id, '__section__')}
                   className="flex w-full items-start gap-1.5 px-2 py-2 pr-7 text-left text-sm"
                 >
                   <span className="mt-0.5 cursor-grab select-none text-gray-300 group-hover:text-gray-400" title="드래그하여 순서 변경">⠿</span>
@@ -605,7 +620,8 @@ export default function TenantPageEditor() {
             baseUrl={baseUrl}
             headers={headers}
             selectedSectionId={selectedSectionId}
-            onSelectSection={setSelectedSectionId}
+            selectedElementKey={selectedElementKey}
+            onSelect={selectElement}
           />
         ) : (
           <div className="flex h-full items-center justify-center bg-gray-100 text-sm text-gray-400">
@@ -633,11 +649,12 @@ export default function TenantPageEditor() {
             pageId={selectedPageId ?? ''}
             sections={sections.map((s) => ({ ...s, pageId: selectedPageId ?? '' })) as unknown as PageSection[]}
             sectionId={selectedSection.id}
-            // '__section__' = edit the whole block (all fields). An empty
-            // string would put the inspector in single-element focus mode
-            // and only show the "comes from content" placeholder.
-            elementKey="__section__"
-            onClose={() => setSelectedSectionId(null)}
+            // Driven by canvas clicks: '__section__' = whole-block mode;
+            // a real element key (title/content/…) = focus mode, which shows
+            // that element's design-token-applied font/color (read live from
+            // the in-process canvas DOM by the inspector's useAppliedStyle).
+            elementKey={selectedElementKey}
+            onClose={() => { setSelectedSectionId(null); setSelectedElementKey('__section__'); }}
             onPropsChange={handlePropsChange}
             onStyleOverridesChange={handleStyleChange}
             pageKind={selectedPage?.kind}

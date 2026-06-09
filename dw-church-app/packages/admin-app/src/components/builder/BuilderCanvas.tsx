@@ -40,7 +40,16 @@ interface Props {
   baseUrl: string;
   headers: Record<string, string>;
   selectedSectionId?: string | null;
-  onSelectSection?: (sectionId: string) => void;
+  selectedElementKey?: string | null;
+  /**
+   * Reports the clicked section + the clicked element's key. The element
+   * key comes from the @dw-church/blocks BlockRenderer (it walks up to the
+   * nearest [data-element]); a click on section chrome / the background
+   * reports '__section__'. The inspector enters focus mode for a real
+   * element key (showing that element's applied font/color from the design
+   * tokens) and whole-block mode for '__section__'.
+   */
+  onSelect?: (sectionId: string, elementKey: string) => void;
 }
 
 type Device = 'desktop' | 'tablet' | 'mobile';
@@ -156,7 +165,7 @@ function ChurchBlockCard({ label }: { label: string }) {
   );
 }
 
-export function BuilderCanvas({ sections, slug, baseUrl, headers, selectedSectionId, onSelectSection }: Props) {
+export function BuilderCanvas({ sections, slug, baseUrl, headers, selectedSectionId, selectedElementKey, onSelect }: Props) {
   const [device, setDevice] = useState<Device>('desktop');
   const [cssVars, setCssVars] = useState<Record<string, string>>({});
   // Stabilize the header dep so the theme effect doesn't refetch every render.
@@ -203,6 +212,20 @@ export function BuilderCanvas({ sections, slug, baseUrl, headers, selectedSectio
     el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [selectedSectionId]);
 
+  // Mark the focused element so the styles.css `[data-element-selected]`
+  // outline shows which element the inspector is editing. Clear any stale
+  // marks first. Runs after render so the freshly-rendered nodes exist.
+  useEffect(() => {
+    const root = scrollRef.current;
+    if (!root) return;
+    root.querySelectorAll('[data-element-selected="true"]').forEach((n) => n.removeAttribute('data-element-selected'));
+    if (!selectedSectionId || !selectedElementKey || selectedElementKey === '__section__') return;
+    const safeId = selectedSectionId.replace(/"/g, '');
+    const safeKey = selectedElementKey.replace(/"/g, '');
+    const el = root.querySelector(`[data-section-id="${safeId}"] [data-element="${safeKey}"]`);
+    el?.setAttribute('data-element-selected', 'true');
+  }, [selectedSectionId, selectedElementKey, sections]);
+
   return (
     <div className="flex h-full flex-col bg-gray-100">
       {/* Toolbar */}
@@ -236,14 +259,19 @@ export function BuilderCanvas({ sections, slug, baseUrl, headers, selectedSectio
                 <div
                   key={s.id}
                   data-canvas-section={s.id}
-                  onClick={() => onSelectSection?.(s.id)}
-                  className={`relative cursor-pointer transition-shadow ${
+                  // Church placeholder cards aren't rendered by BlockRenderer
+                  // (no editorMode click div), so they need the wrapper click.
+                  // Real blocks report clicks (with element key) via the
+                  // BlockRenderer onElementClick below — no wrapper onClick so
+                  // the element key isn't swallowed.
+                  onClick={churchLabel ? () => onSelect?.(s.id, '__section__') : undefined}
+                  className={`relative transition-shadow ${churchLabel ? 'cursor-pointer' : ''} ${
                     selected ? 'ring-2 ring-inset ring-blue-500' : 'hover:ring-1 hover:ring-inset hover:ring-blue-300'
                   }`}
                 >
                   {selected && (
                     <span className="pointer-events-none absolute left-0 top-0 z-10 rounded-br-md bg-blue-500 px-2 py-0.5 font-mono text-[10px] text-white">
-                      {s.blockType}
+                      {s.blockType}{selectedElementKey && selectedElementKey !== '__section__' ? ` · ${selectedElementKey}` : ''}
                     </span>
                   )}
                   {churchLabel ? (
@@ -253,7 +281,7 @@ export function BuilderCanvas({ sections, slug, baseUrl, headers, selectedSectio
                       section={{ id: s.id, blockType: s.blockType, props: s.props, styleOverrides: (s.props as { blockStyle?: never }).blockStyle ?? null } as RenderableSection}
                       slug={slug}
                       editorMode
-                      onElementClick={(sectionId) => onSelectSection?.(sectionId)}
+                      onElementClick={(sectionId, elementKey) => onSelect?.(sectionId, elementKey)}
                     />
                   )}
                 </div>
