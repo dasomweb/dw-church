@@ -8,6 +8,7 @@ import {
   useDeleteEvent,
 } from '@dw-church/api-client';
 import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, ImageUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
+import { ContentMigrationButton } from '../components/ContentMigrationButton';
 import { useBulkDelete } from '../components/useBulkDelete';
 
 interface EventFormData {
@@ -199,6 +200,7 @@ export default function EventManagement() {
               선택 삭제 ({bulk.count})
             </button>
           )}
+          <ContentMigrationButton contentType="events" label="행사" onDone={() => refetch()} />
           <button
             onClick={handleCreate}
             className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"

@@ -12,6 +12,7 @@ import {
   useUpdateChurchSettings,
 } from '@dw-church/api-client';
 import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, ImageUpload, useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
+import { ContentMigrationButton } from '../components/ContentMigrationButton';
 import { useBulkDelete } from '../components/useBulkDelete';
 
 interface StaffFormData {
@@ -414,6 +415,7 @@ export default function StaffManagement() {
               선택 삭제 ({bulk.count})
             </button>
           )}
+          <ContentMigrationButton contentType="staff" label="교역자" onDone={() => refetch()} />
           <button
             onClick={handleCreate}
             className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"

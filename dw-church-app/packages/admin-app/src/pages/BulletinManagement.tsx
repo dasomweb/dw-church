@@ -8,6 +8,7 @@ import {
   useDeleteBulletin,
 } from '@dw-church/api-client';
 import { FormField, FormSection, FormRow, inputClass, selectClass, MultiImageUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
+import { ContentMigrationButton } from '../components/ContentMigrationButton';
 import { useBulkDelete } from '../components/useBulkDelete';
 
 interface BulletinFormData {
@@ -170,6 +171,7 @@ export default function BulletinManagement() {
               선택 삭제 ({bulk.count})
             </button>
           )}
+          <ContentMigrationButton contentType="bulletins" label="주보" onDone={() => refetch()} />
           <button
             onClick={handleCreate}
             className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"

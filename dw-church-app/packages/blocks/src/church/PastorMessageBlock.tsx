@@ -26,6 +26,7 @@ export function PastorMessageBlock({ props }: PastorMessageBlockProps) {
   const title = (props.title as string) ?? '';
   const pastorName = (props.pastorName as string) ?? '';
   const pastorTitle = (props.pastorTitle as string) ?? '';
+  const subtitle = (props.subtitle as string) ?? '';
   // `message` is the historical key; theme-set templates use `content`.
   const message = (props.message as string) || (props.content as string) || '';
   // pastorPhotoUrl is the theme-set key; imageUrl is the inspector key.
@@ -46,6 +47,7 @@ export function PastorMessageBlock({ props }: PastorMessageBlockProps) {
           style={{ display: 'flex', flexDirection: 'column', gap: 'var(--block-gap, 1rem)' }}
         >
           <HeadingElement text={title} props={props} elementKey="title" defaultTag="h2" defaultSize="h2" />
+          <HeadingElement text={subtitle} props={props} elementKey="subtitle" defaultTag="h3" defaultSize="h3" />
           <TextBodyElement
             text={message}
             props={props}

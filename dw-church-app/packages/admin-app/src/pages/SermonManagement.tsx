@@ -12,6 +12,7 @@ import {
 } from '@dw-church/api-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { FormField, FormSection, FormRow, inputClass, selectClass, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
+import { ContentMigrationButton } from '../components/ContentMigrationButton';
 import { useBulkDelete } from '../components/useBulkDelete';
 
 // ─── YouTube 썸네일 유틸 ──────────────────────────────────
@@ -394,6 +395,7 @@ export default function SermonManagement() {
               선택 삭제 ({bulk.count})
             </button>
           )}
+          <ContentMigrationButton contentType="sermons" label="설교" onDone={() => refetch()} />
           <button
             onClick={handleCreate}
             className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"

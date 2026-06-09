@@ -202,7 +202,14 @@ directions, newcomer, mission, worship, home}, you MUST also populate
 pageContent[] with the page body translated into structured blocks.
 Without this, the static page content is lost.
 
-For each page classification, use these exact blockType values + props:
+For each page classification, use these exact blockType values + props.
+
+IMPORTANT — 제목/부제/본문 3단 구조: for EVERY content block below, ALSO
+populate a short "subtitle" in props — a one-line tagline or lead sentence
+(<= 60 chars) drawn from the page (e.g. the line right under the main heading,
+or a one-sentence summary you compose from the intro). It renders between the
+title (제목) and the body (본문) as the 부제. Omit "subtitle" ONLY when the page
+genuinely has no lead line worth showing.
 
 - pastor_greeting → blockType="pastor_message", props={ title, name, message, photoUrl }
     title = page heading (default "담임목사 인사말")
@@ -210,12 +217,12 @@ For each page classification, use these exact blockType values + props:
     message = full greeting body text (preserve paragraphs as \n\n)
     photoUrl = URL of any pastor photo in the page
 
-- about → blockType="church_intro", props={ title, content, imageUrl }
+- about → blockType="church_intro", props={ title, subtitle, content, imageUrl }
     title = page heading (default "교회 소개")
     content = full intro body text
     imageUrl = main image URL if present
 
-- vision → blockType="mission_vision", props={ title, content, imageUrl }
+- vision → blockType="mission_vision", props={ title, subtitle, content, imageUrl }
     title = page heading (default "비전")
     content = full vision statement text
     imageUrl = main image URL if present
@@ -224,12 +231,12 @@ For each page classification, use these exact blockType values + props:
     blockType="location_map", props={ title="오시는 길", address }
     blockType="contact_info", props={ title="연락처", phone, email, address }
 
-- newcomer → blockType="newcomer_info", props={ title, content, imageUrl }
+- newcomer → blockType="newcomer_info", props={ title, subtitle, content, imageUrl }
     title = page heading (default "새가족 안내")
     content = full newcomer info text
     imageUrl = main image URL if present
 
-- mission → blockType="text_image", props={ title, content, imageUrl }
+- mission → blockType="text_image", props={ title, subtitle, content, imageUrl }
     title = page heading (default "선교")
     content = full mission text
     imageUrl = main image URL if present

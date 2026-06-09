@@ -13,6 +13,7 @@ import {
   useUploadFile,
 } from '@dw-church/api-client';
 import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
+import { ContentMigrationButton } from '../components/ContentMigrationButton';
 
 // ─── Board Form ────────────────────────────────────────────
 interface BoardFormData {
@@ -52,7 +53,7 @@ export default function BoardManagement() {
   const [isDragging, setIsDragging] = useState(false);
 
   const { showToast } = useToast();
-  const { data: boards, isLoading: boardsLoading } = useBoards();
+  const { data: boards, isLoading: boardsLoading, refetch: refetchBoards } = useBoards();
   const { data: postsData, isLoading: postsLoading } = useBoardPosts(
     selectedBoard?.id ?? '',
     postParams,
@@ -390,9 +391,12 @@ export default function BoardManagement() {
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-lg font-semibold">게시판 관리</h2>
-            <button onClick={handleCreateBoard} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-              게시판 추가
-            </button>
+            <div className="flex items-center gap-2">
+              <ContentMigrationButton contentType="boards" label="게시판" onDone={() => refetchBoards()} />
+              <button onClick={handleCreateBoard} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                게시판 추가
+              </button>
+            </div>
           </div>
 
           {boardsLoading ? (

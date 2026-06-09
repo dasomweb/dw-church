@@ -47,6 +47,7 @@ export function NewcomerInfoBlock({ props }: NewcomerInfoBlockProps) {
           </div>
         )}
         <HeadingElement text={title} props={props} elementKey="title" defaultTag="h2" defaultSize="h2" />
+        <HeadingElement text={(props.subtitle as string) ?? ''} props={props} elementKey="subtitle" defaultTag="h3" defaultSize="h3" />
         <TextBodyElement
           text={content}
           props={props}
