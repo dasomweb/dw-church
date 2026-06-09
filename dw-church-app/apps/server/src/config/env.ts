@@ -35,6 +35,9 @@ const envSchema = z.object({
 
   // AI (optional — Gemini for text/image generation)
   GEMINI_API_KEY: z.string().default(''),
+  // Anthropic Claude — used by the migration agent (site analysis + ClassifiedData
+  // extraction). Gemini was unreliable at structuring sites; Claude replaces it.
+  ANTHROPIC_API_KEY: z.string().default(''),
 
   // AI Builder — Phase 11-A2 (apps/agents Python 서비스 연동).
   // AGENTS_BASE_URL    = Railway 의 apps/agents 내부 URL

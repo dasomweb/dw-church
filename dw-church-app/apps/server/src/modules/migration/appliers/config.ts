@@ -160,18 +160,6 @@ const PAGE_NAV: Record<string, { label: string; order: number }> = {
   board: { label: '게시판', order: 15 },
 };
 
-/** Dynamic content module pages that should always appear in the migrated nav
- *  when they exist as pages (the seed creates them; content fills in via the
- *  per-module import). slugs match schema-manager.ts seed page slugs. */
-const DYNAMIC_CONTENT_NAV: { slug: string; label: string; order: number }[] = [
-  { slug: 'sermons',   label: '설교',          order: 50 },
-  { slug: 'bulletins', label: '주보',          order: 51 },
-  { slug: 'columns',   label: '목회칼럼',       order: 52 },
-  { slug: 'albums',    label: '갤러리',         order: 53 },
-  { slug: 'events',    label: '행사',          order: 54 },
-  { slug: 'staff',     label: '섬기는 사람들',   order: 55 },
-];
-
 /**
  * Fallback nav when the agent returned no menus: build a flat nav from the
  * pages that were actually migrated, in canonical church order. 'home' is
@@ -211,22 +199,13 @@ export async function applyMenus(
   const slugToId = new Map(pageRows.map((p) => [p.slug, p.id]));
 
   // Drop items that point at a page that wasn't migrated (dead links) —
-  // but keep group headers (no pageSlug) so the hierarchy survives.
+  // but keep group headers (no pageSlug) so the hierarchy survives. The nav
+  // mirrors the SOURCE site: dynamic content pages (설교/주보/…) appear here
+  // only when the source nav actually links to them (the agent extracts them
+  // into `menus`). We do NOT blanket-add every seeded dynamic page — a church
+  // whose source site has no 주보 section shouldn't get a 주보 nav item.
   const usable = menus.filter((m) => !m.pageSlug || slugToId.has(m.pageSlug));
-
-  // Dynamic content module pages (설교/주보/칼럼/앨범/행사/교역자) exist as pages
-  // (the seed creates them; per-module import fills them later) but the nav we
-  // extract from the source is static-focused. Without this they'd be WIPED from
-  // the nav when we replace the default menu — leaving a migrated site whose
-  // menu has only static pages. Re-include every dynamic content page that
-  // exists in the tenant and isn't already covered, so the nav stays complete.
-  const coveredSlugs = new Set(usable.map((m) => m.pageSlug).filter(Boolean));
-  const dynamicAppends: ClassifiedMenu[] = DYNAMIC_CONTENT_NAV
-    .filter((d) => slugToId.has(d.slug) && !coveredSlugs.has(d.slug))
-    .map((d) => ({ label: d.label, pageSlug: d.slug, parentLabel: null, sortOrder: d.order }));
-
-  const allItems = [...usable, ...dynamicAppends];
-  const linked = allItems.filter((m) => m.pageSlug && slugToId.has(m.pageSlug));
+  const linked = usable.filter((m) => m.pageSlug && slugToId.has(m.pageSlug));
 
   // Safety: a near-empty source nav is worse than the seeded structure.
   // Only take over the nav when at least 2 real pages mapped.
@@ -237,7 +216,7 @@ export async function applyMenus(
   // default+source duplication.
   await prisma.$executeRawUnsafe(`DELETE FROM "${schema}".menus`);
 
-  const sorted = [...allItems].sort((a, b) => a.sortOrder - b.sortOrder);
+  const sorted = [...usable].sort((a, b) => a.sortOrder - b.sortOrder);
   const labelToId = new Map<string, string>();
   let count = 0;
 

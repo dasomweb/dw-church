@@ -26,12 +26,13 @@ import type { ClassifiedData } from './types.js';
 import { emptyClassifiedData } from './types.js';
 import { renderHtml } from './extractors/browser-render.js';
 
-const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta';
-// gemini-2.5-pro, not flash: building the full ClassifiedData payload from a
-// long crawl is at the edge of flash's reliability — same input gave 7 pages
-// one run and an empty {} the next. Migration is a one-time setup step, so the
-// extra latency/cost of pro is worth the consistency.
-const MODEL = 'gemini-2.5-pro';
+// Migration runs on Claude (Anthropic Messages API) — Gemini was unreliable at
+// analyzing a site and structuring it into ClassifiedData (same input gave 7
+// pages one run, empty {} the next). Migration is a one-time setup step, so the
+// strongest practical agentic model is worth it.
+const ANTHROPIC_BASE = 'https://api.anthropic.com/v1/messages';
+const MODEL = 'claude-sonnet-4-6';
+const MAX_TOKENS = 16384;
 const MAX_ITERATIONS = 20;        // hard cap on agent loop
 const FETCH_TIMEOUT_MS = 25_000;
 const BROWSER_UA =
@@ -75,6 +76,13 @@ interface AgentResult {
   warnings: string[];
 }
 
+// Claude Messages API content blocks + message shape.
+type Block =
+  | { type: 'text'; text: string }
+  | { type: 'tool_use'; id: string; name: string; input: Record<string, unknown> }
+  | { type: 'tool_result'; tool_use_id: string; content: string };
+type Msg = { role: 'user' | 'assistant'; content: Block[] };
+
 /**
  * Run the migration agent. Returns a populated ClassifiedData based on
  * whatever the agent could extract, plus per-tool diagnostics so the
@@ -92,8 +100,8 @@ export async function runMigrationAgent(
   const toolCalls: AgentResult['toolCalls'] = [];
   const warnings: string[] = [];
 
-  if (!env.GEMINI_API_KEY) {
-    warnings.push('GEMINI_API_KEY 미설정 — agent 비활성');
+  if (!env.ANTHROPIC_API_KEY) {
+    warnings.push('ANTHROPIC_API_KEY 미설정 — agent 비활성');
     return { data, iterations: 0, toolCalls, warnings };
   }
 
@@ -107,16 +115,11 @@ export async function runMigrationAgent(
         ? `\nSCOPE — "${focus.content}" CONTENT ONLY: Extract ONLY the "${focus.content}" items. Find that section's list page and its WordPress REST endpoint (/wp-json/wp/v2/...), page through ALL items, and capture each item's fields + images. Leave pageContents and every OTHER content type as EMPTY. Do not waste turns on unrelated pages.`
         : '';
 
-  // Conversation history (Gemini "contents" format).
-  type Content = { role: 'user' | 'model' | 'function'; parts: Part[] };
-  type Part =
-    | { text: string }
-    | { functionCall: { name: string; args: Record<string, unknown> } }
-    | { functionResponse: { name: string; response: Record<string, unknown> } };
-
-  const history: Content[] = [{
+  // Conversation history (Claude Messages API format).
+  const messages: Msg[] = [{
     role: 'user',
-    parts: [{
+    content: [{
+      type: 'text',
       text: `You are a Korean-church website migration agent. Source: ${sourceUrl}${youtubeChannelUrl ? `, YouTube channel: ${youtubeChannelUrl}` : ''}.
 
 GOAL: investigate the source and call commit_result with a populated
@@ -259,78 +262,82 @@ You have at most ${MAX_ITERATIONS} tool calls. Use them. Don't give up early.`,
     return { error: `unknown tool: ${name}` };
   }
 
+  // Append a user-side text block. Claude requires alternating roles AND that
+  // a turn with tool_use is answered by a turn whose content carries the
+  // matching tool_result. So if the last message is already a user turn (it
+  // holds this round's tool_results), we ADD the nudge text to it rather than
+  // push a second consecutive user message (which the API rejects).
+  const pushUserText = (text: string): void => {
+    const last = messages[messages.length - 1];
+    if (last && last.role === 'user') {
+      last.content.push({ type: 'text', text });
+    } else {
+      messages.push({ role: 'user', content: [{ type: 'text', text }] });
+    }
+  };
+
   // ── The agent loop ──
   let iterations = 0;
   let committed = false;
-  // Gemini sometimes returns an empty turn (no functionCall, no text) before
-  // it has committed — especially after a long crawl. Rather than give up and
-  // discard everything gathered so far, nudge it to commit. Capped so a model
-  // that refuses can't spin the loop forever.
+  // Claude can return a text-only turn (no tool_use) before it has committed.
+  // Rather than discard everything gathered so far, nudge it to commit. Capped
+  // so a model that refuses can't spin the loop forever.
   let forcedCommitNudges = 0;
   const MAX_FORCED_COMMIT_NUDGES = 2;
   while (iterations < MAX_ITERATIONS && !committed) {
     iterations++;
-    const response = await callGemini(history);
+    const response = await callClaude(messages);
     if (!response) {
-      warnings.push(`Gemini call ${iterations} failed`);
+      warnings.push(`Claude call ${iterations} failed`);
       break;
     }
 
-    // Append model turn to history so the next call has context.
-    history.push({ role: 'model', parts: response.parts });
+    // Append the assistant turn so the next call has context.
+    messages.push({ role: 'assistant', content: response.content });
 
-    let hadFunctionCall = false;
-    for (const part of response.parts) {
-      if ('functionCall' in part) {
-        hadFunctionCall = true;
-        const { name, args } = part.functionCall;
+    const toolUses = response.content.filter(
+      (b): b is Extract<Block, { type: 'tool_use' }> => b.type === 'tool_use',
+    );
+
+    if (toolUses.length > 0) {
+      // Execute each tool_use and return ALL results in ONE user message
+      // (Claude requires every tool_use to be answered in the next turn).
+      const toolResults: Block[] = [];
+      for (const tu of toolUses) {
         try {
-          const result = await execTool(name, args);
-          toolCalls.push({ name, args, ok: !('error' in result) });
-          history.push({
-            role: 'function',
-            parts: [{ functionResponse: { name, response: result } }],
-          });
+          const result = await execTool(tu.name, tu.input);
+          toolCalls.push({ name: tu.name, args: tu.input, ok: !('error' in result) });
+          toolResults.push({ type: 'tool_result', tool_use_id: tu.id, content: JSON.stringify(result) });
           // Only a NON-empty commit counts. An empty commit is rejected
-          // (result.rejected) and fed back so Gemini retries instead of
-          // "giving up" with empty arrays.
-          if (name === 'commit_result' && !('rejected' in result)) committed = true;
+          // (result.rejected) and fed back so Claude retries.
+          if (tu.name === 'commit_result' && !('rejected' in result)) committed = true;
         } catch (err) {
-          toolCalls.push({ name, args, ok: false });
-          warnings.push(`tool ${name} threw: ${err instanceof Error ? err.message : String(err)}`);
-          history.push({
-            role: 'function',
-            parts: [{ functionResponse: { name, response: { error: String(err) } } }],
-          });
+          toolCalls.push({ name: tu.name, args: tu.input, ok: false });
+          warnings.push(`tool ${tu.name} threw: ${err instanceof Error ? err.message : String(err)}`);
+          toolResults.push({ type: 'tool_result', tool_use_id: tu.id, content: JSON.stringify({ error: String(err) }) });
         }
       }
-    }
-
-    if (!hadFunctionCall) {
-      // No tool call — Gemini's done, try to parse text as final result.
+      messages.push({ role: 'user', content: toolResults });
+    } else {
+      // No tool_use — Claude may have answered with the JSON as text.
+      const text = response.content
+        .filter((b): b is Extract<Block, { type: 'text' }> => b.type === 'text')
+        .map((b) => b.text)
+        .join('\n');
       let parsedText = false;
-      for (const part of response.parts) {
-        if ('text' in part && part.text) {
-          const parsed = parseAgentJson(part.text);
-          if (parsed) {
-            mergeAgentResult(data, parsed);
-            committed = true;
-            parsedText = true;
-          } else {
-            warnings.push(`agent ended without commit; final text: ${part.text.slice(0, 200)}`);
-          }
+      if (text) {
+        const parsed = parseAgentJson(text);
+        if (parsed && countIncoming(parsed) > 0) {
+          mergeAgentResult(data, parsed);
+          committed = true;
+          parsedText = true;
+        } else {
+          warnings.push(`agent ended without commit; final text: ${text.slice(0, 200)}`);
         }
       }
-      // Empty/non-JSON turn without a commit → don't discard the crawl.
-      // Force a commit_result and keep looping (bounded).
       if (!committed && !parsedText && forcedCommitNudges < MAX_FORCED_COMMIT_NUDGES) {
         forcedCommitNudges++;
-        history.push({
-          role: 'user',
-          parts: [{
-            text: `STOP investigating. You have already fetched the source pages — their full text is in this conversation above. Call commit_result NOW with a populated ClassifiedData built from what you gathered: map page bodies into pageContents (담임목사 인사말 → pastor_message, 교회 소개/비전 → church_intro/mission_vision, 오시는 길 → location_map, 연락처 → contact_info), worshipTimes from any 예배 시간표, churchInfo (name/address/phone), and menus from the nav links. Use empty arrays ONLY for content types that genuinely do not exist on this site. Do not reply with prose — emit the commit_result function call.`,
-          }],
-        });
+        pushUserText(`STOP investigating. You have already fetched the source pages — their full text is in this conversation above. Call commit_result NOW with a populated ClassifiedData built from what you gathered: map page bodies into pageContents (담임목사 인사말 → pastor_message, 교회 소개/비전 → church_intro/mission_vision, 오시는 길 → location_map, 연락처 → contact_info), worshipTimes from any 예배 시간표, churchInfo (name/address/phone), and menus from the nav links. Use empty arrays ONLY for content types that genuinely do not exist on this site. Use the commit_result tool.`);
         continue;
       }
       break;
@@ -338,13 +345,10 @@ You have at most ${MAX_ITERATIONS} tool calls. Use them. Don't give up early.`,
   }
 
   // Final guarantee when the loop ended without a populated commit (it
-  // exhausted iterations mid-crawl, or kept committing empty). We do NOT use
-  // function-calling mode=ANY here: forcing the call makes Gemini emit
-  // commit_result with EMPTY args every time (observed keys= blank x3). Instead
-  // we stay in AUTO mode and hand it an explicit checklist of the pages it
-  // fetched, then accept EITHER a populated commit_result functionCall OR a
-  // text reply containing the JSON (parseAgentJson). Empty payloads are
-  // rejected and retried.
+  // exhausted iterations mid-crawl, or kept committing empty). Hand the model
+  // an explicit checklist of the pages it fetched, then accept EITHER a
+  // populated commit_result tool call OR a text reply containing the JSON
+  // (parseAgentJson). Empty payloads are rejected and retried.
   if (!committed) {
     const fetchedUrls = [...new Set(
       toolCalls
@@ -354,34 +358,40 @@ You have at most ${MAX_ITERATIONS} tool calls. Use them. Don't give up early.`,
     )];
     const checklist = fetchedUrls.slice(0, 25).map((u, i) => `${i + 1}. ${u}`).join('\n');
     for (let attempt = 0; attempt < 3 && !committed; attempt++) {
-      history.push({
-        role: 'user',
-        parts: [{
-          text: `STOP fetching. Build the result NOW. You already fetched these pages (their text is above in this conversation):
+      pushUserText(`STOP fetching. Build the result NOW. You already fetched these pages (their text is above in this conversation):
 ${checklist || '(see the fetched page text above)'}
 
-Emit a commit_result whose classifiedData is POPULATED — an empty object is a failure. For EACH content page add a pageContents entry whose blocks reproduce the layout in order: a hero_banner first (page heading → title, the small line under it → subtitle, the banner background photo → backgroundImageUrl), then one text_image per section (heading → title, body → content, side image → imageUrl, alternating layout left/right), and image_gallery for image grids. Also fill churchInfo (name/address/phone/email), worshipTimes, menus, and every sermon/column/event/staff/album/bulletin you saw.`,
-        }],
-      });
-      const response = await callGemini(history);
+Emit a commit_result whose classifiedData is POPULATED — an empty object is a failure. For EACH content page add a pageContents entry whose blocks reproduce the layout in order: a hero_banner first (page heading → title, the small line under it → subtitle, the banner background photo → backgroundImageUrl), then one text_image per section (heading → title, body → content, side image → imageUrl, alternating layout left/right), and image_gallery for image grids. Also fill churchInfo (name/address/phone/email), worshipTimes, menus, and every sermon/column/event/staff/album/bulletin you saw.`);
+      const response = await callClaude(messages);
       if (!response) break;
-      history.push({ role: 'model', parts: response.parts });
-      for (const part of response.parts) {
-        if ('functionCall' in part && part.functionCall.name === 'commit_result') {
+      messages.push({ role: 'assistant', content: response.content });
+      const toolUses = response.content.filter(
+        (b): b is Extract<Block, { type: 'tool_use' }> => b.type === 'tool_use',
+      );
+      if (toolUses.length > 0) {
+        const toolResults: Block[] = [];
+        for (const tu of toolUses) {
           try {
-            const result = await execTool('commit_result', part.functionCall.args) as { itemCountInPayload?: number };
-            toolCalls.push({ name: 'commit_result', args: part.functionCall.args, ok: true });
-            if ((result.itemCountInPayload ?? 0) > 0) committed = true;
+            const result = await execTool(tu.name, tu.input) as { itemCountInPayload?: number; error?: string };
+            toolCalls.push({ name: tu.name, args: tu.input, ok: !('error' in result) });
+            toolResults.push({ type: 'tool_result', tool_use_id: tu.id, content: JSON.stringify(result) });
+            if (tu.name === 'commit_result' && (result.itemCountInPayload ?? 0) > 0) committed = true;
           } catch (err) {
+            toolCalls.push({ name: tu.name, args: tu.input, ok: false });
             warnings.push(`forced commit_result threw: ${err instanceof Error ? err.message : String(err)}`);
+            toolResults.push({ type: 'tool_result', tool_use_id: tu.id, content: JSON.stringify({ error: String(err) }) });
           }
-        } else if ('text' in part && part.text) {
-          // Gemini answered with the JSON as text instead of a function call.
-          const parsed = parseAgentJson(part.text);
-          if (parsed && countIncoming(parsed) > 0) {
-            mergeAgentResult(data, parsed);
-            committed = true;
-          }
+        }
+        messages.push({ role: 'user', content: toolResults });
+      } else {
+        const text = response.content
+          .filter((b): b is Extract<Block, { type: 'text' }> => b.type === 'text')
+          .map((b) => b.text)
+          .join('\n');
+        const parsed = parseAgentJson(text);
+        if (parsed && countIncoming(parsed) > 0) {
+          mergeAgentResult(data, parsed);
+          committed = true;
         }
       }
       onProgress?.(`result:final_commit attempt=${attempt + 1} items=${countTotals(data)} committed=${committed}`);
@@ -580,108 +590,94 @@ async function tryYoutubeChannel(channelUrl: string): Promise<Record<string, unk
 }
 
 // ────────────────────────────────────────────────────────────
-// Gemini call with function-calling enabled.
+// Claude (Anthropic Messages API) call with tool use enabled.
 // ────────────────────────────────────────────────────────────
 
-const TOOL_DECLARATIONS = [{
-  functionDeclarations: [
-    {
-      name: 'fetch_url',
-      description: 'Fetch a single web page. Returns title, plain text (truncated to ~6000 chars), links, image URLs, and a WordPress hint.',
-      parameters: {
-        type: 'object',
-        properties: { url: { type: 'string', description: 'Absolute URL to fetch' } },
-        required: ['url'],
-      },
+const CLAUDE_TOOLS = [
+  {
+    name: 'fetch_url',
+    description: 'Fetch a single web page. Returns title, plain text (truncated to ~6000 chars), links, image URLs, and a WordPress hint.',
+    input_schema: {
+      type: 'object',
+      properties: { url: { type: 'string', description: 'Absolute URL to fetch' } },
+      required: ['url'],
     },
-    {
-      name: 'fetch_sitemap',
-      description: 'Try /sitemap.xml, /sitemap_index.xml, /wp-sitemap.xml at the given base URL. Returns up to 200 page URLs.',
-      parameters: {
-        type: 'object',
-        properties: { baseUrl: { type: 'string' } },
-        required: ['baseUrl'],
-      },
+  },
+  {
+    name: 'fetch_sitemap',
+    description: 'Try /sitemap.xml, /sitemap_index.xml, /wp-sitemap.xml at the given base URL. Returns up to 200 page URLs.',
+    input_schema: {
+      type: 'object',
+      properties: { baseUrl: { type: 'string' } },
+      required: ['baseUrl'],
     },
-    {
-      name: 'try_wp_rest',
-      description: 'Try a WordPress REST API endpoint, e.g. /wp-json/wp/v2/posts or /wp-json/wp/v2/pages. Returns up to 30 summarised items.',
-      parameters: {
-        type: 'object',
-        properties: { baseUrl: { type: 'string' }, endpoint: { type: 'string' } },
-        required: ['baseUrl', 'endpoint'],
-      },
+  },
+  {
+    name: 'try_wp_rest',
+    description: 'Try a WordPress REST API endpoint, e.g. /wp-json/wp/v2/posts or /wp-json/wp/v2/pages. Returns up to 30 summarised items.',
+    input_schema: {
+      type: 'object',
+      properties: { baseUrl: { type: 'string' }, endpoint: { type: 'string' } },
+      required: ['baseUrl', 'endpoint'],
     },
-    {
-      name: 'try_youtube_channel',
-      description: 'Fetch a YouTube channel page (for sermon video metadata).',
-      parameters: {
-        type: 'object',
-        properties: { channelUrl: { type: 'string' } },
-        required: ['channelUrl'],
-      },
+  },
+  {
+    name: 'try_youtube_channel',
+    description: 'Fetch a YouTube channel page (for sermon video metadata).',
+    input_schema: {
+      type: 'object',
+      properties: { channelUrl: { type: 'string' } },
+      required: ['channelUrl'],
     },
-    {
-      name: 'commit_result',
-      description: 'When you have gathered enough material, call this with the final ClassifiedData JSON. This ends the agent loop.',
-      parameters: {
-        type: 'object',
-        properties: {
-          classifiedData: {
-            type: 'object',
-            description: 'Final structured migration result (ClassifiedData shape — see system prompt).',
-          },
+  },
+  {
+    name: 'commit_result',
+    description: 'When you have gathered enough material, call this with the final ClassifiedData JSON. This ends the agent loop.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        classifiedData: {
+          type: 'object',
+          description: 'Final structured migration result (ClassifiedData shape — see the instructions in the first message).',
         },
-        required: ['classifiedData'],
       },
+      required: ['classifiedData'],
     },
-  ],
-}];
+  },
+];
 
-interface GeminiResponse {
-  parts: Array<
-    | { text: string }
-    | { functionCall: { name: string; args: Record<string, unknown> } }
-  >;
-}
+const CLAUDE_SYSTEM =
+  'You are a website-migration agent for Korean church sites. Use the provided ' +
+  'tools to investigate the source site, then call commit_result with a fully ' +
+  'populated ClassifiedData object. Prefer tool calls over prose.';
 
-async function callGemini(
-  history: Array<{ role: string; parts: unknown[] }>,
-  opts: { forceCommit?: boolean } = {},
-): Promise<GeminiResponse | null> {
+async function callClaude(messages: Msg[]): Promise<{ content: Block[] } | null> {
   try {
-    const res = await fetch(
-      `${GEMINI_BASE}/models/${MODEL}:generateContent?key=${env.GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: history,
-          tools: TOOL_DECLARATIONS,
-          // forceCommit: make Gemini MANDATORILY emit commit_result (no more
-          // fetching, no prose) — used as the final guarantee when the agent
-          // explored but never committed within the iteration budget.
-          ...(opts.forceCommit
-            ? { toolConfig: { functionCallingConfig: { mode: 'ANY', allowedFunctionNames: ['commit_result'] } } }
-            : {}),
-          // A full-site ClassifiedData payload (churchInfo + pageContents
-          // blocks + worshipTimes + menus + …) easily exceeds 4096 tokens.
-          // At 4096 the commit_result args / final JSON got truncated →
-          // empty commit or unparseable text. gemini-2.5-flash allows far
-          // more, so give it ample room.
-          generationConfig: { temperature: 0.2, maxOutputTokens: 16384 },
-        }),
+    const res = await fetch(ANTHROPIC_BASE, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
       },
-    );
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: MAX_TOKENS,
+        temperature: 0.2,
+        system: CLAUDE_SYSTEM,
+        tools: CLAUDE_TOOLS,
+        messages,
+      }),
+    });
     if (!res.ok) {
-      console.log(`[agent] Gemini HTTP ${res.status}: ${(await res.text()).slice(0, 300)}`);
+      console.log(`[agent] Claude HTTP ${res.status}: ${(await res.text()).slice(0, 300)}`);
       return null;
     }
     const data = await res.json();
-    const parts = (data.candidates?.[0]?.content?.parts ?? []) as GeminiResponse['parts'];
-    return { parts };
+    const content = (data.content ?? []) as Block[];
+    return { content };
   } catch (err) {
-    console.log(`[agent] Gemini exception: ${err instanceof Error ? err.message : String(err)}`);
+    console.log(`[agent] Claude exception: ${err instanceof Error ? err.message : String(err)}`);
     return null;
   }
 }
