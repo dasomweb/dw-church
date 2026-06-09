@@ -156,9 +156,9 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl">
         <div className="flex items-start gap-3 mb-4">
-          <div className="text-3xl">📥</div>
+          <div className="text-3xl">🚚</div>
           <div className="flex-1">
-            <h3 className="text-lg font-bold text-gray-900">기존 사이트 가져오기</h3>
+            <h3 className="text-lg font-bold text-gray-900">기존 사이트 마이그레이션</h3>
             <p className="mt-1 text-sm text-gray-600">
               <span className="font-semibold">{tenant.name}</span> 에 기존 교회 사이트의
               페이지·콘텐츠·이미지를 자동으로 가져옵니다.
@@ -276,7 +276,7 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
                 disabled={running || !sourceUrl.trim()}
                 className="flex-1 py-2.5 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-sm font-semibold hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50"
               >
-                {running ? '진행 중...' : '가져오기 시작'}
+                {running ? '진행 중...' : '마이그레이션 시작'}
               </button>
             </div>
 
@@ -291,7 +291,7 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
         {result && (
           <div className="space-y-3">
             <div className="p-4 rounded-lg bg-green-50 border border-green-200">
-              <h4 className="text-sm font-bold text-green-900">✅ 가져오기 완료</h4>
+              <h4 className="text-sm font-bold text-green-900">✅ 마이그레이션 완료</h4>
               <div className="mt-2 grid grid-cols-2 gap-1.5 text-xs text-green-900">
                 <ResultRow label="페이지" value={result.counts.pages} />
                 <ResultRow label="설교" value={result.counts.sermons} />

@@ -1354,9 +1354,9 @@ function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) {
                         <button
                           onClick={() => setMigrateTenant(t)}
                           className="px-2 py-1 text-xs text-emerald-700 border border-emerald-200 hover:bg-emerald-50 rounded transition-colors whitespace-nowrap"
-                          title={`${t.name} — 기존 교회 사이트 URL에서 콘텐츠 자동 가져오기`}
+                          title={`${t.name} — 기존 교회 사이트를 AI가 분석해 사이트맵·섹션·디자인을 자동 구성 (정적 구조/디자인. 설교·주보 등 동적 콘텐츠는 각 관리 페이지에서 개별 가져오기)`}
                         >
-                          📥 가져오기
+                          🚚 마이그레이션
                         </button>
                         {/* AI 빌더 — Phase 11-A1: AIBuilderModal (PlannerWizard 8-step).
                             기존 ✨ 이모지 제거 + 한 줄 유지. */}
