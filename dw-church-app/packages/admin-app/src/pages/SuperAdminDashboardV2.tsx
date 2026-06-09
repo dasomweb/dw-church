@@ -1628,6 +1628,181 @@ function DomainsTab() {
 // ═══════════════════════════════════════════════════════════
 // ─── Tab: Users ──────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════
+// ─── Create User Modal ───────────────────────────────────
+// Super admin adds a user directly. Tenant binding is optional (super_admin
+// users may have none). If no password is entered the server generates a
+// temporary one and returns it ONCE — we surface it so the operator can hand
+// it over; it is never stored in plain text.
+function CreateUserModal({
+  onClose,
+  onSaved,
+}: {
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const apiFetch = useAdminApi();
+  const { showToast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [role, setRole] = useState('editor');
+  const [tenantSlug, setTenantSlug] = useState('');
+  const [password, setPassword] = useState('');
+  const [tempPassword, setTempPassword] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !name.trim()) {
+      showToast('error', '이메일과 이름은 필수입니다.');
+      return;
+    }
+    if (password && password.length < 8) {
+      showToast('error', '비밀번호는 최소 8자 이상이어야 합니다.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await apiFetch<{ tempPassword?: string }>('/users', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: email.trim(),
+          name: name.trim(),
+          role,
+          tenantSlug: tenantSlug.trim() || undefined,
+          password: password || undefined,
+        }),
+      });
+      onSaved();
+      if (res?.tempPassword) {
+        // Keep the modal open to display the generated password once.
+        setTempPassword(res.tempPassword);
+        showToast('success', '사용자가 생성되었습니다. 임시 비밀번호를 전달하세요.');
+      } else {
+        showToast('success', '사용자가 생성되었습니다.');
+        onClose();
+      }
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '사용자 생성 실패');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl w-full max-w-sm p-6 shadow-2xl">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold">사용자 추가</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+        </div>
+
+        {tempPassword ? (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              사용자가 생성되었습니다. 아래 임시 비밀번호를 사용자에게 전달하세요.
+              <br />
+              <span className="text-amber-600">이 비밀번호는 다시 표시되지 않습니다.</span>
+            </p>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-3 font-mono text-sm text-gray-900 select-all break-all">
+              {tempPassword}
+            </div>
+            <button
+              onClick={() => {
+                void navigator.clipboard?.writeText(tempPassword).catch(() => {});
+                showToast('success', '복사되었습니다.');
+              }}
+              className="w-full bg-gray-100 py-2 rounded-lg text-sm hover:bg-gray-200 transition-colors"
+            >
+              비밀번호 복사
+            </button>
+            <button
+              onClick={onClose}
+              className="w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+            >
+              완료
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">이메일 *</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="user@example.com"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">이름 *</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="홍길동"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">역할</label>
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              >
+                <option value="member">Member</option>
+                <option value="editor">Editor</option>
+                <option value="admin">Admin</option>
+                <option value="owner">Owner</option>
+                <option value="super_admin">Super Admin</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">
+                교회(테넌트) slug <span className="text-gray-400">— 선택</span>
+              </label>
+              <input
+                type="text"
+                value={tenantSlug}
+                onChange={(e) => setTenantSlug(e.target.value)}
+                placeholder="예: grace-church (비워두면 미지정)"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">
+                비밀번호 <span className="text-gray-400">— 비우면 자동 생성</span>
+              </label>
+              <input
+                type="text"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="최소 8자 (선택)"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
+            <div className="flex gap-2 pt-2">
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              >
+                {loading ? '생성 중...' : '생성'}
+              </button>
+              <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200 transition-colors">
+                취소
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function UsersTab() {
   const apiFetch = useAdminApi();
   const { showToast } = useToast();
@@ -1639,6 +1814,7 @@ function UsersTab() {
   const [roleChangeUser, setRoleChangeUser] = useState<User | null>(null);
   const [passwordResetUser, setPasswordResetUser] = useState<User | null>(null);
   const [tenantTransferUser, setTenantTransferUser] = useState<User | null>(null);
+  const [showCreateUser, setShowCreateUser] = useState(false);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -1719,6 +1895,12 @@ function UsersTab() {
             초기화
           </button>
         )}
+        <button
+          onClick={() => setShowCreateUser(true)}
+          className="ml-auto inline-flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+        >
+          <span>＋</span> 사용자 추가
+        </button>
       </div>
 
       {/* Table */}
@@ -1812,6 +1994,12 @@ function UsersTab() {
       </div>
 
       {/* Modals */}
+      {showCreateUser && (
+        <CreateUserModal
+          onClose={() => setShowCreateUser(false)}
+          onSaved={() => void fetchUsers()}
+        />
+      )}
       {roleChangeUser && (
         <RoleChangeModal
           user={roleChangeUser}

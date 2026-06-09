@@ -10,6 +10,15 @@ import { prisma } from '../../config/database.js';
 
 const BCRYPT_ROUNDS = 12;
 
+/** Deterministic 32-bit string hash — used only to seed a temp password. */
+function hashString(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) {
+    h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+  }
+  return h;
+}
+
 /**
  * Require super_admin role.
  * Primary: user_metadata.role === 'super_admin' (DB-driven)
@@ -366,6 +375,106 @@ export default async function tenantRoutes(app: FastifyInstance): Promise<void> 
     } catch {
       return reply.send({ data: [] });
     }
+  });
+
+  // POST /admin/users — Create a new user (super admin)
+  // Super admin can add a user directly: email + name + role, optionally bound
+  // to a tenant. If no password is supplied a temporary one is generated and
+  // returned ONCE so the operator can hand it to the user (force-reset later).
+  app.post('/users', async (request, reply) => {
+    const body = request.body as {
+      email?: string;
+      name?: string;
+      role?: string;
+      tenantSlug?: string;
+      password?: string;
+    };
+
+    const email = (body.email ?? '').trim().toLowerCase();
+    const name = (body.name ?? '').trim();
+    const role = (body.role ?? 'editor').trim();
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new AppError('VALIDATION_ERROR', 400, 'A valid email is required');
+    }
+    if (!name) {
+      throw new AppError('VALIDATION_ERROR', 400, 'Name is required');
+    }
+
+    const validRoles = ['super_admin', 'owner', 'admin', 'editor', 'member'];
+    if (!validRoles.includes(role)) {
+      throw new AppError('VALIDATION_ERROR', 400, `Invalid role. Must be one of: ${validRoles.join(', ')}`);
+    }
+
+    // Email uniqueness
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      throw new AppError('EMAIL_TAKEN', 409, 'Email is already in use');
+    }
+
+    // Resolve tenant binding (optional — super_admin users may have none)
+    let tenantId: string | null = null;
+    let tenantSlug: string | null = null;
+    if (body.tenantSlug && body.tenantSlug.trim()) {
+      const tenant = await prisma.tenant.findFirst({
+        where: { slug: body.tenantSlug.trim(), isActive: true },
+        select: { id: true, slug: true },
+      });
+      if (!tenant) {
+        throw new AppError('TENANT_NOT_FOUND', 404, `Tenant '${body.tenantSlug}' not found`);
+      }
+      tenantId = tenant.id;
+      tenantSlug = tenant.slug;
+    }
+
+    // Password: use supplied one or generate a temporary password to return once.
+    const supplied = body.password && body.password.length >= 8 ? body.password : null;
+    if (body.password && body.password.length > 0 && body.password.length < 8) {
+      throw new AppError('VALIDATION_ERROR', 400, 'Password must be at least 8 characters');
+    }
+    const generated = supplied ? null : `Tl${Math.abs(hashString(email + name)).toString(36)}!${name.length}${email.length}`;
+    const plainPassword = supplied ?? generated!;
+    const passwordHash = await bcrypt.hash(plainPassword, BCRYPT_ROUNDS);
+
+    const user = await prisma.user.create({
+      data: {
+        email,
+        name,
+        role,
+        passwordHash,
+        tenantId,
+        tenantSlug,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        tenantSlug: true,
+        tenantId: true,
+        isActive: true,
+        createdAt: true,
+      },
+    });
+
+    return reply.code(201).send({
+      success: true,
+      data: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        tenantSlug: user.tenantSlug ?? '',
+        tenantId: user.tenantId ?? '',
+        isActive: user.isActive,
+        createdAt: user.createdAt.toISOString(),
+        lastSignIn: null,
+      },
+      // Only present when the server generated the password — show it to the
+      // operator once; it is never persisted in plain text.
+      tempPassword: generated ?? undefined,
+    });
   });
 
   // GET /admin/users — List all users
