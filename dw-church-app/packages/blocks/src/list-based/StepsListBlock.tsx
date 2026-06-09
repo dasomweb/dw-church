@@ -35,7 +35,7 @@ interface StepItem {
   number?: string;
 }
 
-type Layout = 'vertical' | 'grid';
+type Layout = 'vertical' | 'grid' | 'cards';
 type Mode = 'icon' | 'number';
 
 export function StepsListBlock({ props }: StepsListBlockProps) {
@@ -88,7 +88,15 @@ export function StepsListBlock({ props }: StepsListBlockProps) {
           </header>
         )}
 
-        {layout === 'grid' ? (
+        {layout === 'cards' ? (
+          <ol
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 list-none p-0 m-0"
+          >
+            {items.map((it, i) => (
+              <CardStep key={i} index={i} item={it} parentProps={props} />
+            ))}
+          </ol>
+        ) : layout === 'grid' ? (
           <ol
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 list-none p-0 m-0"
           >
@@ -186,6 +194,61 @@ function GridStep({
         defaultTag="h3"
         defaultSize="h4"
         className="mt-5"
+      />
+      <TextBodyElement
+        text={item.description ?? ''}
+        props={parentProps}
+        elementKey={`items[${index}].description`}
+        defaultTag="p"
+        defaultSize="body"
+        className="mt-2"
+      />
+    </li>
+  );
+}
+
+/* ─── card cell (bordered card, big faded number) ─────────── */
+// Matches the koreanunity.org "목장 모임 순서" pattern: a bordered, rounded
+// card with a large faded ordinal at the top, a bold title, and a description.
+function CardStep({
+  index,
+  item,
+  parentProps,
+}: {
+  index: number;
+  item: StepItem;
+  parentProps: Record<string, unknown>;
+}) {
+  const stepNumber = item.number?.trim() || String(index + 1).padStart(2, '0');
+  return (
+    <li
+      style={{
+        border: '1px solid var(--border, rgba(0,0,0,0.10))',
+        borderRadius: 'var(--brand-radius-lg, 12px)',
+        padding: '1.75rem',
+        background: 'var(--surface, #fff)',
+        height: '100%',
+      }}
+    >
+      <div
+        aria-hidden="true"
+        style={{
+          fontSize: '1.75rem',
+          fontWeight: 700,
+          letterSpacing: '0.02em',
+          color: 'var(--text-muted, rgba(0,0,0,0.25))',
+          opacity: 0.55,
+          marginBottom: '1.25rem',
+        }}
+      >
+        {stepNumber}
+      </div>
+      <HeadingElement
+        text={item.title}
+        props={parentProps}
+        elementKey={`items[${index}].title`}
+        defaultTag="h3"
+        defaultSize="h4"
       />
       <TextBodyElement
         text={item.description ?? ''}

@@ -77,6 +77,8 @@ export { VideoBlock } from './static/VideoBlock';
 export { QuoteBlock } from './static/QuoteBlock';
 export { LogoTitleBlock } from './static/LogoTitleBlock';
 export { ButtonGroupBlock } from './static/ButtonGroupBlock';
+export { DirectionsSplitBlock } from './static/DirectionsSplitBlock';
+export { ScheduleSplitBlock } from './static/ScheduleSplitBlock';
 export { SubscribeFormBlock } from './static/SubscribeFormBlock';
 export { ShoppableImageBlock } from './static/ShoppableImageBlock';
 export { LookbookSliderBlock } from './static/LookbookSliderBlock';
