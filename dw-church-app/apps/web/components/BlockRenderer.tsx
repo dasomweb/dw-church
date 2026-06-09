@@ -21,10 +21,11 @@ import { EventGridBlock } from './blocks/EventGridBlock';
 import { BoardBlock } from './blocks/BoardBlock';
 import { BannerSliderBlock } from './blocks/BannerSliderBlock';
 // ── Church-specific static blocks not in the shared set ───────────────
-import { PastorMessageBlock } from './blocks/PastorMessageBlock';
-import { NewcomerInfoBlock } from './blocks/NewcomerInfoBlock';
+// pastor_message / newcomer_info / worship_schedule now live in
+// @dw-church/blocks (shared set) so the storefront + builder render them
+// identically with full design-token support. ContactInfoBlock stays here
+// because it's an async Server Component (fetches church settings).
 import { ContactInfoBlock } from './blocks/ContactInfoBlock';
-import { WorshipScheduleBlock } from './blocks/WorshipScheduleBlock';
 
 type PageSection = { id: string; blockType: string; props: Record<string, unknown>; sortOrder: number; isVisible: boolean };
 type AnyBlock = (p: { props: Record<string, unknown>; slug: string }) => React.ReactNode | Promise<React.ReactNode>;
@@ -41,14 +42,11 @@ const CHURCH_BLOCKS: Record<string, AnyBlock> = {
   board: BoardBlock as AnyBlock,
   banner_slider: BannerSliderBlock as AnyBlock,
   hero_image_slider: BannerSliderBlock as AnyBlock,
-  pastor_message: PastorMessageBlock as AnyBlock,
-  church_intro: PastorMessageBlock as AnyBlock,
-  newcomer_info: NewcomerInfoBlock as AnyBlock,
-  visitor_welcome: NewcomerInfoBlock as AnyBlock,
+  // contact_info is async (fetches church settings) so it stays a
+  // storefront-only data block; pastor_message / newcomer_info /
+  // worship_schedule come from the shared @dw-church/blocks set.
   contact_info: ContactInfoBlock as AnyBlock,
   address_info: ContactInfoBlock as AnyBlock,
-  worship_schedule: WorshipScheduleBlock as AnyBlock,
-  worship_times: WorshipScheduleBlock as AnyBlock,
 };
 
 const BLOCK_MAP: Record<string, AnyBlock> = {

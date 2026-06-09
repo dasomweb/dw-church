@@ -35,6 +35,12 @@ import { CheckListBlock } from '../list-based/CheckListBlock';
 import { StepsListBlock } from '../list-based/StepsListBlock';
 import { TabsBlock } from '../list-based/TabsBlock';
 import { LayoutBlock } from '../layout/LayoutBlock';
+// Church static blocks — dw-church domain blocks composed from the same
+// element primitives, so the storefront AND the super-admin builder render
+// them identically with full design-token (--brand-*) support.
+import { PastorMessageBlock } from '../church/PastorMessageBlock';
+import { NewcomerInfoBlock } from '../church/NewcomerInfoBlock';
+import { WorshipScheduleBlock } from '../church/WorshipScheduleBlock';
 import { blockStyleToCss } from './block-style-resolver';
 import { buildElementHoverCss } from './element-styles';
 import { placeholderResolveDynamicProps } from './dynamic-data';
@@ -199,6 +205,15 @@ export const BLOCK_MAP: Record<string, SyncBlockComponent> = {
   // admin 캔버스는 양식 placeholder 미리보기; storefront 가 async 버전으로
   // override 해서 실제 양식 fetch/렌더.
   form_split: FormSplitBlock,
+
+  // ── Church static blocks (dw-church domain) ──────────────────────────
+  // Operator-entered content → render fully in-process on both surfaces.
+  pastor_message:    PastorMessageBlock,
+  church_intro:      PastorMessageBlock,
+  newcomer_info:     NewcomerInfoBlock,
+  visitor_welcome:   NewcomerInfoBlock,
+  worship_schedule:  WorshipScheduleBlock,
+  worship_times:     WorshipScheduleBlock,
 };
 
 interface BlockRendererProps {

@@ -18,6 +18,12 @@
 // b2bsmart's admin uses for data blocks that only resolve on the storefront.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BlockRenderer, type RenderableSection } from '@dw-church/blocks';
+import {
+  tokensToCssVars,
+  legacyThemeToTokens,
+  DEFAULT_DESIGN_TOKENS,
+  type DesignTokens,
+} from '@dw-church/design-tokens';
 import '@dw-church/blocks/styles.css';
 
 interface Section {
@@ -41,11 +47,12 @@ type Device = 'desktop' | 'tablet' | 'mobile';
 const DEVICE_WIDTH: Record<Device, number | null> = { desktop: null, tablet: 834, mobile: 390 };
 const DEVICE_LABEL: Record<Device, string> = { desktop: '데스크탑', tablet: '태블릿', mobile: '모바일' };
 
-// Church content-module + church-static blocks that the shared @dw-church/blocks
-// BLOCK_MAP doesn't render (they fetch from /api/v1/... on the storefront, or
-// are dw-church-only static blocks defined in apps/web). Shown as a labeled
-// card so the operator knows the block exists + edits its props in the
-// inspector; the real render appears on the published site.
+// Church content-module data blocks that the shared @dw-church/blocks BLOCK_MAP
+// doesn't render in-process (they fetch from /api/v1/... on the storefront).
+// Shown as a labeled card so the operator knows the block exists + edits its
+// props in the inspector; the real data render appears on the published site.
+// NOTE: church STATIC blocks (pastor_message / newcomer_info / worship_*) now
+// live in the shared set and render fully in-process — they are NOT listed here.
 const CHURCH_BLOCK_LABELS: Record<string, string> = {
   recent_sermons: '설교 목록 (Data Block)',
   recent_bulletins: '주보 목록 (Data Block)',
@@ -57,54 +64,80 @@ const CHURCH_BLOCK_LABELS: Record<string, string> = {
   board: '게시판 (Data Block)',
   banner_slider: '배너 슬라이더 (Data Block)',
   hero_image_slider: '배너 슬라이더 (Data Block)',
-  pastor_message: '담임목사 인사',
-  church_intro: '교회 소개',
-  newcomer_info: '새가족 안내',
-  visitor_welcome: '새가족 안내',
-  contact_info: '연락처',
-  address_info: '연락처',
-  worship_schedule: '예배 시간',
-  worship_times: '예배 시간',
+  // contact_info is an async Server Component (fetches church settings).
+  contact_info: '연락처 (Data Block)',
+  address_info: '연락처 (Data Block)',
 };
 
-// Tenant theme → CSS vars bridge. Mirrors apps/web layout.tsx cssVars exactly
-// so the in-editor render matches the storefront. tokens (--brand-* path the
-// theme editor writes) take precedence, then the legacy /theme blob.
-const BORDER_RADIUS_MAP: Record<string, string> = { none: '0px', sm: '6px', md: '8px', lg: '12px', xl: '16px', full: '9999px' };
-const CONTENT_WIDTH_MAP: Record<string, string> = { narrow: '768px', default: '1024px', wide: '1280px', full: '100%' };
-const CARD_SHADOW_MAP: Record<string, string> = { shadow: '0 1px 3px rgba(0,0,0,0.1)', border: 'none', flat: 'none' };
+// Resolve the tenant's DesignTokens from the API responses — the SAME
+// b2bsmart token system the storefront uses. Priority: explicit tokens
+// (/theme/tokens) → legacy /theme blob converted → defaults.
+function resolveTokens(tokensResp: unknown, themeResp: unknown): DesignTokens {
+  const t = tokensResp as Partial<DesignTokens> | null | undefined;
+  if (t?.colors?.system && t?.typography?.families && t?.typography?.scales) {
+    return t as DesignTokens;
+  }
+  if (themeResp && typeof themeResp === 'object') {
+    try {
+      return legacyThemeToTokens(themeResp as never);
+    } catch {
+      /* fall through to defaults */
+    }
+  }
+  return DEFAULT_DESIGN_TOKENS;
+}
 
-function buildCssVars(theme: any, tokens: any): Record<string, string> {
-  const colors = theme?.colors ?? {};
-  const fonts = theme?.fonts ?? {};
-  const layout = theme?.layout ?? {};
-  const sys = (tokens?.colors?.system ?? {}) as Record<string, string>;
-  const fam = (tokens?.typography?.families ?? {}) as Record<string, string>;
-  const headingFamily = fam.heading || fonts?.heading || "'Pretendard Variable', 'Pretendard', sans-serif";
-  const bodyFamily = fam.body || fonts?.body || "'Pretendard Variable', 'Pretendard', sans-serif";
+// Emit the full --brand-* set from tokens (tokensToCssVars) PLUS a small
+// --dw-* / --accent bridge derived from the same tokens, so package blocks
+// that still read the legacy vars (HeroBanner, CTA) also pick up the tenant's
+// color + font set. Single source of truth = DesignTokens.
+function buildVars(tokens: DesignTokens): Record<string, string> {
+  const brand = tokensToCssVars(tokens);
+  const sys = tokens.colors.system;
+  const fam = tokens.typography.families;
   return {
-    '--dw-primary': sys.primary || colors?.primary || '#2563eb',
-    '--dw-secondary': sys.secondary || colors?.secondary || '#64748b',
-    '--dw-accent': sys.accent || colors?.accent || '#f59e0b',
-    '--dw-background': sys.background || colors?.background || '#ffffff',
-    '--dw-surface': sys.surface || colors?.surface || '#f8fafc',
-    '--dw-text': sys.text || colors?.text || '#0f172a',
-    '--dw-font-heading': headingFamily,
-    '--dw-font-body': bodyFamily,
-    '--dw-radius': BORDER_RADIUS_MAP[layout?.borderRadius ?? 'lg'] ?? '12px',
-    '--dw-content-width': CONTENT_WIDTH_MAP[layout?.contentWidth ?? 'default'] ?? '1024px',
-    '--dw-card-shadow': CARD_SHADOW_MAP[layout?.cardStyle ?? 'shadow'] ?? CARD_SHADOW_MAP.shadow,
-    '--dw-card-border': layout?.cardStyle === 'border' ? '1px solid #e5e7eb' : 'none',
-    '--dw-sermon-grid': String(layout?.sermonGrid ?? 4),
-    // Bridge --dw-* → the b2bsmart --brand-*/--accent tokens the shared blocks
-    // also read, so swatches/buttons in package blocks pick up tenant color.
-    '--accent': sys.primary || colors?.primary || '#2563eb',
-    '--bg': sys.background || colors?.background || '#ffffff',
-    '--text-primary': sys.text || colors?.text || '#0f172a',
-    '--brand-primary': sys.primary || colors?.primary || '#2563eb',
-    '--brand-secondary': sys.secondary || colors?.secondary || '#64748b',
-    '--brand-accent': sys.accent || colors?.accent || '#f59e0b',
+    ...brand,
+    '--dw-primary': sys.primary,
+    '--dw-secondary': sys.secondary,
+    '--dw-accent': sys.accent,
+    '--dw-background': sys.background,
+    '--dw-surface': sys.surface,
+    '--dw-text': sys.text,
+    '--dw-font-heading': fam.heading,
+    '--dw-font-body': fam.body,
+    '--accent': sys.primary,
+    '--bg': sys.background,
+    '--bg-subtle': sys.surface,
+    '--text-primary': sys.text,
+    '--text-muted': sys.muted,
   };
+}
+
+// Webfont loader for the canvas — mirrors apps/web layout.tsx googleFontsHref
+// so the editor preview uses the same fonts the storefront loads. The canvas
+// only sets font-family CSS vars; without loading the webfont the browser
+// falls back to a system font and the chosen Korean font never shows.
+const PRELOADED_FONTS = new Set(['Pretendard', 'Pretendard Variable', 'system-ui', 'sans-serif', 'serif', 'monospace', '-apple-system', 'BlinkMacSystemFont']);
+function firstFamily(stack: string | undefined): string | null {
+  if (!stack) return null;
+  const first = stack.split(',')[0]?.trim().replace(/^['"]|['"]$/g, '');
+  return first || null;
+}
+function ensureGoogleFonts(families: (string | undefined)[]) {
+  if (typeof document === 'undefined') return;
+  const names = families
+    .map(firstFamily)
+    .filter((f): f is string => f != null && !PRELOADED_FONTS.has(f))
+    .filter((f, i, arr) => arr.indexOf(f) === i);
+  for (const name of names) {
+    const id = `dw-gfont-${name.replace(/\s+/g, '-')}`;
+    if (document.getElementById(id)) continue;
+    const link = document.createElement('link');
+    link.id = id;
+    link.rel = 'stylesheet';
+    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(name)}:wght@400;500;600;700&display=swap`;
+    document.head.appendChild(link);
+  }
 }
 
 function ChurchBlockCard({ label }: { label: string }) {
@@ -143,9 +176,11 @@ export function BuilderCanvas({ sections, slug, baseUrl, headers, selectedSectio
         if (cancelled) return;
         const theme = tRes?.data ?? tRes ?? null;
         const tokens = tokRes?.data ?? tokRes ?? null;
-        setCssVars(buildCssVars(theme, tokens));
+        const resolved = resolveTokens(tokens, theme);
+        ensureGoogleFonts([resolved.typography.families.heading, resolved.typography.families.body]);
+        setCssVars(buildVars(resolved));
       } catch {
-        if (!cancelled) setCssVars(buildCssVars(null, null));
+        if (!cancelled) setCssVars(buildVars(DEFAULT_DESIGN_TOKENS));
       }
     })();
     return () => { cancelled = true; };

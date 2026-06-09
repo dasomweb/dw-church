@@ -40,6 +40,11 @@ export type {
 
 import type { ThemeSet } from './schema.js';
 import { modernLight } from './sets/modern-light.js';
+import { traditionalFormal } from './sets/traditional-formal.js';
+import { warmFamily } from './sets/warm-family.js';
+import { modernDark } from './sets/modern-dark.js';
+import { koreanClassic } from './sets/korean-classic.js';
+import { boldYouth } from './sets/bold-youth.js';
 
 /**
  * The curated registry — array order is the picker display order. Add
@@ -47,6 +52,11 @@ import { modernLight } from './sets/modern-light.js';
  */
 export const ALL_THEME_SETS: ThemeSet[] = [
   modernLight,
+  traditionalFormal,
+  warmFamily,
+  modernDark,
+  koreanClassic,
+  boldYouth,
 ];
 
 /** Lookup helper — returns null if no match. */
@@ -57,4 +67,4 @@ export function findThemeSet(id: string): ThemeSet | null {
 /** Default — what new tenants are assigned before they pick one. */
 export const DEFAULT_THEME_SET_ID = 'modern-light';
 
-export { modernLight };
+export { modernLight, traditionalFormal, warmFamily, modernDark, koreanClassic, boldYouth };
