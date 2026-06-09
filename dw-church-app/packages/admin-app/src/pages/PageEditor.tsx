@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, Fragment } from 'react';
 import { useForm } from 'react-hook-form';
 import type { Page, PageSection, BlockType } from '@dw-church/api-client';
 import {
@@ -40,7 +40,7 @@ interface BlockDef {
   nature: 'static' | 'dynamic' | 'layout';
   variants: BlockVariant[];
   defaultProps: Record<string, unknown>;
-  editableFields: { key: string; label: string; type: 'text' | 'textarea' | 'number' | 'select' | 'image' | 'images' | 'url' | 'array' | 'tags' | 'services'; options?: { label: string; value: string }[]; max?: number }[];
+  editableFields: { key: string; label: string; type: 'text' | 'textarea' | 'number' | 'select' | 'image' | 'images' | 'url' | 'array' | 'tags' | 'services' | 'buttons' | 'groups'; options?: { label: string; value: string }[]; max?: number }[];
 }
 
 const BLOCK_DEFS: BlockDef[] = [
@@ -71,7 +71,7 @@ const BLOCK_DEFS: BlockDef[] = [
   { type: 'text_only', label: '텍스트', category: '텍스트', icon: '📃', nature: 'static', description: '텍스트 전용', variants: [{ id: 'left', label: '좌측 정렬' }, { id: 'center', label: '중앙 정렬' }], defaultProps: { content: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'content', label: '내용', type: 'textarea' }] },
   { type: 'quote_block', label: '인용/성경구절', category: '텍스트', icon: '✝️', nature: 'static', description: '인용문 또는 성경 말씀', variants: [{ id: 'card', label: '카드' }, { id: 'simple', label: '심플' }, { id: 'highlight', label: '하이라이트' }], defaultProps: { quote: '' }, editableFields: [{ key: 'quote', label: '인용문', type: 'textarea' }, { key: 'source', label: '출처', type: 'text' }, { key: 'reference', label: '참조', type: 'text' }, { key: 'backgroundImageUrl', label: '배경 이미지', type: 'image' }] },
   { type: 'logo_title', label: '로고+타이틀', category: '텍스트', icon: '🏷️', nature: 'static', description: '로고 + 라벨 + 제목', variants: [{ id: 'horizontal', label: '로고 좌측' }, { id: 'center', label: '중앙 정렬' }], defaultProps: { variant: 'horizontal', eyebrow: '', title: '', subtitle: '', logoUrl: '', logoWidth: 72 }, editableFields: [{ key: 'logoUrl', label: '로고', type: 'image' }, { key: 'eyebrow', label: '라벨', type: 'text' }, { key: 'title', label: '제목', type: 'text' }, { key: 'subtitle', label: '부제', type: 'text' }, { key: 'logoWidth', label: '로고 크기(px)', type: 'number' }] },
-  { type: 'button_group', label: '버튼 그룹', category: '텍스트', icon: '🔘', nature: 'static', description: '제목 + 여러 개의 버튼', variants: [{ id: 'center', label: '중앙 정렬' }, { id: 'left', label: '좌측 정렬' }], defaultProps: { title: '', subtitle: '', align: 'center', buttons: [{ text: '버튼 1', url: '' }, { text: '버튼 2', url: '' }] }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'subtitle', label: '부제', type: 'text' }] },
+  { type: 'button_group', label: '버튼 그룹', category: '텍스트', icon: '🔘', nature: 'static', description: '제목 + 여러 개의 버튼', variants: [{ id: 'center', label: '중앙 정렬' }, { id: 'left', label: '좌측 정렬' }], defaultProps: { title: '', subtitle: '', align: 'center', buttons: [{ text: '버튼 1', url: '' }, { text: '버튼 2', url: '' }] }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'subtitle', label: '부제', type: 'text' }, { key: 'buttons', label: '버튼 목록', type: 'buttons' }] },
 
   // ─── Church Info ───────────────────────────────
   { type: 'worship_times', label: '예배 시간', category: '교회 정보', icon: '⏰', nature: 'static', description: '예배 시간 안내', variants: [{ id: 'table', label: '테이블' }], defaultProps: { services: [] }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'services', label: '예배/모임 목록', type: 'services' }] },
@@ -94,7 +94,7 @@ const BLOCK_DEFS: BlockDef[] = [
   // ─── Legacy ────────────────────────────────────
   { type: 'location_map', label: '지도/약도', category: '교회 정보', icon: '🗺️', nature: 'static', description: '교회 위치 지도', variants: [{ id: 'default', label: '기본' }], defaultProps: { address: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'address', label: '주소', type: 'text' }, { key: 'lat', label: '위도', type: 'number' }, { key: 'lng', label: '경도', type: 'number' }] },
   { type: 'directions_split', label: '오시는 길(지도+연락처)', category: '교회 정보', icon: '📍', nature: 'static', description: '좌측 지도 + 우측 연락처(교회명/주소/전화)', variants: [{ id: 'map-left', label: '지도 좌측' }, { id: 'map-right', label: '지도 우측' }], defaultProps: { eyebrow: 'Contact', title: '오시는 길', churchName: '', address: '', phone: '', email: '' }, editableFields: [{ key: 'eyebrow', label: '라벨', type: 'text' }, { key: 'title', label: '제목', type: 'text' }, { key: 'churchName', label: '교회명', type: 'text' }, { key: 'address', label: '주소', type: 'text' }, { key: 'phone', label: '전화', type: 'text' }, { key: 'email', label: '이메일', type: 'text' }, { key: 'mapEmbedUrl', label: '지도 임베드 URL(선택)', type: 'text' }] },
-  { type: 'schedule_split', label: '예배 안내(이미지+표)', category: '교회 정보', icon: '🗓️', nature: 'static', description: '좌측 이미지 + 우측 예배/모임 표 여러 개', variants: [{ id: 'image-left', label: '이미지 좌측' }, { id: 'image-right', label: '이미지 우측' }], defaultProps: { imageUrl: '', groups: [{ title: '주일 예배', columns: ['예배', '시간', '장소'], rows: [['1부 예배', '오전 9:00', '본당']] }] }, editableFields: [{ key: 'imageUrl', label: '이미지', type: 'image' }] },
+  { type: 'schedule_split', label: '예배 안내(이미지+표)', category: '교회 정보', icon: '🗓️', nature: 'static', description: '좌측 이미지 + 우측 예배/모임 표 여러 개', variants: [{ id: 'image-left', label: '이미지 좌측' }, { id: 'image-right', label: '이미지 우측' }], defaultProps: { imageUrl: '', groups: [{ title: '주일 예배', columns: ['예배', '시간', '장소'], rows: [['1부 예배', '오전 9:00', '본당']] }] }, editableFields: [{ key: 'imageUrl', label: '이미지', type: 'image' }, { key: 'groups', label: '예배/모임 표', type: 'groups' }] },
   { type: 'contact_info', label: '연락처 (자동)', category: '교회 정보', icon: '📱', nature: 'static', description: '설정에서 자동 로드', variants: [], defaultProps: {}, editableFields: [] },
   { type: 'newcomer_info', label: '새가족 안내 (레거시)', category: '교회 정보', icon: '🤝', nature: 'static', description: '새가족 환영 메시지', variants: [], defaultProps: { title: '처음 오신 분들을 환영합니다' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'content', label: '내용', type: 'textarea' }, { key: 'imageUrl', label: '이미지', type: 'image' }] },
   { type: 'worship_schedule', label: '예배안내 (레거시)', category: '교회 정보', icon: '🕐', nature: 'static', description: '예배 시간 안내', variants: [], defaultProps: { services: [] }, editableFields: [{ key: 'title', label: '제목', type: 'text' }] },
@@ -503,6 +503,90 @@ function ServiceListEditor({ value, onChange }: { value: { name: string; time: s
         <input value={newLoc} onChange={(e) => setNewLoc(e.target.value)} placeholder="장소" className="border rounded px-2 py-1 text-xs" />
       </div>
       <button type="button" onClick={handleAdd} disabled={!newName.trim()} className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 disabled:opacity-50">추가</button>
+    </div>
+  );
+}
+
+// Button-group repeater — edit the buttons[] array ({ text, url }).
+interface BtnItem { text?: string; url?: string; target?: string }
+function ButtonListEditor({ value, onChange }: { value: BtnItem[]; onChange: (v: BtnItem[]) => void }) {
+  const update = (i: number, field: keyof BtnItem, val: string) => {
+    const a = [...value]; a[i] = { ...a[i]!, [field]: val }; onChange(a);
+  };
+  const remove = (i: number) => onChange(value.filter((_, x) => x !== i));
+  const move = (i: number, dir: 'up' | 'down') => {
+    const j = dir === 'up' ? i - 1 : i + 1;
+    if (j < 0 || j >= value.length) return;
+    const a = [...value]; const t = a[i]!; a[i] = a[j]!; a[j] = t; onChange(a);
+  };
+  return (
+    <div className="space-y-1.5">
+      {value.map((b, i) => (
+        <div key={i} className="grid grid-cols-[1fr_1fr_auto] gap-1 items-center">
+          <input value={b.text || ''} onChange={(e) => update(i, 'text', e.target.value)} placeholder="버튼 텍스트" className="border rounded px-2 py-1 text-xs" />
+          <input value={b.url || ''} onChange={(e) => update(i, 'url', e.target.value)} placeholder="링크 URL" className="border rounded px-2 py-1 text-xs" />
+          <div className="flex gap-0.5">
+            <button type="button" onClick={() => move(i, 'up')} disabled={i === 0} className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-[10px]">▲</button>
+            <button type="button" onClick={() => move(i, 'down')} disabled={i === value.length - 1} className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-[10px]">▼</button>
+            <button type="button" onClick={() => remove(i)} className="text-red-400 hover:text-red-600 text-[10px]">×</button>
+          </div>
+        </div>
+      ))}
+      <button type="button" onClick={() => onChange([...value, { text: '', url: '' }])} className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">+ 버튼 추가</button>
+    </div>
+  );
+}
+
+// Schedule-tables repeater — edit groups[] ({ title, columns[3], rows[][] }).
+interface SchedGroup { title?: string; columns?: string[]; rows?: string[][] }
+function ScheduleGroupsEditor({ value, onChange }: { value: SchedGroup[]; onChange: (v: SchedGroup[]) => void }) {
+  const colsOf = (g: SchedGroup) => (g.columns && g.columns.length ? g.columns : ['예배', '시간', '장소']);
+  const setGroup = (gi: number, patch: Partial<SchedGroup>) => {
+    const a = [...value]; a[gi] = { ...a[gi]!, ...patch }; onChange(a);
+  };
+  const setCol = (gi: number, ci: number, val: string) => {
+    const c = [...colsOf(value[gi]!)]; c[ci] = val; setGroup(gi, { columns: c });
+  };
+  const setCell = (gi: number, ri: number, ci: number, val: string) => {
+    const rows = (value[gi]!.rows || []).map((r) => [...r]);
+    while (rows[ri]!.length < colsOf(value[gi]!).length) rows[ri]!.push('');
+    rows[ri]![ci] = val; setGroup(gi, { rows });
+  };
+  const addRow = (gi: number) => setGroup(gi, { rows: [...(value[gi]!.rows || []), colsOf(value[gi]!).map(() => '')] });
+  const removeRow = (gi: number, ri: number) => setGroup(gi, { rows: (value[gi]!.rows || []).filter((_, i) => i !== ri) });
+  const removeGroup = (gi: number) => onChange(value.filter((_, i) => i !== gi));
+  const addGroup = () => onChange([...value, { title: '새 표', columns: ['예배', '시간', '장소'], rows: [['', '', '']] }]);
+
+  return (
+    <div className="space-y-2">
+      {value.map((g, gi) => {
+        const c = colsOf(g);
+        const gridCols = `repeat(${c.length}, 1fr) auto`;
+        return (
+          <div key={gi} className="border rounded-lg p-2 space-y-1.5">
+            <div className="flex items-center gap-1">
+              <input value={g.title || ''} onChange={(e) => setGroup(gi, { title: e.target.value })} placeholder="표 제목 (예: 주일 예배)" className="border rounded px-2 py-1 text-xs font-medium flex-1" />
+              <button type="button" onClick={() => removeGroup(gi)} className="text-red-400 hover:text-red-600 text-[10px] px-1 whitespace-nowrap">표 삭제</button>
+            </div>
+            <div className="grid gap-1" style={{ gridTemplateColumns: gridCols }}>
+              {c.map((col, ci) => (
+                <input key={`h${ci}`} value={col} onChange={(e) => setCol(gi, ci, e.target.value)} className="border rounded px-1 py-0.5 text-[10px] bg-gray-50 font-medium" />
+              ))}
+              <span />
+              {(g.rows || []).map((row, ri) => (
+                <Fragment key={ri}>
+                  {c.map((_, ci) => (
+                    <input key={ci} value={row[ci] || ''} onChange={(e) => setCell(gi, ri, ci, e.target.value)} className="border rounded px-1 py-0.5 text-xs" />
+                  ))}
+                  <button type="button" onClick={() => removeRow(gi, ri)} className="text-red-400 hover:text-red-600 text-[10px]">×</button>
+                </Fragment>
+              ))}
+            </div>
+            <button type="button" onClick={() => addRow(gi)} className="text-[10px] text-blue-600 hover:text-blue-800">+ 행 추가</button>
+          </div>
+        );
+      })}
+      <button type="button" onClick={addGroup} className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">+ 표 추가</button>
     </div>
   );
 }
@@ -1306,6 +1390,16 @@ function SectionCard({
                 ) : field.type === 'services' ? (
                   <ServiceListEditor
                     value={(props[field.key] as { name: string; time: string; location: string }[]) || []}
+                    onChange={(val) => set(field.key, val)}
+                  />
+                ) : field.type === 'buttons' ? (
+                  <ButtonListEditor
+                    value={(props[field.key] as BtnItem[]) || []}
+                    onChange={(val) => set(field.key, val)}
+                  />
+                ) : field.type === 'groups' ? (
+                  <ScheduleGroupsEditor
+                    value={(props[field.key] as SchedGroup[]) || []}
                     onChange={(val) => set(field.key, val)}
                   />
                 ) : (
