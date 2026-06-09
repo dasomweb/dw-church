@@ -131,9 +131,9 @@ export function useLogin() {
   return useMutation<AuthSession, Error, LoginInput>({
     mutationFn: (input) => client!.login(input),
     onSuccess: (session) => {
-      client.setToken(session.accessToken);
+      client!.setToken(session.accessToken);
       if (session.user?.tenantSlug) {
-        client.setTenantSlug(session.user.tenantSlug);
+        client!.setTenantSlug(session.user.tenantSlug);
       }
       queryClient.setQueryData(queryKeys.auth.me, session.user);
     },
@@ -146,7 +146,7 @@ export function useRegister() {
   return useMutation<AuthSession, Error, RegisterInput>({
     mutationFn: (input) => client!.register(input),
     onSuccess: (session) => {
-      client.setToken(session.accessToken);
+      client!.setToken(session.accessToken);
       queryClient.setQueryData(queryKeys.auth.me, session.user);
     },
   });
@@ -158,7 +158,7 @@ export function useLogout() {
   return useMutation<void, Error, void>({
     mutationFn: () => client!.logout(),
     onSuccess: () => {
-      client.clearToken();
+      client!.clearToken();
       queryClient.clear();
     },
   });
@@ -234,7 +234,7 @@ export function useUpdateBulletin() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Bulletin> }) =>
-      client.updateBulletin(id, data),
+      client!.updateBulletin(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.bulletins.all }),
   });
 }
@@ -293,7 +293,7 @@ export function useUpdateSermon() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Sermon> }) =>
-      client.updateSermon(id, data),
+      client!.updateSermon(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.sermons.all }),
   });
 }
@@ -355,7 +355,7 @@ export function useUpdateColumn() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Column> }) =>
-      client.updateColumn(id, data),
+      client!.updateColumn(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.columns.all }),
   });
 }
@@ -414,7 +414,7 @@ export function useUpdateAlbum() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Album> }) =>
-      client.updateAlbum(id, data),
+      client!.updateAlbum(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.albums.all }),
   });
 }
@@ -467,7 +467,7 @@ export function useUpdateBanner() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Banner> }) =>
-      client.updateBanner(id, data),
+      client!.updateBanner(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.banners.all }),
   });
 }
@@ -526,7 +526,7 @@ export function useUpdateEvent() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Event> }) =>
-      client.updateEvent(id, data),
+      client!.updateEvent(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.events.all }),
   });
 }
@@ -585,7 +585,7 @@ export function useUpdateStaff() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Staff> }) =>
-      client.updateStaff(id, data),
+      client!.updateStaff(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.staff.all }),
   });
 }
@@ -653,7 +653,7 @@ export function useUpdateHistory() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<History> }) =>
-      client.updateHistory(id, data),
+      client!.updateHistory(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.history.all }),
   });
 }
@@ -882,7 +882,7 @@ export function useUpdatePage() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Page> }) =>
-      client.updatePage(id, data),
+      client!.updatePage(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.pages.all }),
   });
 }
@@ -911,7 +911,7 @@ export function useCreateSection() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ pageId, data }: { pageId: string; data: Omit<PageSection, 'id' | 'pageId'> }) =>
-      client.createSection(pageId, data),
+      client!.createSection(pageId, data),
     onSuccess: (_result, variables) =>
       queryClient.invalidateQueries({ queryKey: queryKeys.pages.sections(variables.pageId) }),
   });
@@ -922,7 +922,7 @@ export function useUpdateSection() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ pageId, sectionId, data }: { pageId: string; sectionId: string; data: Partial<PageSection> }) =>
-      client.updateSection(pageId, sectionId, data),
+      client!.updateSection(pageId, sectionId, data),
     onSuccess: (_result, variables) =>
       queryClient.invalidateQueries({ queryKey: queryKeys.pages.sections(variables.pageId) }),
   });
@@ -933,7 +933,7 @@ export function useDeleteSection() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ pageId, sectionId }: { pageId: string; sectionId: string }) =>
-      client.deleteSection(pageId, sectionId),
+      client!.deleteSection(pageId, sectionId),
     onSuccess: (_result, variables) =>
       queryClient.invalidateQueries({ queryKey: queryKeys.pages.sections(variables.pageId) }),
   });
@@ -944,7 +944,7 @@ export function useReorderSections() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ pageId, orderedIds }: { pageId: string; orderedIds: string[] }) =>
-      client.reorderSections(pageId, orderedIds),
+      client!.reorderSections(pageId, orderedIds),
     onSuccess: (_result, variables) =>
       queryClient.invalidateQueries({ queryKey: queryKeys.pages.sections(variables.pageId) }),
   });
@@ -975,7 +975,7 @@ export function useUpdateMenu() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<MenuItem> }) =>
-      client.updateMenu(id, data),
+      client!.updateMenu(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.menus.all }),
   });
 }
@@ -1130,7 +1130,7 @@ export function useBillingCheckout() {
   const client = useDWChurchClient();
   return useMutation({
     mutationFn: (params: { plan: string; successUrl: string; cancelUrl: string }) =>
-      client.createCheckout(params),
+      client!.createCheckout(params),
   });
 }
 

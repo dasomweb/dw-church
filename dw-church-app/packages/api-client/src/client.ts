@@ -7,7 +7,6 @@ import type {
   BannerListParams,
   Board,
   BoardPost,
-  BoardPostListParams,
   Bulletin,
   ChurchSettings,
   ClientConfig,
@@ -49,19 +48,15 @@ function camelizeKeys(obj: unknown): unknown {
   return obj;
 }
 
-// camelCase → snake_case converter for API requests
-function toSnake(str: string): string {
-  return str.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
-}
-
-function snakeizeKeys(obj: unknown): unknown {
-  if (Array.isArray(obj)) return obj.map(snakeizeKeys);
-  if (obj !== null && typeof obj === 'object' && !(obj instanceof Date) && !(obj instanceof FormData)) {
-    return Object.fromEntries(
-      Object.entries(obj as Record<string, unknown>).map(([k, v]) => [toSnake(k), snakeizeKeys(v)])
-    );
+// Unwrap the server's `{ data: T }` envelope — some endpoints return the bare
+// payload, others wrap it. Generic so T is inferred from the caller's return
+// type (return unwrapData(res) inside a `Promise<Staff[]>` method → T=Staff[]),
+// keeping every call site annotation-free and type-safe.
+function unwrapData<T>(res: unknown): T {
+  if (res !== null && typeof res === 'object' && 'data' in res) {
+    return (res as { data: T }).data;
   }
-  return obj;
+  return res as T;
 }
 
 class FetchAdapter implements ApiAdapter {
@@ -458,7 +453,7 @@ export class DWChurchClient {
       department: params?.department,
       active_only: params?.activeOnly,
     });
-    return res.data ?? res;
+    return unwrapData(res);
   }
 
   async getStaffMember(id: string): Promise<Staff> {
@@ -484,17 +479,17 @@ export class DWChurchClient {
   // ─── History ────────────────────────────────────────────
   async getHistory(params?: HistoryListParams): Promise<History[]> {
     const res = await this.api.get(`${this.namespace}/history`, { year: params?.year });
-    return res.data ?? res;
+    return unwrapData(res);
   }
 
   async getHistoryEntry(id: string): Promise<History> {
     const res = await this.api.get(`${this.namespace}/history/${id}`);
-    return res.data ?? res;
+    return unwrapData(res);
   }
 
   async getHistoryYears(): Promise<number[]> {
     const res = await this.api.get(`${this.namespace}/history/years`);
-    return res.data ?? res;
+    return unwrapData(res);
   }
 
   async createHistory(data: Omit<History, 'id'>): Promise<History> {
@@ -579,40 +574,41 @@ export class DWChurchClient {
   // ─── Taxonomies ─────────────────────────────────────────
   async getSermonCategories(): Promise<TaxonomyTerm[]> {
     const res = await this.api.get(`${this.namespace}/taxonomies/sermon_category`);
-    return res.data ?? res;
+    return unwrapData(res);
   }
 
   async getSermonPreachers(): Promise<TaxonomyTerm[]> {
     const res = await this.api.get(`${this.namespace}/taxonomies/sermon_preacher`);
-    return res.data ?? res;
+    return unwrapData(res);
   }
 
   async getBannerCategories(): Promise<TaxonomyTerm[]> {
     const res = await this.api.get(`${this.namespace}/taxonomies/banner_category`);
-    return res.data ?? res;
+    return unwrapData(res);
   }
 
   async getAlbumCategories(): Promise<TaxonomyTerm[]> {
     const res = await this.api.get(`${this.namespace}/taxonomies/album_category`);
-    return res.data ?? res;
+    return unwrapData(res);
   }
 
   async getStaffDepartments(): Promise<TaxonomyTerm[]> {
     const res = await this.api.get(`${this.namespace}/taxonomies/staff_department`);
-    return res.data ?? res;
+    return unwrapData(res);
   }
 
   // ─── Pages ──────────────────────────────────────────────
   async getPages(): Promise<Page[]> {
     const res = await this.api.get(`${this.namespace}/pages`);
-    const data = res.data ?? res;
+    const data = unwrapData<Record<string, unknown>[]>(res);
     return (Array.isArray(data) ? data : []).map((p: Record<string, unknown>) => ({
       id: p.id as string,
       title: (p.title ?? '') as string,
       slug: (p.slug ?? '') as string,
       isHome: (p.is_home ?? p.isHome ?? false) as boolean,
-      status: (p.status ?? 'draft') as string,
+      status: (p.status ?? 'draft') as Page['status'],
       sortOrder: (p.sort_order ?? p.sortOrder ?? 0) as number,
+      sections: (p.sections ?? []) as PageSection[],
     }));
   }
 
@@ -635,7 +631,7 @@ export class DWChurchClient {
   // ─── Page Sections ──────────────────────────────────────
   async getPageSections(pageId: string): Promise<PageSection[]> {
     const res = await this.api.get(`${this.namespace}/pages/${pageId}/sections`);
-    const data = res.data ?? res;
+    const data = unwrapData<Record<string, unknown>[]>(res);
     // Convert snake_case to camelCase for each section
     return (Array.isArray(data) ? data : []).map((s: Record<string, unknown>) => ({
       id: s.id as string,
@@ -666,7 +662,7 @@ export class DWChurchClient {
   // ─── Menus ──────────────────────────────────────────────
   async getMenus(): Promise<MenuItem[]> {
     const res = await this.api.get(`${this.namespace}/menus`);
-    const data = res.data ?? res;
+    const data = unwrapData<Record<string, unknown>[]>(res);
     return (Array.isArray(data) ? data : []).map((m: Record<string, unknown>) => ({
       id: m.id as string,
       label: (m.label ?? '') as string,
@@ -754,12 +750,12 @@ export class DWChurchClient {
   // ─── Domains ─────────────────────────────────────────────
   async getDomains(): Promise<{ id: string; domain: string; status: string; verified_at: string | null; created_at: string; updated_at: string }[]> {
     const res = await this.api.get(`${this.namespace}/domains`);
-    return (res as { data: unknown }).data ?? res;
+    return unwrapData(res);
   }
 
   async addDomain(domain: string): Promise<{ id: string; domain: string; status: string; verified_at: string | null; created_at: string; updated_at: string }> {
     const res = await this.api.post(`${this.namespace}/domains`, { domain });
-    return (res as { data: unknown }).data ?? res;
+    return unwrapData(res);
   }
 
   async removeDomain(id: string): Promise<void> {
@@ -768,7 +764,7 @@ export class DWChurchClient {
 
   async verifyDomain(id: string): Promise<{ id: string; domain: string; status: string; verified_at: string | null; created_at: string; updated_at: string }> {
     const res = await this.api.post(`${this.namespace}/domains/${id}/verify`);
-    return (res as { data: unknown }).data ?? res;
+    return unwrapData(res);
   }
 
   // ─── Billing ─────────────────────────────────────────────

@@ -26,7 +26,6 @@ import type {
   HistoryListParams,
   RelatedPostsParams,
   TaxonomyTerm,
-  AuthConfig,
   ClientConfig,
   ApiAdapter,
 } from '../types';
@@ -38,32 +37,32 @@ import type {
 describe('Type exports - compile-time structure checks', () => {
   it('Bulletin has expected shape', () => {
     const bulletin: Bulletin = {
-      id: 1,
+      id: '1',
       title: 'Test Bulletin',
       date: '2024-01-01',
       pdfUrl: 'https://example.com/test.pdf',
       images: ['https://example.com/img.jpg'],
       thumbnailUrl: 'https://example.com/thumb.jpg',
-      status: 'publish',
+      status: 'published',
       createdAt: '2024-01-01T00:00:00Z',
       modifiedAt: '2024-01-01T00:00:00Z',
     };
-    expect(bulletin.id).toBe(1);
-    expect(bulletin.status).toBe('publish');
+    expect(bulletin.id).toBe('1');
+    expect(bulletin.status).toBe('published');
   });
 
   it('Sermon has expected shape', () => {
     const sermon: Sermon = {
-      id: 2,
+      id: '2',
       title: 'Test Sermon',
       youtubeUrl: 'https://youtube.com/watch?v=test',
       scripture: 'Genesis 1:1',
       preacher: 'Pastor Lee',
       date: '2024-01-07',
       thumbnailUrl: 'https://example.com/thumb.jpg',
-      categoryIds: [1, 2],
+      categoryIds: ['1', '2'],
       category: 'Sunday',
-      status: 'publish',
+      status: 'published',
       createdAt: '2024-01-07T00:00:00Z',
       modifiedAt: '2024-01-07T00:00:00Z',
     };
@@ -73,7 +72,7 @@ describe('Type exports - compile-time structure checks', () => {
 
   it('Column has expected shape', () => {
     const column: Column = {
-      id: 3,
+      id: '3',
       title: 'Pastoral Column',
       content: '<p>Column content</p>',
       topImageUrl: '',
@@ -89,13 +88,13 @@ describe('Type exports - compile-time structure checks', () => {
 
   it('Album has expected shape', () => {
     const album: Album = {
-      id: 4,
+      id: '4',
       title: 'Photo Album',
       images: ['img1.jpg', 'img2.jpg'],
       youtubeUrl: '',
       thumbnailUrl: 'thumb.jpg',
-      categoryIds: [1],
-      status: 'publish',
+      categoryIds: ['1'],
+      status: 'published',
       createdAt: '2024-01-01T00:00:00Z',
       modifiedAt: '2024-01-01T00:00:00Z',
     };
@@ -112,7 +111,7 @@ describe('Type exports - compile-time structure checks', () => {
       widths: { pc: '60%', laptop: '70%', tablet: '80%', mobile: '100%' },
     };
     const banner: Banner = {
-      id: 5,
+      id: '5',
       title: 'Main Banner',
       pcImageUrl: 'pc.jpg',
       mobileImageUrl: 'mobile.jpg',
@@ -123,7 +122,7 @@ describe('Type exports - compile-time structure checks', () => {
       endDate: '2024-12-31',
       textOverlay,
       category: 'main' as BannerCategory,
-      status: 'publish',
+      status: 'published',
       createdAt: '2024-01-01T00:00:00Z',
       modifiedAt: '2024-01-01T00:00:00Z',
     };
@@ -133,7 +132,7 @@ describe('Type exports - compile-time structure checks', () => {
 
   it('Event has expected shape', () => {
     const event: Event = {
-      id: 6,
+      id: '6',
       title: 'Church Event',
       backgroundImageUrl: 'bg.jpg',
       imageOnly: false,
@@ -144,7 +143,7 @@ describe('Type exports - compile-time structure checks', () => {
       description: 'Annual youth retreat',
       youtubeUrl: '',
       thumbnailUrl: 'thumb.jpg',
-      status: 'publish',
+      status: 'published',
       createdAt: '2024-01-01T00:00:00Z',
       modifiedAt: '2024-01-01T00:00:00Z',
     };
@@ -157,7 +156,7 @@ describe('Type exports - compile-time structure checks', () => {
       instagram: 'https://instagram.com/test',
     };
     const staff: Staff = {
-      id: 7,
+      id: '7',
       name: 'John Doe',
       role: 'Youth Pastor',
       department: 'Youth Ministry',
@@ -182,20 +181,26 @@ describe('Type exports - compile-time structure checks', () => {
       photoUrl: 'photo.jpg',
     };
     const history: History = {
-      id: 1,
+      id: '1',
       year: 2020,
       items: [item],
     };
-    expect(history.items[0].month).toBe(3);
+    expect(history.items[0]!.month).toBe(3);
   });
 
   it('ChurchSettings has expected shape', () => {
     const settings: ChurchSettings = {
-      name: 'DW Church',
-      address: '123 Main St',
-      phone: '02-1234-5678',
-      email: 'info@church.com',
-      website: 'https://church.com',
+      churchName: 'DW Church',
+      churchAddress: '123 Main St',
+      churchPhone: '02-1234-5678',
+      churchEmail: 'info@church.com',
+      churchWebsite: 'https://church.com',
+      logoUrl: 'https://church.com/logo.png',
+      faviconUrl: 'https://church.com/favicon.ico',
+      seoTitle: 'DW Church',
+      seoDescription: 'Welcome to DW Church',
+      seoKeywords: 'church, worship',
+      ogImageUrl: 'https://church.com/og.png',
       socialYoutube: '',
       socialInstagram: '',
       socialFacebook: '',
@@ -204,13 +209,13 @@ describe('Type exports - compile-time structure checks', () => {
       socialKakaotalk: '',
       socialKakaotalkChannel: '',
     };
-    expect(settings.name).toBe('DW Church');
+    expect(settings.churchName).toBe('DW Church');
   });
 
   it('PostStatus and PostType are valid string literals', () => {
-    const status: PostStatus = 'publish';
+    const status: PostStatus = 'published';
     const type: PostType = 'sermon';
-    expect(status).toBe('publish');
+    expect(status).toBe('published');
     expect(type).toBe('sermon');
   });
 
@@ -228,7 +233,7 @@ describe('Type exports - compile-time structure checks', () => {
 
   it('ListParams and extensions have expected shape', () => {
     const params: ListParams = { page: 1, perPage: 10, search: 'test', order: 'desc' };
-    const sermonParams: SermonListParams = { ...params, category: 'Sunday', preacher: 1 };
+    const sermonParams: SermonListParams = { ...params, category: 'Sunday', preacher: 'Pastor Kim' };
     const bannerParams: BannerListParams = { ...params, category: 'main', active: true };
     const staffParams: StaffListParams = { ...params, department: 'Youth', activeOnly: true };
     const historyParams: HistoryListParams = { year: 2024 };
@@ -243,9 +248,9 @@ describe('Type exports - compile-time structure checks', () => {
   it('RelatedPostsParams has expected shape', () => {
     const params: RelatedPostsParams = {
       postType: 'sermon',
-      currentId: 1,
+      currentId: '1',
       taxonomy: 'sermon_category',
-      termIds: [1, 2],
+      termIds: ['1', '2'],
       limit: 6,
     };
     expect(params.termIds).toHaveLength(2);
@@ -253,7 +258,7 @@ describe('Type exports - compile-time structure checks', () => {
 
   it('TaxonomyTerm has expected shape', () => {
     const term: TaxonomyTerm = {
-      id: 1,
+      id: '1',
       name: 'Sunday Sermon',
       slug: 'sunday-sermon',
       count: 42,
@@ -262,15 +267,11 @@ describe('Type exports - compile-time structure checks', () => {
     expect(term.slug).toBe('sunday-sermon');
   });
 
-  it('AuthConfig has expected shape', () => {
-    const auth: AuthConfig = { username: 'admin', password: 'password' };
-    expect(auth.username).toBe('admin');
-  });
-
   it('ClientConfig has expected shape', () => {
     const config: ClientConfig = {
       baseUrl: 'https://example.com',
-      auth: { username: 'admin', password: 'pass' },
+      token: 'secret-token',
+      tenantSlug: 'demo',
     };
     expect(config.baseUrl).toBe('https://example.com');
   });

@@ -7,13 +7,13 @@ import type { Bulletin, PaginatedResponse, Sermon, Staff } from '../types';
 const mockBulletins: PaginatedResponse<Bulletin> = {
   data: [
     {
-      id: 1,
+      id: '1',
       title: 'Weekly Bulletin',
       date: '2024-01-07',
       pdfUrl: 'https://example.com/bulletin.pdf',
       images: ['https://example.com/img1.jpg'],
       thumbnailUrl: 'https://example.com/thumb.jpg',
-      status: 'publish',
+      status: 'published',
       createdAt: '2024-01-07T00:00:00Z',
       modifiedAt: '2024-01-07T00:00:00Z',
     },
@@ -27,16 +27,16 @@ const mockBulletins: PaginatedResponse<Bulletin> = {
 const mockSermons: PaginatedResponse<Sermon> = {
   data: [
     {
-      id: 10,
+      id: '10',
       title: 'Sunday Sermon',
       youtubeUrl: 'https://youtube.com/watch?v=abc123',
       scripture: 'John 3:16',
       preacher: 'Pastor Kim',
       date: '2024-01-07',
       thumbnailUrl: 'https://example.com/sermon-thumb.jpg',
-      categoryIds: [1],
+      categoryIds: ['1'],
       category: 'Sunday',
-      status: 'publish',
+      status: 'published',
       createdAt: '2024-01-07T00:00:00Z',
       modifiedAt: '2024-01-07T00:00:00Z',
     },
@@ -49,7 +49,7 @@ const mockSermons: PaginatedResponse<Sermon> = {
 
 const mockStaff: Staff[] = [
   {
-    id: 1,
+    id: '1',
     name: 'Pastor Kim',
     role: 'Senior Pastor',
     department: 'Ministry',
@@ -71,10 +71,11 @@ describe('DWChurchClient', () => {
       expect(client).toBeInstanceOf(DWChurchClient);
     });
 
-    it('creates client with auth (Basic header)', () => {
+    it('creates client with token and tenantSlug', () => {
       const client = new DWChurchClient({
         baseUrl: 'https://example.com',
-        auth: { username: 'admin', password: 'secret' },
+        token: 'secret-token',
+        tenantSlug: 'demo',
       });
       expect(client).toBeInstanceOf(DWChurchClient);
     });
@@ -99,25 +100,25 @@ describe('DWChurchClient', () => {
       const result = await client.getBulletins();
       expect(result).toEqual(mockBulletins);
       expect(result.data).toHaveLength(1);
-      expect(result.data[0].title).toBe('Weekly Bulletin');
+      expect(result.data[0]!.title).toBe('Weekly Bulletin');
     });
 
     it('getSermons returns paginated sermons', async () => {
       const result = await client.getSermons();
       expect(result).toEqual(mockSermons);
-      expect(result.data[0].preacher).toBe('Pastor Kim');
+      expect(result.data[0]!.preacher).toBe('Pastor Kim');
     });
 
     it('getStaff returns staff array', async () => {
       const result = await client.getStaff();
       expect(result).toEqual(mockStaff);
-      expect(result[0].name).toBe('Pastor Kim');
+      expect(result[0]!.name).toBe('Pastor Kim');
     });
 
     it('getRelatedSermons calls the correct URL', async () => {
-      const result = await client.getRelatedSermons(10);
+      const result = await client.getRelatedSermons('10');
       expect(result).toHaveLength(1);
-      expect(result[0].title).toBe('Sunday Sermon');
+      expect(result[0]!.title).toBe('Sunday Sermon');
     });
   });
 
@@ -134,9 +135,9 @@ describe('DWChurchClient', () => {
 
       await client.getRelatedPosts({
         postType: 'sermon',
-        currentId: 5,
+        currentId: '5',
         taxonomy: 'sermon_category',
-        termIds: [1, 2, 3],
+        termIds: ['1', '2', '3'],
         limit: 6,
       });
 
@@ -159,7 +160,7 @@ describe('DWChurchClient', () => {
 
       await client.getRelatedPosts({
         postType: 'bulletin',
-        currentId: 1,
+        currentId: '1',
       });
 
       expect(getSpy).toHaveBeenCalledWith('/api/v1/bulletins/1/related', {
