@@ -1336,36 +1336,36 @@ function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="px-2 py-1 text-xs text-gray-600 border border-gray-200 hover:bg-gray-50 rounded transition-colors whitespace-nowrap"
-                          title={`${t.name} 스토어프론트 새 탭`}
+                          title={`${t.name} — 실제 사이트(스토어프론트)를 새 탭에서 보기`}
                         >
-                          사이트
+                          🌐 사이트
                         </a>
                         {/* 요약 — 테넌트 상세 모달 (빠른 트리아지: 통계 + 이름/플랜 편집 +
                             지원 계정 발급 + 사이트 방문). 일상 운영의 메인 surface. */}
                         <button
                           onClick={() => setViewingTenantId(t.id)}
                           className="px-2 py-1 text-xs text-blue-600 border border-blue-200 hover:bg-blue-50 rounded transition-colors whitespace-nowrap"
-                          title={`${t.name} — 빠른 요약 + 지원 계정`}
+                          title={`${t.name} — 빠른 요약(통계·플랜) + 지원 계정`}
                         >
-                          요약
+                          📊 요약
                         </button>
                         {/* 가져오기 — Phase 12-δ: 기존 사이트 URL 입력으로 자동
                             마이그레이션. 이모지 제거로 헤더 공간 절약. */}
                         <button
                           onClick={() => setMigrateTenant(t)}
                           className="px-2 py-1 text-xs text-emerald-700 border border-emerald-200 hover:bg-emerald-50 rounded transition-colors whitespace-nowrap"
-                          title={`${t.name} 기존 사이트 가져오기`}
+                          title={`${t.name} — 기존 교회 사이트 URL에서 콘텐츠 자동 가져오기`}
                         >
-                          가져오기
+                          📥 가져오기
                         </button>
                         {/* AI 빌더 — Phase 11-A1: AIBuilderModal (PlannerWizard 8-step).
                             기존 ✨ 이모지 제거 + 한 줄 유지. */}
                         <button
                           onClick={() => setAiBuilderTenant(t)}
                           className="px-2.5 py-1 text-xs bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded hover:from-violet-600 hover:to-purple-700 transition-colors font-semibold shadow-sm whitespace-nowrap"
-                          title={`${t.name} AI 빌더 시작`}
+                          title={`${t.name} — AI로 사이트 자동 생성 시작`}
                         >
-                          AI 빌더
+                          ✨ AI 빌더
                         </button>
                         {/* 진입 — 슈퍼어드민 세션으로 테넌트 관리자 화면(/t/:slug)에 바로
                             진입. 게이트가 super_admin 을 통과시키고, AdminLayout 이
@@ -1376,9 +1376,9 @@ function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) {
                             window.location.href = `${window.location.origin}/t/${t.slug}`;
                           }}
                           className="px-2.5 py-1 text-xs bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors font-medium whitespace-nowrap"
-                          title={`${t.name} 관리자 화면으로 진입`}
+                          title={`${t.name} — 교회(테넌트) 관리자 화면. 교회 운영자가 보는 설교·주보·칼럼 등 콘텐츠 관리 화면으로 진입합니다.`}
                         >
-                          진입
+                          👤 교회 관리자
                         </button>
                         {/* 콘솔 — 슈퍼어드민 per-tenant 깊은 편집 콘솔 (/super-admin/t/:slug). */}
                         <button
@@ -1386,9 +1386,9 @@ function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) {
                             window.location.href = `${window.location.origin}/super-admin/t/${t.slug}`;
                           }}
                           className="px-2.5 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors font-medium whitespace-nowrap"
-                          title={`${t.name} — 14섹션 슈퍼어드민 콘솔`}
+                          title={`${t.name} — 슈퍼어드민 편집 콘솔. 페이지 빌더·테마·디자인 등 사이트를 직접 만드는 화면으로 진입합니다.`}
                         >
-                          콘솔
+                          🎨 사이트 편집
                         </button>
                         {/* ⋮ 더보기 — 비활성화/삭제 (드물게 쓰는 destructive). 한 줄
                             유지 + 실수로 누를 위험 낮추기. CSS-only dropdown은

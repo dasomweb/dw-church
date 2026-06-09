@@ -155,6 +155,14 @@ export default function TenantPageEditor() {
       : (import.meta.env.VITE_API_BASE_URL as string) || '';
   }, []);
 
+  // Storefront origin for the "미리보기" link — admin.truelight.app →
+  // truelight.app (the public web app; tenants render at /tenant/<slug>).
+  const webOrigin = useMemo(() => {
+    const host = typeof window !== 'undefined' ? window.location.hostname : '';
+    if (host.startsWith('admin.')) return `https://${host.replace('admin.', '')}`;
+    return (import.meta.env.VITE_WEB_BASE_URL as string) || '';
+  }, []);
+
 
   const headers = useMemo(() => ({
     Authorization: `Bearer ${session?.accessToken ?? ''}`,
@@ -220,6 +228,10 @@ export default function TenantPageEditor() {
 
   const selectedSection = sections.find((s) => s.id === selectedSectionId) ?? null;
   const selectedPage = pages.find((p) => p.id === selectedPageId) ?? null;
+  // Live storefront URL for the selected page — opened by the 미리보기 button.
+  const previewUrl = (webOrigin && tenant?.slug && selectedPage)
+    ? `${webOrigin}/tenant/${tenant.slug}${selectedPage.isHome ? '' : `/${selectedPage.slug}`}`
+    : '';
 
   // ElementInspector edits — auto-saved immediately so the live preview
   // reflects them (debounced reload, no flicker). `dirty` tracks "edited since
@@ -431,6 +443,17 @@ export default function TenantPageEditor() {
             : <span className="ml-2 text-gray-400">· 모든 변경 저장됨</span>}
         </span>
         <div className="flex items-center gap-2">
+          {previewUrl && (
+            <a
+              href={previewUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="이 페이지를 새 탭에서 미리보기"
+              className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+            >
+              ↗ 미리보기
+            </a>
+          )}
           <button
             type="button"
             onClick={handleSave}

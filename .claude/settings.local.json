@@ -83,7 +83,8 @@
       "Bash(curl -s -H \"X-Tenant-Slug: lagrangechurch\" \"https://api.truelight.app/api/v1/theme/tokens\" -o _tk.json -w \"GET %{http_code}\\\\n\")",
       "Bash(node -e ' *)",
       "Bash(rm -f _tk.json)",
-      "Bash(xargs -n1 basename)"
+      "Bash(xargs -n1 basename)",
+      "Bash(grep -rnE \"--cq-|b2b-card-grid|gridTemplateColumns|grid-cols\" packages/blocks/src/list-based)"
     ]
   }
 }
