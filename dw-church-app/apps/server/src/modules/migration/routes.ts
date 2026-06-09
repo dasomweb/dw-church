@@ -33,6 +33,7 @@ import {
   deleteJob,
 } from './job.js';
 import { extractFromHtml } from './extractors/html-scraper.js';
+import { closeBrowser } from './extractors/browser-render.js';
 import { extractFromYouTubeChannel } from './extractors/youtube.js';
 import { classify } from './classifier.js';
 import { runMigrationAgent } from './migration-agent.js';
@@ -398,6 +399,10 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
       const msg = err instanceof Error ? err.message : 'Migration failed';
       await updateJobStatus(job.id, 'failed', msg);
       throw new AppError('INTERNAL_ERROR', 500, msg);
+    } finally {
+      // Release the shared headless-chromium so it doesn't linger in memory
+      // after the crawl finishes.
+      await closeBrowser().catch(() => {});
     }
   });
 
@@ -447,6 +452,8 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
     for (const w of agentResult.warnings.slice(0, 20)) {
       request.log.warn({ migrationStep: 'agent-content-warn' }, w);
     }
+    // Crawl done — release the shared headless chromium.
+    await closeBrowser().catch(() => {});
 
     const result = await applyAll(tenantSlug, agentResult.data, { include: [contentType] });
     return reply.send({

@@ -84,7 +84,8 @@
       "Bash(node -e ' *)",
       "Bash(rm -f _tk.json)",
       "Bash(xargs -n1 basename)",
-      "Bash(grep -rnE \"--cq-|b2b-card-grid|gridTemplateColumns|grid-cols\" packages/blocks/src/list-based)"
+      "Bash(grep -rnE \"--cq-|b2b-card-grid|gridTemplateColumns|grid-cols\" packages/blocks/src/list-based)",
+      "Bash(PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 pnpm install)"
     ]
   }
 }

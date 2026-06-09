@@ -53,5 +53,16 @@ COPY --from=base /app/apps/server/prisma ./prisma
 COPY --from=base /app/apps/server/node_modules ./apps/server/node_modules
 COPY --from=base /app/apps/server/package.json ./package.json
 
+# Install Chromium for Playwright — the migration crawler renders pages in a
+# REAL headless browser so JS-challenge WAFs (SiteGround/Sucuri/Cloudflare) let
+# it through (a bare fetch/proxy gets blocked). --with-deps adds the apt libs.
+# Fixed browsers path so the root runtime user finds it. If this layer ever
+# fails the crawler gracefully falls back to plain fetch.
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+# Non-fatal: if the chromium download/apt step fails, the API still deploys and
+# the crawler falls back to plain fetch (don't take down the whole server over
+# an optional enhancement).
+RUN npx playwright install --with-deps chromium || echo "WARN: playwright chromium install failed — migration crawler will fall back to plain fetch"
+
 EXPOSE 3000
 CMD ["node", "dist/index.js"]

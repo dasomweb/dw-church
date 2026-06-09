@@ -24,6 +24,7 @@
 import { env } from '../../config/env.js';
 import type { ClassifiedData } from './types.js';
 import { emptyClassifiedData } from './types.js';
+import { renderHtml } from './extractors/browser-render.js';
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 // gemini-2.5-pro, not flash: building the full ClassifiedData payload from a
@@ -404,9 +405,21 @@ async function fetchUrl(url: string): Promise<Record<string, unknown>> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
   try {
-    const res = await proxiedFetch(url, { redirect: 'follow', signal: ctrl.signal });
-    const html = await res.text();
-    const headers = Object.fromEntries(res.headers.entries());
+    // Render in a REAL headless browser first — passes JS-challenge WAFs that
+    // block the bare fetch/proxy below. Falls back to proxiedFetch if chromium
+    // is unavailable or the render fails.
+    let html: string;
+    let status = 200;
+    let headers: Record<string, string> = {};
+    const rendered = await renderHtml(url, FETCH_TIMEOUT_MS);
+    if (rendered) {
+      html = rendered;
+    } else {
+      const res = await proxiedFetch(url, { redirect: 'follow', signal: ctrl.signal });
+      html = await res.text();
+      status = res.status;
+      headers = Object.fromEntries(res.headers.entries());
+    }
     // Extract a digest that's small enough to pass back to Gemini.
     const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
     const title = (titleMatch?.[1] ?? '').replace(/<[^>]+>/g, '').trim();
@@ -482,7 +495,7 @@ async function fetchUrl(url: string): Promise<Record<string, unknown>> {
     const images = [...imageSet];
     return {
       url,
-      status: res.status,
+      status,
       contentType: headers['content-type'] ?? '',
       title,
       textLength: text.length,
