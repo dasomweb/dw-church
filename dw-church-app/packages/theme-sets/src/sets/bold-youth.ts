@@ -7,11 +7,15 @@ import { DEFAULT_DESIGN_TOKENS } from '@dw-church/design-tokens';
 import { CHURCH_PAGE_TEMPLATES } from './_shared-templates.js';
 
 // 큰 폰트 스케일 — 헤딩을 기본보다 키워 에너지 있는 인상.
+// `!` on the indexed access: tsconfig has noUncheckedIndexedAccess, so
+// scales.h1 is `Spec | undefined`; spreading the undefined would widen every
+// field to optional and break the DesignTokens type. The keys always exist.
+const s = DEFAULT_DESIGN_TOKENS.typography.scales;
 const boldScales = {
-  ...DEFAULT_DESIGN_TOKENS.typography.scales,
-  h1: { ...DEFAULT_DESIGN_TOKENS.typography.scales.h1, size: { desktop: 88, tablet: 64, mobile: 48 }, weight: 800 },
-  h2: { ...DEFAULT_DESIGN_TOKENS.typography.scales.h2, size: { desktop: 48, tablet: 40, mobile: 34 }, weight: 800 },
-  h3: { ...DEFAULT_DESIGN_TOKENS.typography.scales.h3, size: { desktop: 30, tablet: 26, mobile: 24 }, weight: 700 },
+  ...s,
+  h1: { ...s.h1!, size: { desktop: 88, tablet: 64, mobile: 48 }, weight: 800 },
+  h2: { ...s.h2!, size: { desktop: 48, tablet: 40, mobile: 34 }, weight: 800 },
+  h3: { ...s.h3!, size: { desktop: 30, tablet: 26, mobile: 24 }, weight: 700 },
 };
 
 export const boldYouth: ThemeSet = {
