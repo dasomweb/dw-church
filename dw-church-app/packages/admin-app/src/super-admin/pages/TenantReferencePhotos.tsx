@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDWChurchClient } from '@dw-church/api-client';
 import { useToast } from '../../components';
+import { resizeImage } from '../../utils/resize-image.js';
 
 interface RefRow {
   id: string;
@@ -58,8 +59,12 @@ export default function TenantReferencePhotos() {
       const qs = `kind=reference${tags.length ? `&tags=${encodeURIComponent(tags.join(','))}` : ''}`;
       for (const file of Array.from(files)) {
         try {
+          // Reference photos are high-detail masters (AI references / become
+          // backgrounds) → resize at the larger 1920px 'background' target,
+          // JPEG. Still mandatory — no phone-camera originals to R2.
+          const { file: resized } = await resizeImage(file, 'background');
           const fd = new FormData();
-          fd.append('file', file);
+          fd.append('file', resized);
           // Drop Content-Type so the browser sets the multipart boundary.
           const headers: Record<string, string> = { ...fa.headers };
           delete headers['Content-Type'];

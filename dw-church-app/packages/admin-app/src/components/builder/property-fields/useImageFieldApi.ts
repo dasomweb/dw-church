@@ -1,5 +1,5 @@
 import { useDWChurchClient } from '@dw-church/api-client';
-type ImageKind = 'background' | 'content';
+import { resizeImage, type ImageKind } from '../../../utils/resize-image.js';
 import { useMemo } from 'react';
 
 /**
@@ -69,16 +69,16 @@ export function useImageFieldApi(): {
       fetchAdapter?: { baseUrl: string; headers: Record<string, string> };
     }).fetchAdapter;
 
-    // Client-side resize is applied inside `client.uploadFile` based
-    // on the kind hint — 'background' (2048px) for hero / banner /
-    // full-bleed slots, 'content' (1280px, default) for everything
-    // else. No double-resize: callers pass the kind once and the
-    // upload pipeline handles it.
+    // MANDATORY client-side resize before R2 upload (사장님 directive):
+    // 'background' (1920px) for hero / banner / full-bleed slots, 'content'
+    // (1000px, default) for everything else; JPEG out. ImageField passes the
+    // kind from its variant (hero → background). See [[feedback_image_resize]].
     const upload = async (
       file: File,
-      _opts: { kind?: ImageKind } = {},
+      opts: { kind?: ImageKind } = {},
     ): Promise<string> => {
-      const result = await client.uploadFile(file); // dw-church uploadFile has no kind option
+      const { file: resized } = await resizeImage(file, opts.kind ?? 'content');
+      const result = await client.uploadFile(resized);
       if (!result?.url) throw new Error('Upload response has no URL');
       return result.url;
     };

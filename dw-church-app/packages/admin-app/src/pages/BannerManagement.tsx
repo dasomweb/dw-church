@@ -202,12 +202,14 @@ export default function BannerManagement() {
                 value={watch('pcImageUrl') || ''}
                 onChange={(url) => setValue('pcImageUrl', url)}
                 aspectRatio="21/9"
+                resize="hero"
               />
               <ImageUpload
                 label="모바일 이미지"
                 value={watch('mobileImageUrl') || ''}
                 onChange={(url) => setValue('mobileImageUrl', url)}
                 aspectRatio="9/16"
+                resize="hero"
               />
             </FormRow>
             <ImageUpload
@@ -215,6 +217,7 @@ export default function BannerManagement() {
               value={watch('subImageUrl') || ''}
               onChange={(url) => setValue('subImageUrl', url)}
               aspectRatio="16/9"
+              resize="hero"
             />
           </FormSection>
 

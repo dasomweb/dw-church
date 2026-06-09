@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDWChurchClient } from '@dw-church/api-client';
 import { useToast } from '../../components';
+import { resizeImage } from '../../utils/resize-image.js';
 
 interface FileRow {
   id: string;
@@ -65,9 +66,11 @@ export default function TenantMediaLibrary() {
     try {
       for (const file of Array.from(files)) {
         try {
-          const r = await client.uploadFile(file);
+          // Mandatory client-side resize → JPEG before R2 (resize-image.ts).
+          const { file: resized } = await resizeImage(file, 'content');
+          const r = await client.uploadFile(resized);
           if (r?.url) {
-            setItems((prev) => [{ id: r.id ?? r.url, url: r.url, originalName: file.name, mimeType: file.type, sizeBytes: file.size }, ...prev]);
+            setItems((prev) => [{ id: r.id ?? r.url, url: r.url, originalName: resized.name, mimeType: resized.type, sizeBytes: resized.size }, ...prev]);
             ok++;
           }
         } catch (e) {

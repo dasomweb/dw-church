@@ -823,6 +823,7 @@ function LayoutChildEditor({
                   value={(child.props[field.key] as string) || ''}
                   onChange={(url) => set(field.key, url)}
                   onUpload={onUploadImage}
+                  resize={/background|hero|cover/i.test(field.key) ? 'hero' : 'block'}
                   aspectRatio="16/9"
                 />
               ) : (
@@ -1922,6 +1923,10 @@ export default function PageEditor() {
                 onDuplicate={() => handleDuplicateSection(section)}
                 onVariantChange={(v) => handleVariantChange(section, v)}
                 onUploadImage={async (file: File) => {
+                  // NOTE: this is consumed by <ImageUpload onUpload=…>, which
+                  // already client-side resizes (its `resize` prop) before
+                  // calling here — do NOT resize again (double-encode). New
+                  // direct (non-ImageUpload) callers must resize themselves.
                   const res = await apiClient.uploadFile(file);
                   return res.url;
                 }}

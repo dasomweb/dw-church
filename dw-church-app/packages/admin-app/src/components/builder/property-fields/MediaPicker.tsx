@@ -11,6 +11,7 @@
 // recorded in the DB — never hotlinked.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDWChurchClient } from '@dw-church/api-client';
+import { resizeImage } from '../../../utils/resize-image.js';
 
 export interface MediaItem {
   id: string;
@@ -99,7 +100,9 @@ export function MediaPicker({ onClose, onSelect, onSelectMulti, multi }: Props) 
     setUploading(true);
     setError(null);
     try {
-      const result = await client.uploadFile(file);
+      // Mandatory client-side resize → JPEG before R2 (see resize-image.ts).
+      const { file: resized } = await resizeImage(file, 'content');
+      const result = await client.uploadFile(resized);
       if (!result?.url) throw new Error('업로드 응답에 URL이 없습니다');
       // Newly uploaded image jumps to the front; single-pick mode selects
       // it immediately (operator's intent on upload is "use this one").
