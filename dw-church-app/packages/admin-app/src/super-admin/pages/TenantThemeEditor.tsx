@@ -75,6 +75,10 @@ export default function TenantThemeEditor() {
   const [customCss, setCustomCss] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  // NO auto-save (사장님 directive): tab edits only mutate local `tokens` and
+  // flip `dirty`; the server PUT runs ONLY when the operator clicks 저장.
+  const [dirty, setDirty] = useState(false);
+  const [cssDirty, setCssDirty] = useState(false);
 
   const baseUrl = useMemo(() => {
     const host = typeof window !== 'undefined' ? window.location.hostname : '';
@@ -114,17 +118,26 @@ export default function TenantThemeEditor() {
     return () => { cancelled = true; };
   }, [tenant?.slug, session?.accessToken, baseUrl, headers, showToast]);
 
-  const save = async (next: DesignTokens) => {
+  // Local-only edit — mutate tokens in memory + arm the 저장 button. No PUT.
+  const applyTokens = (next: DesignTokens) => {
+    setTokens(next);
+    setDirty(true);
+  };
+
+  // Explicit save — runs only on the 저장 button click.
+  const save = async () => {
+    if (!tokens || saving) return;
     setSaving(true);
     try {
       const res = await fetch(`${baseUrl}/api/v1/theme/tokens`, {
         method: 'PUT',
         headers,
-        body: JSON.stringify(next),
+        body: JSON.stringify(tokens),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const body = await res.json() as { data: DesignTokens };
       setTokens(body.data);
+      setDirty(false);
       showToast('success', '저장되었습니다.');
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : '저장 실패');
@@ -142,6 +155,7 @@ export default function TenantThemeEditor() {
         body: JSON.stringify({ customCss: css }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setCssDirty(false);
       showToast('success', '저장되었습니다.');
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : '저장 실패');
@@ -162,7 +176,21 @@ export default function TenantThemeEditor() {
     <div className="p-6 lg:p-8 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-bold text-gray-900">테마 설정</h1>
-        {saving && <span className="text-xs text-gray-500">저장 중...</span>}
+        <div className="flex items-center gap-2">
+          {dirty && <span className="text-xs text-amber-600">저장되지 않은 변경</span>}
+          <button
+            type="button"
+            onClick={save}
+            disabled={!dirty || saving}
+            className={`rounded-md px-4 py-1.5 text-sm font-semibold transition-colors ${
+              dirty && !saving
+                ? 'bg-blue-600 text-white hover:bg-blue-500'
+                : 'cursor-default bg-gray-100 text-gray-400'
+            }`}
+          >
+            {saving ? '저장 중…' : '저장'}
+          </button>
+        </div>
       </div>
 
       <div className="border-b border-gray-200 mb-6 flex gap-2 overflow-x-auto">
@@ -181,12 +209,12 @@ export default function TenantThemeEditor() {
         ))}
       </div>
 
-      {tab === 'theme-set' && <ThemeSetTab onApplied={async () => { /* re-fetch tokens after apply */ const res = await fetch(`${baseUrl}/api/v1/theme/tokens`, { headers }); if (res.ok) { const b = await res.json() as { data: DesignTokens }; setTokens(b.data); } }} />}
-      {tab === 'palette' && <PaletteTab tokens={tokens} onChange={save} saving={saving} />}
-      {tab === 'typography' && <TypographyTab tokens={tokens} onChange={save} saving={saving} />}
-      {tab === 'preset' && <PresetTab tokens={tokens} onChange={save} saving={saving} />}
-      {tab === 'spacing' && <SpacingTab tokens={tokens} onChange={save} saving={saving} />}
-      {tab === 'custom' && <CustomCssTab value={customCss} onChange={setCustomCss} onSave={() => saveCustomCss(customCss)} saving={saving} />}
+      {tab === 'theme-set' && <ThemeSetTab onApplied={async () => { /* re-fetch tokens after apply */ const res = await fetch(`${baseUrl}/api/v1/theme/tokens`, { headers }); if (res.ok) { const b = await res.json() as { data: DesignTokens }; setTokens(b.data); setDirty(false); } }} />}
+      {tab === 'palette' && <PaletteTab tokens={tokens} onChange={applyTokens} saving={saving} />}
+      {tab === 'typography' && <TypographyTab tokens={tokens} onChange={applyTokens} saving={saving} />}
+      {tab === 'preset' && <PresetTab tokens={tokens} onChange={applyTokens} saving={saving} />}
+      {tab === 'spacing' && <SpacingTab tokens={tokens} onChange={applyTokens} saving={saving} />}
+      {tab === 'custom' && <CustomCssTab value={customCss} onChange={(v) => { setCustomCss(v); setCssDirty(true); }} onSave={() => saveCustomCss(customCss)} saving={saving} cssDirty={cssDirty} />}
     </div>
   );
 }
@@ -434,7 +462,7 @@ function SpacingTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChan
 }
 
 // ─── Custom CSS ──────────────────────────────────────────────────────
-function CustomCssTab({ value, onChange, onSave, saving }: { value: string; onChange: (v: string) => void; onSave: () => void; saving: boolean }) {
+function CustomCssTab({ value, onChange, onSave, saving, cssDirty }: { value: string; onChange: (v: string) => void; onSave: () => void; saving: boolean; cssDirty: boolean }) {
   return (
     <section className="space-y-3">
       <div>
@@ -450,13 +478,14 @@ function CustomCssTab({ value, onChange, onSave, saving }: { value: string; onCh
         className="w-full px-3 py-2 font-mono text-xs border rounded disabled:opacity-50"
         placeholder=":root { --custom-shadow: 0 8px 32px rgba(0,0,0,0.12); }"
       />
-      <div className="flex justify-end">
+      <div className="flex items-center justify-end gap-2">
+        {cssDirty && <span className="text-xs text-amber-600">저장되지 않은 변경</span>}
         <button
           onClick={onSave}
-          disabled={saving}
-          className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+          disabled={saving || !cssDirty}
+          className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-default"
         >
-          저장
+          {saving ? '저장 중…' : '저장'}
         </button>
       </div>
     </section>

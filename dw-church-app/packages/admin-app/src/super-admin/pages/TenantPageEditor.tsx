@@ -247,34 +247,50 @@ export default function TenantPageEditor() {
   // ElementInspector edits — auto-saved immediately so the live preview
   // reflects them (debounced reload, no flicker). `dirty` tracks "edited since
   // last publish" to drive the Publish (visibility) button.
+  // NO auto-save (사장님 directive — per-keystroke PUTs strained the system):
+  // edits ONLY mutate local `sections` (the in-process canvas reflects them
+  // instantly) and add the section to `dirty`, which arms the 저장 button.
+  // Nothing hits the server until the operator clicks 저장 / 게시.
   const handlePropsChange = (sectionId: string, next: Record<string, unknown>) => {
-    // Guard: ignore empty/undefined props (e.g. an inspector unmount-flush
-    // after the section was deleted) — PUT { props: {} } would 400 with
-    // "No fields to update" and could wipe the section. Also skip if the
-    // section is no longer present locally (already deleted).
     if (!next || typeof next !== 'object' || Object.keys(next).length === 0) return;
     if (!sections.some((s) => s.id === sectionId)) return;
     setSections((prev) => prev.map((s) => (s.id === sectionId ? { ...s, props: next } : s)));
     setDirty((prev) => new Set(prev).add(sectionId));
-    void (async () => {
-      if (!selectedPageId) return;
-      try {
-        const res = await fetch(`${baseUrl}/api/v1/pages/${selectedPageId}/sections/${sectionId}`, {
-          method: 'PUT', headers, body: JSON.stringify({ props: next }),
+  };
+  const handleStyleChange = (sectionId: string, blockStyle: unknown) => {
+    const sec = sections.find((s) => s.id === sectionId);
+    handlePropsChange(sectionId, { ...(sec?.props ?? {}), blockStyle });
+  };
+
+  // Explicit save — PUT every dirty section's props. Returns true on success
+  // so 게시 can save-then-publish. Runs only from the 저장 / 게시 buttons.
+  const [saving, setSaving] = useState(false);
+  const saveAll = async (): Promise<boolean> => {
+    if (!selectedPageId || dirty.size === 0) return true;
+    setSaving(true);
+    try {
+      for (const id of Array.from(dirty)) {
+        const sec = sections.find((s) => s.id === id);
+        if (!sec) continue;
+        const res = await fetch(`${baseUrl}/api/v1/pages/${selectedPageId}/sections/${id}`, {
+          method: 'PUT', headers, body: JSON.stringify({ props: sec.props }),
         });
         if (!res.ok) {
           const body = await res.json().catch(() => null) as { error?: { message?: string } } | null;
           throw new Error(body?.error?.message || `HTTP ${res.status}`);
         }
-        schedulePreviewReload();
-      } catch (err) {
-        showToast('error', err instanceof Error ? `저장 실패: ${err.message}` : '저장 실패');
       }
-    })();
+      setDirty(new Set());
+      return true;
+    } catch (err) {
+      showToast('error', err instanceof Error ? `저장 실패: ${err.message}` : '저장 실패');
+      return false;
+    } finally {
+      setSaving(false);
+    }
   };
-  const handleStyleChange = (sectionId: string, blockStyle: unknown) => {
-    const sec = sections.find((s) => s.id === sectionId);
-    handlePropsChange(sectionId, { ...(sec?.props ?? {}), blockStyle });
+  const handleSave = async () => {
+    if (await saveAll()) showToast('success', '저장되었습니다');
   };
 
   // Canvas click → select a section + the clicked element. A bare section
@@ -286,13 +302,13 @@ export default function TenantPageEditor() {
     setSelectedElementKey(elementKey || '__section__');
   };
 
-  // Publish — make the page publicly visible (status=published). Edits are
-  // already saved (auto-save), so this just flips visibility + clears the
-  // pending-changes flag and refreshes the preview.
+  // Publish — persist any pending edits FIRST (no auto-save), then make the
+  // page publicly visible (status=published).
   const publishChanges = async () => {
     if (!selectedPageId || publishing) return;
     setPublishing(true);
     try {
+      if (!(await saveAll())) return; // saveAll surfaced the error already
       if (selectedPage && selectedPage.status !== 'published') {
         const res = await fetch(`${baseUrl}/api/v1/pages/${selectedPageId}`, {
           method: 'PUT', headers, body: JSON.stringify({ status: 'published' }),
@@ -300,8 +316,6 @@ export default function TenantPageEditor() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         setPages((prev) => prev.map((p) => (p.id === selectedPageId ? { ...p, status: 'published' } : p)));
       }
-      setDirty(new Set());
-      setPreviewNonce((n) => n + 1);
       showToast('success', '게시되었습니다');
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : '게시 실패');
@@ -420,7 +434,8 @@ export default function TenantPageEditor() {
   };
 
   const hasChanges = dirty.size > 0;
-  const canPublish = !publishing && (hasChanges || (selectedPage != null && selectedPage.status !== 'published'));
+  const canSave = !saving && !publishing && hasChanges;
+  const canPublish = !publishing && !saving && (hasChanges || (selectedPage != null && selectedPage.status !== 'published'));
 
   const publishLabel = publishing
     ? '게시 중…'
@@ -432,25 +447,40 @@ export default function TenantPageEditor() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-3.5rem)]">
-      {/* Top toolbar — no auto-save; the operator publishes explicitly. */}
+      {/* Top toolbar — NO auto-save. Edits stay local until 저장 / 게시. */}
       <div className="flex items-center justify-between border-b bg-white px-4 py-1.5 shrink-0">
         <span className="text-xs text-gray-500 truncate">
           {selectedPage ? selectedPage.title : tenant?.name ?? ''}
-          <span className="ml-2 text-green-600">자동 저장됨</span>
-          {hasChanges && <span className="ml-2 text-amber-600">· 미게시 변경 {dirty.size}개</span>}
+          {hasChanges
+            ? <span className="ml-2 text-amber-600">· 저장되지 않은 변경 {dirty.size}개</span>
+            : <span className="ml-2 text-gray-400">· 모든 변경 저장됨</span>}
         </span>
-        <button
-          type="button"
-          onClick={publishChanges}
-          disabled={!canPublish}
-          className={`rounded-md px-3.5 py-1.5 text-xs font-semibold transition-colors ${
-            canPublish
-              ? 'bg-blue-600 text-white hover:bg-blue-500'
-              : 'cursor-default bg-gray-100 text-gray-400'
-          }`}
-        >
-          {publishLabel}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={!canSave}
+            className={`rounded-md px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+              canSave
+                ? 'bg-blue-600 text-white hover:bg-blue-500'
+                : 'cursor-default bg-gray-100 text-gray-400'
+            }`}
+          >
+            {saving ? '저장 중…' : `저장${dirty.size ? ` (${dirty.size})` : ''}`}
+          </button>
+          <button
+            type="button"
+            onClick={publishChanges}
+            disabled={!canPublish}
+            className={`rounded-md px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+              canPublish
+                ? 'bg-green-600 text-white hover:bg-green-500'
+                : 'cursor-default bg-gray-100 text-gray-400'
+            }`}
+          >
+            {publishLabel}
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-1 min-h-0">
@@ -491,7 +521,12 @@ export default function TenantPageEditor() {
             {pages.map((p) => (
               <li key={p.id}>
                 <button
-                  onClick={() => setSelectedPageId(p.id)}
+                  onClick={() => {
+                    // No auto-save: warn before discarding unsaved edits on switch.
+                    if (p.id !== selectedPageId && dirty.size > 0 &&
+                        !window.confirm('저장하지 않은 변경사항이 있습니다. 저장하지 않고 다른 페이지로 이동할까요?')) return;
+                    setSelectedPageId(p.id);
+                  }}
                   className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 ${selectedPageId === p.id ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'}`}
                 >
                   {p.title}
