@@ -131,16 +131,116 @@ export async function applyWorshipTimes(
 }
 
 // ─── Menus ──────────────────────────────────────────────────
-// Assumption: menus already seeded by seedDefaultData.
-// Migration updates labels and sort order but doesn't restructure.
-// Full menu migration is complex — for now, skip and let admin handle.
+// The source site's navigation (사이트맵) replaces the default seeded nav.
+// Before this, applyMenus was a no-op, so every migrated tenant kept the
+// generic seed menu (교회안내/예배 및 모임/교육/…) instead of its own sitemap
+// — i.e. the nav didn't match the church. The migration agent already
+// extracts the source nav into data.menus ({label, pageSlug, parentLabel,
+// sortOrder}); here we map each item to the migrated page and rebuild the
+// tenant's nav to mirror the source.
+
+/** Canonical Korean labels + order for the standard church page slugs.
+ *  Used by the deterministic fallback (deriveMenusFromPages) when the agent
+ *  didn't return a nav. Mirrors the slugs in pages.ts / the agent schema. */
+const PAGE_NAV: Record<string, { label: string; order: number }> = {
+  'pastor-greeting': { label: '인사말', order: 1 },
+  about: { label: '교회소개', order: 2 },
+  vision: { label: '비전', order: 3 },
+  history: { label: '연혁', order: 4 },
+  staff: { label: '섬기는 사람들', order: 5 },
+  worship: { label: '예배안내', order: 6 },
+  mission: { label: '선교', order: 7 },
+  newcomer: { label: '새가족', order: 8 },
+  directions: { label: '오시는 길', order: 9 },
+  sermons: { label: '설교', order: 10 },
+  bulletins: { label: '주보', order: 11 },
+  columns: { label: '목회칼럼', order: 12 },
+  albums: { label: '앨범', order: 13 },
+  events: { label: '행사', order: 14 },
+  board: { label: '게시판', order: 15 },
+};
+
+/**
+ * Fallback nav when the agent returned no menus: build a flat nav from the
+ * pages that were actually migrated, in canonical church order. 'home' is
+ * excluded (the logo links home). Guarantees the migrated site never falls
+ * back to the irrelevant default seed menu.
+ */
+export function deriveMenusFromPages(
+  pageContents: { pageSlug: string }[],
+): ClassifiedMenu[] {
+  const seen = new Set<string>();
+  const out: ClassifiedMenu[] = [];
+  for (const p of pageContents) {
+    if (p.pageSlug === 'home' || seen.has(p.pageSlug)) continue;
+    seen.add(p.pageSlug);
+    const meta = PAGE_NAV[p.pageSlug];
+    out.push({
+      label: meta?.label ?? p.pageSlug,
+      pageSlug: p.pageSlug,
+      parentLabel: null,
+      sortOrder: meta?.order ?? 99,
+    });
+  }
+  return out;
+}
 
 export async function applyMenus(
-  _tenantSlug: string,
-  _menus: ClassifiedMenu[],
+  tenantSlug: string,
+  menus: ClassifiedMenu[],
 ): Promise<number> {
-  // Menus are already seeded with proper structure.
-  // Auto-migrating menus risks breaking existing nav structure.
-  // Admin should adjust menus manually after migration.
-  return 0;
+  if (menus.length === 0) return 0; // nothing extracted → keep default seed
+  const schema = validateSchemaName(`tenant_${tenantSlug}`);
+
+  // Resolve each menu item's target page slug → the migrated page's id.
+  const pageRows = await prisma.$queryRawUnsafe<{ id: string; slug: string }[]>(
+    `SELECT id, slug FROM "${schema}".pages`,
+  );
+  const slugToId = new Map(pageRows.map((p) => [p.slug, p.id]));
+
+  // Drop items that point at a page that wasn't migrated (dead links) —
+  // but keep group headers (no pageSlug) so the hierarchy survives.
+  const usable = menus.filter((m) => !m.pageSlug || slugToId.has(m.pageSlug));
+  const linked = usable.filter((m) => m.pageSlug && slugToId.has(m.pageSlug));
+
+  // Safety: a near-empty source nav is worse than the seeded structure.
+  // Only take over the nav when at least 2 real pages mapped.
+  if (linked.length < 2) return 0;
+
+  // Replace the default seeded nav (migration is a setup step; operator
+  // curates after). Wiping first keeps re-imports idempotent and avoids
+  // default+source duplication.
+  await prisma.$executeRawUnsafe(`DELETE FROM "${schema}".menus`);
+
+  const sorted = [...usable].sort((a, b) => a.sortOrder - b.sortOrder);
+  const labelToId = new Map<string, string>();
+  let count = 0;
+
+  const insert = async (m: ClassifiedMenu, parentId: string | null): Promise<void> => {
+    const pageId = m.pageSlug ? slugToId.get(m.pageSlug) ?? null : null;
+    const rows = await prisma.$queryRawUnsafe<{ id: string }[]>(
+      `INSERT INTO "${schema}".menus (label, page_id, parent_id, sort_order, is_visible)
+       VALUES ($1, $2::uuid, $3::uuid, $4, true)
+       RETURNING id`,
+      m.label,
+      pageId,
+      parentId,
+      m.sortOrder,
+    );
+    if (rows[0]) {
+      labelToId.set(m.label, rows[0].id);
+      count++;
+    }
+  };
+
+  // Parents first (parentLabel == null) so children can resolve parent_id
+  // by label; then children.
+  for (const m of sorted) {
+    if (!m.parentLabel) await insert(m, null);
+  }
+  for (const m of sorted) {
+    if (m.parentLabel) await insert(m, labelToId.get(m.parentLabel) ?? null);
+  }
+
+  return count;
 }

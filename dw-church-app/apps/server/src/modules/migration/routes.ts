@@ -39,6 +39,7 @@ import { classify } from './classifier.js';
 import { runMigrationAgent } from './migration-agent.js';
 import { applyAll, STATIC_INCLUDE, DYNAMIC_INCLUDE, ALL_INCLUDE } from './appliers/index.js';
 import type { IncludeKey } from './appliers/index.js';
+import { deriveMenusFromPages } from './appliers/config.js';
 import type { ClassifiedData, RawExtractedData } from './types.js';
 
 // ─── Auth ──────────────────────────────────────���────────────
@@ -353,6 +354,15 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
         ),
         warnings: agentWarnings,
       };
+
+      // Sitemap (네비게이션) — the migrated tenant's nav must mirror the
+      // source site, not the generic default seed menu. The agent extracts
+      // the source nav into classified.menus; if it came back empty, derive
+      // a flat nav from the pages we actually migrated so the nav still
+      // reflects this church rather than the default template.
+      if (includeList.includes('menus') && classified.menus.length === 0) {
+        classified.menus = deriveMenusFromPages(classified.pageContents);
+      }
 
       await updateJobClassifiedData(job.id, classified);
 
