@@ -92,10 +92,17 @@ export function legacyThemeToTokens(theme: LegacyThemeBlob | null | undefined): 
 
   // Stage 1+2: start with tokensV2 if present, otherwise build a snapshot
   // from the legacy colors / fonts shape with DEFAULTS underneath.
-  const base = t.tokensV2 ? cloneTokens(t.tokensV2) : buildFromLegacyShape(t);
+  const hasV2 = Boolean(t.tokensV2);
+  const base = hasV2 ? cloneTokens(t.tokensV2!) : buildFromLegacyShape(t);
 
-  // Stage 3: overlay legacy typography per-level edits onto the base.
-  if (t.typography) {
+  // Stage 3: overlay legacy per-level typography — ONLY when there is no
+  // tokensV2. When tokensV2 exists it IS the authoritative snapshot (the
+  // super-admin TypographyEditor writes the full scale set there). Overlaying
+  // the stale legacy `settings.typography` (seed / old editor) on top would
+  // clobber the operator's new scale edits with the pre-change values — i.e.
+  // change Body size in the editor, save → tokensV2 updated, but the read
+  // reverts it to the legacy value. (대표님 2026-06-09 "변경전 내용이 그대로".)
+  if (!hasV2 && t.typography) {
     overlayLegacyTypography(base, t.typography);
   }
 
