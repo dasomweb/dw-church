@@ -211,11 +211,11 @@ or a one-sentence summary you compose from the intro). It renders between the
 title (제목) and the body (본문) as the 부제. Omit "subtitle" ONLY when the page
 genuinely has no lead line worth showing.
 
-- pastor_greeting → blockType="pastor_message", props={ title, name, message, photoUrl }
+- pastor_greeting → blockType="pastor_message", props={ title, subtitle, pastorName, message, imageUrl }
     title = page heading (default "담임목사 인사말")
-    name = pastor's name extracted from body (e.g. "김아무개 목사")
+    pastorName = pastor's name extracted from body (e.g. "김아무개 목사")
     message = full greeting body text (preserve paragraphs as \n\n)
-    photoUrl = URL of any pastor photo in the page
+    imageUrl = URL of any pastor photo in the page
 
 - about → blockType="church_intro", props={ title, subtitle, content, imageUrl }
     title = page heading (default "교회 소개")
@@ -636,7 +636,26 @@ const PAGE_RESULT_SCHEMA = {
         type: 'object',
         properties: {
           blockType: { type: 'string' },
-          props: { type: 'object' },
+          // Gemini structured-output only emits keys declared here — a bare
+          // { type: 'object' } returns {} and the block lands with EMPTY props
+          // (this is why the 인사말/소개 page body was lost). Declare the UNION
+          // of every prop field used across the static/data block types so the
+          // model can fill whichever ones the page actually has.
+          props: {
+            type: 'object',
+            properties: {
+              title: { type: 'string' },       // 제목
+              subtitle: { type: 'string' },     // 부제
+              pastorName: { type: 'string' },   // pastor_message: 목사 이름 (block reads pastorName)
+              message: { type: 'string' },      // pastor_message: 인사말 본문
+              content: { type: 'string' },      // church_intro/mission/text_image 본문
+              imageUrl: { type: 'string' },     // 일반 이미지 + 목사 사진 (block reads imageUrl)
+              address: { type: 'string' },      // location_map/contact_info
+              phone: { type: 'string' },        // contact_info
+              email: { type: 'string' },        // contact_info
+              limit: { type: 'number' },        // data block: 표시 개수
+            },
+          },
         },
         required: ['blockType'],
       },
