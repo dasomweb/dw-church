@@ -74,6 +74,28 @@ export function tokensToCssVars(tokens: DesignTokens): CssVarMap {
   vars['--brand-container-px'] = `${tokens.spacing.containerPaddingX}px`;
   vars['--brand-gap-grid'] = `${tokens.spacing.gapGrid}px`;
 
+  // ── Bridge spacing tokens → the vars blocks actually consume ──
+  // Every block reads --section-py-{sm,md,lg,xl} and --gap-grid (defined as
+  // fixed clamp() fallbacks in blocks/styles.css). Before this, the spacing
+  // tokens (--brand-section-py etc.) were emitted but NOTHING read them, so
+  // changing sectionPaddingY — via the theme editor OR the AI builder — had
+  // zero visible effect. Derive a responsive scale from the single
+  // sectionPaddingY (the "md" desktop target) and emit the names blocks read.
+  // Emitted inside the tenant scope, so they override the :root fallback.
+  const py = tokens.spacing.sectionPaddingY;
+  // clamp(min, fluid, max): mobile shrinks to ~0.6×, desktop hits the token.
+  const pyScale = (mult: number, vw: number): string => {
+    const max = Math.round(py * mult);
+    const min = Math.round(max * 0.6);
+    return `clamp(${min}px, ${vw}vw, ${max}px)`;
+  };
+  vars['--section-py-sm'] = pyScale(0.65, 6);
+  vars['--section-py-md'] = pyScale(1, 8);
+  vars['--section-py-lg'] = pyScale(1.4, 10);
+  vars['--section-py-xl'] = pyScale(1.8, 12);
+  vars['--gap-grid'] = `${tokens.spacing.gapGrid}px`;
+  vars['--container-px'] = `${tokens.spacing.containerPaddingX}px`;
+
   // Breakpoints (informational; emitted as numbers without `px` for query usage).
   vars['--brand-bp-tablet'] = `${tokens.breakpoints.tablet}px`;
   vars['--brand-bp-mobile'] = `${tokens.breakpoints.mobile}px`;
