@@ -241,10 +241,29 @@ genuinely has no lead line worth showing.
     content = full mission text
     imageUrl = main image URL if present
 
-- worship → leave pageContent empty (worship times go into worshipTimes[] field)
-
 - home → blockType="text_image" only if home page has substantial intro text
     title, content, imageUrl as above
+
+DYNAMIC-CONTENT pages — reserve the space with a DATA BLOCK, do NOT copy items:
+When the page is a LIST / index of dynamic content (sermon / bulletin / column /
+event / album / staff / history / worship / board), set pageContent to a SINGLE
+data block that reserves the page layout for that content type. Do NOT put the
+individual items inside pageContent — the items are migrated separately by each
+content module. Use these blockType + props={ title }:
+  sermon   -> "recent_sermons"    (title default "설교")
+  bulletin -> "recent_bulletins"  (title default "주보")
+  column   -> "recent_columns"    (title default "목회칼럼")
+  event    -> "event_grid"        (title default "교회 행사")
+  album    -> "album_gallery"     (title default "앨범")
+  staff    -> "staff_grid"        (title default "섬기는 사람들")
+  history  -> "history_timeline"  (title default "교회 연혁")
+  worship  -> "worship_times"     (title default "예배 안내")
+  board    -> "board"             (title default "게시판")
+(You may STILL also extract the structured items into the sermons[]/bulletins[]/
+etc. fields — those feed the per-module importer. The data block only reserves
+the page's layout slot so the migrated site has the right page with the right
+content-block space; the actual items appear once the operator runs the
+per-module import.)
 
 For OTHER pages with substantial body text (not in above list), if you
 still want to preserve content, use blockType="text_image" or
