@@ -126,9 +126,12 @@ export async function updateThemeTokens(
 
   if (existing.length > 0) {
     await prisma.$executeRawUnsafe(
+      // id is a uuid column; $executeRawUnsafe binds the JS string param as
+      // text, so `id = $2` errors 42883 (operator does not exist: uuid = text).
+      // Explicit ::uuid cast fixes the save (theme tokens were 500-ing).
       `UPDATE "${schema}".themes
        SET settings = $1::jsonb, updated_at = NOW()
-       WHERE id = $2`,
+       WHERE id = $2::uuid`,
       JSON.stringify(merged),
       existing[0]!.id,
     );
@@ -194,9 +197,10 @@ export async function updateTheme(
   if (existing.length > 0) {
     const newName = input.templateName ?? existing[0]!.name;
     rows = await prisma.$queryRawUnsafe<ThemeRow[]>(
+      // ::uuid cast — same uuid=text 42883 fix as updateThemeTokens above.
       `UPDATE "${schema}".themes
        SET name = $1, settings = $2::jsonb, updated_at = NOW()
-       WHERE id = $3
+       WHERE id = $3::uuid
        RETURNING id, name, is_active, settings, created_at, updated_at`,
       newName,
       JSON.stringify(newSettings),
