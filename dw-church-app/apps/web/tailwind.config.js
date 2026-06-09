@@ -4,6 +4,11 @@ module.exports = {
     './app/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
     '../../packages/ui-components/src/**/*.{ts,tsx}',
+    // The storefront renders @dw-church/blocks (hero, text-image, etc.). Their
+    // Tailwind classes — especially arbitrary values like the hero height map
+    // (min-h-[480px] sm:min-h-[600px]) — must be scanned here or they get
+    // purged from the storefront CSS and the banner height/layout never apply.
+    '../../packages/blocks/src/**/*.{ts,tsx}',
   ],
   theme: {
     extend: {

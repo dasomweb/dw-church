@@ -19,11 +19,18 @@ const MAX_WIDTH = 1920;
 async function resizeForR2(
   buffer: Buffer,
   contentType: string,
-): Promise<{ buffer: Buffer; contentType: string; ext: string }> {
+): Promise<{ buffer: Buffer; contentType: string; ext: string } | null> {
   const ct = contentType.toLowerCase();
-  if (ct.includes('svg') || ct.includes('gif')) {
-    const ext = ct.includes('svg') ? '.svg' : '.gif';
-    return { buffer, contentType, ext };
+  if (ct.includes('svg')) {
+    // Validate it's actually SVG markup — WAF/error pages also arrive as
+    // text/* and would otherwise be stored as a broken .svg.
+    if (!buffer.subarray(0, 2000).toString('utf8').toLowerCase().includes('<svg')) return null;
+    return { buffer, contentType, ext: '.svg' };
+  }
+  if (ct.includes('gif')) {
+    // GIF magic bytes "GIF8" — reject anything that isn't really a GIF.
+    if (buffer.subarray(0, 4).toString('ascii') !== 'GIF8') return null;
+    return { buffer, contentType, ext: '.gif' };
   }
   try {
     const out = await sharp(buffer)
@@ -33,10 +40,12 @@ async function resizeForR2(
       .toBuffer();
     return { buffer: out, contentType: 'image/webp', ext: '.webp' };
   } catch (err) {
-    // Unreadable/corrupt image — fall back to the original bytes.
-    console.log(`[migration] sharp resize failed (${contentType}): ${err instanceof Error ? err.message : String(err)}`);
-    const ext = ct.includes('png') ? '.png' : ct.includes('webp') ? '.webp' : '.jpg';
-    return { buffer, contentType, ext };
+    // Not a decodable image — almost always a WAF JS-challenge / error HTML
+    // page served with a 200. DO NOT upload it: storing the garbage bytes as
+    // .jpg is exactly what produced the broken "Failed to load image" banners.
+    // Return null so the caller skips this URL entirely.
+    console.log(`[migration] not a valid image, skipping (${contentType}): ${err instanceof Error ? err.message : String(err)}`);
+    return null;
   }
 }
 
@@ -52,26 +61,36 @@ export async function migrateImageToR2(
   if (!imageUrl || imageUrl.startsWith('data:')) return imageUrl;
   if (imageUrl.includes('r2.dev/') || imageUrl.includes('r2.cloudflarestorage.com')) return imageUrl;
 
+  // On ANY failure we return '' (skip), never the original URL — hotlinking the
+  // source is forbidden, and storing a broken object is worse than no image.
+  // An empty result clears the field (hero falls back to its gradient, content
+  // images drop out) instead of rendering a broken-image icon.
   try {
     const res = await fetch(imageUrl, {
       redirect: 'follow',
       headers: { 'User-Agent': USER_AGENT },
     });
-    if (!res.ok) return imageUrl;
+    if (!res.ok) return '';
 
-    const srcContentType = res.headers.get('content-type') || 'image/jpeg';
+    const srcContentType = res.headers.get('content-type') || '';
+    // WAF/challenge/error pages come back as text/html (or json) with 200 —
+    // never an image. Reject by content-type before we even decode.
+    if (srcContentType && !srcContentType.toLowerCase().startsWith('image/')) return '';
+
     const srcBuffer = Buffer.from(await res.arrayBuffer());
-
-    // Skip originals > 15MB (raised from 5MB — we downscale, so large source
-    // photos still end up small in R2 after the 1920px/webp pass).
-    if (srcBuffer.length > 15 * 1024 * 1024) return imageUrl;
+    if (srcBuffer.length === 0) return '';
+    // Skip originals > 15MB (we downscale, so large source photos still end up
+    // small in R2 after the 1920px/webp pass).
+    if (srcBuffer.length > 15 * 1024 * 1024) return '';
 
     // Resize to ≤1920px + webp before upload (backgrounds, content, all).
-    const { buffer, contentType, ext } = await resizeForR2(srcBuffer, srcContentType);
-    const key = `tenant_${tenantSlug}/migration/${randomUUID()}${ext}`;
-    return await r2Upload(key, buffer, contentType);
+    // Returns null when the bytes aren't a real image → skip, don't upload.
+    const resized = await resizeForR2(srcBuffer, srcContentType || 'image/jpeg');
+    if (!resized) return '';
+    const key = `tenant_${tenantSlug}/migration/${randomUUID()}${resized.ext}`;
+    return await r2Upload(key, resized.buffer, resized.contentType);
   } catch {
-    return imageUrl;
+    return '';
   }
 }
 
@@ -144,18 +163,21 @@ export function replaceImageUrls(
 ): Record<string, unknown> {
   const result = { ...props };
 
-  // Single image fields
+  // Single image fields. A mapped value of '' means migration skipped a broken
+  // source image — clear the field so the block renders its fallback (e.g. the
+  // hero gradient) instead of a broken-image icon, and never hotlink the source.
   for (const key of ['imageUrl', 'photoUrl', 'thumbnailUrl', 'topImageUrl', 'backgroundImageUrl']) {
-    if (typeof result[key] === 'string' && urlMap.has(result[key] as string)) {
-      result[key] = urlMap.get(result[key] as string);
+    const cur = result[key];
+    if (typeof cur === 'string' && urlMap.has(cur)) {
+      result[key] = urlMap.get(cur);
     }
   }
 
-  // Image array fields
+  // Image array fields — replace migrated URLs, drop any that failed ('').
   if (Array.isArray(result.images)) {
-    result.images = (result.images as string[]).map(
-      (url) => urlMap.get(url) || url,
-    );
+    result.images = (result.images as string[])
+      .map((url) => (urlMap.has(url) ? urlMap.get(url)! : url))
+      .filter((url) => typeof url === 'string' && url.length > 0);
   }
 
   return result;
