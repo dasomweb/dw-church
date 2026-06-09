@@ -322,33 +322,68 @@ function TypographyTab({ tokens, onChange, saving }: { tokens: DesignTokens; onC
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">스케일 (Desktop)</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+        <h3 className="text-sm font-semibold text-gray-900 mb-1">스케일 (Desktop)</h3>
+        {/* b2bsmart-style LIVE PREVIEW: each scale renders at its actual size so
+            a misconfigured value (e.g. an H1 set to 5px — smaller than 본문) is
+            immediately visible instead of silently breaking the storefront. */}
+        <p className="text-[11px] text-gray-400 mb-3">아래 미리보기는 실제 적용될 크기입니다. 제목이 본문보다 작으면 경고가 표시됩니다.</p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
           {scaleNames.map((name) => {
             const spec = tokens.typography.scales[name];
             if (!spec) return null;
+            const bodyPx = tokens.typography.scales.body?.size.desktop ?? 16;
+            const isHeading = /^h[1-6]$/.test(name);
+            const tooSmall = spec.size.desktop < 8;
+            const headingBelowBody = isHeading && spec.size.desktop < bodyPx;
+            const fam = spec.fontFamily === 'body'
+              ? tokens.typography.families.body
+              : tokens.typography.families.heading;
             return (
-              <div key={name} className="rounded border border-gray-200 p-2 bg-white flex items-center gap-2">
-                <span className="text-xs font-mono w-12 text-gray-500">{SCALE_LABELS[name]}</span>
-                <input
-                  type="number"
-                  value={spec.size.desktop}
-                  onChange={(e) => setScaleSize(name, Number(e.target.value) || spec.size.desktop)}
-                  disabled={saving}
-                  className="w-14 px-1.5 py-0.5 text-xs border rounded disabled:opacity-50"
-                />
-                <span className="text-[10px] text-gray-400">px</span>
-                <input
-                  type="number"
-                  value={spec.weight}
-                  step={100}
-                  min={100}
-                  max={900}
-                  onChange={(e) => setScaleWeight(name, Number(e.target.value) || spec.weight)}
-                  disabled={saving}
-                  className="w-14 px-1.5 py-0.5 text-xs border rounded disabled:opacity-50"
-                />
-                <span className="text-[10px] text-gray-400">wt</span>
+              <div key={name} className={`rounded border p-2 bg-white ${tooSmall || headingBelowBody ? 'border-amber-400 bg-amber-50' : 'border-gray-200'}`}>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono w-12 text-gray-500">{SCALE_LABELS[name]}</span>
+                  <input
+                    type="number"
+                    min={8}
+                    value={spec.size.desktop}
+                    onChange={(e) => setScaleSize(name, Number(e.target.value) || spec.size.desktop)}
+                    disabled={saving}
+                    className="w-14 px-1.5 py-0.5 text-xs border rounded disabled:opacity-50"
+                  />
+                  <span className="text-[10px] text-gray-400">px</span>
+                  <input
+                    type="number"
+                    value={spec.weight}
+                    step={100}
+                    min={100}
+                    max={900}
+                    onChange={(e) => setScaleWeight(name, Number(e.target.value) || spec.weight)}
+                    disabled={saving}
+                    className="w-14 px-1.5 py-0.5 text-xs border rounded disabled:opacity-50"
+                  />
+                  <span className="text-[10px] text-gray-400">wt</span>
+                </div>
+                {/* live sample — capped at 44px so large headings don't blow up
+                    the row, but tiny values still read as obviously tiny. */}
+                <div className="mt-1.5 overflow-hidden" style={{ maxHeight: 52 }}>
+                  <span
+                    style={{
+                      fontSize: `${Math.min(spec.size.desktop, 44)}px`,
+                      fontWeight: spec.weight,
+                      fontFamily: fam,
+                      lineHeight: 1.1,
+                      color: '#0f172a',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    가나다 AaBbCc
+                  </span>
+                </div>
+                {(tooSmall || headingBelowBody) && (
+                  <p className="mt-1 text-[10px] text-amber-700">
+                    ⚠ {tooSmall ? '너무 작습니다 (8px 미만)' : `제목이 본문(${bodyPx}px)보다 작습니다`}
+                  </p>
+                )}
               </div>
             );
           })}

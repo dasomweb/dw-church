@@ -79,7 +79,10 @@
       "Bash(curl -s -X POST https://backboard.railway.com/graphql/v2 -H 'Authorization: Bearer __TRACKED_VAR__' -H 'Content-Type: application/json' -d '{\"query\":\"query\\($id:String!\\){ project\\(id:$id\\){ services{ edges{ node{ name } } } } }\",\"variables\":{\"id\":\"811df8a3-80fe-4297-a55d-65f193192fb3\"}}')",
       "Bash(sed -n '538,548p' apps/server/src/modules/ai/builder-routes/routes.ts)",
       "Bash(sed -n '1,15p' apps/server/src/modules/ai/builder-routes/routes.ts)",
-      "Bash(grep -oa '/tenant/[a-z0-9-]\\\\{3,\\\\}' \"C:/Users/John Kwak/.claude/projects/h--GitHub-dw-church/d4642cef-8684-486b-9189-24401f539148.jsonl\")"
+      "Bash(grep -oa '/tenant/[a-z0-9-]\\\\{3,\\\\}' \"C:/Users/John Kwak/.claude/projects/h--GitHub-dw-church/d4642cef-8684-486b-9189-24401f539148.jsonl\")",
+      "Bash(curl -s -H \"X-Tenant-Slug: lagrangechurch\" \"https://api.truelight.app/api/v1/theme/tokens\" -o _tk.json -w \"GET %{http_code}\\\\n\")",
+      "Bash(node -e ' *)",
+      "Bash(rm -f _tk.json)"
     ]
   }
 }
