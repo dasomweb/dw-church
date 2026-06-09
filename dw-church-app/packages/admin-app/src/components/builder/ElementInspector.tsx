@@ -713,12 +713,13 @@ export function ElementInspector({
   // 이미지 캔버스 반영 안 됨 버그 fix.
   const queueCommit = (next: Record<string, unknown>) => {
     setDraft(next);
-    if (commitTimerRef.current) window.clearTimeout(commitTimerRef.current);
-    commitTimerRef.current = window.setTimeout(() => {
-      commitTimerRef.current = null;
-      if (onPropsChange) onPropsChange(sectionId, next);
-      else updateDraftMut.mutate({ pageId, sectionId, props: next });
-    }, 300);
+    // Auto-save removed: commit straight to the parent's LOCAL state so the
+    // in-process canvas reflects the edit INSTANTLY (no 300ms debounce — that
+    // debounce existed only to batch the now-deleted server PUTs, and it was
+    // making typography/style edits look like they "didn't apply"). The parent
+    // (PageBuilder) holds the change in `dirty` until 저장/게시.
+    if (onPropsChange) onPropsChange(sectionId, next);
+    else updateDraftMut.mutate({ pageId, sectionId, props: next });
   };
 
   // Section / element 전환 시 draft reset + 미저장 변경 즉시 flush.
@@ -746,18 +747,15 @@ export function ElementInspector({
   const styleCommitTimerRef = useRef<number | null>(null);
   const queueStyleCommit = (next: BlockStyle | null) => {
     setStyleDraft(next);
-    if (styleCommitTimerRef.current) window.clearTimeout(styleCommitTimerRef.current);
-    styleCommitTimerRef.current = window.setTimeout(() => {
-      styleCommitTimerRef.current = null;
-      if (onStyleOverridesChange) onStyleOverridesChange(sectionId, next);
-      else {
-        updateDraftMut.mutate({
-          pageId,
-          sectionId,
-          props: { ...draftRef.current, blockStyle: next },
-        });
-      }
-    }, 300);
+    // Immediate local commit (no debounce) — same rationale as queueCommit.
+    if (onStyleOverridesChange) onStyleOverridesChange(sectionId, next);
+    else {
+      updateDraftMut.mutate({
+        pageId,
+        sectionId,
+        props: { ...draftRef.current, blockStyle: next },
+      });
+    }
   };
   useEffect(() => {
     setStyleDraft(initialStyleOverrides);
@@ -2087,7 +2085,11 @@ function FocusedStyleSection({
   // only — :hover values aren't reflected by getComputedStyle on a
   // non-hovered element. Hover panel uses empty placeholders since
   // there's no useful baseline to show.
-  const applied = useAppliedStyle(sectionId, elementPath, [overrideValue]);
+  // Dep is the SERIALIZED override (not the fresh `{}` ref) so useAppliedStyle
+  // re-reads the DOM only when the override actually changes — otherwise it
+  // re-ran + setApplied on every render, churning the inspector.
+  const overrideKey = JSON.stringify(overrideValue);
+  const applied = useAppliedStyle(sectionId, elementPath, [overrideKey]);
 
   return (
     <section>
@@ -2152,7 +2154,14 @@ function ElementStyleControls({
   palette?: Array<{ key: string; label?: string; hex: string }>;
 }) {
   const [draft, setDraft] = useState<ElementStyle>(value);
-  useEffect(() => setDraft(value), [value]);
+  // Sync from the parent ONLY when the override CONTENT changes — not on every
+  // render. `value` is `elementStyles[key] ?? {}`, a fresh object ref each
+  // render, so a plain `[value]` dep reset the local draft on unrelated
+  // re-renders (useAppliedStyle's retries, canvas updates) and could wipe an
+  // in-progress edit. Compare serialized content instead.
+  const valueKey = JSON.stringify(value);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => setDraft(value), [valueKey]);
 
   const set = <K extends keyof ElementStyle>(key: K, v: ElementStyle[K] | undefined) => {
     const next: ElementStyle = { ...draft };
