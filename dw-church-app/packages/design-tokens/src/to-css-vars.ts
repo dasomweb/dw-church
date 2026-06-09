@@ -95,6 +95,8 @@ export function tokensToCssVars(tokens: DesignTokens): CssVarMap {
   vars['--section-py-xl'] = pyScale(1.8, 12);
   vars['--gap-grid'] = `${tokens.spacing.gapGrid}px`;
   vars['--container-px'] = `${tokens.spacing.containerPaddingX}px`;
+  // Theme-level vertical margin between sections (SectionShell reads --section-my).
+  vars['--section-my'] = `${tokens.spacing.sectionMarginY ?? 0}px`;
 
   // Breakpoints (informational; emitted as numbers without `px` for query usage).
   vars['--brand-bp-tablet'] = `${tokens.breakpoints.tablet}px`;

@@ -57,6 +57,7 @@ export const DEFAULT_DESIGN_TOKENS: DesignTokens = {
     sectionPaddingY: 75,
     containerPaddingX: 20,
     gapGrid: 24,
+    sectionMarginY: 0,
   },
 };
 
@@ -114,10 +115,10 @@ export type FontSizePresetName = keyof typeof FONT_SIZE_PRESETS;
  * Spacing density presets. Phase 2 picker.
  */
 export const SPACING_PRESETS = {
-  cozy:    { sectionPaddingY: 48,  containerPaddingX: 16, gapGrid: 16 },
-  default: { sectionPaddingY: 75,  containerPaddingX: 20, gapGrid: 24 },
-  airy:    { sectionPaddingY: 100, containerPaddingX: 24, gapGrid: 32 },
-  spacious:{ sectionPaddingY: 140, containerPaddingX: 32, gapGrid: 40 },
+  cozy:    { sectionPaddingY: 48,  containerPaddingX: 16, gapGrid: 16, sectionMarginY: 0 },
+  default: { sectionPaddingY: 75,  containerPaddingX: 20, gapGrid: 24, sectionMarginY: 0 },
+  airy:    { sectionPaddingY: 100, containerPaddingX: 24, gapGrid: 32, sectionMarginY: 16 },
+  spacious:{ sectionPaddingY: 140, containerPaddingX: 32, gapGrid: 40, sectionMarginY: 32 },
 } as const;
 
 export type SpacingPresetName = keyof typeof SPACING_PRESETS;

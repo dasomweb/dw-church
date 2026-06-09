@@ -35,18 +35,23 @@ import { useAuthStore } from '../../stores/auth';
 import { useToast } from '../../components';
 import { useSuperAdminTenant } from '../SuperAdminTenantLayout';
 
-type TabId = 'theme-set' | 'palette' | 'typography' | 'preset' | 'spacing' | 'custom';
+type TabId = 'theme-set' | 'palette' | 'typography' | 'spacing' | 'custom';
 
 // 2026-06-01 (Phase 10-α): "테마셋" 탭 추가. 슈퍼어드민의 일반적인 흐름은
 // "테마셋 선택" → 필요 시 가벼운 override (팔레트/타이포). 따라서 테마셋이
 // 첫 번째 탭이고 default. 나머지 5탭은 advanced — Pro+ 테넌트의 미세 조정
 // 또는 테마셋 개발 모드 (Phase 10-ε) 진입까지의 임시 surface.
+// 2026-06-09: removed the standalone '프리셋' tab — its font-size + spacing
+// density pickers were vestigial "old structure" (they edited tokens that
+// nothing rendered until the spacing-token bridge fix). The two quick-pick
+// rows now live inside the tabs they belong to: font-size → 타이포그래피,
+// spacing density → 여백 / 간격. So each control sits next to the fine-grained
+// inputs it presets.
 const TABS: { id: TabId; label: string }[] = [
   { id: 'theme-set',  label: '테마셋' },
   { id: 'palette',    label: '팔레트' },
   { id: 'typography', label: '타이포그래피' },
-  { id: 'preset',     label: '프리셋' },
-  { id: 'spacing',    label: '여백 / 둥근 모서리' },
+  { id: 'spacing',    label: '여백 / 간격' },
   { id: 'custom',     label: '커스텀 CSS' },
 ];
 
@@ -212,7 +217,6 @@ export default function TenantThemeEditor() {
       {tab === 'theme-set' && <ThemeSetTab onApplied={async () => { /* re-fetch tokens after apply */ const res = await fetch(`${baseUrl}/api/v1/theme/tokens`, { headers }); if (res.ok) { const b = await res.json() as { data: DesignTokens }; setTokens(b.data); setDirty(false); } }} />}
       {tab === 'palette' && <PaletteTab tokens={tokens} onChange={applyTokens} saving={saving} />}
       {tab === 'typography' && <TypographyTab tokens={tokens} onChange={applyTokens} saving={saving} />}
-      {tab === 'preset' && <PresetTab tokens={tokens} onChange={applyTokens} saving={saving} />}
       {tab === 'spacing' && <SpacingTab tokens={tokens} onChange={applyTokens} saving={saving} />}
       {tab === 'custom' && <CustomCssTab value={customCss} onChange={(v) => { setCustomCss(v); setCssDirty(true); }} onSave={() => saveCustomCss(customCss)} saving={saving} cssDirty={cssDirty} />}
     </div>
@@ -300,9 +304,35 @@ function TypographyTab({ tokens, onChange, saving }: { tokens: DesignTokens; onC
   };
 
   const scaleNames = Object.keys(SCALE_LABELS) as TypographyScaleName[];
+  const activeFontPreset = detectFontSizePreset(tokens);
+  const fontPresetKeys = Object.keys(FONT_SIZE_PRESETS) as FontSizePresetName[];
 
   return (
     <section className="space-y-6">
+      {/* Quick-pick: scales every heading + body in one click. Fine-tune
+          individual scales below. (Moved here from the old 프리셋 tab.) */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-1">글자 크기 프리셋</h3>
+        <p className="text-xs text-gray-500 mb-3">한 번에 제목·본문 크기를 조절합니다. 아래에서 개별 조정 가능.</p>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {fontPresetKeys.map((key) => {
+            const active = activeFontPreset === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                disabled={saving}
+                onClick={() => onChange(applyFontSizePreset(tokens, key))}
+                className={`text-left rounded-lg border p-3 transition-colors disabled:opacity-50 ${active ? 'border-blue-600 bg-blue-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}
+              >
+                <div className="text-sm font-semibold capitalize">{key}</div>
+                <div className="text-xs text-gray-500 mt-0.5">h1: {FONT_SIZE_PRESETS[key].h1.desktop}px</div>
+                {active && <div className="mt-1 text-[10px] text-blue-600 font-medium">현재 적용중</div>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
       <div>
         <h3 className="text-sm font-semibold text-gray-900 mb-3">폰트 패밀리</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -393,38 +423,31 @@ function TypographyTab({ tokens, onChange, saving }: { tokens: DesignTokens; onC
   );
 }
 
-// ─── Preset ──────────────────────────────────────────────────────────
-function PresetTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChange: (t: DesignTokens) => void; saving: boolean }) {
-  const activeFont = detectFontSizePreset(tokens);
-  const activeSpacing = detectSpacingPreset(tokens);
-  const fontKeys = Object.keys(FONT_SIZE_PRESETS) as FontSizePresetName[];
-  const spacingKeys = Object.keys(SPACING_PRESETS) as SpacingPresetName[];
+// ─── Spacing (여백 / 간격) & Radius ───────────────────────────────────
+// Spacing density quick-pick (moved here from the old 프리셋 tab) sits right
+// above the fine-grained px inputs it presets — section padding, container
+// padding, grid gap, and the section-to-section margin (theme-level margin).
+const SPACING_FIELDS: { key: keyof DesignTokens['spacing']; label: string; hint: string }[] = [
+  { key: 'sectionPaddingY',   label: '섹션 상하 여백', hint: '각 섹션 안쪽 위/아래 패딩' },
+  { key: 'containerPaddingX', label: '좌우 여백',     hint: '콘텐츠 좌/우 안쪽 패딩' },
+  { key: 'gapGrid',           label: '그리드 간격',   hint: '카드/그리드 칸 사이 간격' },
+  { key: 'sectionMarginY',    label: '섹션 사이 간격', hint: '섹션과 섹션 사이 바깥 여백(margin)' },
+];
 
+function SpacingTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChange: (t: DesignTokens) => void; saving: boolean }) {
+  const setSpacing = (k: keyof DesignTokens['spacing'], v: number) => {
+    onChange({ ...tokens, spacing: { ...tokens.spacing, [k]: v } });
+  };
+  const setRadius = (k: keyof DesignTokens['radius'], v: number) => {
+    onChange({ ...tokens, radius: { ...tokens.radius, [k]: v } });
+  };
+  const activeSpacing = detectSpacingPreset(tokens);
+  const spacingKeys = Object.keys(SPACING_PRESETS) as SpacingPresetName[];
   return (
-    <section className="space-y-8">
+    <section className="space-y-6">
       <div>
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">글자 크기 프리셋</h3>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {fontKeys.map((key) => {
-            const active = activeFont === key;
-            return (
-              <button
-                key={key}
-                type="button"
-                disabled={saving}
-                onClick={() => onChange(applyFontSizePreset(tokens, key))}
-                className={`text-left rounded-lg border p-3 transition-colors disabled:opacity-50 ${active ? 'border-blue-600 bg-blue-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}
-              >
-                <div className="text-sm font-semibold capitalize">{key}</div>
-                <div className="text-xs text-gray-500 mt-0.5">h1: {FONT_SIZE_PRESETS[key].h1.desktop}px</div>
-                {active && <div className="mt-1 text-[10px] text-blue-600 font-medium">현재 적용중</div>}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-      <div>
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">여백 밀도 프리셋</h3>
+        <h3 className="text-sm font-semibold text-gray-900 mb-1">여백 밀도 프리셋</h3>
+        <p className="text-xs text-gray-500 mb-3">전체 여백을 한 번에 조절합니다. 아래에서 항목별 미세 조정 가능.</p>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {spacingKeys.map((key) => {
             const active = activeSpacing === key;
@@ -444,33 +467,21 @@ function PresetTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChang
           })}
         </div>
       </div>
-    </section>
-  );
-}
-
-// ─── Spacing & Radius ────────────────────────────────────────────────
-function SpacingTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChange: (t: DesignTokens) => void; saving: boolean }) {
-  const setSpacing = (k: keyof DesignTokens['spacing'], v: number) => {
-    onChange({ ...tokens, spacing: { ...tokens.spacing, [k]: v } });
-  };
-  const setRadius = (k: keyof DesignTokens['radius'], v: number) => {
-    onChange({ ...tokens, radius: { ...tokens.radius, [k]: v } });
-  };
-  return (
-    <section className="space-y-6">
       <div>
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">여백</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {(['sectionPaddingY', 'containerPaddingX', 'gapGrid'] as const).map((k) => (
-            <label key={k} className="text-xs">
-              <span className="block font-medium text-gray-700 mb-1">{k}</span>
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">여백 / 간격 (px)</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {SPACING_FIELDS.map(({ key, label, hint }) => (
+            <label key={key} className="text-xs">
+              <span className="block font-medium text-gray-700 mb-1">{label}</span>
               <input
                 type="number"
-                value={tokens.spacing[k]}
-                onChange={(e) => setSpacing(k, Number(e.target.value) || tokens.spacing[k])}
+                min={0}
+                value={tokens.spacing[key] ?? 0}
+                onChange={(e) => setSpacing(key, Number(e.target.value) || 0)}
                 disabled={saving}
                 className="w-full px-2 py-1.5 border rounded disabled:opacity-50"
               />
+              <span className="block text-[10px] text-gray-400 mt-0.5">{hint}</span>
             </label>
           ))}
         </div>

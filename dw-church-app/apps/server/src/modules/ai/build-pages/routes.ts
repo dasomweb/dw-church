@@ -12,6 +12,7 @@ import { fillImage, prefetchUnsplash } from './placeholder-images.js';
 import {
   blockStyleSchema,
   legacyThemeToTokens,
+  SPACING_PRESETS,
   type BlockStyle,
   type LegacyThemeBlob,
 } from '@dw-church/design-tokens';
@@ -544,7 +545,32 @@ export function designSystemToThemeInput(
     colors: input.colors,
     fonts: input.fonts,
   };
-  input.tokensV2 = legacyThemeToTokens(legacyForConvert) as unknown as Parameters<typeof updateTheme>[1]['tokensV2'];
+  const tokensV2 = legacyThemeToTokens(legacyForConvert) as unknown as {
+    spacing?: { sectionPaddingY: number; containerPaddingX: number; gapGrid: number; sectionMarginY: number };
+  };
+
+  // ── Spacing (여백) — map the AI's generated spacing onto the tokens so it
+  // actually renders (the spacing tokens drive --section-py-* / --gap-grid).
+  // Accept either an explicit numeric spacing object or a density keyword.
+  // Without this the AI builder only ever set colors/fonts/typography and the
+  // generated padding/margin was silently dropped.
+  const rawSpacing = designSystem.spacing as
+    | { sectionPaddingY?: number; containerPaddingX?: number; gapGrid?: number; sectionMarginY?: number }
+    | undefined;
+  const density = (designSystem.density ?? designSystem.spacingDensity) as string | undefined;
+  if (tokensV2.spacing) {
+    if (density && density in SPACING_PRESETS) {
+      tokensV2.spacing = { ...SPACING_PRESETS[density as keyof typeof SPACING_PRESETS] };
+    }
+    if (rawSpacing) {
+      if (typeof rawSpacing.sectionPaddingY === 'number') tokensV2.spacing.sectionPaddingY = Math.round(rawSpacing.sectionPaddingY);
+      if (typeof rawSpacing.containerPaddingX === 'number') tokensV2.spacing.containerPaddingX = Math.round(rawSpacing.containerPaddingX);
+      if (typeof rawSpacing.gapGrid === 'number') tokensV2.spacing.gapGrid = Math.round(rawSpacing.gapGrid);
+      if (typeof rawSpacing.sectionMarginY === 'number') tokensV2.spacing.sectionMarginY = Math.round(rawSpacing.sectionMarginY);
+    }
+  }
+
+  input.tokensV2 = tokensV2 as unknown as Parameters<typeof updateTheme>[1]['tokensV2'];
 
   return input;
 }

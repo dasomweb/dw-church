@@ -125,7 +125,14 @@ export function SectionShell({
     .join(' ')
     .trim();
 
-  const mergedStyle: CSSProperties = { ...(style ?? {}), ...borderStyle };
+  // Theme-level vertical margin between sections comes from the design token
+  // (--section-my, default 0 → no change). Listed first so a caller's explicit
+  // marginBlock or a per-block BlockStyle margin still wins.
+  const mergedStyle: CSSProperties = {
+    marginBlock: 'var(--section-my, 0px)',
+    ...(style ?? {}),
+    ...borderStyle,
+  };
 
   // Inner content wrapper class — applyLayout merges contentWidth +
   // textAlign + default block-level container; without applyLayout the

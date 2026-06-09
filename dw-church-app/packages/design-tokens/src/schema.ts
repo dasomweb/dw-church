@@ -118,6 +118,10 @@ export const designTokensSchema = z.object({
     sectionPaddingY: z.number().int().nonnegative(),
     containerPaddingX: z.number().int().nonnegative(),
     gapGrid: z.number().int().nonnegative(),
+    // Theme-level vertical margin BETWEEN stacked sections. Default 0 (sections
+    // butt against each other; their own paddingY provides rhythm). `.default(0)`
+    // keeps already-stored token blobs — which predate this field — parseable.
+    sectionMarginY: z.number().int().nonnegative().default(0),
   }),
 });
 
