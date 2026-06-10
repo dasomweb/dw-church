@@ -45,7 +45,9 @@ async function main(): Promise<void> {
   // --- Plugins ---
   const { corsOptions } = await import('./cors.js');
   await app.register(cors, corsOptions);
-  await app.register(multipart, { limits: { fileSize: 20 * 1024 * 1024 } }); // 20MB max
+  // 25MB to match MAX_DOCUMENT_SIZE in files/service.ts — scanned 주보 PDFs
+  // can be 10–20MB. Images are still capped at 5MB by the service.
+  await app.register(multipart, { limits: { fileSize: 25 * 1024 * 1024 } });
   await app.register(rateLimit, rateLimitConfig);
 
   // --- Error handler ---

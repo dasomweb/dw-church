@@ -8,7 +8,7 @@ import {
   useDeleteBulletin,
   useDWChurchClient,
 } from '@dw-church/api-client';
-import { FormField, FormSection, FormRow, inputClass, selectClass, MultiImageUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
+import { FormField, FormSection, FormRow, inputClass, selectClass, MultiImageUpload, FileUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
 import { ContentMigrationButton } from '../components/ContentMigrationButton';
 import { useBulkDelete } from '../components/useBulkDelete';
 
@@ -29,6 +29,8 @@ export default function BulletinManagement() {
   const { showToast } = useToast();
   const apiClient = useDWChurchClient();
   const uploadImage = async (file: File): Promise<string> => (await apiClient!.uploadFile(file)).url;
+  // Same R2 upload, no resize — used for the 주보 PDF (and any non-image file).
+  const uploadFile = async (file: File): Promise<string> => (await apiClient!.uploadFile(file)).url;
   const { data, isLoading, error, refetch } = useBulletins(params);
   const createMutation = useCreateBulletin();
   const updateMutation = useUpdateBulletin();
@@ -136,13 +138,13 @@ export default function BulletinManagement() {
           </FormSection>
 
           <FormSection title="PDF 파일">
-            <FormField label="PDF URL" help="주보 PDF 파일의 URL을 입력하세요">
-              <input
-                {...register('pdfUrl')}
-                placeholder="https://example.com/bulletin.pdf"
-                className={inputClass}
-              />
-            </FormField>
+            <FileUpload
+              label="주보 PDF"
+              value={watch('pdfUrl') || ''}
+              onChange={(url) => setValue('pdfUrl', url)}
+              onUpload={uploadFile}
+              help="PDF 파일을 선택하면 자동으로 업로드됩니다. (최대 5MB)"
+            />
           </FormSection>
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-6 py-4 flex items-center justify-between">

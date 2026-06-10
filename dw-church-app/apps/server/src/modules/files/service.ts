@@ -8,8 +8,15 @@ import { AppError } from '../../middleware/error-handler.js';
 // ─── Upload Limits ──────────────────────────────────────────
 // Image resizing is done CLIENT-SIDE (browser Canvas API) to avoid
 // server CPU load and reduce upload traffic. Server only validates size.
-const MAX_FILE_SIZE = 5 * 1024 * 1024;        // 5MB per file (client should resize before upload)
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;        // 5MB per image (client resizes first)
+// Documents (주보 PDF 등) can't be client-resized and scanned bulletins are
+// commonly 10–20MB, so non-image files get a higher ceiling.
+const MAX_DOCUMENT_SIZE = 25 * 1024 * 1024;    // 25MB per non-image file
 const MAX_IMAGES_PER_UPLOAD = 20;              // Max images in a single album upload
+
+function maxSizeFor(contentType: string): number {
+  return contentType.startsWith('image/') ? MAX_IMAGE_SIZE : MAX_DOCUMENT_SIZE;
+}
 
 // ─── Upload ─────────────────────────────────────────────────
 
@@ -33,12 +40,13 @@ export async function upload(params: UploadParams) {
   const tags = params.tags ?? null;
   const description = params.description ?? null;
 
-  // File size check
-  if (buffer.length > MAX_FILE_SIZE) {
+  // File size check — images are held to a tighter cap than documents.
+  const maxSize = maxSizeFor(contentType);
+  if (buffer.length > maxSize) {
     throw new AppError(
       'FILE_TOO_LARGE',
       400,
-      `File size (${(buffer.length / 1024 / 1024).toFixed(1)}MB) exceeds the ${MAX_FILE_SIZE / 1024 / 1024}MB limit.`,
+      `File size (${(buffer.length / 1024 / 1024).toFixed(1)}MB) exceeds the ${maxSize / 1024 / 1024}MB limit.`,
     );
   }
 
