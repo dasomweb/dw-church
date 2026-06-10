@@ -47,10 +47,10 @@ export async function createColumn(schema: string, input: CreateColumnInput) {
      RETURNING *`,
     input.title,
     input.content ?? null,
-    input.top_image_url ?? null,
-    input.bottom_image_url ?? null,
-    input.youtube_url ?? null,
-    input.thumbnail_url ?? null,
+    input.topImageUrl ?? null,
+    input.bottomImageUrl ?? null,
+    input.youtubeUrl ?? null,
+    input.thumbnailUrl ?? null,
     input.status,
   );
   return rows[0];
@@ -63,10 +63,10 @@ export async function updateColumn(schema: string, id: string, input: UpdateColu
 
   if (input.title !== undefined) { setClauses.push(`title = $${paramIndex++}`); values.push(input.title); }
   if (input.content !== undefined) { setClauses.push(`content = $${paramIndex++}`); values.push(input.content); }
-  if (input.top_image_url !== undefined) { setClauses.push(`top_image_url = $${paramIndex++}`); values.push(input.top_image_url); }
-  if (input.bottom_image_url !== undefined) { setClauses.push(`bottom_image_url = $${paramIndex++}`); values.push(input.bottom_image_url); }
-  if (input.youtube_url !== undefined) { setClauses.push(`youtube_url = $${paramIndex++}`); values.push(input.youtube_url); }
-  if (input.thumbnail_url !== undefined) { setClauses.push(`thumbnail_url = $${paramIndex++}`); values.push(input.thumbnail_url); }
+  if (input.topImageUrl !== undefined) { setClauses.push(`top_image_url = $${paramIndex++}`); values.push(input.topImageUrl); }
+  if (input.bottomImageUrl !== undefined) { setClauses.push(`bottom_image_url = $${paramIndex++}`); values.push(input.bottomImageUrl); }
+  if (input.youtubeUrl !== undefined) { setClauses.push(`youtube_url = $${paramIndex++}`); values.push(input.youtubeUrl); }
+  if (input.thumbnailUrl !== undefined) { setClauses.push(`thumbnail_url = $${paramIndex++}`); values.push(input.thumbnailUrl); }
   if (input.status !== undefined) { setClauses.push(`status = $${paramIndex++}`); values.push(input.status); }
 
   if (setClauses.length === 0) return getColumn(schema, id);

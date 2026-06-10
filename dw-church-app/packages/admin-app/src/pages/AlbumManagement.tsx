@@ -7,6 +7,7 @@ import {
   useUpdateAlbum,
   useDeleteAlbum,
   useAlbumCategories,
+  useDWChurchClient,
 } from '@dw-church/api-client';
 import { FormField, FormSection, FormRow, inputClass, selectClass, MultiImageUpload, useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
 import { ContentMigrationButton } from '../components/ContentMigrationButton';
@@ -27,6 +28,8 @@ export default function AlbumManagement() {
   const [deleteTarget, setDeleteTarget] = useState<{id: string; name: string} | null>(null);
 
   const { showToast } = useToast();
+  const apiClient = useDWChurchClient();
+  const uploadImage = async (file: File): Promise<string> => (await apiClient!.uploadFile(file)).url;
   const { data, isLoading, error, refetch } = useAlbums(params);
   const { data: categories } = useAlbumCategories();
   const createMutation = useCreateAlbum();
@@ -123,6 +126,8 @@ export default function AlbumManagement() {
             <MultiImageUpload
               value={watch('images') || []}
               onChange={(urls) => setValue('images', urls)}
+              onUpload={uploadImage}
+              resize="content"
               max={15}
             />
           </FormSection>

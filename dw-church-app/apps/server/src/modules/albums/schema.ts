@@ -1,13 +1,16 @@
 import { z } from 'zod';
 
+// camelCase to match the api-client payload. The client sends categoryIds[]
+// (single-select today) → the service stores the first into category_id.
+// URLs are plain strings so empties don't 400.
 export const createAlbumSchema = z.object({
   title: z.string().min(1).max(300),
-  images: z.array(z.string().url()).optional().default([]),
-  youtube_url: z.string().url().max(500).optional().nullable(),
-  thumbnail_url: z.string().url().max(1000).optional().nullable(),
-  category_id: z.string().uuid().optional().nullable(),
+  images: z.array(z.string()).optional().default([]),
+  youtubeUrl: z.string().max(500).optional().nullable(),
+  thumbnailUrl: z.string().max(2000).optional().nullable(),
+  categoryIds: z.array(z.string()).optional().default([]),
   status: z.enum(['draft', 'published']).default('published'),
-});
+}).passthrough();
 
 export const updateAlbumSchema = createAlbumSchema.partial();
 

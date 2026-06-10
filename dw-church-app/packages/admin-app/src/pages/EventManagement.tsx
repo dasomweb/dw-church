@@ -6,6 +6,7 @@ import {
   useCreateEvent,
   useUpdateEvent,
   useDeleteEvent,
+  useDWChurchClient,
 } from '@dw-church/api-client';
 import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, ImageUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
 import { ContentMigrationButton } from '../components/ContentMigrationButton';
@@ -32,6 +33,8 @@ export default function EventManagement() {
   const [deleteTarget, setDeleteTarget] = useState<{id: string; name: string} | null>(null);
 
   const { showToast } = useToast();
+  const apiClient = useDWChurchClient();
+  const uploadImage = async (file: File): Promise<string> => (await apiClient!.uploadFile(file)).url;
   const { data, isLoading, error, refetch } = useEvents(params);
   const createMutation = useCreateEvent();
   const updateMutation = useUpdateEvent();
@@ -157,6 +160,8 @@ export default function EventManagement() {
               label="배경 이미지"
               value={watch('backgroundImageUrl') || ''}
               onChange={(url) => setValue('backgroundImageUrl', url)}
+              onUpload={uploadImage}
+              resize="background"
               aspectRatio="16/9"
             />
             <FormField label="YouTube URL">
@@ -166,6 +171,8 @@ export default function EventManagement() {
               label="썸네일"
               value={watch('thumbnailUrl') || ''}
               onChange={(url) => setValue('thumbnailUrl', url)}
+              onUpload={uploadImage}
+              resize="thumb"
             />
           </FormSection>
 

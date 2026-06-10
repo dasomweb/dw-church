@@ -47,15 +47,15 @@ export async function createEvent(schema: string, input: CreateEventInput) {
      VALUES ($1, $2, $3, $4, $5::date, $6, $7, $8, $9, $10, $11)
      RETURNING *`,
     input.title,
-    input.background_image_url ?? null,
-    input.image_only,
+    input.backgroundImageUrl ?? null,
+    input.imageOnly,
     input.department ?? null,
-    input.event_date ?? null,
+    input.eventDate || null,
     input.location ?? null,
-    input.link_url ?? null,
+    input.linkUrl ?? null,
     input.description ?? null,
-    input.youtube_url ?? null,
-    input.thumbnail_url ?? null,
+    input.youtubeUrl ?? null,
+    input.thumbnailUrl ?? null,
     input.status,
   );
   return rows[0];
@@ -67,15 +67,15 @@ export async function updateEvent(schema: string, id: string, input: UpdateEvent
   let paramIndex = 1;
 
   if (input.title !== undefined) { setClauses.push(`title = $${paramIndex++}`); values.push(input.title); }
-  if (input.background_image_url !== undefined) { setClauses.push(`background_image_url = $${paramIndex++}`); values.push(input.background_image_url); }
-  if (input.image_only !== undefined) { setClauses.push(`image_only = $${paramIndex++}`); values.push(input.image_only); }
+  if (input.backgroundImageUrl !== undefined) { setClauses.push(`background_image_url = $${paramIndex++}`); values.push(input.backgroundImageUrl); }
+  if (input.imageOnly !== undefined) { setClauses.push(`image_only = $${paramIndex++}`); values.push(input.imageOnly); }
   if (input.department !== undefined) { setClauses.push(`department = $${paramIndex++}`); values.push(input.department); }
-  if (input.event_date !== undefined) { setClauses.push(`event_date = $${paramIndex++}::date`); values.push(input.event_date); }
+  if (input.eventDate !== undefined) { setClauses.push(`event_date = $${paramIndex++}::date`); values.push(input.eventDate || null); }
   if (input.location !== undefined) { setClauses.push(`location = $${paramIndex++}`); values.push(input.location); }
-  if (input.link_url !== undefined) { setClauses.push(`link_url = $${paramIndex++}`); values.push(input.link_url); }
+  if (input.linkUrl !== undefined) { setClauses.push(`link_url = $${paramIndex++}`); values.push(input.linkUrl); }
   if (input.description !== undefined) { setClauses.push(`description = $${paramIndex++}`); values.push(input.description); }
-  if (input.youtube_url !== undefined) { setClauses.push(`youtube_url = $${paramIndex++}`); values.push(input.youtube_url); }
-  if (input.thumbnail_url !== undefined) { setClauses.push(`thumbnail_url = $${paramIndex++}`); values.push(input.thumbnail_url); }
+  if (input.youtubeUrl !== undefined) { setClauses.push(`youtube_url = $${paramIndex++}`); values.push(input.youtubeUrl); }
+  if (input.thumbnailUrl !== undefined) { setClauses.push(`thumbnail_url = $${paramIndex++}`); values.push(input.thumbnailUrl); }
   if (input.status !== undefined) { setClauses.push(`status = $${paramIndex++}`); values.push(input.status); }
 
   if (setClauses.length === 0) return getEvent(schema, id);

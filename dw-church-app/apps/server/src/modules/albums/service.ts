@@ -58,9 +58,9 @@ export async function createAlbum(schema: string, input: CreateAlbumInput) {
      RETURNING *`,
     input.title,
     JSON.stringify(input.images),
-    input.youtube_url ?? null,
-    input.thumbnail_url ?? null,
-    input.category_id ?? null,
+    input.youtubeUrl ?? null,
+    input.thumbnailUrl ?? null,
+    input.categoryIds?.[0] ?? null,
     input.status,
   );
   return rows[0];
@@ -73,9 +73,9 @@ export async function updateAlbum(schema: string, id: string, input: UpdateAlbum
 
   if (input.title !== undefined) { setClauses.push(`title = $${paramIndex++}`); values.push(input.title); }
   if (input.images !== undefined) { setClauses.push(`images = $${paramIndex++}::jsonb`); values.push(JSON.stringify(input.images)); }
-  if (input.youtube_url !== undefined) { setClauses.push(`youtube_url = $${paramIndex++}`); values.push(input.youtube_url); }
-  if (input.thumbnail_url !== undefined) { setClauses.push(`thumbnail_url = $${paramIndex++}`); values.push(input.thumbnail_url); }
-  if (input.category_id !== undefined) { setClauses.push(`category_id = $${paramIndex++}::uuid`); values.push(input.category_id); }
+  if (input.youtubeUrl !== undefined) { setClauses.push(`youtube_url = $${paramIndex++}`); values.push(input.youtubeUrl); }
+  if (input.thumbnailUrl !== undefined) { setClauses.push(`thumbnail_url = $${paramIndex++}`); values.push(input.thumbnailUrl); }
+  if (input.categoryIds !== undefined) { setClauses.push(`category_id = $${paramIndex++}::uuid`); values.push(input.categoryIds[0] ?? null); }
   if (input.status !== undefined) { setClauses.push(`status = $${paramIndex++}`); values.push(input.status); }
 
   if (setClauses.length === 0) return getAlbum(schema, id);

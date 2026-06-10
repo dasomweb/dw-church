@@ -6,6 +6,7 @@ import {
   useCreateBulletin,
   useUpdateBulletin,
   useDeleteBulletin,
+  useDWChurchClient,
 } from '@dw-church/api-client';
 import { FormField, FormSection, FormRow, inputClass, selectClass, MultiImageUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
 import { ContentMigrationButton } from '../components/ContentMigrationButton';
@@ -26,6 +27,8 @@ export default function BulletinManagement() {
   const [deleteTarget, setDeleteTarget] = useState<{id: string; name: string} | null>(null);
 
   const { showToast } = useToast();
+  const apiClient = useDWChurchClient();
+  const uploadImage = async (file: File): Promise<string> => (await apiClient!.uploadFile(file)).url;
   const { data, isLoading, error, refetch } = useBulletins(params);
   const createMutation = useCreateBulletin();
   const updateMutation = useUpdateBulletin();
@@ -125,6 +128,8 @@ export default function BulletinManagement() {
             <MultiImageUpload
               value={watch('images') || []}
               onChange={(urls) => setValue('images', urls)}
+              onUpload={uploadImage}
+              resize="content"
               max={10}
               label="주보 이미지"
             />

@@ -6,6 +6,7 @@ import {
   useCreateColumn,
   useUpdateColumn,
   useDeleteColumn,
+  useDWChurchClient,
 } from '@dw-church/api-client';
 import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, ImageUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
 import { ContentMigrationButton } from '../components/ContentMigrationButton';
@@ -28,6 +29,8 @@ export default function ColumnManagement() {
   const [deleteTarget, setDeleteTarget] = useState<{id: string; name: string} | null>(null);
 
   const { showToast } = useToast();
+  const apiClient = useDWChurchClient();
+  const uploadImage = async (file: File): Promise<string> => (await apiClient!.uploadFile(file)).url;
   const { data, isLoading, error, refetch } = useColumns(params);
   const createMutation = useCreateColumn();
   const updateMutation = useUpdateColumn();
@@ -123,11 +126,15 @@ export default function ColumnManagement() {
               <ImageUpload
                 value={watch('topImageUrl') || ''}
                 onChange={(url) => setValue('topImageUrl', url)}
+                onUpload={uploadImage}
+                resize="content"
                 label="상단 이미지"
               />
               <ImageUpload
                 value={watch('bottomImageUrl') || ''}
                 onChange={(url) => setValue('bottomImageUrl', url)}
+                onUpload={uploadImage}
+                resize="content"
                 label="하단 이미지"
               />
             </FormRow>
@@ -141,6 +148,8 @@ export default function ColumnManagement() {
             <ImageUpload
               value={watch('thumbnailUrl') || ''}
               onChange={(url) => setValue('thumbnailUrl', url)}
+              onUpload={uploadImage}
+              resize="thumb"
               label="썸네일"
             />
           </FormSection>

@@ -47,10 +47,10 @@ export async function createBulletin(schema: string, input: CreateBulletinInput)
      VALUES ($1, $2::date, $3, $4::jsonb, $5, $6)
      RETURNING *`,
     input.title,
-    input.bulletin_date,
-    input.pdf_url ?? null,
+    input.date,
+    input.pdfUrl ?? null,
     JSON.stringify(input.images),
-    input.thumbnail_url ?? null,
+    input.thumbnailUrl ?? null,
     input.status,
   );
   return rows[0];
@@ -62,10 +62,10 @@ export async function updateBulletin(schema: string, id: string, input: UpdateBu
   let paramIndex = 1;
 
   if (input.title !== undefined) { setClauses.push(`title = $${paramIndex++}`); values.push(input.title); }
-  if (input.bulletin_date !== undefined) { setClauses.push(`bulletin_date = $${paramIndex++}::date`); values.push(input.bulletin_date); }
-  if (input.pdf_url !== undefined) { setClauses.push(`pdf_url = $${paramIndex++}`); values.push(input.pdf_url); }
+  if (input.date !== undefined) { setClauses.push(`bulletin_date = $${paramIndex++}::date`); values.push(input.date); }
+  if (input.pdfUrl !== undefined) { setClauses.push(`pdf_url = $${paramIndex++}`); values.push(input.pdfUrl); }
   if (input.images !== undefined) { setClauses.push(`images = $${paramIndex++}::jsonb`); values.push(JSON.stringify(input.images)); }
-  if (input.thumbnail_url !== undefined) { setClauses.push(`thumbnail_url = $${paramIndex++}`); values.push(input.thumbnail_url); }
+  if (input.thumbnailUrl !== undefined) { setClauses.push(`thumbnail_url = $${paramIndex++}`); values.push(input.thumbnailUrl); }
   if (input.status !== undefined) { setClauses.push(`status = $${paramIndex++}`); values.push(input.status); }
 
   if (setClauses.length === 0) return getBulletin(schema, id);

@@ -7,6 +7,16 @@ function extractYoutubeThumbnail(url?: string | null): string | null {
   return match?.[1] ? `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg` : null;
 }
 
+/** The form's preacher dropdown sends the NAME; resolve it to a preacher id. */
+async function resolvePreacherId(schema: string, name?: string | null): Promise<string | null> {
+  if (!name || !name.trim()) return null;
+  const rows = await prisma.$queryRawUnsafe<{ id: string }[]>(
+    `SELECT id FROM "${schema}".preachers WHERE name = $1 LIMIT 1`,
+    name.trim(),
+  );
+  return rows[0]?.id ?? null;
+}
+
 interface ListParams {
   page: number;
   perPage: number;
@@ -150,34 +160,35 @@ export async function getRelatedSermons(schema: string, id: string, limit = 6) {
 }
 
 export async function createSermon(schema: string, input: CreateSermonInput) {
-  const { category_ids = [], ...data } = input;
+  const { categoryIds = [] } = input;
 
   // Auto-generate thumbnail from YouTube URL if not provided
-  const thumbnailUrl = data.thumbnail_url || extractYoutubeThumbnail(data.youtube_url) || null;
+  const thumbnailUrl = input.thumbnailUrl || extractYoutubeThumbnail(input.youtubeUrl) || null;
+  const preacherId = await resolvePreacherId(schema, input.preacher);
 
   const rows = await prisma.$queryRawUnsafe<[{ id: string }]>(
     `INSERT INTO "${schema}".sermons (title, scripture, youtube_url, sermon_date, thumbnail_url, preacher_id, status)
      VALUES ($1, $2, $3, $4, $5, $6::uuid, $7)
      RETURNING id`,
-    data.title,
-    data.scripture ?? null,
-    data.youtube_url ?? null,
-    new Date(data.sermon_date),
+    input.title,
+    input.scripture ?? null,
+    input.youtubeUrl ?? null,
+    new Date(input.date),
     thumbnailUrl,
-    data.preacher_id ?? null,
-    data.status ?? 'published',
+    preacherId,
+    input.status ?? 'published',
   );
 
   const sermonId = rows[0].id;
 
-  if (category_ids && category_ids.length > 0) {
-    const placeholders = category_ids
+  if (categoryIds && categoryIds.length > 0) {
+    const placeholders = categoryIds
       .map((_, i) => `($1::uuid, $${i + 2}::uuid)`)
       .join(', ');
     await prisma.$queryRawUnsafe(
       `INSERT INTO "${schema}".sermon_category_map (sermon_id, category_id) VALUES ${placeholders}`,
       sermonId,
-      ...category_ids,
+      ...categoryIds,
     );
   }
 
@@ -185,26 +196,29 @@ export async function createSermon(schema: string, input: CreateSermonInput) {
 }
 
 export async function updateSermon(schema: string, id: string, input: UpdateSermonInput) {
-  const { category_ids, ...data } = input;
+  const { categoryIds } = input;
 
   const setClauses: string[] = [];
   const values: unknown[] = [];
   let paramIndex = 1;
 
-  if (data.title !== undefined) { setClauses.push(`title = $${paramIndex++}`); values.push(data.title); }
-  if (data.scripture !== undefined) { setClauses.push(`scripture = $${paramIndex++}`); values.push(data.scripture); }
-  if (data.youtube_url !== undefined) {
-    setClauses.push(`youtube_url = $${paramIndex++}`); values.push(data.youtube_url);
+  if (input.title !== undefined) { setClauses.push(`title = $${paramIndex++}`); values.push(input.title); }
+  if (input.scripture !== undefined) { setClauses.push(`scripture = $${paramIndex++}`); values.push(input.scripture); }
+  if (input.youtubeUrl !== undefined) {
+    setClauses.push(`youtube_url = $${paramIndex++}`); values.push(input.youtubeUrl);
     // Auto-update thumbnail when YouTube URL changes (unless thumbnail explicitly provided)
-    if (data.thumbnail_url === undefined) {
-      const autoThumb = extractYoutubeThumbnail(data.youtube_url);
+    if (input.thumbnailUrl === undefined) {
+      const autoThumb = extractYoutubeThumbnail(input.youtubeUrl);
       if (autoThumb) { setClauses.push(`thumbnail_url = $${paramIndex++}`); values.push(autoThumb); }
     }
   }
-  if (data.sermon_date !== undefined) { setClauses.push(`sermon_date = $${paramIndex++}::date`); values.push(data.sermon_date); }
-  if (data.thumbnail_url !== undefined) { setClauses.push(`thumbnail_url = $${paramIndex++}`); values.push(data.thumbnail_url); }
-  if (data.preacher_id !== undefined) { setClauses.push(`preacher_id = $${paramIndex++}::uuid`); values.push(data.preacher_id); }
-  if (data.status !== undefined) { setClauses.push(`status = $${paramIndex++}`); values.push(data.status); }
+  if (input.date !== undefined) { setClauses.push(`sermon_date = $${paramIndex++}::date`); values.push(input.date); }
+  if (input.thumbnailUrl !== undefined) { setClauses.push(`thumbnail_url = $${paramIndex++}`); values.push(input.thumbnailUrl); }
+  if (input.preacher !== undefined) {
+    setClauses.push(`preacher_id = $${paramIndex++}::uuid`);
+    values.push(await resolvePreacherId(schema, input.preacher));
+  }
+  if (input.status !== undefined) { setClauses.push(`status = $${paramIndex++}`); values.push(input.status); }
 
   if (setClauses.length > 0) {
     setClauses.push(`updated_at = NOW()`);
@@ -215,19 +229,19 @@ export async function updateSermon(schema: string, id: string, input: UpdateSerm
     );
   }
 
-  if (category_ids !== undefined) {
+  if (categoryIds !== undefined) {
     await prisma.$queryRawUnsafe(
       `DELETE FROM "${schema}".sermon_category_map WHERE sermon_id = $1::uuid`,
       id,
     );
-    if (category_ids.length > 0) {
-      const placeholders = category_ids
+    if (categoryIds.length > 0) {
+      const placeholders = categoryIds
         .map((_, i) => `($1::uuid, $${i + 2}::uuid)`)
         .join(', ');
       await prisma.$queryRawUnsafe(
         `INSERT INTO "${schema}".sermon_category_map (sermon_id, category_id) VALUES ${placeholders}`,
         id,
-        ...category_ids,
+        ...categoryIds,
       );
     }
   }
