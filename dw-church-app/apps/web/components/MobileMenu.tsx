@@ -15,9 +15,17 @@ interface NavItem {
 
 interface MobileMenuProps {
   navItems: NavItem[];
+  /** Public base path for links — `/tenant/{slug}` on the bare platform host,
+   *  '' on a proxied custom domain / subdomain (see layout.tsx). */
+  basePath?: string;
 }
 
-export default function MobileMenu({ navItems }: MobileMenuProps) {
+export default function MobileMenu({ navItems, basePath = '' }: MobileMenuProps) {
+  const navHref = (item: { pageSlug?: string; externalUrl?: string }): string => {
+    if (item.externalUrl) return item.externalUrl;
+    if (!item.pageSlug || item.pageSlug === 'home') return basePath || '/';
+    return `${basePath}/${item.pageSlug}`;
+  };
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -168,7 +176,7 @@ export default function MobileMenu({ navItems }: MobileMenuProps) {
             {visibleItems.map((item) => (
               <li key={item.id}>
                 <Link
-                  href={item.externalUrl ?? (item.pageSlug ? `/${item.pageSlug}` : '#')}
+                  href={navHref(item)}
                   onClick={close}
                   className="block rounded-md px-3 py-3 text-base font-medium text-[var(--dw-text)] hover:bg-gray-100 hover:text-[var(--dw-primary)] transition-colors"
                 >

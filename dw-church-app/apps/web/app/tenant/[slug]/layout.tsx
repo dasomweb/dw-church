@@ -1,6 +1,7 @@
 import '@dw-church/blocks/styles.css';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { headers } from 'next/headers';
 import { getChurchSettings, getMenuItems, getTheme, getThemeTokens } from '@/lib/api';
 import MobileMenu from '@/components/MobileMenu';
 import { BrandTokensStyle } from '@/components/BrandTokensStyle';
@@ -167,8 +168,36 @@ export async function generateMetadata({ params }: TenantLayoutProps): Promise<M
 
 // ─── Component ───────────────────────────────────────────────
 
+// Bare platform hosts serve the storefront at `/tenant/{slug}/...` WITHOUT a
+// middleware rewrite, so nav links must carry the `/tenant/{slug}` prefix.
+// Custom domains + `{slug}.truelight.app` subdomains are rewritten to that
+// path internally, so on those the public URL is the domain root and links
+// must stay root-relative. Mirrors middleware.ts PLATFORM_HOSTS.
+const PLATFORM_HOSTS = new Set([
+  'truelight.app',
+  'www.truelight.app',
+  'customers.truelight.app',
+  'localhost:3002',
+]);
+
 export default async function TenantLayout({ children, params }: TenantLayoutProps) {
   const { slug } = await params;
+
+  // Determine the public base path for nav links. On the bare platform host
+  // (truelight.app/tenant/{slug}) links need the prefix or they 404; on a
+  // proxied custom domain / subdomain the URL is already the tenant root.
+  const hdrs = await headers();
+  const host = (hdrs.get('host') || '').toLowerCase();
+  const proxiedCustomDomain = !!hdrs.get('x-tenant-host');
+  const basePath = !proxiedCustomDomain && PLATFORM_HOSTS.has(host) ? `/tenant/${slug}` : '';
+  // Resolve a menu item to its href, scoped to the right base path. 'home' (or
+  // no slug) → the tenant root.
+  const navHref = (item: { pageSlug?: string; externalUrl?: string }): string => {
+    if (item.externalUrl) return item.externalUrl;
+    if (!item.pageSlug || item.pageSlug === 'home') return basePath || '/';
+    return `${basePath}/${item.pageSlug}`;
+  };
+  const homeHref = basePath || '/';
 
   let settings: ChurchSettings | null = null;
   let menuItems: MenuItem[] = [];
@@ -293,7 +322,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
           /* Centered header: logo above, nav below, both centered */
           <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
             <div className="flex flex-col items-center gap-3">
-              <Link href="/" className="flex items-center gap-2">
+              <Link href={homeHref} className="flex items-center gap-2">
                 {logoUrl ? (
                   <img src={logoUrl} alt={churchName} className="h-10 w-auto object-contain" />
                 ) : (
@@ -306,7 +335,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                 {sortedVisibleItems.map((item) => (
                   <div key={item.id} className="relative group">
                     <Link
-                      href={item.externalUrl ?? (item.pageSlug ? `/${item.pageSlug}` : '#')}
+                      href={navHref(item)}
                       className="text-sm font-medium transition-colors hover:opacity-80 py-2 inline-flex items-center gap-0.5"
                       style={{ color: navLinkColor }}
                     >
@@ -321,7 +350,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                           {item.children.map((child) => (
                             <Link
                               key={child.id}
-                              href={child.externalUrl ?? (child.pageSlug ? `/${child.pageSlug}` : '/')}
+                              href={navHref(child)}
                               className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[var(--dw-primary)] transition-colors"
                             >
                               {child.label}
@@ -335,13 +364,13 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
               </nav>
             </div>
             <div className="absolute right-4 top-4 sm:right-6 md:hidden">
-              <MobileMenu navItems={navItems} />
+              <MobileMenu navItems={navItems} basePath={basePath} />
             </div>
           </div>
         ) : (
           /* Default / transparent / dark header: left logo, right nav */
           <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
-            <Link href="/" className="flex items-center gap-2">
+            <Link href={homeHref} className="flex items-center gap-2">
               {logoUrl ? (
                 <img src={logoUrl} alt={churchName} className="h-10 w-auto object-contain" />
               ) : (
@@ -381,7 +410,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                 </div>
               ))}
             </nav>
-            <MobileMenu navItems={navItems} />
+            <MobileMenu navItems={navItems} basePath={basePath} />
           </div>
         )}
       </header>
