@@ -68,26 +68,28 @@ export async function RecentColumnsBlock({ props, slug }: RecentColumnsBlockProp
               <Link
                 key={id}
                 href={`/columns/${id}`}
-                className="group block overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-md transition-shadow"
+                className="group flex flex-col overflow-hidden rounded-2xl border border-black/[0.06] bg-white shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
               >
-                {imageUrl && (
-                  <div className="aspect-video overflow-hidden">
+                <div className="aspect-video overflow-hidden bg-gray-100">
+                  {imageUrl ? (
                     <img
                       src={imageUrl}
                       alt={colTitle}
-                      className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                  </div>
-                )}
-                <div className="p-4">
-                  <h3 className="font-bold font-heading text-base line-clamp-2 group-hover:text-[var(--dw-primary)] transition-colors">
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-white/90 text-3xl" style={{ background: 'linear-gradient(135deg, var(--dw-primary, #2563eb), var(--dw-secondary, #64748b))' }}>✍️</div>
+                  )}
+                </div>
+                <div className="p-5 flex flex-col flex-1">
+                  <h3 className="font-bold font-heading text-base leading-snug line-clamp-2 group-hover:text-[var(--dw-primary)] transition-colors">
                     {colTitle}
                   </h3>
                   {content && (
-                    <p className="mt-2 text-sm text-gray-500 line-clamp-2">{truncate(content, 100)}</p>
+                    <p className="mt-2 text-sm text-gray-500 leading-relaxed line-clamp-2">{truncate(content, 110)}</p>
                   )}
                   {date && (
-                    <p className="mt-2 text-xs text-gray-400">{formatDate(date)}</p>
+                    <p className="mt-3 pt-3 border-t border-black/[0.05] text-xs text-gray-400">{formatDate(date)}</p>
                   )}
                 </div>
               </Link>

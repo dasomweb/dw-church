@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 
 interface RichEditorProps {
   value: string;
@@ -9,6 +9,19 @@ interface RichEditorProps {
 
 export function RichEditor({ value, onChange, placeholder = '내용을 입력하세요...', minHeight = '200px' }: RichEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
+
+  // Sync the external `value` into the contentEditable IMPERATIVELY (not via a
+  // controlled dangerouslySetInnerHTML, which re-set innerHTML on every
+  // keystroke and reset the caret to the top — pressing Enter jumped to the
+  // start). Skip while the editor is focused so the user's own edits never
+  // clobber the caret; only sync for initial load / external/programmatic
+  // changes.
+  useEffect(() => {
+    const el = editorRef.current;
+    if (!el) return;
+    if (document.activeElement === el) return; // user is typing — leave it alone
+    if (el.innerHTML !== (value || '')) el.innerHTML = value || '';
+  }, [value]);
 
   const exec = useCallback((cmd: string, val?: string) => {
     document.execCommand(cmd, false, val);
@@ -91,7 +104,6 @@ export function RichEditor({ value, onChange, placeholder = '내용을 입력하
         suppressContentEditableWarning
         onInput={handleInput}
         onPaste={handlePaste}
-        dangerouslySetInnerHTML={{ __html: value }}
         className="p-4 outline-none prose prose-sm max-w-none"
         style={{ minHeight }}
         data-placeholder={placeholder}

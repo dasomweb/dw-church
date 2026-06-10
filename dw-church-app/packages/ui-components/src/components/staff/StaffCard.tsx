@@ -137,7 +137,7 @@ export function StaffCard({ staff, onClick, className = '', photoStyle = 'rect',
 
   return (
     <article
-      className={`group overflow-hidden rounded-xl bg-white transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.1)] ${
+      className={`group overflow-hidden rounded-2xl border border-black/[0.06] bg-white shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] ${
         onClick ? 'cursor-pointer' : ''
       } ${className}`}
       onClick={() => onClick?.(staff.id)}
@@ -179,9 +179,9 @@ export function StaffCard({ staff, onClick, className = '', photoStyle = 'rect',
           </h3>
         )}
 
-        {/* Role */}
+        {/* Role — accented so the title/role hierarchy reads clearly */}
         {show('role') && staff.role && (
-          <p className="mt-1 text-[13px] text-gray-500">{staff.role}</p>
+          <p className="mt-1 text-[13px] font-semibold text-primary">{staff.role}</p>
         )}
 
         {/* Department */}
