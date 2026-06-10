@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useAuthStore } from '../stores/auth';
 import { useToast } from '../components';
 import { AIBuilderModal } from '../components/super-admin/AIBuilderModal';
@@ -2400,40 +2400,58 @@ function GalleryUploadModal({
   token?: string;
 }) {
   const { showToast } = useToast();
-  const [file, setFile] = useState<File | null>(null);
-  const [title, setTitle] = useState('');
-  const [category, setCategory] = useState(defaultCategory);
+  const [files, setFiles] = useState<File[]>([]);
+  // Default to the category the operator was viewing; 'AI 자동 분류' (auto)
+  // lets the server vision-classify each image instead.
+  const [category, setCategory] = useState(defaultCategory || 'auto');
   const [tags, setTags] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState({ done: 0, total: 0 });
+  const [dragOver, setDragOver] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const addFiles = (incoming: FileList | File[]) => {
+    const imgs = Array.from(incoming).filter((f) => f.type.startsWith('image/'));
+    if (imgs.length === 0) return;
+    setFiles((prev) => [...prev, ...imgs]);
+  };
+  const removeAt = (i: number) => setFiles((prev) => prev.filter((_, x) => x !== i));
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file) { showToast('error', '파일을 선택하세요'); return; }
+    if (files.length === 0) { showToast('error', '이미지를 추가하세요'); return; }
     setUploading(true);
-    try {
-      const qs = new URLSearchParams({
-        title: title || file.name,
-        category,
-        ...(tags.trim() ? { tags } : {}),
-      }).toString();
-      const body = new FormData();
-      body.append('file', file);
-      const res = await fetch(`/api/v1/admin/shared-images/upload?${qs}`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token || ''}` },
-        body,
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error((err as any)?.error?.message || '업로드 실패');
-      }
-      showToast('success', '업로드 완료');
-      onUploaded();
-    } catch (err) {
-      showToast('error', err instanceof Error ? err.message : '업로드 실패');
-    } finally {
-      setUploading(false);
+    setProgress({ done: 0, total: files.length });
+    let succeeded = 0;
+    for (const file of files) {
+      try {
+        // Shared-library images are reused across tenants → resize to 1920px
+        // JPEG before upload. SVG/PDF/animated pass through; >20MB falls back.
+        let toUpload: File = file;
+        try {
+          const resized = await resizeImage(file, 'background');
+          toUpload = resized.file;
+        } catch { /* keep original */ }
+        const qs = new URLSearchParams({
+          title: file.name,
+          category,
+          ...(tags.trim() ? { tags } : {}),
+        }).toString();
+        const body = new FormData();
+        body.append('file', toUpload);
+        const res = await fetch(`/api/v1/admin/shared-images/upload?${qs}`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token || ''}` },
+          body,
+        });
+        if (res.ok) succeeded++;
+      } catch { /* count as failure */ }
+      setProgress((p) => ({ ...p, done: p.done + 1 }));
     }
+    setUploading(false);
+    showToast(succeeded === files.length ? 'success' : 'error',
+      `${succeeded}/${files.length}장 업로드 완료${category === 'auto' ? ' (AI 자동 분류)' : ''}`);
+    onUploaded();
   };
 
   return (
@@ -2443,20 +2461,49 @@ function GalleryUploadModal({
           <h3 className="text-base font-bold">공용 이미지 업로드</h3>
           <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
         </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">파일 *</label>
-          <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} required />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">제목</label>
+
+        {/* Multi-file drag & drop dropzone */}
+        <div
+          onClick={() => inputRef.current?.click()}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragOver(false);
+            if (e.dataTransfer.files.length > 0) addFiles(e.dataTransfer.files);
+          }}
+          className={`cursor-pointer rounded-xl border-2 border-dashed px-4 py-8 text-center transition-colors ${
+            dragOver ? 'border-indigo-500 bg-indigo-50/60' : 'border-gray-300 hover:border-indigo-400 hover:bg-gray-50'
+          }`}
+        >
+          <div className="text-2xl">🖼️</div>
+          <p className="mt-1 text-sm font-medium text-gray-700">여기로 여러 이미지를 드래그&드롭</p>
+          <p className="text-xs text-gray-400">또는 클릭해서 선택 (여러 장 선택 가능)</p>
           <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="예: 봄꽃이 핀 공원"
-            className="w-full border rounded-lg px-3 py-1.5 text-sm"
+            ref={inputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ''; }}
           />
         </div>
+
+        {/* Selected files */}
+        {files.length > 0 && (
+          <div className="max-h-40 overflow-y-auto rounded-lg border border-gray-100 divide-y">
+            {files.map((f, i) => (
+              <div key={i} className="flex items-center justify-between px-3 py-1.5 text-xs">
+                <span className="truncate text-gray-700">{f.name}</span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-gray-400">{(f.size / 1024 / 1024).toFixed(1)}MB</span>
+                  <button type="button" onClick={() => removeAt(i)} className="text-red-400 hover:text-red-600">×</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">카테고리</label>
           <select
@@ -2464,6 +2511,7 @@ function GalleryUploadModal({
             onChange={(e) => setCategory(e.target.value)}
             className="w-full border rounded-lg px-3 py-1.5 text-sm"
           >
+            <option value="auto">AI 자동 분류</option>
             {GALLERY_CATEGORIES.map((c) => (
               <option key={c.id} value={c.id}>{c.label}</option>
             ))}
@@ -2482,10 +2530,10 @@ function GalleryUploadModal({
         <div className="flex gap-2 pt-2">
           <button
             type="submit"
-            disabled={uploading || !file}
+            disabled={uploading || files.length === 0}
             className="flex-1 bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
           >
-            {uploading ? '업로드 중...' : '업로드'}
+            {uploading ? `업로드 중... ${progress.done}/${progress.total}` : `${files.length > 0 ? files.length + '장 ' : ''}업로드`}
           </button>
           <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200">
             취소
