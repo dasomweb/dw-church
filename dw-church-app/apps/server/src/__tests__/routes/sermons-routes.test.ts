@@ -113,7 +113,7 @@ describe('POST /api/v1/sermons', () => {
       method: 'POST',
       url: '/api/v1/sermons',
       headers: { authorization: `Bearer ${makeToken()}` },
-      payload: { title: '새 설교', sermon_date: '2026-04-06', status: 'published' },
+      payload: { title: '새 설교', date: '2026-04-06', status: 'published' },
     });
 
     expect(res.statusCode).toBe(201);
@@ -124,7 +124,7 @@ describe('POST /api/v1/sermons', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/v1/sermons',
-      payload: { title: 'Test', sermon_date: '2026-01-01' },
+      payload: { title: 'Test', date: '2026-01-01' },
     });
     expect(res.statusCode).toBe(401);
   });
@@ -134,7 +134,7 @@ describe('POST /api/v1/sermons', () => {
       method: 'POST',
       url: '/api/v1/sermons',
       headers: { authorization: `Bearer ${makeToken()}` },
-      payload: { sermon_date: '2026-01-01' },
+      payload: { date: '2026-01-01' },
     });
     expect(res.statusCode).toBe(400);
   });
@@ -144,7 +144,7 @@ describe('POST /api/v1/sermons', () => {
       method: 'POST',
       url: '/api/v1/sermons',
       headers: { authorization: `Bearer ${makeToken()}` },
-      payload: { title: 'Test', sermon_date: 'Jan 1 2026' },
+      payload: { title: 'Test', date: 'Jan 1 2026' },
     });
     expect(res.statusCode).toBe(400);
   });

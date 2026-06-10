@@ -11,16 +11,16 @@ describe('createBannerSchema', () => {
   it('accepts full input', () => {
     expect(createBannerSchema.safeParse({
       ...valid,
-      pc_image_url: 'https://example.com/pc.jpg',
-      mobile_image_url: 'https://example.com/mobile.jpg',
-      sub_image_url: 'https://example.com/sub.jpg',
-      link_url: 'https://example.com/event',
-      link_target: '_blank',
-      start_date: '2026-04-01',
-      end_date: '2026-04-30',
-      text_overlay: { heading: '부활절', subheading: '함께 기쁨을' },
+      pcImageUrl: 'https://example.com/pc.jpg',
+      mobileImageUrl: 'https://example.com/mobile.jpg',
+      subImageUrl: 'https://example.com/sub.jpg',
+      linkUrl: 'https://example.com/event',
+      linkTarget: '_blank',
+      startDate: '2026-04-01',
+      endDate: '2026-04-30',
+      textOverlay: { heading: '부활절', subheading: '함께 기쁨을' },
       category: 'main',
-      sort_order: 1,
+      sortOrder: 1,
       status: 'published',
     }).success).toBe(true);
   });
@@ -29,8 +29,9 @@ describe('createBannerSchema', () => {
     expect(createBannerSchema.safeParse({ title: '' }).success).toBe(false);
   });
 
-  it('rejects invalid link_target', () => {
-    expect(createBannerSchema.safeParse({ ...valid, link_target: '_parent' }).success).toBe(false);
+  it('rejects invalid linkTarget', () => {
+    // linkTarget remains an enum (_self | _blank).
+    expect(createBannerSchema.safeParse({ ...valid, linkTarget: '_parent' }).success).toBe(false);
   });
 
   it('rejects invalid category', () => {
@@ -38,12 +39,13 @@ describe('createBannerSchema', () => {
   });
 
   it('rejects invalid date format', () => {
-    expect(createBannerSchema.safeParse({ ...valid, start_date: 'April 1' }).success).toBe(false);
+    // startDate is still a strict YYYY-MM-DD regex string.
+    expect(createBannerSchema.safeParse({ ...valid, startDate: 'April 1' }).success).toBe(false);
   });
 
-  it('defaults link_target to _self', () => {
+  it('defaults linkTarget to _self', () => {
     const r = createBannerSchema.safeParse(valid);
-    if (r.success) expect(r.data.link_target).toBe('_self');
+    if (r.success) expect(r.data.linkTarget).toBe('_self');
   });
 
   it('defaults category to main', () => {
@@ -58,14 +60,14 @@ describe('createBannerSchema', () => {
 
   it('allows null optional fields', () => {
     expect(createBannerSchema.safeParse({
-      ...valid, pc_image_url: null, mobile_image_url: null, link_url: null, start_date: null, end_date: null, text_overlay: null,
+      ...valid, pcImageUrl: null, mobileImageUrl: null, linkUrl: null, startDate: null, endDate: null, textOverlay: null,
     }).success).toBe(true);
   });
 });
 
 describe('updateBannerSchema', () => {
   it('accepts partial', () => {
-    expect(updateBannerSchema.safeParse({ sort_order: 2 }).success).toBe(true);
+    expect(updateBannerSchema.safeParse({ sortOrder: 2 }).success).toBe(true);
   });
   it('accepts empty', () => {
     expect(updateBannerSchema.safeParse({}).success).toBe(true);

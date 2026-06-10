@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { createBulletinSchema, updateBulletinSchema } from '../../modules/bulletins/schema.js';
 
 describe('createBulletinSchema', () => {
-  const valid = { title: '2024년 1월 주보', bulletin_date: '2024-01-07' };
+  const valid = { title: '2024년 1월 주보', date: '2024-01-07' };
 
   it('accepts valid input', () => {
     expect(createBulletinSchema.safeParse(valid).success).toBe(true);
@@ -11,9 +11,9 @@ describe('createBulletinSchema', () => {
   it('accepts full input with images', () => {
     const result = createBulletinSchema.safeParse({
       ...valid,
-      pdf_url: 'https://example.com/bulletin.pdf',
+      pdfUrl: 'https://example.com/bulletin.pdf',
       images: ['https://example.com/img1.jpg'],
-      thumbnail_url: 'https://example.com/thumb.jpg',
+      thumbnailUrl: 'https://example.com/thumb.jpg',
       status: 'draft',
     });
     expect(result.success).toBe(true);
@@ -24,7 +24,12 @@ describe('createBulletinSchema', () => {
   });
 
   it('rejects invalid date', () => {
-    expect(createBulletinSchema.safeParse({ ...valid, bulletin_date: 'Jan 7' }).success).toBe(false);
+    expect(createBulletinSchema.safeParse({ ...valid, date: 'Jan 7' }).success).toBe(false);
+  });
+
+  it('accepts lenient (non-.url) string URL fields', () => {
+    // pdfUrl/thumbnailUrl are plain max-length strings, not .url() validated
+    expect(createBulletinSchema.safeParse({ ...valid, pdfUrl: 'not-a-url', thumbnailUrl: '' }).success).toBe(true);
   });
 
   it('defaults status to published', () => {

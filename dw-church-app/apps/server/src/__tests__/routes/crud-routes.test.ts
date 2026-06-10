@@ -103,7 +103,7 @@ describe('Bulletins', () => {
     expect(res.statusCode).toBe(200);
   });
   it('POST → 201', async () => {
-    const res = await app.inject({ method: 'POST', url: '/api/v1/bulletins', headers: AUTH, payload: { title: '주보', bulletin_date: '2026-04-09' } });
+    const res = await app.inject({ method: 'POST', url: '/api/v1/bulletins', headers: AUTH, payload: { title: '주보', date: '2026-04-09' } });
     expect(res.statusCode).toBe(201);
   });
   it('POST no auth → 401', async () => {
@@ -154,8 +154,10 @@ describe('Albums', () => {
     const res = await app.inject({ method: 'POST', url: '/api/v1/albums', headers: AUTH, payload: { title: '앨범' } });
     expect(res.statusCode).toBe(201);
   });
-  it('POST invalid image → 400', async () => {
-    const res = await app.inject({ method: 'POST', url: '/api/v1/albums', headers: AUTH, payload: { title: 'X', images: ['bad'] } });
+  it('POST missing title → 400', async () => {
+    // URL/image fields are lenient plain strings now; the only validation
+    // rejection left for create is a missing required `title`.
+    const res = await app.inject({ method: 'POST', url: '/api/v1/albums', headers: AUTH, payload: { images: ['bad'] } });
     expect(res.statusCode).toBe(400);
   });
 });
@@ -170,8 +172,10 @@ describe('Events', () => {
     const res = await app.inject({ method: 'POST', url: '/api/v1/events', headers: AUTH, payload: { title: '행사' } });
     expect(res.statusCode).toBe(201);
   });
-  it('POST invalid date → 400', async () => {
-    const res = await app.inject({ method: 'POST', url: '/api/v1/events', headers: AUTH, payload: { title: 'X', event_date: 'bad' } });
+  it('POST missing title → 400', async () => {
+    // eventDate is free-form now (e.g. "2026-03-22 10:00"), so a bad date no
+    // longer 400s; the remaining create rejection is a missing required `title`.
+    const res = await app.inject({ method: 'POST', url: '/api/v1/events', headers: AUTH, payload: { eventDate: 'bad' } });
     expect(res.statusCode).toBe(400);
   });
   it('PUT missing → 404', async () => {

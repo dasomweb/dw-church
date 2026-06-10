@@ -16,10 +16,10 @@ describe('createStaffSchema', () => {
       email: 'pastor@grace.church',
       phone: '770-555-1234',
       bio: '총신대학교 신학대학원 졸업.',
-      photo_url: 'https://example.com/photo.jpg',
-      sns_links: { youtube: 'https://youtube.com/@test', instagram: 'https://instagram.com/test' },
-      sort_order: 0,
-      is_active: true,
+      photoUrl: 'https://example.com/photo.jpg',
+      snsLinks: { youtube: 'https://youtube.com/@test', instagram: 'https://instagram.com/test' },
+      order: 0,
+      isActive: true,
     }).success).toBe(true);
   });
 
@@ -27,26 +27,33 @@ describe('createStaffSchema', () => {
     expect(createStaffSchema.safeParse({ name: '' }).success).toBe(false);
   });
 
+  it('rejects missing name', () => {
+    expect(createStaffSchema.safeParse({ role: '부목사' }).success).toBe(false);
+  });
+
   it('rejects name over 200 chars', () => {
     expect(createStaffSchema.safeParse({ name: 'a'.repeat(201) }).success).toBe(false);
   });
 
-  it('rejects invalid email', () => {
-    expect(createStaffSchema.safeParse({ ...valid, email: 'not-email' }).success).toBe(false);
+  it('accepts lenient (non-.email) email string', () => {
+    // email is a plain string (not .email()) so a staff member with no real
+    // email or an unusual value doesn't 400.
+    expect(createStaffSchema.safeParse({ ...valid, email: 'not-email' }).success).toBe(true);
   });
 
-  it('rejects invalid sns_links URL', () => {
-    expect(createStaffSchema.safeParse({ ...valid, sns_links: { youtube: 'not-url' } }).success).toBe(false);
+  it('accepts lenient (non-URL) snsLinks strings', () => {
+    // snsLinks values are plain optional strings, not .url() validated.
+    expect(createStaffSchema.safeParse({ ...valid, snsLinks: { youtube: 'not-url' } }).success).toBe(true);
   });
 
-  it('defaults sort_order to 0', () => {
+  it('defaults order to 0', () => {
     const r = createStaffSchema.safeParse(valid);
-    if (r.success) expect(r.data.sort_order).toBe(0);
+    if (r.success) expect(r.data.order).toBe(0);
   });
 
-  it('defaults is_active to true', () => {
+  it('defaults isActive to true', () => {
     const r = createStaffSchema.safeParse(valid);
-    if (r.success) expect(r.data.is_active).toBe(true);
+    if (r.success) expect(r.data.isActive).toBe(true);
   });
 
   it('allows null optional fields', () => {

@@ -11,15 +11,15 @@ describe('createEventSchema', () => {
   it('accepts full input', () => {
     expect(createEventSchema.safeParse({
       ...valid,
-      background_image_url: 'https://example.com/img.jpg',
-      image_only: false,
+      backgroundImageUrl: 'https://example.com/img.jpg',
+      imageOnly: false,
       department: '예배부',
-      event_date: '2026-04-20',
+      eventDate: '2026-04-20',
       location: '본당',
-      link_url: 'https://example.com',
+      linkUrl: 'https://example.com',
       description: '부활의 기쁨을 함께 나누는 특별예배입니다.',
-      youtube_url: 'https://www.youtube.com/watch?v=abc',
-      thumbnail_url: 'https://example.com/thumb.jpg',
+      youtubeUrl: 'https://www.youtube.com/watch?v=abc',
+      thumbnailUrl: 'https://example.com/thumb.jpg',
       status: 'draft',
     }).success).toBe(true);
   });
@@ -28,13 +28,15 @@ describe('createEventSchema', () => {
     expect(createEventSchema.safeParse({ title: '' }).success).toBe(false);
   });
 
-  it('rejects invalid date format', () => {
-    expect(createEventSchema.safeParse({ ...valid, event_date: 'April 20' }).success).toBe(false);
+  it('accepts free-form eventDate string', () => {
+    // eventDate is free-form (max 100), e.g. "2026-03-22 10:00" — no strict regex
+    expect(createEventSchema.safeParse({ ...valid, eventDate: '2026-03-22 10:00' }).success).toBe(true);
+    expect(createEventSchema.safeParse({ ...valid, eventDate: 'April 20' }).success).toBe(true);
   });
 
-  it('defaults image_only to false', () => {
+  it('defaults imageOnly to false', () => {
     const r = createEventSchema.safeParse(valid);
-    if (r.success) expect(r.data.image_only).toBe(false);
+    if (r.success) expect(r.data.imageOnly).toBe(false);
   });
 
   it('defaults status to published', () => {
@@ -44,7 +46,7 @@ describe('createEventSchema', () => {
 
   it('allows null optional fields', () => {
     expect(createEventSchema.safeParse({
-      ...valid, background_image_url: null, department: null, event_date: null, location: null,
+      ...valid, backgroundImageUrl: null, department: null, eventDate: null, location: null,
     }).success).toBe(true);
   });
 });

@@ -12,9 +12,9 @@ describe('createAlbumSchema', () => {
     expect(createAlbumSchema.safeParse({
       ...valid,
       images: ['https://example.com/1.jpg', 'https://example.com/2.jpg'],
-      youtube_url: 'https://www.youtube.com/watch?v=abc',
-      thumbnail_url: 'https://example.com/thumb.jpg',
-      category_id: '550e8400-e29b-41d4-a716-446655440000',
+      youtubeUrl: 'https://www.youtube.com/watch?v=abc',
+      thumbnailUrl: 'https://example.com/thumb.jpg',
+      categoryIds: ['550e8400-e29b-41d4-a716-446655440000'],
       status: 'draft',
     }).success).toBe(true);
   });
@@ -23,17 +23,24 @@ describe('createAlbumSchema', () => {
     expect(createAlbumSchema.safeParse({ title: '' }).success).toBe(false);
   });
 
-  it('rejects invalid image URL in array', () => {
-    expect(createAlbumSchema.safeParse({ ...valid, images: ['not-url'] }).success).toBe(false);
+  it('accepts lenient (non-URL) image strings', () => {
+    // URLs are plain strings (not .url()) so empty/odd values don't 400.
+    expect(createAlbumSchema.safeParse({ ...valid, images: ['not-url'] }).success).toBe(true);
   });
 
-  it('rejects invalid category_id', () => {
-    expect(createAlbumSchema.safeParse({ ...valid, category_id: 'not-uuid' }).success).toBe(false);
+  it('accepts arbitrary categoryIds strings', () => {
+    // categoryIds are plain strings (not .uuid()) — lenient by design.
+    expect(createAlbumSchema.safeParse({ ...valid, categoryIds: ['not-uuid'] }).success).toBe(true);
   });
 
   it('defaults images to empty array', () => {
     const r = createAlbumSchema.safeParse(valid);
     if (r.success) expect(r.data.images).toEqual([]);
+  });
+
+  it('defaults categoryIds to empty array', () => {
+    const r = createAlbumSchema.safeParse(valid);
+    if (r.success) expect(r.data.categoryIds).toEqual([]);
   });
 
   it('defaults status to published', () => {

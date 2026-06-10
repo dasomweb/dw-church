@@ -169,7 +169,7 @@ describe('Service Errors', () => {
     const res = await app.inject({
       method: 'POST', url: '/api/v1/sermons',
       headers: { authorization: `Bearer ${makeToken()}` },
-      payload: { title: 'Test', sermon_date: '2026-01-01' },
+      payload: { title: 'Test', date: '2026-01-01' },
     });
     expect(res.statusCode).toBe(500);
   });

@@ -12,10 +12,10 @@ describe('createColumnSchema', () => {
     expect(createColumnSchema.safeParse({
       ...valid,
       content: '따스한 봄바람이 불어오는 계절입니다.',
-      top_image_url: 'https://example.com/img.jpg',
-      bottom_image_url: 'https://example.com/img2.jpg',
-      youtube_url: 'https://www.youtube.com/watch?v=abc',
-      thumbnail_url: 'https://example.com/thumb.jpg',
+      topImageUrl: 'https://example.com/img.jpg',
+      bottomImageUrl: 'https://example.com/img2.jpg',
+      youtubeUrl: 'https://www.youtube.com/watch?v=abc',
+      thumbnailUrl: 'https://example.com/thumb.jpg',
       status: 'draft',
     }).success).toBe(true);
   });
@@ -24,8 +24,13 @@ describe('createColumnSchema', () => {
     expect(createColumnSchema.safeParse({ title: '' }).success).toBe(false);
   });
 
-  it('rejects invalid URL', () => {
-    expect(createColumnSchema.safeParse({ ...valid, youtube_url: 'not-url' }).success).toBe(false);
+  it('rejects missing title', () => {
+    expect(createColumnSchema.safeParse({ content: 'no title here' }).success).toBe(false);
+  });
+
+  it('accepts lenient (non-.url) youtubeUrl string', () => {
+    // youtubeUrl is a plain max-length string, not .url() validated
+    expect(createColumnSchema.safeParse({ ...valid, youtubeUrl: 'not-url' }).success).toBe(true);
   });
 
   it('defaults status to published', () => {
@@ -34,7 +39,7 @@ describe('createColumnSchema', () => {
   });
 
   it('allows null optional fields', () => {
-    expect(createColumnSchema.safeParse({ ...valid, content: null, top_image_url: null }).success).toBe(true);
+    expect(createColumnSchema.safeParse({ ...valid, content: null, topImageUrl: null }).success).toBe(true);
   });
 });
 
