@@ -161,6 +161,33 @@ const PAGE_NAV: Record<string, { label: string; order: number }> = {
 };
 
 /**
+ * Map a nav LABEL to a canonical page slug. The migration agent extracts the
+ * source nav but its per-item `pageSlug` guess often doesn't match our seeded
+ * slugs (e.g. it emits "" or the source URL slug). Without this, dynamic
+ * content pages (설교/주보/칼럼/앨범/행사/교역자) — which DO exist as seeded pages
+ * — were dropped as dead links, so the migrated nav ended up static-only.
+ * Matching by label fixes that while still mirroring the SOURCE (we only link
+ * sections the source nav actually names). Slugs match schema-manager seeds.
+ */
+function inferSlugFromLabel(label: string): string | null {
+  const s = (label || '').toLowerCase().replace(/\s+/g, '');
+  const has = (...kw: string[]) => kw.some((k) => s.includes(k));
+  // 주보 must be checked before 설교/예배 (distinct content module).
+  if (has('주보', 'jubo', 'bulletin')) return 'bulletins';
+  if (has('설교', '말씀', 'sermon', 'message', 'preach')) return 'sermons';
+  if (has('칼럼', '묵상', 'column', 'devotion')) return 'columns';
+  if (has('앨범', '갤러리', '사진', 'gallery', 'photo', 'album')) return 'albums';
+  if (has('행사', '공지', '소식', '이벤트', 'event', 'news', 'notice')) return 'events';
+  if (has('교역자', '섬기는', '사역자', '목회자', 'staff', 'pastor')) return 'staff';
+  if (has('연혁', '발자취', 'history')) return 'history';
+  if (has('인사말', '환영', 'welcome', 'greeting', '담임')) return 'welcome';
+  if (has('비전', '사명', 'vision', 'mission')) return 'vision';
+  if (has('오시는', '찾아', 'location', 'direction', 'contact', '연락', '약도', '지도', 'map')) return 'directions';
+  if (has('예배', 'worship', '모임', 'service')) return 'worship';
+  return null;
+}
+
+/**
  * Fallback nav when the agent returned no menus: build a flat nav from the
  * pages that were actually migrated, in canonical church order. 'home' is
  * excluded (the logo links home). Guarantees the migrated site never falls
@@ -198,52 +225,62 @@ export async function applyMenus(
   );
   const slugToId = new Map(pageRows.map((p) => [p.slug, p.id]));
 
-  // Drop items that point at a page that wasn't migrated (dead links) —
-  // but keep group headers (no pageSlug) so the hierarchy survives. The nav
-  // mirrors the SOURCE site: dynamic content pages (설교/주보/…) appear here
-  // only when the source nav actually links to them (the agent extracts them
-  // into `menus`). We do NOT blanket-add every seeded dynamic page — a church
-  // whose source site has no 주보 section shouldn't get a 주보 nav item.
-  const usable = menus.filter((m) => !m.pageSlug || slugToId.has(m.pageSlug));
-  const linked = usable.filter((m) => m.pageSlug && slugToId.has(m.pageSlug));
+  // Resolve each menu item to an existing page: prefer the agent's pageSlug,
+  // else infer from the LABEL (설교→sermons, 주보→bulletins, …). This is the fix
+  // for "migrated nav is static-only" — the source nav's dynamic content items
+  // now link to the seeded pages even when the agent's slug guess was wrong.
+  // The nav still MIRRORS the source: we only link sections the source names.
+  const resolveSlug = (m: ClassifiedMenu): string | null => {
+    if (m.pageSlug && slugToId.has(m.pageSlug)) return m.pageSlug;
+    const inferred = inferSlugFromLabel(m.label);
+    if (inferred && slugToId.has(inferred)) return inferred;
+    return null;
+  };
+  const resolved = menus.map((m) => ({ item: m, slug: resolveSlug(m) }));
+  const parentLabels = new Set(menus.map((m) => m.parentLabel).filter(Boolean));
+  const linkedCount = resolved.filter((r) => r.slug).length;
 
   // Safety: a near-empty source nav is worse than the seeded structure.
   // Only take over the nav when at least 2 real pages mapped.
-  if (linked.length < 2) return 0;
+  if (linkedCount < 2) return 0;
 
   // Replace the default seeded nav (migration is a setup step; operator
   // curates after). Wiping first keeps re-imports idempotent and avoids
   // default+source duplication.
   await prisma.$executeRawUnsafe(`DELETE FROM "${schema}".menus`);
 
-  const sorted = [...usable].sort((a, b) => a.sortOrder - b.sortOrder);
+  const sorted = [...resolved].sort((a, b) => a.item.sortOrder - b.item.sortOrder);
   const labelToId = new Map<string, string>();
   let count = 0;
 
-  const insert = async (m: ClassifiedMenu, parentId: string | null): Promise<void> => {
-    const pageId = m.pageSlug ? slugToId.get(m.pageSlug) ?? null : null;
+  const insert = async (r: { item: ClassifiedMenu; slug: string | null }, parentId: string | null): Promise<void> => {
+    const pageId = r.slug ? slugToId.get(r.slug) ?? null : null;
+    // Keep group headers (a parent with children) even with no page; drop a
+    // leaf that resolves to no page (it would be a dead link).
+    const isHeader = parentLabels.has(r.item.label);
+    if (!pageId && !isHeader) return;
     const rows = await prisma.$queryRawUnsafe<{ id: string }[]>(
       `INSERT INTO "${schema}".menus (label, page_id, parent_id, sort_order, is_visible)
        VALUES ($1, $2::uuid, $3::uuid, $4, true)
        RETURNING id`,
-      m.label,
+      r.item.label,
       pageId,
       parentId,
-      m.sortOrder,
+      r.item.sortOrder,
     );
     if (rows[0]) {
-      labelToId.set(m.label, rows[0].id);
+      labelToId.set(r.item.label, rows[0].id);
       count++;
     }
   };
 
   // Parents first (parentLabel == null) so children can resolve parent_id
   // by label; then children.
-  for (const m of sorted) {
-    if (!m.parentLabel) await insert(m, null);
+  for (const r of sorted) {
+    if (!r.item.parentLabel) await insert(r, null);
   }
-  for (const m of sorted) {
-    if (m.parentLabel) await insert(m, labelToId.get(m.parentLabel) ?? null);
+  for (const r of sorted) {
+    if (r.item.parentLabel) await insert(r, labelToId.get(r.item.parentLabel) ?? null);
   }
 
   return count;
