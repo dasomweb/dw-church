@@ -11,18 +11,21 @@ export const textOverlaySchema = z.object({
   widths: z.record(z.string()).optional(),
 }).optional().nullable();
 
+// camelCase to match what the api-client sends (it no longer snakeizes
+// payloads). The old snake_case fields here silently dropped pc_image_url etc.
+// on save — banner images/links/dates never persisted.
 export const createBannerSchema = z.object({
   title: z.string().min(1).max(300),
-  pc_image_url: z.string().max(2000).optional().nullable(),
-  mobile_image_url: z.string().max(2000).optional().nullable(),
-  sub_image_url: z.string().max(2000).optional().nullable(),
-  link_url: z.string().max(1000).optional().nullable(),
-  link_target: z.enum(['_self', '_blank']).default('_self'),
-  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
-  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
-  text_overlay: textOverlaySchema,
+  pcImageUrl: z.string().max(2000).optional().nullable(),
+  mobileImageUrl: z.string().max(2000).optional().nullable(),
+  subImageUrl: z.string().max(2000).optional().nullable(),
+  linkUrl: z.string().max(1000).optional().nullable(),
+  linkTarget: z.enum(['_self', '_blank']).default('_self'),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+  textOverlay: textOverlaySchema,
   category: z.enum(['main', 'sub']).default('main'),
-  sort_order: z.number().int().default(0),
+  sortOrder: z.number().int().default(0),
   status: z.enum(['draft', 'published']).default('published'),
 }).passthrough();
 

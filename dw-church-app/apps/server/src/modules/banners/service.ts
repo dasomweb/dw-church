@@ -43,16 +43,16 @@ export async function createBanner(schema: string, input: CreateBannerInput) {
              $7::date, $8::date, $9::jsonb, $10, $11, $12)
      RETURNING *`,
     input.title,
-    input.pc_image_url ?? null,
-    input.mobile_image_url ?? null,
-    input.sub_image_url ?? null,
-    input.link_url ?? null,
-    input.link_target,
-    input.start_date ?? null,
-    input.end_date ?? null,
-    input.text_overlay ? JSON.stringify(input.text_overlay) : null,
+    input.pcImageUrl ?? null,
+    input.mobileImageUrl ?? null,
+    input.subImageUrl ?? null,
+    input.linkUrl ?? null,
+    input.linkTarget,
+    input.startDate ?? null,
+    input.endDate ?? null,
+    input.textOverlay ? JSON.stringify(input.textOverlay) : null,
     input.category,
-    input.sort_order,
+    input.sortOrder,
     input.status,
   );
   return rows[0];
@@ -64,16 +64,16 @@ export async function updateBanner(schema: string, id: string, input: UpdateBann
   let paramIndex = 1;
 
   if (input.title !== undefined) { setClauses.push(`title = $${paramIndex++}`); values.push(input.title); }
-  if (input.pc_image_url !== undefined) { setClauses.push(`pc_image_url = $${paramIndex++}`); values.push(input.pc_image_url); }
-  if (input.mobile_image_url !== undefined) { setClauses.push(`mobile_image_url = $${paramIndex++}`); values.push(input.mobile_image_url); }
-  if (input.sub_image_url !== undefined) { setClauses.push(`sub_image_url = $${paramIndex++}`); values.push(input.sub_image_url); }
-  if (input.link_url !== undefined) { setClauses.push(`link_url = $${paramIndex++}`); values.push(input.link_url); }
-  if (input.link_target !== undefined) { setClauses.push(`link_target = $${paramIndex++}`); values.push(input.link_target); }
-  if (input.start_date !== undefined) { setClauses.push(`start_date = $${paramIndex++}::date`); values.push(input.start_date); }
-  if (input.end_date !== undefined) { setClauses.push(`end_date = $${paramIndex++}::date`); values.push(input.end_date); }
-  if (input.text_overlay !== undefined) { setClauses.push(`text_overlay = $${paramIndex++}::jsonb`); values.push(input.text_overlay ? JSON.stringify(input.text_overlay) : null); }
+  if (input.pcImageUrl !== undefined) { setClauses.push(`pc_image_url = $${paramIndex++}`); values.push(input.pcImageUrl); }
+  if (input.mobileImageUrl !== undefined) { setClauses.push(`mobile_image_url = $${paramIndex++}`); values.push(input.mobileImageUrl); }
+  if (input.subImageUrl !== undefined) { setClauses.push(`sub_image_url = $${paramIndex++}`); values.push(input.subImageUrl); }
+  if (input.linkUrl !== undefined) { setClauses.push(`link_url = $${paramIndex++}`); values.push(input.linkUrl); }
+  if (input.linkTarget !== undefined) { setClauses.push(`link_target = $${paramIndex++}`); values.push(input.linkTarget); }
+  if (input.startDate !== undefined) { setClauses.push(`start_date = $${paramIndex++}::date`); values.push(input.startDate); }
+  if (input.endDate !== undefined) { setClauses.push(`end_date = $${paramIndex++}::date`); values.push(input.endDate); }
+  if (input.textOverlay !== undefined) { setClauses.push(`text_overlay = $${paramIndex++}::jsonb`); values.push(input.textOverlay ? JSON.stringify(input.textOverlay) : null); }
   if (input.category !== undefined) { setClauses.push(`category = $${paramIndex++}`); values.push(input.category); }
-  if (input.sort_order !== undefined) { setClauses.push(`sort_order = $${paramIndex++}`); values.push(input.sort_order); }
+  if (input.sortOrder !== undefined) { setClauses.push(`sort_order = $${paramIndex++}`); values.push(input.sortOrder); }
   if (input.status !== undefined) { setClauses.push(`status = $${paramIndex++}`); values.push(input.status); }
 
   if (setClauses.length === 0) return getBanner(schema, id);

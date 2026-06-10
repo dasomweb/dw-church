@@ -24,8 +24,26 @@ app.use(
   }),
 );
 
-app.use(express.static(DIST, { index: false, maxAge: '1h' }));
-app.get('*', (_req, res) => res.sendFile(path.join(DIST, 'index.html')));
+// Cache strategy: index.html must NEVER be cached (it references the current
+// content-hashed chunk filenames) — otherwise a deploy doesn't reach users who
+// keep getting the old index.html → old chunks → "changes not applied, need to
+// refresh". Hashed assets (admin-<hash>.js) are immutable → cache forever.
+app.use(
+  express.static(DIST, {
+    index: false,
+    setHeaders(res, filePath) {
+      if (filePath.endsWith('index.html')) {
+        res.setHeader('Cache-Control', 'no-cache');
+      } else {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+    },
+  }),
+);
+app.get('*', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-cache');
+  res.sendFile(path.join(DIST, 'index.html'));
+});
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`[admin] serving ${DIST} on :${PORT} — /api → ${API_TARGET}`);
