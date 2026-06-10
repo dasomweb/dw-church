@@ -66,31 +66,31 @@ export interface BuildPagesRes {
  * seconds because they wait on Claude. Cloudflare's proxy enforces a hard
  * 100s origin-timeout on Free/Pro/Business plans → operators see HTTP 524.
  *
- * Bypass: route these calls through `api-direct.truelight.app`, a sister
- * sub-domain on the same Railway service but with Cloudflare DNS set to
- * "DNS only" (gray cloud). The TLS / Cloudflare edge stays untouched for
- * api.truelight.app (WAF, caching, DDoS) — only the long-running planner
- * traffic skips the proxy.
+ * Bypass: route these calls through the api-server's Railway-direct origin
+ * (api-server-production-c612.up.railway.app), which doesn't sit behind the
+ * Cloudflare proxy — so the 100s edge timeout doesn't apply. This mirrors
+ * what ContentMigrationButton does for its own long (60-130s) calls.
+ *
+ * (We used to point at `api-direct.truelight.app`, a "DNS-only" sibling
+ * sub-domain, but that record is currently proxied/misrouted — it answers
+ * 404 with no CORS headers, so the browser surfaces a "Load failed" on the
+ * first planner call. The Railway-direct origin is verified working + CORS.)
  *
  * Resolution order:
  *   1. VITE_PLANNER_DIRECT_BASE_URL  (explicit override — dev / preview)
- *   2. Same-origin admin SPA → derive 'api-direct.{tail}' from window host
- *   3. Fallback to client.fetchAdapter.baseUrl (legacy / no-bypass setups)
- *
- * Returning the legacy baseUrl when (1) and (2) miss is intentional —
- * dev (localhost) doesn't need the bypass and operators running a stand-
- * alone admin without the api-direct DNS record stay functional (just
- * still exposed to 524 on heavy steps).
+ *   2. admin.truelight.app → the Railway-direct origin
+ *   3. Fallback to client.fetchAdapter.baseUrl (dev / self-hosted — still
+ *      functional, just exposed to 524 on heavy SYNC steps; the heaviest
+ *      step, content-map, already runs as an async job so it's unaffected).
  */
+const RAILWAY_DIRECT_API = 'https://api-server-production-c612.up.railway.app';
+
 function resolvePlannerBaseUrl(fallbackBaseUrl: string): string {
   const override = (typeof import.meta !== 'undefined' &&
     (import.meta as unknown as { env?: { VITE_PLANNER_DIRECT_BASE_URL?: string } }).env?.VITE_PLANNER_DIRECT_BASE_URL) || '';
   if (override) return override;
-  if (typeof window !== 'undefined') {
-    const host = window.location.hostname;
-    if (host.startsWith('admin.')) {
-      return `https://api-direct.${host.slice('admin.'.length)}`;
-    }
+  if (typeof window !== 'undefined' && window.location.hostname === 'admin.truelight.app') {
+    return RAILWAY_DIRECT_API;
   }
   return fallbackBaseUrl;
 }
