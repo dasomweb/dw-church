@@ -4,8 +4,42 @@
  */
 
 import { uploadFile as r2Upload } from '../../../config/r2.js';
+import { prisma } from '../../../config/database.js';
+import { validateSchemaName } from '../../../utils/validate-schema.js';
 import { randomUUID } from 'crypto';
 import sharp from 'sharp';
+
+/**
+ * Register a migrated image in the tenant's `files` table so it shows up in the
+ * media library (미디어) and the operator can reuse it. Best-effort: a failure
+ * here must not break the migration — the image already works via its URL.
+ */
+async function registerMigratedFile(
+  tenantSlug: string,
+  storageKey: string,
+  url: string,
+  mimeType: string,
+  sizeBytes: number,
+  sourceUrl: string,
+): Promise<void> {
+  try {
+    const schema = validateSchemaName(`tenant_${tenantSlug}`);
+    const name = (sourceUrl.split('/').pop()?.split('?')[0]) || 'migrated-image';
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO "${schema}".files
+         (original_name, storage_key, url, mime_type, size_bytes, entity_type, kind, tags, description)
+       VALUES ($1, $2, $3, $4, $5, 'migration', 'upload', NULL, $6)`,
+      name,
+      storageKey,
+      url,
+      mimeType,
+      sizeBytes,
+      '마이그레이션으로 가져온 이미지',
+    );
+  } catch {
+    // Non-fatal — the image still works via its R2 URL.
+  }
+}
 
 const USER_AGENT = 'TrueLight-Migration/2.0';
 
@@ -88,7 +122,10 @@ export async function migrateImageToR2(
     const resized = await resizeForR2(srcBuffer, srcContentType || 'image/jpeg');
     if (!resized) return '';
     const key = `tenant_${tenantSlug}/migration/${randomUUID()}${resized.ext}`;
-    return await r2Upload(key, resized.buffer, resized.contentType);
+    const url = await r2Upload(key, resized.buffer, resized.contentType);
+    // Make it browsable in the tenant's media library.
+    await registerMigratedFile(tenantSlug, key, url, resized.contentType, resized.buffer.length, imageUrl);
+    return url;
   } catch {
     return '';
   }

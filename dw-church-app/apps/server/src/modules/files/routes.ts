@@ -34,6 +34,13 @@ export async function fileRoutes(app: FastifyInstance) {
     return reply.status(201).send({ data: file });
   });
 
+  // Register migration images already in R2 (tenant_<slug>/migration/) that
+  // have no `files` row yet, so they show up in the media library.
+  app.post('/files/backfill-migration', { preHandler: [requireAuth] }, async (request, reply) => {
+    const result = await fileService.backfillMigration(getSchema(request), request.tenant!.slug);
+    return reply.send({ data: result });
+  });
+
   app.delete('/files/:id', { preHandler: [requireAuth] }, async (request, reply) => {
     const { id } = request.params as { id: string };
     const deleted = await fileService.remove(getSchema(request), id);

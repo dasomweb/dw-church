@@ -69,6 +69,30 @@ export async function deleteFile(key: string): Promise<void> {
 }
 
 /**
+ * List all objects under a prefix (e.g. "tenant_x/migration/"). Returns key +
+ * size for each. Paginates through > 1000 objects. Used by the media-library
+ * backfill that registers already-uploaded migration images.
+ */
+export async function listObjectsByPrefix(prefix: string): Promise<{ key: string; size: number }[]> {
+  const out: { key: string; size: number }[] = [];
+  let continuationToken: string | undefined;
+  do {
+    const list = await s3.send(
+      new ListObjectsV2Command({
+        Bucket: env.R2_BUCKET_NAME,
+        Prefix: prefix,
+        ContinuationToken: continuationToken,
+      }),
+    );
+    for (const obj of list.Contents ?? []) {
+      if (obj.Key) out.push({ key: obj.Key, size: Number(obj.Size ?? 0) });
+    }
+    continuationToken = list.IsTruncated ? list.NextContinuationToken : undefined;
+  } while (continuationToken);
+  return out;
+}
+
+/**
  * Delete all files with a given prefix (e.g. "tenant_bethelfaith/").
  */
 export async function deleteFilesByPrefix(prefix: string): Promise<number> {

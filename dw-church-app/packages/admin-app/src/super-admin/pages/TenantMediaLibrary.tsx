@@ -96,6 +96,24 @@ export default function TenantMediaLibrary() {
     }
   };
 
+  const [backfilling, setBackfilling] = useState(false);
+  const handleBackfill = async () => {
+    if (!client) return;
+    setBackfilling(true);
+    try {
+      const res = await client.adapter.post<{ data: { added: number; total: number } }>(
+        '/api/v1/files/backfill-migration', {},
+      );
+      const added = res?.data?.added ?? 0;
+      showToast('success', added > 0 ? `마이그레이션 이미지 ${added}개를 라이브러리에 등록했습니다.` : '새로 등록할 마이그레이션 이미지가 없습니다.');
+      if (added > 0) void load(1, false);
+    } catch (e) {
+      showToast('error', e instanceof Error ? e.message : '등록 실패');
+    } finally {
+      setBackfilling(false);
+    }
+  };
+
   const copyUrl = async (url: string) => {
     try {
       await navigator.clipboard.writeText(url);
@@ -112,14 +130,25 @@ export default function TenantMediaLibrary() {
           <h1 className="text-lg font-bold text-gray-900">미디어 라이브러리</h1>
           <p className="text-xs text-gray-500 mt-0.5">이 테넌트의 업로드 파일 (R2 저장). 이미지·PDF 등.</p>
         </div>
-        <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          disabled={uploading}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-50"
-        >
-          {uploading ? '업로드 중…' : '↑ 파일 업로드'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => void handleBackfill()}
+            disabled={backfilling}
+            title="이미 마이그레이션으로 가져온 이미지를 라이브러리에 등록합니다"
+            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          >
+            {backfilling ? '등록 중…' : '🚚 마이그레이션 이미지 등록'}
+          </button>
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-50"
+          >
+            {uploading ? '업로드 중…' : '↑ 파일 업로드'}
+          </button>
+        </div>
         <input
           ref={fileRef}
           type="file"

@@ -1,7 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { extname } from 'node:path';
 import { prisma } from '../../config/database.js';
-import { uploadFile, deleteFile } from '../../config/r2.js';
+import { uploadFile, deleteFile, listObjectsByPrefix } from '../../config/r2.js';
+import { env } from '../../config/env.js';
 import { AppError } from '../../middleware/error-handler.js';
 
 // ─── Upload Limits ──────────────────────────────────────────
@@ -104,6 +105,52 @@ export async function uploadBulk(params: BulkUploadParams) {
     results.push(result);
   }
   return results;
+}
+
+// ─── Backfill migration images ──────────────────────────────
+// Migration uploads images to R2 under tenant_<slug>/migration/ but older runs
+// never created `files` rows, so those images don't appear in the media
+// library. This scans that R2 prefix and registers any image not already
+// tracked. Idempotent — re-running only adds what's missing.
+
+const MIME_BY_EXT: Record<string, string> = {
+  '.webp': 'image/webp', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+  '.png': 'image/png', '.gif': 'image/gif', '.svg': 'image/svg+xml',
+};
+
+export async function backfillMigration(
+  schema: string,
+  tenantSlug: string,
+): Promise<{ added: number; total: number }> {
+  const prefix = `tenant_${tenantSlug}/migration/`;
+  const objects = await listObjectsByPrefix(prefix);
+  if (objects.length === 0) return { added: 0, total: 0 };
+
+  const existing = await prisma.$queryRawUnsafe<{ storage_key: string }[]>(
+    `SELECT storage_key FROM "${schema}".files WHERE storage_key LIKE $1`,
+    `${prefix}%`,
+  );
+  const have = new Set(existing.map((e) => e.storage_key));
+
+  let added = 0;
+  for (const obj of objects) {
+    if (have.has(obj.key)) continue;
+    const ext = (obj.key.match(/\.[a-z0-9]+$/i)?.[0] ?? '').toLowerCase();
+    const mime = MIME_BY_EXT[ext];
+    if (!mime) continue; // only register images (skip PDFs / unknown)
+    const url = `${env.R2_PUBLIC_URL}/${obj.key}`;
+    const name = obj.key.split('/').pop() ?? 'migrated-image';
+    try {
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO "${schema}".files
+           (original_name, storage_key, url, mime_type, size_bytes, entity_type, kind, tags, description)
+         VALUES ($1, $2, $3, $4, $5, 'migration', 'upload', NULL, $6)`,
+        name, obj.key, url, mime, obj.size, '마이그레이션으로 가져온 이미지',
+      );
+      added++;
+    } catch { /* skip a single failed row */ }
+  }
+  return { added, total: objects.length };
 }
 
 // ─── Delete ─────────────────────────────────────────────────

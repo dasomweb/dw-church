@@ -1,5 +1,30 @@
-import { lazy, Suspense, useEffect, useMemo } from 'react';
+import { lazy, Suspense, useEffect, useMemo, type ComponentType } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
+
+// Wrap React.lazy so a STALE CHUNK auto-reloads the page once instead of
+// rendering a blank screen. After a deploy the hashed chunk filenames change;
+// a tab still running the old app requests an old chunk on navigation, the
+// dynamic import 404s, and Suspense (no error boundary) shows blank — the
+// classic "click a menu → blank, refresh fixes it". Here we reload ONCE
+// automatically (guarded by sessionStorage so a genuinely-missing chunk can't
+// loop), which fetches the fresh index.html + chunk names transparently.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function lazyWithReload<T extends ComponentType<any>>(factory: () => Promise<{ default: T }>) {
+  return lazy(async () => {
+    try {
+      const mod = await factory();
+      sessionStorage.removeItem('chunk-reloaded');
+      return mod;
+    } catch (err) {
+      if (typeof window !== 'undefined' && !sessionStorage.getItem('chunk-reloaded')) {
+        sessionStorage.setItem('chunk-reloaded', '1');
+        window.location.reload();
+        return new Promise<{ default: T }>(() => {}); // halt render until reload
+      }
+      throw err;
+    }
+  });
+}
 import { DWChurchClient } from '@dw-church/api-client';
 import { DWChurchProvider } from '@dw-church/ui-components';
 import { AdminLayout } from './layouts/AdminLayout';
@@ -7,50 +32,50 @@ import { useAuthStore, isTokenExpiringSoon } from './stores/auth';
 import { ToastProvider } from './components';
 
 // Lazy-loaded pages — Auth
-const LoginPage = lazy(() => import('./pages/LoginPage'));
-const RegisterPage = lazy(() => import('./pages/RegisterPage'));
-const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
+const LoginPage = lazyWithReload(() => import('./pages/LoginPage'));
+const RegisterPage = lazyWithReload(() => import('./pages/RegisterPage'));
+const ForgotPasswordPage = lazyWithReload(() => import('./pages/ForgotPasswordPage'));
 
 // Lazy-loaded pages — Admin
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const BulletinManagement = lazy(() => import('./pages/BulletinManagement'));
-const SermonManagement = lazy(() => import('./pages/SermonManagement'));
-const ColumnManagement = lazy(() => import('./pages/ColumnManagement'));
-const AlbumManagement = lazy(() => import('./pages/AlbumManagement'));
-const BannerManagement = lazy(() => import('./pages/BannerManagement'));
-const EventManagement = lazy(() => import('./pages/EventManagement'));
-const StaffManagement = lazy(() => import('./pages/StaffManagement'));
-const HistoryManagement = lazy(() => import('./pages/HistoryManagement'));
-const BoardManagement = lazy(() => import('./pages/BoardManagement'));
-const PageEditor = lazy(() => import('./pages/PageEditor'));
-const PageWizard = lazy(() => import('./pages/PageWizard'));
-const MenuEditor = lazy(() => import('./pages/MenuEditor'));
+const Dashboard = lazyWithReload(() => import('./pages/Dashboard'));
+const BulletinManagement = lazyWithReload(() => import('./pages/BulletinManagement'));
+const SermonManagement = lazyWithReload(() => import('./pages/SermonManagement'));
+const ColumnManagement = lazyWithReload(() => import('./pages/ColumnManagement'));
+const AlbumManagement = lazyWithReload(() => import('./pages/AlbumManagement'));
+const BannerManagement = lazyWithReload(() => import('./pages/BannerManagement'));
+const EventManagement = lazyWithReload(() => import('./pages/EventManagement'));
+const StaffManagement = lazyWithReload(() => import('./pages/StaffManagement'));
+const HistoryManagement = lazyWithReload(() => import('./pages/HistoryManagement'));
+const BoardManagement = lazyWithReload(() => import('./pages/BoardManagement'));
+const PageEditor = lazyWithReload(() => import('./pages/PageEditor'));
+const PageWizard = lazyWithReload(() => import('./pages/PageWizard'));
+const MenuEditor = lazyWithReload(() => import('./pages/MenuEditor'));
 // ThemeEditor (tenant-admin) deprecated — friendly notice 로 대체.
 // 2026-06-01: 테마 = 슈퍼어드민 owned (테마셋 라이브러리 기반).
-const ThemeDeprecatedNotice = lazy(() => import('./pages/ThemeDeprecatedNotice'));
-const UserManagement = lazy(() => import('./pages/UserManagement'));
-const SettingsPage = lazy(() => import('./pages/SettingsPage'));
-const DomainSettings = lazy(() => import('./pages/DomainSettings'));
-const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboardV2'));
-const ProfilePage = lazy(() => import('./pages/ProfilePage'));
-const BillingPage = lazy(() => import('./pages/BillingPage'));
+const ThemeDeprecatedNotice = lazyWithReload(() => import('./pages/ThemeDeprecatedNotice'));
+const UserManagement = lazyWithReload(() => import('./pages/UserManagement'));
+const SettingsPage = lazyWithReload(() => import('./pages/SettingsPage'));
+const DomainSettings = lazyWithReload(() => import('./pages/DomainSettings'));
+const SuperAdminDashboard = lazyWithReload(() => import('./pages/SuperAdminDashboardV2'));
+const ProfilePage = lazyWithReload(() => import('./pages/ProfilePage'));
+const BillingPage = lazyWithReload(() => import('./pages/BillingPage'));
 
 // Super-admin per-tenant console (Phase 2). Lives at /super-admin/t/:slug/*
 // — a distinct surface from the tenant-admin /t/:slug, with its own
 // 14-section sidebar. Placeholders fill out the routes that get real UIs
 // in later phases (theme editor in Phase 3, page builder inspector in
 // Phase 4, etc.).
-const SuperAdminTenantLayout = lazy(() => import('./super-admin/SuperAdminTenantLayout').then((m) => ({ default: m.SuperAdminTenantLayout })));
-const TenantOverview = lazy(() => import('./super-admin/pages/TenantOverview'));
-const TenantThemeEditor = lazy(() => import('./super-admin/pages/TenantThemeEditor'));
-const TenantPageEditor = lazy(() => import('./super-admin/pages/TenantPageEditor'));
-const TenantFeaturePermissions = lazy(() => import('./super-admin/pages/TenantFeaturePermissions'));
-const TenantDangerZone = lazy(() => import('./super-admin/pages/TenantDangerZone'));
-const TenantAIContext = lazy(() => import('./super-admin/pages/TenantAIContext'));
-const TenantMediaLibrary = lazy(() => import('./super-admin/pages/TenantMediaLibrary'));
-const TenantTemplates = lazy(() => import('./super-admin/pages/TenantTemplates'));
-const TenantReferencePhotos = lazy(() => import('./super-admin/pages/TenantReferencePhotos'));
-const TenantContentEntries = lazy(() => import('./super-admin/pages/TenantContentEntries'));
+const SuperAdminTenantLayout = lazyWithReload(() => import('./super-admin/SuperAdminTenantLayout').then((m) => ({ default: m.SuperAdminTenantLayout })));
+const TenantOverview = lazyWithReload(() => import('./super-admin/pages/TenantOverview'));
+const TenantThemeEditor = lazyWithReload(() => import('./super-admin/pages/TenantThemeEditor'));
+const TenantPageEditor = lazyWithReload(() => import('./super-admin/pages/TenantPageEditor'));
+const TenantFeaturePermissions = lazyWithReload(() => import('./super-admin/pages/TenantFeaturePermissions'));
+const TenantDangerZone = lazyWithReload(() => import('./super-admin/pages/TenantDangerZone'));
+const TenantAIContext = lazyWithReload(() => import('./super-admin/pages/TenantAIContext'));
+const TenantMediaLibrary = lazyWithReload(() => import('./super-admin/pages/TenantMediaLibrary'));
+const TenantTemplates = lazyWithReload(() => import('./super-admin/pages/TenantTemplates'));
+const TenantReferencePhotos = lazyWithReload(() => import('./super-admin/pages/TenantReferencePhotos'));
+const TenantContentEntries = lazyWithReload(() => import('./super-admin/pages/TenantContentEntries'));
 
 export interface AppConfig {
   baseUrl: string;
