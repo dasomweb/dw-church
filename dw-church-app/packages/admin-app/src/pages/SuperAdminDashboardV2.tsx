@@ -3,6 +3,7 @@ import { useAuthStore } from '../stores/auth';
 import { useToast } from '../components';
 import { AIBuilderModal } from '../components/super-admin/AIBuilderModal';
 import { MigrationDialog } from '../components/super-admin/MigrationDialog';
+import { resizeImage } from '../utils/resize-image';
 // import MigrationTab from './MigrationTab';  // 보류
 
 // snake_case → camelCase
@@ -2093,9 +2094,19 @@ function GalleryTab() {
     let succeeded = 0;
     for (const file of list) {
       try {
+        // Shared-library images are reused across many tenants → optimize hard
+        // before upload: cap width at 1920px and re-encode as JPEG (q≈0.82).
+        // Storage waste is a hard constraint. SVG/PDF/animated pass through.
+        let toUpload: File = file;
+        try {
+          const resized = await resizeImage(file, 'background');
+          toUpload = resized.file;
+        } catch {
+          // Resize failure (e.g. >20MB) → fall back to the original file.
+        }
         const qs = new URLSearchParams({ title: file.name, category: 'auto' }).toString();
         const body = new FormData();
-        body.append('file', file);
+        body.append('file', toUpload);
         const res = await fetch(`/api/v1/admin/shared-images/upload?${qs}`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${token || ''}` },
