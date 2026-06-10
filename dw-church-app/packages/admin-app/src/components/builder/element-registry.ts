@@ -1390,6 +1390,7 @@ const LAYOUT_CONTAINER_FIELDS: ChurchField[] = [
 
 const PASTOR_MESSAGE = churchBlock(
   { title: 'Content', fields: [
+    { key: 'eyebrow', label: '라벨(작은 윗글)', type: 'text', hint: '예: 인사말 · 담임목사' },
     { key: 'title', label: '섹션 제목', type: 'text' },
     { key: 'pastorName', label: '이름', type: 'text' },
     { key: 'pastorTitle', label: '직함', type: 'text' },
@@ -1399,6 +1400,13 @@ const PASTOR_MESSAGE = churchBlock(
   { title: 'Design', fields: [
     { key: 'variant', label: '레이아웃', type: 'select', choices: [
       { value: 'right', label: '사진 우측' }, { value: 'left', label: '사진 좌측' },
+    ]},
+    { key: 'columnRatio', label: '글:사진 비율', type: 'select', hint: '두 컬럼의 너비 비율 (글:사진)', choices: [
+      { value: '1-1', label: '1 : 1 (균등)' },
+      { value: '3-2', label: '3 : 2 (글 크게)' },
+      { value: '2-1', label: '2 : 1 (글 더 크게 · 사진 작게)' },
+      { value: '3-1', label: '3 : 1 (글 매우 크게)' },
+      { value: '2-3', label: '2 : 3 (사진 크게)' },
     ]},
   ]},
 );

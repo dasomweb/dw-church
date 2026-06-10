@@ -10,6 +10,7 @@ import {
   useReorderStaff,
   useChurchSettings,
   useUpdateChurchSettings,
+  useDWChurchClient,
 } from '@dw-church/api-client';
 import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, ImageUpload, useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
 import { ContentMigrationButton } from '../components/ContentMigrationButton';
@@ -37,6 +38,14 @@ export default function StaffManagement() {
   const [deleteTarget, setDeleteTarget] = useState<{id: string; name: string} | null>(null);
 
   const { showToast } = useToast();
+  const apiClient = useDWChurchClient();
+  // Upload staff photos to R2 (short URL). Without this, ImageUpload falls back
+  // to a base64 data URI → ~90KB payload that blows past photo_url's length cap
+  // and 400s on save. ImageUpload client-side resizes first.
+  const uploadImage = async (file: File): Promise<string> => {
+    const res = await apiClient!.uploadFile(file);
+    return res.url;
+  };
   const { data: staffList, isLoading, error, refetch } = useStaff(params);
   const { data: departments } = useStaffDepartments();
   const { data: settings } = useChurchSettings();
@@ -192,6 +201,8 @@ export default function StaffManagement() {
             <ImageUpload
               value={watch('photoUrl') || ''}
               onChange={(url) => setValue('photoUrl', url)}
+              onUpload={uploadImage}
+              resize="avatar"
               aspectRatio="1/1"
               label="프로필 사진"
             />

@@ -6,7 +6,7 @@
  * `services` is an operator-entered list (props), so this renders fully
  * in-process in the builder canvas (no data fetch).
  */
-import { HeadingElement } from '../elements';
+import { HeadingElement, EyebrowElement } from '../elements';
 import { SectionShell } from '../utilities/SectionShell';
 
 interface Service {
@@ -23,6 +23,7 @@ interface WorshipScheduleBlockProps {
 export function WorshipScheduleBlock({ props }: WorshipScheduleBlockProps) {
   const services = (props.services as Service[]) ?? [];
   const title = (props.title as string) || '예배 안내';
+  const eyebrow = (props.eyebrow as string) ?? '';
 
   return (
     <SectionShell
@@ -32,8 +33,10 @@ export function WorshipScheduleBlock({ props }: WorshipScheduleBlockProps) {
       defaultContentClass="mx-auto max-w-4xl px-4 sm:px-6"
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--block-gap, 1.5rem)' }}>
-        <div className="text-center">
+        <div className="text-center flex flex-col items-center gap-2">
+          <EyebrowElement text={eyebrow} props={props} elementKey="eyebrow" />
           <HeadingElement text={title} props={props} elementKey="title" defaultTag="h2" defaultSize="h2" />
+          <span aria-hidden="true" style={{ display: 'block', width: 48, height: 3, borderRadius: 2, backgroundColor: 'var(--brand-primary, var(--dw-primary, #2563eb))' }} />
         </div>
         {services.length === 0 ? (
           <p style={{ textAlign: 'center', color: 'var(--brand-muted, #94a3b8)', fontSize: 'var(--fs-sm)' }}>

@@ -14,7 +14,8 @@
  *
  * Layout: variant 'left' = photo first, 'right' (default) = text first.
  */
-import { HeadingElement, TextBodyElement, ImageElement } from '../elements';
+import type { CSSProperties } from 'react';
+import { HeadingElement, TextBodyElement, EyebrowElement, ImageElement } from '../elements';
 import { SectionShell } from '../utilities/SectionShell';
 
 interface PastorMessageBlockProps {
@@ -27,12 +28,20 @@ export function PastorMessageBlock({ props }: PastorMessageBlockProps) {
   const pastorName = (props.pastorName as string) ?? '';
   const pastorTitle = (props.pastorTitle as string) ?? '';
   const subtitle = (props.subtitle as string) ?? '';
+  const eyebrow = (props.eyebrow as string) ?? '';
   // `message` is the historical key; theme-set templates use `content`.
   const message = (props.message as string) || (props.content as string) || '';
   // pastorPhotoUrl is the theme-set key; imageUrl is the inspector key.
   const imageUrl = (props.imageUrl as string) || (props.pastorPhotoUrl as string) || '';
   const pos = (props.variant as string) || (props.layout as string) || 'right';
   const imageFirst = pos === 'left';
+  // Column ratio (text:image), e.g. '2-1' = text twice the image width (so the
+  // photo can read smaller than the message). Applied on md+ via a CSS var so
+  // the layout stays single-column on mobile. For image-first, swap the order.
+  const [textFr, imgFr] = ((props.columnRatio as string) || '1-1')
+    .split('-')
+    .map((n) => Number(n) || 1);
+  const colsValue = imageFirst ? `${imgFr}fr ${textFr}fr` : `${textFr}fr ${imgFr}fr`;
 
   return (
     <SectionShell
@@ -41,12 +50,18 @@ export function PastorMessageBlock({ props }: PastorMessageBlockProps) {
       style={{ paddingBlock: 'var(--section-py-md)' }}
       defaultContentClass="mx-auto max-w-7xl px-4 sm:px-6"
     >
-      <div className="grid items-center gap-12 md:grid-cols-2">
+      <div
+        className="grid grid-cols-1 items-center gap-12 md:[grid-template-columns:var(--pm-cols,1fr_1fr)]"
+        style={{ ['--pm-cols' as string]: colsValue } as CSSProperties}
+      >
         <div
           className={imageFirst ? 'order-2' : 'order-1'}
           style={{ display: 'flex', flexDirection: 'column', gap: 'var(--block-gap, 1rem)' }}
         >
+          <EyebrowElement text={eyebrow} props={props} elementKey="eyebrow" />
           <HeadingElement text={title} props={props} elementKey="title" defaultTag="h2" defaultSize="h2" />
+          {/* accent rule under the heading — a small church-y flourish */}
+          <span aria-hidden="true" style={{ display: 'block', width: 48, height: 3, borderRadius: 2, backgroundColor: 'var(--brand-primary, var(--dw-primary, #2563eb))' }} />
           <HeadingElement text={subtitle} props={props} elementKey="subtitle" defaultTag="h3" defaultSize="h3" />
           <TextBodyElement
             text={message}
@@ -67,7 +82,7 @@ export function PastorMessageBlock({ props }: PastorMessageBlockProps) {
         {imageUrl && (
           <div
             className={`relative overflow-hidden ${imageFirst ? 'order-1' : 'order-2'}`}
-            style={{ aspectRatio: '4 / 5', borderRadius: 'var(--r-lg, var(--brand-radius-lg, 16px))' }}
+            style={{ aspectRatio: '4 / 5', borderRadius: 'var(--r-lg, var(--brand-radius-lg, 16px))', boxShadow: '0 20px 40px -16px rgba(0,0,0,0.25)' }}
           >
             <ImageElement
               url={imageUrl}

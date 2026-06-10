@@ -47,6 +47,7 @@ export function NewcomerInfoBlock({ props }: NewcomerInfoBlockProps) {
           </div>
         )}
         <HeadingElement text={title} props={props} elementKey="title" defaultTag="h2" defaultSize="h2" />
+        <span aria-hidden="true" style={{ display: 'block', width: 48, height: 3, borderRadius: 2, backgroundColor: 'var(--brand-primary, var(--dw-primary, #2563eb))' }} />
         <HeadingElement text={(props.subtitle as string) ?? ''} props={props} elementKey="subtitle" defaultTag="h3" defaultSize="h3" />
         <TextBodyElement
           text={content}
