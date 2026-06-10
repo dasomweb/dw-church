@@ -364,7 +364,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
               </nav>
             </div>
             <div className="absolute right-4 top-4 sm:right-6 md:hidden">
-              <MobileMenu navItems={navItems} basePath={basePath} />
+              <MobileMenu navItems={sortedVisibleItems} basePath={basePath} />
             </div>
           </div>
         ) : (
@@ -410,7 +410,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                 </div>
               ))}
             </nav>
-            <MobileMenu navItems={navItems} basePath={basePath} />
+            <MobileMenu navItems={sortedVisibleItems} basePath={basePath} />
           </div>
         )}
       </header>
