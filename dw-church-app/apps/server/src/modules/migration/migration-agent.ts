@@ -110,7 +110,10 @@ export async function runMigrationAgent(
   // {content} = one content type only (per-module migration).
   const focusDirective =
     focus === 'static'
-      ? `\nSCOPE — STATIC PAGES ONLY: Extract ONLY pageContents (each page's hero_banner + text_image / image_gallery blocks in order, with images), churchInfo, worshipTimes, and menus. Do NOT open or extract individual sermon / bulletin / column / board posts — leave sermons, bulletins, columns, events, albums, staff, history, boards as EMPTY arrays. Spend every turn on the main navigation pages' layouts and their images. Those content types are migrated separately.\nEach fetch_url result has a "backgroundImages" array (hero/section background photos pulled from the page's CSS) — set the hero_banner's backgroundImageUrl to the page's backgroundImages[0] when present, and use "images" for inline content/gallery pictures.`
+      ? `\nSCOPE — SITE STRUCTURE (analyze the sitemap; no individual posts): Reproduce the FULL sitemap. First call fetch_sitemap and read the nav. ANALYZE EVERY navigation page and CLASSIFY it from its menu label AND its page content, then emit a pageContents entry for it:
+  • Static page (인사말/소개/비전/오시는 길/예배안내/새가족/사명 등) → emit its real blocks in order (hero_banner first, then text_image / image_gallery).
+  • DYNAMIC content list page (설교/주보/칼럼/앨범·갤러리/행사·공지/교역자/게시판/연혁) → RESERVE the page with ONE matching data block (see the data-block list below) using the canonical pageSlug. Do NOT open or copy the individual posts — leave the sermons/bulletins/columns/events/albums/staff/history/boards ITEM arrays EMPTY (those migrate per-module later).
+Also emit a menus[] entry for EVERY page (same pageSlug, preserving the source nav hierarchy via parentLabel + order via sortOrder). The migrated nav + pages MUST MIRROR the source sitemap — judge each page yourself, do not skip dynamic sections.\nEach fetch_url result has a "backgroundImages" array (hero/section background photos pulled from the page's CSS) — set the hero_banner's backgroundImageUrl to backgroundImages[0] when present, and use "images" for inline content/gallery pictures.`
       : typeof focus === 'object'
         ? `\nSCOPE — "${focus.content}" CONTENT ONLY: Extract ONLY the "${focus.content}" items. Find that section's list page and its WordPress REST endpoint (/wp-json/wp/v2/...), page through ALL items, and capture each item's fields + images. Leave pageContents and every OTHER content type as EMPTY. Do not waste turns on unrelated pages.`
         : '';
@@ -166,12 +169,18 @@ NOT boardPosts):
   "menus": [{ "label": "", "pageSlug": "", "parentLabel": null,
     "sortOrder": 0 }],
   "pageContents": [{
-    "pageSlug": "pastor-greeting" | "about" | "vision" | "directions" |
-      "newcomer" | "mission" | "worship" | "history" | "home",
+    // Use the EXACT canonical slug for a known section so it maps to the right
+    // content module; for any other page use a short kebab slug from its label.
+    "pageSlug":
+      "home" | "welcome" | "vision" | "directions" | "worship" | "newcomer" | "mission"   // static
+      | "sermons" | "bulletins" | "columns" | "albums" | "events" | "staff" | "history" | "board"  // dynamic
+      | "<kebab-from-label>",
     "blocks": [{
-      "blockType": "hero_banner" | "pastor_message" | "church_intro" |
-        "mission_vision" | "location_map" | "contact_info" |
-        "newcomer_info" | "text_image" | "image_gallery",
+      "blockType":
+        "hero_banner" | "pastor_message" | "church_intro" | "mission_vision"
+        | "location_map" | "contact_info" | "newcomer_info" | "text_image" | "image_gallery"  // static
+        | "recent_sermons" | "recent_bulletins" | "recent_columns" | "album_gallery"
+        | "event_grid" | "staff_grid" | "history_timeline" | "board",                          // data blocks
       "props": { ... block-specific ... }
     }]
   }],
@@ -192,9 +201,9 @@ text dump. For each page, walk the page top-to-bottom and emit blocks IN ORDER:
      (preserve line breaks with \n). Capture EVERY <img> src you see on the
      page into the relevant block's imageUrl / images and also into "images".
 
-Page-content blockType templates (use exact keys):
+Static block templates (use exact keys):
   hero_banner    → { title, subtitle, backgroundImageUrl, buttonText, buttonUrl }
-  pastor_message → { title, name, message, photoUrl }
+  pastor_message → { title, pastorName, message, imageUrl }
   church_intro   → { title, content, imageUrl }
   mission_vision → { title, content, imageUrl }
   location_map   → { title, address }
@@ -203,10 +212,20 @@ Page-content blockType templates (use exact keys):
   text_image     → { title, subtitle, content, imageUrl, layout }
   image_gallery  → { title, images }
 
-Korean content type cues for classifying WP posts:
-  설교/sermon, 주보/jubo/bulletin, 칼럼/column, 행사/공지/notice → events,
-  교역자/staff, 인사말/greeting → pastor_greeting page, 비전/vision page,
-  예배/worship → worshipTimes, 연혁/history.
+PAGE CLASSIFICATION — judge each nav page by its LABEL + content, pick the page
+type, and reserve DYNAMIC pages with a single data block { title } (no items):
+  설교 / sermon / message / 말씀      → pageSlug "sermons",   block recent_sermons
+  주보 / jubo / bulletin              → pageSlug "bulletins", block recent_bulletins
+  칼럼 / 묵상 / column / devotion      → pageSlug "columns",   block recent_columns
+  앨범 / 갤러리 / 사진 / gallery / photo → pageSlug "albums",    block album_gallery
+  행사 / 공지 / 소식 / event / news     → pageSlug "events",    block event_grid
+  교역자 / 섬기는 / 사역자 / staff       → pageSlug "staff",     block staff_grid
+  연혁 / history / 발자취              → pageSlug "history",    block history_timeline
+  게시판 / board / 자유게시판           → pageSlug "board",     block board
+Static pages: 인사말/환영/greeting → "welcome" (pastor_message), 비전/사명/vision →
+  "vision" (mission_vision), 교회소개/about → church_intro, 오시는 길/contact →
+  "directions" (location_map + contact_info), 예배안내/worship → "worship"
+  (worship_times + the worshipTimes list), 새가족/newcomer → "newcomer".
 
 You have at most ${MAX_ITERATIONS} tool calls. Use them. Don't give up early.`,
     }],
