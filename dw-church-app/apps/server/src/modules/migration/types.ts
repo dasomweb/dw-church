@@ -143,6 +143,8 @@ export interface ClassifiedSermon {
   date: string;
   youtubeUrl: string;
   thumbnailUrl: string;
+  /** Original source post URL — idempotency key on re-import. Optional. */
+  sourceUrl?: string;
 }
 
 export interface ClassifiedBulletin {
@@ -150,6 +152,8 @@ export interface ClassifiedBulletin {
   date: string;
   pdfUrl: string;
   images: string[];
+  /** Original source post URL — idempotency key on re-import. Optional. */
+  sourceUrl?: string;
 }
 
 export interface ClassifiedColumn {
@@ -174,12 +178,20 @@ export interface ClassifiedEvent {
   date: string;
   location: string;
   imageUrl: string;
+  /** Original source post URL — idempotency key on re-import. Optional. */
+  sourceUrl?: string;
 }
 
 export interface ClassifiedAlbum {
   title: string;
   images: string[];
   youtubeUrl: string;
+  /** Publication date from the source gallery (YYYY-MM-DD-ish). Maps to
+   *  albums.created_at on apply so albums keep their original order.
+   *  Empty when not extractable. */
+  date?: string;
+  /** Original source post URL — idempotency key on re-import. Optional. */
+  sourceUrl?: string;
 }
 
 export interface ClassifiedBoardPost {

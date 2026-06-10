@@ -148,6 +148,15 @@ CRITICAL RULES — follow these or migration fails:
 4. Use AT LEAST 8 tool calls before commit_result, unless you've
    definitively gathered all content.
 
+5. PER-ITEM DATE + SOURCE URL (required for sermons/bulletins/columns/
+   events/albums): for EVERY item capture the publish date shown on the
+   list row or detail page into "date", and the item's own permalink into
+   "sourceUrl". The date is what keeps items in their original order and the
+   sourceUrl makes re-import idempotent — do not leave them blank when the
+   page shows them. Emit "date" as YYYY-MM-DD (convert "2024.03.15",
+   "2024년 3월 15일", "2024/3/5" → "2024-03-15"). For WP REST items use the
+   'date' and 'link' fields directly.
+
 ClassifiedData EXACT field shape (use these field names — NOT pastorGreeting,
 NOT boardPosts):
 {
@@ -155,13 +164,15 @@ NOT boardPosts):
     "description": "", "seoTitle": "", "seoDescription": "", "seoKeywords": "",
     "ogImageUrl": "", "logoUrl": "", "locale": "", "slogan": "" },
   "sermons": [{ "title": "", "scripture": "", "preacher": "", "date": "",
-    "youtubeUrl": "", "thumbnailUrl": "" }],
-  "bulletins": [{ "title": "", "date": "", "pdfUrl": "", "images": [] }],
+    "youtubeUrl": "", "thumbnailUrl": "", "sourceUrl": "" }],
+  "bulletins": [{ "title": "", "date": "", "pdfUrl": "", "images": [],
+    "sourceUrl": "" }],
   "columns": [{ "title": "", "content": "", "topImageUrl": "",
     "youtubeUrl": "", "date": "", "sourceUrl": "" }],
   "events": [{ "title": "", "description": "", "date": "",
-    "location": "", "imageUrl": "" }],
-  "albums": [{ "title": "", "images": [], "youtubeUrl": "" }],
+    "location": "", "imageUrl": "", "sourceUrl": "" }],
+  "albums": [{ "title": "", "images": [], "youtubeUrl": "", "date": "",
+    "sourceUrl": "" }],
   "staff": [{ "name": "", "role": "", "department": "", "photoUrl": "",
     "bio": "" }],
   "history": [{ "year": 0, "month": "", "title": "", "description": "" }],

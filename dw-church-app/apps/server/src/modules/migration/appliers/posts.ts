@@ -15,6 +15,7 @@ import type {
   ClassifiedBoard,
 } from '../types.js';
 import type { ImageUrlMap } from './images.js';
+import { normalizeDate, migrationKey } from './normalize-date.js';
 
 // ─── Sermons ────────────────────────────────────────────────
 // DB has preacher_id FK → preachers table. We look up or create preacher by name.
@@ -64,17 +65,27 @@ export async function applySermons(
       }
     }
 
+    // Normalize the source date so a non-ISO literal (2024.03.15, 2024년 3월
+    // 15일, …) doesn't throw on ::date and drop the whole sermon. Re-import is
+    // idempotent on source_url (real permalink or a synthetic title+date key).
+    const sermonDate = normalizeDate(s.date);
+    const key = migrationKey('sermon', s.sourceUrl, s.title, s.date);
     try {
       await prisma.$queryRawUnsafe(
-        `INSERT INTO "${schema}".sermons (title, scripture, youtube_url, sermon_date, thumbnail_url, preacher_id, status)
-         VALUES ($1, $2, $3, $4::date, $5, $6::uuid, 'published')
-         ON CONFLICT DO NOTHING`,
+        `INSERT INTO "${schema}".sermons (title, scripture, youtube_url, sermon_date, thumbnail_url, preacher_id, status, source_url)
+         VALUES ($1, $2, $3, $4::date, $5, $6::uuid, 'published', $7)
+         ON CONFLICT (source_url) WHERE source_url IS NOT NULL
+         DO UPDATE SET title = EXCLUDED.title, scripture = EXCLUDED.scripture,
+                       youtube_url = EXCLUDED.youtube_url, sermon_date = EXCLUDED.sermon_date,
+                       thumbnail_url = EXCLUDED.thumbnail_url, preacher_id = EXCLUDED.preacher_id,
+                       updated_at = NOW()`,
         s.title || '',
         s.scripture || '',
         s.youtubeUrl || '',
-        s.date || null,
+        sermonDate,
         thumb,
         preacherId,
+        key,
       );
       count++;
     } catch {
@@ -101,15 +112,25 @@ export async function applyBulletins(
     // pdfUrl is migrated to R2 too (mapped in urlMap) — never store the source
     // hotlink. Falls back to the original only if migration failed.
     const pdf = (b.pdfUrl && urlMap.get(b.pdfUrl)) || b.pdfUrl || '';
+    // bulletin_date is NOT NULL — COALESCE to CURRENT_DATE so a missing/
+    // unparseable source date imports the bulletin instead of dropping it.
+    const bulletinDate = normalizeDate(b.date);
+    const thumb = images[0] || '';
+    const key = migrationKey('bulletin', b.sourceUrl, b.title, b.date);
     try {
       await prisma.$queryRawUnsafe(
-        `INSERT INTO "${schema}".bulletins (title, bulletin_date, pdf_url, images, status)
-         VALUES ($1, $2::date, $3, $4::jsonb, 'published')
-         ON CONFLICT DO NOTHING`,
+        `INSERT INTO "${schema}".bulletins (title, bulletin_date, pdf_url, images, thumbnail_url, status, source_url)
+         VALUES ($1, COALESCE($2::date, CURRENT_DATE), $3, $4::jsonb, $5, 'published', $6)
+         ON CONFLICT (source_url) WHERE source_url IS NOT NULL
+         DO UPDATE SET title = EXCLUDED.title, bulletin_date = EXCLUDED.bulletin_date,
+                       pdf_url = EXCLUDED.pdf_url, images = EXCLUDED.images,
+                       thumbnail_url = EXCLUDED.thumbnail_url, updated_at = NOW()`,
         b.title || '',
-        b.date || null,
+        bulletinDate,
         pdf,
         JSON.stringify(images),
+        thumb,
+        key,
       );
       count++;
     } catch {
@@ -133,7 +154,11 @@ export async function applyColumns(
 
   for (const c of columns) {
     const topImg = urlMap.get(c.topImageUrl) || c.topImageUrl;
-    const sourceUrl = (c.sourceUrl || '').trim() || null;
+    // Normalize the date (KR/dot/slash → YYYY-MM-DD) and fall back to a
+    // synthetic title+date key when the source gave no permalink, so a
+    // re-import still UPDATEs instead of duplicating.
+    const createdAt = normalizeDate(c.date);
+    const key = migrationKey('column', c.sourceUrl, c.title, c.date);
     try {
       // created_at preserves source publish order. When the source page
       // gave us a date, COALESCE picks it; null falls back to NOW().
@@ -145,13 +170,13 @@ export async function applyColumns(
          ON CONFLICT (source_url) WHERE source_url IS NOT NULL
          DO UPDATE SET title = EXCLUDED.title, content = EXCLUDED.content,
                        top_image_url = EXCLUDED.top_image_url, youtube_url = EXCLUDED.youtube_url,
-                       updated_at = NOW()`,
+                       created_at = EXCLUDED.created_at, updated_at = NOW()`,
         c.title || '',
         c.content || '',
         topImg,
         c.youtubeUrl || '',
-        c.date || null,
-        sourceUrl,
+        createdAt,
+        key,
       );
       count++;
     } catch {
@@ -176,16 +201,27 @@ export async function applyEvents(
 
   for (const e of events) {
     const img = urlMap.get(e.imageUrl) || e.imageUrl;
+    // event_date is a free-form VARCHAR (can read "매주 주일 오후 2시") — keep the
+    // source string verbatim. created_at carries the parsed date so the list
+    // still orders by real recency; idempotent on source_url.
+    const createdAt = normalizeDate(e.date);
+    const key = migrationKey('event', e.sourceUrl, e.title, e.date);
     try {
       await prisma.$queryRawUnsafe(
-        `INSERT INTO "${schema}".events (title, description, event_date, location, background_image_url, status)
-         VALUES ($1, $2, $3, $4, $5, 'published')
-         ON CONFLICT DO NOTHING`,
+        `INSERT INTO "${schema}".events (title, description, event_date, location, background_image_url, status, created_at, source_url)
+         VALUES ($1, $2, $3, $4, $5, 'published', COALESCE($6::timestamptz, NOW()), $7)
+         ON CONFLICT (source_url) WHERE source_url IS NOT NULL
+         DO UPDATE SET title = EXCLUDED.title, description = EXCLUDED.description,
+                       event_date = EXCLUDED.event_date, location = EXCLUDED.location,
+                       background_image_url = EXCLUDED.background_image_url,
+                       created_at = EXCLUDED.created_at, updated_at = NOW()`,
         e.title || '',
         e.description || '',
         e.date || '',
         e.location || '',
         img,
+        createdAt,
+        key,
       );
       count++;
     } catch {
@@ -213,15 +249,25 @@ export async function applyAlbums(
     // they show a placeholder even though images[] is populated. Default it
     // to the first migrated image.
     const thumbnail = images[0] || '';
+    // Albums have no dedicated date column — created_at carries the source
+    // publish date so the gallery keeps its original order (list sorts by
+    // created_at DESC). Idempotent on source_url.
+    const createdAt = normalizeDate(a.date);
+    const key = migrationKey('album', a.sourceUrl, a.title, a.date);
     try {
       await prisma.$queryRawUnsafe(
-        `INSERT INTO "${schema}".albums (title, images, thumbnail_url, youtube_url, status)
-         VALUES ($1, $2::jsonb, $3, $4, 'published')
-         ON CONFLICT DO NOTHING`,
+        `INSERT INTO "${schema}".albums (title, images, thumbnail_url, youtube_url, status, created_at, source_url)
+         VALUES ($1, $2::jsonb, $3, $4, 'published', COALESCE($5::timestamptz, NOW()), $6)
+         ON CONFLICT (source_url) WHERE source_url IS NOT NULL
+         DO UPDATE SET title = EXCLUDED.title, images = EXCLUDED.images,
+                       thumbnail_url = EXCLUDED.thumbnail_url, youtube_url = EXCLUDED.youtube_url,
+                       created_at = EXCLUDED.created_at, updated_at = NOW()`,
         a.title || '',
         JSON.stringify(images),
         thumbnail,
         a.youtubeUrl || '',
+        createdAt,
+        key,
       );
       count++;
     } catch {
