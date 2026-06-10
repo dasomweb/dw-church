@@ -5,8 +5,63 @@ import { prisma } from '../../config/database.js';
 import { env } from '../../config/env.js';
 import { requireAuth } from '../../middleware/auth.js';
 import { AppError } from '../../middleware/error-handler.js';
-import { uploadFile, deleteFile } from '../../config/r2.js';
+import { uploadFile, deleteFile, copyFile } from '../../config/r2.js';
 import { generateImage, classifyImage } from '../ai/service.js';
+import { validateSchemaName } from '../../utils/validate-schema.js';
+
+/**
+ * Copy-on-delete safety. A curated shared image is referenced by tenants
+ * (NOT copied) while it lives in the library — zero storage duplication. When
+ * a super admin deletes it, any tenant still using its URL would 404. So
+ * before the shared object is removed, give every tenant that references it
+ * its OWN copy under tenant_<slug>/library/ and rewrite that tenant's
+ * page_sections so the path keeps working. Copies happen only at deletion and
+ * only for tenants actually using the image — minimal storage.
+ *
+ * Returns the number of tenants that received a copy.
+ */
+async function copySharedImageToReferencingTenants(url: string, r2Key: string): Promise<number> {
+  if (!url || !r2Key) return 0;
+  const ext = (r2Key.split('.').pop() || 'bin').toLowerCase();
+  const like = `%${url}%`;
+  const tenants = await prisma.tenant.findMany({
+    where: { isActive: true },
+    select: { slug: true },
+  });
+  let copied = 0;
+  for (const { slug } of tenants) {
+    let schema: string;
+    try {
+      schema = validateSchemaName(`tenant_${slug}`);
+    } catch {
+      continue;
+    }
+    try {
+      const rows = await prisma.$queryRawUnsafe<{ n: number }[]>(
+        `SELECT count(*)::int AS n FROM "${schema}".page_sections WHERE props::text LIKE $1`,
+        like,
+      );
+      if (Number(rows[0]?.n ?? 0) === 0) continue;
+
+      // Materialize a tenant-owned copy and repoint the references to it.
+      const destKey = `tenant_${slug}/library/${crypto.randomUUID()}.${ext}`;
+      const newUrl = await copyFile(r2Key, destKey);
+      await prisma.$executeRawUnsafe(
+        `UPDATE "${schema}".page_sections
+         SET props = REPLACE(props::text, $1, $2)::jsonb
+         WHERE props::text LIKE $3`,
+        url,
+        newUrl,
+        like,
+      );
+      copied++;
+    } catch {
+      // Per-tenant best effort — a missing table / copy error on one tenant
+      // must not abort the whole deletion.
+    }
+  }
+  return copied;
+}
 
 /**
  * Shared image gallery — curated platform-wide by super admins, picked by
@@ -148,18 +203,32 @@ export default async function sharedImageRoutes(app: FastifyInstance): Promise<v
     },
   );
 
-  // DELETE /admin/shared-images/:id  — removes DB row + R2 object
+  // DELETE /admin/shared-images/:id  — copy-on-delete safety, then remove
+  // DB row + R2 object. Tenants still referencing the image get their own
+  // copy first (see copySharedImageToReferencingTenants) so no path breaks.
   app.delete<{ Params: { id: string } }>(
     '/admin/shared-images/:id',
     { preHandler: [requireSuperAdmin] },
     async (request, reply) => {
       const image = await prisma.sharedImage.findUnique({ where: { id: request.params.id } });
       if (!image) throw new AppError('NOT_FOUND', 404, 'Image not found');
+
+      // 1. Give every tenant still using this image its own copy + repoint refs.
+      let copiedToTenants = 0;
+      if (image.r2Key) {
+        try {
+          copiedToTenants = await copySharedImageToReferencingTenants(image.url, image.r2Key);
+        } catch (err) {
+          request.log.warn(`copy-on-delete failed: ${err}`);
+        }
+      }
+
+      // 2. Now it's safe to remove the shared original (R2 + DB row).
       if (image.r2Key) {
         try { await deleteFile(image.r2Key); } catch (err) { request.log.warn(`R2 delete failed: ${err}`); }
       }
       await prisma.sharedImage.delete({ where: { id: image.id } });
-      return reply.status(204).send();
+      return reply.send({ success: true, copiedToTenants });
     },
   );
 }

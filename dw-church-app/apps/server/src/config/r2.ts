@@ -5,6 +5,7 @@ import {
   DeleteObjectsCommand,
   GetObjectCommand,
   ListObjectsV2Command,
+  CopyObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl as awsGetSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { env } from './env.js';
@@ -35,6 +36,24 @@ export async function uploadFile(
     }),
   );
   return `${env.R2_PUBLIC_URL}/${key}`;
+}
+
+/**
+ * Server-side copy of an object within the bucket (no download/re-upload).
+ * Used by the shared-image "copy-on-delete" safety: when a curated shared
+ * image is removed, each tenant still using it gets its own copy first.
+ * Returns the public URL of the new object.
+ */
+export async function copyFile(srcKey: string, destKey: string): Promise<string> {
+  await s3.send(
+    new CopyObjectCommand({
+      Bucket: env.R2_BUCKET_NAME,
+      // CopySource must be `<bucket>/<key>`, URL-encoded.
+      CopySource: encodeURIComponent(`${env.R2_BUCKET_NAME}/${srcKey}`),
+      Key: destKey,
+    }),
+  );
+  return `${env.R2_PUBLIC_URL}/${destKey}`;
 }
 
 /**

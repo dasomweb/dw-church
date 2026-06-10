@@ -2127,14 +2127,16 @@ function GalleryTab() {
   const byCategory = images.filter((i) => i.category === activeCategory);
 
   const handleDelete = async (id: string, title: string) => {
-    if (!confirm(`"${title}" 이미지를 삭제하시겠습니까?`)) return;
+    if (!confirm(`"${title}" 이미지를 삭제하시겠습니까?\n사용 중인 테넌트에는 자동으로 복사본이 만들어져 경로가 유지됩니다.`)) return;
     try {
       const res = await fetch(`/api/v1/admin/shared-images/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token || ''}` },
       });
       if (!res.ok) throw new Error('delete failed');
-      showToast('success', '삭제되었습니다.');
+      const json = (await res.json().catch(() => ({}))) as { copiedToTenants?: number };
+      const n = json.copiedToTenants ?? 0;
+      showToast('success', n > 0 ? `삭제됨 — 사용 중인 ${n}개 테넌트에 복사본 생성됨` : '삭제되었습니다.');
       void reload();
     } catch {
       showToast('error', '삭제 실패');
