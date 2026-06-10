@@ -749,6 +749,13 @@ const BANNER_SLIDER: BlockElementRegistry = {
     { title: 'Data', elements: [
       { label: 'Category', path: 'category', kind: 'text', hint: '배너 관리에서 분류한 카테고리 slug (기본: main)' },
     ]},
+    { title: 'Style', elements: [
+      { label: '오버레이 색상', path: 'overlayColor', kind: 'color', hint: '배너 이미지 위 색조 덮개 (기본 검정)' },
+      { label: '오버레이 투명도 (%)', path: 'overlayOpacity', kind: 'number', hint: '0~100. 0이면 덮개 없음. 기본 20' },
+      { label: '높이 비율 (%)', path: 'heightRatio', kind: 'number', hint: '슬라이드 높이 = 가로폭의 %. 기본 40' },
+      { label: '상하 바깥여백 margin (px)', path: 'marginY', kind: 'number', hint: '블록 위/아래 간격' },
+      { label: '좌우 안쪽여백 padding (px)', path: 'paddingX', kind: 'number', hint: '좌/우 안쪽 여백' },
+    ]},
   ],
 };
 

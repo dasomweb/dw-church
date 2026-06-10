@@ -13,6 +13,19 @@ interface BannerSliderBlockProps {
 export async function BannerSliderBlock({ props, slug }: BannerSliderBlockProps) {
   const category = (props.category as string) ?? 'main';
 
+  // Inspector-tunable overlay + spacing (super-admin builder Style section).
+  const overlayColor = (props.overlayColor as string) || '#000000';
+  const overlayOpacity = props.overlayOpacity != null ? Number(props.overlayOpacity) : 20;
+  const heightRatio = props.heightRatio != null ? Number(props.heightRatio) : 40;
+  const marginY = props.marginY != null ? Number(props.marginY) : 0;
+  const paddingX = props.paddingX != null ? Number(props.paddingX) : 0;
+  const wrapStyle = {
+    marginTop: marginY ? `${marginY}px` : undefined,
+    marginBottom: marginY ? `${marginY}px` : undefined,
+    paddingLeft: paddingX ? `${paddingX}px` : undefined,
+    paddingRight: paddingX ? `${paddingX}px` : undefined,
+  };
+
   let banners;
   try {
     const result = await getBanners(slug);
@@ -35,5 +48,14 @@ export async function BannerSliderBlock({ props, slug }: BannerSliderBlockProps)
     );
   }
 
-  return <HeroBannerClient banners={banners} />;
+  return (
+    <div style={wrapStyle}>
+      <HeroBannerClient
+        banners={banners}
+        overlayColor={overlayColor}
+        overlayOpacity={overlayOpacity}
+        heightRatio={heightRatio}
+      />
+    </div>
+  );
 }

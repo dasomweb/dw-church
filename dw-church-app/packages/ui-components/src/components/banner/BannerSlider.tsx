@@ -9,6 +9,12 @@ export interface BannerSliderProps {
   category?: 'main' | 'sub';
   autoPlayInterval?: number;
   className?: string;
+  /** Tint over the banner image. Default #000000. */
+  overlayColor?: string;
+  /** Overlay opacity 0–100 (0 = no overlay). Default 20. */
+  overlayOpacity?: number;
+  /** Slide height as a % of width (paddingBottom). Default 40. */
+  heightRatio?: number;
 }
 
 function BannerTextOverlay({ banner }: { banner: Banner }) {
@@ -77,7 +83,11 @@ export function BannerSlider({
   category,
   autoPlayInterval = 5000,
   className = '',
+  overlayColor = '#000000',
+  overlayOpacity = 20,
+  heightRatio = 40,
 }: BannerSliderProps) {
+  const overlayAlpha = Math.min(100, Math.max(0, overlayOpacity)) / 100;
   const { data: fetchedData, isLoading } = useActiveBanners(category);
   const banners = data ?? fetchedData?.data ?? [];
 
@@ -105,7 +115,7 @@ export function BannerSlider({
   const banner = banners[currentIndex]!;
 
   const slideContent = (
-    <div className="relative w-full overflow-hidden" style={{ paddingBottom: '40%' }}>
+    <div className="relative w-full overflow-hidden" style={{ paddingBottom: `${heightRatio}%` }}>
       <picture>
         <source media="(max-width: 768px)" srcSet={banner.mobileImageUrl ?? undefined} />
         <img
@@ -114,7 +124,9 @@ export function BannerSlider({
           className="absolute inset-0 h-full w-full object-cover transition-opacity duration-500"
         />
       </picture>
-      <div className="absolute inset-0 bg-black/20" />
+      {overlayAlpha > 0 && (
+        <div className="absolute inset-0" style={{ backgroundColor: overlayColor, opacity: overlayAlpha }} />
+      )}
       <BannerTextOverlay banner={banner} />
     </div>
   );

@@ -5,8 +5,18 @@ import type { Banner } from '@dw-church/api-client';
 
 interface HeroBannerClientProps {
   banners: Banner[];
+  overlayColor?: string;
+  overlayOpacity?: number;
+  heightRatio?: number;
 }
 
-export function HeroBannerClient({ banners }: HeroBannerClientProps) {
-  return <BannerSlider data={banners} />;
+export function HeroBannerClient({ banners, overlayColor, overlayOpacity, heightRatio }: HeroBannerClientProps) {
+  return (
+    <BannerSlider
+      data={banners}
+      overlayColor={overlayColor}
+      overlayOpacity={overlayOpacity}
+      heightRatio={heightRatio}
+    />
+  );
 }
