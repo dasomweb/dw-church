@@ -48,7 +48,6 @@ const StaffManagement = lazyWithReload(() => import('./pages/StaffManagement'));
 const HistoryManagement = lazyWithReload(() => import('./pages/HistoryManagement'));
 const BoardManagement = lazyWithReload(() => import('./pages/BoardManagement'));
 const PageEditor = lazyWithReload(() => import('./pages/PageEditor'));
-const PageWizard = lazyWithReload(() => import('./pages/PageWizard'));
 const MenuEditor = lazyWithReload(() => import('./pages/MenuEditor'));
 // ThemeEditor (tenant-admin) deprecated — friendly notice 로 대체.
 // 2026-06-01: 테마 = 슈퍼어드민 owned (테마셋 라이브러리 기반).
@@ -306,7 +305,6 @@ export function App({ config }: { config: AppConfig }) {
                 <Route path="history" element={<HistoryManagement />} />
                 <Route path="boards" element={<BoardManagement />} />
                 <Route path="pages" element={<PageEditor />} />
-                <Route path="page-wizard" element={<PageWizard />} />
                 <Route path="menus" element={<MenuEditor />} />
                 <Route path="theme" element={<ThemeDeprecatedNotice />} />
                 <Route path="users" element={<UserManagement />} />

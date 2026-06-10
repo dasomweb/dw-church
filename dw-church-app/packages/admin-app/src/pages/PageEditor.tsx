@@ -914,7 +914,6 @@ function SectionCard({
   onDuplicate,
   onVariantChange,
   onUploadImage,
-  onGenerateText,
   onDragStart,
   onDragOver,
   onDrop,
@@ -934,7 +933,6 @@ function SectionCard({
   onDuplicate: () => void;
   onVariantChange: (variant: string) => void;
   onUploadImage: (file: File) => Promise<string>;
-  onGenerateText: (prompt: string, context?: string) => Promise<string>;
   onDragStart: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
@@ -943,11 +941,8 @@ function SectionCard({
   const def = getBlockDef(section.blockType);
   const props = localProps;
   const set = (key: string, value: unknown) => onPropsChange({ ...props, [key]: value });
-  const [aiLoading, setAiLoading] = useState<string | null>(null);
-  const [aiSuggestions, setAiSuggestions] = useState<{ field: string; label: string; samples: string[] } | null>(null);
   const [collapsed, setCollapsed] = useState(true);
   const [showChildPicker, setShowChildPicker] = useState(false);
-  const { showToast } = useToast();
   const isDynamic = def?.nature === 'dynamic';
   const isLayoutBlock = def?.nature === 'layout';
   const layoutChildren = (props.children as { blockType: string; props: Record<string, unknown> }[]) || [];
@@ -980,88 +975,6 @@ function SectionCard({
     [newChildren[idx], newChildren[targetIdx]] = [newChildren[targetIdx]!, newChildren[idx]!];
     set('children', newChildren);
   };
-
-  // Block-specific prompt templates
-  const blockPrompts: Record<string, Record<string, string>> = {
-    pastor_message: {
-      name: '담임목사의 이름을 한국 이름 형식(예: 홍길동 목사)으로',
-      message: '담임목사가 교인들에게 보내는 따뜻한 인사말을 300자 내외로. 은혜롭고 격려하는 내용으로',
-      title: '"담임목사 인사말" 섹션의 제목을',
-    },
-    church_intro: {
-      title: '교회 소개 섹션 제목을',
-      content: '교회 소개 글을 300자 내외로. 교회의 특색, 공동체 분위기, 지향점을 포함',
-    },
-    mission_vision: {
-      title: '교회 비전/미션 섹션 제목을',
-      content: '교회의 비전과 미션 선언문을 200자 내외로. 성경적 근거와 함께',
-    },
-    newcomer_info: {
-      title: '새가족 환영 섹션 제목을',
-      content: '새가족에게 보내는 환영 메시지를 200자 내외로. 따뜻하고 편안한 분위기로',
-    },
-    quote_block: {
-      title: '인용구의 출처를 (예: 요한복음 3:16)',
-      content: '교회 웹사이트에 어울리는 성경구절이나 교회 표어를',
-    },
-    hero_banner: {
-      title: '히어로 배너의 메인 타이틀을. 간결하고 임팩트있게',
-      subtitle: '히어로 배너의 부제목을. 교회의 슬로건이나 환영 문구로',
-    },
-  };
-
-  // AI recommend — generates 3 samples for user to choose
-  const handleAiSuggest = async (
-    fieldKey: string,
-    fieldLabel: string,
-    keyword?: string,
-    length: 'sentence' | 'paragraph' = 'paragraph',
-  ) => {
-    setAiLoading(fieldKey);
-    setAiSuggestions(null);
-    try {
-      const blockLabel = def?.label || section.blockType;
-      const blockType = section.blockType;
-      const basePrompt = blockPrompts[blockType]?.[fieldKey] || `교회 웹사이트의 "${blockLabel}" 블록에 들어갈 "${fieldLabel}" 내용을`;
-
-      const keywordPart = keyword ? ` 키워드 "${keyword}"를 중심으로` : '';
-      const lengthHint = length === 'sentence'
-        ? ' 간결하게 한두 문장으로'
-        : ' 200자 이상의 충분한 분량의 한 문단으로 자연스럽고 풍부하게';
-      const prompt = `${basePrompt}${keywordPart}${lengthHint} 작성해주세요.
-서로 다른 스타일로 3가지 버전을 만들어주세요.
-각 버전을 "---" 구분자로 분리해서 출력하세요.
-내용만 출력하고 번호나 설명은 붙이지 마세요.`;
-
-      const text = await onGenerateText(prompt, `한국 교회 웹사이트, 블록: ${blockLabel}, 필드: ${fieldLabel}`);
-
-      const samples = text.split(/---+/).map(s => s.trim()).filter(s => s.length > 0).slice(0, 3);
-
-      if (samples.length === 0) {
-        set(fieldKey, text.trim());
-      } else {
-        setAiSuggestions({ field: fieldKey, label: fieldLabel, samples });
-      }
-    } catch (err) {
-      showToast('error', `AI 추천 실패: ${err instanceof Error ? err.message : '알 수 없는 오류'}`);
-    } finally {
-      setAiLoading(null);
-    }
-  };
-
-  const handleSelectSuggestion = (text: string) => {
-    if (aiSuggestions) {
-      set(aiSuggestions.field, text);
-      setAiSuggestions(null);
-    }
-  };
-
-  // AI keyword input state
-  const [aiKeywordField, setAiKeywordField] = useState<string | null>(null);
-  const [aiKeyword, setAiKeyword] = useState('');
-  // Per-field AI length preference — "문장" (short) or "문단" (paragraph, default).
-  const [aiLengthByField, setAiLengthByField] = useState<Record<string, 'sentence' | 'paragraph'>>({});
-  const lengthFor = (key: string): 'sentence' | 'paragraph' => aiLengthByField[key] ?? 'paragraph';
 
   const [imageLibraryField, setImageLibraryField] = useState<string | null>(null);
 
@@ -1280,61 +1193,6 @@ function SectionCard({
               <div key={field.key}>
                 <div className="flex items-center justify-between mb-0.5">
                   <label className="text-[11px] font-medium text-gray-500">{field.label}</label>
-                  {(field.type === 'text' || field.type === 'textarea') && (
-                    <div className="flex items-center gap-1">
-                      {/* Length selector — only meaningful for textarea (longer content) */}
-                      {field.type === 'textarea' && (
-                        <div className="inline-flex rounded border border-gray-200 overflow-hidden text-[10px]" title="AI 추천 길이">
-                          {(['sentence', 'paragraph'] as const).map((opt) => {
-                            const selected = lengthFor(field.key) === opt;
-                            return (
-                              <button
-                                key={opt}
-                                type="button"
-                                onClick={() => setAiLengthByField((prev) => ({ ...prev, [field.key]: opt }))}
-                                className={`px-1.5 py-0.5 transition-colors ${selected ? 'bg-purple-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-                              >
-                                {opt === 'sentence' ? '문장' : '문단'}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                      {aiKeywordField === field.key ? (
-                        <div className="flex items-center gap-1">
-                          <input
-                            type="text"
-                            value={aiKeyword}
-                            onChange={(e) => setAiKeyword(e.target.value)}
-                            placeholder="키워드 (선택)"
-                            className="w-20 border rounded px-1 py-0.5 text-[10px]"
-                            onKeyDown={(e) => { if (e.key === 'Enter') { handleAiSuggest(field.key, field.label, aiKeyword || undefined, lengthFor(field.key)); setAiKeywordField(null); setAiKeyword(''); } if (e.key === 'Escape') { setAiKeywordField(null); setAiKeyword(''); } }}
-                            autoFocus
-                          />
-                          <button
-                            type="button"
-                            onClick={() => { handleAiSuggest(field.key, field.label, aiKeyword || undefined, lengthFor(field.key)); setAiKeywordField(null); setAiKeyword(''); }}
-                            disabled={!!aiLoading}
-                            className="text-[10px] bg-purple-600 text-white px-1.5 py-0.5 rounded disabled:opacity-50"
-                          >
-                            {aiLoading === field.key ? '...' : '생성'}
-                          </button>
-                          <button type="button" onClick={() => { setAiKeywordField(null); setAiKeyword(''); }} className="text-[10px] text-gray-400">✕</button>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setAiKeywordField(field.key)}
-                          disabled={!!aiLoading}
-                          className="flex items-center gap-0.5 text-[10px] bg-purple-50 text-purple-600 hover:bg-purple-100 px-1.5 py-0.5 rounded disabled:opacity-50 transition-colors"
-                          title="AI 추천 (3개 샘플)"
-                        >
-                          {aiLoading === field.key ? <span className="inline-block w-3 h-3 border border-purple-400 border-t-transparent rounded-full animate-spin" /> : <span>✨</span>}
-                          AI 추천
-                        </button>
-                      )}
-                    </div>
-                  )}
                   {field.type === 'image' && (
                     <button
                       type="button"
@@ -1409,27 +1267,6 @@ function SectionCard({
                     onChange={(e) => set(field.key, e.target.value)}
                     className="w-full border rounded-lg px-2.5 py-1.5 text-xs"
                   />
-                )}
-
-                {/* AI Suggestion Samples */}
-                {aiSuggestions?.field === field.key && (
-                  <div className="mt-1.5 border border-purple-200 rounded-lg bg-purple-50/50 p-2 space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-medium text-purple-600">✨ AI 추천 — 클릭하여 선택</span>
-                      <button type="button" onClick={() => setAiSuggestions(null)} className="text-[10px] text-gray-400 hover:text-gray-600">닫기</button>
-                    </div>
-                    {aiSuggestions.samples.map((sample, si) => (
-                      <button
-                        key={si}
-                        type="button"
-                        onClick={() => handleSelectSuggestion(sample)}
-                        className="w-full text-left px-2.5 py-2 bg-white border border-purple-100 rounded-lg text-xs text-gray-700 hover:border-purple-400 hover:bg-purple-50 transition-colors"
-                      >
-                        <span className="text-[10px] text-purple-400 font-medium">#{si + 1}</span>
-                        <p className="mt-0.5 line-clamp-3">{sample}</p>
-                      </button>
-                    ))}
-                  </div>
                 )}
               </div>
                   ))}
@@ -1546,47 +1383,6 @@ function TemplateGallery({ onSelect, onClose }: { onSelect: (t: PageTemplate) =>
   );
 }
 
-// ═══════════════════════════════════════════════════════════
-// Page Wizard Categories
-// ═══════════════════════════════════════════════════════════
-const PAGE_WIZARD_CATEGORIES = [
-  { title: '교회 안내', icon: '⛪', pages: [
-    { label: '인사말', blocks: '3블록', prompt: '담임목사 인사말 페이지를 만들어줘. 담임목사 프로필 사진과 인사말, 비전/사명 선언문을 포함해줘' },
-    { label: '교회 소개', blocks: '4블록', prompt: '교회 소개 페이지를 만들어줘. 교회 소개 텍스트와 이미지, 비전/미션, 교회 표어 성경구절을 포함해줘' },
-    { label: '교회 역사', blocks: '3블록', prompt: '교회 역사 페이지를 만들어줘. 연도별 타임라인과 교회 사진을 포함해줘' },
-    { label: '교역자 소개', blocks: '2블록', prompt: '교역자 소개 페이지를 만들어줘. 교역자 그리드(4열, 사진+이름+직분+담당사역)를 포함해줘' },
-    { label: '신앙고백/비전', blocks: '4블록', prompt: '신앙고백과 비전 페이지를 만들어줘. 신앙고백 본문, 핵심가치 설명, 비전 성경구절을 포함해줘' },
-    { label: '오시는 길', blocks: '4블록', prompt: '오시는 길 페이지를 만들어줘. 구글맵 지도, 주소, 연락처, 주차 안내와 대중교통 안내를 포함해줘' },
-  ]},
-  { title: '예배 및 모임', icon: '🙏', pages: [
-    { label: '예배 시간표', blocks: '3블록', prompt: '예배 안내 페이지를 만들어줘. 예배 시간표(주일1부 오전7시, 주일2부 오전9:30, 주일3부 오전11:30, 수요예배 저녁7:30, 금요기도 저녁8시), 특별예배 공지를 포함해줘' },
-    { label: '주보', blocks: '2블록', prompt: '주보 페이지를 만들어줘. 최신 주보 목록(12개, 4열 그리드, PDF 다운로드)을 포함해줘' },
-    { label: '새가족 안내', blocks: '6블록', prompt: '새가족 안내 페이지를 만들어줘. 환영 메시지(한국어/영어), 등록 절차와 FAQ, 예배 시간표, 오시는 길, 연락처를 포함해줘. 이민교회 특성 반영해줘' },
-  ]},
-  { title: '사역 부서', icon: '👥', pages: [
-    { label: '아동부/주일학교', blocks: '4블록', prompt: '아동부/주일학교 소개 페이지를 만들어줘. 대상연령과 교육철학, 교사소개, 행사 일정, 등록 안내 게시판을 포함해줘' },
-    { label: '청년부', blocks: '5블록', prompt: '청년부 소개 페이지를 만들어줘. 부서 소개와 간증, 활동 사진 갤러리, 행사 일정, 등록 게시판을 포함해줘' },
-    { label: '장년부/구역', blocks: '4블록', prompt: '장년부/구역 소개 페이지를 만들어줘. 구역 목록(구역명, 구역장, 모임시간/장소), 성경공부 일정, 구역 관련 게시판을 포함해줘' },
-    { label: '선교부', blocks: '4블록', prompt: '선교부 페이지를 만들어줘. 선교지 현황(국가별 선교사 카드), 선교 후원 안내, 선교 소식 게시판을 포함해줘' },
-  ]},
-  { title: '미디어', icon: '📺', pages: [
-    { label: '설교 영상', blocks: '2블록', prompt: '설교 영상 페이지를 만들어줘. 설교 목록(12개, 4열 그리드, YouTube 연동, 검색+필터)을 포함해줘' },
-    { label: '갤러리', blocks: '2블록', prompt: '갤러리 페이지를 만들어줘. 앨범 목록(12개, 4열 그리드, 행사명+날짜+사진)을 포함해줘' },
-    { label: '찬양/악보', blocks: '2블록', prompt: '찬양과 악보 페이지를 만들어줘. 찬양 목록 게시판(제목, 작사/작곡, 악보 PDF 다운로드)을 포함해줘' },
-    { label: '목회칼럼', blocks: '2블록', prompt: '목회칼럼 페이지를 만들어줘. 칼럼 목록(12개, 3열 그리드)을 포함해줘' },
-  ]},
-  { title: '공동체', icon: '🤝', pages: [
-    { label: '공지사항', blocks: '2블록', prompt: '공지사항 페이지를 만들어줘. 공지 게시판(제목, 작성일, 중요공지 상단고정, 첨부파일)을 포함해줘' },
-    { label: '교회 소식', blocks: '2블록', prompt: '교회 소식 페이지를 만들어줘. 소식 목록(12개, 3열 카드, 이미지+제목+요약+날짜)을 포함해줘' },
-    { label: '기도 요청', blocks: '3블록', prompt: '기도 요청 페이지를 만들어줘. 기도 요청 안내 텍스트와 기도 요청 게시판을 포함해줘' },
-    { label: '새가족 등록', blocks: '6블록', prompt: '새가족 등록 페이지를 만들어줘. 환영 메시지(한국어/영어 이중안내), 등록절차 안내, 예배시간표, 오시는 길, 연락처를 포함해줘. 이민교회 특성(미국 거주기간, 관심사역) 반영해줘' },
-  ]},
-  { title: '연락/헌금', icon: '💝', pages: [
-    { label: '연락처', blocks: '3블록', prompt: '연락처 페이지를 만들어줘. 교회 정보(주소, 전화, 이메일, 운영시간), 구글맵 지도, 문의 안내를 포함해줘' },
-    { label: '온라인 헌금', blocks: '3블록', prompt: '온라인 헌금 페이지를 만들어줘. 헌금 종류(십일조, 감사헌금, 선교헌금, 건축헌금), 헌금 방법(Zelle, Venmo, Check 안내), 온라인 결제 안내를 포함해줘. 이민교회 특성 반영해줘' },
-  ]},
-];
-
 // Page Form
 // ═══════════════════════════════════════════════════════════
 interface PageFormData {
@@ -1605,10 +1401,6 @@ export default function PageEditor() {
   const [sectionProps, setSectionProps] = useState<Record<string, Record<string, unknown>>>({});
   const [showPageForm, setShowPageForm] = useState(false);
   const [showTemplateGallery, setShowTemplateGallery] = useState(false);
-  const [showAiGenerator, setShowAiGenerator] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [aiPreview, setAiPreview] = useState<{ title: string; slug: string; blocks: { blockType: string; props: Record<string, unknown> }[] } | null>(null);
-  const [aiLoading, setAiLoading] = useState(false);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
   const { showToast } = useToast();
@@ -1640,53 +1432,6 @@ export default function PageEditor() {
     setSelectedPageId(null);
     reset({ title: '', slug: '', status: 'draft', isHome: false });
     setShowPageForm(true);
-  };
-
-  // ─── AI Page Generation ──────────────────────────
-  const handleAiPreviewDirect = async (prompt: string) => {
-    setAiLoading(true);
-    setAiPreview(null);
-    setAiPrompt(prompt);
-    try {
-      const res = await apiClient!.adapter.post<{ data: { title: string; slug: string; blocks: { blockType: string; props: Record<string, unknown> }[] } }>('/ai/generate-page/preview', { prompt });
-      setAiPreview(res.data);
-    } catch (err) {
-      showToast('error', err instanceof Error ? err.message : 'AI 페이지 생성 실패');
-    } finally {
-      setAiLoading(false);
-    }
-  };
-
-  const handleAiPreview = async () => {
-    if (!aiPrompt.trim()) return;
-    setAiLoading(true);
-    setAiPreview(null);
-    try {
-      const res = await apiClient!.adapter.post<{ data: { title: string; slug: string; blocks: { blockType: string; props: Record<string, unknown> }[] } }>('/ai/generate-page/preview', { prompt: aiPrompt });
-      setAiPreview(res.data);
-    } catch (err) {
-      showToast('error', err instanceof Error ? err.message : 'AI 페이지 생성 실패');
-    } finally {
-      setAiLoading(false);
-    }
-  };
-
-  const handleAiCreate = async () => {
-    if (!aiPrompt.trim()) return;
-    setAiLoading(true);
-    try {
-      const res = await apiClient!.adapter.post<{ data: { page: { id: string; title: string; slug: string }; sections: number } }>('/api/v1/ai/generate-page', { prompt: aiPrompt });
-      showToast('success', `"${res.data.page.title}" 페이지가 생성되었습니다 (${res.data.sections}개 블록)`);
-      queryClient.invalidateQueries({ queryKey: ['pages'] });
-      setSelectedPageId(res.data.page.id);
-      setShowAiGenerator(false);
-      setAiPrompt('');
-      setAiPreview(null);
-    } catch (err) {
-      showToast('error', err instanceof Error ? err.message : 'AI 페이지 생성 실패');
-    } finally {
-      setAiLoading(false);
-    }
   };
 
   const handleEditPage = () => {
@@ -1895,7 +1640,6 @@ export default function PageEditor() {
         <div className="flex items-center justify-between px-3 py-2 border-b bg-gray-50">
           <h3 className="text-xs font-semibold">페이지</h3>
           <div className="flex gap-1">
-            <button onClick={() => setShowAiGenerator(true)} className="text-[10px] bg-purple-600 text-white px-2 py-0.5 rounded hover:bg-purple-700">AI</button>
             <button onClick={handleCreatePage} className="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded hover:bg-blue-700">+ 추가</button>
           </div>
         </div>
@@ -1995,10 +1739,6 @@ export default function PageEditor() {
                   const res = await apiClient!.uploadFile(file);
                   return res.url;
                 }}
-                onGenerateText={async (prompt: string, context?: string) => {
-                  const res = await apiClient!.generateText(prompt, context);
-                  return res.text;
-                }}
                 onDragStart={(e) => handleSectionDragStart(e, index)}
                 onDragOver={(e) => handleSectionDragOver(e, index)}
                 onDrop={(e) => handleSectionDrop(e, index)}
@@ -2078,111 +1818,6 @@ export default function PageEditor() {
         </div>
       )}
 
-      {/* Page Wizard Modal */}
-      {showAiGenerator && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => { setShowAiGenerator(false); setAiPreview(null); setAiPrompt(''); }}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0">
-              <div>
-                <h3 className="text-base font-bold">페이지 마법사</h3>
-                <p className="text-xs text-gray-400 mt-0.5">{aiPreview ? '블록 구성을 확인하고 생성하세요' : '추가할 페이지를 선택하거나 직접 설명하세요'}</p>
-              </div>
-              <button onClick={() => { setShowAiGenerator(false); setAiPreview(null); setAiPrompt(''); }} className="text-gray-400 hover:text-gray-600 text-lg">&times;</button>
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              {/* Preview Mode */}
-              {aiPreview ? (
-                <>
-                  <div className="border border-purple-200 rounded-lg p-4 bg-purple-50/50">
-                    <div className="flex items-center gap-2 mb-3">
-                      <h4 className="text-sm font-bold text-purple-800">{aiPreview.title}</h4>
-                      <span className="text-[10px] text-purple-500 bg-purple-100 px-1.5 py-0.5 rounded">/{aiPreview.slug}</span>
-                      <span className="text-[10px] text-gray-400 ml-auto">{aiPreview.blocks.length}개 블록</span>
-                    </div>
-                    <div className="space-y-1.5">
-                      {aiPreview.blocks.map((block, i) => (
-                        <div key={i} className="flex items-start gap-2 px-3 py-2 bg-white rounded-lg border border-purple-100">
-                          <span className="text-[10px] font-mono bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded flex-shrink-0 mt-0.5">{block.blockType}</span>
-                          <div className="text-xs text-gray-600 min-w-0 flex-1">
-                            {!!block.props.title && <span className="font-medium">{String(block.props.title)}</span>}
-                            {!!block.props.content && <p className="text-gray-400 truncate mt-0.5">{String(block.props.content).slice(0, 100)}</p>}
-                            {!!block.props.subtitle && <p className="text-gray-400">{String(block.props.subtitle)}</p>}
-                            {!!block.props.name && <p className="text-gray-500">{String(block.props.name)}</p>}
-                            {Array.isArray(block.props.services) && <p className="text-gray-400">{(block.props.services as { name: string }[]).map(s => s.name).join(', ')}</p>}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => { setAiPreview(null); }} className="px-4 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200">다시 선택</button>
-                    <button onClick={handleAiPreview} disabled={aiLoading} className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg text-sm hover:bg-purple-200 disabled:opacity-50">
-                      {aiLoading ? '재생성 중...' : '다시 생성'}
-                    </button>
-                    <button onClick={handleAiCreate} disabled={aiLoading} className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 disabled:opacity-50">
-                      {aiLoading ? '저장 중...' : '이 구성으로 페이지 생성'}
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {/* Wizard: Page Category Selection */}
-                  <div className="grid grid-cols-2 gap-3">
-                    {PAGE_WIZARD_CATEGORIES.map((cat) => (
-                      <div key={cat.title} className="border border-gray-200 rounded-lg overflow-hidden">
-                        <div className="px-3 py-2 bg-gray-50 border-b">
-                          <h4 className="text-xs font-bold text-gray-700">{cat.icon} {cat.title}</h4>
-                        </div>
-                        <div className="p-1">
-                          {cat.pages.map((pg) => (
-                            <button
-                              key={pg.label}
-                              onClick={() => { setAiPrompt(pg.prompt); handleAiPreviewDirect(pg.prompt); }}
-                              disabled={aiLoading}
-                              className="w-full text-left px-3 py-2 rounded-md text-xs hover:bg-purple-50 transition-colors flex items-center gap-2 disabled:opacity-50"
-                            >
-                              <span className="flex-1 font-medium text-gray-700">{pg.label}</span>
-                              <span className="text-[10px] text-gray-400">{pg.blocks}</span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Divider */}
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 border-t" />
-                    <span className="text-[10px] text-gray-400">또는 직접 입력</span>
-                    <div className="flex-1 border-t" />
-                  </div>
-
-                  {/* Custom prompt */}
-                  <div className="flex gap-2">
-                    <textarea
-                      value={aiPrompt}
-                      onChange={(e) => setAiPrompt(e.target.value)}
-                      placeholder="원하는 페이지를 자유롭게 설명하세요..."
-                      className="flex-1 border rounded-lg px-3 py-2 text-sm h-16 resize-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                      onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAiPreview(); } }}
-                    />
-                    <button
-                      onClick={handleAiPreview}
-                      disabled={aiLoading || !aiPrompt.trim()}
-                      className="bg-purple-600 text-white px-4 rounded-lg text-sm font-medium hover:bg-purple-700 disabled:opacity-50 self-stretch"
-                    >
-                      {aiLoading ? '...' : '생성'}
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

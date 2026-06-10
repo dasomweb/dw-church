@@ -87,7 +87,11 @@
       "Bash(grep -rnE \"--cq-|b2b-card-grid|gridTemplateColumns|grid-cols\" packages/blocks/src/list-based)",
       "Bash(PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 pnpm install)",
       "Bash(sed -n '900,925p' SuperAdminDashboardV2.tsx)",
-      "Read(//h/apps/server/src/**)"
+      "Read(//h/apps/server/src/**)",
+      "Bash(node -e \"require\\('@prisma/client'\\); console.log\\('require ok'\\)\")",
+      "Bash(pnpm exec *)",
+      "PowerShell(pnpm --filter @dw-church/admin-app typecheck)",
+      "PowerShell(pnpm --filter @dw-church/admin-app build)"
     ]
   }
 }
