@@ -60,8 +60,8 @@ export async function applyAll(
   // 1. Images → R2 — always run if anything we're applying needs them.
   // Static blocks reference imageUrl; dynamic appliers also need urlMap.
   onProgress?.('이미지 R2 업로드', false);
-  const allImages = collectImagesForInclude(data, include);
-  const urlMap = await migrateImages(allImages, tenantSlug);
+  const { all: allImages, backgrounds } = collectImagesForInclude(data, include);
+  const urlMap = await migrateImages(allImages, tenantSlug, undefined, backgrounds);
   // Non-image files — bulletin PDFs — must self-host on R2 too (never hotlink).
   if (include.has('bulletins')) {
     for (const b of data.bulletins) {
@@ -144,8 +144,13 @@ export async function applyAll(
  * Only upload images that the included content types actually reference.
  * Skipping unused images saves R2 bandwidth + tenant storage quota.
  */
-function collectImagesForInclude(data: ClassifiedData, include: Set<IncludeKey>): string[] {
+function collectImagesForInclude(
+  data: ClassifiedData,
+  include: Set<IncludeKey>,
+): { all: string[]; backgrounds: Set<string> } {
   const urls: string[] = [];
+  // Hero/full-bleed backgrounds → 1920px; everything else → 1000px content.
+  const backgrounds = new Set<string>();
 
   // Page-level images always come along when pages are applied.
   if (include.has('pages')) {
@@ -155,19 +160,23 @@ function collectImagesForInclude(data: ClassifiedData, include: Set<IncludeKey>)
         if (typeof b.props.photoUrl === 'string') urls.push(b.props.photoUrl);
         // hero_banner background must self-host too (was being skipped → hero
         // hotlinked the source image, which broke once the source died).
-        if (typeof b.props.backgroundImageUrl === 'string') urls.push(b.props.backgroundImageUrl);
+        if (typeof b.props.backgroundImageUrl === 'string') {
+          urls.push(b.props.backgroundImageUrl);
+          backgrounds.add(b.props.backgroundImageUrl);
+        }
         if (Array.isArray(b.props.images)) urls.push(...(b.props.images as string[]));
       }
     }
   }
 
-  // og:image / logoUrl land in settings → ship them with settings.
+  // og:image / logoUrl land in settings → ship them with settings. og:image is
+  // a share/hero-scale graphic → background width.
   if (include.has('settings')) {
-    if (data.churchInfo.ogImageUrl) urls.push(data.churchInfo.ogImageUrl);
+    if (data.churchInfo.ogImageUrl) { urls.push(data.churchInfo.ogImageUrl); backgrounds.add(data.churchInfo.ogImageUrl); }
     if (data.churchInfo.logoUrl) urls.push(data.churchInfo.logoUrl);
   }
 
-  // Dynamic content images — only if that content is included.
+  // Dynamic content images — only if that content is included. All content-scale.
   if (include.has('staff'))   { for (const s of data.staff)   if (s.photoUrl) urls.push(s.photoUrl); }
   if (include.has('sermons')) { for (const s of data.sermons) if (s.thumbnailUrl) urls.push(s.thumbnailUrl); }
   if (include.has('bulletins')) { for (const b of data.bulletins) urls.push(...b.images); }
@@ -175,7 +184,7 @@ function collectImagesForInclude(data: ClassifiedData, include: Set<IncludeKey>)
   if (include.has('columns'))  { for (const c of data.columns) if (c.topImageUrl) urls.push(c.topImageUrl); }
   if (include.has('events'))   { for (const e of data.events)  if (e.imageUrl) urls.push(e.imageUrl); }
 
-  return [...new Set(urls)];
+  return { all: [...new Set(urls)], backgrounds };
 }
 
 // (Phase 12-γ.5 — collectAllImages removed. Replaced by

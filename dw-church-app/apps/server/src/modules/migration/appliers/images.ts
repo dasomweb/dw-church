@@ -43,16 +43,19 @@ async function registerMigratedFile(
 
 const USER_AGENT = 'TrueLight-Migration/2.0';
 
-// Max width for migrated raster images. Hero/background photos must come down
-// to 1920px (full-bleed banner width) instead of self-hosting phone-camera
-// originals — storage waste is a hard constraint. Smaller images are left as
-// is (withoutEnlargement). SVG/GIF are passed through untouched (vector /
-// animation would be degraded by a raster+webp re-encode).
-const MAX_WIDTH = 1920;
+// Max width by image KIND (사장님 directive 2026-06-10, mirrors the client-side
+// resize-image.ts policy): content photos → 1000px, background/hero → 1920px
+// (full-bleed banner width). Self-hosting phone-camera originals is forbidden —
+// storage waste is a hard constraint. Smaller images are left as is
+// (withoutEnlargement). SVG/GIF pass through untouched (vector / animation
+// would be degraded by a raster+webp re-encode).
+export type ImageKind = 'content' | 'background';
+const MAX_WIDTH: Record<ImageKind, number> = { content: 1000, background: 1920 };
 
 async function resizeForR2(
   buffer: Buffer,
   contentType: string,
+  kind: ImageKind = 'content',
 ): Promise<{ buffer: Buffer; contentType: string; ext: string } | null> {
   const ct = contentType.toLowerCase();
   if (ct.includes('svg')) {
@@ -69,7 +72,7 @@ async function resizeForR2(
   try {
     const out = await sharp(buffer)
       .rotate() // respect EXIF orientation before stripping metadata
-      .resize({ width: MAX_WIDTH, withoutEnlargement: true })
+      .resize({ width: MAX_WIDTH[kind], withoutEnlargement: true })
       .webp({ quality: 82 })
       .toBuffer();
     return { buffer: out, contentType: 'image/webp', ext: '.webp' };
@@ -91,6 +94,7 @@ export type ImageUrlMap = Map<string, string>;
 export async function migrateImageToR2(
   imageUrl: string,
   tenantSlug: string,
+  kind: ImageKind = 'content',
 ): Promise<string> {
   if (!imageUrl || imageUrl.startsWith('data:')) return imageUrl;
   if (imageUrl.includes('r2.dev/') || imageUrl.includes('r2.cloudflarestorage.com')) return imageUrl;
@@ -117,9 +121,9 @@ export async function migrateImageToR2(
     // small in R2 after the 1920px/webp pass).
     if (srcBuffer.length > 15 * 1024 * 1024) return '';
 
-    // Resize to ≤1920px + webp before upload (backgrounds, content, all).
+    // Resize + webp before upload: content → ≤1000px, background → ≤1920px.
     // Returns null when the bytes aren't a real image → skip, don't upload.
-    const resized = await resizeForR2(srcBuffer, srcContentType || 'image/jpeg');
+    const resized = await resizeForR2(srcBuffer, srcContentType || 'image/jpeg', kind);
     if (!resized) return '';
     const key = `tenant_${tenantSlug}/migration/${randomUUID()}${resized.ext}`;
     const url = await r2Upload(key, resized.buffer, resized.contentType);
@@ -167,6 +171,9 @@ export async function migrateImages(
   imageUrls: string[],
   tenantSlug: string,
   onProgress?: (done: number, total: number) => void,
+  /** URLs that are hero/full-bleed backgrounds → resized to 1920px instead of
+   *  the 1000px content default. Everything else is treated as content. */
+  backgroundUrls?: Set<string>,
 ): Promise<ImageUrlMap> {
   const urlMap: ImageUrlMap = new Map();
   const unique = [...new Set(imageUrls.filter((u) => u && !u.startsWith('data:')))];
@@ -177,7 +184,8 @@ export async function migrateImages(
     const batch = unique.slice(i, i + 5);
     const results = await Promise.all(
       batch.map(async (url) => {
-        const r2Url = await migrateImageToR2(url, tenantSlug);
+        const kind: ImageKind = backgroundUrls?.has(url) ? 'background' : 'content';
+        const r2Url = await migrateImageToR2(url, tenantSlug, kind);
         return { original: url, r2: r2Url };
       }),
     );
