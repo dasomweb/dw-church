@@ -6,6 +6,7 @@ import {
   useCreateBanner,
   useUpdateBanner,
   useDeleteBanner,
+  useDWChurchClient,
 } from '@dw-church/api-client';
 import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, ImageUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
 
@@ -54,6 +55,15 @@ export default function BannerManagement() {
   const [deleteTarget, setDeleteTarget] = useState<{id: string; name: string} | null>(null);
 
   const { showToast } = useToast();
+  const apiClient = useDWChurchClient();
+  // Banner images MUST upload to R2 (returns a short URL). Without onUpload,
+  // ImageUpload falls back to a base64 data URI, which blows past the
+  // pc_image_url 2000-char DB limit → the image is dropped and the slider
+  // shows a broken image. ImageUpload already client-side resizes first.
+  const uploadImage = async (file: File): Promise<string> => {
+    const res = await apiClient!.uploadFile(file);
+    return res.url;
+  };
   const { data, isLoading, error } = useBanners(params);
   const createMutation = useCreateBanner();
   const updateMutation = useUpdateBanner();
@@ -201,6 +211,7 @@ export default function BannerManagement() {
                 label="PC 이미지"
                 value={watch('pcImageUrl') || ''}
                 onChange={(url) => setValue('pcImageUrl', url)}
+                onUpload={uploadImage}
                 aspectRatio="21/9"
                 resize="hero"
               />
@@ -208,6 +219,7 @@ export default function BannerManagement() {
                 label="모바일 이미지"
                 value={watch('mobileImageUrl') || ''}
                 onChange={(url) => setValue('mobileImageUrl', url)}
+                onUpload={uploadImage}
                 aspectRatio="9/16"
                 resize="hero"
               />
@@ -216,6 +228,7 @@ export default function BannerManagement() {
               label="서브 배너 이미지"
               value={watch('subImageUrl') || ''}
               onChange={(url) => setValue('subImageUrl', url)}
+              onUpload={uploadImage}
               aspectRatio="16/9"
               resize="hero"
             />
