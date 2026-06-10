@@ -1,12 +1,18 @@
 # Railway config for Admin SPA (Vite)
-# Deploy: railway up --service admin
+# Deploy: copy this to repo root (dw-church-app/railway.toml), then
+#   railway up --service admin --ci   (no --config flag exists), then delete it.
+# dockerfilePath is resolved from that root.
 
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "packages/admin-app/Dockerfile"
 
 [deploy]
-startCommand = "serve -s dist -l 3000"
+# MUST match the Dockerfile CMD. server.js is an Express static server that
+# also sets cache headers (no-cache index.html, immutable hashed assets) and
+# proxies /api. The old `serve -s dist` command broke deploys — `serve` isn't
+# installed in the runner image, so the container started then exited.
+startCommand = "node server.js"
 healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
