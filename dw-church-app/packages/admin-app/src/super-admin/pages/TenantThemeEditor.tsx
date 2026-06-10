@@ -105,8 +105,8 @@ export default function TenantThemeEditor() {
       setLoading(true);
       try {
         const [tokensRes, themeRes] = await Promise.all([
-          fetch(`${baseUrl}/api/v1/theme/tokens`, { headers }),
-          fetch(`${baseUrl}/api/v1/theme`, { headers }),
+          fetch(`${baseUrl}/api/v1/theme/tokens`, { headers, cache: 'no-store' }),
+          fetch(`${baseUrl}/api/v1/theme`, { headers, cache: 'no-store' }),
         ]);
         if (!tokensRes.ok) throw new Error(`tokens HTTP ${tokensRes.status}`);
         const tokensBody = await tokensRes.json() as { data: DesignTokens };
@@ -124,8 +124,16 @@ export default function TenantThemeEditor() {
   }, [tenant?.slug, session?.accessToken, baseUrl, headers, showToast]);
 
   // Local-only edit — mutate tokens in memory + arm the 저장 button. No PUT.
-  const applyTokens = (next: DesignTokens) => {
-    setTokens(next);
+  // Accepts a value OR a functional updater. Editors should pass the UPDATER
+  // form so each change builds on the LATEST tokens — otherwise editing two
+  // fields in a row can overwrite the first edit with a stale base, and the
+  // first save then persists an incomplete set (the "first save doesn't stick,
+  // second does" bug).
+  const applyTokens = (next: DesignTokens | ((prev: DesignTokens) => DesignTokens)) => {
+    setTokens((prev) => {
+      if (!prev) return prev;
+      return typeof next === 'function' ? next(prev) : next;
+    });
     setDirty(true);
   };
 
@@ -276,30 +284,37 @@ function PaletteTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChan
 }
 
 // ─── Typography ──────────────────────────────────────────────────────
-function TypographyTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChange: (t: DesignTokens) => void; saving: boolean }) {
+function TypographyTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChange: (t: DesignTokens | ((prev: DesignTokens) => DesignTokens)) => void; saving: boolean }) {
+  // Functional updates: build on the LATEST tokens so editing several scales in
+  // a row never loses an earlier edit to a stale base (the "first save doesn't
+  // apply" bug).
   const setFamily = (k: 'heading' | 'body' | 'korean', v: string) => {
-    onChange({ ...tokens, typography: { ...tokens.typography, families: { ...tokens.typography.families, [k]: v } } });
+    onChange((prev) => ({ ...prev, typography: { ...prev.typography, families: { ...prev.typography.families, [k]: v } } }));
   };
   const setScaleSize = (name: TypographyScaleName, desktop: number) => {
-    const cur = tokens.typography.scales[name];
-    if (!cur) return;
-    onChange({
-      ...tokens,
-      typography: {
-        ...tokens.typography,
-        scales: { ...tokens.typography.scales, [name]: { ...cur, size: { ...cur.size, desktop } } },
-      },
+    onChange((prev) => {
+      const cur = prev.typography.scales[name];
+      if (!cur) return prev;
+      return {
+        ...prev,
+        typography: {
+          ...prev.typography,
+          scales: { ...prev.typography.scales, [name]: { ...cur, size: { ...cur.size, desktop } } },
+        },
+      };
     });
   };
   const setScaleWeight = (name: TypographyScaleName, weight: number) => {
-    const cur = tokens.typography.scales[name];
-    if (!cur) return;
-    onChange({
-      ...tokens,
-      typography: {
-        ...tokens.typography,
-        scales: { ...tokens.typography.scales, [name]: { ...cur, weight } },
-      },
+    onChange((prev) => {
+      const cur = prev.typography.scales[name];
+      if (!cur) return prev;
+      return {
+        ...prev,
+        typography: {
+          ...prev.typography,
+          scales: { ...prev.typography.scales, [name]: { ...cur, weight } },
+        },
+      };
     });
   };
 
