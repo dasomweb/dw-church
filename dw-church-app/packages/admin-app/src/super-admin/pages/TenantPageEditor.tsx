@@ -126,6 +126,9 @@ export default function TenantPageEditor() {
   const { tenant } = useSuperAdminTenant();
   const { showToast } = useToast();
   const [pages, setPages] = useState<PageRow[]>([]);
+  // Slugs of pages currently linked from the live nav menu — lets the page
+  // list show which pages are actually reachable from the site's menu.
+  const [menuSlugs, setMenuSlugs] = useState<Set<string>>(new Set());
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
   const [sections, setSections] = useState<Section[]>([]);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
@@ -199,6 +202,29 @@ export default function TenantPageEditor() {
     })();
     return () => { cancelled = true; };
   }, [tenant?.slug, baseUrl, headers, showToast, selectedPageId]);
+
+  // Load the live menu → which pages are reachable from the nav. Used to badge
+  // the page list so the operator sees which pages are actually in the menu.
+  useEffect(() => {
+    if (!tenant?.slug) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`${baseUrl}/api/v1/menus`, { headers, cache: 'no-store' });
+        if (!res.ok) return;
+        const body = await res.json() as { data?: { pageSlug?: string; page_slug?: string; isVisible?: boolean; is_visible?: boolean }[] };
+        if (cancelled) return;
+        const slugs = new Set<string>();
+        for (const m of body.data ?? []) {
+          if (m.isVisible === false || m.is_visible === false) continue;
+          const slug = m.pageSlug ?? m.page_slug;
+          if (slug) slugs.add(slug);
+        }
+        setMenuSlugs(slugs);
+      } catch { /* non-fatal — badges just won't show */ }
+    })();
+    return () => { cancelled = true; };
+  }, [tenant?.slug, baseUrl, headers]);
 
   // Load sections for selected page. Switching pages discards any unpublished
   // local edits from the previous page (operator should Publish first).
@@ -527,8 +553,18 @@ export default function TenantPageEditor() {
                   }}
                   className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 ${selectedPageId === p.id ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'}`}
                 >
-                  {p.title}
-                  {p.isHome && <span className="ml-1.5 text-[10px] text-blue-500">★</span>}
+                  <span className="inline-flex items-center gap-1">
+                    {p.title}
+                    {p.isHome && <span className="text-[10px] text-blue-500">★</span>}
+                    {(menuSlugs.has(p.slug) || p.isHome) && (
+                      <span
+                        title="현재 메뉴(네비게이션)에 표시되는 페이지"
+                        className="inline-flex items-center rounded-full bg-green-100 text-green-700 text-[9px] font-medium px-1.5 py-px"
+                      >
+                        메뉴
+                      </span>
+                    )}
+                  </span>
                   <div className="text-[10px] text-gray-400 font-mono">/{p.slug}</div>
                 </button>
               </li>

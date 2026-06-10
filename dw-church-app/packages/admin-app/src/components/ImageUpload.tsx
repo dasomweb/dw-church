@@ -30,6 +30,7 @@ export function ImageUpload({
   const [mode, setMode] = useState<'url' | 'preview'>(value ? 'preview' : 'url');
   const [urlInput, setUrlInput] = useState(value || '');
   const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const [resizeInfo, setResizeInfo] = useState<ResizeResult | null>(null);
   const [resizeError, setResizeError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -44,9 +45,13 @@ export function ImageUpload({
     }
   }, [value]);
 
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (file) void processFile(file);
+  };
+
+  const processFile = async (file: File) => {
+    if (!file || !file.type.startsWith('image/')) return;
     setResizeError(null);
     setResizeInfo(null);
 
@@ -144,8 +149,20 @@ export function ImageUpload({
     <div>
       {label && <p className="text-sm font-medium text-gray-700 mb-1.5">{label}</p>}
       <div
-        className={`border-2 border-dashed border-gray-300 rounded-lg p-6 text-center transition-colors ${uploading ? 'opacity-60 pointer-events-none' : 'hover:border-blue-400 cursor-pointer'}`}
+        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+          uploading ? 'opacity-60 pointer-events-none border-gray-300'
+            : dragOver ? 'border-blue-500 bg-blue-50/60 cursor-pointer'
+            : 'border-gray-300 hover:border-blue-400 cursor-pointer'
+        }`}
         onClick={() => !uploading && fileRef.current?.click()}
+        onDragOver={(e) => { e.preventDefault(); if (!uploading) setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragOver(false);
+          const file = e.dataTransfer.files?.[0];
+          if (file && !uploading) void processFile(file);
+        }}
       >
         <input ref={fileRef} type="file" accept={accept} className="hidden" onChange={handleFile} />
         {uploading ? (
@@ -210,15 +227,20 @@ export function MultiImageUpload({ value = [], onChange, onUpload, max = 15, lab
   const fileRef = useRef<HTMLInputElement>(null);
   const [urlInput, setUrlInput] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   // Phase 12-γ.2: surface per-batch resize savings + reject errors.
   const [resizeError, setResizeError] = useState<string | null>(null);
   const [batchSaved, setBatchSaved] = useState<{ original: number; resized: number } | null>(null);
 
-  const handleFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
+  const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) void processFiles(e.target.files);
+  };
+
+  const processFiles = async (files: FileList | File[]) => {
+    const imgs = Array.from(files).filter((f) => f.type.startsWith('image/'));
+    if (imgs.length === 0) return;
     const remaining = max - value.length;
-    const toAdd = Array.from(files).slice(0, remaining);
+    const toAdd = imgs.slice(0, remaining);
     setResizeError(null);
     setBatchSaved(null);
 
@@ -335,8 +357,19 @@ export function MultiImageUpload({ value = [], onChange, onUpload, max = 15, lab
       {value.length < max && (
         <>
           <div
-            className={`border-2 border-dashed border-gray-300 rounded-lg p-4 text-center transition-colors ${uploading ? 'opacity-60 pointer-events-none' : 'hover:border-blue-400 cursor-pointer'}`}
+            className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
+              uploading ? 'opacity-60 pointer-events-none border-gray-300'
+                : dragOver ? 'border-blue-500 bg-blue-50/60 cursor-pointer'
+                : 'border-gray-300 hover:border-blue-400 cursor-pointer'
+            }`}
             onClick={() => !uploading && fileRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); if (!uploading) setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOver(false);
+              if (e.dataTransfer.files.length > 0 && !uploading) void processFiles(e.dataTransfer.files);
+            }}
           >
             <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFiles} />
             {uploading ? (
