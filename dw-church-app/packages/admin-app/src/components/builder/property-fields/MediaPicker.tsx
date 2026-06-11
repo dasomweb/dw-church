@@ -48,25 +48,37 @@ export function MediaPicker({ onClose, onSelect, onSelectMulti, multi }: Props) 
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [picked, setPicked] = useState<Set<string>>(new Set());
+  // 'tenant' = this church's own uploads (/files); 'shared' = the super-admin
+  // curated 공용 라이브러리 (/shared-images), readable by any tenant.
+  const [source, setSource] = useState<'tenant' | 'shared'>('tenant');
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     if (!client) return;
     setLoading(true);
     setError(null);
+    setPicked(new Set());
     try {
-      // client.adapter.get camelizes the response + carries the tenant
-      // header; query params pass through as-is so perPage is honored.
-      const res = await client.adapter.get<{ data: FileRow[] }>('/api/v1/files', { perPage: PER_PAGE, page: 1 });
-      const all = res?.data ?? [];
-      // Images only — the library also stores PDFs (bulletins) etc.
-      setItems(all.filter((f) => !f.mimeType || f.mimeType.startsWith('image/')));
+      if (source === 'shared') {
+        // Shared library: { data: [{ id, url, title, category, ... }] }.
+        const res = await client.adapter.get<{ data: { id: string; url: string; title?: string }[] }>(
+          '/api/v1/shared-images', { active: 'true' },
+        );
+        setItems((res?.data ?? []).map((s) => ({ id: s.id, url: s.url, originalName: s.title })));
+      } else {
+        // client.adapter.get camelizes the response + carries the tenant
+        // header; query params pass through as-is so perPage is honored.
+        const res = await client.adapter.get<{ data: FileRow[] }>('/api/v1/files', { perPage: PER_PAGE, page: 1 });
+        const all = res?.data ?? [];
+        // Images only — the library also stores PDFs (bulletins) etc.
+        setItems(all.filter((f) => !f.mimeType || f.mimeType.startsWith('image/')));
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : '미디어를 불러오지 못했습니다');
     } finally {
       setLoading(false);
     }
-  }, [client]);
+  }, [client, source]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -125,16 +137,38 @@ export function MediaPicker({ onClose, onSelect, onSelectMulti, multi }: Props) 
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b px-5 py-3">
-          <h3 className="text-base font-bold text-gray-900">미디어 라이브러리</h3>
+          <div className="flex items-center gap-3">
+            <h3 className="text-base font-bold text-gray-900">미디어 라이브러리</h3>
+            {/* Source tabs — 내 미디어(테넌트) / 공용 라이브러리(슈퍼어드민 큐레이션) */}
+            <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden text-xs">
+              <button
+                type="button"
+                onClick={() => setSource('tenant')}
+                className={`px-3 py-1.5 font-medium transition-colors ${source === 'tenant' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+              >
+                내 미디어
+              </button>
+              <button
+                type="button"
+                onClick={() => setSource('shared')}
+                className={`px-3 py-1.5 font-medium transition-colors ${source === 'shared' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+              >
+                공용 라이브러리
+              </button>
+            </div>
+          </div>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              disabled={uploading}
-              className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-500 disabled:opacity-50"
-            >
-              {uploading ? '업로드 중…' : '↑ 업로드'}
-            </button>
+            {/* Upload only into the tenant's own library (shared is super-admin only). */}
+            {source === 'tenant' && (
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
+                className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-500 disabled:opacity-50"
+              >
+                {uploading ? '업로드 중…' : '↑ 업로드'}
+              </button>
+            )}
             <button type="button" onClick={load} className="rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs text-gray-600 hover:bg-gray-50" title="새로고침">
               ↻
             </button>
@@ -160,7 +194,9 @@ export function MediaPicker({ onClose, onSelect, onSelectMulti, multi }: Props) 
             <div className="py-16 text-center text-sm text-red-600">{error}</div>
           ) : items.length === 0 ? (
             <div className="py-16 text-center text-sm text-gray-400">
-              아직 업로드된 이미지가 없습니다. 위의 <strong>업로드</strong> 버튼으로 추가하세요.
+              {source === 'shared'
+                ? '공용 라이브러리에 이미지가 없습니다.'
+                : <>아직 업로드된 이미지가 없습니다. 위의 <strong>업로드</strong> 버튼으로 추가하세요.</>}
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">

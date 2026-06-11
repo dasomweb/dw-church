@@ -381,6 +381,33 @@ export default function TenantPageEditor() {
     }
   };
 
+  // Create a normal (static) page. Prompts for a title; the slug is derived
+  // ascii-safe (falls back to page-xxxx for Korean-only titles). super_admin
+  // bypasses the Pro+ plan gate on POST /pages.
+  const createStaticPage = async () => {
+    const title = window.prompt('새 페이지 제목을 입력하세요 (예: 교회 안내)');
+    if (!title || !title.trim()) return;
+    const rand = Math.random().toString(36).slice(2, 6);
+    const ascii = title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    const slug = ascii ? `${ascii}-${rand}` : `page-${rand}`;
+    setCreating(true);
+    try {
+      const res = await fetch(`${baseUrl}/api/v1/pages`, {
+        method: 'POST', headers,
+        body: JSON.stringify({ title: title.trim(), slug, kind: 'static', status: 'published', isHome: false, sortOrder: 999 }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const created = normalizePage(await res.json() as Record<string, unknown>);
+      setPages((prev) => [...prev, created]);
+      setSelectedPageId(created.id);
+      showToast('success', `"${title.trim()}" 페이지 생성됨 — 블록을 추가하세요. 메뉴에 노출하려면 메뉴 관리에서 연결하세요.`);
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '페이지 생성 실패');
+    } finally {
+      setCreating(false);
+    }
+  };
+
   // Add a new block (section) to the selected page. super_admin bypasses the
   // Pro+ plan gate on POST /sections, so this works on any tenant.
   const addBlock = async (blockType: string, props: Record<string, unknown> = {}) => {
@@ -511,8 +538,18 @@ export default function TenantPageEditor() {
       <div className="flex flex-1 min-h-0">
       {/* Pane 1 — Pages */}
       <aside className="w-48 shrink-0 border-r bg-white overflow-y-auto">
-        <div className="p-3 border-b flex items-center justify-between">
+        <div className="p-3 border-b flex items-center justify-between gap-1">
           <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider">페이지</h2>
+          <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => void createStaticPage()}
+            disabled={creating}
+            title="새 일반 페이지 만들기"
+            className="rounded border border-blue-300 bg-blue-50 px-1.5 py-0.5 text-[11px] font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+          >
+            {creating ? '…' : '+ 페이지'}
+          </button>
           <div className="relative">
             <button
               type="button"
@@ -537,6 +574,7 @@ export default function TenantPageEditor() {
                 ))}
               </div>
             )}
+          </div>
           </div>
         </div>
         {loadingPages ? (
