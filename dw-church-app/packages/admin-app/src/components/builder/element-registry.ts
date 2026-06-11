@@ -752,7 +752,39 @@ const BANNER_SLIDER: BlockElementRegistry = {
     { title: 'Style', elements: [
       { label: '오버레이 색상', path: 'overlayColor', kind: 'color', hint: '배너 이미지 위 색조 덮개 (기본 검정)' },
       { label: '오버레이 투명도 (%)', path: 'overlayOpacity', kind: 'number', hint: '0~100. 0이면 덮개 없음. 기본 20' },
-      { label: '높이 비율 (%)', path: 'heightRatio', kind: 'number', hint: '슬라이드 높이 = 가로폭의 %. 기본 40' },
+    ]},
+    { title: '높이 (데스크탑 1920px 기준)', elements: [
+      // Explicit fixed heights per breakpoint — clearer than the old "% of
+      // width" ratio. Common web-design banner heights. The image fills the
+      // height (object-cover). Picking any one switches the slider to fixed
+      // mode; leaving them blank keeps the legacy ratio for old banners.
+      { label: '데스크탑 (≥1024px)', path: 'desktopHeight', kind: 'select', hint: '가로 1920px 데스크탑 기준 높이', choices: [
+        { value: '', label: '비율 방식 (기존 배너 유지)' },
+        { value: '400px', label: '400px — 낮게' },
+        { value: '500px', label: '500px — 보통' },
+        { value: '600px', label: '600px — 크게 (추천)' },
+        { value: '720px', label: '720px — 와이드' },
+        { value: '900px', label: '900px — 시네마틱' },
+        { value: '100vh', label: '화면 꽉 채움 (100vh)' },
+      ]},
+      { label: '태블릿 (768~1023px)', path: 'tabletHeight', kind: 'select', hint: '태블릿 세로 높이', choices: [
+        { value: '', label: '비율 방식 (기존 배너 유지)' },
+        { value: '300px', label: '300px — 낮게' },
+        { value: '400px', label: '400px — 보통 (추천)' },
+        { value: '500px', label: '500px — 크게' },
+        { value: '600px', label: '600px — 와이드' },
+        { value: '70vh', label: '화면 70%' },
+      ]},
+      { label: '모바일 (<768px)', path: 'mobileHeight', kind: 'select', hint: '모바일 세로 높이', choices: [
+        { value: '', label: '비율 방식 (기존 배너 유지)' },
+        { value: '220px', label: '220px — 낮게' },
+        { value: '300px', label: '300px — 보통 (추천)' },
+        { value: '380px', label: '380px — 크게' },
+        { value: '480px', label: '480px — 와이드' },
+        { value: '60vh', label: '화면 60%' },
+      ]},
+    ]},
+    { title: '여백', elements: [
       { label: '상하 바깥여백 margin (px)', path: 'marginY', kind: 'number', hint: '블록 위/아래 간격' },
       { label: '좌우 안쪽여백 padding (px)', path: 'paddingX', kind: 'number', hint: '좌/우 안쪽 여백' },
     ]},

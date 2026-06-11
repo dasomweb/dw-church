@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useId } from 'react';
+import type { CSSProperties } from 'react';
 import type { Banner } from '@dw-church/api-client';
 import { useActiveBanners } from '@dw-church/api-client';
 import { LoadingSpinner } from '../common/LoadingSpinner';
@@ -13,9 +14,23 @@ export interface BannerSliderProps {
   overlayColor?: string;
   /** Overlay opacity 0–100 (0 = no overlay). Default 20. */
   overlayOpacity?: number;
-  /** Slide height as a % of width (paddingBottom). Default 40. */
+  /** LEGACY: slide height as a % of width (paddingBottom). Used only when the
+   *  explicit per-breakpoint heights below are all unset, so existing banners
+   *  keep their look. Default 40. */
   heightRatio?: number;
+  /** Explicit fixed heights per breakpoint (CSS length, e.g. "600px" or
+   *  "100vh"). Designed against a 1920px desktop. When ANY is set the slider
+   *  switches to fixed-height mode (image object-cover fills it) and applies
+   *  the right one responsively: mobile <768px, tablet 768–1023px,
+   *  desktop ≥1024px. Missing breakpoints fall back to sensible defaults. */
+  desktopHeight?: string;
+  tabletHeight?: string;
+  mobileHeight?: string;
 }
+
+const DEFAULT_DESKTOP_H = '600px';
+const DEFAULT_TABLET_H = '400px';
+const DEFAULT_MOBILE_H = '300px';
 
 function BannerTextOverlay({ banner }: { banner: Banner }) {
   const { textOverlay } = banner;
@@ -86,8 +101,19 @@ export function BannerSlider({
   overlayColor = '#000000',
   overlayOpacity = 20,
   heightRatio = 40,
+  desktopHeight,
+  tabletHeight,
+  mobileHeight,
 }: BannerSliderProps) {
   const overlayAlpha = Math.min(100, Math.max(0, overlayOpacity)) / 100;
+  // Fixed per-breakpoint heights take over as soon as one is provided.
+  const useFixedHeight = Boolean(desktopHeight || tabletHeight || mobileHeight);
+  const sliderId = useId().replace(/[:]/g, '');
+  const heightVars = {
+    '--bsh-mobile': mobileHeight || DEFAULT_MOBILE_H,
+    '--bsh-tablet': tabletHeight || DEFAULT_TABLET_H,
+    '--bsh-desktop': desktopHeight || DEFAULT_DESKTOP_H,
+  } as CSSProperties;
   const { data: fetchedData, isLoading } = useActiveBanners(category);
   const banners = data ?? fetchedData?.data ?? [];
 
@@ -114,8 +140,22 @@ export function BannerSlider({
 
   const banner = banners[currentIndex]!;
 
+  // Fixed mode: a real height per breakpoint (image object-cover fills it).
+  // Legacy mode: aspect-ratio via paddingBottom (% of width).
+  const slideClass = useFixedHeight ? `dw-bs-${sliderId}` : '';
+  const slideStyle: CSSProperties = useFixedHeight
+    ? heightVars
+    : { paddingBottom: `${heightRatio}%` };
+
   const slideContent = (
-    <div className="relative w-full overflow-hidden" style={{ paddingBottom: `${heightRatio}%` }}>
+    <div className={`relative w-full overflow-hidden ${slideClass}`} style={slideStyle}>
+      {useFixedHeight && (
+        <style>{`
+          .dw-bs-${sliderId}{height:var(--bsh-mobile);}
+          @media (min-width:768px){.dw-bs-${sliderId}{height:var(--bsh-tablet);}}
+          @media (min-width:1024px){.dw-bs-${sliderId}{height:var(--bsh-desktop);}}
+        `}</style>
+      )}
       <picture>
         <source media="(max-width: 768px)" srcSet={banner.mobileImageUrl ?? undefined} />
         <img

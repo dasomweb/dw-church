@@ -17,6 +17,11 @@ export async function BannerSliderBlock({ props, slug }: BannerSliderBlockProps)
   const overlayColor = (props.overlayColor as string) || '#000000';
   const overlayOpacity = props.overlayOpacity != null ? Number(props.overlayOpacity) : 20;
   const heightRatio = props.heightRatio != null ? Number(props.heightRatio) : 40;
+  // Explicit per-breakpoint heights (CSS lengths, e.g. "600px"/"100vh"),
+  // designed against a 1920px desktop. When set they override heightRatio.
+  const desktopHeight = (props.desktopHeight as string) || undefined;
+  const tabletHeight = (props.tabletHeight as string) || undefined;
+  const mobileHeight = (props.mobileHeight as string) || undefined;
   const marginY = props.marginY != null ? Number(props.marginY) : 0;
   const paddingX = props.paddingX != null ? Number(props.paddingX) : 0;
   const wrapStyle = {
@@ -55,6 +60,9 @@ export async function BannerSliderBlock({ props, slug }: BannerSliderBlockProps)
         overlayColor={overlayColor}
         overlayOpacity={overlayOpacity}
         heightRatio={heightRatio}
+        desktopHeight={desktopHeight}
+        tabletHeight={tabletHeight}
+        mobileHeight={mobileHeight}
       />
     </div>
   );
