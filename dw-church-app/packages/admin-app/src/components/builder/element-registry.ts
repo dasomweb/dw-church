@@ -1485,6 +1485,16 @@ const RECENT_COLUMNS = churchBlock(
     ]},
   ]},
 );
+const VIDEO_BOARD = churchBlock(
+  { title: 'Header', fields: [{ key: 'title', label: '제목', type: 'text' }]},
+  { title: 'Data', fields: [
+    { key: 'category', label: '카테고리', type: 'text', hint: '영상 게시판에서 만든 카테고리 이름 또는 슬러그 (비우면 전체)' },
+    { key: 'limit', label: '표시 개수', type: 'number', hint: '기본 6' },
+    { key: 'variant', label: 'Columns', type: 'select', choices: [
+      { value: 'grid-2', label: '2 columns' }, { value: 'grid-1', label: '1 column (large)' },
+    ]},
+  ]},
+);
 const EVENT_GRID = churchBlock(
   { title: 'Header', fields: [{ key: 'title', label: '제목', type: 'text' }]},
   { title: 'Data', fields: [
@@ -1614,6 +1624,7 @@ export const ELEMENT_REGISTRY: Record<string, BlockElementRegistry> = {
   recent_sermons:   RECENT_SERMONS,
   recent_bulletins: RECENT_BULLETINS,
   recent_columns:   RECENT_COLUMNS,
+  video_board:      VIDEO_BOARD,
   event_grid:       EVENT_GRID,
   staff_grid:       STAFF_GRID,
   history_timeline: HISTORY_TIMELINE,

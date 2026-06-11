@@ -12,6 +12,9 @@ export type {
   Sermon,
   Column,
   Album,
+  Video,
+  VideoCategory,
+  VideoListParams,
   Banner,
   BannerTextOverlay,
   BannerPosition,
@@ -95,6 +98,13 @@ export {
   useUpdateAlbum,
   useDeleteAlbum,
   useRelatedAlbums,
+  // Videos
+  useVideos,
+  useVideo,
+  useCreateVideo,
+  useUpdateVideo,
+  useDeleteVideo,
+  useVideoCategories,
   // Banners
   useBanners,
   useActiveBanners,

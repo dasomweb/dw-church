@@ -30,6 +30,9 @@ import type {
   TemplatePreset,
   Theme,
   UploadedFile,
+  Video,
+  VideoCategory,
+  VideoListParams,
 } from './types';
 
 // ─── Default HTTP Adapter (fetch-based) ─────────────────────
@@ -394,6 +397,44 @@ export class DWChurchClient {
 
   async getRelatedAlbums(id: string, limit = 4): Promise<Album[]> {
     return this.api.get(`${this.namespace}/albums/${id}/related`, { limit });
+  }
+
+  // ─── Videos (영상 게시판) ────────────────────────────────
+  // Each method unwraps the server's `{ data }` envelope via unwrapData
+  // (the `(res as { data }).data ?? res` convention) — list returns the
+  // paginated envelope as-is to preserve total/page metadata.
+  async getVideos(params?: VideoListParams): Promise<PaginatedResponse<Video>> {
+    const query = { ...toQueryParams(params), category: params?.category };
+    return this.api.get(`${this.namespace}/videos`, query);
+  }
+
+  async getVideo(id: string): Promise<Video> {
+    const res = await this.api.get(`${this.namespace}/videos/${id}`);
+    return unwrapData(res);
+  }
+
+  async createVideo(data: Omit<Video, 'id' | 'createdAt' | 'categoryName'>): Promise<Video> {
+    const res = await this.api.post(`${this.namespace}/videos`, data);
+    return unwrapData(res);
+  }
+
+  async updateVideo(id: string, data: Partial<Video>): Promise<Video> {
+    const res = await this.api.put(`${this.namespace}/videos/${id}`, data);
+    return unwrapData(res);
+  }
+
+  async deleteVideo(id: string): Promise<void> {
+    return this.api.delete(`${this.namespace}/videos/${id}`);
+  }
+
+  async getVideoCategories(): Promise<VideoCategory[]> {
+    const res = await this.api.get(`${this.namespace}/videos/categories`);
+    return unwrapData(res);
+  }
+
+  async createVideoCategory(data: { name: string; slug: string }): Promise<VideoCategory> {
+    const res = await this.api.post(`${this.namespace}/videos/categories`, data);
+    return unwrapData(res);
   }
 
   // ─── Banners ────────────────────────────────────────────

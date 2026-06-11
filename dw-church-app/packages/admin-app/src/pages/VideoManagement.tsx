@@ -1,0 +1,349 @@
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import type { Video, VideoListParams, PostStatus } from '@dw-church/api-client';
+import {
+  useVideos,
+  useCreateVideo,
+  useUpdateVideo,
+  useDeleteVideo,
+  useVideoCategories,
+  useDWChurchClient,
+} from '@dw-church/api-client';
+import { FormField, FormSection, FormRow, inputClass, selectClass, useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
+import { useBulkDelete } from '../components/useBulkDelete';
+
+interface VideoFormData {
+  title: string;
+  youtubeUrl: string;
+  videoDate: string;
+  categoryIds: string;
+  status: PostStatus;
+}
+
+// Derive a YouTube thumbnail for the list grid — mirrors the server helper
+// (youtu.be / watch?v= / embed/ / v/ → img.youtube.com/vi/<id>/hqdefault.jpg).
+function youtubeThumb(url?: string): string {
+  if (!url) return '';
+  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([^&?\s/]+)/);
+  return m?.[1] ? `https://img.youtube.com/vi/${m[1]}/hqdefault.jpg` : '';
+}
+
+export default function VideoManagement() {
+  const [view, setView] = useState<'list' | 'edit'>('list');
+  const [editingItem, setEditingItem] = useState<Video | null>(null);
+  const [params, setParams] = useState<VideoListParams>({ page: 1, perPage: 12, search: '' });
+  const [deleteTarget, setDeleteTarget] = useState<{id: string; name: string} | null>(null);
+
+  const { showToast } = useToast();
+  const apiClient = useDWChurchClient();
+  const { data, isLoading, error, refetch } = useVideos(params);
+  const { data: categories, refetch: refetchCategories } = useVideoCategories();
+  // Inline category creation — the feature is category-driven, so operators
+  // must be able to add categories without leaving the form.
+  const [newCatName, setNewCatName] = useState('');
+  const [newCatSlug, setNewCatSlug] = useState('');
+  const [creatingCat, setCreatingCat] = useState(false);
+  const slugify = (s: string) => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  const addCategory = async () => {
+    const name = newCatName.trim();
+    const slug = (newCatSlug.trim() || slugify(name));
+    if (!name) { showToast('error', '카테고리 이름을 입력하세요.'); return; }
+    if (!/^[a-z0-9-]+$/.test(slug)) { showToast('error', '슬러그는 영문 소문자/숫자/하이픈만 가능합니다. (예: sunday-sermon)'); return; }
+    setCreatingCat(true);
+    try {
+      await apiClient!.createVideoCategory({ name, slug });
+      await refetchCategories();
+      setNewCatName(''); setNewCatSlug('');
+      showToast('success', `카테고리 "${name}" 추가됨`);
+    } catch (e) {
+      showToast('error', e instanceof Error ? e.message : '카테고리 추가 실패');
+    } finally {
+      setCreatingCat(false);
+    }
+  };
+  const createMutation = useCreateVideo();
+  const updateMutation = useUpdateVideo();
+  const deleteMutation = useDeleteVideo();
+  const bulk = useBulkDelete<Video>({ deleteOne: (id) => deleteMutation.mutateAsync(id), onDone: () => refetch() });
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<VideoFormData>();
+
+  const handleEdit = (item: Video) => {
+    setEditingItem(item);
+    reset({
+      title: item.title,
+      youtubeUrl: item.youtubeUrl,
+      videoDate: item.videoDate ? String(item.videoDate).slice(0, 10) : '',
+      categoryIds: item.categoryId ? JSON.stringify([item.categoryId]) : '[]',
+      status: item.status,
+    });
+    setView('edit');
+  };
+
+  const handleCreate = () => {
+    setEditingItem(null);
+    reset({ title: '', youtubeUrl: '', videoDate: '', categoryIds: '[]', status: 'published' });
+    setView('edit');
+  };
+
+  const handleDelete = (item: Video) => {
+    setDeleteTarget({ id: item.id, name: item.title || '' });
+  };
+
+  const onSubmit = (formData: VideoFormData) => {
+    const payload = {
+      title: formData.title,
+      youtubeUrl: formData.youtubeUrl,
+      videoDate: formData.videoDate,
+      categoryIds: JSON.parse(formData.categoryIds || '[]') as string[],
+      status: formData.status,
+    } as unknown as Omit<Video, 'id' | 'createdAt' | 'categoryName'>;
+    if (editingItem) {
+      updateMutation.mutate(
+        { id: editingItem.id, data: payload },
+        {
+          onSuccess: () => { showToast('success', '저장되었습니다.'); setView('list'); },
+          onError: () => { showToast('error', '오류가 발생했습니다.'); },
+        },
+      );
+    } else {
+      createMutation.mutate(payload, {
+        onSuccess: () => { showToast('success', '저장되었습니다.'); setView('list'); },
+        onError: () => { showToast('error', '오류가 발생했습니다.'); },
+      });
+    }
+  };
+
+  const isSaving = createMutation.isPending || updateMutation.isPending;
+
+  if (view === 'edit') {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-8">
+          <button type="button" onClick={() => setView('list')} className="text-sm text-gray-500 hover:text-gray-700 mb-3 inline-flex items-center gap-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+            목록으로
+          </button>
+          <h2 className="text-2xl font-bold text-gray-900">{editingItem ? '영상 수정' : '영상 등록'}</h2>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <FormSection title="영상 정보">
+            <FormRow>
+              <FormField label="제목" required error={errors.title?.message}>
+                <input {...register('title', { required: '제목을 입력하세요' })} className={inputClass} />
+              </FormField>
+              <FormField label="상태">
+                <select {...register('status')} className={selectClass}>
+                  <option value="published">공개</option>
+                  <option value="draft">임시저장</option>
+                  <option value="archived">보관</option>
+                </select>
+              </FormField>
+            </FormRow>
+            <FormRow>
+              <FormField label="카테고리">
+                <select {...register('categoryIds')} className={selectClass}>
+                  <option value="[]">선택</option>
+                  {categories?.map((cat) => (
+                    <option key={cat.id} value={JSON.stringify([cat.id])}>{cat.name} ({cat.slug})</option>
+                  ))}
+                </select>
+                {/* Inline create — name + ascii slug. The slug is what you put in
+                    the video_board block's "카테고리" field (이름도 허용). */}
+                <div className="mt-2 flex gap-2">
+                  <input
+                    type="text"
+                    value={newCatName}
+                    onChange={(e) => setNewCatName(e.target.value)}
+                    placeholder="새 카테고리 이름 (예: 주일설교)"
+                    className={inputClass}
+                  />
+                  <input
+                    type="text"
+                    value={newCatSlug}
+                    onChange={(e) => setNewCatSlug(e.target.value)}
+                    placeholder="슬러그 (예: sunday-sermon)"
+                    className={inputClass}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void addCategory()}
+                    disabled={creatingCat || !newCatName.trim()}
+                    className="shrink-0 rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+                  >
+                    {creatingCat ? '추가 중…' : '+ 추가'}
+                  </button>
+                </div>
+              </FormField>
+              <FormField label="영상 날짜">
+                <input type="date" {...register('videoDate')} className={inputClass} />
+              </FormField>
+            </FormRow>
+          </FormSection>
+
+          <FormSection title="미디어" description="YouTube 영상 URL을 입력하면 사이트에서 16:9 임베드로 재생됩니다">
+            <FormField label="YouTube URL">
+              <input {...register('youtubeUrl')} placeholder="https://youtube.com/watch?v=..." className={inputClass} />
+            </FormField>
+          </FormSection>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-6 py-4 flex items-center justify-between">
+            <p className="text-sm text-gray-500">모든 필수 항목을 입력해주세요</p>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setView('list')} className="px-5 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+                취소
+              </button>
+              <button type="submit" disabled={isSaving} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-6 py-2.5 text-sm font-medium transition-all disabled:opacity-50 shadow-sm shadow-blue-600/25">
+                {isSaving ? '저장 중...' : '저장'}
+              </button>
+            </div>
+          </div>
+
+          {(createMutation.isError || updateMutation.isError) && (
+            <p className="text-red-500 text-sm">저장 중 오류가 발생했습니다.</p>
+          )}
+        </form>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-bold">영상 게시판 관리</h2>
+        <div className="flex items-center gap-2">
+          {data && data.data.length > 0 && (
+            <button onClick={() => bulk.toggleAll(data.data)}
+              className="text-sm text-gray-600 border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-50">
+              {bulk.isAllSelected(data.data) ? '선택 해제' : '전체 선택'}
+            </button>
+          )}
+          {bulk.count > 0 && (
+            <button onClick={() => void bulk.deleteSelected()} disabled={bulk.busy}
+              className="bg-red-600 hover:bg-red-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50">
+              선택 삭제 ({bulk.count})
+            </button>
+          )}
+          <button
+            onClick={handleCreate}
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+          >
+            새 영상
+          </button>
+        </div>
+      </div>
+
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="검색..."
+          value={params.search || ''}
+          onChange={(e) => setParams((p) => ({ ...p, search: e.target.value, page: 1 }))}
+          className="border rounded px-3 py-2 w-64"
+        />
+      </div>
+
+      {isLoading && <CardSkeleton />}
+      {error && <p className="text-red-500">오류가 발생했습니다.</p>}
+
+      {data && data.data.length === 0 && !isLoading && (
+        <EmptyState
+          icon="📺"
+          title="등록된 영상이 없습니다"
+          description="새로운 영상을 추가해보세요."
+          actionLabel="영상 추가"
+          onAction={() => handleCreate()}
+        />
+      )}
+
+      {data && data.data.length > 0 && (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {data.data.map((item) => {
+              const thumb = item.thumbnailUrl || youtubeThumb(item.youtubeUrl);
+              return (
+                <div key={item.id} className={`border rounded-lg overflow-hidden hover:shadow-md transition-shadow ${bulk.has(item.id) ? 'ring-2 ring-red-500' : ''}`}>
+                  <div className="aspect-video bg-gray-100 relative">
+                    <input
+                      type="checkbox"
+                      checked={bulk.has(item.id)}
+                      onChange={() => bulk.toggle(item.id)}
+                      aria-label={`${item.title} 선택`}
+                      className="absolute top-2 left-2 z-10 h-5 w-5 accent-red-600 cursor-pointer"
+                    />
+                    {thumb ? (
+                      <img
+                        src={thumb}
+                        alt={item.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400">
+                        영상 없음
+                      </div>
+                    )}
+                    <span className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">▶ 영상</span>
+                  </div>
+                  <div className="p-3">
+                    <h3 className="text-sm font-medium truncate">{item.title}</h3>
+                    {item.categoryName && (
+                      <p className="text-xs text-gray-400 mt-0.5 truncate">{item.categoryName}</p>
+                    )}
+                    <div className="flex gap-2 mt-2">
+                      <button onClick={() => handleEdit(item)} className="text-xs text-blue-600 hover:underline">편집</button>
+                      <button
+                        onClick={() => handleDelete(item)}
+                        disabled={deleteMutation.isPending}
+                        className="text-xs text-red-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center justify-between mt-6">
+            <span className="text-sm text-gray-500">
+              총 {data.total}건 (페이지 {data.page}/{data.totalPages})
+            </span>
+            <div className="flex gap-2">
+              <button
+                disabled={data.page <= 1}
+                onClick={() => setParams((p) => ({ ...p, page: (p.page || 1) - 1 }))}
+                className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                이전
+              </button>
+              <button
+                disabled={data.page >= data.totalPages}
+                onClick={() => setParams((p) => ({ ...p, page: (p.page || 1) + 1 }))}
+                className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                다음
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="삭제 확인"
+        message={`"${deleteTarget?.name}"을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
+        confirmLabel="삭제"
+        variant="danger"
+        onConfirm={() => {
+          deleteMutation.mutate(deleteTarget!.id, {
+            onSuccess: () => { showToast('success', '삭제되었습니다.'); },
+            onError: () => { showToast('error', '오류가 발생했습니다.'); },
+          });
+          setDeleteTarget(null);
+        }}
+        onCancel={() => setDeleteTarget(null)}
+      />
+    </div>
+  );
+}

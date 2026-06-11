@@ -16,6 +16,7 @@ export const blockTypes = [
   'recent_sermons',
   'recent_bulletins',
   'album_gallery',
+  'video_board',
   'staff_grid',
   'history_timeline',
   'event_grid',

@@ -99,6 +99,29 @@ CREATE TABLE tenant_template.albums (
     updated_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- ─── Video Categories ───────────────────────────────────────
+CREATE TABLE tenant_template.video_categories (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name        VARCHAR(100) NOT NULL,
+    slug        VARCHAR(100) NOT NULL UNIQUE,
+    created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ─── Videos (영상 게시판 — YouTube board) ─────────────────────
+CREATE TABLE tenant_template.videos (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title           VARCHAR(500) NOT NULL,
+    youtube_url     TEXT,
+    video_date      DATE,
+    thumbnail_url   TEXT,
+    category_id     UUID REFERENCES tenant_template.video_categories(id) ON DELETE SET NULL,
+    status          VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+    source_url      TEXT,
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_videos_date ON tenant_template.videos(video_date DESC);
+
 -- ─── Banners ────────────────────────────────────────────────
 CREATE TABLE tenant_template.banners (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),

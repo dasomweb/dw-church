@@ -84,6 +84,7 @@ async function main(): Promise<void> {
   const { bulletinRoutes } = await import('./modules/bulletins/routes.js');
   const { columnRoutes } = await import('./modules/columns/routes.js');
   const { albumRoutes } = await import('./modules/albums/routes.js');
+  const { videoRoutes } = await import('./modules/videos/routes.js');
   const { bannerRoutes } = await import('./modules/banners/routes.js');
   const { eventRoutes } = await import('./modules/events/routes.js');
   const { staffRoutes } = await import('./modules/staff/routes.js');
@@ -116,6 +117,7 @@ async function main(): Promise<void> {
   await app.register(bulletinRoutes, { prefix: '/api/v1' });
   await app.register(columnRoutes, { prefix: '/api/v1' });
   await app.register(albumRoutes, { prefix: '/api/v1' });
+  await app.register(videoRoutes, { prefix: '/api/v1' });
   await app.register(bannerRoutes, { prefix: '/api/v1' });
   await app.register(eventRoutes, { prefix: '/api/v1' });
   await app.register(staffRoutes, { prefix: '/api/v1' });
@@ -203,6 +205,39 @@ async function main(): Promise<void> {
     for (const s of schemas) {
       const schema = s.schema_name;
 
+      // 0. videos + video_categories — 영상 게시판 content module. Cloned from
+      //    the albums module shape (youtube_url + video_date date instead of an
+      //    images gallery). Created here so existing tenants gain the tables on
+      //    deploy; the source_url ALTER below (1b) then attaches dedup support.
+      try {
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".video_categories (
+            "id"         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "name"       VARCHAR(100) NOT NULL,
+            "slug"       VARCHAR(100) NOT NULL UNIQUE,
+            "created_at" TIMESTAMPTZ DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".videos (
+            "id"            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "title"         VARCHAR(500) NOT NULL,
+            "youtube_url"   TEXT,
+            "video_date"    DATE,
+            "thumbnail_url" TEXT,
+            "category_id"   UUID REFERENCES "${schema}".video_categories(id) ON DELETE SET NULL,
+            "status"        VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+            "source_url"    TEXT,
+            "created_at"    TIMESTAMPTZ DEFAULT NOW(),
+            "updated_at"    TIMESTAMPTZ DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(
+          `CREATE INDEX IF NOT EXISTS "videos_date_idx" ON "${schema}".videos ("video_date" DESC)`,
+        );
+        createHits++;
+      } catch { /* skip on error */ }
+
       // 1. preachers.title — code INSERTs (name, title, is_default)
       try {
         await prisma.$executeRawUnsafe(
@@ -214,7 +249,7 @@ async function main(): Promise<void> {
       // 1b. source_url — per-module content migration dedup. Each migrated item
       //     records its original source post URL so a re-import UPDATEs the same
       //     row instead of inserting a duplicate (true idempotency).
-      for (const tbl of ['columns_pastoral', 'sermons', 'albums', 'bulletins', 'events', 'staff', 'history']) {
+      for (const tbl of ['columns_pastoral', 'sermons', 'albums', 'bulletins', 'events', 'staff', 'history', 'videos']) {
         try {
           await prisma.$executeRawUnsafe(
             `ALTER TABLE "${schema}".${tbl} ADD COLUMN IF NOT EXISTS "source_url" TEXT`,

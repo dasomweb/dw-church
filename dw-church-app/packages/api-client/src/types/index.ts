@@ -54,6 +54,26 @@ export interface Album {
   modifiedAt: string;
 }
 
+// ─── Video (영상 게시판) ─────────────────────────────────────
+export interface Video {
+  id: string;
+  title: string;
+  youtubeUrl: string;
+  videoDate: string;
+  thumbnailUrl: string;
+  categoryId: string;
+  categoryName?: string;
+  status: PostStatus;
+  createdAt: string;
+}
+
+export interface VideoCategory {
+  id: string;
+  name: string;
+  slug: string;
+  createdAt: string;
+}
+
 // ─── Banner ─────────────────────────────────────────────────
 export type BannerPosition =
   | 'left-top'
@@ -269,6 +289,11 @@ export interface ListParams {
 export interface SermonListParams extends ListParams {
   category?: string;
   preacher?: string;
+}
+
+export interface VideoListParams extends ListParams {
+  category?: string;
+  categoryId?: string;
 }
 
 export interface BannerListParams extends ListParams {

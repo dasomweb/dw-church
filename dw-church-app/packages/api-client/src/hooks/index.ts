@@ -9,6 +9,9 @@ import type {
   Sermon,
   Column,
   Album,
+  Video,
+  VideoCategory,
+  VideoListParams,
   Banner,
   Event,
   Staff,
@@ -66,6 +69,12 @@ export const queryKeys = {
     list: (params?: ListParams) => ['albums', 'list', params] as const,
     detail: (id: string) => ['albums', 'detail', id] as const,
     related: (id: string) => ['albums', 'related', id] as const,
+  },
+  videos: {
+    all: ['videos'] as const,
+    list: (params?: VideoListParams) => ['videos', 'list', params] as const,
+    detail: (id: string) => ['videos', 'detail', id] as const,
+    categories: ['videos', 'categories'] as const,
   },
   banners: {
     all: ['banners'] as const,
@@ -435,6 +444,65 @@ export function useRelatedAlbums(id: string, limit = 4) {
     queryFn: () => client!.getRelatedAlbums(id, limit),
     enabled: !!client && !!id,
     staleTime: STALE_TIME,
+  });
+}
+
+// ─── Video Hooks (영상 게시판) ───────────────────────────────
+export function useVideos(params?: VideoListParams) {
+  const client = useDWChurchClient();
+  return useQuery<PaginatedResponse<Video>>({
+    queryKey: queryKeys.videos.list(params),
+    queryFn: () => client!.getVideos(params),
+    enabled: !!client,
+    staleTime: STALE_TIME,
+  });
+}
+
+export function useVideo(id: string) {
+  const client = useDWChurchClient();
+  return useQuery<Video>({
+    queryKey: queryKeys.videos.detail(id),
+    queryFn: () => client!.getVideo(id),
+    enabled: !!client && !!id,
+    staleTime: STALE_TIME,
+  });
+}
+
+export function useCreateVideo() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Omit<Video, 'id' | 'createdAt' | 'categoryName'>) => client!.createVideo(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.videos.all }),
+  });
+}
+
+export function useUpdateVideo() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Video> }) =>
+      client!.updateVideo(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.videos.all }),
+  });
+}
+
+export function useDeleteVideo() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => client!.deleteVideo(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.videos.all }),
+  });
+}
+
+export function useVideoCategories() {
+  const client = useDWChurchClient();
+  return useQuery<VideoCategory[]>({
+    queryKey: queryKeys.videos.categories,
+    queryFn: () => client!.getVideoCategories(),
+    enabled: !!client,
+    staleTime: 30 * 60 * 1000,
   });
 }
 

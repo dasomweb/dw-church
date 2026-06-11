@@ -299,6 +299,23 @@ export async function getAlbum(slug: string, id: string): Promise<any> {
   return unwrap(res);
 }
 
+// ─── Videos (영상 게시판) ─────────────────────────────────────
+
+export async function getVideos(
+  slug: string,
+  params?: { page?: number; perPage?: number; category?: string; search?: string },
+): Promise<any> {
+  const p = new URLSearchParams();
+  if (params?.page) p.set('page', String(params.page));
+  if (params?.perPage) p.set('perPage', String(params.perPage));
+  if (params?.category) p.set('category', params.category);
+  if (params?.search) p.set('search', params.search);
+  const qs = p.toString();
+  // No cache for search results, 60s revalidation for regular lists
+  const revalidate = params?.search ? false as const : 60;
+  return apiFetch(slug, `/api/v1/videos${qs ? '?' + qs : ''}`, { revalidate });
+}
+
 // ─── Staff ───────────────────────────────────────────────────
 
 export async function getStaff(slug: string): Promise<any[]> {
