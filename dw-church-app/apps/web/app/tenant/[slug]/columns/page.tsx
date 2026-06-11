@@ -23,7 +23,11 @@ export default async function ColumnsPage({ params, searchParams }: ColumnsPageP
   try { page = await getPageBySlug(slug, 'columns'); } catch { page = null; }
   const sections = page?.sections?.filter((s: any) => s.isVisible).sort((a: any, b: any) => a.sortOrder - b.sortOrder) ?? [];
 
-  const columns = await getColumns(slug, { page: currentPage, perPage: 12 });
+  // Respect the recent_columns block's "표시 개수" (limit) as the page size —
+  // operators set it expecting it to control how many show. Fall back to 12.
+  const columnsBlock = sections.find((s: any) => s.blockType === 'recent_columns');
+  const perPage = Number(columnsBlock?.props?.limit) || 12;
+  const columns = await getColumns(slug, { page: currentPage, perPage });
 
   return (
     <div>

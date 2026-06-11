@@ -24,7 +24,9 @@ export default async function EventsPage({ params, searchParams }: EventsPagePro
   try { page = await getPageBySlug(slug, 'events'); } catch { page = null; }
   const sections = page?.sections?.filter((s: any) => s.isVisible).sort((a: any, b: any) => a.sortOrder - b.sortOrder) ?? [];
 
-  const events = await getEvents(slug, { page: currentPage, perPage: 12 });
+  // Respect the block's "표시 개수" (limit) as page size; fall back to 12.
+  const perPage = Number(sections.find((s: any) => s.blockType === 'event_grid')?.props?.limit) || 12;
+  const events = await getEvents(slug, { page: currentPage, perPage });
 
   return (
     <div>

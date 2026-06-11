@@ -24,7 +24,9 @@ export default async function AlbumsPage({ params, searchParams }: AlbumsPagePro
   try { page = await getPageBySlug(slug, 'albums'); } catch { page = null; }
   const sections = page?.sections?.filter((s: any) => s.isVisible).sort((a: any, b: any) => a.sortOrder - b.sortOrder) ?? [];
 
-  const albums = await getAlbums(slug, { page: currentPage, perPage: 12 });
+  // Respect the block's "표시 개수" (limit) as page size; fall back to 12.
+  const perPage = Number(sections.find((s: any) => s.blockType === 'album_gallery')?.props?.limit) || 12;
+  const albums = await getAlbums(slug, { page: currentPage, perPage });
 
   return (
     <div>

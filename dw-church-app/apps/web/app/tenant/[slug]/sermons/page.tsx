@@ -24,7 +24,9 @@ export default async function SermonsPage({ params, searchParams }: SermonsPageP
   try { page = await getPageBySlug(slug, 'sermons'); } catch { page = null; }
   const sections = page?.sections?.filter((s: any) => s.isVisible).sort((a: any, b: any) => a.sortOrder - b.sortOrder) ?? [];
 
-  const sermons = await getSermons(slug, { page: currentPage, perPage: 12, category: search.category, search: search.search });
+  // Respect the block's "표시 개수" (limit) as page size; fall back to 12.
+  const perPage = Number(sections.find((s: any) => s.blockType === 'recent_sermons')?.props?.limit) || 12;
+  const sermons = await getSermons(slug, { page: currentPage, perPage, category: search.category, search: search.search });
 
   return (
     <div>
