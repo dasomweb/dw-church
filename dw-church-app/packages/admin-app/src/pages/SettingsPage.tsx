@@ -3,14 +3,18 @@ import { useForm } from 'react-hook-form';
 import {
   useChurchSettings,
   useUpdateChurchSettings,
+  useDWChurchClient,
   type ChurchSettings,
 } from '@dw-church/api-client';
+import { ImageUpload } from '../components';
 
 type SettingsFormData = ChurchSettings;
 
 export default function SettingsPage() {
   const { data: settings, isLoading } = useChurchSettings();
   const updateSettings = useUpdateChurchSettings();
+  const apiClient = useDWChurchClient();
+  const uploadImage = async (file: File): Promise<string> => (await apiClient!.uploadFile(file)).url;
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
@@ -18,6 +22,8 @@ export default function SettingsPage() {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { isDirty, isSubmitting },
   } = useForm<SettingsFormData>();
 
@@ -142,14 +148,26 @@ export default function SettingsPage() {
           <p className="text-xs text-gray-500 mb-4">로고와 파비콘은 사이트 헤더와 브라우저 탭에 표시됩니다.</p>
           <div className="space-y-4">
             <div>
-              <label htmlFor="logoUrl" className="block text-sm font-medium text-gray-700 mb-1">로고 이미지 URL</label>
-              <input id="logoUrl" type="url" {...register('logoUrl')} placeholder="https://example.com/logo.png" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" />
+              <ImageUpload
+                label="로고 이미지"
+                value={watch('logoUrl') || ''}
+                onChange={(url) => setValue('logoUrl', url, { shouldDirty: true })}
+                onUpload={uploadImage}
+                resize="content"
+                aspectRatio="3/1"
+              />
               <p className="text-xs text-gray-400 mt-1">권장: 가로형 PNG, 높이 40~60px, 투명 배경</p>
             </div>
             <div>
-              <label htmlFor="faviconUrl" className="block text-sm font-medium text-gray-700 mb-1">파비콘 URL</label>
-              <input id="faviconUrl" type="url" {...register('faviconUrl')} placeholder="https://example.com/favicon.ico" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" />
-              <p className="text-xs text-gray-400 mt-1">권장: 32x32 또는 64x64 PNG/ICO</p>
+              <ImageUpload
+                label="파비콘"
+                value={watch('faviconUrl') || ''}
+                onChange={(url) => setValue('faviconUrl', url, { shouldDirty: true })}
+                onUpload={uploadImage}
+                resize="thumb"
+                aspectRatio="1/1"
+              />
+              <p className="text-xs text-gray-400 mt-1">권장: 정사각형 PNG (32x32 또는 64x64)</p>
             </div>
           </div>
         </section>
@@ -174,9 +192,15 @@ export default function SettingsPage() {
               <p className="text-xs text-gray-400 mt-1">쉼표로 구분</p>
             </div>
             <div>
-              <label htmlFor="ogImageUrl" className="block text-sm font-medium text-gray-700 mb-1">OG 이미지 URL</label>
-              <input id="ogImageUrl" type="url" {...register('ogImageUrl')} placeholder="https://example.com/og-image.jpg" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" />
-              <p className="text-xs text-gray-400 mt-1">SNS 공유 시 표시되는 이미지 (1200x630 권장)</p>
+              <ImageUpload
+                label="OG 이미지 (SNS 공유용)"
+                value={watch('ogImageUrl') || ''}
+                onChange={(url) => setValue('ogImageUrl', url, { shouldDirty: true })}
+                onUpload={uploadImage}
+                resize="background"
+                aspectRatio="1200/630"
+              />
+              <p className="text-xs text-gray-400 mt-1">SNS(카카오톡/페이스북) 공유 시 표시되는 이미지 (1200x630 권장)</p>
             </div>
           </div>
         </section>
