@@ -66,31 +66,39 @@ export interface BuildPagesRes {
  * seconds because they wait on Claude. Cloudflare's proxy enforces a hard
  * 100s origin-timeout on Free/Pro/Business plans → operators see HTTP 524.
  *
- * Bypass: route these calls through the api-server's Railway-direct origin
- * (api-server-production-c612.up.railway.app), which doesn't sit behind the
- * Cloudflare proxy — so the 100s edge timeout doesn't apply. This mirrors
- * what ContentMigrationButton does for its own long (60-130s) calls.
+ * Origin choice (verified 2026-06-10):
+ *   - admin.truelight.app's normal API base is its OWN origin
+ *     (window.location.origin), which proxies /api/* to the api-server. That
+ *     works, but routing the planner through `api.truelight.app` is cleaner
+ *     and equally correct: `api` is a SYSTEM_SUBDOMAIN so the server skips
+ *     tenant resolution (planner is super_admin / tenant-less), and CORS is
+ *     open. Verified: POST returns 401 (auth) — i.e. the request reaches the
+ *     planner route — not 404 TENANT_NOT_FOUND.
+ *   - We must NOT use the Railway-direct origin
+ *     (api-server-production-c612.up.railway.app): its first host label isn't
+ *     a system subdomain, so the tenant middleware reads it as a tenant slug
+ *     and 404s ("Tenant 'api-server-production-c612' not found"). The planner
+ *     strips X-Tenant-Slug, so there's no header to override the host.
+ *   - The old `api-direct.truelight.app` (intended Cloudflare-bypass for the
+ *     100s timeout) is currently misrouted → 404 + no CORS → "Load failed".
  *
- * (We used to point at `api-direct.truelight.app`, a "DNS-only" sibling
- * sub-domain, but that record is currently proxied/misrouted — it answers
- * 404 with no CORS headers, so the browser surfaces a "Load failed" on the
- * first planner call. The Railway-direct origin is verified working + CORS.)
+ * Trade-off: api.truelight.app sits behind the Cloudflare proxy (100s origin
+ * timeout). The heaviest step (content-map) already runs as an async job so
+ * it's unaffected; the remaining sync steps are single Claude calls under
+ * the limit. If build-pages ever 524s on a large site, move it to the async
+ * jobs path too (or restore a properly DNS-only api-direct record).
  *
  * Resolution order:
  *   1. VITE_PLANNER_DIRECT_BASE_URL  (explicit override — dev / preview)
- *   2. admin.truelight.app → the Railway-direct origin
- *   3. Fallback to client.fetchAdapter.baseUrl (dev / self-hosted — still
- *      functional, just exposed to 524 on heavy SYNC steps; the heaviest
- *      step, content-map, already runs as an async job so it's unaffected).
+ *   2. admin.truelight.app → https://api.truelight.app
+ *   3. Fallback to client.fetchAdapter.baseUrl (dev / self-hosted).
  */
-const RAILWAY_DIRECT_API = 'https://api-server-production-c612.up.railway.app';
-
 function resolvePlannerBaseUrl(fallbackBaseUrl: string): string {
   const override = (typeof import.meta !== 'undefined' &&
     (import.meta as unknown as { env?: { VITE_PLANNER_DIRECT_BASE_URL?: string } }).env?.VITE_PLANNER_DIRECT_BASE_URL) || '';
   if (override) return override;
   if (typeof window !== 'undefined' && window.location.hostname === 'admin.truelight.app') {
-    return RAILWAY_DIRECT_API;
+    return 'https://api.truelight.app';
   }
   return fallbackBaseUrl;
 }
