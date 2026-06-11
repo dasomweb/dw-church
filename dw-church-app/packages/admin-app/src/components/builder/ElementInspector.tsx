@@ -11,7 +11,7 @@ import {
   type BlockElementRegistry,
   type ElementSpec,
 } from './element-registry';
-import { ImageField, useImageFieldApi, LinkField, ColorField, SpacingField, MediaPicker, LabeledField, CollapsibleGroup, TypographyTokenField, OverlayField, BorderField, LinkButtonField, LayoutField, DesignField } from './property-fields';
+import { ImageField, useImageFieldApi, LinkField, ColorField, SpacingField, MediaPicker, LabeledField, CollapsibleGroup, TypographyTokenField, OverlayField, BorderField, LinkButtonField, LayoutField, DesignField, ScheduleGroupsField, type ScheduleGroup } from './property-fields';
 import { RichEditor } from '../RichEditor';
 import { DynamicSourcePicker, DynamicChip } from './property-fields/DynamicSourcePicker';
 import { isDynamicRef, dynamicContextsForPageKind, type DynamicContext } from '@dw-church/blocks/builder';
@@ -1658,6 +1658,24 @@ function FieldControl({
       </CollapsibleGroup>
     );
   }
+  // 'groups' — schedule_split 의 props.groups 배열 repeater. 단일 path 이지만
+  // 배열을 통째로 써야 해서 onPropsPatch({ [path]: nextGroups }) 로 커밋.
+  // (CollapsibleGroup 으로 감싸 overlay/border/layout 패널과 동일한 리듬.)
+  if (spec.kind === 'groups' && onPropsPatch) {
+    const current = Array.isArray(value) ? (value as ScheduleGroup[]) : [];
+    return (
+      <CollapsibleGroup title={spec.label} defaultOpen>
+        <ScheduleGroupsField
+          value={current}
+          onChange={(next) => onPropsPatch({ [spec.path]: next })}
+        />
+        {spec.hint && (
+          <p className="mt-1.5 text-[10px] text-gray-500 leading-snug">{spec.hint}</p>
+        )}
+      </CollapsibleGroup>
+    );
+  }
+
   // value 가 DynamicRef 객체이면 — 일반 kind 분기 (input / select / ...)
   // 가 객체를 React child 로 렌더하다 #31 크래시. early-return 으로 chip
   // 만 표시 (대표님 2026-05-28 "프로퍼티 렌더 오류 #31 {path,context,

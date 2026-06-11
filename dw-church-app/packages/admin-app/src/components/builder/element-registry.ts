@@ -45,7 +45,11 @@ export type ElementKind =
   | 'link-button'
   | 'layout'
   | 'design'
-  | 'gallery-image-order';
+  | 'gallery-image-order'
+  // Repeater kind — edits an ARRAY prop (props[path]) of schedule groups
+  // ({ title, columns[], rows[][] }) via ScheduleGroupsField. Single-path
+  // (writes the whole array back through onChange), not multi-prop.
+  | 'groups';
 
 export interface ElementSpec {
   /** Display label in the inspector. */
@@ -1589,6 +1593,20 @@ const WORSHIP_SCHEDULE = churchBlock(
     { key: 'title', label: '제목', type: 'text', hint: '예배 시간은 콘텐츠 관리에서 편집합니다' },
   ]},
 );
+// schedule_split — 이미지 + N개의 제목 표 (주일예배 / 교육부 / 주중모임 …).
+// 'groups' kind 가 props.groups 배열을 ScheduleGroupsField 로 편집. churchBlock
+// 헬퍼는 scalar field 만 지원하므로 registry 를 직접 구성.
+const SCHEDULE_SPLIT: BlockElementRegistry = {
+  sections: [
+    { title: 'Content', elements: [
+      { label: '이미지', path: 'imageUrl', kind: 'image' },
+      { label: '이미지 위치', path: 'imagePosition', kind: 'select', choices: [
+        { value: 'left', label: '왼쪽' }, { value: 'right', label: '오른쪽' },
+      ]},
+      { label: '예배 / 모임 표', path: 'groups', kind: 'groups' },
+    ]},
+  ],
+};
 const LAYOUT_ROW = churchBlock(
   { title: 'Layout', fields: [
     { key: 'gap', label: '간격 (px)', type: 'number' },
@@ -1630,6 +1648,7 @@ export const ELEMENT_REGISTRY: Record<string, BlockElementRegistry> = {
   history_timeline: HISTORY_TIMELINE,
   worship_times:    WORSHIP_TIMES,
   worship_schedule: WORSHIP_SCHEDULE,
+  schedule_split:   SCHEDULE_SPLIT,
   map_embed:        MAP_EMBED,
   address_info:     ADDRESS_INFO,
   visitor_welcome:  VISITOR_WELCOME,

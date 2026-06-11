@@ -15,6 +15,11 @@ export {
 } from './ColorField';
 export { SpacingField, type SpacingFieldProps } from './SpacingField';
 export {
+  ScheduleGroupsField,
+  type ScheduleGroupsFieldProps,
+  type ScheduleGroup,
+} from './ScheduleGroupsField';
+export {
   LayoutField,
   type LayoutFieldProps,
   type LayoutFieldValue,
