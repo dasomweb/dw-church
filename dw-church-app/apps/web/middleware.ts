@@ -51,8 +51,25 @@ export async function middleware(request: NextRequest) {
     return NextResponse.rewrite(new URL(`${railwayUrl}${pathname}${request.nextUrl.search}`));
   }
 
-  // Main landing page
+  // Main landing page (+ canonicalize bare /tenant/<slug> hits).
   if (PLATFORM_HOSTS.has(hostname)) {
+    // A direct hit on truelight.app/tenant/<slug>/... serves the same pages,
+    // but basePath is "/tenant/<slug>" there and many block/card links are
+    // basePath-relative ("/columns/123") — so they 404. Redirect to the
+    // canonical tenant subdomain (basePath = "") where every link resolves.
+    // Scoped to the bare production host only: subdomains never enter this
+    // branch (not in PLATFORM_HOSTS), and localhost/customers are left alone
+    // so dev + the SaaS proxy keep working.
+    if (hostname === 'truelight.app' || hostname === 'www.truelight.app') {
+      const m = pathname.match(/^\/tenant\/([^/]+)(\/.*)?$/);
+      if (m) {
+        const tslug = m[1];
+        const rest = m[2] ?? '';
+        const url = new URL(`https://${tslug}.truelight.app${rest}`);
+        url.search = request.nextUrl.search;
+        return NextResponse.redirect(url, 308);
+      }
+    }
     return NextResponse.next();
   }
 

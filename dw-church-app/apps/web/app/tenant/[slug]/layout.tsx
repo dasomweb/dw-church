@@ -383,7 +383,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
               {sortedVisibleItems.map((item) => (
                 <div key={item.id} className="relative group">
                   <Link
-                    href={item.externalUrl ?? (item.pageSlug ? `/${item.pageSlug}` : '#')}
+                    href={navHref(item)}
                     className="text-sm font-medium transition-colors hover:opacity-80 py-2 inline-flex items-center gap-0.5"
                     style={{ color: navLinkColor }}
                   >
@@ -398,7 +398,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                         {item.children.map((child) => (
                           <Link
                             key={child.id}
-                            href={child.externalUrl ?? (child.pageSlug ? `/${child.pageSlug}` : '/')}
+                            href={navHref(child)}
                             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[var(--dw-primary)] transition-colors"
                           >
                             {child.label}
