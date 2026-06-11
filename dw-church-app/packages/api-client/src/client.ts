@@ -553,12 +553,19 @@ export class DWChurchClient {
   }
 
   // ─── Settings ───────────────────────────────────────────
+  // The server replies with a { data: {...} } envelope and FetchAdapter does
+  // NOT auto-unwrap it — every sibling method strips it with `.data ?? res`.
+  // These two were missing that, so SettingsPage's reset() spread the envelope
+  // and the form always read back empty (write to DB was fine — it was a
+  // read-back bug). See b2bsmart HISTORY-2026-06-10-SETTINGS-ENVELOPE-BUG.
   async getSettings(): Promise<ChurchSettings> {
-    return this.api.get(`${this.namespace}/settings`);
+    const res = await this.api.get(`${this.namespace}/settings`);
+    return (res as { data: ChurchSettings }).data ?? res;
   }
 
   async updateSettings(data: Partial<ChurchSettings>): Promise<ChurchSettings> {
-    return this.api.put(`${this.namespace}/settings`, data);
+    const res = await this.api.put(`${this.namespace}/settings`, data);
+    return (res as { data: ChurchSettings }).data ?? res;
   }
 
   // ─── Related Posts (generic) ────────────────────────────

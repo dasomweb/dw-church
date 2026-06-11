@@ -122,6 +122,48 @@ describe('DWChurchClient', () => {
     });
   });
 
+  // Regression: the server wraps /settings responses in a { data: {...} }
+  // envelope and FetchAdapter does NOT auto-unwrap it. getSettings /
+  // updateSettings must strip it (like every sibling method) or the settings
+  // form reads back empty even though the DB write succeeded.
+  // See b2bsmart HISTORY-2026-06-10-SETTINGS-ENVELOPE-BUG.
+  describe('settings envelope unwrap', () => {
+    const settings = { churchName: 'True Light', phone: '010-1111-2222', address: 'Seoul' };
+
+    it('getSettings unwraps the { data } envelope', async () => {
+      const adapter: any = {
+        get: vi.fn().mockResolvedValue({ data: settings }),
+        post: vi.fn(), put: vi.fn(), delete: vi.fn(),
+      };
+      const client = new DWChurchClient({ baseUrl: 'https://example.com', adapter });
+      const res = await client.getSettings();
+      expect(res).toEqual(settings);
+      expect((res as Record<string, unknown>).data).toBeUndefined();
+    });
+
+    it('updateSettings unwraps the { data } envelope', async () => {
+      const adapter: any = {
+        get: vi.fn(),
+        post: vi.fn(),
+        put: vi.fn().mockResolvedValue({ data: settings }),
+        delete: vi.fn(),
+      };
+      const client = new DWChurchClient({ baseUrl: 'https://example.com', adapter });
+      const res = await client.updateSettings({ churchName: 'True Light' });
+      expect(res).toEqual(settings);
+      expect((res as Record<string, unknown>).data).toBeUndefined();
+    });
+
+    it('falls back to the raw response when there is no envelope', async () => {
+      const adapter: any = {
+        get: vi.fn().mockResolvedValue(settings),
+        post: vi.fn(), put: vi.fn(), delete: vi.fn(),
+      };
+      const client = new DWChurchClient({ baseUrl: 'https://example.com', adapter });
+      expect(await client.getSettings()).toEqual(settings);
+    });
+  });
+
   describe('getRelatedPosts', () => {
     it('constructs correct URL with params', async () => {
       const getSpy = vi.fn().mockResolvedValue([]);
