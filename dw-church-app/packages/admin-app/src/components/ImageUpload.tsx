@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { resizeImage } from '../utils/resize-image.js';
 import type { ResizePreset, ResizeResult } from '../utils/resize-image.js';
+import { MediaPicker } from './builder/property-fields/MediaPicker';
 
 interface ImageUploadProps {
   value: string;
@@ -33,6 +34,7 @@ export function ImageUpload({
   const [dragOver, setDragOver] = useState(false);
   const [resizeInfo, setResizeInfo] = useState<ResizeResult | null>(null);
   const [resizeError, setResizeError] = useState<string | null>(null);
+  const [showLibrary, setShowLibrary] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Sync mode when value changes externally (e.g. AI generation)
@@ -180,6 +182,20 @@ export function ImageUpload({
           </>
         )}
       </div>
+      {/* Pick from the tenant media library (previously-uploaded images). */}
+      <button
+        type="button"
+        onClick={() => setShowLibrary(true)}
+        className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+      >
+        <span>🖼️</span> 미디어 라이브러리에서 선택
+      </button>
+      {showLibrary && (
+        <MediaPicker
+          onClose={() => setShowLibrary(false)}
+          onSelect={(item) => { onChange(item.url); setMode('preview'); setShowLibrary(false); }}
+        />
+      )}
       <div className="flex gap-2 mt-2">
         <input
           type="text"
@@ -231,6 +247,7 @@ export function MultiImageUpload({ value = [], onChange, onUpload, max = 15, lab
   // Phase 12-γ.2: surface per-batch resize savings + reject errors.
   const [resizeError, setResizeError] = useState<string | null>(null);
   const [batchSaved, setBatchSaved] = useState<{ original: number; resized: number } | null>(null);
+  const [showLibrary, setShowLibrary] = useState(false);
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) void processFiles(e.target.files);
@@ -394,7 +411,27 @@ export function MultiImageUpload({ value = [], onChange, onUpload, max = 15, lab
               추가
             </button>
           </div>
+          {/* Pick one or more from the tenant media library. */}
+          <button
+            type="button"
+            onClick={() => setShowLibrary(true)}
+            className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+          >
+            <span>🖼️</span> 미디어 라이브러리에서 선택
+          </button>
         </>
+      )}
+      {showLibrary && (
+        <MediaPicker
+          multi
+          onClose={() => setShowLibrary(false)}
+          onSelectMulti={(items) => {
+            const remaining = max - value.length;
+            const urls = items.map((it) => it.url).slice(0, Math.max(0, remaining));
+            if (urls.length > 0) onChange([...value, ...urls]);
+            setShowLibrary(false);
+          }}
+        />
       )}
       {value.length >= max && (
         <p className="text-amber-600 text-xs mt-1">최대 {max}개까지 업로드 가능합니다.</p>
