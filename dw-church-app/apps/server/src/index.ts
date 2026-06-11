@@ -238,6 +238,41 @@ async function main(): Promise<void> {
         createHits++;
       } catch { /* skip on error */ }
 
+      // 0b. boards + board_posts — some older tenants (e.g. lagrangechurch)
+      //     were cloned before these existed and migrateBoards missed them, so
+      //     creating a board 500'd with 42P01. This loop covers EVERY tenant
+      //     schema, so it heals them reliably.
+      try {
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".boards (
+            "id"          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "title"       VARCHAR(255) NOT NULL,
+            "slug"        VARCHAR(255) NOT NULL,
+            "description" TEXT DEFAULT '',
+            "sort_order"  INT DEFAULT 0,
+            "is_active"   BOOLEAN DEFAULT true,
+            "created_at"  TIMESTAMPTZ DEFAULT NOW(),
+            "updated_at"  TIMESTAMPTZ DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".board_posts (
+            "id"          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "board_id"    UUID NOT NULL REFERENCES "${schema}".boards(id) ON DELETE CASCADE,
+            "title"       VARCHAR(500) NOT NULL,
+            "author_name" VARCHAR(100) NOT NULL DEFAULT '',
+            "content"     TEXT DEFAULT '',
+            "attachments" JSONB DEFAULT '[]',
+            "view_count"  INT DEFAULT 0,
+            "is_pinned"   BOOLEAN DEFAULT false,
+            "status"      VARCHAR(20) DEFAULT 'published',
+            "created_at"  TIMESTAMPTZ DEFAULT NOW(),
+            "updated_at"  TIMESTAMPTZ DEFAULT NOW()
+          )
+        `);
+        createHits++;
+      } catch { /* skip on error */ }
+
       // 1. preachers.title — code INSERTs (name, title, is_default)
       try {
         await prisma.$executeRawUnsafe(

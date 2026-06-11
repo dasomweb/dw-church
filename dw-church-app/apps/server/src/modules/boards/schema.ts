@@ -1,12 +1,15 @@
 import { z } from 'zod';
 
+// camelCase to match the api-client payload (it no longer snake-cases on send).
+// coerce handles the number input + the isActive <select> ("true"/"" → boolean).
+// .passthrough() so stray keys don't 400.
 export const createBoardSchema = z.object({
   title: z.string().min(1).max(255),
   slug: z.string().min(1).max(255),
   description: z.string().max(1000).optional().default(''),
-  sort_order: z.number().int().optional().default(0),
-  is_active: z.boolean().optional().default(true),
-});
+  sortOrder: z.coerce.number().int().optional().default(0),
+  isActive: z.coerce.boolean().optional().default(true),
+}).passthrough();
 
 export const updateBoardSchema = createBoardSchema.partial();
 

@@ -43,8 +43,8 @@ export async function createBoard(schema: string, input: CreateBoardInput) {
     input.title,
     input.slug,
     input.description ?? '',
-    input.sort_order ?? 0,
-    input.is_active ?? true,
+    input.sortOrder ?? 0,
+    input.isActive ?? true,
   );
   return getBoard(schema, rows[0].id);
 }
@@ -57,8 +57,8 @@ export async function updateBoard(schema: string, id: string, input: UpdateBoard
   if (input.title !== undefined) { setClauses.push(`title = $${paramIndex++}`); values.push(input.title); }
   if (input.slug !== undefined) { setClauses.push(`slug = $${paramIndex++}`); values.push(input.slug); }
   if (input.description !== undefined) { setClauses.push(`description = $${paramIndex++}`); values.push(input.description); }
-  if (input.sort_order !== undefined) { setClauses.push(`sort_order = $${paramIndex++}`); values.push(input.sort_order); }
-  if (input.is_active !== undefined) { setClauses.push(`is_active = $${paramIndex++}`); values.push(input.is_active); }
+  if (input.sortOrder !== undefined) { setClauses.push(`sort_order = $${paramIndex++}`); values.push(input.sortOrder); }
+  if (input.isActive !== undefined) { setClauses.push(`is_active = $${paramIndex++}`); values.push(input.isActive); }
 
   if (setClauses.length > 0) {
     setClauses.push(`updated_at = NOW()`);
