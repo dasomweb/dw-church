@@ -18,7 +18,12 @@ interface ScheduleGroup {
 // pull the blocks barrel (which can drag in client-only code).
 export async function ScheduleBoardBlock({ props, slug }: ScheduleBoardBlockProps) {
   const imageUrl = (props.imageUrl as string) || '';
-  const imagePosition = (props.imagePosition as string) || 'left';
+  // imagePosition field (좌측/우측/없음) is the primary control; the tenant
+  // editor's variant buttons (image-left/image-right/no-image) are honored as
+  // a fallback so either control works.
+  const variant = (props.variant as string) || '';
+  const imagePosition = (props.imagePosition as string)
+    || (variant === 'image-right' ? 'right' : variant === 'no-image' ? 'none' : 'left');
   const showImage = imagePosition !== 'none' && !!imageUrl;
   const imageRight = imagePosition === 'right';
 
