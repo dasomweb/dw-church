@@ -21,7 +21,7 @@ export async function listBulletins(schema: string, params: ListParams) {
 
   const [rows, countResult] = await Promise.all([
     prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-      `SELECT * FROM "${schema}".bulletins ${whereClause} ORDER BY bulletin_date DESC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`,
+      `SELECT *, bulletin_date AS date FROM "${schema}".bulletins ${whereClause} ORDER BY bulletin_date DESC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`,
       ...values, perPage, offset,
     ),
     prisma.$queryRawUnsafe<[{ total: number }]>(
@@ -35,7 +35,7 @@ export async function listBulletins(schema: string, params: ListParams) {
 
 export async function getBulletin(schema: string, id: string) {
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-    `SELECT * FROM "${schema}".bulletins WHERE id = $1::uuid`,
+    `SELECT *, bulletin_date AS date FROM "${schema}".bulletins WHERE id = $1::uuid`,
     id,
   );
   return rows[0] ?? null;
