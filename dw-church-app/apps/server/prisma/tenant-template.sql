@@ -122,6 +122,18 @@ CREATE TABLE tenant_template.videos (
 );
 CREATE INDEX idx_videos_date ON tenant_template.videos(video_date DESC);
 
+-- ─── Schedules (예배 및 모임 — titled schedule tables) ─────────
+CREATE TABLE tenant_template.schedules (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title           VARCHAR(255) NOT NULL,
+    columns         JSONB DEFAULT '["예배","시간","장소"]',
+    rows            JSONB DEFAULT '[]',
+    sort_order      INT DEFAULT 0,
+    status          VARCHAR(20) DEFAULT 'published' CHECK (status IN ('draft', 'published', 'archived')),
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ─── Banners ────────────────────────────────────────────────
 CREATE TABLE tenant_template.banners (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),

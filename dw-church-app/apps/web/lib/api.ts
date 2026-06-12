@@ -317,6 +317,13 @@ export async function getVideos(
   return apiFetch(slug, `/api/v1/videos${qs ? '?' + qs : ''}`, { revalidate });
 }
 
+// ─── Schedules (예배 및 모임) ─────────────────────────────────
+
+export async function getSchedules(slug: string): Promise<any[]> {
+  const res = await apiFetch(slug, `/api/v1/schedules`, { revalidate: 60 });
+  return unwrap(res) ?? [];
+}
+
 // ─── Staff ───────────────────────────────────────────────────
 
 export async function getStaff(slug: string): Promise<any[]> {

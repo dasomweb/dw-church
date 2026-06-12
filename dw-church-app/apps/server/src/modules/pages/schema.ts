@@ -20,6 +20,7 @@ export const blockTypes = [
   'staff_grid',
   'history_timeline',
   'event_grid',
+  'schedule_board',
   // Text
   'text_image',
   'text_only',

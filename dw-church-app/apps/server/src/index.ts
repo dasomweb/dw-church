@@ -85,6 +85,7 @@ async function main(): Promise<void> {
   const { columnRoutes } = await import('./modules/columns/routes.js');
   const { albumRoutes } = await import('./modules/albums/routes.js');
   const { videoRoutes } = await import('./modules/videos/routes.js');
+  const { scheduleRoutes } = await import('./modules/schedules/routes.js');
   const { bannerRoutes } = await import('./modules/banners/routes.js');
   const { eventRoutes } = await import('./modules/events/routes.js');
   const { staffRoutes } = await import('./modules/staff/routes.js');
@@ -118,6 +119,7 @@ async function main(): Promise<void> {
   await app.register(columnRoutes, { prefix: '/api/v1' });
   await app.register(albumRoutes, { prefix: '/api/v1' });
   await app.register(videoRoutes, { prefix: '/api/v1' });
+  await app.register(scheduleRoutes, { prefix: '/api/v1' });
   await app.register(bannerRoutes, { prefix: '/api/v1' });
   await app.register(eventRoutes, { prefix: '/api/v1' });
   await app.register(staffRoutes, { prefix: '/api/v1' });
@@ -266,6 +268,25 @@ async function main(): Promise<void> {
             "view_count"  INT DEFAULT 0,
             "is_pinned"   BOOLEAN DEFAULT false,
             "status"      VARCHAR(20) DEFAULT 'published',
+            "created_at"  TIMESTAMPTZ DEFAULT NOW(),
+            "updated_at"  TIMESTAMPTZ DEFAULT NOW()
+          )
+        `);
+        createHits++;
+      } catch { /* skip on error */ }
+
+      // 0c. schedules — 예배 및 모임 content module. Each row is a titled GROUP
+      //     ({ title, columns, rows }) rendered as a table by the schedule_board
+      //     Data Block. Created here so existing tenants gain the table on deploy.
+      try {
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".schedules (
+            "id"          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "title"       VARCHAR(255) NOT NULL,
+            "columns"     JSONB DEFAULT '["예배","시간","장소"]',
+            "rows"        JSONB DEFAULT '[]',
+            "sort_order"  INT DEFAULT 0,
+            "status"      VARCHAR(20) DEFAULT 'published' CHECK (status IN ('draft', 'published', 'archived')),
             "created_at"  TIMESTAMPTZ DEFAULT NOW(),
             "updated_at"  TIMESTAMPTZ DEFAULT NOW()
           )

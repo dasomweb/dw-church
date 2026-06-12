@@ -16,6 +16,7 @@ import { RecentBulletinsBlock } from './blocks/RecentBulletinsBlock';
 import { RecentColumnsBlock } from './blocks/RecentColumnsBlock';
 import { AlbumGalleryBlock } from './blocks/AlbumGalleryBlock';
 import { VideoBoardBlock } from './blocks/VideoBoardBlock';
+import { ScheduleBoardBlock } from './blocks/ScheduleBoardBlock';
 import { StaffGridBlock } from './blocks/StaffGridBlock';
 import { HistoryTimelineBlock } from './blocks/HistoryTimelineBlock';
 import { EventGridBlock } from './blocks/EventGridBlock';
@@ -38,6 +39,7 @@ const CHURCH_BLOCKS: Record<string, AnyBlock> = {
   recent_columns: RecentColumnsBlock as AnyBlock,
   album_gallery: AlbumGalleryBlock as AnyBlock,
   video_board: VideoBoardBlock as AnyBlock,
+  schedule_board: ScheduleBoardBlock as AnyBlock,
   staff_grid: StaffGridBlock as AnyBlock,
   history_timeline: HistoryTimelineBlock as AnyBlock,
   event_grid: EventGridBlock as AnyBlock,

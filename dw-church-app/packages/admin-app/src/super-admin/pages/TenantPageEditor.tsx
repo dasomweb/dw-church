@@ -78,6 +78,7 @@ const ADD_BLOCK_CATALOG: { category: string; blocks: AddBlock[] }[] = [
     { value: 'contact_info', label: '연락처', props: { title: '연락처' } },
     { value: 'newcomer_info', label: '새가족 안내', props: { title: '처음 오신 분들을 환영합니다' } },
     { value: 'schedule_split', label: '예배 및 모임 (이미지+표)', props: { imageUrl: '', imagePosition: 'left', groups: [{ title: '주일 예배', columns: ['예배', '시간', '장소'], rows: [['1부 예배', '오전 9:00', '본당']] }] } },
+    { value: 'schedule_board', label: '예배 및 모임', props: { imageUrl: '', imagePosition: 'left' } },
   ]},
   { category: 'CTA / 미디어', blocks: [
     { value: 'call_to_action', label: 'CTA 배너', props: { title: '', ctaLabel: '', ctaUrl: '' } },

@@ -1507,6 +1507,14 @@ const VIDEO_BOARD = churchBlock(
     ]},
   ]},
 );
+const SCHEDULE_BOARD = churchBlock(
+  { title: 'Data', fields: [
+    { key: 'imageUrl', label: '이미지', type: 'image', hint: '예배/모임 표 옆 사진 (없음 선택 시 숨김)' },
+    { key: 'imagePosition', label: '이미지 위치', type: 'select', choices: [
+      { value: 'left', label: '좌측' }, { value: 'right', label: '우측' }, { value: 'none', label: '없음' },
+    ]},
+  ]},
+);
 const EVENT_GRID = churchBlock(
   { title: 'Header', fields: [{ key: 'title', label: '제목', type: 'text' }]},
   { title: 'Data', fields: [
@@ -1651,6 +1659,7 @@ export const ELEMENT_REGISTRY: Record<string, BlockElementRegistry> = {
   recent_bulletins: RECENT_BULLETINS,
   recent_columns:   RECENT_COLUMNS,
   video_board:      VIDEO_BOARD,
+  schedule_board:   SCHEDULE_BOARD,
   event_grid:       EVENT_GRID,
   staff_grid:       STAFF_GRID,
   history_timeline: HISTORY_TIMELINE,

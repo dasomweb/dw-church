@@ -34,6 +34,8 @@ import type {
   Video,
   VideoCategory,
   VideoListParams,
+  Schedule,
+  ScheduleListParams,
 } from './types';
 
 // ─── Default HTTP Adapter (fetch-based) ─────────────────────
@@ -445,6 +447,33 @@ export class DWChurchClient {
 
   async deleteVideoCategory(id: string): Promise<void> {
     return this.api.delete(`${this.namespace}/videos/categories/${id}`);
+  }
+
+  // ─── Schedules (예배 및 모임) ────────────────────────────────
+  // The list endpoint returns a `{ data }` envelope (not paginated) — each
+  // method unwraps it via unwrapData.
+  async getSchedules(params?: ScheduleListParams): Promise<Schedule[]> {
+    const res = await this.api.get(`${this.namespace}/schedules`, toQueryParams(params));
+    return unwrapData(res);
+  }
+
+  async getSchedule(id: string): Promise<Schedule> {
+    const res = await this.api.get(`${this.namespace}/schedules/${id}`);
+    return unwrapData(res);
+  }
+
+  async createSchedule(data: Omit<Schedule, 'id' | 'createdAt'>): Promise<Schedule> {
+    const res = await this.api.post(`${this.namespace}/schedules`, data);
+    return unwrapData(res);
+  }
+
+  async updateSchedule(id: string, data: Partial<Schedule>): Promise<Schedule> {
+    const res = await this.api.put(`${this.namespace}/schedules/${id}`, data);
+    return unwrapData(res);
+  }
+
+  async deleteSchedule(id: string): Promise<void> {
+    return this.api.delete(`${this.namespace}/schedules/${id}`);
   }
 
   // ─── Banners ────────────────────────────────────────────

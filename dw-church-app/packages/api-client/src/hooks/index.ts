@@ -12,6 +12,8 @@ import type {
   Video,
   VideoCategory,
   VideoListParams,
+  Schedule,
+  ScheduleListParams,
   Banner,
   Event,
   Staff,
@@ -75,6 +77,11 @@ export const queryKeys = {
     list: (params?: VideoListParams) => ['videos', 'list', params] as const,
     detail: (id: string) => ['videos', 'detail', id] as const,
     categories: ['videos', 'categories'] as const,
+  },
+  schedules: {
+    all: ['schedules'] as const,
+    list: (params?: ScheduleListParams) => ['schedules', 'list', params] as const,
+    detail: (id: string) => ['schedules', 'detail', id] as const,
   },
   banners: {
     all: ['banners'] as const,
@@ -503,6 +510,55 @@ export function useVideoCategories() {
     queryFn: () => client!.getVideoCategories(),
     enabled: !!client,
     staleTime: 30 * 60 * 1000,
+  });
+}
+
+// ─── Schedule Hooks (예배 및 모임) ──────────────────────────────
+export function useSchedules(params?: ScheduleListParams) {
+  const client = useDWChurchClient();
+  return useQuery<Schedule[]>({
+    queryKey: queryKeys.schedules.list(params),
+    queryFn: () => client!.getSchedules(params),
+    enabled: !!client,
+    staleTime: STALE_TIME,
+  });
+}
+
+export function useSchedule(id: string) {
+  const client = useDWChurchClient();
+  return useQuery<Schedule>({
+    queryKey: queryKeys.schedules.detail(id),
+    queryFn: () => client!.getSchedule(id),
+    enabled: !!client && !!id,
+    staleTime: STALE_TIME,
+  });
+}
+
+export function useCreateSchedule() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Omit<Schedule, 'id' | 'createdAt'>) => client!.createSchedule(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all }),
+  });
+}
+
+export function useUpdateSchedule() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Schedule> }) =>
+      client!.updateSchedule(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all }),
+  });
+}
+
+export function useDeleteSchedule() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => client!.deleteSchedule(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all }),
   });
 }
 

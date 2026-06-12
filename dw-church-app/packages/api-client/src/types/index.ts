@@ -74,6 +74,19 @@ export interface VideoCategory {
   createdAt: string;
 }
 
+// ─── Schedule (예배 및 모임) ─────────────────────────────────
+// Each row is a titled GROUP: columns[] are the 3 header strings, rows[][]
+// is a string[][] where each inner array is one row matching the columns.
+export interface Schedule {
+  id: string;
+  title: string;
+  columns: string[];
+  rows: string[][];
+  sortOrder: number;
+  status: PostStatus;
+  createdAt: string;
+}
+
 // ─── Banner ─────────────────────────────────────────────────
 export type BannerPosition =
   | 'left-top'
@@ -294,6 +307,10 @@ export interface SermonListParams extends ListParams {
 export interface VideoListParams extends ListParams {
   category?: string;
   categoryId?: string;
+}
+
+export interface ScheduleListParams {
+  status?: PostStatus;
 }
 
 export interface BannerListParams extends ListParams {

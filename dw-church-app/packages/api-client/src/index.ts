@@ -15,6 +15,8 @@ export type {
   Video,
   VideoCategory,
   VideoListParams,
+  Schedule,
+  ScheduleListParams,
   Banner,
   BannerTextOverlay,
   BannerPosition,
@@ -106,6 +108,12 @@ export {
   useUpdateVideo,
   useDeleteVideo,
   useVideoCategories,
+  // Schedules
+  useSchedules,
+  useSchedule,
+  useCreateSchedule,
+  useUpdateSchedule,
+  useDeleteSchedule,
   // Banners
   useBanners,
   useActiveBanners,

@@ -43,6 +43,7 @@ const SermonManagement = lazyWithReload(() => import('./pages/SermonManagement')
 const ColumnManagement = lazyWithReload(() => import('./pages/ColumnManagement'));
 const AlbumManagement = lazyWithReload(() => import('./pages/AlbumManagement'));
 const VideoManagement = lazyWithReload(() => import('./pages/VideoManagement'));
+const ScheduleManagement = lazyWithReload(() => import('./pages/ScheduleManagement'));
 const BannerManagement = lazyWithReload(() => import('./pages/BannerManagement'));
 const EventManagement = lazyWithReload(() => import('./pages/EventManagement'));
 const StaffManagement = lazyWithReload(() => import('./pages/StaffManagement'));
@@ -301,6 +302,7 @@ export function App({ config }: { config: AppConfig }) {
                 <Route path="columns" element={<ColumnManagement />} />
                 <Route path="albums" element={<AlbumManagement />} />
                 <Route path="videos" element={<VideoManagement />} />
+                <Route path="schedules" element={<ScheduleManagement />} />
                 <Route path="banners" element={<BannerManagement />} />
                 <Route path="events" element={<EventManagement />} />
                 <Route path="staff" element={<StaffManagement />} />
