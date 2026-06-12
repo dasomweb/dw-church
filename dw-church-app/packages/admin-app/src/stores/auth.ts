@@ -24,6 +24,20 @@ if (typeof window !== 'undefined') {
   } catch { /* storage unavailable */ }
 }
 
+/**
+ * Hand the current session off to a NEW TAB. sessionStorage is per-tab, so a
+ * freshly opened tab boots logged out; copy the session into localStorage so
+ * the module-load migration above copies it into the new tab's sessionStorage
+ * (and then clears localStorage). Call this immediately before window.open.
+ */
+export function handoffSessionToNewTab(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (raw) localStorage.setItem(SESSION_KEY, raw);
+  } catch { /* storage unavailable */ }
+}
+
 interface AuthState {
   session: AuthSession | null;
   isAuthenticated: boolean;

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useAuthStore } from '../stores/auth';
+import { useAuthStore, handoffSessionToNewTab } from '../stores/auth';
 import { useToast } from '../components';
 import { AIBuilderModal } from '../components/super-admin/AIBuilderModal';
 import { MigrationDialog } from '../components/super-admin/MigrationDialog';
@@ -1375,7 +1375,10 @@ function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) {
                         <button
                           onClick={() => {
                             // Open the tenant admin in a NEW TAB so the super-admin
-                            // dashboard stays put (each tab is its own SPA session).
+                            // dashboard stays put. sessionStorage is per-tab, so hand
+                            // the session off via localStorage first or the new tab
+                            // boots logged out.
+                            handoffSessionToNewTab();
                             window.open(`${window.location.origin}/t/${t.slug}`, '_blank', 'noopener');
                           }}
                           className="px-2.5 py-1 text-xs bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors font-medium whitespace-nowrap"
