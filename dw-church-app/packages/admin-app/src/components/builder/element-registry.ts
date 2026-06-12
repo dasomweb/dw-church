@@ -49,7 +49,9 @@ export type ElementKind =
   // Repeater kind — edits an ARRAY prop (props[path]) of schedule groups
   // ({ title, columns[], rows[][] }) via ScheduleGroupsField. Single-path
   // (writes the whole array back through onChange), not multi-prop.
-  | 'groups';
+  | 'groups'
+  // Dynamic select of the tenant's registered video categories (slug value).
+  | 'video-category';
 
 export interface ElementSpec {
   /** Display label in the inspector. */
@@ -1381,7 +1383,7 @@ export function getElementKindForPath(blockType: string, path: string): ElementK
 // here. Structured-array fields (services / images / steps / tags) are
 // edited via their dedicated widgets in the tenant PageEditor and are
 // intentionally omitted from the scalar inspector.
-type ChurchFieldType = 'text' | 'textarea' | 'image' | 'url' | 'number' | 'select' | 'color';
+type ChurchFieldType = 'text' | 'textarea' | 'image' | 'url' | 'number' | 'select' | 'color' | 'video-category';
 interface ChurchField {
   key: string;
   label: string;
@@ -1391,6 +1393,7 @@ interface ChurchField {
 }
 const CHURCH_KIND: Record<ChurchFieldType, ElementKind> = {
   text: 'text', textarea: 'html', image: 'image', url: 'url', number: 'number', select: 'select', color: 'color',
+  'video-category': 'video-category',
 };
 function churchBlock(...sections: { title: string; fields: ChurchField[] }[]): BlockElementRegistry {
   return {
@@ -1492,7 +1495,7 @@ const RECENT_COLUMNS = churchBlock(
 const VIDEO_BOARD = churchBlock(
   { title: 'Header', fields: [{ key: 'title', label: '제목', type: 'text' }]},
   { title: 'Data', fields: [
-    { key: 'category', label: '카테고리', type: 'text', hint: '영상 게시판에서 만든 카테고리 이름 또는 슬러그 (비우면 전체)' },
+    { key: 'category', label: '카테고리', type: 'video-category', hint: '영상 게시판에서 등록한 카테고리에서 선택 (비우면 전체)' },
     { key: 'limit', label: '표시 개수', type: 'number', hint: '기본 6' },
     { key: 'variant', label: 'Columns', type: 'select', choices: [
       { value: 'grid-2', label: '2 columns' }, { value: 'grid-1', label: '1 column (large)' },

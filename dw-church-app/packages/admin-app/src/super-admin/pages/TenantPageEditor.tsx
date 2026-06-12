@@ -152,6 +152,9 @@ export default function TenantPageEditor() {
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  // Page settings modal (rename / slug / 홈 지정).
+  const [pageSettings, setPageSettings] = useState<{ title: string; slug: string; isHome: boolean } | null>(null);
+  const [savingMeta, setSavingMeta] = useState(false);
 
   const baseUrl = useMemo(() => {
     const host = typeof window !== 'undefined' ? window.location.hostname : '';
@@ -358,6 +361,38 @@ export default function TenantPageEditor() {
     })();
   };
 
+  // Edit page metadata — title (이름), slug (URL), 홈 지정. Persists immediately
+  // via PUT /pages/:id (independent of the section 저장/게시 flow).
+  const savePageSettings = async () => {
+    if (!selectedPageId || !pageSettings) return;
+    const title = pageSettings.title.trim();
+    const slug = pageSettings.slug.trim();
+    if (!title) { showToast('error', '페이지 이름을 입력하세요'); return; }
+    if (!/^[a-z0-9-]+$/.test(slug)) { showToast('error', '슬러그는 영문 소문자/숫자/하이픈만 가능합니다 (예: about-us)'); return; }
+    setSavingMeta(true);
+    try {
+      const res = await fetch(`${baseUrl}/api/v1/pages/${selectedPageId}`, {
+        method: 'PUT', headers,
+        body: JSON.stringify({ title, slug, isHome: pageSettings.isHome }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error?.message || `HTTP ${res.status}`);
+      }
+      setPages((prev) => prev.map((p) => {
+        if (p.id === selectedPageId) return { ...p, title, slug, isHome: pageSettings.isHome };
+        // Only one page can be home — clear the flag on the others locally.
+        return pageSettings.isHome ? { ...p, isHome: false } : p;
+      }));
+      setPageSettings(null);
+      showToast('success', '페이지 설정 저장됨');
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '페이지 설정 저장 실패');
+    } finally {
+      setSavingMeta(false);
+    }
+  };
+
   // Create a fresh, empty detail-template page (separate from the content
   // LIST pages) and select it. Server allows this for super_admin regardless
   // of the tenant's plan (requirePlan bypasses super_admin).
@@ -498,6 +533,16 @@ export default function TenantPageEditor() {
             : <span className="ml-2 text-gray-400">· 모든 변경 저장됨</span>}
         </span>
         <div className="flex items-center gap-2">
+          {selectedPage && (
+            <button
+              type="button"
+              onClick={() => setPageSettings({ title: selectedPage.title, slug: selectedPage.slug, isHome: selectedPage.isHome })}
+              title="페이지 이름·주소(slug)·홈 설정"
+              className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+            >
+              ⚙ 페이지 설정
+            </button>
+          )}
           {previewUrl && (
             <a
               href={previewUrl}
@@ -774,6 +819,59 @@ export default function TenantPageEditor() {
         )}
       </section>
       </div>
+
+      {/* Page settings modal — rename / slug / 홈 지정 */}
+      {pageSettings && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4" onClick={() => !savingMeta && setPageSettings(null)}>
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-gray-900">페이지 설정</h3>
+            <div className="mt-4 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">페이지 이름</label>
+                <input
+                  autoFocus
+                  type="text"
+                  value={pageSettings.title}
+                  onChange={(e) => setPageSettings((s) => s && { ...s, title: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">주소 (slug)</label>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-gray-400">/</span>
+                  <input
+                    type="text"
+                    value={pageSettings.slug}
+                    onChange={(e) => setPageSettings((s) => s && { ...s, slug: e.target.value })}
+                    placeholder="about-us"
+                    className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+                <p className="mt-1 text-[11px] text-gray-400">영문 소문자·숫자·하이픈만. 메뉴에서 이 주소로 연결됩니다.</p>
+              </div>
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={pageSettings.isHome}
+                  onChange={(e) => setPageSettings((s) => s && { ...s, isHome: e.target.checked })}
+                />
+                홈 페이지로 지정 (사이트 첫 화면)
+              </label>
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <button type="button" onClick={() => setPageSettings(null)} disabled={savingMeta}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50">
+                취소
+              </button>
+              <button type="button" onClick={() => void savePageSettings()} disabled={savingMeta}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
+                {savingMeta ? '저장 중…' : '저장'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -19,6 +19,7 @@ export {
   type ScheduleGroupsFieldProps,
   type ScheduleGroup,
 } from './ScheduleGroupsField';
+export { VideoCategorySelectField } from './VideoCategorySelectField';
 export {
   LayoutField,
   type LayoutFieldProps,

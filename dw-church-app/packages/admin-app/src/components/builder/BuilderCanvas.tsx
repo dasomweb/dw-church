@@ -67,6 +67,7 @@ const CHURCH_BLOCK_LABELS: Record<string, string> = {
   recent_bulletins: '주보 목록 (Data Block)',
   recent_columns: '칼럼 목록 (Data Block)',
   album_gallery: '앨범 (Data Block)',
+  video_board: '영상 게시판 (Data Block)',
   staff_grid: '교역자 (Data Block)',
   history_timeline: '교회 연혁 (Data Block)',
   event_grid: '행사 (Data Block)',

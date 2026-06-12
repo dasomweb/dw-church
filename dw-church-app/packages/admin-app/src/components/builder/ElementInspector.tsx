@@ -11,7 +11,7 @@ import {
   type BlockElementRegistry,
   type ElementSpec,
 } from './element-registry';
-import { ImageField, useImageFieldApi, LinkField, ColorField, SpacingField, MediaPicker, LabeledField, CollapsibleGroup, TypographyTokenField, OverlayField, BorderField, LinkButtonField, LayoutField, DesignField, ScheduleGroupsField, type ScheduleGroup } from './property-fields';
+import { ImageField, useImageFieldApi, LinkField, ColorField, SpacingField, MediaPicker, LabeledField, CollapsibleGroup, TypographyTokenField, OverlayField, BorderField, LinkButtonField, LayoutField, DesignField, ScheduleGroupsField, VideoCategorySelectField, type ScheduleGroup } from './property-fields';
 import { RichEditor } from '../RichEditor';
 import { DynamicSourcePicker, DynamicChip } from './property-fields/DynamicSourcePicker';
 import { isDynamicRef, dynamicContextsForPageKind, type DynamicContext } from '@dw-church/blocks/builder';
@@ -1803,6 +1803,12 @@ function FieldControl({
             <option key={c.value} value={c.value}>{c.label}</option>
           ))}
         </select>
+      )}
+      {spec.kind === 'video-category' && (
+        <VideoCategorySelectField
+          value={(value as string) ?? ''}
+          onChange={(v) => onChange(v)}
+        />
       )}
       {spec.kind === 'bool' && (
         <label className="inline-flex items-center gap-2 text-sm">
