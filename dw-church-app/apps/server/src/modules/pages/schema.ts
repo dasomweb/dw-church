@@ -21,6 +21,7 @@ export const blockTypes = [
   'history_timeline',
   'event_grid',
   'schedule_board',
+  'schedule_split',
   // Text
   'text_image',
   'text_only',
