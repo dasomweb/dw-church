@@ -12,9 +12,10 @@ export async function albumRoutes(app: FastifyInstance) {
     const status = (query.status as string) || (request.user ? undefined : 'published');
     const search = query.search as string | undefined;
     const categoryId = query.categoryId as string | undefined;
+    const category = query.category as string | undefined;
 
     const { data, total } = await albumService.listAlbums(getSchema(request), {
-      page, perPage, search, status, categoryId,
+      page, perPage, search, status, categoryId, category,
     });
     return reply.send(paginatedResponse(data, total, page, perPage));
   });

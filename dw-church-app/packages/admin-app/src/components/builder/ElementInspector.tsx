@@ -11,7 +11,7 @@ import {
   type BlockElementRegistry,
   type ElementSpec,
 } from './element-registry';
-import { ImageField, useImageFieldApi, LinkField, ColorField, SpacingField, MediaPicker, LabeledField, CollapsibleGroup, TypographyTokenField, OverlayField, BorderField, LinkButtonField, LayoutField, DesignField, ScheduleGroupsField, VideoCategorySelectField, type ScheduleGroup } from './property-fields';
+import { ImageField, useImageFieldApi, LinkField, ColorField, SpacingField, MediaPicker, LabeledField, CollapsibleGroup, TypographyTokenField, OverlayField, BorderField, LinkButtonField, LayoutField, DesignField, ScheduleGroupsField, VideoCategorySelectField, BoardSelectField, AlbumCategorySelectField, type ScheduleGroup } from './property-fields';
 import { RichEditor } from '../RichEditor';
 import { DynamicSourcePicker, DynamicChip } from './property-fields/DynamicSourcePicker';
 import { isDynamicRef, dynamicContextsForPageKind, type DynamicContext } from '@dw-church/blocks/builder';
@@ -1806,6 +1806,18 @@ function FieldControl({
       )}
       {spec.kind === 'video-category' && (
         <VideoCategorySelectField
+          value={(value as string) ?? ''}
+          onChange={(v) => onChange(v)}
+        />
+      )}
+      {spec.kind === 'board-select' && (
+        <BoardSelectField
+          value={(value as string) ?? ''}
+          onChange={(v) => onChange(v)}
+        />
+      )}
+      {spec.kind === 'album-category' && (
+        <AlbumCategorySelectField
           value={(value as string) ?? ''}
           onChange={(v) => onChange(v)}
         />

@@ -20,6 +20,8 @@ export {
   type ScheduleGroup,
 } from './ScheduleGroupsField';
 export { VideoCategorySelectField } from './VideoCategorySelectField';
+export { BoardSelectField } from './BoardSelectField';
+export { AlbumCategorySelectField } from './AlbumCategorySelectField';
 export {
   LayoutField,
   type LayoutFieldProps,

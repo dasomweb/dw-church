@@ -7,10 +7,12 @@ interface ListParams {
   search?: string;
   status?: string;
   categoryId?: string;
+  // Filter by category slug OR name (the album_gallery block stores a slug).
+  category?: string;
 }
 
 export async function listAlbums(schema: string, params: ListParams) {
-  const { page, perPage, search, status, categoryId } = params;
+  const { page, perPage, search, status, categoryId, category } = params;
   const offset = (page - 1) * perPage;
 
   let whereClause = 'WHERE 1=1';
@@ -20,6 +22,7 @@ export async function listAlbums(schema: string, params: ListParams) {
   if (status) { whereClause += ` AND a.status = $${paramIndex++}`; values.push(status); }
   if (search) { whereClause += ` AND a.title ILIKE $${paramIndex++}`; values.push(`%${search}%`); }
   if (categoryId) { whereClause += ` AND a.category_id = $${paramIndex++}::uuid`; values.push(categoryId); }
+  if (category) { whereClause += ` AND (c.slug = $${paramIndex} OR c.name = $${paramIndex})`; paramIndex++; values.push(category); }
 
   const [rows, countResult] = await Promise.all([
     prisma.$queryRawUnsafe<Record<string, unknown>[]>(
@@ -32,7 +35,11 @@ export async function listAlbums(schema: string, params: ListParams) {
       ...values, perPage, offset,
     ),
     prisma.$queryRawUnsafe<[{ total: number }]>(
-      `SELECT COUNT(*)::int AS total FROM "${schema}".albums a ${whereClause}`,
+      // Same LEFT JOIN as the rows query so the category slug/name filter in
+      // whereClause resolves here too (join is 1:1 on category_id, count unchanged).
+      `SELECT COUNT(*)::int AS total FROM "${schema}".albums a
+       LEFT JOIN "${schema}".categories c ON c.id = a.category_id
+       ${whereClause}`,
       ...values,
     ),
   ]);

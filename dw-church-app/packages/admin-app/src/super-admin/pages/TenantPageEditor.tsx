@@ -59,7 +59,7 @@ const ADD_BLOCK_CATALOG: { category: string; blocks: AddBlock[] }[] = [
     { value: 'recent_sermons', label: '설교 목록', props: { title: '최근 설교', limit: 6 } },
     { value: 'recent_bulletins', label: '주보 목록', props: { title: '주보', limit: 6 } },
     { value: 'recent_columns', label: '칼럼 목록', props: { title: '목회칼럼', limit: 6 } },
-    { value: 'album_gallery', label: '앨범', props: { title: '앨범', limit: 6 } },
+    { value: 'album_gallery', label: '앨범', props: { title: '앨범', limit: 6, category: '' } },
     { value: 'video_board', label: '영상 게시판', props: { title: '영상', category: '', limit: 6 } },
     { value: 'staff_grid', label: '교역자', props: { title: '섬기는 사람들', limit: 20 } },
     { value: 'event_grid', label: '행사', props: { title: '교회 행사', limit: 4 } },

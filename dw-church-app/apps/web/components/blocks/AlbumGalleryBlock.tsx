@@ -12,10 +12,11 @@ export async function AlbumGalleryBlock({ props, slug }: AlbumGalleryBlockProps)
   const title = (props.title as string) || '앨범';
   const variant = (props.variant as string) || 'grid-3';
   const columns = variant === 'grid-4' ? 4 : variant === 'masonry' ? 4 : 3;
+  const category = (props.category as string) || '';
 
   let albums;
   try {
-    const result = await getAlbums(slug, { perPage: limit });
+    const result = await getAlbums(slug, { perPage: limit, category });
     albums = Array.isArray(result) ? result : (result?.data ?? []);
   } catch {
     albums = [];

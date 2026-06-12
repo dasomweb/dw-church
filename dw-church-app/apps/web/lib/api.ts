@@ -285,11 +285,12 @@ export async function getBulletin(slug: string, id: string): Promise<any> {
 
 export async function getAlbums(
   slug: string,
-  params?: { page?: number; perPage?: number },
+  params?: { page?: number; perPage?: number; category?: string },
 ): Promise<any> {
   const p = new URLSearchParams();
   if (params?.page) p.set('page', String(params.page));
   if (params?.perPage) p.set('perPage', String(params.perPage));
+  if (params?.category) p.set('category', params.category);
   const qs = p.toString();
   return apiFetch(slug, `/api/v1/albums${qs ? '?' + qs : ''}`, { revalidate: false });
 }

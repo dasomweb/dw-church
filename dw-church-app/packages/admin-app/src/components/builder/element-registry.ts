@@ -51,7 +51,11 @@ export type ElementKind =
   // (writes the whole array back through onChange), not multi-prop.
   | 'groups'
   // Dynamic select of the tenant's registered video categories (slug value).
-  | 'video-category';
+  | 'video-category'
+  // Dynamic select of the tenant's registered boards (slug value).
+  | 'board-select'
+  // Dynamic select of the tenant's registered album categories (slug value).
+  | 'album-category';
 
 export interface ElementSpec {
   /** Display label in the inspector. */
@@ -741,6 +745,7 @@ const ALBUM_GALLERY: BlockElementRegistry = {
     ]},
     { title: 'Data', elements: [
       { label: 'Limit', path: 'limit', kind: 'number', hint: '표시할 앨범 개수. 0 = 전체' },
+      { label: '카테고리', path: 'category', kind: 'album-category', hint: '앨범 카테고리에서 선택 (비우면 전체)' },
       { label: 'Columns', path: 'variant', kind: 'select', choices: [
         { value: 'grid-2', label: '2 columns' },
         { value: 'grid-3', label: '3 columns' },
@@ -820,7 +825,7 @@ const BOARD: BlockElementRegistry = {
       { label: 'Headline', path: 'title', kind: 'text' },
     ]},
     { title: 'Data', elements: [
-      { label: 'Board slug', path: 'boardSlug', kind: 'text', hint: '게시판 관리에서 설정한 slug. 예: notices, faq, careers' },
+      { label: 'Board slug', path: 'boardSlug', kind: 'board-select', hint: '게시판 관리에서 설정한 slug. 예: notices, faq, careers' },
       { label: 'Limit', path: 'limit', kind: 'number', hint: '표시할 글 개수. 기본 10' },
     ]},
   ],
