@@ -1374,10 +1374,20 @@ function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) {
                             그대로 운영할 수 있음. 지원 계정 로그인 불필요. */}
                         <button
                           onClick={() => {
-                            window.location.href = `${window.location.origin}/t/${t.slug}`;
+                            // Open the tenant admin in a NEW WINDOW so the super-admin
+                            // dashboard stays put (each window is its own SPA session).
+                            const w = Math.min(1600, Math.round(window.screen.availWidth * 0.9));
+                            const h = Math.min(1000, Math.round(window.screen.availHeight * 0.9));
+                            const left = Math.round((window.screen.availWidth - w) / 2);
+                            const top = Math.round((window.screen.availHeight - h) / 2);
+                            window.open(
+                              `${window.location.origin}/t/${t.slug}`,
+                              `tenant-admin-${t.slug}`,
+                              `noopener,width=${w},height=${h},left=${left},top=${top}`,
+                            );
                           }}
                           className="px-2.5 py-1 text-xs bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors font-medium whitespace-nowrap"
-                          title={`${t.name} — 교회(테넌트) 관리자 화면. 교회 운영자가 보는 설교·주보·칼럼 등 콘텐츠 관리 화면으로 진입합니다.`}
+                          title={`${t.name} — 교회(테넌트) 관리자 화면 (새 창). 교회 운영자가 보는 설교·주보·칼럼 등 콘텐츠 관리 화면으로 진입합니다.`}
                         >
                           👤 교회 관리자
                         </button>
