@@ -1,6 +1,7 @@
 import { HeadingElement, TextBodyElement, EyebrowElement, ButtonElement, ImageElement } from '../elements';
 import { sectionBgStyle } from '../utilities/section-bg';
 import { SectionShell } from '../utilities/SectionShell';
+import { getElementStyle } from '../utilities/element-styles';
 
 interface TextImageBlockProps {
   props: Record<string, unknown>;
@@ -43,6 +44,13 @@ export function TextImageBlock({ props }: TextImageBlockProps) {
   const subtitle = (props.subtitle as string) ?? '';
   const content = (props.content as string) ?? '';
   const imageUrl = (props.imageUrl as string) ?? '';
+  // The image-container aspect ratio respects the operator's per-element
+  // "Aspect Ratio" override (elementStyles.imageUrl) — the container drives the
+  // visible box (the img fills it object-cover), so without this the override
+  // had no effect. Falls back to the per-variant default below.
+  const imgOverride = getElementStyle(props, 'imageUrl');
+  const overrideRatio = imgOverride.aspectRatio as string | undefined;
+  const overrideRadius = imgOverride.borderRadius as string | undefined;
   // Editor variant buttons write `variant`; older data may use `layout`.
   const layout = ((props.variant as string) || (props.layout as string) || 'right') as 'left' | 'right' | 'center';
   // Mobile stack order for the 50:50 split — independent of the desktop
@@ -108,7 +116,7 @@ export function TextImageBlock({ props }: TextImageBlockProps) {
           {imageUrl && (
             <div
               className="relative mx-auto max-w-2xl w-full overflow-hidden"
-              style={{ aspectRatio: '16 / 9', borderRadius: 'var(--r-lg)' }}
+              style={{ aspectRatio: overrideRatio ?? '16 / 9', borderRadius: overrideRadius ?? 'var(--r-lg)' }}
             >
               <ImageElement
                 url={imageUrl}
@@ -188,7 +196,7 @@ export function TextImageBlock({ props }: TextImageBlockProps) {
         {imageUrl && (
           <div
             className="b2b-ti-img relative overflow-hidden"
-            style={{ aspectRatio: '4 / 3', borderRadius: 'var(--r-lg)' }}
+            style={{ aspectRatio: overrideRatio ?? '4 / 3', borderRadius: overrideRadius ?? 'var(--r-lg)' }}
           >
             <ImageElement
               url={imageUrl}
