@@ -4,7 +4,7 @@ import { parsePagination, paginatedResponse } from '../../utils/pagination.js';
 import { getSchema } from '../../utils/get-schema.js';
 import {
   createVideoSchema, updateVideoSchema,
-  createVideoCategorySchema,
+  createVideoCategorySchema, updateVideoCategorySchema,
 } from './schema.js';
 import * as videoService from './service.js';
 
@@ -20,6 +20,22 @@ export async function videoRoutes(app: FastifyInstance) {
     const input = createVideoCategorySchema.parse(request.body);
     const category = await videoService.createVideoCategory(getSchema(request), input);
     return reply.status(201).send({ data: category });
+  });
+
+  // Mirrors album-categories update/delete. video_categories FK on videos is
+  // ON DELETE SET NULL, so a plain row delete is safe (no orphaned references).
+  app.put('/videos/categories/:id', { preHandler: [requireAuth] }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const input = updateVideoCategorySchema.parse(request.body);
+    const category = await videoService.updateVideoCategory(getSchema(request), id, input);
+    if (!category) return reply.status(404).send({ error: { code: 'NOT_FOUND', message: 'Video category not found' } });
+    return reply.send({ data: category });
+  });
+
+  app.delete('/videos/categories/:id', { preHandler: [requireAuth] }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    await videoService.deleteVideoCategory(getSchema(request), id);
+    return reply.status(204).send();
   });
 
   // ─── Videos ─────────────────────────────────────────────────────

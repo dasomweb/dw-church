@@ -327,6 +327,14 @@ export interface TaxonomyTerm {
   parentId?: string;
 }
 
+/** A managed category row (sermon/album/video) — the editable id/name/slug
+ * triple returned by the dedicated *-categories CRUD endpoints. */
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 // ─── Page System ────────────────────────────────────────────
 /** Block type string — extensible via @dw-church/design-blocks registry. */
 export type BlockType = string;

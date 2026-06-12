@@ -8,6 +8,7 @@ import type {
   Board,
   BoardPost,
   Bulletin,
+  Category,
   ChurchSettings,
   ClientConfig,
   Column,
@@ -437,6 +438,15 @@ export class DWChurchClient {
     return unwrapData(res);
   }
 
+  async updateVideoCategory(id: string, data: { name?: string; slug?: string }): Promise<VideoCategory> {
+    const res = await this.api.put(`${this.namespace}/videos/categories/${id}`, data);
+    return unwrapData(res);
+  }
+
+  async deleteVideoCategory(id: string): Promise<void> {
+    return this.api.delete(`${this.namespace}/videos/categories/${id}`);
+  }
+
   // ─── Banners ────────────────────────────────────────────
   async getBanners(params?: BannerListParams): Promise<PaginatedResponse<Banner>> {
     const query = {
@@ -643,6 +653,48 @@ export class DWChurchClient {
   async getStaffDepartments(): Promise<TaxonomyTerm[]> {
     const res = await this.api.get(`${this.namespace}/taxonomies/staff_department`);
     return unwrapData(res);
+  }
+
+  // ─── Category CRUD (dedicated endpoints, shared by CategoryManager) ──────
+  // The taxonomy getters above read the read-optimized `/taxonomies/:type`
+  // view (includes `count`). These hit the dedicated `/*-categories` routes so
+  // the id/name/slug round-trips through create/update/delete consistently.
+  async getSermonCategoriesList(): Promise<Category[]> {
+    const res = await this.api.get(`${this.namespace}/sermon-categories`);
+    return unwrapData(res);
+  }
+
+  async createSermonCategory(data: { name: string; slug: string }): Promise<Category> {
+    const res = await this.api.post(`${this.namespace}/sermon-categories`, data);
+    return unwrapData(res);
+  }
+
+  async updateSermonCategory(id: string, data: { name?: string; slug?: string }): Promise<Category> {
+    const res = await this.api.put(`${this.namespace}/sermon-categories/${id}`, data);
+    return unwrapData(res);
+  }
+
+  async deleteSermonCategory(id: string): Promise<void> {
+    return this.api.delete(`${this.namespace}/sermon-categories/${id}`);
+  }
+
+  async getAlbumCategoriesList(): Promise<Category[]> {
+    const res = await this.api.get(`${this.namespace}/album-categories`);
+    return unwrapData(res);
+  }
+
+  async createAlbumCategory(data: { name: string; slug: string }): Promise<Category> {
+    const res = await this.api.post(`${this.namespace}/album-categories`, data);
+    return unwrapData(res);
+  }
+
+  async updateAlbumCategory(id: string, data: { name?: string; slug?: string }): Promise<Category> {
+    const res = await this.api.put(`${this.namespace}/album-categories/${id}`, data);
+    return unwrapData(res);
+  }
+
+  async deleteAlbumCategory(id: string): Promise<void> {
+    return this.api.delete(`${this.namespace}/album-categories/${id}`);
   }
 
   // ─── Pages ──────────────────────────────────────────────

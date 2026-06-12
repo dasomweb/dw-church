@@ -9,7 +9,7 @@ import {
   useVideoCategories,
   useDWChurchClient,
 } from '@dw-church/api-client';
-import { FormField, FormSection, FormRow, inputClass, selectClass, useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
+import { FormField, FormSection, FormRow, inputClass, selectClass, useToast, ConfirmDialog, EmptyState, CardSkeleton, CategoryManager } from '../components';
 import { useBulkDelete } from '../components/useBulkDelete';
 
 interface VideoFormData {
@@ -38,29 +38,9 @@ export default function VideoManagement() {
   const apiClient = useDWChurchClient();
   const { data, isLoading, error, refetch } = useVideos(params);
   const { data: categories, refetch: refetchCategories } = useVideoCategories();
-  // Inline category creation — the feature is category-driven, so operators
-  // must be able to add categories without leaving the form.
-  const [newCatName, setNewCatName] = useState('');
-  const [newCatSlug, setNewCatSlug] = useState('');
-  const [creatingCat, setCreatingCat] = useState(false);
-  const slugify = (s: string) => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-  const addCategory = async () => {
-    const name = newCatName.trim();
-    const slug = (newCatSlug.trim() || slugify(name));
-    if (!name) { showToast('error', '카테고리 이름을 입력하세요.'); return; }
-    if (!/^[a-z0-9-]+$/.test(slug)) { showToast('error', '슬러그는 영문 소문자/숫자/하이픈만 가능합니다. (예: sunday-sermon)'); return; }
-    setCreatingCat(true);
-    try {
-      await apiClient!.createVideoCategory({ name, slug });
-      await refetchCategories();
-      setNewCatName(''); setNewCatSlug('');
-      showToast('success', `카테고리 "${name}" 추가됨`);
-    } catch (e) {
-      showToast('error', e instanceof Error ? e.message : '카테고리 추가 실패');
-    } finally {
-      setCreatingCat(false);
-    }
-  };
+  // Category CRUD is delegated to the shared CategoryManager modal — opened via
+  // the "카테고리 관리" button, refetches the dropdown on any change.
+  const [catManagerOpen, setCatManagerOpen] = useState(false);
   const createMutation = useCreateVideo();
   const updateMutation = useUpdateVideo();
   const deleteMutation = useDeleteVideo();
@@ -142,36 +122,19 @@ export default function VideoManagement() {
             </FormRow>
             <FormRow>
               <FormField label="카테고리">
-                <select {...register('categoryIds')} className={selectClass}>
-                  <option value="[]">선택</option>
-                  {categories?.map((cat) => (
-                    <option key={cat.id} value={JSON.stringify([cat.id])}>{cat.name} ({cat.slug})</option>
-                  ))}
-                </select>
-                {/* Inline create — name + ascii slug. The slug is what you put in
-                    the video_board block's "카테고리" field (이름도 허용). */}
-                <div className="mt-2 flex gap-2">
-                  <input
-                    type="text"
-                    value={newCatName}
-                    onChange={(e) => setNewCatName(e.target.value)}
-                    placeholder="새 카테고리 이름 (예: 주일설교)"
-                    className={inputClass}
-                  />
-                  <input
-                    type="text"
-                    value={newCatSlug}
-                    onChange={(e) => setNewCatSlug(e.target.value)}
-                    placeholder="슬러그 (예: sunday-sermon)"
-                    className={inputClass}
-                  />
+                <div className="flex gap-2">
+                  <select {...register('categoryIds')} className={`${selectClass} flex-1`}>
+                    <option value="[]">선택</option>
+                    {categories?.map((cat) => (
+                      <option key={cat.id} value={JSON.stringify([cat.id])}>{cat.name} ({cat.slug})</option>
+                    ))}
+                  </select>
                   <button
                     type="button"
-                    onClick={() => void addCategory()}
-                    disabled={creatingCat || !newCatName.trim()}
-                    className="shrink-0 rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+                    onClick={() => setCatManagerOpen(true)}
+                    className="shrink-0 rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
                   >
-                    {creatingCat ? '추가 중…' : '+ 추가'}
+                    카테고리 관리
                   </button>
                 </div>
               </FormField>
@@ -203,6 +166,18 @@ export default function VideoManagement() {
             <p className="text-red-500 text-sm">저장 중 오류가 발생했습니다.</p>
           )}
         </form>
+
+        {catManagerOpen && (
+          <CategoryManager
+            title="영상 카테고리"
+            list={() => apiClient!.getVideoCategories()}
+            create={(name, slug) => apiClient!.createVideoCategory({ name, slug })}
+            update={(id, patch) => apiClient!.updateVideoCategory(id, patch)}
+            remove={(id) => apiClient!.deleteVideoCategory(id)}
+            onClose={() => setCatManagerOpen(false)}
+            onChanged={() => void refetchCategories()}
+          />
+        )}
       </div>
     );
   }
@@ -210,8 +185,14 @@ export default function VideoManagement() {
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold">영상 게시판 관리</h2>
+        <h2 className="text-xl font-bold">영상(Youtube) 관리</h2>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setCatManagerOpen(true)}
+            className="text-sm text-gray-600 border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-50"
+          >
+            카테고리 관리
+          </button>
           {data && data.data.length > 0 && (
             <button onClick={() => bulk.toggleAll(data.data)}
               className="text-sm text-gray-600 border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-50">
@@ -344,6 +325,18 @@ export default function VideoManagement() {
         }}
         onCancel={() => setDeleteTarget(null)}
       />
+
+      {catManagerOpen && (
+        <CategoryManager
+          title="영상 카테고리"
+          list={() => apiClient!.getVideoCategories()}
+          create={(name, slug) => apiClient!.createVideoCategory({ name, slug })}
+          update={(id, patch) => apiClient!.updateVideoCategory(id, patch)}
+          remove={(id) => apiClient!.deleteVideoCategory(id)}
+          onClose={() => setCatManagerOpen(false)}
+          onChanged={() => void refetchCategories()}
+        />
+      )}
     </div>
   );
 }

@@ -11,7 +11,7 @@ import {
   useDWChurchClient,
 } from '@dw-church/api-client';
 import { useQueryClient } from '@tanstack/react-query';
-import { FormField, FormSection, FormRow, inputClass, selectClass, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
+import { FormField, FormSection, FormRow, inputClass, selectClass, useToast, ConfirmDialog, EmptyState, TableSkeleton, CategoryManager } from '../components';
 import { ContentMigrationButton } from '../components/ContentMigrationButton';
 import { useBulkDelete } from '../components/useBulkDelete';
 
@@ -178,6 +178,7 @@ export default function SermonManagement() {
   const [newPreacherOpen, setNewPreacherOpen] = useState(false);
   const [newPreacherName, setNewPreacherName] = useState('');
   const [savingPreacher, setSavingPreacher] = useState(false);
+  const [catManagerOpen, setCatManagerOpen] = useState(false);
 
   const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<SermonFormData>();
 
@@ -350,6 +351,15 @@ export default function SermonManagement() {
           />
 
           <FormSection title="카테고리">
+            <div className="mb-2 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setCatManagerOpen(true)}
+                className="rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-200"
+              >
+                카테고리 관리
+              </button>
+            </div>
             <div className="border rounded p-3 max-h-40 overflow-y-auto space-y-1">
               {categories?.map((cat) => (
                 <label key={cat.id} className="flex items-center gap-2 text-sm">
@@ -380,6 +390,18 @@ export default function SermonManagement() {
             <p className="text-red-500 text-sm">저장 중 오류가 발생했습니다.</p>
           )}
         </form>
+
+        {catManagerOpen && (
+          <CategoryManager
+            title="설교 카테고리"
+            list={() => apiClient!.getSermonCategoriesList()}
+            create={(name, slug) => apiClient!.createSermonCategory({ name, slug })}
+            update={(id, patch) => apiClient!.updateSermonCategory(id, patch)}
+            remove={(id) => apiClient!.deleteSermonCategory(id)}
+            onClose={() => setCatManagerOpen(false)}
+            onChanged={() => void queryClient.invalidateQueries({ queryKey: ['taxonomies', 'sermon_category'] })}
+          />
+        )}
       </div>
     );
   }
@@ -389,6 +411,12 @@ export default function SermonManagement() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold">설교 관리</h2>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setCatManagerOpen(true)}
+            className="text-sm text-gray-600 border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-50"
+          >
+            카테고리 관리
+          </button>
           {bulk.count > 0 && (
             <button onClick={() => void bulk.deleteSelected()} disabled={bulk.busy}
               className="bg-red-600 hover:bg-red-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50">
@@ -541,6 +569,18 @@ export default function SermonManagement() {
         }}
         onCancel={() => setDeleteTarget(null)}
       />
+
+      {catManagerOpen && (
+        <CategoryManager
+          title="설교 카테고리"
+          list={() => apiClient!.getSermonCategoriesList()}
+          create={(name, slug) => apiClient!.createSermonCategory({ name, slug })}
+          update={(id, patch) => apiClient!.updateSermonCategory(id, patch)}
+          remove={(id) => apiClient!.deleteSermonCategory(id)}
+          onClose={() => setCatManagerOpen(false)}
+          onChanged={() => void queryClient.invalidateQueries({ queryKey: ['taxonomies', 'sermon_category'] })}
+        />
+      )}
     </div>
   );
 }

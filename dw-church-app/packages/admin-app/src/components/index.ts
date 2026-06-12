@@ -7,3 +7,5 @@ export { ImageUpload, MultiImageUpload } from './ImageUpload';
 export { FileUpload } from './FileUpload';
 export { RichEditor } from './RichEditor';
 export { PlanUpgradeModal, isPlanUpgradeError } from './PlanUpgradeModal';
+export { CategoryManager } from './CategoryManager';
+export type { CategoryManagerProps, CategoryManagerItem } from './CategoryManager';

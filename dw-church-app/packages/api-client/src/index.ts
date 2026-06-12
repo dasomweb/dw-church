@@ -37,6 +37,7 @@ export type {
   HistoryListParams,
   RelatedPostsParams,
   TaxonomyTerm,
+  Category,
   ClientConfig,
   ApiAdapter,
   // Page system

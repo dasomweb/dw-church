@@ -9,7 +9,8 @@ import {
   useAlbumCategories,
   useDWChurchClient,
 } from '@dw-church/api-client';
-import { FormField, FormSection, FormRow, inputClass, selectClass, MultiImageUpload, useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
+import { useQueryClient } from '@tanstack/react-query';
+import { FormField, FormSection, FormRow, inputClass, selectClass, MultiImageUpload, useToast, ConfirmDialog, EmptyState, CardSkeleton, CategoryManager } from '../components';
 import { ContentMigrationButton } from '../components/ContentMigrationButton';
 import { useBulkDelete } from '../components/useBulkDelete';
 
@@ -29,6 +30,8 @@ export default function AlbumManagement() {
 
   const { showToast } = useToast();
   const apiClient = useDWChurchClient();
+  const queryClient = useQueryClient();
+  const [catManagerOpen, setCatManagerOpen] = useState(false);
   const uploadImage = async (file: File): Promise<string> => (await apiClient!.uploadFile(file)).url;
   const { data, isLoading, error, refetch } = useAlbums(params);
   const { data: categories } = useAlbumCategories();
@@ -113,12 +116,21 @@ export default function AlbumManagement() {
               </FormField>
             </FormRow>
             <FormField label="카테고리">
-              <select {...register('categoryIds')} className={selectClass}>
-                <option value="[]">선택</option>
-                {categories?.map((cat) => (
-                  <option key={cat.id} value={JSON.stringify([cat.id])}>{cat.name}</option>
-                ))}
-              </select>
+              <div className="flex gap-2">
+                <select {...register('categoryIds')} className={`${selectClass} flex-1`}>
+                  <option value="[]">선택</option>
+                  {categories?.map((cat) => (
+                    <option key={cat.id} value={JSON.stringify([cat.id])}>{cat.name}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setCatManagerOpen(true)}
+                  className="shrink-0 rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+                >
+                  카테고리 관리
+                </button>
+              </div>
             </FormField>
           </FormSection>
 
@@ -154,6 +166,18 @@ export default function AlbumManagement() {
             <p className="text-red-500 text-sm">저장 중 오류가 발생했습니다.</p>
           )}
         </form>
+
+        {catManagerOpen && (
+          <CategoryManager
+            title="앨범 카테고리"
+            list={() => apiClient!.getAlbumCategoriesList()}
+            create={(name, slug) => apiClient!.createAlbumCategory({ name, slug })}
+            update={(id, patch) => apiClient!.updateAlbumCategory(id, patch)}
+            remove={(id) => apiClient!.deleteAlbumCategory(id)}
+            onClose={() => setCatManagerOpen(false)}
+            onChanged={() => void queryClient.invalidateQueries({ queryKey: ['taxonomies', 'album_category'] })}
+          />
+        )}
       </div>
     );
   }
@@ -163,6 +187,12 @@ export default function AlbumManagement() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold">앨범 관리</h2>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setCatManagerOpen(true)}
+            className="text-sm text-gray-600 border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-50"
+          >
+            카테고리 관리
+          </button>
           {data && data.data.length > 0 && (
             <button onClick={() => bulk.toggleAll(data.data)}
               className="text-sm text-gray-600 border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-50">
@@ -292,6 +322,18 @@ export default function AlbumManagement() {
         }}
         onCancel={() => setDeleteTarget(null)}
       />
+
+      {catManagerOpen && (
+        <CategoryManager
+          title="앨범 카테고리"
+          list={() => apiClient!.getAlbumCategoriesList()}
+          create={(name, slug) => apiClient!.createAlbumCategory({ name, slug })}
+          update={(id, patch) => apiClient!.updateAlbumCategory(id, patch)}
+          remove={(id) => apiClient!.deleteAlbumCategory(id)}
+          onClose={() => setCatManagerOpen(false)}
+          onChanged={() => void queryClient.invalidateQueries({ queryKey: ['taxonomies', 'album_category'] })}
+        />
+      )}
     </div>
   );
 }
