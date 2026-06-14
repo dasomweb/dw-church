@@ -351,6 +351,30 @@ _PRODUCT_SHOWCASE = [
 ]
 
 
+# ─── Church content modules (dw-church) ─────────────────────────────────
+#
+# DB-driven data blocks for the church content modules. Each is a single
+# data block carrying only DISPLAY config — the items (설교/주보/칼럼/…)
+# are pulled from /api/v1/{resource} at render time, registered by the
+# operator in the admin app, so there is NO authored copy and therefore no
+# risky context placeholders (which expand.py would otherwise leave
+# verbatim). `title` is left empty; the storefront block renders its own
+# heading / the operator sets one. Static church blocks (pastor_message /
+# newcomer_info) are handled in the primary TS build-pages path
+# (apps/server/.../build-pages/pattern-map.ts) where the copywriter's
+# authored copy is available — they are intentionally NOT duplicated here.
+_RECENT_SERMONS = [PatternBlock("recent_sermons", {"title": "", "limit": 6, "variant": "grid-3"})]
+_RECENT_BULLETINS = [PatternBlock("recent_bulletins", {"title": "", "limit": 12, "variant": "grid-4"})]
+_RECENT_COLUMNS = [PatternBlock("recent_columns", {"title": "", "limit": 6, "variant": "grid-3"})]
+_VIDEO_BOARD = [PatternBlock("video_board", {"title": "", "category": "", "limit": 6, "variant": "grid-3"})]
+_ALBUM_GALLERY = [PatternBlock("album_gallery", {"title": "", "limit": 6, "variant": "grid-3"})]
+_STAFF_GRID = [PatternBlock("staff_grid", {"title": "", "limit": 8})]
+_EVENT_GRID = [PatternBlock("event_grid", {"title": "", "limit": 6, "variant": "grid-3"})]
+_HISTORY_TIMELINE = [PatternBlock("history_timeline", {"title": ""})]
+_SCHEDULE_BOARD = [PatternBlock("schedule_board", {"title": "", "imagePosition": "left"})]
+_BOARD = [PatternBlock("board", {"title": "", "boardSlug": "notices", "limit": 10})]
+
+
 PATTERN_BLOCK_MAP: dict[str, list[PatternBlock]] = {
     # Existing — now using rich blocks.
     "hero-section":     _HERO_SECTION,
@@ -371,6 +395,20 @@ PATTERN_BLOCK_MAP: dict[str, list[PatternBlock]] = {
     "location":         _LOCATION,
     "check-list":       _CHECK_LIST,
     "product-showcase": _PRODUCT_SHOWCASE,
+    # Church content modules — keyed by the same pattern names planner.py's
+    # SECTION_TO_PATTERN emits, so both the TS build-pages path and this
+    # Python developer/apply_pattern path translate church sections
+    # identically.
+    "recent-sermons":   _RECENT_SERMONS,
+    "recent-bulletins": _RECENT_BULLETINS,
+    "recent-columns":   _RECENT_COLUMNS,
+    "video-board":      _VIDEO_BOARD,
+    "album-gallery":    _ALBUM_GALLERY,
+    "staff-grid":       _STAFF_GRID,
+    "event-grid":       _EVENT_GRID,
+    "history-timeline": _HISTORY_TIMELINE,
+    "schedule-board":   _SCHEDULE_BOARD,
+    "board":            _BOARD,
 }
 """Read-only pattern -> block expansion table.
 

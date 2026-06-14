@@ -523,6 +523,38 @@ SECTION_TO_PATTERN = {
     "category-filter": "category-tabs",
     "tab-grid": "category-tabs",
     "filtered-grid": "category-tabs",
+    # ── Church content modules (dw-church) ──
+    # These are DB-driven data blocks: the LLM only picks the sectionType
+    # and writes a section title/eyebrow — the actual items (설교/주보/…)
+    # are pulled from /api/v1/{resource} at render time, registered by the
+    # operator in the admin app. build-pages/pattern-map.ts maps each of
+    # these patterns to the matching True Light data block_type.
+    "sermons": "recent-sermons",
+    "recent-sermons": "recent-sermons",
+    "bulletins": "recent-bulletins",
+    "recent-bulletins": "recent-bulletins",
+    "columns": "recent-columns",
+    "recent-columns": "recent-columns",
+    "videos": "video-board",
+    "video-board": "video-board",
+    "albums": "album-gallery",
+    "album-gallery": "album-gallery",
+    "worship-schedule": "schedule-board",
+    "schedule": "schedule-board",
+    "schedule-board": "schedule-board",
+    "clergy": "staff-grid",
+    "staff-grid": "staff-grid",
+    "pastors": "staff-grid",
+    "events": "event-grid",
+    "event-grid": "event-grid",
+    "history": "history-timeline",
+    "history-timeline": "history-timeline",
+    "board": "board",
+    "notices": "board",
+    "pastor-message": "pastor-message",
+    "greeting": "pastor-message",
+    "newcomer": "newcomer-info",
+    "new-family": "newcomer-info",
 }
 
 
@@ -928,7 +960,9 @@ Each section needs:
    hero, hero-text, hero-split, page-hero, features, about, text, text-split,
    text-cta, text-quote, text-image, image-text, cta, testimonials, pricing,
    team, faq, contact, stats, logo-bar, subscribe, gallery,
-   steps, process, how-we-work
+   steps, process, how-we-work,
+   sermons, bulletins, columns, videos, albums, worship-schedule, clergy,
+   events, history, board, pastor-message, newcomer
 
    TYPE GUIDE:
    - "text" = center-aligned title + description (simple about/intro)
@@ -957,6 +991,38 @@ Each section needs:
        cards: [{{tab, title, description, imagePrompt, buttonText, buttonUrl}}]
      Each card's `tab` field MUST match one of the tabs[].id values.
      Don't use this for plain feature grids — use "features" instead.
+
+   CHURCH CONTENT BLOCKS (dw-church) — USE THESE on church content pages.
+   These are DATA blocks: they pull live content the operator registers in
+   the admin app (설교/주보/…). You only pick the type and write a short
+   section "title"/"eyebrow" — DO NOT invent items[] for them (the items
+   come from the database). Match the page to its block:
+   - "sermons"          = 최근 설교 그리드 (/api/v1/sermons). USE on the
+                          설교/말씀 (/sermons) page and optionally home.
+   - "bulletins"        = 주보 PDF 그리드 (/api/v1/bulletins). USE on the
+                          주보 (/bulletins) page.
+   - "columns"          = 목회칼럼 그리드 (/api/v1/columns). USE on the
+                          목회칼럼 (/columns) page.
+   - "videos"           = YouTube 영상 그리드 (/api/v1/videos). USE on
+                          찬양/영상 pages.
+   - "albums"           = 교회앨범 갤러리 (/api/v1/albums). USE on the
+                          앨범/사진 page.
+   - "worship-schedule" = 예배·모임 시간표 (/api/v1/schedules). USE on the
+                          예배안내 page and optionally home.
+   - "clergy"           = 교역자 그리드 (/api/v1/staff). USE on the 교역자
+                          (/staff) page. (NOT "team" — that's a hand-typed
+                          generic grid; church staff comes from the DB.)
+   - "events"           = 교회 행사/소식 그리드 (/api/v1/events). USE on the
+                          행사/소식 page and optionally home.
+   - "history"          = 교회 연혁 타임라인 (/api/v1/history). USE on the
+                          연혁 page.
+   - "board"            = 게시판 목록 (/api/v1/boards). USE on 공지/게시판
+                          pages.
+   And two STATIC church blocks you DO write copy for:
+   - "pastor-message"   = 담임목사 인사말 (title=headline, description=인사말
+                          본문, imagePrompt=목사 사진). USE on 교회소개/home.
+   - "newcomer"         = 새가족 환영 + 등록 CTA (title/subtitle/description
+                          + buttonText/buttonUrl). USE as a home/새가족 CTA.
 2. "title" — Short, powerful headline (max 8 words). Specific, not generic.
 3. "subtitle" — One short line (max 15 words) that expands the title
 4. "description" — 1-2 sentences MAXIMUM. Concise and impactful.
@@ -1073,12 +1139,23 @@ HERO RULES — STRICTLY ENFORCED:
   short subtitle is enough. The page body carries the substance.
 
 GOOD page structure examples (each picks DIFFERENT patterns — that's the point):
-  /              hero → logo-bar → text-image → stats → testimonials → cta
-  /about         hero-split → text-quote → stats → team → cta
-  /pricing       page-hero → pricing → faq → testimonials → cta
-  /services      hero-split → features → image-text → process → cta
-  /portfolio     page-hero → gallery → text-image → testimonials → cta
-  /contact       page-hero → text-cta → faq → cta
+  /              hero → pastor-message → worship-schedule → sermons → events → newcomer
+  /about         hero-split → text-quote → pastor-message → history → cta
+  /sermons       page-hero → sermons → cta
+  /bulletins     page-hero → bulletins → cta
+  /columns       page-hero → columns → cta
+  /staff         page-hero → clergy → cta
+  /worship       page-hero → worship-schedule → text-image → cta
+  /contact       page-hero → worship-schedule → contact → cta
+
+CHURCH PAGE RULE — CRITICAL: when a page's purpose is a church content
+module, its MAIN section MUST be the matching data block, not a generic
+substitute. /sermons → "sermons" (NOT gallery/features), /bulletins →
+"bulletins", /columns → "columns", /staff or /교역자 → "clergy" (NOT
+"team"), /events → "events", /history or /연혁 → "history", /albums →
+"albums", /worship or /예배 → "worship-schedule". The home page should
+surface 1-2 of these (e.g. sermons + worship-schedule) so the site reads
+as a living church site, not a brochure.
 
 BAD page structures (the "every site looks the same" anti-pattern):
   hero → features → text-image → cta                 (too few, too predictable)

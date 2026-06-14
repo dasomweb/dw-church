@@ -61,12 +61,164 @@ function commonExtras(spec: SectionSpec): Record<string, unknown> {
  * (e.g. an entire pricing table emitted as one block) are intentionally
  * collapsed into one block_type — admins can split them later.
  */
+/**
+ * Resolve a dw-church content-module section to its data/static block_type.
+ *
+ * Returns null when `key` isn't a church section type, so the caller falls
+ * through to the generic mapper. Keys accept both the planner pattern
+ * (gutenbergPattern, e.g. "recent-sermons" from SECTION_TO_PATTERN) and the
+ * raw sectionType the copywriter wrote (e.g. "sermons") — both forms are
+ * registered here so a mapping gap can't silently drop a church section to
+ * text_only.
+ *
+ * DATA blocks (recent_sermons / recent_bulletins / recent_columns /
+ * video_board / album_gallery / staff_grid / event_grid / history_timeline /
+ * schedule_board / board) carry only DISPLAY config (title / limit / variant /
+ * category / boardSlug). Their items come from /api/v1/{resource} at render
+ * time — the AI never authors them, so we don't read spec.items here.
+ *
+ * STATIC church blocks (pastor_message / worship_schedule / newcomer_info)
+ * DO carry AI-authored copy, so we forward title/subtitle/description/button.
+ */
+function mapChurchBlock(
+  key: string,
+  spec: SectionSpec,
+  parts: { title: string; subtitle: string; description: string; button: string },
+): MappedBlock | null {
+  const { title, subtitle, description, button } = parts;
+  // A church data block whose grid columns the AI hinted via `variant`
+  // (grid-2/grid-3/grid-4/list) — whitelisted so a typo can't break render.
+  const VALID_GRID = new Set(['grid-2', 'grid-3', 'grid-4', 'list', 'masonry']);
+  const gridVariant = (fallback: string): string =>
+    typeof spec.variant === 'string' && VALID_GRID.has(spec.variant) ? spec.variant : fallback;
+  const limitOf = (fallback: number): number => {
+    const n = Number((spec as Record<string, unknown>).limit);
+    return Number.isFinite(n) && n > 0 ? Math.floor(n) : fallback;
+  };
+
+  switch (key) {
+    case 'recent-sermons':
+    case 'sermons':
+      return { blockType: 'recent_sermons', props: { title, limit: limitOf(6), variant: gridVariant('grid-3') } };
+
+    case 'recent-bulletins':
+    case 'bulletins':
+      return { blockType: 'recent_bulletins', props: { title, limit: limitOf(12), variant: gridVariant('grid-4') } };
+
+    case 'recent-columns':
+    case 'columns':
+      return { blockType: 'recent_columns', props: { title, limit: limitOf(6), variant: gridVariant('grid-3') } };
+
+    case 'video-board':
+    case 'videos':
+      return {
+        blockType: 'video_board',
+        props: {
+          title,
+          // category is optional — empty string means "all videos".
+          category: typeof spec.category === 'string' ? spec.category : '',
+          limit: limitOf(6),
+          variant: gridVariant('grid-3'),
+        },
+      };
+
+    case 'album-gallery':
+    case 'albums':
+      return { blockType: 'album_gallery', props: { title, limit: limitOf(6), variant: gridVariant('grid-3') } };
+
+    case 'staff-grid':
+    case 'clergy':
+    case 'pastors':
+      return { blockType: 'staff_grid', props: { title, limit: limitOf(8) } };
+
+    case 'event-grid':
+    case 'events':
+      return { blockType: 'event_grid', props: { title, limit: limitOf(6), variant: gridVariant('grid-3') } };
+
+    case 'history-timeline':
+    case 'history':
+      return { blockType: 'history_timeline', props: { title } };
+
+    case 'schedule-board':
+    case 'worship-schedule':
+    case 'schedule':
+      return {
+        blockType: 'schedule_board',
+        props: {
+          title,
+          // imagePosition left/right/none; default left. The schedule rows
+          // themselves come from /api/v1/schedules (operator-managed groups).
+          imagePosition:
+            spec.imagePosition === 'right' || spec.imagePosition === 'none'
+              ? spec.imagePosition
+              : 'left',
+        },
+      };
+
+    case 'board':
+    case 'notices':
+      return {
+        blockType: 'board',
+        props: {
+          title,
+          // boardSlug defaults to 'notices' (the standard 공지사항 board);
+          // the AI can target another board the operator created.
+          boardSlug: typeof spec.boardSlug === 'string' && spec.boardSlug.trim() ? spec.boardSlug.trim() : 'notices',
+          limit: limitOf(10),
+        },
+      };
+
+    // ── Static church blocks (AI authors the copy) ──
+    case 'pastor-message':
+    case 'greeting':
+      // Refuse an empty greeting — same no-placeholder rule as hero/cta.
+      if (!title && !description) return null;
+      return {
+        blockType: 'pastor_message',
+        props: {
+          title,
+          pastorName: typeof spec.pastorName === 'string' ? spec.pastorName : '',
+          message: description,
+          imageUrl: spec.imageUrl ?? '',
+        },
+      };
+
+    case 'newcomer-info':
+    case 'newcomer':
+    case 'new-family':
+      if (!title) return null;
+      return {
+        blockType: 'newcomer_info',
+        props: {
+          title,
+          subtitle: subtitle || '',
+          description: description || '',
+          buttonText: button || '',
+          buttonUrl: spec.buttonUrl ?? '',
+        },
+      };
+
+    default:
+      return null;
+  }
+}
+
 export function mapSectionToBlock(spec: SectionSpec): MappedBlock | null {
   const key = (spec.gutenbergPattern || spec.sectionType || '').toLowerCase();
   const title = spec.title?.trim() ?? '';
   const subtitle = spec.subtitle?.trim() ?? '';
   const description = spec.description?.trim() ?? spec.content?.trim() ?? '';
   const button = spec.buttonText?.trim() ?? '';
+
+  // ── Church content blocks (dw-church) ──
+  // These are DB-driven data blocks (설교/주보/칼럼/영상/앨범/교역자/연혁/
+  // 행사/예배·모임/게시판). The planner emits them with just a section
+  // title/eyebrow — the items are pulled from /api/v1/{resource} at render
+  // time. They're resolved BEFORE the empty-content guard below because a
+  // data block with only a title is still a valid, renderable section (the
+  // generic guard would otherwise drop it for having no items/description).
+  const church = mapChurchBlock(key, spec, { title, subtitle, description, button });
+  if (church) return church;
 
   // Empty section — skip.
   if (!title && !subtitle && !description && !button && !(spec.items?.length)) {

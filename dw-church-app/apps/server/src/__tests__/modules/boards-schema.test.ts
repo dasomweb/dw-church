@@ -10,7 +10,7 @@ describe('createBoardSchema', () => {
 
   it('accepts full input', () => {
     expect(createBoardSchema.safeParse({
-      ...valid, description: '선교 소식 게시판', sort_order: 1, is_active: true,
+      ...valid, description: '선교 소식 게시판', sortOrder: 1, isActive: true,
     }).success).toBe(true);
   });
 
@@ -22,14 +22,16 @@ describe('createBoardSchema', () => {
     expect(createBoardSchema.safeParse({ ...valid, slug: '' }).success).toBe(false);
   });
 
-  it('defaults sort_order to 0', () => {
+  // Schema is camelCase (api-client no longer snake-cases board payloads —
+  // see modules/boards/schema.ts). Defaults live on sortOrder / isActive.
+  it('defaults sortOrder to 0', () => {
     const r = createBoardSchema.safeParse(valid);
-    if (r.success) expect(r.data.sort_order).toBe(0);
+    if (r.success) expect(r.data.sortOrder).toBe(0);
   });
 
-  it('defaults is_active to true', () => {
+  it('defaults isActive to true', () => {
     const r = createBoardSchema.safeParse(valid);
-    if (r.success) expect(r.data.is_active).toBe(true);
+    if (r.success) expect(r.data.isActive).toBe(true);
   });
 });
 

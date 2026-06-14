@@ -173,6 +173,86 @@
       "useCases": ["프로젝트 갤러리", "이벤트 사진 인덱스"],
       "aiHint": "Album cover grid — pulls from /api/v1/albums. variant: grid-2/grid-3/grid-4/masonry."
     },
+    "recent_sermons": {
+      "label": "최근 설교",
+      "group": "data",
+      "flags": { "isDataBlock": true },
+      "defaultProps": { "title": "", "limit": 6, "variant": "grid-3" },
+      "description": "/api/v1/sermons에서 최근 설교를 카드 그리드로 표시. 각 카드는 YouTube 썸네일 + 제목 + 설교자 + 날짜 + 성경본문. 교회 홈페이지와 '설교/말씀' 페이지의 핵심 블록. 콘텐츠는 운영자가 설교 관리에서 등록.",
+      "tags": ["sermons", "preaching", "worship", "church", "video", "data-driven", "grid", "recent"],
+      "useCases": ["홈 '최근 설교'", "설교/말씀 페이지 상단", "주일예배 말씀 모음"],
+      "aiHint": "Recent sermons grid — pulls from /api/v1/sermons (YouTube + title + preacher + date + scripture). Use on the home page and the 설교/sermons page. variant: grid-2/grid-3/grid-4/list."
+    },
+    "recent_bulletins": {
+      "label": "최근 주보",
+      "group": "data",
+      "flags": { "isDataBlock": true },
+      "defaultProps": { "title": "", "limit": 12, "variant": "grid-4" },
+      "description": "/api/v1/bulletins에서 주보(주간 안내지) PDF를 날짜순 그리드로 표시. 각 항목은 표지 썸네일 + 날짜 + PDF 보기/다운로드. '주보' 페이지의 핵심 블록. 콘텐츠는 운영자가 주보 관리에서 PDF 업로드.",
+      "tags": ["bulletins", "weekly", "pdf", "church", "data-driven", "grid", "recent"],
+      "useCases": ["주보 페이지", "홈 '이번주 주보' 링크"],
+      "aiHint": "Weekly bulletins (주보) grid — pulls from /api/v1/bulletins (PDF cover + date + view/download). Use on the 주보/bulletins page. variant: grid-3/grid-4/list."
+    },
+    "recent_columns": {
+      "label": "최근 목회칼럼",
+      "group": "data",
+      "flags": { "isDataBlock": true },
+      "defaultProps": { "title": "", "limit": 6, "variant": "grid-3" },
+      "description": "/api/v1/columns에서 담임목사·교역자가 쓴 목회칼럼/묵상글을 그리드로 표시. 각 카드는 제목 + 작성자 + 날짜 + 발췌. '목회칼럼' 페이지의 핵심 블록. 콘텐츠는 운영자가 칼럼 관리에서 등록.",
+      "tags": ["columns", "pastoral", "devotion", "essay", "church", "data-driven", "grid", "recent"],
+      "useCases": ["목회칼럼 페이지", "홈 '담임목사 칼럼' 섹션"],
+      "aiHint": "Pastoral columns grid — pulls from /api/v1/columns (title + author + date + excerpt). Use on the 목회칼럼/columns page. variant: grid-2/grid-3/list."
+    },
+    "video_board": {
+      "label": "영상 (YouTube)",
+      "group": "data",
+      "flags": { "isDataBlock": true },
+      "defaultProps": { "title": "", "category": "", "limit": 6, "variant": "grid-3" },
+      "description": "/api/v1/videos에서 YouTube 영상을 카테고리별로 16:9 임베드 그리드로 표시. 찬양·간증·특강·행사영상 등 category로 분리. 콘텐츠는 운영자가 영상 관리에서 등록.",
+      "tags": ["video", "youtube", "worship", "praise", "church", "data-driven", "grid", "category"],
+      "useCases": ["찬양 영상 모음", "주일예배 실황", "특별집회/간증 영상"],
+      "aiHint": "YouTube video board — pulls from /api/v1/videos, filterable by category. Use for 찬양/예배실황/간증 video pages. variant: grid-2/grid-3/grid-4."
+    },
+    "schedule_board": {
+      "label": "예배 및 모임 시간",
+      "group": "data",
+      "flags": { "isDataBlock": true },
+      "defaultProps": { "title": "", "imagePosition": "left", "imageUrl": "" },
+      "description": "/api/v1/schedules에서 예배·모임 시간표를 그룹별 표로 표시 (그룹마다 이름 + 컬럼 + 행). 좌/우 이미지 + 표 레이아웃. 주일예배·새벽기도·교구모임 등을 그룹 리피터로 관리. 콘텐츠는 운영자가 예배/모임 관리에서 등록.",
+      "tags": ["worship", "schedule", "service-times", "meetings", "church", "data-driven", "table"],
+      "useCases": ["예배안내 페이지", "홈 '예배 시간' 섹션", "교구·셀모임 시간표"],
+      "aiHint": "Worship & meeting schedule — pulls from /api/v1/schedules (grouped tables, each with a name). imagePosition: left/right/none. Use on the 예배안내/worship page and the home page."
+    },
+    "pastor_message": {
+      "label": "담임목사 인사말",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "title": "", "pastorName": "", "message": "", "imageUrl": "" },
+      "description": "담임목사의 인사말/환영사를 사진 + 본문으로 표시하는 정적 블록. 교회 소개·홈 페이지에 거의 필수. 운영자가 본문을 직접 작성.",
+      "tags": ["pastor", "greeting", "welcome", "message", "church", "about"],
+      "useCases": ["교회 소개 페이지 상단", "홈 '담임목사 인사말'"],
+      "aiHint": "Senior pastor's greeting — photo + message body. Author the message text (title=greeting headline, message=body). Use on the 교회소개/about and home pages."
+    },
+    "worship_schedule": {
+      "label": "예배 시간 안내 (정적)",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "title": "예배 안내", "items": [] },
+      "description": "예배 시간을 직접 입력해 표로 보여주는 정적 블록 (DB 연동 없음). 간단한 '주일예배 11:00' 식 안내에 적합. 그룹 리피터 + DB 관리가 필요하면 schedule_board(데이터 블록)를 사용.",
+      "tags": ["worship", "service-times", "schedule", "church", "static"],
+      "useCases": ["홈 '예배 시간' 간단 안내", "오시는 길 페이지의 예배시간"],
+      "aiHint": "Static worship-times table — author items: [{label, time, place}] directly. For a DB-managed grouped schedule use schedule_board instead."
+    },
+    "newcomer_info": {
+      "label": "새가족 안내",
+      "group": "conversion",
+      "flags": {},
+      "defaultProps": { "title": "새가족을 환영합니다", "subtitle": "", "description": "", "buttonText": "", "buttonUrl": "" },
+      "description": "처음 방문하는 새가족을 위한 환영·안내 + 등록 CTA 정적 블록. 교회 홈·새가족 페이지의 전환 섹션.",
+      "tags": ["newcomer", "new-family", "welcome", "visitor", "church", "cta", "conversion"],
+      "useCases": ["홈 하단 '처음 오셨나요?'", "새가족 안내 페이지"],
+      "aiHint": "New-family welcome + register CTA. Author title/subtitle/description + buttonText/buttonUrl. Use as a conversion section on home and the 새가족 page."
+    },
     "board": {
       "label": "게시판",
       "group": "data",
@@ -244,31 +324,34 @@
       "aiHint": "Shortcut for products_showcase with source=recent. Use when the AI wants the simplest 'newest N products' list."
     },
     "staff_grid": {
-      "label": "직원 그리드",
+      "label": "교역자 그리드",
       "group": "data",
-      "flags": { "isDataBlock": true, "isHidden": true },
-      "defaultProps": { "limit": 8, "layout": "featured", "photoStyle": "rect", "columns": 3, "showItems": "name,role,department,bio" },
-      "description": "/api/v1/staff에서 직원 카드 그리드. 스토어프론트 컴포넌트 대기 중이라 팔레트에서 숨김. 일반 케이스는 team_members 사용.",
-      "tags": ["staff", "team", "people", "data-driven", "grid", "hidden"],
-      "aiHint": "Staff/team data block — pulls from /api/v1/staff. Hidden from palette pending storefront component."
+      "flags": { "isDataBlock": true },
+      "defaultProps": { "title": "", "limit": 8, "layout": "featured", "photoStyle": "rect", "columns": 3, "showItems": "name,role,department,bio" },
+      "description": "/api/v1/staff에서 교역자/직원 카드 그리드 (사진 + 이름 + 직분 + 소개). 교회 '교역자 소개' 페이지의 핵심 블록. 콘텐츠는 운영자가 교역자 관리에서 등록. 데이터 연동 없이 직접 입력하는 일반 팀 소개는 team_members 사용.",
+      "tags": ["staff", "clergy", "pastors", "team", "people", "church", "data-driven", "grid"],
+      "useCases": ["교역자 소개 페이지", "섬기는 사람들"],
+      "aiHint": "Clergy/staff data block — pulls from /api/v1/staff (photo + name + role + bio). Use on the 교역자/staff page. For a non-DB hand-authored team list use team_members."
     },
     "history_timeline": {
-      "label": "회사 연혁 (자동)",
+      "label": "교회 연혁 (자동)",
       "group": "data",
-      "flags": { "isDataBlock": true, "isHidden": true },
-      "defaultProps": {},
-      "description": "/api/v1/history에서 회사 연혁 데이터 자동 표시. 스토어프론트 대기 중. 정적 연혁은 timeline 블록 사용.",
-      "tags": ["history", "timeline", "milestones", "data-driven", "hidden"],
-      "aiHint": "History timeline data block — pulls from /api/v1/history. Hidden from palette pending storefront component."
+      "flags": { "isDataBlock": true },
+      "defaultProps": { "title": "" },
+      "description": "/api/v1/history에서 교회 연혁(설립·이전·임직 등)을 연도순 타임라인으로 자동 표시. '교회 연혁' 페이지의 핵심 블록. 콘텐츠는 운영자가 연혁 관리에서 등록. 직접 입력하는 정적 연혁은 timeline 블록 사용.",
+      "tags": ["history", "timeline", "milestones", "church", "data-driven"],
+      "useCases": ["교회 연혁 페이지", "교회 소개 하위 '발자취'"],
+      "aiHint": "Church history timeline — pulls from /api/v1/history (year-ordered milestones). Use on the 연혁/history page. For a hand-authored static timeline use the timeline block."
     },
     "event_grid": {
-      "label": "행사 그리드",
+      "label": "행사/소식 그리드",
       "group": "data",
-      "flags": { "isDataBlock": true, "isHidden": true },
-      "defaultProps": { "limit": 6 },
-      "description": "/api/v1/events에서 행사 카드 그리드. 스토어프론트 대기 중이라 팔레트에서 숨김.",
-      "tags": ["events", "calendar", "data-driven", "grid", "hidden"],
-      "aiHint": "Events data block — pulls from /api/v1/events. Hidden from palette pending storefront component."
+      "flags": { "isDataBlock": true },
+      "defaultProps": { "title": "", "limit": 6 },
+      "description": "/api/v1/events에서 교회 행사·모임·소식을 카드 그리드로 표시 (제목 + 날짜 + 사진 + 안내). '교회 행사/소식' 페이지의 핵심 블록. 콘텐츠는 운영자가 행사 관리에서 등록.",
+      "tags": ["events", "calendar", "news", "church", "data-driven", "grid"],
+      "useCases": ["교회 행사 안내 페이지", "홈 '다가오는 행사' 섹션"],
+      "aiHint": "Church events/news grid — pulls from /api/v1/events (title + date + image). Use on the 행사/events page and home. variant: grid-2/grid-3/grid-4."
     },
     "location_map": {
       "label": "지도",
