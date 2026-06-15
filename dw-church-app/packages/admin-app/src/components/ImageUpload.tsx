@@ -116,26 +116,31 @@ export function ImageUpload({
 
   if (mode === 'preview' && value) {
     return (
-      <div className="relative group">
+      <div>
         {label && <p className="text-sm font-medium text-gray-700 mb-1.5">{label}</p>}
         <div className="relative rounded-lg overflow-hidden border border-gray-200" style={{ aspectRatio }}>
           <img src={value} alt="미리보기" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-            <button
-              type="button"
-              onClick={() => { setMode('url'); setUrlInput(value); }}
-              className="bg-white text-gray-700 px-3 py-1.5 rounded-lg text-xs font-medium shadow"
-            >
-              변경
-            </button>
-            <button
-              type="button"
-              onClick={handleRemove}
-              className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium shadow"
-            >
-              삭제
-            </button>
-          </div>
+        </div>
+        {/* Always-visible controls. These were previously hover-only
+            (opacity-0 group-hover:opacity-100), so on touch devices
+            (tablet/phone — no hover) the operator could never change or
+            delete an uploaded image. A visible button row works on every
+            device. */}
+        <div className="mt-2 flex gap-2">
+          <button
+            type="button"
+            onClick={() => { setMode('url'); setUrlInput(value); }}
+            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+          >
+            이미지 변경
+          </button>
+          <button
+            type="button"
+            onClick={handleRemove}
+            className="flex-1 bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+          >
+            삭제
+          </button>
         </div>
         {resizeInfo && !resizeInfo.skipped && (
           <p className="mt-1 text-[10px] text-gray-400">
