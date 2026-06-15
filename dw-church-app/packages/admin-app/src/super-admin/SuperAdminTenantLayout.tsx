@@ -59,7 +59,7 @@ const NAV: NavEntry[] = [
   { to: 'reference-photos',  label: '참조 사진',         icon: '📷' },
   { to: 'media',             label: '미디어',            icon: '🖼️' },
   { to: 'domains',           label: '도메인',            icon: '🌐' },
-  { to: 'settings',          label: '설정',              icon: '⚙️' },
+  { to: 'settings',          label: '기본정보',          icon: '⚙️' },
   { to: 'users',             label: '사용자',            icon: '👥' },
   { to: 'billing',           label: '결제',              icon: '💳' },
   { to: 'feature-permissions', label: '기능 권한',       icon: '🧰' },
