@@ -102,6 +102,13 @@ export function tokensToCssVars(tokens: DesignTokens): CssVarMap {
   vars['--brand-bp-tablet'] = `${tokens.breakpoints.tablet}px`;
   vars['--brand-bp-mobile'] = `${tokens.breakpoints.mobile}px`;
 
+  // Header chrome — logo height + nav font size. `?? default` guards token
+  // blobs persisted before `header` existed (they reach here unparsed via
+  // getThemeTokens' projection, which now backfills, but the fallback keeps
+  // this emit safe regardless). Consumed by the storefront header.
+  vars['--brand-logo-height'] = `${tokens.header?.logoHeight ?? 40}px`;
+  vars['--brand-nav-font-size'] = `${tokens.header?.navFontSize ?? 14}px`;
+
   return vars;
 }
 

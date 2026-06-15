@@ -59,6 +59,12 @@ export const DEFAULT_DESIGN_TOKENS: DesignTokens = {
     gapGrid: 24,
     sectionMarginY: 0,
   },
+  // Header chrome — 40px logo / 14px nav match the storefront's previous
+  // hard-coded `h-10` logo + `text-sm` nav, so unset tenants look unchanged.
+  header: {
+    logoHeight: 40,
+    navFontSize: 14,
+  },
 };
 
 /**

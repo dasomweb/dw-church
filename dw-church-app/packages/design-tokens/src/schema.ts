@@ -100,6 +100,23 @@ export const designTokenRadiusSchema = z.object({
   full: z.number().int().nonnegative(),
 });
 
+// ─── Header tokens ─────────────────────────────────────────────────────────
+//
+// Per-tenant header chrome the operator tunes in the super-admin theme editor:
+// logo render height + the desktop nav-link font size. Emitted as
+// --brand-logo-height / --brand-nav-font-size and consumed by the storefront
+// header (apps/web/.../tenant/[slug]/layout.tsx). The whole object + each
+// field carries a default so token blobs persisted BEFORE this field existed
+// still parse (and old AI-builder tokensV2 snapshots don't 400 on save).
+export const designTokenHeaderSchema = z
+  .object({
+    /** Storefront logo <img> height in px (default 40 = the old hard-coded h-10). */
+    logoHeight: z.number().int().positive().default(40),
+    /** Desktop header nav-link font size in px (default 14 = the old text-sm). */
+    navFontSize: z.number().int().positive().default(14),
+  })
+  .default({ logoHeight: 40, navFontSize: 14 });
+
 // ─── Final DesignTokens ────────────────────────────────────────────────────
 
 export const designTokensSchema = z.object({
@@ -123,12 +140,16 @@ export const designTokensSchema = z.object({
     // keeps already-stored token blobs — which predate this field — parseable.
     sectionMarginY: z.number().int().nonnegative().default(0),
   }),
+  /** Header chrome (logo size, nav font size). `.default` so pre-existing
+   *  token blobs without a header key still parse. */
+  header: designTokenHeaderSchema,
 });
 
 export type SystemColorTokens = z.infer<typeof systemColorTokensSchema>;
 export type DesignTokenColors = z.infer<typeof designTokenColorsSchema>;
 export type TypographyScaleSpec = z.infer<typeof typographyScaleSpecSchema>;
 export type DesignTokenTypography = z.infer<typeof designTokenTypographySchema>;
+export type DesignTokenHeader = z.infer<typeof designTokenHeaderSchema>;
 export type DesignTokens = z.infer<typeof designTokensSchema>;
 
 // ─── BlockStyle — per-block override container ─────────────────────────────

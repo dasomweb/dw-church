@@ -324,7 +324,14 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
             <div className="flex flex-col items-center gap-3">
               <Link href={homeHref} className="flex items-center gap-2">
                 {logoUrl ? (
-                  <img src={logoUrl} alt={churchName} className="h-10 w-auto object-contain" />
+                  <img
+                    src={logoUrl}
+                    alt={churchName}
+                    className="w-auto object-contain"
+                    // Operator-tunable logo height (super-admin 테마 → 헤더).
+                    // Falls back to 40px (the previous hard-coded h-10).
+                    style={{ height: 'var(--brand-logo-height, 40px)' }}
+                  />
                 ) : (
                   <span className="text-xl font-bold font-heading" style={{ color: isDarkHeader ? 'var(--dw-background)' : 'var(--dw-primary)' }}>
                     {churchName}
@@ -336,8 +343,10 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                   <div key={item.id} className="relative group">
                     <Link
                       href={navHref(item)}
-                      className="text-sm font-medium transition-colors hover:opacity-80 py-2 inline-flex items-center gap-0.5"
-                      style={{ color: navLinkColor }}
+                      className="font-medium transition-colors hover:opacity-80 py-2 inline-flex items-center gap-0.5"
+                      // Operator-tunable nav font size (super-admin 테마 → 헤더).
+                      // Inline fontSize overrides the old text-sm; 14px fallback = text-sm.
+                      style={{ color: navLinkColor, fontSize: 'var(--brand-nav-font-size, 14px)' }}
                     >
                       {item.label}
                       {item.children && item.children.length > 0 && (
@@ -372,7 +381,13 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
           <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
             <Link href={homeHref} className="flex items-center gap-2">
               {logoUrl ? (
-                <img src={logoUrl} alt={churchName} className="h-10 w-auto object-contain" />
+                <img
+                  src={logoUrl}
+                  alt={churchName}
+                  className="w-auto object-contain"
+                  // Operator-tunable logo height (super-admin 테마 → 헤더). 40px fallback = old h-10.
+                  style={{ height: 'var(--brand-logo-height, 40px)' }}
+                />
               ) : (
                 <span className="text-xl font-bold font-heading" style={{ color: isDarkHeader ? 'var(--dw-background)' : 'var(--dw-primary)' }}>
                   {churchName}
@@ -384,8 +399,9 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                 <div key={item.id} className="relative group">
                   <Link
                     href={navHref(item)}
-                    className="text-sm font-medium transition-colors hover:opacity-80 py-2 inline-flex items-center gap-0.5"
-                    style={{ color: navLinkColor }}
+                    className="font-medium transition-colors hover:opacity-80 py-2 inline-flex items-center gap-0.5"
+                    // Operator-tunable nav font size (super-admin 테마 → 헤더). 14px fallback = text-sm.
+                    style={{ color: navLinkColor, fontSize: 'var(--brand-nav-font-size, 14px)' }}
                   >
                     {item.label}
                     {item.children && item.children.length > 0 && (

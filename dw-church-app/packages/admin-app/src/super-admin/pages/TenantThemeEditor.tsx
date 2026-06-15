@@ -35,7 +35,7 @@ import { useAuthStore } from '../../stores/auth';
 import { useToast } from '../../components';
 import { useSuperAdminTenant } from '../SuperAdminTenantLayout';
 
-type TabId = 'theme-set' | 'palette' | 'typography' | 'spacing' | 'custom';
+type TabId = 'theme-set' | 'palette' | 'typography' | 'header' | 'spacing' | 'custom';
 
 // 2026-06-01 (Phase 10-α): "테마셋" 탭 추가. 슈퍼어드민의 일반적인 흐름은
 // "테마셋 선택" → 필요 시 가벼운 override (팔레트/타이포). 따라서 테마셋이
@@ -51,6 +51,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'theme-set',  label: '테마셋' },
   { id: 'palette',    label: '팔레트' },
   { id: 'typography', label: '타이포그래피' },
+  { id: 'header',     label: '헤더' },
   { id: 'spacing',    label: '여백 / 간격' },
   { id: 'custom',     label: '커스텀 CSS' },
 ];
@@ -225,6 +226,7 @@ export default function TenantThemeEditor() {
       {tab === 'theme-set' && <ThemeSetTab onApplied={async () => { /* re-fetch tokens after apply */ const res = await fetch(`${baseUrl}/api/v1/theme/tokens`, { headers }); if (res.ok) { const b = await res.json() as { data: DesignTokens }; setTokens(b.data); setDirty(false); } }} />}
       {tab === 'palette' && <PaletteTab tokens={tokens} onChange={applyTokens} saving={saving} />}
       {tab === 'typography' && <TypographyTab tokens={tokens} onChange={applyTokens} saving={saving} />}
+      {tab === 'header' && <HeaderTab tokens={tokens} onChange={applyTokens} saving={saving} />}
       {tab === 'spacing' && <SpacingTab tokens={tokens} onChange={applyTokens} saving={saving} />}
       {tab === 'custom' && <CustomCssTab value={customCss} onChange={(v) => { setCustomCss(v); setCssDirty(true); }} onSave={() => saveCustomCss(customCss)} saving={saving} cssDirty={cssDirty} />}
     </div>
@@ -433,6 +435,92 @@ function TypographyTab({ tokens, onChange, saving }: { tokens: DesignTokens; onC
             );
           })}
         </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Header (헤더: 로고 크기 / 메뉴 폰트) ──────────────────────────────
+// Tunes the storefront header chrome: logo render height + desktop nav-link
+// font size. Both persist under tokens.header and emit as
+// --brand-logo-height / --brand-nav-font-size, consumed by the storefront
+// header (apps/web/.../tenant/[slug]/layout.tsx). Defaults 40/14 match the
+// previous hard-coded h-10 logo + text-sm nav.
+const HEADER_DEFAULTS = { logoHeight: 40, navFontSize: 14 } as const;
+
+function HeaderTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChange: (t: DesignTokens | ((prev: DesignTokens) => DesignTokens)) => void; saving: boolean }) {
+  const header = tokens.header ?? HEADER_DEFAULTS;
+  const setField = (k: 'logoHeight' | 'navFontSize', v: number) => {
+    onChange((prev) => ({
+      ...prev,
+      header: { ...(prev.header ?? HEADER_DEFAULTS), [k]: v },
+    }));
+  };
+
+  const fields: { key: 'logoHeight' | 'navFontSize'; label: string; hint: string; min: number; max: number }[] = [
+    { key: 'logoHeight',  label: '로고 높이',    hint: '헤더 로고 이미지 높이 (px). 24~120 권장.', min: 16, max: 160 },
+    { key: 'navFontSize', label: '메뉴 폰트 크기', hint: '상단 메뉴 글자 크기 (px). 12~24 권장.',   min: 10, max: 32 },
+  ];
+
+  return (
+    <section className="space-y-6">
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-1">헤더 (로고 · 메뉴)</h3>
+        <p className="text-xs text-gray-500 mb-4">
+          스토어프론트 상단 헤더의 로고 크기와 메뉴 글자 크기를 조절합니다.
+          (<code>--brand-logo-height</code> / <code>--brand-nav-font-size</code>)
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {fields.map(({ key, label, hint, min, max }) => (
+            <div key={key} className="rounded-lg border border-gray-200 p-3 bg-white">
+              <label className="text-xs font-medium text-gray-700">{label}</label>
+              <div className="mt-1.5 flex items-center gap-2">
+                <input
+                  type="range"
+                  min={min}
+                  max={max}
+                  value={header[key]}
+                  onChange={(e) => setField(key, Number(e.target.value) || header[key])}
+                  disabled={saving}
+                  className="flex-1 disabled:opacity-50"
+                />
+                <input
+                  type="number"
+                  min={min}
+                  max={max}
+                  value={header[key]}
+                  onChange={(e) => setField(key, Number(e.target.value) || header[key])}
+                  disabled={saving}
+                  className="w-16 px-2 py-1.5 text-xs border rounded disabled:opacity-50"
+                />
+                <span className="text-[10px] text-gray-400">px</span>
+              </div>
+              <span className="block text-[10px] text-gray-400 mt-1">{hint}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Live preview — a mock header row rendered at the chosen sizes so the
+          operator sees the logo box + menu scale before saving. */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-2">미리보기</h3>
+        <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 flex items-center justify-between overflow-hidden">
+          <div
+            className="rounded bg-gray-200 text-gray-500 flex items-center justify-center font-bold"
+            style={{ height: `${header.logoHeight}px`, width: `${Math.round(header.logoHeight * 2.6)}px`, fontSize: `${Math.min(header.logoHeight * 0.32, 18)}px` }}
+          >
+            LOGO
+          </div>
+          <nav className="hidden sm:flex items-center gap-5">
+            {['홈', '교회소개', '예배', '오시는 길'].map((label) => (
+              <span key={label} className="font-medium text-gray-700" style={{ fontSize: `${header.navFontSize}px` }}>
+                {label}
+              </span>
+            ))}
+          </nav>
+        </div>
+        <p className="mt-1 text-[10px] text-gray-400">실제 헤더는 테마 색상·폰트가 함께 적용됩니다. 위 미리보기는 크기 비율만 보여줍니다.</p>
       </div>
     </section>
   );
