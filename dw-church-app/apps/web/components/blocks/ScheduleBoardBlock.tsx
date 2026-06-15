@@ -27,6 +27,19 @@ export async function ScheduleBoardBlock({ props, slug }: ScheduleBoardBlockProp
   const showImage = imagePosition !== 'none' && !!imageUrl;
   const imageRight = imagePosition === 'right';
 
+  // Operator-tunable image sizing (super-admin 빌더 → schedule_board Design).
+  // imageHeight + imageHeightUnit ('px' | 'vh') set an explicit image height;
+  // when unset (0/empty) the image keeps its default 3:4 aspect ratio.
+  // imageFit chooses object-fit (cover = fill+crop, contain = whole image).
+  // imageGap is the px gap between the image and the tables.
+  const imageHeightRaw = Number(props.imageHeight);
+  const hasExplicitHeight = Number.isFinite(imageHeightRaw) && imageHeightRaw > 0;
+  const imageHeightUnit = props.imageHeightUnit === 'vh' ? 'vh' : 'px';
+  const imageHeightCss = hasExplicitHeight ? `${imageHeightRaw}${imageHeightUnit}` : undefined;
+  const imageFit: 'cover' | 'contain' = props.imageFit === 'contain' ? 'contain' : 'cover';
+  const gapRaw = Number(props.imageGap);
+  const gapCss = Number.isFinite(gapRaw) && gapRaw >= 0 ? `${gapRaw}px` : '2.5rem';
+
   let groups: ScheduleGroup[] = [];
   try {
     const data = await getSchedules(slug);
@@ -53,10 +66,12 @@ export async function ScheduleBoardBlock({ props, slug }: ScheduleBoardBlockProp
         alt={(props.imageAlt as string) || '예배 사진'}
         style={{
           width: '100%',
-          height: '100%',
-          objectFit: 'cover',
+          height: imageHeightCss ?? '100%',
+          objectFit: imageFit,
           borderRadius: 'var(--brand-radius-lg, 12px)',
-          aspectRatio: '3 / 4',
+          // Only impose the default 3:4 ratio when no explicit height is set
+          // (height:100% has no parent height to resolve against without it).
+          ...(imageHeightCss ? {} : { aspectRatio: '3 / 4' }),
         }}
       />
     </div>
@@ -134,7 +149,7 @@ export async function ScheduleBoardBlock({ props, slug }: ScheduleBoardBlockProp
           style={{
             display: 'flex',
             flexDirection: imageRight ? 'row-reverse' : 'row',
-            gap: '2.5rem',
+            gap: gapCss,
             alignItems: 'flex-start',
             flexWrap: 'wrap',
           }}

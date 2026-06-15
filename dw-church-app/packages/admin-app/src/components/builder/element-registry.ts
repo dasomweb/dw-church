@@ -1514,6 +1514,16 @@ const SCHEDULE_BOARD = churchBlock(
       { value: 'left', label: '좌측' }, { value: 'right', label: '우측' }, { value: 'none', label: '없음' },
     ]},
   ]},
+  { title: 'Design', fields: [
+    { key: 'imageHeight', label: '이미지 높이', type: 'number', hint: '비우면 기본 3:4 비율. 단위는 아래에서 선택.' },
+    { key: 'imageHeightUnit', label: '높이 단위', type: 'select', choices: [
+      { value: 'px', label: 'px (고정)' }, { value: 'vh', label: 'vh (화면 높이 비율)' },
+    ]},
+    { key: 'imageFit', label: '이미지 채움', type: 'select', choices: [
+      { value: 'cover', label: '커버드 (꽉 채우고 잘림)' }, { value: 'contain', label: '컨텐트 (전체 보임)' },
+    ]},
+    { key: 'imageGap', label: '사진-표 간격 (px)', type: 'number', hint: '비우면 기본 40px' },
+  ]},
 );
 const EVENT_GRID = churchBlock(
   { title: 'Header', fields: [{ key: 'title', label: '제목', type: 'text' }]},
@@ -1620,6 +1630,16 @@ const SCHEDULE_SPLIT: BlockElementRegistry = {
         { value: 'left', label: '왼쪽' }, { value: 'right', label: '오른쪽' },
       ]},
       { label: '예배 / 모임 표', path: 'groups', kind: 'groups' },
+    ]},
+    { title: 'Design', elements: [
+      { label: '이미지 높이', path: 'imageHeight', kind: 'number' },
+      { label: '높이 단위', path: 'imageHeightUnit', kind: 'select', choices: [
+        { value: 'px', label: 'px (고정)' }, { value: 'vh', label: 'vh (화면 높이 비율)' },
+      ]},
+      { label: '이미지 채움', path: 'imageFit', kind: 'select', choices: [
+        { value: 'cover', label: '커버드 (꽉 채우고 잘림)' }, { value: 'contain', label: '컨텐트 (전체 보임)' },
+      ]},
+      { label: '사진-표 간격 (px)', path: 'imageGap', kind: 'number' },
     ]},
   ],
 };

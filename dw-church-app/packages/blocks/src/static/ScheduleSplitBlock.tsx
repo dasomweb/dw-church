@@ -29,6 +29,18 @@ export function ScheduleSplitBlock({ props }: ScheduleSplitBlockProps) {
   const backgroundColor = (props.backgroundColor as string) || '';
   const sectionBg = sectionBgStyle(bgMode, backgroundColor);
 
+  // Operator-tunable image sizing (super-admin 빌더 → schedule_split Design).
+  // Matches ScheduleBoardBlock: explicit height in px/vh, cover/contain fit,
+  // and the px gap between the image and the tables. Unset height keeps the
+  // default 3:4 ratio.
+  const imageHeightRaw = Number(props.imageHeight);
+  const hasExplicitHeight = Number.isFinite(imageHeightRaw) && imageHeightRaw > 0;
+  const imageHeightUnit = props.imageHeightUnit === 'vh' ? 'vh' : 'px';
+  const imageHeightCss = hasExplicitHeight ? `${imageHeightRaw}${imageHeightUnit}` : undefined;
+  const imageFit: 'cover' | 'contain' = props.imageFit === 'contain' ? 'contain' : 'cover';
+  const gapRaw = Number(props.imageGap);
+  const gapCss = Number.isFinite(gapRaw) && gapRaw >= 0 ? `${gapRaw}px` : '2.5rem';
+
   const imageCol = (
     <div style={{ flex: '0 0 38%', minWidth: 0 }} className="w-full md:w-auto">
       <ImageElement
@@ -39,10 +51,10 @@ export function ScheduleSplitBlock({ props }: ScheduleSplitBlockProps) {
         sizeCategory="split-side"
         baseStyle={{
           width: '100%',
-          height: '100%',
-          objectFit: 'cover',
+          height: imageHeightCss ?? '100%',
+          objectFit: imageFit,
           borderRadius: 'var(--brand-radius-lg, 12px)',
-          aspectRatio: '3 / 4',
+          ...(imageHeightCss ? {} : { aspectRatio: '3 / 4' }),
         }}
         placeholderText="예배 사진"
       />
@@ -127,7 +139,7 @@ export function ScheduleSplitBlock({ props }: ScheduleSplitBlockProps) {
         style={{
           display: 'flex',
           flexDirection: imageRight ? 'row-reverse' : 'row',
-          gap: '2.5rem',
+          gap: gapCss,
           alignItems: 'flex-start',
           flexWrap: 'wrap',
         }}
