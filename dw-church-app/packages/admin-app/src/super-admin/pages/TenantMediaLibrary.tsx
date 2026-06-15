@@ -105,7 +105,7 @@ export default function TenantMediaLibrary() {
         '/api/v1/files/backfill-migration', {},
       );
       const added = res?.data?.added ?? 0;
-      showToast('success', added > 0 ? `마이그레이션 이미지 ${added}개를 라이브러리에 등록했습니다.` : '새로 등록할 마이그레이션 이미지가 없습니다.');
+      showToast('success', added > 0 ? `누락된 이미지 ${added}개를 라이브러리에 등록했습니다.` : '새로 등록할 이미지가 없습니다.');
       if (added > 0) void load(1, false);
     } catch (e) {
       showToast('error', e instanceof Error ? e.message : '등록 실패');
@@ -135,10 +135,10 @@ export default function TenantMediaLibrary() {
             type="button"
             onClick={() => void handleBackfill()}
             disabled={backfilling}
-            title="이미 마이그레이션으로 가져온 이미지를 라이브러리에 등록합니다"
+            title="R2에 있지만 라이브러리에 누락된 이미지(마이그레이션·import 등)를 모두 등록합니다"
             className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
           >
-            {backfilling ? '등록 중…' : '🚚 마이그레이션 이미지 등록'}
+            {backfilling ? '등록 중…' : '🚚 누락 이미지 등록'}
           </button>
           <button
             type="button"

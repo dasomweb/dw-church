@@ -116,10 +116,12 @@ export async function uploadBulk(params: BulkUploadParams) {
 }
 
 // ─── Backfill migration images ──────────────────────────────
-// Migration uploads images to R2 under tenant_<slug>/migration/ but older runs
-// never created `files` rows, so those images don't appear in the media
-// library. This scans that R2 prefix and registers any image not already
-// tracked. Idempotent — re-running only adds what's missing.
+// Images can land in R2 under tenant_<slug>/ via paths that never create a
+// `files` row: the WordPress migration (…/migration/), one-off import scripts
+// (…/general/), and any future bulk path. The media library lists ONLY `files`
+// rows, so those images are invisible until registered. This scans the WHOLE
+// tenant prefix (not just migration/) and registers every image that has no
+// `files` row yet. Idempotent — re-running only adds what's missing.
 
 const MIME_BY_EXT: Record<string, string> = {
   '.webp': 'image/webp', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
@@ -130,7 +132,9 @@ export async function backfillMigration(
   schema: string,
   tenantSlug: string,
 ): Promise<{ added: number; total: number }> {
-  const prefix = `tenant_${tenantSlug}/migration/`;
+  // Scan the entire tenant prefix so general/ (import-script) uploads and any
+  // other sub-path are caught — not only migration/.
+  const prefix = `tenant_${tenantSlug}/`;
   const objects = await listObjectsByPrefix(prefix);
   if (objects.length === 0) return { added: 0, total: 0 };
 
@@ -141,24 +145,31 @@ export async function backfillMigration(
   const have = new Set(existing.map((e) => e.storage_key));
 
   let added = 0;
+  let imageCount = 0;
   for (const obj of objects) {
-    if (have.has(obj.key)) continue;
     const ext = (obj.key.match(/\.[a-z0-9]+$/i)?.[0] ?? '').toLowerCase();
     const mime = MIME_BY_EXT[ext];
     if (!mime) continue; // only register images (skip PDFs / unknown)
+    imageCount++;
+    if (have.has(obj.key)) continue;
     const url = `${env.R2_PUBLIC_URL}/${obj.key}`;
-    const name = obj.key.split('/').pop() ?? 'migrated-image';
+    const name = obj.key.split('/').pop() ?? 'image';
+    // entity_type = the sub-path segment after the tenant prefix
+    // (migration / general / sermons / …) so the operator can tell where an
+    // image came from; falls back to 'import'.
+    const subPath = obj.key.slice(prefix.length).split('/')[0] || 'import';
     try {
       await prisma.$executeRawUnsafe(
         `INSERT INTO "${schema}".files
            (original_name, storage_key, url, mime_type, size_bytes, entity_type, kind, tags, description)
-         VALUES ($1, $2, $3, $4, $5, 'migration', 'upload', NULL, $6)`,
-        name, obj.key, url, mime, obj.size, '마이그레이션으로 가져온 이미지',
+         VALUES ($1, $2, $3, $4, $5, $6, 'upload', NULL, $7)`,
+        name, obj.key, url, mime, obj.size, subPath, 'R2에서 등록한 이미지',
       );
       added++;
     } catch { /* skip a single failed row */ }
   }
-  return { added, total: objects.length };
+  // total = images under the prefix (not raw object count, which includes PDFs).
+  return { added, total: imageCount };
 }
 
 // ─── Delete ─────────────────────────────────────────────────
