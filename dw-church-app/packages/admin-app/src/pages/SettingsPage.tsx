@@ -17,6 +17,30 @@ export default function SettingsPage() {
   const uploadImage = async (file: File): Promise<string> => (await apiClient!.uploadFile(file)).url;
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [exporting, setExporting] = useState(false);
+
+  // Download the full content archive (all tiers — the SaaS exit guarantee).
+  const handleExport = async () => {
+    if (!apiClient || exporting) return;
+    setExporting(true);
+    try {
+      const blob = await apiClient.exportData();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const date = new Date().toISOString().slice(0, 10);
+      a.download = `${settings?.churchName || 'church'}-export-${date}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setToast({ message: '데이터를 내보냈습니다.', type: 'success' });
+    } catch {
+      setToast({ message: '데이터 내보내기에 실패했습니다.', type: 'error' });
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const {
     register,
@@ -316,6 +340,23 @@ export default function SettingsPage() {
           </button>
         </div>
       </form>
+
+      {/* Data export — the SaaS exit guarantee (available on every plan) */}
+      <section className="mt-8 bg-white rounded-lg border border-gray-200 p-6">
+        <h2 className="text-base font-semibold text-gray-900 mb-1">데이터 내보내기</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          설교·주보·앨범·교역자 등 모든 콘텐츠와 이미지 주소를 하나의 JSON 파일로 내려받습니다.
+          교회의 데이터는 언제든 직접 보관할 수 있습니다.
+        </p>
+        <button
+          type="button"
+          onClick={handleExport}
+          disabled={exporting}
+          className="px-5 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {exporting ? '내보내는 중...' : '전체 데이터 내보내기 (.json)'}
+        </button>
+      </section>
     </div>
   );
 }

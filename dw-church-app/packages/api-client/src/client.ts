@@ -178,6 +178,23 @@ class FetchAdapter implements ApiAdapter {
   async delete<T>(url: string): Promise<T> {
     return this.request<T>('DELETE', url);
   }
+
+  /**
+   * Raw GET that returns the response body as a Blob with NO key camelization.
+   * Used for file downloads (e.g. /export) where the payload is an opaque
+   * archive and rewriting its keys would corrupt it.
+   */
+  async getBlob(url: string): Promise<Blob> {
+    const response = await fetch(`${this.baseUrl}${url}`, {
+      method: 'GET',
+      headers: { ...this.headers },
+    });
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new DWChurchApiError(response.status, response.statusText, errorBody);
+    }
+    return response.blob();
+  }
 }
 
 // ─── API Error ──────────────────────────────────────────────
@@ -864,6 +881,19 @@ export class DWChurchClient {
 
   async deleteFile(id: string): Promise<void> {
     return this.api.delete(`${this.namespace}/files/${id}`);
+  }
+
+  // ─── Data Export ────────────────────────────────────────
+  /**
+   * Download the tenant's full content archive as a JSON Blob (available on
+   * every tier — the SaaS exit guarantee). Bypasses key camelization so the
+   * raw DB column names are preserved in the archive.
+   */
+  async exportData(): Promise<Blob> {
+    if (!this.fetchAdapter) {
+      throw new Error('exportData requires the default fetch adapter');
+    }
+    return this.fetchAdapter.getBlob(`${this.namespace}/export`);
   }
 
   async getFiles(): Promise<UploadedFile[]> {
