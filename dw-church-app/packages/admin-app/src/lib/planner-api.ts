@@ -244,6 +244,19 @@ export function makePlannerApi(client: DWChurchClient) {
     marketingInsight: (data: Record<string, unknown>) =>
       call<MarketingInsightRes>('/marketing-insight', data),
 
+    /**
+     * Backgrounded marketing-insight. The 8-section report is a long
+     * 6000-token generation that routinely runs ~100-120s — OVER Cloudflare's
+     * 100s proxy limit on api.truelight.app, so the synchronous version above
+     * 524s and the wizard's Analysis step shows "Failed to fetch". Routing it
+     * through /ai/jobs (server kind 'planner:marketing-insight' already exists)
+     * runs it in the background and polls, removing the timeout ceiling.
+     */
+    marketingInsightAsync: (
+      data: Record<string, unknown>,
+      opts?: { signal?: AbortSignal; onJobId?: (id: string) => void },
+    ) => runJob<MarketingInsightRes>('planner:marketing-insight', data, opts),
+
     autoStrategy: (data: Record<string, unknown>) =>
       call<AutoStrategyRes>('/auto-strategy', data),
 

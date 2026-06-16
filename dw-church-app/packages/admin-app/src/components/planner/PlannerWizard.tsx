@@ -446,8 +446,11 @@ export function PlannerWizard({ plannerApi, targetTenantName, onComplete, onClos
       }
 
       // Step 3: Insight (with strategy) + Design + optional crawl in parallel.
+      // marketingInsight runs ~100-120s (long 8-section report) — use the
+      // backgrounded /ai/jobs version so it doesn't 524 at Cloudflare's 100s
+      // proxy limit ("Failed to fetch" on the Analysis step).
       const parallel: Promise<unknown>[] = [
-        plannerApi.marketingInsight({
+        plannerApi.marketingInsightAsync({
           ...business,
           targetLocation: business.location,
           censusData: censusSummary,
