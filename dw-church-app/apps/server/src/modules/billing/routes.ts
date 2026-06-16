@@ -86,24 +86,9 @@ export default async function billingRoutes(app: FastifyInstance): Promise<void>
     return reply.send(result);
   });
 
-  /**
-   * POST /billing/webhook
-   * Stripe webhook handler. No auth required — uses Stripe signature verification.
-   */
-  app.post('/webhook', async (request: FastifyRequest, reply: FastifyReply) => {
-    const signature = request.headers['stripe-signature'] as string | undefined;
-    if (!signature) {
-      return reply.status(400).send({
-        error: { code: 'MISSING_SIGNATURE', message: 'Missing stripe-signature header' },
-      });
-    }
-
-    const payload = typeof request.body === 'string'
-      ? request.body
-      : JSON.stringify(request.body);
-
-    await billingService.handleWebhook(payload, signature);
-
-    return reply.send({ received: true });
-  });
+  // NOTE: POST /billing/webhook is intentionally NOT defined here. Stripe
+  // signature verification needs the RAW request bytes, but this module runs
+  // under the global JSON parser (which would corrupt the payload). The
+  // webhook is registered in its own encapsulated buffer-parser scope in
+  // index.ts. See the "Stripe webhook" block there.
 }

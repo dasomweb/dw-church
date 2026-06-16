@@ -121,6 +121,33 @@ export default function BillingPage() {
     }
   };
 
+  // Start a Stripe Checkout for the initial subscription. The Portal only
+  // manages EXISTING subscriptions, so a free tenant (no Stripe customer yet)
+  // must go through Checkout to subscribe — this is what creates the customer.
+  const handleCheckout = async (plan: 'basic' | 'pro') => {
+    setRedirecting(true);
+    try {
+      const res = await fetch('/api/v1/billing/checkout', {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan,
+          successUrl: `${window.location.origin}${billingPath}?success=1`,
+          cancelUrl: `${window.location.origin}${billingPath}?canceled=1`,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as { error?: { message?: string } })?.error?.message || '체크아웃 생성 실패');
+      }
+      const json = await res.json() as { url: string };
+      window.location.href = json.url;
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '결제 시작 실패');
+      setRedirecting(false);
+    }
+  };
+
   // Group invoices by month for the dropdown filter (descending — newest first)
   const invoiceMonths = useMemo(() => {
     if (!info?.invoices) return [];
@@ -191,13 +218,33 @@ export default function BillingPage() {
               </p>
             )}
           </div>
-          <button
-            onClick={handleManageInStripe}
-            disabled={redirecting || !info.hasStripeCustomer}
-            className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 whitespace-nowrap"
-          >
-            플랜 변경
-          </button>
+          {info.plan === 'free' ? (
+            // No paid plan yet — Checkout (not Portal) starts the subscription.
+            <div className="flex flex-col gap-2 shrink-0">
+              <button
+                onClick={() => handleCheckout('basic')}
+                disabled={redirecting}
+                className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 whitespace-nowrap"
+              >
+                {redirecting ? '이동 중...' : 'Basic 구독'}
+              </button>
+              <button
+                onClick={() => handleCheckout('pro')}
+                disabled={redirecting}
+                className="border border-gray-300 bg-white text-gray-800 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50 whitespace-nowrap"
+              >
+                Pro 구독
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleManageInStripe}
+              disabled={redirecting || !info.hasStripeCustomer}
+              className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 whitespace-nowrap"
+            >
+              플랜 변경
+            </button>
+          )}
         </div>
       </section>
 

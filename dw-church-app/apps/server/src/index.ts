@@ -104,6 +104,38 @@ async function main(): Promise<void> {
 
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(tenantRoutes, { prefix: '/api/v1/admin' });
+
+  // Stripe webhook — needs the RAW request bytes for signature verification.
+  // Fastify's global JSON parser would hand handleWebhook a parsed object;
+  // re-stringifying it changes the bytes so constructEvent ALWAYS fails (the
+  // classic Stripe "#1 gotcha"). Register the webhook in its OWN encapsulated
+  // scope with a buffer parser so ONLY this route gets the raw Buffer — every
+  // other route keeps normal JSON parsing. Must be registered before/separate
+  // from billingRoutes (which no longer owns /webhook).
+  await app.register(async (webhookScope) => {
+    webhookScope.addContentTypeParser(
+      'application/json',
+      { parseAs: 'buffer' },
+      (_req, body, done) => done(null, body),
+    );
+    const { handleWebhook } = await import('./modules/billing/service.js');
+    webhookScope.post('/webhook', async (request, reply) => {
+      const signature = request.headers['stripe-signature'] as string | undefined;
+      if (!signature) {
+        return reply.status(400).send({ error: { code: 'MISSING_SIGNATURE', message: 'Missing stripe-signature header' } });
+      }
+      try {
+        await handleWebhook(request.body as Buffer, signature);
+        return reply.send({ received: true });
+      } catch (err) {
+        // Return non-2xx so Stripe retries delivery.
+        const msg = err instanceof Error ? err.message : 'webhook error';
+        request.log.warn(`Stripe webhook failed: ${msg}`);
+        return reply.status(400).send({ error: { code: 'WEBHOOK_ERROR', message: msg } });
+      }
+    });
+  }, { prefix: '/api/v1/billing' });
+
   await app.register(billingRoutes, { prefix: '/api/v1/billing' });
   await app.register(pageRoutes, { prefix: '/api/v1/pages' });
   await app.register(menuRoutes, { prefix: '/api/v1/menus' });
@@ -492,6 +524,22 @@ async function main(): Promise<void> {
     );
   } catch (err) {
     app.log.warn(`ai_jobs table migration skipped: ${err}`);
+  }
+
+  // --- Stripe billing columns on public.tenants ---
+  //     The Prisma schema declares tenants.stripe_customer_id /
+  //     stripe_subscription_id, but this project applies schema changes via
+  //     raw SQL at boot (not prisma migrate). Ensure the columns exist so the
+  //     billing service's selects/updates don't 500 on a DB that predates them.
+  try {
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE "tenants" ADD COLUMN IF NOT EXISTS "stripe_customer_id" VARCHAR(255)`,
+    );
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE "tenants" ADD COLUMN IF NOT EXISTS "stripe_subscription_id" VARCHAR(255)`,
+    );
+  } catch (err) {
+    app.log.warn(`tenants stripe columns migration skipped: ${err}`);
   }
 
   // --- Ensure super_admin users are always active ---
