@@ -458,6 +458,98 @@ _CTA_SECTION_TYPES: frozenset[str] = frozenset({
 })
 
 
+# ── Church content-module page structure enforcement ──
+#
+# A page whose PURPOSE is to surface a content module (설교/주보/목회칼럼/
+# 영상/앨범/예배안내/교역자/연혁/행사/게시판) must follow ONE fixed shape:
+#
+#     page-hero  →  one intro text block  →  the module's DATA block
+#
+# e.g. 목회칼럼 = page-hero + intro text + recent_columns. The copywriter
+# sometimes renders these as a generic text-image/gallery instead of the
+# data block, so we enforce the shape deterministically after generation.
+# Keyword (matched against page name + slug, lowercased) → data-block
+# sectionType. Order matters — earlier, more specific keywords win.
+_CONTENT_MODULE_KEYWORDS: list[tuple[tuple[str, ...], str]] = [
+    (("sermon", "설교", "말씀", "preach"), "sermons"),
+    (("bulletin", "주보"), "bulletins"),
+    (("column", "칼럼", "목회"), "columns"),
+    (("video", "영상", "찬양"), "videos"),
+    (("album", "앨범", "사진", "gallery", "갤러리"), "albums"),
+    (("worship", "예배", "모임", "schedule"), "worship-schedule"),
+    (("staff", "교역자", "clergy", "섬기는"), "clergy"),
+    (("event", "행사", "소식"), "events"),
+    (("history", "연혁", "발자취"), "history"),
+    (("board", "게시판", "공지", "notice"), "board"),
+]
+
+
+def _detect_content_module(name: str, slug: str) -> str | None:
+    """Return the content-module sectionType this page is about, or None.
+
+    Home ('/') is intentionally NOT matched — it aggregates several modules
+    (hero → pastor-message → worship → sermons → events → newcomer) and must
+    stay free-form. Only single-purpose content pages get the fixed shape.
+    """
+    s = (slug or "").strip().lower()
+    if s in ("/", "", "home", "#home"):
+        return None
+    hay = f"{name} {slug}".lower()
+    for keywords, section in _CONTENT_MODULE_KEYWORDS:
+        if any(k in hay for k in keywords):
+            return section
+    return None
+
+
+def _enforce_content_module_structure(page: dict, sections: list[dict]) -> list[dict] | None:
+    """If `page` is a church content module, force its sections to exactly
+    [page-hero, intro text, <data block>]. Returns the new list, or None when
+    the page is not a content module (caller keeps the LLM output as-is).
+
+    The hero + intro COPY is reused from the LLM's own output for this page
+    (so the text is still AI-written for the church) — we only fix the
+    STRUCTURE: compact hero, one plain text block, then the DB-driven block.
+    """
+    module = _detect_content_module(str(page.get("name", "")), str(page.get("slug", "")))
+    if not module:
+        return None
+
+    def _is_hero(sec: dict) -> bool:
+        return str(sec.get("sectionType", "")).lower() in _HERO_SECTION_TYPES
+
+    # 1. Hero — reuse the LLM's hero copy if present; always render compact.
+    hero_src = next((s for s in sections if _is_hero(s)), None)
+    hero = {
+        "sectionType": "page-hero",
+        "title": (hero_src or {}).get("title") or page.get("name", ""),
+        "subtitle": (hero_src or {}).get("subtitle", ""),
+        "eyebrow": (hero_src or {}).get("eyebrow", ""),
+        "imagePrompt": (hero_src or {}).get("imagePrompt", ""),
+    }
+
+    # 2. Intro text — reuse the LLM's first non-hero textual section as a plain
+    #    text block (keep its copy); synthesize a minimal one if none.
+    intro_src = next(
+        (s for s in sections
+         if not _is_hero(s)
+         and (s.get("title") or s.get("description") or s.get("content") or s.get("subtitle"))),
+        None,
+    )
+    intro = {
+        "sectionType": "text",
+        "title": (intro_src or {}).get("title") or page.get("name", ""),
+        "subtitle": (intro_src or {}).get("subtitle", ""),
+        "description": (intro_src or {}).get("description") or (intro_src or {}).get("content", ""),
+        "eyebrow": (intro_src or {}).get("eyebrow", ""),
+    }
+
+    # 3. The DATA block — DB-driven, no LLM-authored items. Title left empty so
+    #    the storefront block renders its own heading.
+    data_block = {"sectionType": module, "title": ""}
+
+    return [hero, intro, data_block]
+
+
 def _reorder_sections_by_role(sections: list[dict]) -> list[dict]:
     """Put hero variants first, CTA variants last, leave the rest in
     their relative order. No-op for empty/single-section lists. **No
@@ -1169,14 +1261,20 @@ GOOD page structure examples (each picks DIFFERENT patterns — that's the point
   /worship       page-hero → worship-schedule → text-image → cta
   /contact       page-hero → worship-schedule → contact → cta
 
-CHURCH PAGE RULE — CRITICAL: when a page's purpose is a church content
-module, its MAIN section MUST be the matching data block, not a generic
-substitute. /sermons → "sermons" (NOT gallery/features), /bulletins →
-"bulletins", /columns → "columns", /staff or /교역자 → "clergy" (NOT
-"team"), /events → "events", /history or /연혁 → "history", /albums →
-"albums", /worship or /예배 → "worship-schedule". The home page should
-surface 1-2 of these (e.g. sermons + worship-schedule) so the site reads
-as a living church site, not a brochure.
+CHURCH PAGE RULE — CRITICAL: a page whose purpose is a single church content
+module must use EXACTLY THREE sections in this order:
+    1. a hero  (page-hero)
+    2. ONE short intro text block  (sectionType "text")
+    3. the module's DATA block
+NOTHING ELSE — no text-image, no gallery, no features on these pages. The
+data block already shows the real content, so the page is just: header +
+one intro paragraph + the block. Mapping:
+  /sermons → "sermons", /bulletins → "bulletins", 목회칼럼/columns →
+  "columns", /staff or /교역자 → "clergy" (NOT "team"), /events or 행사 →
+  "events", /history or /연혁 → "history", /albums or 갤러리 → "albums",
+  예배안내/worship → "worship-schedule", 영상 → "videos", 게시판 → "board".
+The HOME page is the exception — it aggregates several modules
+(hero → pastor-message → worship-schedule → sermons → events → newcomer).
 
 BAD page structures (the "every site looks the same" anti-pattern):
   hero → features → text-image → cta                 (too few, too predictable)
@@ -1233,6 +1331,13 @@ Return JSON only:
             # failed. Emit empty list instead so the wizard can detect
             # the gap and surface a clear error.
             sections = _reorder_sections_by_role(sections)
+            # Church content-module pages (설교/주보/목회칼럼/예배안내/…) get a
+            # FIXED shape: page-hero → intro text → the module's DATA block.
+            # The copywriter otherwise renders some of these as text-image; this
+            # guarantees the data block is used. Non-module pages pass through.
+            enforced = _enforce_content_module_structure(page, sections)
+            if enforced is not None:
+                sections = enforced
             for s in sections:
                 st = s.get("sectionType", "text")
                 s["gutenbergPattern"] = SECTION_TO_PATTERN.get(st, "text-block")
