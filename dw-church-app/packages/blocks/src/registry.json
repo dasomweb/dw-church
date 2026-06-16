@@ -253,6 +253,16 @@
       "useCases": ["홈 하단 '처음 오셨나요?'", "새가족 안내 페이지"],
       "aiHint": "New-family welcome + register CTA. Author title/subtitle/description + buttonText/buttonUrl. Use as a conversion section on home and the 새가족 page."
     },
+    "giving_info": {
+      "label": "헌금 안내",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "title": "헌금 안내", "intro": "", "zelle": "", "bankInfo": "", "mailingName": "", "mailingAddress": "", "note": "", "qrImageUrl": "" },
+      "description": "온라인 헌금 '방법'을 안내하는 정적 블록 (결제 처리 아님). Zelle 아이디, 계좌 이체, 교회로 체크 보낼 우편 주소, QR 이미지를 표시. 채워진 방법만 노출. 운영자가 직접 작성.",
+      "tags": ["giving", "donation", "offering", "헌금", "zelle", "church", "static", "info"],
+      "useCases": ["온라인 헌금 안내 페이지", "홈 '헌금 안내' 섹션"],
+      "aiHint": "Giving INFO page (not a payment processor) — shows how to give: Zelle id, bank transfer, mailing address for checks, optional QR. Author the text/image fields; empty methods are hidden."
+    },
     "board": {
       "label": "게시판",
       "group": "data",

@@ -1614,6 +1614,19 @@ const NEWCOMER_INFO = churchBlock(
     { key: 'imageUrl', label: '이미지', type: 'image' },
   ]},
 );
+// 헌금 안내 — 온라인 헌금 '방법' 안내 (결제 처리 아님). 채워진 방법만 노출.
+const GIVING_INFO = churchBlock(
+  { title: 'Content', fields: [
+    { key: 'title', label: '제목', type: 'text' },
+    { key: 'intro', label: '안내문', type: 'textarea' },
+    { key: 'zelle', label: 'Zelle (이메일/전화)', type: 'text' },
+    { key: 'bankInfo', label: '계좌 이체 정보', type: 'text' },
+    { key: 'mailingName', label: '체크 수취인 (교회명)', type: 'text' },
+    { key: 'mailingAddress', label: '우편 주소', type: 'text' },
+    { key: 'note', label: '추가 안내', type: 'textarea' },
+    { key: 'qrImageUrl', label: 'QR 이미지', type: 'image' },
+  ]},
+);
 const WORSHIP_SCHEDULE = churchBlock(
   { title: 'Content', fields: [
     { key: 'title', label: '제목', type: 'text', hint: '예배 시간은 콘텐츠 관리에서 편집합니다' },
@@ -1691,6 +1704,7 @@ export const ELEMENT_REGISTRY: Record<string, BlockElementRegistry> = {
   visitor_welcome:  VISITOR_WELCOME,
   first_time_guide: FIRST_TIME_GUIDE,
   newcomer_info:    NEWCOMER_INFO,
+  giving_info:      GIVING_INFO,
   layout_row:       LAYOUT_ROW,
   layout_columns:   LAYOUT_COLUMNS,
   layout_section:   LAYOUT_SECTION,

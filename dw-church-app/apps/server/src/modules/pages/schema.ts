@@ -37,6 +37,7 @@ export const blockTypes = [
   'newcomer_info',
   'visitor_welcome',
   'first_time_guide',
+  'giving_info',
   // Media
   'image_gallery',
   'video',

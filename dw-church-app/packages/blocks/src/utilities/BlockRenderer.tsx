@@ -44,6 +44,7 @@ import { LayoutBlock } from '../layout/LayoutBlock';
 // them identically with full design-token (--brand-*) support.
 import { PastorMessageBlock } from '../church/PastorMessageBlock';
 import { NewcomerInfoBlock } from '../church/NewcomerInfoBlock';
+import { GivingInfoBlock } from '../church/GivingInfoBlock';
 import { WorshipScheduleBlock } from '../church/WorshipScheduleBlock';
 import { blockStyleToCss } from './block-style-resolver';
 import { buildElementHoverCss } from './element-styles';
@@ -220,6 +221,7 @@ export const BLOCK_MAP: Record<string, SyncBlockComponent> = {
   church_intro:      PastorMessageBlock,
   newcomer_info:     NewcomerInfoBlock,
   visitor_welcome:   NewcomerInfoBlock,
+  giving_info:       GivingInfoBlock,
   worship_schedule:  WorshipScheduleBlock,
   worship_times:     WorshipScheduleBlock,
 };
