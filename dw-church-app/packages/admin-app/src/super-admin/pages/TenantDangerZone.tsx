@@ -58,9 +58,12 @@ export default function TenantDangerZone() {
     if (!window.confirm(`정말로 "${tenant.name}" 을(를) 영구 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없으며 테넌트의 모든 데이터(스키마, R2 파일, 사용자, 도메인) 가 함께 삭제됩니다.`)) return;
     setBusy(true);
     try {
+      // DELETE has no body — DON'T send Content-Type: application/json or
+      // Fastify rejects the empty body with FST_ERR_CTP_EMPTY_JSON_BODY (400).
+      // Send the auth header only.
       const res = await fetch(`${baseUrl}/api/v1/admin/tenants/${tenant.id}`, {
         method: 'DELETE',
-        headers,
+        headers: { Authorization: `Bearer ${session?.accessToken ?? ''}` },
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       showToast('success', '삭제 완료');
