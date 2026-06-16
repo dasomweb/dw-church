@@ -1365,6 +1365,33 @@ Return JSON only:
             continue
         content_map.update(r)
 
+    # Resilience pass: the copywriter occasionally drops ONE page from a
+    # batch's JSON (returns it empty / omits it), which used to fail the whole
+    # wizard step ("N개 페이지 실패 — 다시 시도하세요"). Retry just the empty pages
+    # ONCE, each on its own so a single bad page can't take others down. Only
+    # overwrite when the retry actually produced sections — never paper over a
+    # persistent failure with placeholders (see feedback-no-hardcoded-defaults).
+    empty_pages = [
+        p for p in actual_pages
+        if not (content_map.get(p["slug"], {}) or {}).get("sections")
+    ]
+    if empty_pages:
+        logger.info(
+            "Phase B retry: %d empty page(s): %s",
+            len(empty_pages), [p["slug"] for p in empty_pages],
+        )
+        retry_results = await asyncio.gather(
+            *[process_batch(-1, [p]) for p in empty_pages],
+            return_exceptions=True,
+        )
+        for r in retry_results:
+            if isinstance(r, Exception):
+                logger.warning("Phase B retry coroutine raised: %s", r)
+                continue
+            for slug, data in r.items():
+                if data.get("sections"):
+                    content_map[slug] = data
+
     return {"contentMap": content_map}
 
 
