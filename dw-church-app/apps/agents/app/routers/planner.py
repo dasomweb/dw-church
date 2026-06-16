@@ -668,6 +668,10 @@ SECTION_TO_PATTERN = {
     "greeting": "pastor-message",
     "newcomer": "newcomer-info",
     "new-family": "newcomer-info",
+    "giving": "giving-info",
+    "giving-info": "giving-info",
+    "donation": "giving-info",
+    "헌금": "giving-info",
 }
 
 
@@ -1131,11 +1135,14 @@ Each section needs:
                           연혁 page.
    - "board"            = 게시판 목록 (/api/v1/boards). USE on 공지/게시판
                           pages.
-   And two STATIC church blocks you DO write copy for:
+   And STATIC church blocks you DO write copy for:
    - "pastor-message"   = 담임목사 인사말 (title=headline, description=인사말
                           본문, imagePrompt=목사 사진). USE on 교회소개/home.
    - "newcomer"         = 새가족 환영 + 등록 CTA (title/subtitle/description
                           + buttonText/buttonUrl). USE as a home/새가족 CTA.
+   - "giving"           = 헌금 안내 (온라인 헌금 '방법' 안내 — 결제 아님).
+                          title + intro 만 작성; Zelle·계좌·우편주소는 운영자가
+                          채움. USE on a 헌금/온라인헌금 page.
 2. "title" — Short, powerful headline (max 8 words). Specific, not generic.
 3. "subtitle" — One short line (max 15 words) that expands the title
 4. "description" — 1-2 sentences MAXIMUM. Concise and impactful.
@@ -1251,15 +1258,22 @@ HERO RULES — STRICTLY ENFORCED:
 - Sub-page heroes (page-hero) should NOT have a long description — title +
   short subtitle is enough. The page body carries the substance.
 
-GOOD page structure examples (each picks DIFFERENT patterns — that's the point):
+CHURCH CTA RULE: do NOT force a CTA section at the bottom of church pages. A
+church site is not a sales funnel — most pages should simply END with their
+content (the sermon list, the schedule, the map). Only add a CTA / newcomer
+section when it's genuinely useful (e.g., the home page, or a 새가족 page).
+Never tack a generic CTA onto every page.
+
+GOOD page structure examples (each picks DIFFERENT patterns — that's the point;
+note these do NOT all end in cta):
   /              hero → pastor-message → worship-schedule → sermons → events → newcomer
-  /about         hero-split → text-quote → pastor-message → history → cta
-  /sermons       page-hero → sermons → cta
-  /bulletins     page-hero → bulletins → cta
-  /columns       page-hero → columns → cta
-  /staff         page-hero → clergy → cta
-  /worship       page-hero → worship-schedule → text-image → cta
-  /contact       page-hero → worship-schedule → contact → cta
+  /about         hero-split → text-quote → pastor-message → history
+  /sermons       page-hero → sermons
+  /bulletins     page-hero → bulletins
+  /columns       page-hero → columns
+  /staff         page-hero → clergy
+  /worship       page-hero → worship-schedule → text-image
+  /contact       page-hero → worship-schedule → contact
 
 CHURCH PAGE RULE — CRITICAL: a page whose purpose is a single church content
 module must use EXACTLY THREE sections in this order:

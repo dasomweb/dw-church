@@ -198,6 +198,20 @@ function mapChurchBlock(
         },
       };
 
+    case 'giving-info':
+    case 'giving':
+    case 'donation':
+      // 헌금 안내 — giving INFO (not payment). AI writes title + intro; the
+      // operator fills the Zelle/bank/mailing fields after.
+      if (!title) return null;
+      return {
+        blockType: 'giving_info',
+        props: {
+          title,
+          intro: description || '',
+        },
+      };
+
     default:
       return null;
   }
