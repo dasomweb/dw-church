@@ -17,7 +17,12 @@ export default function TenantDangerZone() {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
+  // Two-step confirmation (Vercel-style): the operator must type BOTH the
+  // tenant slug AND a fixed phrase before the delete button arms. Two distinct
+  // inputs make an accidental/auto-filled deletion essentially impossible.
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deletePhraseText, setDeletePhraseText] = useState('');
+  const DELETE_PHRASE = '테넌트를 영구 삭제합니다';
 
   const host = typeof window !== 'undefined' ? window.location.hostname : '';
   const baseUrl = host.startsWith('admin.')
@@ -51,11 +56,12 @@ export default function TenantDangerZone() {
 
   const deleteTenant = async () => {
     if (!tenant || busy) return;
-    if (deleteConfirmText !== tenant.slug) {
-      showToast('error', `확인을 위해 slug "${tenant.slug}" 를 정확히 입력하세요.`);
+    // Defensive — the button is already disabled until both inputs match, but
+    // re-check so a programmatic call can't bypass the two-step confirmation.
+    if (deleteConfirmText !== tenant.slug || deletePhraseText !== DELETE_PHRASE) {
+      showToast('error', '확인 입력이 일치하지 않습니다.');
       return;
     }
-    if (!window.confirm(`정말로 "${tenant.name}" 을(를) 영구 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없으며 테넌트의 모든 데이터(스키마, R2 파일, 사용자, 도메인) 가 함께 삭제됩니다.`)) return;
     setBusy(true);
     try {
       // DELETE has no body — DON'T send Content-Type: application/json or
@@ -78,6 +84,11 @@ export default function TenantDangerZone() {
   if (!tenant) {
     return <div className="p-6 text-sm text-gray-500">테넌트 정보 로딩 중...</div>;
   }
+
+  // Both confirmations must match exactly before the delete button arms.
+  const slugMatches = deleteConfirmText === tenant.slug;
+  const phraseMatches = deletePhraseText === DELETE_PHRASE;
+  const canDelete = slugMatches && phraseMatches;
 
   return (
     <div className="p-6 lg:p-8 max-w-3xl mx-auto space-y-6">
@@ -113,31 +124,73 @@ export default function TenantDangerZone() {
         </div>
       </section>
 
-      {/* Delete */}
+      {/* Delete — two-step confirmation (slug + fixed phrase) */}
       <section className="rounded-xl border border-red-300 bg-red-50 p-5">
         <h2 className="text-sm font-semibold text-red-900">테넌트 영구 삭제</h2>
         <p className="mt-1 text-xs text-red-800">
           데이터베이스 스키마 (<code className="font-mono">tenant_{tenant.slug}</code>), R2 파일, 사용자, 도메인이 모두 삭제됩니다. 복구 불가능.
         </p>
-        <div className="mt-3 space-y-2">
-          <label className="block text-xs font-medium text-red-900">
-            확인을 위해 slug 를 입력하세요: <code className="font-mono">{tenant.slug}</code>
+
+        {/* Confirm 1 — tenant slug */}
+        <div className="mt-4 space-y-1.5">
+          <label className="block text-xs text-red-900">
+            확인을 위해 <span className="font-mono font-bold">{tenant.slug}</span> 를 입력하세요
           </label>
           <input
             type="text"
             value={deleteConfirmText}
             onChange={(e) => setDeleteConfirmText(e.target.value)}
             disabled={busy}
-            className="w-full px-3 py-1.5 border border-red-300 rounded text-sm font-mono disabled:opacity-50"
+            className={`w-full px-3 py-2 rounded-lg text-sm font-mono outline-none disabled:opacity-50 ${
+              slugMatches ? 'border border-red-300 focus:border-red-500' : 'border-2 border-red-400 bg-white'
+            }`}
             placeholder={tenant.slug}
+            autoComplete="off"
+            spellCheck={false}
           />
+          {!slugMatches && (
+            <p className="flex items-center gap-1 text-[11px] text-red-600">
+              <span aria-hidden>⊘</span> “{tenant.slug}” 입력이 필요합니다
+            </p>
+          )}
         </div>
+
+        {/* Confirm 2 — fixed phrase */}
+        <div className="mt-4 space-y-1.5">
+          <label className="block text-xs text-red-900">
+            확인을 위해 <span className="font-bold">{DELETE_PHRASE}</span> 를 입력하세요
+          </label>
+          <input
+            type="text"
+            value={deletePhraseText}
+            onChange={(e) => setDeletePhraseText(e.target.value)}
+            disabled={busy}
+            className={`w-full px-3 py-2 rounded-lg text-sm outline-none disabled:opacity-50 ${
+              phraseMatches ? 'border border-red-300 focus:border-red-500' : 'border-2 border-red-400 bg-white'
+            }`}
+            placeholder={DELETE_PHRASE}
+            autoComplete="off"
+            spellCheck={false}
+          />
+          {!phraseMatches && (
+            <p className="flex items-center gap-1 text-[11px] text-red-600">
+              <span aria-hidden>⊘</span> “{DELETE_PHRASE}” 입력이 필요합니다
+            </p>
+          )}
+        </div>
+
+        {/* Irreversible warning banner */}
+        <div className="mt-4 flex items-center gap-2 rounded-lg bg-red-100 px-3 py-2.5 text-xs font-medium text-red-700">
+          <span aria-hidden>⚠️</span>
+          <span>{tenant.name} 삭제는 되돌릴 수 없습니다.</span>
+        </div>
+
         <button
           onClick={deleteTenant}
-          disabled={busy || deleteConfirmText !== tenant.slug}
-          className="mt-3 w-full py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={busy || !canDelete}
+          className="mt-4 w-full py-2.5 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
         >
-          {busy ? '삭제 중...' : '영구 삭제'}
+          {busy ? '삭제 중...' : '테넌트 영구 삭제'}
         </button>
       </section>
     </div>
