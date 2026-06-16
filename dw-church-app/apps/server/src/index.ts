@@ -465,6 +465,35 @@ async function main(): Promise<void> {
     app.log.warn(`shared_images table migration skipped: ${err}`);
   }
 
+  // --- ai_jobs table (platform-wide async AI jobs: content-map,
+  //     marketing-insight, design-system, sitemap, …). Backs /ai/jobs so
+  //     long planner calls survive Cloudflare's 100s proxy limit. This was
+  //     missing in prod — createJob 500'd with 42P01 ("relation ai_jobs does
+  //     not exist") and the wizard showed "AI 콘텐츠 생성 실패: A database error
+  //     occurred". Created here (public schema) like shared_images. ---
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "ai_jobs" (
+        "id"          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+        "user_id"     UUID        NOT NULL,
+        "kind"        VARCHAR(64) NOT NULL,
+        "status"      VARCHAR(20) NOT NULL DEFAULT 'queued',
+        "input"       JSONB       NOT NULL DEFAULT '{}',
+        "output"      JSONB,
+        "error"       TEXT,
+        "progress"    JSONB       NOT NULL DEFAULT '{}',
+        "created_at"  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        "started_at"  TIMESTAMPTZ,
+        "finished_at" TIMESTAMPTZ
+      )
+    `);
+    await prisma.$executeRawUnsafe(
+      `CREATE INDEX IF NOT EXISTS "ai_jobs_user_status_idx" ON "ai_jobs" ("user_id", "status")`,
+    );
+  } catch (err) {
+    app.log.warn(`ai_jobs table migration skipped: ${err}`);
+  }
+
   // --- Ensure super_admin users are always active ---
   try {
     await prisma.user.updateMany({
