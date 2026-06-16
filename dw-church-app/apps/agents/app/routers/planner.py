@@ -7,8 +7,9 @@ Pipeline: Business → Suggest → Marketing → Strategy → Design System → 
 import asyncio
 import json
 import logging
+import os
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
 
 from app.services.agents.architect import (
@@ -48,7 +49,27 @@ from app.services.planner.census_service import (
 from app.services.planner.llm_service import call_gemini, call_llm, extract_json
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/api/planner", tags=["planner"])
+def _verify_service_token(authorization: str | None = Header(default=None)) -> None:
+    """Router-level auth — require ``Authorization: Bearer $INTERNAL_SERVICE_TOKEN``.
+
+    The agents service is reachable on a public Railway domain, but every
+    legitimate caller is api-server's planner proxy (planner-proxy/
+    agents-client.ts AND builder-routes/routes.ts), which always sends this
+    header. Enforcing it here closes the hole where anyone could hit
+    /api/planner/* directly and burn LLM credits — without breaking the proxy.
+    /health stays open (it's a top-level route in main.py, not on this router).
+    Fail-closed: if INTERNAL_SERVICE_TOKEN is unset on this service, reject all.
+    """
+    expected = os.getenv("INTERNAL_SERVICE_TOKEN", "")
+    if not expected:
+        raise HTTPException(status_code=503, detail="INTERNAL_SERVICE_TOKEN not configured on agents service")
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing Bearer token")
+    if authorization.removeprefix("Bearer ").strip() != expected:
+        raise HTTPException(status_code=401, detail="Invalid service token")
+
+
+router = APIRouter(prefix="/api/planner", tags=["planner"], dependencies=[Depends(_verify_service_token)])
 
 
 # ── Request Models ──

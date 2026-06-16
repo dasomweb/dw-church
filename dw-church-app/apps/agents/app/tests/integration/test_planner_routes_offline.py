@@ -27,6 +27,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.routers.planner import _verify_service_token
 
 # ──────────────────────────────────────────────────────────────────
 # Fixtures
@@ -35,7 +36,15 @@ from app.main import app
 
 @pytest.fixture
 def client() -> TestClient:
-    return TestClient(app)
+    # The /api/planner router now requires a service bearer token (hardening —
+    # the agents service is reachable on a public domain). These offline tests
+    # exercise the handlers in-process, so bypass the auth dependency rather
+    # than thread a token through every request.
+    app.dependency_overrides[_verify_service_token] = lambda: None
+    try:
+        yield TestClient(app)
+    finally:
+        app.dependency_overrides.pop(_verify_service_token, None)
 
 
 def _stub_claude(text: str) -> AsyncMock:
