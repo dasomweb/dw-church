@@ -205,13 +205,12 @@ async function buildPages(input: BuildPagesInput, tenantSchema: string): Promise
         );
         continue;
       }
-      // Two symmetric guardrails: every page starts with hero, ends with cta.
-      // Both are required by the operator's "every page is a conversion ramp"
-      // rule (feedback-last-section-must-be-cta). ensureCtaLast was previously
-      // missing — a page that LLM closed with features-grid / testimonials
-      // would silently ship without a CTA. Now synthesized if absent.
-      const sectionsWithHero = ensureHeroFirst(rawSections, pageSpec, input.designSystem);
-      const sections = ensureCtaLast(sectionsWithHero, pageSpec, warnings);
+      // Guardrail: every page starts with a hero. (The old ensureCtaLast — which
+      // force-appended a CTA to the bottom of EVERY page — was removed per the
+      // operator's 2026-06-16 directive: a CTA is no longer mandatory on every
+      // page. The LLM may still place a CTA where it fits; we just don't
+      // synthesize one when it's absent.)
+      const sections = ensureHeroFirst(rawSections, pageSpec, input.designSystem);
       // dasomweb 6-pattern QA — append advisory warnings (build still
       // succeeds). See qaDasomwebPatterns for the checklist.
       qaDasomwebPatterns(sections, pageSpec, warnings);
@@ -822,11 +821,9 @@ function ensureHeroFirst(
   return [synthesizeHero(pageSpec, designSystem), ...sections];
 }
 
-const CTA_SECTION_KEYS = new Set(['cta', 'cta-section', 'cta-banner']);
-
 /**
  * dasomweb 6-pattern QA — feedback-design-quality-benchmark. Inspects a
- * page's final section list (after ensureHero/ensureCta) and pushes
+ * page's final section list (after ensureHeroFirst) and pushes
  * advisory warnings when the page misses common quality patterns. None
  * of these block the build; the operator gets the page either way, but
  * the wizard's "참고" toast surfaces missed improvements.
@@ -836,8 +833,6 @@ const CTA_SECTION_KEYS = new Set(['cta', 'cta-section', 'cta-banner']);
  * persisted DB rows):
  *   1. Page diversity — same sectionType twice in a row triggers warn
  *   2. Section count — < 4 sections feels thin (dasomweb pages have 5-7)
- *   3. CTA presence — already ensured by ensureCtaLast; this is the
- *      double-check telemetry
  */
 function qaDasomwebPatterns(
   sections: SectionSpec[],
@@ -874,56 +869,10 @@ function qaDasomwebPatterns(
   }
 }
 
-/**
- * Operator rule (feedback-last-section-must-be-cta): EVERY page must end
- * with a cta-section. Symmetric to ensureHeroFirst — if the planner /
- * copywriter didn't put a CTA at the bottom (or used a non-CTA pattern
- * like features-grid / testimonials / faq as the closer), synthesize a
- * minimal cta-section so the page still ramps the visitor to the next
- * action.
- *
- * The synthesized CTA is intentionally sparse — title only, no copy.
- * The build-pages adapter's pattern-map will map it to cta_section block;
- * the operator can then fill in proper copy via the inspector. Better
- * than silently shipping a page without a CTA.
- */
-function ensureCtaLast(
-  sections: SectionSpec[],
-  pageSpec: { name: string; slug: string },
-  warnings?: string[],
-): SectionSpec[] {
-  const last = sections[sections.length - 1];
-  const lastKey = ((last?.gutenbergPattern || last?.sectionType) ?? '')
-    .toString()
-    .toLowerCase();
-  if (last && CTA_SECTION_KEYS.has(lastKey)) {
-    return sections;
-  }
-  // Telemetry — the operator wants to know which pages the planner forgot
-  // to close with CTA so the prompt can be tightened next iteration. The
-  // synthesized fallback ships a usable page, but the warning surfaces
-  // the underlying planner failure in the build response.
-  if (warnings) {
-    warnings.push(
-      `Page '${pageSpec.name}' (${pageSpec.slug}): planner did not close with cta-section, synthesized fallback. Review planner prompt + LLM output.`,
-    );
-  }
-  return [...sections, synthesizeCta(pageSpec)];
-}
-
-function synthesizeCta(pageSpec: { name: string; slug: string }): SectionSpec {
-  // Title falls back to the page name so the synthesized CTA isn't an
-  // empty card — the operator sees "Contact" / "Pricing" etc. and can
-  // edit. Empty subtitle / description / button so pattern-map.ts:166's
-  // null-return on missing title doesn't fire (it requires a title).
-  return {
-    sectionType: 'cta-section',
-    gutenbergPattern: 'cta-section',
-    title: pageSpec.name,
-    subtitle: '',
-    description: '',
-  };
-}
+// ensureCtaLast() + synthesizeCta() were removed 2026-06-16 per the operator's
+// directive: a CTA is no longer force-appended to the bottom of every AI-built
+// page. The LLM still emits CTAs where appropriate; we just don't synthesize a
+// fallback when a page doesn't close with one.
 
 function synthesizeHero(
   pageSpec: { name: string; slug: string },
