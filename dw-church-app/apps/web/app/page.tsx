@@ -24,9 +24,16 @@ interface Copy {
   features: { title: string; desc: string; icon: string }[];
   howSection: { title: string; subtitle: string };
   steps: { step: string; title: string; desc: string }[];
-  plansSection: { title: string; subtitle: string; note: string; contact: string };
+  plansSection: {
+    title: string; subtitle: string;
+    monthly: string; yearly: string; save: string;
+    perMonth: string; billedYearly: string; setupOnce: string;
+    includedTitle: string; included: string[];
+    note: string; contact: string;
+  };
   plans: {
-    name: string; price: string; period: string; subtitle: string; description: string;
+    name: string; subtitle: string;
+    monthly: number; yearly: number; setupFee: number;
     features: string[]; cta: string; highlighted: boolean; badge?: string;
   }[];
   custom: { eyebrow: string; title: string; description: string; features: string[]; oneTime: string; anyPlan: string; quote: string };
@@ -73,28 +80,47 @@ const COPY: Record<Lang, Copy> = {
     ],
     plansSection: {
       title: '간단하고 투명한 요금제',
-      subtitle: '교회에 맞는 플랜을 선택하세요. 언제든 변경 가능합니다.',
-      note: '모든 플랜에 호스팅·SSL·백업·플랫폼 업데이트 포함. 숨은 비용 없음.\n교인이 더 필요하신가요? 50명당 월 $10 추가. 1,000명 이상이면 맞춤 플랜을',
+      subtitle: '교회 규모에 맞는 플랜을 선택하세요. 언제든 업그레이드할 수 있습니다.',
+      monthly: '월 결제', yearly: '연 결제', save: '20% 할인',
+      perMonth: '/월', billedYearly: '연 1회 청구', setupOnce: '셋업비 1회',
+      includedTitle: '모든 플랜 공통 포함',
+      included: [
+        '디자인 템플릿 10종 + 테마 편집기',
+        '맞춤 도메인 + 무료 SSL',
+        '관리형 호스팅·자동 백업',
+        '온라인 헌금 안내 페이지',
+        '콘텐츠 내보내기(Export)',
+        '모바일 최적화',
+        '한국어·영어 인터페이스',
+        '이메일 지원',
+      ],
+      note: '셋업비는 1회성이며, AI 빌더와 기존 사이트 마이그레이션을 포함한 초기 구축 비용입니다.\n더 큰 규모의 교회이신가요? 맞춤 플랜을',
       contact: '문의하세요',
     },
     plans: [
       {
-        name: 'Essential', price: '$99', period: '/월', subtitle: '교회 홈페이지',
-        description: '템플릿 기반 디자인, 콘텐츠 관리, 자체 도메인까지 갖춘 완성형 교회 홈페이지.',
-        features: ['전문 디자인 템플릿 10종', '설교·주보 관리', '사진 앨범·행사 안내', '교역자 소개·교회 연혁', '드래그앤드롭 페이지 빌더', '최대 5개 페이지', '부서 사이트(최대 3개)', '맞춤 도메인 + SSL', '관리형 호스팅·백업', '이메일 지원'],
+        name: '라이트', subtitle: '소형 교회 시작용',
+        monthly: 59, yearly: 49, setupFee: 300,
+        features: ['설교·주보 관리', '교역자 소개·교회 연혁', '예배 안내·오시는 길', '담임목사 인사말', '사진 앨범', '교육부 소개 페이지', '관리자 계정 2개'],
         cta: '시작하기', highlighted: false,
       },
       {
-        name: 'Ministry', price: '$199', period: '/월', subtitle: '홈페이지 + 교인 명부',
-        description: '에센셜의 모든 기능에 더해, 성도와 연결되는 비공개 교인 명부까지.',
-        features: ['에센셜의 모든 기능', '고급 테마 편집기', '교인 명부(최대 200명)', '연락처 그룹·분류', '교인 검색·필터', '최대 15개 페이지', '우선 이메일 지원'],
-        cta: '미니스트리 시작하기', highlighted: true, badge: '가장 인기',
+        name: '기본', subtitle: '성장하는 교회',
+        monthly: 99, yearly: 79, setupFee: 400,
+        features: ['라이트의 모든 기능', '행사 안내', '목회 칼럼', '영상 게시판', '공지·선교 게시판', '배너 슬라이더', '관리자 계정 3개'],
+        cta: '시작하기', highlighted: true, badge: '가장 인기',
       },
       {
-        name: 'Outreach', price: '$399', period: '/월', subtitle: '홈페이지 + 교인 + 성장',
-        description: '성장하는 교회를 위한 완성형 플랫폼 — 확장된 용량, 부서 사이트, 분석까지.',
-        features: ['미니스트리의 모든 기능', '교인 명부(최대 1,000명)', '분석·참여 대시보드', '최대 30개 페이지', '우선 이메일 지원'],
-        cta: '아웃리치 시작하기', highlighted: false,
+        name: '플러스', subtitle: '체계적인 교회 관리',
+        monthly: 149, yearly: 119, setupFee: 600,
+        features: ['기본의 모든 기능', '새가족 안내', '목장(셀) 관리', '관리자 계정 5개'],
+        cta: '시작하기', highlighted: false,
+      },
+      {
+        name: '프로', subtitle: '완성형 교회 플랫폼',
+        monthly: 199, yearly: 159, setupFee: 800,
+        features: ['플러스의 모든 기능', '새가족 온라인 등록 폼', '등록 교인 관리', '관리자 계정 10개'],
+        cta: '시작하기', highlighted: false,
       },
     ],
     custom: {
@@ -154,28 +180,47 @@ const COPY: Record<Lang, Copy> = {
     ],
     plansSection: {
       title: 'Simple, Transparent Pricing',
-      subtitle: 'Choose the plan that fits your church. Upgrade or downgrade anytime.',
-      note: 'All plans include hosting, SSL, backups, and platform updates. No hidden fees.\nNeed more members? Add 50 members for $10/mo. Over 1,000 members?',
+      subtitle: 'Choose the plan that fits your church. Upgrade anytime.',
+      monthly: 'Monthly', yearly: 'Yearly', save: 'Save 20%',
+      perMonth: '/mo', billedYearly: 'billed annually', setupOnce: 'setup, one-time',
+      includedTitle: 'Included in Every Plan',
+      included: [
+        '10 design templates + theme editor',
+        'Custom domain + free SSL',
+        'Managed hosting & automatic backups',
+        'Online giving info page',
+        'Content export',
+        'Mobile responsive',
+        'Korean & English interface',
+        'Email support',
+      ],
+      note: 'The setup fee is a one-time charge covering initial build with the AI builder and migration from your existing site.\nA larger congregation?',
       contact: 'Contact us',
     },
     plans: [
       {
-        name: 'Essential', price: '$99', period: '/mo', subtitle: 'Church Website',
-        description: 'A complete church website with template-based design, content management, and your own domain.',
-        features: ['10 professional design templates', 'Sermon & bulletin management', 'Photo albums & event calendar', 'Staff directory & church history', 'Page builder with drag & drop', 'Up to 5 pages', 'Department sites (up to 3)', 'Custom domain + SSL', 'Managed hosting & backups', 'Email support'],
+        name: 'Light', subtitle: 'For small churches',
+        monthly: 59, yearly: 49, setupFee: 300,
+        features: ['Sermons & bulletins', 'Staff directory & history', 'Worship info & directions', 'Pastor’s message', 'Photo albums', 'Education ministry page', '2 admin accounts'],
         cta: 'Get Started', highlighted: false,
       },
       {
-        name: 'Ministry', price: '$199', period: '/mo', subtitle: 'Website + Member Directory',
-        description: 'Everything in Essential, plus a private member directory to stay connected with your congregation.',
-        features: ['Everything in Essential', 'Advanced theme editor', 'Member directory (up to 200)', 'Contact groups & categories', 'Member search & filtering', 'Up to 15 pages', 'Priority email support'],
-        cta: 'Start Ministry Plan', highlighted: true, badge: 'Most Popular',
+        name: 'Basic', subtitle: 'For growing churches',
+        monthly: 99, yearly: 79, setupFee: 400,
+        features: ['Everything in Light', 'Event calendar', 'Pastoral columns', 'Video board', 'Notice & mission boards', 'Banner slider', '3 admin accounts'],
+        cta: 'Get Started', highlighted: true, badge: 'Most Popular',
       },
       {
-        name: 'Outreach', price: '$399', period: '/mo', subtitle: 'Website + Members + Growth',
-        description: 'The complete platform for growing churches — expanded capacity, department sites, and analytics.',
-        features: ['Everything in Ministry', 'Member directory (up to 1,000)', 'Analytics & engagement dashboard', 'Up to 30 pages', 'Priority email support'],
-        cta: 'Get Outreach Plan', highlighted: false,
+        name: 'Plus', subtitle: 'Organized church care',
+        monthly: 149, yearly: 119, setupFee: 600,
+        features: ['Everything in Basic', 'Newcomer info', 'Small-group (cell) management', '5 admin accounts'],
+        cta: 'Get Started', highlighted: false,
+      },
+      {
+        name: 'Pro', subtitle: 'The complete platform',
+        monthly: 199, yearly: 159, setupFee: 800,
+        features: ['Everything in Plus', 'Online newcomer registration form', 'Member management', '10 admin accounts'],
+        cta: 'Get Started', highlighted: false,
       },
     ],
     custom: {
@@ -261,6 +306,7 @@ function HeroSlider({ slides, getStarted, seePlans }: { slides: { headline: stri
 export default function LandingPage() {
   // Korean is the primary language — default state + SSR render is 'ko'.
   const [lang, setLang] = useState<Lang>('ko');
+  const [billing, setBilling] = useState<'monthly' | 'yearly'>('yearly');
 
   useEffect(() => {
     try {
@@ -392,52 +438,104 @@ export default function LandingPage() {
       {/* Plans */}
       <section id="plans" className="bg-gray-50 px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-16 text-center">
+          <div className="mb-10 text-center">
             <h2 className="mb-4 text-3xl font-bold text-gray-900">{t.plansSection.title}</h2>
             <p className="text-gray-600">{t.plansSection.subtitle}</p>
           </div>
-          <div className="grid gap-8 lg:grid-cols-3">
-            {t.plans.map((plan) => (
-              <div
-                key={plan.name}
-                className={`relative rounded-2xl border-2 bg-white p-8 transition-shadow hover:shadow-lg ${
-                  plan.highlighted ? 'border-blue-600 shadow-xl' : 'border-gray-200'
+          {/* Monthly / Yearly toggle */}
+          <div className="mb-12 flex items-center justify-center">
+            <div className="inline-flex items-center gap-1 rounded-xl border border-gray-200 bg-white p-1">
+              <button
+                onClick={() => setBilling('monthly')}
+                className={`rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
+                  billing === 'monthly' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-gray-900'
                 }`}
+                aria-pressed={billing === 'monthly'}
               >
-                {plan.badge && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-4 py-1 text-xs font-bold text-white">
-                    {plan.badge}
-                  </span>
-                )}
-                <div className="mb-1 text-sm font-medium text-blue-600">{plan.subtitle}</div>
-                <h3 className="mb-2 text-xl font-bold text-gray-900">{plan.name}</h3>
-                <div className="mb-3">
-                  <span className="text-4xl font-extrabold text-gray-900">{plan.price}</span>
-                  <span className="text-gray-500">{plan.period}</span>
-                </div>
-                <p className="mb-6 text-sm leading-relaxed text-gray-600">{plan.description}</p>
-                <ul className="mb-8 space-y-3">
-                  {plan.features.map((feat) => (
-                    <li key={feat} className="flex items-start gap-2 text-sm text-gray-700">
-                      <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                      {feat}
-                    </li>
-                  ))}
-                </ul>
-                <a
-                  href="https://admin.truelight.app/register"
-                  className={`block w-full rounded-xl py-3.5 text-center text-sm font-bold transition-colors ${
-                    plan.highlighted
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
-                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                {t.plansSection.monthly}
+              </button>
+              <button
+                onClick={() => setBilling('yearly')}
+                className={`flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
+                  billing === 'yearly' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-gray-900'
+                }`}
+                aria-pressed={billing === 'yearly'}
+              >
+                {t.plansSection.yearly}
+                <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                  billing === 'yearly' ? 'bg-white/20 text-white' : 'bg-green-100 text-green-700'
+                }`}>
+                  {t.plansSection.save}
+                </span>
+              </button>
+            </div>
+          </div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {t.plans.map((plan) => {
+              const price = billing === 'monthly' ? plan.monthly : plan.yearly;
+              return (
+                <div
+                  key={plan.name}
+                  className={`relative flex flex-col rounded-2xl border-2 bg-white p-7 transition-shadow hover:shadow-lg ${
+                    plan.highlighted ? 'border-blue-600 shadow-xl' : 'border-gray-200'
                   }`}
                 >
-                  {plan.cta}
-                </a>
-              </div>
-            ))}
+                  {plan.badge && (
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-blue-600 px-4 py-1 text-xs font-bold text-white">
+                      {plan.badge}
+                    </span>
+                  )}
+                  <div className="mb-1 text-sm font-medium text-blue-600">{plan.subtitle}</div>
+                  <h3 className="mb-3 text-xl font-bold text-gray-900">{plan.name}</h3>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-extrabold text-gray-900">${price}</span>
+                    <span className="text-gray-500">{t.plansSection.perMonth}</span>
+                  </div>
+                  <p className="mt-1 h-4 text-xs text-gray-400">
+                    {billing === 'yearly' ? t.plansSection.billedYearly : ' '}
+                  </p>
+                  <p className="mt-3 text-sm font-medium text-gray-700">
+                    + ${plan.setupFee} <span className="text-gray-400">{t.plansSection.setupOnce}</span>
+                  </p>
+                  <ul className="my-6 space-y-3 border-t border-gray-100 pt-6">
+                    {plan.features.map((feat) => (
+                      <li key={feat} className="flex items-start gap-2 text-sm text-gray-700">
+                        <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        {feat}
+                      </li>
+                    ))}
+                  </ul>
+                  <a
+                    href="https://admin.truelight.app/register"
+                    className={`mt-auto block w-full rounded-xl py-3.5 text-center text-sm font-bold transition-colors ${
+                      plan.highlighted
+                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                        : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                    }`}
+                  >
+                    {plan.cta}
+                  </a>
+                </div>
+              );
+            })}
+          </div>
+          {/* Included in every plan */}
+          <div className="mt-12 rounded-2xl border border-gray-200 bg-white p-8">
+            <h3 className="mb-5 text-center text-sm font-bold uppercase tracking-wide text-gray-500">
+              {t.plansSection.includedTitle}
+            </h3>
+            <div className="mx-auto grid max-w-4xl gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {t.plansSection.included.map((item) => (
+                <div key={item} className="flex items-start gap-2 text-sm text-gray-700">
+                  <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  {item}
+                </div>
+              ))}
+            </div>
           </div>
           <p className="mt-8 text-center text-sm text-gray-500" style={{ whiteSpace: 'pre-line' }}>
             {t.plansSection.note} <a href="mailto:hello@truelight.app" className="text-blue-600 hover:underline">{t.plansSection.contact}</a>
