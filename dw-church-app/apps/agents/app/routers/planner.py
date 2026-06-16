@@ -1105,7 +1105,7 @@ PAGE COMPOSITION RULES — CRITICAL:
 - Each page should have 4-6 sections (not 3) so the page has rhythm + depth
 - MANDATORY: Every page MUST have at least 1-2 visual sections
 - MAX 1 pure text section per page (text, text-split, text-block)
-- DIVERSIFY — DO NOT default to {hero, features, text-image, cta}. The
+- DIVERSIFY — DO NOT default to {{hero, features, text-image, cta}}. The
   operator has explicitly flagged this 3-block pattern as the lazy /
   same-site-every-time output. Mix AT LEAST 4 DISTINCT section types per
   page from the full guide above (24 types). Same sectionType MUST NOT
@@ -1182,7 +1182,7 @@ BAD page structures (the "every site looks the same" anti-pattern):
   hero → features → text-image → cta                 (too few, too predictable)
   hero → features → features → text-image → cta      (repeating features)
   hero-text → text-split → text → text-cta → text-image  (all text, no rhythm)
-  Any page where {hero, features, text-image, cta} are the only patterns used.
+  Any page where {{hero, features, text-image, cta}} are the only patterns used.
 
 Pages to write:
 {batch_pages_str}
