@@ -18,8 +18,11 @@ matrix and reduce census to a sidebar fact when appropriate.
 
 from __future__ import annotations
 
+import re
+
 from app.services.agents.shared.base_agent import BaseAgent
-from app.services.agents.shared.llm_client import ModelSpec
+from app.services.agents.shared.llm_client import LLMRequest, ModelSpec
+from app.services.planner.llm_service import extract_json
 from app.services.agents.shared.must_haves import format_must_haves
 from app.services.agents.strategy.domain import (
     CensusSnapshot,
@@ -506,6 +509,46 @@ class InsightAgent(BaseAgent[InsightInput, MarketingInsight]):
     # retries here are mostly wasted tokens.
     max_schema_retries = 1
 
+    async def run(self, input: InsightInput) -> MarketingInsight:  # type: ignore[override]
+        """Lenient override of BaseAgent.run — the insight is ONE long
+        free-text markdown report, not structured data.
+
+        The base run() forces the output through SchemaRetryPolicy, which
+        requires valid JSON. Asking the LLM to JSON-encode a multi-thousand-word
+        markdown string (`{"insight": "...report..."}`) is fragile: unescaped
+        newlines/quotes make json.loads fail, so the retry re-ran the whole
+        6000-token generation. That doubled latency past Cloudflare's 100s proxy
+        limit on api.truelight.app — the wizard's Analysis step died with
+        "Failed to fetch" — and still 502'd in the end.
+
+        Here we make ONE LLM call and take its text as the report directly:
+        strip any ```fence, and (for back-compat with the old JSON-envelope
+        prompt) unwrap a `{"insight": "..."}` object when the model still emits
+        clean JSON. No JSON dependency, no second call.
+        """
+        response = await self.llm_client.complete(
+            LLMRequest(
+                prompt=self.build_prompt(input),
+                system=self.system_prompt(),
+                spec=self.model_spec,
+            ),
+            agent=self.name,
+        )
+        text = (response.text if hasattr(response, "text") else str(response)).strip()
+        # Strip a leading ```/```json fence and trailing ``` if the model added one.
+        text = re.sub(r"^```\w*\n?", "", text)
+        text = re.sub(r"\n?```\s*$", "", text).strip()
+        # Back-compat: a model that still returns a valid {"insight": "..."}
+        # envelope is unwrapped so we never show JSON scaffolding in the report.
+        parsed = extract_json(text)
+        if (
+            isinstance(parsed, dict)
+            and isinstance(parsed.get("insight"), str)
+            and len(parsed["insight"].strip()) >= 200
+        ):
+            text = parsed["insight"].strip()
+        return MarketingInsight(insight=text)
+
     def system_prompt(self) -> str:
         # Static role + frame matrix + section guidance — all cached.
         # Previously frame matrix and section guidance lived in the
@@ -608,6 +651,8 @@ class InsightAgent(BaseAgent[InsightInput, MarketingInsight]):
             f"Open the report with a single line:\n"
             f"{opening_line}\n"
             f"\n"
-            f"Return ONLY the markdown text wrapped in this JSON envelope:\n"
-            f'{{"insight": "..."}}\n'
+            f"Return ONLY the markdown report itself — NO JSON wrapper, NO code\n"
+            f"fences, no preamble or closing remarks. Start directly with the\n"
+            f"opening line above. (Wrapping a multi-thousand-word report in a\n"
+            f"JSON string forces fragile escaping that breaks parsing.)\n"
         )
