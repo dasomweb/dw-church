@@ -502,14 +502,12 @@ async function main(): Promise<void> {
     }
   } catch { /* ignore */ }
 
-  // --- One-time migration: create boards tables ---
-  try {
-    const { migrateBoards } = await import('./utils/migrate-boards.js');
-    const migrated = await migrateBoards();
-    if (migrated > 0) app.log.info(`Board tables ensured for ${migrated} schema(s)`);
-  } catch (err) {
-    app.log.warn(`Board migration skipped: ${err}`);
-  }
+  // NOTE: the old migrateBoards() utility was removed here. It put two CREATE
+  // TABLE statements in ONE prisma.$executeRawUnsafe() call, which Prisma's raw
+  // exec rejects ("Invalid invocation" — single statement only), so it errored
+  // on EVERY startup for every schema. The per-tenant self-heal loop above
+  // (block 0b) already creates boards + board_posts as SEPARATE statements for
+  // every schema, so migrateBoards was both redundant and broken. Deleted.
 
   // --- Start ---
   await app.listen({ port: env.PORT, host: '0.0.0.0' });
