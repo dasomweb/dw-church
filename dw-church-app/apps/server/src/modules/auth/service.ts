@@ -7,6 +7,7 @@ import { AppError } from '../../middleware/error-handler.js';
 import { createTenantSchema } from '../../utils/schema-manager.js';
 import { sendEmail } from '../../config/email.js';
 import { welcomeEmail, passwordResetEmail, inviteEmail } from '../../config/email-templates.js';
+import { planLimits } from '../../config/plan-limits.js';
 import type { RegisterInput, LoginInput, InviteInput } from './schema.js';
 
 const BCRYPT_ROUNDS = 12;
@@ -300,6 +301,23 @@ export async function inviteUser(
     throw new AppError('FORBIDDEN', 403, 'Only owners and admins can invite users');
   }
 
+  // Enforce the tenant's admin-account quota (light 2 / basic 3 / plus 5 / pro 10).
+  // The owner counts toward the limit, so we compare the current head-count of
+  // every login account on this tenant against the plan's maxAdmins.
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { plan: true, name: true },
+  });
+  const { maxAdmins } = planLimits(tenant?.plan);
+  const currentAccounts = await prisma.user.count({ where: { tenantId } });
+  if (currentAccounts >= maxAdmins) {
+    throw new AppError(
+      'PLAN_LIMIT_REACHED',
+      403,
+      `현재 플랜의 관리자 계정 한도(${maxAdmins}개)에 도달했습니다. 계정을 더 추가하려면 플랜을 업그레이드하세요.`,
+    );
+  }
+
   // Check if user already exists
   const existingUser = await prisma.user.findUnique({ where: { email: input.email } });
   if (existingUser) {
@@ -328,8 +346,7 @@ export async function inviteUser(
     { expiresIn: '72h' },
   );
 
-  // Look up tenant name for the email template
-  const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+  // Tenant name for the email template (looked up above with the plan).
   const churchName = tenant?.name ?? tenantSlug;
   const inviteUrl = `https://admin.truelight.app/reset-password?token=${inviteToken}`;
   const tpl = inviteEmail(churchName, inviteUrl);

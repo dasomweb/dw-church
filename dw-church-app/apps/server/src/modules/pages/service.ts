@@ -70,6 +70,13 @@ export async function listPages(schema: string): Promise<PageRow[]> {
   );
 }
 
+export async function countPages(schema: string): Promise<number> {
+  const rows = await prisma.$queryRawUnsafe<{ count: bigint }[]>(
+    `SELECT COUNT(*)::bigint AS count FROM "${schema}".pages`,
+  );
+  return Number(rows[0]?.count ?? 0);
+}
+
 export async function getPageBySlug(
   schema: string,
   slug: string,

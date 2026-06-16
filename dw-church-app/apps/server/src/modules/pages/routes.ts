@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { requireAuth, optionalAuth, requirePlan } from '../../middleware/auth.js';
 import { AppError } from '../../middleware/error-handler.js';
+import { planLimits } from '../../config/plan-limits.js';
 import {
   createPageSchema,
   updatePageSchema,
@@ -62,6 +63,19 @@ export default async function pageRoutes(app: FastifyInstance): Promise<void> {
     const schema = request.tenantSchema;
     if (!schema) {
       throw new AppError('TENANT_NOT_FOUND', 404, 'Tenant not resolved');
+    }
+    // Enforce the tenant's page quota. super_admin bypasses (they build the
+    // initial site and may legitimately seed pages on any tenant).
+    if (request.user?.role !== 'super_admin') {
+      const { maxPages } = planLimits(request.tenant?.plan);
+      const current = await pageService.countPages(schema);
+      if (current >= maxPages) {
+        throw new AppError(
+          'PLAN_LIMIT_REACHED',
+          403,
+          `현재 플랜의 페이지 한도(${maxPages}개)에 도달했습니다. 페이지를 더 추가하려면 플랜을 업그레이드하세요.`,
+        );
+      }
     }
     const body = createPageSchema.parse(request.body);
     const page = await pageService.createPage(schema, body);

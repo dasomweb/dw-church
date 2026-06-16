@@ -22,6 +22,7 @@ vi.mock('../../config/env.js', () => ({
 }));
 vi.mock('../../modules/pages/service.js', () => ({
   listPages: vi.fn().mockResolvedValue([]),
+  countPages: vi.fn().mockResolvedValue(0),
   createPage: vi.fn().mockResolvedValue({ id: 'p1', title: 'new' }),
   updatePage: vi.fn(),
   deletePage: vi.fn(),
