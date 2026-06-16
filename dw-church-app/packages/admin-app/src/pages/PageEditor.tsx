@@ -43,6 +43,15 @@ interface BlockDef {
   editableFields: { key: string; label: string; type: 'text' | 'textarea' | 'number' | 'select' | 'image' | 'images' | 'url' | 'array' | 'tags' | 'services' | 'buttons' | 'groups'; options?: { label: string; value: string }[]; max?: number }[];
 }
 
+// CONTENT_ONLY — tenant page editor is locked to "글·사진만 수정" per the
+// operator's done-for-you model (2026-06-16): we build the site; tenants edit
+// only TEXT and IMAGES of existing blocks. So we hide everything structural —
+// the block palette (add block), add/edit/delete page, block add/duplicate/
+// delete/reorder, templates, and the size/layout/color/link fields (only the
+// text + image element groups remain in the inspector). The full builder lives
+// in the super-admin TenantPageEditor.
+const CONTENT_ONLY = true;
+
 const BLOCK_DEFS: BlockDef[] = [
   // ─── Hero ─────────────────────────────────────
   { type: 'hero_banner', label: '히어로 배너', category: '히어로', icon: '🖼️', nature: 'static', description: '배경 이미지 + 텍스트 오버레이 배너', variants: [{ id: 'centered', label: '중앙' }, { id: 'left', label: '좌측' }], defaultProps: { title: '환영합니다', subtitle: '', height: 'md', textAlign: 'center', layout: 'full', overlayColor: '#000000', overlayOpacity: 50 }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'subtitle', label: '부제목', type: 'text' }, { key: 'backgroundImageUrl', label: '배경 이미지', type: 'image' }, { key: 'overlayColor', label: '오버레이 색상', type: 'text' }, { key: 'overlayOpacity', label: '오버레이 투명도 (%)', type: 'number' }, { key: 'buttonText', label: '버튼 텍스트', type: 'text' }, { key: 'buttonUrl', label: '버튼 링크', type: 'url' }, { key: 'layout', label: '레이아웃', type: 'select', options: [{ label: '풀 와이드', value: 'full' }, { label: '컨테이너', value: 'contained' }] }, { key: 'height', label: '높이', type: 'select', options: [{ label: '작게', value: 'sm' }, { label: '보통', value: 'md' }, { label: '크게', value: 'lg' }, { label: '전체', value: 'full' }] }] },
@@ -845,8 +854,10 @@ function LayoutChildEditor({
             </div>
           )}
 
-          {/* Editable fields */}
-          {childDef.editableFields.map((field) => (
+          {/* Editable fields — content-only keeps just text + image (글·사진). */}
+          {childDef.editableFields
+            .filter((field) => !CONTENT_ONLY || ['text', 'textarea', 'image', 'images'].includes(field.type))
+            .map((field) => (
             <div key={field.key}>
               <label className="text-[10px] font-medium text-gray-500 block mb-0.5">{field.label}</label>
               {field.type === 'textarea' ? (
@@ -1048,24 +1059,26 @@ function SectionCard({
         className="flex items-center gap-1.5 px-1.5 py-2 bg-gray-50/80 border-b cursor-pointer select-none group/header"
         onClick={handleHeaderClick}
       >
-        {/* Drag handle */}
-        <div
-          draggable
-          onDragStart={(e) => {
-            e.stopPropagation();
-            onDragStart(e);
-          }}
-          className="flex-shrink-0 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-200 text-gray-300 hover:text-gray-500 transition-colors"
-          onClick={(e) => e.stopPropagation()}
-          title="드래그하여 이동"
-        >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-            <circle cx="9" cy="5" r="1.5" /><circle cx="15" cy="5" r="1.5" />
-            <circle cx="9" cy="10" r="1.5" /><circle cx="15" cy="10" r="1.5" />
-            <circle cx="9" cy="15" r="1.5" /><circle cx="15" cy="15" r="1.5" />
-            <circle cx="9" cy="20" r="1.5" /><circle cx="15" cy="20" r="1.5" />
-          </svg>
-        </div>
+        {/* Drag handle — hidden in content-only (no reordering) */}
+        {!CONTENT_ONLY && (
+          <div
+            draggable
+            onDragStart={(e) => {
+              e.stopPropagation();
+              onDragStart(e);
+            }}
+            className="flex-shrink-0 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-200 text-gray-300 hover:text-gray-500 transition-colors"
+            onClick={(e) => e.stopPropagation()}
+            title="드래그하여 이동"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="9" cy="5" r="1.5" /><circle cx="15" cy="5" r="1.5" />
+              <circle cx="9" cy="10" r="1.5" /><circle cx="15" cy="10" r="1.5" />
+              <circle cx="9" cy="15" r="1.5" /><circle cx="15" cy="15" r="1.5" />
+              <circle cx="9" cy="20" r="1.5" /><circle cx="15" cy="20" r="1.5" />
+            </svg>
+          </div>
+        )}
 
         <span className="text-lg flex-shrink-0">{def?.icon || '?'}</span>
         <div className="flex-1 min-w-0">
@@ -1101,26 +1114,33 @@ function SectionCard({
           )}
         </div>
 
-        {/* Action buttons */}
+        {/* Action buttons — content-only shows ONLY the edit (글·사진) button;
+            move/visibility/duplicate/delete are structural and hidden. */}
         <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
-          <button onClick={() => onMove('up')} disabled={index === 0} className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-200 rounded transition-colors disabled:opacity-20" title="위로">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M5 15l7-7 7 7" /></svg>
-          </button>
-          <button onClick={() => onMove('down')} disabled={index === totalSections - 1} className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-200 rounded transition-colors disabled:opacity-20" title="아래로">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 9l-7 7-7-7" /></svg>
-          </button>
-          <button onClick={onToggleVisibility} className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-200 rounded transition-colors" title={section.isVisible ? '숨기기' : '표시'}>
-            {section.isVisible ? '👁️' : '👁️‍🗨️'}
-          </button>
-          <button onClick={onDuplicate} className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="복제">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-          </button>
+          {!CONTENT_ONLY && (
+            <>
+              <button onClick={() => onMove('up')} disabled={index === 0} className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-200 rounded transition-colors disabled:opacity-20" title="위로">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M5 15l7-7 7 7" /></svg>
+              </button>
+              <button onClick={() => onMove('down')} disabled={index === totalSections - 1} className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-200 rounded transition-colors disabled:opacity-20" title="아래로">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 9l-7 7-7-7" /></svg>
+              </button>
+              <button onClick={onToggleVisibility} className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-200 rounded transition-colors" title={section.isVisible ? '숨기기' : '표시'}>
+                {section.isVisible ? '👁️' : '👁️‍🗨️'}
+              </button>
+              <button onClick={onDuplicate} className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="복제">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+              </button>
+            </>
+          )}
           <button onClick={onToggleEdit} className={`p-1 rounded transition-colors ${isEditing ? 'text-blue-600 bg-blue-50' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-200'}`} title="편집">
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
           </button>
-          <button onClick={onDelete} className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="삭제">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
+          {!CONTENT_ONLY && (
+            <button onClick={onDelete} className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="삭제">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          )}
         </div>
       </div>
 
@@ -1180,7 +1200,7 @@ function SectionCard({
                 ))}
               </div>
             )}
-            {(['text', 'image', 'link', 'config'] as const).map((cat) => {
+            {(CONTENT_ONLY ? (['text', 'image'] as const) : (['text', 'image', 'link', 'config'] as const)).map((cat) => {
               const fields = groupedFields[cat] || [];
               if (fields.length === 0) return null;
               const meta = elementGroupMeta[cat]!;
@@ -1284,13 +1304,15 @@ function SectionCard({
               <div className="mt-3 pt-3 border-t border-indigo-100">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="text-xs font-bold text-indigo-700">📦 자식 블록 ({layoutChildren.length})</h4>
-                  <button
-                    type="button"
-                    onClick={() => setShowChildPicker(true)}
-                    className="text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded hover:bg-indigo-700"
-                  >
-                    + 블록 추가
-                  </button>
+                  {!CONTENT_ONLY && (
+                    <button
+                      type="button"
+                      onClick={() => setShowChildPicker(true)}
+                      className="text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded hover:bg-indigo-700"
+                    >
+                      + 블록 추가
+                    </button>
+                  )}
                 </div>
 
                 {layoutChildren.length === 0 ? (
@@ -1634,15 +1656,16 @@ export default function PageEditor() {
   // ═══════════════════════════════════════════════════
   return (
     <div className="flex h-[calc(100vh-8rem)]">
-      {/* Block Palette */}
-      <BlockPalette onAdd={handleAddBlock} />
+      {/* Block Palette — hidden in content-only (tenants can't add blocks) */}
+      {!CONTENT_ONLY && <BlockPalette onAdd={handleAddBlock} />}
 
       {/* Page List */}
       <div className="w-56 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col overflow-hidden">
         <div className="flex items-center justify-between px-3 py-2 border-b bg-gray-50">
           <h3 className="text-xs font-semibold">페이지</h3>
           <div className="flex gap-1">
-            <button onClick={handleCreatePage} className="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded hover:bg-blue-700">+ 추가</button>
+            {/* Add-page hidden in content-only — page structure is set up for the tenant. */}
+            {!CONTENT_ONLY && <button onClick={handleCreatePage} className="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded hover:bg-blue-700">+ 추가</button>}
           </div>
         </div>
         <div className="flex-1 overflow-y-auto">
@@ -1703,17 +1726,21 @@ export default function PageEditor() {
                   </span>
                 </div>
               </div>
-              <div className="flex gap-1.5">
-                <button onClick={() => setShowTemplateGallery(true)} className="text-xs px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors font-medium">
-                  템플릿
-                </button>
-                <button onClick={handleEditPage} className="text-xs px-3 py-1.5 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors font-medium">
-                  수정
-                </button>
-                <button onClick={handleDeletePage} className="text-xs px-3 py-1.5 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors font-medium">
-                  삭제
-                </button>
-              </div>
+              {/* Page-level structural actions (templates/settings/delete) are
+                  hidden in content-only — tenants edit content, not structure. */}
+              {!CONTENT_ONLY && (
+                <div className="flex gap-1.5">
+                  <button onClick={() => setShowTemplateGallery(true)} className="text-xs px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors font-medium">
+                    템플릿
+                  </button>
+                  <button onClick={handleEditPage} className="text-xs px-3 py-1.5 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors font-medium">
+                    수정
+                  </button>
+                  <button onClick={handleDeletePage} className="text-xs px-3 py-1.5 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors font-medium">
+                    삭제
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Sections */}
@@ -1748,30 +1775,32 @@ export default function PageEditor() {
               />
             ))}
 
-            {/* Drop zone at bottom */}
-            <div
-              className={`border-2 border-dashed rounded-xl py-8 text-center text-xs transition-all ${
-                dragOverIdx === sortedSections.length
-                  ? 'border-blue-400 bg-blue-50/80 text-blue-600 animate-pulse'
-                  : 'border-gray-300 text-gray-400 hover:border-gray-400'
-              }`}
-              onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; setDragOverIdx(sortedSections.length); }}
-              onDrop={(e) => { handleBoardDrop(e); }}
-            >
-              {sortedSections.length === 0 ? (
-                <div className="space-y-2">
-                  <div className="w-10 h-10 mx-auto bg-gray-100 rounded-xl flex items-center justify-center">
-                    <svg className="w-5 h-5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path d="M12 4v16m8-8H4" />
-                    </svg>
+            {/* Block drop zone — hidden in content-only (no adding blocks). */}
+            {!CONTENT_ONLY && (
+              <div
+                className={`border-2 border-dashed rounded-xl py-8 text-center text-xs transition-all ${
+                  dragOverIdx === sortedSections.length
+                    ? 'border-blue-400 bg-blue-50/80 text-blue-600 animate-pulse'
+                    : 'border-gray-300 text-gray-400 hover:border-gray-400'
+                }`}
+                onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; setDragOverIdx(sortedSections.length); }}
+                onDrop={(e) => { handleBoardDrop(e); }}
+              >
+                {sortedSections.length === 0 ? (
+                  <div className="space-y-2">
+                    <div className="w-10 h-10 mx-auto bg-gray-100 rounded-xl flex items-center justify-center">
+                      <svg className="w-5 h-5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path d="M12 4v16m8-8H4" />
+                      </svg>
+                    </div>
+                    <p>왼쪽 팔레트에서 블록을 드래그하거나 클릭하세요</p>
+                    <p className="text-gray-300">또는 상단의 "템플릿" 버튼으로 시작하세요</p>
                   </div>
-                  <p>왼쪽 팔레트에서 블록을 드래그하거나 클릭하세요</p>
-                  <p className="text-gray-300">또는 상단의 "템플릿" 버튼으로 시작하세요</p>
-                </div>
-              ) : (
-                <p>블록을 여기에 드롭하여 추가</p>
-              )}
-            </div>
+                ) : (
+                  <p>블록을 여기에 드롭하여 추가</p>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
