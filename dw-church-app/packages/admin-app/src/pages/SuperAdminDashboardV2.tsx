@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, type ReactNode } from 'react';
 import { useAuthStore, handoffSessionToNewTab } from '../stores/auth';
 import { useToast } from '../components';
 import { AIBuilderModal } from '../components/super-admin/AIBuilderModal';
@@ -105,11 +105,12 @@ const PLAN_COLORS: Record<string, string> = {
   free: 'bg-gray-100 text-gray-600',
 };
 
-type TabId = 'overview' | 'tenants' | 'domains' | 'users' | 'storage' | 'gallery';
+type TabId = 'overview' | 'tenants' | 'applications' | 'domains' | 'users' | 'storage' | 'gallery';
 
 const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'overview', label: '개요', icon: '📊' },
   { id: 'tenants', label: '교회 관리', icon: '⛪' },
+  { id: 'applications', label: '신청서', icon: '📝' },
   { id: 'gallery', label: '이미지 라이브러리', icon: '🖼️' },
   { id: 'domains', label: '도메인 관리', icon: '🌐' },
   { id: 'users', label: '사용자 관리', icon: '👥' },
@@ -1809,6 +1810,405 @@ function CreateUserModal({
   );
 }
 
+// ═══════════════════════════════════════════════════════════
+// ─── Tab: Applications (신청서 — website-build inbox) ──────
+// ═══════════════════════════════════════════════════════════
+type ApplicationStatus = 'new' | 'reviewing' | 'approved' | 'paid' | 'converted' | 'rejected';
+
+interface Application {
+  id: string;
+  churchName: string;
+  contactName: string;
+  email: string;
+  phone: string | null;
+  plan: 'light' | 'basic' | 'plus' | 'pro' | null;
+  billingPeriod: string | null;
+  existingUrl: string | null;
+  desiredDomain: string | null;
+  message: string | null;
+  status: ApplicationStatus;
+  adminNote: string | null;
+  paymentLink: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
+  new: '신규',
+  reviewing: '검토중',
+  approved: '승인',
+  paid: '결제완료',
+  converted: '전환됨',
+  rejected: '반려',
+};
+
+const APPLICATION_STATUS_COLORS: Record<ApplicationStatus, string> = {
+  new: 'bg-blue-100 text-blue-700',
+  reviewing: 'bg-amber-100 text-amber-700',
+  approved: 'bg-indigo-100 text-indigo-700',
+  paid: 'bg-green-100 text-green-700',
+  converted: 'bg-purple-100 text-purple-700',
+  rejected: 'bg-red-100 text-red-700',
+};
+
+const APPLICATION_STATUS_ORDER: ApplicationStatus[] = [
+  'new',
+  'reviewing',
+  'approved',
+  'paid',
+  'converted',
+  'rejected',
+];
+
+function ApplicationStatusBadge({ status }: { status: ApplicationStatus }) {
+  return (
+    <span
+      className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+        APPLICATION_STATUS_COLORS[status] || 'bg-gray-100 text-gray-600'
+      }`}
+    >
+      {APPLICATION_STATUS_LABELS[status] || status}
+    </span>
+  );
+}
+
+function ApplicationsTab() {
+  const apiFetch = useAdminApi();
+  const { showToast } = useToast();
+
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<'all' | ApplicationStatus>('all');
+  const [selected, setSelected] = useState<Application | null>(null);
+
+  const fetchApplications = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await apiFetch<{ data: Application[] } | Application[]>('/applications');
+      setApplications(Array.isArray(res) ? res : res.data ?? []);
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '신청서 목록 로딩 실패');
+    } finally {
+      setLoading(false);
+    }
+  }, [apiFetch, showToast]);
+
+  useEffect(() => {
+    void fetchApplications();
+  }, [fetchApplications]);
+
+  // newest-first, then apply the status filter
+  const sorted = [...applications].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+  const visible =
+    statusFilter === 'all' ? sorted : sorted.filter((a) => a.status === statusFilter);
+
+  const filterTabs: { id: 'all' | ApplicationStatus; label: string }[] = [
+    { id: 'all', label: '전체' },
+    ...APPLICATION_STATUS_ORDER.map((s) => ({ id: s, label: APPLICATION_STATUS_LABELS[s] })),
+  ];
+
+  return (
+    <div className="space-y-4">
+      {/* Status filter */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        {filterTabs.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setStatusFilter(t.id)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              statusFilter === t.id
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        {loading ? (
+          <Spinner />
+        ) : visible.length === 0 ? (
+          <EmptyState
+            message={statusFilter === 'all' ? '아직 신청서가 없습니다' : '해당 상태의 신청서가 없습니다'}
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 text-left text-gray-500 font-medium text-xs">
+                  <th className="px-5 py-3">교회명</th>
+                  <th className="px-5 py-3">담당자</th>
+                  <th className="px-5 py-3">플랜</th>
+                  <th className="px-5 py-3">상태</th>
+                  <th className="px-5 py-3">신청일</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {visible.map((a, idx) => (
+                  <tr
+                    key={a.id}
+                    onClick={() => setSelected(a)}
+                    className={`cursor-pointer hover:bg-blue-50/60 transition-colors ${
+                      idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
+                    }`}
+                  >
+                    <td className="px-5 py-3 font-medium text-gray-900">{a.churchName}</td>
+                    <td className="px-5 py-3 text-gray-700">
+                      <div>{a.contactName}</div>
+                      <div className="text-xs text-gray-400">{a.email}</div>
+                    </td>
+                    <td className="px-5 py-3 text-gray-700">
+                      {a.plan ? (
+                        <span
+                          className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
+                            PLAN_COLORS[a.plan] || 'bg-gray-100 text-gray-600'
+                          }`}
+                        >
+                          {a.plan}
+                        </span>
+                      ) : (
+                        <span className="text-gray-300">—</span>
+                      )}
+                      {a.billingPeriod && (
+                        <span className="ml-1 text-xs text-gray-400">{a.billingPeriod}</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-3">
+                      <ApplicationStatusBadge status={a.status} />
+                    </td>
+                    <td className="px-5 py-3 text-gray-500 text-xs">{formatDate(a.createdAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {selected && (
+        <ApplicationDetailModal
+          application={selected}
+          onClose={() => setSelected(null)}
+          onChanged={() => {
+            setSelected(null);
+            void fetchApplications();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function ApplicationDetailModal({
+  application,
+  onClose,
+  onChanged,
+}: {
+  application: Application;
+  onClose: () => void;
+  onChanged: () => void;
+}) {
+  const apiFetch = useAdminApi();
+  const { showToast } = useToast();
+
+  const [status, setStatus] = useState<ApplicationStatus>(application.status);
+  const [adminNote, setAdminNote] = useState(application.adminNote ?? '');
+  const [paymentLink, setPaymentLink] = useState(application.paymentLink ?? '');
+  const [saving, setSaving] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const busy = saving || sending || deleting;
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await apiFetch(`/applications/${application.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status, adminNote, paymentLink }),
+      });
+      showToast('success', '저장되었습니다.');
+      onChanged();
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '저장 실패');
+      setSaving(false);
+    }
+  };
+
+  const handleSendPaymentLink = async () => {
+    if (!paymentLink.trim()) {
+      showToast('error', '결제 링크를 먼저 입력하세요.');
+      return;
+    }
+    if (!window.confirm('신청자에게 결제 링크 이메일을 보내시겠습니까? (상태가 승인으로 변경됩니다)')) return;
+    setSending(true);
+    try {
+      await apiFetch(`/applications/${application.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ paymentLink, sendPaymentLink: true }),
+      });
+      showToast('success', '결제 링크를 전송했습니다.');
+      onChanged();
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '결제 링크 전송 실패');
+      setSending(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm(`"${application.churchName}" 신청서를 삭제하시겠습니까?`)) return;
+    setDeleting(true);
+    try {
+      await apiFetch(`/applications/${application.id}`, { method: 'DELETE' });
+      showToast('success', '삭제되었습니다.');
+      onChanged();
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '삭제 실패');
+      setDeleting(false);
+    }
+  };
+
+  const Row = ({ label, value }: { label: string; value: ReactNode }) => (
+    <div className="flex gap-3 py-1.5 border-b border-gray-50 last:border-0">
+      <span className="w-24 shrink-0 text-xs font-medium text-gray-400">{label}</span>
+      <span className="text-sm text-gray-800 break-all">{value ?? <span className="text-gray-300">—</span>}</span>
+    </div>
+  );
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl w-full max-w-lg p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-bold">{application.churchName}</h3>
+            <ApplicationStatusBadge status={application.status} />
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">
+            &times;
+          </button>
+        </div>
+
+        {/* Read-only details */}
+        <div className="rounded-lg border border-gray-100 bg-gray-50/60 px-4 py-2 mb-4">
+          <Row label="담당자" value={application.contactName} />
+          <Row label="이메일" value={application.email} />
+          <Row label="연락처" value={application.phone} />
+          <Row
+            label="플랜"
+            value={
+              application.plan
+                ? `${application.plan}${application.billingPeriod ? ` (${application.billingPeriod})` : ''}`
+                : null
+            }
+          />
+          <Row
+            label="기존 사이트"
+            value={
+              application.existingUrl ? (
+                <a
+                  href={application.existingUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  {application.existingUrl}
+                </a>
+              ) : null
+            }
+          />
+          <Row label="희망 도메인" value={application.desiredDomain} />
+          <Row label="메시지" value={application.message ? <span className="whitespace-pre-wrap">{application.message}</span> : null} />
+          <Row label="신청일" value={formatDate(application.createdAt)} />
+        </div>
+
+        {/* Editable controls */}
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium mb-1">상태</label>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value as ApplicationStatus)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            >
+              {APPLICATION_STATUS_ORDER.map((s) => (
+                <option key={s} value={s}>
+                  {APPLICATION_STATUS_LABELS[s]}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">관리자 메모</label>
+            <textarea
+              value={adminNote}
+              onChange={(e) => setAdminNote(e.target.value)}
+              rows={3}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              placeholder="내부 메모 (신청자에게 표시되지 않음)"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">결제 링크</label>
+            <div className="flex gap-2">
+              <input
+                type="url"
+                value={paymentLink}
+                onChange={(e) => setPaymentLink(e.target.value)}
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                placeholder="https://..."
+              />
+              <button
+                type="button"
+                onClick={handleSendPaymentLink}
+                disabled={busy}
+                className="shrink-0 px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {sending ? '전송 중...' : '결제 링크 보내기'}
+              </button>
+            </div>
+            <p className="mt-1 text-xs text-gray-400">전송 시 신청자에게 이메일이 발송되며 상태가 승인으로 변경됩니다.</p>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-2 pt-5">
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={busy}
+            className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {saving ? '저장 중...' : '저장'}
+          </button>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={busy}
+            className="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {deleting ? '삭제 중...' : '삭제'}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={busy}
+            className="px-4 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200 disabled:opacity-50 transition-colors"
+          >
+            닫기
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function UsersTab() {
   const apiFetch = useAdminApi();
   const { showToast } = useToast();
@@ -2803,6 +3203,7 @@ export default function SuperAdminDashboardV2() {
           />
         )}
         {activeTab === 'tenants' && <TenantsTab refreshKey={tenantsRefreshKey} />}
+        {activeTab === 'applications' && <ApplicationsTab />}
         {activeTab === 'gallery' && <GalleryTab />}
         {activeTab === 'domains' && <DomainsTab />}
         {activeTab === 'users' && <UsersTab />}
