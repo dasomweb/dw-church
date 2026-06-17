@@ -105,18 +105,71 @@ const PLAN_COLORS: Record<string, string> = {
   free: 'bg-gray-100 text-gray-600',
 };
 
-type TabId = 'overview' | 'tenants' | 'applications' | 'reference' | 'domains' | 'users' | 'storage' | 'gallery';
+type TabId = 'overview' | 'tenants' | 'applications' | 'reference' | 'billing' | 'support' | 'domains' | 'users' | 'storage' | 'gallery';
 
 const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'overview', label: '개요', icon: '📊' },
   { id: 'tenants', label: '교회 관리', icon: '⛪' },
   { id: 'applications', label: '신청서', icon: '📝' },
   { id: 'reference', label: '참조 데이터', icon: '📚' },
+  { id: 'billing', label: '과금', icon: '💳' },
+  { id: 'support', label: '고객지원', icon: '🎧' },
   { id: 'gallery', label: '이미지 라이브러리', icon: '🖼️' },
   { id: 'domains', label: '도메인 관리', icon: '🌐' },
   { id: 'users', label: '사용자 관리', icon: '👥' },
   { id: 'storage', label: '저장공간', icon: '💾' },
 ];
+
+// ─── Billing constants (Phase 3) ─────────────────────────
+// 4-tier 가격표 (2026-06 확정, 신청서/과금 집계용). PLAN_PRICES(개요 MRR용,
+// basic/pro 2-tier 레거시)와 별개 — 과금 탭은 light/basic/plus/pro 4단계로 집계.
+const BILLING_MONTHLY: Record<string, number> = { light: 59, basic: 99, plus: 149, pro: 199 };
+const BILLING_SETUP: Record<string, number> = { light: 300, basic: 500, plus: 700, pro: 1000 };
+// 과금 탭에 노출할 플랜 순서 (enterprise/free 등 그 외는 '기타'로 합산).
+const BILLING_PLAN_ORDER = ['light', 'basic', 'plus', 'pro'] as const;
+const BILLING_PLAN_LABELS: Record<string, string> = {
+  light: 'Light', basic: 'Basic', plus: 'Plus', pro: 'Pro', 기타: '기타',
+};
+
+// ─── Support ticket types (Phase 4) ──────────────────────
+type SupportStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
+interface SupportTicket {
+  id: string;
+  tenantSlug: string | null;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  status: SupportStatus;
+  adminReply: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+const SUPPORT_STATUS_LABELS: Record<SupportStatus, string> = {
+  open: '대기',
+  in_progress: '처리중',
+  resolved: '해결',
+  closed: '종료',
+};
+const SUPPORT_STATUS_COLORS: Record<SupportStatus, string> = {
+  open: 'bg-red-100 text-red-700',
+  in_progress: 'bg-blue-100 text-blue-700',
+  resolved: 'bg-green-100 text-green-700',
+  closed: 'bg-gray-100 text-gray-600',
+};
+const SUPPORT_STATUS_ORDER: SupportStatus[] = ['open', 'in_progress', 'resolved', 'closed'];
+
+function SupportStatusBadge({ status }: { status: SupportStatus }) {
+  return (
+    <span
+      className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+        SUPPORT_STATUS_COLORS[status] || 'bg-gray-100 text-gray-600'
+      }`}
+    >
+      {SUPPORT_STATUS_LABELS[status] || status}
+    </span>
+  );
+}
 
 // ─── Helpers ─────────────────────────────────────────────
 function formatDate(dateStr: string): string {
@@ -1118,6 +1171,8 @@ function OverviewTab({
   // 운영 대시보드용 신청서 요약 — 신규 신청 수 + 이단 의심(미확인) 경보 수.
   const [newCount, setNewCount] = useState<number | null>(null);
   const [cultAlertCount, setCultAlertCount] = useState<number | null>(null);
+  // 미처리 지원 — open/in_progress 상태의 support 티켓 수.
+  const [openSupportCount, setOpenSupportCount] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -1136,6 +1191,26 @@ function OverviewTab({
           setNewCount(0);
           setCultAlertCount(0);
         }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [apiFetch]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiFetch<{ data: SupportTicket[] } | SupportTicket[]>('/support-tickets');
+        const list = Array.isArray(res) ? res : res.data ?? [];
+        if (cancelled) return;
+        setOpenSupportCount(
+          list.filter((t) => t.status === 'open' || t.status === 'in_progress').length,
+        );
+      } catch {
+        // non-fatal — overview just won't show the support metric
+        if (!cancelled) setOpenSupportCount(0);
       }
     })();
     return () => {
@@ -1183,6 +1258,12 @@ function OverviewTab({
           value={cultAlertCount ?? '-'}
           color="rose"
           subtitle="미확인 cult 분류"
+        />
+        <StatCard
+          title="🎧 미처리 지원"
+          value={openSupportCount ?? '-'}
+          color="amber"
+          subtitle="대기 + 처리중"
         />
       </div>
 
@@ -3543,6 +3624,458 @@ function StorageTab() {
 // ─── Tab: Migration — imported from MigrationTab.tsx ──────
 
 // ═══════════════════════════════════════════════════════════
+// ─── Tab: Billing (과금) ─────────────────────────────────
+// ═══════════════════════════════════════════════════════════
+// Phase 3 — 프론트엔드 집계 전용. 신규 백엔드 없음.
+// MRR/ARR 는 활성 테넌트의 plan × 월 요금으로 산출하고, 셋업비는 신청서
+// (status = paid/converted) 의 plan × 셋업비를 누적한다.
+function BillingTab() {
+  const apiFetch = useAdminApi();
+  const { showToast } = useToast();
+
+  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        // TenantsTab 와 동일한 호출 형태({ data, meta }). 집계를 위해 전체 페이지를
+        // 순회한다(과금 계산은 표본이 아닌 전수가 필요).
+        const allTenants: Tenant[] = [];
+        let page = 1;
+        let totalPages = 1;
+        do {
+          const res = await apiFetch<TenantsResponse>(`/tenants?page=${page}&perPage=100`);
+          allTenants.push(...res.data);
+          totalPages = res.meta?.totalPages ?? 1;
+          page += 1;
+        } while (page <= totalPages);
+
+        const appRes = await apiFetch<{ data: Application[] } | Application[]>('/applications');
+        const apps = Array.isArray(appRes) ? appRes : appRes.data ?? [];
+
+        if (cancelled) return;
+        setTenants(allTenants);
+        setApplications(apps);
+      } catch (err) {
+        if (!cancelled) showToast('error', err instanceof Error ? err.message : '과금 데이터 로딩 실패');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [apiFetch, showToast]);
+
+  if (loading) return <Spinner />;
+
+  // ── MRR: 활성 테넌트만 plan 별 집계. 알 수 없는 plan 은 '기타' 로 합산(요금 0). ──
+  const activeTenants = tenants.filter((t) => t.isActive);
+  type Tier = (typeof BILLING_PLAN_ORDER)[number] | '기타';
+  const tierCounts: Record<string, number> = {};
+  for (const t of activeTenants) {
+    const plan = (t.plan || '').toLowerCase();
+    const tier: Tier = (BILLING_PLAN_ORDER as readonly string[]).includes(plan) ? (plan as Tier) : '기타';
+    tierCounts[tier] = (tierCounts[tier] ?? 0) + 1;
+  }
+  const mrrRows = [...BILLING_PLAN_ORDER, ...(tierCounts['기타'] ? (['기타'] as const) : [])].map((tier) => {
+    const count = tierCounts[tier] ?? 0;
+    const monthly = BILLING_MONTHLY[tier] ?? 0; // '기타' → 0
+    return { tier, count, total: count * monthly };
+  });
+  const mrr = mrrRows.reduce((sum, r) => sum + r.total, 0);
+  const arr = mrr * 12;
+
+  // ── 셋업비 수금: 신청서 status=paid|converted 의 plan 별 셋업비 누적. ──
+  const paidApps = applications.filter((a) => a.status === 'paid' || a.status === 'converted');
+  const collectedSetup = paidApps.reduce((sum, a) => sum + (a.plan ? BILLING_SETUP[a.plan] ?? 0 : 0), 0);
+  // 승인됐지만 아직 미결제(=결제 대기) 신청서 수.
+  const pendingPaymentCount = applications.filter((a) => a.status === 'approved').length;
+
+  // ── Stripe 연동: 테넌트 응답에 stripe 필드가 있으면 연동/미연동 카운트, 없으면 안내. ──
+  const hasStripeField = tenants.some(
+    (t) => 'stripeSubscriptionId' in (t as object) || 'stripeCustomerId' in (t as object),
+  );
+  const stripeConnected = hasStripeField
+    ? tenants.filter(
+        (t) =>
+          !!(t as { stripeSubscriptionId?: string }).stripeSubscriptionId ||
+          !!(t as { stripeCustomerId?: string }).stripeCustomerId,
+      ).length
+    : 0;
+  const stripeNotConnected = tenants.length - stripeConnected;
+
+  return (
+    <div className="space-y-6">
+      {/* 핵심 지표 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="월 매출 (MRR)" value={`$${mrr.toLocaleString()}`} color="amber" subtitle="활성 교회 기준" />
+        <StatCard title="연 매출 (ARR)" value={`$${arr.toLocaleString()}`} color="green" subtitle="MRR × 12" />
+        <StatCard
+          title="수금된 셋업비 (누적)"
+          value={`$${collectedSetup.toLocaleString()}`}
+          color="purple"
+          subtitle={`결제완료/전환 신청 ${paidApps.length}건`}
+        />
+        <StatCard
+          title="결제 대기 신청"
+          value={pendingPaymentCount}
+          color="rose"
+          subtitle="status = 승인"
+        />
+      </div>
+
+      {/* MRR by tier */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="px-5 py-3 border-b border-gray-100">
+          <h2 className="text-sm font-semibold text-gray-700">플랜별 월 매출 (MRR)</h2>
+        </div>
+        {mrrRows.every((r) => r.count === 0) ? (
+          <EmptyState message="활성 교회가 없습니다" />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 text-left text-gray-500 font-medium text-xs">
+                  <th className="px-5 py-3">플랜</th>
+                  <th className="px-5 py-3">교회 수</th>
+                  <th className="px-5 py-3">월 요금</th>
+                  <th className="px-5 py-3 text-right">월 합계</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {mrrRows.map((r) => (
+                  <tr key={r.tier}>
+                    <td className="px-5 py-3">
+                      <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${PLAN_COLORS[r.tier] || 'bg-gray-100 text-gray-600'}`}>
+                        {BILLING_PLAN_LABELS[r.tier] ?? r.tier}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3 text-gray-700">{r.count}</td>
+                    <td className="px-5 py-3 text-gray-500">
+                      {BILLING_MONTHLY[r.tier] ? `$${BILLING_MONTHLY[r.tier]}` : '—'}
+                    </td>
+                    <td className="px-5 py-3 text-right font-medium text-gray-900">${r.total.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="bg-gray-50 font-semibold text-gray-900">
+                  <td className="px-5 py-3" colSpan={3}>합계 (MRR)</td>
+                  <td className="px-5 py-3 text-right">${mrr.toLocaleString()}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Stripe 연동 상태 */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <h2 className="text-sm font-semibold text-gray-700 mb-3">Stripe 연동 상태</h2>
+        {hasStripeField ? (
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-green-50 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-green-600">{stripeConnected}</p>
+              <p className="text-xs text-green-500 mt-1">연동됨</p>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-gray-600">{stripeNotConnected}</p>
+              <p className="text-xs text-gray-500 mt-1">미연동</p>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500 leading-relaxed">
+            구독 결제(MRR 실수금)·결제 실패 현황은 Stripe 연동 활성화 후 표시됩니다.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// ─── Tab: Support (고객지원) ─────────────────────────────
+// ═══════════════════════════════════════════════════════════
+// Phase 4 — support API(/support-tickets) 사용. 목록 + 상태 필터 + 상세 모달
+// (답변/저장/삭제). PATCH 의 sendReply:true 면 서버가 이메일을 발송한다.
+function SupportTab() {
+  const apiFetch = useAdminApi();
+  const { showToast } = useToast();
+
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<'all' | SupportStatus>('all');
+  const [selected, setSelected] = useState<SupportTicket | null>(null);
+
+  const fetchTickets = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await apiFetch<{ data: SupportTicket[] } | SupportTicket[]>('/support-tickets');
+      setTickets(Array.isArray(res) ? res : res.data ?? []);
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '지원 티켓 로딩 실패');
+    } finally {
+      setLoading(false);
+    }
+  }, [apiFetch, showToast]);
+
+  useEffect(() => {
+    void fetchTickets();
+  }, [fetchTickets]);
+
+  // newest-first, then apply the status filter
+  const sorted = [...tickets].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+  const visible = statusFilter === 'all' ? sorted : sorted.filter((t) => t.status === statusFilter);
+
+  const filterTabs: { id: 'all' | SupportStatus; label: string }[] = [
+    { id: 'all', label: '전체' },
+    ...SUPPORT_STATUS_ORDER.map((s) => ({ id: s, label: SUPPORT_STATUS_LABELS[s] })),
+  ];
+
+  return (
+    <div className="space-y-4">
+      {/* Status filter */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        {filterTabs.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setStatusFilter(t.id)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              statusFilter === t.id
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        {loading ? (
+          <Spinner />
+        ) : visible.length === 0 ? (
+          <EmptyState
+            message={statusFilter === 'all' ? '아직 문의가 없습니다' : '해당 상태의 문의가 없습니다'}
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 text-left text-gray-500 font-medium text-xs">
+                  <th className="px-5 py-3">제목</th>
+                  <th className="px-5 py-3">교회</th>
+                  <th className="px-5 py-3">이메일</th>
+                  <th className="px-5 py-3">상태</th>
+                  <th className="px-5 py-3">접수일</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {visible.map((t, idx) => (
+                  <tr
+                    key={t.id}
+                    onClick={() => setSelected(t)}
+                    className={`cursor-pointer hover:bg-blue-50/60 transition-colors ${
+                      idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
+                    }`}
+                  >
+                    <td className="px-5 py-3 font-medium text-gray-900">{t.subject}</td>
+                    <td className="px-5 py-3 text-gray-700 font-mono text-xs">
+                      {t.tenantSlug || <span className="text-gray-300">—</span>}
+                    </td>
+                    <td className="px-5 py-3 text-gray-500 text-xs">{t.email}</td>
+                    <td className="px-5 py-3">
+                      <SupportStatusBadge status={t.status} />
+                    </td>
+                    <td className="px-5 py-3 text-gray-500 text-xs">{formatDate(t.createdAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {selected && (
+        <SupportTicketModal
+          ticket={selected}
+          onClose={() => setSelected(null)}
+          onChanged={() => {
+            setSelected(null);
+            void fetchTickets();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function SupportTicketModal({
+  ticket,
+  onClose,
+  onChanged,
+}: {
+  ticket: SupportTicket;
+  onClose: () => void;
+  onChanged: () => void;
+}) {
+  const apiFetch = useAdminApi();
+  const { showToast } = useToast();
+
+  const [status, setStatus] = useState<SupportStatus>(ticket.status);
+  const [adminReply, setAdminReply] = useState(ticket.adminReply ?? '');
+  const [saving, setSaving] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const busy = saving || sending || deleting;
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await apiFetch(`/support-tickets/${ticket.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status, adminReply }),
+      });
+      showToast('success', '저장되었습니다.');
+      onChanged();
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '저장 실패');
+      setSaving(false);
+    }
+  };
+
+  const handleSendReply = async () => {
+    if (!adminReply.trim()) {
+      showToast('error', '답변 내용을 먼저 입력하세요.');
+      return;
+    }
+    if (!window.confirm('신청자에게 답변 이메일을 보내시겠습니까?')) return;
+    setSending(true);
+    try {
+      await apiFetch(`/support-tickets/${ticket.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status, adminReply, sendReply: true }),
+      });
+      showToast('success', '답변을 전송했습니다.');
+      onChanged();
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '답변 전송 실패');
+      setSending(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm(`"${ticket.subject}" 문의를 삭제하시겠습니까?`)) return;
+    setDeleting(true);
+    try {
+      await apiFetch(`/support-tickets/${ticket.id}`, { method: 'DELETE' });
+      showToast('success', '삭제되었습니다.');
+      onChanged();
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '삭제 실패');
+      setDeleting(false);
+    }
+  };
+
+  const Row = ({ label, value }: { label: string; value: ReactNode }) => (
+    <div className="flex gap-3 py-1.5 border-b border-gray-50 last:border-0">
+      <span className="w-20 shrink-0 text-xs font-medium text-gray-400">{label}</span>
+      <span className="text-sm text-gray-800 break-all">{value ?? <span className="text-gray-300">—</span>}</span>
+    </div>
+  );
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl w-full max-w-lg p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="text-lg font-bold">{ticket.subject}</h3>
+            <SupportStatusBadge status={ticket.status} />
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">
+            &times;
+          </button>
+        </div>
+
+        {/* Read-only 정보 */}
+        <div className="rounded-lg bg-gray-50 px-4 py-2 mb-4">
+          <Row label="교회" value={ticket.tenantSlug ? <span className="font-mono">{ticket.tenantSlug}</span> : null} />
+          <Row label="이름" value={ticket.name} />
+          <Row label="이메일" value={ticket.email} />
+          <Row label="접수일" value={formatDate(ticket.createdAt)} />
+        </div>
+
+        {/* 문의 내용 */}
+        <div className="mb-4">
+          <label className="block text-xs font-medium text-gray-400 mb-1">문의 내용</label>
+          <div className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 whitespace-pre-wrap break-words">
+            {ticket.message}
+          </div>
+        </div>
+
+        {/* 상태 */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">상태</label>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value as SupportStatus)}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          >
+            {SUPPORT_STATUS_ORDER.map((s) => (
+              <option key={s} value={s}>{SUPPORT_STATUS_LABELS[s]}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* 답변 */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">답변</label>
+          <textarea
+            value={adminReply}
+            onChange={(e) => setAdminReply(e.target.value)}
+            rows={5}
+            placeholder="신청자에게 보낼 답변을 입력하세요."
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-y"
+          />
+        </div>
+
+        {/* Actions */}
+        <div className="flex flex-wrap gap-2 pt-1">
+          <button
+            onClick={handleSendReply}
+            disabled={busy}
+            className="flex-1 min-w-[8rem] bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          >
+            {sending ? '전송 중...' : '답변 보내기'}
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={busy}
+            className="px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200 disabled:opacity-50 transition-colors"
+          >
+            {saving ? '저장 중...' : '저장'}
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={busy}
+            className="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 disabled:opacity-50 transition-colors"
+          >
+            {deleting ? '삭제 중...' : '삭제'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
 // ─── Main Dashboard Component ────────────────────────────
 // ═══════════════════════════════════════════════════════════
 export default function SuperAdminDashboardV2() {
@@ -3659,6 +4192,8 @@ export default function SuperAdminDashboardV2() {
         {activeTab === 'tenants' && <TenantsTab refreshKey={tenantsRefreshKey} />}
         {activeTab === 'applications' && <ApplicationsTab />}
         {activeTab === 'reference' && <ReferenceDataTab />}
+        {activeTab === 'billing' && <BillingTab />}
+        {activeTab === 'support' && <SupportTab />}
         {activeTab === 'gallery' && <GalleryTab />}
         {activeTab === 'domains' && <DomainsTab />}
         {activeTab === 'users' && <UsersTab />}
