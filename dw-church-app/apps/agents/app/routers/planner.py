@@ -33,6 +33,7 @@ from app.services.agents.design import (
     DesignAgent,
     DesignInput,
 )
+from app.services.agents.shared.church_voice import CHURCH_VOICE
 from app.services.agents.shared.retry import SchemaValidationError
 from app.services.agents.strategy import (
     CensusSnapshot,
@@ -941,7 +942,12 @@ async def generate_content_map(body: ContentMapRequest) -> dict:
 
     strategy_prompt = f"""You are a senior content strategist for a {body.industry} website.
 
-Business: "{body.businessName}"
+This is a Christian church website. Frame every purpose / keyMessage in a
+pastoral, faith-rooted voice — think about a visitor's spiritual journey and
+how to welcome them into the community, NOT a customer sales funnel. Speak of
+성도/이웃/방문자, 예배·말씀·섬김·공동체 — never 고객/전환/마케팅 혜택.
+
+Church: "{body.businessName}"
 Description: {body.description}
 Services: {body.services}
 Target audience: {body.targetAudience}
@@ -1056,12 +1062,15 @@ Page: {p['name']} ({p['slug']})
         # copywriter writes from that distilled per-page strategy — this
         # removes the last truncation point and keeps the prompt focused
         # on exactly what this page needs (smaller AND lossless).
-        copy_prompt = f"""You are an expert web copywriter. Your job is to write the ACTUAL TEXT
-that will appear on each section of each page. This text must be ready to publish.
+        copy_prompt = f"""You are an expert church-website copywriter. Your job is to write the
+ACTUAL TEXT that will appear on each section of each page. This text must be
+ready to publish, and must sound like a warm faith community — not a business.
 
-Business: "{body.businessName}" — {body.description}
-Services: {body.services}
-Target: {body.targetAudience}
+{CHURCH_VOICE}
+
+Church: "{body.businessName}" — {body.description}
+Ministries: {body.services}
+Audience: {body.targetAudience}
 
 [CONTENT STRATEGY — Follow this exactly. The "Evidence" bullets are
 specific facts already distilled from the full market/competitor

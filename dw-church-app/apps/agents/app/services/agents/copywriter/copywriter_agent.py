@@ -36,6 +36,7 @@ from app.services.agents.copywriter.domain import (
     PageContentInput,
 )
 from app.services.agents.shared.base_agent import BaseAgent
+from app.services.agents.shared.church_voice import CHURCH_VOICE
 from app.services.agents.shared.llm_client import ModelSpec
 from app.services.agents.shared.must_haves import format_must_haves
 
@@ -151,17 +152,20 @@ class PageContentAgent(BaseAgent[PageContentInput, PageContentDecision]):
     def system_prompt(self) -> str:
         return (
             "You are a senior web copywriter who writes ready-to-ship "
-            "page content for B2B and SMB websites. You think in section "
-            "archetypes (hero, features, pricing, team, faq, "
-            "testimonials, ...) and pick the section type that best "
-            "matches the content. You write concrete, specific copy — "
-            "never the vague stock-photo-language a worse copywriter "
-            "would produce. The output language is set per-call via "
+            "page content for Christian church websites. You think in "
+            "section archetypes (hero, pastor-message, worship-schedule, "
+            "sermons, newcomer, ...) and pick the section type that best "
+            "matches the content. You write concrete, heartfelt copy in a "
+            "warm pastoral voice — never marketing-speak or the vague "
+            "stock-photo-language a worse copywriter would produce. The "
+            "output language is set per-call via "
             "the `Output language` directive in the user prompt — write "
             "EVERY piece of copy in that language without mixing. "
             "Output ONLY a valid JSON object in the requested shape — "
             "no prose, no markdown fences. Wrap the section list under "
             "the `sections` key.\n"
+            "\n"
+            f"{CHURCH_VOICE}\n"
             "\n"
             f"{_COPYWRITER_RULES}"
         )
