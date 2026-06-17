@@ -8,9 +8,9 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api-server-producti
 
 const PLANS = [
   { id: 'light', label: '라이트', monthly: 59, yearly: 49, setup: 300 },
-  { id: 'basic', label: '기본', monthly: 99, yearly: 79, setup: 400 },
-  { id: 'plus', label: '플러스', monthly: 149, yearly: 119, setup: 600 },
-  { id: 'pro', label: '프로', monthly: 199, yearly: 159, setup: 800 },
+  { id: 'basic', label: '기본', monthly: 99, yearly: 79, setup: 500 },
+  { id: 'plus', label: '플러스', monthly: 149, yearly: 119, setup: 700 },
+  { id: 'pro', label: '프로', monthly: 199, yearly: 159, setup: 1000 },
 ] as const;
 
 const inputCls =
