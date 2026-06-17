@@ -102,6 +102,8 @@ async function main(): Promise<void> {
   const { default: migrationRoutes } = await import('./modules/migration/routes.js');
   const { default: sharedImageRoutes } = await import('./modules/shared-images/routes.js');
   const { exportRoutes } = await import('./modules/export/routes.js');
+  const { cellRoutes } = await import('./modules/cells/routes.js');
+  const { newcomerRoutes } = await import('./modules/newcomers/routes.js');
 
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(tenantRoutes, { prefix: '/api/v1/admin' });
@@ -167,6 +169,8 @@ async function main(): Promise<void> {
   await app.register(migrationRoutes, { prefix: '/api/v1/migration' });
   await app.register(sharedImageRoutes, { prefix: '/api/v1' });
   await app.register(exportRoutes, { prefix: '/api/v1' }); // /export
+  await app.register(cellRoutes, { prefix: '/api/v1' }); // /cells (목장, Plus/Pro)
+  await app.register(newcomerRoutes, { prefix: '/api/v1' }); // /newcomers (새가족, Pro)
 
   // --- Internal: resolve custom domain to tenant slug (used by Next.js middleware) ---
   app.get('/api/v1/admin/tenants/resolve-domain', async (request, reply) => {
@@ -325,6 +329,60 @@ async function main(): Promise<void> {
             "updated_at"  TIMESTAMPTZ DEFAULT NOW()
           )
         `);
+        createHits++;
+      } catch { /* skip on error */ }
+
+      // 0d. cells — 목장(셀) content module (Plus/Pro). Created here so existing
+      //     tenants gain the table on deploy.
+      try {
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".cells (
+            "id"           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "name"         VARCHAR(200) NOT NULL,
+            "leader_name"  VARCHAR(100),
+            "leader_role"  VARCHAR(100),
+            "region"       VARCHAR(100),
+            "meeting_day"  VARCHAR(50),
+            "meeting_time" VARCHAR(50),
+            "location"     VARCHAR(255),
+            "contact"      VARCHAR(50),
+            "description"  TEXT,
+            "photo_url"    TEXT,
+            "sort_order"   INT DEFAULT 0,
+            "is_visible"   BOOLEAN DEFAULT true,
+            "created_at"   TIMESTAMPTZ DEFAULT NOW(),
+            "updated_at"   TIMESTAMPTZ DEFAULT NOW()
+          )
+        `);
+        createHits++;
+      } catch { /* skip on error */ }
+
+      // 0e. newcomer_registrations — 새가족 등록·관리 content module (Pro). Public
+      //     intake form writes here; admins manage status/memo.
+      try {
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".newcomer_registrations (
+            "id"             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "name"           VARCHAR(100) NOT NULL,
+            "phone"          VARCHAR(50),
+            "email"          VARCHAR(200),
+            "address"        VARCHAR(500),
+            "birth_date"     VARCHAR(40),
+            "gender"         VARCHAR(20),
+            "prev_church"    VARCHAR(200),
+            "visit_path"     VARCHAR(300),
+            "faith_status"   VARCHAR(100),
+            "family_info"    TEXT,
+            "prayer_request" TEXT,
+            "status"         VARCHAR(20) DEFAULT 'new' CHECK (status IN ('new','contacted','registered','archived')),
+            "memo"           TEXT,
+            "created_at"     TIMESTAMPTZ DEFAULT NOW(),
+            "updated_at"     TIMESTAMPTZ DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(
+          `CREATE INDEX IF NOT EXISTS "newcomers_status_idx" ON "${schema}".newcomer_registrations ("status", "created_at" DESC)`,
+        );
         createHits++;
       } catch { /* skip on error */ }
 

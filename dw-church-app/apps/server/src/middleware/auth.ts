@@ -4,6 +4,7 @@ import { env } from '../config/env.js';
 import { prisma } from '../config/database.js';
 import { AppError } from './error-handler.js';
 import { validateSchemaName } from '../utils/validate-schema.js';
+import { planAllowsFeature, tiersForFeature } from '../config/plan-limits.js';
 import type { JwtPayload } from '../config/jwt.js';
 
 function extractToken(request: FastifyRequest): string | null {
@@ -160,6 +161,31 @@ export function requirePlan(allowed: string[]) {
         'PLAN_UPGRADE_REQUIRED',
         403,
         `이 기능은 ${allowed.join(' 또는 ')} 플랜에서 사용할 수 있습니다. (현재: ${plan || 'unknown'})`,
+      );
+    }
+  };
+}
+
+/**
+ * Feature gate — require the tenant's plan to include a named feature
+ * (see FEATURE_TIERS in config/plan-limits.ts). Normalizes plan aliases, so
+ * pass a stable feature id (e.g. 'cells', 'newcomer_registration') rather than
+ * a tier list. super_admin bypasses. Stack after requireAuth/requireAdmin:
+ *
+ *   app.post('/cells', { preHandler: [requireAuth, requireFeature('cells')] }, ...)
+ */
+export function requireFeature(feature: string) {
+  return async function featureGate(
+    request: FastifyRequest,
+    _reply: FastifyReply,
+  ): Promise<void> {
+    if (request.user?.role === 'super_admin') return;
+    const plan = request.tenant?.plan ?? '';
+    if (!planAllowsFeature(plan, feature)) {
+      throw new AppError(
+        'PLAN_UPGRADE_REQUIRED',
+        403,
+        `이 기능은 ${tiersForFeature(feature).join(' 또는 ')} 플랜에서 사용할 수 있습니다. (현재: ${plan || 'unknown'})`,
       );
     }
   };
