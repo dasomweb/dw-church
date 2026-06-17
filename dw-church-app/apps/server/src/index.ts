@@ -106,6 +106,7 @@ async function main(): Promise<void> {
   const { newcomerRoutes } = await import('./modules/newcomers/routes.js');
   const { applicationRoutes } = await import('./modules/applications/routes.js');
   const { referenceDenominationRoutes } = await import('./modules/reference-denominations/routes.js');
+  const { supportRoutes } = await import('./modules/support/routes.js');
 
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(tenantRoutes, { prefix: '/api/v1/admin' });
@@ -175,6 +176,7 @@ async function main(): Promise<void> {
   await app.register(newcomerRoutes, { prefix: '/api/v1' }); // /newcomers (새가족, Pro)
   await app.register(applicationRoutes, { prefix: '/api/v1' }); // /applications + /admin/applications
   await app.register(referenceDenominationRoutes, { prefix: '/api/v1' }); // /admin/reference-denominations
+  await app.register(supportRoutes, { prefix: '/api/v1' }); // /support-tickets + /admin/support-tickets
 
   // --- Internal: resolve custom domain to tenant slug (used by Next.js middleware) ---
   app.get('/api/v1/admin/tenants/resolve-domain', async (request, reply) => {
@@ -671,6 +673,29 @@ async function main(): Promise<void> {
     }
   } catch (err) {
     app.log.warn(`reference_denominations table migration skipped: ${err}`);
+  }
+
+  // --- support_tickets (고객지원 티켓, 슈퍼어드민 관리) ---
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "support_tickets" (
+        "id"          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+        "tenant_slug" VARCHAR(100) NOT NULL DEFAULT '',
+        "name"        VARCHAR(100) NOT NULL DEFAULT '',
+        "email"       VARCHAR(200) NOT NULL DEFAULT '',
+        "subject"     VARCHAR(300) NOT NULL,
+        "message"     TEXT        NOT NULL DEFAULT '',
+        "status"      VARCHAR(20) NOT NULL DEFAULT 'open' CHECK (status IN ('open','in_progress','resolved','closed')),
+        "admin_reply" TEXT        NOT NULL DEFAULT '',
+        "created_at"  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        "updated_at"  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await prisma.$executeRawUnsafe(
+      `CREATE INDEX IF NOT EXISTS "support_tickets_status_idx" ON "support_tickets" ("status", "created_at" DESC)`,
+    );
+  } catch (err) {
+    app.log.warn(`support_tickets table migration skipped: ${err}`);
   }
 
   // --- Stripe billing columns on public.tenants ---
