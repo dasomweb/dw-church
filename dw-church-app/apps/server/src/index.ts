@@ -104,6 +104,7 @@ async function main(): Promise<void> {
   const { exportRoutes } = await import('./modules/export/routes.js');
   const { cellRoutes } = await import('./modules/cells/routes.js');
   const { newcomerRoutes } = await import('./modules/newcomers/routes.js');
+  const { applicationRoutes } = await import('./modules/applications/routes.js');
 
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(tenantRoutes, { prefix: '/api/v1/admin' });
@@ -171,6 +172,7 @@ async function main(): Promise<void> {
   await app.register(exportRoutes, { prefix: '/api/v1' }); // /export
   await app.register(cellRoutes, { prefix: '/api/v1' }); // /cells (목장, Plus/Pro)
   await app.register(newcomerRoutes, { prefix: '/api/v1' }); // /newcomers (새가족, Pro)
+  await app.register(applicationRoutes, { prefix: '/api/v1' }); // /applications + /admin/applications
 
   // --- Internal: resolve custom domain to tenant slug (used by Next.js middleware) ---
   app.get('/api/v1/admin/tenants/resolve-domain', async (request, reply) => {
@@ -584,6 +586,36 @@ async function main(): Promise<void> {
     );
   } catch (err) {
     app.log.warn(`ai_jobs table migration skipped: ${err}`);
+  }
+
+  // --- service_applications table (platform-wide build-request inbox) ---
+  //     Prospects submit the public 개발 신청서 before they have a tenant, so
+  //     this lives in the public schema like shared_images / ai_jobs.
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "service_applications" (
+        "id"             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+        "church_name"    VARCHAR(200) NOT NULL,
+        "contact_name"   VARCHAR(100),
+        "email"          VARCHAR(200) NOT NULL,
+        "phone"          VARCHAR(50),
+        "plan"           VARCHAR(20),
+        "billing_period" VARCHAR(20),
+        "existing_url"   VARCHAR(500),
+        "desired_domain" VARCHAR(255),
+        "message"        TEXT,
+        "status"         VARCHAR(20) NOT NULL DEFAULT 'new' CHECK (status IN ('new','reviewing','approved','paid','converted','rejected')),
+        "admin_note"     TEXT,
+        "payment_link"   VARCHAR(1000),
+        "created_at"     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        "updated_at"     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await prisma.$executeRawUnsafe(
+      `CREATE INDEX IF NOT EXISTS "service_applications_status_idx" ON "service_applications" ("status", "created_at" DESC)`,
+    );
+  } catch (err) {
+    app.log.warn(`service_applications table migration skipped: ${err}`);
   }
 
   // --- Stripe billing columns on public.tenants ---

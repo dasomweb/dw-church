@@ -147,6 +147,25 @@ export function passwordResetEmail(resetUrl: string): { subject: string; html: s
   };
 }
 
+export function paymentLinkEmail(
+  churchName: string,
+  paymentUrl: string,
+): { subject: string; html: string } {
+  return {
+    subject: `${churchName} 홈페이지 제작 신청 — 결제 안내 (TRUE LIGHT)`,
+    html: layout(`
+      ${heading('신청해 주셔서 감사합니다')}
+      ${paragraph(`<strong style="color:${TEXT_PRIMARY}">${churchName}</strong>의 홈페이지 제작 신청을 검토했습니다.<br>아래 버튼으로 결제를 완료해 주시면 곧바로 제작을 시작하겠습니다.`)}
+
+      ${button('결제하고 시작하기', paymentUrl)}
+
+      ${infoBox('결제가 확인되면 디자인 셋업과 (기존 사이트가 있다면) 콘텐츠 이전을 진행합니다.')}
+
+      ${smallText(`버튼이 동작하지 않는 경우, 아래 주소를 브라우저에 직접 입력해 주세요.<br><a href="${paymentUrl}" style="color:${BRAND_COLOR};text-decoration:none">${paymentUrl}</a>`)}
+    `),
+  };
+}
+
 export function inviteEmail(churchName: string, inviteUrl: string): { subject: string; html: string } {
   return {
     subject: `${churchName} 관리자 초대 — TRUE LIGHT`,
