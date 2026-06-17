@@ -105,13 +105,14 @@ const PLAN_COLORS: Record<string, string> = {
   free: 'bg-gray-100 text-gray-600',
 };
 
-type TabId = 'overview' | 'tenants' | 'applications' | 'reference' | 'billing' | 'support' | 'domains' | 'users' | 'storage' | 'gallery';
+type TabId = 'overview' | 'tenants' | 'applications' | 'reference' | 'pricing' | 'billing' | 'support' | 'domains' | 'users' | 'storage' | 'gallery';
 
 const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'overview', label: '개요', icon: '📊' },
   { id: 'tenants', label: '교회 관리', icon: '⛪' },
   { id: 'applications', label: '신청서', icon: '📝' },
   { id: 'reference', label: '참조 데이터', icon: '📚' },
+  { id: 'pricing', label: '상품/가격', icon: '🏷️' },
   { id: 'billing', label: '과금', icon: '💳' },
   { id: 'support', label: '고객지원', icon: '🎧' },
   { id: 'gallery', label: '이미지 라이브러리', icon: '🖼️' },
@@ -2214,8 +2215,38 @@ function ApplicationDetailModal({
   const [saving, setSaving] = useState(false);
   const [sending, setSending] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  // Stripe Checkout 링크 자동 생성 중 여부.
+  const [generating, setGenerating] = useState(false);
 
-  const busy = saving || sending || deleting;
+  const busy = saving || sending || deleting || generating;
+
+  // 결제 링크 자동 생성 — 서버가 가격(상품/가격 탭의 단일 출처)으로 Stripe
+  // Checkout 세션을 만들어 URL 을 반환한다. 생성된 URL 은 결제 링크 필드에만
+  // 채워지고, 실제 발송은 운영자가 기존 "결제 링크 보내기"로 진행한다.
+  const handleGenerateCheckoutLink = async () => {
+    setGenerating(true);
+    try {
+      // billingPeriod(camelized). 없으면 연간을 기본으로 사용.
+      const period = application.billingPeriod ?? 'yearly';
+      const res = await apiFetch<{ data: { url: string; application: Application } }>(
+        `/applications/${application.id}/checkout-link`,
+        { method: 'POST', body: JSON.stringify({ period }) },
+      );
+      const url = res.data?.url;
+      if (url) setPaymentLink(url);
+      showToast('success', "결제 링크가 생성되었습니다. '결제 링크 보내기'로 발송하세요.");
+    } catch (err) {
+      // Stripe 키 미설정(503 / BILLING_NOT_CONFIGURED)이면 친절한 안내를 노출.
+      const msg = err instanceof Error ? err.message : '';
+      if (/BILLING_NOT_CONFIGURED|503/i.test(msg)) {
+        showToast('error', 'Stripe API 키가 아직 설정되지 않았습니다. 키 설정 후 다시 시도하세요.');
+      } else {
+        showToast('error', msg || '결제 링크 생성 실패');
+      }
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -2390,6 +2421,14 @@ function ApplicationDetailModal({
               />
               <button
                 type="button"
+                onClick={handleGenerateCheckoutLink}
+                disabled={busy}
+                className="shrink-0 px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {generating ? '생성 중...' : '결제 링크 자동 생성'}
+              </button>
+              <button
+                type="button"
                 onClick={handleSendPaymentLink}
                 disabled={busy}
                 className="shrink-0 px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -2397,7 +2436,7 @@ function ApplicationDetailModal({
                 {sending ? '전송 중...' : '결제 링크 보내기'}
               </button>
             </div>
-            <p className="mt-1 text-xs text-gray-400">전송 시 신청자에게 이메일이 발송되며 상태가 승인으로 변경됩니다.</p>
+            <p className="mt-1 text-xs text-gray-400">'자동 생성'은 상품/가격 탭의 가격으로 Stripe 링크를 만들어 위 칸에 채웁니다. '보내기' 시 신청자에게 이메일이 발송되며 상태가 승인으로 변경됩니다.</p>
           </div>
         </div>
 
@@ -3797,6 +3836,181 @@ function BillingTab() {
 }
 
 // ═══════════════════════════════════════════════════════════
+// ─── Tab: Pricing (상품/가격) ────────────────────────────
+// ═══════════════════════════════════════════════════════════
+// 가격 단일 출처(single source of truth). 여기서 정한 가격이 신청 폼과
+// 신청서 결제 링크(Stripe Checkout) 생성에 그대로 적용된다. 금액은 모두
+// "달러 정수" 단위(monthly 99 = $99/월, yearly 79 = 연 청구 시 $79/월,
+// setupFee 500 = 1회 $500).
+interface Plan {
+  id: string;
+  planKey: string;
+  label: string;
+  monthly: number;
+  yearly: number;
+  setupFee: number;
+  sortOrder: number;
+  isActive: boolean;
+}
+
+// 단일 플랜 편집 카드 — 로컬 편집 후 "저장" 클릭 시에만 서버에 PATCH(자동저장 없음).
+function PricingPlanCard({ plan, onSaved }: { plan: Plan; onSaved: () => void }) {
+  const apiFetch = useAdminApi();
+  const { showToast } = useToast();
+  const [label, setLabel] = useState(plan.label);
+  const [monthly, setMonthly] = useState(String(plan.monthly));
+  const [yearly, setYearly] = useState(String(plan.yearly));
+  const [setupFee, setSetupFee] = useState(String(plan.setupFee));
+  const [isActive, setIsActive] = useState(plan.isActive);
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await apiFetch(`/pricing/${plan.planKey}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          label,
+          // 정수 달러로 강제. 빈 입력/NaN 은 0 처리.
+          monthly: Math.max(0, Math.round(Number(monthly) || 0)),
+          yearly: Math.max(0, Math.round(Number(yearly) || 0)),
+          setupFee: Math.max(0, Math.round(Number(setupFee) || 0)),
+          isActive,
+        }),
+      });
+      showToast('success', `${label || plan.planKey} 가격이 저장되었습니다.`);
+      onSaved();
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '가격 저장 실패');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className={`rounded-xl border p-5 ${isActive ? 'border-gray-200 bg-white' : 'border-gray-200 bg-gray-50'}`}>
+      <div className="flex items-center justify-between mb-3">
+        <span className="inline-flex px-2.5 py-1 rounded-lg text-xs font-bold font-mono bg-blue-100 text-blue-700">
+          {plan.planKey}
+        </span>
+        <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+          <input
+            type="checkbox"
+            checked={isActive}
+            onChange={(e) => setIsActive(e.target.checked)}
+            className="rounded"
+          />
+          활성
+        </label>
+      </div>
+
+      <div className="space-y-3">
+        <div>
+          <label className="block text-xs font-medium text-gray-500 mb-1">표시명(label)</label>
+          <input
+            type="text"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            placeholder="플랜 이름"
+          />
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">월 가격($/월)</label>
+            <input
+              type="number"
+              min={0}
+              value={monthly}
+              onChange={(e) => setMonthly(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">연 가격($/월, 연 청구)</label>
+            <input
+              type="number"
+              min={0}
+              value={yearly}
+              onChange={(e) => setYearly(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">셋업비($, 1회)</label>
+            <input
+              type="number"
+              min={0}
+              value={setupFee}
+              onChange={(e) => setSetupFee(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            />
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={saving}
+          className="w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {saving ? '저장 중...' : '저장'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PricingTab() {
+  const apiFetch = useAdminApi();
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await apiFetch<{ data: Plan[] } | Plan[]>('/pricing');
+      const list = Array.isArray(res) ? res : res.data ?? [];
+      // sortOrder 오름차순으로 정렬해 표시.
+      setPlans([...list].sort((a, b) => a.sortOrder - b.sortOrder));
+    } catch {
+      // non-fatal — 빈 상태로 표시
+      setPlans([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [apiFetch]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  if (loading) return <Spinner />;
+
+  return (
+    <div className="space-y-5">
+      <div className="rounded-xl border border-blue-200 bg-blue-50 px-5 py-4">
+        <p className="text-sm font-medium text-blue-800">
+          여기서 정한 가격이 신청서 결제 링크(Stripe)와 신청 폼에 적용됩니다.
+          Stripe 대시보드에 상품을 따로 만들 필요가 없습니다.
+        </p>
+      </div>
+
+      {plans.length === 0 ? (
+        <EmptyState message="등록된 가격 플랜이 없습니다." />
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {plans.map((p) => (
+            <PricingPlanCard key={p.planKey} plan={p} onSaved={() => void load()} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
 // ─── Tab: Support (고객지원) ─────────────────────────────
 // ═══════════════════════════════════════════════════════════
 // Phase 4 — support API(/support-tickets) 사용. 목록 + 상태 필터 + 상세 모달
@@ -4192,6 +4406,7 @@ export default function SuperAdminDashboardV2() {
         {activeTab === 'tenants' && <TenantsTab refreshKey={tenantsRefreshKey} />}
         {activeTab === 'applications' && <ApplicationsTab />}
         {activeTab === 'reference' && <ReferenceDataTab />}
+        {activeTab === 'pricing' && <PricingTab />}
         {activeTab === 'billing' && <BillingTab />}
         {activeTab === 'support' && <SupportTab />}
         {activeTab === 'gallery' && <GalleryTab />}
