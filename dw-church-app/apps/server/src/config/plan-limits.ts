@@ -41,11 +41,14 @@ export interface PlanLimits {
   maxPages: number;
 }
 
+// maxPages = the page count each tier's offering adds up to (counted from the
+// tier's included pages; pro is the hard ceiling at 25, the "별도 추가 페이지"
+// buffer). 라이트 8 / 기본 15 / 플러스 20 / 프로 25.
 export const PLAN_LIMITS: Record<PlanTier, PlanLimits> = {
-  light: { maxAdmins: 2, maxPages: 12 },
-  basic: { maxAdmins: 3, maxPages: 20 },
-  plus: { maxAdmins: 5, maxPages: 30 },
-  pro: { maxAdmins: 10, maxPages: 50 },
+  light: { maxAdmins: 2, maxPages: 8 },
+  basic: { maxAdmins: 3, maxPages: 15 },
+  plus: { maxAdmins: 5, maxPages: 20 },
+  pro: { maxAdmins: 10, maxPages: 25 },
 };
 
 export function planLimits(plan: string | null | undefined): PlanLimits {
