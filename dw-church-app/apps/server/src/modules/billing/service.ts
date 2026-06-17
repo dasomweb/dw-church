@@ -67,6 +67,76 @@ export async function createCheckoutSession(
   return { url: session.url };
 }
 
+const MARKETING_ORIGIN = process.env.MARKETING_ORIGIN || 'https://truelight.app';
+
+/**
+ * Application checkout — the done-for-you payment path. Builds a Stripe Checkout
+ * Session DYNAMICALLY from plan_pricing (the super-admin's single source of
+ * truth), so NO products/prices need to be created in the Stripe dashboard.
+ * One charge covers the recurring subscription + the one-time setup fee.
+ * Used by the super-admin "결제 링크 자동 생성" on a 신청서.
+ */
+export async function createApplicationCheckout(
+  applicationId: string,
+  period: 'monthly' | 'yearly',
+): Promise<{ url: string }> {
+  requireStripe();
+  const apps = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
+    `SELECT * FROM public.service_applications WHERE id = $1::uuid`,
+    applicationId,
+  );
+  const appRow = apps[0];
+  if (!appRow) throw new AppError('NOT_FOUND', 404, 'Application not found');
+
+  const plan = (appRow.plan as string) || 'basic';
+  const prices = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
+    `SELECT * FROM public.plan_pricing WHERE plan_key = $1`,
+    plan,
+  );
+  const p = prices[0];
+  if (!p) throw new AppError('INVALID_PLAN', 400, `No pricing configured for plan: ${plan}`);
+
+  const yearly = period === 'yearly';
+  const perMonth = Number(yearly ? p.yearly : p.monthly); // $/month
+  // Annual plan bills 12× the per-month-equivalent once a year.
+  const recurringAmountCents = Math.round((yearly ? perMonth * 12 : perMonth) * 100);
+  const setupCents = Math.round(Number(p.setup_fee) * 100);
+
+  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
+    {
+      price_data: {
+        currency: 'usd',
+        product_data: { name: `TRUE LIGHT ${p.label as string} (${yearly ? '연' : '월'} 구독)` },
+        unit_amount: recurringAmountCents,
+        recurring: { interval: yearly ? 'year' : 'month' },
+      },
+      quantity: 1,
+    },
+  ];
+  if (setupCents > 0) {
+    // One-time setup fee — billed on the first invoice alongside the subscription.
+    lineItems.push({
+      price_data: {
+        currency: 'usd',
+        product_data: { name: `TRUE LIGHT ${p.label as string} 셋업비 (1회)` },
+        unit_amount: setupCents,
+      },
+      quantity: 1,
+    });
+  }
+
+  const session = await requireStripe().checkout.sessions.create({
+    mode: 'subscription',
+    customer_email: (appRow.email as string) || undefined,
+    line_items: lineItems,
+    success_url: `${MARKETING_ORIGIN}/apply?paid=1`,
+    cancel_url: `${MARKETING_ORIGIN}/apply`,
+    metadata: { applicationId, plan, period },
+  });
+  if (!session.url) throw new AppError('STRIPE_ERROR', 500, 'Failed to create checkout session');
+  return { url: session.url };
+}
+
 /**
  * Handle incoming Stripe webhook events.
  */
@@ -103,6 +173,15 @@ export async function handleWebhook(
             stripeSubscriptionId: session.subscription as string,
           },
         });
+      }
+      // Application-driven (done-for-you) checkout → mark the 신청서 paid so the
+      // super admin can proceed to build the site.
+      const applicationId = session.metadata?.applicationId;
+      if (applicationId) {
+        await prisma.$executeRawUnsafe(
+          `UPDATE public.service_applications SET status = 'paid', updated_at = NOW() WHERE id = $1::uuid`,
+          applicationId,
+        );
       }
       break;
     }

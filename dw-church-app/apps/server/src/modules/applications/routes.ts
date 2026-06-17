@@ -86,4 +86,20 @@ export async function applicationRoutes(app: FastifyInstance) {
     await applicationService.deleteApplication(id);
     return reply.status(204).send();
   });
+
+  // Auto-generate a Stripe checkout link from plan_pricing (no Stripe products
+  // needed) and save it onto the application. The super admin then sends it.
+  app.post('/admin/applications/:id/checkout-link', { preHandler: [requireSuperAdmin] }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { period } = (request.body ?? {}) as { period?: 'monthly' | 'yearly' };
+    const app2 = await applicationService.getApplication(id);
+    if (!app2) return reply.status(404).send({ error: { code: 'NOT_FOUND', message: '신청서를 찾을 수 없습니다' } });
+
+    const { createApplicationCheckout } = await import('../billing/service.js');
+    const chosen = period ?? (app2.billing_period as 'monthly' | 'yearly') ?? 'yearly';
+    const { url } = await createApplicationCheckout(id, chosen);
+    // Persist the generated link onto the application for record/sending.
+    const row = await applicationService.updateApplication(id, { paymentLink: url });
+    return reply.send({ data: { url, application: row } });
+  });
 }

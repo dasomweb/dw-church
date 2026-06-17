@@ -107,6 +107,7 @@ async function main(): Promise<void> {
   const { applicationRoutes } = await import('./modules/applications/routes.js');
   const { referenceDenominationRoutes } = await import('./modules/reference-denominations/routes.js');
   const { supportRoutes } = await import('./modules/support/routes.js');
+  const { pricingRoutes } = await import('./modules/pricing/routes.js');
 
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(tenantRoutes, { prefix: '/api/v1/admin' });
@@ -177,6 +178,7 @@ async function main(): Promise<void> {
   await app.register(applicationRoutes, { prefix: '/api/v1' }); // /applications + /admin/applications
   await app.register(referenceDenominationRoutes, { prefix: '/api/v1' }); // /admin/reference-denominations
   await app.register(supportRoutes, { prefix: '/api/v1' }); // /support-tickets + /admin/support-tickets
+  await app.register(pricingRoutes, { prefix: '/api/v1' }); // /pricing + /admin/pricing
 
   // --- Internal: resolve custom domain to tenant slug (used by Next.js middleware) ---
   app.get('/api/v1/admin/tenants/resolve-domain', async (request, reply) => {
@@ -696,6 +698,39 @@ async function main(): Promise<void> {
     );
   } catch (err) {
     app.log.warn(`support_tickets table migration skipped: ${err}`);
+  }
+
+  // --- plan_pricing (가격 단일 출처, 슈퍼어드민 관리) — Stripe/landing read this ---
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "plan_pricing" (
+        "id"         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+        "plan_key"   VARCHAR(20) NOT NULL UNIQUE,
+        "label"      VARCHAR(50) NOT NULL DEFAULT '',
+        "monthly"    INT         NOT NULL DEFAULT 0,
+        "yearly"     INT         NOT NULL DEFAULT 0,
+        "setup_fee"  INT         NOT NULL DEFAULT 0,
+        "sort_order" INT         NOT NULL DEFAULT 0,
+        "is_active"  BOOLEAN     NOT NULL DEFAULT true,
+        "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    // Seed the 4 tiers ONCE (whole-dollar amounts; super admin edits afterward).
+    const pricingSeed: [string, string, number, number, number, number][] = [
+      ['light', '라이트', 59, 49, 300, 0],
+      ['basic', '기본', 99, 79, 500, 1],
+      ['plus', '플러스', 149, 119, 700, 2],
+      ['pro', '프로', 199, 159, 1000, 3],
+    ];
+    for (const [key, label, monthly, yearly, setupFee, sort] of pricingSeed) {
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO "plan_pricing" (plan_key, label, monthly, yearly, setup_fee, sort_order)
+         VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (plan_key) DO NOTHING`,
+        key, label, monthly, yearly, setupFee, sort,
+      );
+    }
+  } catch (err) {
+    app.log.warn(`plan_pricing table migration skipped: ${err}`);
   }
 
   // --- Stripe billing columns on public.tenants ---
