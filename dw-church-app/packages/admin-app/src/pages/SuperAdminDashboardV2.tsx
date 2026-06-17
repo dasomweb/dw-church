@@ -1821,6 +1821,8 @@ interface Application {
   contactName: string;
   email: string;
   phone: string | null;
+  churchAddress: string | null;
+  denomination: string | null;
   plan: 'light' | 'basic' | 'plus' | 'pro' | null;
   billingPeriod: string | null;
   existingUrl: string | null;
@@ -2098,6 +2100,8 @@ function ApplicationDetailModal({
           <Row label="담당자" value={application.contactName} />
           <Row label="이메일" value={application.email} />
           <Row label="연락처" value={application.phone} />
+          <Row label="교회 주소" value={application.churchAddress} />
+          <Row label="소속 교단" value={application.denomination} />
           <Row
             label="플랜"
             value={

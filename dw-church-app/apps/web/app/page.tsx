@@ -264,16 +264,16 @@ function HeroSlider({ slides, getStarted, seePlans }: { slides: { headline: stri
             className="absolute inset-0 h-full w-full object-cover"
             loading={i === 0 ? 'eager' : 'lazy'}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
-          <div className="relative flex h-full items-center px-6 sm:px-12 lg:px-20">
-            <div className="max-w-2xl">
+          <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/45 to-black/60" />
+          <div className="relative flex h-full items-center justify-center px-6 sm:px-12 lg:px-20">
+            <div className="mx-auto max-w-2xl text-center">
               <h1 className="text-3xl font-bold leading-tight text-white sm:text-4xl lg:text-5xl xl:text-6xl" style={{ whiteSpace: 'pre-line', letterSpacing: '-0.5px' }}>
                 {slide.headline}
               </h1>
               <p className="mt-4 text-sm leading-relaxed text-gray-200 sm:mt-6 sm:text-base lg:text-lg" style={{ whiteSpace: 'pre-line' }}>
                 {slide.subline}
               </p>
-              <div className="mt-6 flex gap-3 sm:mt-8">
+              <div className="mt-6 flex justify-center gap-3 sm:mt-8">
                 <a href="/apply" className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg hover:bg-blue-700 sm:px-8 sm:text-base">
                   {getStarted}
                 </a>
@@ -537,7 +537,7 @@ export default function LandingPage() {
             </div>
           </div>
           <p className="mt-8 text-center text-sm text-gray-500" style={{ whiteSpace: 'pre-line' }}>
-            {t.plansSection.note} <a href="mailto:hello@truelight.app" className="text-blue-600 hover:underline">{t.plansSection.contact}</a>
+            {t.plansSection.note} <a href="mailto:info@truelight.app" className="text-blue-600 hover:underline">{t.plansSection.contact}</a>
           </p>
         </div>
       </section>
@@ -568,7 +568,7 @@ export default function LandingPage() {
                 <p className="text-sm text-gray-400">{t.custom.oneTime}</p>
                 <p className="mt-1 text-sm text-gray-400">{t.custom.anyPlan}</p>
               </div>
-              <a href="mailto:hello@truelight.app" className="rounded-xl bg-white px-8 py-3.5 text-sm font-bold text-gray-900 shadow-lg hover:bg-gray-100 transition-colors">
+              <a href="mailto:info@truelight.app" className="rounded-xl bg-white px-8 py-3.5 text-sm font-bold text-gray-900 shadow-lg hover:bg-gray-100 transition-colors">
                 {t.custom.quote}
               </a>
             </div>
@@ -587,7 +587,7 @@ export default function LandingPage() {
             <a href="/apply" className="rounded-xl bg-white px-8 py-3.5 text-sm font-bold text-blue-700 shadow-lg hover:bg-gray-50">
               {t.cta.primary}
             </a>
-            <a href="mailto:hello@truelight.app" className="rounded-xl border border-white/30 px-8 py-3.5 text-sm font-semibold text-white hover:bg-white/10">
+            <a href="mailto:info@truelight.app" className="rounded-xl border border-white/30 px-8 py-3.5 text-sm font-semibold text-white hover:bg-white/10">
               {t.cta.secondary}
             </a>
           </div>
@@ -613,7 +613,8 @@ export default function LandingPage() {
             <div>
               <h4 className="mb-3 text-sm font-bold text-gray-900">{t.footer.support}</h4>
               <ul className="space-y-2 text-sm text-gray-500">
-                <li><a href="mailto:hello@truelight.app" className="hover:text-gray-700">{t.footer.contact}</a></li>
+                <li><a href="mailto:info@truelight.app" className="hover:text-gray-700">{t.footer.contact}</a></li>
+                <li><a href="mailto:support@truelight.app" className="hover:text-gray-700">{lang === 'ko' ? '고객지원' : 'Customer Support'}</a></li>
                 <li><a href="https://admin.truelight.app" className="hover:text-gray-700">{t.footer.adminLogin}</a></li>
               </ul>
             </div>

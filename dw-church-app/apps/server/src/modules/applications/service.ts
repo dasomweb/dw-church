@@ -9,6 +9,8 @@ const COLUMN_MAP: Record<string, string> = {
   contactName: 'contact_name',
   email: 'email',
   phone: 'phone',
+  churchAddress: 'church_address',
+  denomination: 'denomination',
   plan: 'plan',
   billingPeriod: 'billing_period',
   existingUrl: 'existing_url',

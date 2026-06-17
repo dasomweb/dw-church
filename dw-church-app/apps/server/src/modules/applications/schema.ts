@@ -16,6 +16,8 @@ export const createApplicationSchema = z.object({
   contactName: z.string().max(100).optional().nullable(),
   email: z.string().email().max(200),
   phone: z.string().max(50).optional().nullable(),
+  churchAddress: z.string().max(500).optional().nullable(),
+  denomination: z.string().max(200).optional().nullable(), // 소속 교단 (이단 스크리닝용)
   plan: z.enum(APPLICATION_PLANS).optional().nullable(),
   billingPeriod: z.enum(['monthly', 'yearly']).optional().nullable(),
   existingUrl: z.string().max(500).optional().nullable(), // 기존 웹사이트 (마이그레이션용)
@@ -28,6 +30,8 @@ export const updateApplicationSchema = z.object({
   status: z.enum(APPLICATION_STATUSES).optional(),
   adminNote: z.string().max(5000).optional().nullable(),
   paymentLink: z.string().max(1000).optional().nullable(),
+  churchAddress: z.string().max(500).optional().nullable(),
+  denomination: z.string().max(200).optional().nullable(),
   // When true, email the paymentLink to the applicant (and set status=approved).
   sendPaymentLink: z.boolean().optional(),
 });

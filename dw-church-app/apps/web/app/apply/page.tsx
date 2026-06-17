@@ -7,10 +7,10 @@ import { useSearchParams } from 'next/navigation';
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api-server-production-c612.up.railway.app';
 
 const PLANS = [
-  { id: 'light', label: '라이트', price: '$59/월' },
-  { id: 'basic', label: '기본', price: '$99/월' },
-  { id: 'plus', label: '플러스', price: '$149/월' },
-  { id: 'pro', label: '프로', price: '$199/월' },
+  { id: 'light', label: '라이트', monthly: 59, yearly: 49, setup: 300 },
+  { id: 'basic', label: '기본', monthly: 99, yearly: 79, setup: 400 },
+  { id: 'plus', label: '플러스', monthly: 149, yearly: 119, setup: 600 },
+  { id: 'pro', label: '프로', monthly: 199, yearly: 159, setup: 800 },
 ] as const;
 
 const inputCls =
@@ -48,6 +48,8 @@ function ApplyForm() {
           contactName: form.contactName || undefined,
           email: form.email,
           phone: form.phone || undefined,
+          churchAddress: form.churchAddress || undefined,
+          denomination: form.denomination || undefined,
           plan: form.plan || undefined,
           billingPeriod: form.billingPeriod || undefined,
           existingUrl: form.existingUrl || undefined,
@@ -91,12 +93,21 @@ function ApplyForm() {
         </div>
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">연락처</label>
-          <input value={form.phone || ''} onChange={set('phone')} className={inputCls} placeholder="010-0000-0000" />
+          <input value={form.phone || ''} onChange={set('phone')} className={inputCls} placeholder="예: (213) 555-0100" />
         </div>
       </div>
       <div>
         <label className="mb-1 block text-sm font-medium text-gray-700">이메일 <span className="text-red-500">*</span></label>
         <input required type="email" value={form.email || ''} onChange={set('email')} className={inputCls} placeholder="name@email.com" />
+      </div>
+      <div>
+        <label className="mb-1 block text-sm font-medium text-gray-700">교회 주소</label>
+        <input value={form.churchAddress || ''} onChange={set('churchAddress')} className={inputCls} placeholder="예: 123 Main St, Los Angeles, CA 90012" />
+      </div>
+      <div>
+        <label className="mb-1 block text-sm font-medium text-gray-700">소속 교단</label>
+        <input value={form.denomination || ''} onChange={set('denomination')} className={inputCls} placeholder="예: 예장합동, 예장통합, 기감, 미국장로교(PCUSA) 등" />
+        <p className="mt-1 text-xs text-gray-400">정규(정통) 기독교 교단 소속 교회만 신청하실 수 있습니다. 이단·사이비로 분류되는 단체는 서비스 대상이 아닙니다.</p>
       </div>
 
       <div>
@@ -112,7 +123,7 @@ function ApplyForm() {
               }`}
             >
               <div className="font-semibold">{p.label}</div>
-              <div className="text-xs text-gray-400">{p.price}</div>
+              <div className="text-xs text-gray-400">${form.billingPeriod === 'yearly' ? p.yearly : p.monthly}/월</div>
             </button>
           ))}
         </div>
@@ -126,10 +137,24 @@ function ApplyForm() {
                 form.billingPeriod === b ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'
               }`}
             >
-              {b === 'monthly' ? '월 결제' : '연 결제'}
+              {b === 'monthly' ? '월 결제' : '연 결제 (약 20% 할인)'}
             </button>
           ))}
         </div>
+        {(() => {
+          const sel = PLANS.find((p) => p.id === form.plan);
+          if (!sel) return null;
+          const yearly = form.billingPeriod === 'yearly';
+          const price = yearly ? sel.yearly : sel.monthly;
+          return (
+            <div className="mt-3 rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-900">
+              <span className="font-semibold">{sel.label}</span> · {yearly ? '연 결제' : '월 결제'} →{' '}
+              <span className="font-bold">${price}/월</span>
+              {yearly && <span className="text-blue-700"> (연 1회 청구)</span>}
+              <span className="block text-xs text-blue-700 mt-0.5">+ 셋업비 ${sel.setup} (1회)</span>
+            </div>
+          );
+        })()}
       </div>
 
       <div>
@@ -137,8 +162,9 @@ function ApplyForm() {
         <input value={form.existingUrl || ''} onChange={set('existingUrl')} className={inputCls} placeholder="https://" />
       </div>
       <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">희망 도메인 <span className="text-gray-400">(선택)</span></label>
-        <input value={form.desiredDomain || ''} onChange={set('desiredDomain')} className={inputCls} placeholder="예: yourchurch.com" />
+        <label className="mb-1 block text-sm font-medium text-gray-700">연결할 도메인 <span className="text-gray-400">(직접 구입 — 보유 중이거나 구입 예정인 주소)</span></label>
+        <input value={form.desiredDomain || ''} onChange={set('desiredDomain')} className={inputCls} placeholder="예: yourchurch.org" />
+        <p className="mt-1 text-xs text-gray-400">도메인은 교회에서 직접 구입하시며, 구입하신 주소를 사이트에 연결해 드립니다.</p>
       </div>
       <div>
         <label className="mb-1 block text-sm font-medium text-gray-700">교회 소개 / 요청사항</label>

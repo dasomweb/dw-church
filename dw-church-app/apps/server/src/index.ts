@@ -599,6 +599,8 @@ async function main(): Promise<void> {
         "contact_name"   VARCHAR(100),
         "email"          VARCHAR(200) NOT NULL,
         "phone"          VARCHAR(50),
+        "church_address" VARCHAR(500),
+        "denomination"   VARCHAR(200),
         "plan"           VARCHAR(20),
         "billing_period" VARCHAR(20),
         "existing_url"   VARCHAR(500),
@@ -614,6 +616,9 @@ async function main(): Promise<void> {
     await prisma.$executeRawUnsafe(
       `CREATE INDEX IF NOT EXISTS "service_applications_status_idx" ON "service_applications" ("status", "created_at" DESC)`,
     );
+    // Columns added after the table shipped — backfill on existing prod table.
+    await prisma.$executeRawUnsafe(`ALTER TABLE "service_applications" ADD COLUMN IF NOT EXISTS "church_address" VARCHAR(500)`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE "service_applications" ADD COLUMN IF NOT EXISTS "denomination" VARCHAR(200)`);
   } catch (err) {
     app.log.warn(`service_applications table migration skipped: ${err}`);
   }
