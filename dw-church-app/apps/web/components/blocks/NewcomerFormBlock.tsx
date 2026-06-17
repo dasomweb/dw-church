@@ -7,7 +7,7 @@ interface NewcomerFormBlockProps {
   slug: string;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api-server-production-c612.up.railway.app';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.truelight.app';
 
 // 새가족 등록 폼 (Static Block, Pro tier). Public visitors submit their info; it
 // lands in the 새가족 관리 inbox. Pure client component — POSTs to the public

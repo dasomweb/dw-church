@@ -47,7 +47,7 @@ export async function middleware(request: NextRequest) {
 
   // API subdomain → proxy to Railway
   if (hostname.startsWith('api.truelight.app') || hostname.startsWith('api.localhost')) {
-    const railwayUrl = process.env.RAILWAY_API_URL || 'https://api-server-production-c612.up.railway.app';
+    const railwayUrl = process.env.RAILWAY_API_URL || 'https://api.truelight.app';
     return NextResponse.rewrite(new URL(`${railwayUrl}${pathname}${request.nextUrl.search}`));
   }
 
@@ -78,7 +78,7 @@ export async function middleware(request: NextRequest) {
   // hit if DNS is mis-set). Look up via API to find the tenant slug.
   if (!isPlatformHost(hostname)) {
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api-server-production-c612.up.railway.app';
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api.truelight.app';
       const res = await fetch(
         `${apiBase}/api/v1/admin/tenants/resolve-domain?domain=${encodeURIComponent(hostname.split(':')[0] ?? hostname)}`,
         { headers: { 'x-internal': '1' }, next: { revalidate: 60 } },
@@ -102,7 +102,7 @@ export async function middleware(request: NextRequest) {
   if (slug && slug !== 'www' && slug !== 'admin' && slug !== 'api' && slug !== 'customers') {
     // Verify tenant exists via API
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api-server-production-c612.up.railway.app';
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api.truelight.app';
       const res = await fetch(
         `${apiBase}/api/v1/settings`,
         {

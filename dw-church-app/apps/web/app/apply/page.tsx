@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api-server-production-c612.up.railway.app';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.truelight.app';
 
 const PLANS = [
   { id: 'light', label: '라이트', monthly: 59, yearly: 49, setup: 300 },
