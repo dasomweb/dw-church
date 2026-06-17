@@ -19,6 +19,7 @@ const COLUMN_MAP: Record<string, string> = {
   status: 'status',
   adminNote: 'admin_note',
   paymentLink: 'payment_link',
+  denominationVerified: 'denomination_verified',
 };
 
 export async function listApplications(status?: string) {

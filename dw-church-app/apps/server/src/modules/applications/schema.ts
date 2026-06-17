@@ -32,6 +32,7 @@ export const updateApplicationSchema = z.object({
   paymentLink: z.string().max(1000).optional().nullable(),
   churchAddress: z.string().max(500).optional().nullable(),
   denomination: z.string().max(200).optional().nullable(),
+  denominationVerified: z.boolean().optional(), // 슈퍼어드민 "정통 교단 확인" 체크
   // When true, email the paymentLink to the applicant (and set status=approved).
   sendPaymentLink: z.boolean().optional(),
 });

@@ -5,6 +5,16 @@ import { sendEmail } from '../../config/email.js';
 import { paymentLinkEmail } from '../../config/email-templates.js';
 import { createApplicationSchema, updateApplicationSchema } from './schema.js';
 import * as applicationService from './service.js';
+import { classifyDenomination } from '../reference-denominations/service.js';
+
+// Attach the 이단 필터 classification (✓ 정규 / ? 미확인 / 🚩 이단의심) to an
+// application row, matched on its denomination then church name.
+async function withDenomStatus(row: Record<string, unknown>) {
+  const match =
+    (await classifyDenomination(row.denomination as string)) ??
+    (await classifyDenomination(row.church_name as string));
+  return { ...row, denomination_status: match?.status ?? null, denomination_match: match?.matchedName ?? null };
+}
 
 /**
  * 웹사이트 개발 신청서 routes.
@@ -25,7 +35,8 @@ export async function applicationRoutes(app: FastifyInstance) {
   // ── Super-admin: manage the inbox ──
   app.get('/admin/applications', { preHandler: [requireSuperAdmin] }, async (request, reply) => {
     const { status } = request.query as { status?: string };
-    const data = await applicationService.listApplications(status);
+    const rows = await applicationService.listApplications(status);
+    const data = await Promise.all(rows.map(withDenomStatus));
     return reply.send({ data });
   });
 
@@ -33,7 +44,7 @@ export async function applicationRoutes(app: FastifyInstance) {
     const { id } = request.params as { id: string };
     const row = await applicationService.getApplication(id);
     if (!row) return reply.status(404).send({ error: { code: 'NOT_FOUND', message: '신청서를 찾을 수 없습니다' } });
-    return reply.send({ data: row });
+    return reply.send({ data: await withDenomStatus(row) });
   });
 
   app.patch('/admin/applications/:id', { preHandler: [requireSuperAdmin] }, async (request, reply) => {

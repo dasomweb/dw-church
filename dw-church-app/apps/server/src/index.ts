@@ -105,6 +105,7 @@ async function main(): Promise<void> {
   const { cellRoutes } = await import('./modules/cells/routes.js');
   const { newcomerRoutes } = await import('./modules/newcomers/routes.js');
   const { applicationRoutes } = await import('./modules/applications/routes.js');
+  const { referenceDenominationRoutes } = await import('./modules/reference-denominations/routes.js');
 
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(tenantRoutes, { prefix: '/api/v1/admin' });
@@ -173,6 +174,7 @@ async function main(): Promise<void> {
   await app.register(cellRoutes, { prefix: '/api/v1' }); // /cells (목장, Plus/Pro)
   await app.register(newcomerRoutes, { prefix: '/api/v1' }); // /newcomers (새가족, Pro)
   await app.register(applicationRoutes, { prefix: '/api/v1' }); // /applications + /admin/applications
+  await app.register(referenceDenominationRoutes, { prefix: '/api/v1' }); // /admin/reference-denominations
 
   // --- Internal: resolve custom domain to tenant slug (used by Next.js middleware) ---
   app.get('/api/v1/admin/tenants/resolve-domain', async (request, reply) => {
@@ -619,8 +621,56 @@ async function main(): Promise<void> {
     // Columns added after the table shipped — backfill on existing prod table.
     await prisma.$executeRawUnsafe(`ALTER TABLE "service_applications" ADD COLUMN IF NOT EXISTS "church_address" VARCHAR(500)`);
     await prisma.$executeRawUnsafe(`ALTER TABLE "service_applications" ADD COLUMN IF NOT EXISTS "denomination" VARCHAR(200)`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE "service_applications" ADD COLUMN IF NOT EXISTS "denomination_verified" BOOLEAN DEFAULT false`);
   } catch (err) {
     app.log.warn(`service_applications table migration skipped: ${err}`);
+  }
+
+  // --- reference_denominations (이단 필터 보조 데이터, 슈퍼어드민 관리) ---
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "reference_denominations" (
+        "id"         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+        "name"       VARCHAR(200) NOT NULL,
+        "country"    VARCHAR(8)  NOT NULL DEFAULT '',
+        "status"     VARCHAR(20) NOT NULL DEFAULT 'recognized' CHECK (status IN ('recognized','watch','cult')),
+        "note"       TEXT        NOT NULL DEFAULT '',
+        "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await prisma.$executeRawUnsafe(
+      `CREATE UNIQUE INDEX IF NOT EXISTS "reference_denominations_name_key" ON "reference_denominations" (lower(name))`,
+    );
+    // Seed a starter reference set ONCE (only if empty). Operators curate it
+    // afterward. cult/watch entries are widely, publicly designated; the app
+    // only FLAGS — the super admin makes the final call.
+    const countRows = await prisma.$queryRawUnsafe<{ count: bigint }[]>(`SELECT COUNT(*)::bigint AS count FROM "reference_denominations"`);
+    if (Number(countRows[0]?.count ?? 0) === 0) {
+      const seed: [string, string, string][] = [
+        // 정규 (KR)
+        ['예장합동', 'KR', 'recognized'], ['예장통합', 'KR', 'recognized'], ['예장고신', 'KR', 'recognized'],
+        ['예장합신', 'KR', 'recognized'], ['기독교대한감리회', 'KR', 'recognized'], ['기독교한국침례회', 'KR', 'recognized'],
+        ['기독교대한성결교회', 'KR', 'recognized'], ['기독교대한하나님의성회', 'KR', 'recognized'], ['대한예수교장로회', 'KR', 'recognized'],
+        // 정규 (US)
+        ['PCA', 'US', 'recognized'], ['PCUSA', 'US', 'recognized'], ['Southern Baptist', 'US', 'recognized'],
+        ['United Methodist', 'US', 'recognized'], ['Assemblies of God', 'US', 'recognized'], ['KAPC', 'US', 'recognized'],
+        ['Presbyterian', 'US', 'recognized'], ['Methodist', 'US', 'recognized'], ['Baptist', 'US', 'recognized'],
+        // 이단/사이비 (널리 규정됨)
+        ['신천지', '', 'cult'], ['신천지예수교 증거장막성전', '', 'cult'], ['통일교', '', 'cult'], ['세계평화통일가정연합', '', 'cult'],
+        ['하나님의교회', '', 'cult'], ['안상홍', '', 'cult'], ['World Mission Society Church of God', '', 'cult'],
+        ['여호와의증인', '', 'cult'], ["Jehovah's Witnesses", '', 'cult'], ['몰몬교', '', 'cult'], ['후기성도', '', 'cult'],
+        ['구원파', '', 'cult'], ['전능신교', '', 'cult'], ['JMS', '', 'cult'], ['기독교복음선교회', '', 'cult'], ['다미선교회', '', 'cult'],
+      ];
+      for (const [name, country, status] of seed) {
+        await prisma.$executeRawUnsafe(
+          `INSERT INTO "reference_denominations" (name, country, status) VALUES ($1, $2, $3) ON CONFLICT (lower(name)) DO NOTHING`,
+          name, country, status,
+        );
+      }
+    }
+  } catch (err) {
+    app.log.warn(`reference_denominations table migration skipped: ${err}`);
   }
 
   // --- Stripe billing columns on public.tenants ---
