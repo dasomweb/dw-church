@@ -105,12 +105,13 @@ const PLAN_COLORS: Record<string, string> = {
   free: 'bg-gray-100 text-gray-600',
 };
 
-type TabId = 'overview' | 'tenants' | 'applications' | 'domains' | 'users' | 'storage' | 'gallery';
+type TabId = 'overview' | 'tenants' | 'applications' | 'reference' | 'domains' | 'users' | 'storage' | 'gallery';
 
 const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'overview', label: '개요', icon: '📊' },
   { id: 'tenants', label: '교회 관리', icon: '⛪' },
   { id: 'applications', label: '신청서', icon: '📝' },
+  { id: 'reference', label: '참조 데이터', icon: '📚' },
   { id: 'gallery', label: '이미지 라이브러리', icon: '🖼️' },
   { id: 'domains', label: '도메인 관리', icon: '🌐' },
   { id: 'users', label: '사용자 관리', icon: '👥' },
@@ -1106,11 +1107,42 @@ function OverviewTab({
   stats,
   loading,
   onCreateChurch,
+  onGoToApplications,
 }: {
   stats: GlobalStats | null;
   loading: boolean;
   onCreateChurch: () => void;
+  onGoToApplications: () => void;
 }) {
+  const apiFetch = useAdminApi();
+  // 운영 대시보드용 신청서 요약 — 신규 신청 수 + 이단 의심(미확인) 경보 수.
+  const [newCount, setNewCount] = useState<number | null>(null);
+  const [cultAlertCount, setCultAlertCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiFetch<{ data: Application[] } | Application[]>('/applications');
+        const apps = Array.isArray(res) ? res : res.data ?? [];
+        if (cancelled) return;
+        setNewCount(apps.filter((a) => a.status === 'new').length);
+        setCultAlertCount(
+          apps.filter((a) => a.denominationStatus === 'cult' && !a.denominationVerified).length,
+        );
+      } catch {
+        // non-fatal — overview just won't show the application metrics
+        if (!cancelled) {
+          setNewCount(0);
+          setCultAlertCount(0);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [apiFetch]);
+
   if (loading && !stats) return <Spinner />;
 
   const mrr = stats
@@ -1119,6 +1151,19 @@ function OverviewTab({
 
   return (
     <div className="space-y-6">
+      {/* 이단 의심 경보 배너 — 미확인 cult 신청이 1건 이상이면 노출 */}
+      {cultAlertCount != null && cultAlertCount > 0 && (
+        <button
+          onClick={onGoToApplications}
+          className="w-full text-left rounded-xl border border-red-300 bg-red-50 px-5 py-4 hover:bg-red-100 transition-colors"
+        >
+          <p className="text-sm font-bold text-red-700">
+            🚩 이단 의심 신청 {cultAlertCount}건 — 확인이 필요합니다.
+          </p>
+          <p className="mt-0.5 text-xs text-red-600">클릭하여 신청서 탭에서 검토하세요.</p>
+        </button>
+      )}
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
         <StatCard title="전체 교회" value={stats?.totalTenants ?? 0} color="blue" />
@@ -1128,6 +1173,17 @@ function OverviewTab({
         <StatCard title="총 저장공간" value={formatBytes(stats?.totalStorage ?? 0)} color="cyan" />
         <StatCard title="DB 크기" value={formatBytes(stats?.totalDbSize ?? 0)} color="rose" />
         <StatCard title="월 매출(MRR)" value={`$${mrr.toLocaleString()}`} color="amber" />
+      </div>
+
+      {/* 운영 지표 — 신청서 요약 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="신규 신청서" value={newCount ?? '-'} color="blue" subtitle="status = 신규" />
+        <StatCard
+          title="🚩 이단 의심 신청"
+          value={cultAlertCount ?? '-'}
+          color="rose"
+          subtitle="미확인 cult 분류"
+        />
       </div>
 
       {/* Plan Distribution */}
@@ -1833,6 +1889,41 @@ interface Application {
   paymentLink: string | null;
   createdAt: string;
   updatedAt: string;
+  // 이단(cult) 자동 대조 결과 — 서버가 신청 교단·교회명을 참조 목록과 대조해 채움.
+  denominationStatus: 'recognized' | 'watch' | 'cult' | null;
+  denominationMatch: string | null;
+  denominationVerified: boolean;
+}
+
+// 이단 대조 상태 배지 — recognized(정규)/watch(확인필요)/cult(이단)/null(미확인).
+// denominationVerified 가 true 면 슈퍼어드민이 직접 "정통 교단" 확인한 것이므로
+// 상태와 무관하게 "확인됨" 표시를 함께 노출한다.
+function DenominationBadge({
+  status,
+  verified,
+}: {
+  status: 'recognized' | 'watch' | 'cult' | null;
+  verified?: boolean;
+}) {
+  const map: Record<'recognized' | 'watch' | 'cult', { label: string; cls: string }> = {
+    recognized: { label: '✓ 정규 교단', cls: 'bg-green-100 text-green-700' },
+    cult: { label: '🚩 이단 의심', cls: 'bg-red-100 text-red-700' },
+    watch: { label: '? 확인 필요', cls: 'bg-amber-100 text-amber-700' },
+  };
+  const fallback = { label: '미확인', cls: 'bg-gray-100 text-gray-600' };
+  const entry = status ? map[status] : fallback;
+  return (
+    <span className="inline-flex items-center gap-1">
+      <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${entry.cls}`}>
+        {entry.label}
+      </span>
+      {verified && (
+        <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+          ✓ 확인됨
+        </span>
+      )}
+    </span>
+  );
 }
 
 const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
@@ -1945,6 +2036,7 @@ function ApplicationsTab() {
                 <tr className="bg-gray-50 text-left text-gray-500 font-medium text-xs">
                   <th className="px-5 py-3">교회명</th>
                   <th className="px-5 py-3">담당자</th>
+                  <th className="px-5 py-3">교단</th>
                   <th className="px-5 py-3">플랜</th>
                   <th className="px-5 py-3">상태</th>
                   <th className="px-5 py-3">신청일</th>
@@ -1959,10 +2051,25 @@ function ApplicationsTab() {
                       idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
                     }`}
                   >
-                    <td className="px-5 py-3 font-medium text-gray-900">{a.churchName}</td>
+                    <td className="px-5 py-3 font-medium text-gray-900">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span>{a.churchName}</span>
+                        <DenominationBadge
+                          status={a.denominationStatus}
+                          verified={a.denominationVerified}
+                        />
+                      </div>
+                    </td>
                     <td className="px-5 py-3 text-gray-700">
                       <div>{a.contactName}</div>
                       <div className="text-xs text-gray-400">{a.email}</div>
+                    </td>
+                    <td className="px-5 py-3 text-gray-700">
+                      {a.denomination ? (
+                        <span className="text-xs">{a.denomination}</span>
+                      ) : (
+                        <span className="text-gray-300">—</span>
+                      )}
                     </td>
                     <td className="px-5 py-3 text-gray-700">
                       {a.plan ? (
@@ -2021,6 +2128,8 @@ function ApplicationDetailModal({
   const [status, setStatus] = useState<ApplicationStatus>(application.status);
   const [adminNote, setAdminNote] = useState(application.adminNote ?? '');
   const [paymentLink, setPaymentLink] = useState(application.paymentLink ?? '');
+  // 슈퍼어드민이 직접 "정통 교단(이단 아님)" 확인했는지 여부. 저장 시 PATCH 본문에 포함.
+  const [denominationVerified, setDenominationVerified] = useState(application.denominationVerified);
   const [saving, setSaving] = useState(false);
   const [sending, setSending] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -2032,7 +2141,7 @@ function ApplicationDetailModal({
     try {
       await apiFetch(`/applications/${application.id}`, {
         method: 'PATCH',
-        body: JSON.stringify({ status, adminNote, paymentLink }),
+        body: JSON.stringify({ status, adminNote, paymentLink, denominationVerified }),
       });
       showToast('success', '저장되었습니다.');
       onChanged();
@@ -2086,7 +2195,7 @@ function ApplicationDetailModal({
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl w-full max-w-lg p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <h3 className="text-lg font-bold">{application.churchName}</h3>
             <ApplicationStatusBadge status={application.status} />
           </div>
@@ -2095,6 +2204,18 @@ function ApplicationDetailModal({
           </button>
         </div>
 
+        {/* 이단 대조 배지 — 모달 상단에 눈에 띄게 노출 */}
+        <div className="mb-3">
+          <DenominationBadge status={application.denominationStatus} verified={denominationVerified} />
+        </div>
+
+        {/* 이단/사이비 경고 — cult 로 분류되었고 아직 확인되지 않은 경우만 */}
+        {application.denominationStatus === 'cult' && !denominationVerified && (
+          <div className="mb-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+            🚩 이단/사이비로 의심되는 단체입니다. 승인 전 반드시 확인하세요.
+          </div>
+        )}
+
         {/* Read-only details */}
         <div className="rounded-lg border border-gray-100 bg-gray-50/60 px-4 py-2 mb-4">
           <Row label="담당자" value={application.contactName} />
@@ -2102,6 +2223,9 @@ function ApplicationDetailModal({
           <Row label="연락처" value={application.phone} />
           <Row label="교회 주소" value={application.churchAddress} />
           <Row label="소속 교단" value={application.denomination} />
+          {application.denominationMatch && (
+            <Row label="대조 결과" value={`일치: ${application.denominationMatch}`} />
+          )}
           <Row
             label="플랜"
             value={
@@ -2132,6 +2256,21 @@ function ApplicationDetailModal({
 
         {/* Editable controls */}
         <div className="space-y-3">
+          <div className="rounded-lg border border-gray-200 bg-gray-50/60 px-3 py-2">
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-800">
+              <input
+                type="checkbox"
+                checked={denominationVerified}
+                onChange={(e) => setDenominationVerified(e.target.checked)}
+                className="rounded"
+              />
+              정통 교단 확인 (이단 아님)
+            </label>
+            <p className="mt-1 text-xs text-gray-400">
+              슈퍼어드민이 직접 정통 교단임을 확인한 경우 체크하세요. 저장 시 반영됩니다.
+            </p>
+          </div>
+
           <div>
             <label className="block text-sm font-medium mb-1">상태</label>
             <select
@@ -2209,6 +2348,316 @@ function ApplicationDetailModal({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// ─── Tab: Reference Data (참조 데이터 — 교단 대조 목록 관리) ───
+// ═══════════════════════════════════════════════════════════
+type RefDenomStatus = 'recognized' | 'watch' | 'cult';
+
+interface RefDenom {
+  id: string;
+  name: string;
+  country: 'KR' | 'US' | '';
+  status: RefDenomStatus;
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const REF_STATUS_META: Record<RefDenomStatus, { label: string; headerCls: string; badgeCls: string }> = {
+  recognized: { label: '정규 교단', headerCls: 'bg-green-50 text-green-800 border-green-200', badgeCls: 'bg-green-100 text-green-700' },
+  watch: { label: '주의', headerCls: 'bg-amber-50 text-amber-800 border-amber-200', badgeCls: 'bg-amber-100 text-amber-700' },
+  cult: { label: '이단', headerCls: 'bg-red-50 text-red-800 border-red-200', badgeCls: 'bg-red-100 text-red-700' },
+};
+
+const REF_STATUS_ORDER: RefDenomStatus[] = ['recognized', 'watch', 'cult'];
+
+function countryLabel(c: string): string {
+  if (c === 'KR') return '한국';
+  if (c === 'US') return '미국';
+  return '공통';
+}
+
+function ReferenceDataTab() {
+  const apiFetch = useAdminApi();
+  const { showToast } = useToast();
+
+  const [items, setItems] = useState<RefDenom[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // 추가 폼 상태
+  const [form, setForm] = useState<{ name: string; country: 'KR' | 'US' | ''; status: RefDenomStatus; note: string }>({
+    name: '',
+    country: '',
+    status: 'recognized',
+    note: '',
+  });
+  const [adding, setAdding] = useState(false);
+
+  // 인라인 편집 상태 (편집 중인 행 id 와 임시 값)
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{ name: string; country: 'KR' | 'US' | ''; status: RefDenomStatus; note: string }>({
+    name: '',
+    country: '',
+    status: 'recognized',
+    note: '',
+  });
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const fetchItems = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await apiFetch<{ data: RefDenom[] } | RefDenom[]>('/reference-denominations');
+      setItems(Array.isArray(res) ? res : res.data ?? []);
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '참조 목록 로딩 실패');
+    } finally {
+      setLoading(false);
+    }
+  }, [apiFetch, showToast]);
+
+  useEffect(() => {
+    void fetchItems();
+  }, [fetchItems]);
+
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim() || adding) return;
+    setAdding(true);
+    try {
+      await apiFetch('/reference-denominations', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: form.name.trim(),
+          country: form.country,
+          status: form.status,
+          note: form.note.trim() || null,
+        }),
+      });
+      showToast('success', '추가되었습니다.');
+      setForm({ name: '', country: '', status: 'recognized', note: '' });
+      void fetchItems();
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '추가 실패');
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const startEdit = (item: RefDenom) => {
+    setEditingId(item.id);
+    setEditForm({
+      name: item.name,
+      country: item.country,
+      status: item.status,
+      note: item.note ?? '',
+    });
+  };
+
+  const handleSaveEdit = async (id: string) => {
+    if (!editForm.name.trim() || savingEdit) return;
+    setSavingEdit(true);
+    try {
+      await apiFetch(`/reference-denominations/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          name: editForm.name.trim(),
+          country: editForm.country,
+          status: editForm.status,
+          note: editForm.note.trim() || null,
+        }),
+      });
+      showToast('success', '수정되었습니다.');
+      setEditingId(null);
+      void fetchItems();
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '수정 실패');
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleDelete = async (item: RefDenom) => {
+    if (!window.confirm(`"${item.name}"을(를) 참조 목록에서 삭제하시겠습니까?`)) return;
+    try {
+      await apiFetch(`/reference-denominations/${item.id}`, { method: 'DELETE' });
+      showToast('success', '삭제되었습니다.');
+      void fetchItems();
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '삭제 실패');
+    }
+  };
+
+  const grouped = (status: RefDenomStatus) => items.filter((i) => i.status === status);
+
+  return (
+    <div className="space-y-5">
+      {/* 설명 */}
+      <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+        신청서의 교단·교회명을 이 목록과 자동 대조해 배지를 표시합니다. 최종 판단은 직접 하세요.
+      </div>
+
+      {/* 추가 폼 */}
+      <form
+        onSubmit={handleAdd}
+        className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-wrap items-end gap-3"
+      >
+        <div className="flex-1 min-w-[160px]">
+          <label className="block text-xs font-medium text-gray-500 mb-1">이름 *</label>
+          <input
+            required
+            value={form.name}
+            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            placeholder="대한예수교장로회 (합동)"
+          />
+        </div>
+        <div className="w-28">
+          <label className="block text-xs font-medium text-gray-500 mb-1">국가</label>
+          <select
+            value={form.country}
+            onChange={(e) => setForm((f) => ({ ...f, country: e.target.value as 'KR' | 'US' | '' }))}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          >
+            <option value="">공통</option>
+            <option value="KR">한국</option>
+            <option value="US">미국</option>
+          </select>
+        </div>
+        <div className="w-32">
+          <label className="block text-xs font-medium text-gray-500 mb-1">분류</label>
+          <select
+            value={form.status}
+            onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as RefDenomStatus }))}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          >
+            {REF_STATUS_ORDER.map((s) => (
+              <option key={s} value={s}>
+                {REF_STATUS_META[s].label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex-1 min-w-[160px]">
+          <label className="block text-xs font-medium text-gray-500 mb-1">메모</label>
+          <input
+            value={form.note}
+            onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            placeholder="비고 (선택)"
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={adding || !form.name.trim()}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {adding ? '추가 중...' : '추가'}
+        </button>
+      </form>
+
+      {/* 그룹별 섹션 */}
+      {loading ? (
+        <Spinner />
+      ) : (
+        <div className="space-y-4">
+          {REF_STATUS_ORDER.map((s) => {
+            const rows = grouped(s);
+            const meta = REF_STATUS_META[s];
+            return (
+              <div key={s} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className={`px-4 py-2.5 border-b text-sm font-semibold flex items-center justify-between ${meta.headerCls}`}>
+                  <span>{meta.label}</span>
+                  <span className="text-xs font-medium">{rows.length}개</span>
+                </div>
+                {rows.length === 0 ? (
+                  <div className="px-4 py-6 text-center text-xs text-gray-400">등록된 항목이 없습니다.</div>
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {rows.map((item) =>
+                      editingId === item.id ? (
+                        <div key={item.id} className="px-4 py-3 flex flex-wrap items-end gap-2 bg-blue-50/40">
+                          <input
+                            value={editForm.name}
+                            onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
+                            className="flex-1 min-w-[140px] border border-gray-300 rounded-lg px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                          <select
+                            value={editForm.country}
+                            onChange={(e) => setEditForm((f) => ({ ...f, country: e.target.value as 'KR' | 'US' | '' }))}
+                            className="w-24 border border-gray-300 rounded-lg px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="">공통</option>
+                            <option value="KR">한국</option>
+                            <option value="US">미국</option>
+                          </select>
+                          <select
+                            value={editForm.status}
+                            onChange={(e) => setEditForm((f) => ({ ...f, status: e.target.value as RefDenomStatus }))}
+                            className="w-28 border border-gray-300 rounded-lg px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            {REF_STATUS_ORDER.map((st) => (
+                              <option key={st} value={st}>
+                                {REF_STATUS_META[st].label}
+                              </option>
+                            ))}
+                          </select>
+                          <input
+                            value={editForm.note}
+                            onChange={(e) => setEditForm((f) => ({ ...f, note: e.target.value }))}
+                            placeholder="메모"
+                            className="flex-1 min-w-[120px] border border-gray-300 rounded-lg px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                          <button
+                            onClick={() => handleSaveEdit(item.id)}
+                            disabled={savingEdit || !editForm.name.trim()}
+                            className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 disabled:opacity-50"
+                          >
+                            {savingEdit ? '저장 중...' : '저장'}
+                          </button>
+                          <button
+                            onClick={() => setEditingId(null)}
+                            className="px-3 py-1.5 bg-gray-100 rounded-lg text-xs hover:bg-gray-200"
+                          >
+                            취소
+                          </button>
+                        </div>
+                      ) : (
+                        <div key={item.id} className="px-4 py-3 flex items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-medium text-gray-900 text-sm">{item.name}</span>
+                              <span className="text-xs text-gray-400">{countryLabel(item.country)}</span>
+                            </div>
+                            {item.note && <p className="text-xs text-gray-500 mt-0.5 break-all">{item.note}</p>}
+                          </div>
+                          <div className="flex shrink-0 gap-1">
+                            <button
+                              onClick={() => startEdit(item)}
+                              className="px-2 py-1 text-xs text-gray-600 border border-gray-200 rounded hover:bg-gray-50"
+                            >
+                              수정
+                            </button>
+                            <button
+                              onClick={() => handleDelete(item)}
+                              className="px-2 py-1 text-xs text-red-600 border border-red-200 rounded hover:bg-red-50"
+                            >
+                              삭제
+                            </button>
+                          </div>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -3162,52 +3611,54 @@ export default function SuperAdminDashboardV2() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-7xl px-6 py-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">플랫폼 관리</h1>
-          <p className="mt-1 text-sm text-gray-500">모든 교회 사이트를 통합 관리합니다.</p>
-        </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-        >
-          + 교회 추가
-        </button>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
-        <nav className="flex gap-0 -mb-px">
-          {TABS.map((tab) => (
+      {/* 운영 콘솔 레이아웃 — 좌측 세로 사이드바 + 우측 콘텐츠.
+          작은 화면(<lg)에서는 사이드바가 콘텐츠 위로 쌓임(flex-col). */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 flex flex-col lg:flex-row gap-6">
+        {/* Sidebar nav */}
+        <aside className="lg:w-56 shrink-0">
+          <div className="lg:sticky lg:top-20 space-y-4">
+            <div>
+              <h1 className="text-lg font-bold text-gray-900">플랫폼 관리</h1>
+              <p className="mt-0.5 text-xs text-gray-500">운영 콘솔</p>
+            </div>
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === tab.id
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+              onClick={() => setShowCreateModal(true)}
+              className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
             >
-              <span>{tab.icon}</span>
-              <span>{tab.label}</span>
+              + 교회 추가
             </button>
-          ))}
-        </nav>
-      </div>
+            <nav className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible">
+              {TABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                    activeTab === tab.id
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                >
+                  <span>{tab.icon}</span>
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </nav>
+          </div>
+        </aside>
 
-      {/* Tab Content */}
-      <div>
+        {/* Tab Content */}
+        <div className="flex-1 min-w-0 space-y-6">
         {activeTab === 'overview' && (
           <OverviewTab
             stats={stats}
             loading={statsLoading}
             onCreateChurch={() => setShowCreateModal(true)}
+            onGoToApplications={() => setActiveTab('applications')}
           />
         )}
         {activeTab === 'tenants' && <TenantsTab refreshKey={tenantsRefreshKey} />}
         {activeTab === 'applications' && <ApplicationsTab />}
+        {activeTab === 'reference' && <ReferenceDataTab />}
         {activeTab === 'gallery' && <GalleryTab />}
         {activeTab === 'domains' && <DomainsTab />}
         {activeTab === 'users' && <UsersTab />}
