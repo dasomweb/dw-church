@@ -29,6 +29,7 @@ interface Copy {
     monthly: string; yearly: string; save: string;
     perMonth: string; billedYearly: string; setupOnce: string;
     includedTitle: string; included: string[];
+    setupTitle: string; setupItems: string[];
     note: string; contact: string;
   };
   plans: {
@@ -93,7 +94,16 @@ const COPY: Record<Lang, Copy> = {
         '한국어·영어',
         '이메일 지원',
       ],
-      note: '셋업비는 1회성이며, AI 빌더와 기존 사이트 마이그레이션을 포함한 초기 구축 비용입니다.\n더 큰 규모의 교회이신가요? 맞춤 플랜을',
+      setupTitle: '셋업비(1회)에 포함되는 것',
+      setupItems: [
+        '교회에 맞는 전문 디자인 적용 및 초기 구성',
+        '선택하신 플랜의 페이지·메뉴·기능 셋업',
+        '기존 웹사이트가 있으면 콘텐츠 이전(설교·주보·사진 등)',
+        '예배 시간·오시는 길·교역자 등 기본 정보 입력',
+        '도메인 연결 설정 (도메인은 교회에서 직접 구입)',
+        '오픈 전 점검 후 사이트 공개',
+      ],
+      note: '셋업비는 초기 구축에 한 번만 발생하며, 이후에는 매달(또는 매년) 이용료만 부담합니다.\n더 큰 규모의 교회이신가요? 맞춤 플랜을',
       contact: '문의하세요',
     },
     plans: [
@@ -192,7 +202,16 @@ const COPY: Record<Lang, Copy> = {
         'Korean & English',
         'Email support',
       ],
-      note: 'The setup fee is a one-time charge covering initial build with the AI builder and migration from your existing site.\nA larger congregation?',
+      setupTitle: 'What the one-time setup includes',
+      setupItems: [
+        'A professional design applied and configured for your church',
+        'Your plan’s pages, menu, and features set up',
+        'Migration of your existing site’s content (sermons, bulletins, photos, …)',
+        'Initial entry of worship times, directions, staff, and key info',
+        'Domain connection setup (you purchase the domain)',
+        'A pre-launch review, then your site goes live',
+      ],
+      note: 'The setup fee is charged once for the initial build; after that you pay only the monthly (or yearly) plan.\nA larger congregation?',
       contact: 'Contact us',
     },
     plans: [
@@ -527,6 +546,22 @@ export default function LandingPage() {
             </h3>
             <div className="mx-auto grid max-w-4xl gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {t.plansSection.included.map((item) => (
+                <div key={item} className="flex items-start gap-2 text-sm text-gray-700">
+                  <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* What the one-time setup fee includes */}
+          <div className="mt-6 rounded-2xl border border-blue-100 bg-blue-50/50 p-8">
+            <h3 className="mb-5 text-center text-sm font-bold uppercase tracking-wide text-blue-700">
+              {t.plansSection.setupTitle}
+            </h3>
+            <div className="mx-auto grid max-w-4xl gap-3 sm:grid-cols-2">
+              {t.plansSection.setupItems.map((item) => (
                 <div key={item} className="flex items-start gap-2 text-sm text-gray-700">
                   <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
