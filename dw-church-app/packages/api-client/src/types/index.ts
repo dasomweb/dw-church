@@ -205,6 +205,48 @@ export interface History {
   items: HistoryItem[];
 }
 
+// ─── Cell (목장/셀) ──────────────────────────────────────────
+export interface Cell {
+  id: string;
+  name: string;
+  leaderName?: string | null;
+  leaderRole?: string | null;
+  region?: string | null;
+  meetingDay?: string | null;
+  meetingTime?: string | null;
+  location?: string | null;
+  contact?: string | null;
+  description?: string | null;
+  photoUrl?: string | null;
+  sortOrder?: number;
+  isVisible?: boolean;
+}
+
+// ─── Newcomer (새가족 등록) ──────────────────────────────────
+export type NewcomerStatus = 'new' | 'contacted' | 'registered' | 'archived';
+
+export interface Newcomer {
+  id: string;
+  name: string;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  birthDate?: string | null;
+  gender?: string | null;
+  prevChurch?: string | null;
+  visitPath?: string | null;
+  faithStatus?: string | null;
+  familyInfo?: string | null;
+  prayerRequest?: string | null;
+  status?: NewcomerStatus;
+  memo?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// The public intake form submits only the visitor-facing fields.
+export type NewcomerSubmission = Omit<Newcomer, 'id' | 'status' | 'memo' | 'createdAt' | 'updatedAt'>;
+
 // ─── Church Settings ────────────────────────────────────────
 export interface ChurchSettings {
   churchName: string;

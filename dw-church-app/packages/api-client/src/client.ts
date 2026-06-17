@@ -9,11 +9,15 @@ import type {
   BoardPost,
   Bulletin,
   Category,
+  Cell,
   ChurchSettings,
   ClientConfig,
   Column,
   Event,
   History,
+  Newcomer,
+  NewcomerStatus,
+  NewcomerSubmission,
   HistoryListParams,
   ListParams,
   LoginInput,
@@ -599,6 +603,57 @@ export class DWChurchClient {
 
   async deleteHistory(id: string): Promise<void> {
     return this.api.delete(`${this.namespace}/history/${id}`);
+  }
+
+  // ─── Cells (목장/셀) ─────────────────────────────────────
+  async getCells(): Promise<Cell[]> {
+    const res = await this.api.get(`${this.namespace}/cells`);
+    return unwrapData(res);
+  }
+
+  async getCell(id: string): Promise<Cell> {
+    const res = await this.api.get(`${this.namespace}/cells/${id}`);
+    return unwrapData(res);
+  }
+
+  async createCell(data: Omit<Cell, 'id'>): Promise<Cell> {
+    const res = await this.api.post(`${this.namespace}/cells`, data);
+    return unwrapData(res);
+  }
+
+  async updateCell(id: string, data: Partial<Cell>): Promise<Cell> {
+    const res = await this.api.put(`${this.namespace}/cells/${id}`, data);
+    return unwrapData(res);
+  }
+
+  async deleteCell(id: string): Promise<void> {
+    return this.api.delete(`${this.namespace}/cells/${id}`);
+  }
+
+  // ─── Newcomers (새가족 등록·관리) ────────────────────────
+  async getNewcomers(status?: NewcomerStatus): Promise<Newcomer[]> {
+    const res = await this.api.get(`${this.namespace}/newcomers`, { status });
+    return unwrapData(res);
+  }
+
+  async getNewcomer(id: string): Promise<Newcomer> {
+    const res = await this.api.get(`${this.namespace}/newcomers/${id}`);
+    return unwrapData(res);
+  }
+
+  /** Public intake form submission (no auth — relies on X-Tenant-Slug). */
+  async submitNewcomer(data: NewcomerSubmission): Promise<Newcomer> {
+    const res = await this.api.post(`${this.namespace}/newcomers`, data);
+    return unwrapData(res);
+  }
+
+  async updateNewcomer(id: string, data: Partial<Newcomer>): Promise<Newcomer> {
+    const res = await this.api.put(`${this.namespace}/newcomers/${id}`, data);
+    return unwrapData(res);
+  }
+
+  async deleteNewcomer(id: string): Promise<void> {
+    return this.api.delete(`${this.namespace}/newcomers/${id}`);
   }
 
   // ─── Boards (게시판) ───���──────────────────────────────────

@@ -366,6 +366,13 @@ export async function getHistory(slug: string): Promise<any[]> {
   return unwrap(res) ?? [];
 }
 
+// ─── Cells (목장/셀) ──────────────────────────────────────────
+
+export async function getCells(slug: string): Promise<any[]> {
+  const res = await apiFetch(slug, `/api/v1/cells`, { revalidate: 60 });
+  return unwrap(res) ?? [];
+}
+
 // ─── Events ──────────────────────────────────────────────────
 
 export async function getEvents(

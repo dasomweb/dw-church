@@ -28,6 +28,10 @@ export type {
   StaffSnsLinks,
   History,
   HistoryItem,
+  Cell,
+  Newcomer,
+  NewcomerStatus,
+  NewcomerSubmission,
   ChurchSettings,
   PostStatus,
   PostType,
@@ -142,6 +146,15 @@ export {
   useCreateHistory,
   useUpdateHistory,
   useDeleteHistory,
+  // Cells (목장)
+  useCells,
+  useCreateCell,
+  useUpdateCell,
+  useDeleteCell,
+  // Newcomers (새가족)
+  useNewcomers,
+  useUpdateNewcomer,
+  useDeleteNewcomer,
   // Boards
   useBoards,
   useBoard,

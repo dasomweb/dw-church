@@ -58,6 +58,9 @@ export const blockTypes = [
   'board',
   // Contact form (새가족 등록 등)
   'contact_form',
+  // 목장(셀) Data Block + 새가족 등록 폼 Static Block
+  'cell_grid',
+  'newcomer_form',
 ] as const;
 
 export type BlockType = (typeof blockTypes)[number];

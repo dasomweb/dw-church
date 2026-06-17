@@ -139,6 +139,12 @@ function mapChurchBlock(
     case 'history':
       return { blockType: 'history_timeline', props: { title } };
 
+    case 'cell-grid':
+    case 'cells':
+    case 'small-groups':
+      // 목장(셀) grid — data block; rows come from /api/v1/cells.
+      return { blockType: 'cell_grid', props: { title, limit: limitOf(24), columns: 3 } };
+
     case 'schedule-board':
     case 'worship-schedule':
     case 'schedule':
@@ -195,6 +201,17 @@ function mapChurchBlock(
           description: description || '',
           buttonText: button || '',
           buttonUrl: spec.buttonUrl ?? '',
+        },
+      };
+
+    case 'newcomer-form':
+    case 'newcomer-registration':
+      // 새가족 등록 폼 (public intake). AI authors title/subtitle only.
+      return {
+        blockType: 'newcomer_form',
+        props: {
+          title: title || '새가족 등록',
+          subtitle: subtitle || '',
         },
       };
 

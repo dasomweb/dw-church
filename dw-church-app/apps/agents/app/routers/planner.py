@@ -669,6 +669,13 @@ SECTION_TO_PATTERN = {
     "greeting": "pastor-message",
     "newcomer": "newcomer-info",
     "new-family": "newcomer-info",
+    "newcomer-form": "newcomer-form",
+    "newcomer-registration": "newcomer-form",
+    "새가족등록": "newcomer-form",
+    "cells": "cell-grid",
+    "cell-grid": "cell-grid",
+    "small-groups": "cell-grid",
+    "목장": "cell-grid",
     "giving": "giving-info",
     "giving-info": "giving-info",
     "donation": "giving-info",
@@ -1144,7 +1151,13 @@ Each section needs:
                           연혁 page.
    - "board"            = 게시판 목록 (/api/v1/boards). USE on 공지/게시판
                           pages.
+   - "cells"            = 목장(셀) 그리드 (/api/v1/cells). USE on the 목장/
+                          공동체/소그룹 page. Data block — write only a title.
    And STATIC church blocks you DO write copy for:
+   - "newcomer-form"    = 새가족 온라인 등록 폼 (방문자가 직접 작성 → 새가족
+                          관리 인박스). title/subtitle 만 작성. USE on a 새가족/
+                          처음오신분 page when online registration is wanted.
+                          (NOT "newcomer" — that's the welcome+CTA info block.)
    - "pastor-message"   = 담임목사 인사말 (title=headline, description=인사말
                           본문, imagePrompt=목사 사진). USE on 교회소개/home.
    - "newcomer"         = 새가족 환영 + 등록 CTA (title/subtitle/description

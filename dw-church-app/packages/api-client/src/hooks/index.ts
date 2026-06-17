@@ -18,6 +18,9 @@ import type {
   Event,
   Staff,
   History,
+  Cell,
+  Newcomer,
+  NewcomerStatus,
   ChurchSettings,
   ListParams,
   LoginInput,
@@ -104,6 +107,16 @@ export const queryKeys = {
     list: (params?: HistoryListParams) => ['history', 'list', params] as const,
     detail: (id: string) => ['history', 'detail', id] as const,
     years: ['history', 'years'] as const,
+  },
+  cells: {
+    all: ['cells'] as const,
+    list: () => ['cells', 'list'] as const,
+    detail: (id: string) => ['cells', 'detail', id] as const,
+  },
+  newcomers: {
+    all: ['newcomers'] as const,
+    list: (status?: string) => ['newcomers', 'list', status] as const,
+    detail: (id: string) => ['newcomers', 'detail', id] as const,
   },
   boards: {
     all: ['boards'] as const,
@@ -788,6 +801,73 @@ export function useDeleteHistory() {
   return useMutation({
     mutationFn: (id: string) => client!.deleteHistory(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.history.all }),
+  });
+}
+
+// ─── Cell (목장) Hooks ───────────────────────────────────────
+export function useCells() {
+  const client = useDWChurchClient();
+  return useQuery<Cell[]>({
+    queryKey: queryKeys.cells.list(),
+    queryFn: () => client!.getCells(),
+    enabled: !!client,
+    staleTime: STALE_TIME,
+  });
+}
+
+export function useCreateCell() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Omit<Cell, 'id'>) => client!.createCell(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.cells.all }),
+  });
+}
+
+export function useUpdateCell() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Cell> }) => client!.updateCell(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.cells.all }),
+  });
+}
+
+export function useDeleteCell() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => client!.deleteCell(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.cells.all }),
+  });
+}
+
+// ─── Newcomer (새가족 등록) Hooks ────────────────────────────
+export function useNewcomers(status?: NewcomerStatus) {
+  const client = useDWChurchClient();
+  return useQuery<Newcomer[]>({
+    queryKey: queryKeys.newcomers.list(status),
+    queryFn: () => client!.getNewcomers(status),
+    enabled: !!client,
+    staleTime: STALE_TIME,
+  });
+}
+
+export function useUpdateNewcomer() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Newcomer> }) => client!.updateNewcomer(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.newcomers.all }),
+  });
+}
+
+export function useDeleteNewcomer() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => client!.deleteNewcomer(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.newcomers.all }),
   });
 }
 

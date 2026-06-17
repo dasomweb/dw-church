@@ -273,6 +273,26 @@
       "useCases": ["공지사항 (notices)", "자주 묻는 질문 (faq)", "채용 공고 (careers)"],
       "aiHint": "Board/forum widget — pulls from /api/v1/boards/{boardSlug}/posts. Use boardSlug like notices/faq/careers/resources."
     },
+    "cell_grid": {
+      "label": "목장 안내",
+      "group": "data",
+      "flags": { "isDataBlock": true },
+      "defaultProps": { "title": "목장 안내", "limit": 24, "columns": 3 },
+      "description": "목장(셀) 그리드 Data Block. /api/v1/cells에서 각 목장의 목자·모임 요일/시간·장소·소개를 카드로 표시. 운영자가 목장 관리에서 등록한 내용이 자동 반영.",
+      "tags": ["cell", "small-group", "목장", "셀", "구역", "community", "data-driven", "church"],
+      "useCases": ["목장 안내 페이지", "공동체/소그룹 소개 섹션"],
+      "aiHint": "목장(small-group/cell) grid — pulls from /api/v1/cells. Each card shows the 목장 name, leader, meeting day/time, location. USE on a 목장/공동체/소그룹 page. Data block: write only the section title."
+    },
+    "newcomer_form": {
+      "label": "새가족 등록 폼",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "title": "새가족 등록", "subtitle": "저희 교회를 찾아주셔서 감사합니다. 아래 정보를 남겨주시면 따뜻하게 안내해 드리겠습니다." },
+      "description": "새가족이 직접 정보를 남기는 공개 등록 폼 (Pro). 제출 내용은 새가족 관리 인박스로 들어감. title·subtitle만 작성하면 됨.",
+      "tags": ["newcomer", "registration", "새가족", "form", "intake", "welcome", "church", "static"],
+      "useCases": ["새가족 등록 페이지", "처음 오신 분 안내 페이지 하단 등록 폼"],
+      "aiHint": "Newcomer self-registration FORM (not the 안내 block) — a public form that drops into the 새가족 관리 inbox. Author only title/subtitle. USE on a 새가족/처음오신분 page when the church wants visitors to register online."
+    },
     "products_showcase": {
       "label": "제품 카탈로그 (그리드/포트폴리오/매거진)",
       "group": "product",
