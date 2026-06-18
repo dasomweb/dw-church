@@ -30,11 +30,18 @@ export async function emailSettingsRoutes(app: FastifyInstance) {
   app.post('/admin/email-settings/test', { preHandler: [requireSuperAdmin] }, async (request, reply) => {
     const { to } = testEmailSchema.parse(request.body);
     invalidateMailCache();
-    await sendEmail({
-      to,
-      subject: 'TRUE LIGHT 메일 설정 테스트',
-      html: '<p>이 메일이 보이면 SMTP 설정이 정상입니다. ✅</p>',
-    });
-    return reply.send({ data: { sent: true } });
+    try {
+      await sendEmail({
+        to,
+        subject: 'TRUE LIGHT 메일 설정 테스트',
+        html: '<p>이 메일이 보이면 SMTP 설정이 정상입니다. ✅</p>',
+      });
+      return reply.send({ data: { sent: true } });
+    } catch (err) {
+      // Surface the real SMTP error (auth failed / connection / cert) instead of
+      // a generic 500, so the operator can fix the settings.
+      const msg = err instanceof Error ? err.message : String(err);
+      return reply.status(400).send({ error: { code: 'EMAIL_SEND_FAILED', message: `메일 발송 실패: ${msg}` } });
+    }
   });
 }

@@ -74,6 +74,10 @@ export async function sendEmail(opts: {
     port: cfg.port,
     secure: cfg.secure || cfg.port === 465,
     auth: cfg.user ? { user: cfg.user, pass: cfg.pass } : undefined,
+    // Fail fast with a clear error rather than hanging on a bad host/firewall.
+    connectionTimeout: 15000,
+    greetingTimeout: 10000,
+    socketTimeout: 20000,
   });
 
   const fromAddr =
