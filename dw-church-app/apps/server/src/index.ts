@@ -109,6 +109,7 @@ async function main(): Promise<void> {
   const { supportRoutes } = await import('./modules/support/routes.js');
   const { pricingRoutes } = await import('./modules/pricing/routes.js');
   const { emailSettingsRoutes } = await import('./modules/email-settings/routes.js');
+  const { intakeRoutes } = await import('./modules/intake/routes.js');
 
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(tenantRoutes, { prefix: '/api/v1/admin' });
@@ -181,6 +182,7 @@ async function main(): Promise<void> {
   await app.register(supportRoutes, { prefix: '/api/v1' }); // /support-tickets + /admin/support-tickets
   await app.register(pricingRoutes, { prefix: '/api/v1' }); // /pricing + /admin/pricing
   await app.register(emailSettingsRoutes, { prefix: '/api/v1' }); // /admin/email-settings
+  await app.register(intakeRoutes, { prefix: '/api/v1' }); // /intake + /admin/intake
 
   // --- Internal: resolve custom domain to tenant slug (used by Next.js middleware) ---
   app.get('/api/v1/admin/tenants/resolve-domain', async (request, reply) => {
@@ -762,6 +764,26 @@ async function main(): Promise<void> {
     );
   } catch (err) {
     app.log.warn(`email_settings table migration skipped: ${err}`);
+  }
+
+  // --- site_intake (결제 후 고객이 작성하는 사이트 콘텐츠, 중간저장/제출) ---
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "site_intake" (
+        "id"          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+        "tenant_slug" VARCHAR(100) NOT NULL UNIQUE,
+        "plan"        VARCHAR(20) NOT NULL DEFAULT '',
+        "data"        JSONB       NOT NULL DEFAULT '{}',
+        "status"      VARCHAR(20) NOT NULL DEFAULT 'draft' CHECK (status IN ('draft','submitted','built')),
+        "created_at"  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        "updated_at"  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await prisma.$executeRawUnsafe(
+      `CREATE INDEX IF NOT EXISTS "site_intake_status_idx" ON "site_intake" ("status", "updated_at" DESC)`,
+    );
+  } catch (err) {
+    app.log.warn(`site_intake table migration skipped: ${err}`);
   }
 
   // --- Stripe billing columns on public.tenants ---
