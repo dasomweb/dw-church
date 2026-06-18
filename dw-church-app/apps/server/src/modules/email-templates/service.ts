@@ -112,6 +112,22 @@ export async function renderTemplate(
   };
 }
 
+/**
+ * Render a (possibly unsaved) draft subject/body into a ready-to-view
+ * { subject, html } using the same substitution + shell as a real send.
+ * Used by the admin live-preview panel so the editor shows the final design.
+ */
+export function renderRaw(
+  subject: string,
+  body: string,
+  vars: Record<string, string> = {},
+): { subject: string; html: string } {
+  return {
+    subject: substitute(subject, vars),
+    html: wrapEmail(substitute(body, vars)),
+  };
+}
+
 /** Render arbitrary broadcast body (admin-authored inner HTML) into the shell. */
 export function renderBroadcast(subject: string, body: string): { subject: string; html: string } {
   return { subject, html: wrapEmail(body, { footerNote: '본 메일은 TRUE LIGHT 공지입니다.' }) };

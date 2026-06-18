@@ -12,6 +12,12 @@ export const updateTemplateSchema = z.object({
 
 export const testTemplateSchema = z.object({ to: z.string().email() });
 
+// Live preview of (possibly unsaved) subject/body — renders the design shell.
+export const previewTemplateSchema = z.object({
+  subject: z.string().max(300).optional(),
+  body: z.string().max(20000).optional(),
+});
+
 export const broadcastSchema = z.object({
   subject: z.string().min(1).max(300),
   body: z.string().min(1).max(50000), // inner HTML

@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { requireSuperAdmin } from '../../middleware/auth.js';
 import { sendEmail } from '../../config/email.js';
 import { wrapEmail } from '../../config/email-layout.js';
-import { updateTemplateSchema, testTemplateSchema, broadcastSchema } from './schema.js';
+import { updateTemplateSchema, testTemplateSchema, previewTemplateSchema, broadcastSchema } from './schema.js';
 import * as svc from './service.js';
 
 // Sample variables so a test send shows a realistic preview.
@@ -39,6 +39,18 @@ export async function emailTemplateRoutes(app: FastifyInstance) {
       const msg = err instanceof Error ? err.message : String(err);
       return reply.status(400).send({ error: { code: 'EMAIL_SEND_FAILED', message: `발송 실패: ${msg}` } });
     }
+  });
+
+  // Live preview — render the (possibly unsaved) subject/body with sample
+  // variables and the design shell, so the editor shows the final email.
+  app.post('/admin/email-templates/:key/preview', { preHandler: [requireSuperAdmin] }, async (request, reply) => {
+    const { key } = request.params as { key: string };
+    const input = previewTemplateSchema.parse(request.body ?? {});
+    const saved = await svc.getTemplate(key).catch(() => null);
+    const subject = input.subject ?? (saved?.subject as string | undefined) ?? '';
+    const body = input.body ?? (saved?.body as string | undefined) ?? '';
+    const rendered = svc.renderRaw(subject, body, SAMPLE_VARS[key] ?? {});
+    return reply.send({ data: rendered });
   });
 
   // Broadcast / preview an announcement to all tenant-admin emails.
