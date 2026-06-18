@@ -37,6 +37,7 @@ from app.services.agents.copywriter.domain import (
 )
 from app.services.agents.shared.base_agent import BaseAgent
 from app.services.agents.shared.church_voice import CHURCH_VOICE
+from app.services.agents.shared.church_content_reference import CHURCH_CONTENT_REFERENCE
 from app.services.agents.shared.llm_client import ModelSpec
 from app.services.agents.shared.must_haves import format_must_haves
 
@@ -164,6 +165,19 @@ class PageContentAgent(BaseAgent[PageContentInput, PageContentDecision]):
             "Output ONLY a valid JSON object in the requested shape — "
             "no prose, no markdown fences. Wrap the section list under "
             "the `sections` key.\n"
+            "\n"
+            "Below is the AUTHORITATIVE church content reference (Dr. John Kwak, "
+            "Church Planting LCCM 3354). Use §1–§12 as the theological and ministry "
+            "source for what each page should actually say (biblical basis, the NT "
+            "church models, the four Kingdom competencies, grace+truth, "
+            "contextualization, assimilation, small groups, teams, stewardship, "
+            "public worship), and apply §13's Do/Don't plus the §13.5 seven-point "
+            "self-check before finalizing. Draw concrete, specific substance from "
+            "it — never settle for generic church-sounding filler.\n"
+            "\n"
+            "===== CHURCH CONTENT REFERENCE (canon) =====\n"
+            f"{CHURCH_CONTENT_REFERENCE}\n"
+            "===== END REFERENCE =====\n"
             "\n"
             f"{CHURCH_VOICE}\n"
             "\n"
