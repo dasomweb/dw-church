@@ -1,0 +1,15 @@
+# Keep the build context small + clean so `railway up` uploads source only.
+# (Without this, local .next/dist/node_modules bloat the context to 100s of MB
+# and intermittently trip the buildkit cache-key computation on the Metal
+# builder. The Dockerfiles install deps + build from source, so none of these
+# are needed in the context.)
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+**/.git
+**/.venv
+**/__pycache__
+**/*.log
+**/coverage
+**/.DS_Store
