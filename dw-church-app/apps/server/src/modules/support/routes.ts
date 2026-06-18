@@ -45,6 +45,7 @@ export async function supportRoutes(app: FastifyInstance) {
         to: row.email as string,
         subject: `[TRUE LIGHT 고객지원] ${row.subject as string}`,
         html: `<p>${String(input.adminReply).replace(/\n/g, '<br>')}</p>`,
+        from: 'support',
       }).catch((err) => console.error('[email] support reply failed:', err));
     }
     return reply.send({ data: row });

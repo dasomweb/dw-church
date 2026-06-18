@@ -108,6 +108,7 @@ async function main(): Promise<void> {
   const { referenceDenominationRoutes } = await import('./modules/reference-denominations/routes.js');
   const { supportRoutes } = await import('./modules/support/routes.js');
   const { pricingRoutes } = await import('./modules/pricing/routes.js');
+  const { emailSettingsRoutes } = await import('./modules/email-settings/routes.js');
 
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(tenantRoutes, { prefix: '/api/v1/admin' });
@@ -179,6 +180,7 @@ async function main(): Promise<void> {
   await app.register(referenceDenominationRoutes, { prefix: '/api/v1' }); // /admin/reference-denominations
   await app.register(supportRoutes, { prefix: '/api/v1' }); // /support-tickets + /admin/support-tickets
   await app.register(pricingRoutes, { prefix: '/api/v1' }); // /pricing + /admin/pricing
+  await app.register(emailSettingsRoutes, { prefix: '/api/v1' }); // /admin/email-settings
 
   // --- Internal: resolve custom domain to tenant slug (used by Next.js middleware) ---
   app.get('/api/v1/admin/tenants/resolve-domain', async (request, reply) => {
@@ -732,6 +734,34 @@ async function main(): Promise<void> {
     }
   } catch (err) {
     app.log.warn(`plan_pricing table migration skipped: ${err}`);
+  }
+
+  // --- email_settings (SMTP + from-addresses, 슈퍼어드민 관리, single row) ---
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "email_settings" (
+        "id"           INT         PRIMARY KEY DEFAULT 1,
+        "smtp_host"    VARCHAR(255) NOT NULL DEFAULT '',
+        "smtp_port"    INT          NOT NULL DEFAULT 587,
+        "smtp_secure"  BOOLEAN      NOT NULL DEFAULT false,
+        "smtp_user"    VARCHAR(255) NOT NULL DEFAULT '',
+        "smtp_pass"    VARCHAR(500) NOT NULL DEFAULT '',
+        "from_info"    VARCHAR(255) NOT NULL DEFAULT '',
+        "from_order"   VARCHAR(255) NOT NULL DEFAULT '',
+        "from_support" VARCHAR(255) NOT NULL DEFAULT '',
+        "from_name"    VARCHAR(100) NOT NULL DEFAULT 'TRUE LIGHT',
+        "updated_at"   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+        CONSTRAINT "email_settings_single_row" CHECK (id = 1)
+      )
+    `);
+    // Seed the single row with the operator's intended from-addresses.
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO "email_settings" (id, from_info, from_order, from_support, from_name)
+       VALUES (1, 'info@dasomweb.com', 'order@dasomweb.com', 'support@dasomweb.com', 'TRUE LIGHT')
+       ON CONFLICT (id) DO NOTHING`,
+    );
+  } catch (err) {
+    app.log.warn(`email_settings table migration skipped: ${err}`);
   }
 
   // --- Stripe billing columns on public.tenants ---

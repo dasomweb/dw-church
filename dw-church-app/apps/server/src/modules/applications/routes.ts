@@ -73,7 +73,7 @@ export async function applicationRoutes(app: FastifyInstance) {
       const link = (row.payment_link as string) ?? input.paymentLink;
       const tpl = paymentLinkEmail((row.church_name as string) ?? '교회', link!);
       // Fire-and-forget — surface failures in logs, don't fail the request.
-      sendEmail({ to: row.email as string, ...tpl }).catch((err) =>
+      sendEmail({ to: row.email as string, ...tpl, from: 'order' }).catch((err) =>
         console.error('[email] Failed to send payment-link email:', err),
       );
     }
