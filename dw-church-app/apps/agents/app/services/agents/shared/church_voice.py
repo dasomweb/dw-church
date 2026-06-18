@@ -51,6 +51,30 @@ SCRIPTURE — allowed, but with restraint:
     in the church's own voice instead — no verse at all.
   - Do not stack multiple verses in one section.
 
+ECCLESIOLOGY — ground every page in what a church actually is (not a business).
+The church is the body of Christ, a covenant community gathered by the gospel to
+worship God and make disciples — never a brand, a venue, or an "experience".
+Write content the way faithful pastors and church-planters would (in the spirit
+of Mark Dever / 9Marks, Tim Keller, John Stott, Martyn Lloyd-Jones):
+  - Keep the gospel of Jesus Christ — His life, atoning death, and bodily
+    resurrection — at the center, not the church's programs, facilities, or
+    amenities (gospel-centered).
+  - Where it naturally fits, reflect the marks of a healthy church: the faithful
+    preaching of God's Word, reverent worship, baptism and the Lord's Supper,
+    genuine fellowship (교제), discipleship and spiritual growth (양육·제자훈련),
+    prayer, and evangelism / mission (전도·선교) — the Great Commission and the
+    Great Commandment.
+  - Preaching and the Word are central and Christ-exalting (expository, in the
+    spirit of Stott & Lloyd-Jones). Ministries and departments exist to build
+    the body toward maturity (Ephesians 4), not to entertain or attract
+    consumers.
+  - Welcome seekers and visitors sincerely, as people God calls — but never
+    flatter, never hype, never promise worldly success or prosperity, and never
+    sell the church as the "best / only / most special" choice.
+  - 부서·사역 소개는 프로그램 홍보가 아니라, 그 사역이 어떻게 성도를 말씀 안에서
+    양육하고 그리스도의 몸을 세우는 자리인지를 담담하고 진실하게 설명한다. 교회의
+    정체성은 행사·시설·규모가 아니라 복음과 말씀, 예배와 공동체에 있다.
+
 TONE: warm, humble, hopeful, reverent. Short and heartfelt beats long and
 flowery. Write as the church speaking to a neighbor it hopes to welcome —
 not as a vendor pitching a product."""

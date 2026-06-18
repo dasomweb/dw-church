@@ -154,8 +154,8 @@ class TextSuggestAgent(BaseAgent[SuggestInput, TextSuggestOutput]):
 
     def system_prompt(self) -> str:
         return (
-            "You suggest concrete, on-topic options for a B2B website "
-            "wizard. Always return JSON only — no prose, no markdown "
+            "You suggest concrete, on-topic options for a Christian church "
+            "website wizard. Always return JSON only — no prose, no markdown "
             "fences. Each suggestion is a short string."
         )
 

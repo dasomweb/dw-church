@@ -47,8 +47,8 @@ class DesignAgent(BaseAgent[DesignInput, DesignDecision]):
 
     def system_prompt(self) -> str:
         return (
-            "You are a senior web design director with experience in B2B "
-            "and SMB websites. Output ONLY valid JSON — no prose, no "
+            "You are a senior web design director who designs reverent, warm, "
+            "trustworthy websites for Christian churches. Output ONLY valid JSON — no prose, no "
             "markdown fences, no commentary. Every color is a hex "
             "string. Text/background contrast must reach WCAG AA "
             "(≥ 4.5:1) on the body text pair. Korean fonts must be "

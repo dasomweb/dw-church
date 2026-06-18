@@ -63,7 +63,7 @@ class ArchitectAgent(BaseAgent[SitemapInput, SitemapDecision]):
 
     def system_prompt(self) -> str:
         return (
-            "You are a senior information architect for B2B and SMB "
+            "You are a senior information architect for Christian church "
             "websites. You design site structure that operators can "
             "actually populate — never propose a 6-level deep nesting "
             "or a 50-page sitemap when 12 pages would carry the same "
