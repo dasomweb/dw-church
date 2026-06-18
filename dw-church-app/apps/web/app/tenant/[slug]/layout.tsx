@@ -1,9 +1,12 @@
 import '@dw-church/blocks/styles.css';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import Link from 'next/link';
 import { headers } from 'next/headers';
-import { getChurchSettings, getMenuItems, getTheme, getThemeTokens } from '@/lib/api';
+import { getChurchSettings, getMenuItems, getSiteMeta, getTheme, getThemeTokens } from '@/lib/api';
 import MobileMenu from '@/components/MobileMenu';
+import MobileAppNav from '@/components/MobileAppNav';
+import PwaRegister from '@/components/PwaRegister';
+import InstallAppButton from '@/components/InstallAppButton';
 import { BrandTokensStyle } from '@/components/BrandTokensStyle';
 import { PreviewBridge } from '@/components/PreviewBridge';
 import { DEFAULT_DESIGN_TOKENS, type DesignTokens } from '@dw-church/design-tokens';
@@ -130,6 +133,14 @@ function getFooterStyle(style: string | undefined): React.CSSProperties {
   }
 }
 
+// ─── Viewport ────────────────────────────────────────────────
+
+// Next 15 wants themeColor in the viewport export (not metadata). Matches the
+// PWA manifest theme_color so the installed app + browser chrome stay on-brand.
+export const viewport: Viewport = {
+  themeColor: '#2563eb',
+};
+
 // ─── Metadata ────────────────────────────────────────────────
 
 export async function generateMetadata({ params }: TenantLayoutProps): Promise<Metadata> {
@@ -138,6 +149,10 @@ export async function generateMetadata({ params }: TenantLayoutProps): Promise<M
   try {
     settings = await getChurchSettings(slug);
   } catch { /* fallback */ }
+
+  // PWA (mobile app) is a Pro-plan-only feature — gate the manifest + Apple
+  // web-app meta on it so non-Pro tenants get no extra tags.
+  const siteMeta = await getSiteMeta(slug);
 
   const churchName = settings?.churchName ?? settings?.name ?? slug;
   const seoTitle = settings?.seoTitle ?? settings?.seo_title ?? churchName;
@@ -163,6 +178,16 @@ export async function generateMetadata({ params }: TenantLayoutProps): Promise<M
       ...(ogImageUrl ? { images: [ogImageUrl] } : {}),
     },
     icons: faviconUrl ? { icon: faviconUrl, apple: faviconUrl } : undefined,
+    ...(siteMeta.features.pwa
+      ? {
+          manifest: `/tenant/${slug}/manifest.webmanifest`,
+          appleWebApp: {
+            capable: true,
+            statusBarStyle: 'default',
+            title: churchName,
+          },
+        }
+      : {}),
   };
 }
 
@@ -203,6 +228,11 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   let menuItems: MenuItem[] = [];
   let theme: Theme | null = null;
   let tokens: DesignTokens = DEFAULT_DESIGN_TOKENS;
+
+  // PWA/mobile-app experience is Pro-plan only (getSiteMeta self-defaults to
+  // pwa:false on error, so this never throws and non-Pro tenants are unaffected).
+  const siteMeta = await getSiteMeta(slug);
+  const pwaEnabled = siteMeta.features.pwa;
 
   try {
     // Tokens are the new source of truth; the legacy `getTheme` blob
@@ -285,6 +315,14 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   // Flat list for backward compat (only top-level shown in header)
   const sortedVisibleItems = topLevelItems;
 
+  // Items for the Pro-plan mobile app bottom nav — same top-level visible
+  // menu items, resolved to { label, href } via the SAME navHref helper the
+  // header + slide-out menu use (so destinations stay consistent). Capped to 5
+  // inside MobileAppNav.
+  const appNavItems = pwaEnabled
+    ? sortedVisibleItems.map((item) => ({ label: item.label, href: navHref(item) }))
+    : [];
+
   return (
     <div
       // data-tenant scopes BrandTokensStyle's `--brand-*` CSS so multiple
@@ -305,6 +343,8 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
         <link rel="stylesheet" href={googleFontsHref([headingFamily, bodyFamily])!} />
       )}
       <PreviewBridge />
+      {/* PWA service worker registration — Pro-plan only. */}
+      {pwaEnabled && <PwaRegister />}
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--dw-primary)]"
@@ -372,7 +412,8 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                 ))}
               </nav>
             </div>
-            <div className="absolute right-4 top-4 sm:right-6 md:hidden">
+            <div className="absolute right-4 top-4 sm:right-6 md:hidden flex items-center gap-2">
+              {pwaEnabled && <InstallAppButton className="hidden sm:inline-flex" />}
               <MobileMenu navItems={sortedVisibleItems} basePath={basePath} />
             </div>
           </div>
@@ -426,13 +467,22 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                 </div>
               ))}
             </nav>
-            <MobileMenu navItems={sortedVisibleItems} basePath={basePath} />
+            <div className="flex items-center gap-2 md:hidden">
+              {pwaEnabled && <InstallAppButton />}
+              <MobileMenu navItems={sortedVisibleItems} basePath={basePath} />
+            </div>
           </div>
         )}
       </header>
 
       {/* Main */}
-      <main id="main-content" className="min-h-[60vh]" style={{ backgroundColor: 'var(--dw-background)', color: 'var(--dw-text)' }}>
+      {/* Extra bottom padding on mobile (pwa only) so the fixed app bottom nav
+          doesn't cover the last bit of content. */}
+      <main
+        id="main-content"
+        className={`min-h-[60vh] ${pwaEnabled ? 'pb-20 sm:pb-0' : ''}`}
+        style={{ backgroundColor: 'var(--dw-background)', color: 'var(--dw-text)' }}
+      >
         {children}
       </main>
 
@@ -528,6 +578,9 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
           </div>
         )}
       </footer>
+
+      {/* App-style bottom navigation — Pro-plan only, mobile only. */}
+      {pwaEnabled && <MobileAppNav items={appNavItems} />}
     </div>
   );
 }

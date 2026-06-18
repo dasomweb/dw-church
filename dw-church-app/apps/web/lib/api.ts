@@ -112,6 +112,31 @@ export async function getTheme(slug: string): Promise<any> {
 }
 
 /**
+ * Lightweight tenant meta used to gate plan-only features (e.g. the PWA/mobile
+ * app experience). `features.pwa` is true only on the Pro plan. Resilient:
+ * on any error returns a safe default so the storefront never breaks.
+ */
+export async function getSiteMeta(slug: string): Promise<{
+  slug: string;
+  name: string;
+  plan: string;
+  features: { pwa: boolean };
+}> {
+  try {
+    const res = await apiFetch<any>(slug, `/api/v1/site-meta`, { revalidate: 300 });
+    const data = unwrap(res) ?? {};
+    return {
+      slug: data.slug ?? slug,
+      name: data.name ?? slug,
+      plan: data.plan ?? 'basic',
+      features: { pwa: Boolean(data.features?.pwa) },
+    };
+  } catch {
+    return { slug, name: slug, plan: 'basic', features: { pwa: false } };
+  }
+}
+
+/**
  * Fetch the full DesignTokens snapshot for a tenant. The server endpoint
  * projects legacy `settings.colors/fonts` through `legacyThemeToTokens()`
  * when `settings.tokensV2` isn't set, so this always returns a valid
