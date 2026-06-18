@@ -1961,6 +1961,7 @@ interface Application {
   phone: string | null;
   churchAddress: string | null;
   denomination: string | null;
+  faithAffirmed: boolean;
   plan: 'light' | 'basic' | 'plus' | 'pro' | null;
   billingPeriod: string | null;
   existingUrl: string | null;
@@ -2335,6 +2336,7 @@ function ApplicationDetailModal({
           <Row label="연락처" value={application.phone} />
           <Row label="교회 주소" value={application.churchAddress} />
           <Row label="소속 교단" value={application.denomination} />
+          <Row label="신앙고백 동의" value={application.faithAffirmed ? '✓ 동의함' : '미동의'} />
           {application.denominationMatch && (
             <Row label="대조 결과" value={`일치: ${application.denominationMatch}`} />
           )}

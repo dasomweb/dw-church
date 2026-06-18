@@ -50,13 +50,26 @@ export default function TermsPage() {
 
           <section>
             <h2 className="mb-2 text-lg font-bold text-gray-900">2. Eligibility &amp; Statement of Faith</h2>
+            <p className="mb-3">
+              The Service is offered to Christian churches and ministries that affirm the historic
+              Christian faith summarized in the Apostles&apos; and Nicene Creeds (the &quot;Statement of
+              Faith&quot;), namely:
+            </p>
+            <ul className="mb-3 list-disc space-y-1 pl-5">
+              <li>One God, eternally existing in three persons — Father, Son, and Holy Spirit (the Trinity);</li>
+              <li>The full deity and humanity of Jesus Christ, His virgin birth, atoning death, and bodily resurrection;</li>
+              <li>Salvation by grace through faith in Jesus Christ;</li>
+              <li>The divine inspiration and authority of the Bible (the Old and New Testaments);</li>
+              <li>The bodily return of Jesus Christ.</li>
+            </ul>
             <p>
-              The Service is offered to Christian churches and organizations whose beliefs and
-              practices align with historic, orthodox Christian doctrine. We reserve the right,
-              in our sole discretion, to decline, suspend, or discontinue the Service for any
-              organization that we determine promotes teachings widely regarded as heretical or
-              that is commonly identified as a cult or pseudo-Christian group. Such decisions are
-              based on doctrinal alignment with our mission and are not based on any
+              By applying, you represent that your church affirms this Statement of Faith. Churches
+              of any recognized denomination as well as independent / non-denominational churches
+              that affirm this Statement of Faith are eligible. Because building and hosting a church
+              website is expressive work carried out in furtherance of our mission, we serve churches
+              aligned with this Statement of Faith and may decline or discontinue the Service where
+              this eligibility requirement is not met. These eligibility decisions are based on
+              doctrinal alignment and the expressive nature of our work, and are not based on any
               characteristic protected under applicable federal or Georgia law.
             </p>
           </section>

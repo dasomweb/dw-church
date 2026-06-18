@@ -19,6 +19,7 @@ const inputCls =
 function ApplyForm() {
   const params = useSearchParams();
   const [form, setForm] = useState<Record<string, string>>({ billingPeriod: 'yearly' });
+  const [faithAffirmed, setFaithAffirmed] = useState(false);
   const [state, setState] = useState<'idle' | 'submitting' | 'done' | 'error'>('idle');
 
   // Preselect plan / period from the landing pricing cards (?plan=basic&period=yearly).
@@ -37,7 +38,7 @@ function ApplyForm() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.churchName?.trim() || !form.email?.trim()) return;
+    if (!form.churchName?.trim() || !form.email?.trim() || !faithAffirmed) return;
     setState('submitting');
     try {
       const res = await fetch(`${API_BASE}/api/v1/applications`, {
@@ -50,6 +51,7 @@ function ApplyForm() {
           phone: form.phone || undefined,
           churchAddress: form.churchAddress || undefined,
           denomination: form.denomination || undefined,
+          faithAffirmed: true,
           plan: form.plan || undefined,
           billingPeriod: form.billingPeriod || undefined,
           existingUrl: form.existingUrl || undefined,
@@ -106,8 +108,8 @@ function ApplyForm() {
       </div>
       <div>
         <label className="mb-1 block text-sm font-medium text-gray-700">소속 교단</label>
-        <input value={form.denomination || ''} onChange={set('denomination')} className={inputCls} placeholder="예: 예장합동, 예장통합, 기감, 미국장로교(PCUSA) 등" />
-        <p className="mt-1 text-xs text-gray-400">정규(정통) 기독교 교단 소속 교회만 신청하실 수 있습니다. 이단·사이비로 분류되는 단체는 서비스 대상이 아닙니다.</p>
+        <input value={form.denomination || ''} onChange={set('denomination')} className={inputCls} placeholder="예: 예장합동, 예장통합, 기감, 미국장로교(PCUSA), 무교단 등" />
+        <p className="mt-1 text-xs text-gray-400">본 서비스는 정통 기독교 신앙고백을 따르는 교회를 대상으로 합니다. 무교단·독립교회도 신청하실 수 있습니다.</p>
       </div>
 
       <div>
@@ -171,12 +173,27 @@ function ApplyForm() {
         <textarea value={form.message || ''} onChange={set('message')} rows={4} className={inputCls} placeholder="교회 규모, 원하시는 분위기, 꼭 들어갈 내용 등을 자유롭게 적어주세요." />
       </div>
 
+      {/* Statement of Faith — positive eligibility (required) */}
+      <label className="flex items-start gap-2 rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-700">
+        <input
+          type="checkbox"
+          checked={faithAffirmed}
+          onChange={(e) => setFaithAffirmed(e.target.checked)}
+          className="mt-0.5 h-4 w-4 flex-shrink-0"
+        />
+        <span>
+          우리 교회는 사도신경·니케아 신경으로 요약되는 정통 기독교 신앙(삼위일체 하나님, 예수 그리스도의 신성·대속의 죽음과 부활, 성경의 권위, 그리스도의 재림)을 고백합니다. <span className="text-red-500">*</span>
+          {' '}
+          <a href="/terms" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">신앙고백 전문</a>
+        </span>
+      </label>
+
       {state === 'error' && (
         <p className="text-sm text-red-600">신청 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.</p>
       )}
       <button
         type="submit"
-        disabled={state === 'submitting' || !form.churchName?.trim() || !form.email?.trim()}
+        disabled={state === 'submitting' || !form.churchName?.trim() || !form.email?.trim() || !faithAffirmed}
         className="w-full rounded-xl bg-blue-600 py-3.5 text-sm font-bold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
       >
         {state === 'submitting' ? '제출 중...' : '개발 신청서 제출'}
