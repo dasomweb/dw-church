@@ -2649,6 +2649,25 @@ function IntakeDetailModal({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [marking, setMarking] = useState(false);
+  const [applying, setApplying] = useState(false);
+
+  const handleApply = async () => {
+    if (applying) return;
+    if (!window.confirm('입력한 콘텐츠(교회정보·교역자·연혁·목장·홈 블록)를 사이트에 바로 적용합니다. 진행할까요?')) return;
+    setApplying(true);
+    try {
+      const res = await apiFetch<{ data: { settings: number; staff: number; history: number; cells: number; blocks: number } }>(
+        `/intake/${slug}/apply`, { method: 'POST' },
+      );
+      const s = (res as { data?: Record<string, number> }).data ?? (res as unknown as Record<string, number>);
+      showToast('success', `적용 완료 — 설정 ${s.settings ?? 0} · 교역자 ${s.staff ?? 0} · 연혁 ${s.history ?? 0} · 목장 ${s.cells ?? 0} · 홈 블록 ${s.blocks ?? 0}`);
+      onBuilt();
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '적용 실패');
+    } finally {
+      setApplying(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -2722,6 +2741,13 @@ function IntakeDetailModal({
                 className="px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
               >
                 전체 내용 복사
+              </button>
+              <button
+                onClick={handleApply}
+                disabled={applying}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {applying ? '적용 중...' : '📥 콘텐츠 사이트에 적용'}
               </button>
               <button
                 onClick={handleMarkBuilt}

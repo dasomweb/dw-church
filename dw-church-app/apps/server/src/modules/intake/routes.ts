@@ -57,4 +57,12 @@ export async function intakeRoutes(app: FastifyInstance) {
     if (!row) return reply.status(404).send({ error: { code: 'NOT_FOUND', message: '입력 내용을 찾을 수 없습니다' } });
     return reply.send({ data: row });
   });
+
+  // Apply the intake content verbatim into the tenant (settings/staff/history/
+  // cells + home blocks) and mark built. One-click "intake로 콘텐츠 채우기".
+  app.post('/admin/intake/:slug/apply', { preHandler: [requireSuperAdmin] }, async (request, reply) => {
+    const { slug } = request.params as { slug: string };
+    const summary = await svc.applyIntake(slug);
+    return reply.send({ data: summary });
+  });
 }
