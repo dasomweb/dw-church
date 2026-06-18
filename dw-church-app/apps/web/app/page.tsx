@@ -49,9 +49,9 @@ const COPY: Record<Lang, Copy> = {
       getStarted: '시작하기',
       seePlans: '요금제 보기',
       slides: [
-        { headline: '매주 쌓이는 말씀과 주보, 한 곳에 차곡차곡', subline: '유튜브 설교를 연동하고 주보 PDF만 올리면, 성도들이 언제 어디서나 다시 듣고 펼쳐 봅니다.' },
-        { headline: '교회에 필요한 사역, 하나의 사이트 안에', subline: '설교와 주보부터 사진 앨범, 행사 안내, 새가족 등록, 목장과 부서별 게시판까지. 흩어진 도구 없이 한 곳에서 섬깁니다.' },
-        { headline: '셋업은 저희가, 사역은 교회가', subline: '전문가가 직접 디자인과 초기 구성을 맡고, 교회 전용 도메인에 모바일 앱까지 준비해 드립니다. 교회는 말씀과 성도에만 집중하세요.' },
+        { headline: '교회 웹사역을 쉽고 편리하게', subline: '복잡한 준비 없이 교회의 온라인 사역을 시작할 수 있습니다.' },
+        { headline: '누구나 손쉽게 관리할 수 있습니다', subline: '어려운 설정이나 기술 없이 교회가 직접 콘텐츠를 올리고 관리합니다.' },
+        { headline: '교회는 사역에만 집중할 수 있습니다', subline: '복잡한 기술과 관리는 솔루션이 처리하므로 교회는 본연의 사역에 전념할 수 있습니다.' },
       ],
     },
     trust: ['교회 전용 기능', '휴대폰에서도 완벽하게', '교회 전용 주소', '전문적인 관리', '든든한 지원'],
@@ -154,9 +154,9 @@ const COPY: Record<Lang, Copy> = {
       getStarted: 'Get Started',
       seePlans: 'See Plans',
       slides: [
-        { headline: 'Every sermon and bulletin, gathered in one place', subline: 'Link your YouTube sermons and upload each week’s bulletin — your members can revisit them anytime, anywhere.' },
-        { headline: 'Everything your church needs, in one site', subline: 'From sermons and bulletins to photo albums, events, newcomer sign-ups, and ministry boards — your whole church life, together in one place.' },
-        { headline: 'We handle the setup, you focus on ministry', subline: 'Our team builds your design and initial setup, with your own church domain and a mobile app ready to go — so you can give your heart to the Word and your people.' },
+        { headline: 'Church web ministry made simple', subline: 'Start your church’s online ministry without the complicated setup.' },
+        { headline: 'Easy for anyone to manage', subline: 'Your church adds and manages content directly — no technical skills needed.' },
+        { headline: 'Focus on what matters most', subline: 'The platform handles the technical side, so your church can focus on its ministry.' },
       ],
     },
     trust: ['Church-specific tools', 'Great on phones', 'Your own church address', 'Professionally managed', 'Real support'],
@@ -282,8 +282,8 @@ function HeroSlider({ slides, getStarted, seePlans }: { slides: { headline: stri
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/45 to-black/60" />
           <div className="relative flex h-full items-center justify-center px-6 sm:px-12 lg:px-20">
-            <div className="mx-auto max-w-2xl text-center">
-              <h1 className="text-3xl font-bold leading-tight text-white sm:text-4xl lg:text-5xl xl:text-6xl" style={{ whiteSpace: 'pre-line', letterSpacing: '-0.5px' }}>
+            <div className="mx-auto max-w-4xl text-center">
+              <h1 className="text-2xl font-bold leading-tight text-white sm:text-3xl lg:text-4xl xl:text-5xl" style={{ whiteSpace: 'pre-line', letterSpacing: '-0.5px' }}>
                 {slide.headline}
               </h1>
               <p className="mt-4 text-sm leading-relaxed text-gray-200 sm:mt-6 sm:text-base lg:text-lg" style={{ whiteSpace: 'pre-line' }}>
