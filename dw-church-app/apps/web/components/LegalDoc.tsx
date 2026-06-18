@@ -6,96 +6,121 @@ import Link from 'next/link';
 /**
  * Bilingual (KO/EN) legal document renderer for Terms & Privacy.
  * NOTE: good-faith drafts, NOT legal advice — have a Georgia attorney review.
- * The English version is the governing text (stated below); Korean is provided
- * for convenience.
+ * For the Terms, the Korean version is the governing text (per the client's
+ * provided contract); the English version is a convenience translation. The
+ * Privacy Policy still treats English as governing.
  */
 type Lang = 'ko' | 'en';
 type Section = { h: string; body?: string[]; list?: string[] };
 type Doc = { title: string; updated: string; intro: string[]; sections: Section[]; govern: string };
 
 const FAITH_LIST_EN = [
-  'One God, eternally existing in three persons — Father, Son, and Holy Spirit (the Trinity);',
-  'The full deity and humanity of the Lord Jesus Christ — the only Christ — including His virgin birth, atoning death, and bodily resurrection; we acknowledge no other "christ," messiah, or second-coming figure;',
-  'Salvation by grace alone, through faith alone, in Jesus Christ;',
-  'The divine inspiration, inerrancy, final authority, and sufficiency of the Holy Bible — the sixty-six (66) books of the Old and New Testaments — as the complete and authoritative Word of God (the canon of Scripture), to which no new revelation or additional scripture may be added;',
+  'One God, eternally existing in three persons: Father, Son, and Holy Spirit (the Trinity);',
+  'The full deity and humanity of our Lord Jesus Christ, His virgin birth, His substitutionary death, and His bodily resurrection, recognizing no other "Christ," second-coming savior, or messiah;',
+  'Salvation solely by grace through faith in Jesus Christ alone;',
+  'Acceptance of the 66 books of the Old and New Testaments as the fully inspired, infallible, and final authority of the Word of God, rejecting any new revelations or additional scriptures;',
   'The personal, bodily, and visible future return of Jesus Christ.',
 ];
 const FAITH_LIST_KO = [
   '성부·성자·성령, 삼위로 영원히 존재하시는 한 분 하나님(삼위일체);',
-  '유일하신 그리스도이신 주 예수 그리스도의 완전한 신성과 인성, 동정녀 탄생, 대속의 죽음과 육체적 부활을 믿으며, 그분 외의 다른 "그리스도"·재림주·메시아를 인정하지 않음;',
-  '오직 예수 그리스도를 믿는 믿음과 오직 은혜로 받는 구원;',
-  '성경의 신적 영감·무오성(無誤性)·최종 권위와 충분성 — 구약과 신약 66권을 하나님의 완전하고 권위 있는 말씀이자 정경(正經)으로 받아들이며, 여기에 어떤 새 계시나 추가 경전도 더하지 않음;',
-  '예수 그리스도의 인격적이고 육체적이며 가시적인, 장차 있을 재림.',
+  '주 예수 그리스도의 완전한 신성과 인성, 동정녀 탄생, 대속의 죽음과 육체적 부활을 믿으며, 그분 외의 다른 "그리스도", 재림주, 메시아를 인정하지 않음;',
+  '오직 은혜와 오직 믿음으로 받는 구원;',
+  '구약과 신약 66권을 하나님의 완전하고 권위 있는 말씀이자 최종 권위로 받아들이며, 어떠한 새 계시나 추가 경전도 인정하지 않음;',
+  '예수 그리스도의 인격적이고 육체적이며 가시적인 재림.',
 ];
 
 const CONTENT: Record<'terms' | 'privacy', Record<Lang, Doc>> = {
   terms: {
     en: {
       title: 'Terms of Service',
-      updated: 'Last updated: June 2026',
-      govern: 'This English version is the governing text. The Korean translation is provided for convenience; in case of any conflict, the English version controls.',
+      updated: 'Last Updated: June 2026',
+      govern: 'The original Korean version is the governing text and controls the legal relationship between the parties. This English translation is provided for convenience; in case of any conflict or dispute, the Korean version shall control.',
       intro: [
-        'These Terms of Service ("Terms") govern your access to and use of the websites, software, and services (the "Service") provided by TRUE LIGHT ("we," "us," or "our"). By submitting an application, creating an account, or using the Service, you (the "Customer" or the "Church") agree to these Terms.',
+        'These Terms of Service ("Terms") govern the use of the website, software, hosting, and related services ("Services") provided by TRUE LIGHT ("Company"), a Georgia limited liability company. By submitting an application, creating an account, or using the Services, you ("Customer" or "Church") legally agree to be bound by these Terms. In the event that a translation of these Terms is provided, the original Korean version shall control and govern the legal relationship between the parties in case of any conflict or dispute.',
       ],
       sections: [
-        { h: '1. The Service', body: ['TRUE LIGHT is a church online-ministry solution that provides a hosted church website together with content and ministry tools. We set up and configure each site; the Customer manages its own content thereafter.'] },
-        { h: '2. Eligibility & Statement of Faith', body: ['The Service is offered to Christian churches and ministries that affirm the historic Christian faith summarized in the Apostles’ and Nicene Creeds (the "Statement of Faith"), namely:'], list: FAITH_LIST_EN },
+        { h: '1. Definition and Scope of Services', body: ['The Company provides church website development and online ministry solutions. The Company’s role is strictly limited to initial setup, system configuration, template provision, and hosting environment management. Following the completion of the initial setup, the Customer bears sole responsibility for the operation, management, and all content (including but not limited to text, images, and videos) uploaded to the website. The Company has no obligation to monitor the Customer’s website content.'] },
+        { h: '2. Religious Qualification & Discretion', body: ['The Services are offered exclusively to churches that profess and practice the orthodox Christian faith as summarized by the Apostles’ Creed and the Nicene Creed ("Confession of Faith"). Specifically, the doctrinal standards include:'], list: FAITH_LIST_EN },
         { h: '', body: [
-          'By submitting an application and using the Service, you represent and warrant that (a) your church affirms this Statement of Faith, and (b) you are authorized to accept these Terms on behalf of your church. Churches of any recognized denomination as well as independent / non-denominational churches that affirm the Statement of Faith are eligible. Because building and hosting a church website is expressive work carried out in furtherance of our religious mission, we serve churches aligned with this Statement of Faith and may, in our sole discretion, decline, suspend, or discontinue the Service where this eligibility requirement is not met. These eligibility decisions are based on doctrinal alignment and the expressive nature of our work, and are not based on any characteristic protected under applicable federal or Georgia law.',
-          'When you check the acceptance box during the application, you acknowledge that you have read these Terms and the Statement of Faith in full and that checking the box constitutes your binding agreement. If any representation you make — including your affirmation of this Statement of Faith or the information you provide — is found to be untrue, inaccurate, or incomplete, we may, at our sole discretion, suspend, terminate, or refuse the Service, and any refund will be handled in accordance with Section 4.',
+          'By submitting an application and using the Services, you REPRESENT AND WARRANT that (a) your Church fully agrees to the Confession of Faith, and (b) you have the proper legal authority to bind your Church to these Terms. Non-denominational and independent churches that agree to the Confession of Faith are eligible to apply.',
+          'The production and hosting of church websites constitute an exercise of the Company’s religious mission and qualify as an expressive activity protected under the First Amendment of the United States Constitution. Therefore, the Company provides Services exclusively to churches that align with this Confession of Faith. If the Company determines, in its SOLE DISCRETION, that these qualifications are not met or have been violated, the Company reserves the right to refuse, suspend, discontinue, or terminate the Services without prior notice. Such decisions are based entirely on doctrinal alignment and the expressive nature of the Company’s work, and are not based on any protected characteristics under federal or Georgia state law (such as race, national origin, or gender).',
+          'If any representation made by you—including adherence to the Confession of Faith or any provided information—is found to be false, inaccurate, or incomplete, the Company may immediately terminate the Services, and all fees paid up to that date shall be strictly non-refundable.',
         ] },
-        { h: '3. Accounts & Responsibilities', body: ['You are responsible for the accuracy of the information you provide, for keeping your credentials confidential, and for all activity under your account. You agree to provide accurate information and to keep it current.'] },
-        { h: '4. Fees & Billing', body: ['The Service is offered in tiered plans billed monthly or annually, plus a one-time setup fee covering initial design, build, and (where applicable) content migration. Recurring fees are billed in advance and are non-refundable except as required by law. The setup fee is non-refundable once setup work has begun. Payments are processed by third-party processors; you authorize us and our processors to charge your selected payment method.'] },
-        { h: '5. Your Content & Ownership', body: ['You retain ownership of all content you upload, and you are solely responsible for it. You represent that you have the rights to all content you upload and that it does not infringe any third party’s rights. You grant us a limited, non-exclusive license to host, store, and display it solely to operate the Service. You may export your content at any time.'] },
-        { h: '6. Acceptable Use', body: ['You agree not to use the Service to upload unlawful, infringing, or harmful content, to violate others’ rights, to distribute malware, or to disrupt or gain unauthorized access to the Service. We may remove content or suspend accounts that violate these Terms.'] },
-        { h: '7. Intellectual Property', body: ['The Service, including its software, designs, and templates, is owned by TRUE LIGHT and protected by law. Except for your own content, no rights are granted other than the limited right to use the Service under these Terms.'] },
-        { h: '8. Third-Party Services', body: ['The Service relies on third-party providers (for example, payment processing, hosting, email, and analytics). Your use of those providers may be subject to their own terms, and we are not responsible for third-party services. Domain registration is the Customer’s responsibility.'] },
-        { h: '9. Service Availability & Modifications', body: ['We strive to keep the Service available but do not guarantee uninterrupted or error-free operation. We may modify, add, or discontinue features of the Service from time to time. We will use reasonable efforts to provide notice of material changes that adversely affect your use.'] },
-        { h: '10. Termination', body: ['You may cancel at any time, effective at the end of the current billing period. We may suspend or terminate the Service for violation of these Terms or as described in Section 2. Upon termination, you may export your content for a reasonable period before it is removed. Sections that by their nature should survive termination (including ownership, disclaimers, limitation of liability, indemnification, and dispute resolution) will survive.'] },
-        { h: '11. Disclaimers & Limitation of Liability', body: ['THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, TO THE FULLEST EXTENT PERMITTED BY LAW. TO THE MAXIMUM EXTENT PERMITTED BY LAW, TRUE LIGHT WILL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF DATA, REVENUE, OR PROFITS. OUR TOTAL LIABILITY ARISING OUT OF OR RELATING TO THE SERVICE WILL NOT EXCEED THE AMOUNTS YOU PAID US IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM.'] },
-        { h: '12. Indemnification', body: ['You agree to indemnify and hold harmless TRUE LIGHT and its officers, employees, and contractors from any claims, damages, liabilities, and expenses (including reasonable attorneys’ fees) arising out of your content, your use of the Service, or your violation of these Terms or of any law or third-party right.'] },
-        { h: '13. Governing Law, Dispute Resolution & Class-Action Waiver', body: [
-          'These Terms are governed by the laws of the State of Georgia, USA, without regard to its conflict-of-laws rules.',
-          'Before initiating any arbitration or lawsuit, the parties agree to first attempt in good faith to resolve any dispute through informal negotiation and, if needed, mediation, for a period of at least thirty (30) days from the date written notice of the dispute is given. If the dispute is not resolved within that 30-day period, it shall be resolved in the state or federal courts located in Georgia, and the parties consent to the jurisdiction of those courts.',
-          'TO THE EXTENT PERMITTED BY LAW, ANY DISPUTE WILL BE RESOLVED ON AN INDIVIDUAL BASIS ONLY, AND YOU AND TRUE LIGHT EACH WAIVE ANY RIGHT TO PARTICIPATE IN A CLASS, COLLECTIVE, OR REPRESENTATIVE ACTION.',
+        { h: '3. Account and Management Responsibility', body: ['You are entirely responsible for maintaining the security and confidentiality of your account credentials. All activities occurring under your account (including unauthorized access) and all content uploaded shall be deemed your own acts. The Company shall not be liable for any losses or damages arising from your failure to safeguard your account information.'] },
+        { h: '4. Fees, Billing, and Payments', body: [
+          'Fee Structure: Service fees consist of recurring subscription charges (monthly or annual) and a one-time setup fee covering initial design, construction, and content migration (if applicable).',
+          'Non-Refundable Policy: ALL RECURRING FEES ARE BILLED IN ADVANCE AND ARE STRICTLY NON-REFUNDABLE UNLESS OTHERWISE REQUIRED BY APPLICABLE LAW. THE ONE-TIME SETUP FEE IS STRICTLY NON-REFUNDABLE ONCE THE COMPANY HAS COMMENCED DESIGN OR DEVELOPMENT WORK.',
+          'Payment Processing: Payments are processed via a third-party payment processor. In the event of a payment failure, the Company reserves the right to immediately restrict access to the Services.',
         ] },
-        { h: '14. Changes to These Terms', body: ['We may update these Terms; material changes are posted with a new "Last updated" date. Continued use after changes take effect constitutes acceptance.'] },
-        { h: '15. Miscellaneous', body: ['These Terms (together with the Privacy Policy) are the entire agreement between you and TRUE LIGHT regarding the Service and supersede prior agreements. If any provision is held unenforceable, the remaining provisions remain in effect. You may not assign these Terms without our consent; we may assign them in connection with a merger, acquisition, or sale of assets. Our failure to enforce a provision is not a waiver. Neither party is liable for delays or failures caused by events beyond its reasonable control (force majeure).'] },
-        { h: '16. Contact', body: ['Questions: info@dasomweb.com. Support: support@dasomweb.com.'] },
+        { h: '5. Content Ownership and License', body: ['The Customer retains all intellectual property rights in the content uploaded by the Customer. However, you grant the Company a worldwide, royalty-free, non-exclusive, limited license to host, store, display, transmit, and distribute such content solely for the purpose of operating and providing the Services. The Customer may export content only through the designated features provided within the Services and shall not extract, reverse engineer, or claim ownership over the Company’s system architecture or source code.'] },
+        { h: '6. Prohibited Conduct', body: ['You agree not to use the Services for any unlawful activities, infringement of third-party intellectual property rights, distribution of malware, generation of excessive server loads, or any ministry activities that defame the reputation of the Company. The Company reserves the right to remove non-compliant content or suspend accounts immediately without prior notice.'] },
+        { h: '7. Intellectual Property Rights of the Company', body: ['All intellectual property rights, including software, designs, templates, source code, and trademarks related to the Services, remain the sole and exclusive property of TRUE LIGHT. The Customer is granted only a limited, revocable right to use the Services in accordance with these Terms, and no ownership interest or title is transferred to the Customer.'] },
+        { h: '8. Third-Party Services and Independent Contractor Status', body: [
+          'The Company relies on third-party infrastructure and providers (e.g., AWS for hosting, Stripe for payment processing). THE COMPANY SHALL NOT BE LIABLE FOR ANY DAMAGES, DISRUPTIONS, ERRORS, DATA LOSS, OR POLICY CHANGES ARISING FROM OR RELATED TO SUCH THIRD-PARTY SERVICES. Domain registration, renewal, and management remain the sole responsibility of the Customer.',
+          'The Company and the Customer are INDEPENDENT CONTRACTORS. Nothing in these Terms shall be construed to create a partnership, joint venture, employment, or agency relationship between the parties. The Company assumes no liability or joint responsibility for any acts, omissions, or disputes involving the Customer and third parties.',
+        ] },
+        { h: '9. Modifications and Limitation of Availability', body: ['While the Company endeavors to maintain stable operations, the Services are provided on an "AS IS" and "AS AVAILABLE" basis. The Company disclaims all liability for service interruptions caused by unscheduled system maintenance, infrastructure failures, or force majeure. The Company reserves the right to modify, add, or discontinue features or technical specifications of the Services at any time.'] },
+        { h: '10. Termination and Data Deletion', body: [
+          'Customer Termination: The Customer may request termination at any time through the account settings. Termination will take effect at the end of the current billing cycle.',
+          'Company Termination: The Company may terminate the Services immediately upon a breach of these Terms or a failure to meet the religious qualifications specified in Section 2.',
+          'Data Deletion: Upon termination, the Company may permanently delete all Customer data immediately or within a reasonable timeframe. The Company shall not be liable for any failure to preserve or back up data post-termination. Provisions that by their nature should survive termination (including indemnification, limitation of liability, and jurisdiction) shall remain in full force and effect.',
+        ] },
+        { h: '11. LIMITATION OF LIABILITY', body: ['TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL TRUE LIGHT, ITS OFFICERS, DIRECTORS, EMPLOYEES, OR AGENTS BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS, LOSS OF DATA, OR BUSINESS INTERRUPTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OF THE SERVICES. REGARDLESS OF THE THEORY OF LIABILITY—WHETHER IN CONTRACT, TORT, OR OTHERWISE—THE COMPANY’S TOTAL CUMULATIVE LIABILITY UNDER THESE TERMS SHALL NOT EXCEED THE TOTAL AMOUNT ACTUALLY PAID BY YOU TO THE COMPANY DURING THE TWELVE (12) MONTHS IMMEDIATELY PRECEDING THE EVENT GIVING RISE TO THE CLAIM.'] },
+        { h: '12. INDEMNIFICATION', body: ['YOU AGREE TO DEFEND, INDEMNIFY, AND HOLD HARMLESS TRUE LIGHT, ITS OFFICERS, DIRECTORS, EMPLOYEES, AND CONTRACTORS FROM AND AGAINST ANY AND ALL CLAIMS, DAMAGES, LOSSES, LIABILITIES, COSTS, AND EXPENSES (INCLUDING REASONABLE ATTORNEYS\' FEES) ARISING FROM OR RELATED TO YOUR CONTENT, YOUR USE OF THE SERVICES, YOUR VIOLATION OF THESE TERMS OR APPLICABLE LAW, OR YOUR INFRINGEMENT OF ANY THIRD-PARTY RIGHTS, INCLUDING INTELLECTUAL PROPERTY AND PRIVACY RIGHTS.'] },
+        { h: '13. Governing Law, Jurisdiction, and Class Action Waiver', body: [
+          'Governing Law: These Terms shall be governed by and construed in accordance with the laws of the State of Georgia, USA, without regard to its conflict of law principles.',
+          'Dispute Resolution: Prior to initiating any formal legal action, the parties agree to attempt to resolve any dispute through good-faith informal negotiations for a minimum period of thirty (30) days following written notice of the dispute. If the dispute is not resolved within thirty (30) days, any legal action must be filed exclusively in the state courts of Gwinnett County, Georgia, or the applicable federal courts in the State of Georgia. The parties hereby consent to the exclusive personal jurisdiction of such courts.',
+          'CLASS ACTION WAIVER: TO THE MAXIMUM EXTENT PERMITTED BY LAW, ALL CLAIMS MUST BE BROUGHT SOLELY IN AN INDIVIDUAL CAPACITY. YOU HEREBY WAIVE ANY RIGHT TO PARTICIPATE AS A PLAINTIFF OR CLASS MEMBER IN ANY CLASS ACTION, REPRESENTATIVE PROCEEDING, OR MULTI-PLAINTIFF LAWSUIT AGAINST THE COMPANY.',
+        ] },
+        { h: '14. Changes to Terms', body: ['The Company reserves the right to modify these Terms at its sole discretion. When changes are made, the "Last Updated" date at the top of these Terms will be revised. Continued use of the Services after the effective date of any modifications constitutes your formal acceptance of the revised Terms.'] },
+        { h: '15. Miscellaneous', body: ['These Terms, together with the Privacy Policy, constitute the entire agreement between the Company and the Customer regarding the Services and supersede all prior agreements. The failure of the Company to enforce any right or provision of these Terms shall not constitute a waiver of such right. If any provision of these Terms is held to be invalid or unenforceable by a court of competent jurisdiction, the remaining provisions shall remain in full force and effect.'] },
+        { h: '16. Contact Information', body: ['Official Inquiries: info@dasomweb.com', 'Customer Support: support@dasomweb.com'] },
       ],
     },
     ko: {
-      title: '이용약관',
+      title: 'TRUE LIGHT 이용약관',
       updated: '최종 수정일: 2026년 6월',
-      govern: '본 약관은 영문본이 정본(governing text)이며, 한국어 번역은 편의를 위한 것입니다. 해석상 충돌이 있을 경우 영문본이 우선합니다.',
+      govern: '본 약관은 한글 원본이 정본(governing text)이며, 영문 번역은 편의를 위해 제공됩니다. 분쟁 발생 시에는 본 한글 원본 약관이 최종적인 법적 권위를 가집니다.',
       intro: [
-        '본 이용약관("약관")은 TRUE LIGHT("당사")가 제공하는 웹사이트·소프트웨어·서비스("서비스")의 이용에 적용됩니다. 신청서를 제출하거나 계정을 생성하거나 서비스를 이용함으로써, 귀하("고객" 또는 "교회")는 본 약관에 동의하게 됩니다.',
+        '본 이용약관("약관")은 미국 조지아주 법인인 TRUE LIGHT("당사")가 제공하는 웹사이트, 소프트웨어, 호스팅 및 관련 서비스("서비스")의 이용에 적용됩니다. 신청서를 제출하거나, 계정을 생성하거나, 서비스를 이용함으로써 귀하("고객" 또는 "교회")는 본 약관의 모든 조항에 법적으로 동의하게 됩니다. 본 약관의 영문 번역본이 제공되는 경우라 하더라도, 분쟁 발생 시에는 본 한글 원본 약관이 최종적인 법적 권위를 가집니다.',
       ],
       sections: [
-        { h: '1. 서비스', body: ['TRUE LIGHT는 교회 홈페이지와 콘텐츠·사역 도구를 함께 제공하는 교회 온라인 사역 솔루션입니다. 당사가 각 사이트를 셋업·구성하며, 이후 콘텐츠는 고객이 직접 관리합니다.'] },
-        { h: '2. 자격 요건 및 신앙고백', body: ['본 서비스는 사도신경·니케아 신경으로 요약되는 정통 기독교 신앙("신앙고백")을 고백하는 교회를 대상으로 합니다. 구체적으로:'], list: FAITH_LIST_KO },
+        { h: '1. 서비스 정의 및 범위', body: ['당사는 교회 홈페이지 구축 및 온라인 사역 솔루션을 제공합니다. 당사의 역할은 초기 셋업, 시스템 구성, 템플릿 제공 및 호스팅 환경 관리에 국한됩니다. 초기 구축 완료 이후 웹사이트에 업로드되는 모든 텍스트, 이미지, 영상 등의 콘텐츠 및 운영 관리는 전적으로 고객의 책임입니다. 당사는 고객 웹사이트의 콘텐츠를 상시 모니터링할 의무가 없습니다.'] },
+        { h: '2. 자격 요건 및 신앙고백 (Religious Qualification & Discretion)', body: ['본 서비스는 사도신경 및 니케아 신경으로 요약되는 정통 기독교 신앙("신앙고백")을 고백하고 실천하는 교회를 대상으로만 제공됩니다. 구체적인 교리적 기준은 다음과 같습니다:'], list: FAITH_LIST_KO },
         { h: '', body: [
-          '신청서를 제출하고 서비스를 이용함으로써, 귀하는 (a) 귀 교회가 위 신앙고백에 동의하며, (b) 귀 교회를 대표하여 본 약관에 동의할 권한이 있음을 진술·보증합니다. 인정 교단 소속 교회는 물론, 신앙고백에 동의하는 무교단·독립교회도 신청할 수 있습니다. 교회 홈페이지를 제작·호스팅하는 일은 당사의 종교적 사명 수행으로서의 표현 활동이므로, 당사는 본 신앙고백에 부합하는 교회를 대상으로 서비스하며 본 자격 요건이 충족되지 않는 경우 당사의 재량으로 서비스 제공을 거절·정지·중단할 수 있습니다. 이러한 결정은 교리적 부합성과 당사 업무의 표현적 성격에 근거하며, 연방법 또는 조지아주법상 보호되는 특성에 근거하지 않습니다.',
-          '신청 시 동의 체크는 귀하가 본 약관과 신앙고백을 끝까지 읽었으며, 그 체크가 법적 구속력 있는 동의임을 확인하는 것입니다. 귀하가 행한 진술 — 본 신앙고백 동의 또는 제공한 정보 포함 — 이 사실과 다르거나 부정확·불완전함이 확인될 경우, 당사는 재량으로 서비스를 정지·해지·거절할 수 있으며, 환불은 제4조에 따릅니다.',
+          '신청서를 제출하고 서비스를 이용함으로써 귀하는 (a) 귀 교회가 위 신앙고백에 완전히 동의하며, (b) 귀 교회를 대표하여 본 약관에 동의할 적법한 권한이 있음을 진술하고 보증(Represent and Warrant)합니다. 신앙고백에 동의하는 무교단·독립교회도 신청할 수 있습니다.',
+          '교회 홈페이지를 제작하고 호스팅하는 행위는 당사의 종교적 사명 수행이자 미국 수정헌법 제1조(First Amendment)에 의해 보호되는 표현 활동(Expressive Activity)입니다. 따라서 당사는 본 신앙고백에 부합하는 교회만을 대상으로 서비스하며, 본 자격 요건이 충족되지 않거나 위배된다고 판단되는 경우, 당사의 독자적인 재량(Sole Discretion)으로 사전 통지 없이 서비스 제공을 거절, 정지, 중단 또는 해지할 수 있습니다. 이러한 결정은 오직 교리적 부합성과 당사 업무의 표현적 성격에만 근거하며, 연방법 또는 조지아주법상 보호되는 특성(인종, 국적, 성별 등)에 근거한 차별이 아님을 명시합니다.',
+          '귀하가 행한 진술(신앙고백 동의 및 제공 정보 포함)이 사실과 다르거나 부정확함이 확인될 경우, 당사는 즉시 서비스를 해지할 수 있으며 이 경우 기 지불된 요금은 일체 환불되지 않습니다.',
         ] },
-        { h: '3. 계정 및 책임', body: ['귀하는 제공하는 정보의 정확성, 계정 정보의 보안 유지, 계정에서 발생하는 모든 활동에 대해 책임을 집니다. 정확한 정보를 제공하고 이를 최신으로 유지하기로 합니다.'] },
-        { h: '4. 요금 및 결제', body: ['서비스는 월간 또는 연간으로 청구되는 단계별 요금제와, 초기 디자인·구축 및 (해당 시) 콘텐츠 이전을 포함하는 1회성 셋업비로 제공됩니다. 정기 요금은 선불 청구되며 법이 요구하는 경우를 제외하고 환불되지 않습니다. 셋업비는 셋업 작업이 시작된 후에는 환불되지 않습니다. 결제는 제3자 결제 처리업체를 통해 처리되며, 귀하는 당사 및 처리업체가 선택한 결제수단으로 청구하는 것에 동의합니다.'] },
-        { h: '5. 콘텐츠 및 소유권', body: ['귀하가 업로드한 모든 콘텐츠의 소유권은 귀하에게 있으며, 그에 대한 책임도 전적으로 귀하에게 있습니다. 귀하는 업로드하는 모든 콘텐츠에 대한 권리를 보유하며 제3자의 권리를 침해하지 않음을 진술합니다. 귀하는 서비스 운영을 위한 범위에서 당사가 이를 호스팅·저장·표시할 수 있는 제한적·비독점적 라이선스를 부여합니다. 콘텐츠는 언제든 내보내기(Export)할 수 있습니다.'] },
-        { h: '6. 이용 제한', body: ['불법·침해·유해 콘텐츠 업로드, 타인의 권리 침해, 악성코드 배포, 서비스 방해 또는 무단 접근 등에 본 서비스를 사용하지 않기로 합니다. 당사는 본 약관을 위반하는 콘텐츠를 삭제하거나 계정을 정지할 수 있습니다.'] },
-        { h: '7. 지식재산권', body: ['소프트웨어·디자인·템플릿을 포함한 서비스의 지식재산권은 TRUE LIGHT에 있으며 법으로 보호됩니다. 귀하의 콘텐츠를 제외하고, 본 약관에 따른 제한적 이용권 외의 권리는 부여되지 않습니다.'] },
-        { h: '8. 제3자 서비스', body: ['서비스는 제3자 제공업체(예: 결제 처리, 호스팅, 이메일, 분석)에 의존합니다. 해당 제공업체 이용에는 그들의 약관이 적용될 수 있으며, 당사는 제3자 서비스에 대해 책임지지 않습니다. 도메인 등록은 고객의 책임입니다.'] },
-        { h: '9. 서비스 가용성 및 변경', body: ['당사는 서비스를 가용하게 유지하고자 노력하나, 중단 없는 또는 오류 없는 운영을 보증하지 않습니다. 당사는 수시로 서비스의 기능을 수정·추가·중단할 수 있습니다. 귀하의 이용에 불리한 중대한 변경에 대해서는 합리적으로 통지하도록 노력합니다.'] },
-        { h: '10. 해지', body: ['귀하는 언제든 해지할 수 있으며, 해지는 현재 청구 주기 종료 시 효력이 발생합니다. 당사는 본 약관 위반 또는 제2조에 따른 경우 서비스를 정지·해지할 수 있습니다. 해지 시 삭제 전 합리적 기간 동안 콘텐츠를 내보낼 수 있습니다. 성격상 존속되어야 하는 조항(소유권, 면책, 책임 제한, 면책보상, 분쟁 해결 등)은 해지 후에도 존속합니다.'] },
-        { h: '11. 면책 및 책임의 제한', body: ['서비스는 법이 허용하는 최대 범위에서 명시적·묵시적 어떠한 보증도 없이 "있는 그대로(as is)" 및 "이용 가능한 상태로(as available)" 제공됩니다. 법이 허용하는 최대 범위에서 TRUE LIGHT는 간접·부수적·특별·결과적·징벌적 손해, 또는 데이터·수익·이익의 손실에 대해 책임지지 않습니다. 서비스와 관련한 당사의 총 책임은 청구 발생 직전 12개월간 귀하가 당사에 지불한 금액을 초과하지 않습니다.'] },
-        { h: '12. 면책보상(Indemnification)', body: ['귀하는 귀하의 콘텐츠, 서비스 이용, 또는 본 약관·법령·제3자 권리 위반으로 인해 발생하는 모든 청구·손해·책임·비용(합리적 변호사 비용 포함)으로부터 TRUE LIGHT 및 그 임직원·계약자를 면책하고 손해를 보상하기로 합니다.'] },
-        { h: '13. 준거법, 분쟁 해결 및 집단소송 포기', body: [
-          '본 약관은 미국 조지아주 법을 준거법으로 하며, 그 국제사법 원칙은 적용하지 않습니다.',
-          '중재 또는 소송을 제기하기 전에, 당사자들은 분쟁의 서면 통지일로부터 최소 30일간 비공식 협의 및 (필요 시) 조정을 통해 성실히 분쟁을 해결하기로 합의합니다. 해당 30일 이내에 해결되지 않으면, 분쟁은 조지아주 소재 주 법원 또는 연방 법원에서 해결하며, 당사자들은 그 관할에 동의합니다.',
-          '법이 허용하는 범위에서, 모든 분쟁은 개별적으로만 해결되며, 귀하와 TRUE LIGHT는 집단·대표·단체 소송에 참여할 권리를 포기합니다.',
+        { h: '3. 계정 및 관리 책임', body: ['귀하는 계정 자격 증명의 보안을 유지할 전적인 책임이 있습니다. 귀하의 계정 하에서 발생하는 모든 활동(무단 접근 포함) 및 콘텐츠 업로드 행위는 귀하의 행위로 간주됩니다. 당사는 계정 관리 소홀로 인해 발생하는 어떠한 손해에 대해서도 책임을 지지 않습니다.'] },
+        { h: '4. 요금, 청구 및 결제', body: [
+          '요금 구조: 서비스 요금은 정기 요금(월간/연간)과 1회성 초기 셋업비로 구성됩니다.',
+          '환불 불가 원칙: 모든 정기 요금은 선불로 청구되며, 관련 법령에서 강제하지 않는 한 환불이 불가능(NON-REFUNDABLE)합니다. 초기 셋업비는 당사가 디자인 및 구축 작업을 시작한 직후부터 어떠한 경우에도 환불되지 않습니다.',
+          '결제 처리: 결제는 제3자 결제 처리업체를 통해 수행되며, 결제 실패 시 당사는 즉시 서비스 이용을 제한할 수 있습니다.',
         ] },
-        { h: '14. 약관의 변경', body: ['당사는 약관을 변경할 수 있으며, 중요한 변경은 새로운 "최종 수정일"과 함께 게시됩니다. 변경 효력 발생 후 계속 이용하면 변경에 동의한 것으로 봅니다.'] },
-        { h: '15. 일반 조항', body: ['본 약관은 (개인정보처리방침과 함께) 서비스에 관한 귀하와 TRUE LIGHT 간의 완전한 합의이며 이전 합의를 대체합니다. 어느 조항이 집행 불가능하더라도 나머지 조항은 유효합니다. 귀하는 당사 동의 없이 본 약관을 양도할 수 없으며, 당사는 합병·인수·자산 양도와 관련하여 이를 양도할 수 있습니다. 당사가 어느 조항을 집행하지 않더라도 이는 권리 포기가 아닙니다. 어느 당사자도 합리적 통제를 벗어난 사유(불가항력)로 인한 지연·불이행에 대해 책임지지 않습니다.'] },
-        { h: '16. 문의', body: ['문의: info@dasomweb.com · 고객지원: support@dasomweb.com'] },
+        { h: '5. 콘텐츠 소유권 및 라이선스', body: ['고객이 업로드한 모든 콘텐츠의 지식재산권은 고객에게 귀속됩니다. 다만, 귀하는 당사에게 서비스를 운영, 호스팅, 저장, 표시, 전송 및 배포할 수 있는 범위 내에서 전 세계적이고, 무상이며, 비독점적인 제한적 라이선스를 부여합니다. 고객은 본 서비스가 제공하는 기능을 통해서만 콘텐츠를 내보내기(Export) 할 수 있으며, 당사의 시스템 아키텍처나 소스 코드 자체를 추출하거나 소유할 수는 없습니다.'] },
+        { h: '6. 이용 제한 행위', body: ['귀하는 본 서비스를 불법 행위, 제3자의 지식재산권 침해, 악성코드 배포, 서버 부하 유발, 또는 당사의 명예를 훼손하는 사역 활동에 사용할 수 없습니다. 당사는 위반 소지가 있는 콘텐츠를 사전 통지 없이 즉시 삭제하거나 계정을 폐쇄할 권리를 가집니다.'] },
+        { h: '7. 당사의 지식재산권 소유', body: ['서비스와 관련된 모든 소프트웨어, 디자인, 템플릿, 소스 코드, 상표 및 지식재산권은 전적으로 TRUE LIGHT의 소유입니다. 고객에게는 본 약관에 따른 제한적이고 취소 가능한 서비스 이용권만 부여되며, 서비스 자체에 대한 어떠한 권리나 소유권도 이전되지 않습니다.'] },
+        { h: '8. 제3자 서비스 및 독립 계약자 규정', body: [
+          '당사는 인프라 운영을 위해 제3자 제공업체(AWS 등 호스팅, Stripe 등 결제 모듈 등)에 의존합니다. 당사는 제3자 서비스의 중단, 오류, 데이터 유실 또는 해당 업체의 정책 변경으로 인해 발생하는 손해에 대해 어떠한 법적 책임도 지지 않습니다. 도메인 구매 및 갱신 관리 책임은 전적으로 고객에게 있습니다.',
+          '당사와 고객은 상호 독립된 계약자(Independent Contractors)이며, 본 계약은 양 당사자 간의 파트너십, 합작 투자(Joint Venture), 고용 관계 또는 대리인 관계를 형성하지 않습니다. 고객 교회의 행위나 제3자와의 분쟁에 대해 당사는 아무런 연대 책임을 지지 않습니다.',
+        ] },
+        { h: '9. 서비스의 변경 및 가용성 제한', body: ['당사는 상시 안정적인 서비스를 제공하고자 노력하나, 본 서비스는 "있는 그대로(AS IS)" 및 "이용 가능한 상태로(AS AVAILABLE)" 제공됩니다. 당사는 예고 없는 시스템 점검, 인프라 장애 등으로 인한 서비스 중단에 대해 책임을 지지 않습니다. 당사는 서비스의 기능이나 디자인 스펙을 수시로 변경할 수 있습니다.'] },
+        { h: '10. 해지 및 콘텐츠 백업 기간', body: [
+          '고객 해지: 고객은 언제든지 계정 내 설정을 통해 해지 신청을 할 수 있으며, 해지 효력은 당해 청구 주기의 종료일에 발생합니다.',
+          '당사 해지: 약관 위반 또는 제2조의 교리적 불합치 발생 시 당사는 즉시 서비스를 해지할 수 있습니다.',
+          '데이터 삭제: 서비스 해지 후 당사는 고객 데이터를 즉시 또는 합리적 기간 내에 영구 삭제할 수 있으며, 해지 이후의 데이터 보존이나 백업 실패에 대한 책임을 지지 않습니다. 성격상 존속되어야 하는 면책, 책임 제한, 관할 합의 조항은 계약 해지 후에도 유효합니다.',
+        ] },
+        { h: '11. 책임의 제한 (LIMITATION OF LIABILITY)', body: ['법이 허용하는 최대 범위 내에서, 어떠한 경우에도 TRUE LIGHT, 그 임직원, 이사 또는 대리인은 본 서비스 이용으로 인해 발생하는 간접적, 부수적, 특별, 결과적, 또는 징벌적 손해(이익 손실, 데이터 유실, 비즈니스 중단 등을 포함하되 이에 제한되지 않음)에 대해 책임을 지지 않습니다. 본 약관과 관련하여 계약, 불법행위 또는 기타 책임 이론에 관계없이 당사가 부담하는 총 누적 책임은 청구 발생 직전 12개월 동안 귀하가 당사에 실제로 지불한 금액을 초과할 수 없습니다.'] },
+        { h: '12. 면책보상 (INDEMNIFICATION)', body: ['귀하는 귀하가 업로드한 콘텐츠, 귀하의 서비스 이용 행위, 본 약관 또는 법령 위반, 또는 제3자의 권리(지식재산권 및 프라이버시권 포함) 침해로 인해 발생하는 모든 종류의 청구, 손해, 손실, 책임, 비용 및 비용(합리적인 변호사 비용 포함)으로부터 TRUE LIGHT와 그 임직원 및 하청업체를 완전히 면책하고 방어하며 손해를 보상하기로 합의합니다.'] },
+        { h: '13. 준거법, 관할법원 및 집단소송 포기', body: [
+          '준거법: 본 약관은 미국 조지아주(State of Georgia) 법률을 준거법으로 하며, 국제사법 원칙은 적용되지 않습니다.',
+          '분쟁 해결 절차: 분쟁 발생 시 당사자들은 소송을 제기하기 전 30일 동안 성실히 비공식 협의를 진행해야 합니다. 합의에 도달하지 못할 경우, 모든 법적 소송은 조지아주 귀네트 카운티(Gwinnett County, Georgia) 소재 주 법원 또는 해당 관할 연방법원에만 제기할 수 있으며, 양 당사자는 해당 법원의 전속적 관할권에 동의합니다.',
+          '집단소송 포기 (CLASS ACTION WAIVER): 법이 허용하는 범위 내에서 모든 청구는 개별적으로만 제기되어야 하며, 귀하는 당사를 상대로 집단소송(Class Action), 대표소송 또는 다수당사자 소송의 원고나 집단 구성원으로서 참여할 권리를 영구히 포기합니다.',
+        ] },
+        { h: '14. 약관의 변경', body: ['당사는 재량으로 본 약관을 수시로 변경할 수 있습니다. 약관이 변경되는 경우 최상단의 최종 수정일을 갱신하여 게시합니다. 약관 변경 효력 발생일 이후에도 서비스를 계속 이용하는 것은 수정된 약관에 동의한 것으로 간주됩니다.'] },
+        { h: '15. 일반 조항', body: ['본 약관은 개인정보처리방침과 함께 당사와 고객 간의 완전한 합의(Entire Agreement)를 구성합니다. 당사가 본 약관의 특정 권리나 조항을 행사하지 않더라도 이는 해당 권리의 포기로 해석되지 않습니다. 본 약관의 일부 조항이 법원에 의해 무효로 판정되더라도, 나머지 조항들의 유효성은 그대로 유지됩니다.'] },
+        { h: '16. 문의 및 연락처', body: ['공식 문의: info@dasomweb.com', '고객 지원: support@dasomweb.com'] },
       ],
     },
   },
