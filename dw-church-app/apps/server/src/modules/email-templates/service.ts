@@ -32,7 +32,7 @@ export const DEFAULT_TEMPLATES: TemplateDef[] = [
     key: 'payment',
     name: '결제 안내',
     subject: '{{churchName}} 결제 안내 — TRUE LIGHT',
-    body: `${emailHeading('결제 안내')}<p>{{churchName}}의 신청을 검토했습니다. 아래 버튼으로 결제를 완료해 주시면 곧바로 제작을 시작하겠습니다.</p>{{button}}<p style="font-size:13px;color:#9ca3af">결제가 확인되면 디자인 셋업과 콘텐츠 이전을 진행합니다.</p>`,
+    body: `${emailHeading('결제 안내')}<p>{{churchName}}의 신청을 검토했습니다. 아래 버튼으로 결제를 완료해 주시면 곧바로 제작을 시작하겠습니다.</p>{{button}}<p style="font-size:13px;color:#9ca3af">결제가 확인되면 디자인 셋업과 기본 구성을 진행합니다.</p>`,
     vars: 'churchName, button',
   },
   {

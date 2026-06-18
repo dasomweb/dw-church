@@ -163,7 +163,7 @@ function ApplyForm() {
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">기존 웹사이트 주소 <span className="text-gray-400">(있으면 — 콘텐츠 이전에 사용)</span></label>
+        <label className="mb-1 block text-sm font-medium text-gray-700">기존 웹사이트 주소 <span className="text-gray-400">(있으면 — 디자인·구조 참고용)</span></label>
         <input value={form.existingUrl || ''} onChange={set('existingUrl')} className={inputCls} placeholder="https://" />
       </div>
       <div>
@@ -242,7 +242,7 @@ export default function ApplyPage() {
           <h1 className="mb-3 text-3xl font-bold text-gray-900">홈페이지 개발 신청</h1>
           <p className="text-sm leading-relaxed text-gray-500">
             아래 신청서를 작성해 주시면 검토 후 결제 안내를 보내드립니다.<br />
-            결제가 확인되면 디자인 셋업과 콘텐츠 이전을 시작합니다.
+            결제가 확인되면 디자인 셋업과 기본 구성을 시작합니다.
           </p>
         </div>
         <Suspense fallback={<div className="mx-auto max-w-xl rounded-2xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-400">불러오는 중...</div>}>

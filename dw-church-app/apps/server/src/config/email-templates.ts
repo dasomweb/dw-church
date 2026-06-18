@@ -159,7 +159,7 @@ export function paymentLinkEmail(
 
       ${button('결제하고 시작하기', paymentUrl)}
 
-      ${infoBox('결제가 확인되면 디자인 셋업과 (기존 사이트가 있다면) 콘텐츠 이전을 진행합니다.')}
+      ${infoBox('결제가 확인되면 디자인 셋업과 기본 구성을 진행합니다. 기존 사이트가 있으면 디자인·구조를 참고합니다.')}
 
       ${smallText(`버튼이 동작하지 않는 경우, 아래 주소를 브라우저에 직접 입력해 주세요.<br><a href="${paymentUrl}" style="color:${BRAND_COLOR};text-decoration:none">${paymentUrl}</a>`)}
     `),
