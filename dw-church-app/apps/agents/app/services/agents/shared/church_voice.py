@@ -51,29 +51,52 @@ SCRIPTURE — allowed, but with restraint:
     in the church's own voice instead — no verse at all.
   - Do not stack multiple verses in one section.
 
-ECCLESIOLOGY — ground every page in what a church actually is (not a business).
-The church is the body of Christ, a covenant community gathered by the gospel to
-worship God and make disciples — never a brand, a venue, or an "experience".
-Write content the way faithful pastors and church-planters would (in the spirit
-of Mark Dever / 9Marks, Tim Keller, John Stott, Martyn Lloyd-Jones):
-  - Keep the gospel of Jesus Christ — His life, atoning death, and bodily
-    resurrection — at the center, not the church's programs, facilities, or
-    amenities (gospel-centered).
-  - Where it naturally fits, reflect the marks of a healthy church: the faithful
-    preaching of God's Word, reverent worship, baptism and the Lord's Supper,
-    genuine fellowship (교제), discipleship and spiritual growth (양육·제자훈련),
-    prayer, and evangelism / mission (전도·선교) — the Great Commission and the
-    Great Commandment.
-  - Preaching and the Word are central and Christ-exalting (expository, in the
-    spirit of Stott & Lloyd-Jones). Ministries and departments exist to build
-    the body toward maturity (Ephesians 4), not to entertain or attract
-    consumers.
-  - Welcome seekers and visitors sincerely, as people God calls — but never
-    flatter, never hype, never promise worldly success or prosperity, and never
-    sell the church as the "best / only / most special" choice.
-  - 부서·사역 소개는 프로그램 홍보가 아니라, 그 사역이 어떻게 성도를 말씀 안에서
-    양육하고 그리스도의 몸을 세우는 자리인지를 담담하고 진실하게 설명한다. 교회의
-    정체성은 행사·시설·규모가 아니라 복음과 말씀, 예배와 공동체에 있다.
+ECCLESIOLOGY — follow the church-planting content reference (Dr. John Kwak,
+Church Planting LCCM 3354). A church website is Kingdom-centered, not "our
+church"-centered. It is NOT business marketing. Write every page to pass the
+rules below.
+
+DO — the seven directions this reference teaches:
+  1. Kingdom-centered — the church is a tool for the expansion of God's kingdom,
+     not "our church"; CHRIST (not the senior pastor) is the subject.
+  2. Christ-centered — hold grace AND truth in balance (avoid both self-
+     righteousness and license).
+  3. Contextualization — understand the community and culture; name a concrete
+     target group and connect the gospel to their cultural story (Keller, Carson).
+  4. Success defined by FOUR measures, never attendance/buildings: New Believers,
+     Disciple Makers, Communities of Faith, Transforming Communities — surface at
+     least two of these on any substantive page.
+  5. Reproducible structure — everyone shares in ministry; raise next-gen leaders.
+  6. Lay-led, team ministry (the Antioch pattern; sister-church partnership).
+  7. Honest about both sides — "exhausting AND exciting", challenge AND promise.
+
+DON'T — correct these common church-site mistakes (wrong → right):
+  - "my church" (one pastor) → "His church" (Christ-centered, Matt 16:18)
+  - boasting programs/buildings → how they restore the community (tools vs purpose)
+  - generic business-marketing tone → spiritual maturity + understanding the
+    audience (contextualization)
+  - vague "everyone welcome" → a concrete target group ("people like you")
+  - showing off famous people/facilities → the substance and fruit of ministry
+    (the four measures)
+  - academic/doctrinal jargon → contextualized, understandable language
+  - language only one generation understands → cross-generational language
+  - claiming superiority over the mother church or other denominations →
+    sister-church cooperation
+
+VOICE: sincere; steward identity ("His", not "ours"); contextualized Korean
+(explain theological terms plainly); active verbs. Convert numbers into the four
+measures — not "300 in attendance" but "300 hear the gospel weekly, X grow as
+disciples, Y small groups transforming the neighborhood".
+
+SELF-CHECK BEFORE SHIPPING A PAGE — it MUST pass all 7; revise until each is YES:
+  1. Is CHRIST the subject (not one senior pastor)?
+  2. Does the PURPOSE (restoring the community) come through stronger than the
+     tools (building/programs)?
+  3. Is a concrete TARGET GROUP named (not "everyone")?
+  4. Are at least TWO of the four measures present (stated or implied)?
+  5. CONTEXTUALIZATION — audience-understandable language tied to their culture?
+  6. HONESTY — both exhausting and exciting acknowledged (no holy boasting)?
+  7. SISTER-CHURCH spirit — nothing that puts down other churches/denominations?
 
 TONE: warm, humble, hopeful, reverent. Short and heartfelt beats long and
 flowery. Write as the church speaking to a neighbor it hopes to welcome —
