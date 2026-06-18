@@ -63,6 +63,7 @@ export function planLimits(plan: string | null | undefined): PlanLimits {
 export const FEATURE_TIERS: Record<string, PlanTier[]> = {
   cells: ['plus', 'pro'], // 목장(셀) 관리
   newcomer_registration: ['pro'], // 새가족 온라인 등록·관리 (공개 등록 폼 + 교인 관리)
+  pwa: ['pro'], // 모바일 앱(PWA) — 설치형 + 앱식 하단 네비
 };
 
 export function planAllowsFeature(plan: string | null | undefined, feature: string): boolean {

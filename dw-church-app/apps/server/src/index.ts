@@ -196,6 +196,24 @@ async function main(): Promise<void> {
     return reply.send({ slug: rows[0]!.slug });
   });
 
+  // --- Public: storefront site meta (plan + feature flags). Used by the tenant
+  //     site to enable Pro-only features like the mobile app (PWA). Resolved
+  //     from the X-Tenant-Slug header via tenantMiddleware. ---
+  app.get('/api/v1/site-meta', async (request, reply) => {
+    const { planAllowsFeature, normalizePlan } = await import('./config/plan-limits.js');
+    const slug = request.tenant?.slug;
+    if (!slug) return reply.status(400).send({ error: 'Tenant not resolved' });
+    const plan = request.tenant?.plan ?? '';
+    return reply.send({
+      data: {
+        slug,
+        name: request.tenant?.name ?? slug,
+        plan: normalizePlan(plan),
+        features: { pwa: planAllowsFeature(plan, 'pwa') },
+      },
+    });
+  });
+
   // --- Health check ---
   app.get('/health', async () => ({
     status: 'ok',
