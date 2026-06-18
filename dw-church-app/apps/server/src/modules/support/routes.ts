@@ -39,14 +39,13 @@ export async function supportRoutes(app: FastifyInstance) {
     const row = await svc.updateTicket(id, input);
     if (!row) return reply.status(404).send({ error: { code: 'NOT_FOUND', message: '티켓을 찾을 수 없습니다' } });
 
-    // Email the reply to the ticket's contact when asked.
+    // Email the reply to the ticket's contact when asked (editable template).
     if (input.sendReply && input.adminReply && row.email) {
-      sendEmail({
-        to: row.email as string,
-        subject: `[TRUE LIGHT 고객지원] ${row.subject as string}`,
-        html: `<p>${String(input.adminReply).replace(/\n/g, '<br>')}</p>`,
-        from: 'support',
-      }).catch((err) => console.error('[email] support reply failed:', err));
+      const { renderTemplate } = await import('../email-templates/service.js');
+      const tpl = await renderTemplate('support_reply', { subject: row.subject as string, reply: input.adminReply });
+      sendEmail({ to: row.email as string, ...tpl, from: 'support' }).catch((err) =>
+        console.error('[email] support reply failed:', err),
+      );
     }
     return reply.send({ data: row });
   });

@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { requireSuperAdmin } from '../../middleware/auth.js';
 import { AppError } from '../../middleware/error-handler.js';
 import { sendEmail } from '../../config/email.js';
-import { paymentLinkEmail } from '../../config/email-templates.js';
+import { renderTemplate } from '../email-templates/service.js';
 import { createApplicationSchema, updateApplicationSchema } from './schema.js';
 import * as applicationService from './service.js';
 import { classifyDenomination } from '../reference-denominations/service.js';
@@ -29,6 +29,12 @@ export async function applicationRoutes(app: FastifyInstance) {
   app.post('/applications', async (request, reply) => {
     const input = createApplicationSchema.parse(request.body);
     const created = await applicationService.createApplication(input);
+    // Confirmation email to the applicant (editable 'application_received' template).
+    if (input.email) {
+      renderTemplate('application_received', { churchName: input.churchName, plan: input.plan ?? '' })
+        .then((tpl) => sendEmail({ to: input.email, ...tpl, from: 'order' }))
+        .catch((err) => console.error('[email] application_received failed:', err));
+    }
     return reply.status(201).send({ data: created });
   });
 
@@ -71,7 +77,10 @@ export async function applicationRoutes(app: FastifyInstance) {
 
     if (wantsSend) {
       const link = (row.payment_link as string) ?? input.paymentLink;
-      const tpl = paymentLinkEmail((row.church_name as string) ?? '교회', link!);
+      const tpl = await renderTemplate('payment', {
+        churchName: (row.church_name as string) ?? '교회',
+        buttonUrl: link!, buttonText: '결제하고 시작하기',
+      });
       // Fire-and-forget — surface failures in logs, don't fail the request.
       sendEmail({ to: row.email as string, ...tpl, from: 'order' }).catch((err) =>
         console.error('[email] Failed to send payment-link email:', err),

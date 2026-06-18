@@ -110,6 +110,7 @@ async function main(): Promise<void> {
   const { pricingRoutes } = await import('./modules/pricing/routes.js');
   const { emailSettingsRoutes } = await import('./modules/email-settings/routes.js');
   const { intakeRoutes } = await import('./modules/intake/routes.js');
+  const { emailTemplateRoutes } = await import('./modules/email-templates/routes.js');
 
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(tenantRoutes, { prefix: '/api/v1/admin' });
@@ -183,6 +184,7 @@ async function main(): Promise<void> {
   await app.register(pricingRoutes, { prefix: '/api/v1' }); // /pricing + /admin/pricing
   await app.register(emailSettingsRoutes, { prefix: '/api/v1' }); // /admin/email-settings
   await app.register(intakeRoutes, { prefix: '/api/v1' }); // /intake + /admin/intake
+  await app.register(emailTemplateRoutes, { prefix: '/api/v1' }); // /admin/email-templates + /admin/email-broadcast
 
   // --- Internal: resolve custom domain to tenant slug (used by Next.js middleware) ---
   app.get('/api/v1/admin/tenants/resolve-domain', async (request, reply) => {
@@ -782,6 +784,30 @@ async function main(): Promise<void> {
     );
   } catch (err) {
     app.log.warn(`email_settings table migration skipped: ${err}`);
+  }
+
+  // --- email_templates (편집 가능한 알림 메일 템플릿, 슈퍼어드민 관리) ---
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "email_templates" (
+        "key"        VARCHAR(64)  PRIMARY KEY,
+        "name"       VARCHAR(100) NOT NULL DEFAULT '',
+        "subject"    VARCHAR(300) NOT NULL DEFAULT '',
+        "body"       TEXT         NOT NULL DEFAULT '',
+        "vars"       VARCHAR(300) NOT NULL DEFAULT '',
+        "updated_at" TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+      )
+    `);
+    const { DEFAULT_TEMPLATES } = await import('./modules/email-templates/service.js');
+    for (const t of DEFAULT_TEMPLATES) {
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO "email_templates" (key, name, subject, body, vars)
+         VALUES ($1, $2, $3, $4, $5) ON CONFLICT (key) DO NOTHING`,
+        t.key, t.name, t.subject, t.body, t.vars,
+      );
+    }
+  } catch (err) {
+    app.log.warn(`email_templates table migration skipped: ${err}`);
   }
 
   // --- site_intake (결제 후 고객이 작성하는 사이트 콘텐츠, 중간저장/제출) ---
