@@ -19,6 +19,7 @@ export const createApplicationSchema = z.object({
   churchAddress: z.string().max(500).optional().nullable(),
   denomination: z.string().max(200).optional().nullable(), // 소속 교단 (인정 교단 = 패스트트랙)
   faithAffirmed: z.boolean().optional(), // 정통 신앙고백 동의 (자격 요건)
+  termsAccepted: z.boolean().optional(), // 이용약관·신앙고백 클릭랩 동의 (끝까지 읽고 동의)
   plan: z.enum(APPLICATION_PLANS).optional().nullable(),
   billingPeriod: z.enum(['monthly', 'yearly']).optional().nullable(),
   existingUrl: z.string().max(500).optional().nullable(), // 기존 웹사이트 (마이그레이션용)

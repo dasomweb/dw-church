@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { TermsConsentModal } from '../../components/TermsConsentModal';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.truelight.app';
 
@@ -19,7 +20,8 @@ const inputCls =
 function ApplyForm() {
   const params = useSearchParams();
   const [form, setForm] = useState<Record<string, string>>({ billingPeriod: 'yearly' });
-  const [faithAffirmed, setFaithAffirmed] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
   const [state, setState] = useState<'idle' | 'submitting' | 'done' | 'error'>('idle');
 
   // Preselect plan / period from the landing pricing cards (?plan=basic&period=yearly).
@@ -38,7 +40,7 @@ function ApplyForm() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.churchName?.trim() || !form.email?.trim() || !faithAffirmed) return;
+    if (!form.churchName?.trim() || !form.email?.trim() || !agreed) return;
     setState('submitting');
     try {
       const res = await fetch(`${API_BASE}/api/v1/applications`, {
@@ -52,6 +54,7 @@ function ApplyForm() {
           churchAddress: form.churchAddress || undefined,
           denomination: form.denomination || undefined,
           faithAffirmed: true,
+          termsAccepted: true,
           plan: form.plan || undefined,
           billingPeriod: form.billingPeriod || undefined,
           existingUrl: form.existingUrl || undefined,
@@ -173,30 +176,45 @@ function ApplyForm() {
         <textarea value={form.message || ''} onChange={set('message')} rows={4} className={inputCls} placeholder="교회 규모, 원하시는 분위기, 꼭 들어갈 내용 등을 자유롭게 적어주세요." />
       </div>
 
-      {/* Statement of Faith — positive eligibility (required) */}
-      <label className="flex items-start gap-2 rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-700">
-        <input
-          type="checkbox"
-          checked={faithAffirmed}
-          onChange={(e) => setFaithAffirmed(e.target.checked)}
-          className="mt-0.5 h-4 w-4 flex-shrink-0"
-        />
-        <span>
-          우리 교회는 사도신경·니케아 신경으로 요약되는 정통 기독교 신앙(삼위일체 하나님, 유일하신 그리스도 예수님의 신성·대속의 죽음과 부활, 성경의 무오성·충분성과 정경[66권, 추가 계시 부정], 예수 그리스도의 육체적·가시적 재림)을 고백하며,{' '}
-          <a href="/terms" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">이용약관 및 신앙고백</a>에 동의합니다. <span className="text-red-500">*</span>
-        </span>
-      </label>
+      {/* Clickwrap consent — must open Terms, scroll to the end, and accept (required) */}
+      {agreed ? (
+        <div className="flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+          <span className="mt-0.5 text-base leading-none">✓</span>
+          <span>
+            이용약관 및 신앙고백에 동의하셨습니다.{' '}
+            <button type="button" onClick={() => setShowTerms(true)} className="text-green-700 underline">다시 보기</button>
+          </span>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setShowTerms(true)}
+          className="flex w-full items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-left text-sm text-amber-800 transition-colors hover:bg-amber-100"
+        >
+          <span className="mt-0.5 text-base leading-none">📄</span>
+          <span>
+            <strong>이용약관 및 신앙고백 읽고 동의하기</strong> <span className="text-red-500">*</span>
+            <span className="mt-0.5 block text-xs text-amber-700">신청 전 약관과 신앙고백을 끝까지 읽고 동의해 주세요. (필수)</span>
+          </span>
+        </button>
+      )}
 
       {state === 'error' && (
         <p className="text-sm text-red-600">신청 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.</p>
       )}
       <button
         type="submit"
-        disabled={state === 'submitting' || !form.churchName?.trim() || !form.email?.trim() || !faithAffirmed}
+        disabled={state === 'submitting' || !form.churchName?.trim() || !form.email?.trim() || !agreed}
         className="w-full rounded-xl bg-blue-600 py-3.5 text-sm font-bold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
       >
         {state === 'submitting' ? '제출 중...' : '개발 신청서 제출'}
       </button>
+
+      <TermsConsentModal
+        open={showTerms}
+        onClose={() => setShowTerms(false)}
+        onAgree={() => setAgreed(true)}
+      />
       <p className="text-center text-xs text-gray-400">
         제출 후 결제 절차는 없습니다 — 검토 후 결제 안내를 이메일로 보내드립니다.
       </p>
