@@ -182,9 +182,8 @@ function ApplyForm() {
           className="mt-0.5 h-4 w-4 flex-shrink-0"
         />
         <span>
-          우리 교회는 사도신경·니케아 신경으로 요약되는 정통 기독교 신앙(삼위일체 하나님, 예수 그리스도의 신성·대속의 죽음과 부활, 성경의 권위, 그리스도의 재림)을 고백합니다. <span className="text-red-500">*</span>
-          {' '}
-          <a href="/terms" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">신앙고백 전문</a>
+          우리 교회는 사도신경·니케아 신경으로 요약되는 정통 기독교 신앙(삼위일체 하나님, 예수 그리스도의 신성·대속의 죽음과 부활, 성경의 무오성과 정경성, 그리스도의 재림)을 고백하며,{' '}
+          <a href="/terms" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">이용약관 및 신앙고백</a>에 동의합니다. <span className="text-red-500">*</span>
         </span>
       </label>
 
