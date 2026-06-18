@@ -8,7 +8,7 @@ import {
   useDeleteColumn,
   useDWChurchClient,
 } from '@dw-church/api-client';
-import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, ImageUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
+import { FormField, FormSection, FormRow, inputClass, selectClass, ImageUpload, RichEditor, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
 import { ContentMigrationButton } from '../components/ContentMigrationButton';
 import { useBulkDelete } from '../components/useBulkDelete';
 
@@ -113,10 +113,11 @@ export default function ColumnManagement() {
 
           <FormSection title="본문">
             <FormField label="내용">
-              <textarea
-                {...register('content')}
-                rows={12}
-                className={textareaClass}
+              <RichEditor
+                value={watch('content') || ''}
+                onChange={(html) => setValue('content', html)}
+                minHeight="320px"
+                placeholder="칼럼 본문을 입력하세요. 문단·서식·목록을 사용할 수 있습니다."
               />
             </FormField>
           </FormSection>

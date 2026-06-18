@@ -14,7 +14,23 @@ function formatDate(dateStr: string): string {
   return d.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
+// Older columns were saved as plain text (the editor used a textarea), so
+// blank lines were lost when injected as HTML. If the content has no HTML
+// tags, treat double newlines as paragraphs and single newlines as <br>.
+function toParagraphHtml(raw: string): string {
+  const text = raw || '';
+  const looksLikeHtml = /<[a-z][\s\S]*?>/i.test(text);
+  if (looksLikeHtml) return text;
+  return text
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => `<p>${p.replace(/\n/g, '<br>')}</p>`)
+    .join('');
+}
+
 export function SingleColumnClient({ column, slug }: SingleColumnClientProps) {
+  const contentHtml = toParagraphHtml(column.content);
   return (
     <div>
       <Link
@@ -50,7 +66,7 @@ export function SingleColumnClient({ column, slug }: SingleColumnClientProps) {
         {/* Content */}
         <div
           className="prose max-w-none"
-          dangerouslySetInnerHTML={{ __html: column.content }}
+          dangerouslySetInnerHTML={{ __html: contentHtml }}
         />
 
         {/* Bottom Image */}
