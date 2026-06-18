@@ -10,10 +10,10 @@ import { useRef, useState, useEffect } from 'react';
  */
 const FAITH = [
   '성부·성자·성령, 삼위로 영원히 존재하시는 한 분 하나님(삼위일체)',
-  '유일하신 그리스도이신 주 예수 그리스도의 완전한 신성과 인성, 동정녀 탄생, 대속의 죽음과 육체적 부활 — 그분 외의 다른 "그리스도"·재림주·메시아를 인정하지 않음',
-  '오직 예수 그리스도를 믿는 믿음과 오직 은혜로 받는 구원',
-  '성경의 신적 영감·무오성·최종 권위와 충분성 — 구약과 신약 66권을 정경으로 받아들이며, 어떤 새 계시나 추가 경전도 더하지 않음',
-  '예수 그리스도의 인격적이고 육체적이며 가시적인, 장차 있을 재림',
+  '주 예수 그리스도의 완전한 신성과 인성, 동정녀 탄생, 대속의 죽음과 육체적 부활을 믿으며, 그분 외의 다른 "그리스도", 재림주, 메시아를 인정하지 않음',
+  '오직 은혜와 오직 믿음으로 받는 구원',
+  '구약과 신약 66권을 하나님의 완전하고 권위 있는 말씀이자 최종 권위로 받아들이며, 어떠한 새 계시나 추가 경전도 인정하지 않음',
+  '예수 그리스도의 인격적이고 육체적이며 가시적인 재림',
 ];
 
 export function TermsConsentModal({
@@ -70,10 +70,10 @@ export function TermsConsentModal({
           <p className="mb-2">아래 <strong>동의 체크는 법적 구속력 있는 동의</strong>를 의미합니다. 귀하는 본 신앙고백과 <a href="/terms" target="_blank" rel="noreferrer" className="text-blue-600 underline">이용약관 전문 및 개인정보처리방침</a>을 끝까지 읽고 그 전부에 동의하는 것으로 봅니다.</p>
 
           <h3 className="mb-2 font-bold text-gray-900">3. 허위 진술 시 취소·해지</h3>
-          <p className="mb-2">귀하가 기재·진술한 내용(신앙고백 동의 및 제공한 정보 포함)이 <strong>사실과 다르거나 부정확·불완전함이 확인될 경우, 당사는 재량으로 서비스를 거절·정지·해지할 수 있으며</strong>, 환불은 이용약관에 따릅니다.</p>
+          <p className="mb-2">귀하가 기재·진술한 내용(신앙고백 동의 및 제공한 정보 포함)이 <strong>사실과 다르거나 부정확함이 확인될 경우, 당사는 즉시 서비스를 해지할 수 있으며, 이 경우 기 지불된 요금은 일체 환불되지 않습니다.</strong></p>
           <p className="mb-2">또한 귀하는 귀 교회를 대표하여 본 동의를 할 권한이 있음을 진술합니다.</p>
 
-          <p className="mt-6 rounded-lg bg-gray-50 px-4 py-3 text-xs text-gray-400">전체 이용약관·개인정보처리방침은 truelight.app/terms, truelight.app/privacy 에서 확인할 수 있습니다. (영문본이 정본)</p>
+          <p className="mt-6 rounded-lg bg-gray-50 px-4 py-3 text-xs text-gray-400">전체 이용약관·개인정보처리방침은 truelight.app/terms, truelight.app/privacy 에서 확인할 수 있습니다. (한글 원본이 정본)</p>
         </div>
 
         <div className="border-t border-gray-100 px-6 py-4">
