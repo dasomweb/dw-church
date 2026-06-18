@@ -951,6 +951,25 @@ export class DWChurchClient {
     return this.fetchAdapter.getBlob(`${this.namespace}/export`);
   }
 
+  // ─── Site Intake (결제 후 콘텐츠 입력) ──────────────────
+  /** Load this church's intake draft (resume mid-progress). */
+  async getIntake(): Promise<{ tenantSlug?: string; plan?: string; data: Record<string, unknown>; status: string }> {
+    const res = await this.api.get(`${this.namespace}/intake`);
+    return unwrapData(res);
+  }
+
+  /** Save the intake draft (mid-progress save — explicit, no auto-save). */
+  async saveIntake(data: Record<string, unknown>): Promise<{ data: Record<string, unknown>; status: string }> {
+    const res = await this.api.put(`${this.namespace}/intake`, { data });
+    return unwrapData(res);
+  }
+
+  /** Submit the completed intake. */
+  async submitIntake(): Promise<{ status: string }> {
+    const res = await this.api.post(`${this.namespace}/intake/submit`);
+    return unwrapData(res);
+  }
+
   async getFiles(): Promise<UploadedFile[]> {
     return this.api.get(`${this.namespace}/files`);
   }

@@ -58,6 +58,7 @@ const MenuEditor = lazyWithReload(() => import('./pages/MenuEditor'));
 const ThemeDeprecatedNotice = lazyWithReload(() => import('./pages/ThemeDeprecatedNotice'));
 const UserManagement = lazyWithReload(() => import('./pages/UserManagement'));
 const SettingsPage = lazyWithReload(() => import('./pages/SettingsPage'));
+const IntakeWizard = lazyWithReload(() => import('./pages/IntakeWizard'));
 const DomainSettings = lazyWithReload(() => import('./pages/DomainSettings'));
 const SuperAdminDashboard = lazyWithReload(() => import('./pages/SuperAdminDashboardV2'));
 const ProfilePage = lazyWithReload(() => import('./pages/ProfilePage'));
@@ -299,6 +300,7 @@ export function App({ config }: { config: AppConfig }) {
                 }
               >
                 <Route index element={<Dashboard />} />
+                <Route path="intake" element={<IntakeWizard />} />
                 <Route path="bulletins" element={<BulletinManagement />} />
                 <Route path="sermons" element={<SermonManagement />} />
                 <Route path="columns" element={<ColumnManagement />} />
