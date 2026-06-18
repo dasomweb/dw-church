@@ -15,17 +15,17 @@ type Doc = { title: string; updated: string; intro: string[]; sections: Section[
 
 const FAITH_LIST_EN = [
   'One God, eternally existing in three persons — Father, Son, and Holy Spirit (the Trinity);',
-  'The full deity and humanity of Jesus Christ, His virgin birth, atoning death, and bodily resurrection;',
-  'Salvation by grace through faith in Jesus Christ;',
-  'The divine inspiration, inerrancy, and final authority of the Holy Bible — the sixty-six (66) books of the Old and New Testaments — as the complete and authoritative Word of God, which we receive as the canon of Scripture;',
-  'The bodily return of Jesus Christ.',
+  'The full deity and humanity of the Lord Jesus Christ — the only Christ — including His virgin birth, atoning death, and bodily resurrection; we acknowledge no other "christ," messiah, or second-coming figure;',
+  'Salvation by grace alone, through faith alone, in Jesus Christ;',
+  'The divine inspiration, inerrancy, final authority, and sufficiency of the Holy Bible — the sixty-six (66) books of the Old and New Testaments — as the complete and authoritative Word of God (the canon of Scripture), to which no new revelation or additional scripture may be added;',
+  'The personal, bodily, and visible future return of Jesus Christ.',
 ];
 const FAITH_LIST_KO = [
   '성부·성자·성령, 삼위로 영원히 존재하시는 한 분 하나님(삼위일체);',
-  '예수 그리스도의 완전한 신성과 인성, 동정녀 탄생, 대속의 죽음과 육체적 부활;',
-  '오직 예수 그리스도를 믿는 믿음과 은혜로 받는 구원;',
-  '성경의 신적 영감과 무오성(無誤性), 그리고 최종 권위 — 구약과 신약 66권을 하나님의 완전하고 권위 있는 말씀이자 정경(正經)으로 받아들임;',
-  '예수 그리스도의 육체적 재림.',
+  '유일하신 그리스도이신 주 예수 그리스도의 완전한 신성과 인성, 동정녀 탄생, 대속의 죽음과 육체적 부활을 믿으며, 그분 외의 다른 "그리스도"·재림주·메시아를 인정하지 않음;',
+  '오직 예수 그리스도를 믿는 믿음과 오직 은혜로 받는 구원;',
+  '성경의 신적 영감·무오성(無誤性)·최종 권위와 충분성 — 구약과 신약 66권을 하나님의 완전하고 권위 있는 말씀이자 정경(正經)으로 받아들이며, 여기에 어떤 새 계시나 추가 경전도 더하지 않음;',
+  '예수 그리스도의 인격적이고 육체적이며 가시적인, 장차 있을 재림.',
 ];
 
 const CONTENT: Record<'terms' | 'privacy', Record<Lang, Doc>> = {
