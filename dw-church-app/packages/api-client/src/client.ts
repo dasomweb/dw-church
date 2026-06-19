@@ -783,7 +783,12 @@ export class DWChurchClient {
 
   // ─── Taxonomies ─────────────────────────────────────────
   async getSermonCategories(): Promise<TaxonomyTerm[]> {
-    const res = await this.api.get(`${this.namespace}/taxonomies/sermon_category`);
+    // Read the dedicated `/sermon-categories` table (the same source the category
+    // manager writes to) — the `/taxonomies/sermon_category` view came back empty,
+    // so the sermon form's category checkboxes showed "카테고리가 없습니다" even
+    // though categories existed, and the IDs wouldn't have matched what a sermon
+    // stores. Mirrors the getSermonPreachers fix.
+    const res = await this.api.get(`${this.namespace}/sermon-categories`);
     return unwrapData(res);
   }
 
