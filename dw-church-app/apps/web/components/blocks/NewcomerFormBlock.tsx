@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { DataSection } from './DataSection';
 
 interface NewcomerFormBlockProps {
   props: Record<string, unknown>;
@@ -53,7 +54,7 @@ export function NewcomerFormBlock({ props, slug }: NewcomerFormBlockProps) {
 
   if (state === 'done') {
     return (
-      <section className="px-4 py-16 sm:px-6" style={{ backgroundColor: 'var(--dw-surface)' }}>
+      <DataSection props={props} defaultBg="var(--dw-surface)" paddingClassName="px-4 py-16 sm:px-6">
         <div className="mx-auto max-w-xl rounded-2xl border bg-white p-10 text-center shadow-sm" style={{ borderColor: 'var(--dw-border, #e5e7eb)' }}>
           <div className="mb-3 text-4xl">🙏</div>
           <h2 className="mb-2 text-2xl font-bold font-heading">등록해 주셔서 감사합니다</h2>
@@ -61,14 +62,14 @@ export function NewcomerFormBlock({ props, slug }: NewcomerFormBlockProps) {
             남겨주신 정보로 곧 연락드리겠습니다. 주님의 은혜가 함께하시길 바랍니다.
           </p>
         </div>
-      </section>
+      </DataSection>
     );
   }
 
   const inputCls = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none';
 
   return (
-    <section className="px-4 py-12 sm:px-6 sm:py-16" style={{ backgroundColor: 'var(--dw-surface)' }}>
+    <DataSection props={props} defaultBg="var(--dw-surface)" paddingClassName="px-4 py-12 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-xl">
         <div className="mb-8 text-center">
           <h2 className="mb-3 text-3xl font-bold font-heading">{title}</h2>
@@ -132,6 +133,6 @@ export function NewcomerFormBlock({ props, slug }: NewcomerFormBlockProps) {
           </button>
         </form>
       </div>
-    </section>
+    </DataSection>
   );
 }

@@ -1,5 +1,6 @@
 import { getBulletins } from '@/lib/api';
 import { getElementStyle } from '@/lib/element-style';
+import { DataSection } from './DataSection';
 import { RecentBulletinsClient } from './RecentBulletinsClient';
 
 interface RecentBulletinsBlockProps {
@@ -23,21 +24,21 @@ export async function RecentBulletinsBlock({ props, slug }: RecentBulletinsBlock
 
   if (bulletins.length === 0) {
     return (
-      <section className="px-4 py-10 sm:px-6 sm:py-16">
+      <DataSection props={props}>
         <div className="mx-auto max-w-7xl text-center">
           <h2 className="mb-4 text-3xl font-bold font-heading" style={getElementStyle(props, 'title')}>{title}</h2>
           <p className="text-gray-400 text-sm">등록된 주보가 없습니다.</p>
         </div>
-      </section>
+      </DataSection>
     );
   }
 
   return (
-    <section className="px-4 py-10 sm:px-6 sm:py-16">
+    <DataSection props={props}>
       <div className="mx-auto max-w-7xl">
         <h2 className="mb-8 text-center text-3xl font-bold font-heading" style={getElementStyle(props, 'title')}>{title}</h2>
         <RecentBulletinsClient bulletins={bulletins} slug={slug} columns={columns} />
       </div>
-    </section>
+    </DataSection>
   );
 }

@@ -1,4 +1,5 @@
 import { getSchedules } from '@/lib/api';
+import { DataSection } from './DataSection';
 
 interface ScheduleBoardBlockProps {
   props: Record<string, unknown>;
@@ -143,7 +144,9 @@ export async function ScheduleBoardBlock({ props, slug }: ScheduleBoardBlockProp
   );
 
   return (
-    <section className="px-4 sm:px-6" style={{ paddingBlock: 'var(--section-py-md)' }}>
+    // Keeps its token-based vertical rhythm (--section-py-md) via an arbitrary
+    // Tailwind class; the literal appears in this scanned source so JIT emits it.
+    <DataSection props={props} paddingClassName="px-4 sm:px-6 py-[var(--section-py-md)]">
       <div className="mx-auto max-w-7xl">
         <div
           style={{
@@ -159,6 +162,6 @@ export async function ScheduleBoardBlock({ props, slug }: ScheduleBoardBlockProp
           {tablesCol}
         </div>
       </div>
-    </section>
+    </DataSection>
   );
 }

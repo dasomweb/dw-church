@@ -1,4 +1,5 @@
 import { getBoardBySlug, getBoardPosts } from '@/lib/api';
+import { DataSection } from './DataSection';
 
 interface BoardBlockProps {
   props: Record<string, unknown>;
@@ -13,11 +14,11 @@ export async function BoardBlock({ props, slug }: BoardBlockProps) {
 
   if (!boardSlug) {
     return (
-      <section className="px-4 py-10 sm:px-6 sm:py-16">
+      <DataSection props={props}>
         <div className="mx-auto max-w-7xl text-center text-gray-400 text-sm">
           게시판 슬러그를 설정해주세요.
         </div>
-      </section>
+      </DataSection>
     );
   }
 
@@ -39,7 +40,7 @@ export async function BoardBlock({ props, slug }: BoardBlockProps) {
   const displayTitle = title || board.title || '게시판';
 
   return (
-    <section className="px-4 py-10 sm:px-6 sm:py-16" style={{ backgroundColor: 'var(--dw-surface)' }}>
+    <DataSection props={props} defaultBg="var(--dw-surface)">
       <div className="mx-auto max-w-7xl">
         <h2 className="mb-8 text-center text-3xl font-bold font-heading">{displayTitle}</h2>
 
@@ -51,7 +52,7 @@ export async function BoardBlock({ props, slug }: BoardBlockProps) {
           <BoardGridView posts={posts} columns={variant === 'grid-3' ? 3 : 2} />
         )}
       </div>
-    </section>
+    </DataSection>
   );
 }
 

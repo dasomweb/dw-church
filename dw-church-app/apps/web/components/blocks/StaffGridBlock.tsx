@@ -1,4 +1,5 @@
 import { getStaff, getChurchSettings } from '@/lib/api';
+import { DataSection } from './DataSection';
 import { StaffGridBlockClient } from './StaffGridBlockClient';
 
 interface StaffGridBlockProps {
@@ -34,17 +35,17 @@ export async function StaffGridBlock({ props, slug }: StaffGridBlockProps) {
 
   if (staff.length === 0) {
     return (
-      <section className="px-4 py-10 sm:px-6 sm:py-16" style={{ backgroundColor: 'var(--dw-surface)' }}>
+      <DataSection props={props} defaultBg="var(--dw-surface)">
         <div className="mx-auto max-w-7xl text-center">
           <h2 className="mb-4 text-3xl font-bold font-heading">교역자 소개</h2>
           <p className="text-gray-400 text-sm">등록된 교역자가 없습니다.</p>
         </div>
-      </section>
+      </DataSection>
     );
   }
 
   return (
-    <section className="px-4 py-10 sm:px-6 sm:py-16" style={{ backgroundColor: 'var(--dw-surface)' }}>
+    <DataSection props={props} defaultBg="var(--dw-surface)">
       <div className="mx-auto max-w-7xl">
         <h2 className="mb-8 text-center text-3xl font-bold font-heading">
           {(props.title as string) || '교역자'}
@@ -60,6 +61,6 @@ export async function StaffGridBlock({ props, slug }: StaffGridBlockProps) {
           showItems={showItems}
         />
       </div>
-    </section>
+    </DataSection>
   );
 }

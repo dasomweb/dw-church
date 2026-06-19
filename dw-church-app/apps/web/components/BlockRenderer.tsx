@@ -85,7 +85,16 @@ export function BlockRenderer({ section, slug }: BlockRendererProps) {
   // Section-level design override — the Style/Advanced tabs save a structured
   // BlockStyle to props.blockStyle. Applied at the wrapper (the block reads its
   // own in-content props like eyebrow/bgMode/overlay via SectionShell).
-  const overrideStyle = blockStyleToCss(section.props.blockStyle as BlockStyle | null | undefined);
+  //
+  // Content (Data) blocks paint their OWN <section> (background + padding) via
+  // DataSection, which consumes props.blockStyle directly — applying the same
+  // override here too would double the padding and hide the background behind
+  // the block's opaque section. So for data blocks the wrapper stays neutral
+  // and DataSection is the single owner of the section chrome.
+  const isDataBlock = section.blockType in CHURCH_BLOCKS;
+  const overrideStyle = isDataBlock
+    ? undefined
+    : blockStyleToCss(section.props.blockStyle as BlockStyle | null | undefined);
 
   // Cast to a sync element — storefront data blocks may be async Server
   // Components; Next.js renders them fine, but tsc's JSX checker needs the cast.

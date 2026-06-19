@@ -92,6 +92,46 @@ function withShadowPreset(
   return collapseBlockStyle(cleanedBase);
 }
 
+function withBackgroundColor(base: BlockStyle | null, hex: string | undefined): BlockStyle | null {
+  const background = { ...(base?.background ?? {}) };
+  if (!hex) {
+    delete background.color;
+  } else {
+    background.color = { hex };
+  }
+  const cleanedBg =
+    background.color === undefined && background.image === undefined && background.gradient === undefined
+      ? undefined
+      : background;
+  const cleanedBase: BlockStyle = { ...(base ?? {}) };
+  if (cleanedBg === undefined) delete cleanedBase.background;
+  else cleanedBase.background = cleanedBg;
+  return collapseBlockStyle(cleanedBase);
+}
+
+function withOverlay(
+  base: BlockStyle | null,
+  patch: { hex?: string | undefined; opacity?: number | undefined },
+): BlockStyle | null {
+  const overlay = { ...(base?.overlay ?? {}) };
+  if ('hex' in patch) {
+    if (!patch.hex) delete overlay.color;
+    else overlay.color = { hex: patch.hex };
+  }
+  if ('opacity' in patch) {
+    if (patch.opacity === undefined) delete overlay.opacity;
+    else overlay.opacity = patch.opacity;
+  }
+  const cleanedOverlay =
+    overlay.color === undefined && overlay.opacity === undefined && overlay.gradient === undefined && overlay.image === undefined
+      ? undefined
+      : overlay;
+  const cleanedBase: BlockStyle = { ...(base ?? {}) };
+  if (cleanedOverlay === undefined) delete cleanedBase.overlay;
+  else cleanedBase.overlay = cleanedOverlay;
+  return collapseBlockStyle(cleanedBase);
+}
+
 function withBorderRadius(
   base: BlockStyle | null,
   radius: number | undefined,
@@ -147,6 +187,40 @@ function radiusToPresetKey(
   return null;
 }
 
+/** Color swatch + hex text + clear (×). Empty hex === inherit/none. */
+function HexColorRow({ hex, onChange }: { hex: string; onChange: (hex: string | undefined) => void }) {
+  // A native color input needs a valid #rrggbb; fall back to #ffffff for the
+  // swatch while keeping the actual stored value empty when unset.
+  const swatch = /^#[0-9a-fA-F]{6}$/.test(hex) ? hex : '#ffffff';
+  return (
+    <div className="flex items-center gap-2">
+      <input
+        type="color"
+        value={swatch}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-9 h-9 rounded cursor-pointer border border-gray-300"
+      />
+      <input
+        type="text"
+        value={hex}
+        placeholder="#RRGGBB"
+        onChange={(e) => onChange(e.target.value.trim() || undefined)}
+        className="flex-1 text-xs font-mono border border-gray-300 rounded px-2 py-1.5 focus:border-blue-500 outline-none"
+      />
+      {hex && (
+        <button
+          type="button"
+          onClick={() => onChange(undefined)}
+          className="text-xs text-gray-400 hover:text-gray-700 px-1"
+          title="지우기"
+        >
+          ✕
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function BlockStyleInspector({ value, onChange }: BlockStyleInspectorProps) {
   const padding = value?.spacing?.padding;
   const margin = value?.spacing?.margin;
@@ -154,9 +228,46 @@ export function BlockStyleInspector({ value, onChange }: BlockStyleInspectorProp
   const shadowPreset = value?.shadow?.preset;
   const radius = value?.border?.radius;
   const radiusPresetKey = radiusToPresetKey(radius);
+  // Background / overlay show their hex when set directly. A token-based color
+  // (rare for sections) leaves the picker blank — the operator can type a hex
+  // to switch to a literal color.
+  const bgHex = value?.background?.color?.hex ?? '';
+  const overlayHex = value?.overlay?.color?.hex ?? '';
+  const overlayOpacity = value?.overlay?.opacity;
 
   return (
     <div className="space-y-4">
+      <div>
+        <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2">
+          배경 & 오버레이
+        </div>
+        <div className="space-y-3">
+          <LabeledField label="배경 색상" hint="섹션 전체 배경. 비우면 테마 기본 배경을 사용합니다.">
+            <HexColorRow
+              hex={bgHex}
+              onChange={(hex) => onChange(withBackgroundColor(value, hex))}
+            />
+          </LabeledField>
+          <LabeledField label="오버레이 색상" hint="배경 위에 덮는 반투명 레이어. 배경 이미지 위 텍스트 가독성에 사용.">
+            <HexColorRow
+              hex={overlayHex}
+              onChange={(hex) => onChange(withOverlay(value, { hex }))}
+            />
+          </LabeledField>
+          {overlayHex && (
+            <LabeledField label={`오버레이 투명도 (${Math.round((overlayOpacity ?? 1) * 100)}%)`}>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={Math.round((overlayOpacity ?? 1) * 100)}
+                onChange={(e) => onChange(withOverlay(value, { opacity: Number(e.target.value) / 100 }))}
+                className="w-full"
+              />
+            </LabeledField>
+          )}
+        </div>
+      </div>
       <div>
         <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2">
           Section Style

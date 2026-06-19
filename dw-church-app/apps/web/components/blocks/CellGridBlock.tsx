@@ -1,4 +1,5 @@
 import { getCells } from '@/lib/api';
+import { DataSection } from './DataSection';
 
 interface CellGridBlockProps {
   props: Record<string, unknown>;
@@ -24,12 +25,12 @@ export async function CellGridBlock({ props, slug }: CellGridBlockProps) {
 
   if (cells.length === 0) {
     return (
-      <section className="px-4 py-10 sm:px-6 sm:py-16" style={{ backgroundColor: 'var(--dw-surface)' }}>
+      <DataSection props={props} defaultBg="var(--dw-surface)">
         <div className="mx-auto max-w-7xl text-center">
           <h2 className="mb-4 text-3xl font-bold font-heading">{title}</h2>
           <p className="text-sm text-gray-400">등록된 목장이 없습니다.</p>
         </div>
-      </section>
+      </DataSection>
     );
   }
 
@@ -39,7 +40,7 @@ export async function CellGridBlock({ props, slug }: CellGridBlockProps) {
     : 'sm:grid-cols-2 lg:grid-cols-3';
 
   return (
-    <section className="px-4 py-10 sm:px-6 sm:py-16" style={{ backgroundColor: 'var(--dw-surface)' }}>
+    <DataSection props={props} defaultBg="var(--dw-surface)">
       <div className="mx-auto max-w-7xl">
         <h2 className="mb-8 text-center text-3xl font-bold font-heading">{title}</h2>
         <div className={`grid grid-cols-1 gap-6 ${gridCols}`}>
@@ -92,6 +93,6 @@ export async function CellGridBlock({ props, slug }: CellGridBlockProps) {
           })}
         </div>
       </div>
-    </section>
+    </DataSection>
   );
 }
