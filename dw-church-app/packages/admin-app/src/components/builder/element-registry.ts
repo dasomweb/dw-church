@@ -1168,8 +1168,11 @@ const STEPS_LIST: BlockElementRegistry = {
     ]},
     { title: 'Design', elements: [
       { label: 'Layout', path: 'layout', kind: 'select', choices: [
-        { value: 'vertical', label: 'Vertical (long process)' }, { value: 'grid', label: 'Grid (3-4 steps)' },
+        { value: 'vertical', label: 'Vertical (long process)' }, { value: 'grid', label: 'Grid' }, { value: 'cards', label: 'Cards' },
       ]},
+      { label: 'Columns per row', path: 'columns', kind: 'select', choices: [
+        { value: '2', label: '2 per row' }, { value: '3', label: '3 per row' }, { value: '4', label: '4 per row' },
+      ], hint: 'Grid / Cards layout only (blank = 3)' },
       { label: 'Indicator Mode', path: 'indicatorMode', kind: 'select', choices: [
         { value: 'icon', label: 'Icon + Number Badge' }, { value: 'number', label: 'Big Number' },
       ], hint: 'Blank = auto (based on whether items have icons)' },

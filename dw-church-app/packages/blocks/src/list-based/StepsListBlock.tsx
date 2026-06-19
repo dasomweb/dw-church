@@ -48,6 +48,14 @@ export function StepsListBlock({ props }: StepsListBlockProps) {
     .filter((it) => (it.title ?? '').trim().length > 0);
 
   const layout = ((props.layout as string) ?? 'vertical') as Layout;
+  // Columns-per-row for grid / cards layouts (2 / 3 / 4; default 3). Classes are
+  // written as full static literals so apps/web Tailwind (which scans
+  // packages/blocks/src) doesn't purge them.
+  const columns = Number(props.columns);
+  const gridCols =
+    columns === 2 ? 'grid-cols-1 sm:grid-cols-2'
+      : columns === 4 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+        : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
   const bgMode = (props.bgMode as string) ?? 'none';
   const backgroundColor = (props.backgroundColor as string) || '';
   const sectionBg = sectionBgStyle(bgMode, backgroundColor);
@@ -90,7 +98,7 @@ export function StepsListBlock({ props }: StepsListBlockProps) {
 
         {layout === 'cards' ? (
           <ol
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 list-none p-0 m-0"
+            className={`grid ${gridCols} gap-5 sm:gap-6 list-none p-0 m-0`}
           >
             {items.map((it, i) => (
               <CardStep key={i} index={i} item={it} parentProps={props} />
@@ -98,7 +106,7 @@ export function StepsListBlock({ props }: StepsListBlockProps) {
           </ol>
         ) : layout === 'grid' ? (
           <ol
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 list-none p-0 m-0"
+            className={`grid ${gridCols} gap-6 sm:gap-8 list-none p-0 m-0`}
           >
             {items.map((it, i) => (
               <GridStep
