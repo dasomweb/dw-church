@@ -164,6 +164,39 @@ describe('DWChurchClient', () => {
     });
   });
 
+  // Regression: the sermons API returns preacherName / sermonDate / categories[],
+  // but the edit form binds preacher / date / categoryIds. Without mapping, the
+  // 설교자·날짜 fields load blank (looks like the save didn't stick).
+  describe('sermon field mapping', () => {
+    const raw = {
+      id: 's1', title: '살아있는 교회 공동체', preacherName: '곽정민 목사',
+      sermonDate: '2023-07-09', categories: [{ id: 'c1', name: '주일' }, { id: 'c2', name: '오후' }],
+    };
+
+    it('getSermons maps preacherName/sermonDate/categories → preacher/date/categoryIds', async () => {
+      const adapter: any = {
+        get: vi.fn().mockResolvedValue({ data: [raw], meta: { total: 1 } }),
+        post: vi.fn(), put: vi.fn(), delete: vi.fn(),
+      };
+      const client = new DWChurchClient({ baseUrl: 'https://example.com', adapter });
+      const res = await client.getSermons();
+      expect(res.data[0].preacher).toBe('곽정민 목사');
+      expect(res.data[0].date).toBe('2023-07-09');
+      expect(res.data[0].categoryIds).toEqual(['c1', 'c2']);
+    });
+
+    it('updateSermon returns the mapped shape', async () => {
+      const adapter: any = {
+        get: vi.fn(), post: vi.fn(), delete: vi.fn(),
+        put: vi.fn().mockResolvedValue({ data: raw }),
+      };
+      const client = new DWChurchClient({ baseUrl: 'https://example.com', adapter });
+      const res = await client.updateSermon('s1', { preacher: '곽정민 목사' });
+      expect(res.preacher).toBe('곽정민 목사');
+      expect(res.date).toBe('2023-07-09');
+    });
+  });
+
   describe('getRelatedPosts', () => {
     it('constructs correct URL with params', async () => {
       const getSpy = vi.fn().mockResolvedValue([]);

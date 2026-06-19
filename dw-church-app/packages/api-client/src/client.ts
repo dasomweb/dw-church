@@ -71,6 +71,23 @@ function unwrapData<T>(res: unknown): T {
   return res as T;
 }
 
+// The sermons API returns preacher_name / sermon_date / categories[] (camelized
+// to preacherName / sermonDate / categories), but the typed Sermon shape uses
+// preacher / date / categoryIds. Normalize here — without this the admin edit
+// form reads item.preacher / item.date / item.categoryIds as undefined and the
+// 설교자·날짜 fields load blank (looks like the save didn't stick).
+function mapSermon(raw: unknown): Sermon {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  const categories = Array.isArray(r.categories) ? (r.categories as Array<{ id?: string }>) : [];
+  return {
+    ...r,
+    preacher: (r.preacher as string) ?? (r.preacherName as string) ?? '',
+    date: (r.date as string) ?? (r.sermonDate as string) ?? '',
+    category: (r.category as string) ?? '',
+    categoryIds: (r.categoryIds as string[]) ?? categories.map((c) => c.id).filter(Boolean),
+  } as Sermon;
+}
+
 class FetchAdapter implements ApiAdapter {
   private headers: Record<string, string>;
 
@@ -346,19 +363,23 @@ export class DWChurchClient {
       category: params?.category,
       preacher: params?.preacher,
     };
-    return this.api.get(`${this.namespace}/sermons`, query);
+    const res = await this.api.get<PaginatedResponse<Sermon>>(`${this.namespace}/sermons`, query);
+    return { ...res, data: (res.data ?? []).map(mapSermon) };
   }
 
   async getSermon(id: string): Promise<Sermon> {
-    return this.api.get(`${this.namespace}/sermons/${id}`);
+    const res = await this.api.get(`${this.namespace}/sermons/${id}`);
+    return mapSermon(unwrapData(res));
   }
 
   async createSermon(data: Omit<Sermon, 'id' | 'createdAt' | 'modifiedAt'>): Promise<Sermon> {
-    return this.api.post(`${this.namespace}/sermons`, data);
+    const res = await this.api.post(`${this.namespace}/sermons`, data);
+    return mapSermon(unwrapData(res));
   }
 
   async updateSermon(id: string, data: Partial<Sermon>): Promise<Sermon> {
-    return this.api.put(`${this.namespace}/sermons/${id}`, data);
+    const res = await this.api.put(`${this.namespace}/sermons/${id}`, data);
+    return mapSermon(unwrapData(res));
   }
 
   async deleteSermon(id: string): Promise<void> {
@@ -369,10 +390,12 @@ export class DWChurchClient {
     id: string,
     options?: { taxonomy?: string; limit?: number },
   ): Promise<Sermon[]> {
-    return this.api.get(`${this.namespace}/sermons/${id}/related`, {
+    const res = await this.api.get(`${this.namespace}/sermons/${id}/related`, {
       taxonomy: options?.taxonomy ?? 'sermon_category',
       limit: options?.limit ?? 4,
     });
+    const list = unwrapData<Sermon[]>(res);
+    return Array.isArray(list) ? list.map(mapSermon) : [];
   }
 
   // ─── Columns ────────────────────────────────────────────
