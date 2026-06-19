@@ -234,9 +234,12 @@ export default function TenantThemeEditor() {
 }
 
 // ─── Palette ─────────────────────────────────────────────────────────
-function PaletteTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChange: (t: DesignTokens) => void; saving: boolean }) {
+function PaletteTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChange: (t: DesignTokens | ((prev: DesignTokens) => DesignTokens)) => void; saving: boolean }) {
+  // Functional update: build on the LATEST tokens so editing several color slots
+  // before saving never loses an earlier edit to a stale base (the "first save
+  // doesn't stick, second does" bug).
   const setSlot = (slot: keyof SystemColorTokens, hex: string) => {
-    onChange({ ...tokens, colors: { ...tokens.colors, system: { ...tokens.colors.system, [slot]: hex } } });
+    onChange((prev) => ({ ...prev, colors: { ...prev.colors, system: { ...prev.colors.system, [slot]: hex } } }));
   };
   const slots = Object.keys(COLOR_LABELS) as (keyof SystemColorTokens)[];
 
@@ -339,7 +342,7 @@ function TypographyTab({ tokens, onChange, saving }: { tokens: DesignTokens; onC
                 key={key}
                 type="button"
                 disabled={saving}
-                onClick={() => onChange(applyFontSizePreset(tokens, key))}
+                onClick={() => onChange((prev) => applyFontSizePreset(prev, key))}
                 className={`text-left rounded-lg border p-3 transition-colors disabled:opacity-50 ${active ? 'border-blue-600 bg-blue-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}
               >
                 <div className="text-sm font-semibold capitalize">{key}</div>
@@ -537,12 +540,15 @@ const SPACING_FIELDS: { key: keyof DesignTokens['spacing']; label: string; hint:
   { key: 'sectionMarginY',    label: '섹션 사이 간격', hint: '섹션과 섹션 사이 바깥 여백(margin)' },
 ];
 
-function SpacingTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChange: (t: DesignTokens) => void; saving: boolean }) {
+function SpacingTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChange: (t: DesignTokens | ((prev: DesignTokens) => DesignTokens)) => void; saving: boolean }) {
+  // Functional update: build on the LATEST tokens so editing several spacing/radius
+  // fields before saving never loses an earlier edit to a stale base (the "first
+  // save doesn't stick, second does" bug).
   const setSpacing = (k: keyof DesignTokens['spacing'], v: number) => {
-    onChange({ ...tokens, spacing: { ...tokens.spacing, [k]: v } });
+    onChange((prev) => ({ ...prev, spacing: { ...prev.spacing, [k]: v } }));
   };
   const setRadius = (k: keyof DesignTokens['radius'], v: number) => {
-    onChange({ ...tokens, radius: { ...tokens.radius, [k]: v } });
+    onChange((prev) => ({ ...prev, radius: { ...prev.radius, [k]: v } }));
   };
   const activeSpacing = detectSpacingPreset(tokens);
   const spacingKeys = Object.keys(SPACING_PRESETS) as SpacingPresetName[];
@@ -559,7 +565,7 @@ function SpacingTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChan
                 key={key}
                 type="button"
                 disabled={saving}
-                onClick={() => onChange(applySpacingPreset(tokens, key))}
+                onClick={() => onChange((prev) => applySpacingPreset(prev, key))}
                 className={`text-left rounded-lg border p-3 transition-colors disabled:opacity-50 ${active ? 'border-blue-600 bg-blue-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}
               >
                 <div className="text-sm font-semibold capitalize">{key}</div>
