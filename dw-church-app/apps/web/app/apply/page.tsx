@@ -23,6 +23,9 @@ function ApplyForm() {
   const [agreed, setAgreed] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [state, setState] = useState<'idle' | 'submitting' | 'done' | 'error'>('idle');
+  const [appliedPromo, setAppliedPromo] = useState<{ discountPercent: number; targetPlans: string[]; label?: string } | null>(null);
+  const [couponChecking, setCouponChecking] = useState(false);
+  const [couponError, setCouponError] = useState('');
 
   // Preselect plan / period from the landing pricing cards (?plan=basic&period=yearly).
   useEffect(() => {
@@ -37,6 +40,29 @@ function ApplyForm() {
 
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const applyCoupon = async () => {
+    const code = (form.couponCode || '').trim();
+    if (!code) return;
+    setCouponChecking(true);
+    setCouponError('');
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/promo/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+      if (!res.ok) { setAppliedPromo(null); setCouponError('사용할 수 없는 쿠폰 코드입니다.'); return; }
+      const json = await res.json();
+      const p = json.data;
+      setAppliedPromo({ discountPercent: p.discountPercent, targetPlans: p.targetPlans || [], label: p.label });
+    } catch {
+      setAppliedPromo(null);
+      setCouponError('확인 중 오류가 발생했습니다.');
+    } finally {
+      setCouponChecking(false);
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +82,7 @@ function ApplyForm() {
           plantingType: form.plantingType || undefined,
           memberProfile: form.memberProfile || undefined,
           localContext: form.localContext || undefined,
+          couponCode: appliedPromo ? (form.couponCode || '').trim() : undefined,
           faithAffirmed: true,
           termsAccepted: true,
           plan: form.plan || undefined,
@@ -182,15 +209,53 @@ function ApplyForm() {
           if (!sel) return null;
           const yearly = form.billingPeriod === 'yearly';
           const price = yearly ? sel.yearly : sel.monthly;
+          const discounted = !!appliedPromo && appliedPromo.targetPlans.includes(sel.id);
+          const setupAfter = discounted ? Math.round(sel.setup * (1 - appliedPromo!.discountPercent / 100)) : sel.setup;
           return (
             <div className="mt-3 rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-900">
               <span className="font-semibold">{sel.label}</span> · {yearly ? '연 결제' : '월 결제'} →{' '}
               <span className="font-bold">${price}/월</span>
               {yearly && <span className="text-blue-700"> (연 1회 청구)</span>}
-              <span className="block text-xs text-blue-700 mt-0.5">+ 셋업비 ${sel.setup} (1회)</span>
+              <span className="block text-xs text-blue-700 mt-0.5">
+                + 셋업비{' '}
+                {discounted ? (
+                  <>
+                    <s className="text-blue-400">${sel.setup}</s>{' '}
+                    <b className="text-green-700">${setupAfter}</b>{' '}
+                    <span className="text-green-700">({appliedPromo!.discountPercent}%↓)</span>
+                  </>
+                ) : (
+                  `$${sel.setup}`
+                )}{' '}
+                (1회)
+              </span>
             </div>
           );
         })()}
+
+        {/* 쿠폰 코드 */}
+        <div className="mt-3">
+          <div className="flex gap-2">
+            <input
+              value={form.couponCode || ''}
+              onChange={(e) => { set('couponCode')(e); setAppliedPromo(null); setCouponError(''); }}
+              className={`${inputCls} flex-1`}
+              placeholder="쿠폰 코드 (있으면 입력)"
+            />
+            <button
+              type="button"
+              onClick={applyCoupon}
+              disabled={couponChecking || !(form.couponCode || '').trim()}
+              className="rounded-lg bg-gray-800 px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-900 disabled:opacity-50"
+            >
+              {couponChecking ? '확인 중...' : '적용'}
+            </button>
+          </div>
+          {appliedPromo && (
+            <p className="mt-1 text-xs text-green-600">✓ {appliedPromo.label || '쿠폰 적용됨'} — 라이트·기본 셋업비 {appliedPromo.discountPercent}% 할인</p>
+          )}
+          {couponError && <p className="mt-1 text-xs text-red-500">{couponError}</p>}
+        </div>
       </div>
 
       <div>

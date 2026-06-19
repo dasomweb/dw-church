@@ -31,6 +31,7 @@ export const createApplicationSchema = z.object({
   plantingType: z.enum(APPLICATION_PLANTING_TYPES).optional().nullable(), // 개척/사역 유형
   memberProfile: z.string().max(1000).optional().nullable(), // 교회 구성원 (연령대·주재원/한국 신규 유입 등)
   localContext: z.string().max(1000).optional().nullable(), // 지역 환경 (학군·대학·한인 기업 등)
+  couponCode: z.string().max(40).optional().nullable(), // 셋업비 할인 쿠폰 코드
 });
 
 // Super-admin updates: workflow status, internal note, the payment link to send.

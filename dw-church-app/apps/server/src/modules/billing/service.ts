@@ -100,7 +100,16 @@ export async function createApplicationCheckout(
   const perMonth = Number(yearly ? p.yearly : p.monthly); // $/month
   // Annual plan bills 12× the per-month-equivalent once a year.
   const recurringAmountCents = Math.round((yearly ? perMonth * 12 : perMonth) * 100);
-  const setupCents = Math.round(Number(p.setup_fee) * 100);
+  // Apply a coupon to the one-time setup fee when the application carries a code
+  // that is still valid (active + in window + targets this plan).
+  let setupFee = Number(p.setup_fee);
+  const couponCode = (appRow.coupon_code as string) || '';
+  if (couponCode) {
+    const { validateCode, applyPromoToSetupFee } = await import('../promo/service.js');
+    const promo = await validateCode(couponCode);
+    if (promo) setupFee = applyPromoToSetupFee(setupFee, plan, promo);
+  }
+  const setupCents = Math.round(setupFee * 100);
 
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
     {

@@ -657,6 +657,7 @@ async function main(): Promise<void> {
     await prisma.$executeRawUnsafe(`ALTER TABLE "service_applications" ADD COLUMN IF NOT EXISTS "planting_type" VARCHAR(50)`);
     await prisma.$executeRawUnsafe(`ALTER TABLE "service_applications" ADD COLUMN IF NOT EXISTS "member_profile" TEXT`);
     await prisma.$executeRawUnsafe(`ALTER TABLE "service_applications" ADD COLUMN IF NOT EXISTS "local_context" TEXT`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE "service_applications" ADD COLUMN IF NOT EXISTS "coupon_code" VARCHAR(40)`);
   } catch (err) {
     app.log.warn(`service_applications table migration skipped: ${err}`);
   }

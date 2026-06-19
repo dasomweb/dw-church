@@ -21,6 +21,7 @@ const COLUMN_MAP: Record<string, string> = {
   plantingType: 'planting_type',
   memberProfile: 'member_profile',
   localContext: 'local_context',
+  couponCode: 'coupon_code',
   status: 'status',
   adminNote: 'admin_note',
   paymentLink: 'payment_link',
