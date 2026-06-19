@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { requireAdmin, requireSuperAdmin } from '../../middleware/auth.js';
 import { AppError } from '../../middleware/error-handler.js';
-import { saveIntakeSchema } from './schema.js';
+import { saveIntakeSchema, buildStageSchema } from './schema.js';
 import * as svc from './service.js';
 
 /**
@@ -20,7 +20,7 @@ export async function intakeRoutes(app: FastifyInstance) {
     const slug = request.user?.tenantSlug;
     if (!slug) throw new AppError('TENANT_REQUIRED', 400, '교회를 찾을 수 없습니다');
     const row = await svc.getIntake(slug);
-    return reply.send({ data: row ?? { tenant_slug: slug, plan: request.tenant?.plan ?? '', data: {}, status: 'draft' } });
+    return reply.send({ data: row ?? { tenant_slug: slug, plan: request.tenant?.plan ?? '', data: {}, status: 'draft', build_stage: 'input' } });
   });
 
   app.put('/intake', { preHandler: [requireAdmin] }, async (request, reply) => {
@@ -55,6 +55,14 @@ export async function intakeRoutes(app: FastifyInstance) {
     const { slug } = request.params as { slug: string };
     const row = await svc.setBuilt(slug);
     if (!row) return reply.status(404).send({ error: { code: 'NOT_FOUND', message: '입력 내용을 찾을 수 없습니다' } });
+    return reply.send({ data: row });
+  });
+
+  // Super admin sets the build pipeline stage shown on the church dashboard.
+  app.post('/admin/intake/:slug/build-stage', { preHandler: [requireSuperAdmin] }, async (request, reply) => {
+    const { slug } = request.params as { slug: string };
+    const { stage } = buildStageSchema.parse(request.body);
+    const row = await svc.updateBuildStage(slug, stage);
     return reply.send({ data: row });
   });
 

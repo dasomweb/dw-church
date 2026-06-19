@@ -953,8 +953,14 @@ export class DWChurchClient {
 
   // ─── Site Intake (결제 후 콘텐츠 입력) ──────────────────
   /** Load this church's intake draft (resume mid-progress). */
-  async getIntake(): Promise<{ tenantSlug?: string; plan?: string; data: Record<string, unknown>; status: string }> {
+  async getIntake(): Promise<{ tenantSlug?: string; plan?: string; data: Record<string, unknown>; status: string; buildStage?: string }> {
     const res = await this.api.get(`${this.namespace}/intake`);
+    return unwrapData(res);
+  }
+
+  /** Super admin: set the build pipeline stage shown on the church dashboard. */
+  async setBuildStage(slug: string, stage: string): Promise<{ buildStage?: string }> {
+    const res = await this.api.post(`${this.namespace}/admin/intake/${slug}/build-stage`, { stage });
     return unwrapData(res);
   }
 

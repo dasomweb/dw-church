@@ -830,6 +830,10 @@ async function main(): Promise<void> {
     await prisma.$executeRawUnsafe(
       `CREATE INDEX IF NOT EXISTS "site_intake_status_idx" ON "site_intake" ("status", "updated_at" DESC)`,
     );
+    // Build pipeline stage shown to the church: input → developing → review → live.
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE "site_intake" ADD COLUMN IF NOT EXISTS "build_stage" VARCHAR(20) NOT NULL DEFAULT 'input'`,
+    );
   } catch (err) {
     app.log.warn(`site_intake table migration skipped: ${err}`);
   }

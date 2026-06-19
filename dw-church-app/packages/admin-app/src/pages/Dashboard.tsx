@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   useBulletins,
@@ -5,7 +6,10 @@ import {
   useAlbums,
   useEvents,
   useStaff,
+  useDWChurchClient,
 } from '@dw-church/api-client';
+import { useToast } from '../components';
+import { useAuthStore } from '../stores/auth';
 
 function StatCard({
   label,
@@ -85,6 +89,95 @@ function formatDate(dateStr: string): string {
   }
 }
 
+const PIPELINE_STAGES = [
+  { id: 'input', label: '콘텐츠 입력' },
+  { id: 'developing', label: '디자인·개발' },
+  { id: 'review', label: '검수' },
+  { id: 'live', label: '오픈' },
+] as const;
+
+// 사이트 제작 진행바. 교회는 현재 단계를 확인하고, 슈퍼어드민(운영자)은 단계를
+// 클릭해 갱신한다. 1단계(콘텐츠 입력)는 교회의 초기셋업 status(작성 중/제출)로
+// 세부 표시, 2~4단계는 운영자가 수동 전환.
+function BuildPipeline({ slug }: { slug: string }) {
+  const apiClient = useDWChurchClient();
+  const isSuperAdmin = !!useAuthStore((s) => s.session)?.user?.isSuperAdmin;
+  const { showToast } = useToast();
+  const [stage, setStage] = useState<string>('input');
+  const [status, setStatus] = useState<string>('draft');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await apiClient!.getIntake();
+        if (!cancelled) { setStage(res.buildStage || 'input'); setStatus(res.status || 'draft'); }
+      } catch { /* ignore — no intake yet */ }
+      finally { if (!cancelled) setLoading(false); }
+    })();
+    return () => { cancelled = true; };
+  }, [apiClient]);
+
+  const currentIdx = Math.max(0, PIPELINE_STAGES.findIndex((s) => s.id === stage));
+  const inputSub = stage === 'input' ? (status === 'submitted' ? ' (제출 완료)' : ' (작성 중)') : '';
+
+  const changeStage = async (id: string) => {
+    if (!isSuperAdmin || saving) return;
+    setSaving(true);
+    try {
+      await apiClient!.setBuildStage(slug, id);
+      setStage(id);
+      showToast('success', '진행 단계를 변경했습니다.');
+    } catch {
+      showToast('error', '단계 변경에 실패했습니다.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return null;
+
+  return (
+    <section>
+      <h2 className="text-lg font-semibold text-gray-900 mb-4">사이트 제작 진행</h2>
+      <div className="bg-white rounded-lg border border-gray-200 p-5">
+        <div className="flex items-center">
+          {PIPELINE_STAGES.map((s, i) => {
+            const done = i <= currentIdx;
+            const isCurrent = i === currentIdx;
+            return (
+              <div key={s.id} className="flex flex-1 items-center last:flex-none">
+                <button
+                  type="button"
+                  disabled={!isSuperAdmin || saving}
+                  onClick={() => changeStage(s.id)}
+                  className="flex flex-col items-center gap-1"
+                  title={isSuperAdmin ? '클릭하여 이 단계로 변경' : undefined}
+                >
+                  <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${done ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'}`}>
+                    {i + 1}
+                  </span>
+                  <span className={`text-xs whitespace-nowrap ${isCurrent ? 'font-semibold text-blue-700' : 'text-gray-500'}`}>
+                    {s.label}{isCurrent ? inputSub : ''}
+                  </span>
+                </button>
+                {i < PIPELINE_STAGES.length - 1 && (
+                  <div className={`flex-1 h-0.5 mx-2 ${i < currentIdx ? 'bg-blue-600' : 'bg-gray-200'}`} />
+                )}
+              </div>
+            );
+          })}
+        </div>
+        {isSuperAdmin && (
+          <p className="mt-3 text-xs text-gray-400">운영자: 단계를 클릭하면 교회 대시보드의 진행 상황이 갱신됩니다.</p>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export default function Dashboard() {
   const bulletins = useBulletins({ perPage: 3 });
   const sermons = useSermons({ perPage: 3 });
@@ -96,6 +189,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
+      <BuildPipeline slug={slug} />
       {/* Stats cards */}
       <section>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">현황</h2>

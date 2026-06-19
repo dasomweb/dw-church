@@ -49,6 +49,25 @@ export async function setBuilt(tenantSlug: string) {
   return rows[0] ?? null;
 }
 
+// 교회(테넌트)에 보여줄 개발 진행 단계. 1단계(input)는 교회의 초기셋업 입력으로
+// 자동, 2~4단계(developing/review/live)는 슈퍼어드민이 수동 전환.
+export const BUILD_STAGES = ['input', 'developing', 'review', 'live'] as const;
+export type BuildStage = (typeof BUILD_STAGES)[number];
+
+/** Super-admin sets the build pipeline stage (creates the row if absent). */
+export async function updateBuildStage(tenantSlug: string, stage: BuildStage) {
+  const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
+    `INSERT INTO ${TABLE} (tenant_slug, plan, data, status, build_stage)
+     VALUES ($1, '', '{}'::jsonb, 'draft', $2)
+     ON CONFLICT (tenant_slug) DO UPDATE
+       SET build_stage = EXCLUDED.build_stage, updated_at = NOW()
+     RETURNING *`,
+    tenantSlug,
+    stage,
+  );
+  return rows[0];
+}
+
 export async function listSubmitted() {
   return prisma.$queryRawUnsafe<Record<string, unknown>[]>(
     `SELECT tenant_slug, plan, status, updated_at FROM ${TABLE} ORDER BY updated_at DESC`,
