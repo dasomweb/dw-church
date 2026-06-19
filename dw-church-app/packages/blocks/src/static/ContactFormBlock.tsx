@@ -39,6 +39,15 @@ import { HeadingElement, TextBodyElement } from '../elements';
 import { SectionShell } from '../utilities/SectionShell';
 import { mergeElementStyle } from '../utilities/element-styles';
 
+// Storefront and API are on different origins in prod, so a relative endpoint
+// (the default /api/v1/forms/contact) would POST to the web origin and 404.
+// Resolve relative endpoints against the API base (inlined by Next at build).
+const API_BASE =
+  (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) || 'https://api.truelight.app';
+function resolveEndpoint(endpoint: string): string {
+  return /^https?:\/\//.test(endpoint) ? endpoint : `${API_BASE}${endpoint}`;
+}
+
 interface ContactFormBlockProps {
   props: Record<string, unknown>;
   slug?: string;
@@ -196,7 +205,7 @@ function FormBody({
     try {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (tenantSlug) headers['X-Tenant-Slug'] = tenantSlug;
-      const res = await fetch(endpoint, {
+      const res = await fetch(resolveEndpoint(endpoint), {
         method: 'POST',
         headers,
         body: JSON.stringify(payload),

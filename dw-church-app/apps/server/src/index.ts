@@ -112,6 +112,7 @@ async function main(): Promise<void> {
   const { intakeRoutes } = await import('./modules/intake/routes.js');
   const { emailTemplateRoutes } = await import('./modules/email-templates/routes.js');
   const { promoRoutes } = await import('./modules/promo/routes.js');
+  const { formRoutes } = await import('./modules/forms/routes.js');
 
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(tenantRoutes, { prefix: '/api/v1/admin' });
@@ -187,6 +188,7 @@ async function main(): Promise<void> {
   await app.register(intakeRoutes, { prefix: '/api/v1' }); // /intake + /admin/intake
   await app.register(emailTemplateRoutes, { prefix: '/api/v1' }); // /admin/email-templates + /admin/email-broadcast
   await app.register(promoRoutes, { prefix: '/api/v1' }); // /promo/validate + /admin/promo
+  await app.register(formRoutes, { prefix: '/api/v1' }); // /forms/:type (public) + /admin/forms/submissions
 
   // --- Internal: resolve custom domain to tenant slug (used by Next.js middleware) ---
   app.get('/api/v1/admin/tenants/resolve-domain', async (request, reply) => {
@@ -416,6 +418,30 @@ async function main(): Promise<void> {
         `);
         await prisma.$executeRawUnsafe(
           `CREATE INDEX IF NOT EXISTS "newcomers_status_idx" ON "${schema}".newcomer_registrations ("status", "created_at" DESC)`,
+        );
+        createHits++;
+      } catch { /* skip on error */ }
+
+      // 0f. form_submissions — generic form content module. ONE table backs
+      //     every storefront form (contact / cell_report / newcomer / custom);
+      //     form_type discriminates. payload holds the raw key/value answers.
+      //     Foundation for the future 교적관리 (membership) system.
+      try {
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".form_submissions (
+            "id"                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "form_type"         VARCHAR(60) NOT NULL,
+            "submitter_name"    VARCHAR(300),
+            "submitter_contact" VARCHAR(300),
+            "payload"           JSONB NOT NULL DEFAULT '{}'::jsonb,
+            "status"            VARCHAR(20) DEFAULT 'new' CHECK (status IN ('new','read','done','archived')),
+            "memo"              TEXT,
+            "created_at"        TIMESTAMPTZ DEFAULT NOW(),
+            "updated_at"        TIMESTAMPTZ DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(
+          `CREATE INDEX IF NOT EXISTS "form_submissions_type_idx" ON "${schema}".form_submissions ("form_type", "status", "created_at" DESC)`,
         );
         createHits++;
       } catch { /* skip on error */ }

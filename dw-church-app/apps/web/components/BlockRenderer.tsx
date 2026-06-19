@@ -24,6 +24,7 @@ import { BoardBlock } from './blocks/BoardBlock';
 import { BannerSliderBlock } from './blocks/BannerSliderBlock';
 import { CellGridBlock } from './blocks/CellGridBlock';
 import { NewcomerFormBlock } from './blocks/NewcomerFormBlock';
+import { CellReportBlock } from './blocks/CellReportBlock';
 // ── Church-specific static blocks not in the shared set ───────────────
 // pastor_message / newcomer_info / worship_schedule now live in
 // @dw-church/blocks (shared set) so the storefront + builder render them
@@ -50,6 +51,7 @@ const CHURCH_BLOCKS: Record<string, AnyBlock> = {
   hero_image_slider: BannerSliderBlock as AnyBlock,
   cell_grid: CellGridBlock as AnyBlock, // 목장(셀) Data Block
   newcomer_form: NewcomerFormBlock as AnyBlock, // 새가족 등록 폼 (Static Block)
+  cell_report: CellReportBlock as AnyBlock, // 목장사역보고서 폼 (Data Block, form_type=cell_report)
   // contact_info is async (fetches church settings) so it stays a
   // storefront-only data block; pastor_message / newcomer_info /
   // worship_schedule come from the shared @dw-church/blocks set.

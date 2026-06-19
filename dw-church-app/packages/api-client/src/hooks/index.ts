@@ -21,6 +21,8 @@ import type {
   Cell,
   Newcomer,
   NewcomerStatus,
+  FormSubmission,
+  FormSubmissionStatus,
   ChurchSettings,
   ListParams,
   LoginInput,
@@ -117,6 +119,11 @@ export const queryKeys = {
     all: ['newcomers'] as const,
     list: (status?: string) => ['newcomers', 'list', status] as const,
     detail: (id: string) => ['newcomers', 'detail', id] as const,
+  },
+  formSubmissions: {
+    all: ['formSubmissions'] as const,
+    list: (formType?: string, status?: string) => ['formSubmissions', 'list', formType, status] as const,
+    detail: (id: string) => ['formSubmissions', 'detail', id] as const,
   },
   boards: {
     all: ['boards'] as const,
@@ -868,6 +875,36 @@ export function useDeleteNewcomer() {
   return useMutation({
     mutationFn: (id: string) => client!.deleteNewcomer(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.newcomers.all }),
+  });
+}
+
+// ─── Form submissions (문의 / 목장사역보고서 / 커스텀 폼 인박스) Hooks ──
+export function useFormSubmissions(params?: { formType?: string; status?: FormSubmissionStatus }) {
+  const client = useDWChurchClient();
+  return useQuery<FormSubmission[]>({
+    queryKey: queryKeys.formSubmissions.list(params?.formType, params?.status),
+    queryFn: () => client!.getFormSubmissions(params),
+    enabled: !!client,
+    staleTime: STALE_TIME,
+  });
+}
+
+export function useUpdateFormSubmission() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { status?: FormSubmissionStatus; memo?: string } }) =>
+      client!.updateFormSubmission(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.formSubmissions.all }),
+  });
+}
+
+export function useDeleteFormSubmission() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => client!.deleteFormSubmission(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.formSubmissions.all }),
   });
 }
 

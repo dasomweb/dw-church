@@ -32,6 +32,8 @@ export type {
   Newcomer,
   NewcomerStatus,
   NewcomerSubmission,
+  FormSubmission,
+  FormSubmissionStatus,
   ChurchSettings,
   PostStatus,
   PostType,
@@ -155,6 +157,10 @@ export {
   useNewcomers,
   useUpdateNewcomer,
   useDeleteNewcomer,
+  // Form submissions (폼 제출 인박스)
+  useFormSubmissions,
+  useUpdateFormSubmission,
+  useDeleteFormSubmission,
   // Boards
   useBoards,
   useBoard,

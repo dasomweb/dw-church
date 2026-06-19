@@ -339,6 +339,19 @@ const CONTACT_FORM: BlockElementRegistry = {
   ],
 };
 
+// 목장사역보고서 폼 (Data Block). Cell leaders submit weekly reports → lands in
+// the 폼 제출 inbox as form_type 'cell_report'. Operator tunes the heading copy;
+// the form fields themselves are fixed in the block. Background/overlay/spacing
+// come from the Advanced tab (props.blockStyle).
+const CELL_REPORT: BlockElementRegistry = {
+  sections: [
+    { title: 'Content', elements: [
+      { label: '제목', path: 'title', kind: 'text' },
+      { label: '안내 문구', path: 'subtitle', kind: 'text' },
+    ]},
+  ],
+};
+
 const COMPARISON_TABLE: BlockElementRegistry = {
   sections: [
     { title: 'Header', elements: [
@@ -1721,6 +1734,7 @@ export const ELEMENT_REGISTRY: Record<string, BlockElementRegistry> = {
   spacer:            SPACER,
   timeline:          TIMELINE,
   contact_form:      CONTACT_FORM,
+  cell_report:       CELL_REPORT,
   products_showcase: PRODUCTS_SHOWCASE,
   recent_products:   PRODUCTS_SHOWCASE,
   comparison_table: COMPARISON_TABLE,

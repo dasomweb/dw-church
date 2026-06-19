@@ -247,6 +247,24 @@ export interface Newcomer {
 // The public intake form submits only the visitor-facing fields.
 export type NewcomerSubmission = Omit<Newcomer, 'id' | 'status' | 'memo' | 'createdAt' | 'updatedAt'>;
 
+// ─── Form submissions (문의 / 목장사역보고서 / 커스텀 폼) ─────────────
+// Generic content module: one record per storefront-form submission. `payload`
+// holds the raw field answers (the form's fields are defined by the block).
+// Foundation for the future 교적관리 (membership) system.
+export type FormSubmissionStatus = 'new' | 'read' | 'done' | 'archived';
+
+export interface FormSubmission {
+  id: string;
+  formType: string;
+  submitterName?: string | null;
+  submitterContact?: string | null;
+  payload: Record<string, unknown>;
+  status?: FormSubmissionStatus;
+  memo?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 // ─── Church Settings ────────────────────────────────────────
 export interface ChurchSettings {
   churchName: string;

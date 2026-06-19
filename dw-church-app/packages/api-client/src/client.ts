@@ -18,6 +18,8 @@ import type {
   Newcomer,
   NewcomerStatus,
   NewcomerSubmission,
+  FormSubmission,
+  FormSubmissionStatus,
   HistoryListParams,
   ListParams,
   LoginInput,
@@ -654,6 +656,32 @@ export class DWChurchClient {
 
   async deleteNewcomer(id: string): Promise<void> {
     return this.api.delete(`${this.namespace}/newcomers/${id}`);
+  }
+
+  // ─── Form submissions (문의 / 목장사역보고서 / 커스텀 폼 인박스) ──────
+  /** Public form submission (no auth — relies on X-Tenant-Slug). */
+  async submitForm(formType: string, payload: Record<string, unknown>): Promise<FormSubmission> {
+    const res = await this.api.post(`${this.namespace}/forms/${formType}`, payload);
+    return unwrapData(res);
+  }
+
+  async getFormSubmissions(params?: { formType?: string; status?: FormSubmissionStatus }): Promise<FormSubmission[]> {
+    const res = await this.api.get(`${this.namespace}/admin/forms/submissions`, params);
+    return unwrapData(res);
+  }
+
+  async getFormSubmission(id: string): Promise<FormSubmission> {
+    const res = await this.api.get(`${this.namespace}/admin/forms/submissions/${id}`);
+    return unwrapData(res);
+  }
+
+  async updateFormSubmission(id: string, data: { status?: FormSubmissionStatus; memo?: string }): Promise<FormSubmission> {
+    const res = await this.api.put(`${this.namespace}/admin/forms/submissions/${id}`, data);
+    return unwrapData(res);
+  }
+
+  async deleteFormSubmission(id: string): Promise<void> {
+    return this.api.delete(`${this.namespace}/admin/forms/submissions/${id}`);
   }
 
   // ─── Boards (게시판) ───���──────────────────────────────────

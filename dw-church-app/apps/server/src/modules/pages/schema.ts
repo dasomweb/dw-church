@@ -61,6 +61,8 @@ export const blockTypes = [
   // 목장(셀) Data Block + 새가족 등록 폼 Static Block
   'cell_grid',
   'newcomer_form',
+  // 목장사역보고서 폼 Data Block (form_type=cell_report)
+  'cell_report',
 ] as const;
 
 export type BlockType = (typeof blockTypes)[number];
