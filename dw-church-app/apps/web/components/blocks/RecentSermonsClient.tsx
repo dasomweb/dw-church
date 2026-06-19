@@ -20,6 +20,15 @@ const GRID_COLS: Record<number, string> = {
 
 const accentSoft = 'color-mix(in srgb, var(--dw-primary, #2563eb) 12%, transparent)';
 
+// Sermon dates arrive as UTC-midnight ISO strings (e.g. "2023-07-09T00:00:00.000Z").
+// Show the date only — no time — and parse the YYYY-MM-DD prefix directly so a
+// negative-offset timezone never shifts it to the previous day.
+function formatSermonDate(raw: string): string {
+  const m = String(raw).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return String(raw);
+  return `${m[1]}년 ${Number(m[2])}월 ${Number(m[3])}일`;
+}
+
 export function RecentSermonsClient({ sermons, slug, columns = 3 }: RecentSermonsClientProps) {
   const router = useRouter();
   const gridClass = GRID_COLS[columns] || GRID_COLS[3];
@@ -57,7 +66,7 @@ export function RecentSermonsClient({ sermons, slug, columns = 3 }: RecentSermon
               <div className="mt-2.5 flex items-center gap-2 text-xs text-gray-400">
                 {sermon.preacher && <span className="truncate">{sermon.preacher}</span>}
                 {sermon.preacher && sermon.date && <span className="w-1 h-1 rounded-full bg-gray-300 shrink-0" />}
-                {sermon.date && <span className="shrink-0">{sermon.date}</span>}
+                {sermon.date && <span className="shrink-0">{formatSermonDate(sermon.date)}</span>}
               </div>
             </div>
           </button>
