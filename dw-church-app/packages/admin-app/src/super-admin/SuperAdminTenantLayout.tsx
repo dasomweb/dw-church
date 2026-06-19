@@ -45,25 +45,31 @@ export function useSuperAdminTenant(): TenantContextValue {
   return ctx;
 }
 
-// Sidebar matches the screenshot the user provided of B2BSmart's
-// super-admin-per-tenant console, in the same order.
-interface NavEntry { to: string; label: string; icon: string }
+// Clean line icons (heroicons-style) — no emoji. Single `d` per icon; a few
+// use multiple subpaths within the one string.
+const Ico = ({ d }: { d: string }) => (
+  <svg className="w-[18px] h-[18px] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+    <path d={d} />
+  </svg>
+);
+
+interface NavEntry { to: string; label: string; icon: JSX.Element }
 const NAV: NavEntry[] = [
-  { to: '',                  label: '개요',              icon: '📊' },
-  { to: 'pages',             label: '페이지',            icon: '📄' },
-  { to: 'content',           label: '콘텐츠',            icon: '🧩' },
-  { to: 'templates',         label: '템플릿',            icon: '✨' },
-  { to: 'menus',             label: '메뉴',              icon: '🧭' },
-  { to: 'theme',             label: '테마',              icon: '🎨' },
-  { to: 'ai-context',        label: 'AI 컨텍스트',       icon: '🧠' },
-  { to: 'reference-photos',  label: '참조 사진',         icon: '📷' },
-  { to: 'media',             label: '미디어',            icon: '🖼️' },
-  { to: 'domains',           label: '도메인',            icon: '🌐' },
-  { to: 'settings',          label: '기본정보',          icon: '⚙️' },
-  { to: 'users',             label: '사용자',            icon: '👥' },
-  { to: 'billing',           label: '결제',              icon: '💳' },
-  { to: 'feature-permissions', label: '기능 권한',       icon: '🧰' },
-  { to: 'danger',            label: '위험구역',          icon: '⚠️' },
+  { to: '',                  label: '개요',        icon: <Ico d="M4 5h6v6H4zM14 5h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" /> },
+  { to: 'pages',             label: '페이지',      icon: <Ico d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /> },
+  { to: 'content',           label: '콘텐츠',      icon: <Ico d="M4 6a2 2 0 012-2h3v5H4V6zm0 7h5v5H6a2 2 0 01-2-2v-3zm9-9h3a2 2 0 012 2v3h-5V4zm0 7h5v3a2 2 0 01-2 2h-3v-5z" /> },
+  { to: 'templates',         label: '템플릿',      icon: <Ico d="M4 5a1 1 0 011-1h14a1 1 0 011 1v3H4V5zm0 5h7v10H5a1 1 0 01-1-1V10zm9 0h7v9a1 1 0 01-1 1h-6V10z" /> },
+  { to: 'menus',             label: '메뉴',        icon: <Ico d="M4 6h16M4 12h16M4 18h16" /> },
+  { to: 'theme',             label: '테마',        icon: <Ico d="M9.53 16.12a3 3 0 00-5.78 1.13 2.25 2.25 0 01-2.4 2.24 4.5 4.5 0 008.4-2.24c0-.4-.08-.78-.22-1.13zm0 0a16 16 0 003.39-1.62m-5.04-.02a16 16 0 011.62-3.4m3.42 3.42a16 16 0 004.76-4.65l3.88-5.81a1.15 1.15 0 00-1.6-1.6l-5.81 3.88a16 16 0 00-4.65 4.76m3.42 3.42a6.78 6.78 0 00-3.42-3.42" /> },
+  { to: 'ai-context',        label: 'AI 컨텍스트', icon: <Ico d="M8 4v2M16 4v2M8 18v2M16 18v2M4 8H2M4 16H2M22 8h-2M22 16h-2M7 7h10v10H7zM10 10h4v4h-4z" /> },
+  { to: 'reference-photos',  label: '참조 사진',   icon: <Ico d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /> },
+  { to: 'media',             label: '미디어',      icon: <Ico d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /> },
+  { to: 'domains',           label: '도메인',      icon: <Ico d="M21 12a9 9 0 11-18 0 9 9 0 0118 0zM3.6 9h16.8M3.6 15h16.8M12 3a15 15 0 010 18M12 3a15 15 0 000 18" /> },
+  { to: 'settings',          label: '기본정보',    icon: <Ico d="M10.33 4.32c.42-1.76 2.92-1.76 3.34 0a1.72 1.72 0 002.58 1.07c1.54-.94 3.3.83 2.37 2.37a1.72 1.72 0 001.06 2.57c1.76.43 1.76 2.93 0 3.35a1.72 1.72 0 00-1.06 2.58c.93 1.54-.83 3.3-2.37 2.37a1.72 1.72 0 00-2.58 1.06c-.42 1.76-2.92 1.76-3.34 0a1.72 1.72 0 00-2.58-1.06c-1.54.93-3.3-.83-2.37-2.37a1.72 1.72 0 00-1.06-2.58c-1.76-.42-1.76-2.92 0-3.35a1.72 1.72 0 001.06-2.57c-.94-1.54.83-3.31 2.37-2.37 1 .6 2.3.07 2.58-1.07zM15 12a3 3 0 11-6 0 3 3 0 016 0z" /> },
+  { to: 'users',             label: '사용자',      icon: <Ico d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /> },
+  { to: 'billing',           label: '결제',        icon: <Ico d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /> },
+  { to: 'feature-permissions', label: '기능 권한', icon: <Ico d="M6 4v6m0 4v6M6 10a2 2 0 100 4 2 2 0 000-4zM18 4v2m0 4v10M18 6a2 2 0 100 4 2 2 0 000-4zM12 4v8m0 4v4M12 12a2 2 0 100 4 2 2 0 000-4z" /> },
+  { to: 'danger',            label: '위험구역',    icon: <Ico d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /> },
 ];
 
 const PLAN_BADGE: Record<string, string> = {
@@ -170,17 +176,22 @@ export function SuperAdminTenantLayout() {
                   to={dest}
                   end={!item.to}
                   className={({ isActive }) =>
-                    `flex items-center gap-2.5 px-3 py-1.5 rounded-md text-sm transition-colors ${
+                    `group relative flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
                       isActive
-                        ? 'bg-blue-50 text-blue-700 font-medium'
+                        ? 'bg-blue-50 text-blue-700 font-semibold'
                         : item.to === 'danger'
                           ? 'text-red-600 hover:bg-red-50'
-                          : 'text-gray-700 hover:bg-gray-100'
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`
                   }
                 >
-                  <span className="text-base">{item.icon}</span>
-                  {item.label}
+                  {({ isActive }) => (
+                    <>
+                      {isActive && <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-blue-600" />}
+                      {item.icon}
+                      {item.label}
+                    </>
+                  )}
                 </NavLink>
               );
             })}

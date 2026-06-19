@@ -172,13 +172,18 @@ export function AdminLayout() {
                   end
                   onClick={() => setSidebarOpen(false)}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      isActive ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
+                    `group relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`
                   }
                 >
-                  {entry.icon}
-                  {entry.label}
+                  {({ isActive }) => (
+                    <>
+                      {isActive && <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-blue-600" />}
+                      {entry.icon}
+                      {entry.label}
+                    </>
+                  )}
                 </NavLink>
               );
             }
@@ -194,13 +199,18 @@ export function AdminLayout() {
                         to={dest}
                         onClick={() => setSidebarOpen(false)}
                         className={({ isActive }) =>
-                          `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            isActive ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
+                          `group relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                           }`
                         }
                       >
-                        {item.icon}
-                        {item.label}
+                        {({ isActive }) => (
+                          <>
+                            {isActive && <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-blue-600" />}
+                            {item.icon}
+                            {item.label}
+                          </>
+                        )}
                       </NavLink>
                     );
                   })}

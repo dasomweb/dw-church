@@ -107,23 +107,30 @@ const PLAN_COLORS: Record<string, string> = {
 
 type TabId = 'monitoring' | 'overview' | 'tenants' | 'applications' | 'intake' | 'reference' | 'pricing' | 'billing' | 'email' | 'emailTemplates' | 'broadcast' | 'support' | 'domains' | 'users' | 'storage' | 'gallery';
 
-const TABS: { id: TabId; label: string; icon: string }[] = [
-  { id: 'monitoring', label: '모니터링', icon: '📈' },
-  { id: 'overview', label: '개요', icon: '📊' },
-  { id: 'tenants', label: '교회 관리', icon: '⛪' },
-  { id: 'applications', label: '신청서', icon: '📝' },
-  { id: 'intake', label: '초기 입력', icon: '📥' },
-  { id: 'reference', label: '참조 데이터', icon: '📚' },
-  { id: 'pricing', label: '상품/가격', icon: '🏷️' },
-  { id: 'billing', label: '과금', icon: '💳' },
-  { id: 'email', label: '이메일/SMTP', icon: '✉️' },
-  { id: 'emailTemplates', label: '이메일 템플릿', icon: '📧' },
-  { id: 'broadcast', label: '공지 메일', icon: '📣' },
-  { id: 'support', label: '고객지원', icon: '🎧' },
-  { id: 'gallery', label: '이미지 라이브러리', icon: '🖼️' },
-  { id: 'domains', label: '도메인 관리', icon: '🌐' },
-  { id: 'users', label: '사용자 관리', icon: '👥' },
-  { id: 'storage', label: '저장공간', icon: '💾' },
+// Clean line icons (no emoji). Single `d` per icon; some use multiple subpaths.
+const TabIcon = (d: string) => (
+  <svg className="w-[18px] h-[18px] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+    <path d={d} />
+  </svg>
+);
+
+const TABS: { id: TabId; label: string; icon: JSX.Element }[] = [
+  { id: 'monitoring', label: '모니터링', icon: TabIcon('M3 3v18h18M19 9l-5 5-4-4-3 3') },
+  { id: 'overview', label: '개요', icon: TabIcon('M4 5h6v6H4zM14 5h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z') },
+  { id: 'tenants', label: '교회 관리', icon: TabIcon('M3 21h18M5 21V7l7-4 7 4v14M9 21v-4a3 3 0 016 0v4M9 9h.01M15 9h.01') },
+  { id: 'applications', label: '신청서', icon: TabIcon('M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2') },
+  { id: 'intake', label: '초기 입력', icon: TabIcon('M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3') },
+  { id: 'reference', label: '참조 데이터', icon: TabIcon('M12 6.25C10.83 5.48 9.25 5 7.5 5S4.17 5.48 3 6.25v13C4.17 18.48 5.75 18 7.5 18s3.33.48 4.5 1.25m0-13C13.17 5.48 14.75 5 16.5 5s3.33.48 4.5 1.25v13C19.83 18.48 18.25 18 16.5 18s-3.33.48-4.5 1.25m0-13v13') },
+  { id: 'pricing', label: '상품/가격', icon: TabIcon('M7 7h.01M3 5v4.586a2 2 0 00.586 1.414l8 8a2 2 0 002.828 0l4.586-4.586a2 2 0 000-2.828l-8-8A2 2 0 009.586 3H5a2 2 0 00-2 2z') },
+  { id: 'billing', label: '과금', icon: TabIcon('M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z') },
+  { id: 'email', label: '이메일/SMTP', icon: TabIcon('M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z') },
+  { id: 'emailTemplates', label: '이메일 템플릿', icon: TabIcon('M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2') },
+  { id: 'broadcast', label: '공지 메일', icon: TabIcon('M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4 4 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a4 4 0 01-1.564-.317z') },
+  { id: 'support', label: '고객지원', icon: TabIcon('M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-6 0a3 3 0 11-6 0 3 3 0 016 0z') },
+  { id: 'gallery', label: '이미지 라이브러리', icon: TabIcon('M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z') },
+  { id: 'domains', label: '도메인 관리', icon: TabIcon('M21 12a9 9 0 11-18 0 9 9 0 0118 0zM3.6 9h16.8M3.6 15h16.8M12 3a15 15 0 010 18M12 3a15 15 0 000 18') },
+  { id: 'users', label: '사용자 관리', icon: TabIcon('M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z') },
+  { id: 'storage', label: '저장공간', icon: TabIcon('M4 7c0-1.657 3.582-3 8-3s8 1.343 8 3-3.582 3-8 3-8-1.343-8-3zM4 7v5c0 1.657 3.582 3 8 3s8-1.343 8-3V7M4 12v5c0 1.657 3.582 3 8 3s8-1.343 8-3v-5') },
 ];
 
 // Grouped navigation for the modern sidebar — related surfaces sit together so
@@ -136,9 +143,9 @@ const NAV_GROUPS: { label: string; ids: TabId[] }[] = [
   { label: '시스템', ids: ['domains', 'users', 'storage', 'gallery', 'reference'] },
 ];
 
-const TAB_META: Record<TabId, { label: string; icon: string }> = Object.fromEntries(
+const TAB_META: Record<TabId, { label: string; icon: JSX.Element }> = Object.fromEntries(
   TABS.map((t) => [t.id, { label: t.label, icon: t.icon }]),
-) as Record<TabId, { label: string; icon: string }>;
+) as Record<TabId, { label: string; icon: JSX.Element }>;
 
 // ─── Billing constants (Phase 3) ─────────────────────────
 // 4-tier 가격표 (2026-06 확정, 신청서/과금 집계용). PLAN_PRICES(개요 MRR용,
@@ -1210,6 +1217,7 @@ function MonitoringTab({
   const [cultAlertCount, setCultAlertCount] = useState<number | null>(null);
   const [openSupportCount, setOpenSupportCount] = useState<number | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [services, setServices] = useState<{ key: string; label: string; status: string }[] | null>(null);
 
   const baseUrl = (() => {
     const host = typeof window !== 'undefined' ? window.location.hostname : '';
@@ -1253,18 +1261,30 @@ function MonitoringTab({
     }
   }, [apiFetch]);
 
+  const loadServices = useCallback(async () => {
+    try {
+      type Svc = { key: string; label: string; status: string };
+      const res = await apiFetch<{ data?: { services: Svc[] }; services?: Svc[] }>('/services-health');
+      setServices(res.data?.services ?? res.services ?? []);
+    } catch {
+      setServices([]);
+    }
+  }, [apiFetch]);
+
   useEffect(() => {
     void loadHealth();
     void loadOps();
-    // Poll health every 30s so the status dot stays live without hammering the API.
-    const h = setInterval(() => { void loadHealth(); }, 30000);
+    void loadServices();
+    // Poll health + service status every 30s so the dots stay live.
+    const h = setInterval(() => { void loadHealth(); void loadServices(); }, 30000);
     return () => clearInterval(h);
-  }, [loadHealth, loadOps]);
+  }, [loadHealth, loadOps, loadServices]);
 
   const refreshAll = () => {
     onRefresh();
     void loadHealth();
     void loadOps();
+    void loadServices();
   };
 
   const ok = !!health && health.status === 'ok' && !healthErr;
@@ -1319,6 +1339,32 @@ function MonitoringTab({
         </div>
       </div>
 
+      {/* Per-service status — api / db / web / agents pinged server-side */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">서비스 상태</h3>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {(services ?? [{ key: 'api', label: 'API 서버', status: '' }, { key: 'db', label: '데이터베이스', status: '' }, { key: 'web', label: '웹사이트', status: '' }, { key: 'agents', label: 'AI 빌더(에이전트)', status: '' }]).map((s) => {
+            const up = s.status === 'ok';
+            const down = s.status === 'down';
+            const unknown = s.status === 'unknown' || s.status === '';
+            return (
+              <div key={s.key} className={`flex items-center gap-2.5 rounded-lg border p-3 ${up ? 'border-green-200 bg-green-50/50' : down ? 'border-red-200 bg-red-50/50' : 'border-gray-200 bg-gray-50'}`}>
+                <span className={`relative grid h-2.5 w-2.5 place-items-center`}>
+                  <span className={`h-2.5 w-2.5 rounded-full ${up ? 'bg-green-500' : down ? 'bg-red-500' : 'bg-gray-300'}`} />
+                  {up && <span className="absolute h-2.5 w-2.5 rounded-full bg-green-400 animate-ping" />}
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-800 truncate">{s.label}</p>
+                  <p className={`text-[11px] ${up ? 'text-green-600' : down ? 'text-red-600' : 'text-gray-400'}`}>
+                    {unknown ? '확인 중…' : up ? '정상' : '응답 없음'}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Operational queues — surface anything that needs action */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className={`rounded-xl border p-5 ${(newCount ?? 0) > 0 ? 'border-blue-200 bg-blue-50' : 'border-gray-100 bg-white'}`}>
@@ -1327,12 +1373,12 @@ function MonitoringTab({
           <p className="mt-0.5 text-xs text-gray-400">검토 대기 중인 신청</p>
         </div>
         <div className={`rounded-xl border p-5 ${(cultAlertCount ?? 0) > 0 ? 'border-red-300 bg-red-50' : 'border-gray-100 bg-white'}`}>
-          <p className="text-sm font-medium text-gray-500">🚩 이단 의심 신청</p>
+          <p className="text-sm font-medium text-gray-500">이단 의심 신청</p>
           <p className={`mt-1 text-3xl font-bold ${(cultAlertCount ?? 0) > 0 ? 'text-red-600' : 'text-gray-900'}`}>{cultAlertCount ?? '-'}</p>
           <p className="mt-0.5 text-xs text-gray-400">미확인 cult 분류</p>
         </div>
         <div className={`rounded-xl border p-5 ${(openSupportCount ?? 0) > 0 ? 'border-amber-200 bg-amber-50' : 'border-gray-100 bg-white'}`}>
-          <p className="text-sm font-medium text-gray-500">🎧 미처리 지원</p>
+          <p className="text-sm font-medium text-gray-500">미처리 지원</p>
           <p className="mt-1 text-3xl font-bold text-gray-900">{openSupportCount ?? '-'}</p>
           <p className="mt-0.5 text-xs text-gray-400">대기 + 처리중</p>
         </div>
@@ -5935,7 +5981,7 @@ export default function SuperAdminDashboardV2() {
                           }`}
                         >
                           {active && <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-blue-600 hidden lg:block" />}
-                          <span className="text-base leading-none">{meta.icon}</span>
+                          {meta.icon}
                           <span>{meta.label}</span>
                         </button>
                       );

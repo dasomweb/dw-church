@@ -47,6 +47,9 @@ const envSchema = z.object({
   //                          not configured' 응답. AI 빌더 비활성.
   AGENTS_BASE_URL: z.string().default(''),
   INTERNAL_SERVICE_TOKEN: z.string().default(''),
+  // Public web (storefront) base — pinged by /admin/services-health for the
+  // super-admin monitoring page. Default is the production apex.
+  WEB_BASE_URL: z.string().default('https://truelight.app'),
 
   // Monitoring (optional)
   SENTRY_DSN: z.string().default(''),

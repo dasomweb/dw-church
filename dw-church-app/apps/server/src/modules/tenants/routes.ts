@@ -81,6 +81,39 @@ export default async function tenantRoutes(app: FastifyInstance): Promise<void> 
     return reply.send(stats);
   });
 
+  // GET /admin/services-health — per-service status for the 모니터링 page.
+  // Pinged server-side (no browser CORS / URL discovery): api(self) + db(SELECT 1)
+  // + web(/api/health) + agents(/health). 4s timeout each; failures → 'down'.
+  app.get('/services-health', async (_request, reply) => {
+    const ping = async (url: string): Promise<'ok' | 'down'> => {
+      try {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 4000);
+        const res = await fetch(url, { signal: ctrl.signal });
+        clearTimeout(timer);
+        return res.ok ? 'ok' : 'down';
+      } catch {
+        return 'down';
+      }
+    };
+    let db: 'ok' | 'down' = 'ok';
+    try { await prisma.$queryRawUnsafe('SELECT 1'); } catch { db = 'down'; }
+    const [web, agents] = await Promise.all([
+      ping(`${env.WEB_BASE_URL}/api/health`),
+      env.AGENTS_BASE_URL ? ping(`${env.AGENTS_BASE_URL}/health`) : Promise.resolve('unknown' as const),
+    ]);
+    return reply.send({
+      data: {
+        services: [
+          { key: 'api', label: 'API 서버', status: 'ok' as const },
+          { key: 'db', label: '데이터베이스', status: db },
+          { key: 'web', label: '웹사이트', status: web },
+          { key: 'agents', label: 'AI 빌더(에이전트)', status: agents },
+        ],
+      },
+    });
+  });
+
   // GET /admin/tenants/by-slug/:slug — light summary keyed by slug rather
   // than id. Used by SuperAdminTenantLayout to populate its header before
   // any of the sidebar destinations have loaded. Returns the same row
