@@ -205,6 +205,19 @@ export default function SermonManagement() {
     }
   };
 
+  // Delete a preacher from the dedicated preachers table. Fails (FK) if a sermon
+  // still references them — surfaced as a clear message.
+  const handleDeletePreacher = async (id: string, name: string) => {
+    if (!window.confirm(`설교자 "${name}"을(를) 삭제하시겠습니까?`)) return;
+    try {
+      await apiClient!.adapter.delete(`/api/v1/preachers/${id}`);
+      await queryClient.invalidateQueries({ queryKey: ['taxonomies', 'sermon_preacher'] });
+      showToast('success', `설교자 "${name}" 삭제됨`);
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '삭제 실패 — 이 설교자를 사용하는 설교가 있는지 확인하세요.');
+    }
+  };
+
   const handleEdit = (item: Sermon) => {
     setEditingItem(item);
     reset({
@@ -297,24 +310,44 @@ export default function SermonManagement() {
                   </button>
                 </div>
                 {newPreacherOpen && (
-                  <div className="mt-2 flex gap-2 items-center rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2">
-                    <input
-                      type="text"
-                      value={newPreacherName}
-                      onChange={(e) => setNewPreacherName(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void handleSavePreacher(); } }}
-                      placeholder="예: 김요한 목사"
-                      className="flex-1 border border-indigo-300 rounded px-2 py-1 text-sm"
-                      autoFocus
-                    />
-                    <button
-                      type="button"
-                      onClick={() => void handleSavePreacher()}
-                      disabled={!newPreacherName.trim() || savingPreacher}
-                      className="px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
-                    >
-                      {savingPreacher ? '저장 중...' : '저장'}
-                    </button>
+                  <div className="mt-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 space-y-2">
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        value={newPreacherName}
+                        onChange={(e) => setNewPreacherName(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void handleSavePreacher(); } }}
+                        placeholder="예: 김요한 목사"
+                        className="flex-1 border border-indigo-300 rounded px-2 py-1 text-sm"
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={() => void handleSavePreacher()}
+                        disabled={!newPreacherName.trim() || savingPreacher}
+                        className="px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
+                      >
+                        {savingPreacher ? '저장 중...' : '저장'}
+                      </button>
+                    </div>
+                    {preachers && preachers.length > 0 && (
+                      <ul className="space-y-1 border-t border-indigo-200 pt-2">
+                        {preachers.map((p) => (
+                          <li key={p.id} className="flex items-center justify-between text-xs text-gray-700">
+                            <span>{p.name}{(p as { isDefault?: boolean }).isDefault ? ' (기본)' : ''}</span>
+                            {!(p as { isDefault?: boolean }).isDefault && (
+                              <button
+                                type="button"
+                                onClick={() => void handleDeletePreacher(p.id, p.name)}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                삭제
+                              </button>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 )}
               </FormField>
