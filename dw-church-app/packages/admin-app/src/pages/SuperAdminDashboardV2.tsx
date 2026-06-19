@@ -1965,6 +1965,9 @@ interface Application {
   phone: string | null;
   churchAddress: string | null;
   denomination: string | null;
+  plantingType: string | null;
+  memberProfile: string | null;
+  localContext: string | null;
   faithAffirmed: boolean;
   plan: 'light' | 'basic' | 'plus' | 'pro' | null;
   billingPeriod: string | null;
@@ -1981,6 +1984,12 @@ interface Application {
   denominationMatch: string | null;
   denominationVerified: boolean;
 }
+
+// 개척/사역 유형 코드 → 한국어 라벨 (Send Network 모델).
+const PLANTING_LABELS: Record<string, string> = {
+  standard: '전통/표준 개척', covocational: '자비량/이중직(미자립)', multisite: '다중 사이트',
+  multiethnic: '다민족/다언어', replant: '교회 재개척', micro: '마이크로/가정교회', other: '기타',
+};
 
 // 이단 대조 상태 배지 — recognized(정규)/watch(확인필요)/cult(이단)/null(미확인).
 // denominationVerified 가 true 면 슈퍼어드민이 직접 "정통 교단" 확인한 것이므로
@@ -2340,6 +2349,9 @@ function ApplicationDetailModal({
           <Row label="연락처" value={application.phone} />
           <Row label="교회 주소" value={application.churchAddress} />
           <Row label="소속 교단" value={application.denomination} />
+          <Row label="개척/사역 유형" value={application.plantingType ? (PLANTING_LABELS[application.plantingType] || application.plantingType) : null} />
+          <Row label="교회 구성원" value={application.memberProfile} />
+          <Row label="지역 환경(학군·대학·한인기업 등)" value={application.localContext} />
           <Row label="신앙고백 동의" value={application.faithAffirmed ? '✓ 동의함' : '미동의'} />
           {application.denominationMatch && (
             <Row label="대조 결과" value={`일치: ${application.denominationMatch}`} />

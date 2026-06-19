@@ -6,7 +6,7 @@ import { useAuthStore } from '../stores/auth';
 // Nav item paths are relative to the current tenant root (/t/:slug). An empty
 // string means the tenant dashboard (/t/:slug), "sermons" becomes
 // /t/:slug/sermons, etc.
-interface NavItem { to: string; label: string; icon: JSX.Element }
+interface NavItem { to: string; label: string; icon: JSX.Element; superAdminOnly?: boolean }
 interface NavGroup { label: string; items: NavItem[] }
 
 const I = (d: string) => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d={d} /></svg>;
@@ -15,7 +15,9 @@ const navGroups: (NavItem | NavGroup)[] = [
   { to: '', label: '대시보드', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg> },
 
   { label: '콘텐츠', items: [
-    { to: 'intake', label: '초기 셋업', icon: I('M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z') },
+    // 초기 셋업은 슈퍼어드민(운영자)이 사이트 구축 시 사용하는 도구 — 교회에 전달된
+    // 테넌트 어드민에는 노출하지 않는다.
+    { to: 'intake', label: '초기 셋업', icon: I('M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'), superAdminOnly: true },
     { to: 'sermons', label: '설교', icon: I('M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m-4-1h8M12 4a3 3 0 00-3 3v4a3 3 0 006 0V7a3 3 0 00-3-3z') },
     { to: 'bulletins', label: '주보', icon: I('M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z') },
     { to: 'columns', label: '목회칼럼', icon: I('M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z') },
@@ -109,7 +111,6 @@ export function AdminLayout() {
   const pageTitle = pageTitlesByLeaf[leaf ?? ''] || '관리';
   const user = session?.user;
   const isSuperAdmin = !!user?.isSuperAdmin;
-  void isSuperAdmin;
 
   const handleLogout = async () => {
     try {
@@ -183,7 +184,7 @@ export function AdminLayout() {
               <div key={entry.label} className={i > 0 ? 'mt-4' : 'mt-2'}>
                 <p className="px-3 py-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{entry.label}</p>
                 <div className="space-y-0.5">
-                  {entry.items.map((item) => {
+                  {entry.items.filter((item) => !item.superAdminOnly || isSuperAdmin).map((item) => {
                     const dest = pathFor(item.to);
                     return (
                       <NavLink
