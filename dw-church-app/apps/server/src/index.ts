@@ -111,6 +111,7 @@ async function main(): Promise<void> {
   const { emailSettingsRoutes } = await import('./modules/email-settings/routes.js');
   const { intakeRoutes } = await import('./modules/intake/routes.js');
   const { emailTemplateRoutes } = await import('./modules/email-templates/routes.js');
+  const { promoRoutes } = await import('./modules/promo/routes.js');
 
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(tenantRoutes, { prefix: '/api/v1/admin' });
@@ -185,6 +186,7 @@ async function main(): Promise<void> {
   await app.register(emailSettingsRoutes, { prefix: '/api/v1' }); // /admin/email-settings
   await app.register(intakeRoutes, { prefix: '/api/v1' }); // /intake + /admin/intake
   await app.register(emailTemplateRoutes, { prefix: '/api/v1' }); // /admin/email-templates + /admin/email-broadcast
+  await app.register(promoRoutes, { prefix: '/api/v1' }); // /promo/validate + /admin/promo
 
   // --- Internal: resolve custom domain to tenant slug (used by Next.js middleware) ---
   app.get('/api/v1/admin/tenants/resolve-domain', async (request, reply) => {
@@ -760,6 +762,32 @@ async function main(): Promise<void> {
     }
   } catch (err) {
     app.log.warn(`plan_pricing table migration skipped: ${err}`);
+  }
+
+  // --- promo_settings (단일 행 프로모션 — 기간 한정 쿠폰, 슈퍼어드민 관리) ---
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "promo_settings" (
+        "id"               INT          PRIMARY KEY,
+        "active"           BOOLEAN      NOT NULL DEFAULT false,
+        "code"             VARCHAR(40),
+        "label"            VARCHAR(200),
+        "discount_percent" INT          NOT NULL DEFAULT 30,
+        "target_plans"     JSONB        NOT NULL DEFAULT '["light","basic"]',
+        "starts_at"        TIMESTAMPTZ,
+        "ends_at"          TIMESTAMPTZ,
+        "updated_at"       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+        CONSTRAINT "promo_singleton" CHECK (id = 1)
+      )
+    `);
+    // Seed the row disabled — super admin reviews the code/dates then activates.
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO "promo_settings" (id, active, code, label, discount_percent, target_plans, ends_at)
+       VALUES (1, false, 'OPEN30', '오픈 기념 — 디자인 셋업비 30% 할인', 30, '["light","basic"]'::jsonb, '2026-07-31T23:59:59Z')
+       ON CONFLICT (id) DO NOTHING`,
+    );
+  } catch (err) {
+    app.log.warn(`promo_settings table migration skipped: ${err}`);
   }
 
   // --- email_settings (SMTP + from-addresses, 슈퍼어드민 관리, single row) ---
