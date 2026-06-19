@@ -737,7 +737,11 @@ export class DWChurchClient {
   }
 
   async getSermonPreachers(): Promise<TaxonomyTerm[]> {
-    const res = await this.api.get(`${this.namespace}/taxonomies/sermon_preacher`);
+    // Preachers live in the dedicated `preachers` table (sermons.preacher_id FK,
+    // seeded there, and POST /preachers writes there) — NOT categories. Reading
+    // /taxonomies/sermon_preacher hit the wrong table, so newly added preachers
+    // never showed in the dropdown.
+    const res = await this.api.get(`${this.namespace}/preachers`);
     return unwrapData(res);
   }
 
