@@ -136,8 +136,15 @@ export const designTokenFooterSchema = z
     text: z.string().default('#9ca3af'),
     /** Heading / label color (hex). */
     heading: z.string().default('#e5e7eb'),
-    /** Show the church logo in the footer. */
+    /** Show the brand area (logo or text) in the footer. */
     showLogo: z.boolean().default(true),
+    /** Brand area mode: a logo image or a text wordmark. */
+    brandMode: z.enum(['logo', 'text']).default('logo'),
+    /** Footer-specific logo image URL (e.g. a light logo for a dark footer).
+     *  Empty → falls back to the church settings logo. */
+    logoUrl: z.string().default(''),
+    /** Footer brand text (used when brandMode = 'text'). Empty → church name. */
+    brandText: z.string().default(''),
     /** 오시는 길 column label. */
     directionsLabel: z.string().default('오시는 길'),
     /** Social column label. */
@@ -151,6 +158,9 @@ export const designTokenFooterSchema = z
     text: '#9ca3af',
     heading: '#e5e7eb',
     showLogo: true,
+    brandMode: 'logo',
+    logoUrl: '',
+    brandText: '',
     directionsLabel: '오시는 길',
     socialLabel: 'Social Media / 온라인 예배',
     copyright: '',

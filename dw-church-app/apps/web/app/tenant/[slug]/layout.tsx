@@ -331,6 +331,12 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   const fc = tokens.footer ?? DEFAULT_DESIGN_TOKENS.footer;
   const copyright = (fc.copyright ?? '').trim()
     || `© ${new Date().getFullYear()} ${churchName}. All rights Reserved.`;
+  // Footer brand: logo image OR text. Footer-specific logo (e.g. a light logo
+  // for a dark footer) wins; else the settings logo. Text wins when brandMode
+  // is 'text' or no logo is available.
+  const footerLogo = (fc.logoUrl ?? '').trim() || logoUrl || '';
+  const footerBrandText = (fc.brandText ?? '').trim() || churchName;
+  const footerShowText = fc.brandMode === 'text' || !footerLogo;
   // Settings come back snake_case from /settings (no camelize on the web side),
   // with camelCase tolerated as a fallback.
   const footerAddress = settings?.churchAddress ?? settings?.church_address ?? settings?.address ?? '';
@@ -535,11 +541,11 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
               <div className={`grid gap-8 ${fc.variant === 'centered' ? 'justify-items-center text-center' : 'md:grid-cols-3'}`}>
                 {fc.showLogo && (
                   <div>
-                    {logoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={logoUrl} alt={churchName} className="w-auto object-contain" style={{ height: 56 }} />
+                    {footerShowText ? (
+                      <span className="text-lg font-bold font-heading" style={{ color: fc.heading }}>{footerBrandText}</span>
                     ) : (
-                      <span className="text-lg font-bold font-heading" style={{ color: fc.heading }}>{churchName}</span>
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={footerLogo} alt={churchName} className="w-auto object-contain" style={{ height: 56 }} />
                     )}
                   </div>
                 )}

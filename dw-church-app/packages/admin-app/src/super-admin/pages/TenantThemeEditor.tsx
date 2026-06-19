@@ -32,7 +32,7 @@ import {
   type TypographyScaleName,
 } from '@dw-church/design-tokens';
 import { useAuthStore } from '../../stores/auth';
-import { useToast } from '../../components';
+import { useToast, ImageUpload } from '../../components';
 import { useSuperAdminTenant } from '../SuperAdminTenantLayout';
 
 type TabId = 'theme-set' | 'design-sets' | 'palette' | 'typography' | 'header' | 'footer' | 'spacing' | 'custom';
@@ -565,6 +565,9 @@ const FOOTER_DEFAULTS = {
   text: '#9ca3af',
   heading: '#e5e7eb',
   showLogo: true,
+  brandMode: 'logo' as 'logo' | 'text',
+  logoUrl: '',
+  brandText: '',
   directionsLabel: '오시는 길',
   socialLabel: 'Social Media / 온라인 예배',
   copyright: '',
@@ -585,6 +588,30 @@ function FooterTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChang
       ...prev,
       footer: { ...FOOTER_DEFAULTS, ...(prev.footer ?? {}), [k]: v },
     }));
+  };
+
+  // Footer-specific logo upload — super-admin posts to the tenant's files
+  // endpoint with the tenant slug header (a dark footer often needs a light
+  // logo, distinct from the header logo).
+  const session = useAuthStore((s) => s.session);
+  const { tenant } = useSuperAdminTenant();
+  const baseUrl = useMemo(() => {
+    const host = typeof window !== 'undefined' ? window.location.hostname : '';
+    return host.startsWith('admin.')
+      ? `https://api.${host.replace('admin.', '')}`
+      : (import.meta.env.VITE_API_BASE_URL as string) || '';
+  }, []);
+  const uploadFooterLogo = async (file: File): Promise<string> => {
+    const fd = new FormData();
+    fd.append('file', file);
+    const res = await fetch(`${baseUrl}/api/v1/files/upload`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${session?.accessToken ?? ''}`, 'X-Tenant-Slug': tenant?.slug ?? '' },
+      body: fd,
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const body = await res.json() as { data?: { url: string }; url?: string };
+    return body.data?.url ?? body.url ?? '';
   };
 
   const colorFields: { key: 'background' | 'text' | 'heading'; label: string }[] = [
@@ -640,15 +667,60 @@ function FooterTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChang
             ))}
           </div>
 
-          <label className="flex items-center gap-2 rounded-lg border border-gray-200 p-3 bg-white text-xs font-medium text-gray-700">
-            <input
-              type="checkbox"
-              checked={footer.showLogo}
-              onChange={(e) => set('showLogo', e.target.checked)}
-              disabled={saving}
-            />
-            풋터에 로고 표시
-          </label>
+          {/* Brand area: logo image OR text */}
+          <div className="rounded-lg border border-gray-200 p-3 bg-white space-y-3">
+            <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
+              <input
+                type="checkbox"
+                checked={footer.showLogo}
+                onChange={(e) => set('showLogo', e.target.checked)}
+                disabled={saving}
+              />
+              풋터에 브랜드(로고/텍스트) 표시
+            </label>
+            {footer.showLogo && (
+              <>
+                <div className="flex gap-2">
+                  {([['logo', '로고 이미지'], ['text', '텍스트']] as const).map(([val, label]) => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => set('brandMode', val)}
+                      disabled={saving}
+                      className={`flex-1 rounded-md border px-2 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${footer.brandMode === val ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {footer.brandMode === 'logo' ? (
+                  <div>
+                    <ImageUpload
+                      label="풋터 로고 (비우면 설정의 로고 사용)"
+                      value={footer.logoUrl}
+                      onChange={(url) => set('logoUrl', url)}
+                      onUpload={uploadFooterLogo}
+                      resize="content"
+                      aspectRatio="3/1"
+                    />
+                    <p className="text-[10px] text-gray-400 mt-1">어두운 풋터에는 밝은(흰색) 로고를 권장합니다.</p>
+                  </div>
+                ) : (
+                  <div>
+                    <input
+                      type="text"
+                      value={footer.brandText}
+                      onChange={(e) => set('brandText', e.target.value)}
+                      disabled={saving}
+                      placeholder="비우면 교회 이름이 사용됩니다"
+                      className="w-full px-2 py-1.5 text-xs border rounded disabled:opacity-50"
+                    />
+                    <p className="text-[10px] text-gray-400 mt-1">풋터에 표시할 텍스트(교회명/슬로건 등).</p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="rounded-lg border border-gray-200 p-3 bg-white">
@@ -693,7 +765,11 @@ function FooterTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChang
         <h3 className="text-sm font-semibold text-gray-900 mb-2">미리보기</h3>
         <div className="rounded-lg overflow-hidden border border-gray-200" style={{ backgroundColor: footer.background, color: footer.text }}>
           <div className="px-5 py-6 grid grid-cols-3 gap-4">
-            {footer.showLogo && <div className="text-sm font-bold" style={{ color: footer.heading }}>LOGO</div>}
+            {footer.showLogo && (
+              footer.brandMode === 'logo' && footer.logoUrl
+                ? <img src={footer.logoUrl} alt="logo" className="h-7 w-auto object-contain" />
+                : <div className="text-sm font-bold" style={{ color: footer.heading }}>{footer.brandMode === 'text' ? (footer.brandText || '교회명') : 'LOGO'}</div>
+            )}
             <div>
               <div className="text-xs font-semibold mb-1.5" style={{ color: footer.heading }}>{footer.directionsLabel}</div>
               <div className="text-[11px] leading-relaxed">240 Tusculum Road, Antioch, TN</div>
