@@ -1,15 +1,27 @@
 "use client";
 
+/**
+ * Church-reframed strategy panel for the AI Website Planner (Strategy step).
+ * The original panel was a generic B2B marketing model (transaction type,
+ * revenue model, purchase blocker, 4P/7P mix). Those don't fit a church, so the
+ * UI now surfaces only church-meaningful inputs: ministry mode, who we serve,
+ * church identity, the stage we mainly serve, the discipleship journey, and the
+ * primary invitation (CTA).
+ *
+ * The legacy fields stay on the MarketingStrategy type for back-compat with the
+ * strategy JSON shape the wizard/agents exchange, but the church wizard neither
+ * shows nor summarizes them.
+ */
 export interface MarketingStrategy {
   deliveryModel: string;
-  transactionType: string;
-  revenueModel: string;
+  transactionType: string; // legacy (unused in church UI)
+  revenueModel: string; // legacy (unused in church UI)
   segmentAxis: string[];
   positioning: string;
   involvementLevel: string;
-  purchaseBlocker: string;
-  mixFocus: string;
-  keyP: string;
+  purchaseBlocker: string; // legacy (unused in church UI)
+  mixFocus: string; // legacy (unused in church UI)
+  keyP: string; // legacy (unused in church UI)
   funnelCoverage: string[];
   primaryCTA: string;
 }
@@ -31,25 +43,17 @@ export const INITIAL_STRATEGY: MarketingStrategy = {
 export function strategyToPromptContext(s: MarketingStrategy): string {
   const parts: string[] = [];
   if (s.deliveryModel) {
-    const labels: Record<string, string> = { local: "Local (customer visits)", regional: "Regional (we visit)", online: "Online (no travel)" };
-    parts.push(`Delivery: ${labels[s.deliveryModel] || s.deliveryModel}`);
+    const labels: Record<string, string> = { local: "현장 예배 중심", regional: "지역·심방 중심", online: "온라인·미디어 중심" };
+    parts.push(`사역 방식: ${labels[s.deliveryModel] || s.deliveryModel}`);
   }
-  if (s.transactionType) parts.push(`Transaction: ${s.transactionType.toUpperCase()}`);
-  if (s.revenueModel) {
-    const labels: Record<string, string> = { "one-time": "One-time purchase", repeat: "Repeat purchase", subscription: "Subscription", "high-ticket": "High-ticket" };
-    parts.push(`Revenue: ${labels[s.revenueModel] || s.revenueModel}`);
-  }
-  if (s.segmentAxis.length) parts.push(`Segments: ${s.segmentAxis.join(", ")}`);
-  if (s.positioning) parts.push(`Positioning: "${s.positioning}"`);
+  if (s.segmentAxis.length) parts.push(`섬기는 대상: ${s.segmentAxis.join(", ")}`);
+  if (s.positioning) parts.push(`교회 정체성: "${s.positioning}"`);
   if (s.involvementLevel) {
-    const labels: Record<string, string> = { low: "Low (impulse)", medium: "Medium (compare)", high: "High (research)" };
-    parts.push(`Involvement: ${labels[s.involvementLevel] || s.involvementLevel}`);
+    const labels: Record<string, string> = { low: "처음 오신 분", medium: "정기 출석", high: "헌신된 제자" };
+    parts.push(`주로 섬기는 단계: ${labels[s.involvementLevel] || s.involvementLevel}`);
   }
-  if (s.purchaseBlocker) parts.push(`Blocker: ${s.purchaseBlocker}`);
-  if (s.mixFocus) parts.push(`Mix: ${s.mixFocus.toUpperCase()}`);
-  if (s.keyP) parts.push(`Key P: ${s.keyP}`);
-  if (s.funnelCoverage.length) parts.push(`Funnel: ${s.funnelCoverage.join(" > ")}`);
-  if (s.primaryCTA) parts.push(`CTA: ${s.primaryCTA}`);
+  if (s.funnelCoverage.length) parts.push(`신앙 여정: ${s.funnelCoverage.join(" > ")}`);
+  if (s.primaryCTA) parts.push(`주요 초청: ${s.primaryCTA}`);
   return parts.join(" | ");
 }
 
@@ -69,158 +73,87 @@ export default function MarketingCore({ strategy, onChange }: Props) {
     });
   };
 
-  const isB2B = strategy.transactionType === "b2b" || strategy.transactionType === "b2g";
-
   return (
     <div className="space-y-4">
-      {/* 1. Delivery Model */}
-      <Section label="1. Service Delivery">
+      {/* 1. 개척/사역 모델 (Send Network 5 models) */}
+      <Section label="1. 개척/사역 모델">
         <ChipGroup>
           {[
-            { id: "local", label: "Local", desc: "Customer visits (restaurant, salon)" },
-            { id: "regional", label: "Regional", desc: "We visit (contractor, service)" },
-            { id: "online", label: "Online", desc: "No travel (SaaS, e-commerce)" },
+            { id: "standard", label: "전통/표준 개척", desc: "핵심팀으로 예배 공동체 론칭" },
+            { id: "covocational", label: "자비량/이중직(미자립)", desc: "텐트메이커·미션형 소그룹" },
+            { id: "multisite", label: "다중 사이트", desc: "모교회 비전 공유·캠퍼스 분립" },
+            { id: "multiethnic", label: "다민족/다언어", desc: "이민·다언어 공동체(한인 등)" },
+            { id: "replant", label: "교회 재개척", desc: "쇠퇴한 교회 리모델링" },
+            { id: "micro", label: "마이크로/가정교회", desc: "건물 없이 유기적 소그룹" },
           ].map((d) => (
             <Chip key={d.id} selected={strategy.deliveryModel === d.id} onClick={() => upd("deliveryModel", d.id)} label={d.label} desc={d.desc} />
           ))}
         </ChipGroup>
       </Section>
 
-      {/* 2. Transaction Type */}
-      <Section label="2. Transaction Type">
+      {/* 2. 섬기는 대상 */}
+      <Section label="2. 섬기는 대상 (복수 선택)">
         <ChipGroup>
           {[
-            { id: "b2c", label: "B2C", desc: "Visual + emotion driven" },
-            { id: "b2b", label: "B2B", desc: "Trust + ROI + case studies" },
-            { id: "b2g", label: "B2G", desc: "Credentials + compliance" },
-            { id: "mixed", label: "Mixed", desc: "B2C + B2B" },
-          ].map((t) => (
-            <Chip key={t.id} selected={strategy.transactionType === t.id} onClick={() => upd("transactionType", t.id)} label={t.label} desc={t.desc} />
-          ))}
-        </ChipGroup>
-      </Section>
-
-      {/* 3. Revenue Model */}
-      <Section label="3. Revenue Model">
-        <ChipGroup>
-          {[
-            { id: "one-time", label: "One-time", desc: "First conversion focus" },
-            { id: "repeat", label: "Repeat", desc: "Re-purchase / membership" },
-            { id: "subscription", label: "Subscription", desc: "Onboarding / trust" },
-            { id: "high-ticket", label: "High-ticket", desc: "Long funnel / consultation" },
-          ].map((r) => (
-            <Chip key={r.id} selected={strategy.revenueModel === r.id} onClick={() => upd("revenueModel", r.id)} label={r.label} desc={r.desc} />
-          ))}
-        </ChipGroup>
-      </Section>
-
-      {/* 4. Segmentation */}
-      <Section label="4. Segmentation Axes (multi-select)">
-        <ChipGroup>
-          {[
-            { id: "geographic", label: "Geographic" },
-            { id: "demographic", label: "Demographic" },
-            { id: "psychographic", label: "Psychographic" },
-            { id: "behavioral", label: "Behavioral" },
-            ...(isB2B ? [{ id: "firmographic", label: "Firmographic" }] : []),
+            { id: "geographic", label: "지역", desc: "동네·지역사회" },
+            { id: "demographic", label: "세대·연령", desc: "다음세대·청년·장년" },
+            { id: "psychographic", label: "신앙 관심·필요", desc: "구도자·새신자·성도" },
+            { id: "behavioral", label: "삶의 정황", desc: "가정·직장·이민" },
           ].map((s) => (
-            <Chip key={s.id} selected={strategy.segmentAxis.includes(s.id)} onClick={() => toggleArr("segmentAxis", s.id)} label={s.label} />
+            <Chip key={s.id} selected={strategy.segmentAxis.includes(s.id)} onClick={() => toggleArr("segmentAxis", s.id)} label={s.label} desc={s.desc} />
           ))}
         </ChipGroup>
       </Section>
 
-      {/* 5. Positioning */}
-      <Section label="5. Positioning Statement">
+      {/* 3. 교회 정체성 */}
+      <Section label="3. 교회 정체성 한 문장">
         <input
           className="w-full bg-zinc-800/40 border border-zinc-700/30 text-zinc-200 px-3 py-2 rounded-md text-sm outline-none focus:border-blue-500/40 placeholder-zinc-600"
           value={strategy.positioning}
           onChange={(e) => upd("positioning", e.target.value)}
-          placeholder='e.g., "Your trusted wholesale orchid partner"'
+          placeholder='예: "복음으로 다음세대를 세우는 공동체"'
         />
       </Section>
 
-      {/* 6. Involvement Level */}
-      <Section label="6. Customer Involvement">
+      {/* 4. 주로 섬기는 단계 */}
+      <Section label="4. 주로 섬기려는 단계">
         <ChipGroup>
           {[
-            { id: "low", label: "Low", desc: "Impulse — visual impact, simple" },
-            { id: "medium", label: "Medium", desc: "Compare — reviews, info + emotion" },
-            { id: "high", label: "High", desc: "Research — detailed info, consultation" },
+            { id: "low", label: "처음 오신 분", desc: "교회를 처음 찾는 단계" },
+            { id: "medium", label: "정기 출석", desc: "예배에 함께하는 단계" },
+            { id: "high", label: "헌신된 제자", desc: "양육·사역에 참여하는 단계" },
           ].map((i) => (
             <Chip key={i.id} selected={strategy.involvementLevel === i.id} onClick={() => upd("involvementLevel", i.id)} label={i.label} desc={i.desc} />
           ))}
         </ChipGroup>
       </Section>
 
-      {/* 7. Purchase Blocker */}
-      <Section label="7. Purchase Decision Blocker">
+      {/* 5. 신앙 여정 */}
+      <Section label="5. 함께 그릴 신앙 여정 (복수 선택)">
         <ChipGroup>
           {[
-            { id: "awareness", label: "Awareness", desc: "Don't know we exist" },
-            { id: "search", label: "Search", desc: "Can't find info" },
-            { id: "evaluation", label: "Evaluation", desc: "Comparing with competitors" },
-            { id: "decision", label: "Decision", desc: "Not confident to buy" },
-            { id: "post", label: "Post-purchase", desc: "No repeat / referral" },
-          ].map((b) => (
-            <Chip key={b.id} selected={strategy.purchaseBlocker === b.id} onClick={() => upd("purchaseBlocker", b.id)} label={b.label} desc={b.desc} />
-          ))}
-        </ChipGroup>
-      </Section>
-
-      {/* 8. Marketing Mix */}
-      <Section label="8. Marketing Mix">
-        <ChipGroup>
-          <Chip selected={strategy.mixFocus === "4p"} onClick={() => upd("mixFocus", "4p")} label="4P (Product-focused)" />
-          <Chip selected={strategy.mixFocus === "7p"} onClick={() => upd("mixFocus", "7p")} label="7P (Service-focused)" />
-        </ChipGroup>
-        {strategy.mixFocus && (
-          <div className="mt-2">
-            <p className="text-xs text-zinc-600 mb-1">Key P — most critical element:</p>
-            <ChipGroup>
-              {[
-                { id: "product", label: "Product" },
-                { id: "price", label: "Price" },
-                { id: "place", label: "Place" },
-                { id: "promotion", label: "Promotion" },
-                ...(strategy.mixFocus === "7p"
-                  ? [{ id: "people", label: "People" }, { id: "process", label: "Process" }, { id: "evidence", label: "Evidence" }]
-                  : []),
-              ].map((p) => (
-                <Chip key={p.id} selected={strategy.keyP === p.id} onClick={() => upd("keyP", p.id)} label={p.label} />
-              ))}
-            </ChipGroup>
-          </div>
-        )}
-      </Section>
-
-      {/* 9. Funnel Coverage */}
-      <Section label="9. Funnel Coverage (multi-select)">
-        <ChipGroup>
-          {[
-            { id: "awareness", label: "Awareness" },
-            { id: "interest", label: "Interest" },
-            { id: "consideration", label: "Consideration" },
-            { id: "purchase", label: "Purchase" },
-            { id: "loyalty", label: "Loyalty" },
-            { id: "advocacy", label: "Advocacy" },
+            { id: "awareness", label: "접촉" },
+            { id: "interest", label: "관심" },
+            { id: "consideration", label: "방문" },
+            { id: "purchase", label: "정착" },
+            { id: "loyalty", label: "제자훈련" },
+            { id: "advocacy", label: "사역 동참" },
           ].map((f) => (
             <Chip key={f.id} selected={strategy.funnelCoverage.includes(f.id)} onClick={() => toggleArr("funnelCoverage", f.id)} label={f.label} />
           ))}
         </ChipGroup>
       </Section>
 
-      {/* 10. Primary CTA */}
-      <Section label="10. Primary CTA">
+      {/* 6. 주요 초청 (CTA) */}
+      <Section label="6. 주요 초청 (CTA)">
         <ChipGroup>
           {[
-            { id: "buy", label: "구매" },
+            { id: "visit", label: "예배·방문 안내" },
+            { id: "newcomer", label: "새가족 등록" },
+            { id: "prayer", label: "기도 요청" },
+            { id: "serve", label: "사역 참여" },
+            { id: "give", label: "헌금 안내" },
             { id: "contact", label: "문의" },
-            { id: "book", label: "예약" },
-            { id: "subscribe", label: "구독" },
-            { id: "call", label: "전화" },
-            { id: "quote", label: "견적 요청" },
-            { id: "trial", label: "무료 체험" },
-            { id: "consult", label: "상담" },
           ].map((c) => (
             <Chip key={c.id} selected={strategy.primaryCTA === c.id} onClick={() => upd("primaryCTA", c.id)} label={c.label} />
           ))}
@@ -230,7 +163,7 @@ export default function MarketingCore({ strategy, onChange }: Props) {
       {/* Summary */}
       {strategyToPromptContext(strategy) && (
         <div className="bg-zinc-800/30 rounded-lg p-3 border border-zinc-700/20">
-          <p className="text-xs text-zinc-500 mb-1">Strategy Summary</p>
+          <p className="text-xs text-zinc-500 mb-1">전략 요약</p>
           <p className="text-xs text-zinc-400">{strategyToPromptContext(strategy)}</p>
         </div>
       )}

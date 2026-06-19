@@ -29,6 +29,11 @@ def _load(name: str) -> str:
 
 CHURCH_PLANTING_LECTURES = _load("church_planting_lectures.md")
 CHURCH_CONTENT_REFERENCE = _load("church_content_reference.md")
+# Send Network (SBC NAMB) church-planting models + core values + 9 essentials —
+# the lens for tailoring strategy/content to the applicant church's planting
+# type (standard / co-vocational / multi-site / multi-ethnic / replant / micro)
+# and its priority ministry values.
+CHURCH_SEND_NETWORK = _load("church_send_network.md")
 
 # Combined canon injected into content-generation prompts.
 CHURCH_CANON = (
@@ -37,5 +42,8 @@ CHURCH_CANON = (
     f"{CHURCH_PLANTING_LECTURES}\n\n"
     "########## CHURCH WEBSITE CONTENT REFERENCE (consolidated + §13 web guide & "
     "7-point ship checklist) ##########\n"
-    f"{CHURCH_CONTENT_REFERENCE}"
+    f"{CHURCH_CONTENT_REFERENCE}\n\n"
+    "########## SEND NETWORK — PLANTING MODELS, CORE VALUES, 9 ESSENTIALS "
+    "(tailor by church type & priority values) ##########\n"
+    f"{CHURCH_SEND_NETWORK}"
 )

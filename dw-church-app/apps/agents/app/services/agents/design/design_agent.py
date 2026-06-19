@@ -53,7 +53,11 @@ class DesignAgent(BaseAgent[DesignInput, DesignDecision]):
             "string. Text/background contrast must reach WCAG AA "
             "(≥ 4.5:1) on the body text pair. Korean fonts must be "
             "actual Korean families (Pretendard, Noto Sans KR, etc.) — "
-            "not English transliterations."
+            "not English transliterations. If the church serves many people who "
+            "recently arrived from Korea (e.g. a Korean immigrant church near "
+            "Korean employers with many corporate expatriates / 주재원), lean toward "
+            "palettes and typography that feel familiar and preferred in Korea — "
+            "clean, modern, refined — rather than a purely Western aesthetic."
         )
 
     def build_prompt(self, input: DesignInput) -> str:
