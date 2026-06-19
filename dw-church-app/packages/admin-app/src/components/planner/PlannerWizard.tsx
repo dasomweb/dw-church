@@ -828,7 +828,7 @@ export function PlannerWizard({ plannerApi, targetTenantName, onComplete, onClos
         </div>
         <div className="px-5 py-1.5">
           <span className="text-xs text-zinc-600 uppercase tracking-wider">
-            {step} — Step {stepIndex + 1}/{STEPS.length}
+            {step === "Business" ? "Church" : step} — Step {stepIndex + 1}/{STEPS.length}
           </span>
         </div>
 
@@ -1020,7 +1020,7 @@ function PromptStep({
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={"e.g. We are Korus Orchid Corporation, a wholesale orchid grower based in Southern California. We specialize in Phalaenopsis, Oncidium, and tropical orchids. Our target customers are garden centers and retail nurseries across the US.\n\nReference sites:\nhttps://example-orchids.com\nhttps://another-grower.com"}
+          placeholder={"e.g. We are Grace Korean Church, a Korean immigrant church in Apopka, FL. We focus on next-generation discipleship, Sunday worship, small groups (목장), and welcoming newcomers — reaching Korean families and neighbors in our community.\n\nReference sites:\nhttps://referencechurch1.org\nhttps://referencechurch2.org"}
           rows={8}
           className="w-full bg-zinc-800/40 border border-zinc-700/30 text-zinc-200 px-4 py-3 rounded-lg text-sm outline-none focus:border-blue-500/40 placeholder-zinc-600 resize-none leading-relaxed"
           disabled={loading}
@@ -1063,23 +1063,23 @@ function BusinessStep({
 }) {
   return (
     <div className="space-y-2.5">
-      <Field label="Business Name" value={business.businessName} onChange={(v) => updateField("businessName", v)} placeholder="Seoul Coffee" />
-      <Field label="Industry" value={business.industry} onChange={(v) => updateField("industry", v)} placeholder="Coffee Shop / Cafe" />
-      <Field label="Description" value={business.description} onChange={(v) => updateField("description", v)} placeholder="Premium specialty coffee shop in Gangnam" textarea />
-      <FieldWithSuggest label="Services / Products" value={business.services} onChange={(v) => updateField("services", v)} onSuggest={() => onSuggest("services")} loading={loading} placeholder="Espresso, Latte, Pastries..." textarea />
-      <FieldWithSuggest label="Target Audience" value={business.targetAudience} onChange={(v) => updateField("targetAudience", v)} onSuggest={() => onSuggest("targetAudience")} loading={loading} placeholder="Young professionals, coffee enthusiasts..." textarea />
-      <FieldWithSuggest label="Brand Keywords" value={business.brandKeywords} onChange={(v) => updateField("brandKeywords", v)} onSuggest={() => onSuggest("brandKeywords")} loading={loading} placeholder="Modern, Premium, Warm..." />
+      <Field label="Church Name" value={business.businessName} onChange={(v) => updateField("businessName", v)} placeholder="은혜교회 (Grace Church)" />
+      <Field label="Tradition / Denomination" value={business.industry} onChange={(v) => updateField("industry", v)} placeholder="Korean immigrant church · Baptist / Presbyterian / non-denominational" />
+      <Field label="About the Church" value={business.description} onChange={(v) => updateField("description", v)} placeholder="A Korean immigrant church in Apopka, FL, making disciples of the next generation" textarea />
+      <FieldWithSuggest label="Ministries & Programs" value={business.services} onChange={(v) => updateField("services", v)} onSuggest={() => onSuggest("services")} loading={loading} placeholder="Sunday worship, next-generation education, small groups, newcomer care..." textarea />
+      <FieldWithSuggest label="Who We're Reaching" value={business.targetAudience} onChange={(v) => updateField("targetAudience", v)} onSuggest={() => onSuggest("targetAudience")} loading={loading} placeholder="Families seeking the gospel, next-gen parents, neighbors in the community..." textarea />
+      <FieldWithSuggest label="Core Values / Keywords" value={business.brandKeywords} onChange={(v) => updateField("brandKeywords", v)} onSuggest={() => onSuggest("brandKeywords")} loading={loading} placeholder="Gospel, the Word, discipleship, community..." />
       <Field label="Location" value={business.location} onChange={(v) => updateField("location", v)} placeholder="1808 Plymouth Sorrento Rd Apopka, FL 32712" />
       <div>
-        <label className="text-sm text-zinc-500 mb-1 block">Reference / Competitor Sites</label>
+        <label className="text-sm text-zinc-500 mb-1 block">Reference Sites (for inspiration)</label>
         <textarea
           value={referenceUrls}
           onChange={(e) => onReferenceUrlsChange(e.target.value)}
-          placeholder={"https://competitor1.com\nhttps://competitor2.com"}
+          placeholder={"https://referencechurch1.org\nhttps://referencechurch2.org"}
           rows={3}
           className="w-full bg-zinc-800/40 border border-zinc-700/30 text-zinc-200 px-3 py-2 rounded-md text-sm outline-none focus:border-blue-500/40 placeholder-zinc-600 resize-none"
         />
-        <p className="text-xs text-zinc-600 mt-1">Enter URLs (one per line). All pages will be crawled and analyzed.</p>
+        <p className="text-xs text-zinc-600 mt-1">Reference church / ministry sites (one URL per line). All pages will be crawled and analyzed.</p>
       </div>
     </div>
   );
@@ -3346,7 +3346,7 @@ function MustHavesPanel({
         <textarea
           value={mustHaves}
           onChange={(e) => onMustHavesChange(e.target.value)}
-          placeholder="예: 1) 20년 경력 강조  2) Apopka, FL 베이스 (지역 신뢰)  3) B2B 도매만 — 소매 X  4) 마지막 페이지에 '견적 요청' 버튼 강조"
+          placeholder="예: 1) 다음세대 성경교육 강조  2) Apopka, FL 지역 한인 가정을 섬김  3) 매주 수요예배·금요기도회 안내  4) '새가족 등록' 버튼을 잘 보이게"
           rows={4}
           className="w-full bg-zinc-900/60 border border-zinc-700/40 text-zinc-200 px-3 py-2 rounded-md text-sm outline-none focus:border-amber-500/50 placeholder-zinc-600 resize-y font-mono"
         />
@@ -3356,19 +3356,19 @@ function MustHavesPanel({
         label="필수 페이지 (사이트맵에 반드시 포함)"
         items={requiredPages}
         onChange={onRequiredPagesChange}
-        placeholder="예: Pricing, 문의하기, 채용"
+        placeholder="예: 예배 안내, 새가족 등록, 오시는 길"
       />
       <MustHaveListInput
         label="필수 키 메시지 (헤드라인 / 본문에 반영)"
         items={requiredKeyMessages}
         onChange={onRequiredKeyMessagesChange}
-        placeholder="예: 24시간 응답 보장, 평균 출하 2일"
+        placeholder="예: 매주 주일 11시 예배, 모든 세대를 위한 신앙 교육"
       />
       <MustHaveListInput
         label="필수 수치 / 통계 (정확한 숫자 반영)"
         items={requiredStats}
         onChange={onRequiredStatsChange}
-        placeholder="예: 1,000+ 거래처, 99.5% 정시 출하"
+        placeholder="예: 주일 출석 200명, 소그룹(목장) 12개, 다음세대 3개 부서"
       />
     </div>
   );
