@@ -114,8 +114,47 @@ export const designTokenHeaderSchema = z
     logoHeight: z.number().int().positive().default(40),
     /** Desktop header nav-link font size in px (default 14 = the old text-sm). */
     navFontSize: z.number().int().positive().default(14),
+    /** Desktop header nav-link font weight (100–900, default 500 = medium). */
+    navFontWeight: z.number().int().min(100).max(900).default(500),
   })
-  .default({ logoHeight: 40, navFontSize: 14 });
+  .default({ logoHeight: 40, navFontSize: 14, navFontWeight: 500 });
+
+// ─── Footer tokens ─────────────────────────────────────────────────────────
+//
+// Per-tenant footer DESIGN the operator tunes in the super-admin theme editor's
+// 풋터 tab. The footer's CONTENT (address / phone / social links) still comes
+// from church settings; these tokens drive look + labels + copyright. The whole
+// object + each field carries a default so token blobs persisted before this
+// field existed still parse.
+export const designTokenFooterSchema = z
+  .object({
+    /** Layout: columns (logo + 오시는 길 + Social), centered, or minimal. */
+    variant: z.enum(['columns', 'centered', 'minimal']).default('columns'),
+    /** Footer background color (hex). Default = dark navy. */
+    background: z.string().default('#0b1622'),
+    /** Body text color (hex). */
+    text: z.string().default('#9ca3af'),
+    /** Heading / label color (hex). */
+    heading: z.string().default('#e5e7eb'),
+    /** Show the church logo in the footer. */
+    showLogo: z.boolean().default(true),
+    /** 오시는 길 column label. */
+    directionsLabel: z.string().default('오시는 길'),
+    /** Social column label. */
+    socialLabel: z.string().default('Social Media / 온라인 예배'),
+    /** Copyright line. Empty → auto "© {year} {CHURCH}. All rights Reserved." */
+    copyright: z.string().default(''),
+  })
+  .default({
+    variant: 'columns',
+    background: '#0b1622',
+    text: '#9ca3af',
+    heading: '#e5e7eb',
+    showLogo: true,
+    directionsLabel: '오시는 길',
+    socialLabel: 'Social Media / 온라인 예배',
+    copyright: '',
+  });
 
 // ─── Final DesignTokens ────────────────────────────────────────────────────
 
@@ -143,6 +182,9 @@ export const designTokensSchema = z.object({
   /** Header chrome (logo size, nav font size). `.default` so pre-existing
    *  token blobs without a header key still parse. */
   header: designTokenHeaderSchema,
+  /** Footer design (variant, colors, labels, copyright). `.default` so
+   *  pre-existing token blobs without a footer key still parse. */
+  footer: designTokenFooterSchema,
 });
 
 export type SystemColorTokens = z.infer<typeof systemColorTokensSchema>;
@@ -150,6 +192,7 @@ export type DesignTokenColors = z.infer<typeof designTokenColorsSchema>;
 export type TypographyScaleSpec = z.infer<typeof typographyScaleSpecSchema>;
 export type DesignTokenTypography = z.infer<typeof designTokenTypographySchema>;
 export type DesignTokenHeader = z.infer<typeof designTokenHeaderSchema>;
+export type DesignTokenFooter = z.infer<typeof designTokenFooterSchema>;
 export type DesignTokens = z.infer<typeof designTokensSchema>;
 
 // ─── BlockStyle — per-block override container ─────────────────────────────

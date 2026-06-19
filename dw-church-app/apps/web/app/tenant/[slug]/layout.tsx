@@ -111,28 +111,6 @@ function getHeaderStyle(style: string | undefined): React.CSSProperties {
   }
 }
 
-function getFooterClasses(style: string | undefined): string {
-  switch (style) {
-    case 'minimal':
-      return 'border-t border-gray-200';
-    case 'centered':
-      return 'border-t border-gray-200';
-    case 'dark':
-      return 'border-t border-gray-700';
-    default:
-      return 'border-t border-gray-200';
-  }
-}
-
-function getFooterStyle(style: string | undefined): React.CSSProperties {
-  switch (style) {
-    case 'dark':
-      return { backgroundColor: 'var(--dw-text)', color: 'var(--dw-background)' };
-    default:
-      return { backgroundColor: 'var(--dw-surface)' };
-  }
-}
-
 // ─── Viewport ────────────────────────────────────────────────
 
 // Next 15 wants themeColor in the viewport export (not metadata). Matches the
@@ -205,6 +183,53 @@ const PLATFORM_HOSTS = new Set([
   'localhost:3002',
 ]);
 
+// ─── Footer social icons ─────────────────────────────────────
+// Brand-colored rounded buttons (matches the standard church footer). Each
+// renders only when the matching link is set in church settings.
+function SocialButton({ href, bg, label, children }: { href: string; bg: string; label: string; children: React.ReactNode }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={label}
+      title={label}
+      className="inline-flex h-9 w-9 items-center justify-center rounded-md transition-opacity hover:opacity-85"
+      style={{ backgroundColor: bg }}
+    >
+      {children}
+    </a>
+  );
+}
+function KakaoIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="#3A1D1D" aria-hidden="true">
+      <path d="M12 3C6.48 3 2 6.58 2 10.99c0 2.84 1.93 5.33 4.84 6.74-.16.55-.83 2.87-.86 3.05 0 0-.02.15.08.21.1.06.22.01.22.01.29-.04 3.37-2.2 3.96-2.61.55.08 1.12.12 1.76.12 5.52 0 10-3.58 10-7.52C22 6.58 17.52 3 12 3z" />
+    </svg>
+  );
+}
+function InstagramIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="#fff" stroke="none" />
+    </svg>
+  );
+}
+function YoutubeIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
+      <path d="M21.6 7.2a2.5 2.5 0 0 0-1.76-1.77C18.25 5 12 5 12 5s-6.25 0-7.84.43A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.76 1.77C5.75 19 12 19 12 19s6.25 0 7.84-.43a2.5 2.5 0 0 0 1.76-1.77A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8zM10 15V9l5.2 3-5.2 3z" />
+    </svg>
+  );
+}
+function FacebookIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
+      <path d="M14 8.5h2.5V5.5h-2.5c-2 0-3.5 1.5-3.5 3.5v2H8.5V14H10.5v6h3v-6h2.3l.7-3h-3v-1.5c0-.6.4-1 1-1z" />
+    </svg>
+  );
+}
+
 export default async function TenantLayout({ children, params }: TenantLayoutProps) {
   const { slug } = await params;
 
@@ -261,7 +286,6 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   const layout = theme?.layout;
 
   const headerStyle = layout?.headerStyle ?? 'default';
-  const footerStyle = layout?.footerStyle ?? 'default';
 
   // The super-admin theme editor saves to the DESIGN TOKENS (--brand-*), but
   // dw-church block components read the legacy --dw-* vars. Bridge them so
@@ -289,9 +313,8 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
     '--dw-sermon-grid': String(layout?.sermonGrid ?? 4),
   };
 
-  // Determine text colors for dark header/footer
+  // Determine text colors for dark header
   const isDarkHeader = headerStyle === 'dark';
-  const isDarkFooter = footerStyle === 'dark';
 
   const navLinkColor = isDarkHeader ? 'var(--dw-background)' : 'var(--dw-text)';
 
@@ -301,6 +324,17 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   // hasn't set it explicitly — so churchName almost always resolves to the
   // human-readable name, and we only fall back to slug as a last resort.
   const churchName = settings?.churchName ?? settings?.church_name ?? settings?.name ?? slug;
+
+  // Footer DESIGN comes from tokens.footer (super-admin 테마설정 → 풋터); footer
+  // CONTENT (주소/전화/SNS) comes from church settings. Copyright auto-fills with
+  // the current year + church name when the operator leaves it blank.
+  const fc = tokens.footer ?? DEFAULT_DESIGN_TOKENS.footer;
+  const copyright = (fc.copyright ?? '').trim()
+    || `© ${new Date().getFullYear()} ${churchName}. All rights Reserved.`;
+  const kakaoUrl = settings?.socialKakaotalkChannel ?? settings?.socialKakaotalk ?? settings?.social_kakaotalk_channel ?? settings?.social_kakaotalk ?? '';
+  const instagramUrl = settings?.socialInstagram ?? settings?.social_instagram ?? '';
+  const youtubeUrl = settings?.socialYoutube ?? settings?.social_youtube ?? '';
+  const facebookUrl = settings?.socialFacebook ?? settings?.social_facebook ?? '';
 
   // Build tree: top-level items with children
   const topLevelItems = navItems
@@ -386,7 +420,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                       className="font-medium transition-colors hover:opacity-80 py-2 inline-flex items-center gap-0.5"
                       // Operator-tunable nav font size (super-admin 테마 → 헤더).
                       // Inline fontSize overrides the old text-sm; 14px fallback = text-sm.
-                      style={{ color: navLinkColor, fontSize: 'var(--brand-nav-font-size, 14px)' }}
+                      style={{ color: navLinkColor, fontSize: 'var(--brand-nav-font-size, 14px)', fontWeight: 'var(--brand-nav-font-weight, 500)' }}
                     >
                       {item.label}
                       {item.children && item.children.length > 0 && (
@@ -442,7 +476,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                     href={navHref(item)}
                     className="font-medium transition-colors hover:opacity-80 py-2 inline-flex items-center gap-0.5"
                     // Operator-tunable nav font size (super-admin 테마 → 헤더). 14px fallback = text-sm.
-                    style={{ color: navLinkColor, fontSize: 'var(--brand-nav-font-size, 14px)' }}
+                    style={{ color: navLinkColor, fontSize: 'var(--brand-nav-font-size, 14px)', fontWeight: 'var(--brand-nav-font-weight, 500)' }}
                   >
                     {item.label}
                     {item.children && item.children.length > 0 && (
@@ -487,95 +521,44 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
       </main>
 
       {/* Footer */}
-      <footer
-        role="contentinfo"
-        className={getFooterClasses(footerStyle)}
-        style={getFooterStyle(footerStyle)}
-      >
-        {footerStyle === 'minimal' ? (
-          /* Minimal footer: just copyright */
-          <div className="mx-auto max-w-7xl px-4 py-6 text-center text-xs text-gray-400 sm:px-6">
-            {settings?.name ? `\u00A9 ${settings.name}. ` : ''}Powered by True Light
-          </div>
-        ) : footerStyle === 'centered' ? (
-          /* Centered footer: all content centered */
-          <div className="mx-auto max-w-7xl px-4 py-12 text-center sm:px-6">
-            <h3 className="mb-3 text-lg font-bold font-heading" style={{ color: 'var(--dw-primary)' }}>
-              {churchName}
-            </h3>
-            {settings?.address && (
-              <p className="text-sm text-gray-600">{settings.address}</p>
-            )}
-            <div className="mt-3 space-y-1">
-              {settings?.phone && (
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">전화:</span> {settings.phone}
-                </p>
-              )}
-              {settings?.email && (
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">이메일:</span> {settings.email}
-                </p>
-              )}
-            </div>
-            <div className="mt-4 flex justify-center gap-4">
-              {settings?.socialYoutube && (
-                <a href={settings.socialYoutube} target="_blank" rel="noopener noreferrer" className="text-sm text-gray-500 hover:text-gray-700">YouTube</a>
-              )}
-              {settings?.socialInstagram && (
-                <a href={settings.socialInstagram} target="_blank" rel="noopener noreferrer" className="text-sm text-gray-500 hover:text-gray-700">Instagram</a>
-              )}
-              {settings?.socialFacebook && (
-                <a href={settings.socialFacebook} target="_blank" rel="noopener noreferrer" className="text-sm text-gray-500 hover:text-gray-700">Facebook</a>
-              )}
-            </div>
-            <div className="mt-8 border-t border-gray-200 pt-6 text-xs text-gray-400">
-              Powered by True Light
-            </div>
-          </div>
+      <footer role="contentinfo" style={{ backgroundColor: fc.background, color: fc.text }}>
+        {fc.variant === 'minimal' ? (
+          <div className="mx-auto max-w-7xl px-4 py-6 text-center text-xs sm:px-6">{copyright}</div>
         ) : (
-          /* Default / dark footer: 3-column grid */
-          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-            <div className="grid gap-8 md:grid-cols-3">
-              <div>
-                <h3
-                  className="mb-3 text-lg font-bold font-heading"
-                  style={{ color: isDarkFooter ? 'var(--dw-accent)' : 'var(--dw-primary)' }}
-                >
-                  {churchName}
-                </h3>
-                {settings?.address && (
-                  <p className={`text-sm ${isDarkFooter ? 'text-gray-300' : 'text-gray-600'}`}>{settings.address}</p>
+          <>
+            <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+              <div className={`grid gap-8 ${fc.variant === 'centered' ? 'justify-items-center text-center' : 'md:grid-cols-3'}`}>
+                {fc.showLogo && (
+                  <div>
+                    {logoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={logoUrl} alt={churchName} className="w-auto object-contain" style={{ height: 56 }} />
+                    ) : (
+                      <span className="text-lg font-bold font-heading" style={{ color: fc.heading }}>{churchName}</span>
+                    )}
+                  </div>
                 )}
-              </div>
-              <div>
-                {settings?.phone && (
-                  <p className={`text-sm ${isDarkFooter ? 'text-gray-300' : 'text-gray-600'}`}>
-                    <span className="font-medium">전화:</span> {settings.phone}
-                  </p>
-                )}
-                {settings?.email && (
-                  <p className={`text-sm ${isDarkFooter ? 'text-gray-300' : 'text-gray-600'}`}>
-                    <span className="font-medium">이메일:</span> {settings.email}
-                  </p>
-                )}
-              </div>
-              <div className="flex gap-4">
-                {settings?.socialYoutube && (
-                  <a href={settings.socialYoutube} target="_blank" rel="noopener noreferrer" className={`text-sm ${isDarkFooter ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'}`}>YouTube</a>
-                )}
-                {settings?.socialInstagram && (
-                  <a href={settings.socialInstagram} target="_blank" rel="noopener noreferrer" className={`text-sm ${isDarkFooter ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'}`}>Instagram</a>
-                )}
-                {settings?.socialFacebook && (
-                  <a href={settings.socialFacebook} target="_blank" rel="noopener noreferrer" className={`text-sm ${isDarkFooter ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'}`}>Facebook</a>
-                )}
+                <div>
+                  <h3 className="mb-3 text-sm font-semibold" style={{ color: fc.heading }}>{fc.directionsLabel}</h3>
+                  {settings?.address && <p className="text-sm leading-relaxed">{settings.address}</p>}
+                  {settings?.phone && <p className="mt-1.5 text-sm">{settings.phone}</p>}
+                  {settings?.email && <p className="mt-1.5 text-sm">{settings.email}</p>}
+                </div>
+                <div>
+                  <h3 className="mb-3 text-sm font-semibold" style={{ color: fc.heading }}>{fc.socialLabel}</h3>
+                  <div className={`flex gap-2 ${fc.variant === 'centered' ? 'justify-center' : ''}`}>
+                    {kakaoUrl && <SocialButton href={kakaoUrl} bg="#FEE500" label="KakaoTalk"><KakaoIcon /></SocialButton>}
+                    {instagramUrl && <SocialButton href={instagramUrl} bg="#E1306C" label="Instagram"><InstagramIcon /></SocialButton>}
+                    {youtubeUrl && <SocialButton href={youtubeUrl} bg="#FF0000" label="YouTube"><YoutubeIcon /></SocialButton>}
+                    {facebookUrl && <SocialButton href={facebookUrl} bg="#1877F2" label="Facebook"><FacebookIcon /></SocialButton>}
+                  </div>
+                </div>
               </div>
             </div>
-            <div className={`mt-8 border-t pt-6 text-center text-xs ${isDarkFooter ? 'border-gray-700 text-gray-500' : 'border-gray-200 text-gray-400'}`}>
-              Powered by True Light
+            <div className="px-4 py-5 text-center text-xs" style={{ borderTop: `1px solid ${fc.text}22` }}>
+              {copyright}
             </div>
-          </div>
+          </>
         )}
       </footer>
 

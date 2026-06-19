@@ -124,6 +124,7 @@ function cloneTokens(t: DesignTokens): DesignTokens {
     // tokensV2 blobs persisted before `header` existed won't carry it —
     // fall back to the default so the projection is always complete.
     header: { ...DEFAULT_DESIGN_TOKENS.header, ...(t.header ?? {}) },
+    footer: { ...DEFAULT_DESIGN_TOKENS.footer, ...(t.footer ?? {}) },
   };
 }
 
@@ -161,6 +162,7 @@ function buildFromLegacyShape(theme: Omit<LegacyThemeBlob, 'tokensV2'>): DesignT
     containerMax: DEFAULT_DESIGN_TOKENS.containerMax,
     spacing: { ...DEFAULT_DESIGN_TOKENS.spacing },
     header: { ...DEFAULT_DESIGN_TOKENS.header },
+    footer: { ...DEFAULT_DESIGN_TOKENS.footer },
   };
 }
 

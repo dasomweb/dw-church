@@ -48,6 +48,8 @@ export type {
   DesignTokenColors,
   TypographyScaleSpec,
   DesignTokenTypography,
+  DesignTokenHeader,
+  DesignTokenFooter,
   DesignTokens,
   BlockStyle,
   ColorValue,

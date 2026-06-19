@@ -35,7 +35,7 @@ import { useAuthStore } from '../../stores/auth';
 import { useToast } from '../../components';
 import { useSuperAdminTenant } from '../SuperAdminTenantLayout';
 
-type TabId = 'theme-set' | 'palette' | 'typography' | 'header' | 'spacing' | 'custom';
+type TabId = 'theme-set' | 'palette' | 'typography' | 'header' | 'footer' | 'spacing' | 'custom';
 
 // 2026-06-01 (Phase 10-α): "테마셋" 탭 추가. 슈퍼어드민의 일반적인 흐름은
 // "테마셋 선택" → 필요 시 가벼운 override (팔레트/타이포). 따라서 테마셋이
@@ -52,6 +52,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'palette',    label: '팔레트' },
   { id: 'typography', label: '타이포그래피' },
   { id: 'header',     label: '헤더' },
+  { id: 'footer',     label: '풋터' },
   { id: 'spacing',    label: '여백 / 간격' },
   { id: 'custom',     label: '커스텀 CSS' },
 ];
@@ -227,6 +228,7 @@ export default function TenantThemeEditor() {
       {tab === 'palette' && <PaletteTab tokens={tokens} onChange={applyTokens} saving={saving} />}
       {tab === 'typography' && <TypographyTab tokens={tokens} onChange={applyTokens} saving={saving} />}
       {tab === 'header' && <HeaderTab tokens={tokens} onChange={applyTokens} saving={saving} />}
+      {tab === 'footer' && <FooterTab tokens={tokens} onChange={applyTokens} saving={saving} />}
       {tab === 'spacing' && <SpacingTab tokens={tokens} onChange={applyTokens} saving={saving} />}
       {tab === 'custom' && <CustomCssTab value={customCss} onChange={(v) => { setCustomCss(v); setCssDirty(true); }} onSave={() => saveCustomCss(customCss)} saving={saving} cssDirty={cssDirty} />}
     </div>
@@ -449,11 +451,19 @@ function TypographyTab({ tokens, onChange, saving }: { tokens: DesignTokens; onC
 // --brand-logo-height / --brand-nav-font-size, consumed by the storefront
 // header (apps/web/.../tenant/[slug]/layout.tsx). Defaults 40/14 match the
 // previous hard-coded h-10 logo + text-sm nav.
-const HEADER_DEFAULTS = { logoHeight: 40, navFontSize: 14 } as const;
+const HEADER_DEFAULTS = { logoHeight: 40, navFontSize: 14, navFontWeight: 500 } as const;
+
+const NAV_WEIGHT_OPTIONS: { value: number; label: string }[] = [
+  { value: 300, label: 'Light (300)' },
+  { value: 400, label: 'Regular (400)' },
+  { value: 500, label: 'Medium (500)' },
+  { value: 600, label: 'Semibold (600)' },
+  { value: 700, label: 'Bold (700)' },
+];
 
 function HeaderTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChange: (t: DesignTokens | ((prev: DesignTokens) => DesignTokens)) => void; saving: boolean }) {
   const header = tokens.header ?? HEADER_DEFAULTS;
-  const setField = (k: 'logoHeight' | 'navFontSize', v: number) => {
+  const setField = (k: 'logoHeight' | 'navFontSize' | 'navFontWeight', v: number) => {
     onChange((prev) => ({
       ...prev,
       header: { ...(prev.header ?? HEADER_DEFAULTS), [k]: v },
@@ -501,6 +511,20 @@ function HeaderTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChang
               <span className="block text-[10px] text-gray-400 mt-1">{hint}</span>
             </div>
           ))}
+          <div className="rounded-lg border border-gray-200 p-3 bg-white">
+            <label className="text-xs font-medium text-gray-700">메뉴 폰트 굵기</label>
+            <select
+              value={header.navFontWeight ?? 500}
+              onChange={(e) => setField('navFontWeight', Number(e.target.value) || 500)}
+              disabled={saving}
+              className="mt-1.5 w-full px-2 py-1.5 text-xs border rounded disabled:opacity-50"
+            >
+              {NAV_WEIGHT_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+            <span className="block text-[10px] text-gray-400 mt-1">상단 메뉴 글자 굵기 (<code>--brand-nav-font-weight</code>).</span>
+          </div>
         </div>
       </div>
 
@@ -517,13 +541,175 @@ function HeaderTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChang
           </div>
           <nav className="hidden sm:flex items-center gap-5">
             {['홈', '교회소개', '예배', '오시는 길'].map((label) => (
-              <span key={label} className="font-medium text-gray-700" style={{ fontSize: `${header.navFontSize}px` }}>
+              <span key={label} className="text-gray-700" style={{ fontSize: `${header.navFontSize}px`, fontWeight: header.navFontWeight ?? 500 }}>
                 {label}
               </span>
             ))}
           </nav>
         </div>
         <p className="mt-1 text-[10px] text-gray-400">실제 헤더는 테마 색상·폰트가 함께 적용됩니다. 위 미리보기는 크기 비율만 보여줍니다.</p>
+      </div>
+    </section>
+  );
+}
+
+// ─── Footer (풋터: 디자인 · 라벨 · 저작권) ────────────────────────────
+// Footer DESIGN persists under tokens.footer; CONTENT (주소/전화/SNS) is edited
+// in 설정. The storefront footer (apps/web/.../tenant/[slug]/layout.tsx) reads
+// tokens.footer for layout/colors/labels/copyright.
+const FOOTER_DEFAULTS = {
+  variant: 'columns' as const,
+  background: '#0b1622',
+  text: '#9ca3af',
+  heading: '#e5e7eb',
+  showLogo: true,
+  directionsLabel: '오시는 길',
+  socialLabel: 'Social Media / 온라인 예배',
+  copyright: '',
+};
+
+const FOOTER_VARIANTS: { value: 'columns' | 'centered' | 'minimal'; label: string }[] = [
+  { value: 'columns', label: '컬럼 (로고 · 오시는 길 · 소셜)' },
+  { value: 'centered', label: '중앙 정렬' },
+  { value: 'minimal', label: '미니멀 (저작권만)' },
+];
+
+function FooterTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChange: (t: DesignTokens | ((prev: DesignTokens) => DesignTokens)) => void; saving: boolean }) {
+  const footer = { ...FOOTER_DEFAULTS, ...(tokens.footer ?? {}) };
+  // Functional update so editing several footer fields before saving never
+  // loses an earlier edit to a stale base (the "first save doesn't stick" bug).
+  const set = <K extends keyof typeof FOOTER_DEFAULTS>(k: K, v: (typeof FOOTER_DEFAULTS)[K]) => {
+    onChange((prev) => ({
+      ...prev,
+      footer: { ...FOOTER_DEFAULTS, ...(prev.footer ?? {}), [k]: v },
+    }));
+  };
+
+  const colorFields: { key: 'background' | 'text' | 'heading'; label: string }[] = [
+    { key: 'background', label: '배경 색상' },
+    { key: 'heading', label: '제목 색상' },
+    { key: 'text', label: '본문 색상' },
+  ];
+
+  return (
+    <section className="space-y-6">
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-1">풋터 디자인</h3>
+        <p className="text-xs text-gray-500 mb-4">
+          스토어프론트 하단 풋터의 레이아웃·색상·라벨·저작권을 조절합니다. 주소·전화·SNS 링크는 <strong>설정</strong>에서 입력합니다.
+        </p>
+
+        <div className="space-y-3">
+          <div className="rounded-lg border border-gray-200 p-3 bg-white">
+            <label className="text-xs font-medium text-gray-700">레이아웃</label>
+            <select
+              value={footer.variant}
+              onChange={(e) => set('variant', e.target.value as typeof FOOTER_DEFAULTS.variant)}
+              disabled={saving}
+              className="mt-1.5 w-full px-2 py-1.5 text-xs border rounded disabled:opacity-50"
+            >
+              {FOOTER_VARIANTS.map((v) => (
+                <option key={v.value} value={v.value}>{v.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {colorFields.map(({ key, label }) => (
+              <div key={key} className="rounded-lg border border-gray-200 p-3 bg-white">
+                <label className="text-xs font-medium text-gray-700">{label}</label>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={/^#[0-9a-fA-F]{6}$/.test(footer[key]) ? footer[key] : '#000000'}
+                    onChange={(e) => set(key, e.target.value)}
+                    disabled={saving}
+                    className="w-9 h-9 rounded cursor-pointer border border-gray-300 disabled:opacity-50"
+                  />
+                  <input
+                    type="text"
+                    value={footer[key]}
+                    onChange={(e) => set(key, e.target.value)}
+                    disabled={saving}
+                    className="flex-1 px-2 py-1.5 text-xs font-mono border rounded disabled:opacity-50"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <label className="flex items-center gap-2 rounded-lg border border-gray-200 p-3 bg-white text-xs font-medium text-gray-700">
+            <input
+              type="checkbox"
+              checked={footer.showLogo}
+              onChange={(e) => set('showLogo', e.target.checked)}
+              disabled={saving}
+            />
+            풋터에 로고 표시
+          </label>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="rounded-lg border border-gray-200 p-3 bg-white">
+              <label className="text-xs font-medium text-gray-700">‘오시는 길’ 라벨</label>
+              <input
+                type="text"
+                value={footer.directionsLabel}
+                onChange={(e) => set('directionsLabel', e.target.value)}
+                disabled={saving}
+                className="mt-1.5 w-full px-2 py-1.5 text-xs border rounded disabled:opacity-50"
+              />
+            </div>
+            <div className="rounded-lg border border-gray-200 p-3 bg-white">
+              <label className="text-xs font-medium text-gray-700">소셜 영역 라벨</label>
+              <input
+                type="text"
+                value={footer.socialLabel}
+                onChange={(e) => set('socialLabel', e.target.value)}
+                disabled={saving}
+                className="mt-1.5 w-full px-2 py-1.5 text-xs border rounded disabled:opacity-50"
+              />
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-gray-200 p-3 bg-white">
+            <label className="text-xs font-medium text-gray-700">저작권 문구</label>
+            <input
+              type="text"
+              value={footer.copyright}
+              onChange={(e) => set('copyright', e.target.value)}
+              disabled={saving}
+              placeholder="비우면 자동: © {연도} {교회명}. All rights Reserved."
+              className="mt-1.5 w-full px-2 py-1.5 text-xs border rounded disabled:opacity-50"
+            />
+            <span className="block text-[10px] text-gray-400 mt-1">비워두면 매년 연도·교회명으로 자동 생성됩니다.</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Live preview — mock footer at the chosen colors/labels. */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-2">미리보기</h3>
+        <div className="rounded-lg overflow-hidden border border-gray-200" style={{ backgroundColor: footer.background, color: footer.text }}>
+          <div className="px-5 py-6 grid grid-cols-3 gap-4">
+            {footer.showLogo && <div className="text-sm font-bold" style={{ color: footer.heading }}>LOGO</div>}
+            <div>
+              <div className="text-xs font-semibold mb-1.5" style={{ color: footer.heading }}>{footer.directionsLabel}</div>
+              <div className="text-[11px] leading-relaxed">240 Tusculum Road, Antioch, TN</div>
+            </div>
+            <div>
+              <div className="text-xs font-semibold mb-1.5" style={{ color: footer.heading }}>{footer.socialLabel}</div>
+              <div className="flex gap-1.5">
+                <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: '#FEE500' }} />
+                <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: '#E1306C' }} />
+                <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: '#FF0000' }} />
+              </div>
+            </div>
+          </div>
+          <div className="px-5 py-3 text-center text-[10px]" style={{ borderTop: `1px solid ${footer.text}22` }}>
+            {footer.copyright || '© 2026 교회명. All rights Reserved.'}
+          </div>
+        </div>
+        <p className="mt-1 text-[10px] text-gray-400">실제 풋터의 주소·전화·SNS 아이콘은 설정값으로 채워집니다.</p>
       </div>
     </section>
   );

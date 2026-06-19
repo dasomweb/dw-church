@@ -46,17 +46,18 @@ describe('designTokensSchema', () => {
     const result = designTokensSchema.safeParse(withoutHeader);
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.header).toEqual({ logoHeight: 40, navFontSize: 14 });
+      expect(result.data.header).toEqual({ logoHeight: 40, navFontSize: 14, navFontWeight: 500 });
     }
   });
 });
 
 describe('header tokens', () => {
   it('emits --brand-logo-height / --brand-nav-font-size from header tokens', () => {
-    const tokens = { ...DEFAULT_DESIGN_TOKENS, header: { logoHeight: 64, navFontSize: 18 } };
+    const tokens = { ...DEFAULT_DESIGN_TOKENS, header: { logoHeight: 64, navFontSize: 18, navFontWeight: 700 } };
     const vars = tokensToCssVars(tokens);
     expect(vars['--brand-logo-height']).toBe('64px');
     expect(vars['--brand-nav-font-size']).toBe('18px');
+    expect(vars['--brand-nav-font-weight']).toBe('700');
   });
 
   it('legacyThemeToTokens backfills header for a tokensV2 blob missing it', () => {
@@ -64,7 +65,7 @@ describe('header tokens', () => {
     const { header: _omit, ...v2WithoutHeader } = DEFAULT_DESIGN_TOKENS;
     void _omit;
     const tokens = legacyThemeToTokens({ tokensV2: v2WithoutHeader as typeof DEFAULT_DESIGN_TOKENS });
-    expect(tokens.header).toEqual({ logoHeight: 40, navFontSize: 14 });
+    expect(tokens.header).toEqual({ logoHeight: 40, navFontSize: 14, navFontWeight: 500 });
     // And the css emit still produces the vars (no NaN/undefined).
     const vars = tokensToCssVars(tokens);
     expect(vars['--brand-logo-height']).toBe('40px');

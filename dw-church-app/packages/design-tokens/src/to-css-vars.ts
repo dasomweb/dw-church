@@ -108,6 +108,7 @@ export function tokensToCssVars(tokens: DesignTokens): CssVarMap {
   // this emit safe regardless). Consumed by the storefront header.
   vars['--brand-logo-height'] = `${tokens.header?.logoHeight ?? 40}px`;
   vars['--brand-nav-font-size'] = `${tokens.header?.navFontSize ?? 14}px`;
+  vars['--brand-nav-font-weight'] = `${tokens.header?.navFontWeight ?? 500}`;
 
   return vars;
 }

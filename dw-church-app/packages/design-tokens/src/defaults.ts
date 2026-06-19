@@ -64,6 +64,19 @@ export const DEFAULT_DESIGN_TOKENS: DesignTokens = {
   header: {
     logoHeight: 40,
     navFontSize: 14,
+    navFontWeight: 500,
+  },
+  // Footer design — dark navy columns layout matching the standard church
+  // footer (logo + 오시는 길 + Social Media / 온라인 예배 + copyright).
+  footer: {
+    variant: 'columns',
+    background: '#0b1622',
+    text: '#9ca3af',
+    heading: '#e5e7eb',
+    showLogo: true,
+    directionsLabel: '오시는 길',
+    socialLabel: 'Social Media / 온라인 예배',
+    copyright: '',
   },
 };
 
