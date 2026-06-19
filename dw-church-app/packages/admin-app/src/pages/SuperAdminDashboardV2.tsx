@@ -105,9 +105,10 @@ const PLAN_COLORS: Record<string, string> = {
   free: 'bg-gray-100 text-gray-600',
 };
 
-type TabId = 'overview' | 'tenants' | 'applications' | 'intake' | 'reference' | 'pricing' | 'billing' | 'email' | 'emailTemplates' | 'broadcast' | 'support' | 'domains' | 'users' | 'storage' | 'gallery';
+type TabId = 'monitoring' | 'overview' | 'tenants' | 'applications' | 'intake' | 'reference' | 'pricing' | 'billing' | 'email' | 'emailTemplates' | 'broadcast' | 'support' | 'domains' | 'users' | 'storage' | 'gallery';
 
 const TABS: { id: TabId; label: string; icon: string }[] = [
+  { id: 'monitoring', label: '모니터링', icon: '📈' },
   { id: 'overview', label: '개요', icon: '📊' },
   { id: 'tenants', label: '교회 관리', icon: '⛪' },
   { id: 'applications', label: '신청서', icon: '📝' },
@@ -124,6 +125,20 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'users', label: '사용자 관리', icon: '👥' },
   { id: 'storage', label: '저장공간', icon: '💾' },
 ];
+
+// Grouped navigation for the modern sidebar — related surfaces sit together so
+// the 16-item list reads as a few intuitive sections instead of one long row.
+const NAV_GROUPS: { label: string; ids: TabId[] }[] = [
+  { label: '대시보드', ids: ['monitoring', 'overview'] },
+  { label: '운영', ids: ['tenants', 'applications', 'intake', 'support'] },
+  { label: '매출 · 상품', ids: ['pricing', 'billing'] },
+  { label: '이메일', ids: ['email', 'emailTemplates', 'broadcast'] },
+  { label: '시스템', ids: ['domains', 'users', 'storage', 'gallery', 'reference'] },
+];
+
+const TAB_META: Record<TabId, { label: string; icon: string }> = Object.fromEntries(
+  TABS.map((t) => [t.id, { label: t.label, icon: t.icon }]),
+) as Record<TabId, { label: string; icon: string }>;
 
 // ─── Billing constants (Phase 3) ─────────────────────────
 // 4-tier 가격표 (2026-06 확정, 신청서/과금 집계용). PLAN_PRICES(개요 MRR용,
@@ -1161,6 +1176,213 @@ function TenantTransferModal({
 // ═══════════════════════════════════════════════════════════
 // ─── Tab: Overview ───────────────────────────────────────
 // ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+// ─── Tab: Monitoring (시스템 모니터링) ────────────────────────
+// ═══════════════════════════════════════════════════════════
+// Live platform health (GET /health, polled) + aggregated KPIs (/admin/stats)
+// + operational queues (신규 신청 / 이단 의심 / 미처리 지원). App-level metrics
+// only — there's no Railway infra integration. Health polls every 30s.
+
+function formatUptime(seconds?: number): string {
+  if (!seconds || seconds < 0) return '-';
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (d > 0) return `${d}일 ${h}시간`;
+  if (h > 0) return `${h}시간 ${m}분`;
+  return `${m}분`;
+}
+
+function MonitoringTab({
+  stats,
+  loading,
+  onRefresh,
+}: {
+  stats: GlobalStats | null;
+  loading: boolean;
+  onRefresh: () => void;
+}) {
+  const apiFetch = useAdminApi();
+  const session = useAuthStore((s) => s.session);
+  const [health, setHealth] = useState<{ status: string; version?: string; uptime?: number } | null>(null);
+  const [healthErr, setHealthErr] = useState(false);
+  const [newCount, setNewCount] = useState<number | null>(null);
+  const [cultAlertCount, setCultAlertCount] = useState<number | null>(null);
+  const [openSupportCount, setOpenSupportCount] = useState<number | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  const baseUrl = (() => {
+    const host = typeof window !== 'undefined' ? window.location.hostname : '';
+    return host.startsWith('admin.')
+      ? `https://api.${host.replace('admin.', '')}`
+      : (import.meta.env.VITE_API_BASE_URL as string) || '';
+  })();
+
+  const loadHealth = useCallback(async () => {
+    try {
+      const res = await fetch(`${baseUrl}/health`, {
+        headers: { Authorization: `Bearer ${session?.accessToken || ''}` },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const j = await res.json();
+      setHealth({ status: j.status ?? 'ok', version: j.version, uptime: j.uptime });
+      setHealthErr(false);
+    } catch {
+      setHealth(null);
+      setHealthErr(true);
+    }
+    setLastUpdated(new Date());
+  }, [baseUrl, session?.accessToken]);
+
+  const loadOps = useCallback(async () => {
+    try {
+      const res = await apiFetch<{ data: Application[] } | Application[]>('/applications');
+      const apps = Array.isArray(res) ? res : res.data ?? [];
+      setNewCount(apps.filter((a) => a.status === 'new').length);
+      setCultAlertCount(apps.filter((a) => a.denominationStatus === 'cult' && !a.denominationVerified).length);
+    } catch {
+      setNewCount(0);
+      setCultAlertCount(0);
+    }
+    try {
+      const res = await apiFetch<{ data: SupportTicket[] } | SupportTicket[]>('/support-tickets');
+      const list = Array.isArray(res) ? res : res.data ?? [];
+      setOpenSupportCount(list.filter((t) => t.status === 'open' || t.status === 'in_progress').length);
+    } catch {
+      setOpenSupportCount(0);
+    }
+  }, [apiFetch]);
+
+  useEffect(() => {
+    void loadHealth();
+    void loadOps();
+    // Poll health every 30s so the status dot stays live without hammering the API.
+    const h = setInterval(() => { void loadHealth(); }, 30000);
+    return () => clearInterval(h);
+  }, [loadHealth, loadOps]);
+
+  const refreshAll = () => {
+    onRefresh();
+    void loadHealth();
+    void loadOps();
+  };
+
+  const ok = !!health && health.status === 'ok' && !healthErr;
+  const inactiveTenants = stats ? Math.max(0, stats.totalTenants - stats.activeTenants) : 0;
+
+  return (
+    <div className="space-y-6">
+      {/* Header row */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="text-lg font-bold text-gray-900">시스템 모니터링</h2>
+          <p className="text-xs text-gray-500">
+            {lastUpdated ? `마지막 업데이트 ${lastUpdated.toLocaleTimeString('ko-KR')}` : '불러오는 중…'} · 상태 30초마다 자동 갱신
+          </p>
+        </div>
+        <button
+          onClick={refreshAll}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M4 4v5h5M20 20v-5h-5M4 9a8 8 0 0114-3M20 15a8 8 0 01-14 3" /></svg>
+          새로고침
+        </button>
+      </div>
+
+      {/* System health banner */}
+      <div className={`rounded-xl border p-5 ${ok ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <span className={`relative grid h-10 w-10 place-items-center rounded-full ${ok ? 'bg-green-100' : 'bg-red-100'}`}>
+              <span className={`h-3 w-3 rounded-full ${ok ? 'bg-green-500' : 'bg-red-500'}`} />
+              {ok && <span className="absolute h-3 w-3 rounded-full bg-green-400 animate-ping" />}
+            </span>
+            <div>
+              <p className={`text-base font-bold ${ok ? 'text-green-700' : 'text-red-700'}`}>
+                {ok ? 'API 서버 정상' : 'API 서버 응답 없음'}
+              </p>
+              <p className={`text-xs ${ok ? 'text-green-600' : 'text-red-600'}`}>
+                {ok ? 'api.truelight.app · /health 200 OK' : '/health 응답 실패 — 서버/네트워크 확인 필요'}
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-6">
+            <div>
+              <p className="text-[11px] font-medium text-gray-500">버전</p>
+              <p className="text-sm font-bold text-gray-900">{health?.version ?? '-'}</p>
+            </div>
+            <div>
+              <p className="text-[11px] font-medium text-gray-500">가동 시간</p>
+              <p className="text-sm font-bold text-gray-900">{formatUptime(health?.uptime)}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Operational queues — surface anything that needs action */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className={`rounded-xl border p-5 ${(newCount ?? 0) > 0 ? 'border-blue-200 bg-blue-50' : 'border-gray-100 bg-white'}`}>
+          <p className="text-sm font-medium text-gray-500">신규 신청서</p>
+          <p className="mt-1 text-3xl font-bold text-gray-900">{newCount ?? '-'}</p>
+          <p className="mt-0.5 text-xs text-gray-400">검토 대기 중인 신청</p>
+        </div>
+        <div className={`rounded-xl border p-5 ${(cultAlertCount ?? 0) > 0 ? 'border-red-300 bg-red-50' : 'border-gray-100 bg-white'}`}>
+          <p className="text-sm font-medium text-gray-500">🚩 이단 의심 신청</p>
+          <p className={`mt-1 text-3xl font-bold ${(cultAlertCount ?? 0) > 0 ? 'text-red-600' : 'text-gray-900'}`}>{cultAlertCount ?? '-'}</p>
+          <p className="mt-0.5 text-xs text-gray-400">미확인 cult 분류</p>
+        </div>
+        <div className={`rounded-xl border p-5 ${(openSupportCount ?? 0) > 0 ? 'border-amber-200 bg-amber-50' : 'border-gray-100 bg-white'}`}>
+          <p className="text-sm font-medium text-gray-500">🎧 미처리 지원</p>
+          <p className="mt-1 text-3xl font-bold text-gray-900">{openSupportCount ?? '-'}</p>
+          <p className="mt-0.5 text-xs text-gray-400">대기 + 처리중</p>
+        </div>
+      </div>
+
+      {/* Platform KPIs */}
+      {loading && !stats ? (
+        <Spinner />
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <StatCard title="전체 교회" value={stats?.totalTenants ?? 0} color="blue" />
+          <StatCard title="활성 교회" value={stats?.activeTenants ?? 0} color="green" subtitle={`비활성 ${inactiveTenants}`} />
+          <StatCard title="전체 사용자" value={stats?.totalUsers ?? 0} color="indigo" />
+          <StatCard title="전체 설교" value={stats?.totalSermons ?? 0} color="purple" />
+          <StatCard title="총 저장공간" value={formatBytes(stats?.totalStorage ?? 0)} color="cyan" />
+          <StatCard title="DB 크기" value={formatBytes(stats?.totalDbSize ?? 0)} color="rose" />
+        </div>
+      )}
+
+      {/* Plan distribution */}
+      {stats && stats.planBreakdown.length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+          <h3 className="text-sm font-semibold text-gray-700 mb-4">플랜 분포</h3>
+          <div className="space-y-2.5">
+            {stats.planBreakdown.map((p) => {
+              const total = stats.totalTenants || 1;
+              const pct = Math.round((p.count / total) * 100);
+              return (
+                <div key={p.plan} className="flex items-center gap-3">
+                  <span className={`inline-flex w-20 justify-center px-2 py-1 rounded-md text-xs font-bold ${PLAN_COLORS[p.plan] || 'bg-gray-100 text-gray-600'}`}>
+                    {p.plan.toUpperCase()}
+                  </span>
+                  <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${p.plan === 'pro' ? 'bg-purple-500' : p.plan === 'basic' ? 'bg-blue-500' : p.plan === 'plus' ? 'bg-indigo-500' : p.plan === 'light' ? 'bg-cyan-500' : 'bg-gray-400'}`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <span className="w-10 text-right text-sm font-bold text-gray-900">{p.count}</span>
+                  <span className="w-9 text-right text-xs text-gray-400">{pct}%</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function OverviewTab({
   stats,
   loading,
@@ -5615,7 +5837,7 @@ export default function SuperAdminDashboardV2() {
   const apiFetch = useAdminApi();
   const session = useAuthStore((s) => s.session);
 
-  const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [activeTab, setActiveTab] = useState<TabId>('monitoring');
   const [stats, setStats] = useState<GlobalStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -5659,17 +5881,18 @@ export default function SuperAdminDashboardV2() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Top bar */}
-      <header className="sticky top-0 z-50 border-b border-gray-200 bg-white">
-        <div className="mx-auto flex max-w-[1600px] items-center justify-between px-6 py-3">
-          <div className="flex items-center gap-3">
-            <span className="text-xl font-bold text-blue-600">True Light</span>
-            <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-600">Super Admin</span>
+      <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/75">
+        <div className="mx-auto flex max-w-[1600px] items-center justify-between px-6 py-2.5">
+          <div className="flex items-center gap-2.5">
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 text-sm font-bold text-white shadow-sm">T</span>
+            <span className="text-lg font-bold tracking-tight text-gray-900">True Light</span>
+            <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-600 ring-1 ring-inset ring-red-100">Super Admin</span>
           </div>
-          <div className="flex items-center gap-4 text-sm">
-            <a href="/profile" className="text-gray-500 hover:text-blue-600 transition-colors">{session?.user?.email}</a>
+          <div className="flex items-center gap-3 text-sm">
+            <a href="/profile" className="hidden sm:inline text-gray-500 hover:text-blue-600 transition-colors">{session?.user?.email}</a>
             <button
               onClick={handleLogout}
-              className="text-gray-500 hover:text-gray-700 transition-colors"
+              className="rounded-lg border border-gray-200 px-3 py-1.5 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
             >
               로그아웃
             </button>
@@ -5681,32 +5904,44 @@ export default function SuperAdminDashboardV2() {
           작은 화면(<lg)에서는 사이드바가 콘텐츠 위로 쌓임(flex-col). */}
       <div className="mx-auto max-w-[1600px] px-4 sm:px-6 py-6 flex flex-col lg:flex-row gap-6">
         {/* Sidebar nav */}
-        <aside className="lg:w-56 shrink-0">
-          <div className="lg:sticky lg:top-20 space-y-4">
+        <aside className="lg:w-60 shrink-0">
+          <div className="lg:sticky lg:top-[4.5rem] space-y-4">
             <div>
               <h1 className="text-lg font-bold text-gray-900">플랫폼 관리</h1>
               <p className="mt-0.5 text-xs text-gray-500">운영 콘솔</p>
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+              className="w-full inline-flex items-center justify-center gap-1.5 bg-blue-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-700 shadow-sm transition-colors"
             >
-              + 교회 추가
+              <span className="text-base leading-none">＋</span> 교회 추가
             </button>
-            <nav className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible">
-              {TABS.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                  }`}
-                >
-                  <span>{tab.icon}</span>
-                  <span>{tab.label}</span>
-                </button>
+            <nav className="flex gap-4 lg:block lg:space-y-4 overflow-x-auto lg:overflow-visible">
+              {NAV_GROUPS.map((group) => (
+                <div key={group.label} className="shrink-0">
+                  <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">{group.label}</p>
+                  <div className="flex lg:flex-col gap-0.5">
+                    {group.ids.map((id) => {
+                      const meta = TAB_META[id];
+                      const active = activeTab === id;
+                      return (
+                        <button
+                          key={id}
+                          onClick={() => setActiveTab(id)}
+                          className={`group relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
+                            active
+                              ? 'bg-blue-50 text-blue-700'
+                              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                          }`}
+                        >
+                          {active && <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-blue-600 hidden lg:block" />}
+                          <span className="text-base leading-none">{meta.icon}</span>
+                          <span>{meta.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               ))}
             </nav>
           </div>
@@ -5714,6 +5949,13 @@ export default function SuperAdminDashboardV2() {
 
         {/* Tab Content */}
         <div className="flex-1 min-w-0 space-y-6">
+        {activeTab === 'monitoring' && (
+          <MonitoringTab
+            stats={stats}
+            loading={statsLoading}
+            onRefresh={() => void fetchStats()}
+          />
+        )}
         {activeTab === 'overview' && (
           <OverviewTab
             stats={stats}
