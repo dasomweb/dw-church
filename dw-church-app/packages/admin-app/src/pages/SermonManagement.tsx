@@ -225,7 +225,9 @@ export default function SermonManagement() {
       scripture: item.scripture,
       preacher: item.preacher,
       youtubeUrl: item.youtubeUrl,
-      date: item.date,
+      // type="date" only accepts YYYY-MM-DD; trim any ISO datetime so the saved
+      // date actually shows (and re-saves) instead of appearing blank.
+      date: item.date ? String(item.date).slice(0, 10) : '',
       categoryIds: JSON.stringify(item.categoryIds),
       thumbnailUrl: item.thumbnailUrl,
       status: item.status,
@@ -394,12 +396,26 @@ export default function SermonManagement() {
               </button>
             </div>
             <div className="border rounded p-3 max-h-40 overflow-y-auto space-y-1">
-              {categories?.map((cat) => (
-                <label key={cat.id} className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" value={cat.id} className="rounded" />
-                  {cat.name}
-                </label>
-              ))}
+              {(() => {
+                let selectedIds: string[] = [];
+                try { selectedIds = JSON.parse(watch('categoryIds') || '[]'); } catch { selectedIds = []; }
+                return categories?.map((cat) => (
+                  <label key={cat.id} className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(cat.id)}
+                      onChange={(e) => {
+                        const next = e.target.checked
+                          ? [...new Set([...selectedIds, cat.id])]
+                          : selectedIds.filter((x) => x !== cat.id);
+                        setValue('categoryIds', JSON.stringify(next), { shouldDirty: true });
+                      }}
+                      className="rounded"
+                    />
+                    {cat.name}
+                  </label>
+                ));
+              })()}
               {(!categories || categories.length === 0) && (
                 <p className="text-gray-400 text-sm">카테고리가 없습니다</p>
               )}
