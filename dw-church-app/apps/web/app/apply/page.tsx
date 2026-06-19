@@ -53,6 +53,9 @@ function ApplyForm() {
           phone: form.phone || undefined,
           churchAddress: form.churchAddress || undefined,
           denomination: form.denomination || undefined,
+          plantingType: form.plantingType || undefined,
+          memberProfile: form.memberProfile || undefined,
+          localContext: form.localContext || undefined,
           faithAffirmed: true,
           termsAccepted: true,
           plan: form.plan || undefined,
@@ -113,6 +116,34 @@ function ApplyForm() {
         <label className="mb-1 block text-sm font-medium text-gray-700">소속 교단</label>
         <input value={form.denomination || ''} onChange={set('denomination')} className={inputCls} placeholder="예: 예장합동, 예장통합, 기감, 미국장로교(PCUSA), 무교단 등" />
         <p className="mt-1 text-xs text-gray-400">본 서비스는 정통 기독교 신앙고백을 따르는 교회를 대상으로 합니다. 무교단·독립교회도 신청하실 수 있습니다.</p>
+      </div>
+
+      <div>
+        <label className="mb-1 block text-sm font-medium text-gray-700">개척/사역 유형 <span className="text-gray-400">(선택)</span></label>
+        <select
+          value={form.plantingType || ''}
+          onChange={(e) => setForm((f) => ({ ...f, plantingType: e.target.value }))}
+          className={inputCls}
+        >
+          <option value="">선택 안 함</option>
+          <option value="standard">전통/표준 개척</option>
+          <option value="covocational">자비량/이중직 (미자립)</option>
+          <option value="multisite">다중 사이트 / 캠퍼스</option>
+          <option value="multiethnic">다민족/다언어 (한인 이민 등)</option>
+          <option value="replant">교회 재개척</option>
+          <option value="micro">마이크로 / 가정교회</option>
+          <option value="other">기타</option>
+        </select>
+        <p className="mt-1 text-xs text-gray-400">교회가 우선으로 두는 사역 방향에 맞춰 사이트를 구성합니다.</p>
+      </div>
+      <div>
+        <label className="mb-1 block text-sm font-medium text-gray-700">교회 구성원 <span className="text-gray-400">(선택)</span></label>
+        <textarea value={form.memberProfile || ''} onChange={set('memberProfile')} rows={2} className={inputCls} placeholder="예: 30~40대 자녀 둔 가정이 많음, 주재원·한국에서 막 오신 분들 비중이 높음" />
+      </div>
+      <div>
+        <label className="mb-1 block text-sm font-medium text-gray-700">지역 환경 <span className="text-gray-400">(선택)</span></label>
+        <textarea value={form.localContext || ''} onChange={set('localContext')} rows={2} className={inputCls} placeholder="예: 인근에 초·중·고 학군 밀집, 근처 대학교, 한인 기업/지사 다수" />
+        <p className="mt-1 text-xs text-gray-400">주변 학군·대학·한인 기업 등 지역 환경은 타깃 세대와 사역 방향에 영향을 줍니다.</p>
       </div>
 
       <div>

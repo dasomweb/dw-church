@@ -36,6 +36,8 @@ interface BusinessInfo {
   targetAudience: string;
   brandKeywords: string;
   location: string;
+  memberProfile: string; // 교회 구성원 (연령대·주재원/한국 신규 유입 등)
+  localContext: string; // 지역 환경 (학군·대학·한인 기업 등)
 }
 
 type ContentMap = Record<string, { pageName: string; purpose?: string; keyMessage?: string; sections: Array<Record<string, unknown>> }>;
@@ -187,6 +189,8 @@ export function PlannerWizard({ plannerApi, targetTenantName, onComplete, onClos
     targetAudience: "",
     brandKeywords: "",
     location: "",
+    memberProfile: "",
+    localContext: "",
   });
 
   // Marketing Strategy
@@ -213,12 +217,22 @@ export function PlannerWizard({ plannerApi, targetTenantName, onComplete, onClos
   /** Bundle the 4 must-have fields into the shape every plannerApi call
    *  spreads into its request body. Wrapped in a helper so any new agent
    *  endpoint added later picks up the channel without per-callsite edits. */
-  const mustHavePayload = () => ({
-    mustHaves,
-    requiredPages,
-    requiredKeyMessages,
-    requiredStats,
-  });
+  const mustHavePayload = () => {
+    // Church member profile + local context (school zones, colleges, Korean
+    // employers/expats) ride the must-have channel so every agent call reflects
+    // them — different church types/communities should yield different content.
+    const ctx = [
+      mustHaves,
+      business.memberProfile && `교회 구성원: ${business.memberProfile}`,
+      business.localContext && `지역 환경(학군·대학·한인 기업/주재원 등): ${business.localContext}`,
+    ].filter(Boolean).join("\n");
+    return {
+      mustHaves: ctx,
+      requiredPages,
+      requiredKeyMessages,
+      requiredStats,
+    };
+  };
 
   // Phase 1: Analysis results
   const [strategy, setStrategy] = useState<Record<string, unknown>>({});
@@ -346,6 +360,8 @@ export function PlannerWizard({ plannerApi, targetTenantName, onComplete, onClos
         targetAudience: parsed.targetAudience || "",
         brandKeywords: parsed.brandKeywords || "",
         location: parsed.location || "",
+        memberProfile: parsed.memberProfile || "",
+        localContext: parsed.localContext || "",
       };
       setBusiness(newBusiness);
       if (parsed.referenceUrls) {
@@ -1070,6 +1086,8 @@ function BusinessStep({
       <FieldWithSuggest label="Who We're Reaching" value={business.targetAudience} onChange={(v) => updateField("targetAudience", v)} onSuggest={() => onSuggest("targetAudience")} loading={loading} placeholder="Families seeking the gospel, next-gen parents, neighbors in the community..." textarea />
       <FieldWithSuggest label="Core Values / Keywords" value={business.brandKeywords} onChange={(v) => updateField("brandKeywords", v)} onSuggest={() => onSuggest("brandKeywords")} loading={loading} placeholder="Gospel, the Word, discipleship, community..." />
       <Field label="Location" value={business.location} onChange={(v) => updateField("location", v)} placeholder="1808 Plymouth Sorrento Rd Apopka, FL 32712" />
+      <Field label="교회 구성원 (Members)" value={business.memberProfile} onChange={(v) => updateField("memberProfile", v)} placeholder="연령대, 주재원·한국에서 막 오신 분 비중 등" textarea />
+      <Field label="지역 환경 (Local context)" value={business.localContext} onChange={(v) => updateField("localContext", v)} placeholder="주변 학군(초·중·고)·대학, 한인 기업/지사 등" textarea />
       <div>
         <label className="text-sm text-zinc-500 mb-1 block">Reference Sites (for inspiration)</label>
         <textarea

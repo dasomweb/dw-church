@@ -9,6 +9,9 @@ import { z } from 'zod';
  */
 export const APPLICATION_STATUSES = ['new', 'reviewing', 'approved', 'paid', 'converted', 'rejected'] as const;
 export const APPLICATION_PLANS = ['light', 'basic', 'plus', 'pro'] as const;
+// 교회 개척/사역 유형 (Send Network 모델) — 교회마다 우선 사역 지향점이 달라
+// AI 빌더가 콘텐츠를 그 유형에 맞춰 생성한다.
+export const APPLICATION_PLANTING_TYPES = ['standard', 'covocational', 'multisite', 'multiethnic', 'replant', 'micro', 'other'] as const;
 
 // Public submission — only church name + a way to reach them are required.
 export const createApplicationSchema = z.object({
@@ -25,6 +28,9 @@ export const createApplicationSchema = z.object({
   existingUrl: z.string().max(500).optional().nullable(), // 기존 웹사이트 (마이그레이션용)
   desiredDomain: z.string().max(255).optional().nullable(),
   message: z.string().max(5000).optional().nullable(), // 교회 소개 / 요청사항
+  plantingType: z.enum(APPLICATION_PLANTING_TYPES).optional().nullable(), // 개척/사역 유형
+  memberProfile: z.string().max(1000).optional().nullable(), // 교회 구성원 (연령대·주재원/한국 신규 유입 등)
+  localContext: z.string().max(1000).optional().nullable(), // 지역 환경 (학군·대학·한인 기업 등)
 });
 
 // Super-admin updates: workflow status, internal note, the payment link to send.
