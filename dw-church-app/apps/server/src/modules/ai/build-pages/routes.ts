@@ -962,15 +962,22 @@ function inferParentSlug(
  * Convert a slug-shape parent like "/our-orchids" into a friendly label
  * for a synthesized menu group ("Our Orchids").
  */
+// Common church-site category slugs → Korean labels, so a synthesized menu
+// group reads in Korean (the primary audience) instead of "About"/"Community".
+const KO_GROUP_LABELS: Record<string, string> = {
+  about: '교회 소개', community: '공동체', worship: '예배·말씀', sermons: '말씀',
+  ministry: '사역', ministries: '사역', media: '미디어', news: '소식',
+  visit: '오시는 길', contact: '오시는 길', connect: '함께하기', give: '헌금',
+  giving: '헌금', education: '교육', groups: '소그룹', 'small-groups': '소그룹',
+  cells: '목장', mission: '선교', missions: '선교', events: '행사',
+  gallery: '갤러리', resources: '자료', newcomers: '새가족', newcomer: '새가족',
+};
+
 function humanizeSlug(slug: string): string {
-  return slug
-    .replace(/^\/+/, '')
-    .split('/')
-    .filter(Boolean)
-    .pop()!
-    .split('-')
-    .map((w) => (w ? w[0]!.toUpperCase() + w.slice(1) : ''))
-    .join(' ');
+  const leaf = slug.replace(/^\/+/, '').split('/').filter(Boolean).pop() || '';
+  if (KO_GROUP_LABELS[leaf]) return KO_GROUP_LABELS[leaf];
+  // Fallback: title-case the leaf (e.g. "/our-orchids" → "Our Orchids").
+  return leaf.split('-').map((w) => (w ? w[0]!.toUpperCase() + w.slice(1) : '')).join(' ');
 }
 
 /**

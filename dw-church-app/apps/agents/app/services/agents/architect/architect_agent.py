@@ -128,6 +128,10 @@ class ArchitectAgent(BaseAgent[SitemapInput, SitemapDecision]):
                 "- 부모는 두 가지 방식 중 택1:\n"
                 "  a) 콘텐츠가 있는 카테고리 페이지 → 일반 slug \"/about\"\n"
                 "  b) 라벨만 있는 메뉴 그룹 → \"#about\"\n"
+                "  어느 방식이든 부모 항목을 한국어 name(예: \"교회 소개\", \"공동체\")과\n"
+                "  함께 sitemap 에 반드시 포함할 것. 자식만 넣고 부모 항목을 생략하면\n"
+                "  메뉴에 'About'/'Community' 같은 영어 라벨이 자동으로 생기므로 절대\n"
+                "  생략 금지. name 필드에는 영어 일반 카테고리명을 쓰지 말 것.\n"
                 "- 마지막에 '오시는 길' / '문의' 페이지 필수.\n"
                 "- top-level 메뉴 항목은 8개를 넘지 말 것.\n"
             )
