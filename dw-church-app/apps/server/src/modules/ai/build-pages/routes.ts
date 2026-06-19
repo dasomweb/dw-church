@@ -581,6 +581,17 @@ async function applyDesignToTheme(
   const input = designSystemToThemeInput(designSystem);
   if (!input) return;
   await updateTheme(tenantSchema, input);
+  // Preserve the generated design as a switchable, editable design set so the
+  // operator can keep / compare / restore AI design variations. Best-effort —
+  // a save failure must never fail the build.
+  if (input.tokensV2) {
+    try {
+      const { saveAiDesignSet } = await import('../../design-sets/service.js');
+      const now = new Date();
+      const stamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      await saveAiDesignSet(tenantSchema, `AI 생성 ${stamp}`, input.tokensV2 as Parameters<typeof saveAiDesignSet>[2]);
+    } catch { /* non-fatal */ }
+  }
 }
 
 /* ──────────────────────────────────────────────────────────

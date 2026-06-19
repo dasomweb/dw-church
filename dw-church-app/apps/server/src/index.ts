@@ -113,6 +113,7 @@ async function main(): Promise<void> {
   const { emailTemplateRoutes } = await import('./modules/email-templates/routes.js');
   const { promoRoutes } = await import('./modules/promo/routes.js');
   const { formRoutes } = await import('./modules/forms/routes.js');
+  const { designSetRoutes } = await import('./modules/design-sets/routes.js');
 
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(tenantRoutes, { prefix: '/api/v1/admin' });
@@ -189,6 +190,7 @@ async function main(): Promise<void> {
   await app.register(emailTemplateRoutes, { prefix: '/api/v1' }); // /admin/email-templates + /admin/email-broadcast
   await app.register(promoRoutes, { prefix: '/api/v1' }); // /promo/validate + /admin/promo
   await app.register(formRoutes, { prefix: '/api/v1' }); // /forms/:type (public) + /admin/forms/submissions
+  await app.register(designSetRoutes, { prefix: '/api/v1' }); // /design-sets (saved color/font sets)
 
   // --- Internal: resolve custom domain to tenant slug (used by Next.js middleware) ---
   app.get('/api/v1/admin/tenants/resolve-domain', async (request, reply) => {
@@ -442,6 +444,26 @@ async function main(): Promise<void> {
         `);
         await prisma.$executeRawUnsafe(
           `CREATE INDEX IF NOT EXISTS "form_submissions_type_idx" ON "${schema}".form_submissions ("form_type", "status", "created_at" DESC)`,
+        );
+        createHits++;
+      } catch { /* skip on error */ }
+
+      // 0g. design_sets — saved per-tenant design token snapshots (color set +
+      //     font set). AI builder saves each generated design here; operator
+      //     can apply/edit/delete. Applying copies tokens → themes.tokensV2.
+      try {
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".design_sets (
+            "id"         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "name"       VARCHAR(200) NOT NULL,
+            "source"     VARCHAR(20) NOT NULL DEFAULT 'manual' CHECK (source IN ('manual','ai','preset')),
+            "tokens"     JSONB NOT NULL DEFAULT '{}'::jsonb,
+            "created_at" TIMESTAMPTZ DEFAULT NOW(),
+            "updated_at" TIMESTAMPTZ DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(
+          `CREATE INDEX IF NOT EXISTS "design_sets_created_idx" ON "${schema}".design_sets ("created_at" DESC)`,
         );
         createHits++;
       } catch { /* skip on error */ }

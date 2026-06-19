@@ -35,7 +35,7 @@ import { useAuthStore } from '../../stores/auth';
 import { useToast } from '../../components';
 import { useSuperAdminTenant } from '../SuperAdminTenantLayout';
 
-type TabId = 'theme-set' | 'palette' | 'typography' | 'header' | 'footer' | 'spacing' | 'custom';
+type TabId = 'theme-set' | 'design-sets' | 'palette' | 'typography' | 'header' | 'footer' | 'spacing' | 'custom';
 
 // 2026-06-01 (Phase 10-α): "테마셋" 탭 추가. 슈퍼어드민의 일반적인 흐름은
 // "테마셋 선택" → 필요 시 가벼운 override (팔레트/타이포). 따라서 테마셋이
@@ -49,6 +49,7 @@ type TabId = 'theme-set' | 'palette' | 'typography' | 'header' | 'footer' | 'spa
 // inputs it presets.
 const TABS: { id: TabId; label: string }[] = [
   { id: 'theme-set',  label: '테마셋' },
+  { id: 'design-sets', label: '내 디자인셋' },
   { id: 'palette',    label: '팔레트' },
   { id: 'typography', label: '타이포그래피' },
   { id: 'header',     label: '헤더' },
@@ -225,6 +226,7 @@ export default function TenantThemeEditor() {
       </div>
 
       {tab === 'theme-set' && <ThemeSetTab onApplied={async () => { /* re-fetch tokens after apply */ const res = await fetch(`${baseUrl}/api/v1/theme/tokens`, { headers }); if (res.ok) { const b = await res.json() as { data: DesignTokens }; setTokens(b.data); setDirty(false); } }} />}
+      {tab === 'design-sets' && <DesignSetsTab tokens={tokens} onApplied={async () => { const res = await fetch(`${baseUrl}/api/v1/theme/tokens`, { headers }); if (res.ok) { const b = await res.json() as { data: DesignTokens }; setTokens(b.data); setDirty(false); } }} />}
       {tab === 'palette' && <PaletteTab tokens={tokens} onChange={applyTokens} saving={saving} />}
       {tab === 'typography' && <TypographyTab tokens={tokens} onChange={applyTokens} saving={saving} />}
       {tab === 'header' && <HeaderTab tokens={tokens} onChange={applyTokens} saving={saving} />}
@@ -848,6 +850,182 @@ interface ThemeSetMeta {
   previewImageUrl: string;
   tags: string[];
   recommendedFor?: string;
+}
+
+// ─── 내 디자인셋 (saved color/font sets) ──────────────────────────────
+// Per-tenant saved snapshots of the full design tokens. The AI builder saves
+// each generated design here (source='ai'); the operator can save the current
+// design manually, apply a set to the live theme, or delete one. Lets a tenant
+// keep / compare / restore AI design variations.
+interface DesignSetRow {
+  id: string;
+  name: string;
+  source: string;
+  tokens: DesignTokens;
+  createdAt?: string;
+  created_at?: string;
+}
+
+function DesignSetsTab({ tokens, onApplied }: { tokens: DesignTokens; onApplied: () => void | Promise<void> }) {
+  const session = useAuthStore((s) => s.session);
+  const { tenant } = useSuperAdminTenant();
+  const { showToast } = useToast();
+  const [sets, setSets] = useState<DesignSetRow[] | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [newName, setNewName] = useState('');
+
+  const baseUrl = useMemo(() => {
+    const host = typeof window !== 'undefined' ? window.location.hostname : '';
+    return host.startsWith('admin.')
+      ? `https://api.${host.replace('admin.', '')}`
+      : (import.meta.env.VITE_API_BASE_URL as string) || '';
+  }, []);
+  const headers = useMemo(() => ({
+    Authorization: `Bearer ${session?.accessToken ?? ''}`,
+    'X-Tenant-Slug': tenant?.slug ?? '',
+    'Content-Type': 'application/json',
+  }), [session?.accessToken, tenant?.slug]);
+
+  const load = async () => {
+    try {
+      const res = await fetch(`${baseUrl}/api/v1/design-sets`, { headers });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const body = await res.json() as { data: DesignSetRow[] };
+      setSets(body.data ?? []);
+    } catch {
+      setSets([]);
+    }
+  };
+  useEffect(() => { void load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [baseUrl, headers]);
+
+  const saveCurrent = async () => {
+    const name = newName.trim() || `디자인 ${new Date().toLocaleDateString('ko-KR')}`;
+    setSaving(true);
+    try {
+      const res = await fetch(`${baseUrl}/api/v1/design-sets`, {
+        method: 'POST', headers, body: JSON.stringify({ name, source: 'manual', tokens }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setNewName('');
+      await load();
+      showToast('success', '현재 디자인을 저장했습니다.');
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '저장 실패');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const apply = async (id: string) => {
+    setBusyId(id);
+    try {
+      const res = await fetch(`${baseUrl}/api/v1/design-sets/${id}/apply`, { method: 'POST', headers });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await onApplied();
+      showToast('success', '디자인셋을 적용했습니다.');
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '적용 실패');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const remove = async (id: string) => {
+    setBusyId(id);
+    try {
+      const res = await fetch(`${baseUrl}/api/v1/design-sets/${id}`, { method: 'DELETE', headers });
+      if (!res.ok && res.status !== 204) throw new Error(`HTTP ${res.status}`);
+      await load();
+      showToast('success', '삭제했습니다.');
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '삭제 실패');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  return (
+    <section className="space-y-5">
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-1">내 디자인셋</h3>
+        <p className="text-xs text-gray-500">
+          AI 빌더가 생성한 디자인과 직접 저장한 디자인(컬러셋 + 폰트셋)을 보관합니다. ‘적용’하면 현재 테마에 즉시 반영됩니다.
+        </p>
+      </div>
+
+      {/* Save current design */}
+      <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
+        <input
+          type="text"
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          placeholder="디자인셋 이름 (예: 봄 시즌)"
+          className="flex-1 px-2 py-1.5 text-xs border rounded"
+        />
+        <button
+          type="button"
+          onClick={saveCurrent}
+          disabled={saving}
+          className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-500 disabled:opacity-50"
+        >
+          {saving ? '저장 중…' : '현재 디자인 저장'}
+        </button>
+      </div>
+
+      {sets === null ? (
+        <div className="animate-pulse text-xs text-gray-400">불러오는 중…</div>
+      ) : sets.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-xs text-gray-400">
+          저장된 디자인셋이 없습니다. AI 빌더로 생성하거나 위에서 현재 디자인을 저장하세요.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {sets.map((s) => {
+            const sys = (s.tokens?.colors?.system ?? {}) as Record<string, string>;
+            const fam = (s.tokens?.typography?.families ?? {}) as Record<string, string>;
+            const swatches = ['primary', 'secondary', 'accent', 'background', 'surface', 'text'];
+            return (
+              <div key={s.id} className="rounded-lg border border-gray-200 bg-white p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-medium text-gray-900 truncate">{s.name}</span>
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${s.source === 'ai' ? 'bg-violet-100 text-violet-700' : 'bg-gray-100 text-gray-500'}`}>
+                    {s.source === 'ai' ? 'AI 생성' : s.source === 'preset' ? '프리셋' : '직접 저장'}
+                  </span>
+                </div>
+                <div className="mt-2 flex gap-1">
+                  {swatches.map((k) => (
+                    <span key={k} title={k} className="h-5 w-5 rounded border border-black/10" style={{ backgroundColor: sys[k] ?? '#fff' }} />
+                  ))}
+                </div>
+                <div className="mt-1.5 text-[10px] text-gray-400 truncate">
+                  {(fam.heading || '').split(',')[0]} · {(fam.body || '').split(',')[0]}
+                </div>
+                <div className="mt-2.5 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => apply(s.id)}
+                    disabled={busyId === s.id}
+                    className="flex-1 rounded-md bg-blue-600 px-2 py-1.5 text-xs font-semibold text-white hover:bg-blue-500 disabled:opacity-50"
+                  >
+                    {busyId === s.id ? '…' : '적용'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => remove(s.id)}
+                    disabled={busyId === s.id}
+                    className="rounded-md border border-gray-300 px-2 py-1.5 text-xs text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    삭제
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
 }
 
 function ThemeSetTab({ onApplied }: { onApplied: () => void | Promise<void> }) {
