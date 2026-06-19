@@ -331,7 +331,12 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   const fc = tokens.footer ?? DEFAULT_DESIGN_TOKENS.footer;
   const copyright = (fc.copyright ?? '').trim()
     || `© ${new Date().getFullYear()} ${churchName}. All rights Reserved.`;
-  const kakaoUrl = settings?.socialKakaotalkChannel ?? settings?.socialKakaotalk ?? settings?.social_kakaotalk_channel ?? settings?.social_kakaotalk ?? '';
+  // Settings come back snake_case from /settings (no camelize on the web side),
+  // with camelCase tolerated as a fallback.
+  const footerAddress = settings?.churchAddress ?? settings?.church_address ?? settings?.address ?? '';
+  const footerPhone = settings?.churchPhone ?? settings?.church_phone ?? settings?.phone ?? '';
+  const footerEmail = settings?.churchEmail ?? settings?.church_email ?? settings?.email ?? '';
+  const kakaoUrl = settings?.socialKakaotalkChannel ?? settings?.social_kakaotalk_channel ?? settings?.socialKakaotalk ?? settings?.social_kakaotalk ?? '';
   const instagramUrl = settings?.socialInstagram ?? settings?.social_instagram ?? '';
   const youtubeUrl = settings?.socialYoutube ?? settings?.social_youtube ?? '';
   const facebookUrl = settings?.socialFacebook ?? settings?.social_facebook ?? '';
@@ -540,9 +545,9 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                 )}
                 <div>
                   <h3 className="mb-3 text-sm font-semibold" style={{ color: fc.heading }}>{fc.directionsLabel}</h3>
-                  {settings?.address && <p className="text-sm leading-relaxed">{settings.address}</p>}
-                  {settings?.phone && <p className="mt-1.5 text-sm">{settings.phone}</p>}
-                  {settings?.email && <p className="mt-1.5 text-sm">{settings.email}</p>}
+                  {footerAddress && <p className="text-sm leading-relaxed">{footerAddress}</p>}
+                  {footerPhone && <p className="mt-1.5 text-sm">{footerPhone}</p>}
+                  {footerEmail && <p className="mt-1.5 text-sm">{footerEmail}</p>}
                 </div>
                 <div>
                   <h3 className="mb-3 text-sm font-semibold" style={{ color: fc.heading }}>{fc.socialLabel}</h3>

@@ -31,6 +31,16 @@ export function isValidKey(key: string): key is SettingKey {
   return (ALLOWED_KEYS as readonly string[]).includes(key);
 }
 
+// The api-client sends camelCase bodies (snakeize-on-send was removed so Zod
+// schemas keep their camelCase fields). Settings are stored snake_case (and the
+// storefront reads church_name etc.), so convert incoming keys before the
+// whitelist check. Idempotent for keys that are already snake_case.
+//   churchName → church_name, logoUrl → logo_url, socialKakaotalkChannel →
+//   social_kakaotalk_channel.
+function toSnakeKey(key: string): string {
+  return key.replace(/([A-Z])/g, '_$1').toLowerCase();
+}
+
 export async function getAllSettings(schema: string): Promise<Record<string, string>> {
   const rows = await prisma.$queryRawUnsafe<{ key: string; value: string }[]>(
     `SELECT key, value FROM "${schema}".settings`,
@@ -46,7 +56,8 @@ export async function upsertSettings(
   schema: string,
   settings: Record<string, string | null>,
 ): Promise<Record<string, string>> {
-  for (const [key, rawValue] of Object.entries(settings)) {
+  for (const [rawKey, rawValue] of Object.entries(settings)) {
+    const key = toSnakeKey(rawKey);
     if (!isValidKey(key)) continue;
     const value = typeof rawValue === 'object' && rawValue !== null ? JSON.stringify(rawValue) : rawValue;
 
