@@ -34,7 +34,7 @@ from app.services.agents.design import (
     DesignInput,
 )
 from app.services.agents.shared.church_voice import CHURCH_VOICE
-from app.services.agents.shared.church_content_reference import CHURCH_CONTENT_REFERENCE
+from app.services.agents.shared.church_content_reference import CHURCH_CANON
 from app.services.agents.shared.retry import SchemaValidationError
 from app.services.agents.strategy import (
     CensusSnapshot,
@@ -1076,12 +1076,13 @@ ready to publish, and must sound like a warm faith community — not a business.
 
 {CHURCH_VOICE}
 
-===== CHURCH CONTENT REFERENCE (canon — Dr. John Kwak, Church Planting LCCM 3354) =====
-Use §1–§12 as the theological/ministry source for what each page should actually
-say; apply §13's Do/Don't and pass the §13.5 seven-point self-check before
-finalizing. Draw concrete, specific substance — never generic church filler.
-{CHURCH_CONTENT_REFERENCE}
-===== END REFERENCE =====
+===== CHURCH CANON (Dr. John Kwak, Church Planting LCCM 3354 — full lectures + reference) =====
+Use the lectures as the theological/ministry source for what each page should
+actually say; apply the reference's §13 Do/Don't and pass the §13.5 seven-point
+self-check before finalizing. Draw concrete, specific substance — never generic
+church filler.
+{CHURCH_CANON}
+===== END CANON =====
 
 Church: "{body.businessName}" — {body.description}
 Ministries: {body.services}

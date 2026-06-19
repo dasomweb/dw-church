@@ -1,8 +1,16 @@
-# Church Website Content Reference — 교회 웹사이트 콘텐츠 신학·사역 가이드
+# Church Website Content Reference — Part 2: 응용 가이드
 
-> 출처: Dr. John Kwak 박사(johnjmkwak@gmail.com)의 Church Planting LCCM 3354 강의 자료 14개
-> (Class 01·03·04·05, Identifying a Church Planter, Lesson #5~15)를 본인 저작권자
-> 허가 하에 종합·정리한 정본.
+> 출처: Dr. John Kwak 박사(johnjmkwak@gmail.com)의 Church Planting LCCM 3354 강의
+> 자료 14개(Class 01·03·04·05, Identifying a Church Planter, Lesson #5~15)를 본인
+> 저작권자 허가 하에 종합·정리한 응용 가이드.
+>
+> **이 문서의 위치 (Part 2):** 웹 콘텐츠 생성 응용 가이드. 강의 정본 풀텍스트는 자매
+> 문서 [CHURCH-PLANTING-LECTURES-FULL.md](CHURCH-PLANTING-LECTURES-FULL.md) (Part 1)를
+> 참조. **두 문서를 함께 사용**할 때 가장 정확합니다.
+>
+> **사용 분담:**
+> - **Part 1 (풀텍스트):** 강의의 본문·성경 인용·예화·도표·사례를 그대로 보존
+> - **Part 2 (이 문서):** Do/Don't·페이지별 권장·톤 가이드·7항목 자가 점검 등 응용
 >
 > **이 문서의 용도:** 교회·교회 개척 단체의 웹사이트(About / Vision / Beliefs /
 > Ministries / Get Involved / Visit 등)에 들어갈 콘텐츠를 생성할 때, AI 에이전트가

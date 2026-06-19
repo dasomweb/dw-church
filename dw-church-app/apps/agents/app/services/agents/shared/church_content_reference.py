@@ -1,24 +1,41 @@
-"""Authoritative church-website content reference (Dr. John Kwak, Church
-Planting LCCM 3354), loaded from the bundled markdown next to this module.
+"""Authoritative church content canon (Dr. John Kwak, Church Planting LCCM 3354),
+loaded from the two bundled markdown files next to this module:
 
-CHURCH_VOICE (church_voice.py) only carries the §13 do/don't + 7-point ship
-checklist. That is the *finishing* guide. The actual theological / ministry
-substance a church page should draw on lives in §1–§12 of this canon (biblical
-basis, the NT church models, the four Kingdom competencies, grace+truth,
-Ridley's marks, contextualization, assimilation models, small-group process,
-F.A.T. teams, support, location, public-worship elements, master plan).
+  - church_planting_lectures.md   — the FULL lecture text (Part 1–…): the detailed
+    theological / ministry source (calling, character [grace & truth], competency,
+    biblical basis, NT church models, contextualization, assimilation, small groups,
+    teams, stewardship, public worship, master plan, with Scripture exposition).
+  - church_content_reference.md    — the consolidated reference + §13 web-content
+    guide (Do/Don't + the §13.5 seven-point ship checklist) and appendices.
 
-Inject CHURCH_CONTENT_REFERENCE into the content-generation system prompt so
-the AI builder grounds copy in this canon instead of staying at the level of
-generic summaries. It's large (~the full doc); keep it in the CACHED system
-block (cache_system=True) so repeated page generations read it cheaply.
+CHURCH_VOICE (church_voice.py) carries the §13 finishing rules + 7-point checklist.
+This module exposes the full substance so the AI builder grounds copy in the actual
+theology/ministry, not generic summaries.
+
+Injected into the CACHED system block (cache_system=True) so repeated page
+generations read it cheaply. It is large (~36K tokens combined) — that is the
+cost of grounding every page in the full canon.
 """
 
 from pathlib import Path
 
-_REF_PATH = Path(__file__).with_name("church_content_reference.md")
 
-try:
-    CHURCH_CONTENT_REFERENCE = _REF_PATH.read_text(encoding="utf-8")
-except FileNotFoundError:  # pragma: no cover - md is bundled by the Dockerfile
-    CHURCH_CONTENT_REFERENCE = ""
+def _load(name: str) -> str:
+    try:
+        return (Path(__file__).with_name(name)).read_text(encoding="utf-8")
+    except FileNotFoundError:  # pragma: no cover - md is bundled by the Dockerfile
+        return ""
+
+
+CHURCH_PLANTING_LECTURES = _load("church_planting_lectures.md")
+CHURCH_CONTENT_REFERENCE = _load("church_content_reference.md")
+
+# Combined canon injected into content-generation prompts.
+CHURCH_CANON = (
+    "########## CHURCH PLANTING LECTURES — FULL (theology & ministry source) "
+    "##########\n"
+    f"{CHURCH_PLANTING_LECTURES}\n\n"
+    "########## CHURCH WEBSITE CONTENT REFERENCE (consolidated + §13 web guide & "
+    "7-point ship checklist) ##########\n"
+    f"{CHURCH_CONTENT_REFERENCE}"
+)
