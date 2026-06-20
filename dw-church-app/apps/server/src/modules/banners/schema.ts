@@ -26,7 +26,9 @@ export const createBannerSchema = z.object({
   textOverlay: textOverlaySchema,
   category: z.enum(['main', 'sub']).default('main'),
   sortOrder: z.number().int().default(0),
-  status: z.enum(['draft', 'published']).default('published'),
+  // 'archived' matches the banners table CHECK + the admin status dropdown
+  // (보관). The schema omitted it, so picking 보관 would 400.
+  status: z.enum(['draft', 'published', 'archived']).default('published'),
 }).passthrough();
 
 export const updateBannerSchema = createBannerSchema.partial();

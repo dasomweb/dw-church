@@ -10,6 +10,146 @@ import {
 } from '@dw-church/api-client';
 import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, ImageUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
 
+// ─── 배너 이미지 생성 가이드 ──────────────────────────────────
+// AI 이미지 도구(ChatGPT 등)는 정확한 픽셀이 아니라 비율(aspect ratio) 기준으로
+// 생성하므로, 운영자가 좋은 결과를 얻도록 권장 사이즈 + 복사 가능한 프롬프트
+// 템플릿을 제공한다.
+const BANNER_SIZES: { use: string; size: string; ratio: string }[] = [
+  { use: 'PC(데스크톱) 메인', size: '1920 × 600', ratio: '16:5' },
+  { use: '태블릿', size: '1200 × 900', ratio: '4:3' },
+  { use: '모바일 메인', size: '1080 × 1350', ratio: '4:5' },
+  { use: '모바일 풀스크린', size: '1080 × 1920', ratio: '9:16' },
+];
+
+const PROMPT_PC = `Ultra-wide panoramic website hero banner.
+Aspect ratio 16:5 (1920×600).
+
+Modern church photography.
+Natural realistic lighting.
+Professional composition.
+Clean and elegant.
+
+Important:
+- Keep all important subjects within center 60% area
+- Leave generous negative space for text
+- Avoid placing important elements near edges
+- Suitable for website hero banner
+- No text, no logo, no watermark
+
+Ultra realistic.
+High-end commercial photography.`;
+
+const PROMPT_MOBILE = `Mobile website hero image.
+Aspect ratio 4:5 (1080×1350).
+
+Modern church photography.
+Natural realistic lighting.
+Professional composition.
+
+Important:
+- Main subject centered
+- Keep all important elements within center 50%
+- Leave negative space at top and bottom for text overlay
+- Optimized for mobile devices
+- No text, no logo
+
+Ultra realistic.
+High-end commercial photography.`;
+
+const PROMPT_MOBILE_FULL = `Mobile website splash screen.
+Aspect ratio 9:16 (1080×1920).
+
+Modern church environment.
+Natural light.
+Clean composition.
+
+Important:
+- Subject positioned in middle third
+- Leave space above and below for headlines
+- Safe area for mobile cropping
+- No text
+
+Professional photography.
+Ultra realistic.`;
+
+function PromptBlock({ label, prompt }: { label: string; prompt: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(prompt);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch { /* clipboard blocked — user can select manually */ }
+  };
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100">
+        <span className="text-xs font-semibold text-gray-700">{label}</span>
+        <button type="button" onClick={copy} className="text-xs font-medium text-blue-600 hover:text-blue-700">
+          {copied ? '복사됨 ✓' : '프롬프트 복사'}
+        </button>
+      </div>
+      <pre className="px-3 py-2 text-[11px] leading-relaxed text-gray-600 whitespace-pre-wrap font-sans max-h-44 overflow-auto">{prompt}</pre>
+    </div>
+  );
+}
+
+function BannerImageGuide() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50/40">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between px-4 py-2.5 text-left"
+      >
+        <span className="text-sm font-semibold text-blue-800">배너 이미지 만들기 가이드 (AI 이미지 생성)</span>
+        <svg className={`w-4 h-4 text-blue-500 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 9l-7 7-7-7" /></svg>
+      </button>
+      {open && (
+        <div className="space-y-4 px-4 pb-4">
+          <p className="text-xs leading-relaxed text-gray-600">
+            ChatGPT 등 AI 이미지는 <strong>정확한 픽셀이 아니라 비율(aspect ratio)</strong> 기준으로 생성됩니다.
+            프롬프트에 <strong>비율과 용도</strong>를 명확히 적고, 생성 후 Canva·Figma·Photoshop 등에서 최종 크기로
+            크롭/리사이즈하세요. <strong>모바일은 가로형을 그대로 쓰면 좌우가 잘려</strong> 중요한 부분이 사라지므로,
+            모바일 이미지는 별도로 생성하는 것을 권장합니다.
+          </p>
+
+          <div className="overflow-hidden rounded-lg border border-gray-200">
+            <table className="w-full text-xs">
+              <thead className="bg-gray-50 text-gray-500">
+                <tr>
+                  <th className="px-3 py-1.5 text-left font-medium">용도</th>
+                  <th className="px-3 py-1.5 text-left font-medium">권장 사이즈</th>
+                  <th className="px-3 py-1.5 text-left font-medium">비율</th>
+                </tr>
+              </thead>
+              <tbody>
+                {BANNER_SIZES.map((s) => (
+                  <tr key={s.use} className="border-t border-gray-100">
+                    <td className="px-3 py-1.5 text-gray-700">{s.use}</td>
+                    <td className="px-3 py-1.5 font-mono text-gray-600">{s.size}</td>
+                    <td className="px-3 py-1.5 font-mono text-gray-600">{s.ratio}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+            <PromptBlock label="PC 배너 (16:5 · 1920×600)" prompt={PROMPT_PC} />
+            <PromptBlock label="모바일 (4:5 · 1080×1350)" prompt={PROMPT_MOBILE} />
+            <PromptBlock label="모바일 풀스크린 (9:16 · 1080×1920)" prompt={PROMPT_MOBILE_FULL} />
+          </div>
+          <p className="text-[11px] text-gray-400">
+            프롬프트 복사 → AI 이미지 도구에 붙여넣기 → 생성 → (필요 시 크롭) → 위 ‘이미지 변경’에서 업로드.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface BannerFormData {
   title: string;
   pcImageUrl: string;
@@ -80,8 +220,11 @@ export default function BannerManagement() {
       subImageUrl: item.subImageUrl || '',
       linkUrl: item.linkUrl || '',
       linkTarget: item.linkTarget || '_self',
-      startDate: item.startDate || '',
-      endDate: item.endDate || '',
+      // DATE columns come back as ISO datetimes (2026-06-20T00:00:00.000Z); a
+      // type="date" input needs YYYY-MM-DD, and the server regex rejects the ISO
+      // form — slice so the date both displays and re-saves correctly.
+      startDate: item.startDate ? String(item.startDate).slice(0, 10) : '',
+      endDate: item.endDate ? String(item.endDate).slice(0, 10) : '',
       textHeading: overlay.heading || '',
       textSubheading: overlay.subheading || '',
       textDescription: overlay.description || '',
@@ -206,6 +349,7 @@ export default function BannerManagement() {
           </FormSection>
 
           <FormSection title="배너 이미지">
+            <BannerImageGuide />
             <FormRow>
               <ImageUpload
                 label="PC 이미지"
@@ -373,8 +517,8 @@ export default function BannerManagement() {
                         {item.category === 'main' ? '메인' : '서브'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm">{item.startDate || '-'}</td>
-                    <td className="px-4 py-3 text-sm">{item.endDate || '-'}</td>
+                    <td className="px-4 py-3 text-sm">{item.startDate ? String(item.startDate).slice(0, 10) : '-'}</td>
+                    <td className="px-4 py-3 text-sm">{item.endDate ? String(item.endDate).slice(0, 10) : '-'}</td>
                     <td className="px-4 py-3 text-sm">
                       {isActive(item) ? (
                         <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-800">활성</span>
