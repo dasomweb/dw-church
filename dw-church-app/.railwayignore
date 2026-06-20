@@ -1,0 +1,13 @@
+# Keep `railway up` uploads small. The Dockerfiles build from source inside the
+# container, so build outputs / deps don't need to be uploaded — and the Python
+# agents venv (~320MB) must never be packed into the admin/web build context
+# (it was causing the upload to time out).
+**/.venv
+**/__pycache__
+**/*.pyc
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+**/coverage
+**/*.log
