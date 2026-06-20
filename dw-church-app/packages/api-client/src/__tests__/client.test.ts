@@ -183,6 +183,7 @@ describe('DWChurchClient', () => {
       expect(res.data[0].preacher).toBe('곽정민 목사');
       expect(res.data[0].date).toBe('2023-07-09');
       expect(res.data[0].categoryIds).toEqual(['c1', 'c2']);
+      expect(res.data[0].category).toBe('주일, 오후'); // joined names for the list column
     });
 
     it('updateSermon returns the mapped shape', async () => {

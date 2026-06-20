@@ -552,7 +552,7 @@ export default function SermonManagement() {
                     <td className="px-4 py-3 text-sm font-medium">{item.title}</td>
                     <td className="px-4 py-3 text-sm">{item.preacher}</td>
                     <td className="px-4 py-3 text-sm">{item.scripture}</td>
-                    <td className="px-4 py-3 text-sm">{item.date}</td>
+                    <td className="px-4 py-3 text-sm">{item.date ? String(item.date).slice(0, 10) : '-'}</td>
                     <td className="px-4 py-3 text-sm">
                       {item.youtubeUrl ? (
                         <a href={item.youtubeUrl} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">

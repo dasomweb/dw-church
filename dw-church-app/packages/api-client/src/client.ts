@@ -78,12 +78,15 @@ function unwrapData<T>(res: unknown): T {
 // 설교자·날짜 fields load blank (looks like the save didn't stick).
 function mapSermon(raw: unknown): Sermon {
   const r = (raw ?? {}) as Record<string, unknown>;
-  const categories = Array.isArray(r.categories) ? (r.categories as Array<{ id?: string }>) : [];
+  const categories = Array.isArray(r.categories) ? (r.categories as Array<{ id?: string; name?: string }>) : [];
+  // `category` is the display string (list table shows it); fall back to the
+  // joined category names so the selected categories are visible in the list.
+  const categoryNames = categories.map((c) => c.name).filter(Boolean).join(', ');
   return {
     ...r,
     preacher: (r.preacher as string) ?? (r.preacherName as string) ?? '',
     date: (r.date as string) ?? (r.sermonDate as string) ?? '',
-    category: (r.category as string) ?? '',
+    category: ((r.category as string) || categoryNames) ?? '',
     categoryIds: (r.categoryIds as string[]) ?? categories.map((c) => c.id).filter(Boolean),
   } as Sermon;
 }
