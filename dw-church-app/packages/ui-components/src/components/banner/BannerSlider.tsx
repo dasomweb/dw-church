@@ -164,7 +164,7 @@ export function BannerSlider({
           className="absolute inset-0 h-full w-full object-cover transition-opacity duration-500"
         />
       </picture>
-      {overlayAlpha > 0 && (
+      {overlayAlpha > 0 && banner.textOverlay?.overlayEnabled !== false && (
         <div className="absolute inset-0" style={{ backgroundColor: overlayColor, opacity: overlayAlpha }} />
       )}
       <BannerTextOverlay banner={banner} />

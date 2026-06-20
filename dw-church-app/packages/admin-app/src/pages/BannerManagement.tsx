@@ -166,6 +166,7 @@ interface BannerFormData {
   textButtonUrl: string;
   textPosition: BannerPosition;
   textAlign: BannerAlign;
+  overlayEnabled: boolean;
   category: BannerCategory;
   status: PostStatus;
 }
@@ -232,6 +233,7 @@ export default function BannerManagement() {
       textButtonUrl: (overlay as any).buttonUrl || '',
       textPosition: overlay.position || 'center',
       textAlign: overlay.align || 'center',
+      overlayEnabled: (overlay as { overlayEnabled?: boolean }).overlayEnabled !== false, // default on
       category: item.category || 'main',
       status: item.status || 'draft',
     });
@@ -246,6 +248,7 @@ export default function BannerManagement() {
       textHeading: '', textSubheading: '', textDescription: '',
       textButtonText: '', textButtonUrl: '',
       textPosition: 'center', textAlign: 'center',
+      overlayEnabled: true,
       category: 'main', status: 'draft',
     });
     setView('edit');
@@ -282,6 +285,7 @@ export default function BannerManagement() {
         buttonUrl: formData.textButtonUrl,
         position: formData.textPosition,
         align: formData.textAlign,
+        overlayEnabled: formData.overlayEnabled,
       },
       category: formData.category,
       status: formData.status,
@@ -393,6 +397,11 @@ export default function BannerManagement() {
           </FormSection>
 
           <FormSection title="텍스트 오버레이">
+            <label className="mb-2 flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm font-medium text-gray-700">
+              <input type="checkbox" {...register('overlayEnabled')} />
+              어둡게(오버레이) 표시
+              <span className="ml-1 text-xs font-normal text-gray-400">— 끄면 이미지 위 어두운 막을 없애 원본 이미지를 그대로 보여줍니다.</span>
+            </label>
             <FormRow>
               <FormField label="제목">
                 <input {...register('textHeading')} className={inputClass} />

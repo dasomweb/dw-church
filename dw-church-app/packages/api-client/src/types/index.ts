@@ -122,6 +122,9 @@ export interface BannerTextOverlay {
   buttonUrl?: string;
   position: BannerPosition;
   align: BannerAlign;
+  // Tenant-toggleable dark overlay (scrim) for THIS banner. Default on (undefined
+  // → treated as true); set false to show the image with no dark overlay.
+  overlayEnabled?: boolean;
   // Optional — the admin banner editor doesn't author per-breakpoint widths;
   // BannerSlider falls back to defaults when absent.
   widths?: {

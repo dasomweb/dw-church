@@ -8,6 +8,8 @@ export const textOverlaySchema = z.object({
   buttonUrl: z.string().optional(),
   position: z.string().optional(),
   align: z.string().optional(),
+  // Tenant toggle for the dark overlay (scrim) on this banner. Default on.
+  overlayEnabled: z.boolean().optional(),
   widths: z.record(z.string()).optional(),
 }).optional().nullable();
 
