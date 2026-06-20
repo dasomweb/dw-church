@@ -72,6 +72,7 @@ const BillingPage = lazyWithReload(() => import('./pages/BillingPage'));
 // Phase 4, etc.).
 const SuperAdminTenantLayout = lazyWithReload(() => import('./super-admin/SuperAdminTenantLayout').then((m) => ({ default: m.SuperAdminTenantLayout })));
 const TenantOverview = lazyWithReload(() => import('./super-admin/pages/TenantOverview'));
+const TenantOwnerPanel = lazyWithReload(() => import('./super-admin/pages/TenantOwnerPanel'));
 const TenantThemeEditor = lazyWithReload(() => import('./super-admin/pages/TenantThemeEditor'));
 const TenantPageEditor = lazyWithReload(() => import('./super-admin/pages/TenantPageEditor'));
 const TenantFeaturePermissions = lazyWithReload(() => import('./super-admin/pages/TenantFeaturePermissions'));
@@ -273,7 +274,9 @@ export function App({ config }: { config: AppConfig }) {
                     so they "just work" mounted under the super-admin route. */}
                 <Route path="domains" element={<DomainSettings />} />
                 <Route path="settings" element={<SettingsPage />} />
-                <Route path="users" element={<UserManagement />} />
+                {/* Super-admin manages ONLY the owner account; admin/editor
+                    accounts are managed by each tenant (plan-limited). */}
+                <Route path="users" element={<TenantOwnerPanel />} />
                 <Route path="billing" element={<BillingPage />} />
                 <Route path="feature-permissions" element={<TenantFeaturePermissions />} />
                 <Route path="danger" element={<TenantDangerZone />} />
