@@ -1626,6 +1626,7 @@ const FIRST_TIME_GUIDE = churchBlock(
 const NEWCOMER_INFO = churchBlock(
   { title: 'Content', fields: [
     { key: 'title', label: '제목', type: 'text' },
+    { key: 'subtitle', label: '부제목', type: 'text' },
     { key: 'content', label: '내용', type: 'textarea' },
     { key: 'imageUrl', label: '이미지', type: 'image' },
   ]},
