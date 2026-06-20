@@ -914,6 +914,7 @@ const TEXT_ONLY: BlockElementRegistry = {
   sections: [
     { title: 'Content', elements: [
       { label: 'Headline', path: 'title', kind: 'text' },
+      { label: '부제목 (Subtitle)', path: 'subtitle', kind: 'text' },
       { label: 'Body', path: 'content', kind: 'html' },
       { label: 'Background Image (optional)', path: 'backgroundImageUrl', kind: 'image', hint: '섹션 전체 뒤에 깔리는 배경' },
     ]},
@@ -1452,6 +1453,7 @@ const PASTOR_MESSAGE = churchBlock(
   { title: 'Content', fields: [
     { key: 'eyebrow', label: '라벨(작은 윗글)', type: 'text', hint: '예: 인사말 · 담임목사' },
     { key: 'title', label: '섹션 제목', type: 'text' },
+    { key: 'subtitle', label: '부제목', type: 'text' },
     { key: 'pastorName', label: '이름', type: 'text' },
     { key: 'pastorTitle', label: '직함', type: 'text' },
     { key: 'message', label: '인사말', type: 'textarea' },
@@ -1472,7 +1474,9 @@ const PASTOR_MESSAGE = churchBlock(
 );
 const CHURCH_INTRO = churchBlock(
   { title: 'Content', fields: [
+    { key: 'eyebrow', label: '라벨(작은 윗글)', type: 'text' },
     { key: 'title', label: '제목', type: 'text' },
+    { key: 'subtitle', label: '부제목', type: 'text' },
     { key: 'content', label: '소개글', type: 'textarea' },
     { key: 'imageUrl', label: '이미지', type: 'image' },
   ]},
@@ -1574,6 +1578,7 @@ const HISTORY_TIMELINE = churchBlock(
 );
 const WORSHIP_TIMES = churchBlock(
   { title: 'Content', fields: [
+    { key: 'eyebrow', label: '라벨(작은 윗글)', type: 'text' },
     { key: 'title', label: '제목', type: 'text', hint: '예배/모임 목록은 콘텐츠 관리에서 편집합니다' },
   ]},
 );
@@ -1604,7 +1609,10 @@ const ADDRESS_INFO = churchBlock(
 const VISITOR_WELCOME = churchBlock(
   { title: 'Content', fields: [
     { key: 'title', label: '제목', type: 'text' },
-    { key: 'message', label: '환영 메시지', type: 'textarea' },
+    { key: 'subtitle', label: '부제목', type: 'text' },
+    // NewcomerInfoBlock renders props.content (the old 'message' key was never
+    // read → the welcome text never showed). Use 'content' so it actually renders.
+    { key: 'content', label: '환영 메시지', type: 'textarea' },
     { key: 'imageUrl', label: '이미지', type: 'image' },
   ]},
   { title: 'Design', fields: [
@@ -1646,6 +1654,7 @@ const GIVING_INFO = churchBlock(
 );
 const WORSHIP_SCHEDULE = churchBlock(
   { title: 'Content', fields: [
+    { key: 'eyebrow', label: '라벨(작은 윗글)', type: 'text' },
     { key: 'title', label: '제목', type: 'text', hint: '예배 시간은 콘텐츠 관리에서 편집합니다' },
   ]},
 );
