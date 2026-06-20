@@ -11,7 +11,7 @@ import {
   useDWChurchClient,
 } from '@dw-church/api-client';
 import { useQueryClient } from '@tanstack/react-query';
-import { FormField, FormSection, FormRow, inputClass, selectClass, useToast, ConfirmDialog, EmptyState, TableSkeleton, CategoryManager } from '../components';
+import { FormField, FormSection, FormRow, inputClass, selectClass, useToast, ConfirmDialog, EmptyState, TableSkeleton, CategoryManager, ImageUpload } from '../components';
 import { ContentMigrationButton } from '../components/ContentMigrationButton';
 import { useBulkDelete } from '../components/useBulkDelete';
 
@@ -43,6 +43,10 @@ function YouTubeMediaSection({ register, watch, setValue }: YouTubeMediaSectionP
   const thumbnailUrl = watch('thumbnailUrl') || '';
   const videoId = extractYouTubeId(youtubeUrl);
   const [picking, setPicking] = useState(false);
+  // Upload a custom thumbnail to R2 (client-side resized) so the operator can
+  // override the auto YouTube thumbnail with their own image.
+  const client = useDWChurchClient();
+  const uploadImage = async (file: File): Promise<string> => (await client!.uploadFile(file)).url;
 
   // Automatically choose the best available thumbnail when the user enters a
   // YouTube URL (single image, highest quality). YouTube returns a 120x90
@@ -79,10 +83,6 @@ function YouTubeMediaSection({ register, watch, setValue }: YouTubeMediaSectionP
     return () => { cancelled = true; };
   }, [videoId, thumbnailUrl, setValue]);
 
-  const handleRemoveThumb = () => {
-    setValue('thumbnailUrl', '');
-  };
-
   return (
     <FormSection title="미디어">
       <FormField label="YouTube URL">
@@ -102,45 +102,25 @@ function YouTubeMediaSection({ register, watch, setValue }: YouTubeMediaSectionP
         )}
       </FormField>
 
-      {/* 현재 선택된 썸네일 미리보기 */}
+      {/* 썸네일 — YouTube URL 입력 시 자동 생성되며, 직접 이미지를 업로드하거나
+          URL을 입력해 덮어쓸 수 있습니다. ImageUpload 가 미리보기/업로드/URL입력/삭제를
+          모두 제공. */}
       <div>
         <p className="text-sm font-medium text-gray-700 mb-1.5">썸네일</p>
-        {thumbnailUrl ? (
-          <div className="relative group">
-            <div className="relative rounded-lg overflow-hidden border border-gray-200" style={{ aspectRatio: '16/9' }}>
-              <img src={thumbnailUrl} alt="썸네일 미리보기" className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                <button
-                  type="button"
-                  onClick={handleRemoveThumb}
-                  className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium shadow"
-                >
-                  삭제
-                </button>
-              </div>
-            </div>
-            <p className="text-xs text-gray-400 mt-1 truncate">{thumbnailUrl}</p>
-          </div>
-        ) : (
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-            <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <p className="text-sm text-gray-500">
-              {videoId ? 'YouTube 썸네일을 선택하세요' : 'YouTube URL을 입력하면 썸네일이 자동 생성됩니다'}
-            </p>
-          </div>
-        )}
-        {/* 직접 URL 입력 폴백 */}
-        <div className="mt-2">
-          <input
-            type="text"
-            value={thumbnailUrl}
-            onChange={(e) => setValue('thumbnailUrl', e.target.value)}
-            placeholder="또는 썸네일 URL 직접 입력"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-          />
-        </div>
+        <ImageUpload
+          label=""
+          value={thumbnailUrl}
+          onChange={(url) => setValue('thumbnailUrl', url, { shouldDirty: true })}
+          onUpload={uploadImage}
+          resize="content"
+          aspectRatio="16/9"
+        />
+        <p className="text-xs text-gray-400 mt-1">
+          {videoId
+            ? 'YouTube URL을 넣으면 썸네일이 자동 생성됩니다. 직접 업로드하면 자동 썸네일 대신 사용됩니다.'
+            : '이미지를 직접 업로드하거나 URL을 입력하세요. (YouTube URL 입력 시 자동 생성)'}
+          {picking && <span className="ml-1 text-gray-500">· 자동 썸네일 찾는 중…</span>}
+        </p>
         <input type="hidden" {...register('thumbnailUrl')} />
       </div>
     </FormSection>
