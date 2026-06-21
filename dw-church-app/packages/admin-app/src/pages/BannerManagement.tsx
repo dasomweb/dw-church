@@ -514,6 +514,26 @@ export default function BannerManagement() {
 
       {data && data.data.length > 0 && (
         <>
+          {/* 상태 범례 — '표시중'과 '공개'의 차이를 헷갈리지 않도록 명시 */}
+          <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-xs text-gray-500">
+            <span className="font-semibold text-gray-600">상태 안내</span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="px-1.5 py-0.5 rounded bg-green-100 text-green-800">표시중</span>
+              공개 + 표시 기간 내 — 지금 사이트에 노출
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">공개</span>
+              공개 상태이나 표시 기간 아님(예약/종료)
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">임시저장</span>
+              비공개 초안
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">보관</span>
+              사용 안 함
+            </span>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
