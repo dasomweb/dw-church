@@ -95,7 +95,14 @@ export async function ScheduleBoardBlock({ props, slug }: ScheduleBoardBlockProp
             </h3>
           ) : null}
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--fs-sm, 0.95rem)' }}>
+            {/* table-layout:fixed + colgroup so every group's columns line up
+                vertically (30% / even split) instead of each table auto-sizing. */}
+            <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', fontSize: 'var(--fs-sm, 0.95rem)' }}>
+              <colgroup>
+                {(g.columns && g.columns.length > 0 ? g.columns : ['', '', '']).map((_, ci, arr) => (
+                  <col key={ci} style={{ width: ci === 0 ? '30%' : `${70 / Math.max(1, arr.length - 1)}%` }} />
+                ))}
+              </colgroup>
               {g.columns && g.columns.length > 0 ? (
                 <thead>
                   <tr>
