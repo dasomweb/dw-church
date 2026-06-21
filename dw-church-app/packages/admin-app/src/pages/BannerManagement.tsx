@@ -171,6 +171,15 @@ interface BannerFormData {
   status: PostStatus;
 }
 
+// 상태 칸 한글 라벨/색상. '표시중'(녹색)은 별도 — 공개 + 표시 기간 내라 지금 사이트에
+// 노출되는 배너. 그 외에는 발행 상태(공개/임시저장/보관)를 그대로 보여준다.
+const BANNER_STATUS_LABELS: Record<string, string> = { published: '공개', draft: '임시저장', archived: '보관' };
+const BANNER_STATUS_BADGE: Record<string, string> = {
+  published: 'bg-blue-100 text-blue-700',
+  draft: 'bg-amber-100 text-amber-700',
+  archived: 'bg-gray-100 text-gray-500',
+};
+
 const POSITION_OPTIONS: { value: BannerPosition; label: string }[] = [
   { value: 'top-left', label: '좌측 상단' },
   { value: 'top-center', label: '중앙 상단' },
@@ -530,9 +539,14 @@ export default function BannerManagement() {
                     <td className="px-4 py-3 text-sm">{item.endDate ? String(item.endDate).slice(0, 10) : '-'}</td>
                     <td className="px-4 py-3 text-sm">
                       {isActive(item) ? (
-                        <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-800">활성</span>
+                        <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-800" title="공개 상태이며 표시 기간 내라 지금 사이트에 노출됩니다">표시중</span>
                       ) : (
-                        <span className="px-2 py-1 rounded text-xs bg-gray-100 text-gray-600">{item.status}</span>
+                        <span
+                          className={`px-2 py-1 rounded text-xs ${BANNER_STATUS_BADGE[item.status] ?? 'bg-gray-100 text-gray-600'}`}
+                          title={item.status === 'published' ? '공개 상태이지만 표시 기간이 아닙니다 (예약 또는 종료)' : undefined}
+                        >
+                          {BANNER_STATUS_LABELS[item.status] ?? item.status}
+                        </span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-sm space-x-2">
