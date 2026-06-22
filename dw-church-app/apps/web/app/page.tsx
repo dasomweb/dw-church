@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import DemoRequestButton from '../components/DemoRequestButton';
 
 // ─── Bilingual copy (Korean is the primary/default language) ──────────────
 // truelight.app marketing site. Korean renders by default (SSR + first paint);
@@ -258,7 +259,7 @@ const COPY: Record<Lang, Copy> = {
   },
 };
 
-function HeroSlider({ slides, getStarted, seePlans }: { slides: { headline: string; subline: string }[]; getStarted: string; seePlans: string }) {
+function HeroSlider({ slides, getStarted, seePlans, lang }: { slides: { headline: string; subline: string }[]; getStarted: string; seePlans: string; lang: Lang }) {
   const [current, setCurrent] = useState(0);
   const next = useCallback(() => setCurrent((c) => (c + 1) % slides.length), [slides.length]);
 
@@ -296,6 +297,7 @@ function HeroSlider({ slides, getStarted, seePlans }: { slides: { headline: stri
                 <a href="#plans" className="rounded-lg border border-white/30 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10 sm:px-8 sm:text-base">
                   {seePlans}
                 </a>
+                <DemoRequestButton lang={lang} />
               </div>
             </div>
           </div>
@@ -385,7 +387,7 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Slider */}
-      <HeroSlider slides={t.hero.slides} getStarted={t.hero.getStarted} seePlans={t.hero.seePlans} />
+      <HeroSlider slides={t.hero.slides} getStarted={t.hero.getStarted} seePlans={t.hero.seePlans} lang={lang} />
 
       {/* Trust Bar */}
       <section className="border-b border-gray-100 bg-gray-50 px-4 py-6 sm:px-6">

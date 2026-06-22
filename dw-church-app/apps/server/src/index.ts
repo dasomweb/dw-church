@@ -114,6 +114,8 @@ async function main(): Promise<void> {
   const { promoRoutes } = await import('./modules/promo/routes.js');
   const { formRoutes } = await import('./modules/forms/routes.js');
   const { designSetRoutes } = await import('./modules/design-sets/routes.js');
+  const { demoRequestRoutes } = await import('./modules/demo-requests/routes.js');
+  const { demoTenantRoutes } = await import('./modules/demo-tenant/routes.js');
 
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(tenantRoutes, { prefix: '/api/v1/admin' });
@@ -191,6 +193,8 @@ async function main(): Promise<void> {
   await app.register(promoRoutes, { prefix: '/api/v1' }); // /promo/validate + /admin/promo
   await app.register(formRoutes, { prefix: '/api/v1' }); // /forms/:type (public) + /admin/forms/submissions
   await app.register(designSetRoutes, { prefix: '/api/v1' }); // /design-sets (saved color/font sets)
+  await app.register(demoRequestRoutes, { prefix: '/api/v1' }); // /demo-requests (public) + /admin/demo-requests + /admin/demo-config
+  await app.register(demoTenantRoutes, { prefix: '/api/v1' }); // /admin/demo-tenant/* (snapshot/reset/status)
 
   // --- Internal: resolve custom domain to tenant slug (used by Next.js middleware) ---
   app.get('/api/v1/admin/tenants/resolve-domain', async (request, reply) => {
@@ -713,6 +717,52 @@ async function main(): Promise<void> {
     app.log.warn(`service_applications table migration skipped: ${err}`);
   }
 
+  // --- demo tenant: 체험 신청 CRM + 야간 스냅샷 메타 + 공유 접속 계정 설정 ---
+  //     All platform-level (public schema) — the demo tenant lets prospects test.
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "demo_requests" (
+        "id"          UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+        "name"        VARCHAR(100) NOT NULL,
+        "church_name" VARCHAR(200),
+        "email"       VARCHAR(200) NOT NULL,
+        "phone"       VARCHAR(50),
+        "message"     TEXT,
+        "status"      VARCHAR(20)  NOT NULL DEFAULT 'new' CHECK (status IN ('new','contacted','sent','archived')),
+        "memo"        TEXT,
+        "created_at"  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+        "updated_at"  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+      )
+    `);
+    await prisma.$executeRawUnsafe(
+      `CREATE INDEX IF NOT EXISTS "demo_requests_status_idx" ON "demo_requests" ("status", "created_at" DESC)`,
+    );
+    // Snapshot metadata (one row per demo tenant slug).
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "demo_snapshots" (
+        "slug"        TEXT        PRIMARY KEY,
+        "table_count" INT,
+        "taken_at"    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    // Shared demo-account access info the super-admin sends to applicants (singleton).
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "demo_config" (
+        "id"             INT         PRIMARY KEY DEFAULT 1,
+        "login_url"      VARCHAR(500),
+        "login_email"    VARCHAR(200),
+        "login_password" VARCHAR(200),
+        "message_body"   TEXT,
+        "updated_at"     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO "demo_config" ("id", "login_url") VALUES (1, 'https://admin.truelight.app/t/dasom/login') ON CONFLICT ("id") DO NOTHING`,
+    );
+  } catch (err) {
+    app.log.warn(`demo tables migration skipped: ${err}`);
+  }
+
   // --- reference_denominations (이단 필터 보조 데이터, 슈퍼어드민 관리) ---
   try {
     await prisma.$executeRawUnsafe(`
@@ -981,6 +1031,10 @@ async function main(): Promise<void> {
   // --- Start ---
   await app.listen({ port: env.PORT, host: '0.0.0.0' });
   app.log.info(`Server listening on port ${env.PORT} (${env.NODE_ENV})`);
+
+  // Nightly reset of the demo tenant (03:00 America/New_York) — wipes tester garbage.
+  const { startDemoResetScheduler } = await import('./modules/demo-tenant/scheduler.js');
+  startDemoResetScheduler();
 
   // --- Graceful shutdown ---
   const shutdown = async (signal: string): Promise<void> => {
