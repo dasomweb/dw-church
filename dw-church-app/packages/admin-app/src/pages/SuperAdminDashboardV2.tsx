@@ -2448,31 +2448,28 @@ function DemoTab() {
         </div>
       </div>
 
-      {/* 공유 데모 접속정보 */}
+      {/* 데모 접속 안내 설정 */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-        <h3 className="text-sm font-bold text-gray-900">공유 데모 접속정보</h3>
-        <p className="mt-1 text-xs text-gray-500">신청자에게 "접속정보 보내기"로 발송되는 공유 데모 계정입니다.</p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <h3 className="text-sm font-bold text-gray-900">데모 접속 안내 설정</h3>
+        <p className="mt-1 text-xs text-gray-500">"접속정보 보내기"를 누르면 신청자별 임시 계정이 자동 발급됩니다.</p>
+        <div className="mt-3 rounded-lg bg-blue-50 border border-blue-100 px-4 py-3 text-xs text-blue-800 leading-relaxed">
+          • 아이디 = <strong>신청자 이메일</strong><br />
+          • 비밀번호 = <strong>24시간 임시 난수</strong> (발송 시 자동 생성)<br />
+          • 계정은 <strong>발급 후 24시간이 지나면 자동 삭제</strong>되며, 안내 메일에도 명시됩니다.
+        </div>
+        <div className="mt-3 grid gap-3">
           <label className="text-xs font-medium text-gray-600">접속 주소(URL)
             <input value={cfg.loginUrl} onChange={(e) => setCfg({ ...cfg, loginUrl: e.target.value })}
               className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900" placeholder="https://admin.truelight.app/t/dasom/login" />
           </label>
-          <label className="text-xs font-medium text-gray-600">아이디(이메일)
-            <input value={cfg.loginEmail} onChange={(e) => setCfg({ ...cfg, loginEmail: e.target.value })}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900" placeholder="demo@truelight.app" />
-          </label>
-          <label className="text-xs font-medium text-gray-600">비밀번호
-            <input value={cfg.loginPassword} onChange={(e) => setCfg({ ...cfg, loginPassword: e.target.value })}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900" placeholder="공유 데모 비밀번호" />
-          </label>
-          <label className="text-xs font-medium text-gray-600 sm:col-span-2">안내 메시지(선택)
+          <label className="text-xs font-medium text-gray-600">안내 메시지(선택)
             <textarea value={cfg.messageBody} onChange={(e) => setCfg({ ...cfg, messageBody: e.target.value })} rows={2}
               className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900" placeholder="비워두면 기본 안내문이 발송됩니다." />
           </label>
         </div>
         <button onClick={saveCfg} disabled={busy === 'cfg'}
           className="mt-3 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60">
-          {busy === 'cfg' ? '저장 중…' : '접속정보 저장'}
+          {busy === 'cfg' ? '저장 중…' : '안내 설정 저장'}
         </button>
       </div>
 

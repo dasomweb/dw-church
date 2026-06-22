@@ -1,4 +1,5 @@
 import { DEMO_SLUG, restoreSnapshot, hasSnapshot } from './service.js';
+import { cleanupExpiredDemoLogins } from './demo-login.js';
 
 /**
  * In-process nightly reset of the demo tenant at 03:00 America/New_York (handles
@@ -21,6 +22,14 @@ function etNow(): { date: string; hour: number; minute: number } {
 }
 
 async function tick(): Promise<void> {
+  // Every minute: delete demo accounts whose 24h window has passed.
+  try {
+    const removed = await cleanupExpiredDemoLogins();
+    if (removed > 0) console.log(`[demo-login] removed ${removed} expired demo account(s)`);
+  } catch (err) {
+    console.error('[demo-login] cleanup failed:', err);
+  }
+
   const { date, hour, minute } = etNow();
   // 03:00–03:04 window; the date guard ensures it runs at most once per ET day.
   if (hour !== 3 || minute >= 5 || lastRunDate === date) return;
