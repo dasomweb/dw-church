@@ -692,22 +692,22 @@ export class DWChurchClient {
   }
 
   async getFormSubmissions(params?: { formType?: string; status?: FormSubmissionStatus }): Promise<FormSubmission[]> {
-    const res = await this.api.get(`${this.namespace}/admin/forms/submissions`, params);
+    const res = await this.api.get(`${this.namespace}/form-submissions`, params);
     return unwrapData(res);
   }
 
   async getFormSubmission(id: string): Promise<FormSubmission> {
-    const res = await this.api.get(`${this.namespace}/admin/forms/submissions/${id}`);
+    const res = await this.api.get(`${this.namespace}/form-submissions/${id}`);
     return unwrapData(res);
   }
 
   async updateFormSubmission(id: string, data: { status?: FormSubmissionStatus; memo?: string }): Promise<FormSubmission> {
-    const res = await this.api.put(`${this.namespace}/admin/forms/submissions/${id}`, data);
+    const res = await this.api.put(`${this.namespace}/form-submissions/${id}`, data);
     return unwrapData(res);
   }
 
   async deleteFormSubmission(id: string): Promise<void> {
-    return this.api.delete(`${this.namespace}/admin/forms/submissions/${id}`);
+    return this.api.delete(`${this.namespace}/form-submissions/${id}`);
   }
 
   // ─── Boards (게시판) ───���──────────────────────────────────

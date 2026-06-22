@@ -84,23 +84,23 @@ describe('forms — public submission', () => {
 });
 
 describe('forms — admin inbox (auth gate)', () => {
-  it('GET /admin/forms/submissions without token → 401', async () => {
-    const res = await app.inject({ method: 'GET', url: '/api/v1/admin/forms/submissions', headers: { 'x-tenant-slug': 'demo' } });
+  it('GET /form-submissions without token → 401', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/v1/form-submissions', headers: { 'x-tenant-slug': 'demo' } });
     expect(res.statusCode).toBe(401);
   });
 
-  it('GET /admin/forms/submissions with token → 200', async () => {
+  it('GET /form-submissions with token → 200', async () => {
     const res = await app.inject({
-      method: 'GET', url: '/api/v1/admin/forms/submissions?formType=contact',
+      method: 'GET', url: '/api/v1/form-submissions?formType=contact',
       headers: { 'x-tenant-slug': 'demo', authorization: `Bearer ${token('demo')}` },
     });
     expect(res.statusCode).toBe(200);
     expect(formSvc.listFormSubmissions).toHaveBeenCalledWith('tenant_demo', { formType: 'contact', status: undefined });
   });
 
-  it('PUT /admin/forms/submissions/:id updates status → 200', async () => {
+  it('PUT /form-submissions/:id updates status → 200', async () => {
     const res = await app.inject({
-      method: 'PUT', url: '/api/v1/admin/forms/submissions/f1',
+      method: 'PUT', url: '/api/v1/form-submissions/f1',
       headers: { 'x-tenant-slug': 'demo', authorization: `Bearer ${token('demo')}` },
       payload: { status: 'done', memo: '연락 완료' },
     });
@@ -108,9 +108,9 @@ describe('forms — admin inbox (auth gate)', () => {
     expect(res.json().data.status).toBe('done');
   });
 
-  it('DELETE /admin/forms/submissions/:id → 204', async () => {
+  it('DELETE /form-submissions/:id → 204', async () => {
     const res = await app.inject({
-      method: 'DELETE', url: '/api/v1/admin/forms/submissions/f1',
+      method: 'DELETE', url: '/api/v1/form-submissions/f1',
       headers: { 'x-tenant-slug': 'demo', authorization: `Bearer ${token('demo')}` },
     });
     expect(res.statusCode).toBe(204);
