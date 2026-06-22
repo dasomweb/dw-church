@@ -52,8 +52,11 @@ export default async function tenantRoutes(app: FastifyInstance): Promise<void> 
   // POST /admin/tenants
   app.post('/tenants', async (request, reply) => {
     const body = createTenantSchema.parse(request.body);
-    const tenant = await tenantService.createTenant(body);
-    return reply.status(201).send(tenant);
+    // createTenant now returns { tenant, tempPassword }; the manual-create
+    // response keeps its tenant-only shape (super-admin issues login via the
+    // owner panel's support-password if needed).
+    const { tenant, tempPassword } = await tenantService.createTenant(body);
+    return reply.status(201).send({ ...tenant, tempPassword });
   });
 
   // PUT /admin/tenants/:id

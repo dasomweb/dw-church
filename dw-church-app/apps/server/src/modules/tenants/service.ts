@@ -142,7 +142,48 @@ export async function createTenant(input: CreateTenantInput) {
   // a password is rotated by the super admin from the detail modal).
   await ensureSupportUser(tenant.id, slug);
 
-  return tenant;
+  // tempPassword is returned so callers (e.g. payment auto-provisioning) can
+  // email the owner their first-login credentials.
+  return { tenant, tempPassword };
+}
+
+// ─── Auto-provisioning from a paid application (b2bsmart-style) ──────────────
+const SLUG_FALLBACK = 'church';
+
+/** Slugify a church name or desired domain into a valid tenant slug base. */
+function slugifyForTenant(raw: string): string {
+  const base = ((raw ?? '').split('.')[0] ?? '') // drop a TLD if a full domain was entered
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return base.length >= 2 ? base.slice(0, 40) : SLUG_FALLBACK;
+}
+
+/** Generate a unique, valid, non-reserved slug, appending -2/-3… on collision. */
+export async function generateUniqueSlug(raw: string): Promise<string> {
+  let base = slugifyForTenant(raw);
+  if (RESERVED_SLUGS.has(base) || !SLUG_FORMAT.test(base)) base = SLUG_FALLBACK;
+  let candidate = base;
+  for (let n = 2; n < 1000; n += 1) {
+    if ((await checkSlugAvailability(candidate)).available) return candidate;
+    candidate = `${base}-${n}`;
+  }
+  return `${base}-${Date.now()}`;
+}
+
+/**
+ * Create a tenant + owner from a paid service_application row. Returns the slug,
+ * the owner email, and the temp password so the caller can email credentials.
+ */
+export async function provisionTenantFromApplication(appRow: Record<string, unknown>) {
+  const churchName = (appRow.church_name as string) || 'True Light Church';
+  const ownerEmail = (appRow.email as string) || '';
+  const ownerName = (appRow.contact_name as string) || churchName;
+  const plan = (appRow.plan as CreateTenantInput['plan']) || 'basic';
+  const slug = await generateUniqueSlug((appRow.desired_domain as string) || churchName);
+  const { tenant, tempPassword } = await createTenant({ name: churchName, slug, ownerEmail, ownerName, plan });
+  return { tenant, tempPassword, slug, ownerEmail };
 }
 
 export async function updateTenant(id: string, input: UpdateTenantInput) {

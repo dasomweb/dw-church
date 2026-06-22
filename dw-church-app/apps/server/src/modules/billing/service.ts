@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import { prisma } from '../../config/database.js';
 import { AppError } from '../../middleware/error-handler.js';
+import { sendEmail } from '../../config/email.js';
 
 const stripeKey = process.env.STRIPE_SECRET_KEY || '';
 const stripe = stripeKey ? new Stripe(stripeKey) : null;
@@ -183,14 +184,63 @@ export async function handleWebhook(
           },
         });
       }
-      // Application-driven (done-for-you) checkout → mark the 신청서 paid so the
-      // super admin can proceed to build the site.
+      // Application-driven (done-for-you) checkout → mark the 신청서 paid, then
+      // AUTO-PROVISION the tenant + owner (b2bsmart-style) and email the owner
+      // their first-login credentials. Idempotent (skips if already linked) and
+      // best-effort (a provisioning failure leaves status='paid' for the super
+      // admin to create the tenant manually — the webhook still returns 200).
       const applicationId = session.metadata?.applicationId;
       if (applicationId) {
         await prisma.$executeRawUnsafe(
           `UPDATE public.service_applications SET status = 'paid', updated_at = NOW() WHERE id = $1::uuid`,
           applicationId,
         );
+        try {
+          const apps = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
+            `SELECT * FROM public.service_applications WHERE id = $1::uuid`,
+            applicationId,
+          );
+          const appRow = apps[0];
+          if (appRow && !appRow.tenant_slug) {
+            const { provisionTenantFromApplication } = await import('../tenants/service.js');
+            const { slug, tempPassword, ownerEmail, tenant } = await provisionTenantFromApplication(appRow);
+            // Attach the Stripe IDs so invoice/subscription webhooks find the tenant.
+            await prisma.tenant.update({
+              where: { id: tenant.id },
+              data: {
+                stripeSubscriptionId: (session.subscription as string) ?? undefined,
+                stripeCustomerId: (session.customer as string) ?? undefined,
+              },
+            }).catch(() => { /* non-fatal */ });
+            await prisma.$executeRawUnsafe(
+              `UPDATE public.service_applications SET status = 'converted', tenant_slug = $2, updated_at = NOW() WHERE id = $1::uuid`,
+              applicationId,
+              slug,
+            );
+            if (ownerEmail) {
+              const loginUrl = `https://admin.truelight.app/t/${slug}/login`;
+              const churchName = (appRow.church_name as string) || 'True Light';
+              await sendEmail({
+                to: ownerEmail,
+                from: 'order',
+                subject: `[TRUE LIGHT] ${churchName} 관리자 계정이 준비되었습니다`,
+                html: `
+                  <div style="font-family:Pretendard,sans-serif;max-width:560px;margin:0 auto;color:#1f2937;line-height:1.6">
+                    <h2 style="color:#2563eb">가입이 완료되었습니다 🎉</h2>
+                    <p><strong>${churchName}</strong> 님, 결제가 확인되어 관리자 계정이 생성되었습니다.<br/>아래 정보로 로그인하신 뒤 비밀번호를 변경해 주세요.</p>
+                    <table style="margin:16px 0;font-size:14px">
+                      <tr><td style="padding:4px 12px 4px 0;color:#6b7280">로그인 주소</td><td><a href="${loginUrl}">${loginUrl}</a></td></tr>
+                      <tr><td style="padding:4px 12px 4px 0;color:#6b7280">이메일</td><td>${ownerEmail}</td></tr>
+                      <tr><td style="padding:4px 12px 4px 0;color:#6b7280">임시 비밀번호</td><td style="font-family:monospace;font-weight:700">${tempPassword}</td></tr>
+                    </table>
+                    <p style="font-size:13px;color:#6b7280">로그인 후 <strong>초기 셋업</strong>에서 교회 정보를 입력해 주시면, 저희가 사이트를 제작해 오픈해 드립니다.</p>
+                  </div>`,
+              }).catch((err) => console.error('[email] owner welcome failed:', err));
+            }
+          }
+        } catch (err) {
+          console.error('[webhook] tenant auto-provision failed (left as paid for manual handling):', err);
+        }
       }
       break;
     }
