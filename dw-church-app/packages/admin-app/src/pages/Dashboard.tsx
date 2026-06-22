@@ -189,12 +189,15 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const apiClient = useDWChurchClient();
   const isSuperAdmin = !!useAuthStore((s) => s.session)?.user?.isSuperAdmin;
+  const role = useAuthStore((s) => s.session)?.user?.role;
 
-  // b2bsmart-style first-login onboarding: a tenant owner who hasn't submitted
+  // b2bsmart-style first-login onboarding: a tenant OWNER who hasn't submitted
   // the initial setup is sent to the standalone onboarding page. Skipped once
-  // they click '나중에 하기' (session flag) and never for super-admins viewing.
+  // they click '나중에 하기' (session flag), never for super-admins, and never
+  // for non-owners (invited admins/editors, demo testers) — onboarding is the
+  // owner's setup task, so a demo login lands straight on the dashboard.
   useEffect(() => {
-    if (isSuperAdmin || sessionStorage.getItem('tl_onboarding_skip')) return;
+    if (isSuperAdmin || role !== 'owner' || sessionStorage.getItem('tl_onboarding_skip')) return;
     let cancelled = false;
     void (async () => {
       try {
@@ -205,7 +208,7 @@ export default function Dashboard() {
       } catch { /* network error — leave them on the dashboard */ }
     })();
     return () => { cancelled = true; };
-  }, [apiClient, slug, isSuperAdmin, navigate]);
+  }, [apiClient, slug, isSuperAdmin, role, navigate]);
 
   return (
     <div className="space-y-8">
