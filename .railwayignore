@@ -1,0 +1,12 @@
+# api-server uploads from the repo root (Root Directory = dw-church-app), so the
+# huge Python agents venv + build dirs must be excluded here too or `railway up`
+# times out on the upload.
+**/.venv
+**/__pycache__
+**/*.pyc
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+**/coverage
+**/*.log
