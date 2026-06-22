@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.truelight.app';
 
@@ -33,8 +34,11 @@ const COPY: Record<Lang, {
 
 export default function DemoRequestButton({ lang = 'ko', className }: { lang?: Lang; className?: string }) {
   const t = COPY[lang];
+  const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [sent, setSent] = useState(false);
+  // createPortal needs document.body — only available after mount (SSR-safe).
+  useEffect(() => { setMounted(true); }, []);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [form, setForm] = useState({ name: '', churchName: '', email: '', phone: '', message: '' });
@@ -77,7 +81,7 @@ export default function DemoRequestButton({ lang = 'ko', className }: { lang?: L
         {t.button}
       </button>
 
-      {open && (
+      {open && mounted && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true">
           <div className="absolute inset-0 bg-black/50" onClick={close} />
           <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl sm:p-8 text-left">
@@ -122,7 +126,8 @@ export default function DemoRequestButton({ lang = 'ko', className }: { lang?: L
               </form>
             )}
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
