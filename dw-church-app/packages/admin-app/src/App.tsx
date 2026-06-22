@@ -59,7 +59,6 @@ const MenuEditor = lazyWithReload(() => import('./pages/MenuEditor'));
 const ThemeDeprecatedNotice = lazyWithReload(() => import('./pages/ThemeDeprecatedNotice'));
 const UserManagement = lazyWithReload(() => import('./pages/UserManagement'));
 const SettingsPage = lazyWithReload(() => import('./pages/SettingsPage'));
-const IntakeWizard = lazyWithReload(() => import('./pages/IntakeWizard'));
 const OnboardingPage = lazyWithReload(() => import('./pages/OnboardingPage'));
 const DomainSettings = lazyWithReload(() => import('./pages/DomainSettings'));
 const SuperAdminDashboard = lazyWithReload(() => import('./pages/SuperAdminDashboardV2'));
@@ -175,6 +174,13 @@ function RoleHomeRedirect() {
   if (user.isSuperAdmin) return <Navigate to="/super-admin" replace />;
   if (user.tenantSlug) return <Navigate to={`/t/${user.tenantSlug}`} replace />;
   return <Navigate to="/login" replace />;
+}
+
+// Onboarding is unified on the standalone /t/:slug/onboarding page; the old
+// in-admin /t/:slug/intake route now just redirects there.
+function IntakeRedirect() {
+  const { slug = '' } = useParams<{ slug: string }>();
+  return <Navigate to={`/t/${slug}/onboarding`} replace />;
 }
 
 /**
@@ -319,7 +325,8 @@ export function App({ config }: { config: AppConfig }) {
                 }
               >
                 <Route index element={<Dashboard />} />
-                <Route path="intake" element={<IntakeWizard />} />
+                {/* Unified onto the standalone onboarding — old /intake links redirect. */}
+                <Route path="intake" element={<IntakeRedirect />} />
                 <Route path="bulletins" element={<BulletinManagement />} />
                 <Route path="sermons" element={<SermonManagement />} />
                 <Route path="columns" element={<ColumnManagement />} />
