@@ -84,10 +84,19 @@ export async function sendEmail(opts: {
     opts.from === 'order' ? cfg.fromOrder : opts.from === 'support' ? cfg.fromSupport : cfg.fromInfo;
   const from = cfg.fromName && fromAddr ? `${cfg.fromName} <${fromAddr}>` : fromAddr;
 
-  await transporter.sendMail({
-    from,
-    to: opts.to,
-    subject: opts.subject,
-    html: opts.html,
-  });
+  try {
+    const info = await transporter.sendMail({
+      from,
+      to: opts.to,
+      subject: opts.subject,
+      html: opts.html,
+    });
+    console.log(
+      `[email] sent to=${opts.to} subject="${opts.subject}" via=${cfg.host}:${cfg.port} ` +
+        `id=${info.messageId} accepted=${JSON.stringify(info.accepted)} rejected=${JSON.stringify(info.rejected)} resp=${JSON.stringify(info.response)}`,
+    );
+  } catch (err) {
+    console.error(`[email] SEND FAILED to=${opts.to} via=${cfg.host}:${cfg.port}:`, (err as Error)?.message || err);
+    throw err;
+  }
 }

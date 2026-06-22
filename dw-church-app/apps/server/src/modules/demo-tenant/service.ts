@@ -39,11 +39,13 @@ async function columnsOf(schema: string, table: string): Promise<string[]> {
 }
 
 export async function hasSnapshot(slug: string): Promise<boolean> {
-  const rows = await prisma.$queryRawUnsafe<{ exists: boolean }[]>(
-    `SELECT EXISTS(SELECT 1 FROM information_schema.schemata WHERE schema_name = $1) AS exists`,
+  // `exists` is a reserved word — alias must be quoted/renamed or Postgres throws
+  // "syntax error at or near EXISTS".
+  const rows = await prisma.$queryRawUnsafe<{ present: boolean }[]>(
+    `SELECT EXISTS(SELECT 1 FROM information_schema.schemata WHERE schema_name = $1) AS present`,
     snapSchemaFor(slug),
   );
-  return !!rows[0]?.exists;
+  return !!rows[0]?.present;
 }
 
 /** Capture the tenant's current content into tenant_{slug}_snapshot (replaces any prior snapshot). */

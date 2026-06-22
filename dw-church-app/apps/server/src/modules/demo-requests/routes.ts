@@ -86,7 +86,12 @@ export async function demoRequestRoutes(app: FastifyInstance) {
         (cfg?.message_body as string) ||
         `안녕하세요 ${(row.name as string) ?? ''}님,\nTRUE LIGHT 데모 체험을 신청해 주셔서 감사합니다. 아래 정보로 로그인하시면 관리자 화면을 자유롭게 둘러보실 수 있습니다.`,
     });
-    await sendEmail({ to: applicantEmail, subject: 'TRUE LIGHT 데모 체험 접속 안내', html, from: 'info' });
+    // Surface SMTP failures instead of silently marking the request 'sent'.
+    try {
+      await sendEmail({ to: applicantEmail, subject: 'TRUE LIGHT 데모 체험 접속 안내', html, from: 'info' });
+    } catch (err) {
+      throw new AppError('EMAIL_SEND_FAILED', 502, `메일 발송 실패: ${(err as Error)?.message ?? '알 수 없는 오류'}`);
+    }
     const updated = await demoService.updateDemoRequest(id, { status: 'sent' });
     return reply.send({ data: updated });
   });
