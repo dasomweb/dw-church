@@ -60,6 +60,7 @@ const ThemeDeprecatedNotice = lazyWithReload(() => import('./pages/ThemeDeprecat
 const UserManagement = lazyWithReload(() => import('./pages/UserManagement'));
 const SettingsPage = lazyWithReload(() => import('./pages/SettingsPage'));
 const IntakeWizard = lazyWithReload(() => import('./pages/IntakeWizard'));
+const OnboardingPage = lazyWithReload(() => import('./pages/OnboardingPage'));
 const DomainSettings = lazyWithReload(() => import('./pages/DomainSettings'));
 const SuperAdminDashboard = lazyWithReload(() => import('./pages/SuperAdminDashboardV2'));
 const ProfilePage = lazyWithReload(() => import('./pages/ProfilePage'));
@@ -288,6 +289,20 @@ export function App({ config }: { config: AppConfig }) {
                 element={
                   <RequireAuth>
                     <ProfilePage />
+                  </RequireAuth>
+                }
+              />
+
+              {/* Standalone full-screen onboarding (no admin sidebar) — first-login
+                  destination for a newly-provisioned owner. Must precede the
+                  /t/:slug layout route so it renders on its own. */}
+              <Route
+                path="/t/:slug/onboarding"
+                element={
+                  <RequireAuth>
+                    <RequireTenantAccess>
+                      <OnboardingPage client={client} />
+                    </RequireTenantAccess>
                   </RequireAuth>
                 }
               />

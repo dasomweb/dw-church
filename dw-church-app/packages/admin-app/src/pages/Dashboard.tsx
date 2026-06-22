@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import {
   useBulletins,
   useSermons,
@@ -186,6 +186,26 @@ export default function Dashboard() {
   const staff = useStaff({ perPage: 1 });
   const { slug = '' } = useParams<{ slug: string }>();
   const tPath = (p: string) => (p ? `/t/${slug}/${p}` : `/t/${slug}`);
+  const navigate = useNavigate();
+  const apiClient = useDWChurchClient();
+  const isSuperAdmin = !!useAuthStore((s) => s.session)?.user?.isSuperAdmin;
+
+  // b2bsmart-style first-login onboarding: a tenant owner who hasn't submitted
+  // the initial setup is sent to the standalone onboarding page. Skipped once
+  // they click '나중에 하기' (session flag) and never for super-admins viewing.
+  useEffect(() => {
+    if (isSuperAdmin || sessionStorage.getItem('tl_onboarding_skip')) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await apiClient!.getIntake();
+        if (!cancelled && res.status !== 'submitted' && res.status !== 'built') {
+          navigate(`/t/${slug}/onboarding`, { replace: true });
+        }
+      } catch { /* network error — leave them on the dashboard */ }
+    })();
+    return () => { cancelled = true; };
+  }, [apiClient, slug, isSuperAdmin, navigate]);
 
   return (
     <div className="space-y-8">
