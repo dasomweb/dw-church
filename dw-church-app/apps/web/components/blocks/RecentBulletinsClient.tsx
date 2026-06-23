@@ -21,6 +21,16 @@ const GRID_COLS: Record<number, string> = {
 
 const accentSoft = 'color-mix(in srgb, var(--dw-primary, #2563eb) 12%, transparent)';
 
+// Bulletin dates arrive as UTC-midnight ISO strings (e.g. "2026-06-28T00:00:00.000Z").
+// Parse the YYYY-MM-DD prefix directly so a negative-offset timezone never shifts
+// the day, and never show the raw ISO string to visitors.
+function formatBulletinDate(raw?: string | null): string {
+  if (!raw) return '';
+  const m = String(raw).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return String(raw);
+  return `${m[1]}년 ${Number(m[2])}월 ${Number(m[3])}일`;
+}
+
 function DocIcon() {
   return (
     <span className="grid place-items-center w-10 h-10 rounded-xl shrink-0" style={{ backgroundColor: accentSoft, color: 'var(--dw-primary, #2563eb)' }}>
@@ -48,7 +58,7 @@ export function RecentBulletinsClient({ bulletins, slug, columns = 1 }: RecentBu
             <DocIcon />
             <div className="min-w-0 flex-1">
               <h3 className="font-semibold text-sm leading-snug line-clamp-1 transition-colors group-hover:text-[var(--dw-primary)]">{b.title}</h3>
-              {b.date && <p className="text-xs text-gray-400 mt-0.5">{b.date}</p>}
+              {b.date && <p className="text-xs text-gray-400 mt-0.5">{formatBulletinDate(b.date)}</p>}
             </div>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="text-gray-300 group-hover:text-[var(--dw-primary)] group-hover:translate-x-0.5 transition-all shrink-0"><path d="M9 18l6-6-6-6" /></svg>
           </button>

@@ -12,6 +12,16 @@ interface BulletinListClientProps {
   columns?: number;
 }
 
+// Bulletin dates arrive as UTC-midnight ISO strings (e.g. "2026-06-28T00:00:00.000Z").
+// Parse the YYYY-MM-DD prefix directly so a negative-offset timezone never shifts
+// the day, and never show the raw ISO string to visitors.
+function formatBulletinDate(raw?: string | null): string {
+  if (!raw) return '';
+  const m = String(raw).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return String(raw);
+  return `${m[1]}년 ${Number(m[2])}월 ${Number(m[3])}일`;
+}
+
 const GRID_COLS: Record<number, string> = {
   1: 'space-y-3',
   2: 'grid grid-cols-1 sm:grid-cols-2 gap-4',
@@ -35,7 +45,7 @@ export function BulletinListClient({ initialData, total, totalPages, currentPage
             className="group w-full text-left rounded-lg border border-gray-200 p-4 hover:shadow-md hover:border-[var(--dw-primary)] transition-all"
           >
             <h3 className="font-semibold text-sm">{b.title}</h3>
-            {(b.date || b.bulletinDate) && <p className="text-xs text-gray-400 mt-1">{b.date || b.bulletinDate}</p>}
+            {(b.date || b.bulletinDate) && <p className="text-xs text-gray-400 mt-1">{formatBulletinDate(b.date || b.bulletinDate)}</p>}
           </button>
         ))}
       </div>
