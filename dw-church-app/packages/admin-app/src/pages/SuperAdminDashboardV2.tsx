@@ -5656,10 +5656,10 @@ const BROADCAST_PRESETS: { key: string; label: string; subject: string; body: st
   {
     key: 'demo_invite',
     label: '데모 체험 초대',
-    subject: '우리 교회 홈페이지, 직접 운영해 보세요 — TRUE LIGHT 데모',
+    subject: '우리 교회 홈페이지, 직접 만들고 관리해 보세요 — TRUE LIGHT 데모',
     body: `<p>안녕하세요,</p>
-<p>TRUE LIGHT는 교회가 직접 운영하는 <strong>교회 전용 홈페이지 플랫폼</strong>입니다. 설교·주보·앨범·행사를 관리자에 등록하면 홈페이지에 바로 반영됩니다 — 외주나 개발자 없이, 교회가 스스로 관리합니다.</p>
-<p>전문가가 설계한 디자인 위에서 콘텐츠만 올리면 되는 구조를, 실제 관리자 화면에서 <strong>데모로 직접</strong> 체험해 보세요.</p>
+<p>TRUE LIGHT는 교회가 홈페이지를 <strong>직접 만들고 관리</strong>할 수 있는 서비스입니다. 설교·주보·앨범·행사를 관리자 화면에서 입력하면 홈페이지에 바로 올라갑니다 — 업체에 맡기거나 어려운 기술을 배우지 않아도 됩니다.</p>
+<p>처음 디자인은 저희가 잡아 드리고, 이후 내용은 교회가 직접 올리고 고치시면 됩니다. 실제 관리자 화면을 <strong>데모로 미리</strong> 둘러보세요.</p>
 <p style="text-align:center;margin:28px 0">
   <a href="https://truelight.app" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600">데모 체험 신청하기</a>
 </p>
@@ -5668,15 +5668,15 @@ const BROADCAST_PRESETS: { key: string; label: string; subject: string; body: st
   {
     key: 'intro',
     label: '서비스 소개',
-    subject: '교회 홈페이지를 플랫폼으로 — TRUE LIGHT',
+    subject: '교회 홈페이지, 직접 만들고 직접 관리하세요 — TRUE LIGHT',
     body: `<p>안녕하세요,</p>
-<p>TRUE LIGHT는 미주 한인교회를 위한 <strong>올인원 교회 홈페이지 플랫폼</strong>입니다. 하나의 관리자에서 교회가 직접 홈페이지를 운영합니다.</p>
+<p>TRUE LIGHT는 미주 한인교회를 위한 홈페이지 서비스입니다. 복잡한 제작 과정 없이, 교회가 관리자 화면에서 홈페이지를 직접 운영합니다.</p>
 <ul>
-  <li>설교·주보·앨범·행사·교역자·게시판을 관리자에서 직접 등록 — 올리면 홈페이지에 즉시 반영</li>
-  <li>모바일까지 자동 대응되는 6가지 전문 디자인 테마</li>
-  <li>시작할 때 디자인 셋업은 전문가가 구축, 이후 운영은 교회가 직접</li>
+  <li>설교·주보·앨범·행사·교역자·게시판을 직접 입력 — 올리면 홈페이지에 바로 반영</li>
+  <li>휴대폰에서도 잘 보이는 6가지 디자인</li>
+  <li>처음 디자인은 전문가가 잡아 드리고, 이후 관리는 교회가 직접</li>
 </ul>
-<p>월 구독으로 부담 없이 시작하고, 교회 성장에 맞춰 기능을 확장하세요.</p>
+<p>매달 정해진 이용료로 부담 없이 시작하고, 교회에 맞춰 기능을 더할 수 있습니다.</p>
 <p style="text-align:center;margin:28px 0">
   <a href="https://truelight.app" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600">자세히 보기</a>
 </p>
@@ -5685,18 +5685,18 @@ const BROADCAST_PRESETS: { key: string; label: string; subject: string; body: st
   {
     key: 'pricing',
     label: '요금제 안내',
-    subject: 'TRUE LIGHT 요금제 — 교회 규모에 맞는 구독 플랜',
+    subject: 'TRUE LIGHT 이용 요금 안내 — 교회 규모에 맞게',
     body: `<p>안녕하세요,</p>
-<p>TRUE LIGHT는 교회 규모와 필요에 맞춰 네 가지 구독 플랜을 제공합니다.</p>
+<p>TRUE LIGHT는 교회 규모와 필요에 맞춰 네 가지 요금제를 제공합니다.</p>
 <ul>
-  <li><strong>라이트</strong> — 기본 홈페이지와 핵심 콘텐츠</li>
-  <li><strong>기본</strong> — 설교·주보·앨범 등 콘텐츠 모듈 확장</li>
-  <li><strong>플러스</strong> — 게시판·행사·다중 관리자</li>
+  <li><strong>라이트</strong> — 기본 홈페이지와 핵심 내용</li>
+  <li><strong>기본</strong> — 설교·주보·앨범까지 확장</li>
+  <li><strong>플러스</strong> — 게시판·행사·관리자 여러 명</li>
   <li><strong>프로</strong> — 모든 기능과 우선 지원</li>
 </ul>
-<p>모든 플랜은 전문 디자인 셋업으로 시작하며, 이후에는 교회가 직접 운영합니다.</p>
+<p>모든 요금제는 처음 디자인 셋업을 포함하며, 이후에는 교회가 직접 관리합니다.</p>
 <p style="text-align:center;margin:28px 0">
-  <a href="https://truelight.app#plans" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600">요금제 보기</a>
+  <a href="https://truelight.app#plans" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600">요금 안내 보기</a>
 </p>
 <p>감사합니다.</p>`,
   },
@@ -5705,8 +5705,8 @@ const BROADCAST_PRESETS: { key: string; label: string; subject: string; body: st
     label: '데모 후속 안내',
     subject: '데모는 어떠셨나요? 우리 교회 이름으로 시작하세요',
     body: `<p>안녕하세요,</p>
-<p>TRUE LIGHT 데모를 이용해 주셔서 감사합니다. 관리자에서 콘텐츠를 직접 다뤄 보시니 어떠셨나요?</p>
-<p>이제 우리 교회 이름으로 시작하실 차례입니다. 플랜만 정하시면 전문 디자인 셋업으로 빠르게 오픈하고, 운영은 교회가 직접 이어가시면 됩니다.</p>
+<p>TRUE LIGHT 데모를 이용해 주셔서 감사합니다. 관리자 화면에서 직접 다뤄 보시니 어떠셨나요?</p>
+<p>이제 우리 교회 이름으로 시작하실 차례입니다. 요금제만 정하시면 처음 디자인은 저희가 잡아 드리고, 이후 관리는 교회가 직접 이어가시면 됩니다.</p>
 <p style="text-align:center;margin:28px 0">
   <a href="https://truelight.app/apply" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600">신청하고 시작하기</a>
 </p>
