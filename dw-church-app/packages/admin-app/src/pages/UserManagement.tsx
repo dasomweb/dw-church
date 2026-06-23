@@ -4,7 +4,12 @@ import {
   useUsers,
   useInviteUser,
   useRemoveUser,
+  useAccountQuota,
 } from '@dw-church/api-client';
+
+const PLAN_LABELS: Record<string, string> = {
+  light: '라이트', basic: '기본', plus: '플러스', pro: '프로',
+};
 import { useAuthStore } from '../stores/auth';
 
 interface InviteFormData {
@@ -34,8 +39,11 @@ export default function UserManagement() {
   const isOwner = currentUser?.role === 'owner';
 
   const { data: users, isLoading } = useUsers();
+  const { data: quota, refetch: refetchQuota } = useAccountQuota();
   const inviteMutation = useInviteUser();
   const removeMutation = useRemoveUser();
+
+  const atLimit = quota ? quota.used >= quota.maxAdmins : false;
 
   const {
     register,
@@ -57,8 +65,11 @@ export default function UserManagement() {
       showToast(`${data.email}로 초대를 보냈습니다.`, 'success');
       reset({ email: '', name: '', role: 'editor' });
       setShowInviteForm(false);
-    } catch {
-      showToast('초대에 실패했습니다.', 'error');
+      void refetchQuota();
+    } catch (err) {
+      // Surface the server's message (e.g. plan-limit reached) when available.
+      const msg = err instanceof Error && err.message ? err.message : '초대에 실패했습니다.';
+      showToast(msg, 'error');
     }
   };
 
@@ -87,18 +98,35 @@ export default function UserManagement() {
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-bold">사용자 관리</h2>
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <h2 className="text-lg font-bold">사용자 관리</h2>
+          {quota && (
+            <p className="mt-1 text-sm text-gray-500">
+              관리자 계정{' '}
+              <span className={`font-semibold ${atLimit ? 'text-red-600' : 'text-gray-800'}`}>{quota.used} / {quota.maxAdmins}</span>
+              <span className="ml-2 text-xs text-gray-400">{PLAN_LABELS[quota.plan] ?? quota.plan} 플랜 · 소유자 포함</span>
+            </p>
+          )}
+        </div>
         <button
           onClick={() => {
+            if (atLimit) return;
             reset({ email: '', name: '', role: 'editor' });
             setShowInviteForm(!showInviteForm);
           }}
-          className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+          disabled={atLimit}
+          title={atLimit ? '플랜의 관리자 계정 한도에 도달했습니다' : undefined}
+          className={`px-4 py-2 text-white text-sm rounded ${atLimit ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
         >
           사용자 초대
         </button>
       </div>
+      {atLimit && quota && (
+        <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          현재 <strong>{PLAN_LABELS[quota.plan] ?? quota.plan} 플랜</strong>의 관리자 계정 한도({quota.maxAdmins}개)에 도달했습니다. 계정을 더 추가하려면 플랜을 업그레이드하세요.
+        </div>
+      )}
 
       {/* Invite form */}
       {showInviteForm && (

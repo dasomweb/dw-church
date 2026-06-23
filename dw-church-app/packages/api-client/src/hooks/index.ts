@@ -1280,6 +1280,16 @@ export function useUsers() {
   });
 }
 
+export function useAccountQuota() {
+  const client = useDWChurchClient();
+  return useQuery<{ plan: string; maxAdmins: number; used: number }>({
+    queryKey: ['account-quota'] as const,
+    queryFn: () => client!.getAccountQuota(),
+    enabled: !!client,
+    staleTime: STALE_TIME,
+  });
+}
+
 export function useRemoveUser() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();

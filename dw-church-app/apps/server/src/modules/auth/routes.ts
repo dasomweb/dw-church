@@ -111,6 +111,12 @@ export default async function authRoutes(app: FastifyInstance): Promise<void> {
     },
   );
 
+  // GET /auth/account-quota — plan-based admin-account limit + current usage
+  app.get('/account-quota', { preHandler: [requireAuth] }, async (request, reply) => {
+    const quota = await authService.getAccountQuota(request.user!.tenantId);
+    return reply.send({ data: quota });
+  });
+
   // PUT /auth/switch-tenant — Owner can switch to a tenant they own
   app.put(
     '/switch-tenant',

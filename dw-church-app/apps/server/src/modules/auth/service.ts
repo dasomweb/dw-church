@@ -7,7 +7,7 @@ import { AppError } from '../../middleware/error-handler.js';
 import { createTenantSchema } from '../../utils/schema-manager.js';
 import { sendEmail } from '../../config/email.js';
 import { welcomeEmail, passwordResetEmail, inviteEmail } from '../../config/email-templates.js';
-import { planLimits } from '../../config/plan-limits.js';
+import { planLimits, normalizePlan } from '../../config/plan-limits.js';
 import type { RegisterInput, LoginInput, InviteInput } from './schema.js';
 
 const BCRYPT_ROUNDS = 12;
@@ -289,6 +289,17 @@ export async function updateProfile(
     tenantId: updated.tenantId ?? '',
     tenantSlug: updated.tenantSlug ?? '',
   };
+}
+
+/**
+ * Admin-account quota for a tenant — plan tier, the cap (owner included), and
+ * how many accounts are currently used. Powers the invite UI's "X / Y" display.
+ */
+export async function getAccountQuota(tenantId: string) {
+  const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { plan: true } });
+  const { maxAdmins } = planLimits(tenant?.plan);
+  const used = await prisma.user.count({ where: { tenantId } });
+  return { plan: normalizePlan(tenant?.plan), maxAdmins, used };
 }
 
 export async function inviteUser(

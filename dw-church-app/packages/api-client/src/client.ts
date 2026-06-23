@@ -334,6 +334,12 @@ export class DWChurchClient {
     return this.api.post(`${this.namespace}/auth/invite`, { email, name, role });
   }
 
+  /** Plan-based admin-account quota for the current tenant (limit + usage). */
+  async getAccountQuota(): Promise<{ plan: string; maxAdmins: number; used: number }> {
+    const res = await this.api.get(`${this.namespace}/auth/account-quota`);
+    return unwrapData(res);
+  }
+
   // ─── Bulletins ──────────────────────────────────────────
   async getBulletins(params?: ListParams): Promise<PaginatedResponse<Bulletin>> {
     return this.api.get(`${this.namespace}/bulletins`, toQueryParams(params));

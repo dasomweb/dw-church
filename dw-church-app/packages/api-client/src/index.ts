@@ -207,6 +207,7 @@ export {
   // Users
   useUsers,
   useRemoveUser,
+  useAccountQuota,
   // Files
   useUploadFile,
   useDeleteFile,
