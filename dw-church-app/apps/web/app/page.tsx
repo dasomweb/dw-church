@@ -6,6 +6,7 @@ import DemoRequestButton from '../components/DemoRequestButton';
 import KakaoInquiryButton from '../components/KakaoInquiryButton';
 import SiteLogo from '../components/SiteLogo';
 import FaviconSetter from '../components/FaviconSetter';
+import FeaturesNavMenu from '../components/FeaturesNavMenu';
 
 // ─── Bilingual copy (Korean is the primary/default language) ──────────────
 // truelight.app marketing site. Korean renders by default (SSR + first paint);
@@ -367,7 +368,7 @@ export default function LandingPage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
           <SiteLogo />
           <nav className="hidden gap-6 md:flex">
-            <Link href="/features" className="text-sm text-gray-600 hover:text-gray-900">{t.nav.features}</Link>
+            <FeaturesNavMenu lang={lang} label={t.nav.features} />
             <a href="#how-it-works" className="text-sm text-gray-600 hover:text-gray-900">{t.nav.how}</a>
             <a href="#plans" className="text-sm text-gray-600 hover:text-gray-900">{t.nav.plans}</a>
           </nav>
