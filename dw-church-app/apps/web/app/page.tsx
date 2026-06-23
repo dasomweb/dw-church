@@ -21,7 +21,7 @@ const SLIDE_IMAGES = [
 ];
 
 interface Copy {
-  nav: { features: string; how: string; plans: string; signIn: string; getStarted: string };
+  nav: { features: string; how: string; plans: string; portfolio: string; signIn: string; getStarted: string };
   hero: { getStarted: string; seePlans: string; slides: { headline: string; subline: string }[] };
   trust: string[];
   value: { headlineTop: string; headlineAccent: string; body: string };
@@ -50,7 +50,7 @@ interface Copy {
 
 const COPY: Record<Lang, Copy> = {
   ko: {
-    nav: { features: '기능', how: '이용 방법', plans: '요금제', signIn: '로그인', getStarted: '시작하기' },
+    nav: { features: '기능', how: '이용 방법', plans: '요금제', portfolio: '포트폴리오', signIn: '로그인', getStarted: '시작하기' },
     hero: {
       getStarted: '시작하기',
       seePlans: '요금제 보기',
@@ -162,7 +162,7 @@ const COPY: Record<Lang, Copy> = {
     },
   },
   en: {
-    nav: { features: 'Features', how: 'How It Works', plans: 'Plans', signIn: 'Sign In', getStarted: 'Get Started' },
+    nav: { features: 'Features', how: 'How It Works', plans: 'Plans', portfolio: 'Portfolio', signIn: 'Sign In', getStarted: 'Get Started' },
     hero: {
       getStarted: 'Get Started',
       seePlans: 'See Plans',
@@ -371,6 +371,7 @@ export default function LandingPage() {
             <FeaturesNavMenu lang={lang} label={t.nav.features} />
             <a href="#how-it-works" className="text-sm text-gray-600 hover:text-gray-900">{t.nav.how}</a>
             <a href="#plans" className="text-sm text-gray-600 hover:text-gray-900">{t.nav.plans}</a>
+            <a href="/portfolio" className="text-sm text-gray-600 hover:text-gray-900">{t.nav.portfolio}</a>
           </nav>
           <div className="flex items-center gap-3">
             {/* Language toggle — Korean is primary */}

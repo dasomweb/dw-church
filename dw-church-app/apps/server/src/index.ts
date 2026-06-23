@@ -117,6 +117,7 @@ async function main(): Promise<void> {
   const { demoRequestRoutes } = await import('./modules/demo-requests/routes.js');
   const { demoTenantRoutes } = await import('./modules/demo-tenant/routes.js');
   const { marketingRoutes } = await import('./modules/marketing/routes.js');
+  const { caseStudyRoutes } = await import('./modules/case-studies/routes.js');
 
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(tenantRoutes, { prefix: '/api/v1/admin' });
@@ -197,6 +198,7 @@ async function main(): Promise<void> {
   await app.register(demoRequestRoutes, { prefix: '/api/v1' }); // /demo-requests (public) + /admin/demo-requests + /admin/demo-config
   await app.register(demoTenantRoutes, { prefix: '/api/v1' }); // /admin/demo-tenant/* (snapshot/reset/status)
   await app.register(marketingRoutes, { prefix: '/api/v1' }); // /marketing-config (public) + /admin/marketing-config
+  await app.register(caseStudyRoutes, { prefix: '/api/v1' }); // /case-studies (public) + /admin/case-studies (포트폴리오)
 
   // --- Internal: resolve custom domain to tenant slug (used by Next.js middleware) ---
   app.get('/api/v1/admin/tenants/resolve-domain', async (request, reply) => {
@@ -717,6 +719,30 @@ async function main(): Promise<void> {
     await prisma.$executeRawUnsafe(`ALTER TABLE "service_applications" ADD COLUMN IF NOT EXISTS "tenant_slug" VARCHAR(255)`);
   } catch (err) {
     app.log.warn(`service_applications table migration skipped: ${err}`);
+  }
+
+  // --- 포트폴리오 / 케이스 스터디 (public schema) — operator-curated showcase of
+  //     churches we've built; the public marketing /portfolio page reads published ones. ---
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS public.case_studies (
+        "id"             UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+        "church_name"    VARCHAR(200) NOT NULL,
+        "tagline"        VARCHAR(300),
+        "screenshot_url" VARCHAR(2000),
+        "live_url"       VARCHAR(500),
+        "tags"           JSONB        NOT NULL DEFAULT '[]'::jsonb,
+        "sort_order"     INTEGER      NOT NULL DEFAULT 0,
+        "is_published"   BOOLEAN      NOT NULL DEFAULT false,
+        "created_at"     TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+        "updated_at"     TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+      )
+    `);
+    await prisma.$executeRawUnsafe(
+      `CREATE INDEX IF NOT EXISTS "case_studies_pub_idx" ON public.case_studies ("is_published", "sort_order", "created_at" DESC)`,
+    );
+  } catch (err) {
+    app.log.warn(`case_studies table migration skipped: ${err}`);
   }
 
   // --- demo tenant: 체험 신청 CRM + 야간 스냅샷 메타 + 공유 접속 계정 설정 ---

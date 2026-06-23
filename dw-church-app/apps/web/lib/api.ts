@@ -325,6 +325,18 @@ export async function getAlbum(slug: string, id: string): Promise<any> {
   return unwrap(res);
 }
 
+// ─── Portfolio / case studies (platform-level, no tenant) ─────
+export async function getCaseStudies(): Promise<any[]> {
+  try {
+    const res = await fetch(`${API_BASE}/api/v1/case-studies`, { next: { revalidate: 300 } });
+    if (!res.ok) return [];
+    const json = (await res.json()) as any;
+    return (json?.data ?? json ?? []) as any[];
+  } catch {
+    return [];
+  }
+}
+
 // ─── Videos (영상 게시판) ─────────────────────────────────────
 
 export async function getVideos(

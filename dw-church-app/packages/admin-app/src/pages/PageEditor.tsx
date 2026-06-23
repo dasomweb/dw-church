@@ -646,9 +646,10 @@ function ImageLibraryModal({ onSelect, onClose }: { onSelect: (url: string) => v
         if (!res.ok) throw new Error('load failed');
         const json = (await res.json()) as { data: SharedLibraryImage[] };
         if (cancelled) return;
-        // 'brand' = truelight.app 플랫폼 로고/파비콘 (슈퍼어드민 사이트 설정에서 업로드).
-        // 테넌트(교회) 페이지 편집의 이미지 라이브러리에는 노출하지 않는다 — 교회 콘텐츠가 아님.
-        const list = (json.data ?? []).filter((i) => i.category !== 'brand');
+        // Platform-owned categories (truelight.app branding + 포트폴리오 스크린샷) are not
+        // church content — keep them out of the tenant page-editor image library.
+        const PLATFORM_ONLY = new Set(['brand', 'portfolio']);
+        const list = (json.data ?? []).filter((i) => !PLATFORM_ONLY.has(i.category));
         setImages(list);
         if (list.length > 0 && !activeCategory) setActiveCategory(list[0]!.category);
       } catch {

@@ -22,6 +22,7 @@ import UsersTab from '../super-admin/tabs/UsersTab';
 import MonitoringTab from '../super-admin/tabs/MonitoringTab';
 import OverviewTab from '../super-admin/tabs/OverviewTab';
 import TenantsTab from '../super-admin/tabs/TenantsTab';
+import CaseStudiesTab from '../super-admin/tabs/CaseStudiesTab';
 // import MigrationTab from './MigrationTab';  // 보류
 
 // ─── Types ───────────────────────────────────────────────
@@ -30,7 +31,7 @@ import TenantsTab from '../super-admin/tabs/TenantsTab';
 // ─── Constants ───────────────────────────────────────────
 // PLAN_PRICES / PLAN_COLORS moved to ../super-admin/shared/constants.
 
-type TabId = 'monitoring' | 'overview' | 'tenants' | 'applications' | 'demo' | 'intake' | 'reference' | 'pricing' | 'billing' | 'email' | 'emailTemplates' | 'broadcast' | 'support' | 'domains' | 'users' | 'storage' | 'gallery' | 'siteSettings';
+type TabId = 'monitoring' | 'overview' | 'tenants' | 'applications' | 'demo' | 'intake' | 'reference' | 'pricing' | 'billing' | 'email' | 'emailTemplates' | 'broadcast' | 'support' | 'domains' | 'users' | 'storage' | 'gallery' | 'siteSettings' | 'caseStudies';
 
 const TABS: { id: TabId; label: string; icon: JSX.Element }[] = [
   { id: 'monitoring', label: '모니터링', icon: TabIcon('M3 3v18h18M19 9l-5 5-4-4-3 3') },
@@ -51,6 +52,7 @@ const TABS: { id: TabId; label: string; icon: JSX.Element }[] = [
   { id: 'users', label: '사용자 관리', icon: TabIcon('M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z') },
   { id: 'storage', label: '저장공간', icon: TabIcon('M4 7c0-1.657 3.582-3 8-3s8 1.343 8 3-3.582 3-8 3-8-1.343-8-3zM4 7v5c0 1.657 3.582 3 8 3s8-1.343 8-3V7M4 12v5c0 1.657 3.582 3 8 3s8-1.343 8-3v-5') },
   { id: 'siteSettings', label: '사이트 설정', icon: TabIcon('M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065zM15 12a3 3 0 11-6 0 3 3 0 016 0z') },
+  { id: 'caseStudies', label: '포트폴리오', icon: TabIcon('M2 7h20M2 7v10a2 2 0 002 2h16a2 2 0 002-2V7M2 7l2-3h16l2 3M9 12h6') },
 ];
 
 // Grouped navigation for the modern sidebar — related surfaces sit together so
@@ -60,7 +62,7 @@ const NAV_GROUPS: { label: string; ids: TabId[] }[] = [
   { label: '운영', ids: ['tenants', 'applications', 'demo', 'intake', 'support'] },
   { label: '매출 · 상품', ids: ['pricing', 'billing'] },
   { label: '이메일', ids: ['email', 'emailTemplates', 'broadcast'] },
-  { label: '시스템', ids: ['siteSettings', 'domains', 'users', 'storage', 'gallery', 'reference'] },
+  { label: '시스템', ids: ['siteSettings', 'caseStudies', 'domains', 'users', 'storage', 'gallery', 'reference'] },
 ];
 
 const TAB_META: Record<TabId, { label: string; icon: JSX.Element }> = Object.fromEntries(
@@ -380,6 +382,7 @@ export default function SuperAdminDashboardV2() {
         {activeTab === 'applications' && <ApplicationsTab />}
         {activeTab === 'demo' && <DemoTab />}
         {activeTab === 'siteSettings' && <SiteSettingsTab />}
+        {activeTab === 'caseStudies' && <CaseStudiesTab />}
         {activeTab === 'intake' && <IntakeTab />}
         {activeTab === 'reference' && <ReferenceDataTab />}
         {activeTab === 'pricing' && <PricingTab />}
