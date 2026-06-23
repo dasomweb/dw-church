@@ -367,7 +367,7 @@ export default function LandingPage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
           <SiteLogo />
           <nav className="hidden gap-6 md:flex">
-            <a href="#features" className="text-sm text-gray-600 hover:text-gray-900">{t.nav.features}</a>
+            <Link href="/features" className="text-sm text-gray-600 hover:text-gray-900">{t.nav.features}</Link>
             <a href="#how-it-works" className="text-sm text-gray-600 hover:text-gray-900">{t.nav.how}</a>
             <a href="#plans" className="text-sm text-gray-600 hover:text-gray-900">{t.nav.plans}</a>
           </nav>
@@ -691,7 +691,7 @@ export default function LandingPage() {
             <div>
               <h4 className="mb-3 text-sm font-bold text-gray-900">{t.footer.platform}</h4>
               <ul className="space-y-2 text-sm text-gray-500">
-                <li><a href="#features" className="hover:text-gray-700">{t.footer.featuresLink}</a></li>
+                <li><Link href="/features" className="hover:text-gray-700">{t.footer.featuresLink}</Link></li>
                 <li><a href="#plans" className="hover:text-gray-700">{t.footer.pricing}</a></li>
                 <li><Link href="/embed" className="hover:text-gray-700">{t.footer.embed}</Link></li>
               </ul>
