@@ -115,6 +115,15 @@ function BannerImageGuide() {
             모바일 이미지는 별도로 생성하는 것을 권장합니다.
           </p>
 
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5">
+            <p className="text-xs font-semibold text-amber-800">한글 배너 텍스트 팁</p>
+            <ul className="mt-1 list-disc space-y-0.5 pl-4 text-[11px] leading-relaxed text-amber-700">
+              <li><strong>좌우 여백(여백의 미)을 충분히</strong> — 글자를 가장자리까지 꽉 채우지 말고 양옆을 비워두면 한글이 훨씬 정돈되고 고급스럽게 보입니다.</li>
+              <li><strong>폰트는 과도하게 크지 않게</strong> — 한글은 영문보다 글자 면적이 커서 너무 키우면 답답해 보입니다. 제목은 한눈에 읽히는 선에서 절제하고 굵기·여백으로 강조하세요.</li>
+              <li>핵심 문구는 짧게 — 한 줄에 다 담으려 하기보다 핵심만 남기면 여백이 살아납니다.</li>
+            </ul>
+          </div>
+
           <div className="overflow-hidden rounded-lg border border-gray-200">
             <table className="w-full text-xs">
               <thead className="bg-gray-50 text-gray-500">
