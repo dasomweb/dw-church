@@ -8,6 +8,7 @@ import { useAdminApi } from '../super-admin/shared/use-admin-api';
 import { TabIcon, StatCard, StatusBadge, VerifyBadge, Spinner, EmptyState } from '../super-admin/shared/admin-ui';
 import { formatDate, formatBytes } from '../super-admin/shared/format';
 import type { SupportTicket } from '../super-admin/shared/support';
+import type { Tenant, GlobalStats, TenantsResponse, Domain, User, TenantDetail } from '../super-admin/shared/types';
 import DemoTab from '../super-admin/tabs/DemoTab';
 import SiteSettingsTab from '../super-admin/tabs/SiteSettingsTab';
 import BroadcastTab from '../super-admin/tabs/BroadcastTab';
@@ -18,77 +19,7 @@ import SupportTab from '../super-admin/tabs/SupportTab';
 // import MigrationTab from './MigrationTab';  // 보류
 
 // ─── Types ───────────────────────────────────────────────
-interface TenantStats {
-  sermonCount: number;
-  userCount: number;
-  storageUsed: number;
-}
-
-interface Tenant {
-  id: string;
-  name: string;
-  slug: string;
-  plan: string;
-  isActive: boolean;
-  createdAt: string;
-  customDomain?: string;
-  stats?: TenantStats;
-  lastActivityAt?: string;
-  dbSize?: number;
-}
-
-interface GlobalStats {
-  totalTenants: number;
-  activeTenants: number;
-  totalUsers: number;
-  totalSermons: number;
-  totalStorage: number;
-  totalDbSize: number;
-  planBreakdown: { plan: string; count: number }[];
-}
-
-interface TenantsResponse {
-  data: Tenant[];
-  meta: { total: number; page: number; perPage: number; totalPages: number };
-}
-
-interface Domain {
-  id: string;
-  domain: string;
-  tenantId: string;
-  tenantName: string;
-  verified: boolean;
-  createdAt: string;
-}
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  tenantId: string;
-  tenantName: string;
-  isActive: boolean;
-  isLocked: boolean;
-  createdAt: string;
-}
-
-interface TenantDetail {
-  id: string;
-  name: string;
-  slug: string;
-  plan: string;
-  isActive: boolean;
-  createdAt: string;
-  customDomain?: string;
-  sermonCount: number;
-  userCount: number;
-  storageUsed: number;
-  dbSize: number;
-  fileCount: number;
-  users: { id: string; email: string; name: string; role: string }[];
-  domains: { id: string; domain: string; verified: boolean }[];
-}
+// Domain types moved to ../super-admin/shared/types — imported at the top of this file.
 
 // ─── Constants ───────────────────────────────────────────
 // 결제 모델 (2026-06-01 확정): Free 없음. Basic = 콘텐츠 편집만, Pro = + 페이지 추가,
