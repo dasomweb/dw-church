@@ -11,6 +11,9 @@ const configSchema = z.object({
   tagline: z.string().max(300).optional().nullable(),
   contactEmail: z.string().max(200).optional().nullable(),
   kakaoUrl: z.string().max(500).optional().nullable(),
+  ogImageUrl: z.string().max(2000).optional().nullable(),
+  seoTitle: z.string().max(200).optional().nullable(),
+  seoDescription: z.string().max(500).optional().nullable(),
 });
 
 /**

@@ -325,6 +325,18 @@ export async function getAlbum(slug: string, id: string): Promise<any> {
   return unwrap(res);
 }
 
+// ─── Marketing config (platform branding + SEO/OG, no tenant) ─
+export async function getMarketingConfig(): Promise<any> {
+  try {
+    const res = await fetch(`${API_BASE}/api/v1/marketing-config`, { next: { revalidate: 300 } });
+    if (!res.ok) return {};
+    const json = (await res.json()) as any;
+    return (json?.data ?? json ?? {}) as any;
+  } catch {
+    return {};
+  }
+}
+
 // ─── Portfolio / case studies (platform-level, no tenant) ─────
 export async function getCaseStudies(): Promise<any[]> {
   try {

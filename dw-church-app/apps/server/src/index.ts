@@ -803,6 +803,10 @@ async function main(): Promise<void> {
     await prisma.$executeRawUnsafe(`ALTER TABLE "marketing_config" ADD COLUMN IF NOT EXISTS "site_name" VARCHAR(200)`);
     await prisma.$executeRawUnsafe(`ALTER TABLE "marketing_config" ADD COLUMN IF NOT EXISTS "tagline" VARCHAR(300)`);
     await prisma.$executeRawUnsafe(`ALTER TABLE "marketing_config" ADD COLUMN IF NOT EXISTS "contact_email" VARCHAR(200)`);
+    // SEO / SNS 링크 미리보기(Open Graph) — set in 슈퍼어드민 사이트 설정.
+    await prisma.$executeRawUnsafe(`ALTER TABLE "marketing_config" ADD COLUMN IF NOT EXISTS "og_image_url" VARCHAR(2000)`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE "marketing_config" ADD COLUMN IF NOT EXISTS "seo_title" VARCHAR(200)`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE "marketing_config" ADD COLUMN IF NOT EXISTS "seo_description" VARCHAR(500)`);
   } catch (err) {
     app.log.warn(`demo tables migration skipped: ${err}`);
   }

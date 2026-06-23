@@ -46,7 +46,7 @@ export default function SiteSettingsTab() {
   const apiFetch = useAdminApi();
   const { showToast } = useToast();
   const session = useAuthStore((s) => s.session);
-  const [cfg, setCfg] = useState({ logoUrl: '', logoHeight: 32, faviconUrl: '', siteName: '', tagline: '', contactEmail: '' });
+  const [cfg, setCfg] = useState({ logoUrl: '', logoHeight: 32, faviconUrl: '', siteName: '', tagline: '', contactEmail: '', ogImageUrl: '', seoTitle: '', seoDescription: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -59,6 +59,8 @@ export default function SiteSettingsTab() {
           logoUrl: (d.logoUrl as string) || '', logoHeight: (d.logoHeight as number) || 32,
           faviconUrl: (d.faviconUrl as string) || '', siteName: (d.siteName as string) || '',
           tagline: (d.tagline as string) || '', contactEmail: (d.contactEmail as string) || '',
+          ogImageUrl: (d.ogImageUrl as string) || '', seoTitle: (d.seoTitle as string) || '',
+          seoDescription: (d.seoDescription as string) || '',
         });
       } catch (e) { showToast('error', e instanceof Error ? e.message : '로딩 실패'); }
       finally { setLoading(false); }
@@ -93,6 +95,9 @@ export default function SiteSettingsTab() {
           siteName: cfg.siteName || null,
           tagline: cfg.tagline || null,
           contactEmail: cfg.contactEmail || null,
+          ogImageUrl: cfg.ogImageUrl || null,
+          seoTitle: cfg.seoTitle || null,
+          seoDescription: cfg.seoDescription || null,
         }),
       });
       showToast('success', '사이트 설정을 저장했습니다. (프론트에 반영되려면 새로고침)');
@@ -166,6 +171,38 @@ export default function SiteSettingsTab() {
           <label className="block text-sm font-medium mb-1 text-gray-700">대표 이메일</label>
           <input value={cfg.contactEmail} onChange={(e) => setCfg({ ...cfg, contactEmail: e.target.value })} className={inputCls} placeholder="info@truelight.app" />
           <p className="mt-1 text-xs text-gray-400">사이트 푸터에 표시됩니다.</p>
+        </div>
+      </div>
+
+      {/* SEO / SNS 공유 (Open Graph) */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-4">
+        <div>
+          <h2 className="text-sm font-semibold text-gray-700">SEO · SNS 공유 미리보기</h2>
+          <p className="mt-1 text-xs text-gray-400">
+            카카오톡·문자·페이스북 등에 truelight.app 링크를 보낼 때 함께 표시되는 제목·설명·이미지(Open Graph)를 설정합니다.
+            검색엔진(SEO)에도 사용됩니다.
+          </p>
+        </div>
+
+        <BrandImageInput
+          label="공유 이미지 (Open Graph)"
+          value={cfg.ogImageUrl}
+          onChange={(url) => setCfg({ ...cfg, ogImageUrl: url })}
+          upload={uploadAsIs}
+          previewClass="h-24 w-[12rem]"
+          hint="권장 1200 × 630px (가로:세로 ≈ 1.91:1), JPG/PNG, 1MB 이하. 중요한 텍스트·로고는 가장자리에서 약 10% 안쪽 안전영역에 배치하세요. 너무 작으면 카카오톡에서 작은 썸네일로 표시됩니다."
+        />
+
+        <div>
+          <label className="block text-sm font-medium mb-1 text-gray-700">공유 제목 (SEO Title)</label>
+          <input value={cfg.seoTitle} onChange={(e) => setCfg({ ...cfg, seoTitle: e.target.value })} className={inputCls} placeholder="TRUE LIGHT — 교회 웹사이트를 쉽고 편리하게" />
+          <p className="mt-1 text-xs text-gray-400">비우면 사이트 이름이 사용됩니다. 50–60자 이내 권장.</p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1 text-gray-700">공유 설명 (Meta Description)</label>
+          <textarea value={cfg.seoDescription} onChange={(e) => setCfg({ ...cfg, seoDescription: e.target.value })} rows={3}
+            className={`${inputCls} resize-y`} placeholder="복잡한 준비 없이 교회의 온라인 사역을 시작하세요. 설교·주보부터 새가족·목장까지 한 곳에서." />
+          <p className="mt-1 text-xs text-gray-400">검색결과·공유 미리보기에 표시됩니다. 120–155자 이내 권장.</p>
         </div>
       </div>
 
