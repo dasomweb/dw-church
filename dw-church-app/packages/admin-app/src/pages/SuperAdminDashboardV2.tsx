@@ -5650,8 +5650,71 @@ function EmailTemplatesTab() {
 // ═══════════════════════════════════════════════════════════
 // ─── Tab: Broadcast (공지 메일) ──────────────────────────
 // ═══════════════════════════════════════════════════════════
-// 모든 교회 관리자에게 공지 메일을 일괄 발송한다. testTo 가 있으면 해당
-// 주소로만 미리보기 발송, 없으면 전체 발송. 디자인 틀은 서버가 자동 적용.
+// 마케팅/공지 본문 프리셋 — 선택하면 제목·본문이 자동 채워진다. 본문은 디자인
+// 틀 안쪽 HTML(서버가 wrapEmail 로 감쌈). 실재하는 기능/요금제만 담는다.
+const BROADCAST_PRESETS: { key: string; label: string; subject: string; body: string }[] = [
+  {
+    key: 'demo_invite',
+    label: '데모 체험 초대',
+    subject: '교회 홈페이지, 직접 둘러보세요 — TRUE LIGHT 데모 체험',
+    body: `<p>안녕하세요,</p>
+<p>TRUE LIGHT는 교회가 사역에 집중하실 수 있도록 홈페이지 제작과 관리를 대신해 드리는 교회 전문 서비스입니다.</p>
+<p>실제 관리자 화면을 직접 둘러보실 수 있는 <strong>데모 체험</strong>을 준비했습니다. 주보·설교·앨범·행사 등록이 얼마나 간단한지 눈으로 확인해 보세요.</p>
+<p style="text-align:center;margin:28px 0">
+  <a href="https://truelight.app" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600">데모 체험 신청하기</a>
+</p>
+<p>궁금한 점은 이 메일에 회신해 주세요. 감사합니다.</p>`,
+  },
+  {
+    key: 'intro',
+    label: '서비스 소개',
+    subject: '교회는 사역에만 집중하세요 — 홈페이지는 TRUE LIGHT가',
+    body: `<p>안녕하세요,</p>
+<p>TRUE LIGHT는 미주 한인교회를 위한 홈페이지 전문 서비스입니다. 복잡한 제작·관리는 저희가 맡고, 교회는 콘텐츠만 올리시면 됩니다.</p>
+<ul>
+  <li>주보·설교·앨범·행사·교역자·게시판을 관리자에서 손쉽게 등록</li>
+  <li>모바일까지 자동으로 대응되는 6가지 디자인 테마</li>
+  <li>처음 셋업은 저희가 직접 디자인해 완성해 드립니다 (done-for-you)</li>
+</ul>
+<p style="text-align:center;margin:28px 0">
+  <a href="https://truelight.app" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600">자세히 보기</a>
+</p>
+<p>감사합니다.</p>`,
+  },
+  {
+    key: 'pricing',
+    label: '요금제 안내',
+    subject: 'TRUE LIGHT 요금제 안내 — 교회 규모에 맞게',
+    body: `<p>안녕하세요,</p>
+<p>TRUE LIGHT는 교회 규모와 필요에 맞춰 네 가지 요금제를 제공합니다.</p>
+<ul>
+  <li><strong>라이트</strong> — 기본 홈페이지와 핵심 콘텐츠</li>
+  <li><strong>기본</strong> — 설교·주보·앨범 등 콘텐츠 모듈 확장</li>
+  <li><strong>플러스</strong> — 게시판·행사·다중 관리자</li>
+  <li><strong>프로</strong> — 모든 기능과 우선 지원</li>
+</ul>
+<p>모든 요금제는 전문 셋업(초기 디자인 구축)을 포함합니다.</p>
+<p style="text-align:center;margin:28px 0">
+  <a href="https://truelight.app#plans" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600">요금제 보기</a>
+</p>
+<p>감사합니다.</p>`,
+  },
+  {
+    key: 'demo_followup',
+    label: '데모 후속 안내',
+    subject: '데모는 어떠셨나요? — 시작을 도와드리겠습니다',
+    body: `<p>안녕하세요,</p>
+<p>TRUE LIGHT 데모 체험을 이용해 주셔서 감사합니다. 직접 사용해 보시니 어떠셨나요?</p>
+<p>실제 교회 홈페이지를 시작하실 준비가 되셨다면, 저희가 초기 디자인부터 콘텐츠 구성까지 함께 도와드립니다.</p>
+<p style="text-align:center;margin:28px 0">
+  <a href="https://truelight.app/apply" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600">신청하고 시작하기</a>
+</p>
+<p>도움이 필요하시면 이 메일에 회신해 주세요. 감사합니다.</p>`,
+  },
+];
+
+// 공지·마케팅 메일을 선택한 대상에게 BCC로 일괄 발송한다. testTo 가 있으면 해당
+// 주소로만 미리보기 발송. 프리셋으로 제목·본문을 채울 수 있다. 디자인 틀은 서버 적용.
 function BroadcastTab() {
   const apiFetch = useAdminApi();
   const { showToast } = useToast();
@@ -5661,7 +5724,7 @@ function BroadcastTab() {
   const [testTo, setTestTo] = useState('');
   const [testing, setTesting] = useState(false);
   const [sending, setSending] = useState(false);
-  const [aud, setAud] = useState({ admins: false, demo: false, applications: false });
+  const [aud, setAud] = useState({ admins: false, demo: true, applications: false });
   const [customEmails, setCustomEmails] = useState('');
   const [counts, setCounts] = useState<{ admins: number; demo: number; applications: number } | null>(null);
 
@@ -5681,6 +5744,14 @@ function BroadcastTab() {
   const hasRecipients = selectedAudiences.length > 0 || customCount > 0;
 
   const canCompose = subject.trim().length > 0 && body.trim().length > 0;
+
+  const applyPreset = (key: string) => {
+    const p = BROADCAST_PRESETS.find((x) => x.key === key);
+    if (!p) return;
+    if ((subject.trim() || body.trim()) && !window.confirm('현재 작성 중인 내용을 프리셋으로 덮어쓸까요?')) return;
+    setSubject(p.subject);
+    setBody(p.body);
+  };
 
   const handleTest = async () => {
     if (testing) return;
@@ -5780,7 +5851,22 @@ function BroadcastTab() {
 
       {/* 작성 폼 */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-4">
-        <h2 className="text-sm font-semibold text-gray-700">공지 작성</h2>
+        <h2 className="text-sm font-semibold text-gray-700">내용 작성</h2>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">프리셋 불러오기</label>
+          <select
+            value=""
+            onChange={(e) => { if (e.target.value) applyPreset(e.target.value); }}
+            className={inputCls}
+          >
+            <option value="">프리셋 선택 — 제목·본문 자동 채우기</option>
+            {BROADCAST_PRESETS.map((p) => (
+              <option key={p.key} value={p.key}>{p.label}</option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-gray-400">선택하면 제목과 본문이 채워집니다. 이후 자유롭게 수정하세요.</p>
+        </div>
 
         <div>
           <label className="block text-sm font-medium mb-1">제목</label>
