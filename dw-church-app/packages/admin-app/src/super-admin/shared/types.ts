@@ -71,3 +71,34 @@ export interface TenantDetail {
   users: { id: string; email: string; name: string; role: string }[];
   domains: { id: string; domain: string; verified: boolean }[];
 }
+
+// ─── Service applications (신청서 — website-build inbox) ──────
+export type ApplicationStatus = 'new' | 'reviewing' | 'approved' | 'paid' | 'converted' | 'rejected';
+
+export interface Application {
+  id: string;
+  churchName: string;
+  contactName: string;
+  email: string;
+  phone: string | null;
+  churchAddress: string | null;
+  denomination: string | null;
+  plantingType: string | null;
+  memberProfile: string | null;
+  localContext: string | null;
+  faithAffirmed: boolean;
+  plan: 'light' | 'basic' | 'plus' | 'pro' | null;
+  billingPeriod: string | null;
+  existingUrl: string | null;
+  desiredDomain: string | null;
+  message: string | null;
+  status: ApplicationStatus;
+  adminNote: string | null;
+  paymentLink: string | null;
+  createdAt: string;
+  updatedAt: string;
+  // 이단(cult) 자동 대조 결과 — 서버가 신청 교단·교회명을 참조 목록과 대조해 채움.
+  denominationStatus: 'recognized' | 'watch' | 'cult' | null;
+  denominationMatch: string | null;
+  denominationVerified: boolean;
+}
