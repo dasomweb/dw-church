@@ -143,19 +143,21 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
   },
 ];
 
-export const FEATURE_CHROME: Record<Lang, { back: string; apply: string; demo: string; ctaTitle: string; ctaDesc: string; note: string; sectionLabel: string }> = {
+export const FEATURE_CHROME: Record<Lang, { back: string; apply: string; demo: string; ctaTitle: string; ctaDesc: string; note: string; sectionLabel: string; navFeatures: string; navHow: string; navPlans: string }> = {
   ko: {
-    back: '← 홈으로', apply: '신청하고 시작하기', demo: '데모 체험 신청',
+    back: '홈으로', apply: '신청하고 시작하기', demo: '데모 체험 신청',
     ctaTitle: '우리 교회 홈페이지, 직접 둘러보세요',
     ctaDesc: '실제 관리자 화면을 데모로 체험하거나, 바로 신청해 시작할 수 있습니다.',
     note: '표시된 기능은 요금제에 따라 제공 범위가 다를 수 있습니다.',
     sectionLabel: '기능 안내',
+    navFeatures: '기능', navHow: '이용 방법', navPlans: '요금제',
   },
   en: {
-    back: '← Home', apply: 'Apply to start', demo: 'Request a demo',
+    back: 'Home', apply: 'Apply to start', demo: 'Request a demo',
     ctaTitle: 'See your church website for yourself',
     ctaDesc: 'Try the real admin in a demo, or apply to get started right away.',
     note: 'Available features may vary by plan.',
     sectionLabel: 'Features',
+    navFeatures: 'Features', navHow: 'How It Works', navPlans: 'Plans',
   },
 };
