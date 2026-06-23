@@ -42,6 +42,7 @@ interface Copy {
     features: string[]; cta: string; highlighted: boolean; badge?: string;
   }[];
   custom: { eyebrow: string; title: string; description: string; features: string[]; oneTime: string; anyPlan: string; quote: string };
+  wordpress: { eyebrow: string; title: string; description: string; features: string[]; note1: string; note2: string; cta: string };
   cta: { title: string; body: string; primary: string; secondary: string };
   footer: { tagline: string; platform: string; pricing: string; embed: string; support: string; contact: string; adminLogin: string; company: string; terms: string; privacy: string; featuresLink: string };
 }
@@ -139,6 +140,13 @@ const COPY: Record<Lang, Copy> = {
       description: '템플릿을 넘어선 고유한 디자인이 필요한 교회를 위해, 브랜드와 정체성에 맞춘 맞춤형 디자인을 함께 만들어 갑니다.',
       features: ['맞춤 홈·페이지 레이아웃', '브랜드 맞춤 색상·타이포그래피', '맞춤 로고·그래픽 요소', '교회 전용 디자인 템플릿'],
       oneTime: '1회성 디자인 비용', anyPlan: '모든 플랜과 호환', quote: '견적 받기 →',
+    },
+    wordpress: {
+      eyebrow: '독립형 웹사이트 제작',
+      title: '워드프레스로 우리 교회만의 웹사이트를',
+      description: '구독형 서비스 대신 완전히 독립된 웹사이트가 필요하다면, 워드프레스 기반으로 교회가 직접 소유하고 운영하는 맞춤 웹사이트를 제작해 드립니다.',
+      features: ['교회가 소유하는 독립형 사이트 (자체 도메인·호스팅)', '워드프레스 기반 — 자유로운 확장과 커스터마이징', '교회에 맞춘 맞춤 디자인·기능 개발', '제작 후 운영 교육·유지보수 지원(선택)'],
+      note1: '1회성 제작 비용', note2: '유지보수 별도 협의', cta: '제작 상담 →',
     },
     cta: {
       title: '지금 시작할 준비 되셨나요?',
@@ -247,6 +255,13 @@ const COPY: Record<Lang, Copy> = {
       description: "For churches that need a unique look beyond our designs, we craft a custom design tailored to your church's brand and identity — together.",
       features: ['Custom homepage & page layouts', 'Brand-matched color scheme & typography', 'Custom logo & graphic elements', 'Exclusive design template built for your church'],
       oneTime: 'One-time design fee', anyPlan: 'Works with any plan', quote: 'Get a Quote →',
+    },
+    wordpress: {
+      eyebrow: 'Standalone Website',
+      title: 'Your own church website, built on WordPress',
+      description: 'Prefer a fully independent site over the subscription service? We build a custom WordPress website your church owns and runs.',
+      features: ['A standalone site your church owns (your own domain & hosting)', 'WordPress-based — open to extend and customize', 'Custom design and features tailored to your church', 'Post-launch training and optional maintenance'],
+      note1: 'One-time build fee', note2: 'Maintenance by arrangement', cta: 'Talk to us →',
     },
     cta: {
       title: 'Ready to Get Started?',
@@ -607,6 +622,40 @@ export default function LandingPage() {
               </div>
               <a href="mailto:info@truelight.app" className="rounded-xl bg-white px-8 py-3.5 text-sm font-bold text-gray-900 shadow-lg hover:bg-gray-100 transition-colors">
                 {t.custom.quote}
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* WordPress standalone site */}
+      <section className="px-4 pb-20 sm:px-6">
+        <div className="mx-auto max-w-5xl rounded-3xl border border-gray-200 bg-white p-10 sm:p-16">
+          <div className="flex flex-col gap-10 md:flex-row md:items-center md:gap-16">
+            <div className="flex-1">
+              <p className="mb-2 text-sm font-medium text-blue-600">{t.wordpress.eyebrow}</p>
+              <h2 className="mb-4 text-3xl font-bold text-gray-900 sm:text-4xl" style={{ letterSpacing: '-0.5px' }}>{t.wordpress.title}</h2>
+              <p className="mb-8 text-base leading-relaxed text-gray-600">{t.wordpress.description}</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {t.wordpress.features.map((f) => (
+                  <div key={f} className="flex items-center gap-3">
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100">
+                      <svg className="h-3.5 w-3.5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <span className="text-sm text-gray-700">{f}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex shrink-0 flex-col items-center gap-5 text-center md:items-start md:text-left">
+              <div>
+                <p className="text-sm text-gray-500">{t.wordpress.note1}</p>
+                <p className="mt-1 text-sm text-gray-500">{t.wordpress.note2}</p>
+              </div>
+              <a href="mailto:info@truelight.app" className="rounded-xl bg-gray-900 px-8 py-3.5 text-sm font-bold text-white shadow-lg transition-colors hover:bg-gray-800">
+                {t.wordpress.cta}
               </a>
             </div>
           </div>
