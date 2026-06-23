@@ -138,7 +138,7 @@ const COPY: Record<Lang, Copy> = {
       eyebrow: '맞춤 디자인 서비스',
       title: '맞춤 디자인이 필요하세요?',
       description: '템플릿을 넘어선 고유한 디자인이 필요한 교회를 위해, 브랜드와 정체성에 맞춘 맞춤형 디자인을 함께 만들어 갑니다.',
-      features: ['맞춤 홈·페이지 레이아웃', '브랜드 맞춤 색상·타이포그래피', '맞춤 로고·그래픽 요소', '교회 전용 디자인 템플릿'],
+      features: ['맞춤 홈·페이지 레이아웃', '브랜드 맞춤 색상·타이포그래피', '맞춤 그래픽·이미지 요소', '교회 전용 디자인 템플릿'],
       oneTime: '1회성 디자인 비용', anyPlan: '모든 플랜과 호환', quote: '견적 받기 →',
     },
     wordpress: {
@@ -253,7 +253,7 @@ const COPY: Record<Lang, Copy> = {
       eyebrow: 'Custom Design Service',
       title: 'Need a Custom Design?',
       description: "For churches that need a unique look beyond our designs, we craft a custom design tailored to your church's brand and identity — together.",
-      features: ['Custom homepage & page layouts', 'Brand-matched color scheme & typography', 'Custom logo & graphic elements', 'Exclusive design template built for your church'],
+      features: ['Custom homepage & page layouts', 'Brand-matched color scheme & typography', 'Custom graphic & image elements', 'Exclusive design template built for your church'],
       oneTime: 'One-time design fee', anyPlan: 'Works with any plan', quote: 'Get a Quote →',
     },
     wordpress: {
