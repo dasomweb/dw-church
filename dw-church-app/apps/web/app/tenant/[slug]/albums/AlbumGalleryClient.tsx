@@ -33,8 +33,9 @@ export function AlbumGalleryClient({ initialData, total, totalPages, currentPage
             className="group text-left rounded-xl overflow-hidden border border-gray-200 hover:shadow-lg transition-all"
           >
             <div className="relative aspect-[4/3] overflow-hidden">
-              {album.thumbnailUrl ? (
-                <Image src={album.thumbnailUrl} alt={album.title} fill className="object-cover group-hover:scale-105 transition-transform" sizes="(max-width: 768px) 100vw, 33vw" />
+              {/* 썸네일 미지정 시 첫 사진으로 폴백 (AlbumCard·관리화면과 동일). */}
+              {(album.thumbnailUrl || album.images?.[0]) ? (
+                <Image src={album.thumbnailUrl || album.images?.[0]} alt={album.title} fill className="object-cover group-hover:scale-105 transition-transform" sizes="(max-width: 768px) 100vw, 33vw" />
               ) : (
                 <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 text-2xl">📷</div>
               )}

@@ -26,14 +26,17 @@ export function AlbumGalleryBlockClient({ albums, slug, columns = 3 }: AlbumGall
       <div className={`grid ${gridClass} gap-4 sm:gap-5`}>
         {albums.map((album: any) => {
           const count = album.imageCount ?? album.photoCount ?? (Array.isArray(album.images) ? album.images.length : 0);
+          // 썸네일이 따로 없으면 첫 번째 사진으로 폴백 (AlbumCard·관리화면과 동일).
+          // 마이그레이션/AI생성 앨범은 thumbnailUrl 없이 images[]만 채워질 수 있다.
+          const thumb = album.thumbnailUrl || album.images?.[0];
           return (
             <button
               key={album.id}
               onClick={() => router.push(`/albums/${album.id}`)}
               className="group relative text-left rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 aspect-[4/3] bg-gray-100"
             >
-              {album.thumbnailUrl ? (
-                <Image src={album.thumbnailUrl} alt={album.title} fill className="object-cover group-hover:scale-110 transition-transform duration-500" sizes="(max-width: 768px) 50vw, 25vw" />
+              {thumb ? (
+                <Image src={thumb} alt={album.title} fill className="object-cover group-hover:scale-110 transition-transform duration-500" sizes="(max-width: 768px) 50vw, 25vw" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-white/90 text-3xl" style={{ background: 'linear-gradient(135deg, var(--dw-primary, #2563eb), var(--dw-secondary, #64748b))' }}>📷</div>
               )}
