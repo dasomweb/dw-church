@@ -770,6 +770,13 @@ async function main(): Promise<void> {
       )
     `);
     await prisma.$executeRawUnsafe(`INSERT INTO "marketing_config" ("id") VALUES (1) ON CONFLICT ("id") DO NOTHING`);
+    // Site branding fields added after marketing_config shipped.
+    await prisma.$executeRawUnsafe(`ALTER TABLE "marketing_config" ADD COLUMN IF NOT EXISTS "logo_url" VARCHAR(1000)`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE "marketing_config" ADD COLUMN IF NOT EXISTS "logo_height" INT DEFAULT 32`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE "marketing_config" ADD COLUMN IF NOT EXISTS "favicon_url" VARCHAR(1000)`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE "marketing_config" ADD COLUMN IF NOT EXISTS "site_name" VARCHAR(200)`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE "marketing_config" ADD COLUMN IF NOT EXISTS "tagline" VARCHAR(300)`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE "marketing_config" ADD COLUMN IF NOT EXISTS "contact_email" VARCHAR(200)`);
   } catch (err) {
     app.log.warn(`demo tables migration skipped: ${err}`);
   }

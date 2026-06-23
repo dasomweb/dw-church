@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import DemoRequestButton from '../components/DemoRequestButton';
 import KakaoInquiryButton from '../components/KakaoInquiryButton';
+import SiteLogo from '../components/SiteLogo';
+import FaviconSetter from '../components/FaviconSetter';
 
 // ─── Bilingual copy (Korean is the primary/default language) ──────────────
 // truelight.app marketing site. Korean renders by default (SSR + first paint);
@@ -348,12 +350,7 @@ export default function LandingPage() {
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 backdrop-blur-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
-              <span className="text-sm font-bold text-white">T</span>
-            </div>
-            <span className="text-lg font-bold tracking-tight text-gray-900">TRUE <span className="text-blue-600">LIGHT</span></span>
-          </Link>
+          <SiteLogo />
           <nav className="hidden gap-6 md:flex">
             <a href="#features" className="text-sm text-gray-600 hover:text-gray-900">{t.nav.features}</a>
             <a href="#how-it-works" className="text-sm text-gray-600 hover:text-gray-900">{t.nav.how}</a>
@@ -673,6 +670,7 @@ export default function LandingPage() {
       </footer>
 
       <KakaoInquiryButton />
+      <FaviconSetter />
     </div>
   );
 }
