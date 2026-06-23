@@ -234,7 +234,8 @@ export default function BulletinManagement() {
                     <td className="px-4 py-3">
                       <input type="checkbox" checked={bulk.has(item.id)} onChange={() => bulk.toggle(item.id)} aria-label={`${item.title} 선택`} />
                     </td>
-                    <td className="px-4 py-3 text-sm">{item.date}</td>
+                    {/* 날짜만 표시 (서버는 UTC-자정 ISO 문자열로 저장) — SermonManagement와 동일 패턴. */}
+                    <td className="px-4 py-3 text-sm">{item.date ? String(item.date).slice(0, 10) : '-'}</td>
                     <td className="px-4 py-3 text-sm font-medium">{item.title}</td>
                     <td className="px-4 py-3 text-sm">
                       {item.pdfUrl ? (
