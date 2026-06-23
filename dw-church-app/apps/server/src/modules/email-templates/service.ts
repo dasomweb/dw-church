@@ -140,3 +140,62 @@ export async function broadcastRecipients(): Promise<string[]> {
   );
   return rows.map((r) => r.email).filter(Boolean);
 }
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+async function emailsFromTable(table: string): Promise<string[]> {
+  try {
+    const rows = await prisma.$queryRawUnsafe<{ email: string }[]>(
+      `SELECT DISTINCT email FROM ${table} WHERE email IS NOT NULL AND email <> ''`,
+    );
+    return rows.map((r) => r.email).filter(Boolean);
+  } catch {
+    return []; // table may not exist yet
+  }
+}
+
+/** Parse a pasted blob of addresses (comma / newline / semicolon separated). */
+export function parseCustomEmails(blob?: string): string[] {
+  if (!blob) return [];
+  return blob
+    .split(/[\s,;]+/)
+    .map((s) => s.trim())
+    .filter((s) => EMAIL_RE.test(s));
+}
+
+/** Per-audience recipient counts for the compose UI. */
+export async function audienceCounts(): Promise<{ admins: number; demo: number; applications: number }> {
+  const [admins, demo, applications] = await Promise.all([
+    broadcastRecipients(),
+    emailsFromTable('public.demo_requests'),
+    emailsFromTable('public.service_applications'),
+  ]);
+  return { admins: admins.length, demo: demo.length, applications: applications.length };
+}
+
+/**
+ * Resolve the full, de-duplicated recipient list for a marketing/announcement
+ * blast from the selected audiences + a pasted custom list.
+ */
+export async function marketingRecipients(
+  audiences: readonly string[] | undefined,
+  customEmails?: string,
+): Promise<string[]> {
+  const picked = audiences && audiences.length ? audiences : ['admins'];
+  const lists: string[][] = [];
+  if (picked.includes('admins')) lists.push(await broadcastRecipients());
+  if (picked.includes('demo')) lists.push(await emailsFromTable('public.demo_requests'));
+  if (picked.includes('applications')) lists.push(await emailsFromTable('public.service_applications'));
+  lists.push(parseCustomEmails(customEmails));
+  // De-dupe case-insensitively, keep the first-seen casing.
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const email of lists.flat()) {
+    const key = email.toLowerCase();
+    if (!seen.has(key) && EMAIL_RE.test(email)) {
+      seen.add(key);
+      out.push(email);
+    }
+  }
+  return out;
+}

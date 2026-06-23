@@ -58,7 +58,8 @@ async function loadConfig(): Promise<MailConfig> {
 }
 
 export async function sendEmail(opts: {
-  to: string;
+  to?: string;
+  bcc?: string[];
   subject: string;
   html: string;
   from?: 'info' | 'order' | 'support';
@@ -66,6 +67,11 @@ export async function sendEmail(opts: {
   const cfg = await loadConfig();
   if (!cfg.host) {
     console.warn('[email] SMTP not configured, skipping:', opts.subject);
+    return;
+  }
+  const bcc = (opts.bcc ?? []).filter(Boolean);
+  if (!opts.to && bcc.length === 0) {
+    console.warn('[email] no recipients, skipping:', opts.subject);
     return;
   }
 
@@ -83,20 +89,24 @@ export async function sendEmail(opts: {
   const fromAddr =
     opts.from === 'order' ? cfg.fromOrder : opts.from === 'support' ? cfg.fromSupport : cfg.fromInfo;
   const from = cfg.fromName && fromAddr ? `${cfg.fromName} <${fromAddr}>` : fromAddr;
+  // For a BCC-only blast, the visible To is the sender itself so recipients
+  // never see each other (and the message isn't headerless).
+  const visibleTo = opts.to || fromAddr;
 
   try {
     const info = await transporter.sendMail({
       from,
-      to: opts.to,
+      to: visibleTo,
+      bcc: bcc.length ? bcc : undefined,
       subject: opts.subject,
       html: opts.html,
     });
     console.log(
-      `[email] sent to=${opts.to} subject="${opts.subject}" via=${cfg.host}:${cfg.port} ` +
+      `[email] sent to=${visibleTo} bcc=${bcc.length} subject="${opts.subject}" via=${cfg.host}:${cfg.port} ` +
         `id=${info.messageId} accepted=${JSON.stringify(info.accepted)} rejected=${JSON.stringify(info.rejected)} resp=${JSON.stringify(info.response)}`,
     );
   } catch (err) {
-    console.error(`[email] SEND FAILED to=${opts.to} via=${cfg.host}:${cfg.port}:`, (err as Error)?.message || err);
+    console.error(`[email] SEND FAILED to=${visibleTo} bcc=${bcc.length} via=${cfg.host}:${cfg.port}:`, (err as Error)?.message || err);
     throw err;
   }
 }

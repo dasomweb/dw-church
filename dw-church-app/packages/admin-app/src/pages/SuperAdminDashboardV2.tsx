@@ -126,7 +126,7 @@ const TABS: { id: TabId; label: string; icon: JSX.Element }[] = [
   { id: 'billing', label: '과금', icon: TabIcon('M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z') },
   { id: 'email', label: '이메일/SMTP', icon: TabIcon('M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z') },
   { id: 'emailTemplates', label: '이메일 템플릿', icon: TabIcon('M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2') },
-  { id: 'broadcast', label: '공지 메일', icon: TabIcon('M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4 4 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a4 4 0 01-1.564-.317z') },
+  { id: 'broadcast', label: '공지·마케팅', icon: TabIcon('M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4 4 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a4 4 0 01-1.564-.317z') },
   { id: 'support', label: '고객지원', icon: TabIcon('M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-6 0a3 3 0 11-6 0 3 3 0 016 0z') },
   { id: 'gallery', label: '이미지 라이브러리', icon: TabIcon('M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z') },
   { id: 'domains', label: '도메인 관리', icon: TabIcon('M21 12a9 9 0 11-18 0 9 9 0 0118 0zM3.6 9h16.8M3.6 15h16.8M12 3a15 15 0 010 18M12 3a15 15 0 000 18') },
@@ -5661,6 +5661,24 @@ function BroadcastTab() {
   const [testTo, setTestTo] = useState('');
   const [testing, setTesting] = useState(false);
   const [sending, setSending] = useState(false);
+  const [aud, setAud] = useState({ admins: false, demo: false, applications: false });
+  const [customEmails, setCustomEmails] = useState('');
+  const [counts, setCounts] = useState<{ admins: number; demo: number; applications: number } | null>(null);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const res = await apiFetch<{ data: { admins: number; demo: number; applications: number } }>('/email-broadcast/audiences');
+        setCounts(res.data);
+      } catch { /* ignore — counts are best-effort */ }
+    })();
+  }, [apiFetch]);
+
+  const selectedAudiences = (Object.keys(aud) as (keyof typeof aud)[]).filter((k) => aud[k]);
+  const customCount = customEmails.split(/[\s,;]+/).map((s) => s.trim()).filter((s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)).length;
+  const audienceTotal =
+    (aud.admins ? counts?.admins ?? 0 : 0) + (aud.demo ? counts?.demo ?? 0 : 0) + (aud.applications ? counts?.applications ?? 0 : 0) + customCount;
+  const hasRecipients = selectedAudiences.length > 0 || customCount > 0;
 
   const canCompose = subject.trim().length > 0 && body.trim().length > 0;
 
@@ -5694,20 +5712,24 @@ function BroadcastTab() {
       showToast('error', '제목과 본문을 입력하세요.');
       return;
     }
-    if (!window.confirm('모든 교회 관리자에게 공지 메일을 발송합니다. 진행할까요?')) return;
+    if (!hasRecipients) {
+      showToast('error', '받는 대상을 한 개 이상 선택하거나 이메일을 입력하세요.');
+      return;
+    }
+    if (!window.confirm(`선택한 대상(약 ${audienceTotal}명)에게 BCC로 메일을 발송합니다. 되돌릴 수 없습니다. 진행할까요?`)) return;
     setSending(true);
     try {
-      const res = await apiFetch<{ data: { recipients: number; sent: number; failed: number } }>(
+      const res = await apiFetch<{ data: { recipients: number; sent: number; failed: number; batches: number } }>(
         '/email-broadcast',
         {
           method: 'POST',
-          body: JSON.stringify({ subject, body }),
+          body: JSON.stringify({ subject, body, audiences: selectedAudiences, customEmails }),
         },
       );
-      const { recipients, sent, failed } = res.data;
-      showToast('success', `발송 완료 — 대상 ${recipients}명 · 성공 ${sent} · 실패 ${failed}`);
+      const { recipients, sent, failed, batches } = res.data;
+      showToast('success', `발송 완료 — 대상 ${recipients}명 · 성공 ${sent} · 실패 ${failed} (BCC ${batches}묶음)`);
     } catch (err) {
-      showToast('error', err instanceof Error ? err.message : '공지 메일 발송 실패');
+      showToast('error', err instanceof Error ? err.message : '메일 발송 실패');
     } finally {
       setSending(false);
     }
@@ -5721,9 +5743,39 @@ function BroadcastTab() {
       {/* Intro */}
       <div className="rounded-xl border border-blue-200 bg-blue-50 px-5 py-4">
         <p className="text-sm font-medium text-blue-800">
-          모든 교회 관리자에게 공지 메일을 일괄 발송합니다.
-          먼저 테스트 발송으로 내용을 확인한 뒤 전체 발송하세요.
+          공지·마케팅 메일을 선택한 대상에게 BCC(서로 주소 비공개)로 일괄 발송합니다.
+          먼저 테스트 발송으로 내용을 확인한 뒤 발송하세요.
         </p>
+      </div>
+
+      {/* 받는 대상 */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-3">
+        <h2 className="text-sm font-semibold text-gray-700">받는 대상</h2>
+        <div className="grid gap-2 sm:grid-cols-3">
+          {([
+            { key: 'admins', label: '교회 관리자', count: counts?.admins },
+            { key: 'demo', label: '데모 체험 신청자', count: counts?.demo },
+            { key: 'applications', label: '서비스 신청자', count: counts?.applications },
+          ] as const).map((o) => (
+            <label key={o.key} className={`flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm cursor-pointer transition-colors ${aud[o.key] ? 'border-blue-400 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+              <input type="checkbox" checked={aud[o.key]} onChange={(e) => setAud({ ...aud, [o.key]: e.target.checked })} className="rounded" />
+              <span className="font-medium text-gray-800">{o.label}</span>
+              <span className="ml-auto text-xs text-gray-400">{o.count ?? '…'}명</span>
+            </label>
+          ))}
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">직접 입력 (선택)</label>
+          <textarea
+            value={customEmails}
+            onChange={(e) => setCustomEmails(e.target.value)}
+            rows={3}
+            className={`${inputCls} font-mono`}
+            placeholder="쉼표·줄바꿈으로 구분된 이메일 주소 (예: a@x.com, b@y.com)"
+          />
+          {customCount > 0 && <p className="mt-1 text-xs text-gray-500">직접 입력 유효 주소 {customCount}개</p>}
+        </div>
+        <p className="text-xs text-gray-500">선택·입력 합계 <strong className="text-gray-800">약 {audienceTotal}명</strong> (중복 주소는 발송 시 자동 제거)</p>
       </div>
 
       {/* 작성 폼 */}
@@ -5779,18 +5831,18 @@ function BroadcastTab() {
         </div>
       </div>
 
-      {/* 전체 발송 */}
+      {/* 발송 */}
       <div className="bg-white rounded-xl shadow-sm border border-red-200 p-5 space-y-3">
-        <h2 className="text-sm font-semibold text-red-700">전체 발송</h2>
+        <h2 className="text-sm font-semibold text-red-700">발송</h2>
         <p className="text-xs text-red-600">
-          ⚠ 이 버튼은 모든 교회 관리자에게 즉시 메일을 발송합니다. 되돌릴 수 없습니다.
+          ⚠ 선택한 대상(약 {audienceTotal}명)에게 즉시 BCC로 발송합니다. 되돌릴 수 없습니다.
         </p>
         <button
           onClick={() => void handleSendAll()}
-          disabled={sending || !canCompose}
+          disabled={sending || !canCompose || !hasRecipients}
           className="bg-red-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {sending ? '발송 중...' : '전체 발송'}
+          {sending ? '발송 중...' : `발송 (약 ${audienceTotal}명)`}
         </button>
       </div>
     </div>

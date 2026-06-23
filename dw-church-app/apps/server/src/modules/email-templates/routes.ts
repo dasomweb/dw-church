@@ -53,10 +53,17 @@ export async function emailTemplateRoutes(app: FastifyInstance) {
     return reply.send({ data: rendered });
   });
 
-  // Broadcast / preview an announcement to all tenant-admin emails.
+  // Per-audience recipient counts for the compose UI.
+  app.get('/admin/email-broadcast/audiences', { preHandler: [requireSuperAdmin] }, async (_request, reply) => {
+    return reply.send({ data: await svc.audienceCounts() });
+  });
+
+  // Broadcast / preview to selected audiences (tenant admins / demo applicants /
+  // service applicants / pasted list). Sent BCC in batches so recipients never
+  // see each other's addresses.
   app.post('/admin/email-broadcast', { preHandler: [requireSuperAdmin] }, async (request, reply) => {
-    const { subject, body, testTo } = broadcastSchema.parse(request.body);
-    const html = wrapEmail(body, { footerNote: '본 메일은 TRUE LIGHT 공지입니다.' });
+    const { subject, body, testTo, audiences, customEmails } = broadcastSchema.parse(request.body);
+    const html = wrapEmail(body, { footerNote: '본 메일은 TRUE LIGHT 안내 메일입니다.' });
 
     if (testTo) {
       try {
@@ -68,14 +75,26 @@ export async function emailTemplateRoutes(app: FastifyInstance) {
       }
     }
 
-    const recipients = await svc.broadcastRecipients();
+    const recipients = await svc.marketingRecipients(audiences, customEmails);
+    if (recipients.length === 0) {
+      return reply.status(400).send({ error: { code: 'NO_RECIPIENTS', message: '받는 사람이 없습니다. 대상을 선택하거나 이메일을 입력하세요.' } });
+    }
+
+    // BCC in batches — one message per batch, addresses hidden from each other.
+    const BATCH = 40;
     let sent = 0;
     let failed = 0;
-    // Sequential to be gentle on SMTP rate limits (recipient counts are small
-    // at this stage). For large lists this should move to a background job.
-    for (const to of recipients) {
-      try { await sendEmail({ to, subject, html, from: 'info' }); sent++; } catch { failed++; }
+    let batches = 0;
+    for (let i = 0; i < recipients.length; i += BATCH) {
+      const group = recipients.slice(i, i + BATCH);
+      batches++;
+      try {
+        await sendEmail({ bcc: group, subject, html, from: 'info' });
+        sent += group.length;
+      } catch {
+        failed += group.length;
+      }
     }
-    return reply.send({ data: { recipients: recipients.length, sent, failed } });
+    return reply.send({ data: { recipients: recipients.length, sent, failed, batches } });
   });
 }
