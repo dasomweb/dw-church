@@ -65,14 +65,14 @@ const COPY: Record<Lang, Copy> = {
     featuresSection: { title: '교회에 필요한 모든 것', subtitle: '교회의 온라인 사역을 위해 만든 전문 기능들.' },
     features: [
       { title: '설교 관리', desc: '유튜브 연동, 카테고리, 설교자 필터, 썸네일 자동 추출.', icon: '🎙️' },
-      { title: '주보', desc: '주보 PDF를 올리면 이미지로 표시. 성도들이 언제든 열람.', icon: '📄' },
+      { title: '주보', desc: '주보를 PDF·이미지로 등록하면 성도들이 언제든 열람합니다.', icon: '📄' },
       { title: '사진 앨범', desc: '교회의 순간을 아름다운 갤러리로. 라이트박스 뷰 지원.', icon: '📸' },
       { title: '교역자 소개', desc: '담임목사·교역자를 사진·약력·연락처와 함께 소개.', icon: '👥' },
       { title: '행사 안내', desc: '예배·수련회·특별행사를 카드와 위치 정보로 안내.', icon: '📅' },
       { title: '교회 전용 주소', desc: '교회만의 인터넷 주소(예: yourchurch.com)를 보안 인증과 함께.', icon: '🌐' },
       { title: '전문가 수준 디자인', desc: '교회에 어울리는 전문 디자인이 처음부터 갖춰진 채로 시작합니다.', icon: '🎨' },
       { title: '휴대폰에서도 완벽하게', desc: '휴대폰·태블릿·컴퓨터 어디서나 깔끔하게. 추가 작업이 필요 없습니다.', icon: '📱' },
-      { title: '한국어·영어', desc: '한국어와 영어를 함께. 성도의 언어로 다가갑니다.', icon: '🌍' },
+      { title: '게시판', desc: '공지·행사·선교·자유 게시판으로 교회 소식을 나눕니다.', icon: '📋' },
     ],
     howSection: { title: '이용 방법', subtitle: '신청부터 오픈까지, 네 단계.' },
     steps: [
@@ -170,14 +170,14 @@ const COPY: Record<Lang, Copy> = {
     featuresSection: { title: 'Everything Your Church Needs', subtitle: 'A complete platform built specifically for church ministry.' },
     features: [
       { title: 'Sermon Management', desc: 'YouTube integration, categories, speaker filtering, and automatic thumbnail extraction.', icon: '🎙️' },
-      { title: 'Weekly Bulletin', desc: 'Upload PDF bulletins and display as image pages. Members access them anytime.', icon: '📄' },
+      { title: 'Weekly Bulletin', desc: 'Register bulletins as PDF or image pages; members read them anytime.', icon: '📄' },
       { title: 'Photo Albums', desc: 'Share church moments in beautiful gallery grids with lightbox viewing.', icon: '📸' },
       { title: 'Staff Directory', desc: 'Showcase pastors and staff with featured layouts, bios, and contact info.', icon: '👥' },
       { title: 'Event Calendar', desc: 'Promote services, retreats, and special events with rich cards and locations.', icon: '📅' },
       { title: 'Your Church Address', desc: 'Use your own church address (e.g., yourchurch.com) with a secure certificate.', icon: '🌐' },
       { title: 'Professional Design', desc: 'A polished, church-fitting design is ready from the very start.', icon: '🎨' },
       { title: 'Great on Phones', desc: 'Looks great on phones, tablets, and computers — with no extra work.', icon: '📱' },
-      { title: 'Korean & English', desc: 'Both Korean and English. Reach your congregation in their language.', icon: '🌍' },
+      { title: 'Boards', desc: 'Notice, event, mission, and open boards to share church news.', icon: '📋' },
     ],
     howSection: { title: 'How It Works', subtitle: 'From sign-up to launch, in four steps.' },
     steps: [
@@ -427,6 +427,11 @@ export default function LandingPage() {
                 <p className="text-sm leading-relaxed text-gray-600">{f.desc}</p>
               </div>
             ))}
+          </div>
+          <div className="mt-10 text-center">
+            <Link href="/features" className="inline-block text-sm font-semibold text-blue-600 hover:text-blue-700">
+              {lang === 'ko' ? '모든 기능 자세히 보기 →' : 'See all features →'}
+            </Link>
           </div>
         </div>
       </section>
