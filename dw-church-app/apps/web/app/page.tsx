@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import DemoRequestButton from '../components/DemoRequestButton';
+import KakaoInquiryButton from '../components/KakaoInquiryButton';
 
 // ─── Bilingual copy (Korean is the primary/default language) ──────────────
 // truelight.app marketing site. Korean renders by default (SSR + first paint);
@@ -665,6 +666,8 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      <KakaoInquiryButton />
     </div>
   );
 }

@@ -5,8 +5,9 @@ import { sendEmail } from '../../config/email.js';
 import { createDemoRequestSchema, updateDemoRequestSchema, demoConfigSchema } from './schema.js';
 import * as demoService from './service.js';
 import { issueDemoLogin } from '../demo-tenant/demo-login.js';
+import { getKakaoUrl } from '../marketing/service.js';
 
-function accessEmailHtml(opts: { name: string; loginUrl: string; loginEmail: string; loginPassword: string; expiresAt: Date; messageBody: string }) {
+function accessEmailHtml(opts: { name: string; loginUrl: string; loginEmail: string; loginPassword: string; expiresAt: Date; messageBody: string; kakaoUrl?: string | null }) {
   const esc = (s: string) => String(s ?? '').replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]!));
   let expires = '';
   try { expires = new Date(opts.expiresAt).toLocaleString('ko-KR', { timeZone: 'America/New_York' }) + ' (미 동부시간)'; } catch { expires = ''; }
@@ -25,6 +26,9 @@ function accessEmailHtml(opts: { name: string; loginUrl: string; loginEmail: str
       데모 사이트는 매일 밤(미 동부시간 새벽 3시) 초기 상태로 자동 복원됩니다 —
       자유롭게 테스트하셔도 됩니다.
     </p>
+    ${opts.kakaoUrl ? `<div style="text-align:center;margin:24px 0 4px">
+      <a href="${esc(opts.kakaoUrl)}" style="display:inline-block;padding:12px 28px;background:#FEE500;color:#191600;text-decoration:none;border-radius:10px;font-weight:700">카카오톡으로 문의하기</a>
+    </div>` : ''}
   </div>`;
 }
 
@@ -82,6 +86,7 @@ export async function demoRequestRoutes(app: FastifyInstance) {
       loginEmail: login.email,
       loginPassword: login.password,
       expiresAt: login.expiresAt,
+      kakaoUrl: await getKakaoUrl(),
       messageBody:
         (cfg?.message_body as string) ||
         `안녕하세요 ${(row.name as string) ?? ''}님,\nTRUE LIGHT 데모 체험을 신청해 주셔서 감사합니다. 아래 정보로 로그인하시면 관리자 화면을 자유롭게 둘러보실 수 있습니다.`,

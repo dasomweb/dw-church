@@ -46,6 +46,14 @@ export function wrapEmail(inner: string, opts?: { footerNote?: string }): string
 </body></html>`;
 }
 
+/** KakaoTalk inquiry button (Kakao yellow). Returns '' when no URL is configured. */
+export function kakaoButton(url?: string | null): string {
+  if (!url) return '';
+  return `<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:8px 0 24px"><tr><td align="center">
+    <a href="${url}" style="display:inline-block;padding:13px 30px;background:#FEE500;color:#191600;font-size:15px;font-weight:700;font-family:${FONT};text-decoration:none;border-radius:10px">카카오톡으로 문의하기</a>
+  </td></tr></table>`;
+}
+
 /** Heading helper for template/broadcast bodies. */
 export function emailHeading(text: string): string {
   return `<h1 style="margin:0 0 14px;font-size:22px;font-weight:800;color:${INK};font-family:${FONT};letter-spacing:-0.6px;line-height:1.4">${text}</h1>`;

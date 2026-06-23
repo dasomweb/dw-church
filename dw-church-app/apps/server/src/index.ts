@@ -116,6 +116,7 @@ async function main(): Promise<void> {
   const { designSetRoutes } = await import('./modules/design-sets/routes.js');
   const { demoRequestRoutes } = await import('./modules/demo-requests/routes.js');
   const { demoTenantRoutes } = await import('./modules/demo-tenant/routes.js');
+  const { marketingRoutes } = await import('./modules/marketing/routes.js');
 
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(tenantRoutes, { prefix: '/api/v1/admin' });
@@ -195,6 +196,7 @@ async function main(): Promise<void> {
   await app.register(designSetRoutes, { prefix: '/api/v1' }); // /design-sets (saved color/font sets)
   await app.register(demoRequestRoutes, { prefix: '/api/v1' }); // /demo-requests (public) + /admin/demo-requests + /admin/demo-config
   await app.register(demoTenantRoutes, { prefix: '/api/v1' }); // /admin/demo-tenant/* (snapshot/reset/status)
+  await app.register(marketingRoutes, { prefix: '/api/v1' }); // /marketing-config (public) + /admin/marketing-config
 
   // --- Internal: resolve custom domain to tenant slug (used by Next.js middleware) ---
   app.get('/api/v1/admin/tenants/resolve-domain', async (request, reply) => {
@@ -759,6 +761,15 @@ async function main(): Promise<void> {
     await prisma.$executeRawUnsafe(
       `INSERT INTO "demo_config" ("id", "login_url") VALUES (1, 'https://admin.truelight.app/t/dasom/login') ON CONFLICT ("id") DO NOTHING`,
     );
+    // Platform marketing config (KakaoTalk inquiry link, etc.) — singleton.
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "marketing_config" (
+        "id"         INT         PRIMARY KEY DEFAULT 1,
+        "kakao_url"  VARCHAR(500),
+        "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await prisma.$executeRawUnsafe(`INSERT INTO "marketing_config" ("id") VALUES (1) ON CONFLICT ("id") DO NOTHING`);
   } catch (err) {
     app.log.warn(`demo tables migration skipped: ${err}`);
   }

@@ -5728,6 +5728,8 @@ function BroadcastTab() {
   const [aud, setAud] = useState({ admins: false, demo: true, applications: false });
   const [customEmails, setCustomEmails] = useState('');
   const [counts, setCounts] = useState<{ admins: number; demo: number; applications: number } | null>(null);
+  const [kakaoUrl, setKakaoUrl] = useState('');
+  const [kakaoSaving, setKakaoSaving] = useState(false);
 
   useEffect(() => {
     void (async () => {
@@ -5735,8 +5737,24 @@ function BroadcastTab() {
         const res = await apiFetch<{ data: { admins: number; demo: number; applications: number } }>('/email-broadcast/audiences');
         setCounts(res.data);
       } catch { /* ignore — counts are best-effort */ }
+      try {
+        const res = await apiFetch<{ data: { kakaoUrl: string | null } }>('/marketing-config');
+        setKakaoUrl(res.data.kakaoUrl ?? '');
+      } catch { /* ignore */ }
     })();
   }, [apiFetch]);
+
+  const saveKakao = async () => {
+    setKakaoSaving(true);
+    try {
+      await apiFetch('/marketing-config', { method: 'PUT', body: JSON.stringify({ kakaoUrl: kakaoUrl.trim() || null }) });
+      showToast('success', '카카오톡 문의 링크를 저장했습니다');
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '저장 실패');
+    } finally {
+      setKakaoSaving(false);
+    }
+  };
 
   const selectedAudiences = (Object.keys(aud) as (keyof typeof aud)[]).filter((k) => aud[k]);
   const customCount = customEmails.split(/[\s,;]+/).map((s) => s.trim()).filter((s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)).length;
@@ -5818,6 +5836,29 @@ function BroadcastTab() {
           공지·마케팅 메일을 선택한 대상에게 BCC(서로 주소 비공개)로 일괄 발송합니다.
           먼저 테스트 발송으로 내용을 확인한 뒤 발송하세요.
         </p>
+      </div>
+
+      {/* 카카오톡 문의 링크 */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-2">
+        <h2 className="text-sm font-semibold text-gray-700">카카오톡 문의 링크</h2>
+        <p className="text-xs text-gray-400">
+          카카오톡 채널 또는 오픈채팅 주소를 넣으면, 발송 메일과 홈페이지에 "카카오톡으로 문의" 버튼이 자동으로 표시됩니다. 비우면 표시되지 않습니다.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            value={kakaoUrl}
+            onChange={(e) => setKakaoUrl(e.target.value)}
+            className={`${inputCls} sm:flex-1`}
+            placeholder="예: https://pf.kakao.com/_xxxxx 또는 https://open.kakao.com/o/xxxxx"
+          />
+          <button
+            onClick={() => void saveKakao()}
+            disabled={kakaoSaving}
+            className="bg-gray-900 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors whitespace-nowrap"
+          >
+            {kakaoSaving ? '저장 중...' : '링크 저장'}
+          </button>
+        </div>
       </div>
 
       {/* 받는 대상 */}

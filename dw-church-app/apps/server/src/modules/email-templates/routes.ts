@@ -1,7 +1,8 @@
 import type { FastifyInstance } from 'fastify';
 import { requireSuperAdmin } from '../../middleware/auth.js';
 import { sendEmail } from '../../config/email.js';
-import { wrapEmail } from '../../config/email-layout.js';
+import { wrapEmail, kakaoButton } from '../../config/email-layout.js';
+import { getKakaoUrl } from '../marketing/service.js';
 import { updateTemplateSchema, testTemplateSchema, previewTemplateSchema, broadcastSchema } from './schema.js';
 import * as svc from './service.js';
 
@@ -63,7 +64,8 @@ export async function emailTemplateRoutes(app: FastifyInstance) {
   // see each other's addresses.
   app.post('/admin/email-broadcast', { preHandler: [requireSuperAdmin] }, async (request, reply) => {
     const { subject, body, testTo, audiences, customEmails } = broadcastSchema.parse(request.body);
-    const html = wrapEmail(body, { footerNote: '본 메일은 TRUE LIGHT 안내 메일입니다.' });
+    // Append a "카카오톡으로 문의" button when a Kakao link is configured.
+    const html = wrapEmail(body + kakaoButton(await getKakaoUrl()), { footerNote: '본 메일은 TRUE LIGHT 안내 메일입니다.' });
 
     if (testTo) {
       try {
