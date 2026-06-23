@@ -228,7 +228,7 @@ export default function StaffManagement() {
                 <input
                   type="tel"
                   {...register('phone')}
-                  placeholder="010-0000-0000"
+                  placeholder="(201) 000-0000"
                   className={inputClass}
                 />
               </FormField>

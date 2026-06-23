@@ -44,7 +44,7 @@ export default function TenantAIContext() {
     {
       key: 'businessProfile',
       label: '비즈니스 프로필',
-      placeholder: '예: 서울 강남구에 위치한 4,000명 규모 도시 교회. 주중 다양한 사역 (청년부 / 어린이부 / 가정 사역) 운영.',
+      placeholder: '예: 미 동부 뉴저지 버겐카운티에 위치한 700명 규모 한인 이민교회. 영어권 2세 사역과 새가족·목장 사역 운영.',
       rows: 4,
     },
     {

@@ -191,7 +191,7 @@ export default function CellManagement() {
               <FormField label="지역/구역">
                 <input
                   {...register('region')}
-                  placeholder="강남구"
+                  placeholder="Fort Lee, NJ"
                   className={inputClass}
                 />
               </FormField>
@@ -223,7 +223,7 @@ export default function CellManagement() {
               <input
                 type="tel"
                 {...register('contact')}
-                placeholder="010-0000-0000"
+                placeholder="(201) 000-0000"
                 className={inputClass}
               />
             </FormField>
