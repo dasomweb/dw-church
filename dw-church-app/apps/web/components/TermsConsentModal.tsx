@@ -60,7 +60,7 @@ export function TermsConsentModal({
           <p className="mb-4 text-gray-500">아래 내용을 <strong>끝까지 읽어 주세요.</strong> 끝까지 스크롤해야 동의 버튼이 활성화됩니다.</p>
 
           <h3 className="mb-2 font-bold text-gray-900">1. 신앙고백 (Statement of Faith)</h3>
-          <p className="mb-2">본 서비스는 사도신경·니케아 신경으로 요약되는 정통 기독교 신앙을 고백하는 교회를 위한 것입니다. 구체적으로:</p>
+          <p className="mb-2">본 서비스는 역사적 정통 기독교 신앙을 고백하는 교회를 위한 것입니다. 장로교·침례교·감리교·성결교·오순절 등 <strong>교단과 전통을 막론하고</strong>, 아래의 핵심 진리를 믿고 고백하는 교회라면 신청할 수 있습니다. (특정 신경(信經)에 대한 형식적 가입 여부가 아니라, 아래 신앙의 내용에 동의하는지를 기준으로 합니다.) 구체적으로:</p>
           <ul className="mb-5 list-disc space-y-1.5 pl-5">
             {FAITH.map((f, i) => <li key={i}>{f}</li>)}
           </ul>

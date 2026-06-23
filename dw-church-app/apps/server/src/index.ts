@@ -850,6 +850,52 @@ async function main(): Promise<void> {
         );
       }
     }
+
+    // Always-run idempotent backfill (ON CONFLICT DO NOTHING). The one-time seed
+    // above only runs on an EMPTY table, so denominations added to this list after
+    // a tenant DB was first populated (e.g. the full US set + acronyms) would never
+    // reach existing prod. This block ensures the canonical list is present on every
+    // DB without duplicating. Covers major US/Korean-American bodies AND their common
+    // acronyms, since applicants type "SBC"/"PCA"/"PCUSA" as often as the full name.
+    const backfill: [string, string, string][] = [
+      // Presbyterian (US)
+      ['SBC', 'US', 'recognized'], ['Southern Baptist Convention', 'US', 'recognized'],
+      ['PCA', 'US', 'recognized'], ['Presbyterian Church in America', 'US', 'recognized'],
+      ['PCUSA', 'US', 'recognized'], ['PC(USA)', 'US', 'recognized'], ['Presbyterian Church (USA)', 'US', 'recognized'],
+      ['EPC', 'US', 'recognized'], ['Evangelical Presbyterian Church', 'US', 'recognized'],
+      ['OPC', 'US', 'recognized'], ['Orthodox Presbyterian Church', 'US', 'recognized'],
+      ['ARP', 'US', 'recognized'], ['ECO', 'US', 'recognized'],
+      // Baptist (US)
+      ['American Baptist', 'US', 'recognized'], ['Converge', 'US', 'recognized'],
+      ['Reformed Baptist', 'US', 'recognized'], ['Independent Baptist', 'US', 'recognized'],
+      // Methodist / Holiness / Wesleyan
+      ['UMC', 'US', 'recognized'], ['Global Methodist', 'US', 'recognized'], ['Free Methodist', 'US', 'recognized'],
+      ['Wesleyan', 'US', 'recognized'], ['Church of the Nazarene', 'US', 'recognized'], ['Nazarene', 'US', 'recognized'],
+      // Lutheran
+      ['LCMS', 'US', 'recognized'], ['Lutheran Church–Missouri Synod', 'US', 'recognized'],
+      ['ELCA', 'US', 'recognized'], ['WELS', 'US', 'recognized'], ['Lutheran', 'US', 'recognized'],
+      // Reformed
+      ['CRC', 'US', 'recognized'], ['Christian Reformed Church', 'US', 'recognized'],
+      ['RCA', 'US', 'recognized'], ['Reformed Church in America', 'US', 'recognized'], ['URCNA', 'US', 'recognized'],
+      // Pentecostal / Charismatic
+      ['AG', 'US', 'recognized'], ['Foursquare', 'US', 'recognized'], ['Church of God', 'US', 'recognized'],
+      ['Vineyard', 'US', 'recognized'], ['Calvary Chapel', 'US', 'recognized'],
+      // Evangelical / Non-denominational / Anglican
+      ['EFCA', 'US', 'recognized'], ['Evangelical Free Church', 'US', 'recognized'],
+      ['CMA', 'US', 'recognized'], ['Christian and Missionary Alliance', 'US', 'recognized'],
+      ['Acts 29', 'US', 'recognized'], ['Non-denominational', 'US', 'recognized'], ['Evangelical', 'US', 'recognized'],
+      ['ACNA', 'US', 'recognized'], ['Anglican Church in North America', 'US', 'recognized'],
+      ['Anglican', 'US', 'recognized'], ['Episcopal', 'US', 'recognized'],
+      // Korean-American
+      ['KPCA', 'US', 'recognized'], ['미주한인예수교장로회', 'US', 'recognized'],
+      ['Korean Presbyterian', 'US', 'recognized'], ['미주성결교회', 'US', 'recognized'],
+    ];
+    for (const [name, country, status] of backfill) {
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO "reference_denominations" (name, country, status) VALUES ($1, $2, $3) ON CONFLICT (lower(name)) DO NOTHING`,
+        name, country, status,
+      );
+    }
   } catch (err) {
     app.log.warn(`reference_denominations table migration skipped: ${err}`);
   }
