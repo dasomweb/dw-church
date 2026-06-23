@@ -62,6 +62,7 @@ const ADD_BLOCK_CATALOG: { category: string; blocks: AddBlock[] }[] = [
     { value: 'album_gallery', label: '앨범', props: { title: '앨범', limit: 6, category: '' } },
     { value: 'video_board', label: '영상 게시판', props: { title: '영상', category: '', limit: 6 } },
     { value: 'staff_grid', label: '교역자', props: { title: '섬기는 사람들', limit: 20 } },
+    { value: 'cell_grid', label: '목장', props: { title: '목장 안내', limit: 24 } },
     { value: 'event_grid', label: '행사', props: { title: '교회 행사', limit: 4 } },
     { value: 'history_timeline', label: '교회 연혁', props: { title: '교회 연혁' } },
     { value: 'board', label: '게시판', props: { title: '게시판', boardSlug: '', limit: 10 } },

@@ -11,7 +11,10 @@ interface CellGridBlockProps {
 // snake_case from the public API (plain fetch, no camelization).
 export async function CellGridBlock({ props, slug }: CellGridBlockProps) {
   const limit = (props.limit as number) ?? 24;
-  const columns = (props.columns as number) ?? 3;
+  // Column count: prefer the variant the page editor sets (grid-2/3/4, like the
+  // other content blocks); fall back to a numeric columns prop / 3.
+  const variant = (props.variant as string) || '';
+  const columns = variant === 'grid-4' ? 4 : variant === 'grid-2' ? 2 : (Number(props.columns) || 3);
 
   let cells: Record<string, unknown>[] = [];
   try {
