@@ -43,7 +43,10 @@ export default function BulletinManagement() {
     setEditingItem(item);
     reset({
       title: item.title,
-      date: item.date,
+      // 서버는 UTC-자정 ISO("2026-06-21T00:00:00.000Z")로 돌려주는데 <input type="date">
+      // 와 서버 검증(YYYY-MM-DD)은 날짜만 받는다. ISO를 그대로 넣으면 input은 빈 값이 되고
+      // RHF 에는 ISO 가 남아 저장 시 400(Must be YYYY-MM-DD). → 날짜 부분만 잘라 넣는다.
+      date: item.date ? String(item.date).slice(0, 10) : '',
       pdfUrl: item.pdfUrl,
       images: item.images || [],
       status: item.status,
