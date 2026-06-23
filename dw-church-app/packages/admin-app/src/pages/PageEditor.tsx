@@ -16,6 +16,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
 import { useToast } from '../components';
 import { ImageUpload, MultiImageUpload } from '../components/ImageUpload';
+import { RichEditor } from '../components/RichEditor';
 import { useAuthStore } from '../stores/auth';
 
 // ═══════════════════════════════════════════════════════════
@@ -40,7 +41,7 @@ interface BlockDef {
   nature: 'static' | 'dynamic' | 'layout';
   variants: BlockVariant[];
   defaultProps: Record<string, unknown>;
-  editableFields: { key: string; label: string; type: 'text' | 'textarea' | 'number' | 'select' | 'image' | 'images' | 'url' | 'array' | 'tags' | 'services' | 'buttons' | 'groups'; options?: { label: string; value: string }[]; max?: number }[];
+  editableFields: { key: string; label: string; type: 'text' | 'textarea' | 'richtext' | 'number' | 'select' | 'image' | 'images' | 'url' | 'array' | 'tags' | 'services' | 'buttons' | 'groups'; options?: { label: string; value: string }[]; max?: number }[];
 }
 
 // CONTENT_ONLY — tenant page editor is locked to "글·사진만 수정" per the
@@ -60,7 +61,7 @@ const BLOCK_DEFS: BlockDef[] = [
   { type: 'hero_split', label: '분할 히어로', category: '히어로', icon: '⬛', nature: 'static', description: '텍스트+이미지 분할', variants: [{ id: 'right', label: '이미지 우측' }, { id: 'left', label: '이미지 좌측' }], defaultProps: { title: '', imageUrl: '', imagePosition: 'right' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'subtitle', label: '부제목', type: 'text' }, { key: 'description', label: '설명', type: 'textarea' }, { key: 'imageUrl', label: '이미지', type: 'image' }] },
 
   // ─── About ────────────────────────────────────
-  { type: 'pastor_message', label: '담임목사 인사', category: '소개', icon: '🙏', nature: 'static', description: '담임목사 인사말', variants: [{ id: 'right', label: '사진 우측' }, { id: 'left', label: '사진 좌측' }], defaultProps: { pastorName: '', message: '', layout: 'right' }, editableFields: [{ key: 'title', label: '섹션 제목', type: 'text' }, { key: 'pastorName', label: '이름', type: 'text' }, { key: 'pastorTitle', label: '직함', type: 'text' }, { key: 'message', label: '인사말', type: 'textarea' }, { key: 'imageUrl', label: '사진', type: 'image' }] },
+  { type: 'pastor_message', label: '담임목사 인사', category: '소개', icon: '🙏', nature: 'static', description: '담임목사 인사말', variants: [{ id: 'right', label: '사진 우측' }, { id: 'left', label: '사진 좌측' }], defaultProps: { pastorName: '', message: '', layout: 'right' }, editableFields: [{ key: 'title', label: '섹션 제목', type: 'text' }, { key: 'pastorName', label: '이름', type: 'text' }, { key: 'pastorTitle', label: '직함', type: 'text' }, { key: 'message', label: '인사말', type: 'richtext' }, { key: 'imageUrl', label: '사진', type: 'image' }] },
   { type: 'church_intro', label: '교회 소개', category: '소개', icon: '⛪', nature: 'static', description: '교회 소개 텍스트', variants: [{ id: 'with-image', label: '이미지 포함' }, { id: 'text-only', label: '텍스트만' }], defaultProps: { content: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'content', label: '소개글', type: 'textarea' }, { key: 'imageUrl', label: '이미지', type: 'image' }] },
   { type: 'mission_vision', label: '미션/비전', category: '소개', icon: '🎯', nature: 'static', description: '미션, 비전, 핵심 가치', variants: [{ id: 'cards-4', label: '4열 카드' }, { id: 'cards-3', label: '3열 카드' }, { id: 'cards-2', label: '2열 카드' }, { id: 'list', label: '리스트' }], defaultProps: { content: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'content', label: '내용', type: 'textarea' }] },
 
@@ -867,7 +868,13 @@ function LayoutChildEditor({
             .map((field) => (
             <div key={field.key}>
               <label className="text-[10px] font-medium text-gray-500 block mb-0.5">{field.label}</label>
-              {field.type === 'textarea' ? (
+              {field.type === 'richtext' ? (
+                <RichEditor
+                  value={(child.props[field.key] as string) || ''}
+                  onChange={(html) => set(field.key, html)}
+                  minHeight="140px"
+                />
+              ) : field.type === 'textarea' ? (
                 <textarea
                   value={(child.props[field.key] as string) || ''}
                   onChange={(e) => set(field.key, e.target.value)}
@@ -1233,7 +1240,13 @@ function SectionCard({
                     </button>
                   )}
                 </div>
-                {field.type === 'textarea' ? (
+                {field.type === 'richtext' ? (
+                  <RichEditor
+                    value={(props[field.key] as string) || ''}
+                    onChange={(html) => set(field.key, html)}
+                    minHeight="160px"
+                  />
+                ) : field.type === 'textarea' ? (
                   <textarea
                     value={(props[field.key] as string) || ''}
                     onChange={(e) => set(field.key, e.target.value)}

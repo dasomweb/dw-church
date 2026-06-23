@@ -118,8 +118,11 @@ export function ImageUpload({
     return (
       <div>
         {label && <p className="text-sm font-medium text-gray-700 mb-1.5">{label}</p>}
-        <div className="relative rounded-lg overflow-hidden border border-gray-200" style={{ aspectRatio }}>
-          <img src={value} alt="미리보기" className="w-full h-full object-cover" />
+        {/* object-contain (not cover) so portrait/세로 photos show in full inside the
+            preview frame instead of being cropped to the center strip. The checkered
+            bg hints at the letterbox area without implying the photo is that shape. */}
+        <div className="relative rounded-lg overflow-hidden border border-gray-200 bg-gray-50" style={{ aspectRatio }}>
+          <img src={value} alt="미리보기" className="w-full h-full object-contain" />
         </div>
         {/* Always-visible controls. These were previously hover-only
             (opacity-0 group-hover:opacity-100), so on touch devices
