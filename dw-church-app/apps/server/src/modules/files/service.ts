@@ -18,6 +18,20 @@ function maxSizeFor(contentType: string): number {
   return contentType.startsWith('image/') ? MAX_IMAGE_SIZE : MAX_DOCUMENT_SIZE;
 }
 
+// Keep a document's ORIGINAL filename but strip path separators and the few
+// characters that break R2 keys / URLs / Content-Disposition headers. Unicode
+// (한글 등) is preserved — the public URL percent-encodes it (see r2.uploadFile)
+// and the browser decodes it back on download. Used only for non-image files so
+// 주보 PDF 등 download with a meaningful name instead of a uuid.
+function safeDocumentName(filename: string): string {
+  const base = filename.split(/[\\/]/).pop() || 'file';
+  const cleaned = base
+    .replace(/[<>:"|?*\/]+/g, '') // filesystem/URL-hostile chars
+    .replace(/\s+/g, '_')                       // spaces → underscores for tidy URLs
+    .replace(/^\.+/, '');                       // no leading dots (hidden-file/relative)
+  return cleaned.slice(0, 200) || 'file';
+}
+
 // ─── Upload ─────────────────────────────────────────────────
 
 interface UploadParams {
@@ -50,9 +64,16 @@ export async function upload(params: UploadParams) {
     );
   }
 
-  const ext = extname(filename) || '.bin';
+  // Images are uuid-named — they're derivative/resized, the original name is
+  // irrelevant, and a flat key keeps the media-library backfill simple. Non-image
+  // documents (주보 PDF 등) keep their ORIGINAL filename so downloads/links stay
+  // meaningful; a per-file uuid *folder* guarantees uniqueness so two uploads
+  // named the same never collide.
+  const isImage = contentType.startsWith('image/');
   const uuid = randomUUID();
-  const storageKey = `tenant_${tenantSlug}/${entityType}/${uuid}${ext}`;
+  const storageKey = isImage
+    ? `tenant_${tenantSlug}/${entityType}/${uuid}${extname(filename) || '.bin'}`
+    : `tenant_${tenantSlug}/${entityType}/${uuid}/${safeDocumentName(filename)}`;
 
   const url = await uploadFile(storageKey, buffer, contentType);
 

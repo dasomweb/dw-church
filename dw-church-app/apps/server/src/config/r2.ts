@@ -35,7 +35,13 @@ export async function uploadFile(
       ContentType: contentType,
     }),
   );
-  return `${env.R2_PUBLIC_URL}/${key}`;
+  // The R2 object Key is stored raw, but the public URL must percent-encode each
+  // path segment — document keys can now carry the original filename (spaces /
+  // Korean / 등) which would otherwise produce an invalid URL. Encoding per
+  // segment leaves the '/' separators intact; pure-ASCII keys (uuid images) are
+  // unchanged since encodeURIComponent is a no-op for [A-Za-z0-9-_.~].
+  const encodedKey = key.split('/').map(encodeURIComponent).join('/');
+  return `${env.R2_PUBLIC_URL}/${encodedKey}`;
 }
 
 /**
