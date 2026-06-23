@@ -1568,6 +1568,16 @@ const STAFF_GRID = churchBlock(
     ], hint: 'grouped 변형에서만 사용' },
   ]},
 );
+const CELL_GRID = churchBlock(
+  { title: 'Header', fields: [{ key: 'title', label: '제목', type: 'text' }]},
+  { title: 'Data', fields: [
+    { key: 'limit', label: '표시 개수', type: 'number', hint: '기본 24' },
+    { key: 'variant', label: 'Columns', type: 'select', choices: [
+      { value: 'grid-3', label: '3 columns' }, { value: 'grid-2', label: '2 columns' },
+      { value: 'grid-4', label: '4 columns' },
+    ]},
+  ]},
+);
 const HISTORY_TIMELINE = churchBlock(
   { title: 'Header', fields: [{ key: 'title', label: '제목', type: 'text' }]},
   { title: 'Design', fields: [
@@ -1721,6 +1731,7 @@ export const ELEMENT_REGISTRY: Record<string, BlockElementRegistry> = {
   schedule_board:   SCHEDULE_BOARD,
   event_grid:       EVENT_GRID,
   staff_grid:       STAFF_GRID,
+  cell_grid:        CELL_GRID,
   history_timeline: HISTORY_TIMELINE,
   worship_times:    WORSHIP_TIMES,
   worship_schedule: WORSHIP_SCHEDULE,

@@ -70,6 +70,7 @@ const CHURCH_BLOCK_LABELS: Record<string, string> = {
   video_board: '영상 게시판 (Data Block)',
   schedule_board: '예배 및 모임 (Data Block)',
   staff_grid: '교역자 (Data Block)',
+  cell_grid: '목장 (Data Block)',
   history_timeline: '교회 연혁 (Data Block)',
   event_grid: '행사 (Data Block)',
   board: '게시판 (Data Block)',
