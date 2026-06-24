@@ -25,6 +25,13 @@ import { useMemo } from 'react';
  */
 export function useImageFieldApi(): {
   upload: ((file: File, opts?: { kind?: ImageKind }) => Promise<string>) | undefined;
+  /**
+   * Sideload an external image URL (YouTube thumbnail, pasted image link) into
+   * R2 and return the self-hosted URL. The storefront must never hotlink
+   * external images (CLAUDE.md), and remote hosts' CORS/CSP often make the raw
+   * URL fail to even preview — so the "Paste URL" field routes through here.
+   */
+  importUrl: ((url: string) => Promise<string>) | undefined;
   generate:
     | ((
         prompt: string,
@@ -61,7 +68,7 @@ export function useImageFieldApi(): {
   const client = useDWChurchClient();
 
   return useMemo(() => {
-    if (!client) return { upload: undefined, generate: undefined, autoGenerate: undefined, autoMatch: undefined };
+    if (!client) return { upload: undefined, importUrl: undefined, generate: undefined, autoGenerate: undefined, autoMatch: undefined };
     // The client exposes a fetchAdapter for raw URL composition (same
     // pattern planner-api.ts uses to bypass the camelize/snake middleware
     // on JSON-passthrough endpoints).
@@ -206,6 +213,27 @@ export function useImageFieldApi(): {
       return { url: json.url, mediaId: json.mediaId, reason: json.reason ?? '' };
     };
 
-    return { upload, generate, autoGenerate, autoMatch };
+    const importUrl = async (url: string): Promise<string> => {
+      if (!fa) throw new Error('API client is not ready');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json', ...fa.headers };
+      const res = await fetch(`${fa.baseUrl}/api/v1/files/import-url`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ url }),
+      });
+      const text = await res.text();
+      let json: { data?: { url?: string }; error?: { message?: string }; detail?: string } = {};
+      try {
+        json = text ? JSON.parse(text) : {};
+      } catch {
+        // not JSON
+      }
+      if (!res.ok || !json.data?.url) {
+        throw new Error(json.error?.message ?? json.detail ?? `HTTP ${res.status}`);
+      }
+      return json.data.url;
+    };
+
+    return { upload, importUrl, generate, autoGenerate, autoMatch };
   }, [client]);
 }

@@ -33,8 +33,9 @@ const VARIANT_HINTS: Record<string, { label: string; aspectRatio: string }> = {
 
 function youtubeIdFromUrl(url: string): string | null {
   const trimmed = url.trim();
+  // Covers watch?v= / youtu.be / embed / shorts / live / v/ forms (incl. ?si= etc.)
   const m = trimmed.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/i,
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/|v\/)|youtu\.be\/)([\w-]{11})/i,
   );
   return m && m[1] ? m[1] : null;
 }
@@ -49,6 +50,10 @@ export interface ImageFieldProps {
   value: string;
   onChange: (url: string) => void;
   onUpload?: (file: File, opts?: { kind?: 'background' | 'content' }) => Promise<string>;
+  /** Sideload an external/YouTube URL to R2 and return the self-hosted URL.
+   *  When provided, the "Paste URL" field routes external links through it so
+   *  the storefront never hotlinks (and the preview loads from our origin). */
+  onImportUrl?: (url: string) => Promise<string>;
   onGenerate?: (
     prompt: string,
     opts: {
@@ -67,7 +72,7 @@ export interface ImageFieldProps {
   initialPrompt?: string;
 }
 
-type Busy = 'upload' | 'ai' | 'auto' | 'match' | null;
+type Busy = 'upload' | 'ai' | 'auto' | 'match' | 'url' | null;
 
 /* ─── Component ───────────────────────────────────────────────── */
 
@@ -75,6 +80,7 @@ export function ImageField({
   value,
   onChange,
   onUpload,
+  onImportUrl,
   onGenerate,
   onAutoGenerate,
   onAutoMatch,
@@ -176,13 +182,31 @@ export function ImageField({
     if (url) onChange(url);
   };
 
-  const applyUrl = () => {
+  const applyUrl = async () => {
     const trimmed = urlDraft.trim();
     if (!trimmed) return;
     setError(null);
     const ytId = youtubeIdFromUrl(trimmed);
-    const finalUrl = ytId ? youtubeThumbnailUrl(ytId) : trimmed;
-    onChange(finalUrl);
+    const candidate = ytId ? youtubeThumbnailUrl(ytId) : trimmed;
+
+    // External images must be self-hosted on R2 (never hotlink). Sideload via the
+    // server, which can fetch the remote image without the CORS/CSP failures that
+    // made the raw URL show "Failed to load image" in the preview.
+    if (onImportUrl && /^https?:\/\//i.test(candidate)) {
+      setBusy('url');
+      try {
+        const hosted = await onImportUrl(candidate);
+        onChange(hosted);
+        setUrlDraft('');
+      } catch (e) {
+        setError(e instanceof Error ? e.message : '이미지를 가져오지 못했습니다');
+      } finally {
+        setBusy(null);
+      }
+      return;
+    }
+
+    onChange(candidate);
     setUrlDraft('');
   };
 
@@ -355,9 +379,9 @@ export function ImageField({
               value={urlDraft}
               onChange={(e) => setUrlDraft(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === 'Enter' && busy !== 'url') {
                   e.preventDefault();
-                  applyUrl();
+                  void applyUrl();
                 }
               }}
               placeholder="https://... or https://youtu.be/..."
@@ -365,11 +389,11 @@ export function ImageField({
             />
             <button
               type="button"
-              onClick={applyUrl}
-              disabled={!urlDraft.trim()}
-              className="bg-gray-100 hover:bg-gray-200 disabled:opacity-50 text-gray-700 px-2 py-1 rounded text-xs"
+              onClick={() => void applyUrl()}
+              disabled={!urlDraft.trim() || busy === 'url'}
+              className="bg-gray-100 hover:bg-gray-200 disabled:opacity-50 text-gray-700 px-2 py-1 rounded text-xs whitespace-nowrap"
             >
-              Apply
+              {busy === 'url' ? '가져오는 중…' : 'Apply'}
             </button>
           </div>
           {youtubeIdFromUrl(urlDraft) && (

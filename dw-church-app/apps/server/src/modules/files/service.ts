@@ -103,6 +103,78 @@ export async function upload(params: UploadParams) {
   return row;
 }
 
+// ─── Import from external URL (sideload → R2) ───────────────
+// Self-host an external image (YouTube thumbnail, pasted image URL) on R2 so the
+// storefront never hotlinks (CLAUDE.md rule) and the operator's preview loads
+// from our own origin instead of failing on the remote host's CORS/CSP.
+//
+// SSRF note: this is an authenticated, tenant-scoped operator action; we restrict
+// to http/https, enforce a fetch timeout + the image size cap, and require the
+// response to actually be an image. Not exposed to anonymous users.
+const IMPORT_TIMEOUT_MS = 10_000;
+
+// Minimal magic-byte sniff for hosts that send a wrong/missing content-type.
+export function sniffImageMime(buf: Buffer): string | null {
+  if (buf.length < 12) return null;
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return 'image/jpeg';
+  if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) return 'image/png';
+  if (buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46) return 'image/gif';
+  if (buf.toString('ascii', 0, 4) === 'RIFF' && buf.toString('ascii', 8, 12) === 'WEBP') return 'image/webp';
+  return null;
+}
+
+export async function importFromUrl(params: {
+  tenantSlug: string;
+  schema: string;
+  entityType: string;
+  url: string;
+}) {
+  let parsed: URL;
+  try {
+    parsed = new URL(params.url);
+  } catch {
+    throw new AppError('BAD_URL', 400, '올바른 URL이 아닙니다.');
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new AppError('BAD_URL', 400, 'http/https 이미지 URL만 가져올 수 있습니다.');
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), IMPORT_TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetch(params.url, { signal: controller.signal, redirect: 'follow' });
+  } catch {
+    throw new AppError('FETCH_FAILED', 502, '이미지를 가져오지 못했습니다.');
+  } finally {
+    clearTimeout(timer);
+  }
+  if (!res.ok) {
+    throw new AppError('FETCH_FAILED', 502, `이미지를 가져오지 못했습니다 (HTTP ${res.status}).`);
+  }
+
+  const buffer = Buffer.from(await res.arrayBuffer());
+  let contentType = (res.headers.get('content-type') ?? '').split(';')[0]!.trim().toLowerCase();
+  if (!contentType.startsWith('image/')) {
+    const extMime = MIME_BY_EXT[(parsed.pathname.match(/\.[a-z0-9]+$/i)?.[0] ?? '').toLowerCase()];
+    contentType = extMime ?? sniffImageMime(buffer) ?? '';
+  }
+  if (!contentType.startsWith('image/')) {
+    throw new AppError('NOT_IMAGE', 400, '이미지 URL이 아닙니다. (이미지 파일을 가리키는 링크가 필요합니다)');
+  }
+
+  const filename = decodeURIComponent(parsed.pathname.split('/').pop() || 'image');
+  return upload({
+    tenantSlug: params.tenantSlug,
+    schema: params.schema,
+    entityType: params.entityType,
+    filename,
+    contentType,
+    buffer,
+    kind: 'upload',
+  });
+}
+
 // ─── Bulk Upload (albums) ───────────────────────────────────
 
 interface BulkUploadParams {

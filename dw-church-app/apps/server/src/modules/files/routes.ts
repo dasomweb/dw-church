@@ -34,6 +34,23 @@ export async function fileRoutes(app: FastifyInstance) {
     return reply.status(201).send({ data: file });
   });
 
+  // Sideload an external image URL (YouTube thumbnail, pasted image link) into
+  // R2 and return a `files` row — so the storefront self-hosts instead of
+  // hotlinking. Used by the builder's "Paste URL" image field.
+  app.post('/files/import-url', { preHandler: [requireAuth] }, async (request, reply) => {
+    const { url, entityType } = (request.body ?? {}) as { url?: string; entityType?: string };
+    if (!url || typeof url !== 'string') {
+      return reply.status(400).send({ error: { code: 'NO_URL', message: 'url is required' } });
+    }
+    const file = await fileService.importFromUrl({
+      tenantSlug: request.tenant!.slug,
+      schema: getSchema(request),
+      entityType: entityType || 'general',
+      url,
+    });
+    return reply.status(201).send({ data: file });
+  });
+
   // Register migration images already in R2 (tenant_<slug>/migration/) that
   // have no `files` row yet, so they show up in the media library.
   app.post('/files/backfill-migration', { preHandler: [requireAuth] }, async (request, reply) => {

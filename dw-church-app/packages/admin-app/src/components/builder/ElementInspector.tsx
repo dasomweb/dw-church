@@ -376,7 +376,7 @@ function ImageFieldAdapter({
    *  THAT item's title/description for the prompt. */
   path?: string;
 }) {
-  const { upload, generate, autoGenerate, autoMatch } = useImageFieldApi();
+  const { upload, importUrl, generate, autoGenerate, autoMatch } = useImageFieldApi();
   const { showToast } = useFormToast();
   const [pickerOpen, setPickerOpen] = useState(false);
   // Holds the resolver for the in-flight onPickFromLibrary Promise.
@@ -447,6 +447,22 @@ function ImageFieldAdapter({
       }
     : undefined;
 
+  // External / YouTube URL → sideload to R2 (self-host) instead of hotlinking.
+  const wrappedImportUrl = importUrl
+    ? async (url: string): Promise<string> => {
+        showToast('info', '🔗 외부 이미지를 가져오는 중…');
+        try {
+          const hosted = await importUrl(url);
+          showToast('success', '이미지를 가져왔습니다');
+          return hosted;
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          showToast('error', `가져오기 실패: ${msg}`);
+          throw e;
+        }
+      }
+    : undefined;
+
   const wrappedGenerate = generate
     ? async (prompt: string, opts: { variant: 'hero' | 'section' | 'square'; referenceUrls?: string[]; mode?: 'space' | 'product' }): Promise<string> => {
         showToast('info', '✨ Generating AI image… (10-30s)');
@@ -511,6 +527,7 @@ function ImageFieldAdapter({
           }
         }}
         onUpload={wrappedUpload}
+        onImportUrl={wrappedImportUrl}
         onGenerate={wrappedGenerate}
         onAutoGenerate={onAutoGenerate}
         onAutoMatch={onAutoMatch}
