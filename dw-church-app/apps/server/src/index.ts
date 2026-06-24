@@ -863,6 +863,9 @@ async function main(): Promise<void> {
     // the current hard-coded values (header py-3 ≈ 12px, footer py-12 ≈ 48px).
     await prisma.$executeRawUnsafe(`ALTER TABLE "marketing_config" ADD COLUMN IF NOT EXISTS "header_padding_y" INT DEFAULT 12`);
     await prisma.$executeRawUnsafe(`ALTER TABLE "marketing_config" ADD COLUMN IF NOT EXISTS "footer_padding_y" INT DEFAULT 48`);
+    // Operator-editable home hero slides (JSONB array) + marketing base font size.
+    await prisma.$executeRawUnsafe(`ALTER TABLE "marketing_config" ADD COLUMN IF NOT EXISTS "hero_slides" JSONB NOT NULL DEFAULT '[]'::jsonb`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE "marketing_config" ADD COLUMN IF NOT EXISTS "base_font_px" INT DEFAULT 16`);
   } catch (err) {
     app.log.warn(`demo tables migration skipped: ${err}`);
   }

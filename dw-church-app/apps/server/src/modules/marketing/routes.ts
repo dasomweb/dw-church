@@ -17,6 +17,15 @@ const configSchema = z.object({
   // truelight.app marketing header/footer vertical padding (px).
   headerPaddingY: z.number().int().min(0).max(80).optional().nullable(),
   footerPaddingY: z.number().int().min(0).max(160).optional().nullable(),
+  // Home hero slides (operator-editable) + base font size.
+  heroSlides: z.array(z.object({
+    headlineKo: z.string().max(200).default(''),
+    headlineEn: z.string().max(200).default(''),
+    sublineKo: z.string().max(400).default(''),
+    sublineEn: z.string().max(400).default(''),
+    imageUrl: z.string().max(2000).default(''),
+  })).max(10).optional().nullable(),
+  baseFontPx: z.number().int().min(12).max(22).optional().nullable(),
 });
 
 /**

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import SiteLogo from './SiteLogo';
 import FeaturesNavMenu from './FeaturesNavMenu';
 import { useMarketingLang } from './useMarketingLang';
@@ -18,6 +19,18 @@ export default function MarketingHeader() {
   const brand = useSiteBrand();
   const t = NAV[lang];
   const padY = brand?.headerPaddingY ?? 12;
+
+  // Base font size — Tailwind text sizes are rem-based, so setting the root
+  // font-size scales all marketing-site text proportionally. Reset on unmount so
+  // it never bleeds into tenant routes. MarketingHeader is on every marketing page.
+  const baseFontPx = brand?.baseFontPx ?? null;
+  useEffect(() => {
+    if (!baseFontPx) return;
+    const el = document.documentElement;
+    const prev = el.style.fontSize;
+    el.style.fontSize = `${baseFontPx}px`;
+    return () => { el.style.fontSize = prev; };
+  }, [baseFontPx]);
 
   return (
     <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 backdrop-blur-sm">

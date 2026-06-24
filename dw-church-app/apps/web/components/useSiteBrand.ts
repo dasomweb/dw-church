@@ -4,6 +4,14 @@ import { useEffect, useState } from 'react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.truelight.app';
 
+export interface HeroSlide {
+  headlineKo: string;
+  headlineEn: string;
+  sublineKo: string;
+  sublineEn: string;
+  imageUrl: string;
+}
+
 export interface SiteBrand {
   logoUrl: string | null;
   logoHeight: number | null;
@@ -15,6 +23,10 @@ export interface SiteBrand {
   /** truelight.app marketing header/footer vertical padding (px). */
   headerPaddingY: number | null;
   footerPaddingY: number | null;
+  /** Operator-editable home hero slides; empty → use the built-in defaults. */
+  heroSlides: HeroSlide[] | null;
+  /** Marketing-site base font size (px); scales all rem-based text. */
+  baseFontPx: number | null;
 }
 
 // Module-level cache so the header logo, favicon setter, and footer share one

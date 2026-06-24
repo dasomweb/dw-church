@@ -8,6 +8,7 @@ import FaviconSetter from '../components/FaviconSetter';
 import MarketingHeader from '../components/MarketingHeader';
 import MarketingFooter from '../components/MarketingFooter';
 import { useMarketingLang } from '../components/useMarketingLang';
+import { useSiteBrand } from '../components/useSiteBrand';
 
 // ─── Bilingual copy (Korean is the primary/default language) ──────────────
 // truelight.app marketing site. Korean renders by default (SSR + first paint);
@@ -279,7 +280,7 @@ const COPY: Record<Lang, Copy> = {
   },
 };
 
-function HeroSlider({ slides, getStarted, seePlans, lang }: { slides: { headline: string; subline: string }[]; getStarted: string; seePlans: string; lang: Lang }) {
+function HeroSlider({ slides, getStarted, seePlans, lang }: { slides: { headline: string; subline: string; image: string }[]; getStarted: string; seePlans: string; lang: Lang }) {
   const [current, setCurrent] = useState(0);
   const next = useCallback(() => setCurrent((c) => (c + 1) % slides.length), [slides.length]);
 
@@ -296,7 +297,7 @@ function HeroSlider({ slides, getStarted, seePlans, lang }: { slides: { headline
           className={`absolute inset-0 transition-opacity duration-1000 ${i === current ? 'opacity-100' : 'opacity-0'}`}
         >
           <img
-            src={SLIDE_IMAGES[i]}
+            src={slide.image}
             alt=""
             className="absolute inset-0 h-full w-full object-cover"
             loading={i === 0 ? 'eager' : 'lazy'}
@@ -342,16 +343,27 @@ function HeroSlider({ slides, getStarted, seePlans, lang }: { slides: { headline
 export default function LandingPage() {
   // Language is shared with the global header via useMarketingLang (Korean primary).
   const { lang } = useMarketingLang();
+  const brand = useSiteBrand();
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('yearly');
 
   const t = COPY[lang];
+
+  // Hero slides: operator-configured (super-admin) override the built-in defaults.
+  const cfgSlides = brand?.heroSlides ?? [];
+  const heroSlides = cfgSlides.length > 0
+    ? cfgSlides.map((s) => ({
+        headline: lang === 'ko' ? s.headlineKo : s.headlineEn,
+        subline: lang === 'ko' ? s.sublineKo : s.sublineEn,
+        image: s.imageUrl,
+      }))
+    : t.hero.slides.map((s, i) => ({ headline: s.headline, subline: s.subline, image: SLIDE_IMAGES[i] ?? SLIDE_IMAGES[0]! }));
 
   return (
     <div className="min-h-screen bg-white">
       <MarketingHeader />
 
       {/* Hero Slider */}
-      <HeroSlider slides={t.hero.slides} getStarted={t.hero.getStarted} seePlans={t.hero.seePlans} lang={lang} />
+      <HeroSlider slides={heroSlides} getStarted={t.hero.getStarted} seePlans={t.hero.seePlans} lang={lang} />
 
       {/* Trust Bar */}
       <section className="border-b border-gray-100 bg-gray-50 px-4 py-6 sm:px-6">
