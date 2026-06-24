@@ -23,6 +23,12 @@ import type {
   NewcomerStatus,
   FormSubmission,
   FormSubmissionStatus,
+  Form,
+  FormWithFields,
+  CreateFormInput,
+  UpdateFormInput,
+  CreateFormFieldInput,
+  UpdateFormFieldInput,
   ChurchSettings,
   ListParams,
   LoginInput,
@@ -119,6 +125,12 @@ export const queryKeys = {
     all: ['newcomers'] as const,
     list: (status?: string) => ['newcomers', 'list', status] as const,
     detail: (id: string) => ['newcomers', 'detail', id] as const,
+  },
+  forms: {
+    all: ['forms'] as const,
+    list: () => ['forms', 'list'] as const,
+    detail: (id: string) => ['forms', 'detail', id] as const,
+    schema: (slug: string) => ['forms', 'schema', slug] as const,
   },
   formSubmissions: {
     all: ['formSubmissions'] as const,
@@ -905,6 +917,103 @@ export function useDeleteFormSubmission() {
   return useMutation({
     mutationFn: (id: string) => client!.deleteFormSubmission(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.formSubmissions.all }),
+  });
+}
+
+// ─── Form Builder Hooks (커스텀 폼 정의 CRUD) ─────────────────
+export function useForms() {
+  const client = useDWChurchClient();
+  return useQuery<Form[]>({
+    queryKey: queryKeys.forms.list(),
+    queryFn: () => client!.getForms(),
+    enabled: !!client,
+    staleTime: STALE_TIME,
+  });
+}
+
+export function useForm(id: string) {
+  const client = useDWChurchClient();
+  return useQuery<FormWithFields>({
+    queryKey: queryKeys.forms.detail(id),
+    queryFn: () => client!.getForm(id),
+    enabled: !!client && !!id,
+    staleTime: STALE_TIME,
+  });
+}
+
+/** Public — fetch a form's schema by slug for storefront rendering. */
+export function useFormSchema(slug: string) {
+  const client = useDWChurchClient();
+  return useQuery<FormWithFields>({
+    queryKey: queryKeys.forms.schema(slug),
+    queryFn: () => client!.getFormSchema(slug),
+    enabled: !!client && !!slug,
+    staleTime: STALE_TIME,
+  });
+}
+
+export function useCreateForm() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateFormInput) => client!.createForm(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.forms.all }),
+  });
+}
+
+export function useUpdateForm() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateFormInput }) => client!.updateForm(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.forms.all }),
+  });
+}
+
+export function useDeleteForm() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => client!.deleteForm(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.forms.all }),
+  });
+}
+
+export function useCreateFormField() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ formId, data }: { formId: string; data: CreateFormFieldInput }) =>
+      client!.createFormField(formId, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.forms.all }),
+  });
+}
+
+export function useUpdateFormField() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateFormFieldInput }) => client!.updateFormField(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.forms.all }),
+  });
+}
+
+export function useDeleteFormField() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => client!.deleteFormField(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.forms.all }),
+  });
+}
+
+export function useReorderFormFields() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ formId, fieldIds }: { formId: string; fieldIds: string[] }) =>
+      client!.reorderFormFields(formId, fieldIds),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.forms.all }),
   });
 }
 

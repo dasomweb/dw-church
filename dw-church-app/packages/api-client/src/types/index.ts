@@ -268,6 +268,66 @@ export interface FormSubmission {
   updatedAt?: string;
 }
 
+// ─── Form Builder (운영자가 설계하는 커스텀 폼: 목장보고서/새가족/문의 …) ──
+// A `Form` (forms 테이블) defines a custom form; its `FormField`s define the
+// inputs. Submissions reuse FormSubmission (form_type = the form's slug) so they
+// land in the existing 폼 제출 inbox.
+export type FormFieldType =
+  | 'text'
+  | 'textarea'
+  | 'email'
+  | 'phone'
+  | 'number'
+  | 'date'
+  | 'select'
+  | 'radio'
+  | 'checkbox';
+
+export interface FormFieldOption {
+  value: string;
+  label: string;
+}
+
+export interface FormField {
+  id: string;
+  formId: string;
+  sortOrder: number;
+  fieldKey: string;
+  fieldType: FormFieldType;
+  label: string;
+  placeholder: string;
+  helpText: string;
+  isRequired: boolean;
+  options: FormFieldOption[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Form {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  submitLabel: string;
+  successMessage: string;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface FormWithFields {
+  form: Form;
+  fields: FormField[];
+}
+
+export type CreateFormInput = Pick<Form, 'name' | 'slug'> &
+  Partial<Pick<Form, 'description' | 'submitLabel' | 'successMessage' | 'isActive' | 'sortOrder'>>;
+export type UpdateFormInput = Partial<Omit<Form, 'id' | 'slug' | 'createdAt' | 'updatedAt'>>;
+export type CreateFormFieldInput = Pick<FormField, 'fieldKey' | 'fieldType' | 'label'> &
+  Partial<Pick<FormField, 'placeholder' | 'helpText' | 'isRequired' | 'sortOrder' | 'options'>>;
+export type UpdateFormFieldInput = Partial<Omit<FormField, 'id' | 'formId' | 'createdAt' | 'updatedAt'>>;
+
 // ─── Church Settings ────────────────────────────────────────
 export interface ChurchSettings {
   churchName: string;

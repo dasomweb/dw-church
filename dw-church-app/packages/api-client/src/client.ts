@@ -20,6 +20,13 @@ import type {
   NewcomerSubmission,
   FormSubmission,
   FormSubmissionStatus,
+  Form,
+  FormField,
+  FormWithFields,
+  CreateFormInput,
+  UpdateFormInput,
+  CreateFormFieldInput,
+  UpdateFormFieldInput,
   HistoryListParams,
   ListParams,
   LoginInput,
@@ -714,6 +721,62 @@ export class DWChurchClient {
 
   async deleteFormSubmission(id: string): Promise<void> {
     return this.api.delete(`${this.namespace}/form-submissions/${id}`);
+  }
+
+  // ─── Form Builder (운영자가 설계하는 커스텀 폼 정의: /form-defs) ──────
+  async getForms(): Promise<Form[]> {
+    const res = await this.api.get(`${this.namespace}/form-defs`);
+    return unwrapData(res);
+  }
+
+  /** Form + its fields (admin edit view). */
+  async getForm(id: string): Promise<FormWithFields> {
+    const res = await this.api.get(`${this.namespace}/form-defs/${id}`);
+    return unwrapData(res);
+  }
+
+  async createForm(data: CreateFormInput): Promise<Form> {
+    const res = await this.api.post(`${this.namespace}/form-defs`, data);
+    return unwrapData(res);
+  }
+
+  async updateForm(id: string, data: UpdateFormInput): Promise<Form> {
+    const res = await this.api.put(`${this.namespace}/form-defs/${id}`, data);
+    return unwrapData(res);
+  }
+
+  async deleteForm(id: string): Promise<void> {
+    return this.api.delete(`${this.namespace}/form-defs/${id}`);
+  }
+
+  async createFormField(formId: string, data: CreateFormFieldInput): Promise<FormField> {
+    const res = await this.api.post(`${this.namespace}/form-defs/${formId}/fields`, data);
+    return unwrapData(res);
+  }
+
+  async reorderFormFields(formId: string, fieldIds: string[]): Promise<void> {
+    await this.api.put(`${this.namespace}/form-defs/${formId}/fields/reorder`, { fieldIds });
+  }
+
+  async updateFormField(id: string, data: UpdateFormFieldInput): Promise<FormField> {
+    const res = await this.api.put(`${this.namespace}/form-fields/${id}`, data);
+    return unwrapData(res);
+  }
+
+  async deleteFormField(id: string): Promise<void> {
+    return this.api.delete(`${this.namespace}/form-fields/${id}`);
+  }
+
+  /** Public — fetch a form's schema by slug for storefront rendering (no auth). */
+  async getFormSchema(slug: string): Promise<FormWithFields> {
+    const res = await this.api.get(`${this.namespace}/forms/${slug}/schema`);
+    return unwrapData(res);
+  }
+
+  /** Public — submit a built form by slug (validated server-side). */
+  async submitBuiltForm(slug: string, payload: Record<string, unknown>): Promise<{ id: string | null; ok: boolean }> {
+    const res = await this.api.post(`${this.namespace}/forms/${slug}/submit`, payload);
+    return unwrapData(res);
   }
 
   // ─── Boards (게시판) ───���──────────────────────────────────

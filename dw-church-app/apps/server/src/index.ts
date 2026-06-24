@@ -113,6 +113,7 @@ async function main(): Promise<void> {
   const { emailTemplateRoutes } = await import('./modules/email-templates/routes.js');
   const { promoRoutes } = await import('./modules/promo/routes.js');
   const { formRoutes } = await import('./modules/forms/routes.js');
+  const { formBuilderRoutes } = await import('./modules/form-builder/routes.js');
   const { designSetRoutes } = await import('./modules/design-sets/routes.js');
   const { demoRequestRoutes } = await import('./modules/demo-requests/routes.js');
   const { demoTenantRoutes } = await import('./modules/demo-tenant/routes.js');
@@ -194,6 +195,7 @@ async function main(): Promise<void> {
   await app.register(emailTemplateRoutes, { prefix: '/api/v1' }); // /admin/email-templates + /admin/email-broadcast
   await app.register(promoRoutes, { prefix: '/api/v1' }); // /promo/validate + /admin/promo
   await app.register(formRoutes, { prefix: '/api/v1' }); // /forms/:type (public) + /admin/forms/submissions
+  await app.register(formBuilderRoutes, { prefix: '/api/v1' }); // /form-defs/* (admin) + /forms/:slug/schema|submit (public)
   await app.register(designSetRoutes, { prefix: '/api/v1' }); // /design-sets (saved color/font sets)
   await app.register(demoRequestRoutes, { prefix: '/api/v1' }); // /demo-requests (public) + /admin/demo-requests + /admin/demo-config
   await app.register(demoTenantRoutes, { prefix: '/api/v1' }); // /admin/demo-tenant/* (snapshot/reset/status)
@@ -472,6 +474,50 @@ async function main(): Promise<void> {
         `);
         await prisma.$executeRawUnsafe(
           `CREATE INDEX IF NOT EXISTS "design_sets_created_idx" ON "${schema}".design_sets ("created_at" DESC)`,
+        );
+        createHits++;
+      } catch { /* skip on error */ }
+
+      // 0h. forms + form_fields — operator-built custom forms (폼 빌더). The
+      //     operator designs a form (목장보고서 / 새가족 / 문의 …) and its fields;
+      //     submissions reuse the generic form_submissions table (form_type = slug)
+      //     so they land in the existing 폼 제출 inbox. slug matches formTypeSchema
+      //     (^[a-z][a-z0-9_]{1,39}$) so it can be used directly as the form_type.
+      try {
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".forms (
+            "id"              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "name"            VARCHAR(200) NOT NULL,
+            "slug"            VARCHAR(60)  NOT NULL,
+            "description"     TEXT        DEFAULT '',
+            "submit_label"    VARCHAR(100) DEFAULT '제출',
+            "success_message" TEXT        DEFAULT '제출해 주셔서 감사합니다.',
+            "is_active"       BOOLEAN     DEFAULT true,
+            "sort_order"      INT         DEFAULT 0,
+            "created_at"      TIMESTAMPTZ DEFAULT NOW(),
+            "updated_at"      TIMESTAMPTZ DEFAULT NOW(),
+            CONSTRAINT "forms_slug_uniq" UNIQUE ("slug")
+          )
+        `);
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".form_fields (
+            "id"          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "form_id"     UUID NOT NULL REFERENCES "${schema}".forms("id") ON DELETE CASCADE,
+            "sort_order"  INT          DEFAULT 0,
+            "field_key"   VARCHAR(50)  NOT NULL,
+            "field_type"  VARCHAR(30)  NOT NULL,
+            "label"       VARCHAR(200) NOT NULL,
+            "placeholder" VARCHAR(200) DEFAULT '',
+            "help_text"   VARCHAR(500) DEFAULT '',
+            "is_required" BOOLEAN      DEFAULT false,
+            "options"     JSONB        NOT NULL DEFAULT '[]'::jsonb,
+            "created_at"  TIMESTAMPTZ  DEFAULT NOW(),
+            "updated_at"  TIMESTAMPTZ  DEFAULT NOW(),
+            CONSTRAINT "form_fields_key_uniq" UNIQUE ("form_id", "field_key")
+          )
+        `);
+        await prisma.$executeRawUnsafe(
+          `CREATE INDEX IF NOT EXISTS "form_fields_form_idx" ON "${schema}".form_fields ("form_id", "sort_order")`,
         );
         createHits++;
       } catch { /* skip on error */ }

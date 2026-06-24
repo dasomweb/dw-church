@@ -51,6 +51,7 @@ const HistoryManagement = lazyWithReload(() => import('./pages/HistoryManagement
 const CellManagement = lazyWithReload(() => import('./pages/CellManagement'));
 const NewcomerManagement = lazyWithReload(() => import('./pages/NewcomerManagement'));
 const FormSubmissionsManagement = lazyWithReload(() => import('./pages/FormSubmissionsManagement'));
+const FormBuilderManagement = lazyWithReload(() => import('./pages/FormBuilderManagement'));
 const BoardManagement = lazyWithReload(() => import('./pages/BoardManagement'));
 const PageEditor = lazyWithReload(() => import('./pages/PageEditor'));
 const MenuEditor = lazyWithReload(() => import('./pages/MenuEditor'));
@@ -339,6 +340,7 @@ export function App({ config }: { config: AppConfig }) {
                 <Route path="history" element={<HistoryManagement />} />
                 <Route path="cells" element={<CellManagement />} />
                 <Route path="newcomers" element={<NewcomerManagement />} />
+                <Route path="forms" element={<FormBuilderManagement />} />
                 <Route path="form-submissions" element={<FormSubmissionsManagement />} />
                 <Route path="boards" element={<BoardManagement />} />
                 <Route path="pages" element={<PageEditor />} />
