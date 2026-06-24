@@ -6,12 +6,17 @@ import { Spinner } from '../shared/admin-ui';
 
 // truelight.app 홈 히어로(상단 배너) 슬라이드 편집. 슬라이드별로 한/영 문구 + 이미지.
 // 비워두면 기본 슬라이드가 표시된다. marketing-config.heroSlides 에 저장.
+type BtnVariant = 'primary' | 'outline' | 'demo';
+interface HeroBtn { labelKo: string; labelEn: string; url: string; variant: BtnVariant; }
 interface HeroSlide {
   headlineKo: string; headlineEn: string;
   sublineKo: string; sublineEn: string;
   imageUrl: string;
+  buttons?: HeroBtn[];
 }
-const emptySlide = (): HeroSlide => ({ headlineKo: '', headlineEn: '', sublineKo: '', sublineEn: '', imageUrl: '' });
+const emptySlide = (): HeroSlide => ({ headlineKo: '', headlineEn: '', sublineKo: '', sublineEn: '', imageUrl: '', buttons: [] });
+const emptyBtn = (): HeroBtn => ({ labelKo: '', labelEn: '', url: '', variant: 'primary' });
+const VARIANT_LABELS: Record<BtnVariant, string> = { primary: '주요(파란 버튼)', outline: '외곽선(흰 테두리)', demo: '데모 체험(모달)' };
 
 export default function SiteBannerTab() {
   const apiFetch = useAdminApi();
@@ -127,6 +132,43 @@ export default function SiteBannerTab() {
             <label className="text-xs font-medium text-gray-600">부제 (영어)
               <input className={`${inputCls} mt-1`} value={s.sublineEn} onChange={(e) => set(idx, { sublineEn: e.target.value })} />
             </label>
+          </div>
+
+          {/* 버튼 */}
+          <div className="border-t border-gray-100 pt-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-gray-500">버튼 (최대 3개)</span>
+              {(s.buttons?.length ?? 0) < 3 && (
+                <button onClick={() => set(idx, { buttons: [...(s.buttons ?? []), emptyBtn()] })}
+                  className="text-xs text-blue-600 hover:underline">+ 버튼 추가</button>
+              )}
+            </div>
+            {(s.buttons?.length ?? 0) === 0 && <p className="text-[11px] text-gray-400">버튼이 없으면 기본 버튼(시작하기·요금제·데모)이 표시됩니다.</p>}
+            <div className="space-y-2">
+              {(s.buttons ?? []).map((b, bi) => {
+                const setBtn = (patch: Partial<HeroBtn>) =>
+                  set(idx, { buttons: (s.buttons ?? []).map((x, j) => (j === bi ? { ...x, ...patch } : x)) });
+                return (
+                  <div key={bi} className="rounded-lg border border-gray-200 p-2.5 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <select className={`${inputCls} flex-1`} value={b.variant} onChange={(e) => setBtn({ variant: e.target.value as BtnVariant })}>
+                        {(Object.keys(VARIANT_LABELS) as BtnVariant[]).map((v) => <option key={v} value={v}>{VARIANT_LABELS[v]}</option>)}
+                      </select>
+                      <button onClick={() => set(idx, { buttons: (s.buttons ?? []).filter((_, j) => j !== bi) })}
+                        className="text-gray-400 hover:text-red-600 px-1">✕</button>
+                    </div>
+                    {b.variant !== 'demo' && (
+                      <div className="grid sm:grid-cols-3 gap-2">
+                        <input className={inputCls} placeholder="버튼명(한국어)" value={b.labelKo} onChange={(e) => setBtn({ labelKo: e.target.value })} />
+                        <input className={inputCls} placeholder="버튼명(영어)" value={b.labelEn} onChange={(e) => setBtn({ labelEn: e.target.value })} />
+                        <input className={inputCls} placeholder="링크 (예: /apply, /#plans)" value={b.url} onChange={(e) => setBtn({ url: e.target.value })} />
+                      </div>
+                    )}
+                    {b.variant === 'demo' && <p className="text-[11px] text-gray-400">데모 체험 신청 모달을 여는 버튼입니다. (문구·링크 고정)</p>}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       ))}

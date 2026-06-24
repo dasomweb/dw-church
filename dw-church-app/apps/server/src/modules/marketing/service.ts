@@ -1,12 +1,21 @@
 import { prisma } from '../../config/database.js';
 
-// truelight.app home hero slide — bilingual copy + a self-hosted (R2) image.
+// truelight.app home hero slide — bilingual copy + a self-hosted (R2) image +
+// optional CTA buttons (variant keeps the existing colors: primary = blue,
+// outline = white border, demo = the demo-request modal button).
+export interface HeroSlideButton {
+  labelKo: string;
+  labelEn: string;
+  url: string;
+  variant: 'primary' | 'outline' | 'demo';
+}
 export interface HeroSlide {
   headlineKo: string;
   headlineEn: string;
   sublineKo: string;
   sublineEn: string;
   imageUrl: string;
+  buttons?: HeroSlideButton[];
 }
 
 export interface MarketingConfigInput {

@@ -4,12 +4,19 @@ import { useEffect, useState } from 'react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.truelight.app';
 
+export interface HeroSlideButton {
+  labelKo: string;
+  labelEn: string;
+  url: string;
+  variant: 'primary' | 'outline' | 'demo';
+}
 export interface HeroSlide {
   headlineKo: string;
   headlineEn: string;
   sublineKo: string;
   sublineEn: string;
   imageUrl: string;
+  buttons?: HeroSlideButton[];
 }
 
 export interface SiteBrand {

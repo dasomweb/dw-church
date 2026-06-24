@@ -16,6 +16,9 @@ import { useSiteBrand } from '../components/useSiteBrand';
 // choice in localStorage. Add a key here and reference it as t.<key> below.
 type Lang = 'ko' | 'en';
 
+// Built-in fallback hero images — used only when the operator hasn't set hero
+// slides in super-admin (marketing_config.hero_slides is empty). Once seeded /
+// edited there, those win (see LandingPage).
 const SLIDE_IMAGES = [
   'https://images.unsplash.com/photo-1507692049790-de58290a4334?w=1680&h=720&fit=crop',
   'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1680&h=720&fit=crop',
@@ -280,7 +283,8 @@ const COPY: Record<Lang, Copy> = {
   },
 };
 
-function HeroSlider({ slides, getStarted, seePlans, lang }: { slides: { headline: string; subline: string; image: string }[]; getStarted: string; seePlans: string; lang: Lang }) {
+type HeroBtn = { label: string; url: string; variant: 'primary' | 'outline' | 'demo' };
+function HeroSlider({ slides, lang }: { slides: { headline: string; subline: string; image: string; buttons: HeroBtn[] }[]; lang: Lang }) {
   const [current, setCurrent] = useState(0);
   const next = useCallback(() => setCurrent((c) => (c + 1) % slides.length), [slides.length]);
 
@@ -311,14 +315,18 @@ function HeroSlider({ slides, getStarted, seePlans, lang }: { slides: { headline
               <p className="mt-4 text-sm leading-relaxed text-gray-200 sm:mt-6 sm:text-base lg:text-lg" style={{ whiteSpace: 'pre-line' }}>
                 {slide.subline}
               </p>
-              <div className="mt-6 flex justify-center gap-3 sm:mt-8">
-                <a href="/apply" className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg hover:bg-blue-700 sm:px-8 sm:text-base">
-                  {getStarted}
-                </a>
-                <a href="#plans" className="rounded-lg border border-white/30 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10 sm:px-8 sm:text-base">
-                  {seePlans}
-                </a>
-                <DemoRequestButton lang={lang} />
+              <div className="mt-6 flex flex-wrap justify-center gap-3 sm:mt-8">
+                {slide.buttons.map((b, bi) => (
+                  b.variant === 'demo' ? (
+                    <DemoRequestButton key={bi} lang={lang} />
+                  ) : (
+                    <a key={bi} href={b.url || '#'} className={b.variant === 'primary'
+                      ? 'rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg hover:bg-blue-700 sm:px-8 sm:text-base'
+                      : 'rounded-lg border border-white/30 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10 sm:px-8 sm:text-base'}>
+                      {b.label}
+                    </a>
+                  )
+                ))}
               </div>
             </div>
           </div>
@@ -349,21 +357,30 @@ export default function LandingPage() {
   const t = COPY[lang];
 
   // Hero slides: operator-configured (super-admin) override the built-in defaults.
+  // Default buttons keep the original look (primary + outline + demo modal).
+  const defaultBtns: HeroBtn[] = [
+    { label: t.hero.getStarted, url: '/apply', variant: 'primary' },
+    { label: t.hero.seePlans, url: '/#plans', variant: 'outline' },
+    { label: lang === 'ko' ? '데모 체험' : 'Try the Demo', url: '', variant: 'demo' },
+  ];
   const cfgSlides = brand?.heroSlides ?? [];
   const heroSlides = cfgSlides.length > 0
     ? cfgSlides.map((s) => ({
         headline: lang === 'ko' ? s.headlineKo : s.headlineEn,
         subline: lang === 'ko' ? s.sublineKo : s.sublineEn,
         image: s.imageUrl,
+        buttons: s.buttons && s.buttons.length > 0
+          ? s.buttons.map((b) => ({ label: lang === 'ko' ? b.labelKo : b.labelEn, url: b.url, variant: b.variant }))
+          : defaultBtns,
       }))
-    : t.hero.slides.map((s, i) => ({ headline: s.headline, subline: s.subline, image: SLIDE_IMAGES[i] ?? SLIDE_IMAGES[0]! }));
+    : t.hero.slides.map((s, i) => ({ headline: s.headline, subline: s.subline, image: SLIDE_IMAGES[i] ?? SLIDE_IMAGES[0]!, buttons: defaultBtns }));
 
   return (
     <div className="min-h-screen bg-white">
       <MarketingHeader />
 
       {/* Hero Slider */}
-      <HeroSlider slides={heroSlides} getStarted={t.hero.getStarted} seePlans={t.hero.seePlans} lang={lang} />
+      <HeroSlider slides={heroSlides} lang={lang} />
 
       {/* Trust Bar */}
       <section className="border-b border-gray-100 bg-gray-50 px-4 py-6 sm:px-6">

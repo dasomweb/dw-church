@@ -24,6 +24,12 @@ const configSchema = z.object({
     sublineKo: z.string().max(400).default(''),
     sublineEn: z.string().max(400).default(''),
     imageUrl: z.string().max(2000).default(''),
+    buttons: z.array(z.object({
+      labelKo: z.string().max(60).default(''),
+      labelEn: z.string().max(60).default(''),
+      url: z.string().max(2000).default(''),
+      variant: z.enum(['primary', 'outline', 'demo']).default('primary'),
+    })).max(3).optional(),
   })).max(10).optional().nullable(),
   baseFontPx: z.number().int().min(12).max(22).optional().nullable(),
 });
