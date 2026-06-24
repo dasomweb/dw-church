@@ -23,6 +23,7 @@
 
 import { BlockRenderer } from '../utilities/BlockRenderer';
 import { resolveOverlayColor } from '../utilities/overlay-color';
+import { objectPositionFor, type SectionBackgroundPosition } from '../elements/SectionBackground';
 
 interface LayoutBlockProps {
   props: Record<string, unknown>;
@@ -36,6 +37,10 @@ export function LayoutBlock({ props, slug }: LayoutBlockProps) {
   const margin = (props.margin as string) || '0';
   const bgColor = (props.backgroundColor as string) || undefined;
   const bgImage = (props.backgroundImageUrl as string) || undefined;
+  // 9-cell focal point for the background image (operator-set). 'center center'
+  // fallback keeps prior behavior when unset. CSS background-position accepts the
+  // same 'left top' / 'center bottom' tokens objectPositionFor emits.
+  const bgPosition = objectPositionFor(props.backgroundImagePosition as SectionBackgroundPosition | undefined);
   // No '#000000' fallback — empty overlayColor renders as transparent
   // (no overlay). See feedback-no-hardcoded-defaults.
   const overlayColor = (props.overlayColor as string) || '';
@@ -65,7 +70,7 @@ export function LayoutBlock({ props, slug }: LayoutBlockProps) {
     backgroundColor: bgColor,
     backgroundImage: bgImage ? `url(${bgImage})` : undefined,
     backgroundSize: bgImage ? 'cover' : undefined,
-    backgroundPosition: bgImage ? 'center' : undefined,
+    backgroundPosition: bgImage ? bgPosition : undefined,
     borderColor: borderColor,
     borderWidth: borderWidth > 0 ? `${borderWidth}px` : undefined,
     borderStyle: borderWidth > 0 ? 'solid' : undefined,
