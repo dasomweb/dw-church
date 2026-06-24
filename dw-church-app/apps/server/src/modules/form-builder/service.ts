@@ -56,16 +56,26 @@ export async function getFormWithFields(
   return { form, fields };
 }
 
+/** Find a free slug: if `base` is taken, try base_2, base_3, … (so a duplicate
+ *  auto-numbers instead of erroring). */
+async function uniqueFormSlug(schema: string, base: string): Promise<string> {
+  if (!(await getFormBySlug(schema, base))) return base;
+  for (let n = 2; n < 1000; n++) {
+    const candidate = `${base}_${n}`;
+    if (!(await getFormBySlug(schema, candidate))) return candidate;
+  }
+  throw new AppError('CONFLICT', 409, `'${base}' slug의 사용 가능한 변형을 찾지 못했습니다.`);
+}
+
 export async function createForm(schema: string, input: CreateFormInput): Promise<Row> {
-  const dup = await getFormBySlug(schema, input.slug);
-  if (dup) throw new AppError('CONFLICT', 409, `이미 '${input.slug}' slug의 폼이 있습니다.`);
+  const slug = await uniqueFormSlug(schema, input.slug);
   const rows = await prisma.$queryRawUnsafe<Row[]>(
     `INSERT INTO "${schema}".forms
        (name, slug, description, submit_label, success_message, is_active, sort_order)
      VALUES ($1, $2, $3, $4, $5, $6, $7)
      RETURNING *`,
     input.name,
-    input.slug,
+    slug,
     input.description,
     input.submitLabel,
     input.successMessage,

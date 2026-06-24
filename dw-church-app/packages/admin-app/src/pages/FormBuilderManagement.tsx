@@ -21,6 +21,8 @@ import {
   EmptyState,
   CardSkeleton,
 } from '../components';
+import { sanitizeSlug } from '../utils/slug';
+import { FORM_PRESETS, type FormPreset } from './form-builder-presets';
 
 // 폼 빌더 — 교역자가 직접 폼(목장보고서/새가족/문의 등)을 설계한다. 제출 내역은
 // 기존 "폼 제출" 인박스(form_submissions)에 form_type=slug 로 쌓인다.
@@ -66,12 +68,14 @@ export default function FormBuilderManagement() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const createForm = useCreateForm();
+  const createField = useCreateFormField();
   const deleteForm = useDeleteForm();
 
   // 새 폼 만들기 폼
   const [newName, setNewName] = useState('');
   const [newSlug, setNewSlug] = useState('');
   const [confirmDeleteForm, setConfirmDeleteForm] = useState<string | null>(null);
+  const [presetBusy, setPresetBusy] = useState<string | null>(null);
 
   const handleCreateForm = async () => {
     if (!newName.trim() || !newSlug.trim()) {
@@ -89,22 +93,56 @@ export default function FormBuilderManagement() {
     }
   };
 
+  // 프리셋: 폼 + 필드를 한 번에 생성. slug 중복 시 서버가 _2 자동 부여.
+  const applyPreset = async (preset: FormPreset) => {
+    setPresetBusy(preset.key);
+    try {
+      const form = await createForm.mutateAsync(preset.form);
+      for (let i = 0; i < preset.fields.length; i++) {
+        await createField.mutateAsync({ formId: form.id, data: { ...preset.fields[i]!, sortOrder: i } });
+      }
+      showToast('success', `'${preset.label}' 폼을 만들었습니다`);
+      setSelectedId(form.id);
+    } catch (e) {
+      showToast('error', e instanceof Error ? e.message : '프리셋 생성 실패');
+    } finally {
+      setPresetBusy(null);
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6">
       {/* 좌측: 폼 목록 + 새 폼 */}
       <aside className="space-y-4">
+        {/* 프리셋으로 빠르게 시작 */}
         <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <h3 className="text-sm font-bold text-gray-900 mb-2">새 폼 만들기</h3>
+          <h3 className="text-sm font-bold text-gray-900 mb-1">프리셋으로 시작</h3>
+          <p className="text-[11px] text-gray-400 mb-2">필드까지 채워진 폼을 한 번에 생성합니다.</p>
+          <div className="space-y-1.5">
+            {FORM_PRESETS.map((p) => (
+              <button key={p.key} onClick={() => applyPreset(p)} disabled={!!presetBusy}
+                className="w-full text-left rounded-lg border border-gray-200 px-3 py-2 hover:bg-gray-50 disabled:opacity-60">
+                <div className="text-sm font-medium text-gray-900">
+                  {presetBusy === p.key ? '생성 중…' : p.label}
+                </div>
+                <div className="text-[11px] text-gray-400">{p.description}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <h3 className="text-sm font-bold text-gray-900 mb-2">직접 만들기</h3>
           <div className="space-y-2">
-            <input className={inputClass} placeholder="폼 이름 (예: 목장보고서)" value={newName}
+            <input className={inputClass} placeholder="폼 이름 (예: 목장 보고서)" value={newName}
               onChange={(e) => setNewName(e.target.value)} />
             <input className={inputClass} placeholder="slug (영문소문자_숫자, 예: cell_report)" value={newSlug}
-              onChange={(e) => setNewSlug(e.target.value.toLowerCase())} />
+              onChange={(e) => setNewSlug(sanitizeSlug(e.target.value))} />
             <button onClick={handleCreateForm} disabled={createForm.isPending}
               className="w-full rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-gray-800 disabled:opacity-60">
               {createForm.isPending ? '생성 중…' : '+ 폼 추가'}
             </button>
-            <p className="text-[11px] text-gray-400">slug는 제출 식별자입니다. 생성 후 변경할 수 없습니다.</p>
+            <p className="text-[11px] text-gray-400">slug는 제출 식별자입니다 (띄어쓰기 불가 · 자동 정리). 중복되면 숫자가 붙습니다.</p>
           </div>
         </div>
 
@@ -363,7 +401,7 @@ function FieldDraftPanel({
         </FormField>
         <FormField label="항목 키 (field key)">
           <input className={inputClass} value={draft.fieldKey}
-            onChange={(e) => set({ fieldKey: e.target.value.toLowerCase() })} placeholder="예: cell_name" />
+            onChange={(e) => set({ fieldKey: sanitizeSlug(e.target.value) })} placeholder="예: cell_name" />
         </FormField>
         <FormField label="유형">
           <select className={selectClass} value={draft.fieldType}
