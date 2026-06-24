@@ -235,6 +235,8 @@ function extractDesignValue(props: Record<string, unknown>): DesignFieldValue {
   return {
     backgroundImagePosition: props.backgroundImagePosition as DesignFieldValue['backgroundImagePosition'],
     backgroundColor: (props.backgroundColor as string) ?? undefined,
+    // Read-only — lets the position picker preview the actual background image.
+    backgroundImageUrl: (props.backgroundImageUrl as string) || undefined,
   };
 }
 

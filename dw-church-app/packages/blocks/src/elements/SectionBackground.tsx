@@ -65,12 +65,17 @@ const OBJECT_POSITION_MAP: Record<SectionBackgroundPosition, string> = {
   'bottom-right': 'right bottom',
 };
 
-/** Resolve a 1-of-9 anchor token into a CSS `object-position` value.
- *  Falls back to `center center` for unknown / unset input so the
- *  storefront never renders broken css. */
-export function objectPositionFor(p: SectionBackgroundPosition | undefined): string {
+/** Resolve a background-image focal point into a CSS `object-position` /
+ *  `background-position` value. Accepts EITHER a 1-of-9 anchor token
+ *  ('center', 'top-left', …) OR a continuous percentage pair from the visual
+ *  picker ('37% 62%'). Falls back to `center center` for unknown / unset input
+ *  so the storefront never renders broken css. */
+export function objectPositionFor(p: string | undefined): string {
   if (!p) return 'center center';
-  return OBJECT_POSITION_MAP[p] ?? 'center center';
+  // Continuous "x% y%" from the visual grid picker — CSS object-position /
+  // background-position take it verbatim.
+  if (p.includes('%')) return p;
+  return OBJECT_POSITION_MAP[p as SectionBackgroundPosition] ?? 'center center';
 }
 
 /**

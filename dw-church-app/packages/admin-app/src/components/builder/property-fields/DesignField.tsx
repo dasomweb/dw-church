@@ -12,14 +12,18 @@
 
 import { ColorField } from './ColorField';
 import { LabeledField } from './LabeledField';
+import { BackgroundPositionPicker } from './BackgroundPositionPicker';
 
 export type SectionBackgroundPosition =
   | 'center' | 'top' | 'bottom' | 'left' | 'right'
   | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
 export interface DesignFieldValue {
-  backgroundImagePosition?: SectionBackgroundPosition;
+  // Either a 1-of-9 token OR a continuous "x% y%" string from the visual picker.
+  backgroundImagePosition?: string;
   backgroundColor?: string;
+  /** Read-only — the section's background image, so the picker can preview it. */
+  backgroundImageUrl?: string;
 }
 
 export interface DesignFieldProps {
@@ -62,22 +66,27 @@ export function DesignField({
   return (
     <div className="space-y-3">
       {show.backgroundPosition && (
-        <LabeledField label="Background Position" hint="배경 이미지의 anchor 위치 (9-cell)">
-          <select
-            value={value.backgroundImagePosition ?? ''}
-            onChange={(e) =>
-              onChange({
-                backgroundImagePosition:
-                  (e.target.value || undefined) as SectionBackgroundPosition | undefined,
-              })
-            }
-            className="w-full text-xs border border-gray-300 rounded px-2 py-1.5 bg-white focus:border-blue-500 outline-none"
-          >
-            <option value="">— 기본값</option>
-            {POSITION_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
+        <LabeledField label="Background Position" hint={value.backgroundImageUrl ? '이미지를 클릭/드래그해 초점 위치를 지정' : '배경 이미지의 anchor 위치 (9-cell)'}>
+          {value.backgroundImageUrl ? (
+            <BackgroundPositionPicker
+              imageUrl={value.backgroundImageUrl}
+              value={value.backgroundImagePosition}
+              onChange={(pos) => onChange({ backgroundImagePosition: pos })}
+            />
+          ) : (
+            <select
+              value={value.backgroundImagePosition ?? ''}
+              onChange={(e) =>
+                onChange({ backgroundImagePosition: e.target.value || undefined })
+              }
+              className="w-full text-xs border border-gray-300 rounded px-2 py-1.5 bg-white focus:border-blue-500 outline-none"
+            >
+              <option value="">— 기본값</option>
+              {POSITION_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          )}
         </LabeledField>
       )}
 
