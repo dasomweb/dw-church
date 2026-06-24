@@ -31,9 +31,11 @@
 
 name: Deploy to Railway
 
+# NOTE (2026-06-24): auto-deploy on push is DISABLED per operator decision —
+# deploys are now run manually via the Railway CLI from the dev machine, and
+# GitHub is used only for source history. This workflow is kept as a manual
+# (workflow_dispatch) fallback; it still needs a valid RAILWAY_TOKEN secret to run.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
     inputs:
       service:
