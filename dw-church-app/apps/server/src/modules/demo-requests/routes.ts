@@ -33,18 +33,61 @@ function accessEmailHtml(opts: { name: string; loginUrl: string; loginEmail: str
 }
 
 /**
+ * Issue a per-applicant 24h demo login (ID = applicant email, random password)
+ * and email it, then mark the request status='sent'. Shared by the automatic
+ * send (public submission) and the manual super-admin "접속정보 보내기" button.
+ * Throws on missing email / email-send failure so callers decide whether to
+ * surface or swallow the error.
+ */
+async function sendDemoAccess(row: Record<string, unknown>): Promise<unknown> {
+  const applicantEmail = row.email as string;
+  if (!applicantEmail) throw new AppError('NO_EMAIL', 400, '신청자 이메일이 없습니다.');
+
+  // Mint the temporary account on the demo tenant (throws if the email is a real account).
+  const login = await issueDemoLogin(applicantEmail, row.name as string | undefined);
+
+  const cfg = await demoService.getDemoConfig();
+  const html = accessEmailHtml({
+    name: (row.name as string) ?? '',
+    loginUrl: (cfg?.login_url as string) || 'https://admin.truelight.app/t/dasom/login',
+    loginEmail: login.email,
+    loginPassword: login.password,
+    expiresAt: login.expiresAt,
+    kakaoUrl: await getKakaoUrl(),
+    messageBody:
+      (cfg?.message_body as string) ||
+      `안녕하세요 ${(row.name as string) ?? ''}님,\nTRUE LIGHT 데모 체험을 신청해 주셔서 감사합니다. 아래 정보로 로그인하시면 관리자 화면을 자유롭게 둘러보실 수 있습니다.`,
+  });
+  try {
+    await sendEmail({ to: applicantEmail, subject: 'TRUE LIGHT 데모 체험 접속 안내', html, from: 'info' });
+  } catch (err) {
+    throw new AppError('EMAIL_SEND_FAILED', 502, `메일 발송 실패: ${(err as Error)?.message ?? '알 수 없는 오류'}`);
+  }
+  return demoService.updateDemoRequest(row.id as string, { status: 'sent' });
+}
+
+/**
  * 데모 체험 신청 routes.
- *   POST /demo-requests                         — PUBLIC submission (marketing site)
+ *   POST /demo-requests                         — PUBLIC submission → auto-issue + email access
  *   GET/PATCH/DELETE /admin/demo-requests/*      — super-admin CRM inbox
- *   POST /admin/demo-requests/:id/send-access    — email the shared demo login
+ *   POST /admin/demo-requests/:id/send-access    — manually (re)send the demo login
  *   GET/PUT /admin/demo-config                   — manage the shared demo access info
  */
 export async function demoRequestRoutes(app: FastifyInstance) {
-  // ── Public: submit a demo request ──
+  // ── Public: submit a demo request → record is kept, then access is auto-sent ──
   app.post('/demo-requests', async (request, reply) => {
     const input = createDemoRequestSchema.parse(request.body);
-    const created = await demoService.createDemoRequest(input);
-    return reply.status(201).send({ data: created });
+    const created = await demoService.createDemoRequest(input) as Record<string, unknown>;
+    // Auto-issue the temp account + email it. Best-effort: the request record is
+    // ALWAYS kept even if the email fails (e.g. SMTP down, or the email belongs to
+    // a real account) — the operator can then send manually from the CRM inbox.
+    let result: unknown = created;
+    try {
+      result = await sendDemoAccess(created);
+    } catch (err) {
+      request.log.warn(`demo auto-access failed for ${String(created.email)}: ${(err as Error)?.message}`);
+    }
+    return reply.status(201).send({ data: result });
   });
 
   // ── Super-admin CRM ──
@@ -67,38 +110,13 @@ export async function demoRequestRoutes(app: FastifyInstance) {
     return reply.status(204).send();
   });
 
-  // Issue a per-applicant 24h demo login (ID = applicant email, random password)
-  // and email it; mark status=sent.
+  // Manually (re)send the demo login. Same logic as the auto-send on submission;
+  // here a failure IS surfaced (the operator clicked the button and wants to know).
   app.post('/admin/demo-requests/:id/send-access', { preHandler: [requireSuperAdmin] }, async (request, reply) => {
     const { id } = request.params as { id: string };
     const row = await demoService.getDemoRequest(id);
     if (!row) return reply.status(404).send({ error: { code: 'NOT_FOUND', message: '신청을 찾을 수 없습니다' } });
-    const applicantEmail = row.email as string;
-    if (!applicantEmail) throw new AppError('NO_EMAIL', 400, '신청자 이메일이 없습니다.');
-
-    // Mint the temporary account on the demo tenant (throws if the email is a real account).
-    const login = await issueDemoLogin(applicantEmail, row.name as string | undefined);
-
-    const cfg = await demoService.getDemoConfig();
-    const html = accessEmailHtml({
-      name: (row.name as string) ?? '',
-      loginUrl: (cfg?.login_url as string) || 'https://admin.truelight.app/t/dasom/login',
-      loginEmail: login.email,
-      loginPassword: login.password,
-      expiresAt: login.expiresAt,
-      kakaoUrl: await getKakaoUrl(),
-      messageBody:
-        (cfg?.message_body as string) ||
-        `안녕하세요 ${(row.name as string) ?? ''}님,\nTRUE LIGHT 데모 체험을 신청해 주셔서 감사합니다. 아래 정보로 로그인하시면 관리자 화면을 자유롭게 둘러보실 수 있습니다.`,
-    });
-    // Surface SMTP failures instead of silently marking the request 'sent'.
-    try {
-      await sendEmail({ to: applicantEmail, subject: 'TRUE LIGHT 데모 체험 접속 안내', html, from: 'info' });
-    } catch (err) {
-      throw new AppError('EMAIL_SEND_FAILED', 502, `메일 발송 실패: ${(err as Error)?.message ?? '알 수 없는 오류'}`);
-    }
-    const updated = await demoService.updateDemoRequest(id, { status: 'sent' });
-    return reply.send({ data: updated });
+    return reply.send({ data: await sendDemoAccess(row as Record<string, unknown>) });
   });
 
   // ── Shared demo access config ──
