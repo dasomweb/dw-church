@@ -1,5 +1,8 @@
 import { prisma } from '../../config/database.js';
 import { validateSchemaName } from '../../utils/validate-schema.js';
+import { isSnapshotStale } from './snapshot-staleness.js';
+
+export { isSnapshotStale };
 
 /**
  * Demo tenant lifecycle — the church customers test on. A "golden snapshot" of
@@ -112,12 +115,19 @@ export async function restoreSnapshot(slug: string): Promise<{ tables: number }>
   return { tables: liveTables.length };
 }
 
-export async function snapshotStatus(slug: string): Promise<{ exists: boolean; takenAt: string | null; tableCount: number | null }> {
+export async function snapshotStatus(slug: string): Promise<{ exists: boolean; takenAt: string | null; tableCount: number | null; lastAdminEditAt: string | null; stale: boolean }> {
   const exists = await hasSnapshot(slug);
-  const rows = await prisma.$queryRawUnsafe<{ taken_at: Date; table_count: number }[]>(
-    `SELECT taken_at, table_count FROM public.demo_snapshots WHERE slug = $1`,
+  const rows = await prisma.$queryRawUnsafe<{ taken_at: Date; table_count: number; last_admin_edit_at: Date | null }[]>(
+    `SELECT taken_at, table_count, last_admin_edit_at FROM public.demo_snapshots WHERE slug = $1`,
     slug,
   );
   const row = rows[0];
-  return { exists, takenAt: row?.taken_at ? new Date(row.taken_at).toISOString() : null, tableCount: row?.table_count ?? null };
+  return {
+    exists,
+    takenAt: row?.taken_at ? new Date(row.taken_at).toISOString() : null,
+    tableCount: row?.table_count ?? null,
+    lastAdminEditAt: row?.last_admin_edit_at ? new Date(row.last_admin_edit_at).toISOString() : null,
+    // Only meaningful once a snapshot exists; without one the UI already shows "스냅샷 없음".
+    stale: exists && isSnapshotStale(row?.taken_at ?? null, row?.last_admin_edit_at ?? null),
+  };
 }

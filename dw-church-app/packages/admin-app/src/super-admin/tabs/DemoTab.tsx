@@ -21,7 +21,7 @@ export default function DemoTab() {
   const { showToast } = useToast();
   const [reqs, setReqs] = useState<DemoRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [snap, setSnap] = useState<{ exists: boolean; takenAt: string | null; tableCount: number | null } | null>(null);
+  const [snap, setSnap] = useState<{ exists: boolean; takenAt: string | null; tableCount: number | null; lastAdminEditAt: string | null; stale: boolean } | null>(null);
   const [cfg, setCfg] = useState({ loginUrl: '', loginEmail: '', loginPassword: '', messageBody: '' });
   const [busy, setBusy] = useState('');
 
@@ -30,7 +30,7 @@ export default function DemoTab() {
     try {
       const [r, s, c] = await Promise.all([
         apiFetch<{ data: DemoRequest[] } | DemoRequest[]>('/demo-requests'),
-        apiFetch<{ data: { exists: boolean; takenAt: string | null; tableCount: number | null } }>('/demo-tenant/status'),
+        apiFetch<{ data: { exists: boolean; takenAt: string | null; tableCount: number | null; lastAdminEditAt: string | null; stale: boolean } }>('/demo-tenant/status'),
         apiFetch<{ data: Record<string, string> | null }>('/demo-config'),
       ]);
       setReqs(Array.isArray(r) ? r : r.data ?? []);
@@ -109,6 +109,14 @@ export default function DemoTab() {
           </span>
           <span className="text-xs text-gray-500">마지막 저장: {fmt(snap?.takenAt ?? null)}</span>
         </div>
+        {snap?.stale && (
+          <div className="mt-3 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-amber-800 leading-relaxed">
+            ⚠ <strong>마지막 스냅샷 이후 변경된 내용이 있습니다.</strong> 지금 저장하지 않으면
+            오늘 밤 복원 시 되돌아갑니다. (마지막 변경: {fmt(snap.lastAdminEditAt)})
+            <br />아래 <strong>"현재 상태 스냅샷 저장"</strong>을 눌러 기준 상태를 갱신하세요.
+            <span className="text-amber-600"> ※ 일반 데모 사용자의 변경은 집계되지 않습니다.</span>
+          </div>
+        )}
         <div className="mt-4 flex flex-wrap gap-2">
           <button onClick={doSnapshot} disabled={busy === 'snapshot'}
             className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-gray-800 disabled:opacity-60">

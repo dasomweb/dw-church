@@ -773,6 +773,12 @@ async function main(): Promise<void> {
         "taken_at"    TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `);
+    // last_admin_edit_at: timestamp of the most recent super-admin write to the demo
+    // tenant (stamped by edit-tracker.ts). When it is newer than taken_at, the
+    // snapshot is stale and the super-admin UI warns to re-capture.
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE "demo_snapshots" ADD COLUMN IF NOT EXISTS "last_admin_edit_at" TIMESTAMPTZ`,
+    );
     // Shared demo-account access info the super-admin sends to applicants (singleton).
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS "demo_config" (
@@ -1121,6 +1127,11 @@ async function main(): Promise<void> {
   // on EVERY startup for every schema. The per-tenant self-heal loop above
   // (block 0b) already creates boards + board_posts as SEPARATE statements for
   // every schema, so migrateBoards was both redundant and broken. Deleted.
+
+  // Track super-admin edits to the demo tenant (marks the golden snapshot stale).
+  // Must be registered BEFORE listen — Fastify rejects hooks added after boot.
+  const { registerDemoEditTracker } = await import('./modules/demo-tenant/edit-tracker.js');
+  registerDemoEditTracker(app);
 
   // --- Start ---
   await app.listen({ port: env.PORT, host: '0.0.0.0' });
