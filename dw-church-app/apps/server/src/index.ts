@@ -859,6 +859,10 @@ async function main(): Promise<void> {
     await prisma.$executeRawUnsafe(`ALTER TABLE "marketing_config" ADD COLUMN IF NOT EXISTS "og_image_url" VARCHAR(2000)`);
     await prisma.$executeRawUnsafe(`ALTER TABLE "marketing_config" ADD COLUMN IF NOT EXISTS "seo_title" VARCHAR(200)`);
     await prisma.$executeRawUnsafe(`ALTER TABLE "marketing_config" ADD COLUMN IF NOT EXISTS "seo_description" VARCHAR(500)`);
+    // truelight.app marketing header/footer vertical padding (px). Defaults match
+    // the current hard-coded values (header py-3 ≈ 12px, footer py-12 ≈ 48px).
+    await prisma.$executeRawUnsafe(`ALTER TABLE "marketing_config" ADD COLUMN IF NOT EXISTS "header_padding_y" INT DEFAULT 12`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE "marketing_config" ADD COLUMN IF NOT EXISTS "footer_padding_y" INT DEFAULT 48`);
   } catch (err) {
     app.log.warn(`demo tables migration skipped: ${err}`);
   }

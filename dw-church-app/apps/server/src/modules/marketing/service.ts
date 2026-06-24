@@ -11,6 +11,8 @@ export interface MarketingConfigInput {
   ogImageUrl?: string | null;
   seoTitle?: string | null;
   seoDescription?: string | null;
+  headerPaddingY?: number | null;
+  footerPaddingY?: number | null;
 }
 
 const COLUMN_MAP: Record<keyof MarketingConfigInput, string> = {
@@ -24,12 +26,15 @@ const COLUMN_MAP: Record<keyof MarketingConfigInput, string> = {
   ogImageUrl: 'og_image_url',
   seoTitle: 'seo_title',
   seoDescription: 'seo_description',
+  headerPaddingY: 'header_padding_y',
+  footerPaddingY: 'footer_padding_y',
 };
 
 type Row = {
   logo_url: string | null; logo_height: number | null; favicon_url: string | null;
   site_name: string | null; tagline: string | null; contact_email: string | null; kakao_url: string | null;
   og_image_url: string | null; seo_title: string | null; seo_description: string | null;
+  header_padding_y: number | null; footer_padding_y: number | null;
 };
 
 /** Normalize the DB row to the camelCase client shape (always all keys). */
@@ -45,13 +50,15 @@ export function toClient(row: Row | null) {
     ogImageUrl: row?.og_image_url ?? null,
     seoTitle: row?.seo_title ?? null,
     seoDescription: row?.seo_description ?? null,
+    headerPaddingY: row?.header_padding_y ?? null,
+    footerPaddingY: row?.footer_padding_y ?? null,
   };
 }
 
 export async function getMarketingConfig(): Promise<Row | null> {
   const rows = await prisma.$queryRawUnsafe<Row[]>(
     `SELECT logo_url, logo_height, favicon_url, site_name, tagline, contact_email, kakao_url,
-            og_image_url, seo_title, seo_description
+            og_image_url, seo_title, seo_description, header_padding_y, footer_padding_y
      FROM public.marketing_config WHERE id = 1`,
   );
   return rows[0] ?? null;

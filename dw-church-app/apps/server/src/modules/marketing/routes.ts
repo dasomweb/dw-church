@@ -14,6 +14,9 @@ const configSchema = z.object({
   ogImageUrl: z.string().max(2000).optional().nullable(),
   seoTitle: z.string().max(200).optional().nullable(),
   seoDescription: z.string().max(500).optional().nullable(),
+  // truelight.app marketing header/footer vertical padding (px).
+  headerPaddingY: z.number().int().min(0).max(80).optional().nullable(),
+  footerPaddingY: z.number().int().min(0).max(160).optional().nullable(),
 });
 
 /**
