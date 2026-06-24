@@ -13,9 +13,11 @@
 #                   Tokens 탭에서 발급. production 환경 선택.
 #                   하나의 토큰으로 프로젝트 내 모든 서비스 배포 가능.
 #                   서비스별로 따로 만들 필요 없음.
-#   RAILWAY_PROJECT_ID — Railway project UUID. Project Settings → General
-#                       의 Project ID 또는 URL 에서 확인.
-#                       railway.com/project/<여기/>...
+#                   ⚠️ PROJECT token 은 `railway link` (계정 단위 명령) 를
+#                   못 한다 → 예전엔 link 단계에서 "Unauthorized" 로 매번
+#                   실패했다. 지금은 link 없이 `railway up --service X` 로
+#                   바로 배포한다 (project token 이 프로젝트+환경을 이미 고정).
+#   RAILWAY_PROJECT_ID — 더 이상 필요 없음 (link 단계 제거). 남겨둬도 무해.
 #
 # Path-filter behavior
 #   각 서비스 job 은 자기와 관련된 파일이 변경됐을 때만 실행. 예를 들어
@@ -110,11 +112,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Railway CLI
         run: npm install -g @railway/cli
-      - name: Link to project
-        # Project token 사용 시 `railway link` 필요 — 어느 프로젝트에
-        # 배포할지 명시. 토큰만 있으면 인증은 되지만 프로젝트 컨텍스트는
-        # 별도 지정 필요.
-        run: railway link --project ${{ secrets.RAILWAY_PROJECT_ID }} --environment production
+      # A Railway PROJECT token (RAILWAY_TOKEN) is scoped to one project+environment
+      # and CANNOT run `railway link` (that's an account-level op → "Unauthorized",
+      # which is why every deploy failed). With a project token, `railway up
+      # --service X` deploys directly — no link step needed.
       - name: Deploy admin
         working-directory: dw-church-app
         run: railway up --service admin --ci
@@ -127,8 +128,6 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Railway CLI
         run: npm install -g @railway/cli
-      - name: Link to project
-        run: railway link --project ${{ secrets.RAILWAY_PROJECT_ID }} --environment production
       - name: Deploy api-server
         # api-server 의 build context 는 repo root (Dockerfile.server 가
         # 거기 있음). 다른 서비스들과 달리 dw-church-app 안에 들어가지
@@ -143,8 +142,6 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Railway CLI
         run: npm install -g @railway/cli
-      - name: Link to project
-        run: railway link --project ${{ secrets.RAILWAY_PROJECT_ID }} --environment production
       - name: Deploy web
         working-directory: dw-church-app
         run: railway up --service web --ci
@@ -157,8 +154,6 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Railway CLI
         run: npm install -g @railway/cli
-      - name: Link to project
-        run: railway link --project ${{ secrets.RAILWAY_PROJECT_ID }} --environment production
       - name: Deploy agents (Phase 11-A3 — Railway 서비스 신규 등록 필요)
         # apps/agents/railway.toml 이 dockerfilePath = "apps/agents/Dockerfile"
         # 을 가리키므로 build context 는 dw-church-app.
