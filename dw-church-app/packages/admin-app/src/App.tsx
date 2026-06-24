@@ -270,6 +270,10 @@ export function App({ config }: { config: AppConfig }) {
                 <Route index element={<TenantOverview />} />
                 <Route path="pages" element={<TenantPageEditor />} />
                 <Route path="content" element={<TenantContentEntries />} />
+                {/* Form builder + inbox reuse the tenant pages; the api-client
+                    header SuperAdminTenantLayout sets scopes them to this tenant. */}
+                <Route path="forms" element={<FormBuilderManagement />} />
+                <Route path="form-submissions" element={<FormSubmissionsManagement />} />
                 <Route path="templates" element={<TenantTemplates />} />
                 <Route path="menus" element={<MenuEditor />} />
                 <Route path="theme" element={<TenantThemeEditor />} />
