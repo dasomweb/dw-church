@@ -141,8 +141,8 @@ function ApplyForm() {
       </div>
       <div>
         <label className="mb-1 block text-sm font-medium text-gray-700">소속 교단</label>
-        <input value={form.denomination || ''} onChange={set('denomination')} className={inputCls} placeholder="예: 예장합동, 예장통합, 기감, 미국장로교(PCUSA), 무교단 등" />
-        <p className="mt-1 text-xs text-gray-400">본 서비스는 정통 기독교 신앙고백을 따르는 교회를 대상으로 합니다. 무교단·독립교회도 신청하실 수 있습니다.</p>
+        <input value={form.denomination || ''} onChange={set('denomination')} className={inputCls} placeholder="소속 교단 (선택 입력, 무교단·독립교회면 비워두세요)" />
+        <p className="mt-1 text-xs text-gray-400">본 서비스는 역사적 정통 기독교 신앙을 고백하는 교회를 위한 것입니다. 무교단·독립교회도 신청하실 수 있습니다.</p>
       </div>
 
       <div>
