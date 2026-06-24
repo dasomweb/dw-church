@@ -12,6 +12,9 @@ export interface SiteBrand {
   tagline: string | null;
   contactEmail: string | null;
   kakaoUrl: string | null;
+  /** truelight.app marketing header/footer vertical padding (px). */
+  headerPaddingY: number | null;
+  footerPaddingY: number | null;
 }
 
 // Module-level cache so the header logo, favicon setter, and footer share one

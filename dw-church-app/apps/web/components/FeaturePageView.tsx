@@ -1,52 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import DemoRequestButton from './DemoRequestButton';
 import KakaoInquiryButton from './KakaoInquiryButton';
-import SiteLogo from './SiteLogo';
 import FaviconSetter from './FaviconSetter';
-import FeaturesNavMenu from './FeaturesNavMenu';
+import MarketingHeader from './MarketingHeader';
+import MarketingFooter from './MarketingFooter';
+import { useMarketingLang } from './useMarketingLang';
 import { FEATURE_GROUPS, FEATURE_CHROME, type FeatureSlug } from '../app/features/featuresData';
 
-type Lang = 'ko' | 'en';
-
 export default function FeaturePageView({ slug }: { slug: FeatureSlug }) {
-  const [lang, setLang] = useState<Lang>('ko');
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('tl_lang');
-      if (saved === 'ko' || saved === 'en') setLang(saved);
-    } catch { /* ignore */ }
-  }, []);
+  const { lang } = useMarketingLang();
 
   const group = FEATURE_GROUPS.find((g) => g.slug === slug)!;
   const side = group[lang];
   const c = FEATURE_CHROME[lang];
 
-  const setL = (l: Lang) => { setLang(l); try { localStorage.setItem('tl_lang', l); } catch { /* ignore */ } };
-
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-          <SiteLogo />
-          <nav className="hidden items-center gap-6 md:flex">
-            <FeaturesNavMenu lang={lang} label={c.navFeatures} />
-            <a href="/#how-it-works" className="text-sm text-gray-600 hover:text-gray-900">{c.navHow}</a>
-            <a href="/#plans" className="text-sm text-gray-600 hover:text-gray-900">{c.navPlans}</a>
-          </nav>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center rounded-lg border border-gray-200 p-0.5 text-xs font-medium">
-              <button onClick={() => setL('ko')} className={`rounded-md px-2 py-1 ${lang === 'ko' ? 'bg-blue-600 text-white' : 'text-gray-500'}`}>KO</button>
-              <button onClick={() => setL('en')} className={`rounded-md px-2 py-1 ${lang === 'en' ? 'bg-blue-600 text-white' : 'text-gray-500'}`}>EN</button>
-            </div>
-            <Link href="/" className="hidden text-sm text-gray-600 hover:text-gray-900 sm:inline">{c.back}</Link>
-            <a href="/apply" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">{c.apply}</a>
-          </div>
-        </div>
-      </header>
+      <MarketingHeader />
 
       {/* Hero banner */}
       <section className={`bg-gradient-to-br ${group.accent}`}>
@@ -100,6 +72,7 @@ export default function FeaturePageView({ slug }: { slug: FeatureSlug }) {
         </div>
       </section>
 
+      <MarketingFooter />
       <KakaoInquiryButton />
       <FaviconSetter />
     </div>

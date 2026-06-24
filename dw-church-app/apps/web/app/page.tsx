@@ -4,9 +4,10 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import DemoRequestButton from '../components/DemoRequestButton';
 import KakaoInquiryButton from '../components/KakaoInquiryButton';
-import SiteLogo from '../components/SiteLogo';
 import FaviconSetter from '../components/FaviconSetter';
-import FeaturesNavMenu from '../components/FeaturesNavMenu';
+import MarketingHeader from '../components/MarketingHeader';
+import MarketingFooter from '../components/MarketingFooter';
+import { useMarketingLang } from '../components/useMarketingLang';
 
 // ─── Bilingual copy (Korean is the primary/default language) ──────────────
 // truelight.app marketing site. Korean renders by default (SSR + first paint);
@@ -339,67 +340,15 @@ function HeroSlider({ slides, getStarted, seePlans, lang }: { slides: { headline
 
 // ─── Page Component ──────────────────────────────────────────
 export default function LandingPage() {
-  // Korean is the primary language — default state + SSR render is 'ko'.
-  const [lang, setLang] = useState<Lang>('ko');
+  // Language is shared with the global header via useMarketingLang (Korean primary).
+  const { lang } = useMarketingLang();
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('yearly');
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('tl_lang');
-      if (saved === 'ko' || saved === 'en') setLang(saved);
-    } catch { /* ignore */ }
-  }, []);
-
-  useEffect(() => {
-    try { document.documentElement.lang = lang; } catch { /* ignore */ }
-  }, [lang]);
-
-  const switchLang = (l: Lang) => {
-    setLang(l);
-    try { localStorage.setItem('tl_lang', l); } catch { /* ignore */ }
-  };
 
   const t = COPY[lang];
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-          <SiteLogo />
-          <nav className="hidden gap-6 md:flex">
-            <FeaturesNavMenu lang={lang} label={t.nav.features} />
-            <a href="#how-it-works" className="text-sm text-gray-600 hover:text-gray-900">{t.nav.how}</a>
-            <a href="#plans" className="text-sm text-gray-600 hover:text-gray-900">{t.nav.plans}</a>
-            <a href="/portfolio" className="text-sm text-gray-600 hover:text-gray-900">{t.nav.portfolio}</a>
-          </nav>
-          <div className="flex items-center gap-3">
-            {/* Language toggle — Korean is primary */}
-            <div className="flex items-center rounded-lg border border-gray-200 p-0.5 text-xs font-medium">
-              <button
-                onClick={() => switchLang('ko')}
-                className={`rounded-md px-2 py-1 transition-colors ${lang === 'ko' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:text-gray-900'}`}
-                aria-pressed={lang === 'ko'}
-              >
-                한국어
-              </button>
-              <button
-                onClick={() => switchLang('en')}
-                className={`rounded-md px-2 py-1 transition-colors ${lang === 'en' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:text-gray-900'}`}
-                aria-pressed={lang === 'en'}
-              >
-                EN
-              </button>
-            </div>
-            <a href="https://admin.truelight.app" className="text-sm text-gray-600 hover:text-gray-900">
-              {t.nav.signIn}
-            </a>
-            <a href="/apply" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
-              {t.nav.getStarted}
-            </a>
-          </div>
-        </div>
-      </header>
+      <MarketingHeader />
 
       {/* Hero Slider */}
       <HeroSlider slides={t.hero.slides} getStarted={t.hero.getStarted} seePlans={t.hero.seePlans} lang={lang} />
@@ -682,43 +631,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-200 bg-white px-4 py-12 sm:px-6">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid gap-8 md:grid-cols-4">
-            <div>
-              <span className="text-lg font-bold text-gray-900">TRUE <span className="text-blue-600">LIGHT</span></span>
-              <p className="mt-3 text-sm text-gray-500">{t.footer.tagline}</p>
-            </div>
-            <div>
-              <h4 className="mb-3 text-sm font-bold text-gray-900">{t.footer.platform}</h4>
-              <ul className="space-y-2 text-sm text-gray-500">
-                <li><Link href="/features" className="hover:text-gray-700">{t.footer.featuresLink}</Link></li>
-                <li><a href="#plans" className="hover:text-gray-700">{t.footer.pricing}</a></li>
-                <li><Link href="/embed" className="hover:text-gray-700">{t.footer.embed}</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="mb-3 text-sm font-bold text-gray-900">{t.footer.support}</h4>
-              <ul className="space-y-2 text-sm text-gray-500">
-                <li><a href="mailto:info@truelight.app" className="hover:text-gray-700">{t.footer.contact}</a></li>
-                <li><a href="mailto:support@truelight.app" className="hover:text-gray-700">{lang === 'ko' ? '고객지원' : 'Customer Support'}</a></li>
-                <li><a href="https://admin.truelight.app" className="hover:text-gray-700">{t.footer.adminLogin}</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="mb-3 text-sm font-bold text-gray-900">{t.footer.company}</h4>
-              <ul className="space-y-2 text-sm text-gray-500">
-                <li><a href="/terms" className="hover:text-gray-700">{t.footer.terms}</a></li>
-                <li><a href="/privacy" className="hover:text-gray-700">{t.footer.privacy}</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="mt-10 border-t border-gray-200 pt-6 text-center text-xs text-gray-400">
-            &copy; {new Date().getFullYear()} TRUE LIGHT by DASOMWEB. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      <MarketingFooter />
 
       <KakaoInquiryButton />
       <FaviconSetter />

@@ -46,7 +46,7 @@ export default function SiteSettingsTab() {
   const apiFetch = useAdminApi();
   const { showToast } = useToast();
   const session = useAuthStore((s) => s.session);
-  const [cfg, setCfg] = useState({ logoUrl: '', logoHeight: 32, faviconUrl: '', siteName: '', tagline: '', contactEmail: '', ogImageUrl: '', seoTitle: '', seoDescription: '' });
+  const [cfg, setCfg] = useState({ logoUrl: '', logoHeight: 32, faviconUrl: '', siteName: '', tagline: '', contactEmail: '', ogImageUrl: '', seoTitle: '', seoDescription: '', headerPaddingY: 12, footerPaddingY: 48 });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -61,6 +61,7 @@ export default function SiteSettingsTab() {
           tagline: (d.tagline as string) || '', contactEmail: (d.contactEmail as string) || '',
           ogImageUrl: (d.ogImageUrl as string) || '', seoTitle: (d.seoTitle as string) || '',
           seoDescription: (d.seoDescription as string) || '',
+          headerPaddingY: (d.headerPaddingY as number) ?? 12, footerPaddingY: (d.footerPaddingY as number) ?? 48,
         });
       } catch (e) { showToast('error', e instanceof Error ? e.message : '로딩 실패'); }
       finally { setLoading(false); }
@@ -98,6 +99,8 @@ export default function SiteSettingsTab() {
           ogImageUrl: cfg.ogImageUrl || null,
           seoTitle: cfg.seoTitle || null,
           seoDescription: cfg.seoDescription || null,
+          headerPaddingY: Number(cfg.headerPaddingY),
+          footerPaddingY: Number(cfg.footerPaddingY),
         }),
       });
       showToast('success', '사이트 설정을 저장했습니다. (프론트에 반영되려면 새로고침)');
@@ -140,6 +143,23 @@ export default function SiteSettingsTab() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* 헤더 · 푸터 여백 */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-4">
+        <h2 className="text-sm font-semibold text-gray-700">헤더 · 푸터 여백</h2>
+        <div>
+          <label className="block text-sm font-medium mb-1 text-gray-700">헤더 상하 여백 — {cfg.headerPaddingY}px</label>
+          <input type="range" min={0} max={48} value={cfg.headerPaddingY}
+            onChange={(e) => setCfg({ ...cfg, headerPaddingY: Number(e.target.value) })} className="w-full" />
+          <p className="text-xs text-gray-400">truelight.app 상단 헤더의 위/아래 여백 (0–48px, 기본 12).</p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1 text-gray-700">푸터 상하 여백 — {cfg.footerPaddingY}px</label>
+          <input type="range" min={0} max={120} value={cfg.footerPaddingY}
+            onChange={(e) => setCfg({ ...cfg, footerPaddingY: Number(e.target.value) })} className="w-full" />
+          <p className="text-xs text-gray-400">truelight.app 하단 푸터의 위/아래 여백 (0–120px, 기본 48).</p>
+        </div>
       </div>
 
       {/* 파비콘 */}
