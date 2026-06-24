@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { resizeImage } from '../utils/resize-image.js';
-import type { ResizePreset, ResizeResult } from '../utils/resize-image.js';
+import type { ResizePreset, ResizeResult, OutputFormat } from '../utils/resize-image.js';
 import { MediaPicker } from './builder/property-fields/MediaPicker';
 
 interface ImageUploadProps {
@@ -16,6 +16,9 @@ interface ImageUploadProps {
    *  Defaults to 'block' (1600px). Use 'hero' for banner images,
    *  'avatar' for staff/profile photos. */
   resize?: ResizePreset;
+  /** Output encoding. Default 'jpeg' (smallest). Use 'auto' for logos/favicons/
+   *  icons so a transparent PNG keeps its PNG type + alpha (still resized). */
+  format?: OutputFormat;
 }
 
 export function ImageUpload({
@@ -27,6 +30,7 @@ export function ImageUpload({
   aspectRatio = '16/9',
   placeholder = '이미지를 선택하거나 URL을 입력하세요',
   resize = 'block',
+  format = 'jpeg',
 }: ImageUploadProps) {
   const [mode, setMode] = useState<'url' | 'preview'>(value ? 'preview' : 'url');
   const [urlInput, setUrlInput] = useState(value || '');
@@ -61,7 +65,7 @@ export function ImageUpload({
     // See [[feedback_image_resize]] — R2 storage cost is the constraint.
     let toUpload: File = file;
     try {
-      const result = await resizeImage(file, resize);
+      const result = await resizeImage(file, resize, { format });
       toUpload = result.file;
       setResizeInfo(result);
     } catch (err) {

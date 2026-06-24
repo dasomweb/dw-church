@@ -178,6 +178,7 @@ export default function SettingsPage() {
                 onChange={(url) => setValue('logoUrl', url, { shouldDirty: true })}
                 onUpload={uploadImage}
                 resize="content"
+                format="auto"
                 aspectRatio="3/1"
               />
               <p className="text-xs text-gray-400 mt-1">권장: 가로형 PNG, 높이 40~60px, 투명 배경</p>
@@ -189,6 +190,7 @@ export default function SettingsPage() {
                 onChange={(url) => setValue('faviconUrl', url, { shouldDirty: true })}
                 onUpload={uploadImage}
                 resize="thumb"
+                format="auto"
                 aspectRatio="1/1"
               />
               <p className="text-xs text-gray-400 mt-1">권장: 정사각형 PNG (32x32 또는 64x64)</p>

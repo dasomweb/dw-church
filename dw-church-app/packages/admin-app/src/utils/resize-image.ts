@@ -64,9 +64,25 @@ export function normalizeImageKind(k: ResizePreset | ImageKind | undefined): Ima
  * explicit reject path (file > 20 MB). `kind` selects the target width:
  * 'background' (1920) for hero/banner/full-bleed, 'content' (1000) default.
  */
+/**
+ * Output format:
+ *   'jpeg' (default) — re-encode to JPEG with a white matte (사장님 bytes directive
+ *           for photos). Smallest files, but DESTROYS transparency.
+ *   'auto'  — preserve the source format: a PNG stays a transparent PNG (no white
+ *           matte), everything else becomes JPEG. Use for logos/favicons/icons
+ *           where the PNG type + alpha channel MUST be kept (still resized/shrunk).
+ *   'png'   — always output PNG (transparency preserved).
+ */
+export type OutputFormat = 'jpeg' | 'auto' | 'png';
+
+export interface ResizeOptions {
+  format?: OutputFormat;
+}
+
 export async function resizeImage(
   file: File,
   kind: ResizePreset | ImageKind = 'content',
+  opts: ResizeOptions = {},
 ): Promise<ResizeResult> {
   if (file.size > MAX_INPUT_BYTES) {
     throw new Error(
@@ -101,33 +117,47 @@ export async function resizeImage(
   const dstW = Math.max(1, Math.round(srcW * scale));
   const dstH = Math.max(1, Math.round(srcH * scale));
 
+  // Decide the output encoding. 'auto' preserves a PNG source (keeps the file
+  // type + alpha channel — required for logos/favicons); otherwise JPEG.
+  const format = opts.format ?? 'jpeg';
+  const outputType =
+    format === 'png'
+      ? 'image/png'
+      : format === 'auto' && file.type === 'image/png'
+        ? 'image/png'
+        : 'image/jpeg';
+  const keepAlpha = outputType === 'image/png';
+
   const canvas = createCanvas(dstW, dstH);
   const ctx = canvas.getContext('2d') as CanvasRenderingContext2D | null;
   if (!ctx) {
     bitmap.close();
     return passthrough(file, 'unsupported');
   }
-  // White matte so transparent PNGs don't turn black under JPEG (which has
-  // no alpha). Photos/backgrounds are opaque so this is a no-op for them.
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, dstW, dstH);
+  // White matte so transparent PNGs don't turn black under JPEG (which has no
+  // alpha). Skipped when keeping PNG output so transparency survives.
+  if (!keepAlpha) {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, dstW, dstH);
+  }
   ctx.drawImage(bitmap, 0, 0, dstW, dstH);
   bitmap.close();
 
-  const blob = await canvasToBlob(canvas, 'image/jpeg', QUALITY);
+  // PNG is lossless — the quality arg is ignored by the encoder.
+  const blob = await canvasToBlob(canvas, outputType, keepAlpha ? 1 : QUALITY);
   if (!blob) {
     return passthrough(file, 'unsupported');
   }
 
-  const newName = renameWithExtension(file.name, '.jpg');
-  const resizedFile = new File([blob], newName, { type: 'image/jpeg' });
+  const newName = renameWithExtension(file.name, keepAlpha ? '.png' : '.jpg');
+  const resizedFile = new File([blob], newName, { type: outputType });
 
   return {
     blob,
     file: resizedFile,
     originalBytes: file.size,
     resizedBytes: blob.size,
-    mimeType: 'image/jpeg',
+    mimeType: outputType,
     skipped: false,
   };
 }

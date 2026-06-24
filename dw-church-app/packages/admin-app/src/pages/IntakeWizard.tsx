@@ -292,12 +292,15 @@ export default function IntakeWizard() {
   // ── 개별 필드 렌더 (config 기반 generic) ─────────────────────
   const renderField = (field: FieldDef, value: string, onChange: (v: string) => void) => {
     if (field.type === 'image') {
+      // Logos/favicons/icons need their PNG transparency kept — preserve format.
+      const transparent = /logo|favicon|icon/i.test(field.key);
       return (
         <ImageUpload
           value={value || ''}
           onChange={onChange}
           onUpload={uploadImage}
           label={field.label}
+          format={transparent ? 'auto' : 'jpeg'}
         />
       );
     }
