@@ -313,6 +313,16 @@ export function mapSectionToBlock(spec: SectionSpec): MappedBlock | null {
     // The previous default `'Welcome'` made every empty hero look
     // valid, so the operator never knew the LLM punted on this slot.
     if (!title) return null;
+    // Heroes with a background image + overlay (image-overlay / page-hero) place
+    // text directly over a photo, so the copy must be white for contrast — the
+    // theme's dark heading color is unreadable there. Set it per-section so it
+    // overrides the global typography palette (operators previously had to fix
+    // every image hero by hand). split-image / text-only render text on a plain
+    // or brand-gradient panel, so they keep the theme colors.
+    const overlayHero = variant === 'image-overlay' || variant === 'page-hero';
+    const heroElementStyles = overlayHero
+      ? { title: { color: '#ffffff' }, subtitle: { color: '#ffffff' }, eyebrow: { color: '#ffffff' } }
+      : undefined;
     return {
       blockType: 'hero_banner',
       props: {
@@ -334,6 +344,7 @@ export function mapSectionToBlock(spec: SectionSpec): MappedBlock | null {
         height,
         textAlign: variant === 'page-hero' ? 'left' : 'center',
         bgMode: variant === 'text-only' ? 'gradient' : 'image',
+        ...(heroElementStyles ? { elementStyles: heroElementStyles } : {}),
         ...heroExtras,
       },
     };
