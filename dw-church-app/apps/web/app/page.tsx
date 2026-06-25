@@ -364,15 +364,23 @@ export default function LandingPage() {
     { label: t.hero.seePlans, url: '/#plans', variant: 'outline' },
     { label: lang === 'ko' ? '데모 체험' : 'Try the Demo', url: '', variant: 'demo' },
   ];
+  // The demo CTA opens a modal (variant 'demo', empty url) — operators can't
+  // add it from the super-admin slide editor, so a slide with custom buttons
+  // (e.g. the promo "30% off" slide) would otherwise lose it. Always ensure
+  // every slide surfaces the demo button by appending it when absent.
+  const demoBtn: HeroBtn = { label: lang === 'ko' ? '데모 체험' : 'Try the Demo', url: '', variant: 'demo' };
+  const withDemo = (btns: HeroBtn[]): HeroBtn[] =>
+    btns.some((b) => b.variant === 'demo') ? btns : [...btns, demoBtn];
+
   const cfgSlides = brand?.heroSlides ?? [];
   const heroSlides = cfgSlides.length > 0
     ? cfgSlides.map((s) => ({
         headline: lang === 'ko' ? s.headlineKo : s.headlineEn,
         subline: lang === 'ko' ? s.sublineKo : s.sublineEn,
         image: s.imageUrl,
-        buttons: s.buttons && s.buttons.length > 0
+        buttons: withDemo(s.buttons && s.buttons.length > 0
           ? s.buttons.map((b) => ({ label: lang === 'ko' ? b.labelKo : b.labelEn, url: b.url, variant: b.variant }))
-          : defaultBtns,
+          : defaultBtns),
       }))
     : t.hero.slides.map((s, i) => ({ headline: s.headline, subline: s.subline, image: SLIDE_IMAGES[i] ?? SLIDE_IMAGES[0]!, buttons: defaultBtns }));
 
