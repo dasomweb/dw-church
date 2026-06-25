@@ -76,6 +76,10 @@ const PALETTE_VARS: Record<string, string> = {
   background: 'var(--dw-background, var(--bg))',
   surface:    'var(--dw-surface, var(--bg-subtle))',
   border:     'var(--border)',
+  // Dark-background text colors — used over image/overlay sections (hero etc.).
+  // White fallbacks so copy stays readable before the token is themed.
+  onDark:      'var(--brand-onDark, #ffffff)',
+  onDarkMuted: 'var(--brand-onDarkMuted, rgba(255,255,255,0.85))',
 };
 
 function resolveColor(value: string): string {

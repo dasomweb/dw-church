@@ -801,7 +801,7 @@ export function ElementInspector({
   // Convert the tenant theme palette (key → hex map) to the array
   // shape ColorField expects. Order matches the canonical palette
   // sequence (primary first, etc.) so the popup is predictable.
-  const PALETTE_ORDER = ['primary', 'secondary', 'accent', 'text', 'muted', 'background', 'surface', 'border'];
+  const PALETTE_ORDER = ['primary', 'secondary', 'accent', 'text', 'muted', 'background', 'surface', 'border', 'onDark', 'onDarkMuted'];
   const paletteList: Array<{ key: string; label?: string; hex: string }> | undefined = palette
     ? PALETTE_ORDER
         .filter((k) => palette[k])
@@ -2096,7 +2096,7 @@ function ItemsEditor({
  * pass through; bare names map to palette CSS vars (primary, accent,
  * text, muted, etc.) at render time.
  */
-const PALETTE_KEYS = ['', 'primary', 'secondary', 'accent', 'text', 'muted', 'background', 'surface', 'border'] as const;
+const PALETTE_KEYS = ['', 'primary', 'secondary', 'accent', 'text', 'muted', 'background', 'surface', 'border', 'onDark', 'onDarkMuted'] as const;
 // FONT_WEIGHTS / typography preset list moved into TypographyTokenField —
 // the inspector now hands the typography section over to the component
 // in property-fields and just forwards the operator override blob.

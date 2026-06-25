@@ -28,6 +28,11 @@ export const systemColorTokensSchema = z.object({
   background: z.string(),
   border: z.string(),
   surface: z.string(),
+  // Dark-background text colors (over image/overlay sections, e.g. hero with
+  // Background Image + Overlay). Optional w/ defaults so themes saved before
+  // these slots existed still parse — they just inherit white.
+  onDark: z.string().default('#ffffff'),
+  onDarkMuted: z.string().default('rgba(255,255,255,0.85)'),
 });
 
 export const designTokenColorsSchema = z.object({

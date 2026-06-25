@@ -319,9 +319,13 @@ export function mapSectionToBlock(spec: SectionSpec): MappedBlock | null {
     // overrides the global typography palette (operators previously had to fix
     // every image hero by hand). split-image / text-only render text on a plain
     // or brand-gradient panel, so they keep the theme colors.
+    // Reference the dark-background system color SLOTS (not a hardcoded hex) so
+    // the white-on-photo color is themeable centrally and the inspector shows
+    // which palette slot is in use. Not forced — the operator can override per
+    // section (Custom or another slot) just like any other color.
     const overlayHero = variant === 'image-overlay' || variant === 'page-hero';
     const heroElementStyles = overlayHero
-      ? { title: { color: '#ffffff' }, subtitle: { color: '#ffffff' }, eyebrow: { color: '#ffffff' } }
+      ? { title: { color: 'onDark' }, subtitle: { color: 'onDarkMuted' }, eyebrow: { color: 'onDark' } }
       : undefined;
     return {
       blockType: 'hero_banner',

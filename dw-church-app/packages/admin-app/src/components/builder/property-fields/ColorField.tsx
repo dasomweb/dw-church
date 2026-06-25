@@ -100,7 +100,10 @@ export function ColorField({
                 ? `Current: ${value} — picking will overwrite with hex`
                 : 'Pick color'
           }
-          className="w-8 h-8 border border-gray-300 rounded cursor-pointer p-0.5"
+          // shrink-0 + explicit size: in flex rows a bare <input type=color>
+          // collapses to a thin sliver. Force a 32×32 square swatch.
+          style={{ width: 32, height: 32 }}
+          className="shrink-0 border border-gray-300 rounded cursor-pointer p-0.5"
         />
         <input
           type="text"
@@ -128,14 +131,18 @@ export function ColorField({
           </button>
         )}
         {showKeySelect && (
+          // Reflect the active slot: if the value IS a palette key show it,
+          // if it's a literal color (hex/rgba/var) show "Custom", else "Palette".
+          // Operators asked to see which system color is in use, not a blank box.
           <select
-            value=""
+            value={paletteKeys!.includes(value) ? value : value ? 'custom' : ''}
             onChange={(e) => {
               const next = e.target.value;
-              if (!next) return;
               if (next === 'custom') {
-                onChange('');
-              } else {
+                // Switch to custom only when not already a literal color, so
+                // re-selecting "Custom" never wipes an existing hex.
+                if (paletteKeys!.includes(value) || !value) onChange('');
+              } else if (next) {
                 onChange(next);
               }
             }}

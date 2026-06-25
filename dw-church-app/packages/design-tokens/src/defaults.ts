@@ -30,6 +30,12 @@ export const DEFAULT_DESIGN_TOKENS: DesignTokens = {
       background: '#ffffff',
       border: '#e2e8f0',
       surface: '#f1f5f9',
+      // Dark-background text colors — used when copy sits over an image/overlay
+      // (e.g. hero with Background Image + Overlay). onDark = headings/primary,
+      // onDarkMuted = subtitles/secondary. Centralizes the white-on-photo color
+      // so operators tune it once instead of per-section.
+      onDark: '#ffffff',
+      onDarkMuted: 'rgba(255,255,255,0.85)',
     },
     custom: {},
   },
