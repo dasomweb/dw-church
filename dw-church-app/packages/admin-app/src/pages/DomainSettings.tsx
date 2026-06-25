@@ -29,6 +29,44 @@ const STATUS_META: Record<string, { label: string; cls: string; hint: string }> 
   failed:      { label: '실패',      cls: 'bg-red-100 text-red-800',      hint: 'DNS 설정을 확인하세요' },
 };
 
+// Shopify-style connection checklist. Each step is derived from the Cloudflare
+// hostname status (pending → verified → pending_ssl → active) and, when the
+// operator has run "연결 확인", the explicit txtFound/cnameOk probe results.
+type StepState = 'done' | 'pending' | 'fail';
+function domainSteps(
+  status: string,
+  checks?: { txtFound: boolean; cnameOk: boolean },
+): { ownership: StepState; routing: StepState; ssl: StepState } {
+  const failed = status === 'failed';
+  const txt = !!checks?.txtFound || ['verified', 'pending_ssl', 'active'].includes(status);
+  const cname = !!checks?.cnameOk || ['pending_ssl', 'active'].includes(status);
+  const active = status === 'active';
+  return {
+    ownership: txt ? 'done' : failed ? 'fail' : 'pending',
+    routing: cname ? 'done' : failed ? 'fail' : 'pending',
+    ssl: active ? 'done' : failed ? 'fail' : 'pending',
+  };
+}
+
+/** Green check when connected, red ✗ on failure, hollow grey circle while pending. */
+function StepIcon({ state }: { state: StepState }) {
+  if (state === 'done') {
+    return (
+      <svg className="w-4 h-4 text-green-600 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-label="연결됨">
+        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+      </svg>
+    );
+  }
+  if (state === 'fail') {
+    return (
+      <svg className="w-4 h-4 text-red-500 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-label="실패">
+        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+      </svg>
+    );
+  }
+  return <span className="w-4 h-4 shrink-0 rounded-full border-2 border-gray-300" aria-label="대기 중" />;
+}
+
 export default function DomainSettings() {
   const { showToast } = useToast();
   const session = useAuthStore((s) => s.session);
@@ -43,6 +81,8 @@ export default function DomainSettings() {
   // Per-domain-row DNS instructions (lazy-loaded on expand)
   const [expanded, setExpanded] = useState<Record<string, DnsInstruction[]>>({});
   const [verifying, setVerifying] = useState<Record<string, boolean>>({});
+  // Last "연결 확인" probe result per domain — feeds the Shopify-style checklist.
+  const [checks, setChecks] = useState<Record<string, { txtFound: boolean; cnameOk: boolean }>>({});
 
   // This page uses raw fetch (no api-client methods exist for /domains), so it
   // must set X-Tenant-Slug itself. Without it the request is proxied to the
@@ -113,6 +153,7 @@ export default function DomainSettings() {
         errorMessage?: string;
       };
       setDomains((prev) => prev.map((x) => (x.id === d.id ? json.data : x)));
+      setChecks((prev) => ({ ...prev, [d.id]: json.checks }));
       if (json.checks.txtFound) {
         const cnameMsg = json.checks.cnameOk ? '' : ' (CNAME은 아직 전파 중이거나 apex 도메인 — SSL은 슈퍼어드민이 Railway에서 등록해야 합니다)';
         showToast('success', `소유권 확인됨 ✓${cnameMsg}`);
@@ -173,7 +214,7 @@ export default function DomainSettings() {
             type="text"
             value={newDomain}
             onChange={(e) => setNewDomain(e.target.value)}
-            placeholder="mychurch.com"
+            placeholder="www.mychurch.com"
             required
             pattern="^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$"
             className="flex-1 border rounded-lg px-3 py-2 text-sm font-mono"
@@ -186,6 +227,35 @@ export default function DomainSettings() {
             {adding ? '추가 중...' : '도메인 추가'}
           </button>
         </form>
+
+        {/* Persistent guidance — what to enter + which DNS records to add.
+            Shown up front so the operator knows the work before clicking add. */}
+        <div className="mt-3 rounded-lg bg-gray-50 border border-gray-200 p-3 text-[11px] leading-relaxed text-gray-600 space-y-2">
+          <p>
+            <strong className="text-gray-800">① www 형식으로 입력하세요.</strong>{' '}
+            <code className="font-mono">www.mychurch.com</code> 처럼요. 루트 도메인(<code className="font-mono">mychurch.com</code>)은
+            DNS 표준상 직접 연결이 안 됩니다 — 아래 ③ 참고.
+          </p>
+          <p>
+            <strong className="text-gray-800">② 도메인 추가 후</strong>, 이 화면에 아래{' '}
+            <strong>2개의 DNS 레코드</strong>가 표시됩니다. 도메인을 구입한 곳(Cloudflare·GoDaddy·Namecheap·가비아 등)의
+            DNS 관리 페이지에 그대로 추가하세요:
+          </p>
+          <div className="ml-3 grid grid-cols-[44px_1fr] gap-x-2 gap-y-1 font-mono text-[11px]">
+            <span className="text-gray-400">TXT</span>
+            <span>소유권 확인용 (추가 후 표시되는 값 그대로) — 복사 버튼 제공</span>
+            <span className="text-gray-400">CNAME</span>
+            <span><code>www</code> → <code>customers.truelight.app</code> (트래픽 라우팅)</span>
+          </div>
+          <p>
+            <strong className="text-gray-800">③ 루트 도메인</strong>(<code className="font-mono">mychurch.com</code>)도 접속되게 하려면,
+            등록업체의 <strong>Domain Forwarding / URL Redirect</strong> 기능으로{' '}
+            <code className="font-mono">mychurch.com → https://www.mychurch.com</code> 리다이렉트를 설정하세요(대부분 무료).
+          </p>
+          <p className="text-gray-500">
+            전파에 1~10분 걸립니다. 그 후 아래 목록에서 <strong>연결 확인</strong>을 누르면 SSL이 자동 발급됩니다.
+          </p>
+        </div>
       </div>
 
       {/* Domain list */}
@@ -230,7 +300,41 @@ export default function DomainSettings() {
                   </div>
                 </div>
 
-                <p className="px-4 pb-3 text-[11px] text-gray-500">{meta.hint}</p>
+                <p className="px-4 pb-2 text-[11px] text-gray-500">{meta.hint}</p>
+
+                {/* Shopify-style connection checklist — a check appears as each
+                    step connects. Re-runs on "연결 확인". */}
+                {(() => {
+                  const st = domainSteps(d.status, checks[d.id]);
+                  const rows: { label: string; state: StepState; note: Record<StepState, string> }[] = [
+                    { label: '도메인 소유권 확인 (TXT)', state: st.ownership, note: { done: '확인됨', pending: '대기 중', fail: '실패' } },
+                    { label: '트래픽 라우팅 (CNAME → customers.truelight.app)', state: st.routing, note: { done: '연결됨', pending: '전파 중', fail: '실패' } },
+                    { label: 'SSL 인증서 · HTTPS 연결', state: st.ssl, note: { done: '발급 완료', pending: '대기 중', fail: '실패' } },
+                  ];
+                  const noteCls: Record<StepState, string> = {
+                    done: 'text-green-600', pending: 'text-gray-400', fail: 'text-red-500',
+                  };
+                  return (
+                    <div className="px-4 pb-3">
+                      <div className="rounded-lg border border-gray-100 bg-gray-50/70 divide-y divide-gray-100">
+                        {rows.map((r) => (
+                          <div key={r.label} className="flex items-center gap-2.5 px-3 py-2 text-xs">
+                            <StepIcon state={r.state} />
+                            <span className={r.state === 'done' ? 'text-gray-800' : 'text-gray-500'}>{r.label}</span>
+                            <span className={`ml-auto text-[10px] font-semibold ${noteCls[r.state]}`}>{r.note[r.state]}</span>
+                          </div>
+                        ))}
+                      </div>
+                      {st.ssl === 'done' ? (
+                        <p className="mt-2 text-[11px] text-green-700">
+                          ✓ 연결 완료 — <a href={`https://${d.domain}`} target="_blank" rel="noreferrer" className="underline font-medium">https://{d.domain}</a> 으로 접속됩니다.
+                        </p>
+                      ) : (
+                        <p className="mt-2 text-[11px] text-gray-400">DNS 추가 후 <strong>연결 확인</strong>을 누르면 단계별로 체크됩니다. 전파에 1~10분 걸릴 수 있습니다.</p>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {instructions && (
                   <div className="border-t bg-gray-50 p-4 space-y-3">
