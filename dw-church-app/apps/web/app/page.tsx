@@ -34,17 +34,18 @@ interface Copy {
   features: { title: string; desc: string; icon: string }[];
   howSection: { title: string; subtitle: string };
   steps: { step: string; title: string; desc: string }[];
+  launchPromo: { eyebrow: string; title: string; subline: string; cta: string };
   plansSection: {
     title: string; subtitle: string;
     monthly: string; yearly: string; save: string;
-    perMonth: string; billedYearly: string; setupOnce: string;
+    perMonth: string; billedYearly: string; setupOnce: string; setupWas: string; promoSetupNote: string;
     includedTitle: string; included: string[];
     setupTitle: string; setupItems: string[];
     note: string; contact: string;
   };
   plans: {
     name: string; subtitle: string;
-    monthly: number; yearly: number; setupFee: number;
+    monthly: number; yearly: number; setupFee: number; promo?: boolean;
     features: string[]; cta: string; highlighted: boolean; badge?: string;
   }[];
   custom: { eyebrow: string; title: string; description: string; features: string[]; oneTime: string; anyPlan: string; quote: string };
@@ -90,11 +91,18 @@ const COPY: Record<Lang, Copy> = {
       { step: '03', title: '콘텐츠 입력', desc: '설교·주보·사진·교역자 정보를 쉬운 관리자 화면에서 글과 사진만 등록합니다.' },
       { step: '04', title: '오픈', desc: '도메인을 연결하고 성도들에게 홈페이지를 공개합니다.' },
     ],
+    launchPromo: {
+      eyebrow: '오픈 기념 한정 혜택',
+      title: '디자인 셋업비 30% OFF',
+      subline: '선착순 20개 교회 · 라이트·기본형 1년 구독 고객 · 7월 31일까지',
+      cta: '런칭 혜택 신청',
+    },
     plansSection: {
       title: '간단하고 투명한 요금제',
       subtitle: '교회 규모에 맞는 플랜을 선택하세요. 언제든 업그레이드할 수 있습니다.',
       monthly: '월 결제', yearly: '연 결제', save: '연간 할인',
       perMonth: '/월', billedYearly: '연 1회 청구', setupOnce: '셋업비(1회)',
+      setupWas: '정가', promoSetupNote: '오픈 기념 30% 할인 (~7/31)',
       includedTitle: '모든 플랜 공통 포함',
       included: [
         '교회 전용 주소 + 보안 인증',
@@ -118,13 +126,13 @@ const COPY: Record<Lang, Copy> = {
     plans: [
       {
         name: '라이트', subtitle: '소형 교회 시작용',
-        monthly: 59, yearly: 49, setupFee: 300,
+        monthly: 59, yearly: 49, setupFee: 300, promo: true,
         features: ['메인 페이지', '담임목사 인사말', '교회 소개', '교역자 소개', '예배 안내', '오시는 길', '교육부 소개', '설교·주보 게시판', '온라인 헌금 안내', 'SNS 연동', '관리자 계정 2개'],
         cta: '시작하기', highlighted: false,
       },
       {
         name: '기본', subtitle: '성장하는 교회',
-        monthly: 99, yearly: 79, setupFee: 500,
+        monthly: 99, yearly: 79, setupFee: 500, promo: true,
         features: ['라이트의 모든 기능', '사진 앨범', '교회 연혁', '목회 칼럼', '영상 게시판', '공지 게시판', '행사 게시판', '선교 게시판', '메인 배너 슬라이드', '콘텐츠 내려받기 (백업·이전)', '관리자 계정 3개'],
         cta: '시작하기', highlighted: true, badge: '가장 인기',
       },
@@ -203,11 +211,18 @@ const COPY: Record<Lang, Copy> = {
       { step: '03', title: 'Add Your Content', desc: 'Upload sermons, bulletins, photos, and staff info through the simple admin panel.' },
       { step: '04', title: 'Go Live', desc: 'Connect your domain and share your website with your congregation.' },
     ],
+    launchPromo: {
+      eyebrow: 'Launch offer',
+      title: '30% off your design setup fee',
+      subline: 'First 20 churches · Light & Basic annual plans · through July 31',
+      cta: 'Claim launch offer',
+    },
     plansSection: {
       title: 'Simple, Transparent Pricing',
       subtitle: 'Choose the plan that fits your church. Upgrade anytime.',
       monthly: 'Monthly', yearly: 'Yearly', save: 'Yearly discount',
       perMonth: '/mo', billedYearly: 'billed annually', setupOnce: 'setup, one-time',
+      setupWas: 'was', promoSetupNote: 'Launch 30% off (through Jul 31)',
       includedTitle: 'Included in Every Plan',
       included: [
         'Professional church design themes',
@@ -233,13 +248,13 @@ const COPY: Record<Lang, Copy> = {
     plans: [
       {
         name: 'Light', subtitle: 'For small churches',
-        monthly: 59, yearly: 49, setupFee: 300,
+        monthly: 59, yearly: 49, setupFee: 300, promo: true,
         features: ['Home page', 'Pastor’s greeting', 'About the church', 'Staff directory', 'Worship info', 'Directions', 'Education ministry', 'Sermon & bulletin board', 'Social links', '2 admin accounts'],
         cta: 'Get Started', highlighted: false,
       },
       {
         name: 'Basic', subtitle: 'For growing churches',
-        monthly: 99, yearly: 79, setupFee: 500,
+        monthly: 99, yearly: 79, setupFee: 500, promo: true,
         features: ['Everything in Light', 'Photo albums', 'Church history', 'Pastoral columns', 'Video board', 'Notice board', 'Event board', 'Mission board', 'Banner slider (home)', 'Content export', '3 admin accounts'],
         cta: 'Get Started', highlighted: true, badge: 'Most Popular',
       },
@@ -458,6 +473,26 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Launch promo — sits directly above the plans so the 30%-off setup
+          fee shown on the Light/Basic cards has its terms right next to it. */}
+      <section className="border-y border-red-100 bg-gradient-to-r from-red-50 via-orange-50 to-red-50 px-4 py-8 sm:px-6">
+        <div className="mx-auto flex max-w-5xl flex-col items-center gap-4 text-center sm:flex-row sm:justify-between sm:text-left">
+          <div>
+            <span className="inline-block rounded-full bg-red-600 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
+              {t.launchPromo.eyebrow}
+            </span>
+            <h2 className="mt-3 text-2xl font-extrabold text-gray-900 sm:text-3xl">{t.launchPromo.title}</h2>
+            <p className="mt-1 text-sm text-gray-600">{t.launchPromo.subline}</p>
+          </div>
+          <a
+            href="/apply"
+            className="shrink-0 rounded-xl bg-red-600 px-6 py-3 text-sm font-bold text-white shadow-lg transition-colors hover:bg-red-700"
+          >
+            {t.launchPromo.cta}
+          </a>
+        </div>
+      </section>
+
       {/* Plans */}
       <section id="plans" className="bg-gray-50 px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-7xl">
@@ -518,9 +553,22 @@ export default function LandingPage() {
                   <p className="mt-1 h-4 text-xs text-gray-400">
                     {billing === 'yearly' ? t.plansSection.billedYearly : ' '}
                   </p>
-                  <p className="mt-3 text-sm font-medium text-gray-700">
-                    + ${plan.setupFee} <span className="text-gray-400">{t.plansSection.setupOnce}</span>
-                  </p>
+                  {plan.promo ? (
+                    <div className="mt-3 text-sm">
+                      <p className="font-medium text-gray-700">
+                        + <span className="text-gray-400 line-through">${plan.setupFee}</span>{' '}
+                        <span className="font-bold text-gray-900">${Math.round(plan.setupFee * 0.7)}</span>{' '}
+                        <span className="text-gray-400">{t.plansSection.setupOnce}</span>
+                      </p>
+                      <span className="mt-1 inline-block rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-600">
+                        {t.plansSection.promoSetupNote}
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-sm font-medium text-gray-700">
+                      + ${plan.setupFee} <span className="text-gray-400">{t.plansSection.setupOnce}</span>
+                    </p>
+                  )}
                   <ul className="my-6 space-y-3 border-t border-gray-100 pt-6">
                     {plan.features.map((feat) => (
                       <li key={feat} className="flex items-start gap-2 text-sm text-gray-700">
