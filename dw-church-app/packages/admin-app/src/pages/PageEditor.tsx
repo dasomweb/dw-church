@@ -316,7 +316,7 @@ function BlockPalette({ onAdd }: { onAdd: (type: string) => void }) {
   }, [search, natureFilter]);
 
   return (
-    <div className="w-56 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col overflow-hidden">
+    <div className="w-40 sm:w-56 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col overflow-hidden">
       {/* Search + View Mode Toggle */}
       <div className="px-3 py-2 border-b space-y-1.5">
         <div className="flex items-center gap-1">
@@ -1808,7 +1808,7 @@ export default function PageEditor() {
       {!CONTENT_ONLY && <BlockPalette onAdd={handleAddBlock} />}
 
       {/* Page List */}
-      <div className="w-56 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col overflow-hidden">
+      <div className="w-40 sm:w-56 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col overflow-hidden">
         <div className="flex items-center justify-between px-3 py-2 border-b bg-gray-50">
           <h3 className="text-xs font-semibold">페이지</h3>
           <div className="flex gap-1">
@@ -1837,7 +1837,7 @@ export default function PageEditor() {
       </div>
 
       {/* Main Board */}
-      <div className="flex-1 overflow-y-auto bg-gray-100/50 p-5"
+      <div className="flex-1 overflow-y-auto bg-gray-100/50 p-3 sm:p-5"
         onDragOver={handleBoardDragOver}
         onDrop={handleBoardDrop}
         onDragLeave={() => setDragOverIdx(null)}

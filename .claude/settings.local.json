@@ -117,7 +117,8 @@
       "Bash(curl -sI --max-time 25 \"https://truelight.app/tenant/lagrangechurch/worship\")",
       "Bash(curl -sI --max-time 25 \"https://lagrangechurch.truelight.app/worship\")",
       "Bash(curl -sI --max-time 25 \"https://truelight.app/\")",
-      "Bash(pnpm --filter @dw-church/api-client typecheck)"
+      "Bash(pnpm --filter @dw-church/api-client typecheck)",
+      "Bash(cd /h/GitHub/dw-church/dw-church-app/packages/admin-app && find . -type f -name \"*.html\" -o -name \"*.json\" -o -name \"*.config.*\" | grep -E \"\\(index|tailwind|vite\\)\" | head -20)"
     ]
   }
 }

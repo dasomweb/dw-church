@@ -220,7 +220,7 @@ export default function VideoManagement() {
           placeholder="검색..."
           value={params.search || ''}
           onChange={(e) => setParams((p) => ({ ...p, search: e.target.value, page: 1 }))}
-          className="border rounded px-3 py-2 w-64"
+          className="border rounded px-3 py-2 w-full sm:w-64"
         />
       </div>
 

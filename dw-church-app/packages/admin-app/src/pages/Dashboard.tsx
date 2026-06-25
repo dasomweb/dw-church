@@ -127,7 +127,7 @@ export default function Dashboard() {
       {/* Stats cards */}
       <section>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">현황</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4">
           <StatCard label="주보"   count={bulletins.data?.total ?? 0} loading={bulletins.isLoading} to={tPath('bulletins')} />
           <StatCard label="설교"   count={sermons.data?.total ?? 0}   loading={sermons.isLoading}   to={tPath('sermons')} />
           <StatCard label="앨범"   count={albums.data?.total ?? 0}    loading={albums.isLoading}    to={tPath('albums')} />
@@ -139,7 +139,7 @@ export default function Dashboard() {
       {/* Recent content */}
       <section>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">최근 콘텐츠</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6">
           {/* Recent Bulletins */}
           <div className="bg-white rounded-lg border border-gray-200 p-5">
             <div className="flex items-center justify-between mb-3">

@@ -1,3 +1,29 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Mobile optimization for the TENANT admin shell.
+ * Scoped to `.admin-content` (AdminLayout <main>) so super-admin layouts,
+ * which have their own responsive handling, are never affected.
+ */
+@media (max-width: 767px) {
+  /* Data tables in every management page scroll horizontally instead of
+     overflowing the viewport. Mirrors the well-tested GitHub-markdown table
+     pattern: the table itself becomes a horizontal scroll container. This
+     fixes pages whose tables are NOT already wrapped in overflow-x-auto. */
+  .admin-content table {
+    display: block;
+    width: max-content;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Slightly tighter cell padding on phones to fit more per screen width. */
+  .admin-content th,
+  .admin-content td {
+    padding-left: 0.625rem;
+    padding-right: 0.625rem;
+  }
+}

@@ -224,22 +224,22 @@ export function AdminLayout() {
       {/* Main content area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top header */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-20">
-          <div className="flex items-center gap-3">
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-3 sm:px-4 lg:px-6 sticky top-0 z-20">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             {/* Hamburger menu for mobile */}
             <button
-              className="lg:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+              className="lg:hidden p-2 -ml-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg shrink-0"
               onClick={() => setSidebarOpen(true)}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <h1 className="text-lg font-semibold text-gray-900">{pageTitle}</h1>
+            <h1 className="text-base sm:text-lg font-semibold text-gray-900 truncate">{pageTitle}</h1>
           </div>
 
           {/* User info + logout */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 sm:gap-3 shrink-0">
             {user && (
               <div className="hidden sm:flex items-center gap-2 text-sm">
                 <span className="font-medium text-gray-700">{user.name}</span>
@@ -276,7 +276,7 @@ export function AdminLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-4 lg:p-6 overflow-auto">
+        <main className="admin-content flex-1 p-3 sm:p-4 lg:p-6 overflow-auto">
           <Outlet />
         </main>
       </div>
