@@ -1,0 +1,33 @@
+name: Deploy Cloudflare Worker — saas-proxy
+
+# Mirrors the proven b2bsmart pipeline: any push that touches the Worker
+# auto-deploys it via wrangler. The Worker lives under dw-church-app/ (the
+# app root), but this workflow MUST sit at the repository root .github/ so
+# GitHub Actions picks it up. Requires repo secret CLOUDFLARE_API_TOKEN
+# (Account: Workers Scripts:Edit + Account Settings:Read,
+#  Zone: Workers Routes:Edit + Zone:Read, scoped to truelight.app).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'dw-church-app/workers/saas-proxy/**'
+      - '.github/workflows/deploy-saas-proxy.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-saas-proxy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: wrangler deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          workingDirectory: dw-church-app/workers/saas-proxy

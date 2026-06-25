@@ -1,7 +1,16 @@
 # True Light — Cloudflare for SaaS 인프라 셋업 (1회)
 
 > 2026-06-03 기준. b2bsmart 의 검증된 아키텍처를 그대로 포팅. 자세한
-> 동작 원리는 [b2bsmart 의 docs/multitenant-domains/01-architecture.md](../../../b2bsmart/docs/multitenant-domains/01-architecture.md) 참조.
+> 동작 원리는 [01-architecture.md](./01-architecture.md) 참조 (b2bsmart 레퍼런스
+> 문서를 truelight.app 기준으로 이 폴더에 self-contained 로 포팅함).
+
+> **⚠️ 현재 알려진 블로커 (2026-06-25 검증)** — 커스텀 도메인 추가가 안 되면
+> 거의 항상 이것: api-server 의 `CF_API_TOKEN` 이 **무효(Cloudflare 에러 9109
+> "Invalid access token")**. `CF_API_TOKEN`/`CF_ZONE_ID` 는 설정돼 있으나 토큰이
+> 만료/권한오류 상태. 진단: `GET /api/v1/domains/diagnostics` → `ping.ok:false`.
+> 해결: §7 대로 토큰 재발급 후 Railway api-server `CF_API_TOKEN` 교체. 토큰 권한은
+> Zone:SSL and Certificates:Edit + Zone:Custom Hostnames:Edit + Zone:Zone:Read
+> (truelight.app zone). 자세한 진단은 [03-troubleshooting.md](./03-troubleshooting.md) §7.
 
 ## 0. 전제
 
@@ -191,4 +200,4 @@ curl -sH "Authorization: Bearer <token>" https://api.truelight.app/api/v1/domain
 | Worker 가 안 트리거됨 | route 가 hostname-restricted (`saas-proxy.truelight.app/*`) | wrangler.toml `pattern = "*/*"` 확인 |
 | 무한 루프 / customers.truelight.app 깨짐 | Worker self-hostname bypass 누락 | worker.js 의 self-bypass 로직 확인 |
 
-자세히는 [b2bsmart docs/multitenant-domains/03-troubleshooting.md](../../../b2bsmart/docs/multitenant-domains/03-troubleshooting.md).
+자세히는 [03-troubleshooting.md](./03-troubleshooting.md).
