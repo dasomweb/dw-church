@@ -15,6 +15,13 @@ function extractSubdomain(hostname: string): string | null {
   // Remove port if present
   const host = hostname.split(':')[0];
   if (!host) return null;
+
+  // Internal service-to-service hosts (Railway private networking, e.g.
+  // api-server.railway.internal) are never tenant domains — such requests must
+  // rely on the X-Tenant-Slug header. Parsing the service name as a slug caused
+  // spurious "Tenant 'api-server' not found" errors for raw-fetch admin calls.
+  if (host.endsWith('.railway.internal') || host.endsWith('.internal')) return null;
+
   const parts = host.split('.');
 
   // Needs at least 3 parts: subdomain.domain.tld

@@ -17,6 +17,8 @@ function shouldSkip(path: string): boolean {
 function extractSubdomain(hostname: string): string | null {
   const host = hostname.split(':')[0];
   if (!host) return null;
+  // Internal service-to-service hosts (Railway private networking) are never tenants.
+  if (host.endsWith('.railway.internal') || host.endsWith('.internal')) return null;
   const parts = host.split('.');
   if (parts.length < 3) {
     if (parts.length === 2 && parts[1] === 'localhost') return parts[0] ?? null;
@@ -95,5 +97,17 @@ describe('extractSubdomain', () => {
 
   it('returns null for localhost with port', () => {
     expect(extractSubdomain('localhost:3000')).toBe(null);
+  });
+
+  // Regression: a raw-fetch admin call (no X-Tenant-Slug) gets proxied to the
+  // api-server internal host. The service name must NOT be read as a tenant slug
+  // (caused "Tenant 'api-server' not found or inactive").
+  it('returns null for Railway internal service host', () => {
+    expect(extractSubdomain('api-server.railway.internal')).toBe(null);
+    expect(extractSubdomain('api-server.railway.internal:3000')).toBe(null);
+  });
+
+  it('returns null for any *.internal host', () => {
+    expect(extractSubdomain('whatever.internal')).toBe(null);
   });
 });

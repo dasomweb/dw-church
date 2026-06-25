@@ -44,7 +44,10 @@ export default function DomainSettings() {
   const [expanded, setExpanded] = useState<Record<string, DnsInstruction[]>>({});
   const [verifying, setVerifying] = useState<Record<string, boolean>>({});
 
-  const headers = { Authorization: `Bearer ${token || ''}` };
+  // This page uses raw fetch (no api-client methods exist for /domains), so it
+  // must set X-Tenant-Slug itself. Without it the request is proxied to the
+  // api-server internal host and the server mis-reads "api-server" as the slug.
+  const headers = { Authorization: `Bearer ${token || ''}`, 'X-Tenant-Slug': slug };
 
   const reload = async () => {
     setLoading(true);
