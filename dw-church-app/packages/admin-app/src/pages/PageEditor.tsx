@@ -32,6 +32,72 @@ interface BlockVariant {
   label: string;
 }
 
+// ─── Modern line icons for blocks ───────────────────────────────────────────
+// Replaces the old emoji glyphs (🖼️📝🙏…) with a consistent stroke icon set in
+// the SAME visual language as the left nav (clean 24px line icons). One path per
+// block type; BlockGlyph renders it. Unknown types fall back to a neutral square.
+const BLOCK_ICON_PATHS: Record<string, string> = {
+  hero_banner: 'M4 5h16v14H4zM4 15l4-4 4 3 3-3 5 5M9.5 9.5a1 1 0 11-2 0 1 1 0 012 0z',
+  banner_slider: 'M7 6h10v12H7zM4 9v6M20 9v6',
+  hero_image_slider: 'M3 6h18v12H3zM8 21h8M9 9.5a1 1 0 11-2 0 1 1 0 012 0zM21 15l-5-4-3 3',
+  hero_split: 'M4 5h16v14H4zM12 5v14',
+  pastor_message: 'M4 5h16v10H8l-4 4zM8 9h8M8 12h5',
+  church_intro: 'M12 3l8 6v11H4V9zM9 20v-5h6v5M12 3v3',
+  mission_vision: 'M12 21a9 9 0 100-18 9 9 0 000 18zM12 15a3 3 0 100-6 3 3 0 000 6zM12 12h.01',
+  features_grid: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
+  steps_list: 'M5 6h2v2H5zM5 11h2v2H5zM5 16h2v2H5zM10 7h9M10 12h9M10 17h9',
+  recent_sermons: 'M12 3a3 3 0 013 3v5a3 3 0 11-6 0V6a3 3 0 013-3zM5 11a7 7 0 0014 0M12 18v3',
+  recent_bulletins: 'M7 3h7l4 4v14H7zM14 3v4h4M9 12h7M9 16h7',
+  event_grid: 'M4 5h16v15H4zM4 9h16M8 3v4M16 3v4M8 13h3v3H8z',
+  album_gallery: 'M4 5h16v14H4zM4 16l4-4 3 3 4-4 5 5M9 10a1 1 0 11-2 0 1 1 0 012 0z',
+  staff_grid: 'M9 11a3 3 0 100-6 3 3 0 000 6zM3 20a6 6 0 0112 0M17 11a3 3 0 10-2-5M21 20a6 6 0 00-5-5.7',
+  cell_grid: 'M12 3l8 7v10H4V10zM9 20v-6h6v6',
+  history_timeline: 'M6 3v18M6 7h6M6 12h8M6 17h5M6 7a1.5 1.5 0 100-3 1.5 1.5 0 000 3z',
+  recent_columns: 'M5 4h11l3 3v13H5zM9 9h6M9 13h6M9 17h4',
+  video_board: 'M3 6h18v12H3zM10 9.5l5 2.5-5 2.5z',
+  schedule_board: 'M4 5h16v15H4zM4 9h16M8 3v4M16 3v4M8 13h8M8 16h5',
+  board: 'M5 4h14v16H5zM9 4V2h6v2M9 11h6M9 15h6M9 8h.01',
+  contact_form: 'M4 5h16v14H4zM4 9l8 5 8-5M8 13h4',
+  cell_report: 'M7 3h10v18H7zM10 7h4M9 11h6M9 15h6',
+  custom_form: 'M5 4h14v16H5zM9 8h6M9 12h6M9 16h3',
+  text_image: 'M4 5h7v14H4zM14 8h6M14 12h6M14 16h4',
+  text_only: 'M5 6h14M5 10h14M5 14h10M5 18h7',
+  quote_block: 'M8 7H5v5h3a3 3 0 01-3 3M19 7h-3v5h3a3 3 0 01-3 3',
+  logo_title: 'M5 7a3 3 0 013-3h2v6H8a3 3 0 01-3-3zM13 5h6M13 9h4M13 14h7M13 18h5',
+  button_group: 'M4 9h7a2 2 0 012 2v2a2 2 0 01-2 2H4zM16 9h4M16 15h4',
+  worship_times: 'M12 21a9 9 0 100-18 9 9 0 000 18zM12 7v5l3 2',
+  map_embed: 'M9 4L3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14',
+  address_info: 'M12 21s7-6.3 7-11a7 7 0 10-14 0c0 4.7 7 11 7 11zM12 12a2.5 2.5 0 100-5 2.5 2.5 0 000 5z',
+  visitor_welcome: 'M12 20s-7-4.3-7-9a4 4 0 017-2.6A4 4 0 0119 11c0 4.7-7 9-7 9z',
+  first_time_guide: 'M12 21a9 9 0 100-18 9 9 0 000 18zM15 9l-2 5-4 1 2-5z',
+  call_to_action: 'M11 5.9 18 13l-2.1 2.1M18 13a3 3 0 100-6M5 13.7A4 4 0 017 7h1.8c4 0 7-1.2 8.5-3v14',
+  newsletter_signup: 'M4 6h16v12H4zM4 8l8 5 8-5',
+  layout_row: 'M3 12h18M9 8l-4 4 4 4M15 8l4 4-4 4',
+  layout_columns: 'M4 5h16v14H4zM10 5v14M16 5v14',
+  layout_section: 'M4 5h16v14H4zM4 9h16',
+  divider: 'M4 12h16M7 12v0M17 12v0',
+  section_header: 'M4 6h16M4 11h10M4 16h7',
+  location_map: 'M9 4L3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14',
+  directions_split: 'M12 21s7-6.3 7-11a7 7 0 10-14 0c0 4.7 7 11 7 11zM12 12a2.5 2.5 0 100-5 2.5 2.5 0 000 5z',
+  schedule_split: 'M4 5h16v15H4zM4 9h16M8 3v4M16 3v4',
+  contact_info: 'M7 3h10v18H7zM10 18h4M10 6h4',
+  newcomer_info: 'M9 11a3 3 0 100-6 3 3 0 000 6zM3 20a6 6 0 0111 .5M17 8v6M14 11h6',
+  giving_info: 'M3 7h18v10H3zM3 11h18M7 14h3',
+  worship_schedule: 'M12 21a9 9 0 100-18 9 9 0 000 18zM12 7v5l3 2',
+  video: 'M3 6h18v12H3zM10 9.5l5 2.5-5 2.5z',
+  image_gallery: 'M4 5h16v14H4zM4 16l4-4 3 3 4-4 5 5M9 10a1 1 0 11-2 0 1 1 0 012 0z',
+};
+const DEFAULT_BLOCK_ICON = 'M5 5h14v14H5z';
+
+function BlockGlyph({ type, className }: { type: string; className?: string }) {
+  return (
+    <svg className={className ?? 'w-[18px] h-[18px]'} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={BLOCK_ICON_PATHS[type] ?? DEFAULT_BLOCK_ICON} />
+    </svg>
+  );
+}
+
 interface BlockDef {
   type: string;
   label: string;
@@ -329,7 +395,7 @@ function BlockPalette({ onAdd }: { onAdd: (type: string) => void }) {
                       role="button"
                       tabIndex={0}
                     >
-                      <span className="text-base">{block.icon}</span>
+                      <span className="text-gray-500"><BlockGlyph type={block.type} className="w-4 h-4" /></span>
                       <span className={`truncate font-medium flex-1 ${tone.label}`}>{block.label}</span>
                       <span className="text-[10px] flex-shrink-0" title={block.nature === 'dynamic' ? '데이터 블록' : block.nature === 'layout' ? '레이아웃 블록' : '스태틱 블록'}>
                         {block.nature === 'dynamic' ? '⚡' : block.nature === 'layout' ? '📦' : '📄'}
@@ -359,7 +425,7 @@ function BlockPalette({ onAdd }: { onAdd: (type: string) => void }) {
                       role="button"
                       tabIndex={0}
                     >
-                      <span className="text-xl">{block.icon}</span>
+                      <span className="text-gray-600"><BlockGlyph type={block.type} className="w-5 h-5" /></span>
                       <span className={`text-[10px] font-medium leading-tight ${tone.label}`}>{block.label}</span>
                       <span className="text-[9px] flex-shrink-0" title={block.nature === 'dynamic' ? '데이터 블록' : block.nature === 'layout' ? '레이아웃 블록' : '스태틱 블록'}>
                         {block.nature === 'dynamic' ? '⚡' : block.nature === 'layout' ? '📦' : '📄'}
@@ -809,7 +875,7 @@ function ChildBlockPicker({ onSelect, onClose }: { onSelect: (type: string) => v
                     onClick={() => onSelect(b.type)}
                     className="flex flex-col items-center gap-1 p-2 rounded-lg border border-gray-200 hover:border-indigo-400 hover:bg-indigo-50 transition-colors"
                   >
-                    <span className="text-lg">{b.icon}</span>
+                    <span className="text-gray-500"><BlockGlyph type={b.type} className="w-[18px] h-[18px]" /></span>
                     <span className="text-[10px] font-medium text-gray-700">{b.label}</span>
                     <span className="text-[9px] text-gray-400">{b.nature === 'dynamic' ? '⚡ 데이터' : '📄 스태틱'}</span>
                   </button>
@@ -862,7 +928,7 @@ function LayoutChildEditor({
         >
           {expanded ? '▼' : '▶'}
         </button>
-        <span className="text-xs">{childDef.icon}</span>
+        <span className="text-gray-500"><BlockGlyph type={childDef.type} className="w-4 h-4" /></span>
         <span className="text-xs font-medium text-gray-700 flex-1 truncate">
           {childDef.label}
           {!!child.props.title && <span className="text-gray-400 ml-1">— {String(child.props.title).slice(0, 20)}</span>}
@@ -1149,7 +1215,7 @@ function SectionCard({
           </div>
         )}
 
-        <span className="text-lg flex-shrink-0">{def?.icon || '?'}</span>
+        <span className="flex-shrink-0 text-gray-500"><BlockGlyph type={section.blockType} className="w-[18px] h-[18px]" /></span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <span className={`text-sm font-medium truncate ${!section.isVisible ? 'line-through text-gray-400' : ''}`}>
