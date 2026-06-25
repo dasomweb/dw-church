@@ -322,6 +322,13 @@ function PageHero({ props }: HeroBannerBlockProps) {
   const overlay = { ...readOverlayProps(props), opacity:
     typeof props.overlayOpacity === 'number' ? (props.overlayOpacity as number) : 60 };
 
+  // page-hero is a compact sub-page strip, so it defaults to 'sm' — but it must
+  // honor the operator's Height (Style → Layout → Height) like every other
+  // variant. Previously this was a hardcoded min-h-[240px] sm:min-h-[300px], so
+  // height edits silently did nothing on AI-generated sub-page heroes (which the
+  // builder emits as variant='page-hero').
+  const height = (props.height as string) || 'sm';
+  const heightClass = HEIGHT_MAP[height] || HEIGHT_MAP.sm;
   const alignClass = ALIGN_MAP[textAlign] || ALIGN_MAP.left;
   const isContained = resolveWidth(props) === 'contained';
   const contentWidth = resolveContentWidth(props);
@@ -329,7 +336,7 @@ function PageHero({ props }: HeroBannerBlockProps) {
   return (
     <section className={isContained ? 'px-4 sm:px-6 py-4' : ''}>
       <div
-        className={`relative flex min-h-[240px] sm:min-h-[300px] items-center overflow-hidden ${isContained ? 'mx-auto max-w-7xl rounded-2xl' : ''}`}
+        className={`relative flex ${heightClass} items-center overflow-hidden ${isContained ? 'mx-auto max-w-7xl rounded-2xl' : ''}`}
       >
         {bgImage ? (
           <SectionBackground
