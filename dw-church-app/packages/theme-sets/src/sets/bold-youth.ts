@@ -39,6 +39,8 @@ export const boldYouth: ThemeSet = {
         background: '#ffffff',
         border: '#e9d5ff',
         surface: '#faf5ff',
+        onDark: '#ffffff',
+        onDarkMuted: 'rgba(255,255,255,0.85)',
       },
       custom: {},
     },

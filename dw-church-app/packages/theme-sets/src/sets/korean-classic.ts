@@ -27,6 +27,8 @@ export const koreanClassic: ThemeSet = {
         background: '#faf6ef',
         border: '#e6ddcf',
         surface: '#f2ebdd',
+        onDark: '#ffffff',
+        onDarkMuted: 'rgba(255,255,255,0.85)',
       },
       custom: {},
     },

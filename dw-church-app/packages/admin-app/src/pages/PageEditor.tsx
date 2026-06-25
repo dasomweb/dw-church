@@ -41,7 +41,7 @@ interface BlockDef {
   nature: 'static' | 'dynamic' | 'layout';
   variants: BlockVariant[];
   defaultProps: Record<string, unknown>;
-  editableFields: { key: string; label: string; type: 'text' | 'textarea' | 'richtext' | 'number' | 'select' | 'image' | 'images' | 'url' | 'array' | 'tags' | 'services' | 'buttons' | 'groups'; options?: { label: string; value: string }[]; max?: number }[];
+  editableFields: { key: string; label: string; type: 'text' | 'textarea' | 'richtext' | 'number' | 'select' | 'image' | 'images' | 'url' | 'array' | 'tags' | 'services' | 'buttons' | 'groups' | 'cardItems'; options?: { label: string; value: string }[]; max?: number; withImage?: boolean }[];
 }
 
 // CONTENT_ONLY — tenant page editor is locked to "글·사진만 수정" per the
@@ -64,6 +64,8 @@ const BLOCK_DEFS: BlockDef[] = [
   { type: 'pastor_message', label: '담임목사 인사', category: '소개', icon: '🙏', nature: 'static', description: '담임목사 인사말', variants: [{ id: 'right', label: '사진 우측' }, { id: 'left', label: '사진 좌측' }], defaultProps: { pastorName: '', message: '', layout: 'right' }, editableFields: [{ key: 'title', label: '섹션 제목', type: 'text' }, { key: 'pastorName', label: '이름', type: 'text' }, { key: 'pastorTitle', label: '직함', type: 'text' }, { key: 'message', label: '인사말', type: 'richtext' }, { key: 'imageUrl', label: '사진', type: 'image' }] },
   { type: 'church_intro', label: '교회 소개', category: '소개', icon: '⛪', nature: 'static', description: '교회 소개 텍스트', variants: [{ id: 'with-image', label: '이미지 포함' }, { id: 'text-only', label: '텍스트만' }], defaultProps: { content: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'content', label: '소개글', type: 'richtext' }, { key: 'imageUrl', label: '이미지', type: 'image' }] },
   { type: 'mission_vision', label: '미션/비전', category: '소개', icon: '🎯', nature: 'static', description: '미션, 비전, 핵심 가치', variants: [{ id: 'cards-4', label: '4열 카드' }, { id: 'cards-3', label: '3열 카드' }, { id: 'cards-2', label: '2열 카드' }, { id: 'list', label: '리스트' }], defaultProps: { content: '' }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'content', label: '내용', type: 'richtext' }] },
+  { type: 'features_grid', label: '특징·사역 그리드', category: '소개', icon: '🧩', nature: 'static', description: '아이콘/사진 + 제목 + 설명 카드 그리드', variants: [{ id: 'columns-3', label: '3열' }, { id: 'columns-2', label: '2열' }, { id: 'columns-4', label: '4열' }], defaultProps: { title: '', items: [] }, editableFields: [{ key: 'eyebrow', label: '라벨(윗글)', type: 'text' }, { key: 'title', label: '제목', type: 'text' }, { key: 'subtitle', label: '부제', type: 'text' }, { key: 'columns', label: '열 수', type: 'select', options: [{ label: '2열', value: '2' }, { label: '3열', value: '3' }, { label: '4열', value: '4' }] }, { key: 'items', label: '카드 항목', type: 'cardItems', withImage: true }] },
+  { type: 'steps_list', label: '단계·절차', category: '소개', icon: '🪜', nature: 'static', description: '번호가 있는 단계/절차 목록', variants: [{ id: 'left', label: '좌측' }, { id: 'center', label: '중앙' }], defaultProps: { title: '', items: [] }, editableFields: [{ key: 'eyebrow', label: '라벨(윗글)', type: 'text' }, { key: 'title', label: '제목', type: 'text' }, { key: 'subtitle', label: '부제', type: 'text' }, { key: 'items', label: '단계 항목', type: 'cardItems', withImage: false }] },
 
   // ─── Content ───────────────────────────────────
   { type: 'recent_sermons', label: '설교', category: '콘텐츠', icon: '🎤', nature: 'dynamic', description: '최근 설교 목록', variants: [{ id: 'grid-4', label: '4열' }, { id: 'grid-3', label: '3열' }, { id: 'grid-2', label: '2열' }, { id: 'list', label: '리스트' }], defaultProps: { limit: 6 }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'limit', label: '표시 개수', type: 'number' }] },
@@ -523,6 +525,55 @@ function ServiceListEditor({ value, onChange }: { value: { name: string; time: s
         <input value={newLoc} onChange={(e) => setNewLoc(e.target.value)} placeholder="장소" className="border rounded px-2 py-1 text-xs" />
       </div>
       <button type="button" onClick={handleAdd} disabled={!newName.trim()} className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 disabled:opacity-50">추가</button>
+    </div>
+  );
+}
+
+// Card/list repeater — edits the items[] array of list-based blocks
+// (features_grid cards, steps_list steps): per-item 제목 / 내용 / 사진.
+// Photo upload only renders when `withImage` (features_grid); steps_list hides it.
+interface CardItem { title?: string; description?: string; imageUrl?: string; [k: string]: unknown }
+function CardItemsEditor({
+  value, onChange, onUpload, withImage,
+}: {
+  value: CardItem[];
+  onChange: (v: CardItem[]) => void;
+  onUpload: (file: File) => Promise<string>;
+  withImage: boolean;
+}) {
+  const items = Array.isArray(value) ? value : [];
+  const update = (i: number, patch: Partial<CardItem>) =>
+    onChange(items.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
+  const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i));
+  const move = (i: number, dir: 'up' | 'down') => {
+    const j = dir === 'up' ? i - 1 : i + 1;
+    if (j < 0 || j >= items.length) return;
+    const arr = [...items];
+    const tmp = arr[i]!; arr[i] = arr[j]!; arr[j] = tmp;
+    onChange(arr);
+  };
+  const add = () => onChange([...items, { title: '', description: '', ...(withImage ? { imageUrl: '' } : {}) }]);
+
+  return (
+    <div className="space-y-2">
+      {items.map((it, i) => (
+        <div key={i} className="rounded-lg border border-gray-200 p-2 space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-medium text-gray-400">#{i + 1}</span>
+            <div className="flex gap-1">
+              <button type="button" onClick={() => move(i, 'up')} disabled={i === 0} className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-[11px]">▲</button>
+              <button type="button" onClick={() => move(i, 'down')} disabled={i === items.length - 1} className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-[11px]">▼</button>
+              <button type="button" onClick={() => remove(i)} className="text-red-400 hover:text-red-600 text-[11px]">×</button>
+            </div>
+          </div>
+          <input value={(it.title as string) || ''} onChange={(e) => update(i, { title: e.target.value })} placeholder="제목" className="w-full border rounded px-2 py-1 text-xs" />
+          <textarea value={(it.description as string) || ''} onChange={(e) => update(i, { description: e.target.value })} placeholder="내용" rows={2} className="w-full border rounded px-2 py-1 text-xs resize-y" />
+          {withImage && (
+            <ImageUpload value={(it.imageUrl as string) || ''} onChange={(url) => update(i, { imageUrl: url })} onUpload={onUpload} aspectRatio="4/3" />
+          )}
+        </div>
+      ))}
+      <button type="button" onClick={add} className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">+ 항목 추가</button>
     </div>
   );
 }
@@ -1305,6 +1356,13 @@ function SectionCard({
                   <ScheduleGroupsEditor
                     value={(props[field.key] as SchedGroup[]) || []}
                     onChange={(val) => set(field.key, val)}
+                  />
+                ) : field.type === 'cardItems' ? (
+                  <CardItemsEditor
+                    value={(props[field.key] as CardItem[]) || []}
+                    onChange={(val) => set(field.key, val)}
+                    onUpload={onUploadImage}
+                    withImage={field.withImage ?? true}
                   />
                 ) : (
                   <input

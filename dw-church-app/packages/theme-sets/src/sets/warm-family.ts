@@ -27,6 +27,8 @@ export const warmFamily: ThemeSet = {
         background: '#fffaf5',
         border: '#f0e3d6',
         surface: '#fdf2e9',
+        onDark: '#ffffff',
+        onDarkMuted: 'rgba(255,255,255,0.85)',
       },
       custom: {},
     },

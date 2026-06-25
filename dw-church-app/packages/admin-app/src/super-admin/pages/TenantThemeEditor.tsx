@@ -67,6 +67,8 @@ const COLOR_LABELS: Record<keyof SystemColorTokens, string> = {
   background: '배경 (Background)',
   border:     '테두리 (Border)',
   surface:    '표면 (Surface)',
+  onDark:      '어두운 배경 글자 (On-Dark)',
+  onDarkMuted: '어두운 배경 보조글자 (On-Dark Muted)',
 };
 
 const SCALE_LABELS: Record<TypographyScaleName, string> = {

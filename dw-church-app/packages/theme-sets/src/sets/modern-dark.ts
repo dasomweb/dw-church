@@ -27,6 +27,8 @@ export const modernDark: ThemeSet = {
         background: '#0f172a',
         border: '#1e293b',
         surface: '#1e293b',
+        onDark: '#ffffff',
+        onDarkMuted: 'rgba(255,255,255,0.85)',
       },
       custom: {},
     },

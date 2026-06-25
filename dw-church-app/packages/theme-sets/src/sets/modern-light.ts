@@ -39,6 +39,8 @@ export const modernLight: ThemeSet = {
         background: '#ffffff',
         border: '#e2e8f0',
         surface: '#f8fafc',
+        onDark: '#ffffff',
+        onDarkMuted: 'rgba(255,255,255,0.85)',
       },
       custom: {},
     },

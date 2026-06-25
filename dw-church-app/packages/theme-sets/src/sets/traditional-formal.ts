@@ -27,6 +27,8 @@ export const traditionalFormal: ThemeSet = {
         background: '#ffffff',
         border: '#dfe3e8',
         surface: '#f5f3ee',
+        onDark: '#ffffff',
+        onDarkMuted: 'rgba(255,255,255,0.85)',
       },
       custom: {},
     },
