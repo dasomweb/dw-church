@@ -259,13 +259,13 @@ function ApplyForm() {
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">기존 웹사이트 주소 <span className="text-gray-400">(있으면 — 디자인·구조 참고용)</span></label>
+        <label className="mb-1 block text-sm font-medium text-gray-700">기존 웹사이트 주소 <span className="text-gray-400">(있으면 — 콘텐츠 마이그레이션용)</span></label>
         <input value={form.existingUrl || ''} onChange={set('existingUrl')} className={inputCls} placeholder="https://" />
       </div>
       <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">연결할 도메인 <span className="text-gray-400">(직접 구입 — 보유 중이거나 구입 예정인 주소)</span></label>
+        <label className="mb-1 block text-sm font-medium text-gray-700">연결할 도메인 <span className="text-gray-400">(보유 또는 구입 예정 — 타사 도메인 연동 지원)</span></label>
         <input value={form.desiredDomain || ''} onChange={set('desiredDomain')} className={inputCls} placeholder="예: yourchurch.org" />
-        <p className="mt-1 text-xs text-gray-400">도메인은 교회에서 직접 구입하시며, 구입하신 주소를 사이트에 연결해 드립니다.</p>
+        <p className="mt-1 text-xs text-gray-400">보유하신 도메인을 사이트에 연결해 드립니다. 도메인이 없으면 구입 방법도 안내해 드립니다.</p>
       </div>
       <div>
         <label className="mb-1 block text-sm font-medium text-gray-700">교회 소개 / 요청사항</label>
@@ -303,7 +303,7 @@ function ApplyForm() {
         disabled={state === 'submitting' || !form.churchName?.trim() || !form.email?.trim() || !agreed}
         className="w-full rounded-xl bg-blue-600 py-3.5 text-sm font-bold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
       >
-        {state === 'submitting' ? '제출 중...' : '개발 신청서 제출'}
+        {state === 'submitting' ? '제출 중...' : '신청서 제출'}
       </button>
 
       <TermsConsentModal
@@ -335,7 +335,7 @@ export default function ApplyPage() {
 
       <main className="px-4 py-12 sm:px-6 sm:py-16">
         <div className="mb-8 text-center">
-          <h1 className="mb-3 text-3xl font-bold text-gray-900">홈페이지 개발 신청</h1>
+          <h1 className="mb-3 text-3xl font-bold text-gray-900">홈페이지 신청</h1>
           <p className="text-sm leading-relaxed text-gray-500">
             아래 신청서를 작성해 주시면 검토 후 결제 안내를 보내드립니다.<br />
             결제가 확인되면 디자인 셋업과 기본 구성을 시작합니다.

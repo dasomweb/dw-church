@@ -11,7 +11,7 @@ const BROADCAST_PRESETS: { key: string; label: string; subject: string; body: st
     subject: '우리 교회 홈페이지, 관리자 화면을 미리 체험해 보세요 — TRUE LIGHT 데모',
     body: `<p>안녕하세요,</p>
 <p>TRUE LIGHT는 교회 홈페이지를 <strong>전문가가 만들어 드리고</strong>, 이후 설교·주보·앨범·행사 같은 콘텐츠는 교회가 관리자 화면에서 <strong>직접 관리</strong>하는 서비스입니다. 어려운 기술을 배우거나 매번 업체에 맡기지 않아도 됩니다.</p>
-<p>처음 디자인 제작(셋업)은 저희가 교회에 맞춰 진행하고, 오픈 이후 내용은 교회가 직접 올리고 고치시면 됩니다. 실제 관리자 화면을 <strong>데모로 미리</strong> 둘러보세요.</p>
+<p>처음 온보딩(디자인·셋업)은 저희가 교회에 맞춰 진행하고, 오픈 이후 내용은 교회가 직접 올리고 고치시면 됩니다. 실제 관리자 화면을 <strong>데모로 미리</strong> 둘러보세요.</p>
 <p style="text-align:center;margin:28px 0">
   <a href="https://truelight.app" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600">데모 체험 신청하기</a>
 </p>
@@ -22,13 +22,13 @@ const BROADCAST_PRESETS: { key: string; label: string; subject: string; body: st
     label: '서비스 소개',
     subject: '교회 홈페이지, 전문가가 만들고 교회가 관리하세요 — TRUE LIGHT',
     body: `<p>안녕하세요,</p>
-<p>TRUE LIGHT는 미주 한인교회를 위한 홈페이지 서비스입니다. 처음 디자인과 제작은 전문가가 교회에 맞춰 진행하고(셋업), 이후에는 교회가 관리자 화면에서 콘텐츠를 직접 운영합니다.</p>
+<p>TRUE LIGHT는 미주 한인교회를 위한 홈페이지 서비스입니다. 처음 온보딩(디자인·셋업)은 전문가가 교회에 맞춰 진행하고, 이후에는 교회가 관리자 화면에서 콘텐츠를 직접 운영합니다.</p>
 <ul>
   <li>설교·주보·앨범·행사·교역자·게시판을 직접 입력 — 올리면 홈페이지에 바로 반영</li>
   <li>휴대폰에서도 잘 보이는 6가지 디자인</li>
   <li>처음 디자인·제작은 전문가가, 이후 콘텐츠 관리는 교회가 직접</li>
 </ul>
-<p>처음 한 번의 디자인 셋업비와 매달 정해진 이용료로 시작하고, 교회에 맞춰 기능을 더할 수 있습니다.</p>
+<p>처음 한 번의 셋업비와 매달 정해진 이용료로 시작하고, 교회에 맞춰 기능을 더할 수 있습니다.</p>
 <p style="text-align:center;margin:28px 0">
   <a href="https://truelight.app" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600">자세히 보기</a>
 </p>
@@ -46,7 +46,7 @@ const BROADCAST_PRESETS: { key: string; label: string; subject: string; body: st
   <li><strong>플러스</strong> — 게시판·행사·관리자 여러 명</li>
   <li><strong>프로</strong> — 모든 기능과 우선 지원</li>
 </ul>
-<p>모든 요금제는 처음 한 번의 전문가 디자인 셋업(별도 셋업비)으로 시작하며, 이후에는 교회가 콘텐츠를 직접 관리합니다.</p>
+<p>모든 요금제는 처음 한 번의 온보딩(셋업비)으로 시작하며, 이후에는 교회가 콘텐츠를 직접 관리합니다.</p>
 <p style="text-align:center;margin:28px 0">
   <a href="https://truelight.app#plans" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600">요금 안내 보기</a>
 </p>
@@ -58,7 +58,7 @@ const BROADCAST_PRESETS: { key: string; label: string; subject: string; body: st
     subject: '데모는 어떠셨나요? 우리 교회 이름으로 시작하세요',
     body: `<p>안녕하세요,</p>
 <p>TRUE LIGHT 데모를 이용해 주셔서 감사합니다. 관리자 화면에서 직접 다뤄 보시니 어떠셨나요?</p>
-<p>이제 우리 교회 이름으로 시작하실 차례입니다. 요금제를 정하시면 처음 디자인·제작은 저희가 교회에 맞춰 진행하고(셋업), 오픈 이후 콘텐츠 관리는 교회가 직접 이어가시면 됩니다.</p>
+<p>이제 우리 교회 이름으로 시작하실 차례입니다. 요금제를 정하시면 처음 온보딩(디자인·셋업)은 저희가 교회에 맞춰 진행하고, 오픈 이후 콘텐츠 관리는 교회가 직접 이어가시면 됩니다.</p>
 <p style="text-align:center;margin:28px 0">
   <a href="https://truelight.app/apply" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600">신청하고 시작하기</a>
 </p>
