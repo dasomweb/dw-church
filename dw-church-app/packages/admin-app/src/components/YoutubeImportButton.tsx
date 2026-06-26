@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { YoutubeSource, YoutubeImportVideo } from '@dw-church/api-client';
 import { useDWChurchClient } from '@dw-church/api-client';
 import { useToast } from './index';
+import { useAuthStore } from '../stores/auth';
 
 interface Props {
   target: 'sermons' | 'videos';
@@ -27,6 +28,8 @@ const SOURCE_LABEL: Record<YoutubeSource['type'], string> = {
 export default function YoutubeImportButton({ target, categories, preachers = [], onDone }: Props) {
   const client = useDWChurchClient();
   const { showToast } = useToast();
+  // Super-admin only — bulk YouTube import is an operator tool.
+  const isSuperAdmin = !!useAuthStore((s) => s.session)?.user?.isSuperAdmin;
 
   const [open, setOpen] = useState(false);
   const [stage, setStage] = useState<Stage>('input');
@@ -104,6 +107,8 @@ export default function YoutubeImportButton({ target, categories, preachers = []
   };
 
   const newCount = videos.filter((v) => !v.alreadyImported).length;
+
+  if (!isSuperAdmin) return null;
 
   return (
     <>
