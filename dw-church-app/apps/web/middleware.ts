@@ -74,27 +74,46 @@ export async function middleware(request: NextRequest) {
   }
 
   // Custom domain handling — host is not a platform host (= tenant's
-  // own domain reached via Cloudflare for SaaS + Worker, OR a direct
-  // hit if DNS is mis-set). Look up via API to find the tenant slug.
+  // own domain reached via Cloudflare for SaaS + Worker). Map it to its
+  // tenant. A custom domain must NEVER fall through to the marketing site
+  // (that would break multi-tenancy — a church domain showing TRUE LIGHT's
+  // landing page). Unknown → 404; apex → redirect to the www version.
   if (!isPlatformHost(hostname)) {
-    try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api.truelight.app';
-      const res = await fetch(
-        `${apiBase}/api/v1/admin/tenants/resolve-domain?domain=${encodeURIComponent(hostname.split(':')[0] ?? hostname)}`,
-        { headers: { 'x-internal': '1' }, next: { revalidate: 60 } },
-      );
-      if (res.ok) {
-        const { slug } = (await res.json()) as { slug: string };
-        if (slug) {
-          const url = new URL(`/tenant/${slug}${pathname}`, request.url);
-          url.search = request.nextUrl.search;
-          return NextResponse.rewrite(url);
-        }
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api.truelight.app';
+    const bareHost = hostname.split(':')[0] ?? hostname;
+    const resolveSlug = async (domain: string): Promise<string | null> => {
+      try {
+        const res = await fetch(
+          `${apiBase}/api/v1/admin/tenants/resolve-domain?domain=${encodeURIComponent(domain)}`,
+          { headers: { 'x-internal': '1' }, next: { revalidate: 60 } },
+        );
+        if (!res.ok) return null;
+        const { slug } = (await res.json()) as { slug: string | null };
+        return slug || null;
+      } catch {
+        return null;
       }
-    } catch {
-      // If the lookup fails, fall through to default behavior
+    };
+
+    // 1) This exact host is a mapped custom domain → serve its tenant.
+    const slug = await resolveSlug(bareHost);
+    if (slug) {
+      const url = new URL(`/tenant/${slug}${pathname}`, request.url);
+      url.search = request.nextUrl.search;
+      return NextResponse.rewrite(url);
     }
-    return NextResponse.next();
+
+    // 2) Apex (no www) whose www. version IS mapped → 308 to the www host.
+    //    Apex can't be a CNAME target, so www is the canonical entry point.
+    if (!bareHost.startsWith('www.') && (await resolveSlug(`www.${bareHost}`))) {
+      const target = new URL(`https://www.${bareHost}${pathname}`);
+      target.search = request.nextUrl.search;
+      return NextResponse.redirect(target, 308);
+    }
+
+    // 3) Unknown custom domain — show 404, never the marketing landing page.
+    const notFound = new URL('/not-found', request.url);
+    return NextResponse.rewrite(notFound, { status: 404 });
   }
 
   // Extract tenant slug from subdomain (e.g. lagrangechurch.truelight.app)
