@@ -96,6 +96,7 @@ async function main(): Promise<void> {
   const { contentEntryRoutes } = await import('./modules/content-entries/routes.js');
   const { boardRoutes } = await import('./modules/boards/routes.js');
   const { domainRoutes } = await import('./modules/domains/routes.js');
+  const { youtubeImportRoutes } = await import('./modules/youtube-import/routes.js');
 
   const { aiRoutes } = await import('./modules/ai/routes.js');
   const { default: billingRoutes } = await import('./modules/billing/routes.js');
@@ -181,6 +182,7 @@ async function main(): Promise<void> {
   await app.register(aiRoutes, { prefix: '/api/v1' });
   await app.register(boardRoutes, { prefix: '/api/v1' });
   await app.register(domainRoutes, { prefix: '/api/v1' });
+  await app.register(youtubeImportRoutes, { prefix: '/api/v1' });
   await app.register(migrationRoutes, { prefix: '/api/v1/migration' });
   await app.register(sharedImageRoutes, { prefix: '/api/v1' });
   await app.register(exportRoutes, { prefix: '/api/v1' }); // /export

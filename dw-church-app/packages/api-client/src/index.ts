@@ -15,6 +15,8 @@ export type {
   Video,
   VideoCategory,
   VideoListParams,
+  YoutubeSource,
+  YoutubeImportVideo,
   Schedule,
   ScheduleListParams,
   Banner,

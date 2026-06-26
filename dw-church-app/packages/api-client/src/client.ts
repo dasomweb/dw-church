@@ -47,6 +47,8 @@ import type {
   Video,
   VideoCategory,
   VideoListParams,
+  YoutubeSource,
+  YoutubeImportVideo,
   Schedule,
   ScheduleListParams,
 } from './types';
@@ -481,6 +483,37 @@ export class DWChurchClient {
   async createVideo(data: Omit<Video, 'id' | 'createdAt' | 'categoryName'>): Promise<Video> {
     const res = await this.api.post(`${this.namespace}/videos`, data);
     return unwrapData(res);
+  }
+
+  // ─── YouTube import (sermons / videos) ──────────────────────────────
+  async youtubeImportStatus(): Promise<{ configured: boolean }> {
+    const res = await this.api.get(`${this.namespace}/youtube-import/status`);
+    return unwrapData(res) as { configured: boolean };
+  }
+
+  /** List importable sources on a channel/playlist URL: whole uploads, each playlist, live. */
+  async youtubeImportSources(channel: string): Promise<{ channelTitle: string; sources: YoutubeSource[] }> {
+    const res = await this.api.post(`${this.namespace}/youtube-import/sources`, { channel });
+    return unwrapData(res) as { channelTitle: string; sources: YoutubeSource[] };
+  }
+
+  /** Fetch the videos of a chosen source (oldest first, already-imported flagged). */
+  async youtubeImportFetch(source: YoutubeSource, target: 'sermons' | 'videos'): Promise<{
+    videos: YoutubeImportVideo[];
+  }> {
+    const res = await this.api.post(`${this.namespace}/youtube-import/fetch`, { source, target });
+    return unwrapData(res) as { videos: YoutubeImportVideo[] };
+  }
+
+  async youtubeImportApply(input: {
+    target: 'sermons' | 'videos';
+    status?: 'draft' | 'published';
+    categoryId?: string | null;
+    preacher?: string | null;
+    videos: YoutubeImportVideo[];
+  }): Promise<{ imported: number; skipped: number }> {
+    const res = await this.api.post(`${this.namespace}/youtube-import/apply`, input);
+    return unwrapData(res) as { imported: number; skipped: number };
   }
 
   async updateVideo(id: string, data: Partial<Video>): Promise<Video> {

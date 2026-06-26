@@ -13,6 +13,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { FormField, FormSection, FormRow, inputClass, selectClass, useToast, ConfirmDialog, EmptyState, TableSkeleton, CategoryManager, ImageUpload } from '../components';
 import { ContentMigrationButton } from '../components/ContentMigrationButton';
+import YoutubeImportButton from '../components/YoutubeImportButton';
 import { useBulkDelete } from '../components/useBulkDelete';
 
 // ─── YouTube 썸네일 유틸 ──────────────────────────────────
@@ -453,6 +454,12 @@ export default function SermonManagement() {
             </button>
           )}
           <ContentMigrationButton contentType="sermons" label="설교" onDone={() => refetch()} />
+          <YoutubeImportButton
+            target="sermons"
+            categories={(categories ?? []).map((c) => ({ id: c.id, name: c.name }))}
+            preachers={(preachers ?? []).map((p) => ({ id: p.id, name: p.name }))}
+            onDone={() => refetch()}
+          />
           <button
             onClick={handleCreate}
             className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"

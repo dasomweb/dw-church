@@ -10,6 +10,7 @@ import {
   useDWChurchClient,
 } from '@dw-church/api-client';
 import { FormField, FormSection, FormRow, inputClass, selectClass, useToast, ConfirmDialog, EmptyState, CardSkeleton, CategoryManager } from '../components';
+import YoutubeImportButton from '../components/YoutubeImportButton';
 import { useBulkDelete } from '../components/useBulkDelete';
 
 interface VideoFormData {
@@ -205,6 +206,11 @@ export default function VideoManagement() {
               선택 삭제 ({bulk.count})
             </button>
           )}
+          <YoutubeImportButton
+            target="videos"
+            categories={(categories ?? []).map((c) => ({ id: c.id, name: c.name }))}
+            onDone={() => refetch()}
+          />
           <button
             onClick={handleCreate}
             className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"

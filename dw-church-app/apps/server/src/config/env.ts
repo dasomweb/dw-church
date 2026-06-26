@@ -89,6 +89,11 @@ const envSchema = z.object({
   RAILWAY_API_TOKEN: z.string().default(''),
   RAILWAY_WEB_SERVICE_ID: z.string().default(''),
   RAILWAY_ENVIRONMENT_ID: z.string().default(''),
+
+  // YouTube Data API v3 key — powers the "YouTube에서 가져오기" import on the
+  // sermon / video admin pages (channels.list + playlistItems.list). Optional;
+  // when missing, the import endpoints return a "not configured" message.
+  YOUTUBE_API_KEY: z.string().default(''),
 });
 
 export type Env = z.infer<typeof envSchema>;

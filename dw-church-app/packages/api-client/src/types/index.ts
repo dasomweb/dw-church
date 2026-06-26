@@ -74,6 +74,28 @@ export interface VideoCategory {
   createdAt: string;
 }
 
+// ─── YouTube import (가져오기) ───────────────────────────────
+/** A selectable import source on a channel: whole uploads, a playlist, or live. */
+export interface YoutubeSource {
+  type: 'uploads' | 'playlist' | 'live';
+  id: string;          // playlist id (uploads/playlist) or channel id (live)
+  title: string;
+  count: number | null; // item count when known
+}
+
+/** One importable video; scripture/sermonDate are best-effort extracted. */
+export interface YoutubeImportVideo {
+  videoId: string;
+  title: string;
+  description: string;
+  publishedAt: string;
+  url: string;
+  thumbnailUrl: string;
+  scripture: string;
+  sermonDate: string;
+  alreadyImported?: boolean;
+}
+
 // ─── Schedule (예배 및 모임) ─────────────────────────────────
 // Each row is a titled GROUP: columns[] are the 3 header strings, rows[][]
 // is a string[][] where each inner array is one row matching the columns.
