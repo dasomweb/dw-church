@@ -17,8 +17,8 @@ const COPY: Record<Lang, {
     title: '데모 체험 신청',
     subtitle: '실제 관리자 화면을 직접 둘러보세요. 접속 정보를 이메일로 보내드립니다.',
     name: '이름', church: '교회명', email: '이메일', phone: '연락처 (선택)', message: '문의사항 (선택)',
-    submit: '신청하기', sending: '신청 중…', done: '신청이 접수되었습니다',
-    doneDesc: '담당자가 확인 후 접속 정보를 보내드리겠습니다. 감사합니다.', close: '닫기',
+    submit: '신청하기', sending: '신청 중…', done: '접속 정보를 보내드렸습니다',
+    doneDesc: '신청하신 이메일 주소를 확인해 주세요. 메일이 보이지 않으면 스팸함도 확인해 주세요.', close: '닫기',
     error: '신청 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
   },
   en: {
@@ -26,8 +26,8 @@ const COPY: Record<Lang, {
     title: 'Request a demo',
     subtitle: 'Explore the real admin dashboard. We will email you the access info.',
     name: 'Name', church: 'Church', email: 'Email', phone: 'Phone (optional)', message: 'Message (optional)',
-    submit: 'Request', sending: 'Sending…', done: 'Request received',
-    doneDesc: 'We will review and send your access info shortly. Thank you.', close: 'Close',
+    submit: 'Request', sending: 'Sending…', done: 'Access info sent',
+    doneDesc: 'Please check the email address you entered — and your spam folder if you don’t see it.', close: 'Close',
     error: 'Something went wrong. Please try again in a moment.',
   },
 };
