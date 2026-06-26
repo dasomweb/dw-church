@@ -120,6 +120,20 @@ export async function getCustomHostname(id: string): Promise<CloudflareCustomHos
   );
 }
 
+/**
+ * Look up a custom hostname by its name. Used to recover from Cloudflare's
+ * 1406 "Duplicate custom hostname" — the hostname already exists on the zone
+ * (e.g. an orphan from a prior attempt), so we fetch the existing record and
+ * reuse its id + ownership_verification instead of failing the add.
+ */
+export async function getCustomHostnameByName(hostname: string): Promise<CloudflareCustomHostname | null> {
+  if (!isConfigured() || !hostname) return null;
+  const list = await cfRequest<CloudflareCustomHostname[]>(
+    `/zones/${env.CF_ZONE_ID}/custom_hostnames?hostname=${encodeURIComponent(hostname)}`,
+  );
+  return list.find((h) => h.hostname === hostname) ?? list[0] ?? null;
+}
+
 /** Remove a hostname when the tenant disconnects their domain. */
 export async function deleteCustomHostname(id: string): Promise<void> {
   if (!isConfigured() || !id) return;

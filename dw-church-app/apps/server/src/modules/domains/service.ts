@@ -164,7 +164,22 @@ export async function addDomain(
     hostname = created;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    throw new AppError('CF_API_ERROR', 502, `Cloudflare 호출 실패: ${msg}`);
+    // Cloudflare 1406 = the hostname is already registered on the zone (commonly
+    // an orphan from a prior attempt that didn't persist locally). Reuse the
+    // existing custom hostname instead of surfacing a raw 502.
+    if (/\b1406\b|duplicate custom hostname/i.test(msg)) {
+      const existingHost = await cf.getCustomHostnameByName(domain).catch(() => null);
+      if (!existingHost) {
+        throw new AppError(
+          'DOMAIN_IN_USE',
+          409,
+          `${domain} 은 이미 등록되어 있으나 정보를 불러오지 못했습니다. 잠시 후 다시 시도하거나 슈퍼어드민에게 문의하세요.`,
+        );
+      }
+      hostname = existingHost;
+    } else {
+      throw new AppError('CF_API_ERROR', 502, `Cloudflare 호출 실패: ${msg}`);
+    }
   }
 
   const rows = await prisma.$queryRawUnsafe<CustomDomain[]>(

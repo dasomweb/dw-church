@@ -286,7 +286,7 @@ export default function DomainSettings() {
             onChange={(e) => setNewDomain(e.target.value)}
             placeholder="www.mychurch.com"
             required
-            pattern="^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$"
+            pattern="^[a-z0-9]+(-[a-z0-9]+)*(\.[a-z0-9]+(-[a-z0-9]+)*)+$"
             className="flex-1 border rounded-lg px-3 py-2 text-sm font-mono"
           />
           <button
