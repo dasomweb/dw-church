@@ -94,6 +94,7 @@ curl -s https://api.truelight.app/api/v1/domains/diagnostics \
 | 추가 시 **"A database error occurred" (42P10)** | 옛 테넌트 스키마의 `custom_domains.domain`에 **UNIQUE 제약 없음** → `ON CONFLICT (domain)` 매칭 실패 | upsert를 **삭제 후 삽입(CTE)** 으로 교체 — 제약 유무와 무관, 멱등 |
 | 콘솔 **"Invalid regular expression … Invalid character class"** | Chrome 149가 `pattern`을 `v` 플래그로 컴파일 → `[a-z0-9-]` 거부 | 하이픈을 클래스 밖으로: `^[a-z0-9]+(-[a-z0-9]+)*(\.[a-z0-9]+(-[a-z0-9]+)*)+$` |
 | 루트 도메인 입력 시 **"직접 연결을 지원하지 않습니다"** | apex(루트)는 DNS 표준상 CNAME 불가 — **정상 동작(의도된 거부)** | `www.` 형식으로 입력 + 루트는 등록업체에서 www로 redirect |
+| **커스텀 도메인이 TRUE LIGHT 마케팅 페이지로 뜸** (멀티테넌트 위반!) | ① verify 때 SSL이 아직 pending이라 `public.tenants.custom_domain` 매핑이 안 써짐 → resolve-domain "not found". ② 미들웨어가 매핑 못 찾은 커스텀 도메인을 `NextResponse.next()`(=마케팅)로 fallback | ① SSL 발급 완료 후 **연결 확인** 재실행 → 매핑 기록. ② 미들웨어 수정: 커스텀 도메인은 절대 마케팅으로 안 가고 — 매핑→테넌트 / apex→www 308 / 미지→404 |
 
 ### 도메인이 이미 Cloudflare에 등록돼 있을 때 (정리)
 - **같은 테넌트 재추가** → 기존 것 재사용(멱등).
