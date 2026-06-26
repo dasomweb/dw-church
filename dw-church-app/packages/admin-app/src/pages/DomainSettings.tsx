@@ -19,6 +19,8 @@ interface DnsInstruction {
   name: string;
   value: string;
   ttl?: number;
+  optional?: boolean;
+  label?: string;
 }
 
 // Super-admin-only diagnostics — surfaces whether the Cloudflare-for-SaaS
@@ -401,12 +403,15 @@ export default function DomainSettings() {
                     </p>
                     <div className="space-y-1 text-xs text-gray-700">
                       <p><strong className="text-gray-900">1단계.</strong> 도메인을 구입한 사이트(예: 가비아·GoDaddy·Namecheap·Cloudflare)에 로그인 → <strong>DNS 관리</strong>(또는 “DNS 설정”, “DNS Records”) 메뉴를 엽니다.</p>
-                      <p><strong className="text-gray-900">2단계.</strong> <strong>“레코드 추가”</strong>로 아래 <strong>2개</strong>를 그대로 입력합니다. (값은 <strong>복사</strong> 버튼을 쓰면 정확합니다)</p>
+                      <p><strong className="text-gray-900">2단계.</strong> <strong>“레코드 추가”</strong>로 아래 레코드를 그대로 입력합니다 — <strong>필수 2개</strong>(소유권 TXT + www CNAME), 루트 주소까지 쓰려면 <strong>선택 1개</strong>(apex CNAME). (값은 <strong>복사</strong> 버튼을 쓰면 정확합니다)</p>
                     </div>
                     {instructions.map((rec, i) => (
-                      <div key={i} className="bg-white rounded border p-3 space-y-2">
+                      <div key={i} className={`bg-white rounded border p-3 space-y-2 ${rec.optional ? 'border-dashed' : ''}`}>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-semibold text-gray-500 uppercase">{rec.purpose === 'ownership' ? '1. 소유권 확인 (TXT)' : '2. 트래픽 라우팅 (CNAME)'}</span>
+                          <span className="text-[10px] font-semibold text-gray-500 uppercase">
+                            {rec.label ?? (rec.purpose === 'ownership' ? '1. 소유권 확인 (TXT)' : '2. 트래픽 라우팅 (CNAME)')}
+                          </span>
+                          {rec.optional && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">선택</span>}
                         </div>
                         <div className="grid grid-cols-[80px_1fr] gap-y-1.5 gap-x-3 items-center text-xs">
                           <span className="text-gray-500">Type</span>
@@ -444,15 +449,10 @@ export default function DomainSettings() {
                     {(() => {
                       const root = d.domain.replace(/^www\./, '');
                       return root !== d.domain ? (
-                        <div className="text-[11px] text-gray-500 space-y-0.5">
-                          <p><strong>(선택) 루트 주소도 연결</strong> — <code className="font-mono">{root}</code> 으로 들어오는 분들도 보이게 하려면:</p>
-                          <p className="ml-2">
-                            <strong className="text-gray-700">① Cloudflare·Route53 등 DNS면(권장):</strong> 같은 DNS에 <code className="font-mono">{root}</code> CNAME → <code className="font-mono">customers.truelight.app</code> (Proxied) <strong>한 줄</strong>만 추가하세요. 자동으로 <code className="font-mono">https://{d.domain}</code> 로 연결됩니다.
-                          </p>
-                          <p className="ml-2">
-                            <strong className="text-gray-700">② 일반 등록업체면:</strong> Domain Forwarding(URL Redirect)으로 <code className="font-mono">{root} → https://{d.domain}</code> 설정. (대부분 무료)
-                          </p>
-                        </div>
+                        <p className="text-[11px] text-gray-500">
+                          <strong>루트(apex) 주소</strong>는 위의 <strong>“선택” CNAME</strong> 한 줄로 연결됩니다(Cloudflare·Route53 등 flattening 지원 DNS). 자동으로 <code className="font-mono">https://{d.domain}</code> 로 넘어갑니다.
+                          {' '}apex CNAME을 지원하지 않는 등록업체라면, 대신 <strong>Domain Forwarding(URL Redirect)</strong>으로 <code className="font-mono">{root} → https://{d.domain}</code> 를 설정하세요.
+                        </p>
                       ) : null;
                     })()}
 

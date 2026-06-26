@@ -53,6 +53,10 @@ export interface DnsInstruction {
   /** What they put in "Value/Target" field. */
   value: string;
   ttl?: number;
+  /** Optional record (e.g. apex connection) — UI marks it 선택. */
+  optional?: boolean;
+  /** Custom heading override (else derived from purpose). */
+  label?: string;
 }
 
 function validateDomain(domain: string): string {
@@ -101,6 +105,20 @@ export function buildDnsInstructionsFromCf(
     value: env.CF_FALLBACK_ORIGIN,
     ttl: 300,
   });
+  // Apex (root) connection — optional. One flattened CNAME at the root; our
+  // middleware then 308-redirects apex → www. Only for www.<apex> domains.
+  const apex = domain.replace(/^www\./, '');
+  if (apex !== domain) {
+    records.push({
+      purpose: 'routing',
+      type: 'CNAME',
+      name: apex,
+      value: env.CF_FALLBACK_ORIGIN,
+      ttl: 300,
+      optional: true,
+      label: '3. 루트(apex) 주소 연결 — 선택 (CNAME)',
+    });
+  }
   return records;
 }
 

@@ -40,15 +40,19 @@ https://www.교회도메인.org  정상 접속 (SSL 자동)
 
 도메인 추가 후 화면에 **그대로 복사**할 값이 뜬다. 예시(atlantawakechurch.org):
 
-| Type | Name / Host | Value / Target |
-|---|---|---|
-| **TXT** | `_cf-custom-hostname.www.atlantawakechurch.org` | (Cloudflare가 준 토큰) |
-| **CNAME** | `www` (= www.atlantawakechurch.org) | `customers.truelight.app` |
+| Type | Name / Host | Value / Target | 비고 |
+|---|---|---|---|
+| **TXT** | `_cf-custom-hostname.www.atlantawakechurch.org` | (Cloudflare가 준 토큰) | 필수 — 소유권 |
+| **CNAME** | `www` (= www.atlantawakechurch.org) | `customers.truelight.app` | 필수 — 라우팅 |
+| **CNAME** | `@` (= atlantawakechurch.org, 루트) | `customers.truelight.app` | **선택 — 루트 연결** |
 
-- 일부 등록업체는 Name 칸에 도메인 뒷부분을 자동으로 붙인다 → 그럴 땐 `www`처럼 **앞부분만** 입력.
-- **루트(apex)** 도 접속되게 하려면: 등록업체의 **Domain Forwarding / URL Redirect** 로
-  `atlantawakechurch.org → https://www.atlantawakechurch.org` 설정(대부분 무료).
-  DNS 표준상 루트에는 CNAME을 못 둬서 직접 연결은 불가 — www가 정식 진입점.
+- 일부 등록업체는 Name 칸에 도메인 뒷부분을 자동으로 붙인다 → 그럴 땐 `www`/`@`처럼 **앞부분만** 입력.
+
+### 루트(apex) 연결 — 표준 = CNAME flattening + 중앙 308
+- 도메인 추가 시 **www뿐 아니라 apex도 Cloudflare custom hostname으로 자동 등록**된다(`addDomain`). 그래서 테넌트는 **apex에 CNAME `@ → customers.truelight.app` (Proxied) 한 줄**만 추가하면 된다.
+- apex가 우리 엣지로 들어오면 **미들웨어가 자동으로 www로 308 리다이렉트**(모든 테넌트 공통, 중앙화). 별도 Redirect Rule·placeholder A 불필요.
+- DNS 표준상 루트엔 CNAME을 직접 못 두지만, **Cloudflare·Route53(ALIAS/ANAME) 등 flattening 지원 DNS**면 위 한 줄로 처리된다.
+- **flattening 미지원 등록업체**면 대안: Domain Forwarding(URL Redirect)으로 `atlantawakechurch.org → https://www.atlantawakechurch.org`.
 
 직접 설정이 어려운 교회는 **도메인 구입처 로그인 정보를 받아 운영자가 대신 설정** (done-for-you).
 
