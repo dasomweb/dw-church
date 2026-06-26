@@ -32,6 +32,7 @@
 | 문서 | 내용 |
 |---|---|
 | **[SETUP.md](./SETUP.md)** | truelight.app 인프라 1회 셋업 (Cloudflare zone / DNS / Worker / Railway / 환경변수). **현재 알려진 블로커 노트 포함.** |
+| **[CUSTOM-DOMAIN-OPS-KR.md](./CUSTOM-DOMAIN-OPS-KR.md)** | 테넌트 도메인 연결 **운영·트러블슈팅(실전)** — 추가 흐름, DNS 안내, 진단 패널, 증상→원인→해결 표. |
 | [01-architecture.md](./01-architecture.md) | 컴포넌트 전체 그림 + 데이터 흐름 + SSL 흐름 + 보안 모델 |
 | [03-troubleshooting.md](./03-troubleshooting.md) | 실패 사례별 진단 + 정확한 fix (404 / SSL / Worker / secret) |
 | [04-operations.md](./04-operations.md) | 일상 운영 (새 테넌트 추가, secret 갱신, 인증서 모니터링) |
