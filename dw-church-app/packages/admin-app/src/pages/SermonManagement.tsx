@@ -12,7 +12,6 @@ import {
 } from '@dw-church/api-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { FormField, FormSection, FormRow, inputClass, selectClass, useToast, ConfirmDialog, EmptyState, TableSkeleton, CategoryManager, ImageUpload } from '../components';
-import { ContentMigrationButton } from '../components/ContentMigrationButton';
 import YoutubeImportButton from '../components/YoutubeImportButton';
 import { useBulkDelete } from '../components/useBulkDelete';
 
@@ -453,7 +452,6 @@ export default function SermonManagement() {
               선택 삭제 ({bulk.count})
             </button>
           )}
-          <ContentMigrationButton contentType="sermons" label="설교" onDone={() => refetch()} />
           <YoutubeImportButton
             target="sermons"
             categories={(categories ?? []).map((c) => ({ id: c.id, name: c.name }))}
