@@ -182,13 +182,16 @@ export async function addDomain(
     }
   }
 
+  // Delete-then-insert instead of ON CONFLICT (domain): older tenant schemas
+  // were provisioned without the UNIQUE(domain) constraint, so ON CONFLICT
+  // failed with 42P10. This CTE is idempotent (re-adding replaces the row) and
+  // works regardless of whether the unique index exists.
   const rows = await prisma.$queryRawUnsafe<CustomDomain[]>(
-    `INSERT INTO "${schema}".custom_domains (domain, status, cf_hostname_id)
+    `WITH deleted AS (
+       DELETE FROM "${schema}".custom_domains WHERE domain = $1
+     )
+     INSERT INTO "${schema}".custom_domains (domain, status, cf_hostname_id)
      VALUES ($1, $2, $3)
-     ON CONFLICT (domain) DO UPDATE
-       SET cf_hostname_id = EXCLUDED.cf_hostname_id,
-           status = EXCLUDED.status,
-           updated_at = NOW()
      RETURNING id, domain, status, verification_token, railway_domain_id,
                cf_hostname_id, verified_at, created_at, updated_at`,
     domain, hostname.status, hostname.id,
