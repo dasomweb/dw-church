@@ -108,9 +108,10 @@ export function buildAdditionalSteps(domain: string): string[] {
   const parts = domain.split('.');
   const apex = parts.slice(-2).join('.');
   return [
-    `루트 도메인(${apex})으로 접속하는 경우도 동작시키려면, ${apex} 의 도메인 관리자(레지스트라)에서 Domain Forwarding 을 설정해주세요: ${apex} → https://${domain}`,
-    `대부분의 등록업체(Squarespace, GoDaddy, Cloudflare Registrar 등)가 Domain Forwarding(또는 URL Redirect)을 무료로 제공합니다. 등록업체 도움말에서 "Domain Forwarding" 또는 "URL Redirect" 로 검색하세요.`,
-    `DNS 표준상 ${apex} 같은 루트 도메인에는 CNAME 레코드를 둘 수 없어 직접 연결은 불가능합니다. www 서브도메인이 정식 진입점이고, 루트는 redirect 로 처리하는 패턴이 일반적입니다.`,
+    `루트 도메인(${apex})으로 접속하는 경우도 동작시키려면, ${apex} 의 DNS에서 아래 둘 중 하나를 설정하세요.`,
+    `① 도메인이 Cloudflare / Route53 등 CNAME flattening(ALIAS·ANAME)을 지원하면: ${apex} 에 CNAME → ${env.CF_FALLBACK_ORIGIN} (Proxied) 를 추가하세요. 그러면 자동으로 https://${domain} 로 연결됩니다(추가 설정 불필요).`,
+    `② 일반 등록업체(GoDaddy·Namecheap·가비아 등)면: Domain Forwarding(또는 URL Redirect)으로 ${apex} → https://${domain} 리다이렉트를 설정하세요(대부분 무료).`,
+    `DNS 표준상 ${apex} 같은 루트 도메인에는 CNAME 레코드를 직접 둘 수 없어, www 서브도메인이 정식 진입점이고 루트는 위 방법으로 연결합니다.`,
   ];
 }
 
@@ -196,6 +197,22 @@ export async function addDomain(
                cf_hostname_id, verified_at, created_at, updated_at`,
     domain, hostname.status, hostname.id,
   );
+
+  // Also register the apex (root) as a custom hostname so a tenant can point
+  // their apex at us with a single flattened CNAME (apex → CF_FALLBACK_ORIGIN);
+  // our middleware then 308-redirects apex → www. Best-effort — a failure here
+  // never fails the www connection (apex is optional).
+  const apex = domain.replace(/^www\./, '');
+  if (apex !== domain) {
+    try {
+      await cf.createCustomHostname(apex);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (!/\b1406\b|duplicate custom hostname/i.test(msg)) {
+        console.warn(`[domains] apex 호스트네임 등록 실패(${apex}):`, msg);
+      }
+    }
+  }
 
   return {
     domain: rows[0]!,
@@ -321,6 +338,16 @@ export async function removeDomain(
       await cf.deleteCustomHostname(rows[0]!.cf_hostname_id);
     } catch (err) {
       console.warn(`Cloudflare deleteCustomHostname failed for ${rows[0]!.cf_hostname_id}:`, err);
+    }
+  }
+  // Clean up the auto-registered apex hostname too (best-effort).
+  const apex = rows[0]!.domain.replace(/^www\./, '');
+  if (apex !== rows[0]!.domain) {
+    try {
+      const apexHost = await cf.getCustomHostnameByName(apex);
+      if (apexHost?.id) await cf.deleteCustomHostname(apexHost.id);
+    } catch (err) {
+      console.warn(`Cloudflare apex cleanup failed for ${apex}:`, err);
     }
   }
 }

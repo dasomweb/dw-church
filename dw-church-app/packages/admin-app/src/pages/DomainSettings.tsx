@@ -444,10 +444,15 @@ export default function DomainSettings() {
                     {(() => {
                       const root = d.domain.replace(/^www\./, '');
                       return root !== d.domain ? (
-                        <p className="text-[11px] text-gray-500">
-                          <strong>(선택) 루트 주소도 연결:</strong> <code className="font-mono">{root}</code> 으로 들어오는 분들도 보이게 하려면, 같은 DNS 화면에서{' '}
-                          <code className="font-mono">{root} → https://{d.domain}</code> 로 “전달(Forwarding / URL Redirect)”을 설정하세요. (대부분 무료)
-                        </p>
+                        <div className="text-[11px] text-gray-500 space-y-0.5">
+                          <p><strong>(선택) 루트 주소도 연결</strong> — <code className="font-mono">{root}</code> 으로 들어오는 분들도 보이게 하려면:</p>
+                          <p className="ml-2">
+                            <strong className="text-gray-700">① Cloudflare·Route53 등 DNS면(권장):</strong> 같은 DNS에 <code className="font-mono">{root}</code> CNAME → <code className="font-mono">customers.truelight.app</code> (Proxied) <strong>한 줄</strong>만 추가하세요. 자동으로 <code className="font-mono">https://{d.domain}</code> 로 연결됩니다.
+                          </p>
+                          <p className="ml-2">
+                            <strong className="text-gray-700">② 일반 등록업체면:</strong> Domain Forwarding(URL Redirect)으로 <code className="font-mono">{root} → https://{d.domain}</code> 설정. (대부분 무료)
+                          </p>
+                        </div>
                       ) : null;
                     })()}
 
