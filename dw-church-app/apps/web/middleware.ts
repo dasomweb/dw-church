@@ -119,9 +119,31 @@ export async function middleware(request: NextRequest) {
   // Extract tenant slug from subdomain (e.g. lagrangechurch.truelight.app)
   const slug = hostname.split('.')[0];
   if (slug && slug !== 'www' && slug !== 'admin' && slug !== 'api' && slug !== 'customers') {
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api.truelight.app';
+
+    // If this tenant has an ACTIVE custom domain, the *.truelight.app subdomain
+    // is no longer canonical — permanently redirect to the custom domain
+    // (preserve path + query). The custom domain enters via the custom-domain
+    // branch above, so this never loops.
+    try {
+      const res = await fetch(
+        `${apiBase}/api/v1/admin/tenants/custom-domain?slug=${encodeURIComponent(slug)}`,
+        { headers: { 'x-internal': '1' }, next: { revalidate: 60 } },
+      );
+      if (res.ok) {
+        const { domain } = (await res.json()) as { domain: string | null };
+        if (domain) {
+          const target = new URL(`https://${domain}${pathname}`);
+          target.search = request.nextUrl.search;
+          return NextResponse.redirect(target, 308);
+        }
+      }
+    } catch {
+      // Lookup failed — fall through and serve the subdomain normally.
+    }
+
     // Verify tenant exists via API
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api.truelight.app';
       const res = await fetch(
         `${apiBase}/api/v1/settings`,
         {

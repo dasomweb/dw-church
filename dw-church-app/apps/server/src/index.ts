@@ -216,6 +216,20 @@ async function main(): Promise<void> {
     return reply.send({ slug: rows[0]!.slug });
   });
 
+  // --- Internal: resolve a tenant slug to its ACTIVE custom domain (used by
+  //     Next.js middleware to 308-redirect <slug>.truelight.app → custom domain). ---
+  app.get('/api/v1/admin/tenants/custom-domain', async (request, reply) => {
+    const { slug } = request.query as { slug?: string };
+    if (!slug) return reply.status(400).send({ error: 'slug query parameter required' });
+    const rows = await prisma.$queryRawUnsafe<{ custom_domain: string | null }[]>(
+      `SELECT custom_domain FROM public.tenants
+         WHERE slug = $1 AND is_active = true AND custom_domain IS NOT NULL AND custom_domain <> ''
+         LIMIT 1`,
+      slug,
+    );
+    return reply.send({ domain: rows[0]?.custom_domain ?? null });
+  });
+
   // --- Public: storefront site meta (plan + feature flags). Used by the tenant
   //     site to enable Pro-only features like the mobile app (PWA). Resolved
   //     from the X-Tenant-Slug header via tenantMiddleware. ---
