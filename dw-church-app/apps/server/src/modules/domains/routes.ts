@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { requireAuth, requireOwner } from '../../middleware/auth.js';
+import { requireAuth, requireOwner, requireSuperAdmin } from '../../middleware/auth.js';
 import { getSchema } from '../../utils/get-schema.js';
 import { addDomainSchema } from './schema.js';
 import * as domainService from './service.js';
@@ -39,7 +39,7 @@ export async function domainRoutes(app: FastifyInstance) {
 
   // GET /domains/diagnostics — Cloudflare for SaaS integration health
   // (super-admin only — read-only, no tenant context required)
-  app.get('/domains/diagnostics', { preHandler: [requireAuth] }, async (_request, reply) => {
+  app.get('/domains/diagnostics', { preHandler: [requireSuperAdmin] }, async (_request, reply) => {
     const data = await domainService.getDiagnostics();
     return reply.send({ data });
   });

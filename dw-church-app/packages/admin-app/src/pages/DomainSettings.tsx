@@ -21,6 +21,15 @@ interface DnsInstruction {
   ttl?: number;
 }
 
+// Super-admin-only diagnostics — surfaces whether the Cloudflare-for-SaaS
+// integration is actually wired (token/zone valid + live API reachable).
+interface DiagData {
+  ok: boolean;
+  config: { hasApiToken: boolean; hasZoneId: boolean; configured: boolean; fallbackOrigin: string };
+  ping: { ok: boolean; error?: string; zoneName?: string };
+  summary: string;
+}
+
 const STATUS_META: Record<string, { label: string; cls: string; hint: string }> = {
   pending:     { label: 'DNS 대기',  cls: 'bg-yellow-100 text-yellow-800', hint: 'DNS 레코드를 아직 인식하지 못했습니다' },
   verified:    { label: 'DNS 확인',  cls: 'bg-blue-100 text-blue-800',    hint: '소유권 확인 완료 — Railway 등록 대기 중' },
@@ -83,6 +92,10 @@ export default function DomainSettings() {
   const [verifying, setVerifying] = useState<Record<string, boolean>>({});
   // Last "연결 확인" probe result per domain — feeds the Shopify-style checklist.
   const [checks, setChecks] = useState<Record<string, { txtFound: boolean; cnameOk: boolean }>>({});
+  // Super-admin diagnostics panel (Cloudflare integration health).
+  const isSuperAdmin = !!session?.user?.isSuperAdmin;
+  const [diag, setDiag] = useState<DiagData | null>(null);
+  const [diagLoading, setDiagLoading] = useState(false);
 
   // This page uses raw fetch (no api-client methods exist for /domains), so it
   // must set X-Tenant-Slug itself. Without it the request is proxied to the
@@ -103,6 +116,20 @@ export default function DomainSettings() {
   };
 
   useEffect(() => { void reload(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [token]);
+
+  const loadDiag = async () => {
+    setDiagLoading(true);
+    try {
+      const res = await fetch('/api/v1/domains/diagnostics', { headers });
+      const json = (await res.json()) as { data: DiagData };
+      setDiag(json.data ?? null);
+    } catch {
+      setDiag(null);
+    } finally {
+      setDiagLoading(false);
+    }
+  };
+  useEffect(() => { if (isSuperAdmin) void loadDiag(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [isSuperAdmin, token]);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -193,6 +220,49 @@ export default function DomainSettings() {
           대신 사용하세요. 연결 과정은 3단계입니다: 도메인 등록 → 레지스트라에서 DNS 레코드 추가 → 소유권 확인.
         </p>
       </div>
+
+      {/* Super-admin-only: is the Cloudflare-for-SaaS integration actually wired?
+          Surfaces token/zone presence + a live API ping so a 9109 (bad token)
+          shows here instead of only failing when a tenant adds a domain. */}
+      {isSuperAdmin && (
+        <div className={`border rounded-lg p-4 ${diag ? (diag.ok ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200') : 'bg-gray-50 border-gray-200'}`}>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-bold text-gray-800">
+              도메인 연동 진단 <span className="font-normal text-gray-400">(슈퍼어드민 전용)</span>
+            </h3>
+            <button
+              onClick={() => void loadDiag()}
+              disabled={diagLoading}
+              className="text-xs px-2 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50"
+            >
+              {diagLoading ? '확인 중...' : '다시 확인'}
+            </button>
+          </div>
+          {!diag ? (
+            <p className="text-xs text-gray-400">{diagLoading ? '진단 중...' : '진단 정보를 불러오지 못했습니다.'}</p>
+          ) : (
+            <>
+              <p className={`text-xs mb-2 ${diag.ok ? 'text-green-800' : 'text-amber-800'}`}>
+                {diag.ok ? '✓ ' : '⚠ '}{diag.summary}
+              </p>
+              <div className="font-mono text-[11px] space-y-0.5 text-gray-600">
+                <p>{diag.config.hasApiToken ? '✓' : '✗'} CF_API_TOKEN</p>
+                <p>{diag.config.hasZoneId ? '✓' : '✗'} CF_ZONE_ID</p>
+                <p className="text-gray-500">Fallback Origin: {diag.config.fallbackOrigin}</p>
+                <p className={diag.ping.ok ? 'text-green-700' : 'text-red-600'}>
+                  {diag.ping.ok ? `✓ Cloudflare API 응답 — zone: ${diag.ping.zoneName}` : `✗ Cloudflare API 응답 — ${diag.ping.error}`}
+                </p>
+              </div>
+              {!diag.ping.ok && (
+                <p className="mt-2 text-[11px] text-amber-700">
+                  토큰 만료/권한 또는 Zone ID 오류일 수 있습니다. Railway api-server 의 <code className="font-mono">CF_API_TOKEN</code> 을
+                  재발급해 교체하세요 (docs/multitenant-domains/SETUP.md §7).
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {/* Default subdomain */}
       <div className="bg-white border rounded-lg p-4">
