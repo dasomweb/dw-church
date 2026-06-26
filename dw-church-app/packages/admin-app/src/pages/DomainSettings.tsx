@@ -228,32 +228,20 @@ export default function DomainSettings() {
           </button>
         </form>
 
-        {/* Persistent guidance — what to enter + which DNS records to add.
-            Shown up front so the operator knows the work before clicking add. */}
-        <div className="mt-3 rounded-lg bg-gray-50 border border-gray-200 p-3 text-[11px] leading-relaxed text-gray-600 space-y-2">
+        {/* Short up-front note — the real, copy-paste, step-by-step walkthrough
+            appears under the domain row after it's added. */}
+        <div className="mt-3 rounded-lg bg-blue-50 border border-blue-200 p-3 text-[11px] leading-relaxed text-gray-700 space-y-1.5">
           <p>
-            <strong className="text-gray-800">① www 형식으로 입력하세요.</strong>{' '}
-            <code className="font-mono">www.mychurch.com</code> 처럼요. 루트 도메인(<code className="font-mono">mychurch.com</code>)은
-            DNS 표준상 직접 연결이 안 됩니다 — 아래 ③ 참고.
+            <strong className="text-gray-900">www 형식으로 입력하세요.</strong>{' '}
+            예: <code className="font-mono">www.mychurch.com</code> (루트 도메인 <code className="font-mono">mychurch.com</code> 단독은 연결되지 않습니다.)
           </p>
           <p>
-            <strong className="text-gray-800">② 도메인 추가 후</strong>, 이 화면에 아래{' '}
-            <strong>2개의 DNS 레코드</strong>가 표시됩니다. 도메인을 구입한 곳(Cloudflare·GoDaddy·Namecheap·가비아 등)의
-            DNS 관리 페이지에 그대로 추가하세요:
+            <strong className="text-gray-900">[도메인 추가]</strong>를 누르면, 도메인 구입처에{' '}
+            <strong>그대로 복사·붙여넣기</strong> 할 DNS 설정값(복사 버튼 포함)과 <strong>단계별 안내</strong>가 바로 아래에 나타납니다.
           </p>
-          <div className="ml-3 grid grid-cols-[44px_1fr] gap-x-2 gap-y-1 font-mono text-[11px]">
-            <span className="text-gray-400">TXT</span>
-            <span>소유권 확인용 (추가 후 표시되는 값 그대로) — 복사 버튼 제공</span>
-            <span className="text-gray-400">CNAME</span>
-            <span><code>www</code> → <code>customers.truelight.app</code> (트래픽 라우팅)</span>
-          </div>
-          <p>
-            <strong className="text-gray-800">③ 루트 도메인</strong>(<code className="font-mono">mychurch.com</code>)도 접속되게 하려면,
-            등록업체의 <strong>Domain Forwarding / URL Redirect</strong> 기능으로{' '}
-            <code className="font-mono">mychurch.com → https://www.mychurch.com</code> 리다이렉트를 설정하세요(대부분 무료).
-          </p>
-          <p className="text-gray-500">
-            전파에 1~10분 걸립니다. 그 후 아래 목록에서 <strong>연결 확인</strong>을 누르면 SSL이 자동 발급됩니다.
+          <p className="text-blue-800">
+            직접 설정이 어려우시면 — 도메인 구입처 로그인 정보를{' '}
+            <a href="mailto:info@truelight.app" className="underline font-medium">info@truelight.app</a> 으로 보내주시면 저희가 대신 연결해 드립니다.
           </p>
         </div>
       </div>
@@ -338,10 +326,13 @@ export default function DomainSettings() {
 
                 {instructions && (
                   <div className="border-t bg-gray-50 p-4 space-y-3">
-                    <p className="text-xs text-gray-700">
-                      도메인을 구입한 서비스(Cloudflare, GoDaddy, Namecheap, 가비아 등)의 DNS 관리 페이지에서
-                      아래 <strong>2개 레코드</strong>를 추가해주세요. 전파까지 최대 5~10분 걸릴 수 있습니다.
+                    <p className="text-sm font-bold text-gray-800">
+                      <code className="font-mono">{d.domain}</code> 연결 방법 — 아래 순서대로 따라 하세요
                     </p>
+                    <div className="space-y-1 text-xs text-gray-700">
+                      <p><strong className="text-gray-900">1단계.</strong> 도메인을 구입한 사이트(예: 가비아·GoDaddy·Namecheap·Cloudflare)에 로그인 → <strong>DNS 관리</strong>(또는 “DNS 설정”, “DNS Records”) 메뉴를 엽니다.</p>
+                      <p><strong className="text-gray-900">2단계.</strong> <strong>“레코드 추가”</strong>로 아래 <strong>2개</strong>를 그대로 입력합니다. (값은 <strong>복사</strong> 버튼을 쓰면 정확합니다)</p>
+                    </div>
                     {instructions.map((rec, i) => (
                       <div key={i} className="bg-white rounded border p-3 space-y-2">
                         <div className="flex items-center gap-2">
@@ -372,10 +363,27 @@ export default function DomainSettings() {
                         </div>
                       </div>
                     ))}
-                    <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
-                      ⚠ apex 도메인(mychurch.com처럼 서브도메인 없는 주소)은 CNAME을 지원하지 않는 레지스트라가 있습니다.
-                      그 경우 <strong>www.mychurch.com</strong>을 CNAME으로 연결하고 apex는 레지스트라가 제공하는
-                      "ANAME/ALIAS/Forwarding" 기능을 사용하세요.
+                    <div className="space-y-1 text-xs text-gray-700">
+                      <p><strong className="text-gray-900">3단계.</strong> 저장하고 <strong>1~10분</strong> 기다립니다. (DNS 전파 시간)</p>
+                      <p><strong className="text-gray-900">4단계.</strong> 위의 <strong>연결 확인</strong> 버튼을 누릅니다. 체크리스트가 모두 초록 ✓ 가 되면 완료 — <code className="font-mono">https://{d.domain}</code> 로 접속됩니다.</p>
+                    </div>
+
+                    <p className="text-[11px] text-gray-500">
+                      ※ 일부 등록업체는 “이름/호스트” 칸에 도메인 뒷부분을 자동으로 붙입니다. 그럴 땐 위 값에서 <strong>앞부분만</strong>(예: <code className="font-mono">www</code>) 입력하세요.
+                    </p>
+                    {(() => {
+                      const root = d.domain.replace(/^www\./, '');
+                      return root !== d.domain ? (
+                        <p className="text-[11px] text-gray-500">
+                          <strong>(선택) 루트 주소도 연결:</strong> <code className="font-mono">{root}</code> 으로 들어오는 분들도 보이게 하려면, 같은 DNS 화면에서{' '}
+                          <code className="font-mono">{root} → https://{d.domain}</code> 로 “전달(Forwarding / URL Redirect)”을 설정하세요. (대부분 무료)
+                        </p>
+                      ) : null;
+                    })()}
+
+                    <p className="text-[11px] text-blue-800 bg-blue-50 border border-blue-200 rounded p-2">
+                      직접 하기 어려우시면 — 도메인 구입처 로그인 정보를{' '}
+                      <a href="mailto:info@truelight.app" className="underline font-medium">info@truelight.app</a> 으로 보내주시면 저희가 대신 설정해 드립니다.
                     </p>
                   </div>
                 )}
