@@ -24,15 +24,38 @@
       │     └─ 이미 등록돼 있으면(1406) 기존 hostname 재사용
       └─ tenant_{slug}.custom_domains 에 row 기록 + DNS 안내 반환
       ▼
-[화면] TXT + CNAME 2개 레코드(복사 버튼) + 단계별 안내 표시
+[화면] TXT(소유권) + www CNAME(필수) + apex CNAME(선택) 레코드(복사 버튼) + 단계별 안내 표시
       ▼
-[테넌트] 도메인 등록업체 DNS에 2개 추가 → 1~10분 → "연결 확인"
+[테넌트] 도메인 등록업체 DNS에 추가 → 1~10분 → "연결 확인"
       ▼
 [api-server] verifyDomain() → Cloudflare 검증 통과 시
       └─ public.tenants.custom_domain 기록 → web 미들웨어가 그 도메인을 테넌트로 라우팅
       ▼
 https://www.교회도메인.org  정상 접속 (SSL 자동)
+      │
+      └─ 이 시점부터 기존 <slug>.truelight.app 은 커스텀 도메인으로 308 자동 전환 (§3-1)
 ```
+
+---
+
+## 3-1. 커스텀 도메인 활성 후 — 서브도메인 자동 전환 (canonical 전환)
+
+커스텀 도메인이 **활성**되면 `<slug>.truelight.app` 은 더 이상 정식 주소가 아니다. 미들웨어가 **서브도메인 → 커스텀 도메인으로 308 영구 리다이렉트**(경로·쿼리 보존)한다.
+
+```
+https://wakechurch.truelight.app/<path>
+      │  middleware → GET /admin/tenants/custom-domain?slug=wakechurch → { domain }
+      ▼  domain 있으면 308
+https://www.atlantawakechurch.org/<path>
+      │  custom-domain 분기로 들어옴 → /tenant/wakechurch 로 rewrite (루프 없음)
+      ▼
+wakechurch 사이트
+```
+
+- 엔드포인트: `GET /api/v1/admin/tenants/custom-domain?slug=` → `{ domain: 활성 custom_domain | null }`.
+- 커스텀 도메인 없는 테넌트는 서브도메인 그대로 정상 서빙.
+- 루프 방지: 커스텀 도메인은 **custom-domain 분기**로 들어와 rewrite되고, 서브도메인 분기에서만 308을 쏜다.
+- 검증(2026-06-26): `curl -I https://wakechurch.truelight.app/` → `308 → https://www.atlantawakechurch.org/`.
 
 ---
 
