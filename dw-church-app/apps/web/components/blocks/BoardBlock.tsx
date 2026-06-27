@@ -42,7 +42,7 @@ export async function BoardBlock({ props, slug }: BoardBlockProps) {
   return (
     <DataSection props={props} defaultBg="var(--dw-surface)">
       <div className="mx-auto max-w-7xl">
-        <h2 className="mb-8 text-center text-3xl font-bold font-heading">{displayTitle}</h2>
+        <h2 className="mb-8 text-center text-2xl sm:text-3xl font-bold font-heading">{displayTitle}</h2>
 
         {posts.length === 0 ? (
           <p className="text-center text-gray-400">등록된 게시글이 없습니다.</p>

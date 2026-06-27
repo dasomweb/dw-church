@@ -72,7 +72,7 @@ export function NewcomerFormBlock({ props, slug }: NewcomerFormBlockProps) {
     <DataSection props={props} defaultBg="var(--dw-surface)" paddingClassName="px-4 py-12 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-xl">
         <div className="mb-8 text-center">
-          <h2 className="mb-3 text-3xl font-bold font-heading">{title}</h2>
+          <h2 className="mb-3 text-2xl sm:text-3xl font-bold font-heading">{title}</h2>
           <p className="text-sm leading-relaxed text-gray-500">{subtitle}</p>
         </div>
         <form onSubmit={submit} className="space-y-4 rounded-2xl border bg-white p-6 shadow-sm sm:p-8" style={{ borderColor: 'var(--dw-border, #e5e7eb)' }}>

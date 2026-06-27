@@ -3,11 +3,12 @@
 @tailwind utilities;
 
 /*
- * Mobile optimization for the TENANT admin shell.
- * Scoped to `.admin-content` (AdminLayout <main>) so super-admin layouts,
- * which have their own responsive handling, are never affected.
+ * Mobile + tablet optimization for the TENANT admin shell (<1024px — the
+ * sidebar is a drawer below lg). Scoped to `.admin-content` (AdminLayout
+ * <main>) so super-admin layouts, which have their own responsive handling,
+ * are never affected.
  */
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   /* Data tables in every management page scroll horizontally instead of
      overflowing the viewport. Mirrors the well-tested GitHub-markdown table
      pattern: the table itself becomes a horizontal scroll container. This

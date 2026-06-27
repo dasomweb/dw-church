@@ -38,7 +38,7 @@ export function AlbumGalleryBlockClient({ albums, slug, columns = 3 }: AlbumGall
               {thumb ? (
                 <Image src={thumb} alt={album.title} fill className="object-cover group-hover:scale-110 transition-transform duration-500" sizes="(max-width: 768px) 50vw, 25vw" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-white/90 text-3xl" style={{ background: 'linear-gradient(135deg, var(--dw-primary, #2563eb), var(--dw-secondary, #64748b))' }}>📷</div>
+                <div className="w-full h-full flex items-center justify-center text-white/90 text-2xl sm:text-3xl" style={{ background: 'linear-gradient(135deg, var(--dw-primary, #2563eb), var(--dw-secondary, #64748b))' }}>📷</div>
               )}
               {/* bottom gradient + title overlay */}
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent p-3 pt-8">

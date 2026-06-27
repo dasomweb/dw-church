@@ -30,7 +30,7 @@ export async function CellGridBlock({ props, slug }: CellGridBlockProps) {
     return (
       <DataSection props={props} defaultBg="var(--dw-surface)">
         <div className="mx-auto max-w-7xl text-center">
-          <h2 className="mb-4 text-3xl font-bold font-heading">{title}</h2>
+          <h2 className="mb-4 text-2xl sm:text-3xl font-bold font-heading">{title}</h2>
           <p className="text-sm text-gray-400">등록된 목장이 없습니다.</p>
         </div>
       </DataSection>
@@ -45,7 +45,7 @@ export async function CellGridBlock({ props, slug }: CellGridBlockProps) {
   return (
     <DataSection props={props} defaultBg="var(--dw-surface)">
       <div className="mx-auto max-w-7xl">
-        <h2 className="mb-8 text-center text-3xl font-bold font-heading">{title}</h2>
+        <h2 className="mb-8 text-center text-2xl sm:text-3xl font-bold font-heading">{title}</h2>
         <div className={`grid grid-cols-1 gap-6 ${gridCols}`}>
           {cells.map((c, i) => {
             const photo = c.photo_url as string | null;

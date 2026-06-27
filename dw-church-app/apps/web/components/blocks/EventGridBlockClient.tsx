@@ -45,7 +45,7 @@ export function EventGridBlockClient({ events, slug, columns = 3 }: EventGridBlo
                 {(event.backgroundImageUrl || event.thumbnailUrl) ? (
                   <Image src={event.backgroundImageUrl || event.thumbnailUrl} alt={event.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 33vw" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-white/90 text-3xl" style={{ background: 'linear-gradient(135deg, var(--dw-primary, #2563eb), var(--dw-secondary, #64748b))' }}>📅</div>
+                  <div className="w-full h-full flex items-center justify-center text-white/90 text-2xl sm:text-3xl" style={{ background: 'linear-gradient(135deg, var(--dw-primary, #2563eb), var(--dw-secondary, #64748b))' }}>📅</div>
                 )}
                 {badge && (
                   <div className="absolute top-3 left-3 rounded-xl bg-white shadow-md overflow-hidden text-center leading-none">

@@ -147,7 +147,7 @@ export function AdminLayout() {
           <svg className="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18L19.35 7.5 12 10.82 4.65 7.5 12 4.18z" />
           </svg>
-          <span className="text-lg font-bold text-gray-900">{churchName}</span>
+          <span className="text-base sm:text-lg font-bold text-gray-900 truncate">{churchName}</span>
           {/* Mobile close button */}
           <button
             className="ml-auto lg:hidden p-1 text-gray-500 hover:text-gray-700"

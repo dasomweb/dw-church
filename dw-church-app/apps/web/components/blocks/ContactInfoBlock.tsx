@@ -30,7 +30,7 @@ export async function ContactInfoBlock({ props, slug }: ContactInfoBlockProps) {
     <DataSection props={props}>
       <div className="mx-auto max-w-4xl">
         <div className="mb-8 flex flex-col items-center gap-2 text-center">
-          <h2 className="text-3xl font-bold font-heading" style={getElementStyle(props, 'title')}>{title}</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold font-heading" style={getElementStyle(props, 'title')}>{title}</h2>
           <span aria-hidden="true" className="block h-[3px] w-12 rounded" style={{ backgroundColor: 'var(--dw-primary, #2563eb)' }} />
         </div>
         <div className="grid gap-5 sm:grid-cols-2">

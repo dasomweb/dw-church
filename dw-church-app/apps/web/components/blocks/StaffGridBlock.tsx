@@ -37,7 +37,7 @@ export async function StaffGridBlock({ props, slug }: StaffGridBlockProps) {
     return (
       <DataSection props={props} defaultBg="var(--dw-surface)">
         <div className="mx-auto max-w-7xl text-center">
-          <h2 className="mb-4 text-3xl font-bold font-heading">교역자 소개</h2>
+          <h2 className="mb-4 text-2xl sm:text-3xl font-bold font-heading">교역자 소개</h2>
           <p className="text-gray-400 text-sm">등록된 교역자가 없습니다.</p>
         </div>
       </DataSection>
@@ -47,7 +47,7 @@ export async function StaffGridBlock({ props, slug }: StaffGridBlockProps) {
   return (
     <DataSection props={props} defaultBg="var(--dw-surface)">
       <div className="mx-auto max-w-7xl">
-        <h2 className="mb-8 text-center text-3xl font-bold font-heading">
+        <h2 className="mb-8 text-center text-2xl sm:text-3xl font-bold font-heading">
           {(props.title as string) || '교역자'}
         </h2>
         <StaffGridBlockClient

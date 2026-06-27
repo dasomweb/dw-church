@@ -47,7 +47,7 @@ export function RecentSermonsClient({ sermons, slug, columns = 3 }: RecentSermon
               {sermon.thumbnailUrl ? (
                 <Image src={sermon.thumbnailUrl} alt={sermon.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 33vw" />
               ) : (
-                <div className="w-full h-full min-h-[140px] flex items-center justify-center text-white/90 text-3xl" style={{ background: 'linear-gradient(135deg, var(--dw-primary, #2563eb), var(--dw-secondary, #64748b))' }}>🎤</div>
+                <div className="w-full h-full min-h-[140px] flex items-center justify-center text-white/90 text-2xl sm:text-3xl" style={{ background: 'linear-gradient(135deg, var(--dw-primary, #2563eb), var(--dw-secondary, #64748b))' }}>🎤</div>
               )}
               {/* play affordance — sermons are video/audio messages */}
               <span className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/10 transition-colors">

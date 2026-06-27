@@ -418,7 +418,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                     style={{ height: 'var(--brand-logo-height, 40px)' }}
                   />
                 ) : (
-                  <span className="text-xl font-bold font-heading" style={{ color: isDarkHeader ? 'var(--dw-background)' : 'var(--dw-primary)' }}>
+                  <span className="text-lg sm:text-xl font-bold font-heading" style={{ color: isDarkHeader ? 'var(--dw-background)' : 'var(--dw-primary)' }}>
                     {churchName}
                   </span>
                 )}
@@ -475,7 +475,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                   style={{ height: 'var(--brand-logo-height, 40px)' }}
                 />
               ) : (
-                <span className="text-xl font-bold font-heading" style={{ color: isDarkHeader ? 'var(--dw-background)' : 'var(--dw-primary)' }}>
+                <span className="text-lg sm:text-xl font-bold font-heading" style={{ color: isDarkHeader ? 'var(--dw-background)' : 'var(--dw-primary)' }}>
                   {churchName}
                 </span>
               )}
