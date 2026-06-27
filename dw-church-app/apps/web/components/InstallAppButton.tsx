@@ -49,11 +49,20 @@ export default function InstallAppButton({ className = '' }: InstallAppButtonPro
 
   if (standalone) return null;
 
+  // Icon-only on mobile (clean + no cramped text); icon + label on sm+ (desktop).
   const pill =
     'inline-flex items-center gap-1.5 rounded-full border border-[var(--dw-primary)] ' +
-    'px-3 py-1.5 text-xs font-semibold text-[var(--dw-primary)] bg-white/80 ' +
+    'p-2 sm:px-3 sm:py-1.5 text-xs font-semibold text-[var(--dw-primary)] bg-white/80 ' +
     'shadow-sm transition-colors hover:bg-[var(--dw-primary)] hover:text-white ' +
     className;
+
+  // Modern, simple install glyph (download-to-line).
+  const Icon = () => (
+    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3v11m0 0l-4-4m4 4l4-4M5 20h14" />
+    </svg>
+  );
+  const Label = () => <span className="hidden sm:inline">앱으로 설치</span>;
 
   // Native install flow (Chromium / Android).
   if (deferred) {
@@ -70,9 +79,10 @@ export default function InstallAppButton({ className = '' }: InstallAppButtonPro
         }}
         className={pill}
         aria-label="앱으로 설치"
+        title="앱으로 설치"
       >
-        <span aria-hidden="true">⬇️</span>
-        앱으로 설치
+        <Icon />
+        <Label />
       </button>
     );
   }
@@ -86,9 +96,10 @@ export default function InstallAppButton({ className = '' }: InstallAppButtonPro
           onClick={() => setShowIosHint((v) => !v)}
           className={pill}
           aria-label="앱으로 설치 안내"
+          title="앱으로 설치"
         >
-          <span aria-hidden="true">⬇️</span>
-          앱으로 설치
+          <Icon />
+          <Label />
         </button>
         {showIosHint && (
           <span
