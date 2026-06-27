@@ -49,20 +49,22 @@ export default function InstallAppButton({ className = '' }: InstallAppButtonPro
 
   if (standalone) return null;
 
-  // Icon-only on mobile (clean + no cramped text); icon + label on sm+ (desktop).
+  // Clean icon-only button — no box/border/background. Icon on mobile;
+  // icon + small label on sm+ (desktop).
   const pill =
-    'inline-flex items-center gap-1.5 rounded-full border border-[var(--dw-primary)] ' +
-    'p-2 sm:px-3 sm:py-1.5 text-xs font-semibold text-[var(--dw-primary)] bg-white/80 ' +
-    'shadow-sm transition-colors hover:bg-[var(--dw-primary)] hover:text-white ' +
+    'inline-flex items-center gap-1.5 text-[var(--dw-primary)] ' +
+    'transition-opacity hover:opacity-60 ' +
     className;
 
-  // Modern, simple install glyph (download-to-line).
+  // Modern install glyph — arrow into a tray (rounded, thin stroke).
   const Icon = () => (
-    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M12 3v11m0 0l-4-4m4 4l4-4M5 20h14" />
+    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3.5v9" />
+      <path d="M8.5 9 12 12.5 15.5 9" />
+      <path d="M5 15v2.5A2.5 2.5 0 0 0 7.5 20h9a2.5 2.5 0 0 0 2.5-2.5V15" />
     </svg>
   );
-  const Label = () => <span className="hidden sm:inline">앱으로 설치</span>;
+  const Label = () => <span className="hidden sm:inline text-sm font-medium">앱으로 설치</span>;
 
   // Native install flow (Chromium / Android).
   if (deferred) {
