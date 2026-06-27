@@ -104,7 +104,7 @@ export default function MobileAppNav({ items }: MobileAppNavProps) {
         className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-white/95 backdrop-blur sm:hidden"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <ul className="mx-auto flex max-w-lg items-stretch justify-around px-1 py-1.5">
+        <ul className="mx-auto flex max-w-lg items-stretch justify-around px-4 py-1.5">
           {primary.map((item, idx) => {
             const isActive = activeHref != null && item.href === activeHref;
             return (
