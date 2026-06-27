@@ -128,7 +128,7 @@ export default async function tenantRoutes(app: FastifyInstance): Promise<void> 
         where: { slug: request.params.slug },
         select: {
           id: true, slug: true, name: true, plan: true,
-          isActive: true, customDomain: true, createdAt: true,
+          isActive: true, customDomain: true, createdAt: true, webAppAddon: true,
         },
       });
       if (!tenant) throw new AppError('NOT_FOUND', 404, 'Tenant not found');

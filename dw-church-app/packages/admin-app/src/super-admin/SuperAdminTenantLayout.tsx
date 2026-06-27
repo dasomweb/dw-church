@@ -29,6 +29,7 @@ interface TenantSummary {
   plan: string;
   isActive: boolean;
   customDomain?: string;
+  webAppAddon?: boolean;
 }
 
 interface TenantContextValue {
@@ -117,6 +118,7 @@ export function SuperAdminTenantLayout() {
         plan: t.plan ?? 'free',
         isActive: t.is_active ?? t.isActive ?? true,
         customDomain: t.custom_domain ?? t.customDomain,
+        webAppAddon: t.web_app_addon ?? t.webAppAddon ?? false,
       });
     } catch {
       setTenant(null);

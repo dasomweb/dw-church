@@ -5,8 +5,11 @@
  * just deep-link into the existing sidebar destinations — operators
  * land here, scan the grid, click in.
  */
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSuperAdminTenant } from '../SuperAdminTenantLayout';
+import { useAuthStore } from '../../stores/auth';
+import { useToast } from '../../components';
 
 interface Card { to: string; icon: string; title: string; subtitle: string }
 
@@ -30,8 +33,36 @@ const PLAN_BADGE: Record<string, string> = {
 
 export default function TenantOverview() {
   const { slug = '' } = useParams<{ slug: string }>();
-  const { tenant, loading } = useSuperAdminTenant();
+  const { tenant, loading, refresh } = useSuperAdminTenant();
   const navigate = useNavigate();
+  const session = useAuthStore((s) => s.session);
+  const { showToast } = useToast();
+  const [addonBusy, setAddonBusy] = useState(false);
+
+  // Web App (모바일 앱) is a paid add-on (+$10/mo) the super admin turns on per
+  // tenant. Persists via PUT /admin/tenants/:id { webAppAddon }.
+  const toggleWebApp = async () => {
+    if (!tenant || addonBusy) return;
+    setAddonBusy(true);
+    try {
+      const host = window.location.hostname;
+      const baseUrl = host.startsWith('admin.')
+        ? `https://api.${host.replace('admin.', '')}`
+        : (import.meta.env.VITE_API_BASE_URL as string) || '';
+      const res = await fetch(`${baseUrl}/api/v1/admin/tenants/${tenant.id}`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${session?.accessToken ?? ''}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ webAppAddon: !tenant.webAppAddon }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await refresh();
+      showToast('success', `웹앱(모바일 앱)을 ${!tenant.webAppAddon ? '켰습니다' : '껐습니다'}.`);
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '변경 실패');
+    } finally {
+      setAddonBusy(false);
+    }
+  };
 
   // "어드민 진입" — open the tenant admin directly in a new tab. The
   // super_admin's existing session passes RequireTenantAccess (it returns
@@ -88,6 +119,34 @@ export default function TenantOverview() {
             className="px-4 py-2 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-lg text-sm font-medium shadow-sm hover:from-violet-600 hover:to-purple-700"
           >
             ☆ AI 빌더 시작
+          </button>
+        </div>
+      </div>
+
+      {/* 부가기능 (Add-ons) */}
+      <div>
+        <h2 className="text-sm font-semibold text-gray-700 mb-3">부가기능 (Add-on)</h2>
+        <div className="bg-white rounded-xl border border-gray-100 p-4 flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">📱</span>
+              <span className="font-semibold text-gray-900">웹앱 (모바일 앱)</span>
+              <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700">+$10 / 월</span>
+            </div>
+            <p className="mt-1 text-xs text-gray-500 leading-relaxed">
+              켜면 이 교회 사이트를 휴대폰 <strong>홈 화면에 앱처럼 설치</strong>할 수 있고, 하단 탭바·앱 설치 버튼이 노출됩니다.
+              {tenant?.webAppAddon ? ' 현재 활성화됨.' : ' 신청한 교회에만 켜주세요.'}
+            </p>
+          </div>
+          <button
+            onClick={() => void toggleWebApp()}
+            disabled={addonBusy || !tenant}
+            role="switch"
+            aria-checked={!!tenant?.webAppAddon}
+            className={`relative shrink-0 w-12 h-7 rounded-full transition-colors disabled:opacity-50 ${tenant?.webAppAddon ? 'bg-emerald-500' : 'bg-gray-300'}`}
+            title={tenant?.webAppAddon ? '끄기' : '켜기'}
+          >
+            <span className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${tenant?.webAppAddon ? 'translate-x-5' : ''}`} />
           </button>
         </div>
       </div>

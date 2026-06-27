@@ -234,16 +234,19 @@ async function main(): Promise<void> {
   //     site to enable Pro-only features like the mobile app (PWA). Resolved
   //     from the X-Tenant-Slug header via tenantMiddleware. ---
   app.get('/api/v1/site-meta', async (request, reply) => {
-    const { planAllowsFeature, normalizePlan } = await import('./config/plan-limits.js');
+    const { normalizePlan } = await import('./config/plan-limits.js');
     const slug = request.tenant?.slug;
     if (!slug) return reply.status(400).send({ error: 'Tenant not resolved' });
     const plan = request.tenant?.plan ?? '';
+    // The web app (PWA) is a paid add-on the super admin enables per tenant
+    // (+$10/mo), decoupled from the plan tier.
+    const row = await prisma.tenant.findFirst({ where: { slug }, select: { webAppAddon: true } });
     return reply.send({
       data: {
         slug,
         name: request.tenant?.name ?? slug,
         plan: normalizePlan(plan),
-        features: { pwa: planAllowsFeature(plan, 'pwa') },
+        features: { pwa: !!row?.webAppAddon },
       },
     });
   });
@@ -287,6 +290,18 @@ async function main(): Promise<void> {
     );
   } catch (err) {
     app.log.warn(`selected_theme_set_id column migration skipped: ${err}`);
+  }
+
+  // --- Web App (PWA) add-on flag on tenants ---
+  // The installable mobile web app is a paid add-on (+$10/mo) the super admin
+  // turns on per tenant — decoupled from the plan tier. site-meta reads this to
+  // gate the manifest / service worker / install button / bottom tab bar.
+  try {
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE "tenants" ADD COLUMN IF NOT EXISTS "web_app_addon" BOOLEAN NOT NULL DEFAULT false`,
+    );
+  } catch (err) {
+    app.log.warn(`web_app_addon column migration skipped: ${err}`);
   }
 
   // --- Tenant schema drift repair ---

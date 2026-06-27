@@ -16,6 +16,7 @@ export const updateTenantSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   plan: z.enum(['free', 'light', 'basic', 'plus', 'pro']).optional(),
   isActive: z.boolean().optional(),
+  webAppAddon: z.boolean().optional(),
 });
 
 export type CreateTenantInput = z.infer<typeof createTenantSchema>;

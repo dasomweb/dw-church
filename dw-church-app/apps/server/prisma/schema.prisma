@@ -19,6 +19,7 @@ model Tenant {
   customDomain  String?   @map("custom_domain") @db.VarChar(255)
   logoUrl       String?   @map("logo_url")
   templateName  String    @default("modern") @map("template_name") @db.VarChar(50)
+  webAppAddon           Boolean   @default(false) @map("web_app_addon")
   isActive              Boolean   @default(true) @map("is_active")
   stripeCustomerId      String?   @unique @map("stripe_customer_id") @db.VarChar(255)
   stripeSubscriptionId  String?   @unique @map("stripe_subscription_id") @db.VarChar(255)

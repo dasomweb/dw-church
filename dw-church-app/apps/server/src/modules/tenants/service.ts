@@ -198,6 +198,7 @@ export async function updateTenant(id: string, input: UpdateTenantInput) {
       ...(input.name !== undefined && { name: input.name }),
       ...(input.plan !== undefined && { plan: input.plan }),
       ...(input.isActive !== undefined && { isActive: input.isActive }),
+      ...(input.webAppAddon !== undefined && { webAppAddon: input.webAppAddon }),
     },
   });
 
