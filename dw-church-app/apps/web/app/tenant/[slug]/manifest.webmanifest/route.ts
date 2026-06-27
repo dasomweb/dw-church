@@ -1,4 +1,4 @@
-import { getChurchSettings } from '@/lib/api';
+import { getChurchSettings, getThemeTokens } from '@/lib/api';
 
 // Per-tenant PWA web manifest. Served at /tenant/{slug}/manifest.webmanifest and
 // referenced from the layout's generateMetadata only when the tenant is on the
@@ -39,6 +39,15 @@ export async function GET(
 
   const shortName = name.length > 12 ? `${name.slice(0, 12)}` : name;
 
+  // theme_color = tenant brand primary (drives the installed app's status bar /
+  // splash). Falls back to the default blue if tokens are unavailable.
+  let themeColor = '#2563eb';
+  try {
+    const tokens = await getThemeTokens(slug);
+    const primary = tokens?.colors?.system?.primary ?? tokens?.colors?.primary;
+    if (typeof primary === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(primary)) themeColor = primary;
+  } catch { /* keep default */ }
+
   // start_url/scope are root ("/") — the manifest is served on the tenant's
   // canonical host (its subdomain or custom domain) where "/" IS the tenant
   // root (the middleware rewrites "/" → /tenant/{slug}). Using /tenant/{slug}
@@ -50,7 +59,7 @@ export async function GET(
     scope: '/',
     display: 'standalone',
     background_color: '#ffffff',
-    theme_color: '#2563eb',
+    theme_color: themeColor,
     lang: 'ko',
     icons,
   };

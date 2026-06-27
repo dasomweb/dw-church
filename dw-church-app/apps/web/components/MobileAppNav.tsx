@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -51,8 +51,23 @@ function iconFor(label: string): string {
 export default function MobileAppNav({ items }: MobileAppNavProps) {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
+  // The app-style bottom bar belongs to the INSTALLED web app only — show it
+  // when launched standalone (display-mode: standalone, or iOS navigator.standalone),
+  // not in the regular mobile browser (which keeps the normal header + install button).
+  const [standalone, setStandalone] = useState(false);
+  useEffect(() => {
+    const check = () =>
+      setStandalone(
+        window.matchMedia?.('(display-mode: standalone)')?.matches === true ||
+        (window.navigator as { standalone?: boolean }).standalone === true,
+      );
+    check();
+    const mq = window.matchMedia?.('(display-mode: standalone)');
+    mq?.addEventListener?.('change', check);
+    return () => mq?.removeEventListener?.('change', check);
+  }, []);
 
-  if (items.length === 0) return null;
+  if (items.length === 0 || !standalone) return null;
 
   const hasOverflow = items.length > 5;
   const primary = hasOverflow ? items.slice(0, 4) : items.slice(0, 5);
@@ -79,6 +94,9 @@ export default function MobileAppNav({ items }: MobileAppNavProps) {
 
   return (
     <>
+      {/* Reserve space so fixed bar doesn't cover content (standalone only). */}
+      <div aria-hidden className="h-[72px] sm:hidden" />
+
       {/* "메뉴" (More) sheet — full menu list */}
       {moreOpen && (
         <div className="fixed inset-0 z-[60] sm:hidden" role="dialog" aria-modal="true" aria-label="전체 메뉴">

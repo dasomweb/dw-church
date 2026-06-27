@@ -363,12 +363,35 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   // Flat list for backward compat (only top-level shown in header)
   const sortedVisibleItems = topLevelItems;
 
-  // Items for the Pro-plan mobile app bottom nav — same top-level visible
-  // menu items, resolved to { label, href } via the SAME navHref helper the
-  // header + slide-out menu use (so destinations stay consistent). Capped to 5
-  // inside MobileAppNav.
+  // Items for the web-app bottom nav — same top-level visible menu items,
+  // resolved to { label, href } via the SAME navHref helper the header uses.
+  // If the operator picked explicit bottom tabs (settings.web_app_tab_ids, a
+  // JSON array of menu ids), those come FIRST (in chosen order) so MobileAppNav
+  // surfaces them as the primary tabs; the rest fall under "메뉴" (More).
+  let orderedAppItems = sortedVisibleItems;
+  const rawTabIds = (settings as Record<string, unknown> | null)?.webAppTabIds
+    ?? (settings as Record<string, unknown> | null)?.web_app_tab_ids;
+  if (pwaEnabled && typeof rawTabIds === 'string' && rawTabIds.trim()) {
+    try {
+      const ids: string[] = JSON.parse(rawTabIds);
+      if (Array.isArray(ids) && ids.length) {
+        const byId = new Map(sortedVisibleItems.map((it) => [it.id, it]));
+        const picked = ids.map((id) => byId.get(id)).filter(Boolean) as typeof sortedVisibleItems;
+        const rest = sortedVisibleItems.filter((it) => !ids.includes(it.id));
+        orderedAppItems = [...picked, ...rest];
+      }
+    } catch { /* malformed — keep menu order */ }
+  }
+  // A parent menu (dropdown with children, no own page) has no real destination
+  // — navHref would send it to home, making several tabs all point to "/". For
+  // the app bar, resolve such parents to their first child that has a page.
+  const appHref = (item: MenuItem): string => {
+    if (item.pageSlug || item.externalUrl) return navHref(item);
+    const child = item.children?.find((c) => c.pageSlug || c.externalUrl);
+    return child ? navHref(child) : navHref(item);
+  };
   const appNavItems = pwaEnabled
-    ? sortedVisibleItems.map((item) => ({ label: item.label, href: navHref(item) }))
+    ? orderedAppItems.map((item) => ({ label: item.label, href: appHref(item) }))
     : [];
 
   return (
@@ -528,7 +551,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
           doesn't cover the last bit of content. */}
       <main
         id="main-content"
-        className={`min-h-[60vh] ${pwaEnabled ? 'pb-20 sm:pb-0' : ''}`}
+        className="min-h-[60vh]"
         style={{ backgroundColor: 'var(--dw-background)', color: 'var(--dw-text)' }}
       >
         {children}
