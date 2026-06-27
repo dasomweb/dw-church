@@ -23,6 +23,8 @@ const ALLOWED_KEYS = [
   'social_kakaotalk',
   'social_kakaotalk_channel',
   'staff_display',
+  // Web App (PWA) bottom tabs — JSON array of menu item ids (max 5)
+  'web_app_tab_ids',
 ] as const;
 
 export type SettingKey = (typeof ALLOWED_KEYS)[number];

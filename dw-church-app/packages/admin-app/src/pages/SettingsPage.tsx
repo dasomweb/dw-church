@@ -4,6 +4,7 @@ import {
   useChurchSettings,
   useUpdateChurchSettings,
   useDWChurchClient,
+  useMenus,
   type ChurchSettings,
 } from '@dw-church/api-client';
 import { ImageUpload } from '../components';
@@ -12,6 +13,7 @@ type SettingsFormData = ChurchSettings;
 
 export default function SettingsPage() {
   const { data: settings, isLoading } = useChurchSettings();
+  const { data: menus } = useMenus();
   const updateSettings = useUpdateChurchSettings();
   const apiClient = useDWChurchClient();
   const uploadImage = async (file: File): Promise<string> => (await apiClient!.uploadFile(file)).url;
@@ -327,6 +329,47 @@ export default function SettingsPage() {
             </div>
           </div>
         </section>
+
+        {/* Web App bottom tabs (shows when the 웹앱 add-on is on) */}
+        {(() => {
+          const topMenus = (menus ?? []).filter((m: { parentId?: string | null }) => !m.parentId);
+          let tabIds: string[] = [];
+          try { tabIds = JSON.parse((watch('webAppTabIds') as string) || '[]'); } catch { tabIds = []; }
+          const toggle = (id: string) => {
+            const next = tabIds.includes(id) ? tabIds.filter((x) => x !== id) : [...tabIds, id];
+            if (next.length > 5) return; // max 5 tabs
+            setValue('webAppTabIds', JSON.stringify(next), { shouldDirty: true });
+          };
+          return (
+            <section className="bg-white rounded-lg border border-gray-200 p-6">
+              <input type="hidden" {...register('webAppTabIds')} />
+              <h2 className="text-base font-semibold text-gray-900 mb-1">웹앱 하단 탭 <span className="text-xs font-normal text-gray-400">(웹앱 부가기능 사용 시)</span></h2>
+              <p className="text-xs text-gray-500 mb-4">
+                설치형 앱의 하단 탭바에 띄울 메뉴를 <strong>최대 5개</strong> 고르세요(선택 순서대로 배치). 나머지 메뉴는 "메뉴" 탭에서 보입니다. 비워두면 메뉴 순서대로 자동 표시됩니다.
+              </p>
+              {topMenus.length === 0 ? (
+                <p className="text-sm text-gray-400">메뉴가 없습니다. 먼저 메뉴 관리에서 메뉴를 추가하세요.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {topMenus.map((m: { id: string; label: string }) => {
+                    const idx = tabIds.indexOf(m.id);
+                    const on = idx >= 0;
+                    return (
+                      <button
+                        type="button"
+                        key={m.id}
+                        onClick={() => toggle(m.id)}
+                        className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${on ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+                      >
+                        {on && <span className="mr-1 font-bold">{idx + 1}</span>}{m.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+          );
+        })()}
 
         {/* Submit button */}
         <div className="flex items-center justify-end gap-3">
