@@ -1564,6 +1564,16 @@ interface PageFormData {
   isHome: boolean;
 }
 
+/** Derive a URL slug from a page name. Keeps a-z/0-9 and Korean; spaces → "-".
+ *  "About Us" → "about-us", "교회 소개" → "교회-소개". */
+function slugifyPageName(s: string): string {
+  return s.trim().toLowerCase()
+    .replace(/[^a-z0-9가-힣\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 // ═══════════════════════════════════════════════════════════
 // Main Component
 // ═══════════════════════════════════════════════════════════
@@ -1572,6 +1582,8 @@ export default function PageEditor() {
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [sectionProps, setSectionProps] = useState<Record<string, Record<string, unknown>>>({});
   const [showPageForm, setShowPageForm] = useState(false);
+  // Once the operator hand-edits the slug, stop auto-deriving it from the name.
+  const [slugEdited, setSlugEdited] = useState(false);
   const [showTemplateGallery, setShowTemplateGallery] = useState(false);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
@@ -1588,7 +1600,16 @@ export default function PageEditor() {
   const deleteSection = useDeleteSection();
   const reorderSections = useReorderSections();
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<PageFormData>();
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<PageFormData>();
+
+  // Auto-derive slug from the page name while creating, until the operator
+  // edits the slug by hand (mirrors the reference "New Page" UX).
+  const watchedTitle = watch('title');
+  useEffect(() => {
+    if (showPageForm && !selectedPageId && !slugEdited) {
+      setValue('slug', slugifyPageName(watchedTitle || ''));
+    }
+  }, [watchedTitle, showPageForm, selectedPageId, slugEdited, setValue]);
 
   const selectedPage = pages?.find((p) => p.id === selectedPageId) ?? null;
   const sortedSections = [...(sections || [])].sort((a, b) => a.sortOrder - b.sortOrder);
@@ -1602,12 +1623,14 @@ export default function PageEditor() {
 
   const handleCreatePage = () => {
     setSelectedPageId(null);
+    setSlugEdited(false);
     reset({ title: '', slug: '', status: 'draft', isHome: false });
     setShowPageForm(true);
   };
 
   const handleEditPage = () => {
     if (!selectedPage) return;
+    setSlugEdited(true); // editing — never auto-overwrite the existing slug
     reset({ title: selectedPage.title, slug: selectedPage.slug, status: selectedPage.status, isHome: selectedPage.isHome });
     setShowPageForm(true);
   };
@@ -1962,34 +1985,57 @@ export default function PageEditor() {
       {showPageForm && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
           <div className="bg-white rounded-xl w-full max-w-md p-5">
-            <h3 className="text-base font-bold mb-3">{selectedPage ? '페이지 수정' : '새 페이지'}</h3>
-            <form onSubmit={handleSubmit(onSubmitPage)} className="space-y-3">
+            <h3 className="text-base font-bold mb-4">{selectedPage ? '페이지 수정' : '새 페이지'}</h3>
+            <form onSubmit={handleSubmit(onSubmitPage)} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium mb-1">제목</label>
-                <input {...register('title', { required: '제목을 입력하세요' })} className="w-full border rounded-lg px-3 py-2 text-sm" />
+                <label className="block text-sm font-semibold mb-1">페이지 이름</label>
+                <input
+                  {...register('title', { required: '페이지 이름을 입력하세요' })}
+                  autoFocus
+                  className="w-full border rounded-lg px-3 py-2 text-sm"
+                  placeholder="예: 교회 소개"
+                />
                 {errors.title && <p className="text-red-500 text-xs mt-0.5">{errors.title.message}</p>}
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1">Slug</label>
-                <input {...register('slug', { required: 'slug를 입력하세요' })} className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="about-us" />
-              </div>
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <label className="block text-xs font-medium mb-1">상태</label>
-                  <select {...register('status')} className="w-full border rounded-lg px-3 py-2 text-sm">
-                    <option value="draft">임시저장</option>
-                    <option value="published">공개</option>
-                  </select>
+                <label className="block text-sm font-semibold mb-1">페이지 주소 (slug)</label>
+                <div className="flex items-stretch border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500">
+                  <span className="flex items-center px-2.5 bg-gray-50 border-r text-gray-400 text-sm">/</span>
+                  <input
+                    {...register('slug', { required: 'slug를 입력하세요', onChange: () => setSlugEdited(true) })}
+                    className="flex-1 px-3 py-2 text-sm outline-none font-mono"
+                    placeholder="about-us"
+                  />
                 </div>
-                <div className="flex items-end pb-1">
-                  <label className="flex items-center gap-1.5 text-xs">
-                    <input type="checkbox" {...register('isHome')} className="rounded" />
-                    홈 페이지
-                  </label>
-                </div>
+                {errors.slug && <p className="text-red-500 text-xs mt-0.5">{errors.slug.message}</p>}
               </div>
+
+              {selectedPage ? (
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <label className="block text-sm font-semibold mb-1">상태</label>
+                    <select {...register('status')} className="w-full border rounded-lg px-3 py-2 text-sm">
+                      <option value="draft">임시저장</option>
+                      <option value="published">공개</option>
+                    </select>
+                  </div>
+                  <div className="flex items-end pb-1">
+                    <label className="flex items-center gap-1.5 text-xs">
+                      <input type="checkbox" {...register('isHome')} className="rounded" />
+                      홈 페이지
+                    </label>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  빈 페이지가 생성됩니다. <strong>메뉴 관리</strong>에서 추가하기 전까지는 사이트 메뉴에 표시되지 않습니다.
+                </p>
+              )}
+
               <div className="flex gap-2 pt-1">
-                <button type="submit" disabled={createPage.isPending || updatePage.isPending} className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50">저장</button>
+                <button type="submit" disabled={createPage.isPending || updatePage.isPending} className="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50">
+                  {selectedPage ? '저장' : '페이지 생성'}
+                </button>
                 <button type="button" onClick={() => setShowPageForm(false)} className="px-4 py-2 bg-gray-100 text-sm rounded-lg hover:bg-gray-200">취소</button>
               </div>
             </form>
