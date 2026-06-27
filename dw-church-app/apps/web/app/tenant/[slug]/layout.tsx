@@ -158,7 +158,10 @@ export async function generateMetadata({ params }: TenantLayoutProps): Promise<M
     icons: faviconUrl ? { icon: faviconUrl, apple: faviconUrl } : undefined,
     ...(siteMeta.features.pwa
       ? {
-          manifest: `/tenant/${slug}/manifest.webmanifest`,
+          // Root-relative so it resolves on the tenant's canonical host
+          // (subdomain / custom domain); the middleware rewrites
+          // /manifest.webmanifest → /tenant/{slug}/manifest.webmanifest.
+          manifest: `/manifest.webmanifest`,
           appleWebApp: {
             capable: true,
             statusBarStyle: 'default',

@@ -170,5 +170,10 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next|api|favicon.ico).*)'],
+  // Exclude static public assets (sw.js, icons, fonts, etc.) so the custom-domain
+  // / subdomain rewrite doesn't turn /sw.js into /tenant/{slug}/sw.js (404),
+  // which would break service-worker registration + PWA icons. NOTE: .webmanifest
+  // is intentionally NOT excluded — it's a dynamic route under /tenant/[slug] and
+  // must be rewritten there.
+  matcher: ['/((?!_next|api|favicon.ico|sw.js|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|js|css|woff2?|ttf|map|txt|xml)$).*)'],
 };

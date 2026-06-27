@@ -39,11 +39,15 @@ export async function GET(
 
   const shortName = name.length > 12 ? `${name.slice(0, 12)}` : name;
 
+  // start_url/scope are root ("/") — the manifest is served on the tenant's
+  // canonical host (its subdomain or custom domain) where "/" IS the tenant
+  // root (the middleware rewrites "/" → /tenant/{slug}). Using /tenant/{slug}
+  // here would double-prefix on those hosts and break the installed app.
   const manifest = {
     name,
     short_name: shortName,
-    start_url: `/tenant/${slug}`,
-    scope: `/tenant/${slug}`,
+    start_url: '/',
+    scope: '/',
     display: 'standalone',
     background_color: '#ffffff',
     theme_color: '#2563eb',
