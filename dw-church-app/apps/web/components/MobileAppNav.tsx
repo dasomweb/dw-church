@@ -3,57 +3,39 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { iconPathByKey } from './webAppIcons';
 
 interface MobileAppNavItem {
   label: string;
   href: string;
+  icon?: string; // operator-chosen icon key (see webAppIcons)
 }
 
 interface MobileAppNavProps {
   items: MobileAppNavItem[];
 }
 
-// Keyword → emoji icon map for app-style tiles. Matched against the menu label
-// so operator-named menus ("설교 말씀", "오시는 길") still resolve sensibly.
-const ICON_KEYWORDS: { match: string; icon: string }[] = [
-  { match: '설교', icon: '🎙️' },
-  { match: '말씀', icon: '🎙️' },
-  { match: '주보', icon: '📄' },
-  { match: '앨범', icon: '📸' },
-  { match: '사진', icon: '📸' },
-  { match: '교역자', icon: '👥' },
-  { match: '섬기는', icon: '👥' },
-  { match: '예배', icon: '🙏' },
-  { match: '오시는', icon: '📍' },
-  { match: '오시는길', icon: '📍' },
-  { match: '위치', icon: '📍' },
-  { match: '소개', icon: 'ℹ️' },
-  { match: '행사', icon: '📅' },
-  { match: '일정', icon: '📅' },
-  { match: '게시판', icon: '📋' },
-  { match: '공지', icon: '📋' },
-  { match: '칼럼', icon: '✍️' },
-];
-
-function iconFor(label: string): string {
-  for (const { match, icon } of ICON_KEYWORDS) {
-    if (label.includes(match)) return icon;
-  }
-  return '⛪';
+function TabIcon({ iconKey, active }: { iconKey?: string; active: boolean }) {
+  return (
+    <svg
+      className={`h-6 w-6 ${active ? 'text-[var(--dw-primary)]' : 'text-gray-500'}`}
+      viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7}
+      strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
+    >
+      <path d={iconPathByKey(iconKey)} />
+    </svg>
+  );
 }
 
 /**
- * App-style bottom tab bar, mobile only (sm:hidden). Shown for tenants with the
- * Web App add-on. Up to 5 menu items render as tabs; when there are MORE than 5,
- * the first 4 are shown plus a "메뉴" (More) tab that opens a sheet listing every
- * menu item — so nothing is unreachable. Active tab matched by pathname.
+ * App-style bottom tab bar — shown ONLY when launched as the installed web app
+ * (display-mode: standalone). Up to 5 tabs; with >5 menu items the first 4 show
+ * plus a "메뉴" (More) tab that opens a full-menu sheet. Icons are operator-chosen
+ * (webAppIcons) — no keyword guessing. Active tab matched by pathname.
  */
 export default function MobileAppNav({ items }: MobileAppNavProps) {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
-  // The app-style bottom bar belongs to the INSTALLED web app only — show it
-  // when launched standalone (display-mode: standalone, or iOS navigator.standalone),
-  // not in the regular mobile browser (which keeps the normal header + install button).
   const [standalone, setStandalone] = useState(false);
   useEffect(() => {
     const check = () =>
@@ -72,7 +54,6 @@ export default function MobileAppNav({ items }: MobileAppNavProps) {
   const hasOverflow = items.length > 5;
   const primary = hasOverflow ? items.slice(0, 4) : items.slice(0, 5);
 
-  // Longest matching href wins so "/about" doesn't light up for "/" root.
   const activeHref = items
     .filter((it) => {
       if (!pathname) return false;
@@ -83,19 +64,13 @@ export default function MobileAppNav({ items }: MobileAppNavProps) {
     })
     .sort((a, b) => b.href.length - a.href.length)[0]?.href;
 
-  const tileClass = (active: boolean) =>
-    `flex h-10 w-10 items-center justify-center rounded-xl text-lg transition-colors ${
-      active ? 'bg-[var(--dw-primary)] text-white shadow' : 'bg-gray-100 text-gray-700'
-    }`;
   const labelClass = (active: boolean) =>
-    `max-w-[64px] truncate text-[10px] font-medium leading-tight ${
-      active ? 'text-[var(--dw-primary)]' : 'text-gray-600'
-    }`;
+    `max-w-[64px] truncate text-[10px] font-medium leading-tight ${active ? 'text-[var(--dw-primary)]' : 'text-gray-500'}`;
 
   return (
     <>
-      {/* Reserve space so fixed bar doesn't cover content (standalone only). */}
-      <div aria-hidden className="h-[72px] sm:hidden" />
+      {/* Reserve space so the fixed bar doesn't cover content (standalone only). */}
+      <div aria-hidden className="h-[64px] sm:hidden" />
 
       {/* "메뉴" (More) sheet — full menu list */}
       {moreOpen && (
@@ -112,12 +87,8 @@ export default function MobileAppNav({ items }: MobileAppNavProps) {
                 const active = activeHref != null && item.href === activeHref;
                 return (
                   <li key={`more-${item.href}-${idx}`}>
-                    <Link
-                      href={item.href}
-                      onClick={() => setMoreOpen(false)}
-                      className="flex flex-col items-center gap-1 rounded-lg py-2"
-                    >
-                      <span className={tileClass(active)} aria-hidden="true">{iconFor(item.label)}</span>
+                    <Link href={item.href} onClick={() => setMoreOpen(false)} className="flex flex-col items-center gap-1 rounded-lg py-2">
+                      <TabIcon iconKey={item.icon} active={active} />
                       <span className={labelClass(active)}>{item.label}</span>
                     </Link>
                   </li>
@@ -130,7 +101,7 @@ export default function MobileAppNav({ items }: MobileAppNavProps) {
 
       <nav
         aria-label="앱 하단 메뉴"
-        className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-white/90 backdrop-blur sm:hidden"
+        className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-white/95 backdrop-blur sm:hidden"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <ul className="mx-auto flex max-w-lg items-stretch justify-around px-1 py-1.5">
@@ -138,12 +109,8 @@ export default function MobileAppNav({ items }: MobileAppNavProps) {
             const isActive = activeHref != null && item.href === activeHref;
             return (
               <li key={`${item.href}-${idx}`} className="flex-1">
-                <Link
-                  href={item.href}
-                  aria-current={isActive ? 'page' : undefined}
-                  className="flex flex-col items-center gap-1 rounded-lg px-1 py-1 transition-colors"
-                >
-                  <span className={tileClass(isActive)} aria-hidden="true">{iconFor(item.label)}</span>
+                <Link href={item.href} aria-current={isActive ? 'page' : undefined} className="flex flex-col items-center gap-1 px-1 py-1">
+                  <TabIcon iconKey={item.icon} active={isActive} />
                   <span className={labelClass(isActive)}>{item.label}</span>
                 </Link>
               </li>
@@ -151,12 +118,8 @@ export default function MobileAppNav({ items }: MobileAppNavProps) {
           })}
           {hasOverflow && (
             <li className="flex-1">
-              <button
-                onClick={() => setMoreOpen(true)}
-                aria-haspopup="dialog"
-                className="flex w-full flex-col items-center gap-1 rounded-lg px-1 py-1 transition-colors"
-              >
-                <span className={tileClass(moreOpen)} aria-hidden="true">☰</span>
+              <button onClick={() => setMoreOpen(true)} aria-haspopup="dialog" className="flex w-full flex-col items-center gap-1 px-1 py-1">
+                <svg className={`h-6 w-6 ${moreOpen ? 'text-[var(--dw-primary)]' : 'text-gray-500'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
                 <span className={labelClass(moreOpen)}>메뉴</span>
               </button>
             </li>

@@ -25,6 +25,7 @@ const ALLOWED_KEYS = [
   'staff_display',
   // Web App (PWA) bottom tabs — JSON array of menu item ids (max 5)
   'web_app_tab_ids',
+  'web_app_tab_icons',
 ] as const;
 
 export type SettingKey = (typeof ALLOWED_KEYS)[number];

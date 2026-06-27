@@ -390,8 +390,15 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
     const child = item.children?.find((c) => c.pageSlug || c.externalUrl);
     return child ? navHref(child) : navHref(item);
   };
+  // Operator-chosen icon per menu (settings.web_app_tab_icons = { menuId: key }).
+  let iconMap: Record<string, string> = {};
+  const rawIcons = (settings as Record<string, unknown> | null)?.webAppTabIcons
+    ?? (settings as Record<string, unknown> | null)?.web_app_tab_icons;
+  if (typeof rawIcons === 'string' && rawIcons.trim()) {
+    try { const m = JSON.parse(rawIcons); if (m && typeof m === 'object') iconMap = m; } catch { /* ignore */ }
+  }
   const appNavItems = pwaEnabled
-    ? orderedAppItems.map((item) => ({ label: item.label, href: appHref(item) }))
+    ? orderedAppItems.map((item) => ({ label: item.label, href: appHref(item), icon: iconMap[item.id] }))
     : [];
 
   return (

@@ -8,6 +8,7 @@ import {
   type ChurchSettings,
 } from '@dw-church/api-client';
 import { ImageUpload } from '../components';
+import { WEB_APP_ICONS } from '../components/webAppIcons';
 
 type SettingsFormData = ChurchSettings;
 
@@ -330,42 +331,78 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* Web App bottom tabs (shows when the 웹앱 add-on is on) */}
+        {/* Web App bottom tabs + per-tab icon picker (웹앱 add-on) */}
         {(() => {
           const topMenus = (menus ?? []).filter((m: { parentId?: string | null }) => !m.parentId);
           let tabIds: string[] = [];
           try { tabIds = JSON.parse((watch('webAppTabIds') as string) || '[]'); } catch { tabIds = []; }
+          let tabIcons: Record<string, string> = {};
+          try { tabIcons = JSON.parse((watch('webAppTabIcons') as string) || '{}') || {}; } catch { tabIcons = {}; }
           const toggle = (id: string) => {
             const next = tabIds.includes(id) ? tabIds.filter((x) => x !== id) : [...tabIds, id];
             if (next.length > 5) return; // max 5 tabs
             setValue('webAppTabIds', JSON.stringify(next), { shouldDirty: true });
           };
+          const pickIcon = (id: string, key: string) => {
+            setValue('webAppTabIcons', JSON.stringify({ ...tabIcons, [id]: key }), { shouldDirty: true });
+          };
+          const labelOf = (id: string) => topMenus.find((m: { id: string; label: string }) => m.id === id)?.label ?? '';
           return (
             <section className="bg-white rounded-lg border border-gray-200 p-6">
               <input type="hidden" {...register('webAppTabIds')} />
+              <input type="hidden" {...register('webAppTabIcons')} />
               <h2 className="text-base font-semibold text-gray-900 mb-1">웹앱 하단 탭 <span className="text-xs font-normal text-gray-400">(웹앱 부가기능 사용 시)</span></h2>
               <p className="text-xs text-gray-500 mb-4">
-                설치형 앱의 하단 탭바에 띄울 메뉴를 <strong>최대 5개</strong> 고르세요(선택 순서대로 배치). 나머지 메뉴는 "메뉴" 탭에서 보입니다. 비워두면 메뉴 순서대로 자동 표시됩니다.
+                설치형 앱의 하단 탭바에 띄울 메뉴를 <strong>최대 5개</strong> 고르고(선택 순서대로 배치), 각 탭의 <strong>아이콘</strong>을 고르세요. 나머지 메뉴는 "메뉴" 탭에서 보입니다.
               </p>
               {topMenus.length === 0 ? (
                 <p className="text-sm text-gray-400">메뉴가 없습니다. 먼저 메뉴 관리에서 메뉴를 추가하세요.</p>
               ) : (
-                <div className="flex flex-wrap gap-2">
-                  {topMenus.map((m: { id: string; label: string }) => {
-                    const idx = tabIds.indexOf(m.id);
-                    const on = idx >= 0;
-                    return (
-                      <button
-                        type="button"
-                        key={m.id}
-                        onClick={() => toggle(m.id)}
-                        className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${on ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
-                      >
-                        {on && <span className="mr-1 font-bold">{idx + 1}</span>}{m.label}
-                      </button>
-                    );
-                  })}
-                </div>
+                <>
+                  <div className="flex flex-wrap gap-2">
+                    {topMenus.map((m: { id: string; label: string }) => {
+                      const idx = tabIds.indexOf(m.id);
+                      const on = idx >= 0;
+                      return (
+                        <button
+                          type="button"
+                          key={m.id}
+                          onClick={() => toggle(m.id)}
+                          className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${on ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+                        >
+                          {on && <span className="mr-1 font-bold">{idx + 1}</span>}{m.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {tabIds.length > 0 && (
+                    <div className="mt-5 space-y-3 border-t border-gray-100 pt-4">
+                      <p className="text-xs font-medium text-gray-500">탭 아이콘 선택</p>
+                      {tabIds.map((id) => (
+                        <div key={id} className="flex items-start gap-3">
+                          <span className="w-20 shrink-0 pt-1.5 text-sm text-gray-700 truncate">{labelOf(id)}</span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {WEB_APP_ICONS.map((ic) => {
+                              const sel = tabIcons[id] === ic.key;
+                              return (
+                                <button
+                                  type="button"
+                                  key={ic.key}
+                                  onClick={() => pickIcon(id, ic.key)}
+                                  title={ic.label}
+                                  className={`h-9 w-9 flex items-center justify-center rounded-lg border transition-colors ${sel ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+                                >
+                                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d={ic.d} /></svg>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </section>
           );
