@@ -77,6 +77,7 @@ async function main(): Promise<void> {
   // 로 destructure 해서 TS2339 build error 발생 (2026-06-03 fix).
   const { aiPlannerProxyRoutes } = await import('./modules/ai/planner-proxy/routes.js');
   const { aiBuildPagesRoutes } = await import('./modules/ai/build-pages/routes.js');
+  const { aiImportContentRoutes } = await import('./modules/ai/import-content/routes.js');
   const { aiBuilderRoutes } = await import('./modules/ai/builder-routes/routes.js');
   const { aiJobsRoutes } = await import('./modules/ai/jobs/routes.js');
 
@@ -163,6 +164,7 @@ async function main(): Promise<void> {
   // Phase 11-A2 — AI 빌더 서버 routes. 모두 super_admin gate (각 route 안에서).
   await app.register(aiPlannerProxyRoutes, { prefix: '/api/v1' }); // /ai/planner/*
   await app.register(aiBuildPagesRoutes,   { prefix: '/api/v1' }); // /ai/build-pages
+  await app.register(aiImportContentRoutes, { prefix: '/api/v1' }); // /ai/import-content (verbatim handoff)
   await app.register(aiBuilderRoutes,      { prefix: '/api/v1' }); // /ai/builder/*
   await app.register(aiJobsRoutes,         { prefix: '/api/v1' }); // /ai/jobs/*
   await app.register(sermonRoutes, { prefix: '/api/v1' });

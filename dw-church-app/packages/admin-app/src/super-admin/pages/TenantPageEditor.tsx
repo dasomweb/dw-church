@@ -153,6 +153,10 @@ export default function TenantPageEditor() {
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
+  // Verbatim content import (paste → AI structures → blocks).
+  const [importOpen, setImportOpen] = useState(false);
+  const [importText, setImportText] = useState('');
+  const [importing, setImporting] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   // Page settings modal (rename / slug / 홈 지정).
@@ -466,6 +470,34 @@ export default function TenantPageEditor() {
     }
   };
 
+  // Verbatim handoff: paste content → AI structures (no rewrite) → blocks
+  // appended to this page (created server-side, like addBlock).
+  const importContent = async () => {
+    if (!selectedPageId || !importText.trim() || importing) return;
+    setImporting(true);
+    try {
+      const res = await fetch(`${baseUrl}/api/v1/ai/import-content`, {
+        method: 'POST', headers,
+        body: JSON.stringify({ pageId: selectedPageId, content: importText }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null) as { error?: { message?: string } } | null;
+        throw new Error(body?.error?.message || `HTTP ${res.status}`);
+      }
+      const body = await res.json() as { data: { created: number; skipped: number; sections: Record<string, unknown>[] } };
+      const rows = (body.data.sections ?? []).map(normalizeSection);
+      setSections((prev) => [...prev, ...rows]);
+      if (rows[0]) setSelectedSectionId(rows[0].id);
+      showToast('success', `블록 ${body.data.created}개 생성${body.data.skipped ? ` · 건너뜀 ${body.data.skipped}` : ''}`);
+      setImportOpen(false);
+      setImportText('');
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '가져오기 실패');
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const deleteSection = async (sectionId: string) => {
     if (!selectedPageId) return;
     // Deselect FIRST so the inspector unmounts and flushes any pending edit to
@@ -667,7 +699,15 @@ export default function TenantPageEditor() {
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider">섹션</h2>
             {selectedPage && (
-              <div className="relative">
+              <div className="relative flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setImportOpen(true)}
+                  title="콘텐츠 붙여넣기 → AI가 블록 자동 생성 (원문 그대로)"
+                  className="rounded border border-indigo-300 px-1.5 py-0.5 text-[11px] text-indigo-700 hover:bg-indigo-50"
+                >
+                  ✦ 콘텐츠 가져오기
+                </button>
                 <button
                   type="button"
                   onClick={() => setAddMenuOpen((v) => !v)}
@@ -822,6 +862,32 @@ export default function TenantPageEditor() {
         )}
       </section>
       </div>
+
+      {/* Verbatim content import — paste → AI structures (no rewrite) → blocks */}
+      {importOpen && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4" onClick={() => !importing && setImportOpen(false)}>
+          <div className="w-full max-w-xl rounded-xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-gray-900">콘텐츠 가져오기 (원문 그대로)</h3>
+            <p className="mt-1 text-xs text-gray-500 leading-relaxed">
+              기존 페이지 내용을 붙여넣으면 AI가 <strong>글을 고치지 않고</strong> 의미만 분석해 알맞은 블록(히어로·기능·단계·FAQ·인용 등)으로 자동 배치합니다. 생성된 블록은 <strong>{selectedPage?.title ?? '현재 페이지'}</strong> 아래에 추가됩니다.
+            </p>
+            <textarea
+              autoFocus
+              value={importText}
+              onChange={(e) => setImportText(e.target.value)}
+              placeholder={'예)\n우리 교회를 소개합니다\n\n섬김의 4단계\n1. 환영 - 처음 오신 분을 맞이합니다\n2. 양육 - ...\n\n자주 묻는 질문\nQ. 주차가 되나요? A. 네, ...'}
+              rows={12}
+              className="mt-4 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+            />
+            <div className="mt-4 flex justify-end gap-2">
+              <button type="button" onClick={() => setImportOpen(false)} disabled={importing} className="px-4 py-2 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50">취소</button>
+              <button type="button" onClick={() => void importContent()} disabled={importing || !importText.trim()} className="px-4 py-2 text-sm font-semibold rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50">
+                {importing ? '분석 중…' : '분석해서 블록 생성'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Page settings modal — rename / slug / 홈 지정 */}
       {pageSettings && (
