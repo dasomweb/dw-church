@@ -555,7 +555,8 @@ export function mapSectionToBlock(spec: SectionSpec): MappedBlock | null {
     }
   }
 
-  if (key === 'features' || key === 'features-grid' || key === 'services-grid' || key === 'capabilities') {
+  if (key === 'features' || key === 'features-grid' || key === 'services-grid' || key === 'capabilities'
+      || ((key === 'list' || key === 'services') && Array.isArray(spec.items) && spec.items.length > 0)) {
     const items = (spec.items ?? []).map((it) => ({
       title: String(it.title ?? it.name ?? it.heading ?? ''),
       description: String(it.description ?? it.text ?? ''),
