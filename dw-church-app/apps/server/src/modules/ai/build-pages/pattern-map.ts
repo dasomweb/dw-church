@@ -534,6 +534,27 @@ export function mapSectionToBlock(spec: SectionSpec): MappedBlock | null {
     };
   }
 
+  // ── Signal: ordered (numbered) list → steps_list (numbered indicators) ──
+  // The verbatim importer flags numbered lists (1. 2. 3.); honor that even when
+  // the section was labeled features/services/list — numbers imply a sequence.
+  const ORDERED_KEYS = new Set(['', 'features', 'features-grid', 'services-grid', 'capabilities', 'list', 'check-list', 'checklist', 'bullets', 'feature-list']);
+  if (spec.ordered === true && Array.isArray(spec.items) && spec.items.length >= 2 && ORDERED_KEYS.has(key)) {
+    const stepItems = spec.items
+      .map((it) => (typeof it === 'string'
+        ? { title: it }
+        : {
+            title: String(it.title ?? it.name ?? it.heading ?? '').trim(),
+            description: String(it.description ?? it.text ?? '').trim() || undefined,
+          }))
+      .filter((it) => it.title);
+    if (stepItems.length >= 2) {
+      return {
+        blockType: 'steps_list',
+        props: { title: title || '', subtitle: subtitle || description || '', items: stepItems, layout: stepItems.length >= 5 ? 'vertical' : 'grid', ...commonExtras(spec) },
+      };
+    }
+  }
+
   if (key === 'features' || key === 'features-grid' || key === 'services-grid' || key === 'capabilities') {
     const items = (spec.items ?? []).map((it) => ({
       title: String(it.title ?? it.name ?? it.heading ?? ''),
@@ -543,13 +564,30 @@ export function mapSectionToBlock(spec: SectionSpec): MappedBlock | null {
       caption: String(it.caption ?? ''),
       href: typeof it.href === 'string' ? it.href : undefined,
     }));
+    // ── Signal: terse, image-less list of 4+ short items → check_list (리스트형),
+    // not cards. Items with real descriptions stay features_grid (카드형). ──
+    const hasImages = items.some((it) => it.imageUrl);
+    const lens = items.map((it) => it.description.length);
+    const avgDesc = lens.length ? lens.reduce((a, b) => a + b, 0) / lens.length : 0;
+    if (!spec.variant && !hasImages && items.length >= 4 && avgDesc < 12) {
+      return {
+        blockType: 'check_list',
+        props: {
+          title: title || '',
+          subtitle: subtitle || description || '',
+          items: items.map((it) => ({ text: it.description ? `${it.title} — ${it.description}` : it.title })),
+          ...commonExtras(spec),
+        },
+      };
+    }
     // FeaturesGrid's own variant (compact / image-card / icon-large)
     // can be set by the AI to flex card style — defaults to compact.
     // Whitelist the value so a typo doesn't break the block.
     const VALID_VARIANTS = new Set(['compact', 'image-card', 'icon-large']);
     const featuresVariant = typeof spec.variant === 'string' && VALID_VARIANTS.has(spec.variant)
       ? spec.variant
-      : 'compact';
+      // Signal: items carry images → image-card (visual cards); else compact text cards.
+      : (hasImages ? 'image-card' : 'compact');
     // image-card variant typically reads better centered with no
     // outline (the image is the visual frame). compact stays outline.
     const cardStyleByVariant: Record<string, string> = {
