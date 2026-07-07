@@ -121,6 +121,7 @@ async function main(): Promise<void> {
   const { demoTenantRoutes } = await import('./modules/demo-tenant/routes.js');
   const { marketingRoutes } = await import('./modules/marketing/routes.js');
   const { caseStudyRoutes } = await import('./modules/case-studies/routes.js');
+  const { analyticsRoutes } = await import('./modules/analytics/routes.js');
 
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(tenantRoutes, { prefix: '/api/v1/admin' });
@@ -205,6 +206,7 @@ async function main(): Promise<void> {
   await app.register(demoTenantRoutes, { prefix: '/api/v1' }); // /admin/demo-tenant/* (snapshot/reset/status)
   await app.register(marketingRoutes, { prefix: '/api/v1' }); // /marketing-config (public) + /admin/marketing-config
   await app.register(caseStudyRoutes, { prefix: '/api/v1' }); // /case-studies (public) + /admin/case-studies (포트폴리오)
+  await app.register(analyticsRoutes, { prefix: '/api/v1' }); // /analytics/hit (public beacon) + /analytics/summary (admin report)
 
   // --- Internal: resolve custom domain to tenant slug (used by Next.js middleware) ---
   app.get('/api/v1/admin/tenants/resolve-domain', async (request, reply) => {
@@ -304,6 +306,35 @@ async function main(): Promise<void> {
     );
   } catch (err) {
     app.log.warn(`web_app_addon column migration skipped: ${err}`);
+  }
+
+  // --- Analytics: shared public.site_visits table (first-party usage tracking) ---
+  // One shared table keyed by tenant_slug (not a per-tenant schema table): the
+  // operator report compares tenants and churches are low-traffic, so a single
+  // indexed table is simplest + cheapest. Every read is filtered by tenant_slug.
+  // Stores a first-party visitor id, coarse device, and external referrer host
+  // only — no IP / full UA / cookies. Populated by POST /api/v1/analytics/hit.
+  try {
+    await prisma.$executeRawUnsafe(
+      `CREATE TABLE IF NOT EXISTS public.site_visits (
+         id            BIGSERIAL PRIMARY KEY,
+         tenant_slug   TEXT NOT NULL,
+         visitor_id    TEXT NOT NULL,
+         session_id    TEXT,
+         path          TEXT NOT NULL,
+         referrer_host TEXT,
+         device        TEXT,
+         created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+       )`,
+    );
+    await prisma.$executeRawUnsafe(
+      `CREATE INDEX IF NOT EXISTS site_visits_tenant_time ON public.site_visits (tenant_slug, created_at DESC)`,
+    );
+    await prisma.$executeRawUnsafe(
+      `CREATE INDEX IF NOT EXISTS site_visits_tenant_visitor ON public.site_visits (tenant_slug, visitor_id)`,
+    );
+  } catch (err) {
+    app.log.warn(`site_visits table migration skipped: ${err}`);
   }
 
   // --- Tenant schema drift repair ---

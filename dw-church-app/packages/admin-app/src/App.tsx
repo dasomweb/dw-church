@@ -60,6 +60,7 @@ const MenuEditor = lazyWithReload(() => import('./pages/MenuEditor'));
 const ThemeDeprecatedNotice = lazyWithReload(() => import('./pages/ThemeDeprecatedNotice'));
 const UserManagement = lazyWithReload(() => import('./pages/UserManagement'));
 const SettingsPage = lazyWithReload(() => import('./pages/SettingsPage'));
+const AnalyticsPage = lazyWithReload(() => import('./pages/AnalyticsPage'));
 const OnboardingPage = lazyWithReload(() => import('./pages/OnboardingPage'));
 const DomainSettings = lazyWithReload(() => import('./pages/DomainSettings'));
 const SuperAdminDashboard = lazyWithReload(() => import('./pages/SuperAdminDashboardV2'));
@@ -268,6 +269,7 @@ export function App({ config }: { config: AppConfig }) {
                 }
               >
                 <Route index element={<TenantOverview />} />
+                <Route path="analytics" element={<AnalyticsPage />} />
                 <Route path="pages" element={<TenantPageEditor />} />
                 <Route path="content" element={<TenantContentEntries />} />
                 {/* Form builder + inbox reuse the tenant pages; the api-client
@@ -330,6 +332,7 @@ export function App({ config }: { config: AppConfig }) {
                 }
               >
                 <Route index element={<Dashboard />} />
+                <Route path="analytics" element={<AnalyticsPage />} />
                 {/* Unified onto the standalone onboarding — old /intake links redirect. */}
                 <Route path="intake" element={<IntakeRedirect />} />
                 <Route path="bulletins" element={<BulletinManagement />} />

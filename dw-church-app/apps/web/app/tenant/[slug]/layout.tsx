@@ -7,6 +7,7 @@ import MobileMenu from '@/components/MobileMenu';
 import MobileAppNav from '@/components/MobileAppNav';
 import PwaRegister from '@/components/PwaRegister';
 import InstallAppButton from '@/components/InstallAppButton';
+import AnalyticsBeacon from '@/components/AnalyticsBeacon';
 import { BrandTokensStyle } from '@/components/BrandTokensStyle';
 import { PreviewBridge } from '@/components/PreviewBridge';
 import { DEFAULT_DESIGN_TOKENS, type DesignTokens } from '@dw-church/design-tokens';
@@ -608,6 +609,9 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
 
       {/* App-style bottom navigation — Pro-plan only, mobile only. */}
       {pwaEnabled && <MobileAppNav items={appNavItems} />}
+
+      {/* First-party page-view tracking (feeds the admin 방문 통계 report). */}
+      <AnalyticsBeacon slug={slug} />
     </div>
   );
 }
