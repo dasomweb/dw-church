@@ -703,6 +703,10 @@ function FooterTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChang
                       onChange={(url) => set('logoUrl', url)}
                       onUpload={uploadFooterLogo}
                       resize="content"
+                      // Logos need their transparent PNG kept (no JPEG white
+                      // matte) — same as the header logo in SettingsPage. 'auto'
+                      // preserves a PNG source, still shrinking it for R2.
+                      format="auto"
                       aspectRatio="3/1"
                     />
                     <p className="text-[10px] text-gray-400 mt-1">어두운 풋터에는 밝은(흰색) 로고를 권장합니다.</p>
