@@ -8,7 +8,11 @@ dockerfilePath = "apps/web/Dockerfile"
 
 [deploy]
 startCommand = "node apps/web/server.js"
-healthcheckPath = "/"
+# Use /api/health (NOT "/"): the tenant middleware treats any non-platform Host
+# — including Railway's internal healthcheck Host — as a custom domain and 404s
+# unknown ones, so "/" fails the healthcheck. /api/health is excluded from the
+# middleware matcher and always returns 200 once the container is up.
+healthcheckPath = "/api/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
