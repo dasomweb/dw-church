@@ -176,7 +176,27 @@ function videoIdFromUrl(url: string): string | null {
   return m?.[1] ?? null;
 }
 
-function buildVideo(videoId: string, title: string, description: string, publishedAt: string): YoutubeVideo {
+// YouTube API returns titles/descriptions with HTML entities (&quot; &amp; &#39;
+// …). Decode them so stored text is clean (React would otherwise show the raw
+// entity literally).
+function decodeEntities(s: string): string {
+  return s
+    .replace(/&quot;/g, '"')
+    .replace(/&#0*34;/g, '"')
+    .replace(/&#0*39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&#x0*27;/gi, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&#(\d+);/g, (_, n) => { try { return String.fromCodePoint(Number(n)); } catch { return _; } })
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => { try { return String.fromCodePoint(parseInt(n, 16)); } catch { return _; } })
+    .replace(/&amp;/g, '&'); // amp last so it doesn't double-decode
+}
+
+function buildVideo(videoId: string, rawTitle: string, rawDescription: string, publishedAt: string): YoutubeVideo {
+  const title = decodeEntities(rawTitle);
+  const description = decodeEntities(rawDescription);
   const blob = `${title}\n${description}`;
   return {
     videoId,
