@@ -90,7 +90,7 @@ function Segmented({ options, value, onChange }: { options: { key: string; label
 
 function PresetPicker({ sizes }: { sizes: PromptSize[] }) {
   const [styleKey, setStyleKey] = useState('modern');
-  const [textKey, setTextKey] = useState('space');
+  const [textKey, setTextKey] = useState('text');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const copy = async (size: PromptSize) => {
     try {
