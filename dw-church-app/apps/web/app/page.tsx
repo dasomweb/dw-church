@@ -309,8 +309,10 @@ function HeroSlider({ slides, lang }: { slides: { headline: string; subline: str
     return () => clearInterval(timer);
   }, [next]);
 
+  // Mobile: a tall hero (560px) so the headline + buttons never clip; the
+  // 21:9 cinematic ratio only kicks in on desktop where it's wide enough.
   return (
-    <section className="relative w-full overflow-hidden bg-gray-900" style={{ aspectRatio: '21/9' }}>
+    <section className="relative w-full overflow-hidden bg-gray-900 min-h-[560px] lg:min-h-0 lg:aspect-[21/9]">
       {slides.map((slide, i) => (
         <div
           key={i}
