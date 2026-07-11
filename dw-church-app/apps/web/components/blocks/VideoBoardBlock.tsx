@@ -26,14 +26,15 @@ function extractYoutubeId(url?: string | null): string | null {
   return match?.[1] ?? null;
 }
 
-// A clickable thumbnail (NOT an inline player) — the church asked that videos
-// not play directly on the page. Clicking opens the video on YouTube in a new
-// tab. Poster uses the stored thumbnail, falling back to YouTube's own image.
-function VideoThumbLink({ url, title, thumbnailUrl }: { url: string; title: string; thumbnailUrl?: string }) {
+// A clickable thumbnail — same look as the sermon video cards: just the YouTube
+// thumbnail image (hqdefault, preferred over any stored thumbnail) with a subtle
+// bottom gradient, NO inline player and NO big play-button overlay. Clicking
+// opens the video on YouTube in a new tab (videos don't play on the page).
+function VideoThumbLink({ url, title }: { url: string; title: string }) {
   const videoId = extractYoutubeId(url);
   if (!videoId) return null;
   const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
-  const poster = thumbnailUrl || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+  const poster = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
   return (
     <a
       href={watchUrl}
@@ -44,12 +45,8 @@ function VideoThumbLink({ url, title, thumbnailUrl }: { url: string; title: stri
       style={{ paddingBottom: '56.25%' }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={poster} alt={title} className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
-      <span className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors group-hover:bg-black/30">
-        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/60 transition-transform group-hover:scale-110">
-          <svg className="h-6 w-6 translate-x-[1px] text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
-        </span>
-      </span>
+      <img src={poster} alt={title} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+      <span className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
     </a>
   );
 }
@@ -102,12 +99,11 @@ export async function VideoBoardBlock({ props, slug, page = 1 }: VideoBoardBlock
             const youtubeUrl = video.youtubeUrl ?? video.youtube_url ?? '';
             const date = video.videoDate ?? video.video_date ?? video.createdAt ?? video.created_at ?? '';
             const categoryName = video.categoryName ?? video.category_name ?? '';
-            const thumbnailUrl = video.thumbnailUrl ?? video.thumbnail_url ?? '';
             const id = video.id ?? '';
 
             return (
               <div key={id} className="flex flex-col overflow-hidden rounded-2xl border border-black/[0.06] bg-white shadow-sm">
-                <VideoThumbLink url={youtubeUrl} title={videoTitle} thumbnailUrl={thumbnailUrl} />
+                <VideoThumbLink url={youtubeUrl} title={videoTitle} />
                 <div className="p-5 flex flex-col flex-1">
                   <h3 className="font-bold font-heading text-base leading-snug line-clamp-2">{videoTitle}</h3>
                   <div className="mt-3 pt-3 border-t border-black/[0.05] flex items-center justify-between text-xs text-gray-400">
