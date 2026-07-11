@@ -431,7 +431,7 @@ export default function DomainSettings() {
                             </div>
                             {rec.nameRelative && (
                               <div>
-                                <div className="text-[10px] text-gray-400 mb-0.5">subdomain만 입력 <span className="text-gray-400">· Squarespace · GoDaddy · 가비아</span></div>
+                                <div className="text-[10px] text-gray-400 mb-0.5">subdomain만 입력 <span className="text-gray-400">· Squarespace · GoDaddy · Namecheap</span></div>
                                 <div className="flex items-center gap-1.5">
                                   <code className="flex-1 font-mono bg-gray-50 px-2 py-1 rounded border text-[11px] truncate">{rec.nameRelative}</code>
                                   <button onClick={() => copy(rec.nameRelative!)} className="text-[10px] px-1.5 py-0.5 bg-white border rounded hover:bg-gray-50">복사</button>
@@ -461,7 +461,7 @@ export default function DomainSettings() {
                     </div>
 
                     <p className="text-[11px] text-gray-500">
-                      ※ “이름/호스트” 칸은 등록업체마다 규칙이 다릅니다. <strong>Cloudflare·Route53</strong>은 <strong>전체 이름</strong>(<code className="font-mono">www.{d.domain.replace(/^www\./, '')}</code>)을, <strong>Squarespace·GoDaddy·가비아</strong>는 <strong>subdomain만</strong>(<code className="font-mono">www</code>, 루트는 <code className="font-mono">@</code>)을 넣습니다. 위 각 레코드에 두 방식을 모두 적어 두었으니 <strong>본인 등록업체에 맞는 쪽</strong>을 복사하세요.
+                      ※ “이름/호스트” 칸은 등록업체마다 규칙이 다릅니다. <strong>Cloudflare·Route53</strong>은 <strong>전체 이름</strong>(<code className="font-mono">www.{d.domain.replace(/^www\./, '')}</code>)을, <strong>Squarespace·GoDaddy·Namecheap</strong>는 <strong>subdomain만</strong>(<code className="font-mono">www</code>, 루트는 <code className="font-mono">@</code>)을 넣습니다. 위 각 레코드에 두 방식을 모두 적어 두었으니 <strong>본인 등록업체에 맞는 쪽</strong>을 복사하세요.
                     </p>
                     {(() => {
                       const root = d.domain.replace(/^www\./, '');

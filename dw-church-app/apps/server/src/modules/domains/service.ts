@@ -51,7 +51,7 @@ export interface DnsInstruction {
   /** Full record name (FQDN) — Cloudflare/Route53 style DNS editors want this. */
   name: string;
   /** Relative host — registrars that auto-append the domain (Squarespace,
-   *  GoDaddy, Namecheap, 가비아 …) want just this ("www", "@" for the root). */
+   *  GoDaddy, Namecheap …) want just this ("www", "@" for the root). */
   nameRelative: string;
   /** What they put in "Value/Target" field. */
   value: string;
