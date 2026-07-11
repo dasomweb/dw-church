@@ -138,8 +138,6 @@ export function BannerSlider({
   if (!data && isLoading) return <LoadingSpinner />;
   if (banners.length === 0) return <EmptyState title="배너가 없습니다" />;
 
-  const banner = banners[currentIndex]!;
-
   // Fixed mode: a real height per breakpoint (image object-cover fills it).
   // Legacy mode: aspect-ratio via paddingBottom (% of width).
   const slideClass = useFixedHeight ? `dw-bs-${sliderId}` : '';
@@ -147,39 +145,56 @@ export function BannerSlider({
     ? heightVars
     : { paddingBottom: `${heightRatio}%` };
 
-  const slideContent = (
-    <div className={`relative w-full overflow-hidden ${slideClass}`} style={slideStyle}>
-      {useFixedHeight && (
-        <style>{`
+  return (
+    <div className={`relative overflow-hidden ${className}`} role="region" aria-label="배너 슬라이더">
+      {/* All slides are stacked; the active one fades in over the previous one
+          for a smooth crossfade instead of a hard cut. */}
+      <div className={`relative w-full overflow-hidden ${slideClass}`} style={slideStyle}>
+        {useFixedHeight && (
+          <style>{`
           .dw-bs-${sliderId}{height:var(--bsh-mobile);}
           @media (min-width:768px){.dw-bs-${sliderId}{height:var(--bsh-tablet);}}
           @media (min-width:1024px){.dw-bs-${sliderId}{height:var(--bsh-desktop);}}
         `}</style>
-      )}
-      <picture>
-        <source media="(max-width: 768px)" srcSet={banner.mobileImageUrl ?? undefined} />
-        <img
-          src={banner.pcImageUrl ?? undefined}
-          alt={banner.title}
-          className="absolute inset-0 h-full w-full object-cover transition-opacity duration-500"
-        />
-      </picture>
-      {overlayAlpha > 0 && banner.textOverlay?.overlayEnabled !== false && (
-        <div className="absolute inset-0" style={{ backgroundColor: overlayColor, opacity: overlayAlpha }} />
-      )}
-      <BannerTextOverlay banner={banner} />
-    </div>
-  );
-
-  return (
-    <div className={`relative overflow-hidden ${className}`} role="region" aria-label="배너 슬라이더">
-      {banner.linkUrl ? (
-        <a href={banner.linkUrl} target={banner.linkTarget} rel="noopener noreferrer">
-          {slideContent}
-        </a>
-      ) : (
-        slideContent
-      )}
+        )}
+        {banners.map((b, idx) => {
+          const active = idx === currentIndex;
+          const layerClass = `absolute inset-0 transition-opacity duration-700 ease-in-out ${active ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`;
+          const inner = (
+            <>
+              <picture>
+                <source media="(max-width: 768px)" srcSet={b.mobileImageUrl ?? undefined} />
+                <img
+                  src={b.pcImageUrl ?? undefined}
+                  alt={b.title}
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              </picture>
+              {overlayAlpha > 0 && b.textOverlay?.overlayEnabled !== false && (
+                <div className="absolute inset-0" style={{ backgroundColor: overlayColor, opacity: overlayAlpha }} />
+              )}
+              <BannerTextOverlay banner={b} />
+            </>
+          );
+          return b.linkUrl ? (
+            <a
+              key={b.id}
+              href={b.linkUrl}
+              target={b.linkTarget}
+              rel="noopener noreferrer"
+              className={`block ${layerClass}`}
+              aria-hidden={!active}
+              tabIndex={active ? undefined : -1}
+            >
+              {inner}
+            </a>
+          ) : (
+            <div key={b.id} className={layerClass} aria-hidden={!active}>
+              {inner}
+            </div>
+          );
+        })}
+      </div>
 
       {/* Prev / Next Buttons */}
       {banners.length > 1 && (
