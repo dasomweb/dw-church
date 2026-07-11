@@ -1278,6 +1278,12 @@ async function main(): Promise<void> {
   const { startDemoResetScheduler } = await import('./modules/demo-tenant/scheduler.js');
   startDemoResetScheduler();
 
+  // Auto-verify pending custom domains (wire tenants.custom_domain the moment
+  // Cloudflare routing+SSL go active) so a domain never stays 404 just because
+  // nobody clicked "연결 확인". See modules/domains/auto-verify.ts.
+  const { startDomainAutoVerify } = await import('./modules/domains/auto-verify.js');
+  startDomainAutoVerify(app);
+
   // --- Graceful shutdown ---
   const shutdown = async (signal: string): Promise<void> => {
     app.log.info(`Received ${signal} — shutting down`);
