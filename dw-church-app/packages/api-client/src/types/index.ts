@@ -172,6 +172,7 @@ export interface Banner {
   textOverlay: BannerTextOverlay;
   category: BannerCategory;
   status: PostStatus;
+  sortOrder?: number;
   createdAt: string;
   modifiedAt: string;
 }

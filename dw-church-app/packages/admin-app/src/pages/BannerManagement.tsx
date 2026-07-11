@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect, type CSSProperties } from 'react';
 import { useForm } from 'react-hook-form';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import type { Banner, BannerListParams, BannerPosition, BannerAlign, BannerCategory, LinkTarget, PostStatus } from '@dw-church/api-client';
 import {
   useBanners,
@@ -189,6 +192,55 @@ const BANNER_STATUS_BADGE: Record<string, string> = {
   archived: 'bg-gray-100 text-gray-500',
 };
 
+// One draggable row of the banner list. The drag handle reorders rows; the new
+// order is persisted as sort_order, which is exactly the order the storefront
+// slider plays them in.
+function SortableBannerRow({ item, active, onEdit, onDelete, deleteDisabled }: {
+  item: Banner;
+  active: boolean;
+  onEdit: () => void;
+  onDelete: () => void;
+  deleteDisabled: boolean;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
+  const style: CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+  return (
+    <tr ref={setNodeRef} style={style} className="border-b bg-white hover:bg-gray-50">
+      <td className="w-8 px-2 py-3 text-center text-gray-400 cursor-grab active:cursor-grabbing touch-none" {...attributes} {...listeners} aria-label="드래그하여 순서 변경" title="드래그하여 순서 변경">
+        <svg className="mx-auto h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5" /><circle cx="15" cy="6" r="1.5" /><circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" /><circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" /></svg>
+      </td>
+      <td className="px-4 py-3 text-sm font-medium">{item.title}</td>
+      <td className="px-4 py-3 text-sm">
+        <span className={`px-2 py-1 rounded text-xs ${item.category === 'main' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>
+          {item.category === 'main' ? '메인' : '서브'}
+        </span>
+      </td>
+      <td className="px-4 py-3 text-sm">{item.startDate ? String(item.startDate).slice(0, 10) : '-'}</td>
+      <td className="px-4 py-3 text-sm">{item.endDate ? String(item.endDate).slice(0, 10) : '-'}</td>
+      <td className="px-4 py-3 text-sm">
+        {active ? (
+          <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-800" title="공개 상태이며 표시 기간 내라 지금 사이트에 노출됩니다">표시중</span>
+        ) : (
+          <span
+            className={`px-2 py-1 rounded text-xs ${BANNER_STATUS_BADGE[item.status] ?? 'bg-gray-100 text-gray-600'}`}
+            title={item.status === 'published' ? '공개 상태이지만 표시 기간이 아닙니다 (예약 또는 종료)' : undefined}
+          >
+            {BANNER_STATUS_LABELS[item.status] ?? item.status}
+          </span>
+        )}
+      </td>
+      <td className="px-4 py-3 text-sm space-x-2">
+        <button onClick={onEdit} className="text-blue-600 hover:underline">편집</button>
+        <button onClick={onDelete} disabled={deleteDisabled} className="text-red-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed">삭제</button>
+      </td>
+    </tr>
+  );
+}
+
 const POSITION_OPTIONS: { value: BannerPosition; label: string }[] = [
   { value: 'top-left', label: '좌측 상단' },
   { value: 'top-center', label: '중앙 상단' },
@@ -228,6 +280,26 @@ export default function BannerManagement() {
   const updateMutation = useUpdateBanner();
   const deleteMutation = useDeleteBanner();
   const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<BannerFormData>();
+
+  // Local order mirror so drag reordering is instant; synced from the query and
+  // persisted back as sort_order (drives the storefront slider order).
+  const [ordered, setOrdered] = useState<Banner[]>([]);
+  useEffect(() => { if (data?.data) setOrdered(data.data); }, [data]);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const handleDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIndex = ordered.findIndex((b) => b.id === active.id);
+    const newIndex = ordered.findIndex((b) => b.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+    const next = arrayMove(ordered, oldIndex, newIndex);
+    setOrdered(next);
+    // Persist only rows whose position actually changed.
+    next.forEach((b, idx) => {
+      if (b.sortOrder !== idx) updateMutation.mutate({ id: b.id, data: { sortOrder: idx } });
+    });
+    showToast('success', '순서가 변경되었습니다.');
+  };
 
   const handleEdit = (item: Banner) => {
     setEditingItem(item);
@@ -543,55 +615,37 @@ export default function BannerManagement() {
               사용 안 함
             </span>
           </div>
+          <p className="mb-2 text-xs text-gray-400">⋮⋮ 손잡이를 드래그해 순서를 바꾸면 사이트 배너 슬라이드 순서가 그대로 반영됩니다.</p>
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-50 border-b">
-                  <th className="text-left px-4 py-3 text-sm font-medium">제목</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium">카테고리</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium">시작일</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium">종료일</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium">상태</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium">액션</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.data.map((item) => (
-                  <tr key={item.id} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm font-medium">{item.title}</td>
-                    <td className="px-4 py-3 text-sm">
-                      <span className={`px-2 py-1 rounded text-xs ${item.category === 'main' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>
-                        {item.category === 'main' ? '메인' : '서브'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm">{item.startDate ? String(item.startDate).slice(0, 10) : '-'}</td>
-                    <td className="px-4 py-3 text-sm">{item.endDate ? String(item.endDate).slice(0, 10) : '-'}</td>
-                    <td className="px-4 py-3 text-sm">
-                      {isActive(item) ? (
-                        <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-800" title="공개 상태이며 표시 기간 내라 지금 사이트에 노출됩니다">표시중</span>
-                      ) : (
-                        <span
-                          className={`px-2 py-1 rounded text-xs ${BANNER_STATUS_BADGE[item.status] ?? 'bg-gray-100 text-gray-600'}`}
-                          title={item.status === 'published' ? '공개 상태이지만 표시 기간이 아닙니다 (예약 또는 종료)' : undefined}
-                        >
-                          {BANNER_STATUS_LABELS[item.status] ?? item.status}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-sm space-x-2">
-                      <button onClick={() => handleEdit(item)} className="text-blue-600 hover:underline">편집</button>
-                      <button
-                        onClick={() => handleDelete(item)}
-                        disabled={deleteMutation.isPending}
-                        className="text-red-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        삭제
-                      </button>
-                    </td>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gray-50 border-b">
+                    <th className="w-8 px-2 py-3" aria-label="순서" />
+                    <th className="text-left px-4 py-3 text-sm font-medium">제목</th>
+                    <th className="text-left px-4 py-3 text-sm font-medium">카테고리</th>
+                    <th className="text-left px-4 py-3 text-sm font-medium">시작일</th>
+                    <th className="text-left px-4 py-3 text-sm font-medium">종료일</th>
+                    <th className="text-left px-4 py-3 text-sm font-medium">상태</th>
+                    <th className="text-left px-4 py-3 text-sm font-medium">액션</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  <SortableContext items={ordered.map((b) => b.id)} strategy={verticalListSortingStrategy}>
+                    {ordered.map((item) => (
+                      <SortableBannerRow
+                        key={item.id}
+                        item={item}
+                        active={isActive(item)}
+                        onEdit={() => handleEdit(item)}
+                        onDelete={() => handleDelete(item)}
+                        deleteDisabled={deleteMutation.isPending}
+                      />
+                    ))}
+                  </SortableContext>
+                </tbody>
+              </table>
+            </DndContext>
           </div>
 
           <div className="flex items-center justify-between mt-4">
