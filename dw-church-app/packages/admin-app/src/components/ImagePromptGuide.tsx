@@ -90,7 +90,10 @@ function Segmented({ options, value, onChange }: { options: { key: string; label
 
 function PresetPicker({ sizes }: { sizes: PromptSize[] }) {
   const [styleKey, setStyleKey] = useState('modern');
-  const [textKey, setTextKey] = useState('text');
+  // Default = 글자포함 (no anti-text restriction). Checking "Only 배경" switches
+  // to the no-text background mode for overlaying a headline in the editor.
+  const [bgOnly, setBgOnly] = useState(false);
+  const textKey = bgOnly ? 'space' : 'text';
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const copy = async (size: PromptSize) => {
     try {
@@ -101,16 +104,14 @@ function PresetPicker({ sizes }: { sizes: PromptSize[] }) {
   };
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] font-semibold text-gray-500">스타일</span>
-          <Segmented options={PROMPT_STYLES} value={styleKey} onChange={setStyleKey} />
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] font-semibold text-gray-500">텍스트</span>
-          <Segmented options={PROMPT_TEXT_MODES} value={textKey} onChange={setTextKey} />
-        </div>
+      <div className="flex items-center gap-2">
+        <span className="text-[11px] font-semibold text-gray-500">스타일</span>
+        <Segmented options={PROMPT_STYLES} value={styleKey} onChange={setStyleKey} />
       </div>
+      <label className="flex w-fit cursor-pointer select-none items-center gap-2 text-xs text-gray-600">
+        <input type="checkbox" checked={bgOnly} onChange={(e) => setBgOnly(e.target.checked)} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600" />
+        <span><strong>Only 배경</strong> <span className="text-gray-400">— 글자 없는 배경으로 생성 (에디터에서 직접 글자를 올릴 때). 체크 해제 시 프롬프트에 원하는 문구를 넣어 생성합니다.</span></span>
+      </label>
       <div className={`grid grid-cols-1 gap-2 ${sizes.length >= 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
         {sizes.map((s) => (
           <button
@@ -166,8 +167,12 @@ export function ImagePromptGuide({
           <p className="text-xs leading-relaxed text-gray-600">{intro}</p>
 
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5">
-            <p className="text-xs font-semibold text-amber-800">한글 텍스트 팁</p>
+            <p className="text-xs font-semibold text-amber-800">한글 폰트·텍스트 디자인 팁</p>
             <ul className="mt-1 list-disc space-y-0.5 pl-4 text-[11px] leading-relaxed text-amber-700">
+              <li><strong>고딕(산세리프) 계열 추천</strong> — 배너·행사 이미지엔 명조보다 굵은 고딕체가 멀리서도 또렷합니다. (예: Pretendard, 나눔스퀘어, 노토 산스 KR)</li>
+              <li><strong>행간(줄 간격)은 넉넉히</strong> — 한글은 받침이 있어 행간이 좁으면 답답합니다. 1.3~1.5배 정도가 편안하게 읽힙니다.</li>
+              <li><strong>자간은 살짝 좁게</strong> — 한글 제목은 자간을 약간(-2~-5%) 좁히면 더 단정하고 밀도 있어 보입니다.</li>
+              <li><strong>배경과 대비 확보</strong> — 사진 위 글자는 어두운 오버레이나 그림자로 가독성을 확보하세요. 밝은 배경엔 진한 글자, 어두운 배경엔 흰 글자.</li>
               <li><strong>좌우 여백(여백의 미)을 충분히</strong> — 글자를 가장자리까지 꽉 채우지 말고 양옆을 비워두면 한글이 훨씬 정돈되고 고급스럽게 보입니다.</li>
               <li><strong>폰트는 과도하게 크지 않게</strong> — 한글은 영문보다 글자 면적이 커서 너무 키우면 답답해 보입니다. 제목은 한눈에 읽히는 선에서 절제하고 굵기·여백으로 강조하세요.</li>
               <li>핵심 문구는 짧게 — 한 줄에 다 담으려 하기보다 핵심만 남기면 여백이 살아납니다.</li>
