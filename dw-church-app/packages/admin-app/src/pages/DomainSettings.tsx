@@ -17,6 +17,8 @@ interface DnsInstruction {
   purpose: 'ownership' | 'routing';
   type: 'TXT' | 'CNAME' | 'A';
   name: string;
+  /** Relative host for registrars that auto-append the domain (e.g. "www", "@"). */
+  nameRelative?: string;
   value: string;
   ttl?: number;
   optional?: boolean;
@@ -418,9 +420,24 @@ export default function DomainSettings() {
                           <code className="font-mono">{rec.type}</code>
 
                           <span className="text-gray-500">Name / Host</span>
-                          <div className="flex items-center gap-1.5">
-                            <code className="flex-1 font-mono bg-gray-50 px-2 py-1 rounded border text-[11px] truncate">{rec.name}</code>
-                            <button onClick={() => copy(rec.name)} className="text-[10px] px-1.5 py-0.5 bg-white border rounded hover:bg-gray-50">복사</button>
+                          <div className="space-y-1.5">
+                            {/* 등록업체마다 "이름/호스트" 칸 규칙이 달라 두 방식을 모두 안내한다. */}
+                            <div>
+                              <div className="text-[10px] text-gray-400 mb-0.5">전체 이름 방식 <span className="text-gray-400">· Cloudflare · Route53</span></div>
+                              <div className="flex items-center gap-1.5">
+                                <code className="flex-1 font-mono bg-gray-50 px-2 py-1 rounded border text-[11px] truncate">{rec.name}</code>
+                                <button onClick={() => copy(rec.name)} className="text-[10px] px-1.5 py-0.5 bg-white border rounded hover:bg-gray-50">복사</button>
+                              </div>
+                            </div>
+                            {rec.nameRelative && (
+                              <div>
+                                <div className="text-[10px] text-gray-400 mb-0.5">subdomain만 입력 <span className="text-gray-400">· Squarespace · GoDaddy · 가비아</span></div>
+                                <div className="flex items-center gap-1.5">
+                                  <code className="flex-1 font-mono bg-gray-50 px-2 py-1 rounded border text-[11px] truncate">{rec.nameRelative}</code>
+                                  <button onClick={() => copy(rec.nameRelative!)} className="text-[10px] px-1.5 py-0.5 bg-white border rounded hover:bg-gray-50">복사</button>
+                                </div>
+                              </div>
+                            )}
                           </div>
 
                           <span className="text-gray-500">Value / Target</span>
@@ -444,7 +461,7 @@ export default function DomainSettings() {
                     </div>
 
                     <p className="text-[11px] text-gray-500">
-                      ※ 일부 등록업체는 “이름/호스트” 칸에 도메인 뒷부분을 자동으로 붙입니다. 그럴 땐 위 값에서 <strong>앞부분만</strong>(예: <code className="font-mono">www</code>) 입력하세요.
+                      ※ “이름/호스트” 칸은 등록업체마다 규칙이 다릅니다. <strong>Cloudflare·Route53</strong>은 <strong>전체 이름</strong>(<code className="font-mono">www.{d.domain.replace(/^www\./, '')}</code>)을, <strong>Squarespace·GoDaddy·가비아</strong>는 <strong>subdomain만</strong>(<code className="font-mono">www</code>, 루트는 <code className="font-mono">@</code>)을 넣습니다. 위 각 레코드에 두 방식을 모두 적어 두었으니 <strong>본인 등록업체에 맞는 쪽</strong>을 복사하세요.
                     </p>
                     {(() => {
                       const root = d.domain.replace(/^www\./, '');

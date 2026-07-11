@@ -48,8 +48,11 @@ export interface CustomDomain {
 export interface DnsInstruction {
   purpose: 'ownership' | 'routing';
   type: 'TXT' | 'CNAME' | 'A';
-  /** What the user types in DNS "Name/Host" field. */
+  /** Full record name (FQDN) — Cloudflare/Route53 style DNS editors want this. */
   name: string;
+  /** Relative host — registrars that auto-append the domain (Squarespace,
+   *  GoDaddy, Namecheap, 가비아 …) want just this ("www", "@" for the root). */
+  nameRelative: string;
   /** What they put in "Value/Target" field. */
   value: string;
   ttl?: number;
@@ -88,12 +91,23 @@ export function buildDnsInstructionsFromCf(
   hostname: cf.CloudflareCustomHostname,
 ): DnsInstruction[] {
   const records: DnsInstruction[] = [];
+
+  // Registrable apex (last two labels) → derive the relative host each registrar
+  // wants ("www", "@", "_cf-...www"). Good enough for single-label TLDs (.org,
+  // .com, .app); multi-part TLDs (.co.uk) are out of scope for these tenants.
+  const registrableApex = domain.split('.').slice(-2).join('.');
+  const rel = (name: string): string =>
+    name === registrableApex ? '@'
+    : name.endsWith(`.${registrableApex}`) ? name.slice(0, -(registrableApex.length + 1))
+    : name;
+
   const verify = hostname.ownership_verification;
   if (verify && verify.type === 'txt') {
     records.push({
       purpose: 'ownership',
       type: 'TXT',
       name: verify.name,
+      nameRelative: rel(verify.name),
       value: verify.value,
       ttl: 300,
     });
@@ -102,6 +116,7 @@ export function buildDnsInstructionsFromCf(
     purpose: 'routing',
     type: 'CNAME',
     name: domain,
+    nameRelative: rel(domain),
     value: env.CF_FALLBACK_ORIGIN,
     ttl: 300,
   });
@@ -113,6 +128,7 @@ export function buildDnsInstructionsFromCf(
       purpose: 'routing',
       type: 'CNAME',
       name: apex,
+      nameRelative: rel(apex),
       value: env.CF_FALLBACK_ORIGIN,
       ttl: 300,
       optional: true,
