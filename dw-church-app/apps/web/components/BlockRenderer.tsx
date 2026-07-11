@@ -34,7 +34,7 @@ import { CustomFormBlock } from './blocks/CustomFormBlock';
 import { ContactInfoBlock } from './blocks/ContactInfoBlock';
 
 type PageSection = { id: string; blockType: string; props: Record<string, unknown>; sortOrder: number; isVisible: boolean };
-type AnyBlock = (p: { props: Record<string, unknown>; slug: string }) => React.ReactNode | Promise<React.ReactNode>;
+type AnyBlock = (p: { props: Record<string, unknown>; slug: string; page?: number }) => React.ReactNode | Promise<React.ReactNode>;
 
 // Church blocks override the shared map by block_type.
 const CHURCH_BLOCKS: Record<string, AnyBlock> = {
@@ -69,9 +69,11 @@ const BLOCK_MAP: Record<string, AnyBlock> = {
 interface BlockRendererProps {
   section: PageSection;
   slug: string;
+  /** Current page for paginated data blocks (e.g. video_board). From ?page=. */
+  page?: number;
 }
 
-export function BlockRenderer({ section, slug }: BlockRendererProps) {
+export function BlockRenderer({ section, slug, page }: BlockRendererProps) {
   const Component = BLOCK_MAP[section.blockType];
 
   if (!Component) {
@@ -102,11 +104,11 @@ export function BlockRenderer({ section, slug }: BlockRendererProps) {
 
   // Cast to a sync element — storefront data blocks may be async Server
   // Components; Next.js renders them fine, but tsc's JSX checker needs the cast.
-  const Render = Component as (p: { props: Record<string, unknown>; slug: string }) => React.ReactNode;
+  const Render = Component as (p: { props: Record<string, unknown>; slug: string; page?: number }) => React.ReactNode;
 
   return (
     <div data-dw-section={section.id} data-dw-blocktype={section.blockType} style={overrideStyle}>
-      <Render props={section.props} slug={slug} />
+      <Render props={section.props} slug={slug} page={page} />
     </div>
   );
 }

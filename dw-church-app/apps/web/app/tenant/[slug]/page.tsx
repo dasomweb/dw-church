@@ -5,6 +5,7 @@ import type { Metadata } from 'next';
 
 interface TenantHomeProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ page?: string }>;
 }
 
 export async function generateMetadata({ params }: TenantHomeProps): Promise<Metadata> {
@@ -12,8 +13,10 @@ export async function generateMetadata({ params }: TenantHomeProps): Promise<Met
   return buildTenantMetadata(slug);
 }
 
-export default async function TenantHomePage({ params }: TenantHomeProps) {
+export default async function TenantHomePage({ params, searchParams }: TenantHomeProps) {
   const { slug } = await params;
+  // ?page= drives pagination for any paginated data block (e.g. video_board).
+  const currentPage = Math.max(1, parseInt((await searchParams).page ?? '1', 10) || 1);
 
   let page;
   try {
@@ -37,7 +40,7 @@ export default async function TenantHomePage({ params }: TenantHomeProps) {
         .filter((s) => s.isVisible)
         .sort((a, b) => a.sortOrder - b.sortOrder)
         .map((section) => (
-          <BlockRenderer key={section.id} section={section} slug={slug} />
+          <BlockRenderer key={section.id} section={section} slug={slug} page={currentPage} />
         ))}
     </div>
   );
