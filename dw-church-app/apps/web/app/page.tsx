@@ -94,7 +94,7 @@ const COPY: Record<Lang, Copy> = {
     launchPromo: {
       eyebrow: '오픈 기념 한정 혜택',
       title: '디자인 셋업비 30% OFF',
-      subline: '선착순 20개 교회 · 라이트·기본형 1년 구독 고객 · 7월 31일까지',
+      subline: '라이트·기본형 1년 구독 고객 · 8월 31일까지',
       cta: '런칭 혜택 신청',
     },
     plansSection: {
@@ -102,7 +102,7 @@ const COPY: Record<Lang, Copy> = {
       subtitle: '교회 규모에 맞는 플랜을 선택하세요. 언제든 업그레이드할 수 있습니다.',
       monthly: '월 결제', yearly: '연 결제', save: '연간 할인',
       perMonth: '/월', billedYearly: '연 1회 청구', setupOnce: '셋업비(1회)',
-      setupWas: '정가', promoSetupNote: '오픈 기념 30% 할인 (~7/31)',
+      setupWas: '정가', promoSetupNote: '오픈 기념 30% 할인 (~8/31)',
       includedTitle: '모든 플랜 공통 포함',
       included: [
         '교회 전용 주소 + 보안 인증',
@@ -214,7 +214,7 @@ const COPY: Record<Lang, Copy> = {
     launchPromo: {
       eyebrow: 'Launch offer',
       title: '30% off your design setup fee',
-      subline: 'First 20 churches · Light & Basic annual plans · through July 31',
+      subline: 'Light & Basic annual plans · through Aug 31',
       cta: 'Claim launch offer',
     },
     plansSection: {
@@ -222,7 +222,7 @@ const COPY: Record<Lang, Copy> = {
       subtitle: 'Choose the plan that fits your church. Upgrade anytime.',
       monthly: 'Monthly', yearly: 'Yearly', save: 'Yearly discount',
       perMonth: '/mo', billedYearly: 'billed annually', setupOnce: 'setup, one-time',
-      setupWas: 'was', promoSetupNote: 'Launch 30% off (through Jul 31)',
+      setupWas: 'was', promoSetupNote: 'Launch 30% off (through Aug 31)',
       includedTitle: 'Included in Every Plan',
       included: [
         'Professional church design themes',

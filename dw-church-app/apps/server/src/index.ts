@@ -940,7 +940,7 @@ async function main(): Promise<void> {
       { labelKo: '데모 체험', labelEn: 'Try the Demo', url: '', variant: 'demo' },
     ];
     const SEED_HERO_SLIDES = [
-      { headlineKo: '솔루션 오픈 기념 · 디자인 셋업비 30% OFF', headlineEn: 'Launch Special · 30% Off Design Setup', sublineKo: '선착순 20개 교회 · 라이트·기본형 1년 구독 고객 · 7월 31일까지', sublineEn: 'First 20 churches · Light·Basic 1-year plans · Through July 31', imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1680&h=720&fit=crop', buttons: [{ labelKo: '런칭 혜택 신청', labelEn: 'Claim Launch Offer', url: '/apply', variant: 'primary' }, { labelKo: '요금제 보기', labelEn: 'See Plans', url: '/#plans', variant: 'outline' }] },
+      { headlineKo: '솔루션 오픈 기념 · 디자인 셋업비 30% OFF', headlineEn: 'Launch Special · 30% Off Design Setup', sublineKo: '라이트·기본형 1년 구독 고객 · 8월 31일까지', sublineEn: 'Light·Basic 1-year plans · Through Aug 31', imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1680&h=720&fit=crop', buttons: [{ labelKo: '런칭 혜택 신청', labelEn: 'Claim Launch Offer', url: '/apply', variant: 'primary' }, { labelKo: '요금제 보기', labelEn: 'See Plans', url: '/#plans', variant: 'outline' }] },
       { headlineKo: '교회 웹사역을 쉽고 편리하게', headlineEn: 'Church web ministry made simple', sublineKo: '복잡한 준비 없이 교회의 온라인 사역을 시작할 수 있습니다.', sublineEn: 'Start your church’s online ministry without the complicated setup.', imageUrl: 'https://images.unsplash.com/photo-1507692049790-de58290a4334?w=1680&h=720&fit=crop', buttons: DEFAULT_BTNS },
       { headlineKo: '누구나 손쉽게 관리할 수 있습니다', headlineEn: 'Easy for anyone to manage', sublineKo: '어려운 설정이나 기술 없이 교회가 직접 콘텐츠를 올리고 관리합니다.', sublineEn: 'Your church adds and manages content directly — no technical skills needed.', imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1680&h=720&fit=crop', buttons: DEFAULT_BTNS },
       { headlineKo: '교회는 사역에만 집중할 수 있습니다', headlineEn: 'Focus on what matters most', sublineKo: '복잡한 기술과 관리는 솔루션이 처리하므로 교회는 본연의 사역에 전념할 수 있습니다.', sublineEn: 'The platform handles the technical side, so your church can focus on its ministry.', imageUrl: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1680&h=720&fit=crop', buttons: DEFAULT_BTNS },
@@ -1122,7 +1122,7 @@ async function main(): Promise<void> {
     // Seed the row disabled — super admin reviews the code/dates then activates.
     await prisma.$executeRawUnsafe(
       `INSERT INTO "promo_settings" (id, active, code, label, discount_percent, target_plans, ends_at)
-       VALUES (1, false, 'OPEN30', '오픈 기념 — 디자인 셋업비 30% 할인', 30, '["light","basic"]'::jsonb, '2026-07-31T23:59:59Z')
+       VALUES (1, false, 'OPEN30', '오픈 기념 — 디자인 셋업비 30% 할인', 30, '["light","basic"]'::jsonb, '2026-08-31T23:59:59Z')
        ON CONFLICT (id) DO NOTHING`,
     );
   } catch (err) {
