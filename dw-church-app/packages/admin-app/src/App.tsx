@@ -193,6 +193,13 @@ function IntakeRedirect() {
  */
 function TenantAdminLayout({ client }: { client: DWChurchClient }) {
   const { slug = '' } = useParams<{ slug: string }>();
+  // Set the tenant header SYNCHRONOUSLY during render (not only in useEffect).
+  // A super_admin's session has no tenantSlug, and the client is recreated on
+  // every token refresh with that empty value — so if we waited for useEffect,
+  // any request firing in the render→effect window (a list refetch, a bulk
+  // delete burst) would hit the server with no X-Tenant-Slug → 400 → the whole
+  // page errors and nothing deletes. Setting it here closes that race window.
+  if (slug) client.setTenantSlug(slug);
   useEffect(() => {
     if (slug) client.setTenantSlug(slug);
   }, [slug, client]);
