@@ -606,7 +606,7 @@ function FooterTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChang
   const uploadFooterLogo = async (file: File): Promise<string> => {
     const fd = new FormData();
     fd.append('file', file);
-    const res = await fetch(`${baseUrl}/api/v1/files/upload`, {
+    const res = await fetch(`${baseUrl}/api/v1/files/upload?entityType=branding`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${session?.accessToken ?? ''}`, 'X-Tenant-Slug': tenant?.slug ?? '' },
       body: fd,

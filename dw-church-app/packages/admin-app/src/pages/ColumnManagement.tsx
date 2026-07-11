@@ -30,7 +30,7 @@ export default function ColumnManagement() {
 
   const { showToast } = useToast();
   const apiClient = useDWChurchClient();
-  const uploadImage = async (file: File): Promise<string> => (await apiClient!.uploadFile(file)).url;
+  const uploadImage = async (file: File): Promise<string> => (await apiClient!.uploadFile(file, 'columns')).url;
   const { data, isLoading, error, refetch } = useColumns(params);
   const createMutation = useCreateColumn();
   const updateMutation = useUpdateColumn();

@@ -85,7 +85,7 @@ export function useImageFieldApi(): {
       opts: { kind?: ImageKind } = {},
     ): Promise<string> => {
       const { file: resized } = await resizeImage(file, opts.kind ?? 'content');
-      const result = await client.uploadFile(resized);
+      const result = await client.uploadFile(resized, 'media');
       if (!result?.url) throw new Error('Upload response has no URL');
       return result.url;
     };

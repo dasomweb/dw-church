@@ -1085,12 +1085,16 @@ export class DWChurchClient {
   }
 
   // ─── File Upload ────────────────────────────────────────
-  async uploadFile(file: File): Promise<UploadedFile> {
+  async uploadFile(file: File, entityType?: string): Promise<UploadedFile> {
     const formData = new FormData();
     formData.append('file', file);
+    // entityType becomes the R2 sub-folder: tenant_<slug>/<entityType>/… — pass
+    // the content type (bulletins/sermons/albums/…) so files are organized by
+    // kind (easier recovery/cleanup) instead of dumped in a flat "general/".
+    const qs = entityType ? `?entityType=${encodeURIComponent(entityType)}` : '';
     // Server returns { data: UploadedFile } — unwrap so callers get { id, url } directly.
     const response = await this.api.post<{ data: UploadedFile } | UploadedFile>(
-      `${this.namespace}/files/upload`,
+      `${this.namespace}/files/upload${qs}`,
       formData,
     );
     if (response && typeof response === 'object' && 'data' in response) {

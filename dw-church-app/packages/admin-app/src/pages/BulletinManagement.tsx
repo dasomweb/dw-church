@@ -28,9 +28,9 @@ export default function BulletinManagement() {
 
   const { showToast } = useToast();
   const apiClient = useDWChurchClient();
-  const uploadImage = async (file: File): Promise<string> => (await apiClient!.uploadFile(file)).url;
+  const uploadImage = async (file: File): Promise<string> => (await apiClient!.uploadFile(file, 'bulletins')).url;
   // Same R2 upload, no resize — used for the 주보 PDF (and any non-image file).
-  const uploadFile = async (file: File): Promise<string> => (await apiClient!.uploadFile(file)).url;
+  const uploadFile = async (file: File): Promise<string> => (await apiClient!.uploadFile(file, 'bulletins')).url;
   const { data, isLoading, error, refetch } = useBulletins(params);
   const createMutation = useCreateBulletin();
   const updateMutation = useUpdateBulletin();

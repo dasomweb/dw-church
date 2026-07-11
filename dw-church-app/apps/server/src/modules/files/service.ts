@@ -49,7 +49,11 @@ interface UploadParams {
 }
 
 export async function upload(params: UploadParams) {
-  const { tenantSlug, schema, entityType, filename, contentType, buffer } = params;
+  const { tenantSlug, schema, filename, contentType, buffer } = params;
+  // Sanitize the entityType before it becomes an R2 path segment
+  // (tenant_<slug>/<entityType>/…) — strip anything but [a-z0-9_-] so a crafted
+  // value can never escape the tenant folder via "../" or slashes.
+  const entityType = (params.entityType || 'general').toLowerCase().replace(/[^a-z0-9_-]/g, '') || 'general';
   const kind = params.kind ?? 'upload';
   const tags = params.tags ?? null;
   const description = params.description ?? null;

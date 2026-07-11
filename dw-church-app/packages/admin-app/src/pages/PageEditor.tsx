@@ -1936,7 +1936,7 @@ export default function PageEditor() {
                   // already client-side resizes (its `resize` prop) before
                   // calling here — do NOT resize again (double-encode). New
                   // direct (non-ImageUpload) callers must resize themselves.
-                  const res = await apiClient!.uploadFile(file);
+                  const res = await apiClient!.uploadFile(file, 'pages');
                   return res.url;
                 }}
                 onDragStart={(e) => handleSectionDragStart(e, index)}

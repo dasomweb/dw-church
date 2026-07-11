@@ -32,7 +32,7 @@ export default function AlbumManagement() {
   const apiClient = useDWChurchClient();
   const queryClient = useQueryClient();
   const [catManagerOpen, setCatManagerOpen] = useState(false);
-  const uploadImage = async (file: File): Promise<string> => (await apiClient!.uploadFile(file)).url;
+  const uploadImage = async (file: File): Promise<string> => (await apiClient!.uploadFile(file, 'albums')).url;
   const { data, isLoading, error, refetch } = useAlbums(params);
   const { data: categories } = useAlbumCategories();
   const createMutation = useCreateAlbum();

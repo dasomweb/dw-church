@@ -1409,11 +1409,11 @@ export function useRemoveUser() {
 }
 
 // ─── File Hooks ─────────────────────────────────────────────
-export function useUploadFile() {
+export function useUploadFile(entityType?: string) {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
   return useMutation<UploadedFile, Error, File>({
-    mutationFn: (file) => client!.uploadFile(file),
+    mutationFn: (file) => client!.uploadFile(file, entityType),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.files.all }),
   });
 }

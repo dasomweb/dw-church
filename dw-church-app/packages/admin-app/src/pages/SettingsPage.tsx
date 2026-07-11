@@ -17,7 +17,7 @@ export default function SettingsPage() {
   const { data: menus } = useMenus();
   const updateSettings = useUpdateChurchSettings();
   const apiClient = useDWChurchClient();
-  const uploadImage = async (file: File): Promise<string> => (await apiClient!.uploadFile(file)).url;
+  const uploadImage = async (file: File): Promise<string> => (await apiClient!.uploadFile(file, 'branding')).url;
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [exporting, setExporting] = useState(false);

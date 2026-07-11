@@ -46,7 +46,7 @@ function YouTubeMediaSection({ register, watch, setValue }: YouTubeMediaSectionP
   // Upload a custom thumbnail to R2 (client-side resized) so the operator can
   // override the auto YouTube thumbnail with their own image.
   const client = useDWChurchClient();
-  const uploadImage = async (file: File): Promise<string> => (await client!.uploadFile(file)).url;
+  const uploadImage = async (file: File): Promise<string> => (await client!.uploadFile(file, 'sermons')).url;
 
   // Automatically choose the best available thumbnail when the user enters a
   // YouTube URL (single image, highest quality). YouTube returns a 120x90

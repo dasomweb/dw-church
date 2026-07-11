@@ -178,7 +178,7 @@ export default function IntakeWizard() {
   const uploadImage = useCallback(
     async (file: File): Promise<string> => {
       if (!apiClient) throw new Error('client not ready');
-      const res = await apiClient.uploadFile(file);
+      const res = await apiClient.uploadFile(file, 'intake');
       return res.url;
     },
     [apiClient],

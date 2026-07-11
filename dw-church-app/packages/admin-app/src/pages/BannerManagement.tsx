@@ -220,7 +220,7 @@ export default function BannerManagement() {
   // pc_image_url 2000-char DB limit → the image is dropped and the slider
   // shows a broken image. ImageUpload already client-side resizes first.
   const uploadImage = async (file: File): Promise<string> => {
-    const res = await apiClient!.uploadFile(file);
+    const res = await apiClient!.uploadFile(file, 'banners');
     return res.url;
   };
   const { data, isLoading, error } = useBanners(params);

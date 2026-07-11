@@ -43,7 +43,7 @@ export default function StaffManagement() {
   // to a base64 data URI → ~90KB payload that blows past photo_url's length cap
   // and 400s on save. ImageUpload client-side resizes first.
   const uploadImage = async (file: File): Promise<string> => {
-    const res = await apiClient!.uploadFile(file);
+    const res = await apiClient!.uploadFile(file, 'staff');
     return res.url;
   };
   const { data: staffList, isLoading, error, refetch } = useStaff(params);

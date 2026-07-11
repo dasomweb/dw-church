@@ -56,7 +56,7 @@ export default function TenantReferencePhotos() {
     setUploading(true);
     let ok = 0;
     try {
-      const qs = `kind=reference${tags.length ? `&tags=${encodeURIComponent(tags.join(','))}` : ''}`;
+      const qs = `entityType=reference&kind=reference${tags.length ? `&tags=${encodeURIComponent(tags.join(','))}` : ''}`;
       for (const file of Array.from(files)) {
         try {
           // Reference photos are high-detail masters (AI references / become

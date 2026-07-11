@@ -34,7 +34,7 @@ export default function EventManagement() {
 
   const { showToast } = useToast();
   const apiClient = useDWChurchClient();
-  const uploadImage = async (file: File): Promise<string> => (await apiClient!.uploadFile(file)).url;
+  const uploadImage = async (file: File): Promise<string> => (await apiClient!.uploadFile(file, 'events')).url;
   const { data, isLoading, error, refetch } = useEvents(params);
   const createMutation = useCreateEvent();
   const updateMutation = useUpdateEvent();

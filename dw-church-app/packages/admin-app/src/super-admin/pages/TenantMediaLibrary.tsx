@@ -68,7 +68,7 @@ export default function TenantMediaLibrary() {
         try {
           // Mandatory client-side resize → JPEG before R2 (resize-image.ts).
           const { file: resized } = await resizeImage(file, 'content');
-          const r = await client.uploadFile(resized);
+          const r = await client.uploadFile(resized, 'media');
           if (r?.url) {
             setItems((prev) => [{ id: r.id ?? r.url, url: r.url, originalName: resized.name, mimeType: resized.type, sizeBytes: resized.size }, ...prev]);
             ok++;

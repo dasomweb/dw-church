@@ -47,7 +47,7 @@ export default function CellManagement() {
   // 목장 사진을 R2 에 업로드하고 짧은 URL 을 받는다. ImageUpload 가 먼저
   // 클라이언트 측에서 리사이즈하므로 저장 시 photo_url 길이 제한을 넘지 않는다.
   const uploadImage = async (file: File): Promise<string> => {
-    const res = await apiClient!.uploadFile(file);
+    const res = await apiClient!.uploadFile(file, 'cells');
     return res.url;
   };
 

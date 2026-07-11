@@ -65,7 +65,7 @@ export default function BoardManagement() {
   const createPostMutation = useCreateBoardPost();
   const updatePostMutation = useUpdateBoardPost();
   const deletePostMutation = useDeleteBoardPost();
-  const uploadMutation = useUploadFile();
+  const uploadMutation = useUploadFile('boards');
 
   const boardForm = useForm<BoardFormData>();
   const postForm = useForm<PostFormData>();
