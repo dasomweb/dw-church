@@ -24,75 +24,124 @@ const BANNER_SIZES: { use: string; size: string; ratio: string }[] = [
   { use: '모바일 풀스크린', size: '1080 × 1920', ratio: '9:16' },
 ];
 
-const PROMPT_PC = `Ultra-wide panoramic website hero banner.
-Aspect ratio 16:5 (1920×600).
+// The three banner sizes we generate copy-prompts for.
+const PROMPT_SIZES: { key: string; label: string; ratio: string; px: string; usage: string }[] = [
+  { key: 'pc', label: 'PC 배너', ratio: '16:5', px: '1920×600', usage: 'Ultra-wide website hero banner (desktop)' },
+  { key: 'mobile', label: '모바일', ratio: '4:5', px: '1080×1350', usage: 'Mobile website hero image (portrait)' },
+  { key: 'full', label: '모바일 풀스크린', ratio: '9:16', px: '1080×1920', usage: 'Mobile full-screen splash image (tall portrait)' },
+];
 
-Modern church photography.
-Natural realistic lighting.
-Professional composition.
-Clean and elegant.
+// Non-religious style presets (플러스 "사이즈만" = ratio only, no look imposed).
+const PROMPT_STYLES: { key: string; label: string; lines: string[] }[] = [
+  { key: 'size', label: '사이즈만', lines: [] },
+  { key: 'modern', label: '모던·클린', lines: [
+    'Modern, clean, minimal design.',
+    'Soft gradients and subtle geometric shapes.',
+    'Sophisticated, muted color palette.',
+    'Professional and elegant.',
+  ] },
+  { key: 'illust', label: '일러스트', lines: [
+    'Flat vector illustration style.',
+    'Simple, friendly, modern shapes.',
+    'Soft, harmonious colors.',
+    'Clean and uncluttered.',
+  ] },
+  { key: 'nature', label: '자연 배경', lines: [
+    'Beautiful natural landscape.',
+    'Soft natural light.',
+    'Serene, peaceful scenery (sky, sea, mountains, or open fields).',
+    'Photorealistic, high quality.',
+  ] },
+  { key: 'church', label: '교회', lines: [
+    'Warm, reverent church atmosphere.',
+    'Soft natural light.',
+    'Modern, professional church photography.',
+    'Clean and elegant.',
+  ] },
+];
 
-Important:
-- Keep all important subjects within center 60% area
-- Leave generous negative space for text
-- Avoid placing important elements near edges
-- Suitable for website hero banner
-- No text, no logo, no watermark
+// Whether the image is a pure background or should reserve space for a headline.
+const PROMPT_TEXT_MODES: { key: string; label: string; lines: string[] }[] = [
+  { key: 'bg', label: '글자 없는 배경', lines: [
+    'Do NOT include any text, letters, numbers, or logos.',
+    'Full-bleed background imagery filling the entire frame.',
+  ] },
+  { key: 'space', label: '글자 공간 포함', lines: [
+    'Do NOT render any text or letters (a headline will be overlaid later).',
+    'Keep the main subject to one side and leave generous clean negative space (the opposite side or lower third) for the headline.',
+  ] },
+];
 
-Ultra realistic.
-High-end commercial photography.`;
+function buildBannerPrompt(sizeKey: string, styleKey: string, textKey: string): string {
+  const size = PROMPT_SIZES.find((s) => s.key === sizeKey)!;
+  const style = PROMPT_STYLES.find((s) => s.key === styleKey)!;
+  const text = PROMPT_TEXT_MODES.find((t) => t.key === textKey)!;
+  const blocks = [
+    `${size.usage}.\nAspect ratio ${size.ratio} (${size.px}).`,
+    style.lines.join('\n'),
+    text.lines.join('\n'),
+    'High resolution. No watermark.',
+  ].filter((b) => b.trim().length > 0);
+  return blocks.join('\n\n');
+}
 
-const PROMPT_MOBILE = `Mobile website hero image.
-Aspect ratio 4:5 (1080×1350).
-
-Modern church photography.
-Natural realistic lighting.
-Professional composition.
-
-Important:
-- Main subject centered
-- Keep all important elements within center 50%
-- Leave negative space at top and bottom for text overlay
-- Optimized for mobile devices
-- No text, no logo
-
-Ultra realistic.
-High-end commercial photography.`;
-
-const PROMPT_MOBILE_FULL = `Mobile website splash screen.
-Aspect ratio 9:16 (1080×1920).
-
-Modern church environment.
-Natural light.
-Clean composition.
-
-Important:
-- Subject positioned in middle third
-- Leave space above and below for headlines
-- Safe area for mobile cropping
-- No text
-
-Professional photography.
-Ultra realistic.`;
-
-function PromptBlock({ label, prompt }: { label: string; prompt: string }) {
-  const [copied, setCopied] = useState(false);
-  const copy = async () => {
+// Style + text-mode selector with one copy button per size (프롬프트 본문은 숨기고
+// 복사만). Composes the prompt on the fly from the current selections.
+function BannerPromptPresets() {
+  const [styleKey, setStyleKey] = useState('modern');
+  const [textKey, setTextKey] = useState('space');
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const copy = async (sizeKey: string) => {
     try {
-      await navigator.clipboard.writeText(prompt);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch { /* clipboard blocked — user can select manually */ }
+      await navigator.clipboard.writeText(buildBannerPrompt(sizeKey, styleKey, textKey));
+      setCopiedKey(sizeKey);
+      setTimeout(() => setCopiedKey((k) => (k === sizeKey ? null : k)), 1500);
+    } catch { /* clipboard blocked — retry */ }
   };
-  return (
-    <div className="rounded-lg border border-gray-200 bg-white">
-      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100">
-        <span className="text-xs font-semibold text-gray-700">{label}</span>
-        <button type="button" onClick={copy} className="text-xs font-medium text-blue-600 hover:text-blue-700">
-          {copied ? '복사됨 ✓' : '프롬프트 복사'}
+  const Segmented = ({ options, value, onChange }: { options: { key: string; label: string }[]; value: string; onChange: (k: string) => void }) => (
+    <div className="inline-flex flex-wrap gap-1 rounded-lg bg-gray-100 p-1">
+      {options.map((o) => (
+        <button
+          key={o.key}
+          type="button"
+          onClick={() => onChange(o.key)}
+          className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${value === o.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+        >
+          {o.label}
         </button>
+      ))}
+    </div>
+  );
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-semibold text-gray-500">스타일</span>
+          <Segmented options={PROMPT_STYLES} value={styleKey} onChange={setStyleKey} />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-semibold text-gray-500">텍스트</span>
+          <Segmented options={PROMPT_TEXT_MODES} value={textKey} onChange={setTextKey} />
+        </div>
       </div>
-      <pre className="px-3 py-2 text-[11px] leading-relaxed text-gray-600 whitespace-pre-wrap font-sans max-h-44 overflow-auto">{prompt}</pre>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        {PROMPT_SIZES.map((s) => (
+          <button
+            key={s.key}
+            type="button"
+            onClick={() => void copy(s.key)}
+            className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-left transition-colors hover:border-blue-300 hover:bg-blue-50/50"
+          >
+            <span>
+              <span className="block text-xs font-semibold text-gray-800">{s.label}</span>
+              <span className="block font-mono text-[10px] text-gray-400">{s.ratio} · {s.px}</span>
+            </span>
+            <span className={`shrink-0 text-xs font-medium ${copiedKey === s.key ? 'text-green-600' : 'text-blue-600'}`}>
+              {copiedKey === s.key ? '복사됨 ✓' : '프롬프트 복사'}
+            </span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -148,13 +197,12 @@ function BannerImageGuide() {
             </table>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-            <PromptBlock label="PC 배너 (16:5 · 1920×600)" prompt={PROMPT_PC} />
-            <PromptBlock label="모바일 (4:5 · 1080×1350)" prompt={PROMPT_MOBILE} />
-            <PromptBlock label="모바일 풀스크린 (9:16 · 1080×1920)" prompt={PROMPT_MOBILE_FULL} />
+          <div className="rounded-lg border border-gray-200 bg-white p-3">
+            <p className="mb-2.5 text-xs font-semibold text-gray-700">프롬프트 프리셋</p>
+            <BannerPromptPresets />
           </div>
           <p className="text-[11px] text-gray-400">
-            프롬프트 복사 → AI 이미지 도구에 붙여넣기 → 생성 → (필요 시 크롭) → 위 ‘이미지 변경’에서 업로드.
+            스타일·텍스트를 고르고 원하는 사이즈의 <strong>프롬프트 복사</strong> → AI 이미지 도구에 붙여넣기 → 생성 → (필요 시 크롭) → 위 ‘이미지 변경’에서 업로드.
           </p>
         </div>
       )}
