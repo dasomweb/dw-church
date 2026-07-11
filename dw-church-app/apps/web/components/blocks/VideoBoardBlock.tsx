@@ -45,8 +45,8 @@ export async function VideoBoardBlock({ props, slug }: VideoBoardBlockProps) {
   const title = (props.title as string) || '영상';
   const category = (props.category as string) || '';
   const variant = (props.variant as string) || 'grid-2';
-  // grid-1 → single column (large); grid-2 → 1 col mobile / 2 col desktop.
-  const columns = variant === 'grid-1' ? 1 : 2;
+  // grid-1 (large) … grid-4 → columns per row. Always 1 col on mobile.
+  const columns = variant === 'grid-1' ? 1 : variant === 'grid-3' ? 3 : variant === 'grid-4' ? 4 : 2;
 
   let data: any[] = [];
   try {
@@ -67,7 +67,12 @@ export async function VideoBoardBlock({ props, slug }: VideoBoardBlockProps) {
     );
   }
 
-  const gridClass = columns === 1 ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2';
+  // Static class strings (no interpolation) so Tailwind's content scan keeps them.
+  const gridClass =
+    columns === 1 ? 'grid-cols-1'
+    : columns === 3 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+    : columns === 4 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+    : 'grid-cols-1 lg:grid-cols-2';
 
   return (
     <DataSection props={props} defaultBg="var(--dw-background)">

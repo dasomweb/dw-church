@@ -1534,7 +1534,8 @@ const VIDEO_BOARD = churchBlock(
     { key: 'category', label: '카테고리', type: 'video-category', hint: '영상 게시판에서 등록한 카테고리에서 선택 (비우면 전체)' },
     { key: 'limit', label: '표시 개수', type: 'number', hint: '기본 6' },
     { key: 'variant', label: 'Columns', type: 'select', choices: [
-      { value: 'grid-2', label: '2 columns' }, { value: 'grid-1', label: '1 column (large)' },
+      { value: 'grid-1', label: '1 column (large)' }, { value: 'grid-2', label: '2 columns' },
+      { value: 'grid-3', label: '3 columns' }, { value: 'grid-4', label: '4 columns' },
     ]},
   ]},
 );
