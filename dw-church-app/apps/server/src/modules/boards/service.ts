@@ -1,4 +1,5 @@
 import { prisma } from '../../config/database.js';
+import { deleteUrlsFromR2, urlsFromValue } from '../../config/r2.js';
 import type { CreateBoardInput, UpdateBoardInput, CreateBoardPostInput, UpdateBoardPostInput } from './schema.js';
 
 // ─── Boards ──────────────────────────────────────────────────
@@ -73,10 +74,17 @@ export async function updateBoard(schema: string, id: string, input: UpdateBoard
 }
 
 export async function deleteBoard(schema: string, id: string) {
+  // Gather every post's attachments first so deleting the board (and its posts)
+  // doesn't orphan their uploaded files in R2.
+  const posts = await prisma.$queryRawUnsafe<{ attachments: unknown }[]>(
+    `SELECT attachments FROM "${schema}".board_posts WHERE board_id = $1::uuid`, id,
+  );
   await prisma.$queryRawUnsafe(
     `DELETE FROM "${schema}".boards WHERE id = $1::uuid`,
     id,
   );
+  const urls = posts.flatMap((p) => urlsFromValue(p.attachments));
+  if (urls.length) await deleteUrlsFromR2(urls);
 }
 
 // ─── Board Posts ─────────────────────────────────────────────
@@ -177,10 +185,14 @@ export async function updatePost(schema: string, id: string, input: UpdateBoardP
 }
 
 export async function deletePost(schema: string, id: string) {
+  const rows = await prisma.$queryRawUnsafe<{ attachments: unknown }[]>(
+    `SELECT attachments FROM "${schema}".board_posts WHERE id = $1::uuid`, id,
+  );
   await prisma.$queryRawUnsafe(
     `DELETE FROM "${schema}".board_posts WHERE id = $1::uuid`,
     id,
   );
+  if (rows[0]) await deleteUrlsFromR2(urlsFromValue(rows[0].attachments));
 }
 
 export async function incrementViewCount(schema: string, id: string) {

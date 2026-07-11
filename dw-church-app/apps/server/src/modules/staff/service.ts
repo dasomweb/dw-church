@@ -1,4 +1,5 @@
 import { prisma } from '../../config/database.js';
+import { deleteUrlsFromR2 } from '../../config/r2.js';
 import type { CreateStaffInput, UpdateStaffInput } from './schema.js';
 
 interface ListParams {
@@ -86,5 +87,9 @@ export async function reorderStaff(schema: string, ids: string[]) {
 }
 
 export async function deleteStaffMember(schema: string, id: string) {
+  const rows = await prisma.$queryRawUnsafe<{ photo_url: string | null }[]>(
+    `SELECT photo_url FROM "${schema}".staff WHERE id = $1::uuid`, id,
+  );
   await prisma.$queryRawUnsafe(`DELETE FROM "${schema}".staff WHERE id = $1::uuid`, id);
+  if (rows[0]) await deleteUrlsFromR2([rows[0].photo_url]);
 }

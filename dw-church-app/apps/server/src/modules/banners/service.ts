@@ -1,4 +1,5 @@
 import { prisma } from '../../config/database.js';
+import { deleteUrlsFromR2 } from '../../config/r2.js';
 import type { CreateBannerInput, UpdateBannerInput } from './schema.js';
 
 interface ListParams {
@@ -87,5 +88,9 @@ export async function updateBanner(schema: string, id: string, input: UpdateBann
 }
 
 export async function deleteBanner(schema: string, id: string) {
+  const rows = await prisma.$queryRawUnsafe<{ pc_image_url: string | null; mobile_image_url: string | null; sub_image_url: string | null }[]>(
+    `SELECT pc_image_url, mobile_image_url, sub_image_url FROM "${schema}".banners WHERE id = $1::uuid`, id,
+  );
   await prisma.$queryRawUnsafe(`DELETE FROM "${schema}".banners WHERE id = $1::uuid`, id);
+  if (rows[0]) await deleteUrlsFromR2([rows[0].pc_image_url, rows[0].mobile_image_url, rows[0].sub_image_url]);
 }

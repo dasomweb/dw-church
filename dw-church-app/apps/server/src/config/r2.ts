@@ -75,6 +75,45 @@ export async function deleteFile(key: string): Promise<void> {
 }
 
 /**
+ * Best-effort delete of R2 objects referenced by a set of stored URLs. Used by
+ * content-delete services so removing a bulletin/album/etc. also removes its
+ * uploaded files instead of orphaning them. ONLY deletes URLs that live in our
+ * bucket (start with R2_PUBLIC_URL) — external URLs (YouTube thumbnails, pasted
+ * links) are skipped. Failures are swallowed so a delete never fails on cleanup.
+ */
+export async function deleteUrlsFromR2(urls: Array<string | null | undefined>): Promise<void> {
+  const prefix = `${env.R2_PUBLIC_URL}/`;
+  const keys = new Set<string>();
+  for (const u of urls) {
+    if (typeof u === 'string' && u.startsWith(prefix)) {
+      const raw = u.slice(prefix.length);
+      try { keys.add(decodeURIComponent(raw)); } catch { keys.add(raw); }
+    }
+  }
+  await Promise.all([...keys].map((k) => deleteFile(k).catch(() => {})));
+}
+
+/**
+ * Flatten a stored value into URL strings. Handles a plain URL string, a jsonb
+ * array of URL strings (albums.images, bulletins.images) or of objects with a
+ * `url` field (board_posts.attachments), and nesting thereof.
+ */
+export function urlsFromValue(value: unknown): string[] {
+  const out: string[] = [];
+  const walk = (v: unknown): void => {
+    if (!v) return;
+    if (typeof v === 'string') { out.push(v); return; }
+    if (Array.isArray(v)) { v.forEach(walk); return; }
+    if (typeof v === 'object') {
+      const url = (v as Record<string, unknown>).url;
+      if (typeof url === 'string') out.push(url);
+    }
+  };
+  walk(value);
+  return out;
+}
+
+/**
  * List all objects under a prefix (e.g. "tenant_x/migration/"). Returns key +
  * size for each. Paginates through > 1000 objects. Used by the media-library
  * backfill that registers already-uploaded migration images.

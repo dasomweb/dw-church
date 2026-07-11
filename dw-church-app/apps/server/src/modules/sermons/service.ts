@@ -1,4 +1,5 @@
 import { prisma } from '../../config/database.js';
+import { deleteUrlsFromR2 } from '../../config/r2.js';
 import type { CreateSermonInput, UpdateSermonInput } from './schema.js';
 
 function extractYoutubeThumbnail(url?: string | null): string | null {
@@ -250,6 +251,9 @@ export async function updateSermon(schema: string, id: string, input: UpdateSerm
 }
 
 export async function deleteSermon(schema: string, id: string) {
+  const rows = await prisma.$queryRawUnsafe<{ thumbnail_url: string | null }[]>(
+    `SELECT thumbnail_url FROM "${schema}".sermons WHERE id = $1::uuid`, id,
+  );
   await prisma.$queryRawUnsafe(
     `DELETE FROM "${schema}".sermon_category_map WHERE sermon_id = $1::uuid`,
     id,
@@ -258,4 +262,7 @@ export async function deleteSermon(schema: string, id: string) {
     `DELETE FROM "${schema}".sermons WHERE id = $1::uuid`,
     id,
   );
+  // Only an uploaded thumbnail is removed; a YouTube hqdefault URL is skipped
+  // (not in our bucket) by deleteUrlsFromR2.
+  if (rows[0]) await deleteUrlsFromR2([rows[0].thumbnail_url]);
 }

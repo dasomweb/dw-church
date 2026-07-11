@@ -1,4 +1,5 @@
 import { prisma } from '../../config/database.js';
+import { deleteUrlsFromR2 } from '../../config/r2.js';
 import type { CreateCellInput, UpdateCellInput } from './schema.js';
 
 // snake_case column ↔ camelCase input field map. The route layer parses
@@ -78,5 +79,9 @@ export async function updateCell(schema: string, id: string, input: UpdateCellIn
 }
 
 export async function deleteCell(schema: string, id: string) {
+  const rows = await prisma.$queryRawUnsafe<{ photo_url: string | null }[]>(
+    `SELECT photo_url FROM "${schema}".cells WHERE id = $1::uuid`, id,
+  );
   await prisma.$queryRawUnsafe(`DELETE FROM "${schema}".cells WHERE id = $1::uuid`, id);
+  if (rows[0]) await deleteUrlsFromR2([rows[0].photo_url]);
 }

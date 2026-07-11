@@ -1,4 +1,5 @@
 import { prisma } from '../../config/database.js';
+import { deleteUrlsFromR2 } from '../../config/r2.js';
 import type { CreateEventInput, UpdateEventInput } from './schema.js';
 
 interface ListParams {
@@ -89,5 +90,9 @@ export async function updateEvent(schema: string, id: string, input: UpdateEvent
 }
 
 export async function deleteEvent(schema: string, id: string) {
+  const rows = await prisma.$queryRawUnsafe<{ background_image_url: string | null; thumbnail_url: string | null }[]>(
+    `SELECT background_image_url, thumbnail_url FROM "${schema}".events WHERE id = $1::uuid`, id,
+  );
   await prisma.$queryRawUnsafe(`DELETE FROM "${schema}".events WHERE id = $1::uuid`, id);
+  if (rows[0]) await deleteUrlsFromR2([rows[0].background_image_url, rows[0].thumbnail_url]);
 }

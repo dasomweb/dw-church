@@ -1,4 +1,5 @@
 import { prisma } from '../../config/database.js';
+import { deleteUrlsFromR2, urlsFromValue } from '../../config/r2.js';
 import type { CreateBulletinInput, UpdateBulletinInput } from './schema.js';
 
 interface ListParams {
@@ -79,5 +80,9 @@ export async function updateBulletin(schema: string, id: string, input: UpdateBu
 }
 
 export async function deleteBulletin(schema: string, id: string) {
+  const rows = await prisma.$queryRawUnsafe<{ pdf_url: string | null; thumbnail_url: string | null; images: unknown }[]>(
+    `SELECT pdf_url, thumbnail_url, images FROM "${schema}".bulletins WHERE id = $1::uuid`, id,
+  );
   await prisma.$queryRawUnsafe(`DELETE FROM "${schema}".bulletins WHERE id = $1::uuid`, id);
+  if (rows[0]) await deleteUrlsFromR2([rows[0].pdf_url, rows[0].thumbnail_url, ...urlsFromValue(rows[0].images)]);
 }

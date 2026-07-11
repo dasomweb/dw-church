@@ -1,4 +1,5 @@
 import { prisma } from '../../config/database.js';
+import { deleteUrlsFromR2 } from '../../config/r2.js';
 import type { CreateColumnInput, UpdateColumnInput } from './schema.js';
 
 interface ListParams {
@@ -80,5 +81,9 @@ export async function updateColumn(schema: string, id: string, input: UpdateColu
 }
 
 export async function deleteColumn(schema: string, id: string) {
+  const rows = await prisma.$queryRawUnsafe<{ top_image_url: string | null; bottom_image_url: string | null; thumbnail_url: string | null }[]>(
+    `SELECT top_image_url, bottom_image_url, thumbnail_url FROM "${schema}".columns_pastoral WHERE id = $1::uuid`, id,
+  );
   await prisma.$queryRawUnsafe(`DELETE FROM "${schema}".columns_pastoral WHERE id = $1::uuid`, id);
+  if (rows[0]) await deleteUrlsFromR2([rows[0].top_image_url, rows[0].bottom_image_url, rows[0].thumbnail_url]);
 }
