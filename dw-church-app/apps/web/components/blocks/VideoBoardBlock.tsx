@@ -2,53 +2,13 @@ import { getVideos } from '@/lib/api';
 import { getElementStyle } from '@/lib/element-style';
 import { DataSection } from './DataSection';
 import { Pagination } from '../Pagination';
+import VideoBoardClient, { type VideoItem } from './VideoBoardClient';
 
 interface VideoBoardBlockProps {
   props: Record<string, unknown>;
   slug: string;
   /** Current page (from ?page=), threaded through BlockRenderer. */
   page?: number;
-}
-
-function formatDate(dateStr: string): string {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
-}
-
-// youtubeUrl → embed id. Mirrors @dw-church/ui-components YoutubeEmbed, inlined
-// here so this async Server Component doesn't import the ui-components barrel
-// (which pulls in client-only React Query hooks → "use client" build error).
-function extractYoutubeId(url?: string | null): string | null {
-  if (!url) return null;
-  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([^&?\s/]+)/);
-  return match?.[1] ?? null;
-}
-
-// A clickable thumbnail — same look as the sermon video cards: just the YouTube
-// thumbnail image (hqdefault, preferred over any stored thumbnail) with a subtle
-// bottom gradient, NO inline player and NO big play-button overlay. Clicking
-// opens the video on YouTube in a new tab (videos don't play on the page).
-function VideoThumbLink({ url, title }: { url: string; title: string }) {
-  const videoId = extractYoutubeId(url);
-  if (!videoId) return null;
-  const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
-  const poster = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-  return (
-    <a
-      href={watchUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={`${title} — YouTube에서 보기`}
-      className="group relative block w-full overflow-hidden"
-      style={{ paddingBottom: '56.25%' }}
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={poster} alt={title} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
-      <span className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-    </a>
-  );
 }
 
 export async function VideoBoardBlock({ props, slug, page = 1 }: VideoBoardBlockProps) {
@@ -89,32 +49,20 @@ export async function VideoBoardBlock({ props, slug, page = 1 }: VideoBoardBlock
     : columns === 4 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
     : 'grid-cols-1 lg:grid-cols-2';
 
+  const videos: VideoItem[] = data.map((video: any) => ({
+    id: video.id ?? '',
+    title: video.title ?? '',
+    youtubeUrl: video.youtubeUrl ?? video.youtube_url ?? '',
+    date: video.videoDate ?? video.video_date ?? video.createdAt ?? video.created_at ?? '',
+    categoryName: video.categoryName ?? video.category_name ?? '',
+  }));
+
   return (
     <DataSection props={props} defaultBg="var(--dw-background)">
       <div className="mx-auto max-w-7xl">
         <h2 className="mb-8 text-center text-2xl sm:text-3xl font-bold font-heading" style={getElementStyle(props, 'title')}>{title}</h2>
-        <div className={`grid ${gridClass} gap-8`}>
-          {data.map((video: any) => {
-            const videoTitle = video.title ?? '';
-            const youtubeUrl = video.youtubeUrl ?? video.youtube_url ?? '';
-            const date = video.videoDate ?? video.video_date ?? video.createdAt ?? video.created_at ?? '';
-            const categoryName = video.categoryName ?? video.category_name ?? '';
-            const id = video.id ?? '';
-
-            return (
-              <div key={id} className="flex flex-col overflow-hidden rounded-2xl border border-black/[0.06] bg-white shadow-sm">
-                <VideoThumbLink url={youtubeUrl} title={videoTitle} />
-                <div className="p-5 flex flex-col flex-1">
-                  <h3 className="font-bold font-heading text-base leading-snug line-clamp-2">{videoTitle}</h3>
-                  <div className="mt-3 pt-3 border-t border-black/[0.05] flex items-center justify-between text-xs text-gray-400">
-                    {date ? <span>{formatDate(date)}</span> : <span />}
-                    {categoryName && <span className="text-[var(--dw-primary)]">{categoryName}</span>}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        {/* Cards + click-to-play modal live in the client half. */}
+        <VideoBoardClient videos={videos} gridClass={gridClass} />
         {/* Shared windowed pagination — same component as sermons/albums/etc. */}
         <Pagination currentPage={currentPage} totalPages={totalPages} hrefForPage={(p) => `?page=${p}`} />
       </div>
