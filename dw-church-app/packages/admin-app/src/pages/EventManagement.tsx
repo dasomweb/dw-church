@@ -10,6 +10,13 @@ import {
 } from '@dw-church/api-client';
 import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, ImageUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
 import { ContentMigrationButton } from '../components/ContentMigrationButton';
+import { ImagePromptGuide, type PromptSize } from '../components/ImagePromptGuide';
+
+// 행사 이미지는 4:5(세로 카드) 또는 1:1(정사각형)이면 충분하다.
+const EVENT_GUIDE_SIZES: PromptSize[] = [
+  { key: 'card', label: '행사 카드 (세로)', ratio: '4:5', px: '1080×1350', usage: 'Event poster / card image (portrait)' },
+  { key: 'square', label: '정사각형', ratio: '1:1', px: '1080×1080', usage: 'Square event image' },
+];
 import { useBulkDelete } from '../components/useBulkDelete';
 
 interface EventFormData {
@@ -156,6 +163,7 @@ export default function EventManagement() {
           </FormSection>
 
           <FormSection title="미디어">
+            <ImagePromptGuide sizes={EVENT_GUIDE_SIZES} title="행사 이미지 만들기 가이드 (AI 이미지 생성)" />
             <ImageUpload
               label="배경 이미지"
               value={watch('backgroundImageUrl') || ''}
