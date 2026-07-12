@@ -16,16 +16,17 @@ export async function ContactInfoBlock({ props, slug }: ContactInfoBlockProps) {
     return null;
   }
 
-  // getChurchSettings returns raw snake_case keys (church_phone, social_youtube …)
-  // — NOT camelCase. Read them by their real names or the block stays empty.
-  const phone = settings.church_phone;
-  const email = settings.church_email;
-  const address = settings.church_address;
+  // apiFetch camelizes the response, so the real keys are churchPhone /
+  // socialYoutube (camelCase). Use the same robust fallback chain as the footer
+  // (camelCase → snake → bare) so it works no matter how the field is stored.
+  const phone = settings.churchPhone ?? settings.church_phone ?? settings.phone;
+  const email = settings.churchEmail ?? settings.church_email ?? settings.email;
+  const address = settings.churchAddress ?? settings.church_address ?? settings.address;
   const links = [
-    { label: 'YouTube', url: settings.social_youtube },
-    { label: 'Instagram', url: settings.social_instagram },
-    { label: 'Facebook', url: settings.social_facebook },
-    { label: 'KakaoTalk', url: settings.social_kakaotalk || settings.social_kakaotalk_channel },
+    { label: 'YouTube', url: settings.socialYoutube ?? settings.social_youtube },
+    { label: 'Instagram', url: settings.socialInstagram ?? settings.social_instagram },
+    { label: 'Facebook', url: settings.socialFacebook ?? settings.social_facebook },
+    { label: 'KakaoTalk', url: settings.socialKakaotalkChannel ?? settings.social_kakaotalk_channel ?? settings.socialKakaotalk ?? settings.social_kakaotalk },
   ].filter((l) => l.url);
 
   const accentSoft = 'color-mix(in srgb, var(--dw-primary, #2563eb) 12%, transparent)';
