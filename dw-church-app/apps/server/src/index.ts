@@ -930,6 +930,8 @@ async function main(): Promise<void> {
     // Operator-editable home hero slides (JSONB array) + marketing base font size.
     await prisma.$executeRawUnsafe(`ALTER TABLE "marketing_config" ADD COLUMN IF NOT EXISTS "hero_slides" JSONB NOT NULL DEFAULT '[]'::jsonb`);
     await prisma.$executeRawUnsafe(`ALTER TABLE "marketing_config" ADD COLUMN IF NOT EXISTS "base_font_px" INT DEFAULT 16`);
+    // How the home hero renders on mobile: '4:5' (portrait card) or 'full' (9:16 full-screen).
+    await prisma.$executeRawUnsafe(`ALTER TABLE "marketing_config" ADD COLUMN IF NOT EXISTS "hero_mobile_ratio" VARCHAR(10) DEFAULT '4:5'`);
     // One-time seed: put the home hero slides (launch promo + the 3 defaults) into
     // the operator-editable config so they show in super-admin → 배너(히어로) and can
     // be edited/replaced there. Runs ONLY while hero_slides is still empty, so it

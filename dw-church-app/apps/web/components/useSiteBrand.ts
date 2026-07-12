@@ -34,6 +34,8 @@ export interface SiteBrand {
   heroSlides: HeroSlide[] | null;
   /** Marketing-site base font size (px); scales all rem-based text. */
   baseFontPx: number | null;
+  /** Mobile home-hero display: '4:5' (portrait card) or 'full' (9:16 full-screen). */
+  heroMobileRatio: string | null;
 }
 
 // Module-level cache so the header logo, favicon setter, and footer share one

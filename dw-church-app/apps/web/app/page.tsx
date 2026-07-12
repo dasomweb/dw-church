@@ -300,7 +300,7 @@ const COPY: Record<Lang, Copy> = {
 };
 
 type HeroBtn = { label: string; url: string; variant: 'primary' | 'outline' | 'demo' };
-function HeroSlider({ slides, lang }: { slides: { headline: string; subline: string; image: string; buttons: HeroBtn[] }[]; lang: Lang }) {
+function HeroSlider({ slides, lang, mobileRatio }: { slides: { headline: string; subline: string; image: string; buttons: HeroBtn[] }[]; lang: Lang; mobileRatio: '4:5' | 'full' }) {
   const [current, setCurrent] = useState(0);
   const next = useCallback(() => setCurrent((c) => (c + 1) % slides.length), [slides.length]);
 
@@ -309,10 +309,11 @@ function HeroSlider({ slides, lang }: { slides: { headline: string; subline: str
     return () => clearInterval(timer);
   }, [next]);
 
-  // Mobile: a tall hero (560px) so the headline + buttons never clip; the
-  // 21:9 cinematic ratio only kicks in on desktop where it's wide enough.
+  // Mobile hero shape is operator-selectable (super-admin): '4:5' portrait card
+  // or 'full' (full-screen). The 21:9 cinematic ratio only kicks in on desktop.
+  const mobileClass = mobileRatio === 'full' ? 'min-h-screen' : 'aspect-[4/5]';
   return (
-    <section className="relative w-full overflow-hidden bg-gray-900 min-h-[560px] lg:min-h-0 lg:aspect-[21/9]">
+    <section className={`relative w-full overflow-hidden bg-gray-900 ${mobileClass} lg:min-h-0 lg:aspect-[21/9]`}>
       {slides.map((slide, i) => (
         <div
           key={i}
@@ -406,7 +407,7 @@ export default function LandingPage() {
       <MarketingHeader />
 
       {/* Hero Slider */}
-      <HeroSlider slides={heroSlides} lang={lang} />
+      <HeroSlider slides={heroSlides} lang={lang} mobileRatio={brand?.heroMobileRatio === 'full' ? 'full' : '4:5'} />
 
       {/* Trust Bar */}
       <section className="border-b border-gray-100 bg-gray-50 px-4 py-6 sm:px-6">

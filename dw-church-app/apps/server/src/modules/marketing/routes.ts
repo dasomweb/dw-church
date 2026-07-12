@@ -32,6 +32,8 @@ const configSchema = z.object({
     })).max(3).optional(),
   })).max(10).optional().nullable(),
   baseFontPx: z.number().int().min(12).max(22).optional().nullable(),
+  // Mobile home-hero display: '4:5' (portrait card) or 'full' (9:16 full-screen).
+  heroMobileRatio: z.enum(['4:5', 'full']).optional().nullable(),
 });
 
 /**
