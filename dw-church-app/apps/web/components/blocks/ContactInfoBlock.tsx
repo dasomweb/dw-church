@@ -3,6 +3,21 @@ import { getChurchSettings } from '@/lib/api';
 import { getElementStyle } from '@/lib/element-style';
 import { DataSection } from './DataSection';
 
+// Derive a display handle/ID from a stored social value: the last path segment
+// of a URL (e.g. youtube.com/@grace → "@grace"), or the raw value when it's
+// already an id (KakaoTalk "dasomweb"). Falls back to the host.
+function socialHandle(raw: string): string {
+  const v = (raw || '').trim();
+  if (!v) return '';
+  try {
+    const u = new URL(v.startsWith('http') ? v : `https://${v}`);
+    const seg = u.pathname.split('/').filter(Boolean).pop();
+    return seg ? decodeURIComponent(seg) : u.hostname.replace(/^www\./, '');
+  } catch {
+    return v;
+  }
+}
+
 interface ContactInfoBlockProps {
   props: Record<string, unknown>;
   slug: string;
@@ -85,21 +100,23 @@ export async function ContactInfoBlock({ props, slug }: ContactInfoBlockProps) {
           {links.length > 0 && (
             <div className="mt-10 flex flex-col items-center gap-3 border-t border-gray-100 pt-8">
               <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">소셜</p>
-              <div className="flex flex-wrap items-center justify-center gap-3">
+              <div className="flex flex-wrap items-center justify-center gap-2.5">
                 {links.map((link) => {
                   const m = socialMeta[link.label];
+                  const handle = socialHandle(link.url as string);
                   return (
                     <a
                       key={link.label}
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      aria-label={link.label}
                       title={link.label}
-                      className="grid h-11 w-11 place-items-center rounded-full shadow-sm transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                      style={{ background: m?.bg ?? 'var(--dw-primary, #2563eb)', color: m?.fg ?? '#fff' }}
+                      className="group flex items-center gap-2.5 rounded-full border border-gray-200 bg-white py-1.5 pl-1.5 pr-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[var(--dw-primary)] hover:shadow-md"
                     >
-                      {m?.icon ?? <span className="text-xs font-semibold">{link.label.charAt(0)}</span>}
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full" style={{ background: m?.bg ?? 'var(--dw-primary, #2563eb)', color: m?.fg ?? '#fff' }}>
+                        {m?.icon ?? <span className="text-xs font-semibold">{link.label.charAt(0)}</span>}
+                      </span>
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-[var(--dw-primary)]">{handle || link.label}</span>
                     </a>
                   );
                 })}
