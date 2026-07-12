@@ -305,7 +305,7 @@ function HeroSlider({ slides, lang, mobileRatio }: { slides: { headline: string;
   const next = useCallback(() => setCurrent((c) => (c + 1) % slides.length), [slides.length]);
 
   useEffect(() => {
-    const timer = setInterval(next, 6000);
+    const timer = setInterval(next, 9000);
     return () => clearInterval(timer);
   }, [next]);
 
