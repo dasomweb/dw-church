@@ -82,28 +82,31 @@ export async function ContactInfoBlock({ props, slug }: ContactInfoBlockProps) {
               </div>
             )}
           </div>
+          {links.length > 0 && (
+            <div className="mt-10 flex flex-col items-center gap-3 border-t border-gray-100 pt-8">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">소셜</p>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                {links.map((link) => {
+                  const m = socialMeta[link.label];
+                  return (
+                    <a
+                      key={link.label}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={link.label}
+                      title={link.label}
+                      className="grid h-11 w-11 place-items-center rounded-full shadow-sm transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                      style={{ background: m?.bg ?? 'var(--dw-primary, #2563eb)', color: m?.fg ?? '#fff' }}
+                    >
+                      {m?.icon ?? <span className="text-xs font-semibold">{link.label.charAt(0)}</span>}
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
-        {links.length > 0 && (
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            {links.map((link) => {
-              const m = socialMeta[link.label];
-              return (
-                <a
-                  key={link.label}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={link.label}
-                  title={link.label}
-                  className="grid h-11 w-11 place-items-center rounded-full shadow-sm transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                  style={{ background: m?.bg ?? 'var(--dw-primary, #2563eb)', color: m?.fg ?? '#fff' }}
-                >
-                  {m?.icon ?? <span className="text-xs font-semibold">{link.label.charAt(0)}</span>}
-                </a>
-              );
-            })}
-          </div>
-        )}
       </div>
     </DataSection>
   );
