@@ -35,6 +35,7 @@ import { ToastProvider } from './components';
 const LoginPage = lazyWithReload(() => import('./pages/LoginPage'));
 const RegisterPage = lazyWithReload(() => import('./pages/RegisterPage'));
 const ForgotPasswordPage = lazyWithReload(() => import('./pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazyWithReload(() => import('./pages/ResetPasswordPage'));
 
 // Lazy-loaded pages — Admin
 const Dashboard = lazyWithReload(() => import('./pages/Dashboard'));
@@ -247,6 +248,9 @@ export function App({ config }: { config: AppConfig }) {
               <Route path="/login" element={<PublicOnly><LoginPage /></PublicOnly>} />
               <Route path="/register" element={<PublicOnly><RegisterPage /></PublicOnly>} />
               <Route path="/forgot-password" element={<PublicOnly><ForgotPasswordPage /></PublicOnly>} />
+              {/* Password reset target of the emailed link (?token=…). NOT auth-gated —
+                  the token is the credential, and it must render even if a session exists. */}
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
 
               {/* Tenant-scoped login (support account sign-in, direct tenant links) */}
               <Route path="/t/:slug/login" element={<PublicOnly><LoginPage /></PublicOnly>} />
