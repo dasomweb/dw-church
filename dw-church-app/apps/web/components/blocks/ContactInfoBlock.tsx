@@ -98,29 +98,30 @@ export async function ContactInfoBlock({ props, slug }: ContactInfoBlockProps) {
             )}
           </div>
           {links.length > 0 && (
-            <div className="mt-10 flex flex-col items-center gap-3 border-t border-gray-100 pt-8">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">소셜</p>
-              <div className="flex flex-wrap items-center justify-center gap-2.5">
-                {links.map((link) => {
-                  const m = socialMeta[link.label];
-                  const handle = socialHandle(link.url as string);
-                  return (
-                    <a
-                      key={link.label}
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title={link.label}
-                      className="group flex items-center gap-2.5 rounded-full border border-gray-200 bg-white py-1.5 pl-1.5 pr-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[var(--dw-primary)] hover:shadow-md"
-                    >
-                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full" style={{ background: m?.bg ?? 'var(--dw-primary, #2563eb)', color: m?.fg ?? '#fff' }}>
-                        {m?.icon ?? <span className="text-xs font-semibold">{link.label.charAt(0)}</span>}
-                      </span>
-                      <span className="text-sm font-medium text-gray-700 group-hover:text-[var(--dw-primary)]">{handle || link.label}</span>
-                    </a>
-                  );
-                })}
-              </div>
+            <div className="mt-10 flex flex-wrap items-center justify-end gap-2.5 border-t border-gray-100 pt-8">
+              {links.map((link) => {
+                const m = socialMeta[link.label];
+                const handle = socialHandle(link.url as string);
+                return (
+                  <a
+                    key={link.label}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={link.label}
+                    className="group flex items-center gap-3 rounded-full border border-gray-200 bg-white py-2 pl-2 pr-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[var(--dw-primary)] hover:shadow-md"
+                  >
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full" style={{ background: m?.bg ?? 'var(--dw-primary, #2563eb)', color: m?.fg ?? '#fff' }}>
+                      {m?.icon ?? <span className="text-xs font-semibold">{link.label.charAt(0)}</span>}
+                    </span>
+                    {/* 이름(플랫폼명) 위 · 채널 아이디 아래 */}
+                    <span className="flex flex-col text-left leading-tight">
+                      <span className="text-sm font-semibold text-gray-900 group-hover:text-[var(--dw-primary)]">{link.label}</span>
+                      {handle && <span className="text-xs text-gray-500">{handle}</span>}
+                    </span>
+                  </a>
+                );
+              })}
             </div>
           )}
         </div>
