@@ -102,7 +102,7 @@ export async function ContactInfoBlock({ props, slug }: ContactInfoBlockProps) {
               const handle = socialHandle(link.url as string);
               return (
                 <a key={link.label} href={link.url} target="_blank" rel="noopener noreferrer" className={colClass}>
-                  <span className={iconChip} style={chipStyle}>
+                  <span className={iconChip} style={{ background: m?.bg ?? 'var(--dw-primary, #2563eb)', color: m?.fg ?? '#fff' }}>
                     <span className="grid h-6 w-6 place-items-center [&>svg]:h-6 [&>svg]:w-6">
                       {m?.icon ?? <span className="text-sm font-semibold">{link.label.charAt(0)}</span>}
                     </span>
