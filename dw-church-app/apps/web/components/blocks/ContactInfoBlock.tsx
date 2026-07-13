@@ -96,34 +96,23 @@ export async function ContactInfoBlock({ props, slug }: ContactInfoBlockProps) {
                 <p className={valClass}>{address}</p>
               </div>
             )}
+            {/* 소셜을 전화/이메일/주소와 동일한 컬럼 스타일로 같은 행에 추가 */}
+            {links.map((link) => {
+              const m = socialMeta[link.label];
+              const handle = socialHandle(link.url as string);
+              return (
+                <a key={link.label} href={link.url} target="_blank" rel="noopener noreferrer" className={colClass}>
+                  <span className={iconChip} style={chipStyle}>
+                    <span className="grid h-6 w-6 place-items-center [&>svg]:h-6 [&>svg]:w-6">
+                      {m?.icon ?? <span className="text-sm font-semibold">{link.label.charAt(0)}</span>}
+                    </span>
+                  </span>
+                  <h3 className={labelClass}>{link.label}</h3>
+                  <span className={`${valClass} break-all hover:text-[var(--dw-primary)]`}>{handle || link.label}</span>
+                </a>
+              );
+            })}
           </div>
-          {links.length > 0 && (
-            <div className="mt-10 flex flex-wrap items-center justify-end gap-2.5 border-t border-gray-100 pt-8">
-              {links.map((link) => {
-                const m = socialMeta[link.label];
-                const handle = socialHandle(link.url as string);
-                return (
-                  <a
-                    key={link.label}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title={link.label}
-                    className="group flex items-center gap-3 rounded-full border border-gray-200 bg-white py-2 pl-2 pr-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[var(--dw-primary)] hover:shadow-md"
-                  >
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full" style={{ background: m?.bg ?? 'var(--dw-primary, #2563eb)', color: m?.fg ?? '#fff' }}>
-                      {m?.icon ?? <span className="text-xs font-semibold">{link.label.charAt(0)}</span>}
-                    </span>
-                    {/* 이름(플랫폼명) 위 · 채널 아이디 아래 */}
-                    <span className="flex flex-col text-left leading-tight">
-                      <span className="text-sm font-semibold text-gray-900 group-hover:text-[var(--dw-primary)]">{link.label}</span>
-                      {handle && <span className="text-xs text-gray-500">{handle}</span>}
-                    </span>
-                  </a>
-                );
-              })}
-            </div>
-          )}
         </div>
       </div>
     </DataSection>
