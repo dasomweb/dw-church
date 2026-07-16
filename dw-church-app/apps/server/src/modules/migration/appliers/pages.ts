@@ -62,10 +62,12 @@ export async function applyPageContents(
 
     // Insert the page's blocks IN ORDER so the source layout is reproduced
     // (hero_banner first, then each image+text / gallery section).
+    const isHome = page.pageSlug === 'home';
     let nextOrder = 0;
     for (const block of page.blocks) {
       // Replace image URLs (imageUrl/photoUrl/backgroundImageUrl/images…) → R2.
-      const props = replaceImageUrls(block.props, urlMap);
+      let props = replaceImageUrls(block.props, urlMap);
+      if (block.blockType === 'hero_banner') props = normalizeHeroBanner(props, isHome);
       {
         await prisma.$queryRawUnsafe(
           `INSERT INTO "${schema}".page_sections (page_id, block_type, props, sort_order, is_visible)
@@ -82,6 +84,69 @@ export async function applyPageContents(
   }
 
   return count;
+}
+
+/**
+ * Normalize an AI-migrated hero banner for readability and consistent sub-page
+ * sizing:
+ *   1. Text over a background photo must stay readable → force the hero's
+ *      title/subtitle/eyebrow to the white-on-dark palette tokens (onDark /
+ *      onDarkMuted). Only fills a color that the classifier left unset, so an
+ *      explicit choice is preserved. Applied only when a background image
+ *      exists (white text on a light text-only hero would be invisible).
+ *   2. When white text is applied and no overlay is configured, add a modest
+ *      dark scrim so the copy reads over bright photos.
+ *   3. Sub-page (non-home) heroes are sized to the compact 'sm-plus' (Small+)
+ *      height so interior pages don't open with a giant full-height hero —
+ *      home keeps its taller hero. This is a deliberate default for migrated
+ *      sites (the operator can raise it per page afterward).
+ * Exported so a one-off backfill can apply the same rules to already-migrated
+ * tenants.
+ */
+export function normalizeHeroBanner(
+  props: Record<string, unknown>,
+  isHome: boolean,
+): Record<string, unknown> {
+  const p: Record<string, unknown> = { ...props };
+  const hasBg = Boolean(p.backgroundImageUrl);
+
+  // 3. Non-home heroes → compact Small+ height (home keeps its full hero).
+  if (!isHome) {
+    p.height = 'sm-plus';
+  }
+
+  if (hasBg) {
+    // 1. Readable white text (only where no explicit color is set).
+    const es: Record<string, Record<string, unknown>> = {
+      ...(p.elementStyles as Record<string, Record<string, unknown>> | undefined),
+    };
+    const ensureColor = (key: string, color: string) => {
+      const cur = { ...(es[key] as Record<string, unknown> | undefined) };
+      const existing = cur.color;
+      if (existing === undefined || existing === null || existing === '') {
+        cur.color = color;
+        es[key] = cur;
+      }
+    };
+    ensureColor('title', 'onDark');
+    ensureColor('subtitle', 'onDarkMuted');
+    ensureColor('eyebrow', 'onDarkMuted');
+    p.elementStyles = es;
+
+    // 2. Ensure a dark scrim so white text is legible over bright photos.
+    const hasOverlay =
+      (typeof p.overlayColor === 'string' && p.overlayColor) ||
+      typeof p.overlayOpacity === 'number' ||
+      p.overlayColor1 ||
+      p.overlayColor2 ||
+      p.overlayMode === 'gradient';
+    if (!hasOverlay) {
+      p.overlayColor = '#000000';
+      p.overlayOpacity = 40;
+    }
+  }
+
+  return p;
 }
 
 /** Friendly Korean page title for an auto-created page slug. Used only
