@@ -211,6 +211,22 @@ export async function deleteTenant(id: string) {
     throw new AppError('NOT_FOUND', 404, 'Tenant not found');
   }
 
+  // 0. Pre-delete full backup (DB + media) so a wrongful deletion is
+  //    recoverable — the snapshot captures the public.tenants row too, so
+  //    restore can fully recreate the deleted tenant. MUST run before the R2
+  //    files are purged below (step 1) while the media still exists. Best
+  //    effort: never wedge a deletion on backup infra (disabled if the backup
+  //    bucket is unset; a failure is logged, not fatal).
+  try {
+    const { createFullBackup, isBackupConfigured } = await import('../backups-full/service.js');
+    if (isBackupConfigured()) {
+      const meta = await createFullBackup(tenant.slug, { kind: 'pre-delete', includeFiles: true, note: '테넌트 삭제 직전 자동 백업' });
+      console.log(`[pre-delete-backup] ${tenant.slug}: ${meta.tableCount} tables / ${meta.rowCount} rows / ${meta.fileCount} files`);
+    }
+  } catch (err) {
+    console.error(`[pre-delete-backup] ${tenant.slug} FAILED (deletion continues):`, err);
+  }
+
   // 1. Delete all uploaded files from R2 storage
   try {
     const filesDeleted = await deleteFilesByPrefix(`tenant_${tenant.slug}/`);

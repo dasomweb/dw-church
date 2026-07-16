@@ -123,6 +123,7 @@ async function main(): Promise<void> {
   const { caseStudyRoutes } = await import('./modules/case-studies/routes.js');
   const { analyticsRoutes } = await import('./modules/analytics/routes.js');
   const { backupRoutes } = await import('./modules/backups/routes.js');
+  const { fullBackupRoutes } = await import('./modules/backups-full/routes.js');
 
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(tenantRoutes, { prefix: '/api/v1/admin' });
@@ -208,7 +209,8 @@ async function main(): Promise<void> {
   await app.register(marketingRoutes, { prefix: '/api/v1' }); // /marketing-config (public) + /admin/marketing-config
   await app.register(caseStudyRoutes, { prefix: '/api/v1' }); // /case-studies (public) + /admin/case-studies (포트폴리오)
   await app.register(analyticsRoutes, { prefix: '/api/v1' }); // /analytics/hit (public beacon) + /analytics/summary (admin report)
-  await app.register(backupRoutes, { prefix: '/api/v1' }); // /admin/tenants/:slug/backups (super-admin backup/restore)
+  await app.register(backupRoutes, { prefix: '/api/v1' }); // /admin/tenants/:slug/backups (super-admin in-DB quick snapshot)
+  await app.register(fullBackupRoutes, { prefix: '/api/v1' }); // /admin/tenants/:slug/full-backups (super-admin R2 DB+media full backup)
 
   // --- Internal: resolve custom domain to tenant slug (used by Next.js middleware) ---
   app.get('/api/v1/admin/tenants/resolve-domain', async (request, reply) => {
@@ -1281,6 +1283,11 @@ async function main(): Promise<void> {
   // Nightly reset of the demo tenant (03:00 America/New_York) — wipes tester garbage.
   const { startDemoResetScheduler } = await import('./modules/demo-tenant/scheduler.js');
   startDemoResetScheduler();
+
+  // Nightly FULL backup (DB + media → R2 backup bucket) of every active tenant
+  // at 03:30 America/New_York. No-op when R2_BACKUP_BUCKET_NAME is unset.
+  const { startNightlyBackupScheduler } = await import('./modules/backups-full/scheduler.js');
+  startNightlyBackupScheduler();
 
   // Auto-verify pending custom domains (wire tenants.custom_domain the moment
   // Cloudflare routing+SSL go active) so a domain never stays 404 just because

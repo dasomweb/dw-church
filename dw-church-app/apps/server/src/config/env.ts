@@ -9,6 +9,11 @@ const envSchema = z.object({
   R2_SECRET_ACCESS_KEY: z.string().default(''),
   R2_BUCKET_NAME: z.string().default('dw-church-files'),
   R2_PUBLIC_URL: z.string().default(''),
+  // Dedicated bucket for tenant full-backups (DB dump + media copies). Kept
+  // SEPARATE from the content bucket so a content-bucket loss doesn't take the
+  // backups with it. Empty = full-backup feature disabled (create returns a
+  // clear error). Shares the same R2 credentials/endpoint as the main bucket.
+  R2_BACKUP_BUCKET_NAME: z.string().default(''),
 
   SUPER_ADMIN_EMAILS: z
     .string()
