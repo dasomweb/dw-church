@@ -80,6 +80,7 @@ const TenantThemeEditor = lazyWithReload(() => import('./super-admin/pages/Tenan
 const TenantPageEditor = lazyWithReload(() => import('./super-admin/pages/TenantPageEditor'));
 const TenantFeaturePermissions = lazyWithReload(() => import('./super-admin/pages/TenantFeaturePermissions'));
 const TenantDangerZone = lazyWithReload(() => import('./super-admin/pages/TenantDangerZone'));
+const TenantBackups = lazyWithReload(() => import('./super-admin/pages/TenantBackups'));
 const TenantAIContext = lazyWithReload(() => import('./super-admin/pages/TenantAIContext'));
 const TenantMediaLibrary = lazyWithReload(() => import('./super-admin/pages/TenantMediaLibrary'));
 const TenantTemplates = lazyWithReload(() => import('./super-admin/pages/TenantTemplates'));
@@ -304,6 +305,7 @@ export function App({ config }: { config: AppConfig }) {
                 <Route path="users" element={<TenantOwnerPanel />} />
                 <Route path="billing" element={<BillingPage />} />
                 <Route path="feature-permissions" element={<TenantFeaturePermissions />} />
+                <Route path="backups" element={<TenantBackups />} />
                 <Route path="danger" element={<TenantDangerZone />} />
               </Route>
 
