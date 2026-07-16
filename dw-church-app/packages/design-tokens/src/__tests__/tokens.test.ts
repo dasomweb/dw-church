@@ -120,7 +120,7 @@ describe('tokensToCssVars', () => {
   });
 
   it('emits typography family + per-scale size in px', () => {
-    expect(vars['--brand-font-heading']).toContain('Inter');
+    expect(vars['--brand-font-heading']).toContain('Pretendard');
     expect(vars['--brand-h1']).toBe('72px');
     expect(vars['--brand-body']).toBe('16px');
   });

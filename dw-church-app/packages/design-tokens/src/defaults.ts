@@ -5,18 +5,24 @@
  */
 import type { DesignTokens, TypographyScaleName, TypographyScaleSpec } from './schema.js';
 
+// Korean-optimized type scale. Korean glyphs are full-height with no ascender/
+// descender slack, so they need MORE line-height than Latin (English display
+// leading of ~1.15 clips 받침 and crowds the next line). Modern Korean web type
+// (Pretendard-driven — Toss / 당근 / Naver) uses generous body leading (~1.7),
+// heading leading of 1.25–1.45, and slight NEGATIVE letter-spacing on large
+// headings (자간 축소, ~-0.02em). Body never drops below 16px (incl. mobile).
 const defaultScales: Record<TypographyScaleName, TypographyScaleSpec> = {
-  h1:       { fontFamily: 'heading', size: { desktop: 72, tablet: 56, mobile: 42 }, weight: 700, lineHeight: 1.15, letterSpacing: -0.5 },
-  h2:       { fontFamily: 'heading', size: { desktop: 40, tablet: 36, mobile: 30 }, weight: 700, lineHeight: 1.2 },
-  h3:       { fontFamily: 'heading', size: { desktop: 26, tablet: 24, mobile: 22 }, weight: 600, lineHeight: 1.25 },
-  h4:       { fontFamily: 'heading', size: { desktop: 20, tablet: 19, mobile: 18 }, weight: 600, lineHeight: 1.3 },
-  h5:       { fontFamily: 'heading', size: { desktop: 16, tablet: 16, mobile: 15 }, weight: 600, lineHeight: 1.35 },
-  h6:       { fontFamily: 'heading', size: { desktop: 14, tablet: 14, mobile: 13 }, weight: 600, lineHeight: 1.4 },
-  body:     { fontFamily: 'body',    size: { desktop: 16, tablet: 16, mobile: 15 }, weight: 400, lineHeight: 1.6 },
-  caption:  { fontFamily: 'body',    size: { desktop: 13, tablet: 13, mobile: 12 }, weight: 400, lineHeight: 1.5 },
-  overline: { fontFamily: 'body',    size: { desktop: 12, tablet: 12, mobile: 11 }, weight: 600, lineHeight: 1.4, letterSpacing: 1.5, transform: 'uppercase' },
-  label:    { fontFamily: 'body',    size: { desktop: 14, tablet: 14, mobile: 13 }, weight: 500, lineHeight: 1.4 },
-  button:   { fontFamily: 'body',    size: { desktop: 15, tablet: 15, mobile: 14 }, weight: 600, lineHeight: 1 },
+  h1:       { fontFamily: 'heading', size: { desktop: 72, tablet: 56, mobile: 42 }, weight: 700, lineHeight: 1.25, letterSpacing: -1.5 },
+  h2:       { fontFamily: 'heading', size: { desktop: 40, tablet: 36, mobile: 30 }, weight: 700, lineHeight: 1.3,  letterSpacing: -0.8 },
+  h3:       { fontFamily: 'heading', size: { desktop: 26, tablet: 24, mobile: 22 }, weight: 600, lineHeight: 1.35, letterSpacing: -0.5 },
+  h4:       { fontFamily: 'heading', size: { desktop: 20, tablet: 19, mobile: 18 }, weight: 600, lineHeight: 1.4,  letterSpacing: -0.3 },
+  h5:       { fontFamily: 'heading', size: { desktop: 16, tablet: 16, mobile: 15 }, weight: 600, lineHeight: 1.45 },
+  h6:       { fontFamily: 'heading', size: { desktop: 14, tablet: 14, mobile: 13 }, weight: 600, lineHeight: 1.45 },
+  body:     { fontFamily: 'body',    size: { desktop: 16, tablet: 16, mobile: 16 }, weight: 400, lineHeight: 1.7 },
+  caption:  { fontFamily: 'body',    size: { desktop: 13, tablet: 13, mobile: 12 }, weight: 400, lineHeight: 1.6 },
+  overline: { fontFamily: 'body',    size: { desktop: 12, tablet: 12, mobile: 11 }, weight: 600, lineHeight: 1.5, letterSpacing: 1.5, transform: 'uppercase' },
+  label:    { fontFamily: 'body',    size: { desktop: 14, tablet: 14, mobile: 13 }, weight: 500, lineHeight: 1.5 },
+  button:   { fontFamily: 'body',    size: { desktop: 15, tablet: 15, mobile: 14 }, weight: 600, lineHeight: 1.2 },
 };
 
 export const DEFAULT_DESIGN_TOKENS: DesignTokens = {
@@ -41,8 +47,13 @@ export const DEFAULT_DESIGN_TOKENS: DesignTokens = {
   },
   typography: {
     families: {
-      heading: "'Inter', 'Pretendard', system-ui, sans-serif",
-      body: "'Inter', 'Pretendard', system-ui, sans-serif",
+      // Korean-first stack — Pretendard is the de-facto standard modern Korean
+      // web font (broad glyph coverage). The storefront already loads Pretendard
+      // (static) via CDN, so it's the guaranteed-rendered default. Latin
+      // fallbacks come AFTER so Korean text isn't driven by Inter's Latin-only
+      // metrics; Noto Sans KR is a loaded Korean fallback.
+      heading: "'Pretendard', 'Noto Sans KR', system-ui, sans-serif",
+      body: "'Pretendard', 'Noto Sans KR', system-ui, sans-serif",
       korean: "'Pretendard', 'Noto Sans KR', system-ui, sans-serif",
     },
     scales: defaultScales,
@@ -94,16 +105,22 @@ export const DEFAULT_DESIGN_TOKENS: DesignTokens = {
  * picker. compact/default/large/xlarge each scales the headings + body anchor.
  * `default` matches DEFAULT_DESIGN_TOKENS exactly.
  */
+// Korean-optimized density presets. Same heading spread as before, but body
+// never drops below 16px on mobile (compact keeps 15) — Korean text at 14–15px
+// on a phone is hard to read. `default` stays in sync with defaultScales above
+// so detectFontSizePreset still recognizes a default snapshot. Line-height and
+// letter-spacing (the bigger Korean-readability levers) live in the base scales
+// and survive a preset switch (applyFontSizePreset only overrides size).
 export const FONT_SIZE_PRESETS = {
   compact: {
     h1: { desktop: 56, mobile: 36 },
     h2: { desktop: 32, mobile: 26 },
     h3: { desktop: 24, mobile: 20 },
     h4: { desktop: 18, mobile: 16 },
-    h5: { desktop: 16, mobile: 14 },
-    h6: { desktop: 14, mobile: 12 },
-    body: { desktop: 15, mobile: 14 },
-    caption: { desktop: 12, mobile: 11 },
+    h5: { desktop: 16, mobile: 15 },
+    h6: { desktop: 14, mobile: 13 },
+    body: { desktop: 15, mobile: 15 },
+    caption: { desktop: 12, mobile: 12 },
   },
   default: {
     h1: { desktop: 72, mobile: 42 },
@@ -112,7 +129,7 @@ export const FONT_SIZE_PRESETS = {
     h4: { desktop: 20, mobile: 18 },
     h5: { desktop: 16, mobile: 15 },
     h6: { desktop: 14, mobile: 13 },
-    body: { desktop: 16, mobile: 15 },
+    body: { desktop: 16, mobile: 16 },
     caption: { desktop: 13, mobile: 12 },
   },
   large: {
@@ -120,9 +137,9 @@ export const FONT_SIZE_PRESETS = {
     h2: { desktop: 48, mobile: 34 },
     h3: { desktop: 30, mobile: 24 },
     h4: { desktop: 22, mobile: 20 },
-    h5: { desktop: 18, mobile: 16 },
+    h5: { desktop: 18, mobile: 17 },
     h6: { desktop: 15, mobile: 14 },
-    body: { desktop: 17, mobile: 16 },
+    body: { desktop: 17, mobile: 17 },
     caption: { desktop: 14, mobile: 13 },
   },
   xlarge: {
@@ -132,7 +149,7 @@ export const FONT_SIZE_PRESETS = {
     h4: { desktop: 24, mobile: 22 },
     h5: { desktop: 20, mobile: 18 },
     h6: { desktop: 16, mobile: 15 },
-    body: { desktop: 18, mobile: 17 },
+    body: { desktop: 18, mobile: 18 },
     caption: { desktop: 15, mobile: 14 },
   },
 } as const;
