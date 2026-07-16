@@ -152,7 +152,10 @@
       "Bash(curl -s -H \"User-Agent: Mozilla/5.0\" \"https://wakechurch.truelight.app/sermons\" -L)",
       "Bash(curl -s -o /dev/null -w \"/api/health: HTTP %{http_code}\\\\n\" -H \"User-Agent: Mozilla/5.0\" https://truelight.app/api/health)",
       "Bash(cp packages/admin-app/railway.toml railway.toml)",
-      "Bash(grep -nE \"<MobileAppNav|<InstallAppButton|</.*>\\\\s*$|return \\\\\\(|<>|</>|appNavItems\" apps/web/app/tenant/\\\\[slug\\\\]/layout.tsx)"
+      "Bash(grep -nE \"<MobileAppNav|<InstallAppButton|</.*>\\\\s*$|return \\\\\\(|<>|</>|appNavItems\" apps/web/app/tenant/\\\\[slug\\\\]/layout.tsx)",
+      "Bash(curl -s -H \"User-Agent: Mozilla/5.0\" \"https://api.truelight.app/api/v1/marketing-config\")",
+      "Bash(sed -n '/export const resetPasswordSchema/,/}\\);/p' apps/server/src/modules/auth/schema.ts)",
+      "Bash(grep -nA6 \"function PublicOnly\" packages/admin-app/src/App.tsx)"
     ]
   }
 }
