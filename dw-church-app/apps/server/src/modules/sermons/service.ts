@@ -2,10 +2,26 @@ import { prisma } from '../../config/database.js';
 import { deleteUrlsFromR2 } from '../../config/r2.js';
 import type { CreateSermonInput, UpdateSermonInput } from './schema.js';
 
-function extractYoutubeThumbnail(url?: string | null): string | null {
+// Pull the 11-char video id out of any YouTube URL shape, incl. the share-menu
+// `/live/<id>?si=…` and `/shorts/<id>` forms (previously unhandled → invalid
+// URL / no thumbnail).
+function extractYoutubeId(url?: string | null): string | null {
   if (!url) return null;
-  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([^&?\s/]+)/);
-  return match?.[1] ? `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg` : null;
+  const match = url.match(/(?:v=|\/live\/|\/embed\/|\/shorts\/|\/v\/|youtu\.be\/)([0-9A-Za-z_-]{11})/);
+  return match?.[1] ?? null;
+}
+
+/** Canonicalize any recognizable YouTube URL to https://www.youtube.com/watch?v=ID.
+ *  Non-YouTube / unrecognized input is returned unchanged. */
+export function normalizeYoutubeUrl(url?: string | null): string | null | undefined {
+  if (!url) return url;
+  const id = extractYoutubeId(url);
+  return id ? `https://www.youtube.com/watch?v=${id}` : url;
+}
+
+function extractYoutubeThumbnail(url?: string | null): string | null {
+  const id = extractYoutubeId(url);
+  return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null;
 }
 
 /** The form's preacher dropdown sends the NAME; resolve it to a preacher id. */
@@ -163,8 +179,10 @@ export async function getRelatedSermons(schema: string, id: string, limit = 6) {
 export async function createSermon(schema: string, input: CreateSermonInput) {
   const { categoryIds = [] } = input;
 
-  // Auto-generate thumbnail from YouTube URL if not provided
-  const thumbnailUrl = input.thumbnailUrl || extractYoutubeThumbnail(input.youtubeUrl) || null;
+  // Canonicalize the YouTube URL (share-menu /live/…?si= → watch?v=…) then
+  // auto-generate thumbnail from it if none was provided.
+  const youtubeUrl = normalizeYoutubeUrl(input.youtubeUrl);
+  const thumbnailUrl = input.thumbnailUrl || extractYoutubeThumbnail(youtubeUrl) || null;
   const preacherId = await resolvePreacherId(schema, input.preacher);
 
   const rows = await prisma.$queryRawUnsafe<[{ id: string }]>(
@@ -173,7 +191,7 @@ export async function createSermon(schema: string, input: CreateSermonInput) {
      RETURNING id`,
     input.title,
     input.scripture ?? null,
-    input.youtubeUrl ?? null,
+    youtubeUrl ?? null,
     new Date(input.date),
     thumbnailUrl,
     preacherId,
@@ -206,10 +224,11 @@ export async function updateSermon(schema: string, id: string, input: UpdateSerm
   if (input.title !== undefined) { setClauses.push(`title = $${paramIndex++}`); values.push(input.title); }
   if (input.scripture !== undefined) { setClauses.push(`scripture = $${paramIndex++}`); values.push(input.scripture); }
   if (input.youtubeUrl !== undefined) {
-    setClauses.push(`youtube_url = $${paramIndex++}`); values.push(input.youtubeUrl);
+    const youtubeUrl = normalizeYoutubeUrl(input.youtubeUrl);
+    setClauses.push(`youtube_url = $${paramIndex++}`); values.push(youtubeUrl);
     // Auto-update thumbnail when YouTube URL changes (unless thumbnail explicitly provided)
     if (input.thumbnailUrl === undefined) {
-      const autoThumb = extractYoutubeThumbnail(input.youtubeUrl);
+      const autoThumb = extractYoutubeThumbnail(youtubeUrl);
       if (autoThumb) { setClauses.push(`thumbnail_url = $${paramIndex++}`); values.push(autoThumb); }
     }
   }

@@ -18,8 +18,17 @@ import { useBulkDelete } from '../components/useBulkDelete';
 // ─── YouTube 썸네일 유틸 ──────────────────────────────────
 function extractYouTubeId(url: string): string | null {
   if (!url) return null;
-  const match = url.match(/(?:v=|\/embed\/|\/shorts\/|youtu\.be\/)([0-9A-Za-z_-]{11})/);
+  // Covers watch?v=, youtu.be/, /embed/, /shorts/, /v/, and the share-menu
+  // /live/<id>?si=… form (previously unhandled → "유효한 URL 아님").
+  const match = url.match(/(?:v=|\/live\/|\/embed\/|\/shorts\/|\/v\/|youtu\.be\/)([0-9A-Za-z_-]{11})/);
   return match?.[1] ?? null;
+}
+
+/** Canonicalize any recognizable YouTube URL to the clean watch?v=ID form.
+ *  Unrecognized input is returned unchanged. */
+function normalizeYoutubeUrl(url: string): string {
+  const id = extractYouTubeId(url);
+  return id ? `https://www.youtube.com/watch?v=${id}` : url;
 }
 
 // Priority list for auto-picking the best available thumbnail. YouTube serves
@@ -87,7 +96,15 @@ function YouTubeMediaSection({ register, watch, setValue }: YouTubeMediaSectionP
     <FormSection title="미디어">
       <FormField label="YouTube URL">
         <input
-          {...register('youtubeUrl')}
+          {...register('youtubeUrl', {
+            // Auto-convert a pasted share URL (…/live/ID?si=…) to the clean
+            // watch?v=ID form the moment the field loses focus, so the operator
+            // sees the corrected value before saving.
+            onBlur: (e) => {
+              const clean = normalizeYoutubeUrl(e.target.value);
+              if (clean !== e.target.value) setValue('youtubeUrl', clean, { shouldDirty: true });
+            },
+          })}
           placeholder="https://youtube.com/watch?v=..."
           className={inputClass}
         />
