@@ -1121,6 +1121,49 @@ async function main(): Promise<void> {
     app.log.warn(`plan_pricing table migration skipped: ${err}`);
   }
 
+  // --- feature_pricing (à-la-carte add-on price per gated feature) ---
+  // A plan is a discounted BUNDLE of features; a feature turned on beyond the
+  // tenant's plan (via 기능 권한 override) is billed at its individual price
+  // here. Whole-dollar monthly/yearly-equivalent, super-admin edits afterward.
+  // Keys MUST match config/plan-limits.ts FEATURE_TIERS.
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "feature_pricing" (
+        "id"          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+        "feature_key" VARCHAR(40) NOT NULL UNIQUE,
+        "label"       VARCHAR(60) NOT NULL DEFAULT '',
+        "monthly"     INT         NOT NULL DEFAULT 0,
+        "yearly"      INT         NOT NULL DEFAULT 0,
+        "sort_order"  INT         NOT NULL DEFAULT 0,
+        "is_active"   BOOLEAN     NOT NULL DEFAULT true,
+        "updated_at"  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    // [key, label, monthly, yearly, sort] — placeholder prices; edit in 요금 관리.
+    const featureSeed: [string, string, number, number, number][] = [
+      ['albums', '사진 앨범', 10, 10, 0],
+      ['history', '교회 연혁', 5, 5, 1],
+      ['columns', '목회 칼럼', 10, 10, 2],
+      ['video', '영상 게시판', 10, 10, 3],
+      ['boards', '게시판', 10, 10, 4],
+      ['events', '행사', 10, 10, 5],
+      ['banners', '메인 배너 슬라이드', 10, 10, 6],
+      ['cells', '목장(셀) 관리', 25, 25, 7],
+      ['newcomer', '새가족 안내·등록 폼', 25, 25, 8],
+      ['newcomer_registration', '새가족 온라인 등록·교인관리', 30, 30, 9],
+      ['pwa', '모바일 앱(PWA)', 30, 30, 10],
+    ];
+    for (const [key, label, monthly, yearly, sort] of featureSeed) {
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO "feature_pricing" (feature_key, label, monthly, yearly, sort_order)
+         VALUES ($1, $2, $3, $4, $5) ON CONFLICT (feature_key) DO NOTHING`,
+        key, label, monthly, yearly, sort,
+      );
+    }
+  } catch (err) {
+    app.log.warn(`feature_pricing table migration skipped: ${err}`);
+  }
+
   // --- promo_settings (단일 행 프로모션 — 기간 한정 쿠폰, 슈퍼어드민 관리) ---
   try {
     await prisma.$executeRawUnsafe(`

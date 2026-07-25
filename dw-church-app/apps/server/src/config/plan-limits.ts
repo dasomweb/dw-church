@@ -112,3 +112,18 @@ export function effectiveFeatures(
   }
   return out;
 }
+
+/**
+ * Billable add-ons: features turned ON for a tenant that its plan does NOT
+ * already include. A plan is a discounted bundle, so plan-included features are
+ * never add-ons; only overrides that grant a feature ABOVE the plan are charged
+ * at the feature's à-la-carte price. (Turning a plan feature OFF is not a
+ * discount — the plan price is a fixed package.)
+ */
+export function addonFeatures(
+  plan: string | null | undefined,
+  overrides: Record<string, unknown> | null | undefined,
+): string[] {
+  const ov = overrides ?? {};
+  return FEATURE_KEYS.filter((key) => ov[key] === true && !planAllowsFeature(plan, key));
+}

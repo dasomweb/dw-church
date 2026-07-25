@@ -7,6 +7,7 @@ import {
   effectiveFeatures,
   planAllowsFeature,
   normalizePlan,
+  addonFeatures,
   FEATURE_KEYS,
 } from '../../config/plan-limits.js';
 
@@ -24,6 +25,17 @@ import {
 const overridesBody = z.object({
   overrides: z.record(z.boolean()),
 });
+
+const featurePriceBody = z.object({
+  label: z.string().max(60).optional(),
+  monthly: z.number().int().min(0).max(100000).optional(),
+  yearly: z.number().int().min(0).max(100000).optional(),
+  isActive: z.boolean().optional(),
+});
+
+interface FeaturePriceRow {
+  feature_key: string; label: string; monthly: number; yearly: number; sort_order: number; is_active: boolean;
+}
 
 async function overridesForTenant(id: string): Promise<Record<string, unknown>> {
   const rows = await prisma.$queryRawUnsafe<{ feature_overrides: Record<string, unknown> | null }[]>(
@@ -73,5 +85,71 @@ export async function entitlementRoutes(app: FastifyInstance) {
     );
     if (!rows[0]) throw new AppError('NOT_FOUND', 404, '테넌트를 찾을 수 없습니다.');
     return reply.send({ data: { plan: normalizePlan(rows[0].plan), overrides: clean, effective: effectiveFeatures(rows[0].plan, clean) } });
+  });
+
+  // ── Feature à-la-carte price catalog (super-admin) ──────────────────
+  app.get('/admin/feature-pricing', { preHandler: [requireSuperAdmin] }, async (_req, reply) => {
+    const rows = await prisma.$queryRawUnsafe<FeaturePriceRow[]>(
+      `SELECT feature_key, label, monthly, yearly, sort_order, is_active FROM public.feature_pricing ORDER BY sort_order ASC`,
+    );
+    return reply.send({ data: rows });
+  });
+
+  app.put('/admin/feature-pricing/:key', { preHandler: [requireSuperAdmin] }, async (req, reply) => {
+    const { key } = req.params as { key: string };
+    const body = featurePriceBody.parse(req.body ?? {});
+    const map: Record<string, string> = { label: 'label', monthly: 'monthly', yearly: 'yearly', isActive: 'is_active' };
+    const set: string[] = [];
+    const values: unknown[] = [];
+    let i = 1;
+    for (const [k, col] of Object.entries(map)) {
+      const v = (body as Record<string, unknown>)[k];
+      if (v !== undefined) { set.push(`"${col}" = $${i++}`); values.push(v); }
+    }
+    if (set.length === 0) {
+      const cur = await prisma.$queryRawUnsafe<FeaturePriceRow[]>(`SELECT * FROM public.feature_pricing WHERE feature_key = $1`, key);
+      return reply.send({ data: cur[0] ?? null });
+    }
+    set.push('updated_at = NOW()');
+    const rows = await prisma.$queryRawUnsafe<FeaturePriceRow[]>(
+      `UPDATE public.feature_pricing SET ${set.join(', ')} WHERE feature_key = $${i} RETURNING feature_key, label, monthly, yearly, sort_order, is_active`,
+      ...values, key,
+    );
+    if (!rows[0]) throw new AppError('NOT_FOUND', 404, '기능 단가를 찾을 수 없습니다.');
+    return reply.send({ data: rows[0] });
+  });
+
+  // ── Tenant billing summary: plan price + add-ons beyond the plan ────
+  app.get('/admin/tenants/:id/billing-summary', { preHandler: [requireSuperAdmin] }, async (req, reply) => {
+    const { id } = req.params as { id: string };
+    const trows = await prisma.$queryRawUnsafe<{ plan: string; feature_overrides: Record<string, unknown> | null }[]>(
+      `SELECT plan, feature_overrides FROM public.tenants WHERE id = $1::uuid`, id,
+    );
+    if (!trows[0]) throw new AppError('NOT_FOUND', 404, '테넌트를 찾을 수 없습니다.');
+    const plan = normalizePlan(trows[0].plan);
+    const overrides = trows[0].feature_overrides ?? {};
+
+    const planRows = await prisma.$queryRawUnsafe<{ monthly: number; yearly: number; label: string }[]>(
+      `SELECT monthly, yearly, label FROM public.plan_pricing WHERE plan_key = $1`, plan,
+    );
+    const planPrice = { monthly: Number(planRows[0]?.monthly ?? 0), yearly: Number(planRows[0]?.yearly ?? 0), label: planRows[0]?.label ?? plan };
+
+    const addonKeys = addonFeatures(trows[0].plan, overrides);
+    const priceRows = await prisma.$queryRawUnsafe<FeaturePriceRow[]>(
+      `SELECT feature_key, label, monthly, yearly, sort_order, is_active FROM public.feature_pricing ORDER BY sort_order ASC`,
+    );
+    const addons = priceRows
+      .filter((r) => addonKeys.includes(r.feature_key) && r.is_active)
+      .map((r) => ({ key: r.feature_key, label: r.label, monthly: Number(r.monthly), yearly: Number(r.yearly) }));
+    const addonMonthly = addons.reduce((s, a) => s + a.monthly, 0);
+    const addonYearly = addons.reduce((s, a) => s + a.yearly, 0);
+
+    return reply.send({
+      data: {
+        plan, planPrice, addons, addonMonthly, addonYearly,
+        totalMonthly: planPrice.monthly + addonMonthly,
+        totalYearly: planPrice.yearly + addonYearly,
+      },
+    });
   });
 }

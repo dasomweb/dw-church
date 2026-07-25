@@ -5,7 +5,7 @@
  *   - an explicit override boolean wins over the plan default (either direction).
  */
 import { describe, it, expect } from 'vitest';
-import { effectiveFeatures } from '../../config/plan-limits.js';
+import { effectiveFeatures, addonFeatures } from '../../config/plan-limits.js';
 
 describe('effectiveFeatures', () => {
   it('light: only ungated + no gated modules', () => {
@@ -50,5 +50,27 @@ describe('effectiveFeatures', () => {
 
   it('legacy/unknown plan folds to light', () => {
     expect(effectiveFeatures('free', {}).albums).toBe(false);
+  });
+});
+
+describe('addonFeatures (billable = enabled ABOVE the plan)', () => {
+  it('none when no overrides', () => {
+    expect(addonFeatures('basic', {})).toEqual([]);
+  });
+
+  it('an override granting an above-plan feature is a billable add-on', () => {
+    expect(addonFeatures('basic', { cells: true })).toEqual(['cells']);
+  });
+
+  it('enabling a feature the plan already includes is NOT an add-on', () => {
+    expect(addonFeatures('basic', { albums: true })).toEqual([]);
+  });
+
+  it('turning a plan feature OFF is not an add-on (no discount)', () => {
+    expect(addonFeatures('basic', { albums: false })).toEqual([]);
+  });
+
+  it('multiple above-plan grants are all add-ons', () => {
+    expect(addonFeatures('light', { cells: true, newcomer: true }).sort()).toEqual(['cells', 'newcomer']);
   });
 });

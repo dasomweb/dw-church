@@ -42,6 +42,8 @@ export default function TenantFeaturePermissions() {
   const [plan, setPlan] = useState('');
   const [defaults, setDefaults] = useState<Record<string, boolean>>({});
   const [overrides, setOverrides] = useState<Record<string, boolean>>({});
+  const [prices, setPrices] = useState<Record<string, number>>({}); // feature_key → 월 단가
+  const [planMonthly, setPlanMonthly] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -49,12 +51,19 @@ export default function TenantFeaturePermissions() {
     if (!tenant?.id) return;
     setLoading(true);
     try {
-      const res = await fetch(`${baseUrl}/api/v1/admin/tenants/${tenant.id}/feature-overrides`, { headers: authHeaders });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const d = (await res.json())?.data ?? {};
+      const [ovRes, priceRes, billRes] = await Promise.all([
+        fetch(`${baseUrl}/api/v1/admin/tenants/${tenant.id}/feature-overrides`, { headers: authHeaders }),
+        fetch(`${baseUrl}/api/v1/admin/feature-pricing`, { headers: authHeaders }),
+        fetch(`${baseUrl}/api/v1/admin/tenants/${tenant.id}/billing-summary`, { headers: authHeaders }),
+      ]);
+      if (!ovRes.ok) throw new Error(`HTTP ${ovRes.status}`);
+      const d = (await ovRes.json())?.data ?? {};
       setPlan(d.plan ?? '');
       setDefaults(d.defaults ?? {});
       setOverrides(d.overrides ?? {});
+      const priceRows = ((await priceRes.json())?.data ?? []) as { feature_key: string; monthly: number }[];
+      setPrices(Object.fromEntries(priceRows.map((r) => [r.feature_key, Number(r.monthly)])));
+      setPlanMonthly(Number((await billRes.json())?.data?.planPrice?.monthly ?? 0));
     } catch (e) {
       showToast('error', e instanceof Error ? e.message : '로딩 실패');
     } finally {
@@ -67,6 +76,10 @@ export default function TenantFeaturePermissions() {
 
   const effective = (key: string) => (key in overrides ? overrides[key] : defaults[key]) ?? false;
   const isOverridden = (key: string) => key in overrides;
+  // Billable add-on = enabled now but NOT included in the plan → charged at its
+  // à-la-carte price (plan is a discounted bundle; plan features never charge).
+  const isAddon = (key: string) => effective(key) && !(defaults[key] ?? false);
+  const addonMonthly = FEATURES.reduce((s, f) => (isAddon(f.key) ? s + (prices[f.key] ?? 0) : s), 0);
 
   // Toggle the effective state. If the new value matches the plan default, drop
   // the override (follow the plan); otherwise record it as an explicit exception.
@@ -127,6 +140,10 @@ export default function TenantFeaturePermissions() {
                         </div>
                         <div className="text-[11px] text-gray-400">
                           플랜 기본: {defaults[f.key] ? '사용 가능' : '미포함'}
+                          <span className="text-gray-300"> · </span>단가 ${prices[f.key] ?? 0}/월
+                          {isAddon(f.key) && (
+                            <span className="ml-1.5 font-semibold text-amber-600">애드온 +${prices[f.key] ?? 0}/월 청구</span>
+                          )}
                           {isOverridden(f.key) && (
                             <button onClick={() => resetKey(f.key)} className="ml-2 text-blue-500 hover:underline">기본값으로</button>
                           )}
@@ -145,7 +162,24 @@ export default function TenantFeaturePermissions() {
             ))}
           </div>
 
-          <div className="mt-6 flex items-center gap-3">
+          {/* 예상 월요금 = 플랜(패키지) + 플랜 밖 애드온 개별 단가 합 */}
+          <div className="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-600">플랜 ({PLAN_LABEL[plan] ?? plan})</span>
+              <span className="font-medium text-gray-900">${planMonthly}/월</span>
+            </div>
+            <div className="mt-1 flex items-center justify-between">
+              <span className="text-gray-600">애드온 (플랜 밖 기능 {FEATURES.filter((f) => isAddon(f.key)).length}개)</span>
+              <span className="font-medium text-amber-600">+${addonMonthly}/월</span>
+            </div>
+            <div className="mt-2 flex items-center justify-between border-t border-gray-200 pt-2">
+              <span className="font-semibold text-gray-900">예상 월요금</span>
+              <span className="text-base font-bold text-gray-900">${planMonthly + addonMonthly}/월</span>
+            </div>
+            <p className="mt-1.5 text-[11px] text-gray-400">단가는 요금 관리(요금제)에서 수정합니다. 실제 청구(Stripe 자동 반영)는 다음 단계에서 연결됩니다.</p>
+          </div>
+
+          <div className="mt-4 flex items-center gap-3">
             <button onClick={save} disabled={saving}
               className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60">
               {saving ? '저장 중…' : '저장'}

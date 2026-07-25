@@ -251,6 +251,95 @@ function PromoCard() {
   );
 }
 
+// 기능(애드온) 개별 단가 — 플랜에 없는 기능을 테넌트에 추가할 때 청구되는 월 단가.
+// (플랜은 이 기능들을 묶어 더 싸게 제공하는 패키지.) 기능권한/결제 화면이 이 값을 읽음.
+interface FeaturePrice { featureKey: string; label: string; monthly: number; yearly: number; isActive: boolean }
+
+function FeaturePricingCard() {
+  const apiFetch = useAdminApi();
+  const { showToast } = useToast();
+  const [rows, setRows] = useState<FeaturePrice[]>([]);
+  const [draft, setDraft] = useState<Record<string, { monthly: string; yearly: string }>>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await apiFetch<{ data: FeaturePrice[] } | FeaturePrice[]>('/admin/feature-pricing');
+      const list = Array.isArray(res) ? res : res.data ?? [];
+      setRows(list);
+      setDraft(Object.fromEntries(list.map((r) => [r.featureKey, { monthly: String(r.monthly), yearly: String(r.yearly) }])));
+    } catch {
+      setRows([]);
+    } finally { setLoading(false); }
+  }, [apiFetch]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      // Only PUT rows whose price actually changed.
+      const changed = rows.filter((r) => {
+        const d = draft[r.featureKey];
+        return d && (Number(d.monthly) !== r.monthly || Number(d.yearly) !== r.yearly);
+      });
+      for (const r of changed) {
+        const d = draft[r.featureKey]!;
+        await apiFetch(`/admin/feature-pricing/${r.featureKey}`, {
+          method: 'PUT',
+          body: JSON.stringify({ monthly: Math.max(0, Math.round(Number(d.monthly) || 0)), yearly: Math.max(0, Math.round(Number(d.yearly) || 0)) }),
+        });
+      }
+      showToast('success', changed.length ? `기능 단가 ${changed.length}개 저장됨` : '변경사항 없음');
+      await load();
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '기능 단가 저장 실패');
+    } finally { setSaving(false); }
+  };
+
+  if (loading) return null;
+  const inp = 'w-20 border border-gray-300 rounded px-2 py-1 text-sm text-right focus:ring-2 focus:ring-blue-500 outline-none';
+
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <h3 className="text-sm font-bold text-gray-900 mb-1">기능(애드온) 단가</h3>
+      <p className="text-xs text-gray-500 mb-3">플랜에 없는 기능을 테넌트에 추가할 때 청구되는 월 단가입니다. 플랜은 이 기능들을 묶어 더 저렴하게 제공하는 패키지입니다.</p>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-xs text-gray-400 border-b border-gray-100">
+              <th className="py-1.5 pr-3 font-medium">기능</th>
+              <th className="py-1.5 px-2 font-medium text-right">월($/월)</th>
+              <th className="py-1.5 px-2 font-medium text-right">연($/월)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.featureKey} className="border-b border-gray-50">
+                <td className="py-1.5 pr-3 text-gray-800">{r.label}<span className="ml-1.5 text-[10px] font-mono text-gray-300">{r.featureKey}</span></td>
+                <td className="py-1.5 px-2 text-right">
+                  <input type="number" min={0} className={inp} value={draft[r.featureKey]?.monthly ?? ''}
+                    onChange={(e) => setDraft((d) => ({ ...d, [r.featureKey]: { monthly: e.target.value, yearly: d[r.featureKey]?.yearly ?? '' } }))} />
+                </td>
+                <td className="py-1.5 px-2 text-right">
+                  <input type="number" min={0} className={inp} value={draft[r.featureKey]?.yearly ?? ''}
+                    onChange={(e) => setDraft((d) => ({ ...d, [r.featureKey]: { monthly: d[r.featureKey]?.monthly ?? '', yearly: e.target.value } }))} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <button onClick={() => void save()} disabled={saving}
+        className="mt-4 bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+        {saving ? '저장 중...' : '기능 단가 저장'}
+      </button>
+    </div>
+  );
+}
+
 export default function PricingTab() {
   const apiFetch = useAdminApi();
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -287,6 +376,8 @@ export default function PricingTab() {
       </div>
 
       <PromoCard />
+
+      <FeaturePricingCard />
 
       {plans.length === 0 ? (
         <EmptyState message="등록된 가격 플랜이 없습니다." />
