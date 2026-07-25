@@ -4,10 +4,25 @@ import type {
   CreateVideoCategoryInput, UpdateVideoCategoryInput,
 } from './schema.js';
 
-function extractYoutubeThumbnail(url?: string | null): string | null {
+// Pull the 11-char video id out of any YouTube URL shape, incl. the share-menu
+// /live/<id>?si=… and /shorts/<id> forms (previously unhandled → no thumbnail).
+function extractYoutubeId(url?: string | null): string | null {
   if (!url) return null;
-  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([^&?\s/]+)/);
-  return match?.[1] ? `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg` : null;
+  const match = url.match(/(?:v=|\/live\/|\/embed\/|\/shorts\/|\/v\/|youtu\.be\/)([0-9A-Za-z_-]{11})/);
+  return match?.[1] ?? null;
+}
+
+/** Canonicalize any recognizable YouTube URL to https://www.youtube.com/watch?v=ID.
+ *  Non-YouTube / unrecognized input is returned unchanged. */
+export function normalizeYoutubeUrl(url?: string | null): string | null | undefined {
+  if (!url) return url;
+  const id = extractYoutubeId(url);
+  return id ? `https://www.youtube.com/watch?v=${id}` : url;
+}
+
+function extractYoutubeThumbnail(url?: string | null): string | null {
+  const id = extractYoutubeId(url);
+  return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null;
 }
 
 interface ListParams {
@@ -68,13 +83,14 @@ export async function getVideo(schema: string, id: string) {
 }
 
 export async function createVideo(schema: string, input: CreateVideoInput) {
-  const thumbnailUrl = input.thumbnailUrl || extractYoutubeThumbnail(input.youtubeUrl) || null;
+  const youtubeUrl = normalizeYoutubeUrl(input.youtubeUrl);
+  const thumbnailUrl = input.thumbnailUrl || extractYoutubeThumbnail(youtubeUrl) || null;
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
     `INSERT INTO "${schema}".videos (title, youtube_url, video_date, thumbnail_url, category_id, status)
      VALUES ($1, $2, $3::date, $4, $5::uuid, $6)
      RETURNING *`,
     input.title,
-    input.youtubeUrl ?? null,
+    youtubeUrl ?? null,
     input.videoDate || null,
     thumbnailUrl,
     input.categoryIds?.[0] ?? null,
@@ -90,10 +106,11 @@ export async function updateVideo(schema: string, id: string, input: UpdateVideo
 
   if (input.title !== undefined) { setClauses.push(`title = $${paramIndex++}`); values.push(input.title); }
   if (input.youtubeUrl !== undefined) {
-    setClauses.push(`youtube_url = $${paramIndex++}`); values.push(input.youtubeUrl);
+    const youtubeUrl = normalizeYoutubeUrl(input.youtubeUrl);
+    setClauses.push(`youtube_url = $${paramIndex++}`); values.push(youtubeUrl);
     // Re-derive the thumbnail unless the caller supplied one explicitly.
     if (input.thumbnailUrl === undefined) {
-      const autoThumb = extractYoutubeThumbnail(input.youtubeUrl);
+      const autoThumb = extractYoutubeThumbnail(youtubeUrl);
       setClauses.push(`thumbnail_url = $${paramIndex++}`); values.push(autoThumb);
     }
   }

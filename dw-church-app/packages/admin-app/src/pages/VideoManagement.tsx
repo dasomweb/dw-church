@@ -21,12 +21,24 @@ interface VideoFormData {
   status: PostStatus;
 }
 
-// Derive a YouTube thumbnail for the list grid — mirrors the server helper
-// (youtu.be / watch?v= / embed/ / v/ → img.youtube.com/vi/<id>/hqdefault.jpg).
+// Pull the 11-char video id out of any YouTube URL shape, incl. the share-menu
+// /live/<id>?si=… and /shorts/<id> forms.
+function extractYouTubeId(url?: string): string | null {
+  if (!url) return null;
+  const m = url.match(/(?:v=|\/live\/|\/embed\/|\/shorts\/|\/v\/|youtu\.be\/)([0-9A-Za-z_-]{11})/);
+  return m?.[1] ?? null;
+}
+
+/** Canonicalize any recognized YouTube URL to the clean watch?v=ID form. */
+function normalizeYoutubeUrl(url: string): string {
+  const id = extractYouTubeId(url);
+  return id ? `https://www.youtube.com/watch?v=${id}` : url;
+}
+
+// Derive a YouTube thumbnail for the list grid — mirrors the server helper.
 function youtubeThumb(url?: string): string {
-  if (!url) return '';
-  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([^&?\s/]+)/);
-  return m?.[1] ? `https://img.youtube.com/vi/${m[1]}/hqdefault.jpg` : '';
+  const id = extractYouTubeId(url);
+  return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : '';
 }
 
 export default function VideoManagement() {
@@ -46,7 +58,7 @@ export default function VideoManagement() {
   const updateMutation = useUpdateVideo();
   const deleteMutation = useDeleteVideo();
   const bulk = useBulkDelete<Video>({ deleteOne: (id) => deleteMutation.mutateAsync(id), onDone: () => refetch() });
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<VideoFormData>();
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<VideoFormData>();
 
   const handleEdit = (item: Video) => {
     setEditingItem(item);
@@ -147,7 +159,18 @@ export default function VideoManagement() {
 
           <FormSection title="미디어" description="YouTube 영상 URL을 입력하면 사이트에서 16:9 임베드로 재생됩니다">
             <FormField label="YouTube URL">
-              <input {...register('youtubeUrl')} placeholder="https://youtube.com/watch?v=..." className={inputClass} />
+              <input
+                {...register('youtubeUrl', {
+                  // Auto-convert a pasted share URL (…/live/ID?si=…) to the clean
+                  // watch?v=ID form when the field loses focus.
+                  onBlur: (e) => {
+                    const clean = normalizeYoutubeUrl(e.target.value);
+                    if (clean !== e.target.value) setValue('youtubeUrl', clean, { shouldDirty: true });
+                  },
+                })}
+                placeholder="https://youtube.com/watch?v=..."
+                className={inputClass}
+              />
             </FormField>
           </FormSection>
 
