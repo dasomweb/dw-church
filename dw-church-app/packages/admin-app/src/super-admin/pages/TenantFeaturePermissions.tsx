@@ -46,6 +46,7 @@ export default function TenantFeaturePermissions() {
   const [planMonthly, setPlanMonthly] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   const load = useCallback(async () => {
     if (!tenant?.id) return;
@@ -94,6 +95,31 @@ export default function TenantFeaturePermissions() {
   };
 
   const resetKey = (key: string) => setOverrides((prev) => { const c = { ...prev }; delete c[key]; return c; });
+
+  // Push add-ons to Stripe — saves the current overrides first (sync reads the
+  // saved DB state), then reconciles the subscription. Explicit, never on toggle.
+  const syncStripe = async () => {
+    if (!tenant?.id) return;
+    setSyncing(true);
+    try {
+      await fetch(`${baseUrl}/api/v1/admin/tenants/${tenant.id}/feature-overrides`, {
+        method: 'PUT', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ overrides }),
+      });
+      const res = await fetch(`${baseUrl}/api/v1/admin/tenants/${tenant.id}/billing/sync-addons`, { method: 'POST', headers: authHeaders });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const d = (await res.json())?.data ?? {};
+      if (d.synced) {
+        showToast('success', `Stripe 청구 반영 완료 — 추가 ${d.added?.length ?? 0} · 제거 ${d.removed?.length ?? 0}`);
+      } else if (d.reason === 'no_subscription') {
+        showToast('error', '활성 Stripe 구독이 없는 테넌트입니다. 애드온은 수동 청구(인보이스)로 처리하세요.');
+      } else {
+        showToast('error', `Stripe 반영 안 됨: ${d.reason ?? '알 수 없음'}`);
+      }
+      await load();
+    } catch (e) {
+      showToast('error', e instanceof Error ? e.message : 'Stripe 반영 실패');
+    } finally { setSyncing(false); }
+  };
 
   const save = async () => {
     if (!tenant?.id) return;
@@ -179,13 +205,18 @@ export default function TenantFeaturePermissions() {
             <p className="mt-1.5 text-[11px] text-gray-400">단가는 요금 관리(요금제)에서 수정합니다. 실제 청구(Stripe 자동 반영)는 다음 단계에서 연결됩니다.</p>
           </div>
 
-          <div className="mt-4 flex items-center gap-3">
-            <button onClick={save} disabled={saving}
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <button onClick={save} disabled={saving || syncing}
               className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60">
               {saving ? '저장 중…' : '저장'}
             </button>
+            <button onClick={syncStripe} disabled={saving || syncing}
+              className="rounded-lg border border-blue-600 px-5 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50 disabled:opacity-60">
+              {syncing ? '반영 중…' : 'Stripe 청구 반영'}
+            </button>
             <span className="text-xs text-gray-400">예외 {Object.keys(overrides).length}개</span>
           </div>
+          <p className="mt-2 text-[11px] text-gray-400">‘Stripe 청구 반영’은 저장 후 이 테넌트의 구독에 애드온 항목을 추가/제거합니다(비례 청구). 활성 구독이 없으면 반영되지 않고 수동 청구 대상입니다.</p>
         </>
       )}
     </div>

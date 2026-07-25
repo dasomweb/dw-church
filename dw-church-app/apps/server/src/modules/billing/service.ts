@@ -2,6 +2,7 @@ import Stripe from 'stripe';
 import { prisma } from '../../config/database.js';
 import { AppError } from '../../middleware/error-handler.js';
 import { sendEmail } from '../../config/email.js';
+import { addonFeatures } from '../../config/plan-limits.js';
 
 const stripeKey = process.env.STRIPE_SECRET_KEY || '';
 const stripe = stripeKey ? new Stripe(stripeKey) : null;
@@ -293,6 +294,117 @@ export async function handleWebhook(
       // Unhandled event type — ignore
       break;
   }
+}
+
+/**
+ * Sync a tenant's billable add-ons (features enabled ABOVE its plan) onto its
+ * Stripe subscription as extra recurring subscription items. Reconciles: creates
+ * items for newly-added add-ons, removes items for dropped ones. Add-on items are
+ * tagged with metadata.dw_addon_feature so Stripe itself is the source of truth
+ * (no extra table). Prorates immediately (this runs only on an explicit
+ * super-admin "청구 반영" click, never on a toggle).
+ *
+ * Tenants WITHOUT an active Stripe subscription are display-only: returns
+ * { synced:false, reason:'no_subscription' } and touches nothing (manual invoice).
+ */
+export interface AddonSyncResult {
+  synced: boolean;
+  reason?: string;
+  interval?: 'month' | 'year';
+  added: string[];
+  removed: string[];
+  active: { key: string; label: string; amountCents: number }[];
+}
+
+export async function syncTenantAddons(tenantId: string): Promise<AddonSyncResult> {
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { plan: true, stripeSubscriptionId: true },
+  });
+  if (!tenant) throw new AppError('NOT_FOUND', 404, 'Tenant not found');
+
+  const ovRows = await prisma.$queryRawUnsafe<{ feature_overrides: Record<string, unknown> | null }[]>(
+    `SELECT feature_overrides FROM public.tenants WHERE id = $1::uuid`,
+    tenantId,
+  );
+  const overrides = ovRows[0]?.feature_overrides ?? {};
+  const desiredKeys = addonFeatures(tenant.plan, overrides);
+
+  // à-la-carte prices for the desired add-ons.
+  const priceRows = await prisma.$queryRawUnsafe<{ feature_key: string; label: string; monthly: number; yearly: number; is_active: boolean }[]>(
+    `SELECT feature_key, label, monthly, yearly, is_active FROM public.feature_pricing`,
+  );
+  const priceByKey = new Map(priceRows.filter((r) => r.is_active).map((r) => [r.feature_key, r]));
+
+  const empty: AddonSyncResult = { synced: false, added: [], removed: [], active: [] };
+  if (!tenant.stripeSubscriptionId) return { ...empty, reason: 'no_subscription' };
+
+  const s = requireStripe();
+  let sub: Stripe.Subscription;
+  try {
+    sub = await s.subscriptions.retrieve(tenant.stripeSubscriptionId, { expand: ['items.data.price'] });
+  } catch {
+    return { ...empty, reason: 'subscription_missing' };
+  }
+  if (sub.status !== 'active' && sub.status !== 'trialing' && sub.status !== 'past_due') {
+    return { ...empty, reason: `subscription_${sub.status}` };
+  }
+
+  // Base plan interval — the item WITHOUT our add-on tag drives month vs year.
+  const baseItem = sub.items.data.find((i) => !i.metadata?.dw_addon_feature);
+  const interval = (baseItem?.price?.recurring?.interval as 'month' | 'year' | undefined) ?? 'month';
+  const existingAddons = sub.items.data.filter((i) => i.metadata?.dw_addon_feature);
+  const existingByKey = new Map(existingAddons.map((i) => [i.metadata!.dw_addon_feature as string, i]));
+
+  const added: string[] = [];
+  const removed: string[] = [];
+
+  // Add newly-desired add-ons.
+  for (const key of desiredKeys) {
+    if (existingByKey.has(key)) continue;
+    const price = priceByKey.get(key);
+    if (!price) continue; // no active price → skip (nothing to charge)
+    // yearly price is $/month-equivalent, billed 12× on an annual sub.
+    const perMonth = interval === 'year' ? Number(price.yearly) : Number(price.monthly);
+    const unitAmount = Math.round((interval === 'year' ? perMonth * 12 : perMonth) * 100);
+    if (unitAmount <= 0) continue;
+    // Subscription-item price_data can't inline product_data (unlike Checkout), so
+    // mint a Price (with an inline product) first, then attach it to the sub.
+    const stripePrice = await s.prices.create({
+      currency: 'usd',
+      unit_amount: unitAmount,
+      recurring: { interval },
+      product_data: { name: `애드온: ${price.label}` },
+    });
+    await s.subscriptionItems.create({
+      subscription: sub.id,
+      price: stripePrice.id,
+      quantity: 1,
+      metadata: { dw_addon_feature: key },
+      proration_behavior: 'create_prorations',
+    });
+    added.push(key);
+  }
+
+  // Remove add-ons no longer desired.
+  const desiredSet = new Set(desiredKeys);
+  for (const item of existingAddons) {
+    const key = item.metadata!.dw_addon_feature as string;
+    if (desiredSet.has(key)) continue;
+    await s.subscriptionItems.del(item.id, { proration_behavior: 'create_prorations' });
+    removed.push(key);
+  }
+
+  const active = desiredKeys
+    .map((key) => {
+      const price = priceByKey.get(key);
+      if (!price) return null;
+      const perMonth = interval === 'year' ? Number(price.yearly) : Number(price.monthly);
+      return { key, label: price.label, amountCents: Math.round((interval === 'year' ? perMonth * 12 : perMonth) * 100) };
+    })
+    .filter((x): x is { key: string; label: string; amountCents: number } => x !== null);
+
+  return { synced: true, interval, added, removed, active };
 }
 
 /**

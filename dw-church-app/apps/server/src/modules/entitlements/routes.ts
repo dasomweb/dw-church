@@ -152,4 +152,11 @@ export async function entitlementRoutes(app: FastifyInstance) {
       },
     });
   });
+
+  // Push the tenant's add-ons to Stripe (explicit — never auto). Phase 2 billing.
+  app.post('/admin/tenants/:id/billing/sync-addons', { preHandler: [requireSuperAdmin] }, async (req, reply) => {
+    const { id } = req.params as { id: string };
+    const { syncTenantAddons } = await import('../billing/service.js');
+    return reply.send({ data: await syncTenantAddons(id) });
+  });
 }
