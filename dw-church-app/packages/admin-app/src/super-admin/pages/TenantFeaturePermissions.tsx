@@ -1,109 +1,159 @@
 /**
- * Tenant Feature Permissions — controls which modules a tenant can see
- * in their own admin (/t/:slug/). Backed by a new
- * `tenants.enabled_modules` JSON column (added via runtime migration in
- * the existing schema-manager pattern, not Prisma migrate).
+ * Tenant Feature Permissions — per-tenant exceptions on top of the PLAN defaults.
+ * The plan (라이트/기본/플러스/프로) decides the baseline (server
+ * config/plan-limits.ts FEATURE_TIERS); here a super-admin can grant or revoke
+ * individual features for one tenant. Persisted to tenants.feature_overrides via
+ * /admin/tenants/:id/feature-overrides, and consumed by GET /admin/entitlements
+ * which gates the tenant's sidebar nav + page-editor block picker.
  *
- * Per-module entries are listed by the dw-church content module catalog
- * — sermons, bulletins, columns, albums, banners, events, staff,
- * history, boards. Plus the two "design layer" modules (pages, theme)
- * the tenant admin can opt out of when the super-admin is the only
- * design editor.
- *
- * Stays a placeholder for the server side until Phase 7a-server lands
- * the GET/PUT /api/v1/admin/tenants/:id/enabled-modules endpoints — for
- * now it shows the state from the cached tenant summary so the UI is
- * navigable.
+ * Raw fetch (not the api-client) so the server's snake_case feature keys survive.
  */
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuthStore } from '../../stores/auth';
 import { useToast } from '../../components';
 import { useSuperAdminTenant } from '../SuperAdminTenantLayout';
 
-interface ModuleDef { key: string; label: string; group: string; defaultOn: boolean }
-
-const MODULES: ModuleDef[] = [
-  // 콘텐츠 — 9 dw-church content modules
-  { key: 'sermons',   label: '설교',     group: '콘텐츠', defaultOn: true },
-  { key: 'bulletins', label: '주보',     group: '콘텐츠', defaultOn: true },
-  { key: 'columns',   label: '목회칼럼', group: '콘텐츠', defaultOn: true },
-  { key: 'albums',    label: '앨범',     group: '콘텐츠', defaultOn: true },
-  { key: 'banners',   label: '배너',     group: '콘텐츠', defaultOn: true },
-  { key: 'events',    label: '행사',     group: '콘텐츠', defaultOn: true },
-  { key: 'staff',     label: '교역자',   group: '콘텐츠', defaultOn: true },
-  { key: 'history',   label: '연혁',     group: '콘텐츠', defaultOn: true },
-  { key: 'boards',    label: '게시판',   group: '콘텐츠', defaultOn: true },
-  // 디자인 — tenant admin can opt-out when super-admin owns design
-  { key: 'theme',     label: '테마',           group: '디자인', defaultOn: true },
-  { key: 'pages',     label: '페이지 빌더',    group: '디자인', defaultOn: true },
-  { key: 'menus',     label: '메뉴',           group: '디자인', defaultOn: true },
-  // 설정
-  { key: 'domains',   label: '도메인',         group: '설정', defaultOn: true },
-  { key: 'users',     label: '사용자',         group: '설정', defaultOn: true },
-  { key: 'billing',   label: '결제',           group: '설정', defaultOn: true },
+// Display labels + grouping for the gated feature keys (must match server keys).
+const FEATURES: { key: string; label: string; group: string }[] = [
+  { key: 'albums', label: '사진 앨범', group: '기본 이상' },
+  { key: 'history', label: '교회 연혁', group: '기본 이상' },
+  { key: 'columns', label: '목회 칼럼', group: '기본 이상' },
+  { key: 'video', label: '영상 게시판', group: '기본 이상' },
+  { key: 'boards', label: '게시판(공지/선교 등)', group: '기본 이상' },
+  { key: 'events', label: '행사', group: '기본 이상' },
+  { key: 'banners', label: '메인 배너 슬라이드', group: '기본 이상' },
+  { key: 'cells', label: '목장(셀) 관리', group: '플러스 이상' },
+  { key: 'newcomer', label: '새가족 안내·등록 폼', group: '플러스 이상' },
+  { key: 'newcomer_registration', label: '새가족 온라인 등록·교인관리', group: '프로' },
+  { key: 'pwa', label: '모바일 앱(PWA)', group: '프로' },
 ];
+
+const PLAN_LABEL: Record<string, string> = { light: '라이트', basic: '기본', plus: '플러스', pro: '프로' };
 
 export default function TenantFeaturePermissions() {
   const session = useAuthStore((s) => s.session);
   const { tenant } = useSuperAdminTenant();
   const { showToast } = useToast();
-  void session;
-  // Local state seed — until the server endpoint ships, treat all
-  // modules as on. The toggle UI is functional; persistence will land
-  // when the server PUT /enabled-modules route is in.
-  const [enabled, setEnabled] = useState<Record<string, boolean>>(
-    Object.fromEntries(MODULES.map((m) => [m.key, m.defaultOn])),
-  );
 
+  const host = typeof window !== 'undefined' ? window.location.hostname : '';
+  const baseUrl = host.startsWith('admin.') ? `https://api.${host.replace('admin.', '')}` : (import.meta.env.VITE_API_BASE_URL as string) || '';
+  const authHeaders = { Authorization: `Bearer ${session?.accessToken ?? ''}` };
+
+  const [plan, setPlan] = useState('');
+  const [defaults, setDefaults] = useState<Record<string, boolean>>({});
+  const [overrides, setOverrides] = useState<Record<string, boolean>>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    if (!tenant?.id) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`${baseUrl}/api/v1/admin/tenants/${tenant.id}/feature-overrides`, { headers: authHeaders });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const d = (await res.json())?.data ?? {};
+      setPlan(d.plan ?? '');
+      setDefaults(d.defaults ?? {});
+      setOverrides(d.overrides ?? {});
+    } catch (e) {
+      showToast('error', e instanceof Error ? e.message : '로딩 실패');
+    } finally {
+      setLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenant?.id, baseUrl]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  const effective = (key: string) => (key in overrides ? overrides[key] : defaults[key]) ?? false;
+  const isOverridden = (key: string) => key in overrides;
+
+  // Toggle the effective state. If the new value matches the plan default, drop
+  // the override (follow the plan); otherwise record it as an explicit exception.
   const toggle = (key: string) => {
-    setEnabled((prev) => ({ ...prev, [key]: !prev[key] }));
-    showToast('success', `${MODULES.find((m) => m.key === key)?.label} 설정이 변경되었습니다. (서버 적용은 Phase 7a-server 에서)`);
+    const next = !effective(key);
+    setOverrides((prev) => {
+      const copy = { ...prev };
+      if (next === (defaults[key] ?? false)) delete copy[key];
+      else copy[key] = next;
+      return copy;
+    });
   };
 
-  const groups = Array.from(new Set(MODULES.map((m) => m.group)));
+  const resetKey = (key: string) => setOverrides((prev) => { const c = { ...prev }; delete c[key]; return c; });
+
+  const save = async () => {
+    if (!tenant?.id) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`${baseUrl}/api/v1/admin/tenants/${tenant.id}/feature-overrides`, {
+        method: 'PUT', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ overrides }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      showToast('success', '기능 권한을 저장했습니다.');
+      await load();
+    } catch (e) {
+      showToast('error', e instanceof Error ? e.message : '저장 실패');
+    } finally { setSaving(false); }
+  };
+
+  const groups = Array.from(new Set(FEATURES.map((f) => f.group)));
 
   return (
-    <div className="p-6 lg:p-8 max-w-4xl mx-auto">
+    <div className="p-6 lg:p-8 max-w-3xl mx-auto">
       <h1 className="text-xl font-bold text-gray-900 mb-1">기능 권한</h1>
-      <p className="text-sm text-gray-500 mb-6">
-        테넌트({tenant?.name ?? '...'}) 어드민이 사용할 수 있는 모듈을 켜고 끕니다. 끄면 해당 모듈은 사이드바에서 숨겨지고 API도 403을 반환합니다.
+      <p className="text-sm text-gray-500 mb-1">
+        플랜(<b>{PLAN_LABEL[plan] ?? (plan || '...')}</b>)이 기본 사용 범위를 정합니다. 여기서 이 테넌트에만 개별 기능을 켜거나 끌 수 있습니다.
       </p>
+      <p className="text-xs text-gray-400 mb-6">끄면 해당 기능이 테넌트 관리자 메뉴와 페이지 편집기 블록 목록에서 숨겨집니다.</p>
 
-      <div className="space-y-6">
-        {groups.map((group) => (
-          <section key={group} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <header className="px-4 py-2.5 bg-gray-50 border-b text-xs font-semibold text-gray-600 uppercase tracking-wider">
-              {group}
-            </header>
-            <ul className="divide-y divide-gray-100">
-              {MODULES.filter((m) => m.group === group).map((m) => (
-                <li key={m.key} className="px-4 py-3 flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">{m.label}</div>
-                    <div className="text-[10px] text-gray-400 font-mono">{m.key}</div>
-                  </div>
-                  <button
-                    onClick={() => toggle(m.key)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      enabled[m.key] ? 'bg-blue-600' : 'bg-gray-300'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        enabled[m.key] ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
-      </div>
+      {loading ? (
+        <div className="text-sm text-gray-400">로딩 중…</div>
+      ) : (
+        <>
+          <div className="space-y-6">
+            {groups.map((group) => (
+              <section key={group} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <header className="px-4 py-2.5 bg-gray-50 border-b text-xs font-semibold text-gray-600 uppercase tracking-wider">{group}</header>
+                <ul className="divide-y divide-gray-100">
+                  {FEATURES.filter((f) => f.group === group).map((f) => (
+                    <li key={f.key} className="px-4 py-3 flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
+                          {f.label}
+                          {isOverridden(f.key) && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700">예외</span>
+                          )}
+                        </div>
+                        <div className="text-[11px] text-gray-400">
+                          플랜 기본: {defaults[f.key] ? '사용 가능' : '미포함'}
+                          {isOverridden(f.key) && (
+                            <button onClick={() => resetKey(f.key)} className="ml-2 text-blue-500 hover:underline">기본값으로</button>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => toggle(f.key)}
+                        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${effective(f.key) ? 'bg-blue-600' : 'bg-gray-300'}`}
+                      >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${effective(f.key) ? 'translate-x-6' : 'translate-x-1'}`} />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
 
-      <div className="mt-6 p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-900">
-        ⚠ 서버 측 강제 (enabled_modules 컬럼 + 미들웨어 게이트) 는 Phase 7a-server 에서 추가됩니다. 현재는 UI 만 동작.
-      </div>
+          <div className="mt-6 flex items-center gap-3">
+            <button onClick={save} disabled={saving}
+              className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60">
+              {saving ? '저장 중…' : '저장'}
+            </button>
+            <span className="text-xs text-gray-400">예외 {Object.keys(overrides).length}개</span>
+          </div>
+        </>
+      )}
     </div>
   );
 }

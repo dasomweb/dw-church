@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useLogout, useChurchSettings } from '@dw-church/api-client';
 import { useAuthStore } from '../stores/auth';
+import { useEntitlements } from '../hooks/useEntitlements';
+import { NAV_FEATURE, featureAllowed } from '../lib/plan-features';
 
 // Nav item paths are relative to the current tenant root (/t/:slug). An empty
 // string means the tenant dashboard (/t/:slug), "sermons" becomes
@@ -102,6 +104,9 @@ export function AdminLayout() {
   const logout = useAuthStore((s) => s.logout);
   const { data: settings } = useChurchSettings();
   const churchName = (settings as any)?.churchName || (settings as any)?.church_name || slug || 'True Light';
+  // Plan gating — hide nav items the tenant's plan doesn't include. Super-admins
+  // see everything (they have the full super-admin console for support).
+  const { features } = useEntitlements(slug);
 
   // Absolute tenant paths — each sidebar link lives under /t/:slug.
   const tenantRoot = `/t/${slug}`;
@@ -192,7 +197,10 @@ export function AdminLayout() {
               <div key={entry.label} className={i > 0 ? 'mt-4' : 'mt-2'}>
                 <p className="px-3 py-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{entry.label}</p>
                 <div className="space-y-0.5">
-                  {entry.items.filter((item) => !item.superAdminOnly || isSuperAdmin).map((item) => {
+                  {entry.items
+                    .filter((item) => !item.superAdminOnly || isSuperAdmin)
+                    .filter((item) => isSuperAdmin || featureAllowed(features, NAV_FEATURE[item.to]))
+                    .map((item) => {
                     const dest = pathFor(item.to);
                     return (
                       <NavLink

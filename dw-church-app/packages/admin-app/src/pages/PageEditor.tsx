@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo, Fragment } from 'react';
+import { useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import type { Page, PageSection, BlockType } from '@dw-church/api-client';
 import {
@@ -18,6 +19,8 @@ import { useToast } from '../components';
 import { ImageUpload, MultiImageUpload } from '../components/ImageUpload';
 import { RichEditor } from '../components/RichEditor';
 import { useAuthStore } from '../stores/auth';
+import { useEntitlements } from '../hooks/useEntitlements';
+import { BLOCK_FEATURE, featureAllowed } from '../lib/plan-features';
 
 // ═══════════════════════════════════════════════════════════
 // Block Registry — types, variants, metadata
@@ -222,7 +225,7 @@ function natureTone(nature: BlockDef['nature']): { list: string; grid: string; l
 }
 
 const BLOCK_CATEGORIES = (() => {
-  const order = ['히어로', '소개', '콘텐츠', '텍스트', '교회 정보', 'CTA', '레이아웃'];
+  const order = ['히어로', '소개', '콘텐츠', '텍스트', '교회 정보', 'CTA', '폼/신청서', '레이아웃'];
   const groups: { category: string; blocks: BlockDef[] }[] = [];
   for (const cat of order) {
     const blocks = BLOCK_DEFS.filter((b) => b.category === cat);
@@ -295,7 +298,7 @@ const TEMPLATES: PageTemplate[] = [
 type NatureFilter = 'all' | 'static' | 'dynamic' | 'layout';
 type PaletteViewMode = 'list' | 'grid';
 
-function BlockPalette({ onAdd }: { onAdd: (type: string) => void }) {
+function BlockPalette({ onAdd, features }: { onAdd: (type: string) => void; features: Record<string, boolean> }) {
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<PaletteViewMode>('list');
   const [natureFilter, setNatureFilter] = useState<NatureFilter>('all');
@@ -304,6 +307,8 @@ function BlockPalette({ onAdd }: { onAdd: (type: string) => void }) {
     return BLOCK_CATEGORIES.map((c) => ({
       ...c,
       blocks: c.blocks.filter((b) => {
+        // Plan gating — hide blocks the tenant's plan doesn't include.
+        if (!featureAllowed(features, BLOCK_FEATURE[b.type])) return false;
         // Nature filter
         if (natureFilter === 'static' && b.nature !== 'static') return false;
         if (natureFilter === 'dynamic' && b.nature !== 'dynamic') return false;
@@ -316,7 +321,7 @@ function BlockPalette({ onAdd }: { onAdd: (type: string) => void }) {
         return true;
       }),
     })).filter((c) => c.blocks.length > 0);
-  }, [search, natureFilter]);
+  }, [search, natureFilter, features]);
 
   return (
     <div className="w-40 sm:w-56 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col overflow-hidden">
@@ -848,7 +853,7 @@ function ChildBlockPicker({ onSelect, onClose }: { onSelect: (type: string) => v
   // Exclude Layout Blocks from children picker to prevent deep nesting
   const availableBlocks = BLOCK_DEFS.filter((b) => b.nature !== 'layout');
   const categories = (() => {
-    const order = ['히어로', '소개', '콘텐츠', '텍스트', '교회 정보', 'CTA'];
+    const order = ['히어로', '소개', '콘텐츠', '텍스트', '교회 정보', 'CTA', '폼/신청서'];
     const groups: { category: string; blocks: BlockDef[] }[] = [];
     for (const cat of order) {
       const blocks = availableBlocks.filter((b) => b.category === cat);
@@ -1590,6 +1595,8 @@ export default function PageEditor() {
   const [showTemplateGallery, setShowTemplateGallery] = useState(false);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
+  const { slug = '' } = useParams<{ slug: string }>();
+  const { features } = useEntitlements(slug); // plan gating for the block palette
   const { showToast } = useToast();
   const { data: pages, isLoading: pagesLoading } = usePages();
   const { data: sections } = usePageSections(selectedPageId || '');
@@ -1831,7 +1838,7 @@ export default function PageEditor() {
   return (
     <div className="flex h-[calc(100vh-8rem)]">
       {/* Block Palette — hidden in content-only (tenants can't add blocks) */}
-      {!CONTENT_ONLY && <BlockPalette onAdd={handleAddBlock} />}
+      {!CONTENT_ONLY && <BlockPalette onAdd={handleAddBlock} features={features} />}
 
       {/* Page List */}
       <div className="w-40 sm:w-56 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col overflow-hidden">

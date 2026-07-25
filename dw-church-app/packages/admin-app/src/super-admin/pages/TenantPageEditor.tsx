@@ -15,6 +15,8 @@ import type { PageSection } from '@dw-church/api-client';
 import { useAuthStore } from '../../stores/auth';
 import { useToast } from '../../components';
 import { useSuperAdminTenant } from '../SuperAdminTenantLayout';
+import { useEntitlements } from '../../hooks/useEntitlements';
+import { BLOCK_FEATURE, featureAllowed } from '../../lib/plan-features';
 import { ElementInspector } from '../../components/builder/ElementInspector';
 import { BuilderCanvas } from '../../components/builder/BuilderCanvas';
 import { ContentEntryPanel } from './ContentEntryPanel';
@@ -138,6 +140,7 @@ interface Section {
 export default function TenantPageEditor() {
   const session = useAuthStore((s) => s.session);
   const { tenant } = useSuperAdminTenant();
+  const { features } = useEntitlements(tenant?.slug); // plan gating for "+블록"
   const { showToast } = useToast();
   const [pages, setPages] = useState<PageRow[]>([]);
   // Slugs of pages currently linked from the live nav menu — lets the page
@@ -727,7 +730,10 @@ export default function TenantPageEditor() {
                 </button>
                 {addMenuOpen && (
                   <div className="absolute right-0 top-full z-20 mt-1 max-h-[28rem] w-48 overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg">
-                    {ADD_BLOCK_CATALOG.map((group) => (
+                    {ADD_BLOCK_CATALOG
+                      .map((group) => ({ ...group, blocks: group.blocks.filter((b) => featureAllowed(features, BLOCK_FEATURE[b.value])) }))
+                      .filter((group) => group.blocks.length > 0)
+                      .map((group) => (
                       <div key={group.category}>
                         <div className="px-3 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
                           {group.category}

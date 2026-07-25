@@ -124,6 +124,7 @@ async function main(): Promise<void> {
   const { analyticsRoutes } = await import('./modules/analytics/routes.js');
   const { backupRoutes } = await import('./modules/backups/routes.js');
   const { fullBackupRoutes } = await import('./modules/backups-full/routes.js');
+  const { entitlementRoutes } = await import('./modules/entitlements/routes.js');
 
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(tenantRoutes, { prefix: '/api/v1/admin' });
@@ -211,6 +212,7 @@ async function main(): Promise<void> {
   await app.register(analyticsRoutes, { prefix: '/api/v1' }); // /analytics/hit (public beacon) + /analytics/summary (admin report)
   await app.register(backupRoutes, { prefix: '/api/v1' }); // /admin/tenants/:slug/backups (super-admin in-DB quick snapshot)
   await app.register(fullBackupRoutes, { prefix: '/api/v1' }); // /admin/tenants/:slug/full-backups (super-admin R2 DB+media full backup)
+  await app.register(entitlementRoutes, { prefix: '/api/v1' }); // /admin/entitlements + /admin/tenants/:id/feature-overrides (plan gating)
 
   // --- Internal: resolve custom domain to tenant slug (used by Next.js middleware) ---
   app.get('/api/v1/admin/tenants/resolve-domain', async (request, reply) => {
@@ -339,6 +341,16 @@ async function main(): Promise<void> {
     );
   } catch (err) {
     app.log.warn(`site_visits table migration skipped: ${err}`);
+  }
+
+  // Per-tenant feature overrides (super-admin "기능 권한" exceptions on top of
+  // the plan defaults). jsonb map { [featureKey]: boolean }. Empty = pure plan.
+  try {
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS feature_overrides jsonb NOT NULL DEFAULT '{}'::jsonb`,
+    );
+  } catch (err) {
+    app.log.warn(`tenants.feature_overrides migration skipped: ${err}`);
   }
 
   // --- Tenant schema drift repair ---

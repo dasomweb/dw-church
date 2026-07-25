@@ -60,11 +60,30 @@ export function planLimits(plan: string | null | undefined): PlanLimits {
  * tiers. Keyed by a stable feature id; value is the set of tiers that include
  * it. A feature absent from this map is available on every tier.
  */
+// Feature id → tiers that include it. A feature absent here is on every tier
+// (라이트 포함). Keys are the SINGLE SOURCE OF TRUTH the admin gates nav + the
+// block picker against (via GET /admin/entitlements). Aligned to the tiers sold
+// on truelight.app: 기본(basic) adds the extra content modules; 플러스(plus)
+// adds 목장 + 새가족; 프로(pro) adds online 새가족 등록 + PWA.
 export const FEATURE_TIERS: Record<string, PlanTier[]> = {
-  cells: ['plus', 'pro'], // 목장(셀) 관리
-  newcomer_registration: ['pro'], // 새가족 온라인 등록·관리 (공개 등록 폼 + 교인 관리)
-  pwa: ['pro'], // 모바일 앱(PWA) — 설치형 + 앱식 하단 네비
+  // 기본(basic)+ content modules (라이트는 설교·주보·교역자·예배·오시는길만)
+  albums: ['basic', 'plus', 'pro'],   // 사진 앨범
+  history: ['basic', 'plus', 'pro'],  // 교회 연혁
+  columns: ['basic', 'plus', 'pro'],  // 목회 칼럼
+  video: ['basic', 'plus', 'pro'],    // 영상 게시판
+  boards: ['basic', 'plus', 'pro'],   // 공지/행사/선교 게시판
+  events: ['basic', 'plus', 'pro'],   // 행사
+  banners: ['basic', 'plus', 'pro'],  // 메인 배너 슬라이드
+  // 플러스(plus)+
+  cells: ['plus', 'pro'],             // 목장(셀) 관리
+  newcomer: ['plus', 'pro'],          // 새가족 안내 + 새가족 등록 폼
+  // 프로(pro)+
+  newcomer_registration: ['pro'],     // 새가족 온라인 등록·관리 (교인 관리)
+  pwa: ['pro'],                       // 모바일 앱(PWA)
 };
+
+/** Every gated feature id — used to build the effective-features map. */
+export const FEATURE_KEYS = Object.keys(FEATURE_TIERS);
 
 export function planAllowsFeature(plan: string | null | undefined, feature: string): boolean {
   const allowed = FEATURE_TIERS[feature];
@@ -75,4 +94,21 @@ export function planAllowsFeature(plan: string | null | undefined, feature: stri
 /** Tiers (canonical names) that include a feature — for requirePlan() gates. */
 export function tiersForFeature(feature: string): PlanTier[] {
   return FEATURE_TIERS[feature] ?? ['light', 'basic', 'plus', 'pro'];
+}
+
+/**
+ * Effective feature access for a tenant: the plan default, overridden per-tenant
+ * where an explicit boolean is set (super-admin "기능 권한" exceptions). Returns
+ * a boolean for every gated feature key so the admin can gate nav + blocks.
+ */
+export function effectiveFeatures(
+  plan: string | null | undefined,
+  overrides: Record<string, unknown> | null | undefined,
+): Record<string, boolean> {
+  const ov = overrides ?? {};
+  const out: Record<string, boolean> = {};
+  for (const key of FEATURE_KEYS) {
+    out[key] = typeof ov[key] === 'boolean' ? (ov[key] as boolean) : planAllowsFeature(plan, key);
+  }
+  return out;
 }
