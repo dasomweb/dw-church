@@ -33,6 +33,7 @@ import {
   deleteJob,
 } from './job.js';
 import { extractFromHtml } from './extractors/html-scraper.js';
+import { parseWxr } from './extractors/wxr.js';
 import { closeBrowser } from './extractors/browser-render.js';
 import { extractFromYouTubeChannel } from './extractors/youtube.js';
 import { classify } from './classifier.js';
@@ -413,6 +414,73 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
       // Release the shared headless-chromium so it doesn't linger in memory
       // after the crawl finishes.
       await closeBrowser().catch(() => {});
+    }
+  });
+
+  // ── WordPress WXR import (upload the WP export .xml) ──
+  // Sources content from an uploaded WordPress export instead of crawling, so it
+  // works even when the source host's WAF blocks our crawler. Parses WXR →
+  // reuses the SAME classify() + applyAll() pipeline. Multipart: field `file`
+  // (the .xml), query `tenantSlug`, optional query `include` (default 'all').
+  app.post('/import-wxr', { preHandler: [requireSuperAdmin] }, async (request, reply) => {
+    const { tenantSlug, include } = request.query as { tenantSlug?: string; include?: string };
+    const slug = (tenantSlug ?? '').trim();
+    if (!slug) throw new AppError('VALIDATION_ERROR', 400, 'tenantSlug (query) required');
+
+    const data = await request.file();
+    if (!data) throw new AppError('VALIDATION_ERROR', 400, 'WXR 파일(file)이 필요합니다.');
+    const xml = (await data.toBuffer()).toString('utf8');
+    if (!/<rss|<wp:|<channel/i.test(xml)) {
+      throw new AppError('VALIDATION_ERROR', 400, 'WordPress 내보내기(WXR) XML 파일이 아닙니다.');
+    }
+
+    const rawData = parseWxr(xml);
+    if (rawData.pages.length === 0) {
+      throw new AppError('VALIDATION_ERROR', 400, 'WXR에서 가져올 페이지/글을 찾지 못했습니다.');
+    }
+    const includeList = include === 'static' ? STATIC_INCLUDE : include === 'dynamic' ? DYNAMIC_INCLUDE : ALL_INCLUDE;
+
+    const job = await createJob(slug, 'wxr-upload', null, request.user?.id ?? null);
+    try {
+      await updateJobRawData(job.id, rawData);
+      const classified = classify(rawData);
+      await updateJobClassifiedData(job.id, classified);
+      await updateJobStatus(job.id, 'applying');
+      const result = await applyAll(slug, classified, { include: includeList });
+      await updateJobApplyResult(job.id, result);
+      await updateJobStatus(job.id, 'done');
+      return reply.send({
+        data: {
+          jobId: job.id,
+          pagesFound: rawData.pages.length,
+          applyResult: result,
+          appliedTypes: includeList,
+          // Same shape as /migrate-url so the admin result panel is reused.
+          classifiedCounts: {
+            sermons: classified.sermons.length,
+            bulletins: classified.bulletins.length,
+            columns: classified.columns.length,
+            events: classified.events.length,
+            albums: classified.albums.length,
+            staff: classified.staff.length,
+            history: classified.history.length,
+            boards: classified.boards.length,
+            menus: classified.menus.length,
+            pages: classified.pageContents.length,
+            images: classified.images.length,
+            youtubeVideos: 0,
+            seoFieldsFilled: countSeoFields(classified.churchInfo),
+            llmPagesAnalyzed: 0,
+            llmItemsAdded: 0,
+            llmBreakdown: {},
+            llmWarnings: [],
+          },
+        },
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'WXR import failed';
+      await updateJobStatus(job.id, 'failed', msg);
+      throw new AppError('INTERNAL_ERROR', 500, msg);
     }
   });
 

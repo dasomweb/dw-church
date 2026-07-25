@@ -69,6 +69,7 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
   const [error, setError] = useState<string | null>(null);
   // 가져오기 = 정적 페이지 전용. 동적 콘텐츠는 각 관리 페이지에서 별도 마이그레이션.
   const [useLlm, setUseLlm] = useState(true);
+  const [wxrFile, setWxrFile] = useState<File | null>(null);
 
   // Reset state whenever the dialog opens for a different tenant.
   // Without this, switching tenants kept the previous tenant's URL /
@@ -147,6 +148,37 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
       onCompleted?.(finalResult);
     } catch (err) {
       setError(err instanceof Error ? err.message : '마이그레이션 실패');
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  // WordPress WXR import — upload the WP export .xml (Tools → Export). Reuses
+  // the same classify/apply pipeline server-side; no crawling, so it works even
+  // when the source host blocks our crawler.
+  const runWxr = async () => {
+    if (!wxrFile) { showToast('error', 'WordPress 내보내기(.xml) 파일을 선택하세요.'); return; }
+    setRunning(true);
+    setResult(null);
+    setError(null);
+    try {
+      const form = new FormData();
+      form.append('file', wxrFile);
+      const res = await fetch(`${baseUrl}/api/v1/migration/import-wxr?tenantSlug=${encodeURIComponent(tenant.slug)}&include=all`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session?.accessToken ?? ''}` },
+        body: form,
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error?.message ?? `HTTP ${res.status}`);
+      }
+      const body = await res.json() as MigrationResponse;
+      const finalResult: MigrationResult = { counts: body.data.classifiedCounts };
+      setResult(finalResult);
+      onCompleted?.(finalResult);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'WXR 가져오기 실패');
     } finally {
       setRunning(false);
     }
@@ -263,6 +295,29 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
               </p>
             </div>
 
+            {/* WordPress 내보내기 파일(WXR)로 가져오기 — 크롤링이 막히는(WAF) 사이트용 대안 */}
+            <div className="p-3 rounded-lg bg-indigo-50 border border-indigo-200 text-xs space-y-2">
+              <div className="font-semibold text-indigo-900">📦 WordPress 내보내기 파일로 가져오기 (선택)</div>
+              <p className="text-[11px] text-indigo-800 leading-relaxed">
+                워드프레스 관리자 <strong>도구 → 내보내기(Tools → Export)</strong>에서 받은 <strong>.xml</strong> 파일을 올리면,
+                크롤링 없이 파일에서 바로 페이지·글·이미지를 우리 시스템으로 변환해 가져옵니다. (원본 사이트가 크롤러를 차단해도 동작)
+              </p>
+              <input
+                type="file"
+                accept=".xml,text/xml,application/xml"
+                disabled={running}
+                onChange={(e) => setWxrFile(e.target.files?.[0] ?? null)}
+                className="block w-full text-[11px] text-gray-700 file:mr-2 file:rounded-md file:border-0 file:bg-indigo-600 file:px-3 file:py-1.5 file:text-white file:text-xs disabled:opacity-50"
+              />
+              <button
+                onClick={runWxr}
+                disabled={running || !wxrFile}
+                className="w-full py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {running ? '가져오는 중...' : 'WXR 파일로 가져오기'}
+              </button>
+            </div>
+
             <div className="flex gap-2 pt-2">
               <button
                 onClick={onClose}
@@ -276,7 +331,7 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
                 disabled={running || !sourceUrl.trim()}
                 className="flex-1 py-2.5 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-sm font-semibold hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50"
               >
-                {running ? '진행 중...' : '마이그레이션 시작'}
+                {running ? '진행 중...' : 'URL로 마이그레이션'}
               </button>
             </div>
 
