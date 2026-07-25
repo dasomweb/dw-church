@@ -87,6 +87,15 @@ const ADD_BLOCK_CATALOG: { category: string; blocks: AddBlock[] }[] = [
     { value: 'image_gallery', label: '이미지 갤러리', props: { title: '', images: [] } },
     { value: 'video', label: '비디오', props: {} },
   ]},
+  { category: '폼/신청서', blocks: [
+    // '폼 만들기'에서 만든 폼을 slug로 불러와 표시. (폼 제출 → 폼 제출 인박스)
+    { value: 'custom_form', label: '커스텀 폼 (만든 폼)', props: { formSlug: '', title: '', subtitle: '' } },
+    // 폼 + 텍스트 2단 배치 (Form + Text).
+    { value: 'form_split', label: '폼 + 텍스트 (2단)', props: { formSlug: '', layout: 'form-left', title: '문의하기', subtitle: '', content: '' } },
+    // 고정 필드 문의 폼 (별도 폼 제작 없이 바로 사용).
+    { value: 'contact_form', label: '문의 폼', props: { title: '문의하기', description: '궁금하신 점을 남겨주시면 빠르게 답변드리겠습니다.', submitLabel: '보내기', successMessage: '문의가 접수되었습니다. 감사합니다.', fields: [{ name: 'name', label: '이름', type: 'text', required: true }, { name: 'phone', label: '연락처', type: 'tel' }, { name: 'email', label: '이메일', type: 'email' }, { name: 'message', label: '문의 내용', type: 'textarea', required: true }] } },
+    { value: 'cell_report', label: '목장사역보고서', props: { title: '목장 사역 보고서', subtitle: '한 주간의 목장 모임을 보고해 주세요.' } },
+  ]},
   { category: '레이아웃', blocks: [
     { value: 'layout_section', label: '섹션 컨테이너', props: { layout: 'section', padding: '40px 24px', children: [] } },
     { value: 'layout_columns', label: '컬럼 (2열)', props: { layout: 'columns-2', gap: 24, padding: '24px', children: [] } },

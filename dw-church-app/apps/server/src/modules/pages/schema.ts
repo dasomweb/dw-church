@@ -63,6 +63,10 @@ export const blockTypes = [
   'newcomer_form',
   // 목장사역보고서 폼 Data Block (form_type=cell_report)
   'cell_report',
+  // 폼 빌더로 만든 커스텀 폼 (props.formSlug) + 폼과 텍스트를 2단으로 배치하는 폼 블록.
+  // 스토어프론트(@dw-church/blocks)는 이미 렌더하지만 enum 누락으로 저장이 막혀 있었음.
+  'custom_form',
+  'form_split',
 ] as const;
 
 export type BlockType = (typeof blockTypes)[number];
