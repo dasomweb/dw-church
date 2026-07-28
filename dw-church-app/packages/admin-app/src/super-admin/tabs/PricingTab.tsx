@@ -266,7 +266,8 @@ function FeaturePricingCard() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await apiFetch<{ data: FeaturePrice[] } | FeaturePrice[]>('/admin/feature-pricing');
+      // useAdminApi already prefixes /api/v1/admin — path must NOT include /admin.
+      const res = await apiFetch<{ data: FeaturePrice[] } | FeaturePrice[]>('/feature-pricing');
       const list = Array.isArray(res) ? res : res.data ?? [];
       setRows(list);
       setDraft(Object.fromEntries(list.map((r) => [r.featureKey, { monthly: String(r.monthly), yearly: String(r.yearly) }])));
@@ -287,7 +288,7 @@ function FeaturePricingCard() {
       });
       for (const r of changed) {
         const d = draft[r.featureKey]!;
-        await apiFetch(`/admin/feature-pricing/${r.featureKey}`, {
+        await apiFetch(`/feature-pricing/${r.featureKey}`, {
           method: 'PUT',
           body: JSON.stringify({ monthly: Math.max(0, Math.round(Number(d.monthly) || 0)), yearly: Math.max(0, Math.round(Number(d.yearly) || 0)) }),
         });
