@@ -21,8 +21,25 @@ interface Plan {
   isActive: boolean;
 }
 
+// 플랜별 "기능 구성" — 각 티어에서 새로 추가되는 기능(feature_key). 상위 플랜은
+// 하위 전체 포함(누적). 서버 config/plan-limits.ts FEATURE_TIERS 와 일치해야 함.
+// light 는 기준가(base): 유지비 + 핵심기능(게이팅 대상 아님)을 텍스트로 명시.
+const PLAN_CORE_LIGHT = [
+  '호스팅 · 시스템 관리 · 유지보수 · 백업',
+  '설교 · 주보 · 교역자',
+  '예배 안내 · 오시는 길 · 헌금 안내 · SNS',
+  '기본 페이지 · 관리자 계정 2',
+];
+const PLAN_ADDS: Record<string, string[]> = {
+  light: [],
+  basic: ['albums', 'history', 'columns', 'video', 'boards', 'events', 'banners'],
+  plus: ['cells', 'newcomer'],
+  pro: ['newcomer_registration', 'pwa'],
+};
+const PLAN_BELOW: Record<string, string> = { basic: '라이트', plus: '기본', pro: '플러스' };
+
 // 단일 플랜 편집 카드 — 로컬 편집 후 "저장" 클릭 시에만 서버에 PATCH(자동저장 없음).
-function PricingPlanCard({ plan, onSaved }: { plan: Plan; onSaved: () => void }) {
+function PricingPlanCard({ plan, onSaved, featurePrices }: { plan: Plan; onSaved: () => void; featurePrices: Record<string, { label: string; monthly: number }> }) {
   const apiFetch = useAdminApi();
   const { showToast } = useToast();
   const [label, setLabel] = useState(plan.label);
@@ -115,6 +132,39 @@ function PricingPlanCard({ plan, onSaved }: { plan: Plan; onSaved: () => void })
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
           </div>
+        </div>
+
+        {/* 기능 구성 — 이 플랜에 포함되는 것 + 각 기능 개별 단가 */}
+        <div className="rounded-lg border border-gray-100 bg-gray-50 p-3 text-xs">
+          <div className="font-semibold text-gray-700 mb-1.5">기능 구성</div>
+          {plan.planKey === 'light' ? (
+            <>
+              <div className="text-[11px] text-gray-500 mb-1">기준가(base) — 모든 플랜의 토대. 아래가 기본 포함됩니다:</div>
+              <ul className="space-y-0.5 text-[11px] text-gray-700">
+                {PLAN_CORE_LIGHT.map((c) => <li key={c}>• {c}</li>)}
+              </ul>
+            </>
+          ) : (
+            <>
+              <div className="text-[11px] text-gray-600 mb-1">
+                <span className="font-medium text-blue-700">{PLAN_BELOW[plan.planKey]}의 모든 기능</span> 포함 +
+              </div>
+              <ul className="space-y-0.5 text-[11px] text-gray-700">
+                {(PLAN_ADDS[plan.planKey] ?? []).map((key) => {
+                  const f = featurePrices[key];
+                  return (
+                    <li key={key} className="flex items-center justify-between">
+                      <span>• {f?.label ?? key}</span>
+                      <span className="text-gray-400">개별 ${f?.monthly ?? 0}/월</span>
+                    </li>
+                  );
+                })}
+              </ul>
+              <div className="mt-1.5 text-[10px] text-gray-400">
+                개별 합보다 저렴한 묶음가입니다. (애드온으로 개별 추가 시 위 단가 적용)
+              </div>
+            </>
+          )}
         </div>
 
         <button
@@ -344,15 +394,20 @@ function FeaturePricingCard() {
 export default function PricingTab() {
   const apiFetch = useAdminApi();
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [featurePrices, setFeaturePrices] = useState<Record<string, { label: string; monthly: number }>>({});
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await apiFetch<{ data: Plan[] } | Plan[]>('/pricing');
-      const list = Array.isArray(res) ? res : res.data ?? [];
-      // sortOrder 오름차순으로 정렬해 표시.
+      const [planRes, priceRes] = await Promise.all([
+        apiFetch<{ data: Plan[] } | Plan[]>('/pricing'),
+        apiFetch<{ data: FeaturePrice[] } | FeaturePrice[]>('/feature-pricing').catch(() => [] as FeaturePrice[]),
+      ]);
+      const list = Array.isArray(planRes) ? planRes : planRes.data ?? [];
       setPlans([...list].sort((a, b) => a.sortOrder - b.sortOrder));
+      const priceList = Array.isArray(priceRes) ? priceRes : priceRes.data ?? [];
+      setFeaturePrices(Object.fromEntries(priceList.map((r) => [r.featureKey, { label: r.label, monthly: r.monthly }])));
     } catch {
       // non-fatal — 빈 상태로 표시
       setPlans([]);
@@ -385,7 +440,7 @@ export default function PricingTab() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {plans.map((p) => (
-            <PricingPlanCard key={p.planKey} plan={p} onSaved={() => void load()} />
+            <PricingPlanCard key={p.planKey} plan={p} onSaved={() => void load()} featurePrices={featurePrices} />
           ))}
         </div>
       )}
