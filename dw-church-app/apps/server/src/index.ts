@@ -1104,11 +1104,12 @@ async function main(): Promise<void> {
       )
     `);
     // Seed the 4 tiers ONCE (whole-dollar amounts; super admin edits afterward).
+    // 라이트는 기본으로 통합됨 — 기본이 진입(base) 티어. (기존 light 요금행은
+    // 마이그레이션 스크립트로 삭제; 여기선 더 이상 시드하지 않는다.)
     const pricingSeed: [string, string, number, number, number, number][] = [
-      ['light', '라이트', 59, 49, 300, 0],
-      ['basic', '기본', 99, 79, 500, 1],
-      ['plus', '플러스', 149, 119, 700, 2],
-      ['pro', '프로', 199, 159, 1000, 3],
+      ['basic', '기본', 99, 79, 500, 0],
+      ['plus', '플러스', 149, 119, 700, 1],
+      ['pro', '프로', 199, 159, 1000, 2],
     ];
     for (const [key, label, monthly, yearly, setupFee, sort] of pricingSeed) {
       await prisma.$executeRawUnsafe(
@@ -1173,7 +1174,7 @@ async function main(): Promise<void> {
         "code"             VARCHAR(40),
         "label"            VARCHAR(200),
         "discount_percent" INT          NOT NULL DEFAULT 30,
-        "target_plans"     JSONB        NOT NULL DEFAULT '["light","basic"]',
+        "target_plans"     JSONB        NOT NULL DEFAULT '["basic"]',
         "starts_at"        TIMESTAMPTZ,
         "ends_at"          TIMESTAMPTZ,
         "updated_at"       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
@@ -1183,7 +1184,7 @@ async function main(): Promise<void> {
     // Seed the row disabled — super admin reviews the code/dates then activates.
     await prisma.$executeRawUnsafe(
       `INSERT INTO "promo_settings" (id, active, code, label, discount_percent, target_plans, ends_at)
-       VALUES (1, false, 'OPEN30', '오픈 기념 — 디자인 셋업비 30% 할인', 30, '["light","basic"]'::jsonb, '2026-08-31T23:59:59Z')
+       VALUES (1, false, 'OPEN30', '오픈 기념 — 디자인 셋업비 30% 할인', 30, '["basic"]'::jsonb, '2026-08-31T23:59:59Z')
        ON CONFLICT (id) DO NOTHING`,
     );
   } catch (err) {

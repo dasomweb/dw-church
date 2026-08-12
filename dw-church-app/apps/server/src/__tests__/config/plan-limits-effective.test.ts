@@ -8,10 +8,10 @@ import { describe, it, expect } from 'vitest';
 import { effectiveFeatures, addonFeatures } from '../../config/plan-limits.js';
 
 describe('effectiveFeatures', () => {
-  it('light: only ungated + no gated modules', () => {
+  it('legacy light folds into basic (content modules on)', () => {
     const f = effectiveFeatures('light', {});
-    expect(f.albums).toBe(false);
-    expect(f.video).toBe(false);
+    expect(f.albums).toBe(true);
+    expect(f.video).toBe(true);
     expect(f.cells).toBe(false);
     expect(f.newcomer).toBe(false);
   });
@@ -48,8 +48,9 @@ describe('effectiveFeatures', () => {
     expect(effectiveFeatures('basic', { albums: false }).albums).toBe(false);
   });
 
-  it('legacy/unknown plan folds to light', () => {
-    expect(effectiveFeatures('free', {}).albums).toBe(false);
+  it('legacy/unknown plan folds to basic (entry)', () => {
+    expect(effectiveFeatures('free', {}).albums).toBe(true);
+    expect(effectiveFeatures('free', {}).cells).toBe(false);
   });
 });
 

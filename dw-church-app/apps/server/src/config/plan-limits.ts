@@ -13,15 +13,18 @@
  * so the rest of the server only ever reasons about light/basic/plus/pro.
  */
 
-export type PlanTier = 'light' | 'basic' | 'plus' | 'pro';
+// 라이트(light) tier was merged into 기본(basic) — basic is now the entry tier
+// (the base: hosting/maintenance + core features). Legacy 'light'/'free' values
+// fold up to basic.
+export type PlanTier = 'basic' | 'plus' | 'pro';
 
-// Every value the plan column might hold → canonical tier. Unknown/empty → light
-// (the smallest paid tier; never grant more than the customer paid for).
+// Every value the plan column might hold → canonical tier. Unknown/empty → basic
+// (the smallest paid tier / entry).
 const PLAN_ALIASES: Record<string, PlanTier> = {
-  free: 'light',
-  starter: 'light',
-  essential: 'light',
-  light: 'light',
+  free: 'basic',
+  starter: 'basic',
+  essential: 'basic',
+  light: 'basic',
   basic: 'basic',
   ministry: 'basic',
   plus: 'plus',
@@ -31,7 +34,7 @@ const PLAN_ALIASES: Record<string, PlanTier> = {
 };
 
 export function normalizePlan(plan: string | null | undefined): PlanTier {
-  return PLAN_ALIASES[(plan ?? '').toLowerCase().trim()] ?? 'light';
+  return PLAN_ALIASES[(plan ?? '').toLowerCase().trim()] ?? 'basic';
 }
 
 export interface PlanLimits {
@@ -45,7 +48,6 @@ export interface PlanLimits {
 // tier's included pages; pro is the hard ceiling at 25, the "별도 추가 페이지"
 // buffer). 라이트 8 / 기본 15 / 플러스 20 / 프로 25.
 export const PLAN_LIMITS: Record<PlanTier, PlanLimits> = {
-  light: { maxAdmins: 2, maxPages: 8 },
   basic: { maxAdmins: 3, maxPages: 15 },
   plus: { maxAdmins: 5, maxPages: 20 },
   pro: { maxAdmins: 10, maxPages: 25 },
@@ -93,7 +95,7 @@ export function planAllowsFeature(plan: string | null | undefined, feature: stri
 
 /** Tiers (canonical names) that include a feature — for requirePlan() gates. */
 export function tiersForFeature(feature: string): PlanTier[] {
-  return FEATURE_TIERS[feature] ?? ['light', 'basic', 'plus', 'pro'];
+  return FEATURE_TIERS[feature] ?? ['basic', 'plus', 'pro'];
 }
 
 /**

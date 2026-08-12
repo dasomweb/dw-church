@@ -12,15 +12,15 @@ import {
 
 describe('normalizePlan', () => {
   it('maps canonical tiers to themselves', () => {
-    expect(normalizePlan('light')).toBe('light');
     expect(normalizePlan('basic')).toBe('basic');
     expect(normalizePlan('plus')).toBe('plus');
     expect(normalizePlan('pro')).toBe('pro');
   });
 
-  it('folds legacy + marketing aliases', () => {
-    expect(normalizePlan('free')).toBe('light');
-    expect(normalizePlan('essential')).toBe('light');
+  it('folds legacy + marketing aliases (light merged into basic)', () => {
+    expect(normalizePlan('light')).toBe('basic');
+    expect(normalizePlan('free')).toBe('basic');
+    expect(normalizePlan('essential')).toBe('basic');
     expect(normalizePlan('ministry')).toBe('basic');
     expect(normalizePlan('outreach')).toBe('pro');
     expect(normalizePlan('enterprise')).toBe('pro');
@@ -31,24 +31,23 @@ describe('normalizePlan', () => {
     expect(normalizePlan('Basic')).toBe('basic');
   });
 
-  it('defaults unknown/empty to the smallest paid tier (light)', () => {
-    expect(normalizePlan('')).toBe('light');
-    expect(normalizePlan(null)).toBe('light');
-    expect(normalizePlan(undefined)).toBe('light');
-    expect(normalizePlan('mystery')).toBe('light');
+  it('defaults unknown/empty to the entry tier (basic)', () => {
+    expect(normalizePlan('')).toBe('basic');
+    expect(normalizePlan(null)).toBe('basic');
+    expect(normalizePlan(undefined)).toBe('basic');
+    expect(normalizePlan('mystery')).toBe('basic');
   });
 });
 
 describe('planLimits — admin/page quotas', () => {
-  it('returns the documented 2/3/5/10 admin ladder', () => {
-    expect(planLimits('light').maxAdmins).toBe(2);
+  it('returns the documented 3/5/10 admin ladder (basic is the entry)', () => {
     expect(planLimits('basic').maxAdmins).toBe(3);
     expect(planLimits('plus').maxAdmins).toBe(5);
     expect(planLimits('pro').maxAdmins).toBe(10);
   });
 
   it('admin + page quotas increase monotonically with tier', () => {
-    const order = ['light', 'basic', 'plus', 'pro'] as const;
+    const order = ['basic', 'plus', 'pro'] as const;
     for (let i = 1; i < order.length; i++) {
       expect(PLAN_LIMITS[order[i]!].maxAdmins).toBeGreaterThan(PLAN_LIMITS[order[i - 1]!].maxAdmins);
       expect(PLAN_LIMITS[order[i]!].maxPages).toBeGreaterThanOrEqual(PLAN_LIMITS[order[i - 1]!].maxPages);
@@ -57,7 +56,8 @@ describe('planLimits — admin/page quotas', () => {
 
   it('resolves limits through aliases too', () => {
     expect(planLimits('enterprise').maxAdmins).toBe(10); // → pro
-    expect(planLimits('free').maxAdmins).toBe(2); // → light
+    expect(planLimits('light').maxAdmins).toBe(3); // → basic (merged)
+    expect(planLimits('free').maxAdmins).toBe(3); // → basic
   });
 });
 
@@ -75,8 +75,8 @@ describe('feature gates', () => {
   });
 
   it('ungated features are allowed on every tier', () => {
-    expect(planAllowsFeature('light', 'sermons')).toBe(true);
-    expect(tiersForFeature('sermons')).toEqual(['light', 'basic', 'plus', 'pro']);
+    expect(planAllowsFeature('basic', 'sermons')).toBe(true);
+    expect(tiersForFeature('sermons')).toEqual(['basic', 'plus', 'pro']);
   });
 
   it('tiersForFeature returns the gated set for known features', () => {

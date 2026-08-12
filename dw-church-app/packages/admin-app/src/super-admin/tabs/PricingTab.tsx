@@ -24,19 +24,22 @@ interface Plan {
 // 플랜별 "기능 구성" — 각 티어에서 새로 추가되는 기능(feature_key). 상위 플랜은
 // 하위 전체 포함(누적). 서버 config/plan-limits.ts FEATURE_TIERS 와 일치해야 함.
 // light 는 기준가(base): 유지비 + 핵심기능(게이팅 대상 아님)을 텍스트로 명시.
-const PLAN_CORE_LIGHT = [
+// 라이트는 기본으로 통합됨 — 기본이 기준가(base): 유지비 + 핵심기능 + 콘텐츠 모듈.
+const PLAN_CORE_BASIC = [
   '호스팅 · 시스템 관리 · 유지보수 · 백업',
-  '설교 · 주보 · 교역자',
-  '예배 안내 · 오시는 길 · 헌금 안내 · SNS',
-  '기본 페이지 · 관리자 계정 2',
+  '메인 페이지 · 담임목사 인사말 · 교회/교역자 소개',
+  '예배 안내 · 오시는 길 · 교육부 소개',
+  '설교 · 주보 게시판 · 온라인 헌금 안내 · SNS',
+  '사진 앨범 · 교회 연혁 · 목회 칼럼 · 영상 게시판',
+  '공지/행사/선교 게시판 · 메인 배너 슬라이드',
+  '콘텐츠 백업·이전 · 관리자 계정 3',
 ];
 const PLAN_ADDS: Record<string, string[]> = {
-  light: [],
-  basic: ['albums', 'history', 'columns', 'video', 'boards', 'events', 'banners'],
+  basic: [],
   plus: ['cells', 'newcomer'],
   pro: ['newcomer_registration', 'pwa'],
 };
-const PLAN_BELOW: Record<string, string> = { basic: '라이트', plus: '기본', pro: '플러스' };
+const PLAN_BELOW: Record<string, string> = { plus: '기본', pro: '플러스' };
 
 // 단일 플랜 편집 카드 — 로컬 편집 후 "저장" 클릭 시에만 서버에 PATCH(자동저장 없음).
 function PricingPlanCard({ plan, onSaved, featurePrices }: { plan: Plan; onSaved: () => void; featurePrices: Record<string, { label: string; monthly: number }> }) {
@@ -137,11 +140,11 @@ function PricingPlanCard({ plan, onSaved, featurePrices }: { plan: Plan; onSaved
         {/* 기능 구성 — 이 플랜에 포함되는 것 + 각 기능 개별 단가 */}
         <div className="rounded-lg border border-gray-100 bg-gray-50 p-3 text-xs">
           <div className="font-semibold text-gray-700 mb-1.5">기능 구성</div>
-          {plan.planKey === 'light' ? (
+          {plan.planKey === 'basic' ? (
             <>
               <div className="text-[11px] text-gray-500 mb-1">기준가(base) — 모든 플랜의 토대. 아래가 기본 포함됩니다:</div>
               <ul className="space-y-0.5 text-[11px] text-gray-700">
-                {PLAN_CORE_LIGHT.map((c) => <li key={c}>• {c}</li>)}
+                {PLAN_CORE_BASIC.map((c) => <li key={c}>• {c}</li>)}
               </ul>
             </>
           ) : (

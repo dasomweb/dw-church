@@ -8,7 +8,7 @@ import { z } from 'zod';
  * 결제 → 테넌트 생성(converted).
  */
 export const APPLICATION_STATUSES = ['new', 'reviewing', 'approved', 'paid', 'converted', 'rejected'] as const;
-export const APPLICATION_PLANS = ['light', 'basic', 'plus', 'pro'] as const;
+export const APPLICATION_PLANS = ['basic', 'plus', 'pro'] as const;
 // 교회 개척/사역 유형 (Send Network 모델) — 교회마다 우선 사역 지향점이 달라
 // AI 빌더가 콘텐츠를 그 유형에 맞춰 생성한다.
 export const APPLICATION_PLANTING_TYPES = ['standard', 'covocational', 'multisite', 'multiethnic', 'replant', 'micro', 'other'] as const;

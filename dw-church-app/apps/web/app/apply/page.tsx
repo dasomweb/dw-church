@@ -8,7 +8,6 @@ import { TermsConsentModal } from '../../components/TermsConsentModal';
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.truelight.app';
 
 const PLANS = [
-  { id: 'light', label: '라이트', monthly: 59, yearly: 49, setup: 300 },
   { id: 'basic', label: '기본', monthly: 99, yearly: 79, setup: 500 },
   { id: 'plus', label: '플러스', monthly: 149, yearly: 119, setup: 700 },
   { id: 'pro', label: '프로', monthly: 199, yearly: 159, setup: 1000 },
@@ -252,7 +251,7 @@ function ApplyForm() {
             </button>
           </div>
           {appliedPromo && (
-            <p className="mt-1 text-xs text-green-600">✓ {appliedPromo.label || '쿠폰 적용됨'} — 라이트·기본 셋업비 {appliedPromo.discountPercent}% 할인</p>
+            <p className="mt-1 text-xs text-green-600">✓ {appliedPromo.label || '쿠폰 적용됨'} — 기본 셋업비 {appliedPromo.discountPercent}% 할인</p>
           )}
           {couponError && <p className="mt-1 text-xs text-red-500">{couponError}</p>}
         </div>

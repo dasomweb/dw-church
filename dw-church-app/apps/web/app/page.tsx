@@ -94,7 +94,7 @@ const COPY: Record<Lang, Copy> = {
     launchPromo: {
       eyebrow: '오픈 기념 한정 혜택',
       title: '디자인 셋업비 30% OFF',
-      subline: '라이트·기본형 1년 구독 고객 · 8월 31일까지',
+      subline: '기본형 1년 구독 고객 · 8월 31일까지',
       cta: '런칭 혜택 신청',
     },
     plansSection: {
@@ -125,15 +125,9 @@ const COPY: Record<Lang, Copy> = {
     },
     plans: [
       {
-        name: '라이트', subtitle: '소형 교회 시작용',
-        monthly: 59, yearly: 49, setupFee: 300, promo: true,
-        features: ['메인 페이지', '담임목사 인사말', '교회 소개', '교역자 소개', '예배 안내', '오시는 길', '교육부 소개', '설교·주보 게시판', '온라인 헌금 안내', 'SNS 바로가기', '관리자 계정 2개'],
-        cta: '시작하기', highlighted: false,
-      },
-      {
-        name: '기본', subtitle: '성장하는 교회',
+        name: '기본', subtitle: '교회 홈페이지 시작',
         monthly: 99, yearly: 79, setupFee: 500, promo: true,
-        features: ['라이트의 모든 기능', '사진 앨범', '교회 연혁', '목회 칼럼', '영상 게시판', '공지 게시판', '행사 게시판', '선교 게시판', '메인 배너 슬라이드', '콘텐츠 내려받기 (백업·이전)', '관리자 계정 3개'],
+        features: ['메인 페이지 · 담임목사 인사말', '교회 소개 · 교역자 소개', '예배 안내 · 오시는 길 · 교육부 소개', '설교·주보 게시판', '온라인 헌금 안내 · SNS 바로가기', '사진 앨범 · 교회 연혁 · 목회 칼럼', '영상 게시판', '공지·행사·선교 게시판', '메인 배너 슬라이드', '콘텐츠 내려받기 (백업·이전)', '관리자 계정 3개'],
         cta: '시작하기', highlighted: true, badge: '가장 인기',
       },
       {
@@ -531,10 +525,10 @@ export default function LandingPage() {
               </button>
             </div>
           </div>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {t.plans.map((plan, idx) => {
               const price = billing === 'monthly' ? plan.monthly : plan.yearly;
-              const planId = (['light', 'basic', 'plus', 'pro'] as const)[idx] ?? 'basic';
+              const planId = (['basic', 'plus', 'pro'] as const)[idx] ?? 'basic';
               return (
                 <div
                   key={plan.name}

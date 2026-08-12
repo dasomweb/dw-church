@@ -11,7 +11,7 @@ import { z } from 'zod';
  *   yearly  = $/month-equivalent on the annual plan (Stripe charges ×12/year)
  *   setupFee = one-time setup charge
  */
-export const PLAN_KEYS = ['light', 'basic', 'plus', 'pro'] as const;
+export const PLAN_KEYS = ['basic', 'plus', 'pro'] as const;
 
 export const updatePricingSchema = z.object({
   label: z.string().max(50).optional(),
