@@ -1,0 +1,63 @@
+<!doctype html><html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Serif+KR:wght@500;700&display=swap">
+<style>
+:root{--brand:#1466d6;--primary:#2b7fff;--bg:#ffffff;--surface:#f7f8fa;--border:#e5e7eb;--fg:#16181d;--fg-muted:#61697a;
+--font-sans:'Pretendard','Inter',system-ui,sans-serif;--font-latin:'Inter',system-ui,sans-serif;--font-mono:ui-monospace,Menlo,monospace;
+--radius-sm:8px;--radius:12px;--radius-lg:16px;--leading-body:1.75;--leading-tight:1.35;--tracking-title:-0.025em;--tracking-body:-0.003em}
+*{box-sizing:border-box}
+body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:var(--font-sans);font-size:16px;line-height:var(--leading-body);letter-spacing:var(--tracking-body);-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word}
+:lang(en){font-family:var(--font-latin);letter-spacing:0;word-break:normal}
+h1,h2,h3{line-height:var(--leading-tight);letter-spacing:var(--tracking-title);margin:0 0 8px}
+/* <image-slot> shim — outside the design runtime it renders a neutral labeled placeholder */
+image-slot{display:block;position:relative;width:100%;height:100%;min-height:120px;background:linear-gradient(135deg,#e2e8f2,#eef1f6)}
+image-slot::after{content:attr(placeholder);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9aa7bd;font-size:13px;font-weight:600;letter-spacing:0}
+image-slot[shape="circle"],image-slot[shape="pill"]{border-radius:999px}
+</style></head>
+<body>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:72px;border-bottom:1px solid var(--border)">
+    <div style="display:flex;align-items:center;gap:28px"><div style="display:flex;align-items:center;gap:10px"><div style="width:30px;height:30px;border-radius:50%;background:var(--brand)"></div><b style="font-size:18px">새길교회</b></div><nav style="display:flex;gap:24px;font-size:15px;color:#333842"><span>교회</span><span>예배</span><span>말씀</span><span>공동체</span><span>나눔</span></nav></div>
+    <div style="display:flex;align-items:center;gap:14px"><div style="display:flex;align-items:center;width:220px;height:38px;border:1px solid var(--border);border-radius:999px;padding:0 16px;font-size:14px;color:var(--fg-muted)">무엇을 찾으세요?</div><div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600"><div style="width:30px;height:30px;border-radius:50%;background:var(--surface)"></div>김은혜 집사</div></div>
+  </div>
+  <div style="padding:32px 48px 0"><div style="border-radius:var(--radius-lg);background:var(--brand);color:#fff;padding:32px 36px;display:flex;align-items:center;justify-content:space-between;gap:32px">
+    <div><div style="font-size:14px;color:rgba(255,255,255,.75);margin-bottom:8px">2026년 8월 16일 주일</div><div style="font-size:28px;font-weight:700;margin-bottom:6px">이번 주 예배 안내</div><div style="font-size:16px;color:rgba(255,255,255,.85)">1부 9:00 · 2부 11:00 · EM 1:00 PM &nbsp;|&nbsp; 설교 「우리를 부르시는 손길」</div></div>
+    <div style="display:flex;gap:10px;flex:none"><span style="display:inline-flex;align-items:center;height:46px;padding:0 22px;border-radius:999px;background:#fff;color:var(--brand);font-size:15px;font-weight:600">주보 보기</span><span style="display:inline-flex;align-items:center;height:46px;padding:0 22px;border-radius:999px;border:1px solid rgba(255,255,255,.5);color:#fff;font-size:15px;font-weight:600">생중계</span></div>
+  </div></div>
+  <div style="padding:28px 48px 0"><div style="display:grid;grid-template-columns:repeat(6,1fr);gap:14px">
+    <div style="border:1px solid var(--border);border-radius:var(--radius);padding:20px 16px;display:flex;flex-direction:column;gap:8px"><div style="width:34px;height:34px;border-radius:var(--radius-sm);background:#eaf2ff"></div><b style="font-size:15px">주보</b></div>
+    <div style="border:1px solid var(--border);border-radius:var(--radius);padding:20px 16px;display:flex;flex-direction:column;gap:8px"><div style="width:34px;height:34px;border-radius:var(--radius-sm);background:#eaf2ff"></div><b style="font-size:15px">설교 영상</b></div>
+    <div style="border:1px solid var(--border);border-radius:var(--radius);padding:20px 16px;display:flex;flex-direction:column;gap:8px"><div style="width:34px;height:34px;border-radius:var(--radius-sm);background:#eaf2ff"></div><b style="font-size:15px">온라인 헌금</b></div>
+    <div style="border:1px solid var(--border);border-radius:var(--radius);padding:20px 16px;display:flex;flex-direction:column;gap:8px"><div style="width:34px;height:34px;border-radius:var(--radius-sm);background:#eaf2ff"></div><b style="font-size:15px">소그룹</b></div>
+    <div style="border:1px solid var(--border);border-radius:var(--radius);padding:20px 16px;display:flex;flex-direction:column;gap:8px"><div style="width:34px;height:34px;border-radius:var(--radius-sm);background:#eaf2ff"></div><b style="font-size:15px">기도 요청</b></div>
+    <div style="border:1px solid var(--border);border-radius:var(--radius);padding:20px 16px;display:flex;flex-direction:column;gap:8px"><div style="width:34px;height:34px;border-radius:var(--radius-sm);background:#eaf2ff"></div><b style="font-size:15px">교회 일정</b></div>
+  </div></div>
+  <div style="padding:36px 48px 0;display:grid;grid-template-columns:1.6fr 1fr;gap:28px">
+    <div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px"><h2 style="margin:0;font-size:22px;font-weight:700">최근 설교</h2><span style="font-size:14px;color:var(--fg-muted)">전체보기</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden"><div style="height:140px"><image-slot id="ch-4d-s1" shape="rect" placeholder="썸네일"></image-slot></div><div style="padding:14px 16px"><b style="font-size:16px">우리를 부르시는 손길</b><div style="font-size:13px;color:var(--fg-muted);margin-top:4px">8월 9일 · 주일 2부</div></div></div>
+        <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden"><div style="height:140px"><image-slot id="ch-4d-s2" shape="rect" placeholder="썸네일"></image-slot></div><div style="padding:14px 16px"><b style="font-size:16px">기다리는 마음</b><div style="font-size:13px;color:var(--fg-muted);margin-top:4px">8월 2일 · 주일 2부</div></div></div>
+      </div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin:28px 0 12px"><h2 style="margin:0;font-size:22px;font-weight:700">공지사항</h2><span style="font-size:14px;color:var(--fg-muted)">더보기</span></div>
+      <div style="display:flex;flex-direction:column">
+        <div style="display:flex;gap:12px;align-items:center;padding:13px 0;border-top:1px solid var(--border)"><span style="font-size:12px;font-weight:600;color:var(--brand);background:#eaf2ff;border-radius:999px;padding:3px 10px">중요</span><span style="font-size:15px;flex:1">가을 성경공부 신청 (9/1 개강)</span><span style="font-size:13px;color:var(--fg-muted)">08.12</span></div>
+        <div style="display:flex;gap:12px;align-items:center;padding:13px 0;border-top:1px solid var(--border)"><span style="font-size:12px;font-weight:600;color:var(--fg-muted);background:var(--surface);border-radius:999px;padding:3px 10px">부서</span><span style="font-size:15px;flex:1">주일학교 교사 모집 (~8/31)</span><span style="font-size:13px;color:var(--fg-muted)">08.05</span></div>
+        <div style="display:flex;gap:12px;align-items:center;padding:13px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)"><span style="font-size:12px;font-weight:600;color:var(--fg-muted);background:var(--surface);border-radius:999px;padding:3px 10px">행사</span><span style="font-size:15px;flex:1">여름 수련회 사진이 올라왔습니다</span><span style="font-size:13px;color:var(--fg-muted)">08.08</span></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <div style="border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px 24px">
+        <div style="font-size:17px;font-weight:700;margin-bottom:14px">이번 주 일정</div>
+        <div style="display:flex;flex-direction:column;gap:12px;font-size:15px">
+          <div style="display:flex;gap:12px"><span style="width:38px;color:var(--brand);font-weight:600">수</span><div><div>수요예배 19:30</div><div style="font-size:13px;color:var(--fg-muted)">본당</div></div></div>
+          <div style="display:flex;gap:12px"><span style="width:38px;color:var(--brand);font-weight:600">금</span><div><div>금요기도회 20:00</div><div style="font-size:13px;color:var(--fg-muted)">소예배실</div></div></div>
+          <div style="display:flex;gap:12px"><span style="width:38px;color:var(--brand);font-weight:600">토</span><div><div>EM 소그룹 5:00 PM</div><div style="font-size:13px;color:var(--fg-muted)">교육관 3층</div></div></div>
+          <div style="display:flex;gap:12px"><span style="width:38px;color:var(--brand);font-weight:600">주일</span><div><div>전교인 식사</div><div style="font-size:13px;color:var(--fg-muted)">2부 예배 후</div></div></div>
+        </div>
+      </div>
+      <div style="background:var(--surface);border-radius:var(--radius-lg);padding:22px 24px"><div style="font-size:17px;font-weight:700;margin-bottom:10px">교회 사진</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div style="height:82px;border-radius:var(--radius-sm);overflow:hidden"><image-slot id="ch-4d-g1" shape="rect" placeholder="사진"></image-slot></div><div style="height:82px;border-radius:var(--radius-sm);overflow:hidden"><image-slot id="ch-4d-g2" shape="rect" placeholder="사진"></image-slot></div><div style="height:82px;border-radius:var(--radius-sm);overflow:hidden"><image-slot id="ch-4d-g3" shape="rect" placeholder="사진"></image-slot></div><div style="height:82px;border-radius:var(--radius-sm);overflow:hidden"><image-slot id="ch-4d-g4" shape="rect" placeholder="사진"></image-slot></div></div></div>
+    </div>
+  </div>
+  <div style="margin-top:44px;padding:32px 48px;background:var(--surface);display:flex;justify-content:space-between;font-size:14px;color:var(--fg-muted)"><span>새길교회 · 3550 Wilshire Blvd, Los Angeles, CA 90010 · (213) 000-0000</span><span>오시는 길 · 문의 · 개인정보처리방침</span></div>
+</body></html>

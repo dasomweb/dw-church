@@ -1,0 +1,56 @@
+<!doctype html><html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Serif+KR:wght@500;700&display=swap">
+<style>
+:root{--brand:#1466d6;--primary:#2b7fff;--bg:#ffffff;--surface:#f7f8fa;--border:#e5e7eb;--fg:#16181d;--fg-muted:#61697a;
+--font-sans:'Pretendard','Inter',system-ui,sans-serif;--font-latin:'Inter',system-ui,sans-serif;--font-mono:ui-monospace,Menlo,monospace;
+--radius-sm:8px;--radius:12px;--radius-lg:16px;--leading-body:1.75;--leading-tight:1.35;--tracking-title:-0.025em;--tracking-body:-0.003em}
+*{box-sizing:border-box}
+body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:var(--font-sans);font-size:16px;line-height:var(--leading-body);letter-spacing:var(--tracking-body);-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word}
+:lang(en){font-family:var(--font-latin);letter-spacing:0;word-break:normal}
+h1,h2,h3{line-height:var(--leading-tight);letter-spacing:var(--tracking-title);margin:0 0 8px}
+/* <image-slot> shim — outside the design runtime it renders a neutral labeled placeholder */
+image-slot{display:block;position:relative;width:100%;height:100%;min-height:120px;background:linear-gradient(135deg,#e2e8f2,#eef1f6)}
+image-slot::after{content:attr(placeholder);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9aa7bd;font-size:13px;font-weight:600;letter-spacing:0}
+image-slot[shape="circle"],image-slot[shape="pill"]{border-radius:999px}
+</style></head>
+<body>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:74px;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:11px"><div style="width:32px;height:32px;border-radius:50%;background:var(--brand)"></div><div><div style="font-size:18px;font-weight:700;line-height:1.2">한사랑교회</div><div style="font-size:11px;color:var(--fg-muted)">HANSARANG CHURCH · ATLANTA, GA</div></div></div><nav style="display:flex;gap:24px;font-size:15px;color:#333842"><span>교회 소개</span><span>예배</span><span>정착 도움</span><span>공동체</span><span>오시는 길</span></nav><span style="display:inline-flex;align-items:center;height:38px;padding:0 18px;border-radius:999px;background:var(--brand);color:#fff;font-size:14px;font-weight:600">문의하기</span></div>
+  <div style="padding:40px 48px 0;text-align:center"><div style="font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--brand);margin-bottom:16px">애틀랜타에 막 도착하셨나요?</div>
+    <h1 style="margin:0 0 18px;font-size:40px;font-weight:700;line-height:1.35">낯선 곳에서의 첫 몇 달,<br>혼자 겪지 않으셔도 됩니다</h1>
+    <p style="margin:0 0 30px;font-size:17px;line-height:1.85;color:var(--fg-muted)">공항 픽업부터 학교 등록, 운전면허, 집 구하기까지<br>먼저 겪은 사람들이 곁에서 돕습니다. 교인이 아니어도 괜찮습니다.</p>
+    <div style="display:flex;gap:12px;justify-content:center"><span style="display:inline-flex;align-items:center;height:50px;padding:0 26px;border-radius:999px;background:var(--brand);color:#fff;font-size:15px;font-weight:600">도움 요청하기</span><span style="display:inline-flex;align-items:center;height:50px;padding:0 26px;border-radius:999px;border:1px solid var(--border);font-size:15px;font-weight:600">카카오톡으로 문의</span></div></div>
+  <div style="padding:44px 48px 0"><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+    <div style="border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px"><b style="font-size:17px">공항 픽업</b><p style="margin:8px 0 0;font-size:14px;line-height:1.75;color:var(--fg-muted)">도착 일정을 알려주시면 마중 나갑니다.</p></div>
+    <div style="border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px"><b style="font-size:17px">학교 · 서류</b><p style="margin:8px 0 0;font-size:14px;line-height:1.75;color:var(--fg-muted)">아이 학교 등록, SSN, 운전면허 절차를 함께 알아봅니다.</p></div>
+    <div style="border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px"><b style="font-size:17px">집 · 생활</b><p style="margin:8px 0 0;font-size:14px;line-height:1.75;color:var(--fg-muted)">동네 정보, 장보기, 병원 — 사소한 것부터 물어보세요.</p></div>
+    <div style="border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px"><b style="font-size:17px">한글학교</b><p style="margin:8px 0 0;font-size:14px;line-height:1.75;color:var(--fg-muted)">토요일 오전, 아이들이 한국어와 친구를 만납니다.</p></div>
+  </div></div>
+  <div style="padding:56px 48px 0;display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:stretch">
+    <div style="height:300px;border-radius:var(--radius-lg);overflow:hidden"><image-slot id="ch-7c-photo" shape="rect" placeholder="친교 사진"></image-slot></div>
+    <div style="background:var(--surface);border-radius:var(--radius-lg);padding:30px 34px;display:flex;flex-direction:column;justify-content:center">
+      <div style="font-size:13px;font-weight:600;color:var(--brand);margin-bottom:14px">예배 안내</div>
+      <div style="display:flex;flex-direction:column;gap:12px;font-size:16px;line-height:1.6">
+        <div style="display:flex;gap:14px"><b style="width:74px;flex:none;font-weight:600">주일예배</b><span>오전 11:00 (한국어) · 오후 1:00 (English)</span></div>
+        <div style="display:flex;gap:14px"><b style="width:74px;flex:none;font-weight:600">금요기도</b><span>저녁 8:00</span></div>
+        <div style="display:flex;gap:14px"><b style="width:74px;flex:none;font-weight:600">장소</b><span>3200 Peachtree Rd, Atlanta, GA · Cornerstone Church 채플 공동 사용</span></div>
+        <div style="display:flex;gap:14px"><b style="width:74px;flex:none;font-weight:600">주차 · 자녀</b><span>건물 주차장 무료 · Nursery 운영 · 예배 후 점심</span></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:22px"><span style="display:inline-flex;align-items:center;height:46px;padding:0 22px;border-radius:999px;background:var(--brand);color:#fff;font-size:15px;font-weight:600">길찾기</span><span style="display:inline-flex;align-items:center;height:46px;padding:0 22px;border-radius:999px;background:var(--bg);border:1px solid var(--border);font-size:15px;font-weight:600">전화 문의</span></div>
+    </div>
+  </div>
+  <div style="margin:56px 48px 0;background:var(--surface);border-left:3px solid var(--brand);border-radius:0 var(--radius-lg) var(--radius-lg) 0;padding:26px 32px"><div style="font-size:13px;font-weight:600;color:var(--brand);margin-bottom:10px">오늘의 말씀</div><p style="margin:0 0 8px;font-size:21px;font-weight:600;line-height:1.6">너희는 나그네를 사랑하라 너희도 애굽 땅에서 나그네 되었음이니라</p><div style="font-size:14px;color:var(--fg-muted)">신명기 10:19</div></div>
+  <div style="padding:56px 48px 0;display:grid;grid-template-columns:1fr 1fr;gap:28px">
+    <div style="border:1px solid var(--border);border-radius:var(--radius-lg);padding:26px 28px"><b style="font-size:18px">이번 주 말씀</b><div style="font-size:21px;font-weight:700;margin:12px 0 8px">나그네를 사랑하라</div><div style="font-size:14px;color:var(--fg-muted);margin-bottom:14px">최은석 담임목사 · 신명기 10:19 · 8월 9일</div><p style="margin:0 0 16px;font-size:15px;line-height:1.85;color:var(--fg-muted)">우리 모두가 한때 나그네였습니다. 그 기억이 우리를 어떤 사람으로 만드는지 함께 나눕니다.</p><div style="display:flex;gap:10px"><span style="display:inline-flex;align-items:center;height:42px;padding:0 20px;border-radius:999px;background:var(--brand);color:#fff;font-size:14px;font-weight:600">설교 전문</span><span style="display:inline-flex;align-items:center;height:42px;padding:0 20px;border:1px solid var(--border);border-radius:999px;font-size:14px;font-weight:600">음성 듣기</span></div></div>
+    <div style="border:1px solid var(--border);border-radius:var(--radius-lg);padding:26px 28px"><div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px"><b style="font-size:18px">주보 · 광고</b><span style="font-size:13px;color:var(--fg-muted)">더보기</span></div>
+      <div style="display:flex;flex-direction:column">
+        <div style="display:flex;padding:12px 0;border-top:1px solid var(--border)"><span style="font-size:15px;flex:1">8월 16일 주보 (PDF)</span><span style="font-size:13px;color:var(--fg-muted)">08.15</span></div>
+        <div style="display:flex;padding:12px 0;border-top:1px solid var(--border)"><span style="font-size:15px;flex:1">한글학교 가을학기 등록</span><span style="font-size:13px;color:var(--fg-muted)">08.12</span></div>
+        <div style="display:flex;padding:12px 0;border-top:1px solid var(--border)"><span style="font-size:15px;flex:1">신입 유학생 환영 모임 (8/24)</span><span style="font-size:13px;color:var(--fg-muted)">08.10</span></div>
+        <div style="display:flex;padding:12px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)"><span style="font-size:15px;flex:1">9월 구역 편성 안내</span><span style="font-size:13px;color:var(--fg-muted)">08.05</span></div>
+      </div>
+      <div style="margin-top:18px;display:flex;gap:8px"><span style="display:inline-flex;align-items:center;height:42px;padding:0 20px;border-radius:999px;background:var(--brand);color:#fff;font-size:14px;font-weight:600">기도 요청</span><span style="display:inline-flex;align-items:center;height:42px;padding:0 20px;border:1px solid var(--border);border-radius:999px;font-size:14px;font-weight:600">온라인 헌금</span></div></div>
+  </div>
+  <div style="margin-top:56px;padding:30px 48px;border-top:1px solid var(--border);font-size:14px;line-height:1.9;color:var(--fg-muted);display:flex;justify-content:space-between"><span><b style="color:var(--fg)">한사랑교회</b> · 2020년 다섯 가정으로 개척 · 미주한인예수교장로회(KAPC)<br>3200 Peachtree Rd, Atlanta, GA 30305 · (404) 000-0000</span><span>카카오톡 채널 · 인스타그램 · 이메일 소식지</span></div>
+</body></html>

@@ -1,49 +1,41 @@
 /**
- * 프론트 샘플 — 신청자가 고를 홈페이지 디자인 샘플 갤러리 (슈퍼어드민 미리보기).
- * 각 샘플은 자기완결 HTML 문서로, <iframe srcDoc> 안에서 격리 렌더된다. 카드에는
- * 축소 라이브 썸네일 + 팔레트, 클릭하면 데스크톱/모바일 전체 미리보기 모달.
+ * 프론트 샘플 — 신청자가 고를 홈페이지 디자인 갤러리 (슈퍼어드민 미리보기).
+ * 샘플은 'Church Homepage' Claude Design 캔버스에서 가져온 실제 디자인 시안
+ * (packages/admin-app/.../front-samples/canvas/*.html) 으로, 디자인시스템 토큰 +
+ * <image-slot> 플레이스홀더 shim 으로 감싸 <iframe srcDoc> 안에서 격리 렌더된다.
  *
- * 지금은 미리보기 전용. 이후: 선택한 샘플이 테넌트 페이지 섹션을 구성하고,
- * 마케팅 페이지의 디자인 선택지로 노출된다.
+ * 지금은 미리보기 전용. 이후: 신청 페이지 디자인 선택지 → 테넌트 페이지 섹션 구성.
  */
-import { useState } from 'react';
-import { FRONT_SAMPLES, type FrontSample } from '../front-samples/templates';
+import { useEffect, useMemo, useState } from 'react';
+import { CANVAS_SAMPLES, type CanvasSample } from '../front-samples/canvas/canvas-index';
 
-function Swatches({ s }: { s: FrontSample }) {
-  const cols = [s.palette.primary, s.palette.primaryDark, s.palette.accent, s.palette.surface];
-  return (
-    <div className="flex gap-1">
-      {cols.map((c) => (
-        <span key={c} className="h-4 w-4 rounded-full border border-black/10" style={{ background: c }} />
-      ))}
-    </div>
-  );
-}
+// Lazy raw-HTML loaders for every wrapped canvas sample (kept out of the main
+// bundle — each is a separate chunk fetched on tab open).
+const LOADERS = import.meta.glob('../front-samples/canvas/*.html', { query: '?raw', import: 'default' }) as Record<string, () => Promise<string>>;
+const loaderFor = (file: string) => {
+  const key = Object.keys(LOADERS).find((k) => k.endsWith('/' + file));
+  return key ? LOADERS[key] : undefined;
+};
 
-// Scaled, non-interactive live thumbnail of the full sample.
 function Thumb({ html }: { html: string }) {
   return (
-    <div className="relative w-full overflow-hidden rounded-t-xl border-b border-gray-100 bg-white" style={{ height: 230 }}>
-      <iframe
-        title="preview"
-        srcDoc={html}
-        tabIndex={-1}
+    <div className="relative w-full overflow-hidden rounded-t-xl border-b border-gray-100 bg-white" style={{ height: 236 }}>
+      <iframe title="preview" srcDoc={html} tabIndex={-1}
         className="pointer-events-none origin-top-left"
-        style={{ width: 1280, height: 1150, transform: 'scale(0.36)', border: 0 }}
-      />
+        style={{ width: 1280, height: 1310, transform: 'scale(0.3125)', border: 0 }} />
     </div>
   );
 }
 
-function PreviewModal({ sample, onClose }: { sample: FrontSample; onClose: () => void }) {
+function PreviewModal({ sample, html, onClose }: { sample: CanvasSample; html: string; onClose: () => void }) {
   const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
   const width = device === 'mobile' ? 390 : '100%';
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black/70" onClick={onClose}>
       <div className="flex items-center justify-between gap-3 bg-white px-5 py-3" onClick={(e) => e.stopPropagation()}>
         <div>
-          <div className="text-sm font-bold text-gray-900">{sample.name}</div>
-          <div className="text-[11px] text-gray-500">{sample.vibe} · theme-set: {sample.themeSet}</div>
+          <div className="text-sm font-bold text-gray-900">{sample.name} <span className="ml-1 text-[11px] font-mono text-gray-400">{sample.code}</span></div>
+          <div className="text-[11px] text-gray-500">{sample.group} · {sample.desc}</div>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex rounded-lg border border-gray-200 p-0.5 text-xs">
@@ -59,7 +51,7 @@ function PreviewModal({ sample, onClose }: { sample: FrontSample; onClose: () =>
       </div>
       <div className="flex-1 overflow-auto bg-gray-100 p-4" onClick={(e) => e.stopPropagation()}>
         <div className="mx-auto bg-white shadow-xl" style={{ width, maxWidth: '100%', height: '100%' }}>
-          <iframe title={sample.name} srcDoc={sample.html} className="h-full w-full" style={{ border: 0 }} />
+          <iframe title={sample.name} srcDoc={html} className="h-full w-full" style={{ border: 0 }} />
         </div>
       </div>
     </div>
@@ -67,40 +59,73 @@ function PreviewModal({ sample, onClose }: { sample: FrontSample; onClose: () =>
 }
 
 export default function FrontSamplesTab() {
-  const [open, setOpen] = useState<FrontSample | null>(null);
+  const [htmls, setHtmls] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState<CanvasSample | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.all(
+      CANVAS_SAMPLES.map(async (s) => {
+        const load = loaderFor(s.file);
+        return [s.file, load ? await load() : ''] as const;
+      }),
+    ).then((pairs) => {
+      if (!cancelled) { setHtmls(Object.fromEntries(pairs)); setLoading(false); }
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  const groups = useMemo(() => {
+    const order: string[] = [];
+    const by = new Map<string, CanvasSample[]>();
+    for (const s of CANVAS_SAMPLES) {
+      let arr = by.get(s.group);
+      if (!arr) { arr = []; by.set(s.group, arr); order.push(s.group); }
+      arr.push(s);
+    }
+    return order.map((g) => ({ group: g, items: by.get(g)! }));
+  }, []);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div className="rounded-xl border border-blue-200 bg-blue-50 px-5 py-4">
         <p className="text-sm font-medium text-blue-800">
-          신청자가 고를 <b>프론트페이지 디자인 샘플</b>입니다. 지금은 슈퍼어드민 미리보기 단계 —
-          완성도가 갖춰지면 신청 페이지의 디자인 선택지로, 이후 테넌트 페이지 섹션 구성에 반영됩니다.
+          신청자가 고를 <b>프론트페이지 디자인 시안 {CANVAS_SAMPLES.length}종</b> — 'Church Homepage' 디자인에서 가져온 실제 시안입니다.
+          사진 자리(<span className="font-mono text-[12px]">image-slot</span>)는 실제 셋업 시 교회 사진으로 채워집니다.
         </p>
+        <p className="mt-1 text-xs text-blue-700/80">지금은 미리보기 단계. 완성도가 갖춰지면 신청 페이지 디자인 선택지 → 테넌트 페이지 섹션 구성에 반영됩니다.</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {FRONT_SAMPLES.map((s) => (
-          <div key={s.id} className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-            <button onClick={() => setOpen(s)} className="block w-full text-left" title="전체 미리보기">
-              <Thumb html={s.html} />
-            </button>
-            <div className="p-4">
-              <div className="flex items-center justify-between gap-2">
-                <div className="text-sm font-bold text-gray-900">{s.name}</div>
-                <Swatches s={s} />
-              </div>
-              <div className="mt-1 text-xs text-gray-500">{s.vibe}</div>
-              <div className="mt-3 flex items-center gap-2">
-                <button onClick={() => setOpen(s)}
-                  className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">전체 미리보기</button>
-                <span className="text-[10px] font-mono text-gray-300">{s.id}</span>
-              </div>
+      {loading ? (
+        <div className="p-10 text-center text-sm text-gray-400">시안 불러오는 중…</div>
+      ) : (
+        groups.map(({ group, items }) => (
+          <section key={group} className="space-y-3">
+            <h3 className="text-sm font-bold text-gray-900">{group} <span className="text-gray-400 font-normal">· {items.length}종</span></h3>
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {items.map((s) => (
+                <div key={s.id} className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                  <button onClick={() => setOpen(s)} className="block w-full text-left" title="전체 미리보기">
+                    <Thumb html={htmls[s.file] ?? ''} />
+                  </button>
+                  <div className="p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-sm font-bold text-gray-900">{s.name}</div>
+                      <span className="text-[10px] font-mono text-gray-300">{s.code}</span>
+                    </div>
+                    {s.desc && <div className="mt-1 text-xs text-gray-500 line-clamp-2">{s.desc}</div>}
+                    <button onClick={() => setOpen(s)}
+                      className="mt-3 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">전체 미리보기</button>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-        ))}
-      </div>
+          </section>
+        ))
+      )}
 
-      {open && <PreviewModal sample={open} onClose={() => setOpen(null)} />}
+      {open && <PreviewModal sample={open} html={htmls[open.file] ?? ''} onClose={() => setOpen(null)} />}
     </div>
   );
 }

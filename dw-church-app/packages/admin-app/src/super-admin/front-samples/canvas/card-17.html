@@ -1,0 +1,43 @@
+<!doctype html><html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Serif+KR:wght@500;700&display=swap">
+<style>
+:root{--brand:#1466d6;--primary:#2b7fff;--bg:#ffffff;--surface:#f7f8fa;--border:#e5e7eb;--fg:#16181d;--fg-muted:#61697a;
+--font-sans:'Pretendard','Inter',system-ui,sans-serif;--font-latin:'Inter',system-ui,sans-serif;--font-mono:ui-monospace,Menlo,monospace;
+--radius-sm:8px;--radius:12px;--radius-lg:16px;--leading-body:1.75;--leading-tight:1.35;--tracking-title:-0.025em;--tracking-body:-0.003em}
+*{box-sizing:border-box}
+body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:var(--font-sans);font-size:16px;line-height:var(--leading-body);letter-spacing:var(--tracking-body);-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word}
+:lang(en){font-family:var(--font-latin);letter-spacing:0;word-break:normal}
+h1,h2,h3{line-height:var(--leading-tight);letter-spacing:var(--tracking-title);margin:0 0 8px}
+/* <image-slot> shim — outside the design runtime it renders a neutral labeled placeholder */
+image-slot{display:block;position:relative;width:100%;height:100%;min-height:120px;background:linear-gradient(135deg,#e2e8f2,#eef1f6)}
+image-slot::after{content:attr(placeholder);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9aa7bd;font-size:13px;font-weight:600;letter-spacing:0}
+image-slot[shape="circle"],image-slot[shape="pill"]{border-radius:999px}
+</style></head>
+<body>
+  <div style="display:flex;align-items:center;justify-content:center;gap:32px;height:88px;font-size:15px;color:#333842"><span>교회 소개</span><span>예배</span><span>말씀</span><b style="font-size:20px;padding:0 10px">새길교회</b><span>공동체</span><span>나눔</span><span>새가족</span></div>
+  <div style="padding:36px 160px 0;text-align:center">
+    <h1 style="margin:0 0 20px;font-size:46px;font-weight:700;line-height:1.35">우리는 서로의 이웃입니다</h1>
+    <p style="margin:0 0 34px;font-size:18px;line-height:1.85;color:var(--fg-muted)">1994년부터 LA 코리아타운에서 예배드리는 한인 공동체입니다.<br>주일 아침, 처음 오시는 분의 자리를 늘 비워둡니다.</p>
+    <div style="display:flex;gap:12px;justify-content:center;margin-bottom:44px"><span style="display:inline-flex;align-items:center;height:50px;padding:0 26px;border-radius:999px;background:var(--brand);color:#fff;font-size:15px;font-weight:600">예배 시간과 오시는 길</span><span style="display:inline-flex;align-items:center;height:50px;padding:0 26px;border-radius:999px;border:1px solid var(--border);font-size:15px;font-weight:600">설교 들어보기</span></div>
+    <div style="height:420px;border-radius:var(--radius-lg);overflow:hidden"><image-slot id="ch-4f-hero" shape="rect" placeholder="대표 사진"></image-slot></div>
+  </div>
+  <div style="padding:64px 160px 0"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;text-align:center">
+    <div style="background:var(--bg);padding:26px"><div style="font-size:13px;color:var(--fg-muted);margin-bottom:8px">주일예배</div><b style="font-size:18px">9:00 · 11:00</b></div>
+    <div style="background:var(--bg);padding:26px"><div style="font-size:13px;color:var(--fg-muted);margin-bottom:8px">수요예배</div><b style="font-size:18px">오후 7:30</b></div>
+    <div style="background:var(--bg);padding:26px"><div style="font-size:13px;color:var(--fg-muted);margin-bottom:8px">새벽기도</div><b style="font-size:18px">오전 5:30</b></div>
+  </div></div>
+  <div style="padding:72px 160px 0;text-align:center"><div style="font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--brand);margin-bottom:12px">이번 주 말씀</div><h2 style="margin:0 0 8px;font-size:32px;font-weight:700">우리를 부르시는 손길</h2><p style="margin:0 0 24px;font-size:15px;color:var(--fg-muted)">로마서 8:28 · 김성호 담임목사 · 8월 9일</p>
+    <div style="position:relative;height:360px;border-radius:var(--radius-lg);overflow:hidden"><image-slot id="ch-4f-sermon" shape="rect" placeholder="설교 영상"></image-slot><div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:68px;height:68px;border-radius:50%;background:rgba(255,255,255,.94);display:flex;align-items:center;justify-content:center;color:var(--brand);font-size:21px;pointer-events:none">▶</div></div>
+    <div style="margin-top:16px;font-size:15px;color:var(--fg-muted)">지난 설교 모두 보기 →</div></div>
+  <div style="padding:72px 160px 0;display:grid;grid-template-columns:1fr 1fr;gap:44px">
+    <div><h2 style="margin:0 0 14px;font-size:22px;font-weight:700">주보 · 공지</h2><div style="display:flex;flex-direction:column">
+      <div style="display:flex;padding:14px 0;border-top:1px solid var(--border)"><span style="font-size:15px;flex:1">8월 16일 주일 주보</span><span style="font-size:13px;color:var(--fg-muted)">08.15</span></div>
+      <div style="display:flex;padding:14px 0;border-top:1px solid var(--border)"><span style="font-size:15px;flex:1">가을 성경공부 신청 안내</span><span style="font-size:13px;color:var(--fg-muted)">08.12</span></div>
+      <div style="display:flex;padding:14px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)"><span style="font-size:15px;flex:1">주일학교 교사 모집</span><span style="font-size:13px;color:var(--fg-muted)">08.05</span></div></div></div>
+    <div><h2 style="margin:0 0 14px;font-size:22px;font-weight:700">교회 사진</h2><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div style="height:120px;border-radius:var(--radius-sm);overflow:hidden"><image-slot id="ch-4f-g1" shape="rect" placeholder="사진"></image-slot></div><div style="height:120px;border-radius:var(--radius-sm);overflow:hidden"><image-slot id="ch-4f-g2" shape="rect" placeholder="사진"></image-slot></div></div></div>
+  </div>
+  <div style="margin:72px 160px 0;text-align:center;background:var(--surface);border-radius:var(--radius-lg);padding:44px"><h2 style="margin:0 0 10px;font-size:26px;font-weight:700">처음 오시나요?</h2><p style="margin:0 0 22px;font-size:16px;line-height:1.8;color:var(--fg-muted)">예배 30분 전, 본당 입구 안내데스크에서 기다리고 있습니다.</p><div style="display:flex;gap:12px;justify-content:center"><span style="display:inline-flex;align-items:center;height:48px;padding:0 24px;border-radius:999px;background:var(--brand);color:#fff;font-size:15px;font-weight:600">새가족 등록</span><span style="display:inline-flex;align-items:center;height:48px;padding:0 24px;border-radius:999px;background:var(--bg);border:1px solid var(--border);font-size:15px;font-weight:600">온라인 헌금</span></div></div>
+  <div style="margin-top:64px;padding:34px 60px;border-top:1px solid var(--border);text-align:center;font-size:14px;color:var(--fg-muted);line-height:1.9">새길교회 · 3550 Wilshire Blvd, Los Angeles, CA 90010 · (213) 000-0000 · 담임 김성호 목사<br>오시는 길 · 문의 · 개인정보처리방침</div>
+</body></html>

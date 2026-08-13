@@ -1,0 +1,167 @@
+<!doctype html><html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Serif+KR:wght@500;700&display=swap">
+<style>
+:root{--brand:#1466d6;--primary:#2b7fff;--bg:#ffffff;--surface:#f7f8fa;--border:#e5e7eb;--fg:#16181d;--fg-muted:#61697a;
+--font-sans:'Pretendard','Inter',system-ui,sans-serif;--font-latin:'Inter',system-ui,sans-serif;--font-mono:ui-monospace,Menlo,monospace;
+--radius-sm:8px;--radius:12px;--radius-lg:16px;--leading-body:1.75;--leading-tight:1.35;--tracking-title:-0.025em;--tracking-body:-0.003em}
+*{box-sizing:border-box}
+body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:var(--font-sans);font-size:16px;line-height:var(--leading-body);letter-spacing:var(--tracking-body);-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word}
+:lang(en){font-family:var(--font-latin);letter-spacing:0;word-break:normal}
+h1,h2,h3{line-height:var(--leading-tight);letter-spacing:var(--tracking-title);margin:0 0 8px}
+/* <image-slot> shim — outside the design runtime it renders a neutral labeled placeholder */
+image-slot{display:block;position:relative;width:100%;height:100%;min-height:120px;background:linear-gradient(135deg,#e2e8f2,#eef1f6)}
+image-slot::after{content:attr(placeholder);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9aa7bd;font-size:13px;font-weight:600;letter-spacing:0}
+image-slot[shape="circle"],image-slot[shape="pill"]{border-radius:999px}
+</style></head>
+<body>
+
+  <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:0 56px;height:52px;background:#c0392b;color:#fff">
+    <span style="display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600"><span style="width:8px;height:8px;border-radius:50%;background:#fff"></span>LIVE</span>
+    <span style="font-size:15px">지금 2부 예배가 진행 중입니다 · 오전 11:00</span>
+    <span style="display:inline-flex;align-items:center;height:32px;padding:0 16px;border-radius:999px;background:#fff;color:#c0392b;font-size:13px;font-weight:600">생중계 바로 보기</span>
+  </div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:0 56px;height:42px;background:var(--surface);border-bottom:1px solid var(--border);font-size:13px;color:var(--fg-muted)">
+    <span>다음 예배 · 8월 16일(주일) 오전 9:00 1부 예배</span>
+    <div style="display:flex;align-items:center;gap:18px">
+      <div style="display:flex;align-items:center;gap:8px"><span>글자 크기</span><span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:24px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);font-size:12px;font-weight:600">가</span><span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:24px;border-radius:var(--radius-sm);background:var(--fg);color:#fff;font-size:15px;font-weight:600">가</span></div>
+      <span style="color:var(--border)">|</span>
+      <div style="display:flex;align-items:center;gap:12px"><span>유튜브</span><span>카카오톡</span><span>인스타그램</span></div>
+      <span style="color:var(--border)">|</span><span>교인 로그인</span>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:0 56px;height:76px;border-bottom:1px solid var(--border)">
+    <div style="display:flex;align-items:center;gap:12px"><div style="width:34px;height:34px;border-radius:50%;background:var(--brand)"></div><span style="font-size:19px;font-weight:700">새길교회</span></div>
+    <nav style="display:flex;align-items:center;gap:32px;font-size:15px;font-weight:500;color:#333842"><span>교회 소개</span><span>예배와 말씀</span><span>공동체</span><span>나눔과 섬김</span><span>새가족</span></nav>
+    <div style="display:flex;align-items:center;gap:12px"><span style="font-size:14px;color:var(--fg-muted)">검색</span><span style="display:inline-flex;align-items:center;height:38px;padding:0 18px;border-radius:999px;background:var(--brand);color:#fff;font-size:14px;font-weight:600">온라인 헌금</span></div>
+  </div>
+
+  <div style="position:relative;padding:0 56px;background:linear-gradient(180deg,var(--surface) 0%,var(--surface) 62%,var(--bg) 62%)">
+    <div style="position:relative;padding-top:44px">
+      <div style="position:relative;height:470px;border-radius:var(--radius-lg);overflow:hidden">
+        <image-slot id="ch-5a-hero" shape="rect" placeholder="히어로 사진 — 예배 드리는 회중"></image-slot>
+        <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(9,15,28,.62) 0%,rgba(9,15,28,.25) 55%,rgba(9,15,28,0) 100%);pointer-events:none"></div>
+        <div style="position:absolute;left:52px;top:96px;max-width:520px;pointer-events:none">
+          <div style="font-size:14px;font-weight:600;letter-spacing:.08em;color:#cfe0fb;margin-bottom:18px">SAEGIL CHURCH</div>
+          <h1 style="margin:0 0 20px;font-size:52px;font-weight:700;color:#fff;line-height:1.28">함께 자라고<br>함께 살아가는 교회</h1>
+          <p style="margin:0;font-size:18px;line-height:1.7;color:rgba(255,255,255,.86)">주일 아침, 당신의 자리를 비워두고 기다립니다.</p>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1.25fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin:-64px 40px 0;position:relative;box-shadow:0 18px 40px rgba(15,25,45,.13)">
+        <div style="background:var(--bg);padding:26px 30px"><div style="font-size:13px;font-weight:600;color:var(--brand);margin-bottom:12px">주일예배</div>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:16px"><div style="display:flex;justify-content:space-between"><span>1부</span><b style="font-weight:600">오전 9:00</b></div><div style="display:flex;justify-content:space-between"><span>2부</span><b style="font-weight:600">오전 11:00</b></div><div style="display:flex;justify-content:space-between"><span>EM (English)</span><b style="font-weight:600">오후 1:00</b></div></div></div>
+        <div style="background:var(--bg);padding:26px 30px"><div style="font-size:13px;font-weight:600;color:var(--brand);margin-bottom:12px">주중예배</div>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:16px"><div style="display:flex;justify-content:space-between"><span>수요예배</span><b style="font-weight:600">오후 7:30</b></div><div style="display:flex;justify-content:space-between"><span>새벽기도</span><b style="font-weight:600">오전 5:30</b></div><div style="display:flex;justify-content:space-between"><span>금요기도회</span><b style="font-weight:600">오후 8:00</b></div></div></div>
+        <div style="background:var(--bg);padding:26px 30px"><div style="font-size:13px;font-weight:600;color:var(--brand);margin-bottom:12px">처음 오시는 분께</div>
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:15px;line-height:1.5">
+            <div style="display:flex;gap:12px"><b style="font-weight:600;width:46px;flex:none">주차</b><span style="color:var(--fg-muted)">건물 주차장 150대 · 무료</span></div>
+            <div style="display:flex;gap:12px"><b style="font-weight:600;width:46px;flex:none">자녀</b><span style="color:var(--fg-muted)">영유아실 본당 2층 · 주일학교 9:00 / 11:00</span></div>
+            <div style="display:flex;gap:12px"><b style="font-weight:600;width:46px;flex:none">위치</b><span style="color:var(--fg-muted)">Wilshire &amp; Normandie · 무료 주차</span></div>
+          </div></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin:56px 56px 0;background:var(--surface);border-left:3px solid var(--brand);border-radius:0 var(--radius-lg) var(--radius-lg) 0;padding:32px 40px;display:flex;align-items:center;justify-content:space-between;gap:40px">
+    <div><div style="font-size:13px;font-weight:600;color:var(--brand);margin-bottom:12px">오늘의 말씀 · 8월 13일</div>
+      <p style="margin:0 0 10px;font-size:24px;font-weight:600;line-height:1.6">수고하고 무거운 짐 진 자들아 다 내게로 오라 내가 너희를 쉬게 하리라</p>
+      <div style="font-size:15px;color:var(--fg-muted)">마태복음 11장 28절</div></div>
+    <span style="display:inline-flex;align-items:center;height:44px;padding:0 22px;border:1px solid var(--border);border-radius:999px;background:var(--bg);font-size:14px;font-weight:600;flex:none">지난 말씀 보기</span>
+  </div>
+
+  <div style="margin:24px 56px 0;border-radius:var(--radius-lg);background:var(--fg);color:#fff;padding:26px 36px;display:flex;align-items:center;justify-content:space-between;gap:32px">
+    <div style="display:flex;align-items:center;gap:22px">
+      <span style="display:inline-flex;align-items:center;height:30px;padding:0 14px;border-radius:999px;background:rgba(255,255,255,.16);font-size:13px;font-weight:600;flex:none">다가오는 행사</span>
+      <div><div style="font-size:20px;font-weight:700;margin-bottom:4px">가을 성경공부 「로마서 함께 읽기」 신청</div><div style="font-size:15px;color:rgba(255,255,255,.7)">9월 1일 개강 · 매주 화요일 저녁 7:30 · 접수 8월 24일까지</div></div>
+    </div>
+    <span style="display:inline-flex;align-items:center;height:46px;padding:0 24px;border-radius:999px;background:#fff;color:var(--fg);font-size:15px;font-weight:600;flex:none">신청하기</span>
+  </div>
+
+  <div style="padding:80px 56px 0">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px"><div><div style="font-size:13px;font-weight:600;color:var(--brand);margin-bottom:8px">설교 말씀</div><h2 style="margin:0;font-size:32px;font-weight:700">이번 주 말씀</h2></div><span style="font-size:15px;color:var(--fg-muted)">설교 아카이브 전체보기 →</span></div>
+    <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:24px">
+      <div style="position:relative;height:330px;border-radius:var(--radius-lg);overflow:hidden"><image-slot id="ch-5a-sermon" shape="rect" placeholder="설교 영상 썸네일"></image-slot>
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(9,15,28,0) 40%,rgba(9,15,28,.78));pointer-events:none"></div>
+        <div style="position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.94);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--brand);pointer-events:none">▶</div>
+        <div style="position:absolute;left:28px;right:28px;bottom:24px;pointer-events:none"><div style="font-size:22px;font-weight:700;color:#fff;margin-bottom:6px">우리를 부르시는 손길</div><div style="font-size:14px;color:rgba(255,255,255,.78)">김성호 담임목사 · 로마서 8:28 · 8월 9일 주일</div></div></div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;gap:14px;padding:14px;border:1px solid var(--border);border-radius:var(--radius)"><div style="width:104px;height:66px;border-radius:var(--radius-sm);overflow:hidden;flex:none"><image-slot id="ch-5a-s1" shape="rect" placeholder="썸네일"></image-slot></div><div style="display:flex;flex-direction:column;justify-content:center;gap:4px"><div style="font-size:16px;font-weight:600">기다리는 마음</div><div style="font-size:13px;color:var(--fg-muted)">8월 2일 · 주일 2부</div></div></div>
+        <div style="display:flex;gap:14px;padding:14px;border:1px solid var(--border);border-radius:var(--radius)"><div style="width:104px;height:66px;border-radius:var(--radius-sm);overflow:hidden;flex:none"><image-slot id="ch-5a-s2" shape="rect" placeholder="썸네일"></image-slot></div><div style="display:flex;flex-direction:column;justify-content:center;gap:4px"><div style="font-size:16px;font-weight:600">낮은 자리에서</div><div style="font-size:13px;color:var(--fg-muted)">7월 26일 · 주일 2부</div></div></div>
+        <div style="display:flex;gap:14px;padding:14px;border:1px solid var(--border);border-radius:var(--radius)"><div style="width:104px;height:66px;border-radius:var(--radius-sm);overflow:hidden;flex:none"><image-slot id="ch-5a-s3" shape="rect" placeholder="썸네일"></image-slot></div><div style="display:flex;flex-direction:column;justify-content:center;gap:4px"><div style="font-size:16px;font-weight:600">함께 걷는 길</div><div style="font-size:13px;color:var(--fg-muted)">7월 19일 · 주일 2부</div></div></div>
+        <div style="display:flex;align-items:center;justify-content:center;height:52px;border:1px solid var(--border);border-radius:var(--radius);font-size:15px;font-weight:600;color:var(--brand)">수요 · 새벽 설교 듣기</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:76px 56px 0">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px"><div><div style="font-size:13px;font-weight:600;color:var(--brand);margin-bottom:8px">사역</div><h2 style="margin:0;font-size:32px;font-weight:700">이렇게 섬기고 있습니다</h2></div><span style="font-size:15px;color:var(--fg-muted)">사역 전체보기 →</span></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px">
+      <div><div style="height:170px;border-radius:var(--radius);overflow:hidden;margin-bottom:16px"><image-slot id="ch-5a-m1" shape="rect" placeholder="주일학교"></image-slot></div><h3 style="margin:0 0 8px;font-size:19px;font-weight:700">주일학교</h3><p style="margin:0;font-size:14px;line-height:1.75;color:var(--fg-muted)">유치부부터 중고등부까지 주일 9시·11시에 모입니다.</p></div>
+      <div><div style="height:170px;border-radius:var(--radius);overflow:hidden;margin-bottom:16px"><image-slot id="ch-5a-m2" shape="rect" placeholder="청년부"></image-slot></div><h3 style="margin:0 0 8px;font-size:19px;font-weight:700">EM · 청년부</h3><p style="margin:0;font-size:14px;line-height:1.75;color:var(--fg-muted)">English Ministry 주일 오후 1시, 2세와 유학생이 함께합니다.</p></div>
+      <div><div style="height:170px;border-radius:var(--radius);overflow:hidden;margin-bottom:16px"><image-slot id="ch-5a-m3" shape="rect" placeholder="지역봉사"></image-slot></div><h3 style="margin:0 0 8px;font-size:19px;font-weight:700">한글학교</h3><p style="margin:0;font-size:14px;line-height:1.75;color:var(--fg-muted)">토요일 오전, 2세 아이들이 한국어와 문화를 배웁니다.</p></div>
+      <div><div style="height:170px;border-radius:var(--radius);overflow:hidden;margin-bottom:16px"><image-slot id="ch-5a-m4" shape="rect" placeholder="선교"></image-slot></div><h3 style="margin:0 0 8px;font-size:19px;font-weight:700">선교</h3><p style="margin:0;font-size:14px;line-height:1.75;color:var(--fg-muted)">네 가정의 선교사를 파송하고 기도로 후원합니다.</p></div>
+    </div>
+  </div>
+
+  <div style="padding:76px 56px 0;display:grid;grid-template-columns:1.35fr 1fr;gap:40px">
+    <div>
+      <div style="display:flex;align-items:center;gap:22px;border-bottom:1px solid var(--border);padding-bottom:14px;margin-bottom:8px"><span style="font-size:20px;font-weight:700">주보 · 공지</span><span style="font-size:16px;color:var(--fg-muted)">교회 일정</span><span style="font-size:16px;color:var(--fg-muted)">부서 소식</span><span style="margin-left:auto;font-size:14px;color:var(--fg-muted)">더보기 +</span></div>
+      <div style="display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;font-weight:600;color:var(--brand);background:#eaf2ff;border-radius:999px;padding:4px 10px">주보</span><span style="font-size:16px;flex:1">8월 16일 주일 주보 (PDF)</span><span style="font-size:14px;color:var(--fg-muted)">08.15</span></div>
+        <div style="display:flex;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;font-weight:600;color:var(--fg-muted);background:var(--surface);border-radius:999px;padding:4px 10px">공지</span><span style="font-size:16px;flex:1">가을 성경공부 신청 안내 (9/1 개강)</span><span style="font-size:14px;color:var(--fg-muted)">08.12</span></div>
+        <div style="display:flex;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;font-weight:600;color:var(--fg-muted);background:var(--surface);border-radius:999px;padding:4px 10px">행사</span><span style="font-size:16px;flex:1">전교인 여름 수련회 사진이 올라왔습니다</span><span style="font-size:14px;color:var(--fg-muted)">08.08</span></div>
+        <div style="display:flex;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;font-weight:600;color:var(--fg-muted);background:var(--surface);border-radius:999px;padding:4px 10px">공지</span><span style="font-size:16px;flex:1">주일학교 교사 모집 (~8/31)</span><span style="font-size:14px;color:var(--fg-muted)">08.05</span></div>
+      </div>
+    </div>
+    <div style="background:var(--surface);border-radius:var(--radius-lg);padding:28px 30px">
+      <div style="font-size:20px;font-weight:700;margin-bottom:6px">마음을 나눠주세요</div>
+      <p style="margin:0 0 20px;font-size:15px;line-height:1.7;color:var(--fg-muted)">기도 제목과 심방 요청은 담당 교역자에게만 전달되며, 본인이 원치 않으면 공개되지 않습니다.</p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;justify-content:center;height:48px;border-radius:var(--radius);background:var(--brand);color:#fff;font-size:15px;font-weight:600">기도 요청하기</div>
+        <div style="display:flex;align-items:center;justify-content:center;height:48px;border-radius:var(--radius);background:var(--bg);border:1px solid var(--border);font-size:15px;font-weight:600">심방 신청하기</div>
+      </div>
+      <div style="margin-top:22px;padding-top:20px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px;font-size:15px">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--fg-muted)">새가족 등록</span><span>→</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--fg-muted)">소그룹 신청</span><span>→</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--fg-muted)">차량 카풀 안내</span><span>→</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:76px 56px 0">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:22px"><h2 style="margin:0;font-size:28px;font-weight:700">교회의 하루하루</h2><span style="font-size:15px;color:var(--fg-muted)">사진 갤러리 →</span></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:150px;gap:14px">
+      <div style="grid-column:span 2;grid-row:span 2;border-radius:var(--radius);overflow:hidden"><image-slot id="ch-5a-g1" shape="rect" placeholder="여름 수련회"></image-slot></div>
+      <div style="border-radius:var(--radius);overflow:hidden"><image-slot id="ch-5a-g2" shape="rect" placeholder="주일학교"></image-slot></div>
+      <div style="border-radius:var(--radius);overflow:hidden"><image-slot id="ch-5a-g3" shape="rect" placeholder="찬양대"></image-slot></div>
+      <div style="border-radius:var(--radius);overflow:hidden"><image-slot id="ch-5a-g4" shape="rect" placeholder="봉사"></image-slot></div>
+      <div style="border-radius:var(--radius);overflow:hidden"><image-slot id="ch-5a-g5" shape="rect" placeholder="소그룹"></image-slot></div>
+    </div>
+  </div>
+
+  <div style="margin:76px 56px 0;border-radius:var(--radius-lg);background:var(--brand);color:#fff;padding:44px 48px;display:flex;align-items:center;justify-content:space-between;gap:40px">
+    <div><h2 style="margin:0 0 10px;font-size:28px;font-weight:700;color:#fff">함께 나누는 헌금</h2><p style="margin:0;font-size:16px;line-height:1.7;color:rgba(255,255,255,.82)">계좌이체와 간편송금으로 언제든 참여하실 수 있습니다. 사용 내역은 매월 주보에 공개됩니다.</p></div>
+    <div style="display:flex;gap:12px;flex:none"><span style="display:inline-flex;align-items:center;height:50px;padding:0 26px;border-radius:999px;background:#fff;color:var(--brand);font-size:15px;font-weight:600">온라인 헌금하기</span><span style="display:inline-flex;align-items:center;height:50px;padding:0 26px;border-radius:999px;border:1px solid rgba(255,255,255,.45);color:#fff;font-size:15px;font-weight:600">헌금 안내</span></div>
+  </div>
+
+  <div style="margin-top:76px;padding:34px 56px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:32px;font-size:15px;color:var(--fg-muted)">
+    <span>1994년 스무 명이 상가 2층을 빌려 시작했고, 32년째 LA 코리아타운에서 한인 이웃과 함께합니다. 미주한인예수교장로회(KAPC) 소속.</span>
+    <span style="flex:none;color:var(--fg);font-weight:600">교회 연혁 보기 →</span>
+  </div>
+
+  <div style="padding:44px 56px;background:var(--surface);display:flex;justify-content:space-between;gap:40px">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><div style="width:26px;height:26px;border-radius:50%;background:var(--brand)"></div><b style="font-size:16px">새길교회 Saegil Korean Church</b></div>
+      <div style="font-size:14px;line-height:1.9;color:var(--fg-muted)">3550 Wilshire Blvd, Los Angeles, CA 90010 · (213) 000-0000<br>담임 김성호 목사 · office@saegilchurch.org</div>
+      <div style="display:flex;gap:10px;margin-top:16px"><span style="display:inline-flex;align-items:center;height:36px;padding:0 16px;border:1px solid var(--border);border-radius:999px;background:var(--bg);font-size:13px;font-weight:600">유튜브</span><span style="display:inline-flex;align-items:center;height:36px;padding:0 16px;border:1px solid var(--border);border-radius:999px;background:var(--bg);font-size:13px;font-weight:600">카카오톡 채널</span><span style="display:inline-flex;align-items:center;height:36px;padding:0 16px;border:1px solid var(--border);border-radius:999px;background:var(--bg);font-size:13px;font-weight:600">인스타그램</span></div>
+    </div>
+    <div style="display:flex;gap:56px;font-size:14px;line-height:2;color:var(--fg-muted)">
+      <div style="display:flex;flex-direction:column"><b style="color:var(--fg);margin-bottom:6px">예배와 말씀</b><span>주일예배</span><span>설교 영상</span><span>주보</span></div>
+      <div style="display:flex;flex-direction:column"><b style="color:var(--fg);margin-bottom:6px">공동체</b><span>부서 안내</span><span>소그룹</span><span>주일학교</span></div>
+      <div style="display:flex;flex-direction:column"><b style="color:var(--fg);margin-bottom:6px">참여</b><span>새가족 등록</span><span>온라인 헌금</span><span>기도 요청</span></div>
+    </div>
+  </div>
+</body></html>
