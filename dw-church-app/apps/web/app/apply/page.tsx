@@ -16,6 +16,34 @@ const PLANS = [
 const inputCls =
   'w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none';
 
+// 신청자가 고르는 홈페이지 디자인 시안(22종). thumb = 그 디자인 프리셋 히어로에
+// 쓰는 자체 호스팅(R2) 대표 사진. 서버 presets.ts 의 id 와 1:1 대응한다.
+const SAMPLE_IMG = 'https://pub-674328f08783498389f7857dc6e1ab00.r2.dev/_samples/frontpage';
+const DESIGNS: { id: string; name: string; group: string; thumb: string }[] = [
+  { id: '00', name: '사진 히어로형', group: '미주 한인 이민교회', thumb: 'worship-2' },
+  { id: '01', name: '영문 우선형', group: '미주 한인 이민교회', thumb: 'worship-1' },
+  { id: '02', name: '정착 안내형', group: '미주 한인 이민교회', thumb: 'group-1' },
+  { id: '03', name: '큰 글씨형', group: '미주 한인 이민교회', thumb: 'church-2' },
+  { id: '04', name: '주간 일정형', group: '미주 한인 이민교회', thumb: 'church-2' },
+  { id: '05', name: '목사 인사말형', group: '소형·개척 교회', thumb: 'church-1' },
+  { id: '06', name: '여백 중심형', group: '소형·개척 교회', thumb: 'sky-1' },
+  { id: '07', name: '지도 우선형', group: '소형·개척 교회', thumb: 'church-1' },
+  { id: '08', name: '모바일 홈형', group: '소형·개척 교회', thumb: 'worship-2' },
+  { id: '09', name: '모바일 메뉴형', group: '소형·개척 교회', thumb: 'group-2' },
+  { id: '10', name: '가정교회형', group: '소형·개척 교회', thumb: 'group-1' },
+  { id: '11', name: '라이브 종합형', group: '완성도 레이아웃 시안', thumb: 'worship-2' },
+  { id: '12', name: '좌측 사이드바', group: '완성도 레이아웃 시안', thumb: 'worship-1' },
+  { id: '13', name: '매거진 타일', group: '완성도 레이아웃 시안', thumb: 'serving-2' },
+  { id: '14', name: '다크 네이비', group: '완성도 레이아웃 시안', thumb: 'sermon-1' },
+  { id: '15', name: '회원 대시보드', group: '완성도 레이아웃 시안', thumb: 'church-2' },
+  { id: '16', name: '스토리 스크롤', group: '완성도 레이아웃 시안', thumb: 'serving-1' },
+  { id: '17', name: '중앙 정렬형', group: '완성도 레이아웃 시안', thumb: 'worship-1' },
+  { id: '18', name: '이번주 안내형', group: '완성도 레이아웃 시안', thumb: 'church-2' },
+  { id: '19', name: '사진 갤러리', group: '완성도 레이아웃 시안', thumb: 'retreat-1' },
+  { id: '20', name: '히어로 겹침형', group: '완성도 레이아웃 시안', thumb: 'worship-2' },
+  { id: '21', name: '풀블리드 히어로', group: '완성도 레이아웃 시안', thumb: 'pray-1' },
+];
+
 function ApplyForm() {
   const params = useSearchParams();
   const [form, setForm] = useState<Record<string, string>>({ billingPeriod: 'yearly' });
@@ -82,6 +110,7 @@ function ApplyForm() {
           memberProfile: form.memberProfile || undefined,
           localContext: form.localContext || undefined,
           couponCode: appliedPromo ? (form.couponCode || '').trim() : undefined,
+          designChoice: form.designChoice || undefined,
           faithAffirmed: true,
           termsAccepted: true,
           plan: form.plan || undefined,
@@ -170,6 +199,32 @@ function ApplyForm() {
         <label className="mb-1 block text-sm font-medium text-gray-700">지역 환경 <span className="text-gray-400">(선택)</span></label>
         <textarea value={form.localContext || ''} onChange={set('localContext')} rows={2} className={inputCls} placeholder="예: 인근에 초·중·고 학군 밀집, 근처 대학교, 한인 기업/지사 다수" />
         <p className="mt-1 text-xs text-gray-400">주변 학군·대학·한인 기업 등 지역 환경은 타깃 세대와 사역 방향에 영향을 줍니다.</p>
+      </div>
+
+      <div>
+        <label className="mb-1 block text-sm font-medium text-gray-700">홈페이지 디자인 <span className="text-gray-400">(선택)</span></label>
+        <p className="mb-2 text-xs text-gray-400">마음에 드는 시안을 고르시면 그 구성으로 사이트를 시작합니다. 셋업 과정에서 교회에 맞게 조정됩니다.</p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {DESIGNS.map((d) => {
+            const on = form.designChoice === d.id;
+            return (
+              <button
+                key={d.id}
+                type="button"
+                onClick={() => setForm((f) => ({ ...f, designChoice: on ? '' : d.id }))}
+                className={`overflow-hidden rounded-lg border text-left transition-colors ${on ? 'border-blue-600 ring-2 ring-blue-200' : 'border-gray-200 hover:border-gray-400'}`}
+              >
+                <div className="relative h-20 w-full bg-cover bg-center" style={{ backgroundImage: `url('${SAMPLE_IMG}/${d.thumb}.jpg')` }}>
+                  {on && <span className="absolute right-1.5 top-1.5 rounded bg-blue-600 px-1.5 py-0.5 text-[10px] font-bold text-white">선택됨</span>}
+                </div>
+                <div className="px-2 py-1.5">
+                  <div className="text-xs font-semibold text-gray-800">{d.name}</div>
+                  <div className="text-[10px] text-gray-400">{d.group}</div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div>

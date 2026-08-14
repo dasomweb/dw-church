@@ -856,6 +856,9 @@ async function main(): Promise<void> {
     await prisma.$executeRawUnsafe(`ALTER TABLE "service_applications" ADD COLUMN IF NOT EXISTS "member_profile" TEXT`);
     await prisma.$executeRawUnsafe(`ALTER TABLE "service_applications" ADD COLUMN IF NOT EXISTS "local_context" TEXT`);
     await prisma.$executeRawUnsafe(`ALTER TABLE "service_applications" ADD COLUMN IF NOT EXISTS "coupon_code" VARCHAR(40)`);
+    // Homepage design the applicant picked (sample id "00".."21") — drives the
+    // per-design home page_sections preset at provisioning (Feature ①).
+    await prisma.$executeRawUnsafe(`ALTER TABLE "service_applications" ADD COLUMN IF NOT EXISTS "design_choice" VARCHAR(40)`);
     // Link to the provisioned tenant (set when payment auto-creates the tenant).
     // Doubles as the idempotency guard so a re-delivered webhook never double-provisions.
     await prisma.$executeRawUnsafe(`ALTER TABLE "service_applications" ADD COLUMN IF NOT EXISTS "tenant_slug" VARCHAR(255)`);

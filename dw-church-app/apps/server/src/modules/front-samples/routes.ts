@@ -6,6 +6,7 @@ import { prisma } from '../../config/database.js';
 import { requireSuperAdmin } from '../../middleware/auth.js';
 import { AppError } from '../../middleware/error-handler.js';
 import { uploadFile } from '../../config/r2.js';
+import { applyDesignToTenant, PRESET_IDS } from './presets.js';
 
 /**
  * Front-sample editor (super-admin only). The 22 homepage design samples ship
@@ -57,6 +58,18 @@ export async function frontSampleRoutes(app: FastifyInstance) {
     const { cardId } = req.params as { cardId: string };
     await prisma.$executeRawUnsafe(`DELETE FROM public.front_sample_edits WHERE card_id = $1`, cardId);
     return reply.send({ data: { cardId, reverted: true } });
+  });
+
+  // Which sample designs have a home-page block preset (Feature ①).
+  app.get('/admin/front-samples/presets', { preHandler: [requireSuperAdmin] }, async (_req, reply) => {
+    return reply.send({ data: PRESET_IDS });
+  });
+
+  // Apply a design preset to a tenant's home page (rebuilds page_sections).
+  app.post('/admin/front-samples/apply', { preHandler: [requireSuperAdmin] }, async (req, reply) => {
+    const { slug, design } = z.object({ slug: z.string().min(1).max(63), design: z.string().min(1).max(40) }).parse(req.body ?? {});
+    const result = await applyDesignToTenant(slug, design);
+    return reply.send({ data: result });
   });
 
   // Super-admin image upload (no tenant context) → R2 _samples/custom/. Server

@@ -32,6 +32,7 @@ export const createApplicationSchema = z.object({
   memberProfile: z.string().max(1000).optional().nullable(), // 교회 구성원 (연령대·주재원/한국 신규 유입 등)
   localContext: z.string().max(1000).optional().nullable(), // 지역 환경 (학군·대학·한인 기업 등)
   couponCode: z.string().max(40).optional().nullable(), // 셋업비 할인 쿠폰 코드
+  designChoice: z.string().max(40).optional().nullable(), // 고른 홈페이지 디자인 시안 id ("00".."21")
 });
 
 // Super-admin updates: workflow status, internal note, the payment link to send.

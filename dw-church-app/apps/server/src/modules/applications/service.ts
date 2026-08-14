@@ -22,6 +22,7 @@ const COLUMN_MAP: Record<string, string> = {
   memberProfile: 'member_profile',
   localContext: 'local_context',
   couponCode: 'coupon_code',
+  designChoice: 'design_choice',
   status: 'status',
   adminNote: 'admin_note',
   paymentLink: 'payment_link',

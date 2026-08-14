@@ -68,6 +68,32 @@ export default function FrontSamplesTab() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState<CanvasSample | null>(null);
   const [editing, setEditing] = useState<CanvasSample | null>(null);
+  // "테넌트에 적용" — rebuild a tenant's home page_sections from this design's preset.
+  const [applyFor, setApplyFor] = useState<CanvasSample | null>(null);
+  const [tenants, setTenants] = useState<{ slug: string; name: string }[]>([]);
+  const [applySlug, setApplySlug] = useState('');
+  const [applyState, setApplyState] = useState<'idle' | 'loading' | 'applying' | 'done' | 'error'>('idle');
+  const [applyMsg, setApplyMsg] = useState('');
+
+  const openApply = (s: CanvasSample) => {
+    setApplyFor(s); setApplySlug(''); setApplyMsg(''); setApplyState('loading');
+    apiFetch<{ data: { slug: string; name?: string; churchName?: string }[] }>('/tenants?perPage=200')
+      .then((r) => {
+        const list = (r.data || []).map((t) => ({ slug: t.slug, name: t.name || t.churchName || t.slug }));
+        setTenants(list); if (list[0]) setApplySlug(list[0].slug); setApplyState('idle');
+      })
+      .catch((e) => { setApplyState('error'); setApplyMsg((e as Error).message); });
+  };
+  const doApply = async () => {
+    if (!applyFor || !applySlug) return;
+    setApplyState('applying'); setApplyMsg('');
+    try {
+      const r = await apiFetch<{ data: { sections: number } }>('/front-samples/apply', {
+        method: 'POST', body: JSON.stringify({ slug: applySlug, design: applyFor.id }),
+      });
+      setApplyState('done'); setApplyMsg(`적용 완료 · 홈 ${r.data.sections}개 섹션이 구성되었습니다.`);
+    } catch (e) { setApplyState('error'); setApplyMsg((e as Error).message); }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -135,6 +161,8 @@ export default function FrontSamplesTab() {
                         className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">전체 미리보기</button>
                       <button onClick={() => setEditing(s)}
                         className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50">✎ 편집</button>
+                      <button onClick={() => openApply(s)}
+                        className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50" title="이 디자인을 테넌트 홈에 적용">↪ 테넌트 적용</button>
                     </div>
                   </div>
                 </div>
@@ -157,6 +185,46 @@ export default function FrontSamplesTab() {
           onSaved={(cardId, html) => setOverrides((p) => ({ ...p, [cardId]: html }))}
           onReverted={(cardId) => setOverrides((p) => { const n = { ...p }; delete n[cardId]; return n; })}
         />
+      )}
+
+      {applyFor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setApplyFor(null)}>
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="text-base font-bold text-gray-900">테넌트에 디자인 적용</div>
+            <div className="mt-1 text-sm text-gray-500"><b className="text-gray-800">{applyFor.name}</b> 구성으로 선택한 테넌트의 <b>홈 페이지</b>를 다시 만듭니다.</div>
+            <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+              홈의 기존 섹션 구성이 이 시안으로 <b>교체</b>됩니다. (설교·주보 등 콘텐츠 데이터는 그대로 유지)
+            </div>
+
+            {applyState === 'loading' ? (
+              <div className="py-6 text-center text-sm text-gray-400">테넌트 목록 불러오는 중…</div>
+            ) : applyState === 'done' ? (
+              <div className="mt-4 rounded-lg bg-emerald-50 px-3 py-3 text-sm font-medium text-emerald-700">{applyMsg}</div>
+            ) : (
+              <>
+                <label className="mt-4 block text-xs font-semibold text-gray-500">대상 테넌트</label>
+                <select value={applySlug} onChange={(e) => setApplySlug(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500">
+                  {tenants.length === 0 && <option value="">테넌트 없음</option>}
+                  {tenants.map((t) => <option key={t.slug} value={t.slug}>{t.name} ({t.slug})</option>)}
+                </select>
+                {applyState === 'error' && <div className="mt-2 text-xs font-medium text-red-600">{applyMsg}</div>}
+              </>
+            )}
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button onClick={() => setApplyFor(null)} className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                {applyState === 'done' ? '닫기' : '취소'}
+              </button>
+              {applyState !== 'done' && (
+                <button onClick={doApply} disabled={!applySlug || applyState === 'applying' || applyState === 'loading'}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
+                  {applyState === 'applying' ? '적용 중…' : '적용'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

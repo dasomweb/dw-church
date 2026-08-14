@@ -183,6 +183,18 @@ export async function provisionTenantFromApplication(appRow: Record<string, unkn
   const plan = (appRow.plan as CreateTenantInput['plan']) || 'basic';
   const slug = await generateUniqueSlug((appRow.desired_domain as string) || churchName);
   const { tenant, tempPassword } = await createTenant({ name: churchName, slug, ownerEmail, ownerName, plan });
+  // If the applicant chose a homepage design, rebuild the home page_sections
+  // from that preset (Feature ①). Non-fatal — a bad/absent choice keeps the
+  // default seeded home so provisioning never fails on this.
+  const design = appRow.design_choice as string | undefined;
+  if (design) {
+    try {
+      const { applyDesignToTenant } = await import('../front-samples/presets.js');
+      await applyDesignToTenant(slug, design);
+    } catch (err) {
+      console.warn(`[provision] design preset '${design}' for ${slug} skipped:`, err);
+    }
+  }
   return { tenant, tempPassword, slug, ownerEmail };
 }
 
