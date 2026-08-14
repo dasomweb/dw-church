@@ -10,9 +10,12 @@
 body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:var(--font-sans);font-size:16px;line-height:var(--leading-body);letter-spacing:var(--tracking-body);-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word}
 :lang(en){font-family:var(--font-latin);letter-spacing:0;word-break:normal}
 h1,h2,h3{line-height:var(--leading-tight);letter-spacing:var(--tracking-title);margin:0 0 8px}
-/* <image-slot> shim — outside the design runtime it renders a neutral labeled placeholder */
+/* <image-slot> shim — filled slots show a real (self-hosted R2) photo; any unfilled
+   ones fall back to a neutral labeled placeholder. */
 image-slot{display:block;position:relative;width:100%;height:100%;min-height:120px;background:linear-gradient(135deg,#e2e8f2,#eef1f6)}
 image-slot::after{content:attr(placeholder);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9aa7bd;font-size:13px;font-weight:600;letter-spacing:0}
+image-slot[data-filled]{background-size:cover;background-position:center;background-repeat:no-repeat}
+image-slot[data-filled]::after{content:none}
 image-slot[shape="circle"],image-slot[shape="pill"]{border-radius:999px}
 </style></head>
 <body>
@@ -34,7 +37,7 @@ image-slot[shape="circle"],image-slot[shape="pill"]{border-radius:999px}
   <div style="position:relative;padding:0 56px 0;background:linear-gradient(180deg,var(--surface) 0%,var(--surface) 62%,var(--bg) 62%)">
     <div style="position:relative;padding-top:44px">
       <div style="position:relative;height:470px;border-radius:var(--radius-lg);overflow:hidden">
-        <image-slot id="ch-3a-hero" shape="rect" placeholder="히어로 사진 — 예배 드리는 회중"></image-slot>
+        <image-slot id="ch-3a-hero" shape="rect" placeholder="히어로 사진 — 예배 드리는 회중" data-filled style="background-image:url('https://pub-674328f08783498389f7857dc6e1ab00.r2.dev/_samples/frontpage/worship-1.jpg')"></image-slot>
         <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(9,15,28,.62) 0%,rgba(9,15,28,.25) 55%,rgba(9,15,28,0) 100%);pointer-events:none"></div>
         <div style="position:absolute;left:52px;top:96px;max-width:520px;pointer-events:none">
           <div style="font-size:14px;font-weight:600;letter-spacing:.08em;color:#cfe0fb;margin-bottom:18px">SAEGIL CHURCH</div>
@@ -81,7 +84,7 @@ image-slot[shape="circle"],image-slot[shape="pill"]{border-radius:999px}
     </div>
     <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:24px">
       <div style="position:relative;height:330px;border-radius:var(--radius-lg);overflow:hidden">
-        <image-slot id="ch-3a-sermon" shape="rect" placeholder="설교 영상 썸네일"></image-slot>
+        <image-slot id="ch-3a-sermon" shape="rect" placeholder="설교 영상 썸네일" data-filled style="background-image:url('https://pub-674328f08783498389f7857dc6e1ab00.r2.dev/_samples/frontpage/worship-2.jpg')"></image-slot>
         <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(9,15,28,0) 40%,rgba(9,15,28,.78) 100%);pointer-events:none"></div>
         <div style="position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.94);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--brand);pointer-events:none">▶</div>
         <div style="position:absolute;left:28px;right:28px;bottom:24px;pointer-events:none">
@@ -91,15 +94,15 @@ image-slot[shape="circle"],image-slot[shape="pill"]{border-radius:999px}
       </div>
       <div style="display:flex;flex-direction:column;gap:12px">
         <div style="display:flex;gap:14px;padding:14px;border:1px solid var(--border);border-radius:var(--radius)">
-          <div style="width:104px;height:66px;border-radius:var(--radius-sm);overflow:hidden;flex:none"><image-slot id="ch-3a-s1" shape="rect" placeholder="썸네일"></image-slot></div>
+          <div style="width:104px;height:66px;border-radius:var(--radius-sm);overflow:hidden;flex:none"><image-slot id="ch-3a-s1" shape="rect" placeholder="썸네일" data-filled style="background-image:url('https://pub-674328f08783498389f7857dc6e1ab00.r2.dev/_samples/frontpage/worship-1.jpg')"></image-slot></div>
           <div style="display:flex;flex-direction:column;justify-content:center;gap:4px"><div style="font-size:16px;font-weight:600">기다리는 마음</div><div style="font-size:13px;color:var(--fg-muted)">8월 2일 · 주일 2부</div></div>
         </div>
         <div style="display:flex;gap:14px;padding:14px;border:1px solid var(--border);border-radius:var(--radius)">
-          <div style="width:104px;height:66px;border-radius:var(--radius-sm);overflow:hidden;flex:none"><image-slot id="ch-3a-s2" shape="rect" placeholder="썸네일"></image-slot></div>
+          <div style="width:104px;height:66px;border-radius:var(--radius-sm);overflow:hidden;flex:none"><image-slot id="ch-3a-s2" shape="rect" placeholder="썸네일" data-filled style="background-image:url('https://pub-674328f08783498389f7857dc6e1ab00.r2.dev/_samples/frontpage/worship-2.jpg')"></image-slot></div>
           <div style="display:flex;flex-direction:column;justify-content:center;gap:4px"><div style="font-size:16px;font-weight:600">낮은 자리에서</div><div style="font-size:13px;color:var(--fg-muted)">7월 26일 · 주일 2부</div></div>
         </div>
         <div style="display:flex;gap:14px;padding:14px;border:1px solid var(--border);border-radius:var(--radius)">
-          <div style="width:104px;height:66px;border-radius:var(--radius-sm);overflow:hidden;flex:none"><image-slot id="ch-3a-s3" shape="rect" placeholder="썸네일"></image-slot></div>
+          <div style="width:104px;height:66px;border-radius:var(--radius-sm);overflow:hidden;flex:none"><image-slot id="ch-3a-s3" shape="rect" placeholder="썸네일" data-filled style="background-image:url('https://pub-674328f08783498389f7857dc6e1ab00.r2.dev/_samples/frontpage/worship-1.jpg')"></image-slot></div>
           <div style="display:flex;flex-direction:column;justify-content:center;gap:4px"><div style="font-size:16px;font-weight:600">함께 걷는 길</div><div style="font-size:13px;color:var(--fg-muted)">7월 19일 · 주일 2부</div></div>
         </div>
         <div style="display:flex;align-items:center;justify-content:center;gap:10px;height:52px;border:1px solid var(--border);border-radius:var(--radius);font-size:15px;font-weight:600;color:var(--brand)">수요 · 새벽 설교 듣기</div>
@@ -143,11 +146,11 @@ image-slot[shape="circle"],image-slot[shape="pill"]{border-radius:999px}
       <span style="font-size:15px;color:var(--fg-muted)">사진 갤러리 →</span>
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:150px;gap:14px">
-      <div style="grid-column:span 2;grid-row:span 2;border-radius:var(--radius);overflow:hidden"><image-slot id="ch-3a-g1" shape="rect" placeholder="여름 수련회"></image-slot></div>
-      <div style="border-radius:var(--radius);overflow:hidden"><image-slot id="ch-3a-g2" shape="rect" placeholder="주일학교"></image-slot></div>
-      <div style="border-radius:var(--radius);overflow:hidden"><image-slot id="ch-3a-g3" shape="rect" placeholder="찬양대"></image-slot></div>
-      <div style="border-radius:var(--radius);overflow:hidden"><image-slot id="ch-3a-g4" shape="rect" placeholder="봉사"></image-slot></div>
-      <div style="border-radius:var(--radius);overflow:hidden"><image-slot id="ch-3a-g5" shape="rect" placeholder="소그룹"></image-slot></div>
+      <div style="grid-column:span 2;grid-row:span 2;border-radius:var(--radius);overflow:hidden"><image-slot id="ch-3a-g1" shape="rect" placeholder="여름 수련회" data-filled style="background-image:url('https://pub-674328f08783498389f7857dc6e1ab00.r2.dev/_samples/frontpage/group-1.jpg')"></image-slot></div>
+      <div style="border-radius:var(--radius);overflow:hidden"><image-slot id="ch-3a-g2" shape="rect" placeholder="주일학교" data-filled style="background-image:url('https://pub-674328f08783498389f7857dc6e1ab00.r2.dev/_samples/frontpage/group-2.jpg')"></image-slot></div>
+      <div style="border-radius:var(--radius);overflow:hidden"><image-slot id="ch-3a-g3" shape="rect" placeholder="찬양대" data-filled style="background-image:url('https://pub-674328f08783498389f7857dc6e1ab00.r2.dev/_samples/frontpage/worship-2.jpg')"></image-slot></div>
+      <div style="border-radius:var(--radius);overflow:hidden"><image-slot id="ch-3a-g4" shape="rect" placeholder="봉사" data-filled style="background-image:url('https://pub-674328f08783498389f7857dc6e1ab00.r2.dev/_samples/frontpage/serving-1.jpg')"></image-slot></div>
+      <div style="border-radius:var(--radius);overflow:hidden"><image-slot id="ch-3a-g5" shape="rect" placeholder="소그룹" data-filled style="background-image:url('https://pub-674328f08783498389f7857dc6e1ab00.r2.dev/_samples/frontpage/group-1.jpg')"></image-slot></div>
     </div>
   </div>
 

@@ -10,9 +10,12 @@
 body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:var(--font-sans);font-size:16px;line-height:var(--leading-body);letter-spacing:var(--tracking-body);-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word}
 :lang(en){font-family:var(--font-latin);letter-spacing:0;word-break:normal}
 h1,h2,h3{line-height:var(--leading-tight);letter-spacing:var(--tracking-title);margin:0 0 8px}
-/* <image-slot> shim — outside the design runtime it renders a neutral labeled placeholder */
+/* <image-slot> shim — filled slots show a real (self-hosted R2) photo; any unfilled
+   ones fall back to a neutral labeled placeholder. */
 image-slot{display:block;position:relative;width:100%;height:100%;min-height:120px;background:linear-gradient(135deg,#e2e8f2,#eef1f6)}
 image-slot::after{content:attr(placeholder);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9aa7bd;font-size:13px;font-weight:600;letter-spacing:0}
+image-slot[data-filled]{background-size:cover;background-position:center;background-repeat:no-repeat}
+image-slot[data-filled]::after{content:none}
 image-slot[shape="circle"],image-slot[shape="pill"]{border-radius:999px}
 </style></head>
 <body>
@@ -36,8 +39,8 @@ image-slot[shape="circle"],image-slot[shape="pill"]{border-radius:999px}
     <div>
       <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px"><h2 style="margin:0;font-size:22px;font-weight:700">최근 설교</h2><span style="font-size:14px;color:var(--fg-muted)">전체보기</span></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-        <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden"><div style="height:140px"><image-slot id="ch-4d-s1" shape="rect" placeholder="썸네일"></image-slot></div><div style="padding:14px 16px"><b style="font-size:16px">우리를 부르시는 손길</b><div style="font-size:13px;color:var(--fg-muted);margin-top:4px">8월 9일 · 주일 2부</div></div></div>
-        <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden"><div style="height:140px"><image-slot id="ch-4d-s2" shape="rect" placeholder="썸네일"></image-slot></div><div style="padding:14px 16px"><b style="font-size:16px">기다리는 마음</b><div style="font-size:13px;color:var(--fg-muted);margin-top:4px">8월 2일 · 주일 2부</div></div></div>
+        <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden"><div style="height:140px"><image-slot id="ch-4d-s1" shape="rect" placeholder="썸네일" data-filled style="background-image:url('https://pub-674328f08783498389f7857dc6e1ab00.r2.dev/_samples/frontpage/worship-1.jpg')"></image-slot></div><div style="padding:14px 16px"><b style="font-size:16px">우리를 부르시는 손길</b><div style="font-size:13px;color:var(--fg-muted);margin-top:4px">8월 9일 · 주일 2부</div></div></div>
+        <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden"><div style="height:140px"><image-slot id="ch-4d-s2" shape="rect" placeholder="썸네일" data-filled style="background-image:url('https://pub-674328f08783498389f7857dc6e1ab00.r2.dev/_samples/frontpage/worship-2.jpg')"></image-slot></div><div style="padding:14px 16px"><b style="font-size:16px">기다리는 마음</b><div style="font-size:13px;color:var(--fg-muted);margin-top:4px">8월 2일 · 주일 2부</div></div></div>
       </div>
       <div style="display:flex;align-items:baseline;justify-content:space-between;margin:28px 0 12px"><h2 style="margin:0;font-size:22px;font-weight:700">공지사항</h2><span style="font-size:14px;color:var(--fg-muted)">더보기</span></div>
       <div style="display:flex;flex-direction:column">
@@ -56,7 +59,7 @@ image-slot[shape="circle"],image-slot[shape="pill"]{border-radius:999px}
           <div style="display:flex;gap:12px"><span style="width:38px;color:var(--brand);font-weight:600">주일</span><div><div>전교인 식사</div><div style="font-size:13px;color:var(--fg-muted)">2부 예배 후</div></div></div>
         </div>
       </div>
-      <div style="background:var(--surface);border-radius:var(--radius-lg);padding:22px 24px"><div style="font-size:17px;font-weight:700;margin-bottom:10px">교회 사진</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div style="height:82px;border-radius:var(--radius-sm);overflow:hidden"><image-slot id="ch-4d-g1" shape="rect" placeholder="사진"></image-slot></div><div style="height:82px;border-radius:var(--radius-sm);overflow:hidden"><image-slot id="ch-4d-g2" shape="rect" placeholder="사진"></image-slot></div><div style="height:82px;border-radius:var(--radius-sm);overflow:hidden"><image-slot id="ch-4d-g3" shape="rect" placeholder="사진"></image-slot></div><div style="height:82px;border-radius:var(--radius-sm);overflow:hidden"><image-slot id="ch-4d-g4" shape="rect" placeholder="사진"></image-slot></div></div></div>
+      <div style="background:var(--surface);border-radius:var(--radius-lg);padding:22px 24px"><div style="font-size:17px;font-weight:700;margin-bottom:10px">교회 사진</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div style="height:82px;border-radius:var(--radius-sm);overflow:hidden"><image-slot id="ch-4d-g1" shape="rect" placeholder="사진" data-filled style="background-image:url('https://pub-674328f08783498389f7857dc6e1ab00.r2.dev/_samples/frontpage/worship-1.jpg')"></image-slot></div><div style="height:82px;border-radius:var(--radius-sm);overflow:hidden"><image-slot id="ch-4d-g2" shape="rect" placeholder="사진" data-filled style="background-image:url('https://pub-674328f08783498389f7857dc6e1ab00.r2.dev/_samples/frontpage/building-2.jpg')"></image-slot></div><div style="height:82px;border-radius:var(--radius-sm);overflow:hidden"><image-slot id="ch-4d-g3" shape="rect" placeholder="사진" data-filled style="background-image:url('https://pub-674328f08783498389f7857dc6e1ab00.r2.dev/_samples/frontpage/group-1.jpg')"></image-slot></div><div style="height:82px;border-radius:var(--radius-sm);overflow:hidden"><image-slot id="ch-4d-g4" shape="rect" placeholder="사진" data-filled style="background-image:url('https://pub-674328f08783498389f7857dc6e1ab00.r2.dev/_samples/frontpage/serving-2.jpg')"></image-slot></div></div></div>
     </div>
   </div>
   <div style="margin-top:44px;padding:32px 48px;background:var(--surface);display:flex;justify-content:space-between;font-size:14px;color:var(--fg-muted)"><span>새길교회 · 3550 Wilshire Blvd, Los Angeles, CA 90010 · (213) 000-0000</span><span>오시는 길 · 문의 · 개인정보처리방침</span></div>
