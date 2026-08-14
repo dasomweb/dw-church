@@ -65,6 +65,19 @@ export async function frontSampleRoutes(app: FastifyInstance) {
     return reply.send({ data: PRESET_IDS });
   });
 
+  // Tenants that actually have a provisioned schema (tenant_<slug>) — the design
+  // picker must only offer these, or applying hits NO_SCHEMA (a tenant row can
+  // exist without its schema when provisioning didn't complete).
+  app.get('/admin/front-samples/tenants', { preHandler: [requireSuperAdmin] }, async (_req, reply) => {
+    const rows = await prisma.$queryRawUnsafe<{ slug: string; name: string }[]>(
+      `SELECT t.slug, t.name
+         FROM public.tenants t
+         JOIN information_schema.schemata s ON s.schema_name = 'tenant_' || t.slug
+        ORDER BY t.name ASC`,
+    );
+    return reply.send({ data: rows });
+  });
+
   // Apply a design preset to a tenant's home page (rebuilds page_sections).
   app.post('/admin/front-samples/apply', { preHandler: [requireSuperAdmin] }, async (req, reply) => {
     const { slug, design } = z.object({ slug: z.string().min(1).max(63), design: z.string().min(1).max(40) }).parse(req.body ?? {});

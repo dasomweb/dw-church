@@ -77,10 +77,12 @@ export default function FrontSamplesTab() {
 
   const openApply = (s: CanvasSample) => {
     setApplyFor(s); setApplySlug(''); setApplyMsg(''); setApplyState('loading');
-    apiFetch<{ data: { slug: string; name?: string; churchName?: string }[] }>('/tenants?perPage=100')
+    // provisioned tenants only (those with a tenant_<slug> schema) — prevents
+    // applying to a schema-less tenant row (which returns NO_SCHEMA / 404).
+    apiFetch<{ data: { slug: string; name?: string }[] }>('/front-samples/tenants')
       .then((r) => {
-        const list = (r.data || []).map((t) => ({ slug: t.slug, name: t.name || t.churchName || t.slug }));
-        setTenants(list); if (list[0]) setApplySlug(list[0].slug); setApplyState('idle');
+        setTenants((r.data || []).map((t) => ({ slug: t.slug, name: t.name || t.slug })));
+        setApplyState('idle'); // no auto-select — operator must pick the target explicitly
       })
       .catch((e) => { setApplyState('error'); setApplyMsg((e as Error).message); });
   };
@@ -205,7 +207,7 @@ export default function FrontSamplesTab() {
                 <label className="mt-4 block text-xs font-semibold text-gray-500">대상 테넌트</label>
                 <select value={applySlug} onChange={(e) => setApplySlug(e.target.value)}
                   className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500">
-                  {tenants.length === 0 && <option value="">테넌트 없음</option>}
+                  <option value="">{tenants.length === 0 ? '적용 가능한 테넌트 없음' : '테넌트를 선택하세요…'}</option>
                   {tenants.map((t) => <option key={t.slug} value={t.slug}>{t.name} ({t.slug})</option>)}
                 </select>
                 {applyState === 'error' && <div className="mt-2 text-xs font-medium text-red-600">{applyMsg}</div>}
