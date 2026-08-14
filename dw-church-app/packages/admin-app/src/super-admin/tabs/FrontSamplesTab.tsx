@@ -8,6 +8,8 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import { CANVAS_SAMPLES, type CanvasSample } from '../front-samples/canvas/canvas-index';
+import { useAdminApi } from '../shared/use-admin-api';
+import FrontSampleEditor from '../front-samples/FrontSampleEditor';
 
 // Lazy raw-HTML loaders for every wrapped canvas sample (kept out of the main
 // bundle — each is a separate chunk fetched on tab open).
@@ -59,22 +61,32 @@ function PreviewModal({ sample, html, onClose }: { sample: CanvasSample; html: s
 }
 
 export default function FrontSamplesTab() {
+  const apiFetch = useAdminApi();
   const [htmls, setHtmls] = useState<Record<string, string>>({});
+  // Saved edits keyed by cardId (sample.id) — override the bundled base html.
+  const [overrides, setOverrides] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState<CanvasSample | null>(null);
+  const [editing, setEditing] = useState<CanvasSample | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    void Promise.all(
-      CANVAS_SAMPLES.map(async (s) => {
-        const load = loaderFor(s.file);
-        return [s.file, load ? await load() : ''] as const;
-      }),
-    ).then((pairs) => {
-      if (!cancelled) { setHtmls(Object.fromEntries(pairs)); setLoading(false); }
+    void Promise.all([
+      Promise.all(
+        CANVAS_SAMPLES.map(async (s) => {
+          const load = loaderFor(s.file);
+          return [s.file, load ? await load() : ''] as const;
+        }),
+      ),
+      apiFetch<{ data: Record<string, string> }>('/front-samples').then((r) => r.data).catch(() => ({})),
+    ]).then(([pairs, ov]) => {
+      if (!cancelled) { setHtmls(Object.fromEntries(pairs)); setOverrides(ov); setLoading(false); }
     });
     return () => { cancelled = true; };
-  }, []);
+  }, [apiFetch]);
+
+  // Edited html wins over the bundled base for previews.
+  const htmlFor = (s: CanvasSample) => overrides[s.id] ?? htmls[s.file] ?? '';
 
   const groups = useMemo(() => {
     const order: string[] = [];
@@ -106,8 +118,11 @@ export default function FrontSamplesTab() {
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
               {items.map((s) => (
                 <div key={s.id} className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                  <button onClick={() => setOpen(s)} className="block w-full text-left" title="전체 미리보기">
-                    <Thumb html={htmls[s.file] ?? ''} />
+                  <button onClick={() => setOpen(s)} className="relative block w-full text-left" title="전체 미리보기">
+                    <Thumb html={htmlFor(s)} />
+                    {overrides[s.id] && (
+                      <span className="absolute right-2 top-2 rounded-md bg-emerald-600 px-2 py-0.5 text-[10px] font-bold text-white shadow">편집됨</span>
+                    )}
                   </button>
                   <div className="p-4">
                     <div className="flex items-center justify-between gap-2">
@@ -115,8 +130,12 @@ export default function FrontSamplesTab() {
                       <span className="text-[10px] font-mono text-gray-300">{s.code}</span>
                     </div>
                     {s.desc && <div className="mt-1 text-xs text-gray-500 line-clamp-2">{s.desc}</div>}
-                    <button onClick={() => setOpen(s)}
-                      className="mt-3 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">전체 미리보기</button>
+                    <div className="mt-3 flex gap-2">
+                      <button onClick={() => setOpen(s)}
+                        className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">전체 미리보기</button>
+                      <button onClick={() => setEditing(s)}
+                        className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50">✎ 편집</button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -125,7 +144,20 @@ export default function FrontSamplesTab() {
         ))
       )}
 
-      {open && <PreviewModal sample={open} html={htmls[open.file] ?? ''} onClose={() => setOpen(null)} />}
+      {open && (
+        <PreviewModal sample={open} html={htmlFor(open)} onClose={() => setOpen(null)} />
+      )}
+
+      {editing && (
+        <FrontSampleEditor
+          sample={editing}
+          baseHtml={htmlFor(editing)}
+          hasOverride={Boolean(overrides[editing.id])}
+          onClose={() => setEditing(null)}
+          onSaved={(cardId, html) => setOverrides((p) => ({ ...p, [cardId]: html }))}
+          onReverted={(cardId) => setOverrides((p) => { const n = { ...p }; delete n[cardId]; return n; })}
+        />
+      )}
     </div>
   );
 }

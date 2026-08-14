@@ -125,6 +125,7 @@ async function main(): Promise<void> {
   const { backupRoutes } = await import('./modules/backups/routes.js');
   const { fullBackupRoutes } = await import('./modules/backups-full/routes.js');
   const { entitlementRoutes } = await import('./modules/entitlements/routes.js');
+  const { frontSampleRoutes } = await import('./modules/front-samples/routes.js');
 
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(tenantRoutes, { prefix: '/api/v1/admin' });
@@ -213,6 +214,7 @@ async function main(): Promise<void> {
   await app.register(backupRoutes, { prefix: '/api/v1' }); // /admin/tenants/:slug/backups (super-admin in-DB quick snapshot)
   await app.register(fullBackupRoutes, { prefix: '/api/v1' }); // /admin/tenants/:slug/full-backups (super-admin R2 DB+media full backup)
   await app.register(entitlementRoutes, { prefix: '/api/v1' }); // /admin/entitlements + /admin/tenants/:id/feature-overrides (plan gating)
+  await app.register(frontSampleRoutes, { prefix: '/api/v1' }); // /admin/front-samples (super-admin sample editor: text+photo edits)
 
   // --- Internal: resolve custom domain to tenant slug (used by Next.js middleware) ---
   app.get('/api/v1/admin/tenants/resolve-domain', async (request, reply) => {
@@ -351,6 +353,20 @@ async function main(): Promise<void> {
     );
   } catch (err) {
     app.log.warn(`tenants.feature_overrides migration skipped: ${err}`);
+  }
+
+  // Front-sample editor overrides: the full edited HTML per design sample,
+  // keyed by cardId (e.g. "14"). Merged over the bundled base in the gallery.
+  try {
+    await prisma.$executeRawUnsafe(
+      `CREATE TABLE IF NOT EXISTS public.front_sample_edits (
+         card_id     TEXT PRIMARY KEY,
+         html        TEXT NOT NULL,
+         updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+       )`,
+    );
+  } catch (err) {
+    app.log.warn(`front_sample_edits table migration skipped: ${err}`);
   }
 
   // --- Tenant schema drift repair ---
