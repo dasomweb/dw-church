@@ -77,7 +77,7 @@ export default function FrontSamplesTab() {
 
   const openApply = (s: CanvasSample) => {
     setApplyFor(s); setApplySlug(''); setApplyMsg(''); setApplyState('loading');
-    apiFetch<{ data: { slug: string; name?: string; churchName?: string }[] }>('/tenants?perPage=200')
+    apiFetch<{ data: { slug: string; name?: string; churchName?: string }[] }>('/tenants?perPage=100')
       .then((r) => {
         const list = (r.data || []).map((t) => ({ slug: t.slug, name: t.name || t.churchName || t.slug }));
         setTenants(list); if (list[0]) setApplySlug(list[0].slug); setApplyState('idle');
