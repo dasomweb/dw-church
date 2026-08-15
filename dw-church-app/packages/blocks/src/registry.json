@@ -549,6 +549,26 @@
       "useCases": ["서비스 페이지 'Key Features'", "랜딩 페이지 'Why us'", "제품 페이지 '주요 기능'"],
       "aiHint": "Icon + title + description cards in a grid. columns: 2/3/4."
     },
+    "info_columns": {
+      "label": "정보 컬럼 (한눈에)",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "title": "", "columns": "3", "items": [] },
+      "description": "예배시간·오시는 길·처음 오시는 분 등을 2~4칸 헤어라인 그리드로 한눈에. 각 칸 = 작은 라벨 + 값.",
+      "tags": ["info", "at-a-glance", "worship-times", "quick-info", "columns", "grid", "service-times", "location"],
+      "useCases": ["홈 상단 예배 안내 3-up", "오시는 길·주차·자녀 안내", "처음 오시는 분 요약"],
+      "aiHint": "2-4 labeled info cells (eyebrow label + value), hairline grid. Use for service times / location / first-time-visitor at-a-glance."
+    },
+    "week_schedule": {
+      "label": "이번 주 일정",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "title": "이번 주 교회는", "items": [] },
+      "description": "이번 주 예배·모임을 요일 배지 + 내용 한 줄의 아젠다 리스트로. 표 형태(schedule_board)가 아닌 행 리스트.",
+      "tags": ["schedule", "this-week", "agenda", "weekly", "events", "gatherings"],
+      "useCases": ["주간 일정 중심 홈", "이번 주 모임 안내", "회원 대시보드 일정 위젯"],
+      "aiHint": "This-week agenda as a row list: day badge + event/time/place. Distinct from schedule_board tables."
+    },
     "check_list": {
       "label": "체크 리스트",
       "group": "content",
