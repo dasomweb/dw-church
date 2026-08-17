@@ -27,6 +27,7 @@ interface ImageGalleryBlockProps {
 export function ImageGalleryBlock({ props }: ImageGalleryBlockProps) {
   const images = (props.images as string[]) ?? [];
   const title = (props.title as string) ?? '';
+  const variant = (props.variant as string) ?? '';
 
   if (images.length === 0) return null;
 
@@ -44,7 +45,22 @@ export function ImageGalleryBlock({ props }: ImageGalleryBlockProps) {
         defaultSize="h2"
         className="mb-8 text-center"
       />
-      <ImageGallery images={images} />
+      {variant === 'masonry' ? (
+        // CSS-columns masonry — varied tile heights, no data fetch (static).
+        <div style={{ columnGap: '12px', columnCount: 3 }} className="[column-count:2] sm:[column-count:3]">
+          {images.map((src, i) => (
+            <img
+              key={i}
+              src={src}
+              alt=""
+              loading="lazy"
+              style={{ width: '100%', marginBottom: 12, borderRadius: 'var(--radius, 12px)', display: 'block', breakInside: 'avoid' }}
+            />
+          ))}
+        </div>
+      ) : (
+        <ImageGallery images={images} />
+      )}
     </SectionShell>
   );
 }

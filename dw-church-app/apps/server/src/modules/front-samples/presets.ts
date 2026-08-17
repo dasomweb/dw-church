@@ -63,6 +63,13 @@ const sermons = (variant = 'grid-4'): PresetSection => ({ block_type: 'recent_se
 const bulletins = (variant = 'grid-4'): PresetSection => ({ block_type: 'recent_bulletins', props: { title: '주보', limit: 4, variant } });
 const events = (): PresetSection => ({ block_type: 'event_grid', props: { title: '교회 행사', limit: 4, variant: 'grid-4' } });
 const albums = (variant = 'grid-4'): PresetSection => ({ block_type: 'album_gallery', props: { title: '포토 갤러리', limit: 8, variant } });
+const verse = (): PresetSection => ({ block_type: 'quote_block', props: { variant: 'verse', eyebrow: '오늘의 말씀', quote: '수고하고 무거운 짐 진 자들아 다 내게로 오라 내가 너희를 쉬게 하리라', reference: '마태복음 11:28' } });
+const announce = (): PresetSection => ({ block_type: 'cta_section', props: { variant: 'announcement-bar', eyebrow: '다가오는 행사', title: '가을 성경공부 「마가복음 6주 과정」', subtitle: '9월 5일 시작 · 매주 목요일 저녁 8시', buttonText: '신청하기', buttonUrl: '/events' } });
+const quickLinks = (): PresetSection => ({ block_type: 'quick_links', props: { title: '바로가기', items: [
+  { title: '기도 요청', content: '/prayer' },
+  { title: '소그룹 신청', content: '/smallgroup' },
+  { title: '온라인 헌금', content: '/giving' },
+] } });
 const columns = (): PresetSection => ({ block_type: 'recent_columns', props: { title: '목회 칼럼', limit: 3, variant: 'grid-3' } });
 const board = (): PresetSection => ({ block_type: 'board', props: { title: '교회 소식', boardSlug: 'notice', limit: 5, variant: 'list' } });
 const banner = (): PresetSection => ({ block_type: 'banner_slider', props: { category: 'main' } });
@@ -80,21 +87,21 @@ const textImage = (title: string, imageUrl: string, layout: 'left' | 'right' = '
 // ── the 22 presets, keyed by sample id ──────────────────────────────────────
 const P: Record<string, PresetSection[]> = {
   // 미주 한인 이민교회
-  '00': [hero('타국에서 만난 하나님의 가족', '주일 예배로 여러분을 초대합니다', { backgroundImageUrl: `${IMG}/worship-2.jpg` }), infoColumns(), sermons('grid-4'), pastor(), albums('grid-4'), location(), contact()],
-  '01': [hero('A Church Where We Grow Together', '한 자리를 비워 두고 기다립니다', { variant: 'split-image', imageUrl: `${IMG}/worship-1.jpg`, imageSide: 'right', backgroundImageUrl: `${IMG}/worship-1.jpg` }), infoColumns(), sermons('grid-3'), newcomer(), location(), contact()],
-  '02': [hero('낯선 곳에서의 첫 걸음, 함께 걷겠습니다', '정착과 신앙, 우리가 돕겠습니다', { backgroundImageUrl: `${IMG}/group-1.jpg` }), newcomer(), infoColumns(), sermons('grid-3'), location(), contact()],
-  '03': [hero('말씀 앞에 함께 섭니다', '', { variant: 'text-only', bgMode: 'gradient', height: 'md' }), infoColumns(), bulletins('grid-2'), sermons('list'), board(), location()],
-  '04': [hero('이번 주, 우리 교회는', '한 주의 예배와 모임을 안내합니다', { backgroundImageUrl: `${IMG}/church-2.jpg` }), weekSchedule(), infoColumns(), events(), sermons('grid-4'), bulletins('grid-4'), location(), contact()],
+  '00': [hero('타국에서 만난 하나님의 가족', '주일 예배로 여러분을 초대합니다', { backgroundImageUrl: `${IMG}/worship-2.jpg` }), infoColumns(), verse(), sermons('grid-4'), pastor(), albums('grid-4'), announce(), location(), contact()],
+  '01': [hero('A Church Where We Grow Together', '한 자리를 비워 두고 기다립니다', { variant: 'split-image', imageUrl: `${IMG}/worship-1.jpg`, imageSide: 'right', backgroundImageUrl: `${IMG}/worship-1.jpg` }), infoColumns(), verse(), sermons('grid-3'), newcomer(), announce(), location(), contact()],
+  '02': [hero('낯선 곳에서의 첫 걸음, 함께 걷겠습니다', '정착과 신앙, 우리가 돕겠습니다', { backgroundImageUrl: `${IMG}/group-1.jpg` }), newcomer(), infoColumns(), verse(), sermons('grid-3'), location(), contact()],
+  '03': [hero('말씀 앞에 함께 섭니다', '', { variant: 'text-only', bgMode: 'gradient', height: 'md' }), infoColumns(), verse(), bulletins('grid-2'), sermons('list'), board(), announce(), location()],
+  '04': [hero('이번 주, 우리 교회는', '한 주의 예배와 모임을 안내합니다', { backgroundImageUrl: `${IMG}/church-2.jpg` }), weekSchedule(), infoColumns(), verse(), events(), sermons('grid-4'), bulletins('grid-4'), location(), contact()],
   // 소형·개척 교회
-  '05': [hero('작지만 서로를 아는 교회', '', { backgroundImageUrl: `${IMG}/church-1.jpg` }), pastor({ variant: 'left' }), infoColumns(), sermons('grid-3'), location(), contact()],
-  '06': [hero('여기 한 자리를 비워 두었습니다', '넉넉한 마음으로 맞이합니다', { variant: 'text-only', bgMode: 'gradient', height: 'md' }), pastor(), infoColumns(), sermons('list'), contact()],
-  '07': [hero('주일 오전 11시, 이곳에서 만나요', '오시는 길을 안내합니다', { backgroundImageUrl: `${IMG}/church-1.jpg` }), location(), infoColumns(), sermons('grid-3'), contact()],
-  '08': [hero('언제 어디서나, 함께 예배합니다', '', { height: 'md', backgroundImageUrl: `${IMG}/worship-2.jpg` }), infoColumns(), sermons('grid-2'), bulletins('grid-2'), location(), contact()],
+  '05': [hero('작지만 서로를 아는 교회', '', { backgroundImageUrl: `${IMG}/church-1.jpg` }), pastor({ variant: 'left' }), infoColumns(), verse(), sermons('grid-3'), quickLinks(), location(), contact()],
+  '06': [hero('여기 한 자리를 비워 두었습니다', '넉넉한 마음으로 맞이합니다', { variant: 'text-only', bgMode: 'gradient', height: 'md' }), pastor(), infoColumns(), verse(), sermons('list'), contact()],
+  '07': [hero('주일 오전 11시, 이곳에서 만나요', '오시는 길을 안내합니다', { backgroundImageUrl: `${IMG}/church-1.jpg` }), location(), infoColumns(), announce(), sermons('grid-3'), contact()],
+  '08': [hero('언제 어디서나, 함께 예배합니다', '', { height: 'md', backgroundImageUrl: `${IMG}/worship-2.jpg` }), infoColumns(), verse(), sermons('grid-2'), bulletins('grid-2'), location(), contact()],
   '09': [hero('함께 모이는 우리 교회', '', { height: 'md', backgroundImageUrl: `${IMG}/group-2.jpg` }), infoColumns(), sermons('list'), board(), location(), contact()],
-  '10': [hero('거실에 둘러앉아 말씀을 나눕니다', '가정처럼 따뜻한 공동체', { backgroundImageUrl: `${IMG}/group-1.jpg` }), weekSchedule(), pastor(), albums('grid-3'), sermons('grid-3'), contact()],
+  '10': [hero('거실에 둘러앉아 말씀을 나눕니다', '가정처럼 따뜻한 공동체', { backgroundImageUrl: `${IMG}/group-1.jpg` }), weekSchedule(), verse(), pastor(), albums('grid-3'), sermons('grid-3'), contact()],
   // 완성도 레이아웃 시안
-  '11': [banner(), hero('함께 자라고 함께 살아가는 교회', '주일 아침, 당신의 자리를 비워두고 기다립니다', { backgroundImageUrl: `${IMG}/worship-2.jpg` }), infoColumns(), sermons('grid-4'), events(), albums('grid-4'), board(), location(), contact()],
-  '12': [hero('함께 자라고 함께 살아가는 교회', '', { backgroundImageUrl: `${IMG}/worship-1.jpg` }), infoColumns(), sermons('grid-3'), bulletins('grid-3'), events(), columns(), location(), contact()],
+  '11': [banner(), hero('함께 자라고 함께 살아가는 교회', '주일 아침, 당신의 자리를 비워두고 기다립니다', { backgroundImageUrl: `${IMG}/worship-2.jpg` }), infoColumns(), verse(), announce(), sermons('grid-4'), events(), albums('grid-4'), quickLinks(), board(), location(), contact()],
+  '12': [hero('함께 자라고 함께 살아가는 교회', '', { backgroundImageUrl: `${IMG}/worship-1.jpg` }), infoColumns(), sermons('grid-3'), bulletins('grid-3'), events(), columns(), quickLinks(), location(), contact()],
   '13': [hero('따뜻한 이웃이 되는 교회', '', { backgroundImageUrl: `${IMG}/serving-2.jpg` }), albums('masonry'), sermons('grid-3'), events(), columns(), location(), contact()],
   '14': [hero('고요한 저녁, 말씀 앞에 나아갑니다', '누구든 오실 수 있습니다', { backgroundImageUrl: `${IMG}/worship-2.jpg`, overlayOpacity: 0.55 }), infoColumns(), sermons('grid-3'), newcomer(), albums('grid-4'), location(), contact()],
   '15': [hero('이번 주 예배 안내', '필요한 것을 한 화면에서', { height: 'md', backgroundImageUrl: `${IMG}/church-2.jpg` }), infoColumns(), sermons('grid-2'), bulletins('grid-2'), events(), board(), location(), contact()],
@@ -102,7 +109,7 @@ const P: Record<string, PresetSection[]> = {
   '17': [hero('우리는 서로의 이웃입니다', '', { variant: 'text-only', bgMode: 'gradient', height: 'md', textAlign: 'center' }), infoColumns(), sermons('grid-3'), albums('grid-3'), location(), contact()],
   '18': [hero('이번 주 교회는 이렇게 모입니다', '', { backgroundImageUrl: `${IMG}/church-2.jpg` }), weekSchedule(), events(), sermons('grid-4'), albums('grid-4'), location(), contact()],
   '19': [hero('교회의 사진이 이야기가 됩니다', '', { backgroundImageUrl: `${IMG}/retreat-1.jpg` }), albums('masonry'), infoColumns(), sermons('grid-3'), events(), contact()],
-  '20': [hero('주일 예배로 초대합니다', '히어로 위에 예배 안내가 놓입니다', { backgroundImageUrl: `${IMG}/worship-2.jpg` }), infoColumns(), sermons('grid-4'), pastor(), albums('grid-4'), location(), contact()],
+  '20': [hero('주일 예배로 초대합니다', '히어로 위에 예배 안내가 놓입니다', { backgroundImageUrl: `${IMG}/worship-2.jpg` }), infoColumns(), sermons('grid-4'), pastor(), albums('grid-4'), quickLinks(), location(), contact()],
   '21': [hero('주일 11시, 당신의 자리가 있습니다', '', { height: 'full', backgroundImageUrl: `${IMG}/worship-2.jpg`, overlayOpacity: 0.5 }), infoColumns(), sermons('grid-4'), newcomer(), albums('grid-4'), location(), contact()],
 };
 

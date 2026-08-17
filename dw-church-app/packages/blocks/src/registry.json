@@ -569,6 +569,16 @@
       "useCases": ["주간 일정 중심 홈", "이번 주 모임 안내", "회원 대시보드 일정 위젯"],
       "aiHint": "This-week agenda as a row list: day badge + event/time/place. Distinct from schedule_board tables."
     },
+    "quick_links": {
+      "label": "바로가기",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "title": "바로가기", "items": [] },
+      "description": "제목 + 화살표 링크 목록 카드(기도 요청 →, 소그룹 신청 →, 온라인 헌금 →). 사이드 위젯으로 자주 쓰임.",
+      "tags": ["quick-links", "shortcuts", "sidebar", "widget", "links", "cta"],
+      "useCases": ["홈 우측 바로가기 위젯", "기도/심방/헌금 링크 모음"],
+      "aiHint": "Side widget: title + arrow-linked shortcut list. items: [{title, content(=url)}]."
+    },
     "check_list": {
       "label": "체크 리스트",
       "group": "content",

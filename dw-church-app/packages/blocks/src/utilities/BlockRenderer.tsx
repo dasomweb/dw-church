@@ -37,6 +37,7 @@ import { TestimonialsBlock } from '../list-based/TestimonialsBlock';
 import { FeaturesGridBlock } from '../list-based/FeaturesGridBlock';
 import { InfoColumnsBlock } from '../list-based/InfoColumnsBlock';
 import { WeekScheduleBlock } from '../list-based/WeekScheduleBlock';
+import { QuickLinksBlock } from '../list-based/QuickLinksBlock';
 import { CheckListBlock } from '../list-based/CheckListBlock';
 import { StepsListBlock } from '../list-based/StepsListBlock';
 import { TabsBlock } from '../list-based/TabsBlock';
@@ -199,6 +200,7 @@ export const BLOCK_MAP: Record<string, SyncBlockComponent> = {
   features_grid:   FeaturesGridBlock,
   info_columns:    InfoColumnsBlock,
   week_schedule:   WeekScheduleBlock,
+  quick_links:     QuickLinksBlock,
   check_list:      CheckListBlock,
   steps_list:      StepsListBlock,
   process_steps:   StepsListBlock,

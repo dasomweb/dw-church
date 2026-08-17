@@ -26,6 +26,7 @@ export const blockTypes = [
   'week_schedule',
   // Info grid (예배시간·오시는길 등 한눈에)
   'info_columns',
+  'quick_links',
   // Text
   'text_image',
   'text_only',

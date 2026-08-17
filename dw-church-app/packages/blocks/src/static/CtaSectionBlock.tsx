@@ -71,7 +71,8 @@ type Variant =
   | 'image-overlay'
   | 'split-image'
   | 'stats-strip'
-  | 'contact-info';
+  | 'contact-info'
+  | 'announcement-bar';
 
 const ALIGN_MAP: Record<string, string> = {
   left: 'text-left',
@@ -87,7 +88,8 @@ function resolveVariant(props: Record<string, unknown>): Variant {
     v === 'image-overlay' ||
     v === 'split-image' ||
     v === 'stats-strip' ||
-    v === 'contact-info'
+    v === 'contact-info' ||
+    v === 'announcement-bar'
   ) {
     return v;
   }
@@ -131,10 +133,53 @@ export function CtaSectionBlock({ props, slug }: CtaSectionBlockProps) {
       return <StatsStrip props={props} slug={slug} />;
     case 'contact-info':
       return <ContactInfo props={props} slug={slug} />;
+    case 'announcement-bar':
+      return <AnnouncementBar props={props} slug={slug} />;
     case 'boxed-card':
     default:
       return <BoxedCard props={props} slug={slug} />;
   }
+}
+
+/* ─── 7. announcement-bar ──────────────────────────────────── */
+
+/**
+ * Dark inline strip: pill eyebrow badge (다가오는 행사 / UPCOMING) + title +
+ * subtext on the left, a white pill CTA on the right. Sample designs
+ * (00,01,03,07,11) use this for an upcoming-event / notice band. Colors
+ * come from theme tokens (--fg for the dark bg) so it reads on any theme.
+ */
+function AnnouncementBar({ props }: CtaSectionBlockProps) {
+  const eyebrow = (props.eyebrow as string) || '';
+  const title = (props.title as string) || '';
+  const subtitle = (props.subtitle as string) || (props.description as string) || '';
+  const btnText = (props.buttonText as string) || (props.ctaLabel as string) || '';
+  const btnUrl = (props.buttonUrl as string) || (props.ctaUrl as string) || '#';
+
+  return (
+    <SectionShell props={props} applyLayout style={{ paddingBlock: 'var(--section-py-md)' }}>
+      <div
+        style={{
+          background: 'var(--fg, #16181d)', color: '#fff', borderRadius: 'var(--radius-lg, 16px)',
+          padding: '20px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: 24, flexWrap: 'wrap',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, minWidth: 0 }}>
+          {eyebrow && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', height: 28, padding: '0 13px', borderRadius: 999, background: 'rgba(255,255,255,.16)', fontSize: 13, fontWeight: 600, flex: 'none' }}>{eyebrow}</span>
+          )}
+          <div style={{ minWidth: 0 }}>
+            {title && <div style={{ fontSize: 18, fontWeight: 700 }}>{title}</div>}
+            {subtitle && <div style={{ fontSize: 14, color: 'rgba(255,255,255,.7)', marginTop: 3 }}>{subtitle}</div>}
+          </div>
+        </div>
+        {btnText && (
+          <a href={btnUrl} style={{ display: 'inline-flex', alignItems: 'center', height: 42, padding: '0 20px', borderRadius: 999, background: '#fff', color: 'var(--fg, #16181d)', fontSize: 14, fontWeight: 600, flex: 'none', textDecoration: 'none' }}>{btnText}</a>
+        )}
+      </div>
+    </SectionShell>
+  );
 }
 
 /* ─── Shared CTA pair ──────────────────────────────────────── */

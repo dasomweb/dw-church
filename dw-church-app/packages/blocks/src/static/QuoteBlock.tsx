@@ -27,8 +27,45 @@ export function QuoteBlock({ props }: QuoteBlockProps) {
   const quote = (props.quote as string) ?? '';
   const source = (props.source as string) ?? '';
   const reference = (props.reference as string) ?? '';
+  const eyebrow = (props.eyebrow as string) ?? '';
+  const variant = (props.variant as string) ?? '';
 
   if (!quote) return null;
+
+  // `verse` variant — 오늘의 말씀 콜아웃: 좌측 브랜드 강조바 + 라벨(eyebrow) +
+  // 큰 구절 + 출처, surface 배경 위. 프론트 샘플 다수(00~11 등)의 반복 섹션.
+  if (variant === 'verse') {
+    return (
+      <SectionShell props={props} style={{ paddingBlock: 'var(--section-py-lg)' }} applyLayout>
+        <div
+          style={{
+            borderLeft: '4px solid var(--brand)',
+            background: 'var(--surface, #f7f8fa)',
+            borderRadius: '0 var(--radius-lg, 16px) var(--radius-lg, 16px) 0',
+            padding: '26px 32px',
+          }}
+        >
+          {eyebrow && (
+            <div style={{ color: 'var(--brand)', fontSize: 13, fontWeight: 600, marginBottom: 10 }}>{eyebrow}</div>
+          )}
+          <TextBodyElement
+            text={quote}
+            props={props}
+            elementKey="quote"
+            defaultTag="p"
+            defaultSize="h3"
+            html
+            className="leading-relaxed"
+          />
+          {(reference || source) && (
+            <div style={{ marginTop: 10, fontSize: 14, color: 'var(--fg-muted, #61697a)' }}>
+              {[source, reference].filter(Boolean).join(' · ')}
+            </div>
+          )}
+        </div>
+      </SectionShell>
+    );
+  }
 
   return (
     <SectionShell
