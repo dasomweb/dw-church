@@ -21,8 +21,8 @@ export function WeekScheduleBlock({ props }: WeekScheduleBlockProps) {
     <SectionShell props={props} style={{ paddingBlock: 'var(--section-py-lg)' }} applyLayout>
       {(eyebrow || title) && (
         <div className="mb-4">
-          {eyebrow && <div className="mb-1 text-sm font-semibold" style={{ color: 'var(--brand)' }}>{eyebrow}</div>}
-          {title && <h2 className="text-2xl font-bold" style={{ color: 'var(--fg)' }}>{title}</h2>}
+          {eyebrow && <div className="mb-1 text-sm font-semibold" style={{ color: 'var(--dw-primary, var(--brand, #1466d6))' }}>{eyebrow}</div>}
+          {title && <h2 className="text-2xl font-bold" style={{ color: 'var(--dw-text, var(--fg, #16181d))' }}>{title}</h2>}
         </div>
       )}
       <div className="flex flex-col">
@@ -30,12 +30,12 @@ export function WeekScheduleBlock({ props }: WeekScheduleBlockProps) {
           <div
             key={i}
             className="flex items-center gap-4"
-            style={{ padding: '16px 4px', borderTop: i === 0 ? 'none' : '1px solid var(--border, #e5e7eb)' }}
+            style={{ padding: '16px 4px', borderTop: i === 0 ? 'none' : '1px solid var(--dw-border, var(--border, #e5e7eb))' }}
           >
-            <span style={{ minWidth: 64, flex: 'none', color: 'var(--brand)', fontWeight: 700, fontSize: 15 }}>
+            <span style={{ minWidth: 64, flex: 'none', color: 'var(--dw-primary, var(--brand, #1466d6))', fontWeight: 700, fontSize: 15 }}>
               {String(it.title ?? '')}
             </span>
-            <div style={{ flex: 1, fontSize: 16, fontWeight: 600, color: 'var(--fg)', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
+            <div style={{ flex: 1, fontSize: 16, fontWeight: 600, color: 'var(--dw-text, var(--fg, #16181d))', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
               {String(it.content ?? '')}
             </div>
           </div>

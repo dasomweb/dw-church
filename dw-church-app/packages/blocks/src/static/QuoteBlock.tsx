@@ -39,14 +39,14 @@ export function QuoteBlock({ props }: QuoteBlockProps) {
       <SectionShell props={props} style={{ paddingBlock: 'var(--section-py-lg)' }} applyLayout>
         <div
           style={{
-            borderLeft: '4px solid var(--brand)',
-            background: 'var(--surface, #f7f8fa)',
+            borderLeft: '4px solid var(--dw-primary, var(--brand, #1466d6))',
+            background: 'var(--dw-surface, var(--surface, #f7f8fa))',
             borderRadius: '0 var(--radius-lg, 16px) var(--radius-lg, 16px) 0',
             padding: '26px 32px',
           }}
         >
           {eyebrow && (
-            <div style={{ color: 'var(--brand)', fontSize: 13, fontWeight: 600, marginBottom: 10 }}>{eyebrow}</div>
+            <div style={{ color: 'var(--dw-primary, var(--brand, #1466d6))', fontSize: 13, fontWeight: 600, marginBottom: 10 }}>{eyebrow}</div>
           )}
           <TextBodyElement
             text={quote}

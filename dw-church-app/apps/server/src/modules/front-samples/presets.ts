@@ -100,8 +100,8 @@ const P: Record<string, PresetSection[]> = {
   '09': [hero('함께 모이는 우리 교회', '', { height: 'md', backgroundImageUrl: `${IMG}/group-2.jpg` }), infoColumns(), sermons('list'), board(), location(), contact()],
   '10': [hero('거실에 둘러앉아 말씀을 나눕니다', '가정처럼 따뜻한 공동체', { backgroundImageUrl: `${IMG}/group-1.jpg` }), weekSchedule(), verse(), pastor(), albums('grid-3'), sermons('grid-3'), contact()],
   // 완성도 레이아웃 시안
-  '11': [banner(), hero('함께 자라고 함께 살아가는 교회', '주일 아침, 당신의 자리를 비워두고 기다립니다', { backgroundImageUrl: `${IMG}/worship-2.jpg` }), infoColumns(), verse(), announce(), sermons('grid-4'), events(), albums('grid-4'), quickLinks(), board(), location(), contact()],
-  '12': [hero('함께 자라고 함께 살아가는 교회', '', { backgroundImageUrl: `${IMG}/worship-1.jpg` }), infoColumns(), sermons('grid-3'), bulletins('grid-3'), events(), columns(), quickLinks(), location(), contact()],
+  '11': [banner(), hero('함께 자라고 함께 살아가는 교회', '주일 아침, 당신의 자리를 비워두고 기다립니다', { backgroundImageUrl: `${IMG}/worship-2.jpg` }), infoColumns(), verse(), announce(), sermons('featured'), events(), albums('grid-4'), quickLinks(), board(), location(), contact()],
+  '12': [hero('함께 자라고 함께 살아가는 교회', '', { backgroundImageUrl: `${IMG}/worship-1.jpg` }), infoColumns(), sermons('featured'), bulletins('grid-3'), events(), columns(), quickLinks(), location(), contact()],
   '13': [hero('따뜻한 이웃이 되는 교회', '', { backgroundImageUrl: `${IMG}/serving-2.jpg` }), albums('masonry'), sermons('grid-3'), events(), columns(), location(), contact()],
   '14': [hero('고요한 저녁, 말씀 앞에 나아갑니다', '누구든 오실 수 있습니다', { backgroundImageUrl: `${IMG}/worship-2.jpg`, overlayOpacity: 0.55 }), infoColumns(), sermons('grid-3'), newcomer(), albums('grid-4'), location(), contact()],
   '15': [hero('이번 주 예배 안내', '필요한 것을 한 화면에서', { height: 'md', backgroundImageUrl: `${IMG}/church-2.jpg` }), infoColumns(), sermons('grid-2'), bulletins('grid-2'), events(), board(), location(), contact()],
@@ -109,9 +109,72 @@ const P: Record<string, PresetSection[]> = {
   '17': [hero('우리는 서로의 이웃입니다', '', { variant: 'text-only', bgMode: 'gradient', height: 'md', textAlign: 'center' }), infoColumns(), sermons('grid-3'), albums('grid-3'), location(), contact()],
   '18': [hero('이번 주 교회는 이렇게 모입니다', '', { backgroundImageUrl: `${IMG}/church-2.jpg` }), weekSchedule(), events(), sermons('grid-4'), albums('grid-4'), location(), contact()],
   '19': [hero('교회의 사진이 이야기가 됩니다', '', { backgroundImageUrl: `${IMG}/retreat-1.jpg` }), albums('masonry'), infoColumns(), sermons('grid-3'), events(), contact()],
-  '20': [hero('주일 예배로 초대합니다', '히어로 위에 예배 안내가 놓입니다', { backgroundImageUrl: `${IMG}/worship-2.jpg` }), infoColumns(), sermons('grid-4'), pastor(), albums('grid-4'), quickLinks(), location(), contact()],
+  '20': [hero('주일 예배로 초대합니다', '히어로 위에 예배 안내가 놓입니다', { backgroundImageUrl: `${IMG}/worship-2.jpg` }), infoColumns(), sermons('featured'), pastor(), albums('grid-4'), quickLinks(), location(), contact()],
   '21': [hero('주일 11시, 당신의 자리가 있습니다', '', { height: 'full', backgroundImageUrl: `${IMG}/worship-2.jpg`, overlayOpacity: 0.5 }), infoColumns(), sermons('grid-4'), newcomer(), albums('grid-4'), location(), contact()],
 };
+
+// ── per-design THEME profiles (colors + fonts) ──────────────────────────────
+// Applying a design also sets the tenant's active theme so the home actually
+// LOOKS like the sample (not just the same blocks in the tenant's old theme).
+// Shape mirrors themes.settings legacy blob; getThemeTokens bridges it to
+// --dw-* CSS vars the storefront + blocks read. tokensV2 is intentionally
+// dropped so these colors win.
+interface ThemeProfile { colors: Record<string, string>; fonts: Record<string, string> }
+const F_SANS = { heading: 'Pretendard', body: 'Pretendard', korean: 'Pretendard' };
+const F_SERIF = { heading: 'Noto Serif KR', body: 'Pretendard', korean: 'Pretendard' };
+const DEFAULT_LIGHT: ThemeProfile = {
+  colors: { primary: '#2563eb', secondary: '#64748b', accent: '#f59e0b', background: '#ffffff', surface: '#f8fafc', text: '#0f172a', muted: '#64748b', border: '#e5e7eb' },
+  fonts: F_SANS,
+};
+const DARK: ThemeProfile = {
+  colors: { primary: '#2b7fff', secondary: '#7fb0ff', accent: '#7fb0ff', background: '#0b1220', surface: '#111a2b', text: '#eaf1fb', muted: '#9db0cc', border: '#25344f' },
+  fonts: F_SANS,
+};
+const WARM: ThemeProfile = {
+  colors: { primary: '#a45a34', secondary: '#c98a5e', accent: '#d9a066', background: '#fbf8f4', surface: '#f3ece3', text: '#2b2320', muted: '#8a7d70', border: '#e7ddd0' },
+  fonts: F_SERIF,
+};
+const SERIF_MINIMAL: ThemeProfile = {
+  colors: { primary: '#3f4650', secondary: '#6b7280', accent: '#3f4650', background: '#ffffff', surface: '#f7f7f6', text: '#1f2328', muted: '#6b7280', border: '#e7e7e5' },
+  fonts: F_SERIF,
+};
+const EDITORIAL: ThemeProfile = {
+  colors: { primary: '#16181d', secondary: '#4b5563', accent: '#1466d6', background: '#ffffff', surface: '#f4f5f7', text: '#16181d', muted: '#61697a', border: '#e5e7eb' },
+  fonts: F_SANS,
+};
+const THEME_PRESETS: Record<string, ThemeProfile> = {
+  '05': WARM, '10': WARM,
+  '06': SERIF_MINIMAL, '17': SERIF_MINIMAL,
+  '11': EDITORIAL, '13': EDITORIAL, '16': EDITORIAL, '20': EDITORIAL,
+  '14': DARK,
+};
+function getThemeProfile(design: string): ThemeProfile {
+  return THEME_PRESETS[design] ?? DEFAULT_LIGHT;
+}
+
+async function applyThemeToTenant(schema: string, profile: ThemeProfile): Promise<void> {
+  const rows = await prisma.$queryRawUnsafe<{ settings: Record<string, unknown> | null }[]>(
+    `SELECT settings FROM "${schema}".themes WHERE is_active = true LIMIT 1`,
+  );
+  const cur = (rows[0]?.settings ?? {}) as Record<string, unknown>;
+  const settings = {
+    templateName: 'modern',
+    colors: profile.colors,
+    fonts: profile.fonts,
+    customCss: (cur.customCss as string) || '',
+    // NOTE: tokensV2 intentionally omitted → legacy→tokens bridge uses these colors.
+  };
+  const affected = await prisma.$executeRawUnsafe(
+    `UPDATE "${schema}".themes SET settings = $1::jsonb WHERE is_active = true`,
+    JSON.stringify(settings),
+  );
+  if (!affected) {
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO "${schema}".themes (name, is_active, settings) VALUES ('modern', true, $1::jsonb)`,
+      JSON.stringify(settings),
+    );
+  }
+}
 
 export function hasPreset(design: string | null | undefined): boolean {
   return Boolean(design && P[design]);
@@ -161,5 +224,15 @@ export async function applyDesignToTenant(slug: string, design: string): Promise
       pageId, sec.block_type, JSON.stringify(sec.props), i,
     );
   }
+
+  // Also set the tenant theme to this design's profile so the home LOOKS like
+  // the sample (colors/fonts/dark). Non-fatal — a theme failure must not undo
+  // the section rebuild.
+  try {
+    await applyThemeToTenant(schema, getThemeProfile(design));
+  } catch (err) {
+    console.warn(`[applyDesign] theme for '${design}' on ${slug} skipped:`, err);
+  }
+
   return { design, sections: sections.length };
 }

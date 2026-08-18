@@ -9,9 +9,11 @@ interface RecentSermonsBlockProps {
 }
 
 export async function RecentSermonsBlock({ props, slug }: RecentSermonsBlockProps) {
-  const limit = (props.limit as number) ?? 6;
-  const title = (props.title as string) || '최근 설교';
   const variant = (props.variant as string) || 'grid-3';
+  const featured = variant === 'featured';
+  // featured needs a lead + a few for the side list; default a touch higher.
+  const limit = (props.limit as number) ?? (featured ? 5 : 6);
+  const title = (props.title as string) || '최근 설교';
   const columns = variant === 'grid-2' ? 2 : variant === 'list' ? 1 : variant === 'grid-4' ? 4 : 3;
 
   let sermons;
@@ -37,7 +39,7 @@ export async function RecentSermonsBlock({ props, slug }: RecentSermonsBlockProp
     <DataSection props={props} defaultBg="var(--dw-surface)">
       <div className="mx-auto max-w-7xl">
         <h2 className="mb-8 text-center text-2xl sm:text-3xl font-bold font-heading" style={getElementStyle(props, 'title')}>{title}</h2>
-        <RecentSermonsClient sermons={sermons} slug={slug} columns={columns} />
+        <RecentSermonsClient sermons={sermons} slug={slug} columns={columns} featured={featured} />
       </div>
     </DataSection>
   );

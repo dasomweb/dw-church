@@ -26,21 +26,21 @@ export function InfoColumnsBlock({ props }: InfoColumnsBlockProps) {
     <SectionShell props={props} style={{ paddingBlock: 'var(--section-py-lg)' }} applyLayout>
       {(eyebrow || title) && (
         <div className="mb-6 text-center">
-          {eyebrow && <div className="mb-2 text-sm font-semibold" style={{ color: 'var(--brand)' }}>{eyebrow}</div>}
-          {title && <h2 className="text-2xl font-bold" style={{ color: 'var(--fg)' }}>{title}</h2>}
+          {eyebrow && <div className="mb-2 text-sm font-semibold" style={{ color: 'var(--dw-primary, var(--brand, #1466d6))' }}>{eyebrow}</div>}
+          {title && <h2 className="text-2xl font-bold" style={{ color: 'var(--dw-text, var(--fg, #16181d))' }}>{title}</h2>}
         </div>
       )}
       <div
         className={`grid grid-cols-1 ${colClass}`}
-        style={{ gap: '1px', background: 'var(--border, #e5e7eb)', border: '1px solid var(--border, #e5e7eb)', borderRadius: 'var(--radius-lg, 16px)', overflow: 'hidden' }}
+        style={{ gap: '1px', background: 'var(--dw-border, var(--border, #e5e7eb))', border: '1px solid var(--dw-border, var(--border, #e5e7eb))', borderRadius: 'var(--radius-lg, 16px)', overflow: 'hidden' }}
       >
         {items.map((it, i) => (
-          <div key={i} style={{ background: 'var(--bg, #ffffff)', padding: '26px 28px' }}>
+          <div key={i} style={{ background: 'var(--dw-background, var(--bg, #ffffff))', padding: '26px 28px' }}>
             {it.title ? (
-              <div style={{ color: 'var(--brand)', fontSize: 13, fontWeight: 600, marginBottom: 10 }}>{String(it.title)}</div>
+              <div style={{ color: 'var(--dw-primary, var(--brand, #1466d6))', fontSize: 13, fontWeight: 600, marginBottom: 10 }}>{String(it.title)}</div>
             ) : null}
             {it.content ? (
-              <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--fg)', lineHeight: 1.5, whiteSpace: 'pre-line' }}>{String(it.content)}</div>
+              <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--dw-text, var(--fg, #16181d))', lineHeight: 1.5, whiteSpace: 'pre-line' }}>{String(it.content)}</div>
             ) : null}
           </div>
         ))}

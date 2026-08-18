@@ -17,8 +17,8 @@ export function QuickLinksBlock({ props }: QuickLinksBlockProps) {
 
   return (
     <SectionShell props={props} style={{ paddingBlock: 'var(--section-py-md)' }} applyLayout>
-      <div style={{ border: '1px solid var(--border, #e5e7eb)', borderRadius: 'var(--radius-lg, 16px)', padding: '22px 24px' }}>
-        {title && <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--fg)', marginBottom: 12 }}>{title}</div>}
+      <div style={{ border: '1px solid var(--dw-border, var(--border, #e5e7eb))', borderRadius: 'var(--radius-lg, 16px)', padding: '22px 24px' }}>
+        {title && <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--dw-text, var(--fg, #16181d))', marginBottom: 12 }}>{title}</div>}
         <div className="flex flex-col">
           {items.map((it, i) => (
             <a
@@ -26,12 +26,12 @@ export function QuickLinksBlock({ props }: QuickLinksBlockProps) {
               href={String(it.content || '#')}
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '13px 0', borderTop: i === 0 ? 'none' : '1px solid var(--border, #e5e7eb)',
-                color: 'var(--fg)', textDecoration: 'none', fontSize: 15, fontWeight: 500,
+                padding: '13px 0', borderTop: i === 0 ? 'none' : '1px solid var(--dw-border, var(--border, #e5e7eb))',
+                color: 'var(--dw-text, var(--fg, #16181d))', textDecoration: 'none', fontSize: 15, fontWeight: 500,
               }}
             >
               <span>{String(it.title || '')}</span>
-              <span style={{ color: 'var(--brand)', flex: 'none', marginLeft: 12 }}>→</span>
+              <span style={{ color: 'var(--dw-primary, var(--brand, #1466d6))', flex: 'none', marginLeft: 12 }}>→</span>
             </a>
           ))}
         </div>
