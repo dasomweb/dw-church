@@ -163,7 +163,9 @@ export default function FrontSampleEditor({
     }
   }, [apiFetch, sample.id, onReverted, onClose]);
 
-  const width = device === 'mobile' ? 390 : '100%';
+  // Edit at the sample's native 1280px width (matches the preview) so full-bleed
+  // heroes fill the full width and layout matches what applicants see.
+  const width = device === 'mobile' ? 390 : 1280;
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black/80">
@@ -197,7 +199,7 @@ export default function FrontSampleEditor({
       </div>
 
       <div className="relative flex-1 overflow-auto bg-gray-100 p-4">
-        <div className="mx-auto bg-white shadow-xl" style={{ width, maxWidth: '100%', height: '100%' }}>
+        <div className="mx-auto bg-white shadow-xl" style={{ width, maxWidth: device === 'mobile' ? '100%' : 'none', height: '100%' }}>
           <iframe ref={iframeRef} title={`edit-${sample.name}`} srcDoc={baseHtml} onLoad={setupEditor}
             className="h-full w-full" style={{ border: 0 }} />
         </div>

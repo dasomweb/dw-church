@@ -213,7 +213,7 @@ function ApplyForm() {
               <div key={d.id} className={`overflow-hidden rounded-lg border transition-colors ${on ? 'border-blue-600 ring-2 ring-blue-200' : 'border-gray-200'}`}>
                 <button type="button" onClick={() => setPreviewId(d.id)} title="미리보기" className="relative block w-full overflow-hidden bg-white" style={{ height: 150 }}>
                   <iframe src={`/front-samples/card-${d.id}.html`} tabIndex={-1} title={d.name}
-                    className="pointer-events-none origin-top-left" style={{ width: 1180, height: 1400, transform: 'scale(0.32)', border: 0 }} />
+                    className="pointer-events-none origin-top-left" style={{ width: 1280, height: 1560, transform: 'scale(0.295)', border: 0 }} />
                   <span className="absolute inset-x-0 bottom-0 bg-black/55 px-2 py-1 text-center text-[11px] font-medium text-white">🔍 미리보기</span>
                   {on && <span className="absolute right-1.5 top-1.5 rounded bg-blue-600 px-1.5 py-0.5 text-[10px] font-bold text-white">선택됨</span>}
                 </button>
@@ -261,7 +261,10 @@ function ApplyForm() {
               </div>
             </div>
             <div className="flex-1 overflow-auto bg-gray-100 p-3 sm:p-4" onClick={(e) => e.stopPropagation()}>
-              <div className="mx-auto bg-white shadow-xl" style={{ width: previewDevice === 'mobile' ? 390 : '100%', maxWidth: '100%', height: '100%' }}>
+              {/* fixed 1280px canvas so every sample renders at its native design
+                  width (full-bleed heroes fill the full 1280); narrower viewports
+                  scroll horizontally instead of squishing the layout. */}
+              <div className="mx-auto bg-white shadow-xl" style={{ width: previewDevice === 'mobile' ? 390 : 1280, maxWidth: previewDevice === 'mobile' ? '100%' : 'none', height: '100%' }}>
                 <iframe src={`/front-samples/card-${d.id}.html`} title={`${d.name} 미리보기`} className="h-full w-full" style={{ border: 0 }} />
               </div>
             </div>

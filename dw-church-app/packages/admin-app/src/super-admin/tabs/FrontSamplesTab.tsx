@@ -31,7 +31,9 @@ function Thumb({ html }: { html: string }) {
 
 function PreviewModal({ sample, html, onClose }: { sample: CanvasSample; html: string; onClose: () => void }) {
   const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
-  const width = device === 'mobile' ? 390 : '100%';
+  // Samples are designed at 1280px — render the preview at that fixed width so
+  // every sample looks consistent and full-bleed heroes fill the full 1280.
+  const width = device === 'mobile' ? 390 : 1280;
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black/70" onClick={onClose}>
       <div className="flex items-center justify-between gap-3 bg-white px-5 py-3" onClick={(e) => e.stopPropagation()}>
@@ -52,7 +54,7 @@ function PreviewModal({ sample, html, onClose }: { sample: CanvasSample; html: s
         </div>
       </div>
       <div className="flex-1 overflow-auto bg-gray-100 p-4" onClick={(e) => e.stopPropagation()}>
-        <div className="mx-auto bg-white shadow-xl" style={{ width, maxWidth: '100%', height: '100%' }}>
+        <div className="mx-auto bg-white shadow-xl" style={{ width, maxWidth: device === 'mobile' ? '100%' : 'none', height: '100%' }}>
           <iframe title={sample.name} srcDoc={html} className="h-full w-full" style={{ border: 0 }} />
         </div>
       </div>
