@@ -1,0 +1,52 @@
+<!doctype html><html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Serif+KR:wght@500;700&display=swap">
+<style>
+:root{--brand:#1466d6;--primary:#2b7fff;--bg:#ffffff;--surface:#f7f8fa;--border:#e5e7eb;--fg:#16181d;--fg-muted:#61697a;
+--font-sans:'Pretendard','Inter',system-ui,sans-serif;--font-latin:'Inter',system-ui,sans-serif;--font-mono:ui-monospace,Menlo,monospace;
+--radius-sm:8px;--radius:12px;--radius-lg:16px;--leading-body:1.75;--leading-tight:1.35;--tracking-title:-0.025em;--tracking-body:-0.003em}
+
+*{box-sizing:border-box}
+body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:var(--font-sans);font-size:16px;line-height:var(--leading-body);letter-spacing:var(--tracking-body);-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word}
+:lang(en){font-family:var(--font-latin);letter-spacing:0;word-break:normal}
+h1,h2,h3{line-height:var(--leading-tight);letter-spacing:var(--tracking-title);margin:0 0 8px}
+/* <image-slot> shim — filled slots show a real (self-hosted R2) photo; any unfilled
+   ones fall back to a neutral labeled placeholder. */
+image-slot{display:block;position:relative;width:100%;height:100%;min-height:120px;background:linear-gradient(135deg,#e2e8f2,#eef1f6)}
+image-slot::after{content:attr(placeholder);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9aa7bd;font-size:13px;font-weight:600;letter-spacing:0}
+image-slot[data-filled]{background-size:cover;background-position:center;background-repeat:no-repeat}
+image-slot[data-filled]::after{content:none}
+image-slot[shape="circle"],image-slot[shape="pill"]{border-radius:999px}
+</style></head>
+<body>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:72px;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:10px"><div style="width:30px;height:30px;border-radius:50%;background:var(--brand)"></div><b style="font-size:18px">이음교회</b></div><nav style="display:flex;gap:24px;font-size:15px;color:#333842"><span>교회 소개</span><span>예배</span><span>말씀</span><span>오시는 길</span></nav><span style="display:inline-flex;align-items:center;height:38px;padding:0 18px;border-radius:999px;background:var(--brand);color:#fff;font-size:14px;font-weight:600">전화 문의</span></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;align-items:stretch">
+    <div style="min-height:420px;position:relative;background:linear-gradient(0deg,rgba(20,102,214,.05),rgba(20,102,214,.05)),repeating-linear-gradient(0deg,#eef2f7 0 39px,#e4eaf2 39px 40px),repeating-linear-gradient(90deg,#eef2f7 0 39px,#e4eaf2 39px 40px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:20px"><div style="font-size:44px;line-height:1">📍</div><b style="font-size:17px;color:var(--fg)">Cornerstone Church</b><span style="font-size:13px;color:var(--fg-muted)">1200 S Brookhurst St, Anaheim, CA 92804</span><span style="display:inline-flex;align-items:center;height:34px;padding:0 16px;border-radius:999px;background:var(--brand);color:#fff;font-size:13px;font-weight:600;margin-top:4px">길찾기 열기</span></div>
+    <div style="padding:44px 48px;background:var(--surface);display:flex;flex-direction:column;justify-content:center">
+      <h1 style="margin:0 0 16px;font-size:36px;font-weight:700;line-height:1.35">주일 오전 11시,<br>Cornerstone Church 채플에서 만나요</h1>
+      <div style="display:flex;flex-direction:column;gap:12px;font-size:16px;line-height:1.6;margin-bottom:24px">
+        <div style="display:flex;gap:14px"><b style="width:56px;flex:none;font-weight:600">주소</b><span>1200 S Brookhurst St, Anaheim, CA 92804</span></div>
+        <div style="display:flex;gap:14px"><b style="width:56px;flex:none;font-weight:600">교통</b><span>5번 프리웨이 Brookhurst 출구에서 2분</span></div>
+        <div style="display:flex;gap:14px"><b style="width:56px;flex:none;font-weight:600">주차</b><span>건물 주차장 20대 · 스트리트 파킹 무료</span></div>
+        <div style="display:flex;gap:14px"><b style="width:56px;flex:none;font-weight:600">자녀</b><span>예배 중 유아 놀이방 운영 · 유모차 진입 가능</span></div>
+      </div>
+      <div style="display:flex;gap:10px"><span style="display:inline-flex;align-items:center;height:48px;padding:0 24px;border-radius:999px;background:var(--brand);color:#fff;font-size:15px;font-weight:600">길찾기 열기</span><span style="display:inline-flex;align-items:center;height:48px;padding:0 24px;border-radius:999px;background:var(--bg);border:1px solid var(--border);font-size:15px;font-weight:600">전화 문의</span></div>
+    </div>
+  </div>
+  <div style="padding:44px 48px 0;display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+    <div style="border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px"><div style="font-size:13px;font-weight:600;color:var(--brand);margin-bottom:10px">예배 시간</div><div style="font-size:17px;font-weight:600;line-height:1.7">주일 11:00<br>수요 19:30</div></div>
+    <div style="border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px"><div style="font-size:13px;font-weight:600;color:var(--brand);margin-bottom:10px">예배 순서</div><div style="font-size:15px;line-height:1.75;color:var(--fg-muted)">찬양 · 기도 · 말씀 · 나눔<br>약 70분 소요됩니다</div></div>
+    <div style="border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px"><div style="font-size:13px;font-weight:600;color:var(--brand);margin-bottom:10px">복장 · 헌금</div><div style="font-size:15px;line-height:1.75;color:var(--fg-muted)">편한 옷차림으로 오세요<br>처음 오신 분은 헌금하지 않습니다</div></div>
+  </div>
+  <div style="margin:44px 48px 0;background:var(--fg);color:#fff;border-radius:var(--radius-lg);padding:24px 32px;display:flex;align-items:center;justify-content:space-between;gap:28px"><div style="display:flex;align-items:center;gap:18px"><span style="display:inline-flex;align-items:center;height:28px;padding:0 13px;border-radius:999px;background:rgba(255,255,255,.16);font-size:13px;font-weight:600;flex:none">다가오는 행사</span><div><b style="font-size:18px">가을 성경공부 「마가복음 6주 과정」</b><div style="font-size:14px;color:rgba(255,255,255,.7);margin-top:3px">9월 5일 시작 · 매주 목요일 저녁 8시</div></div></div><span style="display:inline-flex;align-items:center;height:42px;padding:0 20px;border-radius:999px;background:#fff;color:var(--fg);font-size:14px;font-weight:600;flex:none">신청</span></div>
+  <div style="padding:44px 48px 0;display:grid;grid-template-columns:1fr 1fr;gap:28px">
+    <div><h2 style="margin:0 0 14px;font-size:21px;font-weight:700">이번 주 말씀</h2><div style="position:relative;height:180px;border-radius:var(--radius);overflow:hidden"><image-slot id="ch-6c-sermon" shape="rect" placeholder="설교 썸네일" data-filled style="background-image:url('https://pub-674328f08783498389f7857dc6e1ab00.r2.dev/_samples/frontpage/sermon-1.jpg')"></image-slot><div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.94);display:flex;align-items:center;justify-content:center;color:var(--brand);pointer-events:none">▶</div></div><div style="margin-top:12px;font-size:16px;font-weight:600">함께 걷는 길</div><div style="font-size:13px;color:var(--fg-muted);margin-top:4px">이정민 목사 · 8월 9일</div></div>
+    <div><h2 style="margin:0 0 14px;font-size:21px;font-weight:700">소식과 주보</h2><div style="display:flex;flex-direction:column">
+      <div style="display:flex;padding:13px 0;border-top:1px solid var(--border)"><span style="font-size:15px;flex:1">8월 16일 주보</span><span style="font-size:13px;color:var(--fg-muted)">08.15</span></div>
+      <div style="display:flex;padding:13px 0;border-top:1px solid var(--border)"><span style="font-size:15px;flex:1">목요 성경공부 시작</span><span style="font-size:13px;color:var(--fg-muted)">08.10</span></div>
+      <div style="display:flex;padding:13px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)"><span style="font-size:15px;flex:1">가을 나들이 안내</span><span style="font-size:13px;color:var(--fg-muted)">08.04</span></div></div>
+      <div style="margin-top:18px;display:flex;gap:8px"><span style="display:inline-flex;align-items:center;height:42px;padding:0 20px;border-radius:999px;background:var(--brand);color:#fff;font-size:14px;font-weight:600">기도 요청</span><span style="display:inline-flex;align-items:center;height:42px;padding:0 20px;border:1px solid var(--border);border-radius:999px;font-size:14px;font-weight:600">심방 신청</span><span style="display:inline-flex;align-items:center;height:42px;padding:0 20px;border:1px solid var(--border);border-radius:999px;font-size:14px;font-weight:600">온라인 헌금</span></div></div>
+  </div>
+  <div style="margin-top:44px;padding:30px 48px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:14px;line-height:1.9;color:var(--fg-muted)"><span>이음교회 · 2022년 개척 · 미주한인예수교장로회(KAPC)<br>1200 S Brookhurst St, Anaheim, CA 92804 · (714) 000-0000</span><span>카카오톡 채널 · 인스타그램 · 이메일 소식지</span></div>
+</body></html>

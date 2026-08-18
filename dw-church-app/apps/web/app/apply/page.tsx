@@ -16,9 +16,9 @@ const PLANS = [
 const inputCls =
   'w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none';
 
-// 신청자가 고르는 홈페이지 디자인 시안(22종). thumb = 그 디자인 프리셋 히어로에
-// 쓰는 자체 호스팅(R2) 대표 사진. 서버 presets.ts 의 id 와 1:1 대응한다.
-const SAMPLE_IMG = 'https://pub-674328f08783498389f7857dc6e1ab00.r2.dev/_samples/frontpage';
+// 신청자가 고르는 홈페이지 디자인 시안(22종). 실제 시안 HTML은
+// /public/front-samples/card-<id>.html 로 서빙 → 미리보기 iframe 으로 렌더.
+// 서버 presets.ts 의 id 와 1:1 대응한다. (thumb 필드는 레거시, 미사용)
 const DESIGNS: { id: string; name: string; group: string; thumb: string }[] = [
   { id: '00', name: '사진 히어로형', group: '미주 한인 이민교회', thumb: 'worship-2' },
   { id: '01', name: '영문 우선형', group: '미주 한인 이민교회', thumb: 'worship-1' },
@@ -50,6 +50,8 @@ function ApplyForm() {
   const [agreed, setAgreed] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [state, setState] = useState<'idle' | 'submitting' | 'done' | 'error'>('idle');
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
   const [appliedPromo, setAppliedPromo] = useState<{ discountPercent: number; targetPlans: string[]; label?: string } | null>(null);
   const [couponChecking, setCouponChecking] = useState(false);
   const [couponError, setCouponError] = useState('');
@@ -203,29 +205,69 @@ function ApplyForm() {
 
       <div>
         <label className="mb-1 block text-sm font-medium text-gray-700">홈페이지 디자인 <span className="text-gray-400">(선택)</span></label>
-        <p className="mb-2 text-xs text-gray-400">마음에 드는 시안을 고르시면 그 구성으로 사이트를 시작합니다. 셋업 과정에서 교회에 맞게 조정됩니다.</p>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <p className="mb-2 text-xs text-gray-400">시안을 눌러 <b>미리보기</b>로 확인한 뒤 선택하세요. 셋업 과정에서 교회에 맞게 조정됩니다.</p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {DESIGNS.map((d) => {
             const on = form.designChoice === d.id;
             return (
-              <button
-                key={d.id}
-                type="button"
-                onClick={() => setForm((f) => ({ ...f, designChoice: on ? '' : d.id }))}
-                className={`overflow-hidden rounded-lg border text-left transition-colors ${on ? 'border-blue-600 ring-2 ring-blue-200' : 'border-gray-200 hover:border-gray-400'}`}
-              >
-                <div className="relative h-20 w-full bg-cover bg-center" style={{ backgroundImage: `url('${SAMPLE_IMG}/${d.thumb}.jpg')` }}>
+              <div key={d.id} className={`overflow-hidden rounded-lg border transition-colors ${on ? 'border-blue-600 ring-2 ring-blue-200' : 'border-gray-200'}`}>
+                <button type="button" onClick={() => setPreviewId(d.id)} title="미리보기" className="relative block w-full overflow-hidden bg-white" style={{ height: 150 }}>
+                  <iframe src={`/front-samples/card-${d.id}.html`} tabIndex={-1} title={d.name}
+                    className="pointer-events-none origin-top-left" style={{ width: 1180, height: 1400, transform: 'scale(0.32)', border: 0 }} />
+                  <span className="absolute inset-x-0 bottom-0 bg-black/55 px-2 py-1 text-center text-[11px] font-medium text-white">🔍 미리보기</span>
                   {on && <span className="absolute right-1.5 top-1.5 rounded bg-blue-600 px-1.5 py-0.5 text-[10px] font-bold text-white">선택됨</span>}
+                </button>
+                <div className="flex items-center justify-between gap-1 px-2 py-1.5">
+                  <div className="min-w-0">
+                    <div className="truncate text-xs font-semibold text-gray-800">{d.name}</div>
+                    <div className="truncate text-[10px] text-gray-400">{d.group}</div>
+                  </div>
+                  <button type="button" onClick={() => setForm((f) => ({ ...f, designChoice: on ? '' : d.id }))}
+                    className={`flex-none rounded-md px-2.5 py-1 text-[11px] font-semibold ${on ? 'bg-blue-600 text-white' : 'border border-gray-300 text-gray-700 hover:bg-gray-50'}`}>
+                    {on ? '선택됨' : '선택'}
+                  </button>
                 </div>
-                <div className="px-2 py-1.5">
-                  <div className="text-xs font-semibold text-gray-800">{d.name}</div>
-                  <div className="text-[10px] text-gray-400">{d.group}</div>
-                </div>
-              </button>
+              </div>
             );
           })}
         </div>
       </div>
+
+      {previewId && (() => {
+        const d = DESIGNS.find((x) => x.id === previewId);
+        if (!d) return null;
+        const on = form.designChoice === d.id;
+        return (
+          <div className="fixed inset-0 z-50 flex flex-col bg-black/70" onClick={() => setPreviewId(null)}>
+            <div className="flex items-center justify-between gap-3 bg-white px-4 py-3" onClick={(e) => e.stopPropagation()}>
+              <div className="min-w-0">
+                <div className="truncate text-sm font-bold text-gray-900">{d.name}</div>
+                <div className="truncate text-[11px] text-gray-500">{d.group}</div>
+              </div>
+              <div className="flex flex-none items-center gap-2">
+                <div className="flex rounded-lg border border-gray-200 p-0.5 text-xs">
+                  {(['desktop', 'mobile'] as const).map((dv) => (
+                    <button key={dv} type="button" onClick={() => setPreviewDevice(dv)}
+                      className={`rounded-md px-3 py-1 font-medium ${previewDevice === dv ? 'bg-blue-600 text-white' : 'text-gray-600'}`}>
+                      {dv === 'desktop' ? '데스크톱' : '모바일'}
+                    </button>
+                  ))}
+                </div>
+                <button type="button" onClick={() => { setForm((f) => ({ ...f, designChoice: d.id })); setPreviewId(null); }}
+                  className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">
+                  {on ? '선택됨 ✓' : '이 디자인으로 선택'}
+                </button>
+                <button type="button" onClick={() => setPreviewId(null)} className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">닫기 ✕</button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-auto bg-gray-100 p-3 sm:p-4" onClick={(e) => e.stopPropagation()}>
+              <div className="mx-auto bg-white shadow-xl" style={{ width: previewDevice === 'mobile' ? 390 : '100%', maxWidth: '100%', height: '100%' }}>
+                <iframe src={`/front-samples/card-${d.id}.html`} title={`${d.name} 미리보기`} className="h-full w-full" style={{ border: 0 }} />
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       <div>
         <label className="mb-2 block text-sm font-medium text-gray-700">관심 플랜</label>
