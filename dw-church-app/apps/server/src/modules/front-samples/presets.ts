@@ -236,3 +236,36 @@ export async function applyDesignToTenant(slug: string, design: string): Promise
 
   return { design, sections: sections.length };
 }
+
+/**
+ * "시안 그대로 적용" — set the tenant home to a single custom_html block holding
+ * the sample's real HTML (header/footer already stripped client-side). Renders
+ * pixel-faithful to the sample inside the live site chrome. html is sanitized
+ * (scripts/handlers removed) before storage.
+ */
+export async function applyExactHtmlToTenant(slug: string, html: string): Promise<{ ok: true }> {
+  if (!/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(slug)) throw new AppError('BAD_SLUG', 400, '잘못된 테넌트 slug입니다.');
+  const clean = html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/\son\w+="[^"]*"/gi, '')
+    .replace(/\son\w+='[^']*'/gi, '');
+  const schema = `tenant_${slug}`;
+  const exists = await prisma.$queryRawUnsafe<{ n: number }[]>(
+    `SELECT count(*)::int AS n FROM information_schema.schemata WHERE schema_name = $1`, schema,
+  );
+  if (!exists[0]?.n) throw new AppError('NO_SCHEMA', 404, '테넌트 스키마를 찾을 수 없습니다.');
+  let rows = await prisma.$queryRawUnsafe<{ id: string }[]>(`SELECT id FROM "${schema}".pages WHERE slug = 'home' LIMIT 1`);
+  if (!rows[0]) {
+    await prisma.$executeRawUnsafe(`INSERT INTO "${schema}".pages (title, slug, is_home, status, sort_order) VALUES ('홈', 'home', true, 'published', 0) ON CONFLICT DO NOTHING`);
+    rows = await prisma.$queryRawUnsafe<{ id: string }[]>(`SELECT id FROM "${schema}".pages WHERE slug = 'home' LIMIT 1`);
+  }
+  const pageId = rows[0]?.id;
+  if (!pageId) throw new AppError('NO_HOME', 500, '홈 페이지를 만들 수 없습니다.');
+  await prisma.$executeRawUnsafe(`DELETE FROM "${schema}".page_sections WHERE page_id = $1::uuid`, pageId);
+  await prisma.$executeRawUnsafe(
+    `INSERT INTO "${schema}".page_sections (page_id, block_type, props, sort_order, is_visible)
+     VALUES ($1::uuid, 'custom_html', $2::jsonb, 0, true)`,
+    pageId, JSON.stringify({ html: clean }),
+  );
+  return { ok: true };
+}

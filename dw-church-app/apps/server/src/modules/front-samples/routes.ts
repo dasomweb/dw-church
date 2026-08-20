@@ -6,7 +6,7 @@ import { prisma } from '../../config/database.js';
 import { requireSuperAdmin } from '../../middleware/auth.js';
 import { AppError } from '../../middleware/error-handler.js';
 import { uploadFile } from '../../config/r2.js';
-import { applyDesignToTenant, PRESET_IDS } from './presets.js';
+import { applyDesignToTenant, applyExactHtmlToTenant, PRESET_IDS } from './presets.js';
 
 /**
  * Front-sample editor (super-admin only). The 22 homepage design samples ship
@@ -82,6 +82,14 @@ export async function frontSampleRoutes(app: FastifyInstance) {
   app.post('/admin/front-samples/apply', { preHandler: [requireSuperAdmin] }, async (req, reply) => {
     const { slug, design } = z.object({ slug: z.string().min(1).max(63), design: z.string().min(1).max(40) }).parse(req.body ?? {});
     const result = await applyDesignToTenant(slug, design);
+    return reply.send({ data: result });
+  });
+
+  // "시안 그대로 적용" — set the home to the sample's real HTML (header/footer
+  // stripped client-side) as a single custom_html block (pixel-faithful).
+  app.post('/admin/front-samples/apply-exact', { preHandler: [requireSuperAdmin] }, async (req, reply) => {
+    const { slug, html } = z.object({ slug: z.string().min(1).max(63), html: z.string().min(1).max(600_000) }).parse(req.body ?? {});
+    const result = await applyExactHtmlToTenant(slug, html);
     return reply.send({ data: result });
   });
 

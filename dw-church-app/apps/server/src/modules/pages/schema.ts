@@ -31,6 +31,7 @@ export const blockTypes = [
   'text_image',
   'text_only',
   'quote_block',
+  'custom_html',
   // Church Info
   'worship_schedule',
   'worship_times',

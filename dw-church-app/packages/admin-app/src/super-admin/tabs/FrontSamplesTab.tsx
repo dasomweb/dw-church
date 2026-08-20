@@ -19,6 +19,28 @@ const loaderFor = (file: string) => {
   return key ? LOADERS[key] : undefined;
 };
 
+// "시안 그대로 적용"용: 시안 전체 문서 → 실제 사이트에 넣을 조각으로 변환.
+//  - <style>(토큰/리셋/image-slot shim)는 유지하되 전역 body{} 규칙은 제거해
+//    스토어프론트 전체가 오염되지 않게 함
+//  - 본문의 첫 자식(내비바)·마지막 자식(푸터)은 제거 → 실제 사이트 헤더/푸터가 대신
+function buildExactHtml(fullDoc: string): string {
+  try {
+    const doc = new DOMParser().parseFromString(fullDoc, 'text/html');
+    const styles = Array.from(doc.head.querySelectorAll('style'))
+      .map((s) => s.textContent || '')
+      .join('\n')
+      .replace(/body\s*\{[^}]*\}/gi, ''); // drop global body rule
+    const body = doc.body;
+    const kids = Array.from(body.children);
+    // canvas cards open with a nav bar and end with a footer — strip both so the
+    // tenant's real header/footer aren't duplicated.
+    if (kids.length >= 3) { kids[0].remove(); kids[kids.length - 1].remove(); }
+    return `<style>${styles}</style>\n${body.innerHTML}`;
+  } catch {
+    return fullDoc;
+  }
+}
+
 function Thumb({ html }: { html: string }) {
   return (
     <div className="relative w-full overflow-hidden rounded-t-xl border-b border-gray-100 bg-white" style={{ height: 236 }}>
@@ -76,6 +98,8 @@ export default function FrontSamplesTab() {
   const [applySlug, setApplySlug] = useState('');
   const [applyState, setApplyState] = useState<'idle' | 'loading' | 'applying' | 'done' | 'error'>('idle');
   const [applyMsg, setApplyMsg] = useState('');
+  // 'exact' = 시안 HTML 그대로(픽셀 일치), 'blocks' = 블록 프리셋(편집 쉬움)
+  const [applyMode, setApplyMode] = useState<'exact' | 'blocks'>('exact');
 
   const openApply = (s: CanvasSample) => {
     setApplyFor(s); setApplySlug(''); setApplyMsg(''); setApplyState('loading');
@@ -92,10 +116,18 @@ export default function FrontSamplesTab() {
     if (!applyFor || !applySlug) return;
     setApplyState('applying'); setApplyMsg('');
     try {
-      const r = await apiFetch<{ data: { sections: number } }>('/front-samples/apply', {
-        method: 'POST', body: JSON.stringify({ slug: applySlug, design: applyFor.id }),
-      });
-      setApplyState('done'); setApplyMsg(`적용 완료 · 홈 ${r.data.sections}개 섹션이 구성되었습니다.`);
+      if (applyMode === 'exact') {
+        const html = buildExactHtml(htmlFor(applyFor));
+        await apiFetch('/front-samples/apply-exact', {
+          method: 'POST', body: JSON.stringify({ slug: applySlug, html }),
+        });
+        setApplyState('done'); setApplyMsg('적용 완료 · 시안 디자인 그대로 홈에 반영되었습니다.');
+      } else {
+        const r = await apiFetch<{ data: { sections: number } }>('/front-samples/apply', {
+          method: 'POST', body: JSON.stringify({ slug: applySlug, design: applyFor.id }),
+        });
+        setApplyState('done'); setApplyMsg(`적용 완료 · 홈 ${r.data.sections}개 블록으로 구성되었습니다.`);
+      }
     } catch (e) { setApplyState('error'); setApplyMsg((e as Error).message); }
   };
 
@@ -206,6 +238,19 @@ export default function FrontSamplesTab() {
               <div className="mt-4 rounded-lg bg-emerald-50 px-3 py-3 text-sm font-medium text-emerald-700">{applyMsg}</div>
             ) : (
               <>
+                <div className="mt-4 text-xs font-semibold text-gray-500">적용 방식</div>
+                <div className="mt-1 grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => setApplyMode('exact')}
+                    className={`rounded-lg border px-3 py-2 text-left text-xs ${applyMode === 'exact' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600 hover:border-gray-400'}`}>
+                    <div className="font-bold">시안 그대로</div>
+                    <div className="mt-0.5 text-[10px] opacity-80">시안과 동일한 디자인. 편집은 시안 편집기로.</div>
+                  </button>
+                  <button type="button" onClick={() => setApplyMode('blocks')}
+                    className={`rounded-lg border px-3 py-2 text-left text-xs ${applyMode === 'blocks' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600 hover:border-gray-400'}`}>
+                    <div className="font-bold">블록으로</div>
+                    <div className="mt-0.5 text-[10px] opacity-80">근접 재현. 페이지 편집기로 수정 쉬움.</div>
+                  </button>
+                </div>
                 <label className="mt-4 block text-xs font-semibold text-gray-500">대상 테넌트</label>
                 <select value={applySlug} onChange={(e) => setApplySlug(e.target.value)}
                   className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500">

@@ -569,6 +569,15 @@
       "useCases": ["주간 일정 중심 홈", "이번 주 모임 안내", "회원 대시보드 일정 위젯"],
       "aiHint": "This-week agenda as a row list: day badge + event/time/place. Distinct from schedule_board tables."
     },
+    "custom_html": {
+      "label": "커스텀 HTML (시안 그대로)",
+      "group": "content",
+      "flags": { "isHidden": true },
+      "defaultProps": { "html": "" },
+      "description": "시안(프론트 샘플)의 실제 HTML/CSS를 그대로 렌더. '시안 그대로 적용'이 홈에 넣는 블록. 운영자가 직접 추가하는 용도는 아님.",
+      "tags": ["custom", "html", "raw", "exact-design", "sample"],
+      "aiHint": "Renders raw HTML verbatim. Set by exact-design apply; do not emit from AI."
+    },
     "quick_links": {
       "label": "바로가기",
       "group": "content",
