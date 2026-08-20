@@ -54,7 +54,6 @@ export function QuoteBlock({ props }: QuoteBlockProps) {
             elementKey="quote"
             defaultTag="p"
             defaultSize="h3"
-            html
             className="leading-relaxed"
           />
           {(reference || source) && (
