@@ -35,6 +35,8 @@ export function QuoteBlock({ props }: QuoteBlockProps) {
   // `verse` variant — 오늘의 말씀 콜아웃: 좌측 브랜드 강조바 + 라벨(eyebrow) +
   // 큰 구절 + 출처, surface 배경 위. 프론트 샘플 다수(00~11 등)의 반복 섹션.
   if (variant === 'verse') {
+    const btnText = (props.buttonText as string) ?? '';
+    const btnUrl = (props.buttonUrl as string) ?? '#';
     return (
       <SectionShell props={props} style={{ paddingBlock: 'var(--section-py-lg)' }} applyLayout>
         <div
@@ -42,24 +44,30 @@ export function QuoteBlock({ props }: QuoteBlockProps) {
             borderLeft: '4px solid var(--dw-primary, var(--brand, #1466d6))',
             background: 'var(--dw-surface, var(--surface, #f7f8fa))',
             borderRadius: '0 var(--radius-lg, 16px) var(--radius-lg, 16px) 0',
-            padding: '26px 32px',
+            padding: '30px 40px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 40,
           }}
         >
-          {eyebrow && (
-            <div style={{ color: 'var(--dw-primary, var(--brand, #1466d6))', fontSize: 13, fontWeight: 600, marginBottom: 10 }}>{eyebrow}</div>
-          )}
-          <TextBodyElement
-            text={quote}
-            props={props}
-            elementKey="quote"
-            defaultTag="p"
-            defaultSize="h3"
-            className="leading-relaxed"
-          />
-          {(reference || source) && (
-            <div style={{ marginTop: 10, fontSize: 14, color: 'var(--fg-muted, #61697a)' }}>
-              {[source, reference].filter(Boolean).join(' · ')}
-            </div>
+          <div>
+            {eyebrow && (
+              <div style={{ color: 'var(--dw-primary, var(--brand, #1466d6))', fontSize: 13, fontWeight: 600, marginBottom: 12 }}>{eyebrow}</div>
+            )}
+            <TextBodyElement
+              text={quote}
+              props={props}
+              elementKey="quote"
+              defaultTag="p"
+              defaultSize="h3"
+              className="leading-relaxed"
+            />
+            {(reference || source) && (
+              <div style={{ marginTop: 10, fontSize: 15, color: 'var(--fg-muted, #61697a)' }}>
+                {[source, reference].filter(Boolean).join(' · ')}
+              </div>
+            )}
+          </div>
+          {btnText && (
+            <a href={btnUrl} style={{ display: 'inline-flex', alignItems: 'center', height: 44, padding: '0 22px', border: '1px solid var(--dw-border, var(--border, #e5e7eb))', borderRadius: 999, background: 'var(--dw-background, var(--bg, #fff))', color: 'var(--dw-text, var(--fg, #16181d))', fontSize: 14, fontWeight: 600, flex: 'none', textDecoration: 'none' }}>{btnText}</a>
           )}
         </div>
       </SectionShell>

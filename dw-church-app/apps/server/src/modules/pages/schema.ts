@@ -32,6 +32,9 @@ export const blockTypes = [
   'text_only',
   'quote_block',
   'custom_html',
+  'hero_overlap',
+  'sermon_feature',
+  'news_split',
   // Church Info
   'worship_schedule',
   'worship_times',

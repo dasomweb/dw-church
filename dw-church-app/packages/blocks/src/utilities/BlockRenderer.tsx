@@ -8,6 +8,9 @@ import { ImageGalleryBlock } from '../static/ImageGalleryBlock';
 import { VideoBlock } from '../static/VideoBlock';
 import { QuoteBlock } from '../static/QuoteBlock';
 import { CustomHtmlBlock } from '../static/CustomHtmlBlock';
+import { HeroOverlapBlock } from '../static/HeroOverlapBlock';
+import { SermonFeatureBlock } from '../static/SermonFeatureBlock';
+import { NewsSplitBlock } from '../static/NewsSplitBlock';
 import { LogoTitleBlock } from '../static/LogoTitleBlock';
 import { ButtonGroupBlock } from '../static/ButtonGroupBlock';
 import { DirectionsSplitBlock } from '../static/DirectionsSplitBlock';
@@ -143,6 +146,9 @@ export const BLOCK_MAP: Record<string, SyncBlockComponent> = {
   text_only:    TextOnlyBlock,
   quote_block:  QuoteBlock,
   custom_html:  CustomHtmlBlock,
+  hero_overlap:   HeroOverlapBlock,
+  sermon_feature: SermonFeatureBlock,
+  news_split:     NewsSplitBlock,
   logo_title:   LogoTitleBlock,
   button_group: ButtonGroupBlock,
   directions_split: DirectionsSplitBlock,

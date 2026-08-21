@@ -569,6 +569,33 @@
       "useCases": ["주간 일정 중심 홈", "이번 주 모임 안내", "회원 대시보드 일정 위젯"],
       "aiHint": "This-week agenda as a row list: day badge + event/time/place. Distinct from schedule_board tables."
     },
+    "hero_overlap": {
+      "label": "히어로 + 겹침 안내카드",
+      "group": "hero",
+      "flags": {},
+      "defaultProps": { "eyebrow": "", "title": "", "subtitle": "", "backgroundImageUrl": "", "cards": [] },
+      "description": "라운드 히어로 사진 위 제목/부제 + 아래로 겹쳐 올라오는 3칸 예배 안내 카드(주일/주중/처음오시는분). 시안 11/20의 시그니처 히어로.",
+      "tags": ["hero", "overlap", "worship-times", "info-card", "above-fold"],
+      "aiHint": "Hero image with an overlapping 3-column info card (service times / first-time). cards:[{title, rows:[{label,value}]}]."
+    },
+    "sermon_feature": {
+      "label": "설교 피처드 (대표+목록)",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "eyebrow": "설교 말씀", "title": "이번 주 말씀", "featured": {}, "items": [] },
+      "description": "좌측 큰 영상 카드(하단 오버레이 제목) + 우측 최근 설교 목록 + 하단 링크. 시안 11의 '이번 주 말씀' 섹션.",
+      "tags": ["sermon", "featured", "video", "message", "spotlight"],
+      "aiHint": "Featured sermon: big card + side list. featured:{imageUrl,title,meta}, items:[{imageUrl,title,meta}]."
+    },
+    "news_split": {
+      "label": "소식 + 나눔 카드 (2단)",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "title": "주보 · 공지", "items": [], "sideTitle": "", "buttons": [], "links": [] },
+      "description": "좌측 소식/주보 리스트(태그+제목+날짜) + 우측 카드(안내 + CTA 2개 + 바로가기 목록). 시안 11의 소식/기도요청 2단 섹션.",
+      "tags": ["news", "notices", "bulletin", "prayer", "cta", "two-column"],
+      "aiHint": "News list + side card with CTAs. items:[{tag,title,date}], buttons:[{label,primary}], links:[]."
+    },
     "custom_html": {
       "label": "커스텀 HTML (시안 그대로)",
       "group": "content",
