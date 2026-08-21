@@ -98,8 +98,9 @@ export default function FrontSamplesTab() {
   const [applySlug, setApplySlug] = useState('');
   const [applyState, setApplyState] = useState<'idle' | 'loading' | 'applying' | 'done' | 'error'>('idle');
   const [applyMsg, setApplyMsg] = useState('');
-  // 'exact' = 시안 HTML 그대로(픽셀 일치), 'blocks' = 블록 프리셋(편집 쉬움)
-  const [applyMode, setApplyMode] = useState<'exact' | 'blocks'>('exact');
+  // 기본은 '블록으로'(편집·유지보수 가능). '시안 그대로'(CSS-baked)는 내용/색/
+  // 스타일 조정이 필요없을 때만 쓰는 보조 옵션.
+  const [applyMode, setApplyMode] = useState<'exact' | 'blocks'>('blocks');
 
   const openApply = (s: CanvasSample) => {
     setApplyFor(s); setApplySlug(''); setApplyMsg(''); setApplyState('loading');
@@ -240,15 +241,15 @@ export default function FrontSamplesTab() {
               <>
                 <div className="mt-4 text-xs font-semibold text-gray-500">적용 방식</div>
                 <div className="mt-1 grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => setApplyMode('blocks')}
+                    className={`rounded-lg border px-3 py-2 text-left text-xs ${applyMode === 'blocks' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600 hover:border-gray-400'}`}>
+                    <div className="font-bold">블록으로 (권장)</div>
+                    <div className="mt-0.5 text-[10px] opacity-80">시안 디자인을 블록으로 반영. 내용·색·스타일 수정 가능.</div>
+                  </button>
                   <button type="button" onClick={() => setApplyMode('exact')}
                     className={`rounded-lg border px-3 py-2 text-left text-xs ${applyMode === 'exact' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600 hover:border-gray-400'}`}>
                     <div className="font-bold">시안 그대로</div>
-                    <div className="mt-0.5 text-[10px] opacity-80">시안과 동일한 디자인. 편집은 시안 편집기로.</div>
-                  </button>
-                  <button type="button" onClick={() => setApplyMode('blocks')}
-                    className={`rounded-lg border px-3 py-2 text-left text-xs ${applyMode === 'blocks' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600 hover:border-gray-400'}`}>
-                    <div className="font-bold">블록으로</div>
-                    <div className="mt-0.5 text-[10px] opacity-80">근접 재현. 페이지 편집기로 수정 쉬움.</div>
+                    <div className="mt-0.5 text-[10px] opacity-80">CSS 통째. 조정이 필요없을 때만.</div>
                   </button>
                 </div>
                 <label className="mt-4 block text-xs font-semibold text-gray-500">대상 테넌트</label>
