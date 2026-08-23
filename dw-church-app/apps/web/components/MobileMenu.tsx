@@ -188,12 +188,12 @@ export default function MobileMenu({ navItems, basePath = '' }: MobileMenuProps)
         role="dialog"
         aria-modal="true"
         aria-label="Navigation menu"
-        className={`fixed top-0 right-0 z-50 h-full w-72 bg-[var(--dw-background)] shadow-xl transition-transform duration-300 ease-in-out ${
+        className={`fixed inset-y-0 right-0 z-50 flex flex-col w-72 bg-[var(--dw-background)] shadow-xl transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
         {/* Close button */}
-        <div className="flex items-center justify-end px-6 py-4 border-b border-gray-200">
+        <div className="flex-none flex items-center justify-end px-6 py-4 border-b border-gray-200">
           <button
             onClick={close}
             aria-label="Close navigation menu"
@@ -215,8 +215,10 @@ export default function MobileMenu({ navItems, basePath = '' }: MobileMenuProps)
           </button>
         </div>
 
-        {/* Nav links */}
-        <nav className="px-6 py-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 72px)' }}>
+        {/* Nav links — flex-1 + min-h-0 so this scrolls within the panel's real
+            height (not 100vh, which on mobile includes the URL bar and cut off
+            the bottom of long/expanded submenus). */}
+        <nav className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 py-4">
           <ul className="space-y-1">
             {visibleItems.map((item) => {
               const kids = item.children ?? [];
