@@ -290,6 +290,9 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   const layout = theme?.layout;
 
   const headerStyle = layout?.headerStyle ?? 'default';
+  // 'sidebar' layout (시안 12): fixed left nav on desktop, top bar + hamburger on
+  // mobile. Gated — tenants without this headerStyle are completely unaffected.
+  const isSidebar = headerStyle === 'sidebar';
 
   // The super-admin theme editor saves to the DESIGN TOKENS (--brand-*), but
   // dw-church block components read the legacy --dw-* vars. Bridge them so
@@ -411,6 +414,9 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
       data-tenant={slug}
       style={cssVars as React.CSSProperties}
       data-template={theme?.templateName ?? 'modern'}
+      // sidebar layout: shift all content right of the fixed 264px left nav on
+      // desktop (mobile keeps the normal top header, no shift).
+      className={isSidebar ? 'md:pl-[264px]' : undefined}
     >
       <BrandTokensStyle tenantSlug={slug} tokens={tokens} />
       {/* Load the actual webfont files so the operator-selected fonts render
@@ -431,10 +437,44 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
         본문으로 건너뛰기
       </a>
 
+      {/* Sidebar nav — desktop only, when headerStyle='sidebar' (시안 12). */}
+      {isSidebar && (
+        <aside
+          className="hidden md:flex fixed left-0 top-0 z-40 h-full w-[264px] flex-col"
+          style={{ backgroundColor: 'var(--dw-text)', color: 'var(--dw-background)' }}
+          aria-label="사이드바 메뉴"
+        >
+          <div className="px-6 py-6" style={{ borderBottom: '1px solid rgba(255,255,255,.12)' }}>
+            <Link href={homeHref} className="flex items-center gap-2">
+              {logoUrl ? (
+                <img src={logoUrl} alt={churchName} className="w-auto object-contain" style={{ height: 'var(--brand-logo-height, 36px)' }} />
+              ) : (
+                <span className="text-lg font-bold font-heading">{churchName}</span>
+              )}
+            </Link>
+          </div>
+          <nav aria-label="주 메뉴" className="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-0.5">
+            {sortedVisibleItems.map((item) => (
+              <div key={item.id}>
+                <Link href={navHref(item)} className="block rounded-md px-3 py-2.5 text-sm font-semibold transition-colors hover:bg-white/10">{item.label}</Link>
+                {item.children && item.children.length > 0 && (
+                  <div className="mb-1 ml-3 flex flex-col border-l pl-2" style={{ borderColor: 'rgba(255,255,255,.14)' }}>
+                    {item.children.map((child) => (
+                      <Link key={child.id} href={navHref(child)} className="block rounded-md px-3 py-2 text-xs opacity-80 transition-colors hover:bg-white/10 hover:opacity-100">{child.label}</Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </nav>
+          <div className="px-6 py-5 text-xs" style={{ borderTop: '1px solid rgba(255,255,255,.12)', opacity: 0.7 }}>{churchName}</div>
+        </aside>
+      )}
+
       {/* Header */}
       <header
         role="banner"
-        className={getHeaderClasses(headerStyle)}
+        className={`${getHeaderClasses(headerStyle)}${isSidebar ? ' md:hidden' : ''}`}
         style={getHeaderStyle(headerStyle)}
       >
         {headerStyle === 'centered' ? (

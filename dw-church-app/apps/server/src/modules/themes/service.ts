@@ -23,6 +23,13 @@ interface ThemeResponse {
   fonts: Record<string, unknown>;
   customCss: string;
   isActive: boolean;
+  // Storefront layout switches. Historically the legacy blob carried a full
+  // `layout` object (headerStyle/heroStyle/…) but mapThemeRow dropped it, so
+  // the storefront's header-style switch has been effectively dormant (always
+  // 'default'). We keep that behaviour for the legacy values to avoid changing
+  // any live tenant's header, and surface ONLY the new 'sidebar' shell (시안 12)
+  // so applying design 12 actually activates it. See mapThemeRow below.
+  layout?: { headerStyle: string };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -60,6 +67,12 @@ function mapThemeRow(row: ThemeRow): ThemeResponse {
     },
     customCss: (settings.customCss as string | undefined) ?? '',
     isActive: row.is_active,
+    // Surface ONLY 'sidebar' (see interface note). Every other legacy
+    // headerStyle stays dormant so existing tenants render exactly as before.
+    layout:
+      (settings.layout as { headerStyle?: string } | undefined)?.headerStyle === 'sidebar'
+        ? { headerStyle: 'sidebar' }
+        : undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

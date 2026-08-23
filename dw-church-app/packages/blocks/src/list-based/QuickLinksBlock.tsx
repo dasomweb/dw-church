@@ -12,8 +12,49 @@ interface QuickLinksBlockProps {
  */
 export function QuickLinksBlock({ props }: QuickLinksBlockProps) {
   const title = (props.title as string) ?? '';
+  const variant = (props.variant as string) || 'card';
   const items = Array.isArray(props.items) ? (props.items as Array<Record<string, unknown>>) : [];
   if (!title && items.length === 0) return null;
+
+  // tiles — 6-열(모바일 2~3열) 아이콘+라벨 바로가기 그리드 (프론트 샘플 15 상단
+  // "빠른 작업" 위젯). 각 항목 icon(이모지) + title(라벨) + content(URL).
+  if (variant === 'tiles') {
+    return (
+      <SectionShell props={props} style={{ paddingBlock: 'var(--section-py-sm)' }} applyLayout>
+        {title && <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--dw-text, var(--fg, #16181d))', marginBottom: 12 }}>{title}</div>}
+        <div
+          style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(2, 1fr)' }}
+          className="dw-quicktiles"
+        >
+          {items.map((it, i) => (
+            <a
+              key={i}
+              href={String(it.content || '#')}
+              style={{
+                border: '1px solid var(--dw-border, var(--border, #e5e7eb))',
+                borderRadius: 'var(--radius, 12px)', padding: '20px 16px',
+                display: 'flex', flexDirection: 'column', gap: 8,
+                color: 'var(--dw-text, var(--fg, #16181d))', textDecoration: 'none',
+                background: 'var(--dw-background, var(--bg, #fff))',
+              }}
+            >
+              <span
+                aria-hidden="true"
+                style={{
+                  width: 34, height: 34, borderRadius: 'var(--radius-sm, 8px)',
+                  background: 'color-mix(in srgb, var(--dw-primary, var(--brand, #1466d6)) 12%, transparent)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
+                }}
+              >{String(it.icon || '🔗')}</span>
+              <b style={{ fontSize: 15, fontWeight: 600 }}>{String(it.title || '')}</b>
+            </a>
+          ))}
+        </div>
+        {/* 데스크톱 6열 / 태블릿 3열 — CSS media (인라인 style 로는 표현 불가). */}
+        <style>{`@media(min-width:640px){.dw-quicktiles{grid-template-columns:repeat(3,1fr)!important}}@media(min-width:1024px){.dw-quicktiles{grid-template-columns:repeat(6,1fr)!important}}`}</style>
+      </SectionShell>
+    );
+  }
 
   return (
     <SectionShell props={props} style={{ paddingBlock: 'var(--section-py-md)' }} applyLayout>

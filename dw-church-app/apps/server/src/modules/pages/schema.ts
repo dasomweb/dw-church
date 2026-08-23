@@ -36,6 +36,7 @@ export const blockTypes = [
   'sermon_feature',
   'news_split',
   'bento_grid',
+  'dashboard_banner',
   // Church Info
   'worship_schedule',
   'worship_times',

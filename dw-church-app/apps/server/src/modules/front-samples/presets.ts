@@ -144,6 +144,16 @@ const quickLinks = (): PresetSection => ({ block_type: 'quick_links', props: { t
   { title: '소그룹 신청', content: '/smallgroup' },
   { title: '온라인 헌금', content: '/giving' },
 ] } });
+// 대시보드 환영 배너 + 6칸 아이콘 타일 (시안 15 회원 대시보드형 홈).
+const dashboardBanner = (): PresetSection => ({ block_type: 'dashboard_banner', props: { eyebrow: '이번 주 주일', title: '이번 주 예배 안내', subtitle: '1부 9:00 · 2부 11:00 · EM 1:00 PM  |  설교 「우리를 부르시는 손길」', buttonText: '주보 보기', buttonUrl: '/bulletins', secondaryButtonText: '설교 영상', secondaryButtonUrl: '/sermons' } });
+const quickTiles = (): PresetSection => ({ block_type: 'quick_links', props: { title: '빠른 작업', variant: 'tiles', items: [
+  { icon: '📄', title: '주보', content: '/bulletins' },
+  { icon: '🎬', title: '설교 영상', content: '/sermons' },
+  { icon: '💝', title: '온라인 헌금', content: '/giving' },
+  { icon: '👥', title: '소그룹', content: '/smallgroup' },
+  { icon: '🙏', title: '기도 요청', content: '/prayer' },
+  { icon: '📅', title: '교회 일정', content: '/events' },
+] } });
 const columns = (): PresetSection => ({ block_type: 'recent_columns', props: { title: '목회 칼럼', limit: 3, variant: 'grid-3' } });
 const board = (): PresetSection => ({ block_type: 'board', props: { title: '교회 소식', boardSlug: 'notice', limit: 5, variant: 'list' } });
 const location = (): PresetSection => ({ block_type: 'location_map', props: { title: '오시는 길', address: '', zoom: 15 } });
@@ -179,7 +189,7 @@ const P: Record<string, PresetSection[]> = {
   '12': [hero('함께 자라고 함께 살아가는 교회', '', { backgroundImageUrl: `${IMG}/worship-1.jpg` }), infoColumns(), sermons('featured'), bulletins('grid-3'), events(), columns(), quickLinks(), location(), contact()],
   '13': [bentoGrid(), location(), contact()],
   '14': [hero('고요한 저녁, 말씀 앞에 나아갑니다', '누구든 오실 수 있습니다', { backgroundImageUrl: `${IMG}/worship-2.jpg`, overlayOpacity: 0.55 }), infoColumns(), sermons('grid-3'), newcomer(), albums('grid-4'), location(), contact()],
-  '15': [hero('이번 주 예배 안내', '필요한 것을 한 화면에서', { height: 'md', backgroundImageUrl: `${IMG}/church-2.jpg` }), infoColumns(), sermons('grid-2'), bulletins('grid-2'), events(), board(), location(), contact()],
+  '15': [dashboardBanner(), quickTiles(), sermons('grid-2'), board(), weekSchedule(), albums('grid-4'), location(), contact()],
   '16': [
     hero('주일 11시, 함께 모입니다', 'LA 코리아타운에서 32년째 한인 가족들과 함께합니다', { backgroundImageUrl: `${IMG}/worship-2.jpg`, textAlign: 'center' }),
     story('예배', '말씀 앞에 함께 섭니다', '주일 오전 9시와 11시, 수요일 저녁 7시 30분, 매일 새벽 5시 30분에 모입니다. 예배 순서와 주차 안내는 미리 확인하실 수 있습니다.', `${IMG}/worship-2.jpg`, 'left', '예배 시간 전체 보기'),
@@ -233,16 +243,28 @@ function getThemeProfile(design: string): ThemeProfile {
   return THEME_PRESETS[design] ?? DEFAULT_LIGHT;
 }
 
-async function applyThemeToTenant(schema: string, profile: ThemeProfile): Promise<void> {
+// Per-design storefront header shell. Only 시안 12 uses the fixed left sidebar
+// (headerStyle='sidebar', activated in the tenant layout); every other design
+// gets 'default' so switching AWAY from 12 predictably restores the top header.
+const HEADER_STYLES: Record<string, string> = { '12': 'sidebar' };
+function getHeaderStyleForDesign(design: string): string {
+  return HEADER_STYLES[design] ?? 'default';
+}
+
+async function applyThemeToTenant(schema: string, profile: ThemeProfile, headerStyle: string): Promise<void> {
   const rows = await prisma.$queryRawUnsafe<{ settings: Record<string, unknown> | null }[]>(
     `SELECT settings FROM "${schema}".themes WHERE is_active = true LIMIT 1`,
   );
   const cur = (rows[0]?.settings ?? {}) as Record<string, unknown>;
+  const curLayout = (cur.layout as Record<string, unknown> | undefined) ?? {};
   const settings = {
     templateName: 'modern',
     colors: profile.colors,
     fonts: profile.fonts,
     customCss: (cur.customCss as string) || '',
+    // Preserve any other legacy layout switches; only (re)set headerStyle so
+    // design 12 activates the sidebar and others reset it to 'default'.
+    layout: { ...curLayout, headerStyle },
     // NOTE: tokensV2 intentionally omitted → legacy→tokens bridge uses these colors.
   };
   const affected = await prisma.$executeRawUnsafe(
@@ -310,7 +332,7 @@ export async function applyDesignToTenant(slug: string, design: string): Promise
   // the sample (colors/fonts/dark). Non-fatal — a theme failure must not undo
   // the section rebuild.
   try {
-    await applyThemeToTenant(schema, getThemeProfile(design));
+    await applyThemeToTenant(schema, getThemeProfile(design), getHeaderStyleForDesign(design));
   } catch (err) {
     console.warn(`[applyDesign] theme for '${design}' on ${slug} skipped:`, err);
   }
