@@ -120,6 +120,24 @@ const newsSplit = (): PresetSection => ({
 });
 const givingBand = (): PresetSection => ({ block_type: 'cta_section', props: { variant: 'inline-banner', bgMode: 'accent', title: '함께 나누는 헌금', subtitle: '계좌이체와 간편송금으로 언제든 참여하실 수 있습니다.', buttonText: '온라인 헌금하기', buttonUrl: '/giving', secondaryButtonText: '헌금 안내', secondaryButtonUrl: '/giving' } });
 const galleryMosaic = (): PresetSection => ({ block_type: 'image_gallery', props: { title: '교회의 하루하루', variant: 'masonry', images: [`${IMG}/retreat-1.jpg`, `${IMG}/worship-1.jpg`, `${IMG}/serving-2.jpg`, `${IMG}/group-1.jpg`, `${IMG}/group-2.jpg`, `${IMG}/pray-1.jpg`] } });
+const bentoGrid = (): PresetSection => ({
+  block_type: 'bento_grid',
+  props: {
+    columns: 6,
+    tiles: [
+      { kind: 'photo', colSpan: 4, rowSpan: 3, imageUrl: `${IMG}/worship-2.jpg`, title: '따뜻한 이웃이 되는 교회', subtitle: '주일 9:00 · 11:00  |  수요 19:30' },
+      { kind: 'card', colSpan: 2, bg: 'brand', eyebrow: '이번 주일', title: '8월 16일', subtitle: '1부 9:00 · 2부 11:00' },
+      { kind: 'photo', colSpan: 2, rowSpan: 2, imageUrl: `${IMG}/sermon-1.jpg`, eyebrow: '▶ 최신 설교', title: '우리를 부르시는 손길' },
+      { kind: 'list', colSpan: 3, title: '주보 · 공지', moreLabel: '더보기', items: [{ label: '8월 16일 주일 주보', date: '08.15' }, { label: '가을 성경공부 신청', date: '08.12' }, { label: '주일학교 교사 모집', date: '08.05' }] },
+      { kind: 'pair', colSpan: 3, cards: [{ title: '처음 오시나요?', text: '새가족 안내 · 주차 · 예배 순서' }, { title: '온라인 헌금', text: '계좌이체 · 간편송금' }] },
+      { kind: 'photo', colSpan: 2, imageUrl: `${IMG}/worship-2.jpg` },
+      { kind: 'photo', colSpan: 2, imageUrl: `${IMG}/group-1.jpg` },
+      { kind: 'photo', colSpan: 2, imageUrl: `${IMG}/serving-2.jpg` },
+      { kind: 'card', colSpan: 3, bg: 'surface', title: '공동체', text: '구역 모임과 주일학교, EM이 매주 모입니다.' },
+      { kind: 'card', colSpan: 3, bg: 'surface', title: '이웃을 향해', text: '한인 시니어센터, 푸드뱅크, 선교지 후원.' },
+    ],
+  },
+});
 const announce = (): PresetSection => ({ block_type: 'cta_section', props: { variant: 'announcement-bar', eyebrow: '다가오는 행사', title: '가을 성경공부 「마가복음 6주 과정」', subtitle: '9월 5일 시작 · 매주 목요일 저녁 8시', buttonText: '신청하기', buttonUrl: '/events' } });
 const quickLinks = (): PresetSection => ({ block_type: 'quick_links', props: { title: '바로가기', items: [
   { title: '기도 요청', content: '/prayer' },
@@ -157,7 +175,7 @@ const P: Record<string, PresetSection[]> = {
   // 완성도 레이아웃 시안
   '11': [heroOverlap(), verse(), announce(), sermonFeature(), ministries(), newsSplit(), galleryMosaic(), givingBand()],
   '12': [hero('함께 자라고 함께 살아가는 교회', '', { backgroundImageUrl: `${IMG}/worship-1.jpg` }), infoColumns(), sermons('featured'), bulletins('grid-3'), events(), columns(), quickLinks(), location(), contact()],
-  '13': [hero('따뜻한 이웃이 되는 교회', '', { backgroundImageUrl: `${IMG}/serving-2.jpg` }), albums('masonry'), sermons('grid-3'), events(), columns(), location(), contact()],
+  '13': [bentoGrid(), location(), contact()],
   '14': [hero('고요한 저녁, 말씀 앞에 나아갑니다', '누구든 오실 수 있습니다', { backgroundImageUrl: `${IMG}/worship-2.jpg`, overlayOpacity: 0.55 }), infoColumns(), sermons('grid-3'), newcomer(), albums('grid-4'), location(), contact()],
   '15': [hero('이번 주 예배 안내', '필요한 것을 한 화면에서', { height: 'md', backgroundImageUrl: `${IMG}/church-2.jpg` }), infoColumns(), sermons('grid-2'), bulletins('grid-2'), events(), board(), location(), contact()],
   '16': [hero('우리는 서로의 이웃입니다', '', { backgroundImageUrl: `${IMG}/worship-2.jpg` }), textImage('말씀으로 세워지는 공동체', `${IMG}/sermon-1.jpg`, 'left'), textImage('삶으로 나누는 사랑', `${IMG}/serving-1.jpg`, 'right'), pastor(), sermons('grid-3'), albums('grid-3'), contact()],

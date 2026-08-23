@@ -11,6 +11,7 @@ import { CustomHtmlBlock } from '../static/CustomHtmlBlock';
 import { HeroOverlapBlock } from '../static/HeroOverlapBlock';
 import { SermonFeatureBlock } from '../static/SermonFeatureBlock';
 import { NewsSplitBlock } from '../static/NewsSplitBlock';
+import { BentoGridBlock } from '../static/BentoGridBlock';
 import { LogoTitleBlock } from '../static/LogoTitleBlock';
 import { ButtonGroupBlock } from '../static/ButtonGroupBlock';
 import { DirectionsSplitBlock } from '../static/DirectionsSplitBlock';
@@ -149,6 +150,7 @@ export const BLOCK_MAP: Record<string, SyncBlockComponent> = {
   hero_overlap:   HeroOverlapBlock,
   sermon_feature: SermonFeatureBlock,
   news_split:     NewsSplitBlock,
+  bento_grid:     BentoGridBlock,
   logo_title:   LogoTitleBlock,
   button_group: ButtonGroupBlock,
   directions_split: DirectionsSplitBlock,

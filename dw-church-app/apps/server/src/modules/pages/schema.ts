@@ -35,6 +35,7 @@ export const blockTypes = [
   'hero_overlap',
   'sermon_feature',
   'news_split',
+  'bento_grid',
   // Church Info
   'worship_schedule',
   'worship_times',

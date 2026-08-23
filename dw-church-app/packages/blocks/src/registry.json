@@ -596,6 +596,15 @@
       "tags": ["news", "notices", "bulletin", "prayer", "cta", "two-column"],
       "aiHint": "News list + side card with CTAs. items:[{tag,title,date}], buttons:[{label,primary}], links:[]."
     },
+    "bento_grid": {
+      "label": "매거진 벤토 그리드",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "columns": 6, "tiles": [] },
+      "description": "6칸 그리드에 사진/브랜드카드/설교/리스트/텍스트카드를 서로 다른 크기로 배치하는 매거진형 홈. 시안 13. 모바일은 1칸 스택.",
+      "tags": ["bento", "magazine", "tiles", "grid", "mosaic", "home"],
+      "aiHint": "Magazine bento grid. tiles:[{colSpan,rowSpan,kind:'photo'|'card'|'list'|'pair', ...}]."
+    },
     "custom_html": {
       "label": "커스텀 HTML (시안 그대로)",
       "group": "content",
