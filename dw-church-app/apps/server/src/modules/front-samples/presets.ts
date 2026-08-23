@@ -189,7 +189,7 @@ const P: Record<string, PresetSection[]> = {
   ],
   '17': [hero('우리는 서로의 이웃입니다', '', { variant: 'text-only', bgMode: 'gradient', height: 'md', textAlign: 'center' }), infoColumns(), sermons('grid-3'), albums('grid-3'), location(), contact()],
   '18': [hero('이번 주 교회는 이렇게 모입니다', '', { backgroundImageUrl: `${IMG}/church-2.jpg` }), weekSchedule(), events(), sermons('grid-4'), albums('grid-4'), location(), contact()],
-  '19': [hero('교회의 사진이 이야기가 됩니다', '', { backgroundImageUrl: `${IMG}/retreat-1.jpg` }), albums('masonry'), infoColumns(), sermons('grid-3'), events(), contact()],
+  '19': [hero('함께한 시간들', '교회의 사진이 이야기가 됩니다', { variant: 'page-hero', backgroundImageUrl: `${IMG}/retreat-1.jpg` }), galleryMosaic(), sermonFeature(), newcomer(), contact()],
   '20': [heroOverlap(), verse(), sermonFeature(), ministries(), newsSplit(), galleryMosaic(), givingBand()],
   '21': [hero('주일 11시, 당신의 자리가 있습니다', '', { height: 'full', backgroundImageUrl: `${IMG}/worship-2.jpg`, overlayOpacity: 0.5 }), infoColumns(), sermons('grid-4'), newcomer(), albums('grid-4'), location(), contact()],
 };
