@@ -153,8 +153,10 @@ const pastor = (o: Partial<Record<string, unknown>> = {}): PresetSection => ({
   props: { title: '담임목사 인사말', eyebrow: '환영합니다', pastorName: '', pastorTitle: '담임목사', message: '', imageUrl: `${IMG}/sermon-1.jpg`, variant: 'left', ...o },
 });
 const newcomer = (): PresetSection => ({ block_type: 'newcomer_info', props: { title: '처음 오시나요?', subtitle: '편안하게 오세요, 자리를 비워 두었습니다.', content: '', imageUrl: `${IMG}/group-2.jpg` } });
-const textImage = (title: string, imageUrl: string, layout: 'left' | 'right' = 'left'): PresetSection => ({
-  block_type: 'text_image', props: { title, subtitle: '', content: '', imageUrl, variant: layout, bgMode: 'none' },
+// 스토리 스크롤 행 (좌우 교차): eyebrow + 제목 + 본문 + 버튼 + 이미지. 시안 16.
+const story = (eyebrow: string, title: string, content: string, imageUrl: string, layout: 'left' | 'right', buttonText: string): PresetSection => ({
+  block_type: 'text_image',
+  props: { eyebrow, title, content, imageUrl, variant: layout, bgMode: 'none', buttonText, buttonUrl: '#' },
 });
 
 // ── the 22 presets, keyed by sample id ──────────────────────────────────────
@@ -178,7 +180,13 @@ const P: Record<string, PresetSection[]> = {
   '13': [bentoGrid(), location(), contact()],
   '14': [hero('고요한 저녁, 말씀 앞에 나아갑니다', '누구든 오실 수 있습니다', { backgroundImageUrl: `${IMG}/worship-2.jpg`, overlayOpacity: 0.55 }), infoColumns(), sermons('grid-3'), newcomer(), albums('grid-4'), location(), contact()],
   '15': [hero('이번 주 예배 안내', '필요한 것을 한 화면에서', { height: 'md', backgroundImageUrl: `${IMG}/church-2.jpg` }), infoColumns(), sermons('grid-2'), bulletins('grid-2'), events(), board(), location(), contact()],
-  '16': [hero('우리는 서로의 이웃입니다', '', { backgroundImageUrl: `${IMG}/worship-2.jpg` }), textImage('말씀으로 세워지는 공동체', `${IMG}/sermon-1.jpg`, 'left'), textImage('삶으로 나누는 사랑', `${IMG}/serving-1.jpg`, 'right'), pastor(), sermons('grid-3'), albums('grid-3'), contact()],
+  '16': [
+    hero('주일 11시, 함께 모입니다', 'LA 코리아타운에서 32년째 한인 가족들과 함께합니다', { backgroundImageUrl: `${IMG}/worship-2.jpg`, textAlign: 'center' }),
+    story('예배', '말씀 앞에 함께 섭니다', '주일 오전 9시와 11시, 수요일 저녁 7시 30분, 매일 새벽 5시 30분에 모입니다. 예배 순서와 주차 안내는 미리 확인하실 수 있습니다.', `${IMG}/worship-2.jpg`, 'left', '예배 시간 전체 보기'),
+    story('말씀', '우리를 부르시는 손길', '로마서 8장 28절 · 김성호 담임목사 · 8월 9일 주일 2부. 지난 설교는 영상과 설교문으로 모두 남아 있습니다.', `${IMG}/sermon-1.jpg`, 'right', '설교 영상 보기'),
+    story('공동체', '함께 신앙생활 합니다', '구역 모임과 주일학교, EM이 매주 모입니다. 처음 오신 분은 새가족반에서 여섯 주 동안 함께합니다.', `${IMG}/group-1.jpg`, 'left', '소그룹 둘러보기'),
+    bulletins('grid-3'), galleryMosaic(), givingBand(),
+  ],
   '17': [hero('우리는 서로의 이웃입니다', '', { variant: 'text-only', bgMode: 'gradient', height: 'md', textAlign: 'center' }), infoColumns(), sermons('grid-3'), albums('grid-3'), location(), contact()],
   '18': [hero('이번 주 교회는 이렇게 모입니다', '', { backgroundImageUrl: `${IMG}/church-2.jpg` }), weekSchedule(), events(), sermons('grid-4'), albums('grid-4'), location(), contact()],
   '19': [hero('교회의 사진이 이야기가 됩니다', '', { backgroundImageUrl: `${IMG}/retreat-1.jpg` }), albums('masonry'), infoColumns(), sermons('grid-3'), events(), contact()],
