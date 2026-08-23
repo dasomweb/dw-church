@@ -129,7 +129,16 @@ export function tokensToCssText(tokens: DesignTokens, scope = ':root'): string {
   for (const name of SCALE_KEYS) {
     const spec = tokens.typography.scales[name];
     if (!spec) continue;
-    if (spec.size.mobile !== undefined && spec.size.mobile !== spec.size.desktop) {
+    // Both blocks are max-width queries, so the tablet block ALSO matches
+    // mobile widths and cascades down. The mobile override must therefore be
+    // compared against the value active just above it — the tablet value (or
+    // desktop when no tablet override) — NOT against desktop. Otherwise, when
+    // mobile === desktop but tablet differs (e.g. h1 {mobile:42, tablet:56,
+    // desktop:42}), the mobile block was skipped and the tablet 56px leaked
+    // onto phones (bigger on mobile than desktop). Emit mobile whenever it
+    // differs from the tablet-effective value so it correctly restores it.
+    const tabletEff = spec.size.tablet ?? spec.size.desktop;
+    if (spec.size.mobile !== undefined && spec.size.mobile !== tabletEff) {
       mobileLines.push(`  --brand-${name}: ${spec.size.mobile}px;`);
     }
     if (spec.size.tablet !== undefined && spec.size.tablet !== spec.size.desktop) {
