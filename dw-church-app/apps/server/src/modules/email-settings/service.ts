@@ -12,6 +12,7 @@ export async function getSettings() {
 
 export async function updateSettings(input: UpdateEmailSettingsInput) {
   const map: Record<string, string> = {
+    provider: 'provider', resendApiKey: 'resend_api_key', resendFrom: 'resend_from',
     smtpHost: 'smtp_host', smtpPort: 'smtp_port', smtpSecure: 'smtp_secure',
     smtpUser: 'smtp_user', smtpPass: 'smtp_pass',
     fromInfo: 'from_info', fromOrder: 'from_order', fromSupport: 'from_support', fromName: 'from_name',
@@ -21,8 +22,9 @@ export async function updateSettings(input: UpdateEmailSettingsInput) {
   let i = 1;
   for (const [key, col] of Object.entries(map)) {
     const v = (input as Record<string, unknown>)[key];
-    // smtpPass: only overwrite when a non-empty value is sent (blank = keep existing).
-    if (key === 'smtpPass' && (v === undefined || v === '')) continue;
+    // Secrets (smtpPass / resendApiKey): only overwrite when a non-empty value
+    // is sent (blank = keep existing) so the UI can hide the stored value.
+    if ((key === 'smtpPass' || key === 'resendApiKey') && (v === undefined || v === '')) continue;
     if (v !== undefined) { set.push(`"${col}" = $${i++}`); values.push(v); }
   }
   if (set.length === 0) return getSettings();

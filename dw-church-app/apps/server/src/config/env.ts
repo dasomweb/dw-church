@@ -31,6 +31,9 @@ const envSchema = z.object({
   SMTP_USER: z.string().default(''),
   SMTP_PASS: z.string().default(''),
   EMAIL_FROM: z.string().default('True Light <mailer@truelight.app>'),
+  // Resend — email-marketing provider (optional). When email_settings.provider
+  // = 'resend' the DB-stored key wins; this env is the fallback.
+  RESEND_API_KEY: z.string().default(''),
 
   // Stripe billing (optional — only required if billing is enabled)
   STRIPE_SECRET_KEY: z.string().default(''),

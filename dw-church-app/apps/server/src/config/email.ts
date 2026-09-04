@@ -9,6 +9,9 @@ import { prisma } from './database.js';
  * without a redeploy; invalidateMailCache() clears the cache on save.
  */
 interface MailConfig {
+  provider: 'smtp' | 'resend';
+  resendApiKey: string;
+  resendFrom: string;
   host: string;
   port: number;
   secure: boolean;
@@ -42,7 +45,11 @@ async function loadConfig(): Promise<MailConfig> {
 
   const port = Number(row?.smtp_port ?? env.SMTP_PORT ?? 587);
   const fromInfo = (row?.from_info as string) || env.EMAIL_FROM || '';
+  const provider = (row?.provider as string) === 'resend' ? 'resend' : 'smtp';
   const cfg: MailConfig = {
+    provider,
+    resendApiKey: (row?.resend_api_key as string) || env.RESEND_API_KEY || '',
+    resendFrom: (row?.resend_from as string) || '',
     host: (row?.smtp_host as string) || env.SMTP_HOST || '',
     port,
     secure: (row?.smtp_secure as boolean | undefined) ?? port === 465,
@@ -57,6 +64,42 @@ async function loadConfig(): Promise<MailConfig> {
   return cfg;
 }
 
+/**
+ * Send via Resend's HTTP API (POST /emails). Kept dependency-free (fetch) —
+ * from is required; for a BCC-only blast the visible To is the sender itself
+ * so recipients never see each other. `bcc` capped by the caller's batch size
+ * (Resend allows up to 50 addresses per to/bcc field).
+ */
+async function sendViaResend(
+  cfg: MailConfig,
+  args: { from: string; to: string; bcc: string[]; subject: string; html: string },
+): Promise<void> {
+  const body: Record<string, unknown> = {
+    from: args.from,
+    to: args.to,
+    subject: args.subject,
+    html: args.html,
+  };
+  if (args.bcc.length) body.bcc = args.bcc;
+
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${cfg.resendApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`Resend ${res.status}: ${text.slice(0, 300)}`);
+  }
+  const json = (await res.json().catch(() => ({}))) as { id?: string };
+  console.log(
+    `[email:resend] sent to=${args.to} bcc=${args.bcc.length} subject="${args.subject}" id=${json.id ?? '?'}`,
+  );
+}
+
 export async function sendEmail(opts: {
   to?: string;
   bcc?: string[];
@@ -65,13 +108,34 @@ export async function sendEmail(opts: {
   from?: 'info' | 'order' | 'support';
 }): Promise<void> {
   const cfg = await loadConfig();
-  if (!cfg.host) {
-    console.warn('[email] SMTP not configured, skipping:', opts.subject);
+  const useResend = cfg.provider === 'resend' && !!cfg.resendApiKey;
+  if (!useResend && !cfg.host) {
+    console.warn('[email] provider not configured (no SMTP host / Resend key), skipping:', opts.subject);
     return;
   }
   const bcc = (opts.bcc ?? []).filter(Boolean);
   if (!opts.to && bcc.length === 0) {
     console.warn('[email] no recipients, skipping:', opts.subject);
+    return;
+  }
+
+  // Resolve the From address (shared by both providers).
+  const resolvedFromAddr =
+    opts.from === 'order' ? cfg.fromOrder : opts.from === 'support' ? cfg.fromSupport : cfg.fromInfo;
+
+  if (useResend) {
+    // Resend requires an explicit sender; prefer the dedicated resendFrom
+    // (must be a verified domain), else the fromName<fromInfo> pair.
+    const from =
+      cfg.resendFrom ||
+      (cfg.fromName && resolvedFromAddr ? `${cfg.fromName} <${resolvedFromAddr}>` : resolvedFromAddr);
+    const to = opts.to || resolvedFromAddr;
+    try {
+      await sendViaResend(cfg, { from, to, bcc, subject: opts.subject, html: opts.html });
+    } catch (err) {
+      console.error(`[email:resend] SEND FAILED to=${to} bcc=${bcc.length}:`, (err as Error)?.message || err);
+      throw err;
+    }
     return;
   }
 

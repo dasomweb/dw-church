@@ -164,13 +164,15 @@ export function parseCustomEmails(blob?: string): string[] {
 }
 
 /** Per-audience recipient counts for the compose UI. */
-export async function audienceCounts(): Promise<{ admins: number; demo: number; applications: number }> {
-  const [admins, demo, applications] = await Promise.all([
+export async function audienceCounts(): Promise<{ admins: number; demo: number; applications: number; contacts: number }> {
+  const { subscribedEmails } = await import('../marketing-contacts/service.js');
+  const [admins, demo, applications, contacts] = await Promise.all([
     broadcastRecipients(),
     emailsFromTable('public.demo_requests'),
     emailsFromTable('public.service_applications'),
+    subscribedEmails(),
   ]);
-  return { admins: admins.length, demo: demo.length, applications: applications.length };
+  return { admins: admins.length, demo: demo.length, applications: applications.length, contacts: contacts.length };
 }
 
 /**
@@ -180,12 +182,17 @@ export async function audienceCounts(): Promise<{ admins: number; demo: number; 
 export async function marketingRecipients(
   audiences: readonly string[] | undefined,
   customEmails?: string,
+  contactTags?: string[],
 ): Promise<string[]> {
   const picked = audiences && audiences.length ? audiences : ['admins'];
   const lists: string[][] = [];
   if (picked.includes('admins')) lists.push(await broadcastRecipients());
   if (picked.includes('demo')) lists.push(await emailsFromTable('public.demo_requests'));
   if (picked.includes('applications')) lists.push(await emailsFromTable('public.service_applications'));
+  if (picked.includes('contacts')) {
+    const { subscribedEmails } = await import('../marketing-contacts/service.js');
+    lists.push(await subscribedEmails(contactTags));
+  }
   lists.push(parseCustomEmails(customEmails));
   // De-dupe case-insensitively, keep the first-seen casing.
   const seen = new Set<string>();

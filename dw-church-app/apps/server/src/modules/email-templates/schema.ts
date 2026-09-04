@@ -18,7 +18,8 @@ export const previewTemplateSchema = z.object({
   body: z.string().max(20000).optional(),
 });
 
-export const BROADCAST_AUDIENCES = ['admins', 'demo', 'applications'] as const;
+// 'contacts' = 주소록(marketing_contacts)의 구독 연락처. contactTags 로 세그먼트 필터.
+export const BROADCAST_AUDIENCES = ['admins', 'demo', 'applications', 'contacts'] as const;
 
 export const broadcastSchema = z.object({
   subject: z.string().min(1).max(300),
@@ -26,6 +27,7 @@ export const broadcastSchema = z.object({
   testTo: z.string().email().optional(), // when set, send only to this address (preview)
   // Marketing/announcement recipients. Empty → defaults to 'admins' (legacy 공지).
   audiences: z.array(z.enum(BROADCAST_AUDIENCES)).optional(),
+  contactTags: z.array(z.string().trim().max(40)).max(30).optional(), // 'contacts' 대상일 때 태그 필터
   customEmails: z.string().max(50000).optional(), // pasted addresses (comma/newline/semicolon)
 });
 

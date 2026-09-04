@@ -113,6 +113,7 @@ async function main(): Promise<void> {
   const { emailSettingsRoutes } = await import('./modules/email-settings/routes.js');
   const { intakeRoutes } = await import('./modules/intake/routes.js');
   const { emailTemplateRoutes } = await import('./modules/email-templates/routes.js');
+  const { marketingContactsRoutes } = await import('./modules/marketing-contacts/routes.js');
   const { promoRoutes } = await import('./modules/promo/routes.js');
   const { formRoutes } = await import('./modules/forms/routes.js');
   const { formBuilderRoutes } = await import('./modules/form-builder/routes.js');
@@ -202,6 +203,7 @@ async function main(): Promise<void> {
   await app.register(emailSettingsRoutes, { prefix: '/api/v1' }); // /admin/email-settings
   await app.register(intakeRoutes, { prefix: '/api/v1' }); // /intake + /admin/intake
   await app.register(emailTemplateRoutes, { prefix: '/api/v1' }); // /admin/email-templates + /admin/email-broadcast
+  await app.register(marketingContactsRoutes, { prefix: '/api/v1' }); // /admin/marketing-contacts (주소록 + CSV import)
   await app.register(promoRoutes, { prefix: '/api/v1' }); // /promo/validate + /admin/promo
   await app.register(formRoutes, { prefix: '/api/v1' }); // /forms/:type (public) + /admin/forms/submissions
   await app.register(formBuilderRoutes, { prefix: '/api/v1' }); // /form-defs/* (admin) + /forms/:slug/schema|submit (public)
@@ -1234,8 +1236,34 @@ async function main(): Promise<void> {
        VALUES (1, 'info@dasomweb.com', 'order@dasomweb.com', 'support@dasomweb.com', 'TRUE LIGHT')
        ON CONFLICT (id) DO NOTHING`,
     );
+    // Email marketing provider: Resend (or SMTP). Added 2026-09 for the
+    // super-admin email-marketing feature — operator switches provider +
+    // stores the Resend API key without a redeploy. Cols are additive.
+    await prisma.$executeRawUnsafe(`ALTER TABLE "email_settings" ADD COLUMN IF NOT EXISTS "provider" VARCHAR(20) NOT NULL DEFAULT 'smtp'`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE "email_settings" ADD COLUMN IF NOT EXISTS "resend_api_key" VARCHAR(200) NOT NULL DEFAULT ''`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE "email_settings" ADD COLUMN IF NOT EXISTS "resend_from" VARCHAR(255) NOT NULL DEFAULT ''`);
   } catch (err) {
     app.log.warn(`email_settings table migration skipped: ${err}`);
+  }
+
+  // --- marketing_contacts (주소록 — 슈퍼어드민 이메일 마케팅 연락처, CSV import) ---
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "marketing_contacts" (
+        "id"         UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+        "email"      VARCHAR(320) NOT NULL UNIQUE,
+        "name"       VARCHAR(160) NOT NULL DEFAULT '',
+        "tags"       TEXT[]       NOT NULL DEFAULT '{}',
+        "status"     VARCHAR(20)  NOT NULL DEFAULT 'subscribed' CHECK (status IN ('subscribed','unsubscribed')),
+        "source"     VARCHAR(40)  NOT NULL DEFAULT 'manual',
+        "note"       VARCHAR(300) NOT NULL DEFAULT '',
+        "created_at" TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+        "updated_at" TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+      )
+    `);
+    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "marketing_contacts_status_idx" ON "marketing_contacts" ("status")`);
+  } catch (err) {
+    app.log.warn(`marketing_contacts table migration skipped: ${err}`);
   }
 
   // --- email_templates (편집 가능한 알림 메일 템플릿, 슈퍼어드민 관리) ---

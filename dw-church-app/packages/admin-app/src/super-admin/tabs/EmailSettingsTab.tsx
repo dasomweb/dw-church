@@ -5,6 +5,9 @@ import { Spinner } from '../shared/admin-ui';
 
 interface EmailSettings {
   id: string;
+  provider: 'smtp' | 'resend';
+  resendApiKeySet: boolean;
+  resendFrom: string;
   smtpHost: string;
   smtpPort: number;
   smtpSecure: boolean;
@@ -24,7 +27,11 @@ export default function EmailSettingsTab() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [passSet, setPassSet] = useState(false);
+  const [resendKeySet, setResendKeySet] = useState(false);
   const [form, setForm] = useState({
+    provider: 'smtp' as 'smtp' | 'resend',
+    resendApiKey: '', // 빈 값이면 기존 키 유지 (PATCH 에서 생략)
+    resendFrom: '',
     smtpHost: '',
     smtpPort: 587,
     smtpSecure: false,
@@ -46,7 +53,11 @@ export default function EmailSettingsTab() {
       const res = await apiFetch<{ data: EmailSettings }>('/email-settings');
       const s = res.data;
       setPassSet(!!s.smtpPassSet);
+      setResendKeySet(!!s.resendApiKeySet);
       setForm({
+        provider: s.provider === 'resend' ? 'resend' : 'smtp',
+        resendApiKey: '', // 절대 서버에서 받아오지 않음
+        resendFrom: s.resendFrom ?? '',
         smtpHost: s.smtpHost ?? '',
         smtpPort: s.smtpPort ?? 587,
         smtpSecure: !!s.smtpSecure,
@@ -74,6 +85,8 @@ export default function EmailSettingsTab() {
     try {
       // smtpPass 는 새로 입력한 경우에만 전송 — 빈 값이면 기존 비밀번호 유지.
       const body: Record<string, unknown> = {
+        provider: form.provider,
+        resendFrom: form.resendFrom,
         smtpHost: form.smtpHost,
         smtpPort: Number(form.smtpPort),
         smtpSecure: form.smtpSecure,
@@ -84,6 +97,7 @@ export default function EmailSettingsTab() {
         fromName: form.fromName,
       };
       if (form.smtpPass.trim()) body.smtpPass = form.smtpPass;
+      if (form.resendApiKey.trim()) body.resendApiKey = form.resendApiKey;
 
       await apiFetch('/email-settings', {
         method: 'PATCH',
@@ -132,9 +146,61 @@ export default function EmailSettingsTab() {
       {/* Intro */}
       <div className="rounded-xl border border-blue-200 bg-blue-50 px-5 py-4">
         <p className="text-sm font-medium text-blue-800">
-          여기서 설정한 SMTP로 결제 안내·고객지원 등 모든 자동 메일이 발송됩니다.
-          비밀번호는 보안상 다시 표시되지 않습니다.
+          결제 안내·고객지원 등 모든 자동 메일과 이메일 마케팅 발송이 여기 설정을 따릅니다.
+          발송 방식으로 <b>Resend</b>(권장, 마케팅) 또는 <b>SMTP</b>를 선택하세요. 비밀번호/API 키는 보안상 다시 표시되지 않습니다.
         </p>
+      </div>
+
+      {/* 발송 방식 선택 */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-3">
+        <h2 className="text-sm font-semibold text-gray-700">발송 방식 (Provider)</h2>
+        <div className="flex gap-3">
+          {(['resend', 'smtp'] as const).map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => set('provider', p)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                form.provider === p
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              {p === 'resend' ? 'Resend (권장 · 마케팅)' : 'SMTP'}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-gray-400">
+          Resend는 대량 이메일 마케팅에 최적화된 발송 서비스입니다. 도메인 인증 후 API 키를 발급받아 아래에 입력하세요.
+        </p>
+      </div>
+
+      {/* Resend 설정 */}
+      <div className={`bg-white rounded-xl shadow-sm border p-5 space-y-4 ${form.provider === 'resend' ? 'border-blue-200' : 'border-gray-100 opacity-70'}`}>
+        <h2 className="text-sm font-semibold text-gray-700">Resend 설정</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Resend API 키</label>
+            <input
+              type="password"
+              value={form.resendApiKey}
+              onChange={(e) => set('resendApiKey', e.target.value)}
+              className={inputCls}
+              placeholder={resendKeySet ? '●●●● (저장됨)' : 're_xxxxxxxx'}
+            />
+            <p className="mt-0.5 text-xs text-gray-400">비워두면 기존 키가 유지됩니다.</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">보내는 주소 (인증된 도메인)</label>
+            <input
+              value={form.resendFrom}
+              onChange={(e) => set('resendFrom', e.target.value)}
+              className={inputCls}
+              placeholder="TRUE LIGHT <mailer@truelight.app>"
+            />
+            <p className="mt-0.5 text-xs text-gray-400">비우면 아래 &lsquo;보내는 주소/이름&rsquo;을 사용합니다.</p>
+          </div>
+        </div>
       </div>
 
       {/* SMTP 설정 폼 */}

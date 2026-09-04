@@ -7,6 +7,9 @@ import { z } from 'zod';
  * change accounts/passwords without a redeploy.
  */
 export const updateEmailSettingsSchema = z.object({
+  provider: z.enum(['smtp', 'resend']).optional(),
+  resendApiKey: z.string().max(200).optional(), // only updated when a non-empty value is sent
+  resendFrom: z.string().max(255).optional(),
   smtpHost: z.string().max(255).optional(),
   smtpPort: z.number().int().min(1).max(65535).optional(),
   smtpSecure: z.boolean().optional(),

@@ -9,6 +9,7 @@ import SiteSettingsTab from '../super-admin/tabs/SiteSettingsTab';
 import BroadcastTab from '../super-admin/tabs/BroadcastTab';
 import EmailSettingsTab from '../super-admin/tabs/EmailSettingsTab';
 import EmailTemplatesTab from '../super-admin/tabs/EmailTemplatesTab';
+import AddressBookTab from '../super-admin/tabs/AddressBookTab';
 import PricingTab from '../super-admin/tabs/PricingTab';
 import FrontSamplesTab from '../super-admin/tabs/FrontSamplesTab';
 import SupportTab from '../super-admin/tabs/SupportTab';
@@ -34,7 +35,7 @@ import SiteDesignTab from '../super-admin/tabs/SiteDesignTab';
 // ─── Constants ───────────────────────────────────────────
 // PLAN_PRICES / PLAN_COLORS moved to ../super-admin/shared/constants.
 
-type TabId = 'monitoring' | 'overview' | 'tenants' | 'applications' | 'demo' | 'intake' | 'reference' | 'pricing' | 'billing' | 'email' | 'emailTemplates' | 'broadcast' | 'support' | 'domains' | 'users' | 'storage' | 'gallery' | 'siteSettings' | 'siteBanner' | 'siteDesign' | 'caseStudies' | 'frontSamples';
+type TabId = 'monitoring' | 'overview' | 'tenants' | 'applications' | 'demo' | 'intake' | 'reference' | 'pricing' | 'billing' | 'email' | 'emailTemplates' | 'broadcast' | 'addressBook' | 'support' | 'domains' | 'users' | 'storage' | 'gallery' | 'siteSettings' | 'siteBanner' | 'siteDesign' | 'caseStudies' | 'frontSamples';
 
 const TABS: { id: TabId; label: string; icon: JSX.Element }[] = [
   { id: 'monitoring', label: '모니터링', icon: TabIcon('M3 3v18h18M19 9l-5 5-4-4-3 3') },
@@ -48,7 +49,8 @@ const TABS: { id: TabId; label: string; icon: JSX.Element }[] = [
   { id: 'billing', label: '과금', icon: TabIcon('M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z') },
   { id: 'email', label: '이메일/SMTP', icon: TabIcon('M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z') },
   { id: 'emailTemplates', label: '이메일 템플릿', icon: TabIcon('M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2') },
-  { id: 'broadcast', label: '공지·마케팅', icon: TabIcon('M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4 4 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a4 4 0 01-1.564-.317z') },
+  { id: 'broadcast', label: '이메일 발송', icon: TabIcon('M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4 4 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a4 4 0 01-1.564-.317z') },
+  { id: 'addressBook', label: '주소록', icon: TabIcon('M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z') },
   { id: 'support', label: '고객지원', icon: TabIcon('M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-6 0a3 3 0 11-6 0 3 3 0 016 0z') },
   { id: 'gallery', label: '이미지 라이브러리', icon: TabIcon('M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z') },
   { id: 'domains', label: '도메인 관리', icon: TabIcon('M21 12a9 9 0 11-18 0 9 9 0 0118 0zM3.6 9h16.8M3.6 15h16.8M12 3a15 15 0 010 18M12 3a15 15 0 000 18') },
@@ -67,7 +69,7 @@ const NAV_GROUPS: { label: string; ids: TabId[] }[] = [
   { label: '대시보드', ids: ['monitoring', 'overview'] },
   { label: '운영', ids: ['tenants', 'applications', 'demo', 'intake', 'support'] },
   { label: '매출 · 상품', ids: ['pricing', 'billing'] },
-  { label: '이메일', ids: ['email', 'emailTemplates', 'broadcast'] },
+  { label: '이메일', ids: ['email', 'emailTemplates', 'broadcast', 'addressBook'] },
   // truelight.app 마케팅 사이트 관리 일원화 (브랜드/SEO/여백 = 사이트 설정, 배너, 포트폴리오, 디자인).
   { label: 'TrueLight 사이트', ids: ['siteSettings', 'siteBanner', 'caseStudies', 'siteDesign', 'frontSamples'] },
   { label: '시스템', ids: ['domains', 'users', 'storage', 'gallery', 'reference'] },
@@ -401,6 +403,7 @@ export default function SuperAdminDashboardV2() {
         {activeTab === 'email' && <EmailSettingsTab />}
         {activeTab === 'emailTemplates' && <EmailTemplatesTab />}
         {activeTab === 'broadcast' && <BroadcastTab />}
+        {activeTab === 'addressBook' && <AddressBookTab />}
         {activeTab === 'support' && <SupportTab />}
         {activeTab === 'gallery' && <GalleryTab />}
         {activeTab === 'domains' && <DomainsTab />}

@@ -10,8 +10,12 @@ import * as svc from './service.js';
  */
 function mask(row: Record<string, unknown> | null) {
   if (!row) return null;
-  const { smtp_pass, ...rest } = row;
-  return { ...rest, smtp_pass_set: !!(smtp_pass && String(smtp_pass).length > 0) };
+  const { smtp_pass, resend_api_key, ...rest } = row;
+  return {
+    ...rest,
+    smtp_pass_set: !!(smtp_pass && String(smtp_pass).length > 0),
+    resend_api_key_set: !!(resend_api_key && String(resend_api_key).length > 0),
+  };
 }
 
 /** Translate a raw nodemailer/SMTP error into a clear, actionable Korean message. */
@@ -53,7 +57,7 @@ export async function emailSettingsRoutes(app: FastifyInstance) {
       await sendEmail({
         to,
         subject: 'TRUE LIGHT 메일 설정 테스트',
-        html: '<p>이 메일이 보이면 SMTP 설정이 정상입니다. ✅</p>',
+        html: '<p>이 메일이 보이면 이메일 발송 설정이 정상입니다. ✅</p>',
       });
       return reply.send({ data: { sent: true } });
     } catch (err) {

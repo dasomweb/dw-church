@@ -63,7 +63,7 @@ export async function emailTemplateRoutes(app: FastifyInstance) {
   // service applicants / pasted list). Sent BCC in batches so recipients never
   // see each other's addresses.
   app.post('/admin/email-broadcast', { preHandler: [requireSuperAdmin] }, async (request, reply) => {
-    const { subject, body, testTo, audiences, customEmails } = broadcastSchema.parse(request.body);
+    const { subject, body, testTo, audiences, customEmails, contactTags } = broadcastSchema.parse(request.body);
     // Append a "카카오톡으로 문의" button when a Kakao link is configured.
     const html = wrapEmail(body + kakaoButton(await getKakaoUrl()), { footerNote: '본 메일은 TRUE LIGHT 안내 메일입니다.' });
 
@@ -77,7 +77,7 @@ export async function emailTemplateRoutes(app: FastifyInstance) {
       }
     }
 
-    const recipients = await svc.marketingRecipients(audiences, customEmails);
+    const recipients = await svc.marketingRecipients(audiences, customEmails, contactTags);
     if (recipients.length === 0) {
       return reply.status(400).send({ error: { code: 'NO_RECIPIENTS', message: '받는 사람이 없습니다. 대상을 선택하거나 이메일을 입력하세요.' } });
     }

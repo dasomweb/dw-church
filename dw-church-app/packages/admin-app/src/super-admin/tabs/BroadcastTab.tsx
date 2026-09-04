@@ -77,16 +77,17 @@ export default function BroadcastTab() {
   const [testTo, setTestTo] = useState('');
   const [testing, setTesting] = useState(false);
   const [sending, setSending] = useState(false);
-  const [aud, setAud] = useState({ admins: false, demo: true, applications: false });
+  const [aud, setAud] = useState({ admins: false, demo: true, applications: false, contacts: false });
+  const [contactTags, setContactTags] = useState('');
   const [customEmails, setCustomEmails] = useState('');
-  const [counts, setCounts] = useState<{ admins: number; demo: number; applications: number } | null>(null);
+  const [counts, setCounts] = useState<{ admins: number; demo: number; applications: number; contacts: number } | null>(null);
   const [kakaoUrl, setKakaoUrl] = useState('');
   const [kakaoSaving, setKakaoSaving] = useState(false);
 
   useEffect(() => {
     void (async () => {
       try {
-        const res = await apiFetch<{ data: { admins: number; demo: number; applications: number } }>('/email-broadcast/audiences');
+        const res = await apiFetch<{ data: { admins: number; demo: number; applications: number; contacts: number } }>('/email-broadcast/audiences');
         setCounts(res.data);
       } catch { /* ignore — counts are best-effort */ }
       try {
@@ -111,7 +112,9 @@ export default function BroadcastTab() {
   const selectedAudiences = (Object.keys(aud) as (keyof typeof aud)[]).filter((k) => aud[k]);
   const customCount = customEmails.split(/[\s,;]+/).map((s) => s.trim()).filter((s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)).length;
   const audienceTotal =
-    (aud.admins ? counts?.admins ?? 0 : 0) + (aud.demo ? counts?.demo ?? 0 : 0) + (aud.applications ? counts?.applications ?? 0 : 0) + customCount;
+    (aud.admins ? counts?.admins ?? 0 : 0) + (aud.demo ? counts?.demo ?? 0 : 0) + (aud.applications ? counts?.applications ?? 0 : 0) +
+    (aud.contacts ? counts?.contacts ?? 0 : 0) + customCount;
+  const parsedContactTags = contactTags.split(/[,;]/).map((t) => t.trim()).filter(Boolean);
   const hasRecipients = selectedAudiences.length > 0 || customCount > 0;
 
   const canCompose = subject.trim().length > 0 && body.trim().length > 0;
@@ -165,7 +168,7 @@ export default function BroadcastTab() {
         '/email-broadcast',
         {
           method: 'POST',
-          body: JSON.stringify({ subject, body, audiences: selectedAudiences, customEmails }),
+          body: JSON.stringify({ subject, body, audiences: selectedAudiences, customEmails, contactTags: parsedContactTags }),
         },
       );
       const { recipients, sent, failed, batches } = res.data;
@@ -216,11 +219,12 @@ export default function BroadcastTab() {
       {/* 받는 대상 */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-3">
         <h2 className="text-sm font-semibold text-gray-700">받는 대상</h2>
-        <div className="grid gap-2 sm:grid-cols-3">
+        <div className="grid gap-2 sm:grid-cols-2">
           {([
             { key: 'admins', label: '교회 관리자', count: counts?.admins },
             { key: 'demo', label: '데모 체험 신청자', count: counts?.demo },
             { key: 'applications', label: '서비스 신청자', count: counts?.applications },
+            { key: 'contacts', label: '주소록 (구독 연락처)', count: counts?.contacts },
           ] as const).map((o) => (
             <label key={o.key} className={`flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm cursor-pointer transition-colors ${aud[o.key] ? 'border-blue-400 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}>
               <input type="checkbox" checked={aud[o.key]} onChange={(e) => setAud({ ...aud, [o.key]: e.target.checked })} className="rounded" />
@@ -229,6 +233,18 @@ export default function BroadcastTab() {
             </label>
           ))}
         </div>
+        {aud.contacts && (
+          <div>
+            <label className="block text-sm font-medium mb-1">주소록 태그 필터 (선택)</label>
+            <input
+              value={contactTags}
+              onChange={(e) => setContactTags(e.target.value)}
+              className={inputCls}
+              placeholder="쉼표로 구분 (예: nj, 목회자) — 비우면 전체 구독자"
+            />
+            <p className="mt-1 text-xs text-gray-400">입력한 태그 중 하나라도 가진 구독 연락처에게 발송합니다.</p>
+          </div>
+        )}
         <div>
           <label className="block text-sm font-medium mb-1">직접 입력 (선택)</label>
           <textarea
