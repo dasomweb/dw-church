@@ -54,7 +54,7 @@ export default function ColumnManagement() {
 
   const handleCreate = () => {
     setEditingItem(null);
-    reset({ title: '', content: '', topImageUrl: '', bottomImageUrl: '', youtubeUrl: '', thumbnailUrl: '', status: 'draft' });
+    reset({ title: '', content: '', topImageUrl: '', bottomImageUrl: '', youtubeUrl: '', thumbnailUrl: '', status: 'published' });
     setView('edit');
   };
 

@@ -212,7 +212,7 @@ export default function BannerManagement() {
       textButtonText: '', textButtonUrl: '',
       textPosition: 'center', textAlign: 'center',
       overlayEnabled: true,
-      category: 'main', status: 'draft',
+      category: 'main', status: 'published',
     });
     setView('edit');
   };

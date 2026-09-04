@@ -71,7 +71,7 @@ export default function EventManagement() {
     setEditingItem(null);
     reset({
       title: '', backgroundImageUrl: '', imageOnly: false, department: '',
-      eventDate: '', location: '', linkUrl: '', description: '', youtubeUrl: '', thumbnailUrl: '', status: 'draft',
+      eventDate: '', location: '', linkUrl: '', description: '', youtubeUrl: '', thumbnailUrl: '', status: 'published',
     });
     setView('edit');
   };

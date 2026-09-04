@@ -55,7 +55,7 @@ export default function AlbumManagement() {
 
   const handleCreate = () => {
     setEditingItem(null);
-    reset({ title: '', images: [], youtubeUrl: '', categoryIds: '[]', status: 'draft' });
+    reset({ title: '', images: [], youtubeUrl: '', categoryIds: '[]', status: 'published' });
     setView('edit');
   };
 

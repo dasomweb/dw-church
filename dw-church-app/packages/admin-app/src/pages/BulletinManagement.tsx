@@ -56,7 +56,7 @@ export default function BulletinManagement() {
 
   const handleCreate = () => {
     setEditingItem(null);
-    reset({ title: '', date: '', pdfUrl: '', images: [], status: 'draft' });
+    reset({ title: '', date: '', pdfUrl: '', images: [], status: 'published' });
     setView('edit');
   };
 

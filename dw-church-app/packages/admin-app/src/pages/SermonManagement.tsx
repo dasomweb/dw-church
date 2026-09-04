@@ -234,7 +234,10 @@ export default function SermonManagement() {
 
   const handleCreate = () => {
     setEditingItem(null);
-    reset({ title: '', scripture: '', preacher: '', youtubeUrl: '', date: '', categoryIds: '[]', thumbnailUrl: '', status: 'draft' });
+    // 새 설교는 기본 '공개(published)' — 업로드하면 바로 홈페이지에 보이도록.
+    // (임시저장 default 는 "올렸는데 안 보인다" 혼란의 원인이었음. 서버 스키마·
+    //  YouTube 가져오기 default 와도 일치.) 필요하면 폼에서 임시저장 선택 가능.
+    reset({ title: '', scripture: '', preacher: '', youtubeUrl: '', date: '', categoryIds: '[]', thumbnailUrl: '', status: 'published' });
     setView('edit');
   };
 
