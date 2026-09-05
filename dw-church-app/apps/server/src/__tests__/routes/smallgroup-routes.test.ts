@@ -31,6 +31,15 @@ const rep = {
 };
 vi.mock('../../modules/smallgroup/reports-service.js', () => rep);
 
+const edu = {
+  listCourses: vi.fn(), createCourse: vi.fn(), seedCoursesFromPreset: vi.fn(),
+  updateCourse: vi.fn(), deleteCourse: vi.fn(),
+  listTerms: vi.fn(), getTerm: vi.fn(), createTerm: vi.fn(), updateTerm: vi.fn(), deleteTerm: vi.fn(),
+  completeTerm: vi.fn(), enroll: vi.fn(), updateEnrollment: vi.fn(), removeEnrollment: vi.fn(),
+  recordSessions: vi.fn(), memberEnrollments: vi.fn(),
+};
+vi.mock('../../modules/smallgroup/courses-service.js', () => edu);
+
 const JWT_SECRET = 'test-secret-at-least-32-characters-long';
 function token(role = 'admin') {
   return jwt.sign({ userId: 'u1', email: 't@t.com', tenantId: 't1', tenantSlug: 'base', role }, JWT_SECRET, { expiresIn: '1h' });
@@ -81,6 +90,23 @@ beforeAll(async () => {
   rep.upsertReport.mockResolvedValue({ id: 'r1', status: 'submitted' });
   rep.confirmReport.mockResolvedValue({ id: 'r1', status: 'confirmed' });
   rep.deleteReport.mockResolvedValue(true);
+
+  edu.listCourses.mockResolvedValue([]);
+  edu.createCourse.mockResolvedValue({ id: 'c1', name: '새생명반' });
+  edu.seedCoursesFromPreset.mockResolvedValue({ created: 5, courses: [] });
+  edu.updateCourse.mockResolvedValue({ id: 'c1', name: '새생명반(수정)' });
+  edu.deleteCourse.mockResolvedValue(true);
+  edu.listTerms.mockResolvedValue([]);
+  edu.getTerm.mockResolvedValue({ id: 't1', enrollments: [] });
+  edu.createTerm.mockResolvedValue({ id: 't1', name: '12기' });
+  edu.updateTerm.mockResolvedValue({ id: 't1' });
+  edu.deleteTerm.mockResolvedValue(true);
+  edu.completeTerm.mockResolvedValue({ completed: 4, below: ['차예린'], term: { id: 't1' } });
+  edu.enroll.mockResolvedValue({ added: 2, skipped: [] });
+  edu.updateEnrollment.mockResolvedValue({ id: 'e1', status: 'completed' });
+  edu.removeEnrollment.mockResolvedValue(true);
+  edu.recordSessions.mockResolvedValue({ saved: 3 });
+  edu.memberEnrollments.mockResolvedValue([]);
 });
 afterAll(async () => { await app.close(); });
 
@@ -240,5 +266,53 @@ describe('meeting reports (STEP 2)', () => {
     const res = await app.inject({ method: 'POST', url: '/api/v1/meeting-reports/44444444-4444-4444-4444-444444444444/confirm', headers: H(), payload: { confirmer: '박목사' } });
     expect(res.statusCode).toBe(200);
     expect(res.json().data.status).toBe('confirmed');
+  });
+});
+
+describe('education (STEP 3)', () => {
+  it('GET /courses → 200', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'GET', url: '/api/v1/courses', headers: H() });
+    expect(res.statusCode).toBe(200);
+  });
+
+  it('POST /courses without name → 400', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'POST', url: '/api/v1/courses', headers: H(), payload: { totalSessions: 8 } });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('POST /courses/seed-defaults → 200 {created}', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'POST', url: '/api/v1/courses/seed-defaults', headers: H(), payload: {} });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().data.created).toBe(5);
+  });
+
+  it('POST /enrollments with empty ids → 400', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'POST', url: '/api/v1/enrollments', headers: H(), payload: { termId: GID, memberIds: [] } });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('POST /session-attendance → 200 {saved}', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'POST', url: '/api/v1/session-attendance', headers: H(), payload: { entries: [{ enrollmentId: GID, sessionNo: 1, status: 'present' }] } });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().data.saved).toBe(3);
+  });
+
+  it('POST /course-terms/:id/complete → 200 {completed, below}', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'POST', url: `/api/v1/course-terms/${GID}/complete`, headers: H(), payload: { overrideBelow: false } });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().data.completed).toBe(4);
+    expect(res.json().data.below).toContain('차예린');
+  });
+
+  it('GET /members/:id/enrollments → 200', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'GET', url: `/api/v1/members/${MID}/enrollments`, headers: H() });
+    expect(res.statusCode).toBe(200);
   });
 });

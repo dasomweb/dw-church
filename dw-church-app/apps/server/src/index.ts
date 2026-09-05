@@ -1071,6 +1071,76 @@ async function main(): Promise<void> {
         await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "report_att_member_idx" ON "${schema}".report_attendance ("member_id")`);
         createHits++;
       } catch { /* skip */ }
+
+      // 9. 스몰그룹 STEP 3 — 교육 과정 · 차수 · 수강 · 회차 출결.
+      //    수료 확정이 배치 대기 큐로 이어지고, 이수 이력은 교인 카드에 연동.
+      try {
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".courses (
+            "id"              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "name"            VARCHAR(80)  NOT NULL,
+            "stage"           VARCHAR(20)  NOT NULL DEFAULT '',
+            "prereq_course_id" UUID,
+            "total_sessions"  INT          NOT NULL DEFAULT 8,
+            "criteria"        INT          NOT NULL DEFAULT 6,
+            "required"        VARCHAR(12)  NOT NULL DEFAULT 'optional',
+            "target"          TEXT[]       NOT NULL DEFAULT '{}',
+            "record_history"  BOOLEAN      NOT NULL DEFAULT TRUE,
+            "auto_queue"      BOOLEAN      NOT NULL DEFAULT FALSE,
+            "cert_enabled"    BOOLEAN      NOT NULL DEFAULT FALSE,
+            "sort_order"      INT          NOT NULL DEFAULT 0,
+            "is_active"       BOOLEAN      NOT NULL DEFAULT TRUE,
+            "created_at"      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+            "updated_at"      TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".course_terms (
+            "id"          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "course_id"   UUID NOT NULL REFERENCES "${schema}".courses(id) ON DELETE CASCADE,
+            "name"        VARCHAR(60)  NOT NULL DEFAULT '',
+            "start_date"  DATE,
+            "end_date"    DATE,
+            "weekday"     VARCHAR(20)  NOT NULL DEFAULT '',
+            "time"        VARCHAR(20)  NOT NULL DEFAULT '',
+            "place"       VARCHAR(200) NOT NULL DEFAULT '',
+            "instructor"  VARCHAR(120) NOT NULL DEFAULT '',
+            "capacity"    INT          NOT NULL DEFAULT 0,
+            "status"      VARCHAR(12)  NOT NULL DEFAULT 'planned',
+            "created_at"  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+            "updated_at"  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "course_terms_course_idx" ON "${schema}".course_terms ("course_id")`);
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".enrollments (
+            "id"            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "term_id"       UUID NOT NULL REFERENCES "${schema}".course_terms(id) ON DELETE CASCADE,
+            "member_id"     UUID NOT NULL REFERENCES "${schema}".members(id) ON DELETE CASCADE,
+            "apply_date"    DATE         NOT NULL DEFAULT CURRENT_DATE,
+            "status"        VARCHAR(12)  NOT NULL DEFAULT 'enrolled',
+            "completed_date" DATE,
+            "cert_no"       VARCHAR(60)  NOT NULL DEFAULT '',
+            "waitlist"      BOOLEAN      NOT NULL DEFAULT FALSE,
+            "note"          VARCHAR(500) NOT NULL DEFAULT '',
+            "created_at"    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+            UNIQUE ("term_id", "member_id")
+          )
+        `);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "enrollments_term_idx" ON "${schema}".enrollments ("term_id")`);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "enrollments_member_idx" ON "${schema}".enrollments ("member_id")`);
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".session_attendance (
+            "id"            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "enrollment_id" UUID NOT NULL REFERENCES "${schema}".enrollments(id) ON DELETE CASCADE,
+            "session_no"    INT  NOT NULL,
+            "status"        VARCHAR(10) NOT NULL DEFAULT 'present',
+            UNIQUE ("enrollment_id", "session_no")
+          )
+        `);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "session_att_enroll_idx" ON "${schema}".session_attendance ("enrollment_id")`);
+        createHits++;
+      } catch { /* skip */ }
     }
     if (alterHits || createHits) {
       app.log.info(`Tenant schema drift repair — ALTER: ${alterHits}, CREATE: ${createHits}`);

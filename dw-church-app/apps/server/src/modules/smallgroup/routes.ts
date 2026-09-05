@@ -7,9 +7,12 @@ import {
   addGroupMemberSchema, assignMembersSchema, updateGroupMemberSchema,
   createQueueSchema, placeFromQueueSchema,
   upsertReportSchema, confirmReportSchema, listReportsQuerySchema, monitoringQuerySchema,
+  createCourseSchema, updateCourseSchema, createTermSchema, updateTermSchema,
+  enrollSchema, updateEnrollmentSchema, recordSessionSchema, completeTermSchema,
 } from './schema.js';
 import * as svc from './service.js';
 import * as rep from './reports-service.js';
+import * as edu from './courses-service.js';
 
 /**
  * 스몰그룹 (smallgroup) — 교회 행정 애드온. 전부 관리자 전용:
@@ -177,5 +180,86 @@ export async function smallgroupRoutes(app: FastifyInstance) {
     const ok = await rep.deleteReport(getSchema(request), id);
     if (!ok) return reply.status(404).send(NOT_FOUND('리포트'));
     return reply.send({ data: { deleted: true } });
+  });
+
+  // ── 교육 과정 (courses) — ED-01 ──────────────────────────
+  app.get('/courses', gate, async (request, reply) => reply.send({ data: await edu.listCourses(getSchema(request)) }));
+  app.post('/courses', gate, async (request, reply) => {
+    const input = createCourseSchema.parse(request.body);
+    return reply.status(201).send({ data: await edu.createCourse(getSchema(request), input) });
+  });
+  app.post('/courses/seed-defaults', gate, async (request, reply) =>
+    reply.send({ data: await edu.seedCoursesFromPreset(getSchema(request)) }));
+  app.put('/courses/:id', gate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const row = await edu.updateCourse(getSchema(request), id, updateCourseSchema.parse(request.body));
+    if (!row) return reply.status(404).send(NOT_FOUND('과정'));
+    return reply.send({ data: row });
+  });
+  app.delete('/courses/:id', gate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const ok = await edu.deleteCourse(getSchema(request), id);
+    if (!ok) return reply.status(404).send(NOT_FOUND('과정'));
+    return reply.send({ data: { deleted: true } });
+  });
+
+  // ── 차수 (course-terms) — ED-02/03 ───────────────────────
+  app.get('/course-terms', gate, async (request, reply) => {
+    const { courseId } = request.query as { courseId?: string };
+    return reply.send({ data: await edu.listTerms(getSchema(request), courseId) });
+  });
+  app.get('/course-terms/:id', gate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const row = await edu.getTerm(getSchema(request), id);
+    if (!row) return reply.status(404).send(NOT_FOUND('차수'));
+    return reply.send({ data: row });
+  });
+  app.post('/course-terms', gate, async (request, reply) => {
+    const input = createTermSchema.parse(request.body);
+    return reply.status(201).send({ data: await edu.createTerm(getSchema(request), input) });
+  });
+  app.put('/course-terms/:id', gate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const row = await edu.updateTerm(getSchema(request), id, updateTermSchema.parse(request.body));
+    if (!row) return reply.status(404).send(NOT_FOUND('차수'));
+    return reply.send({ data: row });
+  });
+  app.delete('/course-terms/:id', gate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const ok = await edu.deleteTerm(getSchema(request), id);
+    if (!ok) return reply.status(404).send(NOT_FOUND('차수'));
+    return reply.send({ data: { deleted: true } });
+  });
+  app.post('/course-terms/:id/complete', gate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    return reply.send({ data: await edu.completeTerm(getSchema(request), id, completeTermSchema.parse(request.body ?? {})) });
+  });
+
+  // ── 수강 · 회차 출결 (enrollments) ───────────────────────
+  app.post('/enrollments', gate, async (request, reply) => {
+    const input = enrollSchema.parse(request.body);
+    return reply.send({ data: await edu.enroll(getSchema(request), input) });
+  });
+  app.put('/enrollments/:id', gate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const row = await edu.updateEnrollment(getSchema(request), id, updateEnrollmentSchema.parse(request.body));
+    if (!row) return reply.status(404).send(NOT_FOUND('수강'));
+    return reply.send({ data: row });
+  });
+  app.delete('/enrollments/:id', gate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const ok = await edu.removeEnrollment(getSchema(request), id);
+    if (!ok) return reply.status(404).send(NOT_FOUND('수강'));
+    return reply.send({ data: { deleted: true } });
+  });
+  app.post('/session-attendance', gate, async (request, reply) => {
+    const input = recordSessionSchema.parse(request.body);
+    return reply.send({ data: await edu.recordSessions(getSchema(request), input) });
+  });
+
+  // 교인 카드 이수 이력 (교적 연동).
+  app.get('/members/:id/enrollments', gate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    return reply.send({ data: await edu.memberEnrollments(getSchema(request), id) });
   });
 }

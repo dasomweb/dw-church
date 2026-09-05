@@ -63,6 +63,8 @@ const SmallGroupOrg = lazyWithReload(() => import('./pages/SmallGroupOrg'));
 const PlacementQueue = lazyWithReload(() => import('./pages/PlacementQueue'));
 const GroupReports = lazyWithReload(() => import('./pages/GroupReports'));
 const ReportMonitoring = lazyWithReload(() => import('./pages/ReportMonitoring'));
+const CourseManagement = lazyWithReload(() => import('./pages/CourseManagement'));
+const CourseTerms = lazyWithReload(() => import('./pages/CourseTerms'));
 const AttendanceManagement = lazyWithReload(() => import('./pages/AttendanceManagement'));
 const VisitManagement = lazyWithReload(() => import('./pages/VisitManagement'));
 const SacramentTransferManagement = lazyWithReload(() => import('./pages/SacramentTransferManagement'));
@@ -400,6 +402,8 @@ export function App({ config }: { config: AppConfig }) {
                 <Route path="group-reports" element={<GroupReports />} />
                 <Route path="group-monitor" element={<ReportMonitoring />} />
                 <Route path="group-queue" element={<PlacementQueue />} />
+                <Route path="group-courses" element={<CourseManagement />} />
+                <Route path="group-terms" element={<CourseTerms />} />
                 <Route path="group-settings" element={<SmallGroupSettings />} />
                 <Route path="forms" element={<FormBuilderManagement />} />
                 <Route path="form-submissions" element={<FormSubmissionsManagement />} />

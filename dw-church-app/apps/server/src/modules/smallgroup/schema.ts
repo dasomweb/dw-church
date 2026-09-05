@@ -172,6 +172,74 @@ export type ConfirmReportInput = z.infer<typeof confirmReportSchema>;
 export type ListReportsQuery = z.infer<typeof listReportsQuerySchema>;
 export type MonitoringQuery = z.infer<typeof monitoringQuerySchema>;
 
+// ── 교육 과정 · 차수 · 수강 · 출결 (STEP 3) ────────────────
+const requiredEnum = z.enum(['required', 'optional', 'leader', 'none']);
+
+export const createCourseSchema = z.object({
+  name: z.string().min(1).max(80),
+  stage: z.string().max(20).optional(),
+  prereqCourseId: z.string().uuid().nullable().optional(),
+  totalSessions: z.number().int().min(1).max(60).default(8),
+  criteria: z.number().int().min(0).max(60).default(6),
+  required: requiredEnum.default('optional'),
+  target: z.array(z.string().max(40)).max(20).optional(),
+  recordHistory: z.boolean().optional(),
+  autoQueue: z.boolean().optional(),
+  certEnabled: z.boolean().optional(),
+  sortOrder: z.number().int().optional(),
+  isActive: z.boolean().optional(),
+});
+export const updateCourseSchema = createCourseSchema.partial();
+
+export const createTermSchema = z.object({
+  courseId: z.string().uuid(),
+  name: z.string().max(60).optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  weekday: z.string().max(20).optional(),
+  time: z.string().max(20).optional(),
+  place: z.string().max(200).optional(),
+  instructor: z.string().max(120).optional(),
+  capacity: z.number().int().min(0).max(999).optional(),
+  status: z.enum(['planned', 'ongoing', 'done']).optional(),
+});
+export const updateTermSchema = createTermSchema.omit({ courseId: true }).partial();
+
+export const enrollSchema = z.object({
+  termId: z.string().uuid(),
+  memberIds: z.array(z.string().uuid()).min(1).max(200),
+});
+
+export const updateEnrollmentSchema = z.object({
+  status: z.enum(['applied', 'enrolled', 'completed', 'dropped']).optional(),
+  waitlist: z.boolean().optional(),
+  note: z.string().max(500).optional(),
+});
+
+/** 회차 출결 일괄 기록 — enrollmentId 별 sessionNo 상태. */
+export const recordSessionSchema = z.object({
+  entries: z.array(z.object({
+    enrollmentId: z.string().uuid(),
+    sessionNo: z.number().int().min(1).max(60),
+    status: z.enum(['present', 'absent', 'makeup']),
+  })).min(1).max(2000),
+});
+
+/** 수료 확정 — 기준 충족자만(기본) 또는 지정 enrollmentIds(예외 승인 포함). */
+export const completeTermSchema = z.object({
+  enrollmentIds: z.array(z.string().uuid()).max(500).optional(),
+  overrideBelow: z.boolean().optional(), // 기준 미달자도 강제 수료(예외 승인)
+});
+
+export type CreateCourseInput = z.infer<typeof createCourseSchema>;
+export type UpdateCourseInput = z.infer<typeof updateCourseSchema>;
+export type CreateTermInput = z.infer<typeof createTermSchema>;
+export type UpdateTermInput = z.infer<typeof updateTermSchema>;
+export type EnrollInput = z.infer<typeof enrollSchema>;
+export type UpdateEnrollmentInput = z.infer<typeof updateEnrollmentSchema>;
+export type RecordSessionInput = z.infer<typeof recordSessionSchema>;
+export type CompleteTermInput = z.infer<typeof completeTermSchema>;
+
 export type UpdatePresetInput = z.infer<typeof updatePresetSchema>;
 export type CreateGroupInput = z.infer<typeof createGroupSchema>;
 export type UpdateGroupInput = z.infer<typeof updateGroupSchema>;

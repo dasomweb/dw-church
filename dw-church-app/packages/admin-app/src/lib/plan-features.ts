@@ -33,6 +33,8 @@ export const NAV_FEATURE: Record<string, string> = {
   'group-reports': 'smallgroup',
   'group-monitor': 'smallgroup',
   'group-queue': 'smallgroup',
+  'group-courses': 'smallgroup',
+  'group-terms': 'smallgroup',
   'group-settings': 'smallgroup',
 };
 
