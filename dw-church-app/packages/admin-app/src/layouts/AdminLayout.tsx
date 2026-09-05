@@ -146,6 +146,24 @@ export function AdminLayout() {
   const user = session?.user;
   const isSuperAdmin = !!user?.isSuperAdmin;
 
+  // 접이식 네비 그룹 — 현재 위치한 그룹만 기본 펼침, 나머지는 접힘(사용자가 펼치면
+  // 저장). 모듈/애드온이 늘어도 왼쪽이 길어지지 않게 한다. (활성 그룹은 항상 펼침.)
+  const activeGroupLabel = (() => {
+    for (const entry of navGroups) {
+      if ('items' in entry && entry.items.some((it) => it.to === leaf)) return entry.label;
+    }
+    return null;
+  })();
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    try { return JSON.parse(localStorage.getItem('dw-admin-nav-open') || '{}'); } catch { return {}; }
+  });
+  const isGroupOpen = (label: string) => label === activeGroupLabel || openGroups[label] === true;
+  const toggleGroup = (label: string) => setOpenGroups((prev) => {
+    const next = { ...prev, [label]: !(prev[label] === true) };
+    try { localStorage.setItem('dw-admin-nav-open', JSON.stringify(next)); } catch { /* ignore */ }
+    return next;
+  });
+
   const handleLogout = async () => {
     try {
       await logoutMutation.mutateAsync();
@@ -219,37 +237,54 @@ export function AdminLayout() {
                 </NavLink>
               );
             }
+            const groupItems = entry.items
+              .filter((item) => !item.superAdminOnly || isSuperAdmin)
+              .filter((item) => isSuperAdmin || featureAllowed(features, NAV_FEATURE[item.to]));
+            if (groupItems.length === 0) return null; // 애드온 미보유 → 그룹 통째로 숨김
+            const isActiveGroup = entry.label === activeGroupLabel;
+            const open = isGroupOpen(entry.label);
             return (
-              <div key={entry.label} className={i > 0 ? 'mt-4' : 'mt-2'}>
-                <p className="px-3 py-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{entry.label}</p>
-                <div className="space-y-0.5">
-                  {entry.items
-                    .filter((item) => !item.superAdminOnly || isSuperAdmin)
-                    .filter((item) => isSuperAdmin || featureAllowed(features, NAV_FEATURE[item.to]))
-                    .map((item) => {
-                    const dest = pathFor(item.to);
-                    return (
-                      <NavLink
-                        key={dest}
-                        to={dest}
-                        onClick={() => setSidebarOpen(false)}
-                        className={({ isActive }) =>
-                          `group relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                          }`
-                        }
-                      >
-                        {({ isActive }) => (
-                          <>
-                            {isActive && <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-blue-600" />}
-                            {item.icon}
-                            {item.label}
-                          </>
-                        )}
-                      </NavLink>
-                    );
-                  })}
-                </div>
+              <div key={entry.label} className={i > 0 ? 'mt-2' : 'mt-1'}>
+                {isActiveGroup ? (
+                  <p className="px-3 py-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{entry.label}</p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(entry.label)}
+                    aria-expanded={open}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-50"
+                  >
+                    <span className="flex-1 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{entry.label}</span>
+                    <svg className={`w-3.5 h-3.5 text-gray-400 transition-transform ${open ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M9 5l7 7-7 7" /></svg>
+                  </button>
+                )}
+                {open && (
+                  <div className="space-y-0.5 mt-0.5">
+                    {groupItems.map((item) => {
+                      const dest = pathFor(item.to);
+                      return (
+                        <NavLink
+                          key={dest}
+                          to={dest}
+                          onClick={() => setSidebarOpen(false)}
+                          className={({ isActive }) =>
+                            `group relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                              isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                            }`
+                          }
+                        >
+                          {({ isActive }) => (
+                            <>
+                              {isActive && <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-blue-600" />}
+                              {item.icon}
+                              {item.label}
+                            </>
+                          )}
+                        </NavLink>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })}
