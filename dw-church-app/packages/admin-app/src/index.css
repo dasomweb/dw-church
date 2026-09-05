@@ -6,22 +6,9 @@
  * DASOMWEB Design System 토큰 (Claude Design project 62088c45, _tokens.css).
  * 관리자 콘솔 전역 디자인 언어: 폰트 Pretendard, 주조색 브랜드 블루(#1466d6),
  * surface/border/fg 토큰. tailwind.config 의 blue 스케일 재매핑과 짝을 이룬다.
+ * Pretendard 폰트는 index.html 의 dynamic-subset <link> 로 로드한다(직접 woff2
+ * 경로는 CDN 에서 404 라 사용하지 않는다).
  * ────────────────────────────────────────────────────────────────────────── */
-@font-face {
-  font-family: 'Pretendard Variable';
-  font-weight: 45 920;
-  font-style: normal;
-  font-display: swap;
-  src: url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/woff2/PretendardVariable.woff2') format('woff2-variations');
-}
-@font-face {
-  font-family: 'Inter';
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-  src: url('https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5.0.20/files/inter-latin-wght-normal.woff2') format('woff2-variations');
-}
-
 :root {
   --brand: #1466d6;
   --primary: #2b7fff;
