@@ -6,8 +6,10 @@ import {
   createGroupSchema, updateGroupSchema, listGroupsQuerySchema,
   addGroupMemberSchema, assignMembersSchema, updateGroupMemberSchema,
   createQueueSchema, placeFromQueueSchema,
+  upsertReportSchema, confirmReportSchema, listReportsQuerySchema, monitoringQuerySchema,
 } from './schema.js';
 import * as svc from './service.js';
+import * as rep from './reports-service.js';
 
 /**
  * 스몰그룹 (smallgroup) — 교회 행정 애드온. 전부 관리자 전용:
@@ -129,6 +131,51 @@ export async function smallgroupRoutes(app: FastifyInstance) {
     const { id } = request.params as { id: string };
     const ok = await svc.deleteQueueItem(getSchema(request), id);
     if (!ok) return reply.status(404).send(NOT_FOUND('대기 항목'));
+    return reply.send({ data: { deleted: true } });
+  });
+
+  // ── 모임 리포트 (meeting-reports) — STEP 2 ────────────────
+  app.get('/meeting-reports', gate, async (request, reply) => {
+    const q = listReportsQuerySchema.parse(request.query ?? {});
+    return reply.send({ data: await rep.listReports(getSchema(request), q) });
+  });
+
+  // 리포트 모니터링 격자 (RP-03) — /meeting-reports/:id 보다 먼저 등록.
+  app.get('/meeting-reports/monitor', gate, async (request, reply) => {
+    const q = monitoringQuerySchema.parse(request.query ?? {});
+    return reply.send({ data: await rep.monitoringGrid(getSchema(request), q) });
+  });
+
+  // 작성 화면 초안 (RP-01) — 기존 리포트 or 조직 명단 기반 빈 초안.
+  app.get('/meeting-reports/draft', gate, async (request, reply) => {
+    const { groupId, date } = request.query as { groupId?: string; date?: string };
+    if (!groupId || !date) return reply.status(400).send({ error: { code: 'BAD_QUERY', message: 'groupId 와 date 가 필요합니다.' } });
+    return reply.send({ data: await rep.draftReport(getSchema(request), groupId, date) });
+  });
+
+  app.get('/meeting-reports/:id', gate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const r = await rep.getReport(getSchema(request), id);
+    if (!r) return reply.status(404).send(NOT_FOUND('리포트'));
+    return reply.send({ data: r });
+  });
+
+  app.post('/meeting-reports', gate, async (request, reply) => {
+    const input = upsertReportSchema.parse(request.body);
+    return reply.send({ data: await rep.upsertReport(getSchema(request), input) });
+  });
+
+  app.post('/meeting-reports/:id/confirm', gate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const r = await rep.confirmReport(getSchema(request), id, confirmReportSchema.parse(request.body ?? {}));
+    if (!r) return reply.status(404).send(NOT_FOUND('리포트'));
+    return reply.send({ data: r });
+  });
+
+  app.delete('/meeting-reports/:id', gate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const ok = await rep.deleteReport(getSchema(request), id);
+    if (!ok) return reply.status(404).send(NOT_FOUND('리포트'));
     return reply.send({ data: { deleted: true } });
   });
 }

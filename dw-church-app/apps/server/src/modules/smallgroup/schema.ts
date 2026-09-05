@@ -126,6 +126,52 @@ export const placeFromQueueSchema = z.object({
   reason: reasonEnum.optional(),
 });
 
+// ── 모임 리포트 (meeting_reports) — STEP 2 ────────────────
+const attStatusEnum = z.enum(['present', 'absent', 'online']);
+const reportAttendanceSchema = z.object({
+  memberId: z.string().uuid(),
+  status: attStatusEnum.default('present'),
+  broughtNewcomer: z.boolean().optional(),
+});
+
+/** 리포트 작성/저장 — (group_id, meeting_date) 기준 upsert. 임시저장 or 제출. */
+export const upsertReportSchema = z.object({
+  groupId: z.string().uuid(),
+  meetingDate: z.string().min(8), // YYYY-MM-DD
+  author: z.string().max(120).optional(),
+  status: z.enum(['draft', 'submitted']).default('draft'),
+  items: z.record(z.string(), z.any()).optional(),        // 공개 항목값 (나눔·기도제목 …)
+  privateItems: z.record(z.string(), z.any()).optional(), // 교역자만 열람 (돌봄 요청)
+  attendance: z.array(reportAttendanceSchema).max(500).optional(),
+  newcomerCount: z.number().int().min(0).max(999).optional(),
+});
+
+/** 교역자 확인(RP-03/04) — 확인자·코멘트. */
+export const confirmReportSchema = z.object({
+  confirmer: z.string().max(120).optional(),
+  confirmComment: z.string().max(2000).optional(),
+  unconfirm: z.boolean().optional(), // true 면 확인 취소(다시 submitted)
+});
+
+export const listReportsQuerySchema = z.object({
+  groupId: z.string().uuid().optional(),
+  status: z.enum(['draft', 'submitted', 'confirmed', 'all']).optional(),
+  from: z.string().optional(),
+  to: z.string().optional(),
+});
+
+export const monitoringQuerySchema = z.object({
+  parentId: z.string().uuid().optional(),
+  from: z.string().optional(),
+  to: z.string().optional(),
+  weeks: z.coerce.number().int().min(1).max(26).optional(),
+});
+
+export type UpsertReportInput = z.infer<typeof upsertReportSchema>;
+export type ConfirmReportInput = z.infer<typeof confirmReportSchema>;
+export type ListReportsQuery = z.infer<typeof listReportsQuerySchema>;
+export type MonitoringQuery = z.infer<typeof monitoringQuerySchema>;
+
 export type UpdatePresetInput = z.infer<typeof updatePresetSchema>;
 export type CreateGroupInput = z.infer<typeof createGroupSchema>;
 export type UpdateGroupInput = z.infer<typeof updateGroupSchema>;

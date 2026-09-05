@@ -25,6 +25,12 @@ const svc = {
 };
 vi.mock('../../modules/smallgroup/service.js', () => svc);
 
+const rep = {
+  listReports: vi.fn(), monitoringGrid: vi.fn(), draftReport: vi.fn(), getReport: vi.fn(),
+  upsertReport: vi.fn(), confirmReport: vi.fn(), deleteReport: vi.fn(),
+};
+vi.mock('../../modules/smallgroup/reports-service.js', () => rep);
+
 const JWT_SECRET = 'test-secret-at-least-32-characters-long';
 function token(role = 'admin') {
   return jwt.sign({ userId: 'u1', email: 't@t.com', tenantId: 't1', tenantSlug: 'base', role }, JWT_SECRET, { expiresIn: '1h' });
@@ -67,6 +73,14 @@ beforeAll(async () => {
   svc.createQueueItem.mockResolvedValue({ id: 'q1' });
   svc.placeFromQueue.mockResolvedValue({ id: 'q1', status: 'placed' });
   svc.deleteQueueItem.mockResolvedValue(true);
+
+  rep.listReports.mockResolvedValue([]);
+  rep.monitoringGrid.mockResolvedValue({ weeks: [], rows: [], unsubmittedLatest: [], latestWeek: '' });
+  rep.draftReport.mockResolvedValue({ id: null, group_id: GID, status: 'draft', attendance: [] });
+  rep.getReport.mockResolvedValue({ id: 'r1', group_id: GID, status: 'submitted', attendance: [] });
+  rep.upsertReport.mockResolvedValue({ id: 'r1', status: 'submitted' });
+  rep.confirmReport.mockResolvedValue({ id: 'r1', status: 'confirmed' });
+  rep.deleteReport.mockResolvedValue(true);
 });
 afterAll(async () => { await app.close(); });
 
@@ -184,5 +198,47 @@ describe('roster + queue', () => {
     const res = await app.inject({ method: 'POST', url: '/api/v1/group-queue/33333333-3333-3333-3333-333333333333/place', headers: H(), payload: { groupId: GID } });
     expect(res.statusCode).toBe(200);
     expect(res.json().data.status).toBe('placed');
+  });
+});
+
+describe('meeting reports (STEP 2)', () => {
+  it('GET /meeting-reports/monitor → 200 grid', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'GET', url: '/api/v1/meeting-reports/monitor?weeks=8', headers: H() });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().data).toHaveProperty('weeks');
+  });
+
+  it('GET /meeting-reports/draft without groupId → 400', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'GET', url: '/api/v1/meeting-reports/draft?date=2026-09-06', headers: H() });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('GET /meeting-reports/draft → 200 draft', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'GET', url: `/api/v1/meeting-reports/draft?groupId=${GID}&date=2026-09-06`, headers: H() });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().data.status).toBe('draft');
+  });
+
+  it('POST /meeting-reports without meetingDate → 400', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'POST', url: '/api/v1/meeting-reports', headers: H(), payload: { groupId: GID } });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('POST /meeting-reports → 200', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'POST', url: '/api/v1/meeting-reports', headers: H(), payload: { groupId: GID, meetingDate: '2026-09-06', status: 'submitted', attendance: [{ memberId: MID, status: 'present' }] } });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().data.status).toBe('submitted');
+  });
+
+  it('POST /meeting-reports/:id/confirm → 200 confirmed', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'POST', url: '/api/v1/meeting-reports/44444444-4444-4444-4444-444444444444/confirm', headers: H(), payload: { confirmer: '박목사' } });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().data.status).toBe('confirmed');
   });
 });

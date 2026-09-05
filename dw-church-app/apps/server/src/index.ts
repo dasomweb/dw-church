@@ -1033,6 +1033,44 @@ async function main(): Promise<void> {
         await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "group_queue_status_idx" ON "${schema}".group_placement_queue ("status")`);
         createHits++;
       } catch { /* skip */ }
+
+      // 8. 스몰그룹 STEP 2 — 모임 리포트 + 모임 출석 (교적 attendance 와 별개).
+      try {
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".meeting_reports (
+            "id"            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "group_id"      UUID NOT NULL REFERENCES "${schema}".groups(id) ON DELETE CASCADE,
+            "meeting_date"  DATE NOT NULL,
+            "author"        VARCHAR(120) NOT NULL DEFAULT '',
+            "status"        VARCHAR(12)  NOT NULL DEFAULT 'draft',
+            "items"         JSONB        NOT NULL DEFAULT '{}'::jsonb,
+            "private_items" JSONB        NOT NULL DEFAULT '{}'::jsonb,
+            "attendance_count" INT       NOT NULL DEFAULT 0,
+            "newcomer_count"   INT       NOT NULL DEFAULT 0,
+            "confirmer"     VARCHAR(120) NOT NULL DEFAULT '',
+            "confirm_comment" VARCHAR(2000) NOT NULL DEFAULT '',
+            "confirmed_at"  TIMESTAMPTZ,
+            "created_at"    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+            "updated_at"    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+            UNIQUE ("group_id", "meeting_date")
+          )
+        `);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "meeting_reports_group_idx" ON "${schema}".meeting_reports ("group_id", "meeting_date")`);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "meeting_reports_status_idx" ON "${schema}".meeting_reports ("status")`);
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".report_attendance (
+            "id"        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "report_id" UUID NOT NULL REFERENCES "${schema}".meeting_reports(id) ON DELETE CASCADE,
+            "member_id" UUID NOT NULL REFERENCES "${schema}".members(id) ON DELETE CASCADE,
+            "status"    VARCHAR(10) NOT NULL DEFAULT 'present',
+            "brought_newcomer" BOOLEAN NOT NULL DEFAULT FALSE,
+            UNIQUE ("report_id", "member_id")
+          )
+        `);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "report_att_report_idx" ON "${schema}".report_attendance ("report_id")`);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "report_att_member_idx" ON "${schema}".report_attendance ("member_id")`);
+        createHits++;
+      } catch { /* skip */ }
     }
     if (alterHits || createHits) {
       app.log.info(`Tenant schema drift repair — ALTER: ${alterHits}, CREATE: ${createHits}`);
