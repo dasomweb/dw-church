@@ -1,8 +1,11 @@
 /**
- * 목장(cells) + 새가족(newcomers) route tests — feature-gate boundary + CRUD.
+ * 목장(cells) + 새가족(newcomers) route tests — ADD-ON gate boundary + CRUD.
  *
- *   cells:    write requires Plus/Pro; light/basic → 403. reads open.
- *   newcomers: public POST gated by Pro; admin list/update require auth + Pro.
+ * 2026-09 model: no tier ladder. 목장·새가족 are paid ADD-ONS granted per-tenant
+ * via feature_overrides (requireFeature honors overrides now). So:
+ *   cells:     write requires the 'cells' add-on (override) → off by default 403.
+ *              reads open. super_admin bypasses.
+ *   newcomers: public POST + admin require the 'newcomer_registration' add-on.
  */
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import Fastify from 'fastify';
@@ -48,73 +51,86 @@ beforeAll(async () => {
   cellSvc.createCell.mockResolvedValue({ id: 'c1', name: '사랑목장' });
   ncSvc.listNewcomers.mockResolvedValue([]);
   ncSvc.createNewcomer.mockResolvedValue({ id: 'n1', name: '김방문' });
+  // Default: no add-on overrides. requireFeature loads feature_overrides via
+  // $queryRawUnsafe — return an empty row so add-ons are OFF unless a test
+  // opts in with mockResolvedValueOnce below.
+  vi.mocked(prisma.$queryRawUnsafe).mockResolvedValue([{ feature_overrides: null }] as never);
 });
 afterAll(async () => { await app.close(); });
 
-describe('cells — feature gate (Plus/Pro)', () => {
+// Enable a paid add-on for the NEXT requireFeature check (one gated request).
+async function withAddon(keys: Record<string, boolean>): Promise<void> {
+  const { prisma } = await import('../../config/database.js');
+  vi.mocked(prisma.$queryRawUnsafe).mockResolvedValueOnce([{ feature_overrides: keys }] as never);
+}
+
+describe('cells — add-on gate (목장)', () => {
   it('GET /cells is public (no auth) → 200', async () => {
     const res = await app.inject({ method: 'GET', url: '/api/v1/cells', headers: { 'x-tenant-slug': 'light' } });
     expect(res.statusCode).toBe(200);
   });
 
-  it('POST /cells on basic → 403 PLAN_UPGRADE_REQUIRED', async () => {
+  it('POST /cells WITHOUT the 목장 add-on → 403 PLAN_UPGRADE_REQUIRED', async () => {
     const res = await app.inject({
       method: 'POST', url: '/api/v1/cells',
-      headers: { 'x-tenant-slug': 'basic', authorization: `Bearer ${token('basic')}` },
+      headers: { 'x-tenant-slug': 'base', authorization: `Bearer ${token('base')}` },
       payload: { name: '사랑목장' },
     });
     expect(res.statusCode).toBe(403);
     expect(res.json().error?.code).toBe('PLAN_UPGRADE_REQUIRED');
   });
 
-  it('POST /cells on plus → 201', async () => {
+  it('POST /cells WITH the 목장 add-on (override) → 201', async () => {
+    await withAddon({ cells: true });
     const res = await app.inject({
       method: 'POST', url: '/api/v1/cells',
-      headers: { 'x-tenant-slug': 'plus', authorization: `Bearer ${token('plus')}` },
+      headers: { 'x-tenant-slug': 'base', authorization: `Bearer ${token('base')}` },
       payload: { name: '사랑목장', leaderName: '김목자' },
     });
     expect(res.statusCode).toBe(201);
     expect(res.json().data.id).toBe('c1');
   });
 
-  it('POST /cells on pro → 201', async () => {
+  it('POST /cells as super_admin → 201 (bypass)', async () => {
     const res = await app.inject({
       method: 'POST', url: '/api/v1/cells',
-      headers: { 'x-tenant-slug': 'pro', authorization: `Bearer ${token('pro')}` },
+      headers: { 'x-tenant-slug': 'base', authorization: `Bearer ${token('base', 'super_admin')}` },
       payload: { name: '믿음목장' },
     });
     expect(res.statusCode).toBe(201);
   });
 });
 
-describe('newcomers — public intake + admin gate (Pro)', () => {
-  it('public POST /newcomers on pro → 201 (no auth)', async () => {
+describe('newcomers — add-on gate (새가족)', () => {
+  it('public POST /newcomers WITHOUT the add-on → 403', async () => {
     const res = await app.inject({
       method: 'POST', url: '/api/v1/newcomers',
-      headers: { 'x-tenant-slug': 'pro' },
-      payload: { name: '김방문', phone: '010-1234-5678' },
-    });
-    expect(res.statusCode).toBe(201);
-  });
-
-  it('public POST /newcomers on plus → 403 (Pro-only feature)', async () => {
-    const res = await app.inject({
-      method: 'POST', url: '/api/v1/newcomers',
-      headers: { 'x-tenant-slug': 'plus' },
+      headers: { 'x-tenant-slug': 'base' },
       payload: { name: '김방문' },
     });
     expect(res.statusCode).toBe(403);
   });
 
+  it('public POST /newcomers WITH the add-on (override) → 201', async () => {
+    await withAddon({ newcomer_registration: true });
+    const res = await app.inject({
+      method: 'POST', url: '/api/v1/newcomers',
+      headers: { 'x-tenant-slug': 'base' },
+      payload: { name: '김방문', phone: '(201) 555-1234' },
+    });
+    expect(res.statusCode).toBe(201);
+  });
+
   it('GET /newcomers requires auth → 401 without token', async () => {
-    const res = await app.inject({ method: 'GET', url: '/api/v1/newcomers', headers: { 'x-tenant-slug': 'pro' } });
+    const res = await app.inject({ method: 'GET', url: '/api/v1/newcomers', headers: { 'x-tenant-slug': 'base' } });
     expect(res.statusCode).toBe(401);
   });
 
-  it('GET /newcomers on pro admin → 200', async () => {
+  it('GET /newcomers admin WITH the add-on → 200', async () => {
+    await withAddon({ newcomer_registration: true });
     const res = await app.inject({
       method: 'GET', url: '/api/v1/newcomers',
-      headers: { 'x-tenant-slug': 'pro', authorization: `Bearer ${token('pro')}` },
+      headers: { 'x-tenant-slug': 'base', authorization: `Bearer ${token('base')}` },
     });
     expect(res.statusCode).toBe(200);
   });

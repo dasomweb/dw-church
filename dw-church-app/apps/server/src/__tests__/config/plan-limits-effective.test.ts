@@ -1,77 +1,60 @@
 /**
- * Effective feature access = plan defaults ⊕ per-tenant overrides. This is what
- * the admin gates the sidebar nav + block picker on, so lock the rules:
- *   - a tier grants everything at/above its threshold,
- *   - an explicit override boolean wins over the plan default (either direction).
+ * Effective feature access = base defaults ⊕ per-tenant overrides. This is what
+ * the admin gates the sidebar nav + block picker on, and requireFeature gates
+ * routes on. 2026-09 model (no tier ladder):
+ *   - public website features are BASE (ungated — not gated keys at all),
+ *   - 교회 행정 features (목장·새가족) are paid ADD-ONS: OFF by default, ON only
+ *     via an explicit override boolean (= 구매/활성화).
  */
 import { describe, it, expect } from 'vitest';
-import { effectiveFeatures, addonFeatures } from '../../config/plan-limits.js';
+import { effectiveFeatures, addonFeatures, isAddon } from '../../config/plan-limits.js';
 
-describe('effectiveFeatures', () => {
-  it('legacy light folds into basic (content modules on)', () => {
-    const f = effectiveFeatures('light', {});
-    expect(f.albums).toBe(true);
-    expect(f.video).toBe(true);
+describe('effectiveFeatures (add-on model)', () => {
+  it('base plan: all 행정 add-ons OFF by default', () => {
+    const f = effectiveFeatures('base', {});
     expect(f.cells).toBe(false);
     expect(f.newcomer).toBe(false);
-  });
-
-  it('basic: content modules on, plus/pro features off', () => {
-    const f = effectiveFeatures('basic', {});
-    expect(f.albums).toBe(true);
-    expect(f.columns).toBe(true);
-    expect(f.video).toBe(true);
-    expect(f.boards).toBe(true);
-    expect(f.banners).toBe(true);
-    expect(f.cells).toBe(false);
-    expect(f.newcomer).toBe(false);
-  });
-
-  it('plus: adds cells + newcomer, but not pro-only', () => {
-    const f = effectiveFeatures('plus', {});
-    expect(f.cells).toBe(true);
-    expect(f.newcomer).toBe(true);
     expect(f.newcomer_registration).toBe(false);
-    expect(f.pwa).toBe(false);
   });
 
-  it('pro: everything on', () => {
-    const f = effectiveFeatures('pro', {});
-    for (const v of Object.values(f)) expect(v).toBe(true);
+  it('override enables an add-on (either direction wins over default)', () => {
+    expect(effectiveFeatures('base', { cells: true }).cells).toBe(true);
+    expect(effectiveFeatures('base', { newcomer: true }).newcomer).toBe(true);
+    expect(effectiveFeatures('base', { cells: false }).cells).toBe(false);
   });
 
-  it('override grants a higher-tier feature to a lower plan', () => {
-    expect(effectiveFeatures('basic', { cells: true }).cells).toBe(true);
-  });
-
-  it('override can also revoke a plan-included feature', () => {
-    expect(effectiveFeatures('basic', { albums: false }).albums).toBe(false);
-  });
-
-  it('legacy/unknown plan folds to basic (entry)', () => {
-    expect(effectiveFeatures('free', {}).albums).toBe(true);
-    expect(effectiveFeatures('free', {}).cells).toBe(false);
+  it('public website features are BASE — not gated keys', () => {
+    const f = effectiveFeatures('base', {});
+    expect(f.albums).toBeUndefined();
+    expect(f.boards).toBeUndefined();
+    expect(f.events).toBeUndefined();
   });
 });
 
-describe('addonFeatures (billable = enabled ABOVE the plan)', () => {
+describe('isAddon', () => {
+  it('행정 features are add-ons; web content is not gated', () => {
+    expect(isAddon('cells')).toBe(true);
+    expect(isAddon('newcomer')).toBe(true);
+    expect(isAddon('newcomer_registration')).toBe(true);
+    expect(isAddon('albums')).toBe(false); // ungated base (absent from map)
+    expect(isAddon('pwa')).toBe(false);    // tier-gated (own add-on flag), not []
+  });
+});
+
+describe('addonFeatures (billable = enabled add-ons)', () => {
   it('none when no overrides', () => {
-    expect(addonFeatures('basic', {})).toEqual([]);
+    expect(addonFeatures('base', {})).toEqual([]);
   });
 
-  it('an override granting an above-plan feature is a billable add-on', () => {
-    expect(addonFeatures('basic', { cells: true })).toEqual(['cells']);
+  it('an enabled add-on is billable', () => {
+    expect(addonFeatures('base', { cells: true })).toEqual(['cells']);
   });
 
-  it('enabling a feature the plan already includes is NOT an add-on', () => {
-    expect(addonFeatures('basic', { albums: true })).toEqual([]);
+  it('ungated web content is never a billable add-on', () => {
+    expect(addonFeatures('base', { albums: true })).toEqual([]);
   });
 
-  it('turning a plan feature OFF is not an add-on (no discount)', () => {
-    expect(addonFeatures('basic', { albums: false })).toEqual([]);
-  });
-
-  it('multiple above-plan grants are all add-ons', () => {
-    expect(addonFeatures('light', { cells: true, newcomer: true }).sort()).toEqual(['cells', 'newcomer']);
+  it('multiple enabled add-ons are all billable', () => {
+    expect(addonFeatures('base', { cells: true, newcomer: true }).sort()).toEqual(['cells', 'newcomer']);
   });
 });

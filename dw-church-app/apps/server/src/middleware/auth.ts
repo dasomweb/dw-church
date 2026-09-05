@@ -4,7 +4,7 @@ import { env } from '../config/env.js';
 import { prisma } from '../config/database.js';
 import { AppError } from './error-handler.js';
 import { validateSchemaName } from '../utils/validate-schema.js';
-import { planAllowsFeature, tiersForFeature } from '../config/plan-limits.js';
+import { planAllowsFeature, tiersForFeature, isAddon } from '../config/plan-limits.js';
 import type { JwtPayload } from '../config/jwt.js';
 
 function extractToken(request: FastifyRequest): string | null {
@@ -181,12 +181,31 @@ export function requireFeature(feature: string) {
   ): Promise<void> {
     if (request.user?.role === 'super_admin') return;
     const plan = request.tenant?.plan ?? '';
-    if (!planAllowsFeature(plan, feature)) {
-      throw new AppError(
-        'PLAN_UPGRADE_REQUIRED',
-        403,
-        `이 기능은 ${tiersForFeature(feature).join(' 또는 ')} 플랜에서 사용할 수 있습니다. (현재: ${plan || 'unknown'})`,
-      );
+
+    // Per-tenant overrides (paid add-ons activated via feature_overrides) take
+    // precedence over the plan default — mirrors effectiveFeatures() used by the
+    // admin nav so the ROUTE and the MENU agree. Without this, an add-on shows
+    // in the nav (nav honors overrides) but its API returns 403 (route didn't).
+    let allowed = planAllowsFeature(plan, feature);
+    const tenantId = request.tenant?.id;
+    if (tenantId) {
+      try {
+        const rows = await prisma.$queryRawUnsafe<{ feature_overrides: Record<string, unknown> | null }[]>(
+          `SELECT feature_overrides FROM public.tenants WHERE id = $1::uuid`,
+          tenantId,
+        );
+        const ov = rows[0]?.feature_overrides ?? {};
+        if (typeof ov[feature] === 'boolean') allowed = ov[feature] as boolean;
+      } catch {
+        // overrides unavailable → fall back to the plan default computed above
+      }
+    }
+
+    if (!allowed) {
+      const msg = isAddon(feature)
+        ? '이 기능은 유료 애드온입니다. 슈퍼어드민에서 애드온을 활성화하면 사용할 수 있습니다.'
+        : `이 기능은 ${tiersForFeature(feature).join(' 또는 ')} 플랜에서 사용할 수 있습니다. (현재: ${plan || 'unknown'})`;
+      throw new AppError('PLAN_UPGRADE_REQUIRED', 403, msg);
     }
   };
 }

@@ -63,33 +63,37 @@ export function planLimits(plan: string | null | undefined): PlanLimits {
  * it. A feature absent from this map is available on every tier.
  */
 // Feature id → tiers that include it. A feature absent here is on every tier
-// (라이트 포함). Keys are the SINGLE SOURCE OF TRUTH the admin gates nav + the
-// block picker against (via GET /admin/entitlements). Aligned to the tiers sold
-// on truelight.app: 기본(basic) adds the extra content modules; 플러스(plus)
-// adds 목장 + 새가족; 프로(pro) adds online 새가족 등록 + PWA.
+// (BASE — 모든 테넌트가 씀). A feature mapped to an EMPTY array [] is a paid
+// ADD-ON: no tier includes it, so it's OFF by default and only granted via a
+// per-tenant `feature_overrides` (활성화 = 구매). See isAddon()/addonFeatures().
+//
+// 모델 변경 (2026-09): 라이트/기본/플러스/프로 티어 사다리 제거. 공개 웹사이트
+// 기능(설교·주보·교역자·예배·오시는길 + 앨범·연혁·칼럼·영상·게시판·행사·배너)은
+// 모두 BASE 에 포함(=여기서 제외). 교회 행정 기능(목장·새가족)은 개별 유료 애드온.
+// 가격은 feature_pricing 테이블(요금 관리)에서 애드온별로 매김.
+// Keys are the SINGLE SOURCE OF TRUTH the admin gates nav + block picker against
+// (via GET /admin/entitlements) and requireFeature() gates routes against.
 export const FEATURE_TIERS: Record<string, PlanTier[]> = {
-  // 기본(basic)+ content modules (라이트는 설교·주보·교역자·예배·오시는길만)
-  albums: ['basic', 'plus', 'pro'],   // 사진 앨범
-  history: ['basic', 'plus', 'pro'],  // 교회 연혁
-  columns: ['basic', 'plus', 'pro'],  // 목회 칼럼
-  video: ['basic', 'plus', 'pro'],    // 영상 게시판
-  boards: ['basic', 'plus', 'pro'],   // 공지/행사/선교 게시판
-  events: ['basic', 'plus', 'pro'],   // 행사
-  banners: ['basic', 'plus', 'pro'],  // 메인 배너 슬라이드
-  // 플러스(plus)+
-  cells: ['plus', 'pro'],             // 목장(셀) 관리
-  newcomer: ['plus', 'pro'],          // 새가족 안내 + 새가족 등록 폼
-  // 프로(pro)+
-  newcomer_registration: ['pro'],     // 새가족 온라인 등록·관리 (교인 관리)
-  pwa: ['pro'],                       // 모바일 앱(PWA)
+  // ── 교회 행정 애드온 (유료, 어느 티어에도 미포함 → override 로 활성화) ──
+  cells: [],                  // 목장(셀) 관리
+  newcomer: [],               // 새가족 안내 + 새가족 등록 폼
+  newcomer_registration: [],  // 새가족 온라인 등록·관리 (교인 관리)
+  // ── PWA 는 자체 애드온 플래그(web_app_addon 컬럼)로 스토어프론트에서 제어 ──
+  pwa: ['pro'],               // 모바일 앱(PWA) — admin 게이팅만; 구매는 web_app_addon
 };
 
 /** Every gated feature id — used to build the effective-features map. */
 export const FEATURE_KEYS = Object.keys(FEATURE_TIERS);
 
+/** A feature that no tier includes ([]) — sold only as a paid per-tenant add-on. */
+export function isAddon(feature: string): boolean {
+  const t = FEATURE_TIERS[feature];
+  return Array.isArray(t) && t.length === 0;
+}
+
 export function planAllowsFeature(plan: string | null | undefined, feature: string): boolean {
   const allowed = FEATURE_TIERS[feature];
-  if (!allowed) return true; // ungated feature
+  if (!allowed) return true; // ungated feature (BASE — every tenant)
   return allowed.includes(normalizePlan(plan));
 }
 

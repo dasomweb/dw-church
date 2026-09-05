@@ -61,26 +61,20 @@ describe('planLimits — admin/page quotas', () => {
   });
 });
 
-describe('feature gates', () => {
-  it('cells (목장) requires plus or pro', () => {
-    expect(planAllowsFeature('light', 'cells')).toBe(false);
-    expect(planAllowsFeature('basic', 'cells')).toBe(false);
-    expect(planAllowsFeature('plus', 'cells')).toBe(true);
-    expect(planAllowsFeature('pro', 'cells')).toBe(true);
+describe('feature gates (add-on model)', () => {
+  it('행정 add-ons (목장·새가족) are OFF by default on every plan', () => {
+    // No tier includes them → only a per-tenant override activates them.
+    for (const plan of ['light', 'basic', 'plus', 'pro']) {
+      expect(planAllowsFeature(plan, 'cells')).toBe(false);
+      expect(planAllowsFeature(plan, 'newcomer')).toBe(false);
+      expect(planAllowsFeature(plan, 'newcomer_registration')).toBe(false);
+    }
   });
 
-  it('newcomer registration requires pro', () => {
-    expect(planAllowsFeature('plus', 'newcomer_registration')).toBe(false);
-    expect(planAllowsFeature('pro', 'newcomer_registration')).toBe(true);
-  });
-
-  it('ungated features are allowed on every tier', () => {
-    expect(planAllowsFeature('basic', 'sermons')).toBe(true);
-    expect(tiersForFeature('sermons')).toEqual(['basic', 'plus', 'pro']);
-  });
-
-  it('tiersForFeature returns the gated set for known features', () => {
-    expect(tiersForFeature('cells')).toEqual(['plus', 'pro']);
-    expect(tiersForFeature('newcomer_registration')).toEqual(['pro']);
+  it('public website features are BASE — allowed on every plan (ungated)', () => {
+    for (const key of ['sermons', 'albums', 'boards', 'events', 'columns', 'video', 'banners']) {
+      expect(planAllowsFeature('basic', key)).toBe(true);
+      expect(tiersForFeature(key)).toEqual(['basic', 'plus', 'pro']);
+    }
   });
 });
