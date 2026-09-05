@@ -42,6 +42,12 @@ export default function MemberManagement() {
   const [status, setStatus] = useState<'active' | 'newcomer' | 'all'>('active');
   const [position, setPosition] = useState('');
 
+  // Excel(CSV) import
+  const [showImport, setShowImport] = useState(false);
+  const [csv, setCsv] = useState('');
+  const [createHh, setCreateHh] = useState(true);
+  const [importing, setImporting] = useState(false);
+
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((f) => ({ ...f, [k]: v }));
 
   // ── queries ──
@@ -170,6 +176,26 @@ export default function MemberManagement() {
   };
 
   const uploadPhoto = async (file: File) => (await apiClient!.uploadFile(file, 'members')) as unknown as string;
+
+  const onCsvFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setCsv(String(reader.result ?? ''));
+    reader.readAsText(file);
+  };
+  const runImport = async () => {
+    if (importing || !csv.trim()) { if (!csv.trim()) showToast('error', 'CSV 내용을 붙여넣거나 파일을 선택하세요.'); return; }
+    setImporting(true);
+    try {
+      const res = await api.post<{ data: any }>('/api/v1/members/import', { csv, createHouseholds: createHh });
+      const r = (res as any).data;
+      showToast('success', `가져오기 완료 · ${r.imported}명 등록 (세대 ${r.householdsCreated}개, 무효 ${r.invalid})`);
+      setCsv(''); setShowImport(false);
+      invalidate();
+    } catch (e: any) { showToast('error', e?.message || '가져오기 실패'); }
+    finally { setImporting(false); }
+  };
 
   const positions = codesBy['position'] ?? [];
   const faithLevels = codesBy['faith_level'] ?? [];
@@ -304,8 +330,24 @@ export default function MemberManagement() {
     <div className="space-y-5">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-xl font-bold">교인 명부</h1>
-        <button onClick={openCreate} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">+ 교인 등록</button>
+        <div className="flex gap-2">
+          <button onClick={() => setShowImport((v) => !v)} className="px-4 py-2 rounded-lg text-sm font-medium border border-gray-300 hover:bg-gray-50">엑셀 가져오기</button>
+          <button onClick={openCreate} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">+ 교인 등록</button>
+        </div>
       </div>
+
+      {showImport && (
+        <div className="bg-white rounded-xl border border-blue-200 shadow-sm p-5 space-y-3">
+          <h2 className="text-sm font-semibold text-gray-700">엑셀(CSV) 가져오기 — 초기 이관</h2>
+          <p className="text-xs text-gray-500">엑셀을 <b>CSV로 내보내</b> 붙여넣거나 파일을 선택하세요. 첫 줄 헤더(<code>이름,성별,생년월일,전화,직분,신급,주소,구역,등록상태</code>)를 자동 인식하고, 없으면 1열=이름·2열=전화·3열=생년월일·4열=직분으로 읽습니다.</p>
+          <textarea rows={6} className={`${textareaClass} font-mono text-xs`} value={csv} onChange={(e) => setCsv(e.target.value)} placeholder={'이름,성별,생년월일,전화,직분,구역\n김철수,남,1978-09-05,(201) 555-0101,집사,1구역'} />
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+            <input type="file" accept=".csv,text/csv,text/plain" onChange={onCsvFile} className="text-sm" />
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={createHh} onChange={(e) => setCreateHh(e.target.checked)} className="rounded" /> 세대 자동 생성(세대/주소 기준)</label>
+            <button disabled={importing} onClick={() => void runImport()} className="bg-indigo-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 whitespace-nowrap sm:ml-auto">{importing ? '가져오는 중…' : '가져오기'}</button>
+          </div>
+        </div>
+      )}
 
       {s && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

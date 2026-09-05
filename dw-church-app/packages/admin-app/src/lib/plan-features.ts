@@ -21,7 +21,11 @@ export const NAV_FEATURE: Record<string, string> = {
   cells: 'cells',
   newcomers: 'newcomer',
   members: 'membership',        // 교적관리 애드온
+  'member-dashboard': 'membership',
   households: 'membership',
+  attendance: 'membership',
+  'member-visits': 'membership',
+  'member-records': 'membership',
   'member-codes': 'membership',
 };
 
