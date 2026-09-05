@@ -5,8 +5,12 @@ import {
   createMemberSchema, updateMemberSchema, listMembersQuerySchema,
   createHouseholdSchema, updateHouseholdSchema, listHouseholdsQuerySchema,
   createRelationSchema, createCodeSchema, updateCodeSchema,
+  importMembersSchema, createServiceSchema, updateServiceSchema, recordAttendanceSchema,
+  createVisitSchema, updateVisitSchema, createSacramentSchema, createTransferSchema,
 } from './schema.js';
 import * as svc from './service.js';
+import { importMembers } from './import-service.js';
+import * as rec from './records-service.js';
 
 /**
  * 교적관리 (membership) — 교회 행정 애드온. 전부 내부(관리자) 전용:
@@ -127,4 +131,104 @@ export async function membershipRoutes(app: FastifyInstance) {
     if (!ok) return reply.status(404).send(NOT_FOUND('코드'));
     return reply.send({ data: { deleted: true } });
   });
+
+  // ── 엑셀(CSV) 가져오기 (MB-05) ────────────────────────────
+  app.post('/members/import', gate, async (request, reply) => {
+    const input = importMembersSchema.parse(request.body);
+    if (!input.csv && !(input.rows && input.rows.length)) {
+      return reply.status(400).send({ error: { code: 'NO_DATA', message: 'CSV 내용 또는 rows 가 필요합니다.' } });
+    }
+    return reply.send({ data: await importMembers(getSchema(request), input as any) });
+  });
+
+  // ── 예배 정의(services) ──────────────────────────────────
+  app.get('/member-services', gate, async (request, reply) => reply.send({ data: await rec.listServices(getSchema(request)) }));
+  app.post('/member-services', gate, async (request, reply) => {
+    const input = createServiceSchema.parse(request.body);
+    return reply.status(201).send({ data: await rec.createService(getSchema(request), input) });
+  });
+  app.put('/member-services/:id', gate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const row = await rec.updateService(getSchema(request), id, updateServiceSchema.parse(request.body));
+    if (!row) return reply.status(404).send(NOT_FOUND('예배'));
+    return reply.send({ data: row });
+  });
+  app.delete('/member-services/:id', gate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const ok = await rec.deleteService(getSchema(request), id);
+    if (!ok) return reply.status(404).send(NOT_FOUND('예배'));
+    return reply.send({ data: { deleted: true } });
+  });
+
+  // ── 출석(attendance) ─────────────────────────────────────
+  app.get('/attendance/sheet', gate, async (request, reply) => {
+    const { serviceId, date } = request.query as { serviceId?: string; date?: string };
+    if (!serviceId || !date) return reply.status(400).send({ error: { code: 'BAD_QUERY', message: 'serviceId 와 date 가 필요합니다.' } });
+    return reply.send({ data: await rec.attendanceSheet(getSchema(request), serviceId, date) });
+  });
+  app.post('/attendance', gate, async (request, reply) => {
+    const input = recordAttendanceSchema.parse(request.body);
+    return reply.send({ data: await rec.recordAttendance(getSchema(request), input) });
+  });
+  app.get('/attendance/long-absent', gate, async (request, reply) => {
+    const weeks = Math.max(1, Math.min(52, Number((request.query as any).weeks) || 4));
+    return reply.send({ data: await rec.longAbsentees(getSchema(request), weeks) });
+  });
+
+  // ── 심방(visits) ─────────────────────────────────────────
+  app.get('/member-visits', gate, async (request, reply) => {
+    const q = request.query as any;
+    return reply.send({ data: await rec.listVisits(getSchema(request), { memberId: q.memberId, status: q.status, from: q.from, to: q.to }) });
+  });
+  app.post('/member-visits', gate, async (request, reply) => {
+    const input = createVisitSchema.parse(request.body);
+    return reply.status(201).send({ data: await rec.createVisit(getSchema(request), input) });
+  });
+  app.put('/member-visits/:id', gate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const row = await rec.updateVisit(getSchema(request), id, updateVisitSchema.parse(request.body));
+    if (!row) return reply.status(404).send(NOT_FOUND('심방 기록'));
+    return reply.send({ data: row });
+  });
+  app.delete('/member-visits/:id', gate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const ok = await rec.deleteVisit(getSchema(request), id);
+    if (!ok) return reply.status(404).send(NOT_FOUND('심방 기록'));
+    return reply.send({ data: { deleted: true } });
+  });
+
+  // ── 성례(sacraments) ─────────────────────────────────────
+  app.get('/member-sacraments', gate, async (request, reply) => {
+    const q = request.query as any;
+    return reply.send({ data: await rec.listSacraments(getSchema(request), { memberId: q.memberId, type: q.type }) });
+  });
+  app.post('/member-sacraments', gate, async (request, reply) => {
+    const input = createSacramentSchema.parse(request.body);
+    return reply.status(201).send({ data: await rec.createSacrament(getSchema(request), input) });
+  });
+  app.delete('/member-sacraments/:id', gate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const ok = await rec.deleteSacrament(getSchema(request), id);
+    if (!ok) return reply.status(404).send(NOT_FOUND('성례 기록'));
+    return reply.send({ data: { deleted: true } });
+  });
+
+  // ── 이동(transfers) ──────────────────────────────────────
+  app.get('/member-transfers', gate, async (request, reply) => {
+    const q = request.query as any;
+    return reply.send({ data: await rec.listTransfers(getSchema(request), { type: q.type }) });
+  });
+  app.post('/member-transfers', gate, async (request, reply) => {
+    const input = createTransferSchema.parse(request.body);
+    return reply.status(201).send({ data: await rec.createTransfer(getSchema(request), input) });
+  });
+  app.delete('/member-transfers/:id', gate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const ok = await rec.deleteTransfer(getSchema(request), id);
+    if (!ok) return reply.status(404).send(NOT_FOUND('이동 기록'));
+    return reply.send({ data: { deleted: true } });
+  });
+
+  // ── 통계(Phase 4) ────────────────────────────────────────
+  app.get('/member-stats/report', gate, async (request, reply) => reply.send({ data: await rec.statsReport(getSchema(request)) }));
 }

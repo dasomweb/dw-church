@@ -837,6 +837,79 @@ async function main(): Promise<void> {
         await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "member_relations_from_idx" ON "${schema}".member_relations ("from_member_id")`);
         createHits++;
       } catch { /* skip */ }
+
+      // 6. 교적관리 Phase 2~4 — 출석·심방·성례·이동. member_id FK CASCADE.
+      try {
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".member_services (
+            "id"         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "name"       VARCHAR(100) NOT NULL,
+            "weekday"    VARCHAR(20)  NOT NULL DEFAULT '',
+            "time"       VARCHAR(20)  NOT NULL DEFAULT '',
+            "sort_order" INT          NOT NULL DEFAULT 0,
+            "is_active"  BOOLEAN      NOT NULL DEFAULT TRUE,
+            "created_at" TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".member_attendance (
+            "id"          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "member_id"   UUID NOT NULL REFERENCES "${schema}".members(id) ON DELETE CASCADE,
+            "service_id"  UUID NOT NULL REFERENCES "${schema}".member_services(id) ON DELETE CASCADE,
+            "att_date"    DATE NOT NULL,
+            "status"      VARCHAR(12) NOT NULL DEFAULT 'present',
+            "recorded_by" VARCHAR(120) NOT NULL DEFAULT '',
+            "created_at"  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            UNIQUE ("member_id", "service_id", "att_date")
+          )
+        `);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "member_att_svc_date_idx" ON "${schema}".member_attendance ("service_id", "att_date")`);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "member_att_member_idx" ON "${schema}".member_attendance ("member_id", "att_date")`);
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".member_visits (
+            "id"          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "member_id"   UUID NOT NULL REFERENCES "${schema}".members(id) ON DELETE CASCADE,
+            "visitor"     VARCHAR(120) NOT NULL DEFAULT '',
+            "visit_date"  DATE,
+            "visit_type"  VARCHAR(40)  NOT NULL DEFAULT '심방',
+            "content"     VARCHAR(4000) NOT NULL DEFAULT '',
+            "prayer"      VARCHAR(2000) NOT NULL DEFAULT '',
+            "followup"    VARCHAR(2000) NOT NULL DEFAULT '',
+            "visibility"  VARCHAR(12)  NOT NULL DEFAULT 'pastors',
+            "status"      VARCHAR(12)  NOT NULL DEFAULT 'done',
+            "created_at"  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+            "updated_at"  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "member_visits_member_idx" ON "${schema}".member_visits ("member_id", "visit_date")`);
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".member_sacraments (
+            "id"         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "member_id"  UUID NOT NULL REFERENCES "${schema}".members(id) ON DELETE CASCADE,
+            "sac_type"   VARCHAR(40) NOT NULL,
+            "sac_date"   DATE,
+            "officiant"  VARCHAR(120) NOT NULL DEFAULT '',
+            "place"      VARCHAR(200) NOT NULL DEFAULT '',
+            "cert_no"    VARCHAR(60)  NOT NULL DEFAULT '',
+            "created_at" TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "member_sac_member_idx" ON "${schema}".member_sacraments ("member_id")`);
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".member_transfers (
+            "id"          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "member_id"   UUID NOT NULL REFERENCES "${schema}".members(id) ON DELETE CASCADE,
+            "tr_type"     VARCHAR(20) NOT NULL,
+            "tr_date"     DATE,
+            "counterpart" VARCHAR(200) NOT NULL DEFAULT '',
+            "reason"      VARCHAR(1000) NOT NULL DEFAULT '',
+            "status"      VARCHAR(12)  NOT NULL DEFAULT 'done',
+            "created_at"  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "member_tr_member_idx" ON "${schema}".member_transfers ("member_id")`);
+        createHits++;
+      } catch { /* skip */ }
     }
     if (alterHits || createHits) {
       app.log.info(`Tenant schema drift repair — ALTER: ${alterHits}, CREATE: ${createHits}`);

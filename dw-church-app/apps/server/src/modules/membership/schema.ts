@@ -84,6 +84,66 @@ export const createCodeSchema = z.object({
 });
 export const updateCodeSchema = createCodeSchema.partial().omit({ category: true });
 
+// ── 엑셀(CSV) 가져오기 (MB-05) ────────────────────────────────
+export const importMembersSchema = z.object({
+  csv: z.string().max(5_000_000).optional(),
+  rows: z.array(z.record(z.any())).max(50_000).optional(),
+  createHouseholds: z.boolean().optional(),
+});
+
+// ── 예배(service) ─────────────────────────────────────────────
+export const createServiceSchema = z.object({
+  name: z.string().min(1).max(100),
+  weekday: z.string().max(20).optional(),
+  time: z.string().max(20).optional(),
+  sortOrder: z.number().int().optional(),
+});
+export const updateServiceSchema = createServiceSchema.partial().extend({ isActive: z.boolean().optional() });
+
+// ── 출석(attendance) ──────────────────────────────────────────
+export const recordAttendanceSchema = z.object({
+  serviceId: z.string().uuid(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  recordedBy: z.string().max(120).optional(),
+  entries: z.array(z.object({
+    memberId: z.string().uuid(),
+    status: z.enum(['present', 'absent', 'online']),
+  })).max(2000),
+});
+
+// ── 심방(visit) ───────────────────────────────────────────────
+export const createVisitSchema = z.object({
+  memberId: z.string().uuid(),
+  visitor: z.string().max(120).optional(),
+  visitDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+  visitType: z.string().max(40).optional(),
+  content: z.string().max(4000).optional(),
+  prayer: z.string().max(2000).optional(),
+  followup: z.string().max(2000).optional(),
+  visibility: z.enum(['self', 'pastors', 'all']).optional(),
+  status: z.enum(['planned', 'done']).optional(),
+});
+export const updateVisitSchema = createVisitSchema.partial().omit({ memberId: true });
+
+// ── 성례(sacrament) ───────────────────────────────────────────
+export const createSacramentSchema = z.object({
+  memberId: z.string().uuid(),
+  sacType: z.string().min(1).max(40),  // 세례·유아세례·입교·성찬 등
+  sacDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+  officiant: z.string().max(120).optional(),
+  place: z.string().max(200).optional(),
+  certNo: z.string().max(60).optional(),
+});
+
+// ── 이동(transfer) ────────────────────────────────────────────
+export const createTransferSchema = z.object({
+  memberId: z.string().uuid(),
+  trType: z.enum(['in', 'out', 'dismissal', 'death']),  // 전입·전출·이명·별세
+  trDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+  counterpart: z.string().max(200).optional(),
+  reason: z.string().max(1000).optional(),
+});
+
 export type CreateMemberInput = z.infer<typeof createMemberSchema>;
 export type UpdateMemberInput = z.infer<typeof updateMemberSchema>;
 export type ListMembersQuery = z.infer<typeof listMembersQuerySchema>;

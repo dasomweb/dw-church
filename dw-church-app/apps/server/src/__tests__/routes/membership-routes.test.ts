@@ -25,6 +25,17 @@ const svc = {
 };
 vi.mock('../../modules/membership/service.js', () => svc);
 
+const imp = { importMembers: vi.fn() };
+vi.mock('../../modules/membership/import-service.js', () => imp);
+const rec = {
+  listServices: vi.fn(), createService: vi.fn(), updateService: vi.fn(), deleteService: vi.fn(),
+  attendanceSheet: vi.fn(), recordAttendance: vi.fn(), longAbsentees: vi.fn(),
+  listVisits: vi.fn(), createVisit: vi.fn(), updateVisit: vi.fn(), deleteVisit: vi.fn(),
+  listSacraments: vi.fn(), createSacrament: vi.fn(), deleteSacrament: vi.fn(),
+  listTransfers: vi.fn(), createTransfer: vi.fn(), deleteTransfer: vi.fn(), statsReport: vi.fn(),
+};
+vi.mock('../../modules/membership/records-service.js', () => rec);
+
 const JWT_SECRET = 'test-secret-at-least-32-characters-long';
 function token(role = 'admin') {
   return jwt.sign({ userId: 'u1', email: 't@t.com', tenantId: 't1', tenantSlug: 'base', role }, JWT_SECRET, { expiresIn: '1h' });
@@ -55,6 +66,20 @@ beforeAll(async () => {
   svc.createRelation.mockResolvedValue({ id: 'r1' });
   svc.seedCodesIfEmpty.mockResolvedValue(0);
   svc.listCodes.mockResolvedValue([]);
+
+  imp.importMembers.mockResolvedValue({ received: 2, imported: 2, invalid: 0, invalidSamples: [], householdsCreated: 1 });
+  rec.listServices.mockResolvedValue([]);
+  rec.createService.mockResolvedValue({ id: 'sv1', name: '주일 1부' });
+  rec.recordAttendance.mockResolvedValue({ saved: 3 });
+  rec.attendanceSheet.mockResolvedValue([]);
+  rec.longAbsentees.mockResolvedValue([]);
+  rec.listVisits.mockResolvedValue([]);
+  rec.createVisit.mockResolvedValue({ id: 'v1' });
+  rec.listSacraments.mockResolvedValue([]);
+  rec.createSacrament.mockResolvedValue({ id: 'sac1' });
+  rec.listTransfers.mockResolvedValue([]);
+  rec.createTransfer.mockResolvedValue({ id: 'tr1' });
+  rec.statsReport.mockResolvedValue({ gender: [], age: [], position: [], region: [], attendanceRecent: [] });
 });
 afterAll(async () => { await app.close(); });
 
@@ -143,5 +168,87 @@ describe('households + relations + codes', () => {
     const res = await app.inject({ method: 'GET', url: '/api/v1/member-codes', headers: { 'x-tenant-slug': 'base', ...auth() } });
     expect(res.statusCode).toBe(200);
     expect(svc.seedCodesIfEmpty).toHaveBeenCalled();
+  });
+});
+
+describe('Phase 2-4 — import / attendance / visits / sacraments / transfers / stats', () => {
+  it('POST /members/import no data → 400', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'POST', url: '/api/v1/members/import', headers: { 'x-tenant-slug': 'base', ...auth() }, payload: {} });
+    expect(res.statusCode).toBe(400);
+  });
+  it('POST /members/import with rows → 200 counts', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'POST', url: '/api/v1/members/import', headers: { 'x-tenant-slug': 'base', ...auth() }, payload: { rows: [{ name: '김철수' }, { name: '박영희' }], createHouseholds: true } });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().data.imported).toBe(2);
+  });
+  it('gate: POST /members/import without add-on → 403', async () => {
+    const res = await app.inject({ method: 'POST', url: '/api/v1/members/import', headers: { 'x-tenant-slug': 'base', ...auth() }, payload: { rows: [{ name: 'x' }] } });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it('POST /member-services valid → 201', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'POST', url: '/api/v1/member-services', headers: { 'x-tenant-slug': 'base', ...auth() }, payload: { name: '주일 1부', weekday: '주일', time: '09:00' } });
+    expect(res.statusCode).toBe(201);
+  });
+
+  it('POST /attendance valid → 200 saved', async () => {
+    await withAddon();
+    const res = await app.inject({
+      method: 'POST', url: '/api/v1/attendance', headers: { 'x-tenant-slug': 'base', ...auth() },
+      payload: { serviceId: '11111111-1111-1111-1111-111111111111', date: '2026-09-06', entries: [{ memberId: '22222222-2222-2222-2222-222222222222', status: 'present' }] },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().data.saved).toBe(3);
+  });
+  it('POST /attendance bad status → 400', async () => {
+    await withAddon();
+    const res = await app.inject({
+      method: 'POST', url: '/api/v1/attendance', headers: { 'x-tenant-slug': 'base', ...auth() },
+      payload: { serviceId: '11111111-1111-1111-1111-111111111111', date: '2026-09-06', entries: [{ memberId: '22222222-2222-2222-2222-222222222222', status: 'maybe' }] },
+    });
+    expect(res.statusCode).toBe(400);
+  });
+  it('GET /attendance/sheet without query → 400', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'GET', url: '/api/v1/attendance/sheet', headers: { 'x-tenant-slug': 'base', ...auth() } });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('POST /member-visits valid → 201', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'POST', url: '/api/v1/member-visits', headers: { 'x-tenant-slug': 'base', ...auth() }, payload: { memberId: '22222222-2222-2222-2222-222222222222', visitType: '심방', content: '가정 방문', visibility: 'pastors' } });
+    expect(res.statusCode).toBe(201);
+  });
+  it('POST /member-visits bad memberId → 400', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'POST', url: '/api/v1/member-visits', headers: { 'x-tenant-slug': 'base', ...auth() }, payload: { memberId: 'nope', content: 'x' } });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('POST /member-sacraments valid → 201', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'POST', url: '/api/v1/member-sacraments', headers: { 'x-tenant-slug': 'base', ...auth() }, payload: { memberId: '22222222-2222-2222-2222-222222222222', sacType: '세례', sacDate: '2026-04-05' } });
+    expect(res.statusCode).toBe(201);
+  });
+
+  it('POST /member-transfers valid → 201', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'POST', url: '/api/v1/member-transfers', headers: { 'x-tenant-slug': 'base', ...auth() }, payload: { memberId: '22222222-2222-2222-2222-222222222222', trType: 'out', trDate: '2026-09-01', counterpart: '옆교회' } });
+    expect(res.statusCode).toBe(201);
+  });
+  it('POST /member-transfers bad type → 400', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'POST', url: '/api/v1/member-transfers', headers: { 'x-tenant-slug': 'base', ...auth() }, payload: { memberId: '22222222-2222-2222-2222-222222222222', trType: 'teleport' } });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('GET /member-stats/report → 200', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'GET', url: '/api/v1/member-stats/report', headers: { 'x-tenant-slug': 'base', ...auth() } });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().data).toHaveProperty('gender');
   });
 });
