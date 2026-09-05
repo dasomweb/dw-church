@@ -22,6 +22,7 @@ const svc = {
   updateHousehold: vi.fn(), deleteHousehold: vi.fn(),
   createRelation: vi.fn(), deleteRelation: vi.fn(),
   listCodes: vi.fn(), createCode: vi.fn(), updateCode: vi.fn(), deleteCode: vi.fn(), seedCodesIfEmpty: vi.fn(),
+  getMemberSettings: vi.fn(), updateMemberSettings: vi.fn(),
 };
 vi.mock('../../modules/membership/service.js', () => svc);
 
@@ -67,6 +68,8 @@ beforeAll(async () => {
   svc.createRelation.mockResolvedValue({ id: 'r1' });
   svc.seedCodesIfEmpty.mockResolvedValue(0);
   svc.listCodes.mockResolvedValue([]);
+  svc.getMemberSettings.mockResolvedValue({ recognitionEnabled: true, requiredSacraments: [], requireForOffice: false, defaultBaptismTerm: '세례', positionDistinction: true });
+  svc.updateMemberSettings.mockResolvedValue({ recognitionEnabled: false });
 
   imp.importMembers.mockResolvedValue({ received: 2, imported: 2, invalid: 0, invalidSamples: [], householdsCreated: 1 });
   rec.listServices.mockResolvedValue([]);
@@ -281,6 +284,18 @@ describe('Phase 2-4 — import / attendance / visits / sacraments / transfers / 
   it('GET /member-appointments → 200', async () => {
     await withAddon();
     const res = await app.inject({ method: 'GET', url: '/api/v1/member-appointments', headers: { 'x-tenant-slug': 'base', ...auth() } });
+    expect(res.statusCode).toBe(200);
+  });
+
+  it('GET /member-settings → 200', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'GET', url: '/api/v1/member-settings', headers: { 'x-tenant-slug': 'base', ...auth() } });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().data).toHaveProperty('recognitionEnabled');
+  });
+  it('PUT /member-settings → 200', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'PUT', url: '/api/v1/member-settings', headers: { 'x-tenant-slug': 'base', ...auth() }, payload: { recognitionEnabled: false, requiredSacraments: ['침례'], requireForOffice: true } });
     expect(res.statusCode).toBe(200);
   });
 });

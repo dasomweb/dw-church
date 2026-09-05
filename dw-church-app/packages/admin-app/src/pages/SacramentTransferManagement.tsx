@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
 import { inputClass, useToast, EmptyState } from '../components';
@@ -42,12 +42,19 @@ export default function SacramentTransferManagement() {
     },
   });
   const sacTypes = (sacTypesQ.data && sacTypesQ.data.length > 0) ? sacTypesQ.data : SAC_TYPES_FALLBACK;
+  const settingsQ = useQuery({ queryKey: ['member-settings'], queryFn: async () => (await api.get<{ data: any }>('/api/v1/member-settings') as any).data });
+  const recognitionEnabled = settingsQ.data?.recognitionEnabled !== false;
   const sacQ = useQuery({ queryKey: ['sacraments'], enabled: tab === 'sacrament', queryFn: async () => (await api.get<{ data: Row[] }>('/api/v1/member-sacraments') as any).data as Row[] });
   const trQ = useQuery({ queryKey: ['transfers'], enabled: tab === 'transfer', queryFn: async () => (await api.get<{ data: Row[] }>('/api/v1/member-transfers') as any).data as Row[] });
 
   // sacrament form
   const blankSac = { memberId: '', sacType: '세례', sacDate: '', officiant: '', place: '', certNo: '', recognized: true };
   const [sac, setSac] = useState(blankSac);
+  // 기본 세례 용어(설정) 반영 — 아직 손대지 않은 폼일 때만.
+  useEffect(() => {
+    const def = settingsQ.data?.defaultBaptismTerm;
+    if (def && !sac.memberId && sac.sacType === '세례' && def !== '세례') setSac((s) => ({ ...s, sacType: def }));
+  }, [settingsQ.data]); // eslint-disable-line react-hooks/exhaustive-deps
   const addSac = async () => {
     if (!sac.memberId) { showToast('error', '대상 교인을 선택하세요.'); return; }
     try {
@@ -98,7 +105,7 @@ export default function SacramentTransferManagement() {
           <div><label className="block text-sm font-medium mb-1">집례자</label><input className={inputClass} value={sac.officiant} onChange={(e) => setSac({ ...sac, officiant: e.target.value })} /></div>
           <div><label className="block text-sm font-medium mb-1">받은 교회</label><input className={inputClass} value={sac.place} onChange={(e) => setSac({ ...sac, place: e.target.value })} placeholder="타교회면 교회명" /></div>
           <div><label className="block text-sm font-medium mb-1">증서번호</label><input className={inputClass} placeholder="증서번호" value={sac.certNo} onChange={(e) => setSac({ ...sac, certNo: e.target.value })} /></div>
-          <label className="flex items-center gap-2 text-sm pb-2"><input type="checkbox" checked={sac.recognized} onChange={(e) => setSac({ ...sac, recognized: e.target.checked })} className="rounded" /> 본 교회 인정</label>
+          {recognitionEnabled && <label className="flex items-center gap-2 text-sm pb-2"><input type="checkbox" checked={sac.recognized} onChange={(e) => setSac({ ...sac, recognized: e.target.checked })} className="rounded" /> 본 교회 인정</label>}
           <div className="flex items-end"><button onClick={addSac} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap w-full">등록</button></div>
         </div>
       )}

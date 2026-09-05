@@ -929,6 +929,20 @@ async function main(): Promise<void> {
           )
         `);
         await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "member_appt_member_idx" ON "${schema}".member_appointments ("member_id")`);
+        // 교적 설정(단일 행) — 교단별 동작을 켜고 폼/표현이 따라감.
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".member_settings (
+            "id"                   INT PRIMARY KEY DEFAULT 1,
+            "recognition_enabled"  BOOLEAN     NOT NULL DEFAULT TRUE,
+            "required_sacraments"  TEXT[]      NOT NULL DEFAULT '{}',
+            "require_for_office"   BOOLEAN     NOT NULL DEFAULT FALSE,
+            "default_baptism_term" VARCHAR(20) NOT NULL DEFAULT '세례',
+            "position_distinction" BOOLEAN     NOT NULL DEFAULT TRUE,
+            "updated_at"           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            CONSTRAINT "member_settings_single_row" CHECK (id = 1)
+          )
+        `);
+        await prisma.$executeRawUnsafe(`INSERT INTO "${schema}".member_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING`);
         createHits++;
       } catch { /* skip */ }
     }

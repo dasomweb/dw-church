@@ -28,6 +28,7 @@ export const NAV_FEATURE: Record<string, string> = {
   'member-visits': 'membership',
   'member-records': 'membership',
   'member-codes': 'membership',
+  'member-settings': 'membership',
 };
 
 /** Page-editor block_type → gated feature key. */

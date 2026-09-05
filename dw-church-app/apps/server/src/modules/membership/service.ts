@@ -6,6 +6,14 @@ import type {
   CreateRelationInput, CreateCodeInput, UpdateCodeInput,
 } from './schema.js';
 
+/** JS string[] → Postgres array literal (for `$n::text[]`). */
+function toPgTextArray(arr: string[]): string {
+  return `{${arr.map((t) => `"${String(t).replace(/(["\\])/g, '\\$1')}"`).join(',')}}`;
+}
+function normTags(tags?: string[] | null): string[] {
+  return Array.from(new Set((tags ?? []).map((t) => t.trim()).filter(Boolean)));
+}
+
 // camelCase input field → snake_case column.
 const MEMBER_COLS: Record<string, string> = {
   name: 'name', nameHanja: 'name_hanja', nameEn: 'name_en', gender: 'gender',
@@ -124,7 +132,21 @@ export async function getMember(schema: string, id: string) {
       ORDER BY r.created_at ASC`,
     id,
   );
-  return { ...member, relations };
+  // 직분 요건 성례(예: 침례) 충족 여부 — 설정에서 켰을 때만 계산.
+  let requirement: { required: string[]; met: boolean } | null = null;
+  const settings = await getMemberSettings(schema);
+  const req = (settings?.required_sacraments as string[] | undefined) ?? [];
+  if (settings?.require_for_office && req.length > 0) {
+    const rows = await prisma.$queryRawUnsafe<{ ok: boolean }[]>(
+      `SELECT EXISTS(
+         SELECT 1 FROM "${schema}".member_sacraments
+          WHERE member_id = $1::uuid AND recognized = true AND sac_type = ANY($2::text[])
+       ) AS ok`,
+      id, toPgTextArray(req),
+    );
+    requirement = { required: req, met: rows[0]?.ok === true };
+  }
+  return { ...member, relations, requirement };
 }
 
 export const createMember = (schema: string, input: CreateMemberInput) =>
@@ -337,6 +359,41 @@ const DEFAULT_CODES: Array<[string, string[]]> = [
   ['org_type', ['구역', '부서', '기관', '교회학교']],
   ['sacrament_type', ['세례', '침례', '유아세례', '헌아식', '입교', '성찬', '학습']],
 ];
+// ── 교적 설정(member_settings, 단일 행) ───────────────────────
+export async function getMemberSettings(schema: string) {
+  const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(`SELECT * FROM "${schema}".member_settings WHERE id = 1`);
+  if (rows[0]) return rows[0];
+  await prisma.$executeRawUnsafe(`INSERT INTO "${schema}".member_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING`);
+  const seeded = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(`SELECT * FROM "${schema}".member_settings WHERE id = 1`);
+  return seeded[0] ?? null;
+}
+
+export async function updateMemberSettings(schema: string, input: Record<string, unknown>) {
+  const map: Record<string, string> = {
+    recognitionEnabled: 'recognition_enabled', requireForOffice: 'require_for_office',
+    defaultBaptismTerm: 'default_baptism_term', positionDistinction: 'position_distinction',
+  };
+  const set: string[] = [];
+  const vals: unknown[] = [];
+  let i = 1;
+  for (const [k, c] of Object.entries(map)) {
+    if (input[k] === undefined) continue;
+    set.push(`"${c}" = $${i++}`);
+    vals.push(input[k]);
+  }
+  if (input.requiredSacraments !== undefined) {
+    set.push(`"required_sacraments" = $${i++}::text[]`);
+    vals.push(toPgTextArray(normTags(input.requiredSacraments as string[])));
+  }
+  await prisma.$executeRawUnsafe(`INSERT INTO "${schema}".member_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING`);
+  if (set.length === 0) return getMemberSettings(schema);
+  set.push('updated_at = NOW()');
+  const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
+    `UPDATE "${schema}".member_settings SET ${set.join(', ')} WHERE id = 1 RETURNING *`, ...vals,
+  );
+  return rows[0] ?? null;
+}
+
 export async function seedCodesIfEmpty(schema: string): Promise<number> {
   const existing = await prisma.$queryRawUnsafe<{ n: number }[]>(`SELECT count(*)::int AS n FROM "${schema}".member_codes`);
   if ((existing[0]?.n ?? 0) > 0) return 0;

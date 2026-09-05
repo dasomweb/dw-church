@@ -91,6 +91,11 @@ export default function MemberManagement() {
       return (res as any).data;
     },
   });
+  const settingsQ = useQuery({
+    queryKey: ['member-settings'],
+    queryFn: async () => (await api.get<{ data: any }>('/api/v1/member-settings') as any).data,
+  });
+  const showPositionDistinction = settingsQ.data?.positionDistinction !== false;
 
   const detailQ = useQuery({
     queryKey: ['member', detailId],
@@ -217,6 +222,7 @@ export default function MemberManagement() {
                   <h2 className="text-xl font-bold text-gray-900">{m.name}</h2>
                   {m.position && <span className={`text-xs font-medium rounded-full px-2 py-0.5 ${m.positionCourtesy ? 'bg-gray-100 text-gray-500 border border-gray-200' : 'bg-blue-50 text-blue-700'}`} title={m.positionCourtesy ? '타 교회에서 받은 직분' : '본 교회 임명 직분'}>{m.position}{m.positionCourtesy ? ' · 타교회' : ''}</span>}
                   <span className={`text-xs font-medium rounded-full px-2 py-0.5 ${m.regStatus === 'newcomer' ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-600'}`}>{STATUS_LABEL[m.regStatus] ?? m.regStatus}</span>
+                  {m.requirement && <span className={`text-xs font-medium rounded-full px-2 py-0.5 ${m.requirement.met ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`} title={`직분 요건 성례: ${(m.requirement.required || []).join(', ')}`}>{m.requirement.met ? '직분 요건 충족' : `직분 요건 미충족`}</span>}
                 </div>
                 <div className="mt-2 text-sm text-gray-600 grid grid-cols-2 gap-y-1 gap-x-6 max-w-lg">
                   <span>전화 · {m.phone || '—'}</span>
@@ -283,10 +289,12 @@ export default function MemberManagement() {
               <select className={inputClass} value={form.position} onChange={(e) => set('position', e.target.value)}>
                 <option value="">선택</option>{positions.map((p) => <option key={p} value={p}>{p}</option>)}
               </select></div>
-            <div className="flex items-end pb-2">
-              <label className="flex items-center gap-2 text-sm" title="본 교회에서 임명한 직분이 아니라 타 교회에서 받은 직분일 때 체크">
-                <input type="checkbox" checked={form.positionCourtesy} onChange={(e) => set('positionCourtesy', e.target.checked)} className="rounded" /> 타 교회에서 받은 직분
-              </label></div>
+            {showPositionDistinction && (
+              <div className="flex items-end pb-2">
+                <label className="flex items-center gap-2 text-sm" title="본 교회에서 임명한 직분이 아니라 타 교회에서 받은 직분일 때 체크">
+                  <input type="checkbox" checked={form.positionCourtesy} onChange={(e) => set('positionCourtesy', e.target.checked)} className="rounded" /> 타 교회에서 받은 직분
+                </label></div>
+            )}
             <div><label className="block text-sm font-medium mb-1">신급</label>
               <select className={inputClass} value={form.faithLevel} onChange={(e) => set('faithLevel', e.target.value)}>
                 <option value="">선택</option>{faithLevels.map((p) => <option key={p} value={p}>{p}</option>)}

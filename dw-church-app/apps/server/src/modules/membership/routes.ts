@@ -4,7 +4,7 @@ import { getSchema } from '../../utils/get-schema.js';
 import {
   createMemberSchema, updateMemberSchema, listMembersQuerySchema,
   createHouseholdSchema, updateHouseholdSchema, listHouseholdsQuerySchema,
-  createRelationSchema, createCodeSchema, updateCodeSchema,
+  createRelationSchema, createCodeSchema, updateCodeSchema, updateMemberSettingsSchema,
   importMembersSchema, createServiceSchema, updateServiceSchema, recordAttendanceSchema,
   createVisitSchema, updateVisitSchema, createSacramentSchema, createTransferSchema, appointMembersSchema,
 } from './schema.js';
@@ -130,6 +130,13 @@ export async function membershipRoutes(app: FastifyInstance) {
     const ok = await svc.deleteCode(getSchema(request), id);
     if (!ok) return reply.status(404).send(NOT_FOUND('코드'));
     return reply.send({ data: { deleted: true } });
+  });
+
+  // ── 교적 설정(member_settings) ───────────────────────────
+  app.get('/member-settings', gate, async (request, reply) => reply.send({ data: await svc.getMemberSettings(getSchema(request)) }));
+  app.put('/member-settings', gate, async (request, reply) => {
+    const input = updateMemberSettingsSchema.parse(request.body);
+    return reply.send({ data: await svc.updateMemberSettings(getSchema(request), input) });
   });
 
   // ── 엑셀(CSV) 가져오기 (MB-05) ────────────────────────────

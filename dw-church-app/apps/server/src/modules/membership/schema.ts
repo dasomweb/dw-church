@@ -13,6 +13,16 @@ const dateStr = z
   .optional()
   .nullable();
 
+// ── 교적 설정(member_settings, 단일 행) ───────────────────────
+export const updateMemberSettingsSchema = z.object({
+  recognitionEnabled: z.boolean().optional(),                       // 타교회 성례 인정 관리 사용
+  requiredSacraments: z.array(z.string().trim().max(40)).max(20).optional(), // 직분 요건 성례 (예: 침례)
+  requireForOffice: z.boolean().optional(),                         // 직분 요건 적용
+  defaultBaptismTerm: z.string().trim().max(20).optional(),         // 기본 세례 용어(세례/침례)
+  positionDistinction: z.boolean().optional(),                      // 본교회/타교회 직분 구분 사용
+});
+export type UpdateMemberSettingsInput = z.infer<typeof updateMemberSettingsSchema>;
+
 // ── 교인(member) ──────────────────────────────────────────────
 export const createMemberSchema = z.object({
   name: z.string().min(1).max(120),
