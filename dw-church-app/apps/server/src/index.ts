@@ -1141,6 +1141,45 @@ async function main(): Promise<void> {
         await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "session_att_enroll_idx" ON "${schema}".session_attendance ("enrollment_id")`);
         createHits++;
       } catch { /* skip */ }
+
+      // 10. 스몰그룹 STEP 4 — 공지 + 자료실 (분가는 groups 재사용).
+      try {
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".group_notices (
+            "id"            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "title"         VARCHAR(200) NOT NULL,
+            "body"          TEXT         NOT NULL DEFAULT '',
+            "target"        JSONB        NOT NULL DEFAULT '{"scope":"all"}'::jsonb,
+            "is_pinned"     BOOLEAN      NOT NULL DEFAULT FALSE,
+            "publish_from"  DATE,
+            "publish_to"    DATE,
+            "send_alrimtalk" BOOLEAN     NOT NULL DEFAULT FALSE,
+            "send_email"    BOOLEAN      NOT NULL DEFAULT FALSE,
+            "send_sms"      BOOLEAN      NOT NULL DEFAULT FALSE,
+            "created_at"    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+            "updated_at"    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "group_notices_pin_idx" ON "${schema}".group_notices ("is_pinned", "created_at")`);
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".group_resources (
+            "id"             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "category"       VARCHAR(60)  NOT NULL DEFAULT '',
+            "title"          VARCHAR(200) NOT NULL,
+            "file_url"       TEXT         NOT NULL DEFAULT '',
+            "file_name"      VARCHAR(300) NOT NULL DEFAULT '',
+            "file_size"      INT          NOT NULL DEFAULT 0,
+            "view_permission" VARCHAR(12) NOT NULL DEFAULT 'leaders',
+            "teaching_date"  DATE,
+            "note"           VARCHAR(1000) NOT NULL DEFAULT '',
+            "download_count" INT          NOT NULL DEFAULT 0,
+            "created_at"     TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+            "updated_at"     TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "group_resources_cat_idx" ON "${schema}".group_resources ("category")`);
+        createHits++;
+      } catch { /* skip */ }
     }
     if (alterHits || createHits) {
       app.log.info(`Tenant schema drift repair — ALTER: ${alterHits}, CREATE: ${createHits}`);

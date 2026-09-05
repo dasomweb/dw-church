@@ -7,7 +7,7 @@ import {
 import type {
   UpdatePresetInput, CreateGroupInput, UpdateGroupInput, ListGroupsQuery,
   AddGroupMemberInput, AssignMembersInput, UpdateGroupMemberInput,
-  CreateQueueInput, PlaceFromQueueInput,
+  CreateQueueInput, PlaceFromQueueInput, SplitGroupInput,
 } from './schema.js';
 
 /** JS string[] → Postgres array literal (for `$n::text[]`). */
@@ -347,4 +347,59 @@ export async function placeFromQueue(schema: string, queueId: string, input: Pla
 export async function deleteQueueItem(schema: string, id: string) {
   const rows = await prisma.$queryRawUnsafe<any[]>(`DELETE FROM "${schema}".group_placement_queue WHERE id = $1::uuid RETURNING id`, id);
   return rows.length > 0;
+}
+
+// ── 분가 · 번식 (GR-05/06) ────────────────────────────────
+/** 원 조직에서 일부 명단을 떼어 새 조직으로. origin_group_id 로 분가 계보를 남긴다. */
+export async function splitGroup(schema: string, sourceId: string, input: SplitGroupInput) {
+  const src = (await prisma.$queryRawUnsafe<any[]>(`SELECT * FROM "${schema}".groups WHERE id = $1::uuid`, sourceId))[0];
+  if (!src) throw new AppError('NOT_FOUND', 404, '원 조직을 찾을 수 없습니다.');
+  const created = await createGroup(schema, {
+    name: input.name,
+    level: src.level,
+    parentId: src.parent_id ?? null,
+    leaderMemberId: input.leaderMemberId ?? null,
+    meetingDay: input.meetingDay ?? '',
+    meetingTime: input.meetingTime ?? '',
+    meetingPlace: input.meetingPlace ?? '',
+    region: input.region ?? src.region ?? '',
+    status: 'active',
+  } as CreateGroupInput);
+  await prisma.$executeRawUnsafe(`UPDATE "${schema}".groups SET origin_group_id = $1::uuid WHERE id = $2::uuid`, sourceId, created.id);
+  // 명단 이동: 원 조직 소속 종료 → 새 조직에 편입(정기 개편).
+  let moved = 0;
+  for (const memberId of input.memberIds ?? []) {
+    await prisma.$executeRawUnsafe(
+      `UPDATE "${schema}".group_members SET end_date = CURRENT_DATE
+       WHERE group_id = $1::uuid AND member_id = $2::uuid AND end_date IS NULL`, sourceId, memberId);
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO "${schema}".group_members (group_id, member_id, role, reason, start_date)
+       VALUES ($1::uuid, $2::uuid, 'member', 'reorg', CURRENT_DATE)`, created.id, memberId);
+    moved++;
+  }
+  // 새 목자를 명단에 리더로 (아직 없으면).
+  if (input.leaderMemberId) {
+    const has = await ensureNotDuplicateMember(schema, created.id, input.leaderMemberId);
+    if (!has) {
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO "${schema}".group_members (group_id, member_id, role, reason, start_date)
+         VALUES ($1::uuid, $2::uuid, 'leader', 'reorg', CURRENT_DATE)`, created.id, input.leaderMemberId);
+    } else {
+      await prisma.$executeRawUnsafe(
+        `UPDATE "${schema}".group_members SET role = 'leader' WHERE group_id = $1::uuid AND member_id = $2::uuid AND end_date IS NULL`,
+        created.id, input.leaderMemberId);
+    }
+  }
+  return { group: await getGroup(schema, created.id), moved };
+}
+
+/** 공개 목장 찾기(PB-02) — 인증 없이 노출. is_public 켠 조직만, 인원/리더 포함. */
+export async function listPublicGroups(schema: string) {
+  return prisma.$queryRawUnsafe<any[]>(
+    `SELECT g.id, g.name, g.region, g.meeting_day, g.meeting_time, g.intro, g.photo_url, g.tags,
+            lm.name AS leader_name,
+            (SELECT COUNT(*)::int FROM "${schema}".group_members gm WHERE gm.group_id = g.id AND gm.end_date IS NULL) AS member_count
+     FROM "${schema}".groups g LEFT JOIN "${schema}".members lm ON lm.id = g.leader_member_id
+     WHERE g.is_public = TRUE AND g.status = 'active'
+     ORDER BY g.sort_order, g.name`);
 }

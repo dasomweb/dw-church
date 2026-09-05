@@ -9,10 +9,12 @@ import {
   upsertReportSchema, confirmReportSchema, listReportsQuerySchema, monitoringQuerySchema,
   createCourseSchema, updateCourseSchema, createTermSchema, updateTermSchema,
   enrollSchema, updateEnrollmentSchema, recordSessionSchema, completeTermSchema,
+  createNoticeSchema, updateNoticeSchema, createResourceSchema, updateResourceSchema, splitGroupSchema,
 } from './schema.js';
 import * as svc from './service.js';
 import * as rep from './reports-service.js';
 import * as edu from './courses-service.js';
+import * as com from './community-service.js';
 
 /**
  * 스몰그룹 (smallgroup) — 교회 행정 애드온. 전부 관리자 전용:
@@ -262,4 +264,56 @@ export async function smallgroupRoutes(app: FastifyInstance) {
     const { id } = request.params as { id: string };
     return reply.send({ data: await edu.memberEnrollments(getSchema(request), id) });
   });
+
+  // ── 분가 · 번식 (GR-05/06) ───────────────────────────────
+  app.post('/groups/:id/split', gate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const input = splitGroupSchema.parse(request.body);
+    return reply.status(201).send({ data: await svc.splitGroup(getSchema(request), id, input) });
+  });
+
+  // ── 공지 (group-notices) — NT-01/02 ──────────────────────
+  app.get('/group-notices', gate, async (request, reply) => reply.send({ data: await com.listNotices(getSchema(request)) }));
+  app.post('/group-notices', gate, async (request, reply) => {
+    const input = createNoticeSchema.parse(request.body);
+    return reply.status(201).send({ data: await com.createNotice(getSchema(request), input) });
+  });
+  app.put('/group-notices/:id', gate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const row = await com.updateNotice(getSchema(request), id, updateNoticeSchema.parse(request.body));
+    if (!row) return reply.status(404).send(NOT_FOUND('공지'));
+    return reply.send({ data: row });
+  });
+  app.delete('/group-notices/:id', gate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const ok = await com.deleteNotice(getSchema(request), id);
+    if (!ok) return reply.status(404).send(NOT_FOUND('공지'));
+    return reply.send({ data: { deleted: true } });
+  });
+
+  // ── 자료실 (group-resources) — LB-01 ─────────────────────
+  app.get('/group-resources', gate, async (request, reply) => {
+    const { category } = request.query as { category?: string };
+    return reply.send({ data: await com.listResources(getSchema(request), category) });
+  });
+  app.post('/group-resources', gate, async (request, reply) => {
+    const input = createResourceSchema.parse(request.body);
+    return reply.status(201).send({ data: await com.createResource(getSchema(request), input) });
+  });
+  app.put('/group-resources/:id', gate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const row = await com.updateResource(getSchema(request), id, updateResourceSchema.parse(request.body));
+    if (!row) return reply.status(404).send(NOT_FOUND('자료'));
+    return reply.send({ data: row });
+  });
+  app.delete('/group-resources/:id', gate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const ok = await com.deleteResource(getSchema(request), id);
+    if (!ok) return reply.status(404).send(NOT_FOUND('자료'));
+    return reply.send({ data: { deleted: true } });
+  });
+
+  // ── 공개 목장 찾기 (PB-02) — 인증 없이 노출 (스토어프론트) ──
+  app.get('/public/groups', async (request, reply) =>
+    reply.send({ data: await svc.listPublicGroups(getSchema(request)) }));
 }

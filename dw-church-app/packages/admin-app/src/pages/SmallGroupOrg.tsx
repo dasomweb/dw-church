@@ -209,6 +209,7 @@ function GroupDetail({ group, preset, levelDefs, tree, members, api, showToast, 
 }) {
   const t = preset?.terminology ?? { org: '조직', member: '구성원', leader: '리더' };
   const [editing, setEditing] = useState(false);
+  const [splitting, setSplitting] = useState(false);
   const [busy, setBusy] = useState(false);
   const [addId, setAddId] = useState('');
   const [addRole, setAddRole] = useState('member');
@@ -251,6 +252,11 @@ function GroupDetail({ group, preset, levelDefs, tree, members, api, showToast, 
       }} />;
   }
 
+  if (splitting) {
+    return <SplitForm group={group} preset={preset} members={members} api={api} showToast={showToast}
+      onCancel={() => setSplitting(false)} onDone={() => { setSplitting(false); onChanged(); }} />;
+  }
+
   const meeting = [group.meeting_day, group.meeting_time].filter(Boolean).join(' ') + (group.meeting_place ? ` · ${group.meeting_place}` : '');
 
   return (
@@ -271,6 +277,7 @@ function GroupDetail({ group, preset, levelDefs, tree, members, api, showToast, 
             </p>
           </div>
           <div className="flex gap-2 shrink-0">
+            {roster.length > 0 && <button onClick={() => setSplitting(true)} className="text-sm text-blue-600 border border-blue-100 rounded-lg px-3 py-1.5 hover:bg-blue-50">분가</button>}
             <button onClick={() => setEditing(true)} className="text-sm text-gray-600 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50">수정</button>
             <button onClick={() => void deleteGroup()} className="text-sm text-red-600 border border-red-100 rounded-lg px-3 py-1.5 hover:bg-red-50">삭제</button>
           </div>
@@ -313,6 +320,70 @@ function GroupDetail({ group, preset, levelDefs, tree, members, api, showToast, 
             ))}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ── 분가 · 번식 (GR-05/06) ────────────────────────────────
+function SplitForm({ group, preset, members, api, showToast, onCancel, onDone }: {
+  group: Group; preset: Preset | undefined; members: PickMember[];
+  api: any; showToast: (t: 'success' | 'error', m: string) => void; onCancel: () => void; onDone: () => void;
+}) {
+  const t = preset?.terminology ?? { org: '조직', leader: '리더', member: '구성원' };
+  const roster: any[] = group.members ?? [];
+  const [name, setName] = useState('');
+  const [leaderId, setLeaderId] = useState('');
+  const [move, setMove] = useState<Record<string, boolean>>({});
+  const [meetingDay, setMeetingDay] = useState('');
+  const [meetingTime, setMeetingTime] = useState('');
+  const [busy, setBusy] = useState(false);
+  const moveIds = Object.entries(move).filter(([, v]) => v).map(([k]) => k);
+
+  const submit = async () => {
+    if (!name.trim()) { showToast('error', `새 ${t.org} 이름을 입력하세요.`); return; }
+    setBusy(true);
+    try {
+      const r = (await api.post(`/api/v1/groups/${group.id}/split`, {
+        name: name.trim(), leaderMemberId: leaderId || null, memberIds: moveIds, meetingDay, meetingTime,
+      }) as any).data;
+      showToast('success', `분가 완료 · ${r.moved}명 이동`);
+      onDone();
+    } catch (e: any) { showToast('error', e?.message || '분가 실패'); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-4 max-w-2xl">
+      <div>
+        <button onClick={onCancel} className="text-xs text-gray-400 hover:text-gray-600">← 취소</button>
+        <h2 className="text-lg font-bold text-gray-900 mt-1">{group.name} 분가</h2>
+        <p className="text-sm text-gray-500">일부 {t.member}을(를) 떼어 새 {t.org}을(를) 만듭니다. 분가 계보가 남습니다.</p>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <label className="block sm:col-span-2"><span className="text-xs font-medium text-gray-600">새 {t.org} 이름 *</span>
+          <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} placeholder={`예: 25${t.org}`} autoFocus /></label>
+        <div className="block sm:col-span-2"><span className="text-xs font-medium text-gray-600">새 {t.leader}</span>
+          <MemberPicker members={members} value={leaderId} onChange={setLeaderId} placeholder={`${t.leader} 검색·선택`} /></div>
+        <label className="block"><span className="text-xs font-medium text-gray-600">모임 요일</span>
+          <input className={inputClass} value={meetingDay} onChange={(e) => setMeetingDay(e.target.value)} /></label>
+        <label className="block"><span className="text-xs font-medium text-gray-600">모임 시간</span>
+          <input className={inputClass} value={meetingTime} onChange={(e) => setMeetingTime(e.target.value)} /></label>
+      </div>
+      <div>
+        <span className="text-xs font-medium text-gray-600">새 {t.org}으로 옮길 {t.member} <span className="text-gray-400">({moveIds.length})</span></span>
+        <div className="mt-2 grid grid-cols-2 gap-1.5 max-h-64 overflow-y-auto">
+          {roster.map((m) => (
+            <label key={m.id} className="flex items-center gap-2 text-sm bg-gray-50 rounded-lg px-3 py-2 cursor-pointer">
+              <input type="checkbox" checked={!!move[m.member_id]} onChange={(e) => setMove((p) => ({ ...p, [m.member_id]: e.target.checked }))} className="rounded" />
+              {m.member_name}{m.role === 'leader' ? ' (현 리더)' : ''}
+            </label>
+          ))}
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <button disabled={busy || !name.trim()} onClick={() => void submit()} className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">{busy ? '분가 중…' : '분가 실행'}</button>
+        <button onClick={onCancel} className="px-5 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100">취소</button>
       </div>
     </div>
   );

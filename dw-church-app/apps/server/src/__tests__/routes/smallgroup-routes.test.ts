@@ -22,6 +22,7 @@ const svc = {
   listGroupMembers: vi.fn(), addGroupMember: vi.fn(), assignMembers: vi.fn(),
   updateGroupMember: vi.fn(), removeGroupMember: vi.fn(),
   listQueue: vi.fn(), createQueueItem: vi.fn(), placeFromQueue: vi.fn(), deleteQueueItem: vi.fn(),
+  splitGroup: vi.fn(), listPublicGroups: vi.fn(),
 };
 vi.mock('../../modules/smallgroup/service.js', () => svc);
 
@@ -39,6 +40,12 @@ const edu = {
   recordSessions: vi.fn(), memberEnrollments: vi.fn(),
 };
 vi.mock('../../modules/smallgroup/courses-service.js', () => edu);
+
+const com = {
+  listNotices: vi.fn(), createNotice: vi.fn(), updateNotice: vi.fn(), deleteNotice: vi.fn(),
+  listResources: vi.fn(), createResource: vi.fn(), updateResource: vi.fn(), deleteResource: vi.fn(),
+};
+vi.mock('../../modules/smallgroup/community-service.js', () => com);
 
 const JWT_SECRET = 'test-secret-at-least-32-characters-long';
 function token(role = 'admin') {
@@ -107,6 +114,16 @@ beforeAll(async () => {
   edu.removeEnrollment.mockResolvedValue(true);
   edu.recordSessions.mockResolvedValue({ saved: 3 });
   edu.memberEnrollments.mockResolvedValue([]);
+
+  svc.splitGroup.mockResolvedValue({ group: { id: 'g2', name: '25목장' }, moved: 3 });
+  com.listNotices.mockResolvedValue([]);
+  com.createNotice.mockResolvedValue({ id: 'n1', title: '모임 공지' });
+  com.updateNotice.mockResolvedValue({ id: 'n1' });
+  com.deleteNotice.mockResolvedValue(true);
+  com.listResources.mockResolvedValue([]);
+  com.createResource.mockResolvedValue({ id: 'res1', title: '9월 1주 교안' });
+  com.updateResource.mockResolvedValue({ id: 'res1' });
+  com.deleteResource.mockResolvedValue(true);
 });
 afterAll(async () => { await app.close(); });
 
@@ -314,5 +331,45 @@ describe('education (STEP 3)', () => {
     await withAddon();
     const res = await app.inject({ method: 'GET', url: `/api/v1/members/${MID}/enrollments`, headers: H() });
     expect(res.statusCode).toBe(200);
+  });
+});
+
+describe('community + split (STEP 4)', () => {
+  it('POST /groups/:id/split → 201 {group, moved}', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'POST', url: `/api/v1/groups/${GID}/split`, headers: H(), payload: { name: '25목장', memberIds: [MID] } });
+    expect(res.statusCode).toBe(201);
+    expect(res.json().data.moved).toBe(3);
+  });
+
+  it('POST /groups/:id/split without name → 400', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'POST', url: `/api/v1/groups/${GID}/split`, headers: H(), payload: { memberIds: [MID] } });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('POST /group-notices without title → 400', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'POST', url: '/api/v1/group-notices', headers: H(), payload: { body: '내용' } });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('POST /group-notices → 201', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'POST', url: '/api/v1/group-notices', headers: H(), payload: { title: '모임 공지', target: { scope: 'leaders' } } });
+    expect(res.statusCode).toBe(201);
+  });
+
+  it('POST /group-resources → 201', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'POST', url: '/api/v1/group-resources', headers: H(), payload: { title: '9월 1주 교안', category: '주간교안' } });
+    expect(res.statusCode).toBe(201);
+  });
+
+  it('GET /public/groups → 200 WITHOUT auth (public storefront)', async () => {
+    svc.listPublicGroups.mockResolvedValueOnce([{ id: GID, name: '25목장', member_count: 6 }]);
+    const res = await app.inject({ method: 'GET', url: '/api/v1/public/groups', headers: { 'x-tenant-slug': 'base' } });
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.json().data)).toBe(true);
   });
 });

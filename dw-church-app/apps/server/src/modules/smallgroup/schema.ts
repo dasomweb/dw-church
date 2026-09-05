@@ -240,6 +240,52 @@ export type UpdateEnrollmentInput = z.infer<typeof updateEnrollmentSchema>;
 export type RecordSessionInput = z.infer<typeof recordSessionSchema>;
 export type CompleteTermInput = z.infer<typeof completeTermSchema>;
 
+// ── 공지 · 자료실 · 분가 (STEP 4) ──────────────────────────
+export const createNoticeSchema = z.object({
+  title: z.string().min(1).max(200),
+  body: z.string().max(20000).optional(),
+  target: z.object({
+    scope: z.enum(['all', 'leaders', 'group']).default('all'),
+    groupId: z.string().uuid().optional(),
+  }).optional(),
+  isPinned: z.boolean().optional(),
+  publishFrom: z.string().optional(),
+  publishTo: z.string().optional(),
+  sendAlrimtalk: z.boolean().optional(),
+  sendEmail: z.boolean().optional(),
+  sendSms: z.boolean().optional(),
+});
+export const updateNoticeSchema = createNoticeSchema.partial();
+
+export const createResourceSchema = z.object({
+  title: z.string().min(1).max(200),
+  category: z.string().max(60).optional(),
+  fileUrl: z.string().max(2000).optional(),
+  fileName: z.string().max(300).optional(),
+  fileSize: z.number().int().min(0).optional(),
+  viewPermission: z.enum(['all', 'leaders', 'members']).optional(),
+  teachingDate: z.string().optional(),
+  note: z.string().max(1000).optional(),
+});
+export const updateResourceSchema = createResourceSchema.partial();
+
+/** 분가 · 번식 (GR-05/06) — 원 조직에서 일부를 떼어 새 조직으로. origin=분가 계보. */
+export const splitGroupSchema = z.object({
+  name: z.string().min(1).max(120),
+  leaderMemberId: z.string().uuid().nullable().optional(),
+  memberIds: z.array(z.string().uuid()).max(500).optional(),
+  meetingDay: z.string().max(20).optional(),
+  meetingTime: z.string().max(20).optional(),
+  meetingPlace: z.string().max(200).optional(),
+  region: z.string().max(100).optional(),
+});
+
+export type CreateNoticeInput = z.infer<typeof createNoticeSchema>;
+export type UpdateNoticeInput = z.infer<typeof updateNoticeSchema>;
+export type CreateResourceInput = z.infer<typeof createResourceSchema>;
+export type UpdateResourceInput = z.infer<typeof updateResourceSchema>;
+export type SplitGroupInput = z.infer<typeof splitGroupSchema>;
+
 export type UpdatePresetInput = z.infer<typeof updatePresetSchema>;
 export type CreateGroupInput = z.infer<typeof createGroupSchema>;
 export type UpdateGroupInput = z.infer<typeof updateGroupSchema>;
