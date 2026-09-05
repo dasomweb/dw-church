@@ -114,6 +114,7 @@ async function main(): Promise<void> {
   const { intakeRoutes } = await import('./modules/intake/routes.js');
   const { emailTemplateRoutes } = await import('./modules/email-templates/routes.js');
   const { marketingContactsRoutes } = await import('./modules/marketing-contacts/routes.js');
+  const { membershipRoutes } = await import('./modules/membership/routes.js');
   const { promoRoutes } = await import('./modules/promo/routes.js');
   const { formRoutes } = await import('./modules/forms/routes.js');
   const { formBuilderRoutes } = await import('./modules/form-builder/routes.js');
@@ -204,6 +205,7 @@ async function main(): Promise<void> {
   await app.register(intakeRoutes, { prefix: '/api/v1' }); // /intake + /admin/intake
   await app.register(emailTemplateRoutes, { prefix: '/api/v1' }); // /admin/email-templates + /admin/email-broadcast
   await app.register(marketingContactsRoutes, { prefix: '/api/v1' }); // /admin/marketing-contacts (주소록 + CSV import)
+  await app.register(membershipRoutes, { prefix: '/api/v1' }); // 교적관리 애드온: /members /households /member-relations /member-codes
   await app.register(promoRoutes, { prefix: '/api/v1' }); // /promo/validate + /admin/promo
   await app.register(formRoutes, { prefix: '/api/v1' }); // /forms/:type (public) + /admin/forms/submissions
   await app.register(formBuilderRoutes, { prefix: '/api/v1' }); // /form-defs/* (admin) + /forms/:slug/schema|submit (public)
@@ -761,6 +763,80 @@ async function main(): Promise<void> {
         );
         createHits++;
       } catch { /* skip */ }
+
+      // 5. 교적관리 (membership add-on) Phase 1 — 교인 명부 · 세대 · 가족관계 · 코드.
+      //    Every table tenant-scoped (per-schema). Family-first: a member may
+      //    belong to a household; households.head_member_id has no FK (created
+      //    before members). See docs/교적관리 구조설계.
+      try {
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".member_codes (
+            "id"         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "category"   VARCHAR(30)  NOT NULL,
+            "label"      VARCHAR(80)  NOT NULL,
+            "sort_order" INT          NOT NULL DEFAULT 0,
+            "is_active"  BOOLEAN      NOT NULL DEFAULT TRUE,
+            "created_at" TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(
+          `CREATE INDEX IF NOT EXISTS "member_codes_cat_idx" ON "${schema}".member_codes ("category")`,
+        );
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".households (
+            "id"             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "name"           VARCHAR(120) NOT NULL DEFAULT '',
+            "head_member_id" UUID,
+            "address"        VARCHAR(400) NOT NULL DEFAULT '',
+            "phone"          VARCHAR(40)  NOT NULL DEFAULT '',
+            "region"         VARCHAR(100) NOT NULL DEFAULT '',
+            "photo_url"      TEXT         NOT NULL DEFAULT '',
+            "memo"           VARCHAR(1000) NOT NULL DEFAULT '',
+            "created_at"     TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+            "updated_at"     TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".members (
+            "id"            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "name"          VARCHAR(120) NOT NULL,
+            "name_hanja"    VARCHAR(120) NOT NULL DEFAULT '',
+            "name_en"       VARCHAR(120) NOT NULL DEFAULT '',
+            "gender"        VARCHAR(10)  NOT NULL DEFAULT '',
+            "birth_date"    DATE,
+            "birth_lunar"   BOOLEAN      NOT NULL DEFAULT FALSE,
+            "photo_url"     TEXT         NOT NULL DEFAULT '',
+            "phone"         VARCHAR(40)  NOT NULL DEFAULT '',
+            "email"         VARCHAR(200) NOT NULL DEFAULT '',
+            "address"       VARCHAR(400) NOT NULL DEFAULT '',
+            "position"      VARCHAR(60)  NOT NULL DEFAULT '',
+            "faith_level"   VARCHAR(60)  NOT NULL DEFAULT '',
+            "reg_status"    VARCHAR(30)  NOT NULL DEFAULT 'active',
+            "registered_on" DATE,
+            "occupation"    VARCHAR(120) NOT NULL DEFAULT '',
+            "note"          VARCHAR(2000) NOT NULL DEFAULT '',
+            "household_id"  UUID REFERENCES "${schema}".households(id) ON DELETE SET NULL,
+            "is_head"       BOOLEAN      NOT NULL DEFAULT FALSE,
+            "user_id"       UUID,
+            "created_at"    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+            "updated_at"    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "members_household_idx" ON "${schema}".members ("household_id")`);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "members_status_idx" ON "${schema}".members ("reg_status")`);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "members_name_idx" ON "${schema}".members ("name")`);
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".member_relations (
+            "id"             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "from_member_id" UUID NOT NULL REFERENCES "${schema}".members(id) ON DELETE CASCADE,
+            "to_member_id"   UUID NOT NULL REFERENCES "${schema}".members(id) ON DELETE CASCADE,
+            "relation_type"  VARCHAR(20) NOT NULL,
+            "created_at"     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "member_relations_from_idx" ON "${schema}".member_relations ("from_member_id")`);
+        createHits++;
+      } catch { /* skip */ }
     }
     if (alterHits || createHits) {
       app.log.info(`Tenant schema drift repair — ALTER: ${alterHits}, CREATE: ${createHits}`);
@@ -1174,6 +1250,7 @@ async function main(): Promise<void> {
       ['newcomer', '새가족 안내·등록 폼', 25, 25, 8],
       ['newcomer_registration', '새가족 온라인 등록·교인관리', 30, 30, 9],
       ['pwa', '모바일 앱(PWA)', 30, 30, 10],
+      ['membership', '교적관리 (명부·세대·가족·조직)', 40, 40, 11],
     ];
     for (const [key, label, monthly, yearly, sort] of featureSeed) {
       await prisma.$executeRawUnsafe(

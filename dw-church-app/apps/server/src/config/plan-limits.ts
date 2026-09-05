@@ -78,6 +78,7 @@ export const FEATURE_TIERS: Record<string, PlanTier[]> = {
   cells: [],                  // 목장(셀) 관리
   newcomer: [],               // 새가족 안내 + 새가족 등록 폼
   newcomer_registration: [],  // 새가족 온라인 등록·관리 (교인 관리)
+  membership: [],             // 교적관리 (교인 명부·세대·가족·조직·출석·심방·성례·이동)
   // ── PWA 는 자체 애드온 플래그(web_app_addon 컬럼)로 스토어프론트에서 제어 ──
   pwa: ['pro'],               // 모바일 앱(PWA) — admin 게이팅만; 구매는 web_app_addon
 };
