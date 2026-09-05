@@ -52,6 +52,8 @@ const HistoryManagement = lazyWithReload(() => import('./pages/HistoryManagement
 const CellManagement = lazyWithReload(() => import('./pages/CellManagement'));
 const NewcomerManagement = lazyWithReload(() => import('./pages/NewcomerManagement'));
 const MemberManagement = lazyWithReload(() => import('./pages/MemberManagement'));
+const HouseholdManagement = lazyWithReload(() => import('./pages/HouseholdManagement'));
+const MemberCodeManagement = lazyWithReload(() => import('./pages/MemberCodeManagement'));
 const FormSubmissionsManagement = lazyWithReload(() => import('./pages/FormSubmissionsManagement'));
 const FormBuilderManagement = lazyWithReload(() => import('./pages/FormBuilderManagement'));
 const BoardManagement = lazyWithReload(() => import('./pages/BoardManagement'));
@@ -362,6 +364,8 @@ export function App({ config }: { config: AppConfig }) {
                 <Route path="cells" element={<CellManagement />} />
                 <Route path="newcomers" element={<NewcomerManagement />} />
                 <Route path="members" element={<MemberManagement />} />
+                <Route path="households" element={<HouseholdManagement />} />
+                <Route path="member-codes" element={<MemberCodeManagement />} />
                 <Route path="forms" element={<FormBuilderManagement />} />
                 <Route path="form-submissions" element={<FormSubmissionsManagement />} />
                 <Route path="boards" element={<BoardManagement />} />

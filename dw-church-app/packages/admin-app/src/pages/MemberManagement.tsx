@@ -94,10 +94,37 @@ export default function MemberManagement() {
     },
   });
 
+  // 가족관계 추가용 후보(전체 교인) + 입력 상태
+  const [relTo, setRelTo] = useState('');
+  const [relType, setRelType] = useState<'spouse' | 'child' | 'parent' | 'sibling'>('spouse');
+  const relCandidatesQ = useQuery({
+    queryKey: ['members-all-for-relation'],
+    enabled: view === 'detail',
+    queryFn: async () => {
+      const res = await api.get<{ data: { items: Member[] } }>('/api/v1/members', { regStatus: 'all', perPage: 500 });
+      return ((res as any).data.items ?? []) as Member[];
+    },
+  });
+
   const invalidate = () => {
     void qc.invalidateQueries({ queryKey: ['members'] });
     void qc.invalidateQueries({ queryKey: ['member-stats'] });
     void qc.invalidateQueries({ queryKey: ['households-select'] });
+  };
+  const refreshDetail = () => { if (detailId) void qc.invalidateQueries({ queryKey: ['member', detailId] }); };
+
+  const addRelation = async () => {
+    if (!detailId || !relTo) return;
+    try {
+      await api.post('/api/v1/member-relations', { fromMemberId: detailId, toMemberId: relTo, relationType: relType });
+      setRelTo('');
+      refreshDetail();
+      showToast('success', '가족을 추가했습니다.');
+    } catch (e: any) { showToast('error', e?.message || '추가 실패'); }
+  };
+  const removeRelation = async (id: string) => {
+    try { await api.delete(`/api/v1/member-relations/${id}`); refreshDetail(); }
+    catch (e: any) { showToast('error', e?.message || '삭제 실패'); }
   };
 
   const saveMutation = useMutation({
@@ -176,16 +203,29 @@ export default function MemberManagement() {
             </div>
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
               <h3 className="text-sm font-semibold text-gray-700 mb-3">가족</h3>
-              {(m.relations ?? []).length === 0 ? <p className="text-sm text-gray-400">등록된 가족 관계가 없습니다.</p> : (
-                <div className="flex flex-wrap gap-2">
+              {(m.relations ?? []).length === 0 ? <p className="text-sm text-gray-400 mb-3">등록된 가족 관계가 없습니다.</p> : (
+                <div className="flex flex-wrap gap-2 mb-3">
                   {(m.relations ?? []).map((r: any) => (
-                    <span key={r.id} className="inline-flex items-center gap-1.5 border border-gray-200 rounded-full pl-1 pr-3 py-1 text-sm">
+                    <span key={r.id} className="inline-flex items-center gap-1.5 border border-gray-200 rounded-full pl-1 pr-2 py-1 text-sm">
                       <span className="w-6 h-6 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-xs">{(r.toMemberName || '·')[0]}</span>
                       {r.toMemberName} <span className="text-gray-400 text-xs">{({ spouse: '배우자', child: '자녀', parent: '부모', sibling: '형제' } as any)[r.relationType] ?? r.relationType}</span>
+                      <button onClick={() => removeRelation(r.id)} className="ml-1 text-gray-300 hover:text-red-500" aria-label="삭제">×</button>
                     </span>
                   ))}
                 </div>
               )}
+              <div className="flex flex-wrap gap-2 items-center border-t border-gray-50 pt-3">
+                <select className={`${inputClass} w-auto`} value={relTo} onChange={(e) => setRelTo(e.target.value)}>
+                  <option value="">가족으로 추가할 교인 선택</option>
+                  {(relCandidatesQ.data ?? []).filter((c) => c.id !== m.id).map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}{c.householdRegion ? ` (${c.householdRegion})` : ''}</option>
+                  ))}
+                </select>
+                <select className={`${inputClass} w-auto`} value={relType} onChange={(e) => setRelType(e.target.value as any)}>
+                  <option value="spouse">배우자</option><option value="child">자녀</option><option value="parent">부모</option><option value="sibling">형제</option>
+                </select>
+                <button disabled={!relTo} onClick={() => void addRelation()} className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-40">가족 추가</button>
+              </div>
               {m.note && <><h3 className="text-sm font-semibold text-gray-700 mt-5 mb-2">비고</h3><p className="text-sm text-gray-600 whitespace-pre-wrap">{m.note}</p></>}
             </div>
           </>

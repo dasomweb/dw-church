@@ -20,7 +20,9 @@ export const NAV_FEATURE: Record<string, string> = {
   banners: 'banners',
   cells: 'cells',
   newcomers: 'newcomer',
-  members: 'membership',   // 교적관리 애드온
+  members: 'membership',        // 교적관리 애드온
+  households: 'membership',
+  'member-codes': 'membership',
 };
 
 /** Page-editor block_type → gated feature key. */
