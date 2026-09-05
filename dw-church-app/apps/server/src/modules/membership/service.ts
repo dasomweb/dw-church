@@ -11,6 +11,7 @@ const MEMBER_COLS: Record<string, string> = {
   name: 'name', nameHanja: 'name_hanja', nameEn: 'name_en', gender: 'gender',
   birthDate: 'birth_date', birthLunar: 'birth_lunar', photoUrl: 'photo_url',
   phone: 'phone', email: 'email', address: 'address', position: 'position',
+  positionCourtesy: 'position_courtesy',
   faithLevel: 'faith_level', regStatus: 'reg_status', registeredOn: 'registered_on',
   occupation: 'occupation', note: 'note', householdId: 'household_id',
   isHead: 'is_head', userId: 'user_id',

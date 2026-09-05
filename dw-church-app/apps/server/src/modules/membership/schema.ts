@@ -26,6 +26,7 @@ export const createMemberSchema = z.object({
   email: z.string().max(200).optional().nullable(),
   address: z.string().max(400).optional().nullable(),
   position: z.string().max(60).optional().nullable(),      // 직분
+  positionCourtesy: z.boolean().optional(),                // true=타 교회에서 받은 직분(본 교회 임명 아님)
   faithLevel: z.string().max(60).optional().nullable(),    // 신급
   regStatus: z.enum(['active', 'newcomer', 'inactive', 'transferred', 'deceased']).optional(),
   registeredOn: dateStr,

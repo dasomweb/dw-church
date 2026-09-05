@@ -810,6 +810,7 @@ async function main(): Promise<void> {
             "email"         VARCHAR(200) NOT NULL DEFAULT '',
             "address"       VARCHAR(400) NOT NULL DEFAULT '',
             "position"      VARCHAR(60)  NOT NULL DEFAULT '',
+            "position_courtesy" BOOLEAN  NOT NULL DEFAULT FALSE,
             "faith_level"   VARCHAR(60)  NOT NULL DEFAULT '',
             "reg_status"    VARCHAR(30)  NOT NULL DEFAULT 'active',
             "registered_on" DATE,
@@ -822,6 +823,8 @@ async function main(): Promise<void> {
             "updated_at"    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
           )
         `);
+        // 본 교회 임명 직분 vs 타 교회에서 받은 직분 구분 (기존 테이블에도 추가).
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".members ADD COLUMN IF NOT EXISTS "position_courtesy" BOOLEAN NOT NULL DEFAULT FALSE`);
         await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "members_household_idx" ON "${schema}".members ("household_id")`);
         await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "members_status_idx" ON "${schema}".members ("reg_status")`);
         await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "members_name_idx" ON "${schema}".members ("name")`);
