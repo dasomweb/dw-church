@@ -301,6 +301,7 @@ const CODE_USAGE: Record<string, { table: string; col: string }> = {
   position: { table: 'members', col: 'position' },
   faith_level: { table: 'members', col: 'faith_level' },
   visit_type: { table: 'member_visits', col: 'visit_type' },
+  sacrament_type: { table: 'member_sacraments', col: 'sac_type' },
 };
 export async function deleteCode(schema: string, id: string): Promise<boolean> {
   const rows = await prisma.$queryRawUnsafe<{ category: string; label: string }[]>(
@@ -324,12 +325,16 @@ export async function deleteCode(schema: string, id: string): Promise<boolean> {
 }
 
 // Seed a tenant's default code lists on first use (idempotent — skips if any exist).
+// 여러 교단(장로교·침례교 등)을 모두 담은 기본값. 각 교회가 교적 코드에서
+// 자기 교단에 맞게 편집(불필요한 항목 숨김/삭제)한다. 침례교: 세례→침례,
+// 유아세례→헌아식, 성례→헌아식/침례. 신급도 침례/헌아 포함.
 const DEFAULT_CODES: Array<[string, string[]]> = [
   ['position', ['담임목사', '부목사', '전도사', '장로', '권사', '안수집사', '집사', '성도']],
-  ['faith_level', ['세례', '유아세례', '입교', '학습', '원입']],
+  ['faith_level', ['세례', '침례', '유아세례', '헌아', '입교', '학습', '원입']],
   ['reg_status', ['정착', '새가족', '장기결석', '전출', '별세']],
   ['visit_type', ['심방', '전화심방', '상담']],
   ['org_type', ['구역', '부서', '기관', '교회학교']],
+  ['sacrament_type', ['세례', '침례', '유아세례', '헌아식', '입교', '성찬', '학습']],
 ];
 export async function seedCodesIfEmpty(schema: string): Promise<number> {
   const existing = await prisma.$queryRawUnsafe<{ n: number }[]>(`SELECT count(*)::int AS n FROM "${schema}".member_codes`);

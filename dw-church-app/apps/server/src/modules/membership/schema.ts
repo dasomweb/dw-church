@@ -75,7 +75,7 @@ export const createRelationSchema = z.object({
 });
 
 // ── 코드(직분/신급/등록상태/심방유형/조직유형) ────────────────
-export const CODE_CATEGORIES = ['position', 'faith_level', 'reg_status', 'visit_type', 'org_type'] as const;
+export const CODE_CATEGORIES = ['position', 'faith_level', 'reg_status', 'visit_type', 'org_type', 'sacrament_type'] as const;
 export const createCodeSchema = z.object({
   category: z.enum(CODE_CATEGORIES),
   label: z.string().min(1).max(80),
@@ -128,11 +128,12 @@ export const updateVisitSchema = createVisitSchema.partial().omit({ memberId: tr
 // ── 성례(sacrament) ───────────────────────────────────────────
 export const createSacramentSchema = z.object({
   memberId: z.string().uuid(),
-  sacType: z.string().min(1).max(40),  // 세례·유아세례·입교·성찬 등
+  sacType: z.string().min(1).max(40),  // 세례·침례·유아세례·헌아식·입교·성찬 등 (교적 코드에서 관리)
   sacDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
   officiant: z.string().max(120).optional(),
-  place: z.string().max(200).optional(),
+  place: z.string().max(200).optional(),   // 받은 교회(타교단 포함)
   certNo: z.string().max(60).optional(),
+  recognized: z.boolean().optional(),      // 본 교회 인정 여부 (멤버십/직분 요건)
 });
 
 // ── 이동(transfer) ────────────────────────────────────────────

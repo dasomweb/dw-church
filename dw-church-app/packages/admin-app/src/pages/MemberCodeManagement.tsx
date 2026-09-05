@@ -14,6 +14,7 @@ const CATS: { key: string; label: string }[] = [
   { key: 'position', label: '직분' },
   { key: 'faith_level', label: '신급' },
   { key: 'reg_status', label: '등록상태' },
+  { key: 'sacrament_type', label: '성례유형' },
   { key: 'visit_type', label: '심방유형' },
   { key: 'org_type', label: '조직유형' },
 ];

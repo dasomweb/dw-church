@@ -8,7 +8,9 @@ import { inputClass, useToast, EmptyState } from '../components';
  * 이동 처리 시 서버가 교인 등록상태를 자동 변경(전출/이명→전출, 별세→별세, 전입→정착).
  */
 type Row = Record<string, any>;
-const SAC_TYPES = ['세례', '유아세례', '입교', '성찬', '학습'];
+// 교단별 기본 성례유형(코드 미설정 시 폴백) — 장로교·침례교 용어 모두 포함.
+// 교적 코드 > 성례유형 에서 교회가 편집한다.
+const SAC_TYPES_FALLBACK = ['세례', '침례', '유아세례', '헌아식', '입교', '성찬', '학습'];
 const TR_TYPES: { key: string; label: string }[] = [
   { key: 'in', label: '전입' }, { key: 'out', label: '전출' }, { key: 'dismissal', label: '이명' }, { key: 'death', label: '별세' },
 ];
@@ -29,18 +31,29 @@ export default function SacramentTransferManagement() {
       return ((res as any).data.items ?? []) as Row[];
     },
   });
+  // 성례유형은 교적 코드(sacrament_type)에서 관리 — 한 교회에 침례/세례가 공존하므로
+  // 편집 가능한 목록으로 두고, 코드가 없으면 두 교단 용어를 모두 담은 폴백을 쓴다.
+  const sacTypesQ = useQuery({
+    queryKey: ['member-codes', 'sacrament_type'], enabled: tab === 'sacrament',
+    queryFn: async () => {
+      const res = await api.get<{ data: { label: string; isActive: boolean }[] }>('/api/v1/member-codes', { category: 'sacrament_type' });
+      return ((res as any).data as { label: string; isActive: boolean }[]).filter((c) => c.isActive).map((c) => c.label);
+    },
+  });
+  const sacTypes = (sacTypesQ.data && sacTypesQ.data.length > 0) ? sacTypesQ.data : SAC_TYPES_FALLBACK;
   const sacQ = useQuery({ queryKey: ['sacraments'], enabled: tab === 'sacrament', queryFn: async () => (await api.get<{ data: Row[] }>('/api/v1/member-sacraments') as any).data as Row[] });
   const trQ = useQuery({ queryKey: ['transfers'], enabled: tab === 'transfer', queryFn: async () => (await api.get<{ data: Row[] }>('/api/v1/member-transfers') as any).data as Row[] });
 
   // sacrament form
-  const [sac, setSac] = useState({ memberId: '', sacType: '세례', sacDate: '', officiant: '', place: '', certNo: '' });
+  const blankSac = { memberId: '', sacType: '세례', sacDate: '', officiant: '', place: '', certNo: '', recognized: true };
+  const [sac, setSac] = useState(blankSac);
   const addSac = async () => {
     if (!sac.memberId) { showToast('error', '대상 교인을 선택하세요.'); return; }
     try {
       const body: any = { ...sac }; if (!body.sacDate) delete body.sacDate;
       await api.post('/api/v1/member-sacraments', body);
       showToast('success', '성례 기록을 등록했습니다.');
-      setSac({ memberId: '', sacType: '세례', sacDate: '', officiant: '', place: '', certNo: '' }); setAdding(false);
+      setSac(blankSac); setAdding(false);
       void qc.invalidateQueries({ queryKey: ['sacraments'] });
     } catch (e: any) { showToast('error', e?.message || '등록 실패'); }
   };
@@ -82,11 +95,13 @@ export default function SacramentTransferManagement() {
       {adding && tab === 'sacrament' && (
         <div className="bg-white rounded-xl border border-blue-200 shadow-sm p-5 grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
           <div className="sm:col-span-1"><label className="block text-sm font-medium mb-1">교인 *</label>{memberSelect(sac.memberId, (v) => setSac({ ...sac, memberId: v }))}</div>
-          <div><label className="block text-sm font-medium mb-1">성례</label><select className={inputClass} value={sac.sacType} onChange={(e) => setSac({ ...sac, sacType: e.target.value })}>{SAC_TYPES.map((t) => <option key={t}>{t}</option>)}</select></div>
+          <div><label className="block text-sm font-medium mb-1">성례</label><select className={inputClass} value={sac.sacType} onChange={(e) => setSac({ ...sac, sacType: e.target.value })}>{sacTypes.map((t) => <option key={t}>{t}</option>)}</select></div>
           <div><label className="block text-sm font-medium mb-1">일자</label><input type="date" className={inputClass} value={sac.sacDate} onChange={(e) => setSac({ ...sac, sacDate: e.target.value })} /></div>
           <div><label className="block text-sm font-medium mb-1">집례자</label><input className={inputClass} value={sac.officiant} onChange={(e) => setSac({ ...sac, officiant: e.target.value })} /></div>
-          <div><label className="block text-sm font-medium mb-1">장소</label><input className={inputClass} value={sac.place} onChange={(e) => setSac({ ...sac, place: e.target.value })} /></div>
-          <div className="flex gap-2"><input className={inputClass} placeholder="증서번호" value={sac.certNo} onChange={(e) => setSac({ ...sac, certNo: e.target.value })} /><button onClick={addSac} className="bg-blue-600 text-white px-4 rounded-lg text-sm font-medium whitespace-nowrap">등록</button></div>
+          <div><label className="block text-sm font-medium mb-1">받은 교회</label><input className={inputClass} value={sac.place} onChange={(e) => setSac({ ...sac, place: e.target.value })} placeholder="타교회면 교회명" /></div>
+          <div><label className="block text-sm font-medium mb-1">증서번호</label><input className={inputClass} placeholder="증서번호" value={sac.certNo} onChange={(e) => setSac({ ...sac, certNo: e.target.value })} /></div>
+          <label className="flex items-center gap-2 text-sm pb-2"><input type="checkbox" checked={sac.recognized} onChange={(e) => setSac({ ...sac, recognized: e.target.checked })} className="rounded" /> 본 교회 인정</label>
+          <div className="flex items-end"><button onClick={addSac} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap w-full">등록</button></div>
         </div>
       )}
       {adding && tab === 'transfer' && (
@@ -104,7 +119,7 @@ export default function SacramentTransferManagement() {
           sacQ.isLoading ? <div className="p-8 text-center text-sm text-gray-400">불러오는 중…</div> :
             (sacQ.data?.length ?? 0) === 0 ? <EmptyState icon="✝️" title="성례 기록이 없습니다" description="'+ 등록'으로 세례·입교 등을 기록하세요." /> : (
               <table className="w-full text-sm"><thead><tr className="border-b border-gray-100 text-left text-xs text-gray-500"><th className="px-4 py-3 font-medium">교인</th><th className="px-4 py-3 font-medium">성례</th><th className="px-4 py-3 font-medium">일자</th><th className="px-4 py-3 font-medium">집례자</th><th className="px-4 py-3 font-medium">증서</th><th className="px-4 py-3 font-medium text-right">작업</th></tr></thead>
-                <tbody>{(sacQ.data ?? []).map((r) => (<tr key={r.id} className="border-b border-gray-50"><td className="px-4 py-3 font-medium text-gray-800">{r.memberName}</td><td className="px-4 py-3 text-gray-600">{r.sacType}</td><td className="px-4 py-3 text-gray-600">{r.sacDate ? String(r.sacDate).slice(0, 10) : '—'}</td><td className="px-4 py-3 text-gray-600">{r.officiant || '—'}</td><td className="px-4 py-3 text-gray-500">{r.certNo || '—'}</td><td className="px-4 py-3 text-right"><button onClick={() => removeSac(r.id)} className="text-xs text-red-500 hover:text-red-600">삭제</button></td></tr>))}</tbody>
+                <tbody>{(sacQ.data ?? []).map((r) => (<tr key={r.id} className="border-b border-gray-50"><td className="px-4 py-3 font-medium text-gray-800">{r.memberName}</td><td className="px-4 py-3 text-gray-600"><span className="inline-flex items-center gap-1.5">{r.sacType}{r.recognized === false && <span className="text-[11px] font-medium bg-amber-50 text-amber-700 rounded-full px-1.5 py-0.5">미인정</span>}{r.place ? <span className="text-xs text-gray-400">· {r.place}</span> : null}</span></td><td className="px-4 py-3 text-gray-600">{r.sacDate ? String(r.sacDate).slice(0, 10) : '—'}</td><td className="px-4 py-3 text-gray-600">{r.officiant || '—'}</td><td className="px-4 py-3 text-gray-500">{r.certNo || '—'}</td><td className="px-4 py-3 text-right"><button onClick={() => removeSac(r.id)} className="text-xs text-red-500 hover:text-red-600">삭제</button></td></tr>))}</tbody>
               </table>
             )
         ) : (

@@ -152,9 +152,9 @@ export function listSacraments(schema: string, q: { memberId?: string; type?: st
 }
 export async function createSacrament(schema: string, i: Record<string, any>) {
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-    `INSERT INTO "${schema}".member_sacraments (member_id, sac_type, sac_date, officiant, place, cert_no)
-     VALUES ($1::uuid,$2,$3::date,$4,$5,$6) RETURNING *`,
-    i.memberId, i.sacType, i.sacDate || null, i.officiant ?? '', i.place ?? '', i.certNo ?? '',
+    `INSERT INTO "${schema}".member_sacraments (member_id, sac_type, sac_date, officiant, place, cert_no, recognized)
+     VALUES ($1::uuid,$2,$3::date,$4,$5,$6,$7) RETURNING *`,
+    i.memberId, i.sacType, i.sacDate || null, i.officiant ?? '', i.place ?? '', i.certNo ?? '', i.recognized !== false,
   );
   return rows[0];
 }

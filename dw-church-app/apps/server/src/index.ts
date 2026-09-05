@@ -891,9 +891,13 @@ async function main(): Promise<void> {
             "officiant"  VARCHAR(120) NOT NULL DEFAULT '',
             "place"      VARCHAR(200) NOT NULL DEFAULT '',
             "cert_no"    VARCHAR(60)  NOT NULL DEFAULT '',
+            "recognized" BOOLEAN      NOT NULL DEFAULT TRUE,
             "created_at" TIMESTAMPTZ  NOT NULL DEFAULT NOW()
           )
         `);
+        // 본 교회 인정 여부 — 타교단에서 받은 세례를 인정 안 하거나, 멤버십/직분에
+        // 침례를 요구하는 교회(침례교 등)가 인정 상태를 기록. 기존 테이블에도 추가.
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".member_sacraments ADD COLUMN IF NOT EXISTS "recognized" BOOLEAN NOT NULL DEFAULT TRUE`);
         await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "member_sac_member_idx" ON "${schema}".member_sacraments ("member_id")`);
         await prisma.$executeRawUnsafe(`
           CREATE TABLE IF NOT EXISTS "${schema}".member_transfers (
