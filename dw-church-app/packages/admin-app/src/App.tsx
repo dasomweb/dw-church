@@ -55,6 +55,7 @@ const MemberManagement = lazyWithReload(() => import('./pages/MemberManagement')
 const HouseholdManagement = lazyWithReload(() => import('./pages/HouseholdManagement'));
 const MemberCodeManagement = lazyWithReload(() => import('./pages/MemberCodeManagement'));
 const MemberDashboard = lazyWithReload(() => import('./pages/MemberDashboard'));
+const MobileCheckin = lazyWithReload(() => import('./pages/MobileCheckin'));
 const AttendanceManagement = lazyWithReload(() => import('./pages/AttendanceManagement'));
 const VisitManagement = lazyWithReload(() => import('./pages/VisitManagement'));
 const SacramentTransferManagement = lazyWithReload(() => import('./pages/SacramentTransferManagement'));
@@ -335,6 +336,18 @@ export function App({ config }: { config: AppConfig }) {
                   <RequireAuth>
                     <RequireTenantAccess>
                       <OnboardingPage client={client} />
+                    </RequireTenantAccess>
+                  </RequireAuth>
+                }
+              />
+
+              {/* 모바일 간편 출석 — 사이드바 없는 전체화면 전용 페이지(권한자용 링크). */}
+              <Route
+                path="/t/:slug/checkin"
+                element={
+                  <RequireAuth>
+                    <RequireTenantAccess>
+                      <MobileCheckin />
                     </RequireTenantAccess>
                   </RequireAuth>
                 }

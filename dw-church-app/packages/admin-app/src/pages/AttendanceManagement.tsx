@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
 import { inputClass, useToast, EmptyState } from '../components';
@@ -30,6 +31,13 @@ export default function AttendanceManagement() {
   const [newSvc, setNewSvc] = useState('');
   const [weeks, setWeeks] = useState(4);
   const [showSvcMgr, setShowSvcMgr] = useState(false);
+  const { slug = '' } = useParams<{ slug: string }>();
+  const checkinUrl = `${window.location.origin}/t/${slug}/checkin`;
+  const shareCheckin = async () => {
+    try { await navigator.clipboard.writeText(checkinUrl); showToast('success', '모바일 출석 링크를 복사했습니다. 구역 리더에게 보내세요.'); }
+    catch { showToast('error', checkinUrl); }
+    window.open(checkinUrl, '_blank');
+  };
 
   const servicesQ = useQuery({
     queryKey: ['member-services'],
@@ -117,8 +125,9 @@ export default function AttendanceManagement() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <h1 className="text-xl font-bold">출석</h1>
+        <button onClick={() => void shareCheckin()} className="text-sm font-medium border border-gray-300 rounded-lg px-3 py-1.5 hover:bg-gray-50">📱 모바일 출석 링크</button>
         <div className="ml-auto flex gap-1 bg-gray-100 rounded-lg p-1">
           {(['check', 'absent'] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)} className={`px-3 py-1.5 rounded-md text-sm font-medium ${tab === t ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>{t === 'check' ? '출석 체크' : '장기결석'}</button>
