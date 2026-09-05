@@ -42,6 +42,27 @@ export const DEFAULT_TEMPLATES: TemplateDef[] = [
     body: `${emailHeading('고객지원 답변')}<p>{{reply}}</p>`,
     vars: 'subject, reply',
   },
+  {
+    // 잠재 교회에게 보내는 truelight.app 홍보/소개 메일. 이메일 발송(broadcast)
+    // 탭에서 대상을 골라 보내거나, 여기서 내용을 다듬고 테스트 발송할 수 있음.
+    // 실제 제공 기능/요금제만 담음 (마케팅 포지셔닝: 전문가 제작 + 교회 직접 관리).
+    key: 'promo',
+    name: 'TRUE LIGHT 홍보/소개',
+    subject: '교회 홈페이지, 전문가가 만들고 교회가 직접 관리하세요 — TRUE LIGHT',
+    body: `${emailHeading('교회 홈페이지, 이제 이렇게 하세요')}` +
+      `<p>안녕하세요. 미주 한인교회를 위한 홈페이지 서비스 <strong>TRUE LIGHT</strong>입니다.</p>` +
+      `<p>처음 디자인과 제작은 저희 전문가가 교회에 맞춰 진행하고, 오픈 이후에는 교회가 관리자 화면에서 콘텐츠를 직접 운영합니다. 매번 업체에 맡기거나 어려운 기술을 배우지 않으셔도 됩니다.</p>` +
+      `<ul>` +
+      `<li><strong>설교·주보·앨범·행사·교역자·게시판</strong>을 직접 등록 — 올리면 홈페이지에 바로 반영됩니다.</li>` +
+      `<li><strong>휴대폰</strong>에서도 잘 보이는 6가지 디자인.</li>` +
+      `<li>처음 <strong>디자인·셋업은 전문가</strong>가, 이후 <strong>콘텐츠 관리는 교회</strong>가.</li>` +
+      `<li>교회 규모에 맞춘 <strong>라이트·기본·플러스·프로</strong> 요금제.</li>` +
+      `</ul>` +
+      `<p>실제 관리자 화면을 데모로 미리 둘러보실 수 있습니다. 아래에서 시작해 보세요.</p>` +
+      `{{button}}` +
+      `<p style="font-size:13px;color:#9ca3af">문의는 이 메일에 회신해 주시면 됩니다.</p>`,
+    vars: 'button',
+  },
 ];
 
 const DEFAULT_BY_KEY = new Map(DEFAULT_TEMPLATES.map((t) => [t.key, t]));
