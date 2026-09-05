@@ -126,6 +126,15 @@ export const createVisitSchema = z.object({
 });
 export const updateVisitSchema = createVisitSchema.partial().omit({ memberId: true });
 
+// ── 직분 임명(appointment) — 개별/일괄, 연초 서리집사 임명 등 ──
+export const appointMembersSchema = z.object({
+  memberIds: z.array(z.string().uuid()).min(1).max(1000),
+  position: z.string().min(1).max(60),
+  courtesy: z.boolean().optional(),                                        // 타 교회에서 받은 직분이면 true
+  appointedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+  note: z.string().max(300).optional(),
+});
+
 // ── 성례(sacrament) ───────────────────────────────────────────
 export const createSacramentSchema = z.object({
   memberId: z.string().uuid(),

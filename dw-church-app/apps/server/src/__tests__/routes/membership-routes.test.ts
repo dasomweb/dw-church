@@ -33,6 +33,7 @@ const rec = {
   listVisits: vi.fn(), createVisit: vi.fn(), updateVisit: vi.fn(), deleteVisit: vi.fn(),
   listSacraments: vi.fn(), createSacrament: vi.fn(), deleteSacrament: vi.fn(),
   listTransfers: vi.fn(), createTransfer: vi.fn(), deleteTransfer: vi.fn(), statsReport: vi.fn(),
+  appointMembers: vi.fn(), listAppointments: vi.fn(),
 };
 vi.mock('../../modules/membership/records-service.js', () => rec);
 
@@ -80,6 +81,8 @@ beforeAll(async () => {
   rec.listTransfers.mockResolvedValue([]);
   rec.createTransfer.mockResolvedValue({ id: 'tr1' });
   rec.statsReport.mockResolvedValue({ gender: [], age: [], position: [], region: [], attendanceRecent: [] });
+  rec.appointMembers.mockResolvedValue({ count: 3 });
+  rec.listAppointments.mockResolvedValue([]);
 });
 afterAll(async () => { await app.close(); });
 
@@ -259,5 +262,25 @@ describe('Phase 2-4 — import / attendance / visits / sacraments / transfers / 
     const res = await app.inject({ method: 'GET', url: '/api/v1/member-stats/report', headers: { 'x-tenant-slug': 'base', ...auth() } });
     expect(res.statusCode).toBe(200);
     expect(res.json().data).toHaveProperty('gender');
+  });
+
+  it('POST /members/appoint (bulk) → 200 count', async () => {
+    await withAddon();
+    const res = await app.inject({
+      method: 'POST', url: '/api/v1/members/appoint', headers: { 'x-tenant-slug': 'base', ...auth() },
+      payload: { memberIds: ['22222222-2222-2222-2222-222222222222', '33333333-3333-3333-3333-333333333333'], position: '서리집사', appointedOn: '2026-01-05' },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().data.count).toBe(3);
+  });
+  it('POST /members/appoint with empty memberIds → 400', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'POST', url: '/api/v1/members/appoint', headers: { 'x-tenant-slug': 'base', ...auth() }, payload: { memberIds: [], position: '집사' } });
+    expect(res.statusCode).toBe(400);
+  });
+  it('GET /member-appointments → 200', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'GET', url: '/api/v1/member-appointments', headers: { 'x-tenant-slug': 'base', ...auth() } });
+    expect(res.statusCode).toBe(200);
   });
 });

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
 import { inputClass, textareaClass, ImageUpload, useToast, EmptyState } from '../components';
+import { MemberPicker } from '../components/MemberPicker';
 
 /**
  * 교적관리 — 교인 명부(MB-02) · 등록/수정(MB-04) · 상세(MB-03, 요약).
@@ -241,12 +242,7 @@ export default function MemberManagement() {
                 </div>
               )}
               <div className="flex flex-wrap gap-2 items-center border-t border-gray-50 pt-3">
-                <select className={`${inputClass} w-auto`} value={relTo} onChange={(e) => setRelTo(e.target.value)}>
-                  <option value="">가족으로 추가할 교인 선택</option>
-                  {(relCandidatesQ.data ?? []).filter((c) => c.id !== m.id).map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}{c.householdRegion ? ` (${c.householdRegion})` : ''}</option>
-                  ))}
-                </select>
+                <div className="w-64"><MemberPicker members={(relCandidatesQ.data ?? []).filter((c) => c.id !== m.id) as any} value={relTo} onChange={setRelTo} placeholder="가족 교인 검색" /></div>
                 <select className={`${inputClass} w-auto`} value={relType} onChange={(e) => setRelType(e.target.value as any)}>
                   <option value="spouse">배우자</option><option value="child">자녀</option><option value="parent">부모</option><option value="sibling">형제</option>
                 </select>

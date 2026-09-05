@@ -915,6 +915,20 @@ async function main(): Promise<void> {
           )
         `);
         await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "member_tr_member_idx" ON "${schema}".member_transfers ("member_id")`);
+        // 직분 임명 이력 — 나중에/연초 서리집사 임명 등. 명부의 현재 직분은 members에,
+        // 임명 이력(언제·무슨 직분·본교회 여부)은 여기 남긴다.
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".member_appointments (
+            "id"            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "member_id"     UUID NOT NULL REFERENCES "${schema}".members(id) ON DELETE CASCADE,
+            "position"      VARCHAR(60) NOT NULL,
+            "courtesy"      BOOLEAN     NOT NULL DEFAULT FALSE,
+            "appointed_on"  DATE,
+            "note"          VARCHAR(300) NOT NULL DEFAULT '',
+            "created_at"    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "member_appt_member_idx" ON "${schema}".member_appointments ("member_id")`);
         createHits++;
       } catch { /* skip */ }
     }

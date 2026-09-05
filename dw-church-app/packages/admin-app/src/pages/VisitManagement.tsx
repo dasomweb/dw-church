@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
 import { inputClass, textareaClass, useToast, EmptyState } from '../components';
+import { MemberPicker } from '../components/MemberPicker';
 
 /**
  * 교적관리 — 심방 · 상담 목록(VS-01) + 기록 작성(VS-02). 교회 행정 애드온.
@@ -72,10 +73,8 @@ export default function VisitManagement() {
           <h2 className="text-lg font-bold">{editingId ? '심방 기록 수정' : '심방 기록 작성'}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label className="block text-sm font-medium mb-1">대상 교인 *</label>
-              <select className={inputClass} value={form.memberId} onChange={(e) => set('memberId', e.target.value)} disabled={!!editingId}>
-                <option value="">선택</option>
-                {(membersQ.data ?? []).map((m) => <option key={m.id} value={m.id}>{m.name}{m.householdRegion ? ` (${m.householdRegion})` : ''}</option>)}
-              </select></div>
+              <MemberPicker members={(membersQ.data ?? []) as any} value={form.memberId} onChange={(id) => set('memberId', id)} disabled={!!editingId} placeholder="이름 검색으로 대상 교인 선택" />
+            </div>
             <div><label className="block text-sm font-medium mb-1">담당자</label><input className={inputClass} value={form.visitor} onChange={(e) => set('visitor', e.target.value)} placeholder="심방자" /></div>
             <div><label className="block text-sm font-medium mb-1">일자</label><input type="date" className={inputClass} value={form.visitDate} onChange={(e) => set('visitDate', e.target.value)} /></div>
             <div><label className="block text-sm font-medium mb-1">유형</label>

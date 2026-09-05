@@ -56,6 +56,7 @@ const HouseholdManagement = lazyWithReload(() => import('./pages/HouseholdManage
 const MemberCodeManagement = lazyWithReload(() => import('./pages/MemberCodeManagement'));
 const MemberDashboard = lazyWithReload(() => import('./pages/MemberDashboard'));
 const MobileCheckin = lazyWithReload(() => import('./pages/MobileCheckin'));
+const AppointmentManagement = lazyWithReload(() => import('./pages/AppointmentManagement'));
 const AttendanceManagement = lazyWithReload(() => import('./pages/AttendanceManagement'));
 const VisitManagement = lazyWithReload(() => import('./pages/VisitManagement'));
 const SacramentTransferManagement = lazyWithReload(() => import('./pages/SacramentTransferManagement'));
@@ -383,6 +384,7 @@ export function App({ config }: { config: AppConfig }) {
                 <Route path="member-dashboard" element={<MemberDashboard />} />
                 <Route path="members" element={<MemberManagement />} />
                 <Route path="households" element={<HouseholdManagement />} />
+                <Route path="appointments" element={<AppointmentManagement />} />
                 <Route path="attendance" element={<AttendanceManagement />} />
                 <Route path="member-visits" element={<VisitManagement />} />
                 <Route path="member-records" element={<SacramentTransferManagement />} />

@@ -6,7 +6,7 @@ import {
   createHouseholdSchema, updateHouseholdSchema, listHouseholdsQuerySchema,
   createRelationSchema, createCodeSchema, updateCodeSchema,
   importMembersSchema, createServiceSchema, updateServiceSchema, recordAttendanceSchema,
-  createVisitSchema, updateVisitSchema, createSacramentSchema, createTransferSchema,
+  createVisitSchema, updateVisitSchema, createSacramentSchema, createTransferSchema, appointMembersSchema,
 } from './schema.js';
 import * as svc from './service.js';
 import { importMembers } from './import-service.js';
@@ -227,6 +227,16 @@ export async function membershipRoutes(app: FastifyInstance) {
     const ok = await rec.deleteTransfer(getSchema(request), id);
     if (!ok) return reply.status(404).send(NOT_FOUND('이동 기록'));
     return reply.send({ data: { deleted: true } });
+  });
+
+  // ── 직분 임명(appointments) ──────────────────────────────
+  app.post('/members/appoint', gate, async (request, reply) => {
+    const input = appointMembersSchema.parse(request.body);
+    return reply.send({ data: await rec.appointMembers(getSchema(request), input) });
+  });
+  app.get('/member-appointments', gate, async (request, reply) => {
+    const q = request.query as { memberId?: string };
+    return reply.send({ data: await rec.listAppointments(getSchema(request), { memberId: q.memberId }) });
   });
 
   // ── 통계(Phase 4) ────────────────────────────────────────

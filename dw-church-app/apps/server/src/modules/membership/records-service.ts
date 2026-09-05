@@ -197,6 +197,43 @@ export async function deleteTransfer(schema: string, id: string) {
   return n > 0;
 }
 
+// ── 직분 임명(appointments) ───────────────────────────────────
+export async function appointMembers(
+  schema: string,
+  i: { memberIds: string[]; position: string; courtesy?: boolean; appointedOn?: string | null; note?: string },
+): Promise<{ count: number }> {
+  const courtesy = i.courtesy === true;
+  let count = 0;
+  for (const id of i.memberIds) {
+    await prisma.$executeRawUnsafe(
+      `UPDATE "${schema}".members SET position = $1, position_courtesy = $2, updated_at = NOW() WHERE id = $3::uuid`,
+      i.position, courtesy, id,
+    );
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO "${schema}".member_appointments (member_id, position, courtesy, appointed_on, note)
+       VALUES ($1::uuid, $2, $3, $4::date, $5)`,
+      id, i.position, courtesy, i.appointedOn || null, i.note ?? '',
+    );
+    count++;
+  }
+  return { count };
+}
+
+export function listAppointments(schema: string, q: { memberId?: string } = {}) {
+  if (q.memberId) {
+    return prisma.$queryRawUnsafe<Record<string, unknown>[]>(
+      `SELECT a.*, m.name AS member_name FROM "${schema}".member_appointments a
+         JOIN "${schema}".members m ON m.id = a.member_id
+        WHERE a.member_id = $1::uuid ORDER BY a.appointed_on DESC NULLS LAST, a.created_at DESC`, q.memberId,
+    );
+  }
+  return prisma.$queryRawUnsafe<Record<string, unknown>[]>(
+    `SELECT a.*, m.name AS member_name FROM "${schema}".member_appointments a
+       JOIN "${schema}".members m ON m.id = a.member_id
+      ORDER BY a.appointed_on DESC NULLS LAST, a.created_at DESC LIMIT 200`,
+  );
+}
+
 // ── 통계(Phase 4) ─────────────────────────────────────────────
 export async function statsReport(schema: string) {
   const gender = await prisma.$queryRawUnsafe<{ gender: string; n: number }[]>(

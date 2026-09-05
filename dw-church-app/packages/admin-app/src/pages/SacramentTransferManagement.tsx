@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
 import { inputClass, useToast, EmptyState } from '../components';
+import { MemberPicker } from '../components/MemberPicker';
 
 /**
  * 교적관리 — 성례 대장(SC-01) + 교인 이동 대장(TR-01). 교회 행정 애드온.
@@ -74,10 +75,7 @@ export default function SacramentTransferManagement() {
   const removeTr = async (id: string) => { if (!window.confirm('삭제할까요? (명부 상태는 되돌려지지 않습니다)')) return; try { await api.delete(`/api/v1/member-transfers/${id}`); void qc.invalidateQueries({ queryKey: ['transfers'] }); } catch (e: any) { showToast('error', e?.message || '실패'); } };
 
   const memberSelect = (val: string, onChange: (v: string) => void) => (
-    <select className={inputClass} value={val} onChange={(e) => onChange(e.target.value)}>
-      <option value="">대상 교인 선택</option>
-      {(membersQ.data ?? []).map((m) => <option key={m.id} value={m.id}>{m.name}{m.householdRegion ? ` (${m.householdRegion})` : ''}</option>)}
-    </select>
+    <MemberPicker members={(membersQ.data ?? []) as any} value={val} onChange={onChange} placeholder="이름 검색으로 교인 선택" />
   );
 
   return (
