@@ -45,7 +45,7 @@ export const listMembersQuerySchema = z.object({
   regStatus: z.enum(['active', 'newcomer', 'inactive', 'transferred', 'deceased', 'all']).optional(),
   householdId: z.string().uuid().optional(),
   page: z.coerce.number().int().min(1).optional(),
-  perPage: z.coerce.number().int().min(1).max(200).optional(),
+  perPage: z.coerce.number().int().min(1).max(2000).optional(),
 });
 
 // ── 세대(household) ───────────────────────────────────────────
@@ -64,7 +64,7 @@ export const listHouseholdsQuerySchema = z.object({
   q: z.string().max(200).optional(),
   region: z.string().max(100).optional(),
   page: z.coerce.number().int().min(1).optional(),
-  perPage: z.coerce.number().int().min(1).max(200).optional(),
+  perPage: z.coerce.number().int().min(1).max(2000).optional(),
 });
 
 // ── 가족관계(relation) ────────────────────────────────────────

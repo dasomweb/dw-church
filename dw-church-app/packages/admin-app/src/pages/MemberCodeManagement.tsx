@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
 import { inputClass, useToast } from '../components';
+import { serverErr } from '../lib/server-err';
 
 /**
  * 교적관리 — 교적 코드 관리 (SE-01). 직분·신급·등록상태·심방유형·조직유형 코드를
@@ -25,6 +26,8 @@ export default function MemberCodeManagement() {
 
   const [cat, setCat] = useState('position');
   const [newLabel, setNewLabel] = useState('');
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editLabel, setEditLabel] = useState('');
 
   const codesQ = useQuery({
     queryKey: ['member-codes-admin'],
@@ -51,12 +54,24 @@ export default function MemberCodeManagement() {
 
   const toggle = async (c: Code) => {
     try { await api.put(`/api/v1/member-codes/${c.id}`, { isActive: !c.isActive }); invalidate(); }
-    catch (e: any) { showToast('error', e?.message || '변경 실패'); }
+    catch (e) { showToast('error', serverErr(e, '변경 실패')); }
   };
   const remove = async (c: Code) => {
-    if (!window.confirm(`'${c.label}' 코드를 삭제할까요?`)) return;
+    if (!window.confirm(`'${c.label}' 코드를 삭제할까요? (사용 중이면 삭제되지 않습니다)`)) return;
     try { await api.delete(`/api/v1/member-codes/${c.id}`); invalidate(); }
-    catch (e: any) { showToast('error', e?.message || '삭제 실패'); }
+    catch (e) { showToast('error', serverErr(e, '삭제 실패')); }
+  };
+  const startEdit = (c: Code) => { setEditId(c.id); setEditLabel(c.label); };
+  const saveEdit = async (c: Code) => {
+    const label = editLabel.trim();
+    if (!label || label === c.label) { setEditId(null); return; }
+    try {
+      await api.put(`/api/v1/member-codes/${c.id}`, { label });
+      setEditId(null);
+      invalidate();
+      void qc.invalidateQueries({ queryKey: ['members'] }); // 사용처 표기도 갱신
+      showToast('success', '이름을 수정했습니다. 이 코드를 쓰던 교인/기록도 함께 반영됩니다.');
+    } catch (e) { showToast('error', serverErr(e, '수정 실패')); }
   };
 
   return (
@@ -89,9 +104,20 @@ export default function MemberCodeManagement() {
             <div className="divide-y divide-gray-50">
               {inCat.map((c) => (
                 <div key={c.id} className="flex items-center gap-3 py-2.5">
-                  <span className={`flex-1 text-sm ${c.isActive ? 'text-gray-800' : 'text-gray-400 line-through'}`}>{c.label}</span>
-                  <button onClick={() => toggle(c)} className="text-xs text-gray-400 hover:text-gray-700">{c.isActive ? '숨기기' : '사용'}</button>
-                  <button onClick={() => remove(c)} className="text-xs text-red-400 hover:text-red-600">삭제</button>
+                  {editId === c.id ? (
+                    <>
+                      <input autoFocus className={`${inputClass} flex-1`} value={editLabel} onChange={(e) => setEditLabel(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(c); if (e.key === 'Escape') setEditId(null); }} />
+                      <button onClick={() => saveEdit(c)} className="text-xs font-medium text-blue-600 hover:text-blue-700">저장</button>
+                      <button onClick={() => setEditId(null)} className="text-xs text-gray-400 hover:text-gray-600">취소</button>
+                    </>
+                  ) : (
+                    <>
+                      <button onClick={() => startEdit(c)} className={`flex-1 text-left text-sm ${c.isActive ? 'text-gray-800 hover:text-blue-600' : 'text-gray-400 line-through'}`} title="이름 수정">{c.label}</button>
+                      <button onClick={() => toggle(c)} className="text-xs text-gray-400 hover:text-gray-700">{c.isActive ? '숨기기' : '사용'}</button>
+                      <button onClick={() => remove(c)} className="text-xs text-red-400 hover:text-red-600">삭제</button>
+                    </>
+                  )}
                 </div>
               ))}
             </div>

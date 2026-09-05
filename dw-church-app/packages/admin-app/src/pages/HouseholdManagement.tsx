@@ -69,8 +69,12 @@ export default function HouseholdManagement() {
   const openDetail = (id: string) => { setDetailId(id); setView('detail'); };
 
   const remove = async (h: HH) => {
-    if (!window.confirm(`${h.name || '이 세대'}를 삭제할까요? (구성원 교인은 삭제되지 않고 세대만 해제됩니다)`)) return;
-    try { await api.delete(`/api/v1/households/${h.id}`); showToast('success', '삭제되었습니다.'); invalidate(); }
+    const n = Number(h.memberCount ?? 0);
+    const warn = n > 0
+      ? `'${h.name || '이 세대'}'에 구성원 ${n}명이 있습니다. 삭제하면 세대·구역 연결만 해제되고 교인은 명부에 남습니다. 계속할까요?`
+      : `'${h.name || '이 세대'}'를 삭제할까요?`;
+    if (!window.confirm(warn)) return;
+    try { await api.delete(`/api/v1/households/${h.id}`); showToast('success', '삭제되었습니다.'); invalidate(); void qc.invalidateQueries({ queryKey: ['members'] }); }
     catch (e: any) { showToast('error', e?.message || '삭제 실패'); }
   };
 

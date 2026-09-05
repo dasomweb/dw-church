@@ -169,6 +169,15 @@ describe('households + relations + codes', () => {
     expect(res.statusCode).toBe(200);
     expect(svc.seedCodesIfEmpty).toHaveBeenCalled();
   });
+
+  it('DELETE /member-codes/:id in use → 409 (protection propagates)', async () => {
+    const { AppError } = await import('../../middleware/error-handler.js');
+    svc.deleteCode.mockRejectedValueOnce(new AppError('CODE_IN_USE', 409, "'집사' 코드는 3명(건)이 사용 중이라 삭제할 수 없습니다."));
+    await withAddon();
+    const res = await app.inject({ method: 'DELETE', url: '/api/v1/member-codes/22222222-2222-2222-2222-222222222222', headers: { 'x-tenant-slug': 'base', ...auth() } });
+    expect(res.statusCode).toBe(409);
+    expect(res.json().error?.message).toContain('사용 중');
+  });
 });
 
 describe('Phase 2-4 — import / attendance / visits / sacraments / transfers / stats', () => {

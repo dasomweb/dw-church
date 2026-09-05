@@ -29,6 +29,7 @@ export default function AttendanceManagement() {
   const [saving, setSaving] = useState(false);
   const [newSvc, setNewSvc] = useState('');
   const [weeks, setWeeks] = useState(4);
+  const [showSvcMgr, setShowSvcMgr] = useState(false);
 
   const servicesQ = useQuery({
     queryKey: ['member-services'],
@@ -76,6 +77,15 @@ export default function AttendanceManagement() {
       setServiceId((res as any).data.id);
     } catch (e: any) { showToast('error', e?.message || '추가 실패'); }
   };
+  const deleteService = async (s: Svc) => {
+    if (!window.confirm(`'${s.name}' 예배를 삭제할까요? 이 예배의 모든 출석 기록도 함께 삭제됩니다.`)) return;
+    try {
+      await api.delete(`/api/v1/member-services/${s.id}`);
+      if (serviceId === s.id) setServiceId('');
+      await qc.invalidateQueries({ queryKey: ['member-services'] });
+      showToast('success', '예배를 삭제했습니다.');
+    } catch (e: any) { showToast('error', e?.message || '삭제 실패'); }
+  };
 
   const rows = sheetQ.data ?? [];
   const summary = useMemo(() => {
@@ -118,19 +128,31 @@ export default function AttendanceManagement() {
 
       {tab === 'check' ? (
         <>
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-wrap gap-2 items-center">
-            <select className={`${inputClass} w-auto`} value={serviceId} onChange={(e) => setServiceId(e.target.value)}>
-              <option value="">예배 선택</option>
-              {(servicesQ.data ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}{s.weekday ? ` (${s.weekday} ${s.time || ''})` : ''}</option>)}
-            </select>
-            <input type="date" className={`${inputClass} w-auto`} value={date} onChange={(e) => setDate(e.target.value)} />
-            {(servicesQ.data?.length ?? 0) === 0 && (
-              <div className="flex gap-2 items-center">
-                <input className={`${inputClass} w-auto`} placeholder="예배 추가 (예: 주일 1부)" value={newSvc} onChange={(e) => setNewSvc(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && createService()} />
-                <button onClick={createService} className="text-sm text-blue-600">추가</button>
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 space-y-3">
+            <div className="flex flex-wrap gap-2 items-center">
+              <select className={`${inputClass} w-auto`} value={serviceId} onChange={(e) => setServiceId(e.target.value)}>
+                <option value="">예배 선택</option>
+                {(servicesQ.data ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}{s.weekday ? ` (${s.weekday} ${s.time || ''})` : ''}</option>)}
+              </select>
+              <input type="date" className={`${inputClass} w-auto`} value={date} onChange={(e) => setDate(e.target.value)} />
+              <button onClick={() => setShowSvcMgr((v) => !v)} className="text-sm text-gray-500 hover:text-gray-700">예배 관리</button>
+              <div className="ml-auto text-sm text-gray-500">출석 <b className="text-green-600">{summary.present}</b> · 온라인 <b className="text-blue-600">{summary.online}</b> · 결석 <b className="text-gray-500">{summary.absent}</b></div>
+            </div>
+            {(showSvcMgr || (servicesQ.data?.length ?? 0) === 0) && (
+              <div className="border-t border-gray-50 pt-3 space-y-2">
+                <div className="flex gap-2 items-center">
+                  <input className={`${inputClass} flex-1`} placeholder="예배 추가 (예: 주일 1부 / 수요예배)" value={newSvc} onChange={(e) => setNewSvc(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && createService()} />
+                  <button onClick={createService} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 whitespace-nowrap">예배 추가</button>
+                </div>
+                {(servicesQ.data ?? []).map((s) => (
+                  <div key={s.id} className="flex items-center gap-2 text-sm">
+                    <span className="flex-1 text-gray-700">{s.name}{s.weekday ? ` · ${s.weekday} ${s.time || ''}` : ''}</span>
+                    <button onClick={() => deleteService(s)} className="text-xs text-red-400 hover:text-red-600">삭제</button>
+                  </div>
+                ))}
+                <p className="text-xs text-gray-400">예배를 삭제하면 그 예배의 모든 출석 기록도 함께 삭제됩니다.</p>
               </div>
             )}
-            <div className="ml-auto text-sm text-gray-500">출석 <b className="text-green-600">{summary.present}</b> · 온라인 <b className="text-blue-600">{summary.online}</b> · 결석 <b className="text-gray-500">{summary.absent}</b></div>
           </div>
 
           {!serviceId ? <EmptyState icon="🗓️" title="예배를 선택하세요" description="예배와 날짜를 고르면 명단이 나타납니다." /> :

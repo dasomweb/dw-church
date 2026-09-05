@@ -1,4 +1,5 @@
 import { prisma } from '../../config/database.js';
+import { AppError } from '../../middleware/error-handler.js';
 import type {
   CreateMemberInput, UpdateMemberInput, ListMembersQuery,
   CreateHouseholdInput, UpdateHouseholdInput, ListHouseholdsQuery,
@@ -265,6 +266,12 @@ export async function createCode(schema: string, input: CreateCodeInput) {
 }
 export async function updateCode(schema: string, id: string, input: UpdateCodeInput) {
   // member_codes has no updated_at column, so don't use the generic updateRow.
+  // On a label rename, propagate the new label to the members/visits that store
+  // it as a string — so fixing a typo corrects it everywhere, not just the list.
+  const prevRows = await prisma.$queryRawUnsafe<{ category: string; label: string }[]>(
+    `SELECT category, label FROM "${schema}".member_codes WHERE id = $1::uuid`, id,
+  );
+  const prev = prevRows[0];
   const map: Record<string, string> = { label: 'label', sortOrder: 'sort_order', isActive: 'is_active' };
   const set: string[] = [];
   const vals: unknown[] = [];
@@ -274,19 +281,46 @@ export async function updateCode(schema: string, id: string, input: UpdateCodeIn
     set.push(`"${col}" = $${i++}`);
     vals.push((input as Record<string, unknown>)[key]);
   }
-  if (set.length === 0) {
-    const cur = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(`SELECT * FROM "${schema}".member_codes WHERE id = $1::uuid`, id);
-    return cur[0] ?? null;
-  }
+  if (set.length === 0) return prev ? (await prisma.$queryRawUnsafe<Record<string, unknown>[]>(`SELECT * FROM "${schema}".member_codes WHERE id = $1::uuid`, id))[0] ?? null : null;
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
     `UPDATE "${schema}".member_codes SET ${set.join(', ')} WHERE id = $${i}::uuid RETURNING *`,
     ...vals, id,
   );
+  const newLabel = (input as Record<string, unknown>).label as string | undefined;
+  if (prev && newLabel && newLabel !== prev.label && CODE_USAGE[prev.category]) {
+    const u = CODE_USAGE[prev.category]!;
+    await prisma.$executeRawUnsafe(
+      `UPDATE "${schema}".${u.table} SET ${u.col} = $1 WHERE ${u.col} = $2`, newLabel, prev.label,
+    );
+  }
   return rows[0] ?? null;
 }
+// 사용 중인 코드 삭제 방지 — 직분/신급은 members, 심방유형은 member_visits 에서
+// 문자열로 저장되므로, 삭제 전에 사용 건수를 확인하고 있으면 막는다(→ '숨기기' 유도).
+const CODE_USAGE: Record<string, { table: string; col: string }> = {
+  position: { table: 'members', col: 'position' },
+  faith_level: { table: 'members', col: 'faith_level' },
+  visit_type: { table: 'member_visits', col: 'visit_type' },
+};
 export async function deleteCode(schema: string, id: string): Promise<boolean> {
-  const n = await prisma.$executeRawUnsafe(`DELETE FROM "${schema}".member_codes WHERE id = $1::uuid`, id);
-  return n > 0;
+  const rows = await prisma.$queryRawUnsafe<{ category: string; label: string }[]>(
+    `SELECT category, label FROM "${schema}".member_codes WHERE id = $1::uuid`, id,
+  );
+  const code = rows[0];
+  if (!code) return false;
+  const usage = CODE_USAGE[code.category];
+  if (usage) {
+    const cnt = await prisma.$queryRawUnsafe<{ n: number }[]>(
+      `SELECT count(*)::int AS n FROM "${schema}".${usage.table} WHERE ${usage.col} = $1`, code.label,
+    );
+    const n = cnt[0]?.n ?? 0;
+    if (n > 0) {
+      throw new AppError('CODE_IN_USE', 409,
+        `'${code.label}' 코드는 ${n}명(건)이 사용 중이라 삭제할 수 없습니다. 삭제 대신 '숨기기'를 사용하세요.`);
+    }
+  }
+  const deleted = await prisma.$executeRawUnsafe(`DELETE FROM "${schema}".member_codes WHERE id = $1::uuid`, id);
+  return deleted > 0;
 }
 
 // Seed a tenant's default code lists on first use (idempotent — skips if any exist).
