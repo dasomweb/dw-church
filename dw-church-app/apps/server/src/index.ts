@@ -115,6 +115,7 @@ async function main(): Promise<void> {
   const { emailTemplateRoutes } = await import('./modules/email-templates/routes.js');
   const { marketingContactsRoutes } = await import('./modules/marketing-contacts/routes.js');
   const { membershipRoutes } = await import('./modules/membership/routes.js');
+  const { smallgroupRoutes } = await import('./modules/smallgroup/routes.js');
   const { promoRoutes } = await import('./modules/promo/routes.js');
   const { formRoutes } = await import('./modules/forms/routes.js');
   const { formBuilderRoutes } = await import('./modules/form-builder/routes.js');
@@ -206,6 +207,7 @@ async function main(): Promise<void> {
   await app.register(emailTemplateRoutes, { prefix: '/api/v1' }); // /admin/email-templates + /admin/email-broadcast
   await app.register(marketingContactsRoutes, { prefix: '/api/v1' }); // /admin/marketing-contacts (주소록 + CSV import)
   await app.register(membershipRoutes, { prefix: '/api/v1' }); // 교적관리 애드온: /members /households /member-relations /member-codes
+  await app.register(smallgroupRoutes, { prefix: '/api/v1' }); // 스몰그룹 애드온: /group-preset /groups /group-members /group-queue
   await app.register(promoRoutes, { prefix: '/api/v1' }); // /promo/validate + /admin/promo
   await app.register(formRoutes, { prefix: '/api/v1' }); // /forms/:type (public) + /admin/forms/submissions
   await app.register(formBuilderRoutes, { prefix: '/api/v1' }); // /form-defs/* (admin) + /forms/:slug/schema|submit (public)
@@ -945,6 +947,92 @@ async function main(): Promise<void> {
         await prisma.$executeRawUnsafe(`INSERT INTO "${schema}".member_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING`);
         createHits++;
       } catch { /* skip */ }
+
+      // 7. 스몰그룹 (smallgroup add-on) STEP 1 — 프리셋 + 조직.
+      //    엔진 하나, 운영모델 4종(A 가정교회/목장 · B 구역 · C 셀 · D 사역별).
+      //    group_preset 한 줄이 용어·규칙을 결정하고 나머지 표는 모든 모델이 공유.
+      //    조직(groups)은 parent_id 트리(최대 3단) + 교적 members 로 명단 배정.
+      try {
+        // 프리셋 — 교회당 1행. model + 레벨정의 + 용어 오버라이드 + 리포트/과정 기본값.
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".group_preset (
+            "id"              INT PRIMARY KEY DEFAULT 1,
+            "model"           VARCHAR(2)  NOT NULL DEFAULT 'A',
+            "level_defs"      JSONB       NOT NULL DEFAULT '[]'::jsonb,
+            "terminology"     JSONB       NOT NULL DEFAULT '{}'::jsonb,
+            "allow_multi"     BOOLEAN     NOT NULL DEFAULT FALSE,
+            "report_items"    JSONB       NOT NULL DEFAULT '[]'::jsonb,
+            "course_set"      JSONB       NOT NULL DEFAULT '[]'::jsonb,
+            "metrics"         JSONB       NOT NULL DEFAULT '[]'::jsonb,
+            "is_configured"   BOOLEAN     NOT NULL DEFAULT FALSE,
+            "updated_at"      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            CONSTRAINT "group_preset_single_row" CHECK (id = 1)
+          )
+        `);
+        await prisma.$executeRawUnsafe(`INSERT INTO "${schema}".group_preset (id) VALUES (1) ON CONFLICT (id) DO NOTHING`);
+        // 조직 — 교적 org 확장. parent_id 자기참조(SET NULL), origin_group_id = 분가 계보.
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".groups (
+            "id"                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "name"               VARCHAR(120) NOT NULL,
+            "level"              INT          NOT NULL DEFAULT 1,
+            "parent_id"          UUID,
+            "leader_member_id"   UUID,
+            "subleader_member_id" UUID,
+            "meeting_day"        VARCHAR(20)  NOT NULL DEFAULT '',
+            "meeting_time"       VARCHAR(20)  NOT NULL DEFAULT '',
+            "meeting_place"      VARCHAR(200) NOT NULL DEFAULT '',
+            "status"             VARCHAR(12)  NOT NULL DEFAULT 'active',
+            "origin_group_id"    UUID,
+            "year"               INT,
+            "region"             VARCHAR(100) NOT NULL DEFAULT '',
+            "intro"              VARCHAR(2000) NOT NULL DEFAULT '',
+            "photo_url"          TEXT         NOT NULL DEFAULT '',
+            "is_public"          BOOLEAN      NOT NULL DEFAULT FALSE,
+            "tags"               TEXT[]       NOT NULL DEFAULT '{}',
+            "sort_order"         INT          NOT NULL DEFAULT 0,
+            "created_at"         TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+            "updated_at"         TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+          )
+        `);
+        // parent_id FK 는 별도 ALTER 로 (자기참조라 CREATE 시 순서 무관하게 안전).
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "groups_parent_idx" ON "${schema}".groups ("parent_id")`);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "groups_level_idx" ON "${schema}".groups ("level")`);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "groups_leader_idx" ON "${schema}".groups ("leader_member_id")`);
+        // 소속 이력 — member ↔ group. 역할·기간·편입사유·임시여부.
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".group_members (
+            "id"           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "group_id"     UUID NOT NULL REFERENCES "${schema}".groups(id) ON DELETE CASCADE,
+            "member_id"    UUID NOT NULL REFERENCES "${schema}".members(id) ON DELETE CASCADE,
+            "role"         VARCHAR(16)  NOT NULL DEFAULT 'member',
+            "start_date"   DATE,
+            "end_date"     DATE,
+            "reason"       VARCHAR(20)  NOT NULL DEFAULT '',
+            "is_temporary" BOOLEAN      NOT NULL DEFAULT FALSE,
+            "created_at"   TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "group_members_group_idx" ON "${schema}".group_members ("group_id")`);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "group_members_member_idx" ON "${schema}".group_members ("member_id")`);
+        // 배치 대기 큐 — 과정 수료자 자동 유입 + 공개 참석 문의(외부는 member_id NULL).
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".group_placement_queue (
+            "id"          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "member_id"   UUID REFERENCES "${schema}".members(id) ON DELETE CASCADE,
+            "name"        VARCHAR(120) NOT NULL DEFAULT '',
+            "contact"     VARCHAR(200) NOT NULL DEFAULT '',
+            "source"      VARCHAR(30)  NOT NULL DEFAULT 'manual',
+            "status"      VARCHAR(12)  NOT NULL DEFAULT 'waiting',
+            "note"        VARCHAR(1000) NOT NULL DEFAULT '',
+            "placed_group_id" UUID REFERENCES "${schema}".groups(id) ON DELETE SET NULL,
+            "created_at"  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+            "updated_at"  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "group_queue_status_idx" ON "${schema}".group_placement_queue ("status")`);
+        createHits++;
+      } catch { /* skip */ }
     }
     if (alterHits || createHits) {
       app.log.info(`Tenant schema drift repair — ALTER: ${alterHits}, CREATE: ${createHits}`);
@@ -1359,6 +1447,7 @@ async function main(): Promise<void> {
       ['newcomer_registration', '새가족 온라인 등록·교인관리', 30, 30, 9],
       ['pwa', '모바일 앱(PWA)', 30, 30, 10],
       ['membership', '교적관리 (명부·세대·가족·조직)', 40, 40, 11],
+      ['smallgroup', '스몰그룹 (목장·구역·셀·사역별)', 35, 35, 12],
     ];
     for (const [key, label, monthly, yearly, sort] of featureSeed) {
       await prisma.$executeRawUnsafe(

@@ -29,6 +29,9 @@ export const NAV_FEATURE: Record<string, string> = {
   'member-records': 'membership',
   'member-codes': 'membership',
   'member-settings': 'membership',
+  groups: 'smallgroup',            // 스몰그룹 애드온
+  'group-queue': 'smallgroup',
+  'group-settings': 'smallgroup',
 };
 
 /** Page-editor block_type → gated feature key. */
