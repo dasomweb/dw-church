@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useToast } from '../../components';
+import { useToast, ImageUpload } from '../../components';
 import { useAdminApi } from '../shared/use-admin-api';
+import { useAuthStore } from '../../stores/auth';
+import { uploadPlatformImage } from '../shared/upload-platform-image';
 
 // 마케팅/공지 본문 프리셋 — 선택하면 제목·본문이 자동 채워진다. 본문은 디자인
 // 틀 안쪽 HTML(서버가 wrapEmail 로 감쌈). 실재하는 기능/요금제만 담는다.
@@ -71,9 +73,11 @@ const BROADCAST_PRESETS: { key: string; label: string; subject: string; body: st
 export default function BroadcastTab() {
   const apiFetch = useAdminApi();
   const { showToast } = useToast();
+  const session = useAuthStore((s) => s.session);
 
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
+  const [heroImageUrl, setHeroImageUrl] = useState('');
   const [testTo, setTestTo] = useState('');
   const [testing, setTesting] = useState(false);
   const [sending, setSending] = useState(false);
@@ -141,7 +145,7 @@ export default function BroadcastTab() {
     try {
       await apiFetch('/email-broadcast', {
         method: 'POST',
-        body: JSON.stringify({ subject, body, testTo: testTo.trim() }),
+        body: JSON.stringify({ subject, body, testTo: testTo.trim(), heroImageUrl }),
       });
       showToast('success', '테스트 메일을 보냈습니다.');
     } catch (err) {
@@ -168,7 +172,7 @@ export default function BroadcastTab() {
         '/email-broadcast',
         {
           method: 'POST',
-          body: JSON.stringify({ subject, body, audiences: selectedAudiences, customEmails, contactTags: parsedContactTags }),
+          body: JSON.stringify({ subject, body, audiences: selectedAudiences, customEmails, contactTags: parsedContactTags, heroImageUrl }),
         },
       );
       const { recipients, sent, failed, batches } = res.data;
@@ -262,6 +266,21 @@ export default function BroadcastTab() {
       {/* 작성 폼 */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-4">
         <h2 className="text-sm font-semibold text-gray-700">내용 작성</h2>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">상단 배너 이미지 (선택)</label>
+          <ImageUpload
+            label=""
+            value={heroImageUrl}
+            onChange={(url) => setHeroImageUrl(url)}
+            onUpload={(file) => uploadPlatformImage(file, session?.accessToken, 'email')}
+            aspectRatio="600/240"
+            resize="hero"
+          />
+          <p className="mt-1 text-xs text-gray-400">
+            메일 최상단에 가로 전체로 표시되는 홍보용 배너입니다(권장 폭 600px). 비우면 표시되지 않습니다.
+          </p>
+        </div>
 
         <div>
           <label className="block text-sm font-medium mb-1">프리셋 불러오기</label>

@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useToast } from '../../components';
+import { useToast, ImageUpload } from '../../components';
 import { useAdminApi } from '../shared/use-admin-api';
+import { useAuthStore } from '../../stores/auth';
 import { Spinner, EmptyState } from '../shared/admin-ui';
+import { uploadPlatformImage } from '../shared/upload-platform-image';
 
 
 // ═══════════════════════════════════════════════════════════
@@ -16,21 +18,24 @@ interface EmailTemplate {
   subject: string;
   body: string;
   vars: string;
+  heroImageUrl?: string;
   updatedAt: string;
 }
 
 export default function EmailTemplatesTab() {
   const apiFetch = useAdminApi();
   const { showToast } = useToast();
+  const session = useAuthStore((s) => s.session);
 
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // 편집 중인(로컬) 제목/본문 — 선택된 템플릿에 대해서만 유지.
+  // 편집 중인(로컬) 제목/본문/히어로이미지 — 선택된 템플릿에 대해서만 유지.
   const [draftSubject, setDraftSubject] = useState('');
   const [draftBody, setDraftBody] = useState('');
+  const [draftHero, setDraftHero] = useState('');
 
   // 테스트 발송
   const [testTo, setTestTo] = useState('');
@@ -67,11 +72,12 @@ export default function EmailTemplatesTab() {
     if (selected) {
       setDraftSubject(selected.subject);
       setDraftBody(selected.body);
+      setDraftHero(selected.heroImageUrl ?? '');
     }
   }, [selected]);
 
   // dirty: 서버 값과 draft 가 다를 때만 저장 버튼 활성화.
-  const dirty = !!selected && (draftSubject !== selected.subject || draftBody !== selected.body);
+  const dirty = !!selected && (draftSubject !== selected.subject || draftBody !== selected.body || draftHero !== (selected.heroImageUrl ?? ''));
 
   // 편집 중인 제목/본문이 바뀌면(디바운스) 서버에서 디자인 틀이 입혀진 최종
   // 메일 HTML 을 받아 미리보기에 렌더한다. 저장하지 않아도 즉시 확인 가능.
@@ -84,7 +90,7 @@ export default function EmailTemplatesTab() {
       try {
         const res = await apiFetch<{ data: { subject: string; html: string } }>(
           `/email-templates/${previewKey}/preview`,
-          { method: 'POST', body: JSON.stringify({ subject: draftSubject, body: draftBody }) },
+          { method: 'POST', body: JSON.stringify({ subject: draftSubject, body: draftBody, heroImageUrl: draftHero }) },
         );
         if (!cancelled) { setPreviewHtml(res.data?.html ?? ''); setPreviewSubject(res.data?.subject ?? ''); }
       } catch {
@@ -94,7 +100,7 @@ export default function EmailTemplatesTab() {
       }
     }, 400);
     return () => { cancelled = true; clearTimeout(handle); };
-  }, [previewKey, draftSubject, draftBody, apiFetch]);
+  }, [previewKey, draftSubject, draftBody, draftHero, apiFetch]);
 
   const handleSave = async () => {
     if (!selected || saving || !dirty) return;
@@ -102,7 +108,7 @@ export default function EmailTemplatesTab() {
     try {
       await apiFetch(`/email-templates/${selected.key}`, {
         method: 'PATCH',
-        body: JSON.stringify({ subject: draftSubject, body: draftBody }),
+        body: JSON.stringify({ subject: draftSubject, body: draftBody, heroImageUrl: draftHero }),
       });
       showToast('success', '저장되었습니다.');
       await load();
@@ -181,6 +187,21 @@ export default function EmailTemplatesTab() {
                   <code className="inline-block bg-gray-50 border border-gray-200 rounded px-2 py-1 text-xs font-mono text-gray-700">
                     {selected.key}
                   </code>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">상단 배너 이미지 (선택)</label>
+                  <ImageUpload
+                    label=""
+                    value={draftHero}
+                    onChange={(url) => setDraftHero(url)}
+                    onUpload={(file) => uploadPlatformImage(file, session?.accessToken, 'email')}
+                    aspectRatio="600/240"
+                    resize="hero"
+                  />
+                  <p className="mt-1 text-xs text-gray-400">
+                    메일 최상단에 가로 전체로 표시되는 홍보용 배너입니다(권장 폭 600px). 비우면 표시되지 않습니다.
+                  </p>
                 </div>
 
                 <div>

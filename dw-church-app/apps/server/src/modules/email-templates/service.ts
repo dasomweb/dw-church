@@ -85,6 +85,7 @@ export async function updateTemplate(key: string, input: UpdateTemplateInput) {
   let i = 1;
   if (input.subject !== undefined) { set.push(`subject = $${i++}`); values.push(input.subject); }
   if (input.body !== undefined) { set.push(`body = $${i++}`); values.push(input.body); }
+  if (input.heroImageUrl !== undefined) { set.push(`hero_image_url = $${i++}`); values.push(input.heroImageUrl); }
   if (set.length === 0) return getTemplate(key);
   set.push('updated_at = NOW()');
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
@@ -120,16 +121,17 @@ export async function renderTemplate(
 ): Promise<{ subject: string; html: string }> {
   let subjectTpl: string | undefined;
   let bodyTpl: string | undefined;
+  let heroImageUrl = '';
   try {
     const row = await getTemplate(key);
-    if (row) { subjectTpl = row.subject as string; bodyTpl = row.body as string; }
+    if (row) { subjectTpl = row.subject as string; bodyTpl = row.body as string; heroImageUrl = (row.hero_image_url as string) || ''; }
   } catch { /* table may not exist yet */ }
   const def = DEFAULT_BY_KEY.get(key);
   subjectTpl = subjectTpl ?? def?.subject ?? '';
   bodyTpl = bodyTpl ?? def?.body ?? '';
   return {
     subject: substitute(subjectTpl, vars),
-    html: wrapEmail(substitute(bodyTpl, vars)),
+    html: wrapEmail(substitute(bodyTpl, vars), { heroImageUrl }),
   };
 }
 
@@ -142,10 +144,11 @@ export function renderRaw(
   subject: string,
   body: string,
   vars: Record<string, string> = {},
+  heroImageUrl = '',
 ): { subject: string; html: string } {
   return {
     subject: substitute(subject, vars),
-    html: wrapEmail(substitute(body, vars)),
+    html: wrapEmail(substitute(body, vars), { heroImageUrl }),
   };
 }
 

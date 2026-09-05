@@ -8,6 +8,7 @@ import { z } from 'zod';
 export const updateTemplateSchema = z.object({
   subject: z.string().min(1).max(300).optional(),
   body: z.string().max(20000).optional(),
+  heroImageUrl: z.string().max(1000).optional(), // R2 URL of the top banner image ('' clears)
 });
 
 export const testTemplateSchema = z.object({ to: z.string().email() });
@@ -16,6 +17,7 @@ export const testTemplateSchema = z.object({ to: z.string().email() });
 export const previewTemplateSchema = z.object({
   subject: z.string().max(300).optional(),
   body: z.string().max(20000).optional(),
+  heroImageUrl: z.string().max(1000).optional(),
 });
 
 // 'contacts' = 주소록(marketing_contacts)의 구독 연락처. contactTags 로 세그먼트 필터.
@@ -29,6 +31,7 @@ export const broadcastSchema = z.object({
   audiences: z.array(z.enum(BROADCAST_AUDIENCES)).optional(),
   contactTags: z.array(z.string().trim().max(40)).max(30).optional(), // 'contacts' 대상일 때 태그 필터
   customEmails: z.string().max(50000).optional(), // pasted addresses (comma/newline/semicolon)
+  heroImageUrl: z.string().max(1000).optional(), // 상단 배너 이미지(R2 URL)
 });
 
 export type UpdateTemplateInput = z.infer<typeof updateTemplateSchema>;

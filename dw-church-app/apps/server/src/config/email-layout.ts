@@ -18,18 +18,39 @@ export function emailButton(text: string, url: string): string {
 }
 
 /**
+ * A full-width hero banner image at the top of the email card. `url` must be an
+ * absolute, self-hosted (R2) image — email clients block data: URIs. Optional
+ * `link` wraps the image in an anchor. Returns '' when no url. Rendered
+ * full-bleed inside the rounded card (overflow:hidden clips the top corners).
+ */
+export function emailHero(url?: string | null, link?: string | null): string {
+  if (!url) return '';
+  const img = `<img src="${url}" alt="" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:none;text-decoration:none">`;
+  const inner = link ? `<a href="${link}" style="display:block;text-decoration:none">${img}</a>` : img;
+  return `<tr><td style="padding:0;line-height:0;font-size:0">${inner}</td></tr>`;
+}
+
+/**
  * Wrap inner body HTML in the clean shell. `inner` may contain headings,
  * paragraphs, buttons (from emailButton), etc. Keep the inner simple — the
- * shell provides the frame.
+ * shell provides the frame. `heroImageUrl` renders a full-width banner image
+ * at the very top of the card (for eye-catching promo/hero emails).
  */
-export function wrapEmail(inner: string, opts?: { footerNote?: string }): string {
+export function wrapEmail(
+  inner: string,
+  opts?: { footerNote?: string; heroImageUrl?: string | null; heroLink?: string | null },
+): string {
   const footerNote = opts?.footerNote ?? '본 메일은 TRUE LIGHT에서 발송되었습니다.';
+  const hero = emailHero(opts?.heroImageUrl, opts?.heroLink);
+  // With a hero image the wordmark sits a bit tighter under it.
+  const wordmarkPadTop = hero ? 20 : 28;
   return `<!DOCTYPE html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f4f6fa;font-family:${FONT};-webkit-font-smoothing:antialiased;word-break:keep-all">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6fa"><tr><td align="center" style="padding:40px 16px">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#fff;border:1px solid ${BORDER};border-radius:16px;overflow:hidden">
-      <tr><td style="padding:28px 40px 0">
+      ${hero}
+      <tr><td style="padding:${wordmarkPadTop}px 40px 0">
         <span style="font-size:18px;font-weight:800;color:${INK};font-family:${FONT};letter-spacing:-0.4px">TRUE <span style="color:${BRAND}">LIGHT</span></span>
       </td></tr>
       <tr><td style="padding:24px 40px 36px;font-size:16px;color:${SUB};line-height:1.8">

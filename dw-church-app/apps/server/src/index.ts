@@ -1278,6 +1278,8 @@ async function main(): Promise<void> {
         "updated_at" TIMESTAMPTZ  NOT NULL DEFAULT NOW()
       )
     `);
+    // Hero/promo banner image per template (email marketing visual). Additive.
+    await prisma.$executeRawUnsafe(`ALTER TABLE "email_templates" ADD COLUMN IF NOT EXISTS "hero_image_url" VARCHAR(1000) NOT NULL DEFAULT ''`);
     const { DEFAULT_TEMPLATES } = await import('./modules/email-templates/service.js');
     for (const t of DEFAULT_TEMPLATES) {
       await prisma.$executeRawUnsafe(
