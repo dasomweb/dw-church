@@ -30,7 +30,7 @@ export default function PlacementQueue() {
   const presetQ = useQuery({ queryKey: ['group-preset'], queryFn: async () => (await api.get<{ data: Preset }>('/api/v1/group-preset') as any).data as Preset });
   const queueQ = useQuery({ queryKey: ['group-queue'], queryFn: async () => (await api.get<{ data: QItem[] }>('/api/v1/group-queue?status=waiting') as any).data as QItem[] });
   const groupsQ = useQuery({ queryKey: ['groups-flat'], queryFn: async () => (await api.get<{ data: any[] }>('/api/v1/groups') as any).data as any[] });
-  const membersQ = useQuery({ queryKey: ['members-lite'], queryFn: async () => ((await api.get<{ data: any }>('/api/v1/members?perPage=2000') as any).data?.items ?? []) as any[] });
+  const membersQ = useQuery({ queryKey: ['members-lite'], queryFn: async () => ((await api.get<{ data: any }>('/api/v1/members?perPage=2000&regStatus=all') as any).data?.items ?? []) as any[] });
 
   const t = presetQ.data?.terminology ?? { org: '조직' };
   const pickMembers: PickMember[] = useMemo(
@@ -96,20 +96,20 @@ export default function PlacementQueue() {
               {queue.map((q) => (
                 <div key={q.id} className="p-4">
                   <div className="flex items-center gap-3">
-                    {q.member_photo ? <img src={q.member_photo} alt="" className="w-9 h-9 rounded-full object-cover" /> :
-                      <span className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-sm text-gray-400">{(q.member_name || q.name || '·')[0]}</span>}
+                    {q.memberPhoto ? <img src={q.memberPhoto} alt="" className="w-9 h-9 rounded-full object-cover" /> :
+                      <span className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-sm text-gray-400">{(q.memberName || q.name || '·')[0]}</span>}
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-2">
-                        <b className="text-sm text-gray-800">{q.member_name || q.name || '(이름 없음)'}</b>
+                        <b className="text-sm text-gray-800">{q.memberName || q.name || '(이름 없음)'}</b>
                         <span className="text-[10px] font-medium bg-gray-100 text-gray-500 rounded-full px-1.5 py-0.5">{SOURCE_LABEL[q.source] ?? q.source}</span>
                       </span>
-                      <span className="block text-xs text-gray-400 truncate">{[q.household_name, q.address, q.note].filter(Boolean).join(' · ') || '—'}</span>
+                      <span className="block text-xs text-gray-400 truncate">{[q.householdName, q.address, q.note].filter(Boolean).join(' · ') || '—'}</span>
                     </span>
                     {placeFor === q.id ? (
                       <div className="flex items-center gap-2">
                         <select className={`${inputClass} sm:w-44`} value={placeGroupId} onChange={(e) => setPlaceGroupId(e.target.value)}>
                           <option value="">{t.org} 선택</option>
-                          {groups.map((g) => <option key={g.id} value={g.id}>{g.name}{g.leader_name ? ` · ${g.leader_name}` : ''}</option>)}
+                          {groups.map((g) => <option key={g.id} value={g.id}>{g.name}{g.leaderName ? ` · ${g.leaderName}` : ''}</option>)}
                         </select>
                         <Button size="sm" disabled={busy} onClick={() => void place(q.id)}>배치</Button>
                         <button onClick={() => { setPlaceFor(null); setPlaceGroupId(''); }} className="text-xs text-gray-400 hover:text-gray-600">취소</button>

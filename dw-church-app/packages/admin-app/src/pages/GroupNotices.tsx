@@ -44,9 +44,9 @@ export default function GroupNotices() {
     if (!window.confirm('이 공지를 삭제할까요?')) return;
     try { await api.delete(`/api/v1/group-notices/${n.id}`); qc.invalidateQueries({ queryKey: ['group-notices'] }); if (editing?.id === n.id) setEditing(null); } catch (e: any) { showToast('error', e?.message || '실패'); }
   };
-  const openEdit = (n: Notice) => setEditing({ ...n, target: n.target ?? { scope: 'all' }, isPinned: n.is_pinned, publishFrom: n.publish_from ?? '', publishTo: n.publish_to ?? '', sendAlrimtalk: n.send_alrimtalk, sendEmail: n.send_email, sendSms: n.send_sms });
+  const openEdit = (n: Notice) => setEditing({ ...n, target: n.target ?? { scope: 'all' }, isPinned: n.isPinned, publishFrom: n.publishFrom ?? '', publishTo: n.publishTo ?? '', sendAlrimtalk: n.sendAlrimtalk, sendEmail: n.sendEmail, sendSms: n.sendSms });
 
-  const channels = (n: Notice) => [n.send_alrimtalk && '알림톡', n.send_email && '메일', n.send_sms && '문자'].filter(Boolean).join('·');
+  const channels = (n: Notice) => [n.sendAlrimtalk && '알림톡', n.sendEmail && '메일', n.sendSms && '문자'].filter(Boolean).join('·');
 
   return (
     <div className="space-y-4">
@@ -67,7 +67,7 @@ export default function GroupNotices() {
                 {notices.map((n) => (
                   <button key={n.id} onClick={() => openEdit(n)} className="w-full text-left p-4 hover:bg-gray-50 block">
                     <div className="flex items-center gap-2">
-                      {n.is_pinned && <span className="text-[10px] font-bold text-amber-600">📌 고정</span>}
+                      {n.isPinned && <span className="text-[10px] font-bold text-amber-600">📌 고정</span>}
                       <b className="text-sm text-gray-800">{n.title}</b>
                       <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">{SCOPE_LABEL[n.target?.scope] ?? '전체'}</span>
                       {channels(n) && <span className="text-[11px] text-blue-500">{channels(n)}</span>}

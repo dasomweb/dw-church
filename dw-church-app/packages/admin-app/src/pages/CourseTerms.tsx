@@ -40,11 +40,11 @@ export default function CourseTerms() {
     queryKey: ['course-term', termId], enabled: !!termId,
     queryFn: async () => (await api.get<{ data: Term }>(`/api/v1/course-terms/${termId}`) as any).data as Term,
   });
-  const membersQ = useQuery({ queryKey: ['members-lite'], queryFn: async () => ((await api.get<{ data: any }>('/api/v1/members?perPage=2000') as any).data?.items ?? []) as any[] });
+  const membersQ = useQuery({ queryKey: ['members-lite'], queryFn: async () => ((await api.get<{ data: any }>('/api/v1/members?perPage=2000&regStatus=all') as any).data?.items ?? []) as any[] });
   const pickMembers: PickMember[] = useMemo(() => (membersQ.data ?? []).map((m: any) => ({ id: m.id, name: m.name, position: m.position, householdRegion: m.householdRegion || m.region, regStatus: m.regStatus, phone: m.phone, photoUrl: m.photoUrl })), [membersQ.data]);
 
   const term = termQ.data;
-  const totalSessions: number = term?.total_sessions ?? 0;
+  const totalSessions: number = term?.totalSessions ?? 0;
   const criteria: number = term?.criteria ?? 0;
   const enrollments: any[] = term?.enrollments ?? [];
 
@@ -54,7 +54,7 @@ export default function CourseTerms() {
     const next: Record<string, Record<number, string>> = {};
     for (const e of term.enrollments ?? []) {
       next[e.id] = {};
-      for (const s of e.sessions ?? []) next[e.id]![s.session_no] = s.status;
+      for (const s of e.sessions ?? []) next[e.id]![s.sessionNo] = s.status;
     }
     setAtt(next);
   }, [term]);
@@ -92,7 +92,7 @@ export default function CourseTerms() {
   const complete = async () => {
     const below = enrollments.filter((e) => e.status !== 'completed' && presentOf(e.id) < criteria);
     const msg = below.length
-      ? `기준 미달 ${below.length}명(${below.map((e) => e.member_name).join(', ')})이 있습니다.\n확인을 누르면 기준 충족자만 수료 확정합니다. (미달자 강제 수료는 아래 예외 승인)`
+      ? `기준 미달 ${below.length}명(${below.map((e) => e.memberName).join(', ')})이 있습니다.\n확인을 누르면 기준 충족자만 수료 확정합니다. (미달자 강제 수료는 아래 예외 승인)`
       : '기준 충족자를 수료 확정할까요?';
     if (!window.confirm(msg)) return;
     setBusy(true);
@@ -133,11 +133,11 @@ export default function CourseTerms() {
             : (termsQ.data ?? []).map((tm) => (
               <button key={tm.id} onClick={() => setTermId(tm.id)} className="text-left bg-white rounded-xl border border-gray-100 shadow-sm p-4 hover:border-blue-300">
                 <div className="flex items-center justify-between">
-                  <b className="text-sm text-gray-800">{tm.course_name} {tm.name}</b>
+                  <b className="text-sm text-gray-800">{tm.courseName} {tm.name}</b>
                   <span className={`text-[11px] px-2 py-0.5 rounded-full ${tm.status === 'done' ? 'bg-emerald-50 text-emerald-700' : tm.status === 'ongoing' ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>{tm.status === 'done' ? '종료' : tm.status === 'ongoing' ? '진행 중' : '예정'}</span>
                 </div>
                 <p className="text-xs text-gray-400 mt-1">{[tm.weekday, tm.time, tm.instructor].filter(Boolean).join(' · ') || '일정 미정'}</p>
-                <p className="text-xs text-gray-500 mt-1">수강 {tm.enrolled_count ?? 0}{tm.capacity ? ` / 정원 ${tm.capacity}` : ''}</p>
+                <p className="text-xs text-gray-500 mt-1">수강 {tm.enrolledCount ?? 0}{tm.capacity ? ` / 정원 ${tm.capacity}` : ''}</p>
               </button>
             ))}
         </div>
@@ -149,7 +149,7 @@ export default function CourseTerms() {
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div>
               <button onClick={() => setTermId(null)} className="text-xs text-gray-400 hover:text-gray-600">← 차수 목록</button>
-              <h2 className="text-lg font-bold text-gray-900 mt-1">{term.course_name} {term.name}</h2>
+              <h2 className="text-lg font-bold text-gray-900 mt-1">{term.courseName} {term.name}</h2>
               <p className="text-sm text-gray-500">{[term.weekday, term.time, term.place, term.instructor].filter(Boolean).join(' · ')} · 수강 {enrollments.length}{term.capacity ? ` / ${term.capacity}` : ''} · 수료 기준 {totalSessions}회 중 {criteria}회</p>
             </div>
             <div className="flex gap-2">
@@ -182,8 +182,8 @@ export default function CourseTerms() {
                     return (
                       <tr key={e.id}>
                         <td className="px-2 py-1.5 sticky left-0 bg-white">
-                          <span className="font-medium text-gray-800">{e.member_name}</span>
-                          <span className="block text-[11px] text-gray-400">{e.status === 'completed' ? '수료' : (e.group_name || '미소속')}</span>
+                          <span className="font-medium text-gray-800">{e.memberName}</span>
+                          <span className="block text-[11px] text-gray-400">{e.status === 'completed' ? '수료' : (e.groupName || '미소속')}</span>
                         </td>
                         {Array.from({ length: totalSessions }, (_, i) => {
                           const st = att[e.id]?.[i + 1];
@@ -194,7 +194,7 @@ export default function CourseTerms() {
                         })}
                         <td className="px-2 py-1.5 text-center tabular-nums">
                           <span className={meets ? 'text-emerald-600 font-semibold' : e.status === 'completed' ? 'text-gray-500' : 'text-amber-600'}>{pc} / {criteria}</span>
-                          <button onClick={() => void removeStudent(e.id, e.member_name)} className="block text-[10px] text-gray-300 hover:text-red-500 mt-0.5">제외</button>
+                          <button onClick={() => void removeStudent(e.id, e.memberName)} className="block text-[10px] text-gray-300 hover:text-red-500 mt-0.5">제외</button>
                         </td>
                       </tr>
                     );

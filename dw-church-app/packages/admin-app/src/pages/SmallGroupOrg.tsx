@@ -29,7 +29,7 @@ export default function SmallGroupOrg() {
   const treeQ = useQuery({ queryKey: ['groups-tree'], queryFn: async () => (await api.get<{ data: Group[] }>('/api/v1/groups/tree?status=all') as any).data as Group[] });
   const membersQ = useQuery({
     queryKey: ['members-lite'],
-    queryFn: async () => ((await api.get<{ data: any }>('/api/v1/members?perPage=2000') as any).data?.items ?? []) as any[],
+    queryFn: async () => ((await api.get<{ data: any }>('/api/v1/members?perPage=2000&regStatus=all') as any).data?.items ?? []) as any[],
   });
   const detailQ = useQuery({
     queryKey: ['group', selectedId],
@@ -112,7 +112,7 @@ function TreeList({ nodes, selectedId, onSelect, memberLabel, depth = 0 }: {
             <span className="min-w-0 flex-1">
               <span className="text-sm font-medium text-gray-800 truncate">{n.name}</span>
               <span className="block text-[11px] text-gray-400 truncate">
-                {n.leader_name ? `${n.leader_name}` : '리더 미지정'} · {memberLabel} {n.member_count ?? 0}
+                {n.leaderName ? `${n.leaderName}` : '리더 미지정'} · {memberLabel} {n.memberCount ?? 0}
                 {n.status && n.status !== 'active' ? ` · ${n.status === 'paused' ? '중단' : '종료'}` : ''}
               </span>
             </span>
@@ -134,12 +134,12 @@ function GroupForm({ mode, preset, levelDefs, tree, members, initial, onSave, on
   const t = preset?.terminology ?? { org: '조직' };
   const [name, setName] = useState(initial?.name ?? '');
   const [level, setLevel] = useState<number>(initial?.level ?? (levelDefs.length ? levelDefs[levelDefs.length - 1].level : 1));
-  const [parentId, setParentId] = useState<string>(initial?.parent_id ?? '');
-  const [leaderId, setLeaderId] = useState<string>(initial?.leader_member_id ?? '');
-  const [subleaderId, setSubleaderId] = useState<string>(initial?.subleader_member_id ?? '');
-  const [meetingDay, setMeetingDay] = useState(initial?.meeting_day ?? '');
-  const [meetingTime, setMeetingTime] = useState(initial?.meeting_time ?? '');
-  const [meetingPlace, setMeetingPlace] = useState(initial?.meeting_place ?? '');
+  const [parentId, setParentId] = useState<string>(initial?.parentId ?? '');
+  const [leaderId, setLeaderId] = useState<string>(initial?.leaderMemberId ?? '');
+  const [subleaderId, setSubleaderId] = useState<string>(initial?.subleaderMemberId ?? '');
+  const [meetingDay, setMeetingDay] = useState(initial?.meetingDay ?? '');
+  const [meetingTime, setMeetingTime] = useState(initial?.meetingTime ?? '');
+  const [meetingPlace, setMeetingPlace] = useState(initial?.meetingPlace ?? '');
   const [region, setRegion] = useState(initial?.region ?? '');
   const [status, setStatus] = useState(initial?.status ?? 'active');
 
@@ -261,13 +261,13 @@ function GroupDetail({ group, preset, levelDefs, tree, members, api, showToast, 
       onCancel={() => setSplitting(false)} onDone={() => { setSplitting(false); onChanged(); }} />;
   }
 
-  const meeting = [group.meeting_day, group.meeting_time].filter(Boolean).join(' ') + (group.meeting_place ? ` · ${group.meeting_place}` : '');
+  const meeting = [group.meetingDay, group.meetingTime].filter(Boolean).join(' ') + (group.meetingPlace ? ` · ${group.meetingPlace}` : '');
   const overCount = roster.length > 14;
   const statusBadge = group.status === 'paused' ? { t: '중단', c: 'text-[#61697a] bg-[#f2f4f7]' }
     : group.status === 'closed' ? { t: '종료', c: 'text-[#61697a] bg-[#f2f4f7]' }
     : { t: '운영 중', c: 'text-[#0d7a35] bg-[#e9f7ee]' };
   const metaParts = [
-    [t.leader, group.leader_name].filter(Boolean).join(' ') + (group.subleader_name ? ` · ${t.subleader} ${group.subleader_name}` : ''),
+    [t.leader, group.leaderName].filter(Boolean).join(' ') + (group.subleaderName ? ` · ${t.subleader} ${group.subleaderName}` : ''),
     group.parent?.name,
     meeting,
     `${t.member} ${roster.length}명`,
@@ -278,8 +278,8 @@ function GroupDetail({ group, preset, levelDefs, tree, members, api, showToast, 
     <div className="text-[#16181d]">
       {/* 헤더 카드 (GR-03) */}
       <div className="bg-white border border-[#e5e7eb] rounded-[14px] px-6 py-[22px] flex gap-5 items-center mb-4">
-        {group.photo_url
-          ? <img src={group.photo_url} alt="" className="w-[72px] h-[72px] rounded-[14px] object-cover shrink-0" />
+        {group.photoUrl
+          ? <img src={group.photoUrl} alt="" className="w-[72px] h-[72px] rounded-[14px] object-cover shrink-0" />
           : <div className="w-[72px] h-[72px] rounded-[14px] bg-[#eef1f5] text-[#a3aab8] flex items-center justify-center text-[11.5px] font-bold shrink-0">사진</div>}
         <div className="min-w-0">
           <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
@@ -340,8 +340,8 @@ function GroupDetail({ group, preset, levelDefs, tree, members, api, showToast, 
                     const badge = r.status === 'confirmed' ? { t: '확인', c: 'text-[#0d7a35] bg-[#e9f7ee]' } : r.status === 'submitted' ? { t: '미확인', c: 'text-[#8a6410] bg-[#fdf4e0]' } : { t: '작성중', c: 'text-[#61697a] bg-[#f2f4f7]' };
                     return (
                       <div key={i} className="flex items-center gap-2.5">
-                        <span className="font-bold">{fmtWeek(r.meeting_date)}</span>
-                        <span className="text-[#61697a]">참석 {r.attendance_count}{r.newcomer_count ? ` · 초신자 ${r.newcomer_count}` : ''}{r.has_care ? ' · 돌봄 1' : ''}</span>
+                        <span className="font-bold">{fmtWeek(r.meetingDate)}</span>
+                        <span className="text-[#61697a]">참석 {r.attendanceCount}{r.newcomerCount ? ` · 초신자 ${r.newcomerCount}` : ''}{r.hasCare ? ' · 돌봄 1' : ''}</span>
                         <span className={`ml-auto text-[11.5px] font-extrabold px-2 py-[3px] rounded-full ${badge.c}`}>{badge.t}</span>
                       </div>
                     );
@@ -378,8 +378,8 @@ function GroupDetail({ group, preset, levelDefs, tree, members, api, showToast, 
             <div className="divide-y divide-[#f2f4f7]">
               {group.recentReports.map((r: any, i: number) => (
                 <div key={i} className="flex items-center gap-3 py-2.5 text-[13px]">
-                  <span className="font-bold w-20">{fmtWeek(r.meeting_date)}</span>
-                  <span className="text-[#61697a]">참석 {r.attendance_count}{r.newcomer_count ? ` · 초신자 ${r.newcomer_count}` : ''}</span>
+                  <span className="font-bold w-20">{fmtWeek(r.meetingDate)}</span>
+                  <span className="text-[#61697a]">참석 {r.attendanceCount}{r.newcomerCount ? ` · 초신자 ${r.newcomerCount}` : ''}</span>
                   <span className={`ml-auto text-[11.5px] font-extrabold px-2 py-[3px] rounded-full ${r.status === 'confirmed' ? 'text-[#0d7a35] bg-[#e9f7ee]' : r.status === 'submitted' ? 'text-[#8a6410] bg-[#fdf4e0]' : 'text-[#61697a] bg-[#f2f4f7]'}`}>{r.status === 'confirmed' ? '확인' : r.status === 'submitted' ? '미확인' : '작성중'}</span>
                 </div>
               ))}
@@ -412,7 +412,7 @@ function GroupDetail({ group, preset, levelDefs, tree, members, api, showToast, 
       {tab === 'public' && (
         <div className="bg-white border border-[#e5e7eb] rounded-[14px] px-[22px] py-5 max-w-2xl">
           <div className="flex items-center mb-3"><b className="text-[14px]">공개 소개</b>
-            <span className={`ml-auto text-[11.5px] font-extrabold px-2 py-[3px] rounded-full ${group.is_public ? 'text-[#0d7a35] bg-[#e9f7ee]' : 'text-[#61697a] bg-[#f2f4f7]'}`}>{group.is_public ? '홈페이지 공개' : '비공개'}</span></div>
+            <span className={`ml-auto text-[11.5px] font-extrabold px-2 py-[3px] rounded-full ${group.isPublic ? 'text-[#0d7a35] bg-[#e9f7ee]' : 'text-[#61697a] bg-[#f2f4f7]'}`}>{group.isPublic ? '홈페이지 공개' : '비공개'}</span></div>
           <p className="text-[13px] text-[#3c4353] whitespace-pre-wrap min-h-[40px]">{group.intro || '아직 공개 소개가 없습니다. ‘수정’에서 소개·사진·공개 여부를 설정하세요.'}</p>
           {group.tags?.length > 0 && <div className="flex gap-1.5 flex-wrap mt-3">{group.tags.map((tg: string) => <span key={tg} className="text-[11.5px] text-[#61697a] bg-[#f2f4f7] px-2.5 py-1 rounded-full">{tg}</span>)}</div>}
           <button onClick={() => setEditing(true)} className="text-[12px] text-[#1466d6] font-bold mt-4">소개 편집</button>
@@ -427,13 +427,13 @@ function RosterRow({ m, recentTotal, onRole, onRemove }: {
   m: any; recentTotal: number; onRole: (id: string, role: string) => void; onRemove: (id: string, name: string) => void;
 }) {
   return (
-    <div className={`grid grid-cols-[minmax(0,1.3fr)_84px_minmax(0,1fr)_84px_72px] gap-2.5 px-[18px] py-3 border-b border-[#f2f4f7] text-[13px] items-center ${m.is_temporary ? 'bg-[#fffdf7]' : ''}`}>
+    <div className={`grid grid-cols-[minmax(0,1.3fr)_84px_minmax(0,1fr)_84px_72px] gap-2.5 px-[18px] py-3 border-b border-[#f2f4f7] text-[13px] items-center ${m.isTemporary ? 'bg-[#fffdf7]' : ''}`}>
       <div className="flex items-center gap-2.5 min-w-0">
-        {m.member_photo ? <img src={m.member_photo} alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
-          : <span className="w-7 h-7 rounded-full bg-[#dfe3ea] text-[#61697a] flex items-center justify-center text-[10.5px] font-extrabold shrink-0">{(m.member_name || '·')[0]}</span>}
+        {m.memberPhoto ? <img src={m.memberPhoto} alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
+          : <span className="w-7 h-7 rounded-full bg-[#dfe3ea] text-[#61697a] flex items-center justify-center text-[10.5px] font-extrabold shrink-0">{(m.memberName || '·')[0]}</span>}
         <div className="min-w-0">
-          <b className="font-bold truncate block">{m.member_name}</b>
-          {m.is_temporary && <span className="text-[11px] text-[#b98307] font-bold">교육 중 · 임시</span>}
+          <b className="font-bold truncate block">{m.memberName}</b>
+          {m.isTemporary && <span className="text-[11px] text-[#b98307] font-bold">교육 중 · 임시</span>}
         </div>
       </div>
       <div className="flex items-center">
@@ -441,11 +441,11 @@ function RosterRow({ m, recentTotal, onRole, onRemove }: {
           {Object.entries(ROLE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
       </div>
-      <span className="text-[#61697a] truncate">{m.household_name || '—'}</span>
-      <span className="text-[#61697a]">{m.start_date ? String(m.start_date).slice(0, 7) : '—'}</span>
+      <span className="text-[#61697a] truncate">{m.householdName || '—'}</span>
+      <span className="text-[#61697a]">{m.startDate ? String(m.startDate).slice(0, 7) : '—'}</span>
       <div className="flex items-center gap-1.5">
-        <span className="text-[#61697a]">{recentTotal ? `${m.recent_present ?? 0}/${recentTotal}` : '—'}</span>
-        <button onClick={() => onRemove(m.id, m.member_name)} className="text-[11px] text-[#cdd3de] hover:text-[#dc2626] ml-auto">제외</button>
+        <span className="text-[#61697a]">{recentTotal ? `${m.recentPresent ?? 0}/${recentTotal}` : '—'}</span>
+        <button onClick={() => onRemove(m.id, m.memberName)} className="text-[11px] text-[#cdd3de] hover:text-[#dc2626] ml-auto">제외</button>
       </div>
     </div>
   );
@@ -507,8 +507,8 @@ function SplitForm({ group, preset, members, api, showToast, onCancel, onDone }:
         <div className="mt-2 grid grid-cols-2 gap-1.5 max-h-64 overflow-y-auto">
           {roster.map((m) => (
             <label key={m.id} className="flex items-center gap-2 text-sm bg-gray-50 rounded-lg px-3 py-2 cursor-pointer">
-              <input type="checkbox" checked={!!move[m.member_id]} onChange={(e) => setMove((p) => ({ ...p, [m.member_id]: e.target.checked }))} className="rounded" />
-              {m.member_name}{m.role === 'leader' ? ' (현 리더)' : ''}
+              <input type="checkbox" checked={!!move[m.memberId]} onChange={(e) => setMove((p) => ({ ...p, [m.memberId]: e.target.checked }))} className="rounded" />
+              {m.memberName}{m.role === 'leader' ? ' (현 리더)' : ''}
             </label>
           ))}
         </div>

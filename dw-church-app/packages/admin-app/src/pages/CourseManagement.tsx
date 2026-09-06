@@ -87,12 +87,12 @@ export default function CourseManagement() {
                 </tr></thead>
                 <tbody>
                   {courses.map((c) => (
-                    <tr key={c.id} className={`border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer ${editing?.id === c.id ? 'bg-blue-50/50' : ''}`} onClick={() => setEditing({ ...c, target: c.target ?? [], prereqCourseId: c.prereq_course_id ?? '', totalSessions: c.total_sessions, recordHistory: c.record_history, autoQueue: c.auto_queue, certEnabled: c.cert_enabled, sortOrder: c.sort_order, isActive: c.is_active })}>
+                    <tr key={c.id} className={`border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer ${editing?.id === c.id ? 'bg-blue-50/50' : ''}`} onClick={() => setEditing({ ...c, target: c.target ?? [], prereqCourseId: c.prereqCourseId ?? '', totalSessions: c.totalSessions, recordHistory: c.recordHistory, autoQueue: c.autoQueue, certEnabled: c.certEnabled, sortOrder: c.sortOrder, isActive: c.isActive })}>
                       <td className="px-4 py-2.5">
                         <span className="font-medium text-gray-800">{c.name}</span>
-                        <span className="block text-[11px] text-gray-400">{[c.stage, c.prereq_name ? `선수: ${c.prereq_name}` : '', c.term_count ? `차수 ${c.term_count}` : ''].filter(Boolean).join(' · ')}</span>
+                        <span className="block text-[11px] text-gray-400">{[c.stage, c.prereqName ? `선수: ${c.prereqName}` : '', c.termCount ? `차수 ${c.termCount}` : ''].filter(Boolean).join(' · ')}</span>
                       </td>
-                      <td className="px-2 py-2.5 text-center tabular-nums text-gray-600">{c.total_sessions}</td>
+                      <td className="px-2 py-2.5 text-center tabular-nums text-gray-600">{c.totalSessions}</td>
                       <td className="px-2 py-2.5 text-center tabular-nums text-gray-600">{c.criteria}</td>
                       <td className="px-2 py-2.5 text-center"><span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{REQUIRED_LABEL[c.required] ?? c.required}</span></td>
                       <td className="px-2 py-2.5 text-right"><button onClick={(e) => { e.stopPropagation(); void del(c); }} className="text-xs text-gray-300 hover:text-red-600">삭제</button></td>

@@ -284,8 +284,8 @@ export default function MemberManagement() {
                           <span className={`text-[11px] font-medium rounded-full px-2 py-0.5 ${g.role === 'leader' || g.role === 'subleader' ? 'bg-blue-50 text-blue-700' : g.role === 'preleader' ? 'bg-gray-100 text-gray-600' : 'bg-gray-50 text-gray-500'}`}>
                             {({ leader: '리더', subleader: '부리더', preleader: '예비리더', member: '구성원' } as any)[g.role] ?? g.role}
                           </span>
-                          {g.is_temporary && <span className="text-[11px] text-amber-600 font-medium">임시</span>}
-                          {g.leader_name && <span className="text-xs text-gray-400 ml-auto">리더 {g.leader_name}</span>}
+                          {g.isTemporary && <span className="text-[11px] text-amber-600 font-medium">임시</span>}
+                          {g.leaderName && <span className="text-xs text-gray-400 ml-auto">리더 {g.leaderName}</span>}
                         </div>
                       ))}
                     </div>
@@ -297,12 +297,12 @@ export default function MemberManagement() {
                     <div className="flex flex-col gap-2">
                       {sgQ.data!.enrollments.map((e: any) => (
                         <div key={e.id} className="flex items-center gap-2 text-sm">
-                          <span className="font-medium text-gray-800">{e.course_name}{e.term_name ? ` ${e.term_name}` : ''}</span>
+                          <span className="font-medium text-gray-800">{e.courseName}{e.termName ? ` ${e.termName}` : ''}</span>
                           <span className={`text-[11px] font-medium rounded-full px-2 py-0.5 ${e.status === 'completed' ? 'bg-green-50 text-green-700' : e.status === 'dropped' ? 'bg-gray-100 text-gray-500' : 'bg-blue-50 text-blue-700'}`}>
                             {({ completed: '수료', enrolled: '수강 중', applied: '신청', dropped: '중도포기' } as any)[e.status] ?? e.status}
                           </span>
-                          {e.status !== 'completed' && <span className="text-xs text-gray-400 ml-auto">{e.present_count ?? 0}/{e.criteria ?? 0}</span>}
-                          {e.status === 'completed' && e.completed_date && <span className="text-xs text-gray-400 ml-auto">{String(e.completed_date).slice(0, 10)}</span>}
+                          {e.status !== 'completed' && <span className="text-xs text-gray-400 ml-auto">{e.presentCount ?? 0}/{e.criteria ?? 0}</span>}
+                          {e.status === 'completed' && e.completedDate && <span className="text-xs text-gray-400 ml-auto">{String(e.completedDate).slice(0, 10)}</span>}
                         </div>
                       ))}
                     </div>

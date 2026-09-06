@@ -53,12 +53,12 @@ export default function GroupReports() {
     setReportId(draft.id ?? null);
     setStatus(draft.status ?? 'draft');
     setConfirmer(draft.confirmer ?? '');
-    setNewcomer(draft.newcomer_count ?? 0);
+    setNewcomer(draft.newcomerCount ?? 0);
     setValues(draft.items ?? {});
-    setPrivateValues(draft.private_items ?? {});
+    setPrivateValues(draft.privateItems ?? {});
     setRoster(draft.attendance ?? []);
     const a: Record<string, { status: string; brought: boolean }> = {};
-    (draft.attendance ?? []).forEach((r: any) => { a[r.member_id] = { status: r.status ?? 'present', brought: !!r.brought_newcomer }; });
+    (draft.attendance ?? []).forEach((r: any) => { a[r.memberId] = { status: r.status ?? 'present', brought: !!r.broughtNewcomer }; });
     setAtt(a);
   };
 
@@ -76,7 +76,7 @@ export default function GroupReports() {
     if (!groupId) { showToast('error', `${t.org}을(를) 고르세요.`); return; }
     setBusy(true);
     try {
-      const attendance = roster.map((r) => ({ memberId: r.member_id, status: att[r.member_id]?.status ?? 'present', broughtNewcomer: att[r.member_id]?.brought ?? false }));
+      const attendance = roster.map((r) => ({ memberId: r.memberId, status: att[r.memberId]?.status ?? 'present', broughtNewcomer: att[r.memberId]?.brought ?? false }));
       const saved = (await api.post<{ data: any }>('/api/v1/meeting-reports', {
         groupId, meetingDate: date, status: submit ? 'submitted' : 'draft',
         items: values, privateItems: privateValues, attendance, newcomerCount: newcomer,
@@ -114,7 +114,7 @@ export default function GroupReports() {
         <label className="flex-1 min-w-[200px]"><span className="text-xs font-medium text-gray-600">{t.org}</span>
           <select className={inputClass} value={groupId} onChange={(e) => setGroupId(e.target.value)}>
             <option value="">{t.org} 선택</option>
-            {(groupsQ.data ?? []).map((g) => <option key={g.id} value={g.id}>{g.name}{g.leader_name ? ` · ${g.leader_name}` : ''}</option>)}
+            {(groupsQ.data ?? []).map((g) => <option key={g.id} value={g.id}>{g.name}{g.leaderName ? ` · ${g.leaderName}` : ''}</option>)}
           </select></label>
         <label><span className="text-xs font-medium text-gray-600">모임일</span>
           <input type="date" className={inputClass} value={date} onChange={(e) => setDate(e.target.value)} /></label>
@@ -136,11 +136,11 @@ export default function GroupReports() {
             {roster.length === 0 ? <p className="text-sm text-gray-400 py-3 text-center">이 {t.org}에 명단이 없습니다. 먼저 조직에서 명단을 배정하세요.</p> : (
               <div className="flex flex-wrap gap-2">
                 {roster.map((r) => {
-                  const st = att[r.member_id]?.status ?? 'present';
+                  const st = att[r.memberId]?.status ?? 'present';
                   return (
-                    <button key={r.member_id} type="button" onClick={() => cycleAtt(r.member_id)}
+                    <button key={r.memberId} type="button" onClick={() => cycleAtt(r.memberId)}
                       className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${ATT_COLOR[st]}`}>
-                      {r.member_name} <span className="text-[10px] opacity-80">{ATT_LABEL[st]}</span>
+                      {r.memberName} <span className="text-[10px] opacity-80">{ATT_LABEL[st]}</span>
                     </button>
                   );
                 })}

@@ -53,7 +53,7 @@ export default function GroupResources() {
     if (!window.confirm('이 자료를 삭제할까요?')) return;
     try { await api.delete(`/api/v1/group-resources/${r.id}`); qc.invalidateQueries({ queryKey: ['group-resources'] }); if (editing?.id === r.id) setEditing(null); } catch (e: any) { showToast('error', e?.message || '실패'); }
   };
-  const openEdit = (r: Resource) => setEditing({ ...r, fileUrl: r.file_url, fileName: r.file_name, fileSize: r.file_size, viewPermission: r.view_permission, teachingDate: r.teaching_date ?? '' });
+  const openEdit = (r: Resource) => setEditing({ ...r, fileUrl: r.fileUrl, fileName: r.fileName, fileSize: r.fileSize, viewPermission: r.viewPermission, teachingDate: r.teachingDate ?? '' });
 
   const fmtSize = (b: number) => b > 1e6 ? `${(b / 1e6).toFixed(1)}MB` : b > 1e3 ? `${Math.round(b / 1e3)}KB` : `${b}B`;
 
@@ -78,9 +78,9 @@ export default function GroupResources() {
                     <span className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">📄</span>
                     <button onClick={() => openEdit(r)} className="min-w-0 flex-1 text-left">
                       <span className="text-sm font-medium text-gray-800">{r.title}</span>
-                      <span className="block text-[11px] text-gray-400 truncate">{[r.category, PERM_LABEL[r.view_permission], r.teaching_date, r.file_size ? fmtSize(r.file_size) : ''].filter(Boolean).join(' · ') || '—'}</span>
+                      <span className="block text-[11px] text-gray-400 truncate">{[r.category, PERM_LABEL[r.viewPermission], r.teachingDate, r.fileSize ? fmtSize(r.fileSize) : ''].filter(Boolean).join(' · ') || '—'}</span>
                     </button>
-                    {r.file_url && <a href={r.file_url} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:text-blue-700 shrink-0">열기</a>}
+                    {r.fileUrl && <a href={r.fileUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:text-blue-700 shrink-0">열기</a>}
                     <button onClick={() => void del(r)} className="text-xs text-gray-300 hover:text-red-600 shrink-0">삭제</button>
                   </div>
                 ))}
