@@ -19,6 +19,7 @@ import { useEntitlements } from '../../hooks/useEntitlements';
 import { BLOCK_FEATURE, featureAllowed } from '../../lib/plan-features';
 import { ElementInspector } from '../../components/builder/ElementInspector';
 import { BuilderCanvas } from '../../components/builder/BuilderCanvas';
+import { LivePreviewPane } from '../../components/builder/LivePreviewPane';
 import { ContentEntryPanel } from './ContentEntryPanel';
 
 interface PageRow {
@@ -162,6 +163,11 @@ export default function TenantPageEditor() {
   // process, so there's nothing to reload.
   const [dirty, setDirty] = useState<Set<string>>(new Set()); // edited since last save (drives the button)
   const [publishing, setPublishing] = useState(false);
+  // 중앙 패널 뷰 — '편집'(BuilderCanvas: 데이터 블록은 플레이스홀더) vs '실시간
+  // 미리보기'(LivePreviewPane: 실제 스토어프론트 iframe — 데이터 블록이 실제
+  // 데이터·디자인 그대로 렌더). previewNonce 를 올리면 iframe 이 최신 저장본으로 새로고침.
+  const [centerView, setCenterView] = useState<'edit' | 'preview'>('edit');
+  const [previewNonce, setPreviewNonce] = useState(0);
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
@@ -320,6 +326,7 @@ export default function TenantPageEditor() {
         }
       }
       setDirty(new Set());
+      setPreviewNonce((n) => n + 1); // 실시간 미리보기 iframe 을 방금 저장본으로 갱신
       return true;
     } catch (err) {
       showToast('error', err instanceof Error ? `저장 실패: ${err.message}` : '저장 실패');
@@ -824,20 +831,58 @@ export default function TenantPageEditor() {
       {/* Pane 3 — Live preview (center) — in-process @dw-church/blocks render.
           Edits update `sections` state synchronously, so the canvas reflects
           every change instantly (b2bsmart-identical, no save→reload round trip). */}
-      <section className="flex-1 min-w-0 overflow-hidden">
+      <section className="flex-1 min-w-0 overflow-hidden flex flex-col">
         {selectedPage ? (
-          <BuilderCanvas
-            sections={sections}
-            slug={tenant?.slug ?? ''}
-            baseUrl={baseUrl}
-            headers={headers}
-            selectedSectionId={selectedSectionId}
-            selectedElementKey={selectedElementKey}
-            onSelect={selectElement}
-          />
+          <>
+            {/* 편집 / 실시간 미리보기 토글. 편집=BuilderCanvas(데이터 블록은
+                플레이스홀더), 미리보기=실제 스토어프론트 iframe(데이터 블록이 실제
+                디자인 그대로). 미리보기는 저장/게시된 내용을 보여준다(자동저장 없음). */}
+            <div className="flex items-center gap-2 border-b bg-white px-3 py-1.5">
+              <div className="flex rounded-md border border-gray-200 p-0.5 text-xs">
+                {(['edit', 'preview'] as const).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => { setCenterView(v); if (v === 'preview') setPreviewNonce((n) => n + 1); }}
+                    className={`rounded px-2.5 py-1 font-medium transition-colors ${centerView === v ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+                  >
+                    {v === 'edit' ? '편집' : '실시간 미리보기'}
+                  </button>
+                ))}
+              </div>
+              {centerView === 'preview' && (
+                <span className="text-[11px] text-gray-400">데이터 블록이 실제 디자인 그대로 보입니다{hasChanges ? ' · 미저장 변경은 저장/게시 후 반영' : ''}</span>
+              )}
+            </div>
+            <div className="flex-1 min-h-0 overflow-hidden">
+              {centerView === 'edit' ? (
+                <BuilderCanvas
+                  sections={sections}
+                  slug={tenant?.slug ?? ''}
+                  baseUrl={baseUrl}
+                  headers={headers}
+                  selectedSectionId={selectedSectionId}
+                  selectedElementKey={selectedElementKey}
+                  onSelect={selectElement}
+                />
+              ) : webOrigin ? (
+                <LivePreviewPane
+                  tenantOrigin={webOrigin}
+                  pagePath={`tenant/${tenant?.slug ?? ''}${selectedPage.isHome ? '' : `/${selectedPage.slug}`}`}
+                  reloadNonce={previewNonce}
+                  selectedSectionId={selectedSectionId}
+                  onSelectSection={(id) => selectElement(id, '__section__')}
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center bg-gray-100 text-sm text-gray-400">
+                  미리보기 URL을 확인할 수 없습니다
+                </div>
+              )}
+            </div>
+          </>
         ) : (
           <div className="flex h-full items-center justify-center bg-gray-100 text-sm text-gray-400">
-            페이지를 선택하면 미리보기가 표시됩니다
+            페이지를 선택하면 표시됩니다
           </div>
         )}
       </section>
