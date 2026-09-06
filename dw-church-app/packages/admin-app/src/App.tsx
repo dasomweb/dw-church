@@ -59,6 +59,7 @@ const MobileCheckin = lazyWithReload(() => import('./pages/MobileCheckin'));
 const AppointmentManagement = lazyWithReload(() => import('./pages/AppointmentManagement'));
 const MemberSettings = lazyWithReload(() => import('./pages/MemberSettings'));
 const SmallGroupSettings = lazyWithReload(() => import('./pages/SmallGroupSettings'));
+const SmallGroupDashboard = lazyWithReload(() => import('./pages/SmallGroupDashboard'));
 const SmallGroupOrg = lazyWithReload(() => import('./pages/SmallGroupOrg'));
 const PlacementQueue = lazyWithReload(() => import('./pages/PlacementQueue'));
 const GroupReports = lazyWithReload(() => import('./pages/GroupReports'));
@@ -400,6 +401,7 @@ export function App({ config }: { config: AppConfig }) {
                 <Route path="member-records" element={<SacramentTransferManagement />} />
                 <Route path="member-codes" element={<MemberCodeManagement />} />
                 <Route path="member-settings" element={<MemberSettings />} />
+                <Route path="group-dashboard" element={<SmallGroupDashboard />} />
                 <Route path="groups" element={<SmallGroupOrg />} />
                 <Route path="group-reports" element={<GroupReports />} />
                 <Route path="group-monitor" element={<ReportMonitoring />} />

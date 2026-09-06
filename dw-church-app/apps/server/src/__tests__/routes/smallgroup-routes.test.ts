@@ -47,6 +47,9 @@ const com = {
 };
 vi.mock('../../modules/smallgroup/community-service.js', () => com);
 
+const stats = { dashboardStats: vi.fn() };
+vi.mock('../../modules/smallgroup/stats-service.js', () => stats);
+
 const JWT_SECRET = 'test-secret-at-least-32-characters-long';
 function token(role = 'admin') {
   return jwt.sign({ userId: 'u1', email: 't@t.com', tenantId: 't1', tenantSlug: 'base', role }, JWT_SECRET, { expiresIn: '1h' });
@@ -124,6 +127,8 @@ beforeAll(async () => {
   com.createResource.mockResolvedValue({ id: 'res1', title: '9월 1주 교안' });
   com.updateResource.mockResolvedValue({ id: 'res1' });
   com.deleteResource.mockResolvedValue(true);
+
+  stats.dashboardStats.mockResolvedValue({ week: '9-1', stats: { operating: 24, reportsSubmitted: 19, reportsTotal: 24 }, unions: [], splitCandidates: [], unsubmitted: [], care: [] });
 });
 afterAll(async () => { await app.close(); });
 
@@ -155,6 +160,13 @@ describe('smallgroup — add-on gate', () => {
 });
 
 describe('preset (SG-01)', () => {
+  it('GET /group-stats → 200 dashboard aggregate', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'GET', url: '/api/v1/group-stats', headers: H() });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().data.stats.operating).toBe(24);
+  });
+
   it('GET /group-preset → 200 with model', async () => {
     await withAddon();
     const res = await app.inject({ method: 'GET', url: '/api/v1/group-preset', headers: H() });

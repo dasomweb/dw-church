@@ -15,6 +15,7 @@ import * as svc from './service.js';
 import * as rep from './reports-service.js';
 import * as edu from './courses-service.js';
 import * as com from './community-service.js';
+import { dashboardStats } from './stats-service.js';
 
 /**
  * 스몰그룹 (smallgroup) — 교회 행정 애드온. 전부 관리자 전용:
@@ -25,6 +26,10 @@ import * as com from './community-service.js';
 export async function smallgroupRoutes(app: FastifyInstance) {
   const gate = { preHandler: [requireAuth, requireFeature('smallgroup')] };
   const NOT_FOUND = (what: string) => ({ error: { code: 'NOT_FOUND', message: `${what}을(를) 찾을 수 없습니다` } });
+
+  // ── 대시보드 집계 (GR-01 소그룹 현황) ────────────────────
+  app.get('/group-stats', gate, async (request, reply) =>
+    reply.send({ data: await dashboardStats(getSchema(request)) }));
 
   // ── 프리셋 / 운영 모델 설정 (SG-01) ──────────────────────
   app.get('/group-preset', gate, async (request, reply) =>

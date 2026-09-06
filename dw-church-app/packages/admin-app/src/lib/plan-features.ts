@@ -29,7 +29,8 @@ export const NAV_FEATURE: Record<string, string> = {
   'member-records': 'membership',
   'member-codes': 'membership',
   'member-settings': 'membership',
-  groups: 'smallgroup',            // 스몰그룹 애드온
+  'group-dashboard': 'smallgroup', // 스몰그룹 애드온
+  groups: 'smallgroup',
   'group-reports': 'smallgroup',
   'group-monitor': 'smallgroup',
   'group-queue': 'smallgroup',
