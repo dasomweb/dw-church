@@ -22,7 +22,10 @@ import { resolveColorToCss } from '@dw-church/design-tokens';
  * section chrome — here.
  */
 
-const DEFAULT_PADDING = 'px-4 py-10 sm:px-6 sm:py-16';
+// 수평 패딩만 유틸 클래스로; 수직은 --section-py-md 토큰(정적 블록 SectionShell 과
+// 동일)으로 줘서 데이터/정적 블록의 상하 여백이 일치하게 한다(대표님: padding/margin
+// 불일치 2026-09-06). blockStyle.spacing.padding 이 있으면 그게 우선.
+const DEFAULT_PADDING = 'px-4 sm:px-6';
 
 interface DataSectionProps {
   /** The block's props bag — DataSection reads props.blockStyle from it. */
@@ -45,8 +48,12 @@ function boxShorthand(b: BoxSides): string {
   return `${b.top ?? 0}px ${b.right ?? 0}px ${b.bottom ?? 0}px ${b.left ?? 0}px`;
 }
 
-export function DataSection({ props, defaultBg, paddingClassName = DEFAULT_PADDING, className = '', children }: DataSectionProps) {
+export function DataSection({ props, defaultBg, paddingClassName, className = '', children }: DataSectionProps) {
   const style = (props.blockStyle as BlockStyle | null | undefined) ?? null;
+  // 커스텀 paddingClassName 을 넘긴 블록(예: featured_event 얇은 바)은 그 값을
+  // 그대로 쓰고, 안 넘긴 기본 블록만 수평 클래스 + 수직 토큰(--section-py-md)을 쓴다.
+  const useTokenVertical = !paddingClassName;
+  const padClasses = paddingClassName ?? DEFAULT_PADDING;
 
   const bgColorRaw = style?.background?.color ? resolveColorToCss(style.background.color, '') : '';
   const bgColor = bgColorRaw && bgColorRaw !== 'inherit' ? bgColorRaw : undefined;
@@ -67,6 +74,7 @@ export function DataSection({ props, defaultBg, paddingClassName = DEFAULT_PADDI
     sectionStyle.backgroundRepeat = style?.background?.image?.repeat ?? 'no-repeat';
   }
   if (hasPad) sectionStyle.padding = boxShorthand(padOverride);
+  else if (useTokenVertical) sectionStyle.paddingBlock = 'var(--section-py-md)'; // 토큰 세로 여백(정적 블록과 일치)
   if (hasSides(marginOverride)) sectionStyle.margin = boxShorthand(marginOverride);
 
   // Overlay layer — sits between background and content. Needs the section to
@@ -86,7 +94,7 @@ export function DataSection({ props, defaultBg, paddingClassName = DEFAULT_PADDI
     : null;
 
   // Padding utilities only when the operator hasn't overridden padding.
-  const padClass = hasPad ? '' : paddingClassName;
+  const padClass = hasPad ? '' : padClasses;
 
   return (
     <section className={`${padClass} ${className}`.trim()} style={sectionStyle}>

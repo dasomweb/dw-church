@@ -14,6 +14,7 @@
 import { prisma } from '../../config/database.js';
 import { AppError } from '../../middleware/error-handler.js';
 import { CANVAS_EXACT_HTML } from './canvas-exact.generated.js';
+import { DEFAULT_DESIGN_TOKENS, type DesignTokens } from '@dw-church/design-tokens';
 
 export interface PresetSection { block_type: string; props: Record<string, unknown> }
 
@@ -290,6 +291,65 @@ function getHeaderStyleForDesign(design: string): string {
   return HEADER_STYLES[design] ?? 'default';
 }
 
+// 시안 정합용 정제 타이포/간격. 기본(h1 72px·섹션 75px)은 사진 히어로·컨테이너
+// 레이아웃 대비 과대해서, 샘플 적용 시 tokensV2 로 더 단정한 스케일을 심는다
+// (색/폰트는 프로필에서, 헤더/풋터 토큰은 운영자 설정 보존). 대표님: "타이포가
+// 크고 padding/margin 문제" (2026-09-06).
+const REFINED_SIZES = {
+  h1: { desktop: 48, tablet: 40, mobile: 32 },
+  h2: { desktop: 30, tablet: 28, mobile: 26 },
+  h3: { desktop: 22, tablet: 21, mobile: 20 },
+  h4: { desktop: 18, tablet: 17, mobile: 17 },
+} as const;
+const REFINED_SPACING = { sectionPaddingY: 56, containerPaddingX: 20, gapGrid: 24, sectionMarginY: 0 };
+
+function fontStack(name: string | undefined): string {
+  const n = (name || 'Pretendard').trim();
+  return `'${n}', 'Noto Sans KR', system-ui, sans-serif`;
+}
+
+/** 프로필 색/폰트 + 정제 타이포/간격으로 완전한 tokensV2 를 구성. 기존 tokensV2 의
+ *  header/footer(운영자 설정)와 custom 색은 보존. */
+function buildTokensV2(profile: ThemeProfile, prev: DesignTokens | undefined): DesignTokens {
+  const base = DEFAULT_DESIGN_TOKENS;
+  const c = profile.colors;
+  const scales = { ...base.typography.scales };
+  for (const [k, size] of Object.entries(REFINED_SIZES)) {
+    const key = k as keyof typeof scales;
+    const curScale = scales[key];
+    if (curScale) scales[key] = { ...curScale, size };
+  }
+  return {
+    ...base,
+    colors: {
+      system: {
+        primary: c.primary ?? base.colors.system.primary,
+        secondary: c.secondary ?? base.colors.system.secondary,
+        accent: c.accent ?? base.colors.system.accent,
+        text: c.text ?? base.colors.system.text,
+        muted: c.muted ?? base.colors.system.muted,
+        background: c.background ?? base.colors.system.background,
+        border: c.border ?? base.colors.system.border,
+        surface: c.surface ?? base.colors.system.surface,
+        onDark: base.colors.system.onDark,
+        onDarkMuted: base.colors.system.onDarkMuted,
+      },
+      custom: prev?.colors?.custom ?? {},
+    },
+    typography: {
+      families: {
+        heading: fontStack(profile.fonts.heading),
+        body: fontStack(profile.fonts.body),
+        korean: base.typography.families.korean,
+      },
+      scales,
+    },
+    spacing: { ...base.spacing, ...REFINED_SPACING },
+    header: prev?.header ?? base.header,
+    footer: prev?.footer ?? base.footer,
+  };
+}
+
 async function applyThemeToTenant(schema: string, profile: ThemeProfile, headerStyle: string): Promise<void> {
   const rows = await prisma.$queryRawUnsafe<{ settings: Record<string, unknown> | null }[]>(
     `SELECT settings FROM "${schema}".themes WHERE is_active = true LIMIT 1`,
@@ -304,7 +364,10 @@ async function applyThemeToTenant(schema: string, profile: ThemeProfile, headerS
     // Preserve any other legacy layout switches; only (re)set headerStyle so
     // design 12 activates the sidebar and others reset it to 'default'.
     layout: { ...curLayout, headerStyle },
-    // NOTE: tokensV2 intentionally omitted → legacy→tokens bridge uses these colors.
+    // tokensV2 로 정제 타이포(h1 48)·간격(섹션 56)을 심는다 → 시안 대비 과대한
+    // 기본값(h1 72·섹션 75) 대신 단정하게. 색/폰트는 프로필, 헤더/풋터 토큰은
+    // 운영자 설정 보존. getThemeTokens 는 tokensV2 를 우선 사용.
+    tokensV2: buildTokensV2(profile, cur.tokensV2 as DesignTokens | undefined),
   };
   const affected = await prisma.$executeRawUnsafe(
     `UPDATE "${schema}".themes SET settings = $1::jsonb WHERE is_active = true`,
