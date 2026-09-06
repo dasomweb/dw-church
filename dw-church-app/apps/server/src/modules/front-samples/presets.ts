@@ -250,7 +250,7 @@ const P: Record<string, PresetSection[]> = {
 // Shape mirrors themes.settings legacy blob; getThemeTokens bridges it to
 // --dw-* CSS vars the storefront + blocks read. tokensV2 is intentionally
 // dropped so these colors win.
-interface ThemeProfile { colors: Record<string, string>; fonts: Record<string, string> }
+export interface ThemeProfile { colors: Record<string, string>; fonts: Record<string, string> }
 const F_SANS = { heading: 'Pretendard', body: 'Pretendard', korean: 'Pretendard' };
 const F_SERIF = { heading: 'Noto Serif KR', body: 'Pretendard', korean: 'Pretendard' };
 const DEFAULT_LIGHT: ThemeProfile = {
@@ -310,7 +310,7 @@ function fontStack(name: string | undefined): string {
 
 /** 프로필 색/폰트 + 정제 타이포/간격으로 완전한 tokensV2 를 구성. 기존 tokensV2 의
  *  header/footer(운영자 설정)와 custom 색은 보존. */
-function buildTokensV2(profile: ThemeProfile, prev: DesignTokens | undefined): DesignTokens {
+export function buildTokensV2(profile: ThemeProfile, prev: DesignTokens | undefined): DesignTokens {
   const base = DEFAULT_DESIGN_TOKENS;
   const c = profile.colors;
   const scales = { ...base.typography.scales };
