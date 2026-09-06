@@ -29,6 +29,7 @@ interface PostFormData {
   title: string;
   authorName: string;
   content: string;
+  category: string;
   isPinned: boolean;
   status: PostStatus;
 }
@@ -116,7 +117,7 @@ export default function BoardManagement() {
   // ─── Post CRUD ───────────────────────────────────────
   const handleCreatePost = () => {
     setEditingPost(null);
-    postForm.reset({ title: '', authorName: '', content: '', isPinned: false, status: 'published' });
+    postForm.reset({ title: '', authorName: '', content: '', category: '', isPinned: false, status: 'published' });
     setAttachments([]);
     setPostView('edit');
   };
@@ -127,6 +128,7 @@ export default function BoardManagement() {
       title: post.title,
       authorName: post.authorName,
       content: post.content,
+      category: post.category ?? '',
       isPinned: post.isPinned,
       status: post.status,
     });
@@ -288,6 +290,9 @@ export default function BoardManagement() {
                 </select>
               </FormField>
             </FormRow>
+            <FormField label="분류 (선택)">
+              <input {...postForm.register('category')} className={inputClass} placeholder="예: 친교 · 교육 · 구역 (홈 ‘주보·광고’에 배지로 표시)" />
+            </FormField>
             <FormField label="고정">
               <label className="flex items-center gap-2">
                 <input type="checkbox" {...postForm.register('isPinned')} className="rounded" />

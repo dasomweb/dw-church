@@ -1592,6 +1592,30 @@ const VERSE_OF_DAY = churchBlock(
     { key: 'eyebrow', label: '라벨(윗글)', type: 'text', hint: '예: 오늘의 말씀 · Verse of the Day. 실제 말씀은 [말씀 관리]에서 등록합니다.' },
   ]},
 );
+// 주보·광고 — 주보(주보 모듈) + 광고(교회소식 게시판, board-select) + 액션 버튼.
+// board-select/버튼 flat 필드를 쓰므로 churchBlock 대신 직접 정의.
+const NEWS_ANNOUNCEMENTS: BlockElementRegistry = {
+  sections: [
+    { title: 'Header', elements: [
+      { label: '제목', path: 'title', kind: 'text' },
+      { label: '더보기 링크', path: 'moreUrl', kind: 'url', hint: '기본 /bulletins', disableDynamic: true },
+    ]},
+    { title: '주보 (주보 모듈)', elements: [
+      { label: '주보 개수', path: 'bulletinLimit', kind: 'number', hint: '기본 3' },
+      { label: '주보 배지 라벨', path: 'bulletinBadge', kind: 'text', hint: '기본 주보' },
+    ]},
+    { title: '광고 (교회소식 게시판)', elements: [
+      { label: '교회소식 게시판', path: 'boardSlug', kind: 'board-select', hint: '게시판 관리에서 만든 교회소식 게시판 선택. 글의 분류(친교/교육/구역)가 배지로 표시됩니다.' },
+      { label: '광고 개수', path: 'newsLimit', kind: 'number', hint: '기본 4' },
+    ]},
+    { title: '버튼 (Contact 폼 연결)', elements: [
+      { label: '버튼1 텍스트', path: 'button1Label', kind: 'text', hint: '기본 기도 요청' },
+      { label: '버튼1 링크', path: 'button1Url', kind: 'url', hint: '기본 /contact', disableDynamic: true },
+      { label: '버튼2 텍스트', path: 'button2Label', kind: 'text', hint: '기본 심방 신청' },
+      { label: '버튼2 링크', path: 'button2Url', kind: 'url', hint: '기본 /contact', disableDynamic: true },
+    ]},
+  ],
+};
 const STAFF_GRID = churchBlock(
   { title: 'Header', fields: [{ key: 'title', label: '제목', type: 'text' }]},
   { title: 'Data', fields: [
@@ -1769,6 +1793,7 @@ export const ELEMENT_REGISTRY: Record<string, BlockElementRegistry> = {
   event_grid:       EVENT_GRID,
   featured_event:   FEATURED_EVENT,
   verse_of_day:     VERSE_OF_DAY,
+  news_announcements: NEWS_ANNOUNCEMENTS,
   staff_grid:       STAFF_GRID,
   cell_grid:        CELL_GRID,
   history_timeline: HISTORY_TIMELINE,

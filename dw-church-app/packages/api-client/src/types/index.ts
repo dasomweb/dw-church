@@ -415,6 +415,8 @@ export interface BoardPost {
   title: string;
   authorName: string;
   content: string;
+  /** 분류 (친교/교육/구역 등). 교회소식 게시판에서 사용. */
+  category: string;
   attachments: BoardPostAttachment[];
   viewCount: number;
   isPinned: boolean;

@@ -146,13 +146,14 @@ export async function getPost(schema: string, id: string) {
 
 export async function createPost(schema: string, boardId: string, input: CreateBoardPostInput) {
   const rows = await prisma.$queryRawUnsafe<[{ id: string }]>(
-    `INSERT INTO "${schema}".board_posts (board_id, title, author_name, content, attachments, is_pinned, status)
-     VALUES ($1::uuid, $2, $3, $4, $5::jsonb, $6, $7)
+    `INSERT INTO "${schema}".board_posts (board_id, title, author_name, content, category, attachments, is_pinned, status)
+     VALUES ($1::uuid, $2, $3, $4, $5, $6::jsonb, $7, $8)
      RETURNING id`,
     boardId,
     input.title,
     input.author_name ?? '',
     input.content ?? '',
+    input.category ?? '',
     JSON.stringify(input.attachments ?? []),
     input.is_pinned ?? false,
     input.status ?? 'published',
@@ -168,6 +169,7 @@ export async function updatePost(schema: string, id: string, input: UpdateBoardP
   if (input.title !== undefined) { setClauses.push(`title = $${paramIndex++}`); values.push(input.title); }
   if (input.author_name !== undefined) { setClauses.push(`author_name = $${paramIndex++}`); values.push(input.author_name); }
   if (input.content !== undefined) { setClauses.push(`content = $${paramIndex++}`); values.push(input.content); }
+  if (input.category !== undefined) { setClauses.push(`category = $${paramIndex++}`); values.push(input.category); }
   if (input.attachments !== undefined) { setClauses.push(`attachments = $${paramIndex++}::jsonb`); values.push(JSON.stringify(input.attachments)); }
   if (input.is_pinned !== undefined) { setClauses.push(`is_pinned = $${paramIndex++}`); values.push(input.is_pinned); }
   if (input.status !== undefined) { setClauses.push(`status = $${paramIndex++}`); values.push(input.status); }

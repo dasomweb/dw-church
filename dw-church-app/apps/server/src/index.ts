@@ -452,6 +452,7 @@ async function main(): Promise<void> {
             "title"       VARCHAR(500) NOT NULL,
             "author_name" VARCHAR(100) NOT NULL DEFAULT '',
             "content"     TEXT DEFAULT '',
+            "category"    VARCHAR(100) DEFAULT '',
             "attachments" JSONB DEFAULT '[]',
             "view_count"  INT DEFAULT 0,
             "is_pinned"   BOOLEAN DEFAULT false,
@@ -460,6 +461,10 @@ async function main(): Promise<void> {
             "updated_at"  TIMESTAMPTZ DEFAULT NOW()
           )
         `);
+        // 교회소식 게시판 분류(친교/교육/구역 등) — 기존 테넌트에도 컬럼 추가.
+        await prisma.$executeRawUnsafe(
+          `ALTER TABLE "${schema}".board_posts ADD COLUMN IF NOT EXISTS "category" VARCHAR(100) DEFAULT ''`,
+        );
         createHits++;
       } catch { /* skip on error */ }
 

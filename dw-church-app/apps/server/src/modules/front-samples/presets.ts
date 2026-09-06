@@ -197,14 +197,18 @@ const P: Record<string, PresetSection[]> = {
     // 다가오는 행사 — 이벤트 콘텐츠에서 고른 행사 1개 알림바(미선택 시 숨김).
     { block_type: 'featured_event', props: { label: '다가오는 행사', buttonText: '참석 알리기' } },
     { block_type: 'recent_sermons', props: { title: '이번 주 말씀', variant: 'featured', limit: 4 } },
-    { block_type: 'recent_bulletins', props: { title: '주보 · 광고', variant: 'grid-2', limit: 4 } },
+    // 주보·광고 — 주보(주보 모듈) + 광고(교회소식 게시판, 관리자가 boardSlug 지정) +
+    // 기도/심방 버튼(Contact 폼). boardSlug 비면 주보만 표시.
+    { block_type: 'news_announcements', props: { title: '주보 · 광고', bulletinLimit: 3, newsLimit: 4, moreUrl: '/bulletins',
+      button1Label: '기도 요청', button1Url: '/contact', button2Label: '심방 신청', button2Url: '/contact' } },
     { block_type: 'features_grid', props: { title: '이렇게 섬기고 있습니다', columns: '4', variant: 'compact', items: [
       { title: '한글학교', description: '토요일 오전, 2세 아이들이 한국어와 문화를 배웁니다.' },
       { title: 'EM · 청년', description: 'English Ministry 주일 오후 1시, 2세와 유학생이 함께합니다.' },
       { title: '정착 도움', description: '새로 오신 가정의 정착과 서류·학교 문제를 함께 돕습니다.' },
       { title: '지역 섬김', description: '한인 시니어 센터와 노숙인 급식을 매월 함께합니다.' },
     ] } },
-    { block_type: 'text_only', props: { content: '2019년 열 가정이 아파트 거실에서 시작해, 지금은 채플을 빌려 함께 예배합니다. 미주한인예수교장로회(KAPC) 소속.' } },
+    // 교회 한 줄 소개는 풋터 tagline(tokens.footer.tagline) 기능으로 이동 —
+    // 별도 text_only 블록을 두지 않는다(중복 방지, 대표님 지시).
     location(),
     contact(),
   ],

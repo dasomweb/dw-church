@@ -17,6 +17,8 @@ export const createBoardPostSchema = z.object({
   title: z.string().min(1).max(500),
   author_name: z.string().max(100).optional().default(''),
   content: z.string().optional().default(''),
+  // 교회소식 분류 (친교/교육/구역 등). 자유 문자열 — 게시판마다 다르게 쓸 수 있음.
+  category: z.string().max(100).optional().default(''),
   attachments: z.array(z.object({
     url: z.string().url(),
     filename: z.string(),
