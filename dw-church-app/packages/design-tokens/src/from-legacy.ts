@@ -110,21 +110,27 @@ export function legacyThemeToTokens(theme: LegacyThemeBlob | null | undefined): 
 }
 
 function cloneTokens(t: DesignTokens): DesignTokens {
+  // 각 하위 객체를 DEFAULT 위에 병합한다. tokensV2 가 새 필드(예: colors.system.
+  // onDark/onDarkMuted, radius/shadows/spacing 신규 키) 이전에 저장됐어도 누락값을
+  // 기본값으로 backfill → SoT(--brand-*)가 항상 완결. 기존 값은 보존(스프레드 뒤가
+  // 우선)이라 라이브 무손상, 누락만 채워진다. (팔레트 빈 슬롯 crash 의 근본 해결)
+  const D = DEFAULT_DESIGN_TOKENS;
   return {
-    colors: { system: { ...t.colors.system }, custom: { ...t.colors.custom } },
-    typography: {
-      families: { ...t.typography.families },
-      scales: { ...t.typography.scales } as DesignTokens['typography']['scales'],
+    colors: {
+      system: { ...D.colors.system, ...(t.colors?.system ?? {}) },
+      custom: { ...(t.colors?.custom ?? {}) },
     },
-    breakpoints: { ...t.breakpoints },
-    shadows: { ...t.shadows },
-    radius: { ...t.radius },
-    containerMax: t.containerMax,
-    spacing: { ...t.spacing },
-    // tokensV2 blobs persisted before `header` existed won't carry it —
-    // fall back to the default so the projection is always complete.
-    header: { ...DEFAULT_DESIGN_TOKENS.header, ...(t.header ?? {}) },
-    footer: { ...DEFAULT_DESIGN_TOKENS.footer, ...(t.footer ?? {}) },
+    typography: {
+      families: { ...D.typography.families, ...(t.typography?.families ?? {}) },
+      scales: { ...D.typography.scales, ...(t.typography?.scales ?? {}) } as DesignTokens['typography']['scales'],
+    },
+    breakpoints: { ...D.breakpoints, ...(t.breakpoints ?? {}) },
+    shadows: { ...D.shadows, ...(t.shadows ?? {}) },
+    radius: { ...D.radius, ...(t.radius ?? {}) },
+    containerMax: t.containerMax ?? D.containerMax,
+    spacing: { ...D.spacing, ...(t.spacing ?? {}) },
+    header: { ...D.header, ...(t.header ?? {}) },
+    footer: { ...D.footer, ...(t.footer ?? {}) },
   };
 }
 
