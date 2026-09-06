@@ -173,7 +173,36 @@ const story = (eyebrow: string, title: string, content: string, imageUrl: string
 // ── the 22 presets, keyed by sample id ──────────────────────────────────────
 const P: Record<string, PresetSection[]> = {
   // 미주 한인 이민교회
-  '00': [hero('타국에서 만난 하나님의 가족', '주일 예배로 여러분을 초대합니다', { backgroundImageUrl: `${IMG}/worship-2.jpg` }), infoColumns(), verse(), sermons('grid-4'), pastor(), albums('grid-4'), announce(), location(), contact()],
+  // 시안 00(미주 한인 이민교회 · 사진 히어로)을 실제 블록으로 충실 재구성 — 콘텐츠 블록
+  // (recent_sermons/recent_bulletins)과 일반 블록이 실제로 배선돼 동작한다. 섹션 순서·내용은
+  // card-00.html 그대로. 사진 = R2 group-1(예배/친교). custom_html 통짜가 아니라 편집 가능.
+  '00': [
+    { block_type: 'hero_banner', props: { variant: 'image-overlay', width: 'contained', height: 'md', textAlign: 'left',
+      title: '타국에서 만난 또 하나의 가족', subtitle: 'A Korean-American church family in Los Angeles since 2019',
+      backgroundImageUrl: `${IMG}/group-1.jpg`, overlayColor: '#090f1c', overlayOpacity: 0.5,
+      buttonText: '예배 안내', buttonUrl: '/worship', secondaryButtonText: '처음 오시나요?', secondaryButtonUrl: '/newcomer' } },
+    { block_type: 'info_columns', props: { columns: '3', items: [
+      { title: '주일예배 Sunday', content: '한국어 예배 · 11:00 AM\nEM (English) · 1:00 PM\n주일학교 · 11:00 AM' },
+      { title: '주중 Weekday', content: '금요 기도회 · 8:00 PM\n새벽기도 (Zoom) · 5:30 AM\n구역 모임 · 토 7:00 PM' },
+      { title: '처음 오시는 분께 First time?', content: '장소 · 채플을 함께 사용합니다\n주차 · 무료 주차장 · 스트리트 파킹\n자녀 · Nursery 운영 · 예배 후 전교인 점심' },
+    ] } },
+    { block_type: 'quote_block', props: { variant: 'verse', eyebrow: '오늘의 말씀 · Verse of the Day',
+      quote: '내가 너를 도와주리라 참으로 너를 붙들리라', reference: '이사야 41:10 · Isaiah 41:10' } },
+    { block_type: 'cta_section', props: { variant: 'announcement-bar', eyebrow: '다가오는 행사',
+      title: '추수감사절 전교인 친교 · Thanksgiving Potluck', subtitle: '11월 27일(목) 오후 5시 · 음식 한 가지씩 준비해 주세요',
+      buttonText: '참석 알리기', buttonUrl: '/events' } },
+    { block_type: 'recent_sermons', props: { title: '이번 주 말씀', variant: 'featured', limit: 4 } },
+    { block_type: 'recent_bulletins', props: { title: '주보 · 광고', variant: 'grid-2', limit: 4 } },
+    { block_type: 'features_grid', props: { title: '이렇게 섬기고 있습니다', columns: '4', variant: 'compact', items: [
+      { title: '한글학교', description: '토요일 오전, 2세 아이들이 한국어와 문화를 배웁니다.' },
+      { title: 'EM · 청년', description: 'English Ministry 주일 오후 1시, 2세와 유학생이 함께합니다.' },
+      { title: '정착 도움', description: '새로 오신 가정의 정착과 서류·학교 문제를 함께 돕습니다.' },
+      { title: '지역 섬김', description: '한인 시니어 센터와 노숙인 급식을 매월 함께합니다.' },
+    ] } },
+    { block_type: 'text_only', props: { content: '2019년 열 가정이 아파트 거실에서 시작해, 지금은 채플을 빌려 함께 예배합니다. 미주한인예수교장로회(KAPC) 소속.' } },
+    location(),
+    contact(),
+  ],
   '01': [hero('A Church Where We Grow Together', '한 자리를 비워 두고 기다립니다', { variant: 'split-image', imageUrl: `${IMG}/worship-1.jpg`, imageSide: 'right', backgroundImageUrl: `${IMG}/worship-1.jpg` }), infoColumns(), verse(), sermons('grid-3'), newcomer(), announce(), location(), contact()],
   '02': [hero('낯선 곳에서의 첫 걸음, 함께 걷겠습니다', '정착과 신앙, 우리가 돕겠습니다', { backgroundImageUrl: `${IMG}/group-1.jpg` }), newcomer(), infoColumns(), verse(), sermons('grid-3'), location(), contact()],
   '03': [hero('말씀 앞에 함께 섭니다', '', { variant: 'text-only', bgMode: 'gradient', height: 'md' }), infoColumns(), verse(), bulletins('grid-2'), sermons('list'), board(), announce(), location()],
