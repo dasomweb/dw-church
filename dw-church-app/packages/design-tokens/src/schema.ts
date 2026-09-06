@@ -121,8 +121,35 @@ export const designTokenHeaderSchema = z
     navFontSize: z.number().int().positive().default(14),
     /** Desktop header nav-link font weight (100–900, default 500 = medium). */
     navFontWeight: z.number().int().min(100).max(900).default(500),
+    /** English brand line shown under the logo/name (한인 이민교회 로고 한·영
+     *  병기). Empty → not shown. */
+    brandTextEn: z.string().default(''),
+    // ── Top utility bar (한인 이민교회 상단 바) ────────────────────────
+    /** Master switch. Off by default so existing tenants are unaffected. */
+    utilityBarEnabled: z.boolean().default(false),
+    /** One-line text on the left (예배시간·주소 등). Empty → left side blank. */
+    utilityBarText: z.string().default(''),
+    /** Show the 글자 크기(가/가) accessibility font-size toggle on the right. */
+    utilityShowFontSize: z.boolean().default(true),
+    /** Show the 카카오톡 채널 link on the right (uses settings social_kakaotalk_channel). */
+    utilityShowKakao: z.boolean().default(true),
+    /** Show the 한국어/ENGLISH language toggle. Wired to real translation in a
+     *  later phase; kept off until then so no dead control ships. */
+    utilityShowLanguage: z.boolean().default(false),
+    // ── Giving CTA button (온라인 헌금) ──────────────────────────────
+    /** Show a prominent Giving button on the right of the header nav. */
+    givingEnabled: z.boolean().default(false),
+    /** Giving button label. */
+    givingLabel: z.string().default('온라인 헌금'),
+    /** Giving button link. */
+    givingUrl: z.string().default('/giving'),
   })
-  .default({ logoHeight: 40, navFontSize: 14, navFontWeight: 500 });
+  .default({
+    logoHeight: 40, navFontSize: 14, navFontWeight: 500, brandTextEn: '',
+    utilityBarEnabled: false, utilityBarText: '', utilityShowFontSize: true,
+    utilityShowKakao: true, utilityShowLanguage: false,
+    givingEnabled: false, givingLabel: '온라인 헌금', givingUrl: '/giving',
+  });
 
 // ─── Footer tokens ─────────────────────────────────────────────────────────
 //

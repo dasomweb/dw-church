@@ -82,6 +82,15 @@ export const DEFAULT_DESIGN_TOKENS: DesignTokens = {
     logoHeight: 40,
     navFontSize: 14,
     navFontWeight: 500,
+    brandTextEn: '',
+    utilityBarEnabled: false,
+    utilityBarText: '',
+    utilityShowFontSize: true,
+    utilityShowKakao: true,
+    utilityShowLanguage: false,
+    givingEnabled: false,
+    givingLabel: '온라인 헌금',
+    givingUrl: '/giving',
   },
   // Footer design — dark navy columns layout matching the standard church
   // footer (logo + 오시는 길 + Social Media / 온라인 예배 + copyright).

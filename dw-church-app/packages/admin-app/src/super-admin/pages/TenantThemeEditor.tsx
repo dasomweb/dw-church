@@ -465,7 +465,12 @@ function TypographyTab({ tokens, onChange, saving }: { tokens: DesignTokens; onC
 // --brand-logo-height / --brand-nav-font-size, consumed by the storefront
 // header (apps/web/.../tenant/[slug]/layout.tsx). Defaults 40/14 match the
 // previous hard-coded h-10 logo + text-sm nav.
-const HEADER_DEFAULTS = { logoHeight: 40, navFontSize: 14, navFontWeight: 500 } as const;
+const HEADER_DEFAULTS = {
+  logoHeight: 40, navFontSize: 14, navFontWeight: 500, brandTextEn: '',
+  utilityBarEnabled: false, utilityBarText: '', utilityShowFontSize: true,
+  utilityShowKakao: true, utilityShowLanguage: false,
+  givingEnabled: false, givingLabel: '온라인 헌금', givingUrl: '/giving',
+} as const;
 
 const NAV_WEIGHT_OPTIONS: { value: number; label: string }[] = [
   { value: 300, label: 'Light (300)' },
@@ -476,8 +481,15 @@ const NAV_WEIGHT_OPTIONS: { value: number; label: string }[] = [
 ];
 
 function HeaderTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChange: (t: DesignTokens | ((prev: DesignTokens) => DesignTokens)) => void; saving: boolean }) {
-  const header = tokens.header ?? HEADER_DEFAULTS;
+  const header = { ...HEADER_DEFAULTS, ...(tokens.header ?? {}) };
   const setField = (k: 'logoHeight' | 'navFontSize' | 'navFontWeight', v: number) => {
+    onChange((prev) => ({
+      ...prev,
+      header: { ...(prev.header ?? HEADER_DEFAULTS), [k]: v },
+    }));
+  };
+  // Generic setter for the string/boolean header fields (유틸바 · Giving · 영문 브랜드).
+  const setH = (k: string, v: string | boolean) => {
     onChange((prev) => ({
       ...prev,
       header: { ...(prev.header ?? HEADER_DEFAULTS), [k]: v },
@@ -540,6 +552,74 @@ function HeaderTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChang
             <span className="block text-[10px] text-gray-400 mt-1">상단 메뉴 글자 굵기 (<code>--brand-nav-font-weight</code>).</span>
           </div>
         </div>
+      </div>
+
+      {/* 영문 브랜드 — 로고/교회명 아래 영문 병기 (한인 이민교회) */}
+      <div className="rounded-lg border border-gray-200 p-3 bg-white">
+        <label className="text-xs font-medium text-gray-700">영문 브랜드 (로고 아래 병기)</label>
+        <input
+          type="text"
+          value={header.brandTextEn}
+          onChange={(e) => setH('brandTextEn', e.target.value)}
+          disabled={saving}
+          placeholder="예: GRACE KOREAN CHURCH OF LA"
+          className="mt-1.5 w-full px-2 py-1.5 text-xs border rounded disabled:opacity-50"
+        />
+        <span className="block text-[10px] text-gray-400 mt-1">비우면 표시되지 않습니다.</span>
+      </div>
+
+      {/* 상단 유틸리티 바 */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-1">상단 유틸리티 바</h3>
+        <p className="text-xs text-gray-500 mb-3">헤더 맨 위 얇은 줄 — 예배시간·주소 안내 + 글자 크기 조절 + 카카오톡 채널.</p>
+        <label className="flex items-center gap-2 rounded-lg border border-gray-200 p-3 bg-white text-xs font-medium text-gray-700">
+          <input type="checkbox" checked={header.utilityBarEnabled} onChange={(e) => setH('utilityBarEnabled', e.target.checked)} disabled={saving} />
+          상단 유틸리티 바 사용
+        </label>
+        {header.utilityBarEnabled && (
+          <div className="mt-3 space-y-3">
+            <div className="rounded-lg border border-gray-200 p-3 bg-white">
+              <label className="text-xs font-medium text-gray-700">안내 문구 (좌측 한 줄)</label>
+              <input
+                type="text"
+                value={header.utilityBarText}
+                onChange={(e) => setH('utilityBarText', e.target.value)}
+                disabled={saving}
+                placeholder="예: Sunday Worship 11:00 AM · 주일예배 오전 11시 · 605 W Olympic Blvd, Los Angeles, CA"
+                className="mt-1.5 w-full px-2 py-1.5 text-xs border rounded disabled:opacity-50"
+              />
+            </div>
+            <label className="flex items-center gap-2 rounded-lg border border-gray-200 p-3 bg-white text-xs font-medium text-gray-700">
+              <input type="checkbox" checked={header.utilityShowFontSize} onChange={(e) => setH('utilityShowFontSize', e.target.checked)} disabled={saving} />
+              글자 크기(가/가) 조절 버튼 표시
+            </label>
+            <label className="flex items-center gap-2 rounded-lg border border-gray-200 p-3 bg-white text-xs font-medium text-gray-700">
+              <input type="checkbox" checked={header.utilityShowKakao} onChange={(e) => setH('utilityShowKakao', e.target.checked)} disabled={saving} />
+              카카오톡 채널 링크 표시 (설정의 카카오톡 채널 URL 사용)
+            </label>
+          </div>
+        )}
+      </div>
+
+      {/* Giving CTA 버튼 */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-1">Giving 버튼 (온라인 헌금)</h3>
+        <label className="flex items-center gap-2 rounded-lg border border-gray-200 p-3 bg-white text-xs font-medium text-gray-700">
+          <input type="checkbox" checked={header.givingEnabled} onChange={(e) => setH('givingEnabled', e.target.checked)} disabled={saving} />
+          헤더 우측에 Giving 버튼 표시
+        </label>
+        {header.givingEnabled && (
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="rounded-lg border border-gray-200 p-3 bg-white">
+              <label className="text-xs font-medium text-gray-700">버튼 텍스트</label>
+              <input type="text" value={header.givingLabel} onChange={(e) => setH('givingLabel', e.target.value)} disabled={saving} className="mt-1.5 w-full px-2 py-1.5 text-xs border rounded disabled:opacity-50" />
+            </div>
+            <div className="rounded-lg border border-gray-200 p-3 bg-white">
+              <label className="text-xs font-medium text-gray-700">버튼 링크</label>
+              <input type="text" value={header.givingUrl} onChange={(e) => setH('givingUrl', e.target.value)} disabled={saving} placeholder="/giving" className="mt-1.5 w-full px-2 py-1.5 text-xs border rounded disabled:opacity-50" />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Live preview — a mock header row rendered at the chosen sizes so the

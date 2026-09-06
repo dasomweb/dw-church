@@ -10,6 +10,7 @@ import InstallAppButton from '@/components/InstallAppButton';
 import AnalyticsBeacon from '@/components/AnalyticsBeacon';
 import { BrandTokensStyle } from '@/components/BrandTokensStyle';
 import { PreviewBridge } from '@/components/PreviewBridge';
+import { HeaderTopBar } from '@/components/HeaderTopBar';
 import { DEFAULT_DESIGN_TOKENS, type DesignTokens } from '@dw-church/design-tokens';
 // Types inlined to avoid importing @dw-church/api-client in server components
 type ChurchSettings = Record<string, string>;
@@ -312,6 +313,8 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   // CONTENT (주소/전화/SNS) comes from church settings. Copyright auto-fills with
   // the current year + church name when the operator leaves it blank.
   const fc = tokens.footer ?? DEFAULT_DESIGN_TOKENS.footer;
+  // Header design (logo/nav sizes + 상단 유틸바 + Giving CTA + 영문 브랜드).
+  const hc = tokens.header ?? DEFAULT_DESIGN_TOKENS.header;
   const copyright = (fc.copyright ?? '').trim()
     || `© ${new Date().getFullYear()} ${churchName}. All rights Reserved.`;
   // Footer brand: logo image OR text. Footer-specific logo (e.g. a light logo
@@ -450,6 +453,19 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
         </aside>
       )}
 
+      {/* 상단 유틸리티 바 (예배·주소 한 줄 + 글자크기 + 카카오톡) */}
+      {hc.utilityBarEnabled && (
+        <div className={isSidebar ? 'md:hidden' : ''}>
+          <HeaderTopBar
+            text={hc.utilityBarText}
+            kakaoUrl={kakaoUrl}
+            showFontSize={hc.utilityShowFontSize}
+            showKakao={hc.utilityShowKakao}
+            dark={isDarkHeader}
+          />
+        </div>
+      )}
+
       {/* Header */}
       <header
         role="banner"
@@ -460,8 +476,8 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
           /* Centered header: logo above, nav below, both centered */
           <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
             <div className="flex flex-col items-center gap-3">
-              <Link href={homeHref} className="flex items-center gap-2">
-                {logoUrl ? (
+              <Link href={homeHref} className="flex items-center gap-2.5">
+                {logoUrl && (
                   <img
                     src={logoUrl}
                     alt={churchName}
@@ -470,9 +486,15 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                     // Falls back to 40px (the previous hard-coded h-10).
                     style={{ height: 'var(--brand-logo-height, 40px)' }}
                   />
-                ) : (
-                  <span className="text-lg sm:text-xl font-bold font-heading" style={{ color: isDarkHeader ? 'var(--dw-background)' : 'var(--dw-primary)' }}>
-                    {churchName}
+                )}
+                {(!logoUrl || hc.brandTextEn) && (
+                  <span className="flex flex-col leading-tight">
+                    {!logoUrl && (
+                      <span className="text-lg sm:text-xl font-bold font-heading" style={{ color: isDarkHeader ? 'var(--dw-background)' : 'var(--dw-primary)' }}>{churchName}</span>
+                    )}
+                    {hc.brandTextEn && (
+                      <span className="text-[11px] font-medium uppercase tracking-wide opacity-60" style={{ color: isDarkHeader ? 'var(--dw-background)' : 'var(--dw-muted, #6b7280)' }}>{hc.brandTextEn}</span>
+                    )}
                   </span>
                 )}
               </Link>
@@ -509,6 +531,15 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                   </div>
                 ))}
               </nav>
+              {hc.givingEnabled && (
+                <Link
+                  href={hc.givingUrl}
+                  className="hidden items-center rounded-full px-5 py-2 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90 md:inline-flex"
+                  style={{ backgroundColor: 'var(--dw-primary, #2563eb)' }}
+                >
+                  {hc.givingLabel}
+                </Link>
+              )}
             </div>
             <div className="absolute right-4 top-4 sm:right-6 md:hidden flex items-center gap-2">
               {pwaEnabled && <InstallAppButton className="hidden sm:inline-flex" />}
@@ -518,8 +549,8 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
         ) : (
           /* Default / transparent / dark header: left logo, right nav */
           <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
-            <Link href={homeHref} className="flex items-center gap-2">
-              {logoUrl ? (
+            <Link href={homeHref} className="flex items-center gap-2.5">
+              {logoUrl && (
                 <img
                   src={logoUrl}
                   alt={churchName}
@@ -527,9 +558,15 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                   // Operator-tunable logo height (super-admin 테마 → 헤더). 40px fallback = old h-10.
                   style={{ height: 'var(--brand-logo-height, 40px)' }}
                 />
-              ) : (
-                <span className="text-lg sm:text-xl font-bold font-heading" style={{ color: isDarkHeader ? 'var(--dw-background)' : 'var(--dw-primary)' }}>
-                  {churchName}
+              )}
+              {(!logoUrl || hc.brandTextEn) && (
+                <span className="flex flex-col leading-tight">
+                  {!logoUrl && (
+                    <span className="text-lg sm:text-xl font-bold font-heading" style={{ color: isDarkHeader ? 'var(--dw-background)' : 'var(--dw-primary)' }}>{churchName}</span>
+                  )}
+                  {hc.brandTextEn && (
+                    <span className="text-[11px] font-medium uppercase tracking-wide opacity-60" style={{ color: isDarkHeader ? 'var(--dw-background)' : 'var(--dw-muted, #6b7280)' }}>{hc.brandTextEn}</span>
+                  )}
                 </span>
               )}
             </Link>
@@ -565,6 +602,15 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                 </div>
               ))}
             </nav>
+            {hc.givingEnabled && (
+              <Link
+                href={hc.givingUrl}
+                className="hidden items-center rounded-full px-5 py-2 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90 md:inline-flex"
+                style={{ backgroundColor: 'var(--dw-primary, #2563eb)' }}
+              >
+                {hc.givingLabel}
+              </Link>
+            )}
             <div className="flex items-center gap-2 md:hidden">
               {pwaEnabled && <InstallAppButton />}
               <MobileMenu navItems={sortedVisibleItems} basePath={basePath} />
