@@ -23,7 +23,6 @@ COPY packages/wp-plugin/package.json packages/wp-plugin/
 # the lock file. Include them so the install resolves.
 COPY packages/design-tokens/package.json packages/design-tokens/
 COPY packages/blocks/package.json packages/blocks/
-COPY packages/theme-sets/package.json packages/theme-sets/
 # wp-connector is a WordPress plugin (PHP), not a workspace package
 
 RUN pnpm install --frozen-lockfile
@@ -33,14 +32,12 @@ FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/packages/api-client/node_modules ./packages/api-client/node_modules
 COPY --from=deps /app/packages/ui-components/node_modules ./packages/ui-components/node_modules
-# Phase 10-α / 11 fix (2026-06-03): design-tokens + theme-sets are now built
-# in this stage (pnpm build), and their node_modules (zod for design-tokens,
-# zod + workspace ref for theme-sets) must be present or tsc fails with
-# "Cannot find module 'zod'". Missing these COPYs is what caused the cascading
+# Phase 10-α / 11 fix (2026-06-03): design-tokens is built in this stage
+# (pnpm build), and its node_modules (zod) must be present or tsc fails with
+# "Cannot find module 'zod'". Missing this COPY is what caused the cascading
 # unknown-type errors in contrast.ts and to-css-vars.ts — zod types disappeared
 # so the schema types degraded to unknown.
 COPY --from=deps /app/packages/design-tokens/node_modules ./packages/design-tokens/node_modules
-COPY --from=deps /app/packages/theme-sets/node_modules ./packages/theme-sets/node_modules
 # @dw-church/blocks is now the storefront block set (transpilePackages). Its
 # node_modules holds the symlinks to ui-components/design-tokens it imports.
 COPY --from=deps /app/packages/blocks/node_modules ./packages/blocks/node_modules
@@ -51,10 +48,9 @@ COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.base.json ./
 COPY packages/api-client/ packages/api-client/
 COPY packages/ui-components/ packages/ui-components/
 # Phase 6-A added BrandTokensStyle.tsx that imports @dw-church/design-tokens.
-# Phase 10-α added theme-sets imports. Both packages need to be copied AND built
-# before the Next.js build so webpack can resolve them via package.json exports.
+# The package must be copied AND built before the Next.js build so webpack can
+# resolve it via package.json exports.
 COPY packages/design-tokens/ packages/design-tokens/
-COPY packages/theme-sets/ packages/theme-sets/
 COPY packages/blocks/ packages/blocks/
 COPY apps/web/ apps/web/
 
@@ -63,7 +59,6 @@ COPY apps/web/ apps/web/
 RUN cd packages/api-client && pnpm build:js
 RUN cd packages/ui-components && pnpm build:js
 RUN cd packages/design-tokens && pnpm build
-RUN cd packages/theme-sets && pnpm build
 
 # Build Next.js (standalone output)
 ENV NEXT_TELEMETRY_DISABLED=1
