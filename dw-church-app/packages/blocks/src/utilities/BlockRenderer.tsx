@@ -296,6 +296,7 @@ function stripLegacyFlexAlignment(
 const DATA_BLOCK_LABELS: Record<string, string> = {
   banner_slider: 'Banner Slider',
   hero_image_slider: 'Banner Slider',
+  featured_event: '다가오는 행사 (선택한 행사 1개 — 사이트에서 자동 표시, 미선택 시 숨김)',
   recent_blog_posts: 'Recent Blog Posts',
   album_gallery: 'Album Gallery',
   board: 'Board',

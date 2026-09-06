@@ -22,6 +22,7 @@ export {
 export { VideoCategorySelectField } from './VideoCategorySelectField';
 export { BoardSelectField } from './BoardSelectField';
 export { AlbumCategorySelectField } from './AlbumCategorySelectField';
+export { EventSelectField } from './EventSelectField';
 export {
   LayoutField,
   type LayoutFieldProps,

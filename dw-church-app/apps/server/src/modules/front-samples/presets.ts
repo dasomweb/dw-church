@@ -139,7 +139,10 @@ const bentoGrid = (): PresetSection => ({
     ],
   },
 });
-const announce = (): PresetSection => ({ block_type: 'cta_section', props: { variant: 'announcement-bar', eyebrow: '다가오는 행사', title: '가을 성경공부 「마가복음 6주 과정」', subtitle: '9월 5일 시작 · 매주 목요일 저녁 8시', buttonText: '신청하기', buttonUrl: '/events' } });
+// 다가오는 행사 = 이벤트 콘텐츠에서 고른 행사 1개 알림바. eventId 없으면
+// 렌더 안 됨(관리자가 [행사 관리]에 등록 → 페이지 빌더에서 선택). 정적
+// 더미 공지를 넣지 않는다([[feedback_no_seed_content]]).
+const announce = (): PresetSection => ({ block_type: 'featured_event', props: { label: '다가오는 행사', buttonText: '자세히 보기' } });
 const quickLinks = (): PresetSection => ({ block_type: 'quick_links', props: { title: '바로가기', items: [
   { title: '기도 요청', content: '/prayer' },
   { title: '소그룹 신청', content: '/smallgroup' },
@@ -188,9 +191,8 @@ const P: Record<string, PresetSection[]> = {
     ] } },
     { block_type: 'quote_block', props: { variant: 'verse', eyebrow: '오늘의 말씀 · Verse of the Day',
       quote: '내가 너를 도와주리라 참으로 너를 붙들리라', reference: '이사야 41:10 · Isaiah 41:10' } },
-    { block_type: 'cta_section', props: { variant: 'announcement-bar', eyebrow: '다가오는 행사',
-      title: '추수감사절 전교인 친교 · Thanksgiving Potluck', subtitle: '11월 27일(목) 오후 5시 · 음식 한 가지씩 준비해 주세요',
-      buttonText: '참석 알리기', buttonUrl: '/events' } },
+    // 다가오는 행사 — 이벤트 콘텐츠에서 고른 행사 1개 알림바(미선택 시 숨김).
+    { block_type: 'featured_event', props: { label: '다가오는 행사', buttonText: '참석 알리기' } },
     { block_type: 'recent_sermons', props: { title: '이번 주 말씀', variant: 'featured', limit: 4 } },
     { block_type: 'recent_bulletins', props: { title: '주보 · 광고', variant: 'grid-2', limit: 4 } },
     { block_type: 'features_grid', props: { title: '이렇게 섬기고 있습니다', columns: '4', variant: 'compact', items: [

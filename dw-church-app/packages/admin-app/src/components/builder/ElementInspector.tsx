@@ -11,7 +11,7 @@ import {
   type BlockElementRegistry,
   type ElementSpec,
 } from './element-registry';
-import { ImageField, useImageFieldApi, LinkField, ColorField, SpacingField, MediaPicker, LabeledField, CollapsibleGroup, TypographyTokenField, OverlayField, BorderField, LinkButtonField, LayoutField, DesignField, ScheduleGroupsField, VideoCategorySelectField, BoardSelectField, AlbumCategorySelectField, type ScheduleGroup } from './property-fields';
+import { ImageField, useImageFieldApi, LinkField, ColorField, SpacingField, MediaPicker, LabeledField, CollapsibleGroup, TypographyTokenField, OverlayField, BorderField, LinkButtonField, LayoutField, DesignField, ScheduleGroupsField, VideoCategorySelectField, BoardSelectField, AlbumCategorySelectField, EventSelectField, type ScheduleGroup } from './property-fields';
 import { RichEditor } from '../RichEditor';
 import { DynamicSourcePicker, DynamicChip } from './property-fields/DynamicSourcePicker';
 import { isDynamicRef, dynamicContextsForPageKind, type DynamicContext } from '@dw-church/blocks/builder';
@@ -1839,6 +1839,20 @@ function FieldControl({
         <AlbumCategorySelectField
           value={(value as string) ?? ''}
           onChange={(v) => onChange(v)}
+        />
+      )}
+      {spec.kind === 'event-select' && (
+        <EventSelectField
+          value={(value as string) ?? ''}
+          onChange={(v) => onChange(v)}
+        />
+      )}
+      {spec.kind === 'date' && (
+        <input
+          type="date"
+          value={(value as string) ?? ''}
+          onChange={(e) => onChange(e.target.value || undefined)}
+          className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:border-blue-500 outline-none bg-white"
         />
       )}
       {spec.kind === 'bool' && (

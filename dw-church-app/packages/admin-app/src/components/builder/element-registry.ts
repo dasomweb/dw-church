@@ -55,7 +55,13 @@ export type ElementKind =
   // Dynamic select of the tenant's registered boards (slug value).
   | 'board-select'
   // Dynamic select of the tenant's registered album categories (slug value).
-  | 'album-category';
+  | 'album-category'
+  // Dynamic select of the tenant's registered events (event id value). Used by
+  // the featured_event block so the operator PICKS one event to feature.
+  | 'event-select'
+  // Native <input type="date"> — stores YYYY-MM-DD. Used for the featured_event
+  // "종료일"(auto-hide) and similar single-date props.
+  | 'date';
 
 export interface ElementSpec {
   /** Display label in the inspector. */
@@ -1405,7 +1411,7 @@ export function getElementKindForPath(blockType: string, path: string): ElementK
 // here. Structured-array fields (services / images / steps / tags) are
 // edited via their dedicated widgets in the tenant PageEditor and are
 // intentionally omitted from the scalar inspector.
-type ChurchFieldType = 'text' | 'textarea' | 'image' | 'url' | 'number' | 'select' | 'color' | 'video-category';
+type ChurchFieldType = 'text' | 'textarea' | 'image' | 'url' | 'number' | 'select' | 'color' | 'video-category' | 'event-select' | 'date';
 interface ChurchField {
   key: string;
   label: string;
@@ -1415,7 +1421,7 @@ interface ChurchField {
 }
 const CHURCH_KIND: Record<ChurchFieldType, ElementKind> = {
   text: 'text', textarea: 'html', image: 'image', url: 'url', number: 'number', select: 'select', color: 'color',
-  'video-category': 'video-category',
+  'video-category': 'video-category', 'event-select': 'event-select', date: 'date',
 };
 function churchBlock(...sections: { title: string; fields: ChurchField[] }[]): BlockElementRegistry {
   return {
@@ -1565,6 +1571,19 @@ const EVENT_GRID = churchBlock(
       { value: 'cards-4', label: '4 columns' }, { value: 'cards-3', label: '3 columns' },
       { value: 'cards-2', label: '2 columns' },
     ]},
+  ]},
+);
+// 다가오는 행사 — 이벤트 하나를 골라 상단 알림바로 노출. eventId 없으면
+// 스토어프론트에서 아예 렌더 안 함. endDate 지나도 자동 숨김.
+const FEATURED_EVENT = churchBlock(
+  { title: '행사 선택', fields: [
+    { key: 'eventId', label: '노출할 행사', type: 'event-select', hint: '행사 관리에 등록된 행사에서 하나 선택. 비우면 이 블록은 사이트에 표시되지 않습니다.' },
+    { key: 'endDate', label: '노출 종료일', type: 'date', hint: '이 날짜가 지나면 자동으로 숨겨집니다. 비우면 계속 노출.' },
+  ]},
+  { title: '표시', fields: [
+    { key: 'label', label: '라벨(왼쪽 배지)', type: 'text', hint: '기본: 다가오는 행사' },
+    { key: 'buttonText', label: '버튼 텍스트', type: 'text', hint: '기본: 자세히 보기' },
+    { key: 'buttonUrl', label: '버튼 링크(선택)', type: 'url', hint: '비우면 행사의 링크 또는 행사 목록으로 연결' },
   ]},
 );
 const STAFF_GRID = churchBlock(
@@ -1742,6 +1761,7 @@ export const ELEMENT_REGISTRY: Record<string, BlockElementRegistry> = {
   video_board:      VIDEO_BOARD,
   schedule_board:   SCHEDULE_BOARD,
   event_grid:       EVENT_GRID,
+  featured_event:   FEATURED_EVENT,
   staff_grid:       STAFF_GRID,
   cell_grid:        CELL_GRID,
   history_timeline: HISTORY_TIMELINE,

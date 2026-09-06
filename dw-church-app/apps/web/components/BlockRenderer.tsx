@@ -20,6 +20,7 @@ import { ScheduleBoardBlock } from './blocks/ScheduleBoardBlock';
 import { StaffGridBlock } from './blocks/StaffGridBlock';
 import { HistoryTimelineBlock } from './blocks/HistoryTimelineBlock';
 import { EventGridBlock } from './blocks/EventGridBlock';
+import { FeaturedEventBlock } from './blocks/FeaturedEventBlock';
 import { BoardBlock } from './blocks/BoardBlock';
 import { BannerSliderBlock } from './blocks/BannerSliderBlock';
 import { CellGridBlock } from './blocks/CellGridBlock';
@@ -47,6 +48,7 @@ const CHURCH_BLOCKS: Record<string, AnyBlock> = {
   staff_grid: StaffGridBlock as AnyBlock,
   history_timeline: HistoryTimelineBlock as AnyBlock,
   event_grid: EventGridBlock as AnyBlock,
+  featured_event: FeaturedEventBlock as AnyBlock, // 다가오는 행사 — 관리자가 고른 이벤트 1개 알림바 (미선택/종료일 경과 시 렌더 안 함)
   board: BoardBlock as AnyBlock,
   banner_slider: BannerSliderBlock as AnyBlock,
   hero_image_slider: BannerSliderBlock as AnyBlock,
