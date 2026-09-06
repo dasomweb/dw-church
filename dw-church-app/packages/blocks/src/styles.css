@@ -50,25 +50,26 @@
 }
 
 .b2b-blocks-preview {
-  /* Surface */
-  --bg:               #ffffff;
+  /* Surface — A 토큰 단일화: SoT --brand-* 에서 파생(정적값 fallback). apps/web
+     globals.css 와 반드시 동일하게 유지(캔버스 == 스토어프론트 WYSIWYG). */
+  --bg:               var(--brand-background, #ffffff);
   --bg-subtle:        #f7f7f5;
   --bg-muted:         #efece7;
-  --surface:          #ffffff;
+  --surface:          var(--brand-surface, #ffffff);
   --surface-elevated: #ffffff;
 
   /* Text */
-  --text-primary:     #1a1a1a;
+  --text-primary:     var(--brand-text, #1a1a1a);
   --text-secondary:   #4a4a4a;
-  --text-muted:       #767676;
-  --text-on-accent:   #ffffff;
+  --text-muted:       var(--brand-muted, #767676);
+  --text-on-accent:   var(--brand-primary-fg, #ffffff);
 
   /* Border */
-  --border:           #e5e3de;
+  --border:           var(--brand-border, #e5e3de);
   --border-strong:    #c9c6bf;
 
   /* Accent */
-  --accent:           #2563eb;
+  --accent:           var(--brand-primary, #2563eb);
   --accent-hover:     #1d4ed8;
   --accent-soft:      #eff6ff;
 
@@ -107,11 +108,11 @@
   --fs-xs:      var(--brand-caption, 0.75rem);
 
   /* Radius */
-  --r-sm:   4px;
-  --r-md:   8px;
-  --r-lg:   16px;
+  --r-sm:   var(--brand-radius-sm, 4px);
+  --r-md:   var(--brand-radius-md, 8px);
+  --r-lg:   var(--brand-radius-lg, 16px);
   --r-xl:   24px;
-  --r-full: 9999px;
+  --r-full: var(--brand-radius-full, 9999px);
 
   /* Shadow */
   --shadow-xs: 0 1px 2px rgba(0,0,0,.04);
