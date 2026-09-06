@@ -256,17 +256,22 @@ function PaletteTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChan
         <p className="text-xs text-gray-500 mb-4">테넌트 사이트 전체에 <code>--brand-primary</code> 등 CSS 변수로 카스케이드됩니다.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {slots.map((slot) => {
-            const hex = tokens.colors.system[slot];
+            // 방어: 토큰에 없는 슬롯(onDark/onDarkMuted 등)이나 rgba() 같은 비-hex
+            // 값이 오면 contrastRatio 가 터져 탭 전체가 blank 되던 버그를 막는다.
+            const raw = tokens.colors.system[slot];
+            const hex = typeof raw === 'string' ? raw : '';
             const bg = tokens.colors.system.background ?? '#ffffff';
-            const ratio = contrastRatio(hex, bg);
-            const passes = meetsContrast(hex, bg, WCAG_AA_NORMAL);
+            const isHex = (v: string) => /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v);
+            const showContrast = isHex(hex) && isHex(bg);
+            const ratio = showContrast ? contrastRatio(hex, bg) : 0;
+            const passes = showContrast ? meetsContrast(hex, bg, WCAG_AA_NORMAL) : false;
             return (
               <div key={slot} className="rounded-lg border border-gray-200 p-3 bg-white">
                 <label className="text-xs font-medium text-gray-700">{COLOR_LABELS[slot]}</label>
                 <div className="mt-1.5 flex items-center gap-2">
                   <input
                     type="color"
-                    value={hex}
+                    value={isHex(hex) ? hex : '#000000'}
                     onChange={(e) => setSlot(slot, e.target.value)}
                     disabled={saving}
                     className="w-10 h-10 rounded cursor-pointer disabled:opacity-50"
@@ -274,16 +279,23 @@ function PaletteTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChan
                   <input
                     type="text"
                     value={hex}
+                    placeholder="#RRGGBB (미설정)"
                     onChange={(e) => setSlot(slot, e.target.value)}
                     disabled={saving}
                     className="flex-1 px-2 py-1.5 text-xs font-mono border rounded disabled:opacity-50"
                   />
                 </div>
                 <div className="mt-1.5 flex items-center justify-between text-[10px]">
-                  <span className="font-mono text-gray-500">vs bg: {ratio.toFixed(1)}:1</span>
-                  <span className={passes ? 'text-green-600 font-semibold' : 'text-amber-600'}>
-                    {passes ? 'AA' : 'AA 미달'}
-                  </span>
+                  {showContrast ? (
+                    <>
+                      <span className="font-mono text-gray-500">vs bg: {ratio.toFixed(1)}:1</span>
+                      <span className={passes ? 'text-green-600 font-semibold' : 'text-amber-600'}>
+                        {passes ? 'AA' : 'AA 미달'}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="font-mono text-gray-400">미설정</span>
+                  )}
                 </div>
               </div>
             );
