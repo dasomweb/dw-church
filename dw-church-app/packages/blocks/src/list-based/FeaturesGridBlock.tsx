@@ -268,39 +268,43 @@ function CompactContent({
   align: 'left' | 'center' | 'right';
   parentProps: Record<string, unknown>;
 }) {
+  // 아이콘/이미지가 선택되지 않았으면 아이콘 영역 자체를 렌더하지 않음
+  // (기본 = 아이콘 없음). 예전엔 미선택 시 BulletGlyph 플레이스홀더를 색상
+  // 박스에 넣어 표시했으나 대표님 지시로 제거 (2026-09-06).
+  const hasIcon = !!item.imageUrl || !!(item.iconName && ICONS[item.iconName]);
   return (
     <div className="p-5 sm:p-8">
-      <div
-        className={align === 'center' ? 'mx-auto' : align === 'right' ? 'ml-auto' : ''}
-        style={{
-          width: 48,
-          height: 48,
-          marginBottom: '1.25rem',
-          borderRadius: 'var(--r-md, 0.5rem)',
-          background: item.imageUrl ? undefined : 'var(--accent-soft, rgba(0,0,0,0.04))',
-          color: 'var(--accent, currentColor)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          overflow: 'hidden',
-        }}
-        aria-hidden="true"
-      >
-        {item.imageUrl ? (
-          <ImageElement
-            url={item.imageUrl}
-            alt=""
-            props={parentProps}
-            elementKey={`items[${index}].imageUrl`}
-            sizeCategory="avatar"
-            baseStyle={{ width: 48, height: 48, objectFit: 'cover' }}
-          />
-        ) : item.iconName && ICONS[item.iconName] ? (
-          <Icon name={item.iconName} size={26} data-element={`items[${index}].iconName`} />
-        ) : (
-          <BulletGlyph />
-        )}
-      </div>
+      {hasIcon && (
+        <div
+          className={align === 'center' ? 'mx-auto' : align === 'right' ? 'ml-auto' : ''}
+          style={{
+            width: 48,
+            height: 48,
+            marginBottom: '1.25rem',
+            borderRadius: 'var(--r-md, 0.5rem)',
+            background: item.imageUrl ? undefined : 'var(--accent-soft, rgba(0,0,0,0.04))',
+            color: 'var(--accent, currentColor)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+          }}
+          aria-hidden="true"
+        >
+          {item.imageUrl ? (
+            <ImageElement
+              url={item.imageUrl}
+              alt=""
+              props={parentProps}
+              elementKey={`items[${index}].imageUrl`}
+              sizeCategory="avatar"
+              baseStyle={{ width: 48, height: 48, objectFit: 'cover' }}
+            />
+          ) : (
+            <Icon name={item.iconName!} size={26} data-element={`items[${index}].iconName`} />
+          )}
+        </div>
+      )}
       <HeadingElement
         text={item.title}
         props={parentProps}
@@ -400,39 +404,42 @@ function IconLargeContent({
   // rows put the icon centered above the title. Operator can opt back
   // into left alignment via the parent's align prop.
   const effectiveAlign = align;
+  // 아이콘/이미지 미선택 시 아이콘 원(circle) 자체를 렌더하지 않음 (기본 =
+  // 아이콘 없음). CompactContent 와 동일 정책 (대표님 2026-09-06).
+  const hasIcon = !!item.imageUrl || !!(item.iconName && ICONS[item.iconName]);
   return (
     <div className={`p-5 sm:p-8 ${effectiveAlign === 'center' ? 'text-center' : effectiveAlign === 'right' ? 'text-right' : ''}`}>
-      <div
-        className={effectiveAlign === 'center' ? 'mx-auto' : effectiveAlign === 'right' ? 'ml-auto' : ''}
-        style={{
-          width: 80,
-          height: 80,
-          marginBottom: '1.5rem',
-          borderRadius: '9999px',
-          background: 'var(--accent-soft, rgba(0,0,0,0.04))',
-          color: 'var(--accent, currentColor)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          overflow: 'hidden',
-        }}
-        aria-hidden="true"
-      >
-        {item.imageUrl ? (
-          <ImageElement
-            url={item.imageUrl}
-            alt=""
-            props={parentProps}
-            elementKey={`items[${index}].imageUrl`}
-            sizeCategory="avatar"
-            baseStyle={{ width: 48, height: 48, objectFit: 'contain' }}
-          />
-        ) : item.iconName && ICONS[item.iconName] ? (
-          <Icon name={item.iconName} size={40} data-element={`items[${index}].iconName`} />
-        ) : (
-          <BulletGlyph size={32} />
-        )}
-      </div>
+      {hasIcon && (
+        <div
+          className={effectiveAlign === 'center' ? 'mx-auto' : effectiveAlign === 'right' ? 'ml-auto' : ''}
+          style={{
+            width: 80,
+            height: 80,
+            marginBottom: '1.5rem',
+            borderRadius: '9999px',
+            background: 'var(--accent-soft, rgba(0,0,0,0.04))',
+            color: 'var(--accent, currentColor)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+          }}
+          aria-hidden="true"
+        >
+          {item.imageUrl ? (
+            <ImageElement
+              url={item.imageUrl}
+              alt=""
+              props={parentProps}
+              elementKey={`items[${index}].imageUrl`}
+              sizeCategory="avatar"
+              baseStyle={{ width: 48, height: 48, objectFit: 'contain' }}
+            />
+          ) : (
+            <Icon name={item.iconName!} size={40} data-element={`items[${index}].iconName`} />
+          )}
+        </div>
+      )}
       <HeadingElement
         text={item.title}
         props={parentProps}
@@ -503,11 +510,3 @@ function FeatureItemAction({
   );
 }
 
-function BulletGlyph({ size = 20 }: { size?: number } = {}) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <circle cx="10" cy="10" r="6" />
-      <path d="M10 6v8M6 10h8" strokeLinecap="round" />
-    </svg>
-  );
-}
