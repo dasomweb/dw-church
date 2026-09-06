@@ -11,6 +11,7 @@ import {
 import * as svc from './service.js';
 import { importMembers } from './import-service.js';
 import * as rec from './records-service.js';
+import { memberDashboard } from './dashboard-service.js';
 
 /**
  * 교적관리 (membership) — 교회 행정 애드온. 전부 내부(관리자) 전용:
@@ -248,4 +249,6 @@ export async function membershipRoutes(app: FastifyInstance) {
 
   // ── 통계(Phase 4) ────────────────────────────────────────
   app.get('/member-stats/report', gate, async (request, reply) => reply.send({ data: await rec.statsReport(getSchema(request)) }));
+  // 교적 현황 대시보드(MB-01) 집계.
+  app.get('/member-stats/dashboard', gate, async (request, reply) => reply.send({ data: await memberDashboard(getSchema(request)) }));
 }

@@ -38,6 +38,9 @@ const rec = {
 };
 vi.mock('../../modules/membership/records-service.js', () => rec);
 
+const dash = { memberDashboard: vi.fn() };
+vi.mock('../../modules/membership/dashboard-service.js', () => dash);
+
 const JWT_SECRET = 'test-secret-at-least-32-characters-long';
 function token(role = 'admin') {
   return jwt.sign({ userId: 'u1', email: 't@t.com', tenantId: 't1', tenantSlug: 'base', role }, JWT_SECRET, { expiresIn: '1h' });
@@ -86,6 +89,7 @@ beforeAll(async () => {
   rec.statsReport.mockResolvedValue({ gender: [], age: [], position: [], region: [], attendanceRecent: [] });
   rec.appointMembers.mockResolvedValue({ count: 3 });
   rec.listAppointments.mockResolvedValue([]);
+  dash.memberDashboard.mockResolvedValue({ cards: { registered: 642, attendanceRate: 68 }, byGroup: [], todos: [], ageDist: [] });
 });
 afterAll(async () => { await app.close(); });
 
@@ -112,6 +116,13 @@ describe('membership — add-on gate', () => {
     const res = await app.inject({ method: 'GET', url: '/api/v1/members', headers: { 'x-tenant-slug': 'base', ...auth() } });
     expect(res.statusCode).toBe(200);
     expect(res.json().data).toHaveProperty('items');
+  });
+
+  it('GET /member-stats/dashboard WITH the add-on → 200 (MB-01)', async () => {
+    await withAddon();
+    const res = await app.inject({ method: 'GET', url: '/api/v1/member-stats/dashboard', headers: { 'x-tenant-slug': 'base', ...auth() } });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().data.cards.registered).toBe(642);
   });
 });
 
