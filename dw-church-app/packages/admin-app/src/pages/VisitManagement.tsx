@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
-import { inputClass, textareaClass, useToast, EmptyState } from '../components';
+import { inputClass, textareaClass, useToast, EmptyState, Button } from '../components';
 import { MemberPicker } from '../components/MemberPicker';
 
 /**
@@ -88,8 +88,8 @@ export default function VisitManagement() {
           <div><label className="block text-sm font-medium mb-1">기도제목</label><textarea rows={2} className={textareaClass} value={form.prayer} onChange={(e) => set('prayer', e.target.value)} /></div>
           <div><label className="block text-sm font-medium mb-1">후속조치</label><textarea rows={2} className={textareaClass} value={form.followup} onChange={(e) => set('followup', e.target.value)} /></div>
           <div className="flex gap-2 pt-1">
-            <button disabled={saveMutation.isPending || !form.memberId} onClick={() => { if (!form.memberId) { showToast('error', '대상 교인을 선택하세요.'); return; } saveMutation.mutate(); }} className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">{saveMutation.isPending ? '저장 중…' : '저장'}</button>
-            <button onClick={() => setView('list')} className="px-5 py-2 rounded-lg text-sm border border-gray-300 hover:bg-gray-50">취소</button>
+            <Button disabled={saveMutation.isPending || !form.memberId} onClick={() => { if (!form.memberId) { showToast('error', '대상 교인을 선택하세요.'); return; } saveMutation.mutate(); }}>{saveMutation.isPending ? '저장 중…' : '저장'}</Button>
+            <Button variant="outline" onClick={() => setView('list')}>취소</Button>
           </div>
         </div>
       </div>
@@ -103,7 +103,7 @@ export default function VisitManagement() {
         <h1 className="text-xl font-bold">심방 · 상담</h1>
         <div className="flex gap-2">
           <select className={inputClass} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="">전체</option><option value="done">완료</option><option value="planned">예정</option></select>
-          <button onClick={openCreate} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 whitespace-nowrap">+ 심방 기록</button>
+          <Button onClick={openCreate} className="whitespace-nowrap">+ 심방 기록</Button>
         </div>
       </div>
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">

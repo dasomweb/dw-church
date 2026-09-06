@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
-import { inputClass, useToast, EmptyState } from '../components';
+import { inputClass, useToast, EmptyState, Button } from '../components';
 import { MemberPicker } from '../components/MemberPicker';
 
 /**
@@ -94,7 +94,7 @@ export default function SacramentTransferManagement() {
             <button key={t} onClick={() => { setTab(t); setAdding(false); }} className={`px-3 py-1.5 rounded-md text-sm font-medium ${tab === t ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>{t === 'sacrament' ? '성례' : '이동'}</button>
           ))}
         </div>
-        <button onClick={() => setAdding((v) => !v)} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">+ 등록</button>
+        <Button onClick={() => setAdding((v) => !v)}>+ 등록</Button>
       </div>
 
       {adding && tab === 'sacrament' && (
@@ -106,7 +106,7 @@ export default function SacramentTransferManagement() {
           <div><label className="block text-sm font-medium mb-1">받은 교회</label><input className={inputClass} value={sac.place} onChange={(e) => setSac({ ...sac, place: e.target.value })} placeholder="타교회면 교회명" /></div>
           <div><label className="block text-sm font-medium mb-1">증서번호</label><input className={inputClass} placeholder="증서번호" value={sac.certNo} onChange={(e) => setSac({ ...sac, certNo: e.target.value })} /></div>
           {recognitionEnabled && <label className="flex items-center gap-2 text-sm pb-2"><input type="checkbox" checked={sac.recognized} onChange={(e) => setSac({ ...sac, recognized: e.target.checked })} className="rounded" /> 본 교회 인정</label>}
-          <div className="flex items-end"><button onClick={addSac} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap w-full">등록</button></div>
+          <div className="flex items-end"><Button onClick={addSac} block className="whitespace-nowrap">등록</Button></div>
         </div>
       )}
       {adding && tab === 'transfer' && (
@@ -115,7 +115,7 @@ export default function SacramentTransferManagement() {
           <div><label className="block text-sm font-medium mb-1">유형</label><select className={inputClass} value={tr.trType} onChange={(e) => setTr({ ...tr, trType: e.target.value })}>{TR_TYPES.map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}</select></div>
           <div><label className="block text-sm font-medium mb-1">일자</label><input type="date" className={inputClass} value={tr.trDate} onChange={(e) => setTr({ ...tr, trDate: e.target.value })} /></div>
           <div><label className="block text-sm font-medium mb-1">상대 교회</label><input className={inputClass} value={tr.counterpart} onChange={(e) => setTr({ ...tr, counterpart: e.target.value })} /></div>
-          <div className="sm:col-span-2 flex gap-2"><input className={inputClass} placeholder="사유" value={tr.reason} onChange={(e) => setTr({ ...tr, reason: e.target.value })} /><button onClick={addTr} className="bg-blue-600 text-white px-4 rounded-lg text-sm font-medium whitespace-nowrap">처리</button></div>
+          <div className="sm:col-span-2 flex gap-2"><input className={inputClass} placeholder="사유" value={tr.reason} onChange={(e) => setTr({ ...tr, reason: e.target.value })} /><Button onClick={addTr} className="whitespace-nowrap">처리</Button></div>
         </div>
       )}
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
-import { inputClass, textareaClass, useToast, EmptyState } from '../components';
+import { inputClass, textareaClass, useToast, EmptyState, Button } from '../components';
 
 /**
  * 교적관리 — 세대(가족) 관리 (FM-01 목록 · FM-02 상세). 세대는 가족 단위이며
@@ -104,7 +104,7 @@ export default function HouseholdManagement() {
                 </div>
                 {h.memo && <p className="mt-2 text-sm text-gray-500 whitespace-pre-wrap">{h.memo}</p>}
               </div>
-              <button onClick={() => openEdit(h)} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">수정</button>
+              <Button onClick={() => openEdit(h)}>수정</Button>
             </div>
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
               <h3 className="text-sm font-semibold text-gray-700 mb-3">구성원 {(h.members ?? []).length}명</h3>
@@ -145,8 +145,8 @@ export default function HouseholdManagement() {
           </div>
           <div><label className="block text-sm font-medium mb-1">메모</label><textarea rows={3} className={textareaClass} value={form.memo} onChange={(e) => set('memo', e.target.value)} /></div>
           <div className="flex gap-2 pt-1">
-            <button disabled={saveMutation.isPending} onClick={() => saveMutation.mutate()} className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">{saveMutation.isPending ? '저장 중…' : '저장'}</button>
-            <button onClick={() => setView('list')} className="px-5 py-2 rounded-lg text-sm border border-gray-300 hover:bg-gray-50">취소</button>
+            <Button disabled={saveMutation.isPending} onClick={() => saveMutation.mutate()}>{saveMutation.isPending ? '저장 중…' : '저장'}</Button>
+            <Button variant="outline" onClick={() => setView('list')}>취소</Button>
           </div>
         </div>
       </div>
@@ -159,7 +159,7 @@ export default function HouseholdManagement() {
     <div className="space-y-5">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-xl font-bold">세대 · 가족</h1>
-        <button onClick={openCreate} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">+ 세대 등록</button>
+        <Button onClick={openCreate}>+ 세대 등록</Button>
       </div>
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
         <input className={inputClass} placeholder="세대명 · 주소 검색" value={q} onChange={(e) => setQ(e.target.value)} />

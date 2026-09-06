@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
-import { inputClass, useToast, EmptyState } from '../components';
+import { inputClass, useToast, EmptyState, Button } from '../components';
 
 /**
  * 교적관리 — 출석 체크(AT-01) + 장기결석 관리(AT-03). 예배·날짜 선택 후 명단을
@@ -151,7 +151,7 @@ export default function AttendanceManagement() {
               <div className="border-t border-gray-50 pt-3 space-y-2">
                 <div className="flex gap-2 items-center">
                   <input className={`${inputClass} flex-1`} placeholder="예배 추가 (예: 주일 1부 / 수요예배)" value={newSvc} onChange={(e) => setNewSvc(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && createService()} />
-                  <button onClick={createService} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 whitespace-nowrap">예배 추가</button>
+                  <Button onClick={createService} className="whitespace-nowrap">예배 추가</Button>
                 </div>
                 {(servicesQ.data ?? []).map((s) => (
                   <div key={s.id} className="flex items-center gap-2 text-sm">
@@ -183,7 +183,7 @@ export default function AttendanceManagement() {
                   })}
                 </div>
                 <div className="sticky bottom-0 bg-white/90 backdrop-blur border-t border-gray-100 py-3 flex justify-end">
-                  <button disabled={saving} onClick={() => void save()} className="bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">{saving ? '저장 중…' : '출석 저장'}</button>
+                  <Button size="lg" disabled={saving} onClick={() => void save()}>{saving ? '저장 중…' : '출석 저장'}</Button>
                 </div>
               </>
             )}

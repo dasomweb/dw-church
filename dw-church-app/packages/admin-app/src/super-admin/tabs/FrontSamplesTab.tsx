@@ -34,7 +34,7 @@ function buildExactHtml(fullDoc: string): string {
     const kids = Array.from(body.children);
     // canvas cards open with a nav bar and end with a footer — strip both so the
     // tenant's real header/footer aren't duplicated.
-    if (kids.length >= 3) { kids[0].remove(); kids[kids.length - 1].remove(); }
+    if (kids.length >= 3) { kids[0]?.remove(); kids[kids.length - 1]?.remove(); }
     return `<style>${styles}</style>\n${body.innerHTML}`;
   } catch {
     return fullDoc;

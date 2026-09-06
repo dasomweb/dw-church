@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
-import { inputClass, textareaClass, ImageUpload, useToast, EmptyState } from '../components';
+import { inputClass, textareaClass, ImageUpload, useToast, EmptyState, Button } from '../components';
 import { MemberPicker } from '../components/MemberPicker';
 import { useEntitlements } from '../hooks/useEntitlements';
 import { featureAllowed } from '../lib/plan-features';
@@ -246,7 +246,7 @@ export default function MemberManagement() {
                   <span className="col-span-2">주소 · {m.address || '—'}</span>
                 </div>
               </div>
-              <button onClick={() => openEdit(m)} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">수정</button>
+              <Button onClick={() => openEdit(m)}>수정</Button>
             </div>
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
               <h3 className="text-sm font-semibold text-gray-700 mb-3">가족</h3>
@@ -373,12 +373,11 @@ export default function MemberManagement() {
           <div><label className="block text-sm font-medium mb-1">비고</label><textarea rows={3} className={textareaClass} value={form.note} onChange={(e) => set('note', e.target.value)} /></div>
 
           <div className="flex gap-2 pt-1">
-            <button
+            <Button
               disabled={saving || saveMutation.isPending || !form.name.trim()}
               onClick={() => { if (!form.name.trim()) { showToast('error', '이름을 입력하세요.'); return; } setSaving(true); saveMutation.mutate(undefined, { onSettled: () => setSaving(false) }); }}
-              className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
-            >{saveMutation.isPending ? '저장 중…' : '저장'}</button>
-            <button onClick={() => setView('list')} className="px-5 py-2 rounded-lg text-sm border border-gray-300 hover:bg-gray-50">취소</button>
+            >{saveMutation.isPending ? '저장 중…' : '저장'}</Button>
+            <Button variant="outline" onClick={() => setView('list')}>취소</Button>
           </div>
         </div>
       </div>
@@ -393,8 +392,8 @@ export default function MemberManagement() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-xl font-bold">교인 명부</h1>
         <div className="flex gap-2">
-          <button onClick={() => setShowImport((v) => !v)} className="px-4 py-2 rounded-lg text-sm font-medium border border-gray-300 hover:bg-gray-50">엑셀 가져오기</button>
-          <button onClick={openCreate} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">+ 교인 등록</button>
+          <Button variant="outline" onClick={() => setShowImport((v) => !v)}>엑셀 가져오기</Button>
+          <Button onClick={openCreate}>+ 교인 등록</Button>
         </div>
       </div>
 

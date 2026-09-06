@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
-import { inputClass, useToast, EmptyState } from '../components';
+import { inputClass, useToast, EmptyState, Button } from '../components';
 import { MemberPicker } from '../components/MemberPicker';
 
 /**
@@ -110,10 +110,9 @@ export default function AppointmentManagement() {
         </div>
 
         <div className="flex items-center gap-3 pt-1">
-          <button disabled={applying || !position || staged.length === 0} onClick={() => void apply()}
-            className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+          <Button disabled={applying || !position || staged.length === 0} onClick={() => void apply()}>
             {applying ? '임명 중…' : `${staged.length}명 임명`}
-          </button>
+          </Button>
           {staged.length > 0 && <button onClick={() => setStaged([])} className="text-sm text-gray-500 hover:text-gray-700">비우기</button>}
         </div>
       </div>

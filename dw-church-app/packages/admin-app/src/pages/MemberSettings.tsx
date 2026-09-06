@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
-import { inputClass, useToast } from '../components';
+import { inputClass, useToast, Button } from '../components';
 
 /**
  * 교적 설정 (SE) — 교단별 동작을 켜고, 그에 따라 교적부 입력 필드·표현이 바뀐다.
@@ -112,7 +112,7 @@ export default function MemberSettings() {
       </Card>
 
       <div>
-        <button disabled={saving} onClick={() => void save()} className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">{saving ? '저장 중…' : '설정 저장'}</button>
+        <Button disabled={saving} onClick={() => void save()}>{saving ? '저장 중…' : '설정 저장'}</Button>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
-import { inputClass, useToast } from '../components';
+import { inputClass, useToast, Button } from '../components';
 import { serverErr } from '../lib/server-err';
 
 /**
@@ -96,8 +96,7 @@ export default function MemberCodeManagement() {
           <input className={`${inputClass} flex-1`} placeholder={`새 ${CATS.find((c) => c.key === cat)?.label} 추가`} value={newLabel}
             onChange={(e) => setNewLabel(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && newLabel.trim()) add.mutate(); }} />
-          <button disabled={!newLabel.trim() || add.isPending} onClick={() => add.mutate()}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap">추가</button>
+          <Button disabled={!newLabel.trim() || add.isPending} onClick={() => add.mutate()} className="whitespace-nowrap">추가</Button>
         </div>
 
         {codesQ.isLoading ? <div className="py-6 text-center text-sm text-gray-400">불러오는 중…</div> :
