@@ -19,6 +19,37 @@ interface GeneratedPage {
   blocks: GeneratedBlock[];
 }
 
+// 디자인 시스템 울타리(C): 블록별 허용 variant/옵션. AI 가 임의 값(grid-5 등)을
+// 넣으면 블록이 깨지므로, 생성 후 허용 목록 밖의 값은 제거해 블록 기본값으로 되돌린다.
+const ALLOWED_ENUM_PROPS: Record<string, Record<string, string[]>> = {
+  recent_sermons: { variant: ['grid-2', 'grid-3', 'grid-4'] },
+  recent_bulletins: { variant: ['grid-2', 'grid-3', 'grid-4'] },
+  recent_columns: { variant: ['grid-2', 'grid-3', 'grid-4'] },
+  album_gallery: { variant: ['grid-2', 'grid-3', 'grid-4'] },
+  staff_grid: { variant: ['grid-2', 'grid-3', 'grid-4'] },
+  event_grid: { variant: ['cards-2', 'cards-3', 'cards-4'] },
+  hero_banner: { height: ['sm', 'md', 'lg', 'full'], layout: ['full', 'contained'] },
+};
+
+// 스타일을 직접 지정하는 임의 값은 디자인 시스템(테마 토큰)이 통제해야 하므로
+// props 에서 제거한다 — AI 가 hex 색·px·폰트명을 박아넣어 SoT 를 우회하는 것 방지.
+const FORBIDDEN_STYLE_PROP_KEYS = new Set([
+  'color', 'backgroundColor', 'fontFamily', 'fontSize', 'borderRadius', 'padding', 'margin',
+]);
+
+/** 생성된 블록 props 를 디자인 시스템 울타리로 정제한다. */
+function sanitizeBlockProps(blockType: string, props: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  const enums = ALLOWED_ENUM_PROPS[blockType] ?? {};
+  for (const [k, v] of Object.entries(props ?? {})) {
+    if (FORBIDDEN_STYLE_PROP_KEYS.has(k)) continue; // 임의 스타일 제거(토큰이 통제)
+    const allowed = enums[k];
+    if (allowed && typeof v === 'string' && !allowed.includes(v)) continue; // 허용 밖 variant 제거→기본값
+    out[k] = v;
+  }
+  return out;
+}
+
 // Block descriptions for AI context
 const BLOCK_DESCRIPTIONS = `
 Available block types and their props:
@@ -163,6 +194,11 @@ ${PAGE_GUIDELINES}
 
 ADDITIONAL RULES:
 - Output ONLY valid JSON, no markdown, no explanation
+- DESIGN SYSTEM GUARDRAIL: the tenant's theme (design tokens) controls ALL colors,
+  fonts, radius, spacing and shadows. NEVER put hex colors, px sizes, font names,
+  padding/margin, or any arbitrary styling into props. Only set content (text, urls)
+  and the listed enum options (variant/height/layout) using EXACTLY the allowed values.
+- Use ONLY the block types and the variant values listed above — never invent new ones.
 - Use Korean for all content (titles, text)
 - Choose blocks that best match the user's intent
 - Always start with hero_banner (height: "md", layout: "full")
@@ -196,9 +232,11 @@ Output format:
     throw new Error('AI 응답을 파싱할 수 없습니다. 다시 시도해주세요.');
   }
 
-  // Validate block types
+  // Validate block types (화이트리스트) + 디자인 시스템 울타리로 props 정제.
   const validTypes = new Set(blockTypes as readonly string[]);
-  parsed.blocks = parsed.blocks.filter((b) => validTypes.has(b.blockType));
+  parsed.blocks = parsed.blocks
+    .filter((b) => validTypes.has(b.blockType))
+    .map((b) => ({ ...b, props: sanitizeBlockProps(b.blockType, b.props) }));
 
   if (parsed.blocks.length === 0) {
     throw new Error('유효한 블록이 생성되지 않았습니다.');

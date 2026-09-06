@@ -38,6 +38,28 @@ describe('generatePageFromPrompt', () => {
     expect(result.blocks[1]!.blockType).toBe('church_intro');
   });
 
+  it('디자인 시스템 울타리(C): 허용 밖 variant + 임의 스타일 props 제거', async () => {
+    mockGenerateText.mockResolvedValue(JSON.stringify({
+      title: '설교', slug: 'sermons',
+      blocks: [
+        // variant grid-5 는 허용 밖 → 제거(기본값), color/fontSize 임의 스타일 → 제거
+        { blockType: 'recent_sermons', props: { title: '최근 설교', limit: 6, variant: 'grid-5', color: '#ff0000', fontSize: '20px' } },
+        // 허용 variant + 컨텐츠는 유지
+        { blockType: 'event_grid', props: { title: '행사', variant: 'cards-3', backgroundColor: '#000' } },
+      ],
+    }));
+    const result = await generatePageFromPrompt('설교 페이지');
+    const sermons = result.blocks.find((b) => b.blockType === 'recent_sermons')!;
+    expect(sermons.props.variant).toBeUndefined();  // grid-5 제거
+    expect(sermons.props.color).toBeUndefined();     // 임의 스타일 제거
+    expect(sermons.props.fontSize).toBeUndefined();
+    expect(sermons.props.title).toBe('최근 설교');    // 컨텐츠 유지
+    expect(sermons.props.limit).toBe(6);
+    const events = result.blocks.find((b) => b.blockType === 'event_grid')!;
+    expect(events.props.variant).toBe('cards-3');     // 허용 variant 유지
+    expect(events.props.backgroundColor).toBeUndefined(); // 임의 스타일 제거
+  });
+
   it('strips markdown code blocks from response', async () => {
     mockGenerateText.mockResolvedValue('```json\n{"title":"테스트","slug":"test","blocks":[{"blockType":"text_only","props":{"title":"테스트","content":"내용"}}]}\n```');
 
