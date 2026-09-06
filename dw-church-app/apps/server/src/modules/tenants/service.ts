@@ -189,10 +189,14 @@ export async function provisionTenantFromApplication(appRow: Record<string, unkn
   const design = appRow.design_choice as string | undefined;
   if (design) {
     try {
-      const { applyDesignToTenant } = await import('../front-samples/presets.js');
-      await applyDesignToTenant(slug, design);
+      // Prefer "시안 그대로" (exact sample HTML) so the new church's home matches
+      // its picked design faithfully; fall back to the block preset if that
+      // design has no bundled exact HTML. Non-fatal either way.
+      const { applyDesignExactToTenant, applyDesignToTenant } = await import('../front-samples/presets.js');
+      const exact = await applyDesignExactToTenant(slug, design);
+      if (!exact.ok) await applyDesignToTenant(slug, design);
     } catch (err) {
-      console.warn(`[provision] design preset '${design}' for ${slug} skipped:`, err);
+      console.warn(`[provision] design '${design}' for ${slug} skipped:`, err);
     }
   }
   return { tenant, tempPassword, slug, ownerEmail };

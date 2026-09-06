@@ -34,11 +34,14 @@ function buildExactHtml(fullDoc: string): string {
       .join('\n')
       .replace(/body\s*\{[^}]*\}/gi, ''); // drop global body rule
     const body = doc.body;
-    // 시안의 자체 내비게이션 제거(사이트가 헤더/내비 제공). <nav> 는 시멘틱 태그라 안전.
-    body.querySelectorAll('nav').forEach((n) => n.remove());
-    // 맨 끝 최상위 자식 = 푸터(시안은 <footer> 태그 없이 div 로 끝남) → 제거.
+    // 시안 22종을 전수 조사한 결과: 최상위 첫 자식은 항상 상단 내비(또는 LIVE 바),
+    // 마지막 자식은 항상 푸터다. 그래서 첫·마지막 최상위 자식을 떼어낸다(사이트가
+    // 자체 헤더/푸터를 제공). 일부 시안(11)은 LIVE 바 뒤에 <nav>가 따로 있어, 첫
+    // 자식(LIVE 바) 제거 후 남는 <nav>를 추가로 제거한다.
     const kids = Array.from(body.children);
-    if (kids.length >= 2) kids[kids.length - 1]?.remove();
+    if (kids.length >= 3) { kids[0]?.remove(); kids[kids.length - 1]?.remove(); }
+    else if (kids.length === 2) { kids[kids.length - 1]?.remove(); } // 푸터만(내용 보존)
+    body.querySelectorAll('nav').forEach((n) => n.remove());
     return `<style>${styles}</style>\n${body.innerHTML}`;
   } catch {
     return fullDoc;

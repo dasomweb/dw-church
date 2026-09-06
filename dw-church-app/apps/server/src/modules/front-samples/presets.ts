@@ -13,6 +13,7 @@
  */
 import { prisma } from '../../config/database.js';
 import { AppError } from '../../middleware/error-handler.js';
+import { CANVAS_EXACT_HTML } from './canvas-exact.generated.js';
 
 export interface PresetSection { block_type: string; props: Record<string, unknown> }
 
@@ -370,5 +371,32 @@ export async function applyExactHtmlToTenant(slug: string, html: string): Promis
      VALUES ($1::uuid, 'custom_html', $2::jsonb, 0, true)`,
     pageId, JSON.stringify({ html: clean }),
   );
+  return { ok: true };
+}
+
+/** True if this design has server-bundled exact HTML (for provisioning auto-apply). */
+export function hasExactHtml(design: string | null | undefined): boolean {
+  return Boolean(design && CANVAS_EXACT_HTML[design]);
+}
+
+/**
+ * Apply the chosen design "시안 그대로" (exact HTML) to a tenant's home — used by
+ * provisioning so a new church's home matches its picked sample faithfully (not
+ * the block approximation). Writes the bundled sample HTML as one custom_html
+ * block AND sets the design's theme profile so the surrounding site chrome
+ * matches too. Returns { ok:false } when the design has no bundled exact HTML,
+ * so the caller can fall back to applyDesignToTenant (block preset).
+ * NOTE: uses the bundled BASE sample (super-admin in-place edits are not merged
+ * here) — the operator can re-apply the edited version via the 프론트 샘플 tab.
+ */
+export async function applyDesignExactToTenant(slug: string, design: string): Promise<{ ok: boolean }> {
+  const html = CANVAS_EXACT_HTML[design];
+  if (!html) return { ok: false };
+  await applyExactHtmlToTenant(slug, html); // home = single custom_html block (sanitized inside)
+  try {
+    await applyThemeToTenant(`tenant_${slug}`, getThemeProfile(design), getHeaderStyleForDesign(design));
+  } catch (err) {
+    console.warn(`[applyDesignExact] theme for '${design}' on ${slug} skipped:`, err);
+  }
   return { ok: true };
 }
