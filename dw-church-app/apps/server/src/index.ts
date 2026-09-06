@@ -71,7 +71,6 @@ async function main(): Promise<void> {
   const { default: pageRoutes } = await import('./modules/pages/routes.js');
   const { default: menuRoutes } = await import('./modules/menus/routes.js');
   const { default: themeRoutes } = await import('./modules/themes/routes.js');
-  const { default: themeSetsRoutes } = await import('./modules/theme-sets/routes.js');
   // Phase 11-A2 — b2bsmart AI 빌더 서버 모듈 포트. b2bsmart 의 routes 파일들이
   // named exports (aiPlannerProxyRoutes 등) 라 default 가 아님. 이전엔 default
   // 로 destructure 해서 TS2339 build error 발생 (2026-06-03 fix).
@@ -168,7 +167,6 @@ async function main(): Promise<void> {
   await app.register(pageRoutes, { prefix: '/api/v1/pages' });
   await app.register(menuRoutes, { prefix: '/api/v1/menus' });
   await app.register(themeRoutes, { prefix: '/api/v1/theme' });
-  await app.register(themeSetsRoutes, { prefix: '/api/v1' });
   // Phase 11-A2 — AI 빌더 서버 routes. 모두 super_admin gate (각 route 안에서).
   await app.register(aiPlannerProxyRoutes, { prefix: '/api/v1' }); // /ai/planner/*
   await app.register(aiBuildPagesRoutes,   { prefix: '/api/v1' }); // /ai/build-pages
