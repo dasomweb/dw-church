@@ -20,6 +20,7 @@ import { BLOCK_FEATURE, featureAllowed } from '../../lib/plan-features';
 import { ElementInspector } from '../../components/builder/ElementInspector';
 import { BuilderCanvas } from '../../components/builder/BuilderCanvas';
 import { LivePreviewPane } from '../../components/builder/LivePreviewPane';
+import { ChildBlocksEditor } from '../../components/builder/ChildBlocksEditor';
 import { ContentEntryPanel } from './ContentEntryPanel';
 
 interface PageRow {
@@ -901,6 +902,15 @@ export default function TenantPageEditor() {
             section={selectedSection}
             onChangeProps={handlePropsChange}
           />
+          {/* 레이아웃 블록(행/컬럼/섹션)이면 자식 블록 조립 편집기를 먼저 보여준다 —
+              여기서 각 칸에 블록을 넣고 순서·내용을 편집한다(디자인 시스템 반영의 토대). */}
+          {selectedSection.blockType.startsWith('layout_') && (
+            <ChildBlocksEditor
+              sectionId={selectedSection.id}
+              props={selectedSection.props}
+              onChange={handlePropsChange}
+            />
+          )}
           <ElementInspector
             key={selectedSection.id}
             pageId={selectedPageId ?? ''}

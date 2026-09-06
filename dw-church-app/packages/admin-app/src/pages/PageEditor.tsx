@@ -30,7 +30,7 @@ import { BLOCK_FEATURE, featureAllowed } from '../lib/plan-features';
 // super admins curate under "이미지 라이브러리" in the super admin console.
 // No hard-coded Unsplash links — CLAUDE.md rule: self-host through R2.
 
-interface BlockVariant {
+export interface BlockVariant {
   id: string;
   label: string;
 }
@@ -101,7 +101,7 @@ function BlockGlyph({ type, className }: { type: string; className?: string }) {
   );
 }
 
-interface BlockDef {
+export interface BlockDef {
   type: string;
   label: string;
   category: string;
@@ -122,7 +122,7 @@ interface BlockDef {
 // in the super-admin TenantPageEditor.
 const CONTENT_ONLY = true;
 
-const BLOCK_DEFS: BlockDef[] = [
+export const BLOCK_DEFS: BlockDef[] = [
   // ─── Hero ─────────────────────────────────────
   { type: 'hero_banner', label: '히어로 배너', category: '히어로', icon: '🖼️', nature: 'static', description: '배경 이미지 + 텍스트 오버레이 배너', variants: [{ id: 'centered', label: '중앙' }, { id: 'left', label: '좌측' }], defaultProps: { title: '환영합니다', subtitle: '', height: 'md', textAlign: 'center', layout: 'full', overlayColor: '#000000', overlayOpacity: 50 }, editableFields: [{ key: 'title', label: '제목', type: 'text' }, { key: 'subtitle', label: '부제목', type: 'text' }, { key: 'backgroundImageUrl', label: '배경 이미지', type: 'image' }, { key: 'backgroundImagePosition', label: '배경 이미지 위치', type: 'select', options: [{ label: '가운데 (기본)', value: 'center' }, { label: '상단 중앙', value: 'top' }, { label: '하단 중앙', value: 'bottom' }, { label: '좌측 중앙', value: 'left' }, { label: '우측 중앙', value: 'right' }, { label: '좌측 상단', value: 'top-left' }, { label: '우측 상단', value: 'top-right' }, { label: '좌측 하단', value: 'bottom-left' }, { label: '우측 하단', value: 'bottom-right' }] }, { key: 'overlayColor', label: '오버레이 색상', type: 'text' }, { key: 'overlayOpacity', label: '오버레이 투명도 (%)', type: 'number' }, { key: 'buttonText', label: '버튼 텍스트', type: 'text' }, { key: 'buttonUrl', label: '버튼 링크', type: 'url' }, { key: 'layout', label: '레이아웃', type: 'select', options: [{ label: '풀 와이드', value: 'full' }, { label: '컨테이너', value: 'contained' }] }, { key: 'height', label: '높이', type: 'select', options: [{ label: '작게', value: 'sm' }, { label: '보통', value: 'md' }, { label: '크게', value: 'lg' }, { label: '전체', value: 'full' }] }] },
   { type: 'banner_slider', label: '배너 슬라이더', category: '히어로', icon: '🎠', nature: 'dynamic', description: '배너 관리에서 등록한 배너 자동 슬라이드', variants: [], defaultProps: { category: 'main' }, editableFields: [{ key: 'category', label: '배너 카테고리', type: 'select', options: [{ label: '메인', value: 'main' }, { label: '서브', value: 'sub' }] }] },
