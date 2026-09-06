@@ -1,8 +1,11 @@
 import { useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
 import { inputClass, textareaClass, ImageUpload, useToast, EmptyState } from '../components';
 import { MemberPicker } from '../components/MemberPicker';
+import { useEntitlements } from '../hooks/useEntitlements';
+import { featureAllowed } from '../lib/plan-features';
 
 /**
  * 교적관리 — 교인 명부(MB-02) · 등록/수정(MB-04) · 상세(MB-03, 요약).
@@ -31,6 +34,10 @@ export default function MemberManagement() {
   const api = apiClient!.adapter;
   const { showToast } = useToast();
   const qc = useQueryClient();
+
+  const { slug = '' } = useParams<{ slug: string }>();
+  const { features } = useEntitlements(slug);
+  const hasSmallgroup = featureAllowed(features, 'smallgroup'); // 스몰그룹 애드온 켠 테넌트만 소속목장·이수이력 노출
 
   const [view, setView] = useState<'list' | 'edit' | 'detail'>('list');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -104,6 +111,13 @@ export default function MemberManagement() {
       const res = await api.get<{ data: Member }>(`/api/v1/members/${detailId}`);
       return (res as any).data as Member;
     },
+  });
+
+  // 역방향 연동 — 소속 목장 + 이수 이력. 스몰그룹 애드온 켠 테넌트에서만 호출/표시.
+  const sgQ = useQuery({
+    queryKey: ['member-smallgroup', detailId],
+    enabled: !!detailId && view === 'detail' && hasSmallgroup,
+    queryFn: async () => (await api.get<{ data: any }>(`/api/v1/members/${detailId}/smallgroup`) as any).data as { groups: any[]; enrollments: any[] },
   });
 
   // 가족관계 추가용 후보(전체 교인) + 입력 상태
@@ -256,6 +270,46 @@ export default function MemberManagement() {
               </div>
               {m.note && <><h3 className="text-sm font-semibold text-gray-700 mt-5 mb-2">비고</h3><p className="text-sm text-gray-600 whitespace-pre-wrap">{m.note}</p></>}
             </div>
+
+            {/* 소속 목장 · 이수 이력 — 스몰그룹 애드온 켠 테넌트에서만 (역방향 연동) */}
+            {hasSmallgroup && (
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3">소속 목장</h3>
+                  {(sgQ.data?.groups?.length ?? 0) === 0 ? <p className="text-sm text-gray-400">소속된 목장이 없습니다.</p> : (
+                    <div className="flex flex-col gap-2">
+                      {sgQ.data!.groups.map((g: any) => (
+                        <div key={g.id} className="flex items-center gap-2 text-sm">
+                          <span className="font-medium text-gray-800">{g.name}</span>
+                          <span className={`text-[11px] font-medium rounded-full px-2 py-0.5 ${g.role === 'leader' || g.role === 'subleader' ? 'bg-blue-50 text-blue-700' : g.role === 'preleader' ? 'bg-gray-100 text-gray-600' : 'bg-gray-50 text-gray-500'}`}>
+                            {({ leader: '리더', subleader: '부리더', preleader: '예비리더', member: '구성원' } as any)[g.role] ?? g.role}
+                          </span>
+                          {g.is_temporary && <span className="text-[11px] text-amber-600 font-medium">임시</span>}
+                          {g.leader_name && <span className="text-xs text-gray-400 ml-auto">리더 {g.leader_name}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3">이수 이력</h3>
+                  {(sgQ.data?.enrollments?.length ?? 0) === 0 ? <p className="text-sm text-gray-400">이수·수강 이력이 없습니다.</p> : (
+                    <div className="flex flex-col gap-2">
+                      {sgQ.data!.enrollments.map((e: any) => (
+                        <div key={e.id} className="flex items-center gap-2 text-sm">
+                          <span className="font-medium text-gray-800">{e.course_name}{e.term_name ? ` ${e.term_name}` : ''}</span>
+                          <span className={`text-[11px] font-medium rounded-full px-2 py-0.5 ${e.status === 'completed' ? 'bg-green-50 text-green-700' : e.status === 'dropped' ? 'bg-gray-100 text-gray-500' : 'bg-blue-50 text-blue-700'}`}>
+                            {({ completed: '수료', enrolled: '수강 중', applied: '신청', dropped: '중도포기' } as any)[e.status] ?? e.status}
+                          </span>
+                          {e.status !== 'completed' && <span className="text-xs text-gray-400 ml-auto">{e.present_count ?? 0}/{e.criteria ?? 0}</span>}
+                          {e.status === 'completed' && e.completed_date && <span className="text-xs text-gray-400 ml-auto">{String(e.completed_date).slice(0, 10)}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>

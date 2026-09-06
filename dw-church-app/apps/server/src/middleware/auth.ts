@@ -4,7 +4,7 @@ import { env } from '../config/env.js';
 import { prisma } from '../config/database.js';
 import { AppError } from './error-handler.js';
 import { validateSchemaName } from '../utils/validate-schema.js';
-import { planAllowsFeature, tiersForFeature, isAddon } from '../config/plan-limits.js';
+import { tiersForFeature, isAddon, isFeatureEffective, missingDeps, FEATURE_LABELS } from '../config/plan-limits.js';
 import type { JwtPayload } from '../config/jwt.js';
 
 function extractToken(request: FastifyRequest): string | null {
@@ -186,7 +186,7 @@ export function requireFeature(feature: string) {
     // precedence over the plan default — mirrors effectiveFeatures() used by the
     // admin nav so the ROUTE and the MENU agree. Without this, an add-on shows
     // in the nav (nav honors overrides) but its API returns 403 (route didn't).
-    let allowed = planAllowsFeature(plan, feature);
+    let ov: Record<string, unknown> = {};
     const tenantId = request.tenant?.id;
     if (tenantId) {
       try {
@@ -194,17 +194,26 @@ export function requireFeature(feature: string) {
           `SELECT feature_overrides FROM public.tenants WHERE id = $1::uuid`,
           tenantId,
         );
-        const ov = rows[0]?.feature_overrides ?? {};
-        if (typeof ov[feature] === 'boolean') allowed = ov[feature] as boolean;
+        ov = rows[0]?.feature_overrides ?? {};
       } catch {
-        // overrides unavailable → fall back to the plan default computed above
+        // overrides unavailable → fall back to the plan default
       }
     }
 
+    // 의존성까지 반영한 유효 활성 여부 (선행 애드온이 꺼져 있으면 무효).
+    const allowed = isFeatureEffective(plan, ov, feature);
     if (!allowed) {
-      const msg = isAddon(feature)
-        ? '이 기능은 유료 애드온입니다. 슈퍼어드민에서 애드온을 활성화하면 사용할 수 있습니다.'
-        : `이 기능은 ${tiersForFeature(feature).join(' 또는 ')} 플랜에서 사용할 수 있습니다. (현재: ${plan || 'unknown'})`;
+      const missing = missingDeps(plan, ov, feature);
+      let msg: string;
+      if (missing.length) {
+        // 기능 자신은 켜졌지만 선행 애드온이 없어 막힌 경우.
+        const names = missing.map((d) => FEATURE_LABELS[d] ?? d).join(' · ');
+        msg = `이 기능은 ${names} 애드온이 있어야 사용할 수 있습니다. ${names}을(를) 먼저 활성화하세요.`;
+      } else if (isAddon(feature)) {
+        msg = '이 기능은 유료 애드온입니다. 슈퍼어드민에서 애드온을 활성화하면 사용할 수 있습니다.';
+      } else {
+        msg = `이 기능은 ${tiersForFeature(feature).join(' 또는 ')} 플랜에서 사용할 수 있습니다. (현재: ${plan || 'unknown'})`;
+      }
       throw new AppError('PLAN_UPGRADE_REQUIRED', 403, msg);
     }
   };

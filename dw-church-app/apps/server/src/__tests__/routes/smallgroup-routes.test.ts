@@ -134,7 +134,8 @@ afterAll(async () => { await app.close(); });
 
 async function withAddon(): Promise<void> {
   const { prisma } = await import('../../config/database.js');
-  vi.mocked(prisma.$queryRawUnsafe).mockResolvedValueOnce([{ feature_overrides: { smallgroup: true } }] as never);
+  // 스몰그룹은 교적(membership) 의존 → 둘 다 켜야 게이트 통과 (의존성 시스템).
+  vi.mocked(prisma.$queryRawUnsafe).mockResolvedValueOnce([{ feature_overrides: { smallgroup: true, membership: true } }] as never);
 }
 const auth = () => ({ authorization: `Bearer ${token()}` });
 const H = () => ({ 'x-tenant-slug': 'base', ...auth() });

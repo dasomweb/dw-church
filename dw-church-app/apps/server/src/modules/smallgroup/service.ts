@@ -256,6 +256,20 @@ export async function listGroupMembers(schema: string, groupId: string) {
   );
 }
 
+/** 한 교인의 현재 소속 조직들 — 교적 교인 카드의 '소속 목장' 섹션(역방향 연동). */
+export async function memberGroups(schema: string, memberId: string) {
+  return prisma.$queryRawUnsafe<any[]>(
+    `SELECT g.id, g.name, g.status, gm.role, gm.start_date, gm.is_temporary,
+            lm.name AS leader_name
+     FROM "${schema}".group_members gm
+     JOIN "${schema}".groups g ON g.id = gm.group_id
+     LEFT JOIN "${schema}".members lm ON lm.id = g.leader_member_id
+     WHERE gm.member_id = $1::uuid AND gm.end_date IS NULL
+     ORDER BY g.level, g.sort_order, g.name`,
+    memberId,
+  );
+}
+
 /** 조직들의 소속 상태 — 미소속 명단 배정 화면(GR-02)에서 쓰는 member_id → group 맵. */
 export async function memberGroupMap(schema: string) {
   const rows = await prisma.$queryRawUnsafe<any[]>(

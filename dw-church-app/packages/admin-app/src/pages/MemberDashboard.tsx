@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDWChurchClient } from '@dw-church/api-client';
+import { useEntitlements } from '../hooks/useEntitlements';
+import { featureAllowed } from '../lib/plan-features';
 
 /**
  * MB-01 교적 현황 — 화면 시안(교적관리 화면 시안.dc.html) 그대로 구현.
@@ -20,6 +22,8 @@ export default function MemberDashboard() {
   const navigate = useNavigate();
   const { slug = '' } = useParams<{ slug: string }>();
   const go = (p: string) => navigate(`/t/${slug}/${p}`);
+  const { features } = useEntitlements(slug);
+  const hasSmallgroup = featureAllowed(features, 'smallgroup'); // 스몰그룹 있을 때만 구역별 출석 노출
 
   const dashQ = useQuery({ queryKey: ['member-dashboard'], queryFn: async () => (await api.get<{ data: Dash }>('/api/v1/member-stats/dashboard') as any).data as Dash });
 
@@ -52,33 +56,34 @@ export default function MemberDashboard() {
         <Card label="장기 결석 (4주+)" value={num(c.longAbsent)} sub="심방 배정하기" subLink onSub={() => go('member-visits')} />
       </div>
 
-      {/* 본문 2열 */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-4">
-        {/* 구역별 주일 출석 */}
-        <div className="bg-white border border-[#e5e7eb] rounded-[14px] px-[22px] py-5">
-          <div className="flex items-center mb-[18px]">
-            <b className="text-[14.5px]">구역별 주일 출석 <span className="text-[#8b93a3] font-normal text-[12.5px]">(지난주)</span></b>
-            <button onClick={() => go('attendance')} className="ml-auto text-[12.5px] font-bold text-[#1466d6] hover:text-[#0f4fa8]">전체 보기</button>
-          </div>
-          {byGroup.length === 0 ? (
-            <p className="text-[12.5px] text-[#8b93a3] py-3">지난주 출석 기록 또는 조직(구역)이 없습니다. 출석을 기록하면 조직별로 집계됩니다.</p>
-          ) : (
-            <div className="flex flex-col gap-[13px]">
-              {byGroup.map((g, i) => (
-                <div key={i} className="flex items-center gap-3 text-[13px]">
-                  <span className="basis-[76px] shrink-0 font-bold truncate">{g.name}</span>
-                  <div className="flex-1 h-[9px] rounded-full bg-[#eef1f5] overflow-hidden">
-                    <div className="h-full" style={{ width: `${g.rate}%`, background: g.rate >= 60 ? '#1466d6' : '#f5b423' }} />
-                  </div>
-                  <span className="basis-[92px] shrink-0 text-right text-[#61697a] tabular-nums">{g.present} / {g.total} · {g.rate}%</span>
-                </div>
-              ))}
+      {/* 본문 — 스몰그룹 애드온이 있으면 좌측에 구역별 출석 추가(교적 단독일 땐 미노출) */}
+      <div className={`grid grid-cols-1 gap-4 ${hasSmallgroup ? 'lg:grid-cols-[1.5fr_1fr]' : ''}`}>
+        {hasSmallgroup && (
+          <div className="bg-white border border-[#e5e7eb] rounded-[14px] px-[22px] py-5">
+            <div className="flex items-center mb-[18px]">
+              <b className="text-[14.5px]">구역별 주일 출석 <span className="text-[#8b93a3] font-normal text-[12.5px]">(지난주)</span></b>
+              <button onClick={() => go('attendance')} className="ml-auto text-[12.5px] font-bold text-[#1466d6] hover:text-[#0f4fa8]">전체 보기</button>
             </div>
-          )}
-        </div>
+            {byGroup.length === 0 ? (
+              <p className="text-[12.5px] text-[#8b93a3] py-3">지난주 출석 기록 또는 조직(구역)이 없습니다. 출석을 기록하면 조직별로 집계됩니다.</p>
+            ) : (
+              <div className="flex flex-col gap-[13px]">
+                {byGroup.map((g, i) => (
+                  <div key={i} className="flex items-center gap-3 text-[13px]">
+                    <span className="basis-[76px] shrink-0 font-bold truncate">{g.name}</span>
+                    <div className="flex-1 h-[9px] rounded-full bg-[#eef1f5] overflow-hidden">
+                      <div className="h-full" style={{ width: `${g.rate}%`, background: g.rate >= 60 ? '#1466d6' : '#f5b423' }} />
+                    </div>
+                    <span className="basis-[92px] shrink-0 text-right text-[#61697a] tabular-nums">{g.present} / {g.total} · {g.rate}%</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
-        {/* 우측 */}
-        <div className="flex flex-col gap-4">
+        {/* 우측 (교적 단독이면 아래 2개가 전체 폭) */}
+        <div className={hasSmallgroup ? 'flex flex-col gap-4' : 'grid grid-cols-1 md:grid-cols-2 gap-4'}>
           <div className="bg-white border border-[#e5e7eb] rounded-[14px] px-[22px] py-5">
             <b className="text-[14.5px] block mb-3.5">이번 주 할 일</b>
             {todos.length === 0 ? <p className="text-[12.5px] text-[#8b93a3]">지금 처리할 일이 없습니다. 👍</p> : (

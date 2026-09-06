@@ -15,18 +15,27 @@ import { useSuperAdminTenant } from '../SuperAdminTenantLayout';
 
 // Display labels + grouping for the gated feature keys (must match server keys).
 const FEATURES: { key: string; label: string; group: string }[] = [
-  { key: 'albums', label: '사진 앨범', group: '기본 이상' },
-  { key: 'history', label: '교회 연혁', group: '기본 이상' },
-  { key: 'columns', label: '목회 칼럼', group: '기본 이상' },
-  { key: 'video', label: '영상 게시판', group: '기본 이상' },
-  { key: 'boards', label: '게시판(공지/선교 등)', group: '기본 이상' },
-  { key: 'events', label: '행사', group: '기본 이상' },
-  { key: 'banners', label: '메인 배너 슬라이드', group: '기본 이상' },
-  { key: 'cells', label: '목장(셀) 관리', group: '플러스 이상' },
-  { key: 'newcomer', label: '새가족 안내·등록 폼', group: '플러스 이상' },
-  { key: 'newcomer_registration', label: '새가족 온라인 등록·교인관리', group: '프로' },
-  { key: 'pwa', label: '모바일 앱(PWA)', group: '프로' },
+  { key: 'albums', label: '사진 앨범', group: '웹사이트 콘텐츠' },
+  { key: 'history', label: '교회 연혁', group: '웹사이트 콘텐츠' },
+  { key: 'columns', label: '목회 칼럼', group: '웹사이트 콘텐츠' },
+  { key: 'video', label: '영상 게시판', group: '웹사이트 콘텐츠' },
+  { key: 'boards', label: '게시판(공지/선교 등)', group: '웹사이트 콘텐츠' },
+  { key: 'events', label: '행사', group: '웹사이트 콘텐츠' },
+  { key: 'banners', label: '메인 배너 슬라이드', group: '웹사이트 콘텐츠' },
+  // 교회 행정 애드온 — 교적관리가 토대. 새가족·스몰그룹은 교적 없이는 동작 안 함.
+  { key: 'membership', label: '교적관리 (명부·세대·출석·심방·성례)', group: '교회 행정 애드온' },
+  { key: 'smallgroup', label: '스몰그룹 (목장·구역·셀·사역별) · 교적 필요', group: '교회 행정 애드온' },
+  { key: 'cells', label: '목장(셀) 관리 [구]', group: '교회 행정 애드온' },
+  { key: 'newcomer', label: '새가족 안내·등록 폼 · 교적 필요', group: '교회 행정 애드온' },
+  { key: 'newcomer_registration', label: '새가족 온라인 등록·교인관리 · 교적 필요', group: '교회 행정 애드온' },
+  { key: 'pwa', label: '모바일 앱(PWA)', group: '기타' },
 ];
+
+// 애드온 의존성 (서버 config/plan-limits.ts FEATURE_DEPS 와 반드시 일치).
+const DEPS: Record<string, string[]> = {
+  newcomer: ['membership'], newcomer_registration: ['membership'], smallgroup: ['membership'],
+};
+const DEP_LABEL: Record<string, string> = { membership: '교적관리' };
 
 const PLAN_LABEL: Record<string, string> = { light: '라이트', basic: '기본', plus: '플러스', pro: '프로' };
 
@@ -77,6 +86,9 @@ export default function TenantFeaturePermissions() {
 
   const effective = (key: string) => (key in overrides ? overrides[key] : defaults[key]) ?? false;
   const isOverridden = (key: string) => key in overrides;
+  // 의존성 충족 여부 — 선행 애드온(교적)이 모두 켜져 있어야 이 애드온이 유효.
+  const depsMet = (key: string) => (DEPS[key] ?? []).every((d) => effective(d));
+  const missingDep = (key: string) => (DEPS[key] ?? []).filter((d) => !effective(d)).map((d) => DEP_LABEL[d] ?? d);
   // Billable add-on = enabled now but NOT included in the plan → charged at its
   // à-la-carte price (plan is a discounted bundle; plan features never charge).
   const isAddon = (key: string) => effective(key) && !(defaults[key] ?? false);
@@ -86,10 +98,21 @@ export default function TenantFeaturePermissions() {
   // the override (follow the plan); otherwise record it as an explicit exception.
   const toggle = (key: string) => {
     const next = !effective(key);
+    // 의존성 가드: 선행 애드온 없이 의존 애드온을 켜지 못하게 차단 (A안).
+    if (next && !depsMet(key)) {
+      showToast('error', `${missingDep(key).join(' · ')} 애드온을 먼저 켜야 사용할 수 있습니다.`);
+      return;
+    }
     setOverrides((prev) => {
       const copy = { ...prev };
       if (next === (defaults[key] ?? false)) delete copy[key];
       else copy[key] = next;
+      // 선행 애드온(교적)을 끄면, 이를 의존하는 애드온의 예외도 함께 해제(정리).
+      if (!next) {
+        for (const dk of Object.keys(DEPS)) {
+          if ((DEPS[dk] ?? []).includes(key) && copy[dk]) delete copy[dk];
+        }
+      }
       return copy;
     });
   };
@@ -167,8 +190,11 @@ export default function TenantFeaturePermissions() {
                         <div className="text-[11px] text-gray-400">
                           플랜 기본: {defaults[f.key] ? '사용 가능' : '미포함'}
                           <span className="text-gray-300"> · </span>단가 ${prices[f.key] ?? 0}/월
-                          {isAddon(f.key) && (
+                          {isAddon(f.key) && depsMet(f.key) && (
                             <span className="ml-1.5 font-semibold text-amber-600">애드온 +${prices[f.key] ?? 0}/월 청구</span>
+                          )}
+                          {!depsMet(f.key) && (
+                            <span className="ml-1.5 font-semibold text-red-500">{missingDep(f.key).join('·')} 필요</span>
                           )}
                           {isOverridden(f.key) && (
                             <button onClick={() => resetKey(f.key)} className="ml-2 text-blue-500 hover:underline">기본값으로</button>
@@ -177,7 +203,9 @@ export default function TenantFeaturePermissions() {
                       </div>
                       <button
                         onClick={() => toggle(f.key)}
-                        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${effective(f.key) ? 'bg-blue-600' : 'bg-gray-300'}`}
+                        disabled={!depsMet(f.key) && !effective(f.key)}
+                        title={!depsMet(f.key) ? `${missingDep(f.key).join('·')} 애드온이 먼저 필요합니다` : ''}
+                        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${effective(f.key) && depsMet(f.key) ? 'bg-blue-600' : 'bg-gray-300'}`}
                       >
                         <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${effective(f.key) ? 'translate-x-6' : 'translate-x-1'}`} />
                       </button>

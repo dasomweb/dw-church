@@ -112,7 +112,7 @@ describe('newcomers — add-on gate (새가족)', () => {
   });
 
   it('public POST /newcomers WITH the add-on (override) → 201', async () => {
-    await withAddon({ newcomer_registration: true });
+    await withAddon({ newcomer_registration: true, membership: true }); // 새가족은 교적 의존
     const res = await app.inject({
       method: 'POST', url: '/api/v1/newcomers',
       headers: { 'x-tenant-slug': 'base' },
@@ -127,7 +127,7 @@ describe('newcomers — add-on gate (새가족)', () => {
   });
 
   it('GET /newcomers admin WITH the add-on → 200', async () => {
-    await withAddon({ newcomer_registration: true });
+    await withAddon({ newcomer_registration: true, membership: true }); // 새가족은 교적 의존
     const res = await app.inject({
       method: 'GET', url: '/api/v1/newcomers',
       headers: { 'x-tenant-slug': 'base', authorization: `Bearer ${token('base')}` },

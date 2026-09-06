@@ -270,6 +270,18 @@ export async function smallgroupRoutes(app: FastifyInstance) {
     return reply.send({ data: await edu.memberEnrollments(getSchema(request), id) });
   });
 
+  // 교인 카드 역방향 연동 — 소속 목장 + 이수 이력 (스몰그룹 애드온 있을 때만; gate).
+  // 교적만 산 테넌트는 requireFeature('smallgroup') 에서 403 → 카드에 섹션 미노출.
+  app.get('/members/:id/smallgroup', gate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const schema = getSchema(request);
+    const [groups, enrollments] = await Promise.all([
+      svc.memberGroups(schema, id),
+      edu.memberEnrollments(schema, id),
+    ]);
+    return reply.send({ data: { groups, enrollments } });
+  });
+
   // ── 분가 · 번식 (GR-05/06) ───────────────────────────────
   app.post('/groups/:id/split', gate, async (request, reply) => {
     const { id } = request.params as { id: string };

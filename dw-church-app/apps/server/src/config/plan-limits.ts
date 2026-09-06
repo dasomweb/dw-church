@@ -87,6 +87,59 @@ export const FEATURE_TIERS: Record<string, PlanTier[]> = {
 /** Every gated feature id — used to build the effective-features map. */
 export const FEATURE_KEYS = Object.keys(FEATURE_TIERS);
 
+// 애드온 의존성 — 교회 행정 애드온은 교적관리(membership) 위에서만 동작한다.
+// 새가족·스몰그룹은 교적의 교인(members)을 참조하므로 교적 없이는 서비스 불가.
+// 선행 애드온이 꺼져 있으면 의존 애드온도 자동 무효(fail-safe) 처리한다.
+export const FEATURE_DEPS: Record<string, string[]> = {
+  newcomer: ['membership'],
+  newcomer_registration: ['membership'],
+  smallgroup: ['membership'],
+};
+
+/** 사람이 읽는 애드온 이름 — 의존성 안내 메시지용. */
+export const FEATURE_LABELS: Record<string, string> = {
+  membership: '교적관리', smallgroup: '스몰그룹', newcomer: '새가족',
+  newcomer_registration: '새가족 온라인 등록', cells: '목장(셀)',
+};
+
+export function featureDeps(feature: string): string[] {
+  return FEATURE_DEPS[feature] ?? [];
+}
+
+/** plan ⊕ override 로 계산한 한 기능의 raw 활성 여부 (의존성 무시). */
+function rawEffective(plan: string | null | undefined, overrides: Record<string, unknown> | null | undefined, key: string): boolean {
+  const ov = overrides ?? {};
+  return typeof ov[key] === 'boolean' ? (ov[key] as boolean) : planAllowsFeature(plan, key);
+}
+
+/**
+ * 의존성까지 반영한 유효 활성 여부. 기능 자신이 켜져 있어도 선행 애드온 중 하나라도
+ * 꺼져 있으면 false (fail-safe). effectiveFeatures 와 requireFeature 가 공유한다.
+ */
+export function isFeatureEffective(
+  plan: string | null | undefined,
+  overrides: Record<string, unknown> | null | undefined,
+  key: string,
+  seen: Set<string> = new Set(),
+): boolean {
+  if (!rawEffective(plan, overrides, key)) return false;
+  if (seen.has(key)) return true; // 순환 방어
+  seen.add(key);
+  for (const dep of featureDeps(key)) {
+    if (!isFeatureEffective(plan, overrides, dep, seen)) return false;
+  }
+  return true;
+}
+
+/** 선행 애드온 중 아직 활성화되지 않은 것들 (안내 메시지용). */
+export function missingDeps(
+  plan: string | null | undefined,
+  overrides: Record<string, unknown> | null | undefined,
+  key: string,
+): string[] {
+  return featureDeps(key).filter((dep) => !isFeatureEffective(plan, overrides, dep));
+}
+
 /** A feature that no tier includes ([]) — sold only as a paid per-tenant add-on. */
 export function isAddon(feature: string): boolean {
   const t = FEATURE_TIERS[feature];
@@ -113,10 +166,10 @@ export function effectiveFeatures(
   plan: string | null | undefined,
   overrides: Record<string, unknown> | null | undefined,
 ): Record<string, boolean> {
-  const ov = overrides ?? {};
   const out: Record<string, boolean> = {};
   for (const key of FEATURE_KEYS) {
-    out[key] = typeof ov[key] === 'boolean' ? (ov[key] as boolean) : planAllowsFeature(plan, key);
+    // 의존성 반영(fail-safe): 선행 애드온이 꺼져 있으면 의존 애드온도 무효.
+    out[key] = isFeatureEffective(plan, overrides, key);
   }
   return out;
 }
