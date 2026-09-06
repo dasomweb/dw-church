@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
 import { inputClass, useToast, EmptyState } from '../components';
@@ -13,7 +14,6 @@ type Preset = Record<string, any>;
 type Group = Record<string, any>;
 
 const ROLE_LABEL: Record<string, string> = { leader: '리더', subleader: '부리더', preleader: '예비리더', member: '구성원' };
-const REASON_LABEL: Record<string, string> = { new: '신입 배치', reorg: '정기 개편', move: '이사', request: '본인 요청', disband: '해산', other: '기타' };
 
 export default function SmallGroupOrg() {
   const apiClient = useDWChurchClient();
@@ -208,11 +208,15 @@ function GroupDetail({ group, preset, levelDefs, tree, members, api, showToast, 
   api: any; showToast: (t: 'success' | 'error', m: string) => void; onChanged: () => void; onDeleted: () => void;
 }) {
   const t = preset?.terminology ?? { org: '조직', member: '구성원', leader: '리더' };
+  const navigate = useNavigate();
+  const { slug = '' } = useParams<{ slug: string }>();
   const [editing, setEditing] = useState(false);
   const [splitting, setSplitting] = useState(false);
   const [busy, setBusy] = useState(false);
   const [addId, setAddId] = useState('');
   const [addRole, setAddRole] = useState('member');
+  const [tab, setTab] = useState<'members' | 'reports' | 'courses' | 'public'>('members');
+  const [showAdd, setShowAdd] = useState(false);
 
   const roster: any[] = group.members ?? [];
 
@@ -258,71 +262,199 @@ function GroupDetail({ group, preset, levelDefs, tree, members, api, showToast, 
   }
 
   const meeting = [group.meeting_day, group.meeting_time].filter(Boolean).join(' ') + (group.meeting_place ? ` · ${group.meeting_place}` : '');
+  const overCount = roster.length > 14;
+  const statusBadge = group.status === 'paused' ? { t: '중단', c: 'text-[#61697a] bg-[#f2f4f7]' }
+    : group.status === 'closed' ? { t: '종료', c: 'text-[#61697a] bg-[#f2f4f7]' }
+    : { t: '운영 중', c: 'text-[#0d7a35] bg-[#e9f7ee]' };
+  const metaParts = [
+    [t.leader, group.leader_name].filter(Boolean).join(' ') + (group.subleader_name ? ` · ${t.subleader} ${group.subleader_name}` : ''),
+    group.parent?.name,
+    meeting,
+    `${t.member} ${roster.length}명`,
+  ].filter(Boolean);
+  const TABS: [string, string][] = [['members', `${t.member} ${roster.length}`], ['reports', `리포트 ${group.recentReports?.length ?? 0}`], ['courses', '이수 현황'], ['public', '공개 소개']];
 
   return (
-    <div className="space-y-4">
-      {/* 헤더 카드 */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold text-gray-900 truncate">{group.name}</h2>
-              {group.status && group.status !== 'active' && <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">{group.status === 'paused' ? '중단' : '종료'}</span>}
-              {group.parent?.name && <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-50 text-gray-400">{group.parent.name}</span>}
-            </div>
-            <p className="text-sm text-gray-500 mt-1">
-              {t.leader ?? '리더'} {group.leader_name || '미지정'}
-              {group.subleader_member_id ? '' : ''} · {t.member ?? '구성원'} {roster.length}명
-              {meeting ? ` · ${meeting}` : ''}{group.region ? ` · ${group.region}` : ''}
-            </p>
+    <div className="text-[#16181d]">
+      {/* 헤더 카드 (GR-03) */}
+      <div className="bg-white border border-[#e5e7eb] rounded-[14px] px-6 py-[22px] flex gap-5 items-center mb-4">
+        {group.photo_url
+          ? <img src={group.photo_url} alt="" className="w-[72px] h-[72px] rounded-[14px] object-cover shrink-0" />
+          : <div className="w-[72px] h-[72px] rounded-[14px] bg-[#eef1f5] text-[#a3aab8] flex items-center justify-center text-[11.5px] font-bold shrink-0">사진</div>}
+        <div className="min-w-0">
+          <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
+            <b className="text-[22px] font-extrabold">{group.name}</b>
+            <span className={`text-[12px] font-extrabold px-2.5 py-1 rounded-full ${statusBadge.c}`}>{statusBadge.t}</span>
+            {overCount && <span className="text-[12px] font-extrabold text-[#8a6410] bg-[#fdf4e0] px-2.5 py-1 rounded-full">분가 검토</span>}
           </div>
-          <div className="flex gap-2 shrink-0">
-            {roster.length > 0 && <button onClick={() => setSplitting(true)} className="text-sm text-blue-600 border border-blue-100 rounded-lg px-3 py-1.5 hover:bg-blue-50">분가</button>}
-            <button onClick={() => setEditing(true)} className="text-sm text-gray-600 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50">수정</button>
-            <button onClick={() => void deleteGroup()} className="text-sm text-red-600 border border-red-100 rounded-lg px-3 py-1.5 hover:bg-red-50">삭제</button>
+          <div className="flex flex-wrap gap-x-[18px] gap-y-1.5 text-[13.5px] text-[#61697a]">
+            {metaParts.map((p, i) => <span key={i}>{p}</span>)}
           </div>
+        </div>
+        <div className="ml-auto flex gap-2 shrink-0 flex-wrap justify-end">
+          <button onClick={() => { setTab('members'); setShowAdd(true); }} className="text-[13px] font-bold border border-[#dfe3ea] text-[#3c4353] px-4 py-2.5 rounded-[9px] hover:bg-[#f7f8fa]">명단 배정</button>
+          {roster.length > 0 && <button onClick={() => setSplitting(true)} className="text-[13px] font-bold bg-[#e8f0fe] text-[#1466d6] px-4 py-2.5 rounded-[9px] hover:bg-[#dbe8fc]">분가 처리</button>}
+          <button onClick={() => setEditing(true)} className="text-[13px] font-bold border border-[#dfe3ea] text-[#3c4353] px-4 py-2.5 rounded-[9px] hover:bg-[#f7f8fa]">수정</button>
+          <button onClick={() => void deleteGroup()} className="text-[13px] font-bold text-[#dc2626] px-3 py-2.5 rounded-[9px] hover:bg-red-50">삭제</button>
         </div>
       </div>
 
-      {/* 명단 배정 */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-        <h3 className="text-sm font-semibold text-gray-800 mb-3">{t.member ?? '구성원'} 명단 <span className="text-gray-400 font-normal">({roster.length})</span></h3>
-        <div className="flex flex-wrap items-end gap-2 bg-gray-50 rounded-lg p-3 mb-3">
-          <div className="flex-1 min-w-[220px]">
-            <span className="text-[11px] text-gray-500">교인 추가</span>
-            <MemberPicker members={members} value={addId} onChange={setAddId} placeholder="이름 검색으로 추가" />
-          </div>
-          <label><span className="text-[11px] text-gray-500 block">역할</span>
-            <select className={`${inputClass} sm:w-28`} value={addRole} onChange={(e) => setAddRole(e.target.value)}>
-              {Object.entries(ROLE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-            </select></label>
-          <button disabled={busy || !addId} onClick={() => void addMember()} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">추가</button>
-        </div>
+      {/* 탭 */}
+      <div className="flex gap-1 border-b border-[#e5e7eb] mb-5">
+        {TABS.map(([k, label]) => (
+          <button key={k} onClick={() => setTab(k as any)}
+            className={`text-[13.5px] px-4 py-[11px] -mb-px ${tab === k ? 'font-bold text-[#1466d6] border-b-2 border-[#1466d6]' : 'font-semibold text-[#61697a] hover:text-[#3c4353]'}`}>{label}</button>
+        ))}
+      </div>
 
-        {roster.length === 0 ? <p className="text-sm text-gray-400 py-4 text-center">아직 명단이 비어 있습니다.</p> : (
-          <div className="divide-y divide-gray-50">
-            {roster.map((m) => (
-              <div key={m.id} className="flex items-center gap-3 py-2">
-                {m.member_photo ? <img src={m.member_photo} alt="" className="w-8 h-8 rounded-full object-cover" /> :
-                  <span className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs text-gray-400">{(m.member_name || '·')[0]}</span>}
-                <span className="min-w-0 flex-1">
-                  <span className="text-sm font-medium text-gray-800">{m.member_name}</span>
-                  <span className="block text-[11px] text-gray-400 truncate">
-                    {[m.household_name, m.position, m.is_temporary ? '임시' : '', m.reason ? REASON_LABEL[m.reason] : ''].filter(Boolean).join(' · ') || '—'}
-                  </span>
-                </span>
-                <select value={m.role} onChange={(e) => void changeRole(m.id, e.target.value)}
-                  className="text-xs border border-gray-200 rounded-md px-2 py-1 text-gray-600">
-                  {Object.entries(ROLE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                </select>
-                <button onClick={() => void removeMember(m.id, m.member_name)} className="text-xs text-gray-400 hover:text-red-600">제외</button>
+      {tab === 'members' && (
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] gap-4">
+          {/* 목원 테이블 */}
+          <div className="bg-white border border-[#e5e7eb] rounded-[14px] overflow-hidden">
+            {showAdd && (
+              <div className="flex flex-wrap items-end gap-2 bg-[#f7f8fa] p-3 border-b border-[#eef0f4]">
+                <div className="flex-1 min-w-[200px]"><span className="text-[11px] text-[#61697a]">교인 추가</span>
+                  <MemberPicker members={members} value={addId} onChange={setAddId} placeholder="이름 검색으로 추가" /></div>
+                <label><span className="text-[11px] text-[#61697a] block">역할</span>
+                  <select className={`${inputClass} sm:w-28`} value={addRole} onChange={(e) => setAddRole(e.target.value)}>
+                    {Object.entries(ROLE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                  </select></label>
+                <button disabled={busy || !addId} onClick={() => void addMember()} className="bg-[#1466d6] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#0f4fa8] disabled:opacity-50">추가</button>
+                <button onClick={() => setShowAdd(false)} className="text-xs text-[#8b93a3] px-2 py-2">닫기</button>
               </div>
-            ))}
+            )}
+            <div className="grid grid-cols-[minmax(0,1.3fr)_84px_minmax(0,1fr)_84px_72px] gap-2.5 px-[18px] py-[11px] bg-[#fafbfc] border-b border-[#eef0f4] text-[11.5px] font-extrabold text-[#8b93a3]">
+              <span>{t.member}</span><span>역할</span><span>세대</span><span>합류</span><span>최근 참석</span>
+            </div>
+            {roster.length === 0 ? <p className="text-sm text-[#8b93a3] py-8 text-center">아직 명단이 비어 있습니다. ‘명단 배정’으로 추가하세요.</p>
+              : roster.map((m) => <RosterRow key={m.id} m={m} recentTotal={group.recentTotal ?? 0} onRole={changeRole} onRemove={removeMember} />)}
           </div>
-        )}
+
+          {/* 우측: 최근 리포트 + 이수 현황 요약 */}
+          <div className="flex flex-col gap-3.5">
+            <div className="bg-white border border-[#e5e7eb] rounded-[14px] px-[22px] py-5">
+              <b className="text-[14px] block mb-3">최근 리포트</b>
+              {(group.recentReports?.length ?? 0) === 0 ? <p className="text-[12.5px] text-[#8b93a3]">아직 리포트가 없습니다.</p> : (
+                <div className="flex flex-col gap-[11px] text-[12.5px]">
+                  {group.recentReports.map((r: any, i: number) => {
+                    const badge = r.status === 'confirmed' ? { t: '확인', c: 'text-[#0d7a35] bg-[#e9f7ee]' } : r.status === 'submitted' ? { t: '미확인', c: 'text-[#8a6410] bg-[#fdf4e0]' } : { t: '작성중', c: 'text-[#61697a] bg-[#f2f4f7]' };
+                    return (
+                      <div key={i} className="flex items-center gap-2.5">
+                        <span className="font-bold">{fmtWeek(r.meeting_date)}</span>
+                        <span className="text-[#61697a]">참석 {r.attendance_count}{r.newcomer_count ? ` · 초신자 ${r.newcomer_count}` : ''}{r.has_care ? ' · 돌봄 1' : ''}</span>
+                        <span className={`ml-auto text-[11.5px] font-extrabold px-2 py-[3px] rounded-full ${badge.c}`}>{badge.t}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            <div className="bg-white border border-[#e5e7eb] rounded-[14px] px-[22px] py-5">
+              <b className="text-[14px] block mb-3">이수 현황 요약</b>
+              {(group.courseSummary?.length ?? 0) === 0 ? <p className="text-[12.5px] text-[#8b93a3]">등록된 과정이 없습니다.</p> : (
+                <div className="flex flex-col gap-3 text-[12.5px]">
+                  {group.courseSummary.map((c: any, i: number) => {
+                    const total = group.memberTotal || roster.length || 1;
+                    const pct = Math.round(((c.completed ?? 0) / total) * 100);
+                    return (
+                      <div key={i}>
+                        <div className="flex mb-1.5"><span>{c.name}</span><span className="ml-auto text-[#61697a]">{c.completed ?? 0} / {total}</span></div>
+                        <div className="h-[6px] rounded-full bg-[#eef1f5] overflow-hidden"><div className="h-full" style={{ width: `${pct}%`, background: pct >= 100 ? '#16a34a' : '#1466d6' }} /></div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab === 'reports' && (
+        <div className="bg-white border border-[#e5e7eb] rounded-[14px] px-[22px] py-5">
+          <div className="flex items-center mb-3"><b className="text-[14px]">최근 리포트</b>
+            <button onClick={() => navigate(`/t/${slug}/group-reports`)} className="ml-auto text-[12.5px] font-bold text-[#1466d6]">리포트 작성</button></div>
+          {(group.recentReports?.length ?? 0) === 0 ? <p className="text-[12.5px] text-[#8b93a3]">아직 리포트가 없습니다.</p> : (
+            <div className="divide-y divide-[#f2f4f7]">
+              {group.recentReports.map((r: any, i: number) => (
+                <div key={i} className="flex items-center gap-3 py-2.5 text-[13px]">
+                  <span className="font-bold w-20">{fmtWeek(r.meeting_date)}</span>
+                  <span className="text-[#61697a]">참석 {r.attendance_count}{r.newcomer_count ? ` · 초신자 ${r.newcomer_count}` : ''}</span>
+                  <span className={`ml-auto text-[11.5px] font-extrabold px-2 py-[3px] rounded-full ${r.status === 'confirmed' ? 'text-[#0d7a35] bg-[#e9f7ee]' : r.status === 'submitted' ? 'text-[#8a6410] bg-[#fdf4e0]' : 'text-[#61697a] bg-[#f2f4f7]'}`}>{r.status === 'confirmed' ? '확인' : r.status === 'submitted' ? '미확인' : '작성중'}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === 'courses' && (
+        <div className="bg-white border border-[#e5e7eb] rounded-[14px] px-[22px] py-5 max-w-2xl">
+          <b className="text-[14px] block mb-3">이수 현황 요약 <span className="text-[#8b93a3] font-normal">({t.member} {group.memberTotal || roster.length}명 기준)</span></b>
+          {(group.courseSummary?.length ?? 0) === 0 ? <p className="text-[12.5px] text-[#8b93a3]">등록된 과정이 없습니다.</p> : (
+            <div className="flex flex-col gap-3.5 text-[13px]">
+              {group.courseSummary.map((c: any, i: number) => {
+                const total = group.memberTotal || roster.length || 1;
+                const pct = Math.round(((c.completed ?? 0) / total) * 100);
+                return (
+                  <div key={i}>
+                    <div className="flex mb-1.5"><span className="font-medium">{c.name}</span><span className="ml-auto text-[#61697a]">{c.completed ?? 0} / {total} · {pct}%</span></div>
+                    <div className="h-[7px] rounded-full bg-[#eef1f5] overflow-hidden"><div className="h-full" style={{ width: `${pct}%`, background: pct >= 100 ? '#16a34a' : '#1466d6' }} /></div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <button onClick={() => navigate(`/t/${slug}/group-terms`)} className="text-[12px] text-[#1466d6] font-bold mt-4">차수·출결로 이동</button>
+        </div>
+      )}
+
+      {tab === 'public' && (
+        <div className="bg-white border border-[#e5e7eb] rounded-[14px] px-[22px] py-5 max-w-2xl">
+          <div className="flex items-center mb-3"><b className="text-[14px]">공개 소개</b>
+            <span className={`ml-auto text-[11.5px] font-extrabold px-2 py-[3px] rounded-full ${group.is_public ? 'text-[#0d7a35] bg-[#e9f7ee]' : 'text-[#61697a] bg-[#f2f4f7]'}`}>{group.is_public ? '홈페이지 공개' : '비공개'}</span></div>
+          <p className="text-[13px] text-[#3c4353] whitespace-pre-wrap min-h-[40px]">{group.intro || '아직 공개 소개가 없습니다. ‘수정’에서 소개·사진·공개 여부를 설정하세요.'}</p>
+          {group.tags?.length > 0 && <div className="flex gap-1.5 flex-wrap mt-3">{group.tags.map((tg: string) => <span key={tg} className="text-[11.5px] text-[#61697a] bg-[#f2f4f7] px-2.5 py-1 rounded-full">{tg}</span>)}</div>}
+          <button onClick={() => setEditing(true)} className="text-[12px] text-[#1466d6] font-bold mt-4">소개 편집</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// GR-03 목원 테이블 한 행.
+function RosterRow({ m, recentTotal, onRole, onRemove }: {
+  m: any; recentTotal: number; onRole: (id: string, role: string) => void; onRemove: (id: string, name: string) => void;
+}) {
+  return (
+    <div className={`grid grid-cols-[minmax(0,1.3fr)_84px_minmax(0,1fr)_84px_72px] gap-2.5 px-[18px] py-3 border-b border-[#f2f4f7] text-[13px] items-center ${m.is_temporary ? 'bg-[#fffdf7]' : ''}`}>
+      <div className="flex items-center gap-2.5 min-w-0">
+        {m.member_photo ? <img src={m.member_photo} alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
+          : <span className="w-7 h-7 rounded-full bg-[#dfe3ea] text-[#61697a] flex items-center justify-center text-[10.5px] font-extrabold shrink-0">{(m.member_name || '·')[0]}</span>}
+        <div className="min-w-0">
+          <b className="font-bold truncate block">{m.member_name}</b>
+          {m.is_temporary && <span className="text-[11px] text-[#b98307] font-bold">교육 중 · 임시</span>}
+        </div>
+      </div>
+      <div className="flex items-center">
+        <select value={m.role} onChange={(e) => onRole(m.id, e.target.value)} className="text-[11px] border border-transparent hover:border-[#e5e7eb] rounded-md bg-transparent w-full cursor-pointer appearance-none">
+          {Object.entries(ROLE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+        </select>
+      </div>
+      <span className="text-[#61697a] truncate">{m.household_name || '—'}</span>
+      <span className="text-[#61697a]">{m.start_date ? String(m.start_date).slice(0, 7) : '—'}</span>
+      <div className="flex items-center gap-1.5">
+        <span className="text-[#61697a]">{recentTotal ? `${m.recent_present ?? 0}/${recentTotal}` : '—'}</span>
+        <button onClick={() => onRemove(m.id, m.member_name)} className="text-[11px] text-[#cdd3de] hover:text-[#dc2626] ml-auto">제외</button>
       </div>
     </div>
   );
+}
+
+function fmtWeek(dateStr: string): string {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  return `${d.getMonth() + 1}월 ${Math.ceil(d.getDate() / 7)}주`;
 }
 
 // ── 분가 · 번식 (GR-05/06) ────────────────────────────────

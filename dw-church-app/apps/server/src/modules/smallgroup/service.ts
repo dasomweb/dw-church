@@ -157,6 +157,40 @@ export async function getGroup(schema: string, id: string) {
   group.children = await prisma.$queryRawUnsafe<any[]>(
     `SELECT id, name, status FROM "${schema}".groups WHERE parent_id = $1::uuid ORDER BY sort_order, name`, id,
   );
+  group.subleader_name = group.subleader_member_id
+    ? (await prisma.$queryRawUnsafe<any[]>(`SELECT name FROM "${schema}".members WHERE id = $1::uuid`, group.subleader_member_id))[0]?.name ?? null
+    : null;
+
+  // GR-03 상세: 최근 리포트 5개 + 목원별 최근 참석(최근 8개 리포트) + 이수 현황 요약.
+  const recentReps = await prisma.$queryRawUnsafe<any[]>(
+    `SELECT id, meeting_date::text AS meeting_date, attendance_count, newcomer_count, status,
+            (private_items->>'care' IS NOT NULL AND private_items->>'care' <> '') AS has_care
+     FROM "${schema}".meeting_reports WHERE group_id = $1::uuid ORDER BY meeting_date DESC LIMIT 8`, id,
+  );
+  group.recentReports = recentReps.slice(0, 5);
+  const repIds = recentReps.map((r) => r.id);
+  group.recentTotal = repIds.length;
+  if (repIds.length) {
+    const att = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT member_id, COUNT(*) FILTER (WHERE status IN ('present','online'))::int AS present
+       FROM "${schema}".report_attendance WHERE report_id = ANY($1::uuid[]) GROUP BY member_id`,
+      `{${repIds.join(',')}}`,
+    );
+    const map = new Map(att.map((a) => [a.member_id, a.present]));
+    for (const m of group.members) m.recent_present = map.get(m.member_id) ?? 0;
+  }
+  // 이수 현황 요약 — 현재 목원 중 과정별 수료 인원 / 목원 수.
+  group.memberTotal = group.members.length;
+  group.courseSummary = await prisma.$queryRawUnsafe<any[]>(
+    `SELECT c.name,
+            COUNT(DISTINCT e.member_id) FILTER (WHERE e.status = 'completed')::int AS completed
+     FROM "${schema}".courses c
+     LEFT JOIN "${schema}".course_terms t ON t.course_id = c.id
+     LEFT JOIN "${schema}".enrollments e ON e.term_id = t.id
+       AND e.member_id IN (SELECT member_id FROM "${schema}".group_members WHERE group_id = $1::uuid AND end_date IS NULL)
+     WHERE c.is_active = TRUE
+     GROUP BY c.id, c.name, c.sort_order ORDER BY c.sort_order, c.name LIMIT 6`, id,
+  );
   return group;
 }
 
