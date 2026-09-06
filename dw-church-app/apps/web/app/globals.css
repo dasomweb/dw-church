@@ -38,7 +38,7 @@
 
   /* ── containers / spacing ── */
   --container-narrow:  768px;
-  --container-default: 1200px;
+  --container-default: var(--brand-container-max, 1200px); /* A/② SoT 파생 */
   --container-wide:    1440px;
   --gap-grid:         clamp(1rem, 2vw, 1.5rem);
   --section-py-sm:    clamp(3rem, 6vw, 4rem);
@@ -63,11 +63,11 @@
   --r-lg:   var(--brand-radius-lg, 16px);
   --r-xl:   24px;
   --r-full: var(--brand-radius-full, 9999px);
-  --shadow-xs: 0 1px 2px rgba(0,0,0,.04);
-  --shadow-sm: 0 2px 4px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
-  --shadow-md: 0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04);
-  --shadow-lg: 0 12px 32px rgba(0,0,0,.10), 0 4px 8px rgba(0,0,0,.06);
-  --shadow-xl: 0 24px 64px rgba(0,0,0,.12), 0 8px 16px rgba(0,0,0,.08);
+  --shadow-xs: var(--brand-shadow-xs, 0 1px 2px rgba(0,0,0,.04));
+  --shadow-sm: var(--brand-shadow-sm, 0 2px 4px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04));
+  --shadow-md: var(--brand-shadow-md, 0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04));
+  --shadow-lg: var(--brand-shadow-lg, 0 12px 32px rgba(0,0,0,.10), 0 4px 8px rgba(0,0,0,.06));
+  --shadow-xl: var(--brand-shadow-xl, 0 24px 64px rgba(0,0,0,.12), 0 8px 16px rgba(0,0,0,.08));
 
   /* ── container-query column defaults (card grids) ── */
   --cq-base: 1;
@@ -84,7 +84,10 @@
   --dw-text: var(--text-primary);
   --dw-font-heading: 'Pretendard', sans-serif;
   --dw-font-body: 'Pretendard', sans-serif;
-  --dw-radius: var(--r-md);
+  /* A/② layout→SoT: 레거시 cssVars 주입 제거. 이 베이스 값이 유일 소스 —
+     radius/content-width/shadow 는 SoT(--brand-*)에서 파생되어 editor 편집이
+     반영되고, layout 이중 소스가 없어 드리프트가 구조적으로 불가능. */
+  --dw-radius: var(--brand-radius-lg, 12px);
   --dw-content-width: var(--container-default);
   --dw-card-shadow: var(--shadow-sm);
   --dw-card-border: none;

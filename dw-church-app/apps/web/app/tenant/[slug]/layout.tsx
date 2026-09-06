@@ -36,21 +36,6 @@ interface TenantLayoutProps {
 
 // ─── Layout helpers ──────────────────────────────────────────
 
-const BORDER_RADIUS_MAP: Record<string, string> = {
-  none: '0px',
-  sm: '4px',
-  md: '8px',
-  lg: '12px',
-  xl: '16px',
-};
-
-const CONTENT_WIDTH_MAP: Record<string, string> = {
-  narrow: '768px',
-  default: '1024px',
-  wide: '1280px',
-  full: '100%',
-};
-
 // Fonts already available without a Google Fonts request (Pretendard via CDN,
 // generic system stacks). Everything else is loaded from Google Fonts.
 const PRELOADED_FONTS = new Set([
@@ -80,13 +65,6 @@ function googleFontsHref(stacks: (string | undefined)[]): string | null {
     .join('&');
   return `https://fonts.googleapis.com/css2?${q}&display=swap`;
 }
-
-const CARD_SHADOW_MAP: Record<string, string> = {
-  shadow: '0 1px 3px 0 rgba(0,0,0,.1), 0 1px 2px -1px rgba(0,0,0,.1)',
-  border: 'none',
-  flat: 'none',
-  elevated: '0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -2px rgba(0,0,0,.1)',
-};
 
 function getHeaderClasses(style: string | undefined): string {
   switch (style) {
@@ -313,11 +291,9 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
     '--dw-font-heading': headingFamily,
     '--dw-font-body': bodyFamily,
     // Layout-derived variables
-    '--dw-radius': BORDER_RADIUS_MAP[layout?.borderRadius ?? 'lg'] ?? '12px',
-    '--dw-content-width': CONTENT_WIDTH_MAP[layout?.contentWidth ?? 'default'] ?? '1024px',
-    '--dw-card-shadow': CARD_SHADOW_MAP[layout?.cardStyle ?? 'shadow'] ?? CARD_SHADOW_MAP.shadow,
-    '--dw-card-border': layout?.cardStyle === 'border' ? '1px solid #e5e7eb' : 'none',
-    '--dw-sermon-grid': String(layout?.sermonGrid ?? 4),
+    // A/② layout→SoT: radius/content-width/card-shadow/card-border/sermon-grid
+    // 는 이제 globals.css 베이스에서 SoT(--brand-*) 파생. 레거시 layout 맵 주입을
+    // 제거해 단일 소스(SoT)만 남긴다 — layout 이중 소스 드리프트 원천 제거.
   };
 
   // Determine text colors for dark header

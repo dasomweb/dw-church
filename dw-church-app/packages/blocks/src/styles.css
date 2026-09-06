@@ -81,7 +81,7 @@
 
   /* Container & gutters */
   --container-narrow:  768px;
-  --container-default: 1200px;
+  --container-default: var(--brand-container-max, 1200px);
   --container-wide:    1440px;
   --gap-grid:          clamp(1rem, 2vw, 1.5rem);
 
@@ -115,11 +115,11 @@
   --r-full: var(--brand-radius-full, 9999px);
 
   /* Shadow */
-  --shadow-xs: 0 1px 2px rgba(0,0,0,.04);
-  --shadow-sm: 0 2px 4px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
-  --shadow-md: 0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04);
-  --shadow-lg: 0 12px 32px rgba(0,0,0,.10), 0 4px 8px rgba(0,0,0,.06);
-  --shadow-xl: 0 24px 64px rgba(0,0,0,.12), 0 8px 16px rgba(0,0,0,.08);
+  --shadow-xs: var(--brand-shadow-xs, 0 1px 2px rgba(0,0,0,.04));
+  --shadow-sm: var(--brand-shadow-sm, 0 2px 4px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04));
+  --shadow-md: var(--brand-shadow-md, 0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04));
+  --shadow-lg: var(--brand-shadow-lg, 0 12px 32px rgba(0,0,0,.10), 0 4px 8px rgba(0,0,0,.06));
+  --shadow-xl: var(--brand-shadow-xl, 0 24px 64px rgba(0,0,0,.12), 0 8px 16px rgba(0,0,0,.08));
 
   /* Motion */
   --ease-out:        cubic-bezier(0.22, 1, 0.36, 1);
@@ -137,7 +137,7 @@
   --dw-text:          var(--text-primary);
   --dw-font-heading:  'Pretendard Variable', 'Pretendard', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
   --dw-font-body:     'Pretendard Variable', 'Pretendard', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
-  --dw-radius:        var(--r-md);
+  --dw-radius:        var(--brand-radius-lg, 12px);
   --dw-content-width: var(--container-default);
   --dw-card-shadow:   var(--shadow-sm);
   --dw-card-border:   none;
