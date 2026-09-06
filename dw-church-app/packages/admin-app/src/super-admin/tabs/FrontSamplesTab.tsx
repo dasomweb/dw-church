@@ -22,7 +22,10 @@ const loaderFor = (file: string) => {
 // "시안 그대로 적용"용: 시안 전체 문서 → 실제 사이트에 넣을 조각으로 변환.
 //  - <style>(토큰/리셋/image-slot shim)는 유지하되 전역 body{} 규칙은 제거해
 //    스토어프론트 전체가 오염되지 않게 함
-//  - 본문의 첫 자식(내비바)·마지막 자식(푸터)은 제거 → 실제 사이트 헤더/푸터가 대신
+//  - 시안 자체의 상단 내비게이션(<nav>)과 맨 끝 푸터는 제거 → 실제 사이트의
+//    헤더/푸터가 대신 감싸므로 내비/푸터가 중복되지 않는다. (시안마다 최상단이
+//    LIVE 바 등으로 달라서 '첫 자식 제거'는 <nav>를 남기는 버그가 있었음 → <nav>를
+//    직접 제거하고 마지막 최상위 자식(푸터)만 떼어낸다.)
 function buildExactHtml(fullDoc: string): string {
   try {
     const doc = new DOMParser().parseFromString(fullDoc, 'text/html');
@@ -31,10 +34,11 @@ function buildExactHtml(fullDoc: string): string {
       .join('\n')
       .replace(/body\s*\{[^}]*\}/gi, ''); // drop global body rule
     const body = doc.body;
+    // 시안의 자체 내비게이션 제거(사이트가 헤더/내비 제공). <nav> 는 시멘틱 태그라 안전.
+    body.querySelectorAll('nav').forEach((n) => n.remove());
+    // 맨 끝 최상위 자식 = 푸터(시안은 <footer> 태그 없이 div 로 끝남) → 제거.
     const kids = Array.from(body.children);
-    // canvas cards open with a nav bar and end with a footer — strip both so the
-    // tenant's real header/footer aren't duplicated.
-    if (kids.length >= 3) { kids[0]?.remove(); kids[kids.length - 1]?.remove(); }
+    if (kids.length >= 2) kids[kids.length - 1]?.remove();
     return `<style>${styles}</style>\n${body.innerHTML}`;
   } catch {
     return fullDoc;
@@ -98,9 +102,9 @@ export default function FrontSamplesTab() {
   const [applySlug, setApplySlug] = useState('');
   const [applyState, setApplyState] = useState<'idle' | 'loading' | 'applying' | 'done' | 'error'>('idle');
   const [applyMsg, setApplyMsg] = useState('');
-  // 기본은 '블록으로'(편집·유지보수 가능). '시안 그대로'(CSS-baked)는 내용/색/
-  // 스타일 조정이 필요없을 때만 쓰는 보조 옵션.
-  const [applyMode, setApplyMode] = useState<'exact' | 'blocks'>('blocks');
+  // 기본은 '시안 그대로'(정확 복제) — 적용 결과가 시안과 100% 동일하게 보인다(사진·색·
+  // 레이아웃 인라인). '블록으로'는 근사치라 시안과 달라 보일 수 있어(흉내) 보조 옵션으로 둔다.
+  const [applyMode, setApplyMode] = useState<'exact' | 'blocks'>('exact');
 
   const openApply = (s: CanvasSample) => {
     setApplyFor(s); setApplySlug(''); setApplyMsg(''); setApplyState('loading');
@@ -241,15 +245,15 @@ export default function FrontSamplesTab() {
               <>
                 <div className="mt-4 text-xs font-semibold text-gray-500">적용 방식</div>
                 <div className="mt-1 grid grid-cols-2 gap-2">
-                  <button type="button" onClick={() => setApplyMode('blocks')}
-                    className={`rounded-lg border px-3 py-2 text-left text-xs ${applyMode === 'blocks' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600 hover:border-gray-400'}`}>
-                    <div className="font-bold">블록으로 (권장)</div>
-                    <div className="mt-0.5 text-[10px] opacity-80">시안 디자인을 블록으로 반영. 내용·색·스타일 수정 가능.</div>
-                  </button>
                   <button type="button" onClick={() => setApplyMode('exact')}
                     className={`rounded-lg border px-3 py-2 text-left text-xs ${applyMode === 'exact' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600 hover:border-gray-400'}`}>
-                    <div className="font-bold">시안 그대로</div>
-                    <div className="mt-0.5 text-[10px] opacity-80">CSS 통째. 조정이 필요없을 때만.</div>
+                    <div className="font-bold">시안 그대로 (권장)</div>
+                    <div className="mt-0.5 text-[10px] opacity-80">시안과 100% 동일하게 반영(사진·색·레이아웃 그대로). 문구·사진은 ✎편집으로 먼저 바꿔 적용.</div>
+                  </button>
+                  <button type="button" onClick={() => setApplyMode('blocks')}
+                    className={`rounded-lg border px-3 py-2 text-left text-xs ${applyMode === 'blocks' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600 hover:border-gray-400'}`}>
+                    <div className="font-bold">블록으로 (근사치)</div>
+                    <div className="mt-0.5 text-[10px] opacity-80">블록으로 재구성해 편집은 쉽지만 시안과 달라 보일 수 있음.</div>
                   </button>
                 </div>
                 <label className="mt-4 block text-xs font-semibold text-gray-500">대상 테넌트</label>
