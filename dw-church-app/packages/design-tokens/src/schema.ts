@@ -156,6 +156,12 @@ export const designTokenFooterSchema = z
     socialLabel: z.string().default('Social Media / 온라인 예배'),
     /** Copyright line. Empty → auto "© {year} {CHURCH}. All rights Reserved." */
     copyright: z.string().default(''),
+    /** One-line intro/tagline shown as a band at the TOP of the footer (교회
+     *  한 줄 소개 — 예: "2019년 열 가정이 …에서 시작해 …"). Empty → not shown. */
+    tagline: z.string().default(''),
+    /** Show the site's nav menu groups (교회소개/예배/교육/공동체 …) as footer
+     *  link columns. Only top-level items that have children become a column. */
+    showNav: z.boolean().default(true),
   })
   .default({
     variant: 'columns',
@@ -169,6 +175,8 @@ export const designTokenFooterSchema = z
     directionsLabel: '오시는 길',
     socialLabel: 'Social Media / 온라인 예배',
     copyright: '',
+    tagline: '',
+    showNav: true,
   });
 
 // ─── Final DesignTokens ────────────────────────────────────────────────────

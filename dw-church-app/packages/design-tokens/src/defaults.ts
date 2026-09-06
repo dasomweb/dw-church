@@ -97,6 +97,8 @@ export const DEFAULT_DESIGN_TOKENS: DesignTokens = {
     directionsLabel: '오시는 길',
     socialLabel: 'Social Media / 온라인 예배',
     copyright: '',
+    tagline: '',
+    showNav: true,
   },
 };
 

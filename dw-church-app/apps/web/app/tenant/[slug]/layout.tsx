@@ -342,6 +342,9 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
     }));
   // Flat list for backward compat (only top-level shown in header)
   const sortedVisibleItems = topLevelItems;
+  // Footer link columns — the nav menu groups (교회소개/예배/교육/공동체 …)
+  // that have children. Rendered as footer columns when fc.showNav (tokens.footer).
+  const footerNavGroups = topLevelItems.filter((g) => (g.children?.length ?? 0) > 0);
 
   // Items for the web-app bottom nav — same top-level visible menu items,
   // resolved to { label, href } via the SAME navHref helper the header uses.
@@ -584,36 +587,71 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
       {/* Footer */}
       <footer role="contentinfo" style={{ backgroundColor: fc.background, color: fc.text }}>
         {fc.variant === 'minimal' ? (
-          <div className="mx-auto max-w-7xl px-4 py-6 text-center text-xs sm:px-6">{copyright}</div>
+          <>
+            {fc.tagline && (
+              <div className="mx-auto max-w-7xl px-4 pt-6 text-center text-sm sm:px-6">{fc.tagline}</div>
+            )}
+            <div className="mx-auto max-w-7xl px-4 py-6 text-center text-xs sm:px-6">{copyright}</div>
+          </>
         ) : (
           <>
+            {/* 교회 한 줄 소개(tagline) — 풋터 상단 밴드. tokens.footer.tagline */}
+            {fc.tagline && (
+              <div style={{ borderBottom: `1px solid ${fc.text}22` }}>
+                <div className={`mx-auto max-w-7xl px-4 py-4 text-sm leading-relaxed sm:px-6 ${fc.variant === 'centered' ? 'text-center' : ''}`}>
+                  {fc.tagline}
+                </div>
+              </div>
+            )}
             <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-              <div className={`grid gap-8 ${fc.variant === 'centered' ? 'justify-items-center text-center' : 'md:grid-cols-3'}`}>
-                {fc.showLogo && (
+              <div className={`flex flex-col gap-10 ${fc.variant === 'centered' ? 'items-center text-center' : 'lg:flex-row lg:justify-between'}`}>
+                {/* 좌측: 브랜드 + 오시는 길 + 소셜 */}
+                <div className={`grid gap-8 sm:grid-cols-3 ${fc.variant === 'centered' ? 'justify-items-center' : 'lg:flex lg:gap-12'}`}>
+                  {fc.showLogo && (
+                    <div>
+                      {footerShowText ? (
+                        <span className="text-lg font-bold font-heading" style={{ color: fc.heading }}>{footerBrandText}</span>
+                      ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={footerLogo} alt={churchName} className="w-auto object-contain" style={{ height: 56 }} />
+                      )}
+                    </div>
+                  )}
                   <div>
-                    {footerShowText ? (
-                      <span className="text-lg font-bold font-heading" style={{ color: fc.heading }}>{footerBrandText}</span>
-                    ) : (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={footerLogo} alt={churchName} className="w-auto object-contain" style={{ height: 56 }} />
-                    )}
+                    <h3 className="mb-3 text-sm font-semibold" style={{ color: fc.heading }}>{fc.directionsLabel}</h3>
+                    {footerAddress && <p className="text-sm leading-relaxed">{footerAddress}</p>}
+                    {footerPhone && <p className="mt-1.5 text-sm">{footerPhone}</p>}
+                    {footerEmail && <p className="mt-1.5 text-sm">{footerEmail}</p>}
                   </div>
+                  <div>
+                    <h3 className="mb-3 text-sm font-semibold" style={{ color: fc.heading }}>{fc.socialLabel}</h3>
+                    <div className={`flex gap-2 ${fc.variant === 'centered' ? 'justify-center' : ''}`}>
+                      {kakaoUrl && <SocialButton href={kakaoUrl} bg="#FEE500" label="KakaoTalk"><KakaoIcon /></SocialButton>}
+                      {instagramUrl && <SocialButton href={instagramUrl} bg="#E1306C" label="Instagram"><InstagramIcon /></SocialButton>}
+                      {youtubeUrl && <SocialButton href={youtubeUrl} bg="#FF0000" label="YouTube"><YoutubeIcon /></SocialButton>}
+                      {facebookUrl && <SocialButton href={facebookUrl} bg="#1877F2" label="Facebook"><FacebookIcon /></SocialButton>}
+                    </div>
+                  </div>
+                </div>
+                {/* 우측: 메뉴 그룹 링크 열 (tokens.footer.showNav) */}
+                {fc.showNav && footerNavGroups.length > 0 && (
+                  <nav aria-label="풋터 메뉴" className={`grid grid-cols-2 gap-8 sm:flex sm:gap-12 lg:gap-16 ${fc.variant === 'centered' ? 'justify-center' : ''}`}>
+                    {footerNavGroups.map((group) => (
+                      <div key={group.id}>
+                        <h3 className="mb-3 text-sm font-semibold" style={{ color: fc.heading }}>{group.label}</h3>
+                        <ul className="space-y-2">
+                          {group.children!.map((child) => (
+                            <li key={child.id}>
+                              <Link href={navHref(child)} className="text-sm opacity-80 transition-opacity hover:opacity-100" style={{ color: fc.text }}>
+                                {child.label}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </nav>
                 )}
-                <div>
-                  <h3 className="mb-3 text-sm font-semibold" style={{ color: fc.heading }}>{fc.directionsLabel}</h3>
-                  {footerAddress && <p className="text-sm leading-relaxed">{footerAddress}</p>}
-                  {footerPhone && <p className="mt-1.5 text-sm">{footerPhone}</p>}
-                  {footerEmail && <p className="mt-1.5 text-sm">{footerEmail}</p>}
-                </div>
-                <div>
-                  <h3 className="mb-3 text-sm font-semibold" style={{ color: fc.heading }}>{fc.socialLabel}</h3>
-                  <div className={`flex gap-2 ${fc.variant === 'centered' ? 'justify-center' : ''}`}>
-                    {kakaoUrl && <SocialButton href={kakaoUrl} bg="#FEE500" label="KakaoTalk"><KakaoIcon /></SocialButton>}
-                    {instagramUrl && <SocialButton href={instagramUrl} bg="#E1306C" label="Instagram"><InstagramIcon /></SocialButton>}
-                    {youtubeUrl && <SocialButton href={youtubeUrl} bg="#FF0000" label="YouTube"><YoutubeIcon /></SocialButton>}
-                    {facebookUrl && <SocialButton href={facebookUrl} bg="#1877F2" label="Facebook"><FacebookIcon /></SocialButton>}
-                  </div>
-                </div>
               </div>
             </div>
             <div className="px-4 py-5 text-center text-xs" style={{ borderTop: `1px solid ${fc.text}22` }}>

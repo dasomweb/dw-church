@@ -583,6 +583,8 @@ const FOOTER_DEFAULTS = {
   directionsLabel: '오시는 길',
   socialLabel: 'Social Media / 온라인 예배',
   copyright: '',
+  tagline: '',
+  showNav: true,
 };
 
 const FOOTER_VARIANTS: { value: 'columns' | 'centered' | 'minimal'; label: string }[] = [
@@ -762,6 +764,29 @@ function FooterTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChang
           </div>
 
           <div className="rounded-lg border border-gray-200 p-3 bg-white">
+            <label className="text-xs font-medium text-gray-700">풋터 한 줄 소개 (상단 밴드)</label>
+            <textarea
+              value={footer.tagline}
+              onChange={(e) => set('tagline', e.target.value)}
+              disabled={saving}
+              rows={2}
+              placeholder="예: 2019년 열 가정이 아파트 거실에서 시작해, 지금은 … 함께 예배합니다. 미주한인예수교장로회(KAPC) 소속."
+              className="mt-1.5 w-full px-2 py-1.5 text-xs border rounded disabled:opacity-50"
+            />
+            <span className="block text-[10px] text-gray-400 mt-1">풋터 맨 위에 한 줄로 표시됩니다. 비우면 표시되지 않습니다.</span>
+          </div>
+
+          <label className="flex items-center gap-2 rounded-lg border border-gray-200 p-3 bg-white text-xs font-medium text-gray-700">
+            <input
+              type="checkbox"
+              checked={footer.showNav}
+              onChange={(e) => set('showNav', e.target.checked)}
+              disabled={saving}
+            />
+            메뉴 링크 열 표시 (교회소개/예배/교육/공동체 … 하위 메뉴를 풋터에 열로 표시)
+          </label>
+
+          <div className="rounded-lg border border-gray-200 p-3 bg-white">
             <label className="text-xs font-medium text-gray-700">저작권 문구</label>
             <input
               type="text"
@@ -780,30 +805,47 @@ function FooterTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChang
       <div>
         <h3 className="text-sm font-semibold text-gray-900 mb-2">미리보기</h3>
         <div className="rounded-lg overflow-hidden border border-gray-200" style={{ backgroundColor: footer.background, color: footer.text }}>
-          <div className="px-5 py-6 grid grid-cols-3 gap-4">
-            {footer.showLogo && (
-              footer.brandMode === 'logo' && footer.logoUrl
-                ? <img src={footer.logoUrl} alt="logo" className="h-7 w-auto object-contain" />
-                : <div className="text-sm font-bold" style={{ color: footer.heading }}>{footer.brandMode === 'text' ? (footer.brandText || '교회명') : 'LOGO'}</div>
-            )}
-            <div>
-              <div className="text-xs font-semibold mb-1.5" style={{ color: footer.heading }}>{footer.directionsLabel}</div>
-              <div className="text-[11px] leading-relaxed">240 Tusculum Road, Antioch, TN</div>
-            </div>
-            <div>
-              <div className="text-xs font-semibold mb-1.5" style={{ color: footer.heading }}>{footer.socialLabel}</div>
-              <div className="flex gap-1.5">
-                <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: '#FEE500' }} />
-                <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: '#E1306C' }} />
-                <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: '#FF0000' }} />
+          {footer.tagline && (
+            <div className="px-5 py-3 text-[11px] leading-relaxed" style={{ borderBottom: `1px solid ${footer.text}22` }}>{footer.tagline}</div>
+          )}
+          <div className="px-5 py-6 flex flex-wrap justify-between gap-4">
+            <div className="flex flex-wrap gap-5">
+              {footer.showLogo && (
+                footer.brandMode === 'logo' && footer.logoUrl
+                  ? <img src={footer.logoUrl} alt="logo" className="h-7 w-auto object-contain" />
+                  : <div className="text-sm font-bold" style={{ color: footer.heading }}>{footer.brandMode === 'text' ? (footer.brandText || '교회명') : 'LOGO'}</div>
+              )}
+              <div>
+                <div className="text-xs font-semibold mb-1.5" style={{ color: footer.heading }}>{footer.directionsLabel}</div>
+                <div className="text-[11px] leading-relaxed">240 Tusculum Road, Antioch, TN</div>
+              </div>
+              <div>
+                <div className="text-xs font-semibold mb-1.5" style={{ color: footer.heading }}>{footer.socialLabel}</div>
+                <div className="flex gap-1.5">
+                  <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: '#FEE500' }} />
+                  <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: '#E1306C' }} />
+                  <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: '#FF0000' }} />
+                </div>
               </div>
             </div>
+            {footer.showNav && (
+              <div className="flex gap-6">
+                <div>
+                  <div className="text-xs font-semibold mb-1.5" style={{ color: footer.heading }}>예배</div>
+                  <div className="text-[11px] leading-relaxed space-y-1"><div>주일예배</div><div>설교</div><div>주보</div></div>
+                </div>
+                <div>
+                  <div className="text-xs font-semibold mb-1.5" style={{ color: footer.heading }}>공동체</div>
+                  <div className="text-[11px] leading-relaxed space-y-1"><div>구역모임</div><div>한글학교</div><div>새가족</div></div>
+                </div>
+              </div>
+            )}
           </div>
           <div className="px-5 py-3 text-center text-[10px]" style={{ borderTop: `1px solid ${footer.text}22` }}>
             {footer.copyright || '© 2026 교회명. All rights Reserved.'}
           </div>
         </div>
-        <p className="mt-1 text-[10px] text-gray-400">실제 풋터의 주소·전화·SNS 아이콘은 설정값으로 채워집니다.</p>
+        <p className="mt-1 text-[10px] text-gray-400">실제 풋터의 주소·전화·SNS 아이콘은 설정값, 메뉴 열은 사이트 메뉴로 채워집니다.</p>
       </div>
     </section>
   );
