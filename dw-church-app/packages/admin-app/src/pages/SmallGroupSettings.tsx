@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
-import { inputClass, useToast } from '../components';
+import { inputClass, useToast, Button, Card } from '../components';
 
 /**
  * SG-01 운영 모델 설정 — 스몰그룹 애드온의 프리셋(엔진 하나 + 운영모델 4종).
@@ -102,7 +102,7 @@ export default function SmallGroupSettings() {
       </div>
 
       {/* 운영 모델 선택 */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+      <Card>
         <h2 className="text-sm font-semibold text-gray-800">운영 모델</h2>
         <p className="text-xs text-gray-500 mt-1 mb-3">현재 모델: <b>{form.model}</b> · 다른 모델을 누르면 그 기본값(용어·계층·리포트·과정)으로 초기화됩니다.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -117,10 +117,10 @@ export default function SmallGroupSettings() {
             </button>
           ))}
         </div>
-      </div>
+      </Card>
 
       {/* 용어 */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+      <Card>
         <h2 className="text-sm font-semibold text-gray-800">용어</h2>
         <p className="text-xs text-gray-500 mt-1 mb-3">화면 곳곳에 이 용어로 표기됩니다.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -131,10 +131,10 @@ export default function SmallGroupSettings() {
             </label>
           ))}
         </div>
-      </div>
+      </Card>
 
       {/* 계층 */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+      <Card>
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-sm font-semibold text-gray-800">계층 구조</h2>
@@ -163,20 +163,20 @@ export default function SmallGroupSettings() {
             </div>
           ))}
         </div>
-      </div>
+      </Card>
 
       {/* 규칙 */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+      <Card>
         <h2 className="text-sm font-semibold text-gray-800">소속 규칙</h2>
         <label className="flex items-center gap-2 text-sm cursor-pointer mt-3">
           <input type="checkbox" checked={!!form.allowMulti} onChange={(e) => setForm((f) => ({ ...(f as Preset), allowMulti: e.target.checked }))} className="rounded" />
           한 사람이 여러 조직에 동시에 소속될 수 있음
         </label>
         <p className="text-xs text-gray-400 mt-1.5 pl-6">끄면(대부분의 목장·구역·셀) 새 조직에 배정할 때 기존 소속이 자동으로 종료됩니다. 켜면(사역별 모임) 여러 곳에 동시 소속됩니다.</p>
-      </div>
+      </Card>
 
       <div>
-        <button disabled={saving} onClick={() => void save()} className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">{saving ? '저장 중…' : '설정 저장'}</button>
+        <Button size="lg" disabled={saving} onClick={() => void save()}>{saving ? '저장 중…' : '설정 저장'}</Button>
       </div>
     </div>
   );

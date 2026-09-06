@@ -3,6 +3,8 @@ export { ConfirmDialog } from './ConfirmDialog';
 export { EmptyState } from './EmptyState';
 export { TableSkeleton, CardSkeleton, FormSkeleton } from './Skeleton';
 export { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass } from './FormField';
+export { Button, Card, Badge } from './ui';
+export type { ButtonProps, CardProps, BadgeProps } from './ui';
 export { ImageUpload, MultiImageUpload } from './ImageUpload';
 export { FileUpload } from './FileUpload';
 export { RichEditor } from './RichEditor';
