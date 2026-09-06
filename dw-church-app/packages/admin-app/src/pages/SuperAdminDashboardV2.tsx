@@ -12,6 +12,7 @@ import EmailTemplatesTab from '../super-admin/tabs/EmailTemplatesTab';
 import AddressBookTab from '../super-admin/tabs/AddressBookTab';
 import PricingTab from '../super-admin/tabs/PricingTab';
 import FrontSamplesTab from '../super-admin/tabs/FrontSamplesTab';
+import ClaudeDesignTab from '../super-admin/tabs/ClaudeDesignTab';
 import SupportTab from '../super-admin/tabs/SupportTab';
 import StorageTab from '../super-admin/tabs/StorageTab';
 import IntakeTab from '../super-admin/tabs/IntakeTab';
@@ -35,7 +36,7 @@ import SiteDesignTab from '../super-admin/tabs/SiteDesignTab';
 // ─── Constants ───────────────────────────────────────────
 // PLAN_PRICES / PLAN_COLORS moved to ../super-admin/shared/constants.
 
-type TabId = 'monitoring' | 'overview' | 'tenants' | 'applications' | 'demo' | 'intake' | 'reference' | 'pricing' | 'billing' | 'email' | 'emailTemplates' | 'broadcast' | 'addressBook' | 'support' | 'domains' | 'users' | 'storage' | 'gallery' | 'siteSettings' | 'siteBanner' | 'siteDesign' | 'caseStudies' | 'frontSamples';
+type TabId = 'monitoring' | 'overview' | 'tenants' | 'applications' | 'demo' | 'intake' | 'reference' | 'pricing' | 'billing' | 'email' | 'emailTemplates' | 'broadcast' | 'addressBook' | 'support' | 'domains' | 'users' | 'storage' | 'gallery' | 'siteSettings' | 'siteBanner' | 'siteDesign' | 'caseStudies' | 'frontSamples' | 'claudeDesign';
 
 const TABS: { id: TabId; label: string; icon: JSX.Element }[] = [
   { id: 'monitoring', label: '모니터링', icon: TabIcon('M3 3v18h18M19 9l-5 5-4-4-3 3') },
@@ -61,6 +62,7 @@ const TABS: { id: TabId; label: string; icon: JSX.Element }[] = [
   { id: 'siteBanner', label: '배너(히어로)', icon: TabIcon('M2 6a2 2 0 012-2h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2zM6 10h12M6 14h8') },
   { id: 'siteDesign', label: '디자인(글자)', icon: TabIcon('M4 7V5a1 1 0 011-1h14a1 1 0 011 1v2M9 20h6M12 4v16') },
   { id: 'frontSamples', label: '프론트 샘플', icon: TabIcon('M4 5h16v4H4zM4 11h7v8H4zM13 11h7v8h-7z') },
+  { id: 'claudeDesign', label: 'Claude Design', icon: TabIcon('M9.5 3l1.5 4 4 1.5-4 1.5L9.5 14 8 10 4 8.5 8 7zM17 13l.9 2.4 2.4.9-2.4.9L17 19.6l-.9-2.4-2.4-.9 2.4-.9z') },
 ];
 
 // Grouped navigation for the modern sidebar — related surfaces sit together so
@@ -71,7 +73,7 @@ const NAV_GROUPS: { label: string; ids: TabId[] }[] = [
   { label: '매출 · 상품', ids: ['pricing', 'billing'] },
   { label: '이메일', ids: ['email', 'emailTemplates', 'broadcast', 'addressBook'] },
   // truelight.app 마케팅 사이트 관리 일원화 (브랜드/SEO/여백 = 사이트 설정, 배너, 포트폴리오, 디자인).
-  { label: 'TrueLight 사이트', ids: ['siteSettings', 'siteBanner', 'caseStudies', 'siteDesign', 'frontSamples'] },
+  { label: 'TrueLight 사이트', ids: ['siteSettings', 'siteBanner', 'caseStudies', 'siteDesign', 'frontSamples', 'claudeDesign'] },
   { label: '시스템', ids: ['domains', 'users', 'storage', 'gallery', 'reference'] },
 ];
 
@@ -399,6 +401,7 @@ export default function SuperAdminDashboardV2() {
         {activeTab === 'reference' && <ReferenceDataTab />}
         {activeTab === 'pricing' && <PricingTab />}
         {activeTab === 'frontSamples' && <FrontSamplesTab />}
+        {activeTab === 'claudeDesign' && <ClaudeDesignTab />}
         {activeTab === 'billing' && <BillingTab />}
         {activeTab === 'email' && <EmailSettingsTab />}
         {activeTab === 'emailTemplates' && <EmailTemplatesTab />}
