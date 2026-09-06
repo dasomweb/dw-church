@@ -195,6 +195,18 @@ export interface Event {
   modifiedAt: string;
 }
 
+// ─── Verse (오늘의 말씀) ─────────────────────────────────────
+export interface Verse {
+  id: string;
+  text: string;
+  reference: string;
+  verseDate: string | null;
+  sortOrder: number;
+  status: PostStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ─── Staff (New) ────────────────────────────────────────────
 export interface StaffSnsLinks {
   facebook?: string;

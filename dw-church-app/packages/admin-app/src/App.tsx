@@ -49,6 +49,7 @@ const BannerManagement = lazyWithReload(() => import('./pages/BannerManagement')
 const EventManagement = lazyWithReload(() => import('./pages/EventManagement'));
 const StaffManagement = lazyWithReload(() => import('./pages/StaffManagement'));
 const HistoryManagement = lazyWithReload(() => import('./pages/HistoryManagement'));
+const VerseManagement = lazyWithReload(() => import('./pages/VerseManagement'));
 const CellManagement = lazyWithReload(() => import('./pages/CellManagement'));
 const NewcomerManagement = lazyWithReload(() => import('./pages/NewcomerManagement'));
 const MemberManagement = lazyWithReload(() => import('./pages/MemberManagement'));
@@ -390,6 +391,7 @@ export function App({ config }: { config: AppConfig }) {
                 <Route path="events" element={<EventManagement />} />
                 <Route path="staff" element={<StaffManagement />} />
                 <Route path="history" element={<HistoryManagement />} />
+                <Route path="verses" element={<VerseManagement />} />
                 <Route path="cells" element={<CellManagement />} />
                 <Route path="newcomers" element={<NewcomerManagement />} />
                 <Route path="member-dashboard" element={<MemberDashboard />} />

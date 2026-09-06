@@ -88,6 +88,7 @@ async function main(): Promise<void> {
   const { scheduleRoutes } = await import('./modules/schedules/routes.js');
   const { bannerRoutes } = await import('./modules/banners/routes.js');
   const { eventRoutes } = await import('./modules/events/routes.js');
+  const { verseRoutes } = await import('./modules/verses/routes.js');
   const { staffRoutes } = await import('./modules/staff/routes.js');
   const { historyRoutes } = await import('./modules/history/routes.js');
   const { categoryRoutes } = await import('./modules/categories/routes.js');
@@ -181,6 +182,7 @@ async function main(): Promise<void> {
   await app.register(scheduleRoutes, { prefix: '/api/v1' });
   await app.register(bannerRoutes, { prefix: '/api/v1' });
   await app.register(eventRoutes, { prefix: '/api/v1' });
+  await app.register(verseRoutes, { prefix: '/api/v1' });
   await app.register(staffRoutes, { prefix: '/api/v1' });
   await app.register(historyRoutes, { prefix: '/api/v1' });
   await app.register(categoryRoutes, { prefix: '/api/v1' });
@@ -502,6 +504,29 @@ async function main(): Promise<void> {
             "updated_at"   TIMESTAMPTZ DEFAULT NOW()
           )
         `);
+        createHits++;
+      } catch { /* skip on error */ }
+
+      // 0d-2. verses — 오늘의 말씀 content module. 관리자만 등록/관리(게시판식);
+      //       프론트 verse_of_day 데이터 블록이 활성 말씀 1개(verse_date<=오늘
+      //       중 최신, 없으면 최신 published)를 표시. Created here so existing
+      //       tenants gain the table on deploy.
+      try {
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".verses (
+            "id"          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "text"        TEXT NOT NULL,
+            "reference"   VARCHAR(300) DEFAULT '',
+            "verse_date"  DATE,
+            "sort_order"  INT DEFAULT 0,
+            "status"      VARCHAR(20) DEFAULT 'published' CHECK (status IN ('draft','published','archived')),
+            "created_at"  TIMESTAMPTZ DEFAULT NOW(),
+            "updated_at"  TIMESTAMPTZ DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(
+          `CREATE INDEX IF NOT EXISTS "verses_pick_idx" ON "${schema}".verses ("status", "verse_date" DESC, "created_at" DESC)`,
+        );
         createHits++;
       } catch { /* skip on error */ }
 

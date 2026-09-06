@@ -440,6 +440,13 @@ export async function getEvent(slug: string, id: string): Promise<any> {
   return unwrap(res);
 }
 
+// ─── Verses (오늘의 말씀) ──────────────────────────────────────
+
+export async function getCurrentVerse(slug: string): Promise<any> {
+  const res = await apiFetch(slug, `/api/v1/verses/current`, { revalidate: false });
+  return unwrap(res);
+}
+
 // ─── Boards (게시판) ──────────────────────────────────────────
 
 export async function getBoardBySlug(slug: string, boardSlug: string): Promise<any> {

@@ -14,6 +14,7 @@ import type {
   ClientConfig,
   Column,
   Event,
+  Verse,
   History,
   Newcomer,
   NewcomerStatus,
@@ -620,6 +621,28 @@ export class DWChurchClient {
 
   async getRelatedEvents(id: string, limit = 4): Promise<Event[]> {
     return this.api.get(`${this.namespace}/events/${id}/related`, { limit });
+  }
+
+  // ─── Verses (오늘의 말씀) ────────────────────────────────
+  async getVerses(params?: ListParams): Promise<PaginatedResponse<Verse>> {
+    return this.api.get(`${this.namespace}/verses`, toQueryParams(params));
+  }
+
+  async getCurrentVerse(): Promise<Verse | null> {
+    const res = await this.api.get<{ data: Verse | null } | Verse | null>(`${this.namespace}/verses/current`);
+    return (res as { data?: Verse | null })?.data ?? (res as Verse | null);
+  }
+
+  async createVerse(data: Partial<Verse>): Promise<Verse> {
+    return this.api.post(`${this.namespace}/verses`, data);
+  }
+
+  async updateVerse(id: string, data: Partial<Verse>): Promise<Verse> {
+    return this.api.put(`${this.namespace}/verses/${id}`, data);
+  }
+
+  async deleteVerse(id: string): Promise<void> {
+    return this.api.delete(`${this.namespace}/verses/${id}`);
   }
 
   // ─── Staff ──────────────────────────────────────────────

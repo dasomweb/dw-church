@@ -64,7 +64,10 @@ const sermons = (variant = 'grid-4'): PresetSection => ({ block_type: 'recent_se
 const bulletins = (variant = 'grid-4'): PresetSection => ({ block_type: 'recent_bulletins', props: { title: '주보', limit: 4, variant } });
 const events = (): PresetSection => ({ block_type: 'event_grid', props: { title: '교회 행사', limit: 4, variant: 'grid-4' } });
 const albums = (variant = 'grid-4'): PresetSection => ({ block_type: 'album_gallery', props: { title: '포토 갤러리', limit: 8, variant } });
-const verse = (): PresetSection => ({ block_type: 'quote_block', props: { variant: 'verse', eyebrow: '오늘의 말씀', quote: '수고하고 무거운 짐 진 자들아 다 내게로 오라 내가 너희를 쉬게 하리라', reference: '마태복음 11:28', buttonText: '지난 말씀 보기', buttonUrl: '/sermons' } });
+// 오늘의 말씀 = 말씀 콘텐츠 모듈의 현재 말씀 1개를 표시하는 데이터 블록.
+// 관리자가 [말씀 관리]에 등록하기 전엔 렌더 안 됨(정적 더미 말씀 넣지 않음
+// — [[feedback_no_seed_content]] / CLAUDE.md).
+const verse = (): PresetSection => ({ block_type: 'verse_of_day', props: { eyebrow: '오늘의 말씀 · Verse of the Day' } });
 
 // ── 시안 11(라이브 종합형) 시그니처 섹션 블록들 (card-11 콘텐츠 그대로) ──
 const heroOverlap = (): PresetSection => ({
@@ -189,8 +192,8 @@ const P: Record<string, PresetSection[]> = {
       { title: '주중 Weekday', content: '금요 기도회 · 8:00 PM\n새벽기도 (Zoom) · 5:30 AM\n구역 모임 · 토 7:00 PM' },
       { title: '처음 오시는 분께 First time?', content: '장소 · 채플을 함께 사용합니다\n주차 · 무료 주차장 · 스트리트 파킹\n자녀 · Nursery 운영 · 예배 후 전교인 점심' },
     ] } },
-    { block_type: 'quote_block', props: { variant: 'verse', eyebrow: '오늘의 말씀 · Verse of the Day',
-      quote: '내가 너를 도와주리라 참으로 너를 붙들리라', reference: '이사야 41:10 · Isaiah 41:10' } },
+    // 오늘의 말씀 — 말씀 콘텐츠 모듈의 현재 말씀(관리자 등록 전엔 숨김).
+    { block_type: 'verse_of_day', props: { eyebrow: '오늘의 말씀 · Verse of the Day' } },
     // 다가오는 행사 — 이벤트 콘텐츠에서 고른 행사 1개 알림바(미선택 시 숨김).
     { block_type: 'featured_event', props: { label: '다가오는 행사', buttonText: '참석 알리기' } },
     { block_type: 'recent_sermons', props: { title: '이번 주 말씀', variant: 'featured', limit: 4 } },

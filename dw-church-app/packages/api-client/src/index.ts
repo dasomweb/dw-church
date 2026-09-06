@@ -26,6 +26,7 @@ export type {
   BannerCategory,
   LinkTarget,
   Event,
+  Verse,
   Staff,
   StaffSnsLinks,
   History,
@@ -145,6 +146,11 @@ export {
   useUpdateEvent,
   useDeleteEvent,
   useRelatedEvents,
+  // Verses (오늘의 말씀)
+  useVerses,
+  useCreateVerse,
+  useUpdateVerse,
+  useDeleteVerse,
   // Staff
   useStaff,
   useStaffMember,

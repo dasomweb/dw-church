@@ -1586,6 +1586,12 @@ const FEATURED_EVENT = churchBlock(
     { key: 'buttonUrl', label: '버튼 링크(선택)', type: 'url', hint: '비우면 행사의 링크 또는 행사 목록으로 연결' },
   ]},
 );
+// 오늘의 말씀 — 표시 라벨만 인스펙터에서 편집(실제 말씀은 말씀 관리에서).
+const VERSE_OF_DAY = churchBlock(
+  { title: '표시', fields: [
+    { key: 'eyebrow', label: '라벨(윗글)', type: 'text', hint: '예: 오늘의 말씀 · Verse of the Day. 실제 말씀은 [말씀 관리]에서 등록합니다.' },
+  ]},
+);
 const STAFF_GRID = churchBlock(
   { title: 'Header', fields: [{ key: 'title', label: '제목', type: 'text' }]},
   { title: 'Data', fields: [
@@ -1762,6 +1768,7 @@ export const ELEMENT_REGISTRY: Record<string, BlockElementRegistry> = {
   schedule_board:   SCHEDULE_BOARD,
   event_grid:       EVENT_GRID,
   featured_event:   FEATURED_EVENT,
+  verse_of_day:     VERSE_OF_DAY,
   staff_grid:       STAFF_GRID,
   cell_grid:        CELL_GRID,
   history_timeline: HISTORY_TIMELINE,

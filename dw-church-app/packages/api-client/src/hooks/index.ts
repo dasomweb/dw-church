@@ -16,6 +16,7 @@ import type {
   ScheduleListParams,
   Banner,
   Event,
+  Verse,
   Staff,
   History,
   Cell,
@@ -104,6 +105,11 @@ export const queryKeys = {
     list: (params?: ListParams) => ['events', 'list', params] as const,
     detail: (id: string) => ['events', 'detail', id] as const,
     related: (id: string) => ['events', 'related', id] as const,
+  },
+  verses: {
+    all: ['verses'] as const,
+    list: (params?: ListParams) => ['verses', 'list', params] as const,
+    current: ['verses', 'current'] as const,
   },
   staff: {
     all: ['staff'] as const,
@@ -693,6 +699,49 @@ export function useDeleteEvent() {
   return useMutation({
     mutationFn: (id: string) => client!.deleteEvent(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.events.all }),
+  });
+}
+
+// ─── Verse Hooks (오늘의 말씀) ──────────────────────────────
+// Returns the array (like useHistory) so management pages can .map / bulk-select.
+export function useVerses(params?: ListParams) {
+  const client = useDWChurchClient();
+  return useQuery<Verse[]>({
+    queryKey: queryKeys.verses.list(params),
+    queryFn: async () => {
+      const res = await client!.getVerses(params);
+      return ((res as unknown as { data?: Verse[] })?.data ?? (res as unknown as Verse[])) ?? [];
+    },
+    enabled: !!client,
+    staleTime: STALE_TIME,
+  });
+}
+
+export function useCreateVerse() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Partial<Verse>) => client!.createVerse(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.verses.all }),
+  });
+}
+
+export function useUpdateVerse() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Verse> }) =>
+      client!.updateVerse(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.verses.all }),
+  });
+}
+
+export function useDeleteVerse() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => client!.deleteVerse(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.verses.all }),
   });
 }
 
