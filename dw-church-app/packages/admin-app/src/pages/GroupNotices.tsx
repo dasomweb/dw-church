@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
-import { inputClass, textareaClass, useToast, EmptyState } from '../components';
+import { inputClass, textareaClass, useToast, EmptyState, Button } from '../components';
 
 /**
  * NT-01/02 공지 — 리더/구성원 대상 공지. 실제 알림톡·문자·메일 발송은 교회 발송
@@ -55,7 +55,7 @@ export default function GroupNotices() {
           <h1 className="text-xl font-bold">공지</h1>
           <p className="text-sm text-gray-500 mt-1">{t.leader ?? '리더'}·구성원에게 전할 공지를 등록합니다. 발송은 발송 설정에 계정을 등록해야 실제로 나갑니다.</p>
         </div>
-        <button onClick={() => setEditing(blank())} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">+ 공지 작성</button>
+        <Button onClick={() => setEditing(blank())}>+ 공지 작성</Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_440px] gap-4">
@@ -106,9 +106,9 @@ export default function GroupNotices() {
               </div>
             </div>
             <div className="flex gap-2 pt-1">
-              <button disabled={busy} onClick={() => void save(editing)} className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">저장</button>
-              {editing.id && <button onClick={() => void del(editing)} className="text-sm text-red-600 px-3 py-2 rounded-lg hover:bg-red-50">삭제</button>}
-              <button onClick={() => setEditing(null)} className="px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 ml-auto">취소</button>
+              <Button disabled={busy} onClick={() => void save(editing)}>저장</Button>
+              {editing.id && <Button variant="ghost" onClick={() => void del(editing)} className="text-red-600 hover:bg-red-50">삭제</Button>}
+              <Button variant="ghost" onClick={() => setEditing(null)} className="ml-auto">취소</Button>
             </div>
           </div>
         )}

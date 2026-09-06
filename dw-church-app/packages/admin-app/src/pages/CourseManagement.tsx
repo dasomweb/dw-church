@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
-import { inputClass, useToast } from '../components';
+import { inputClass, useToast, Button } from '../components';
 
 /**
  * ED-01 과정 관리 · 이수과목 셋업 — 교회가 양육 과정 체계를 직접 정의한다.
@@ -66,8 +66,8 @@ export default function CourseManagement() {
           <p className="text-sm text-gray-500 mt-1">양육·훈련 과정을 정의합니다. 회차·수료 기준·선수 과정을 교회가 직접 정합니다.</p>
         </div>
         <div className="flex gap-2">
-          <button disabled={busy} onClick={() => void seedDefaults()} className="text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-600 hover:bg-gray-50">기본값 불러오기</button>
-          <button onClick={() => setEditing(blank(courses.length))} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">+ 과정 추가</button>
+          <Button variant="outline" disabled={busy} onClick={() => void seedDefaults()}>기본값 불러오기</Button>
+          <Button onClick={() => setEditing(blank(courses.length))}>+ 과정 추가</Button>
         </div>
       </div>
 
@@ -133,8 +133,8 @@ export default function CourseManagement() {
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!editing.certEnabled} onChange={(e) => setEditing({ ...editing, certEnabled: e.target.checked })} className="rounded" /> 수료증 번호 발급</label>
             </div>
             <div className="flex gap-2 pt-1">
-              <button disabled={busy} onClick={() => void save(editing)} className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">저장</button>
-              <button onClick={() => setEditing(null)} className="px-5 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100">취소</button>
+              <Button disabled={busy} onClick={() => void save(editing)}>저장</Button>
+              <Button variant="ghost" onClick={() => setEditing(null)}>취소</Button>
             </div>
           </div>
         )}

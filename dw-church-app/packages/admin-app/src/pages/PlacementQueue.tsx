@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
-import { inputClass, useToast, EmptyState } from '../components';
+import { inputClass, useToast, EmptyState, Button } from '../components';
 import { MemberPicker, type PickMember } from '../components/MemberPicker';
 
 /**
@@ -75,7 +75,7 @@ export default function PlacementQueue() {
           <h1 className="text-xl font-bold">배치 대기</h1>
           <p className="text-sm text-gray-500 mt-1">아직 {t.org}에 소속되지 않은 교인을 모아 두고 배치합니다. 과정 수료자와 참석 문의도 여기에 쌓입니다.</p>
         </div>
-        <button onClick={() => setAdding((v) => !v)} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">{adding ? '닫기' : '+ 대기 추가'}</button>
+        <Button onClick={() => setAdding((v) => !v)}>{adding ? '닫기' : '+ 대기 추가'}</Button>
       </div>
 
       {adding && (
@@ -84,7 +84,7 @@ export default function PlacementQueue() {
             <MemberPicker members={pickMembers} value={newMemberId} onChange={setNewMemberId} placeholder="이름 검색으로 선택" /></div>
           <label className="flex-1 min-w-[180px]"><span className="text-[11px] text-gray-500">메모</span>
             <input className={inputClass} value={newNote} onChange={(e) => setNewNote(e.target.value)} placeholder="예: 새생명반 수료 · Fort Lee 거주" /></label>
-          <button disabled={busy || !newMemberId} onClick={() => void addManual()} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">추가</button>
+          <Button disabled={busy || !newMemberId} onClick={() => void addManual()}>추가</Button>
         </div>
       )}
 
@@ -111,7 +111,7 @@ export default function PlacementQueue() {
                           <option value="">{t.org} 선택</option>
                           {groups.map((g) => <option key={g.id} value={g.id}>{g.name}{g.leader_name ? ` · ${g.leader_name}` : ''}</option>)}
                         </select>
-                        <button disabled={busy} onClick={() => void place(q.id)} className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-blue-700 disabled:opacity-50">배치</button>
+                        <Button size="sm" disabled={busy} onClick={() => void place(q.id)}>배치</Button>
                         <button onClick={() => { setPlaceFor(null); setPlaceGroupId(''); }} className="text-xs text-gray-400 hover:text-gray-600">취소</button>
                       </div>
                     ) : (

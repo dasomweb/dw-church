@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
-import { inputClass, useToast, EmptyState } from '../components';
+import { inputClass, useToast, EmptyState, Button } from '../components';
 
 /**
  * LB-01 자료실 — 주간 교안·양식 등을 분류·열람권한과 함께 올린다. 파일은 R2 업로드,
@@ -64,7 +64,7 @@ export default function GroupResources() {
           <h1 className="text-xl font-bold">자료실</h1>
           <p className="text-sm text-gray-500 mt-1">주간 교안·양식 등을 분류와 열람권한을 정해 올립니다.</p>
         </div>
-        <button onClick={() => setEditing(blank())} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">+ 자료 추가</button>
+        <Button onClick={() => setEditing(blank())}>+ 자료 추가</Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-4">
@@ -120,8 +120,8 @@ export default function GroupResources() {
                 <input type="date" className={inputClass} value={editing.teachingDate} onChange={(e) => setEditing({ ...editing, teachingDate: e.target.value })} /></label>
             </div>
             <div className="flex gap-2 pt-1">
-              <button disabled={busy} onClick={() => void save(editing)} className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">저장</button>
-              <button onClick={() => setEditing(null)} className="px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 ml-auto">취소</button>
+              <Button disabled={busy} onClick={() => void save(editing)}>저장</Button>
+              <Button variant="ghost" onClick={() => setEditing(null)} className="ml-auto">취소</Button>
             </div>
           </div>
         )}

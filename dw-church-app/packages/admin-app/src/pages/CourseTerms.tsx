@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
-import { inputClass, useToast } from '../components';
+import { inputClass, useToast, Button } from '../components';
 import { MemberPicker, type PickMember } from '../components/MemberPicker';
 
 /**
@@ -118,7 +118,7 @@ export default function CourseTerms() {
             <option value="">과정 선택</option>
             {(coursesQ.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}{c.stage ? ` · ${c.stage}` : ''}</option>)}
           </select></label>
-        {courseId && <button onClick={() => setShowNewTerm((v) => !v)} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">{showNewTerm ? '닫기' : '+ 차수 추가'}</button>}
+        {courseId && <Button onClick={() => setShowNewTerm((v) => !v)}>{showNewTerm ? '닫기' : '+ 차수 추가'}</Button>}
       </div>
 
       {showNewTerm && courseId && (
@@ -153,7 +153,7 @@ export default function CourseTerms() {
               <p className="text-sm text-gray-500">{[term.weekday, term.time, term.place, term.instructor].filter(Boolean).join(' · ')} · 수강 {enrollments.length}{term.capacity ? ` / ${term.capacity}` : ''} · 수료 기준 {totalSessions}회 중 {criteria}회</p>
             </div>
             <div className="flex gap-2">
-              <button disabled={busy} onClick={() => void saveAtt()} className="text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-50">출결 저장</button>
+              <Button variant="outline" disabled={busy} onClick={() => void saveAtt()}>출결 저장</Button>
               <button disabled={busy} onClick={() => void complete()} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50">수료 확정</button>
             </div>
           </div>
@@ -162,7 +162,7 @@ export default function CourseTerms() {
           <div className="flex flex-wrap items-end gap-2 bg-gray-50 rounded-lg p-3">
             <div className="flex-1 min-w-[220px]"><span className="text-[11px] text-gray-500">수강생 추가</span>
               <MemberPicker members={pickMembers} value={addStudent} onChange={setAddStudent} placeholder="이름 검색으로 추가" /></div>
-            <button disabled={busy || !addStudent} onClick={() => void enrollStudent()} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">추가</button>
+            <Button disabled={busy || !addStudent} onClick={() => void enrollStudent()}>추가</Button>
           </div>
 
           {enrollments.length === 0 ? <p className="text-sm text-gray-400 py-4 text-center">수강생이 없습니다.</p> : (
@@ -229,7 +229,7 @@ function NewTermForm({ api, courseId, busy, setBusy, showToast, onDone }: {
       <label className="block"><span className="text-[11px] text-gray-500">장소</span><input className={inputClass} value={f.place} onChange={(e) => setF({ ...f, place: e.target.value })} /></label>
       <label className="block"><span className="text-[11px] text-gray-500">강사</span><input className={inputClass} value={f.instructor} onChange={(e) => setF({ ...f, instructor: e.target.value })} /></label>
       <label className="block"><span className="text-[11px] text-gray-500">정원</span><input type="number" className={inputClass} value={f.capacity} onChange={(e) => setF({ ...f, capacity: Number(e.target.value) })} /></label>
-      <div className="flex items-end"><button disabled={busy} onClick={() => void submit()} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 w-full">추가</button></div>
+      <div className="flex items-end"><Button block disabled={busy} onClick={() => void submit()}>추가</Button></div>
     </div>
   );
 }
