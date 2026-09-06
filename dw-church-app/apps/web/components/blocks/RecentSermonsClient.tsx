@@ -11,6 +11,10 @@ interface RecentSermonsClientProps {
   columns?: number;
   /** featured layout: 1 large lead sermon + a compact side list of the rest. */
   featured?: boolean;
+  /** '이번 주 말씀' 단일 카드 스킨(시안 card-00): 영상 썸네일 + 제목 + 본문 + 버튼. */
+  sermonCard?: boolean;
+  /** sermonCard 헤더 라벨(예: 이번 주 말씀). */
+  cardTitle?: string;
 }
 
 const GRID_COLS: Record<number, string> = {
@@ -31,10 +35,46 @@ function formatSermonDate(raw: string): string {
   return `${m[1]}년 ${Number(m[2])}월 ${Number(m[3])}일`;
 }
 
-export function RecentSermonsClient({ sermons, columns = 3, featured = false }: RecentSermonsClientProps) {
+export function RecentSermonsClient({ sermons, columns = 3, featured = false, sermonCard = false, cardTitle }: RecentSermonsClientProps) {
   const router = useRouter();
   const gridClass = GRID_COLS[columns] || GRID_COLS[3];
   const isList = columns === 1;
+
+  // ── sermonCard: 시안 '이번 주 말씀' 단일 카드 — 영상 썸네일 + 본문 + 2버튼 ──
+  if (sermonCard && sermons.length > 0) {
+    const s: any = sermons[0];
+    const excerpt: string = String(s.summary ?? s.description ?? s.content ?? '').replace(/<[^>]+>/g, '').trim();
+    const meta = [s.preacher, s.scripture, s.date ? formatSermonDate(s.date) : ''].filter(Boolean).join(' · ');
+    return (
+      <div className="rounded-2xl border border-black/[0.06] bg-white p-6 sm:p-7">
+        <div className="mb-4 flex items-baseline justify-between">
+          <b className="text-lg font-bold font-heading">{cardTitle || '이번 주 말씀'}</b>
+          <span className="text-[13px] text-gray-400">설교 원고 · 음성</span>
+        </div>
+        <button onClick={() => router.push(`/sermons/${s.id}`)} className="group mb-4 block w-full text-left">
+          <div className="relative aspect-video overflow-hidden rounded-xl bg-gray-100">
+            {s.thumbnailUrl ? (
+              <Image src={s.thumbnailUrl} alt={s.title} fill className="object-cover transition-transform duration-500 group-hover:scale-105" sizes="(max-width:1024px) 100vw, 50vw" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-4xl text-white/90" style={{ background: 'linear-gradient(135deg, var(--dw-primary,#2563eb), var(--dw-secondary,#64748b))' }}>🎤</div>
+            )}
+            <span className="absolute inset-0 flex items-center justify-center">
+              <span className="grid h-16 w-16 place-items-center rounded-full bg-white/95 shadow-lg" style={{ color: 'var(--dw-primary,#2563eb)' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+              </span>
+            </span>
+          </div>
+        </button>
+        <div className="text-[22px] font-bold font-heading leading-snug">{s.title}</div>
+        {meta && <div className="mt-1.5 text-sm text-gray-400">{meta}</div>}
+        {excerpt && <p className="mt-3 text-[15px] leading-[1.9] text-gray-500 line-clamp-3">{excerpt}</p>}
+        <div className="mt-5 flex flex-wrap gap-2.5">
+          <Link href={`/sermons/${s.id}`} className="inline-flex items-center rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: 'var(--dw-primary,#2563eb)' }}>설교 전문 읽기</Link>
+          <Link href={s.youtubeUrl || `/sermons/${s.id}`} className="inline-flex items-center rounded-full border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50">음성으로 듣기</Link>
+        </div>
+      </div>
+    );
+  }
 
   // ── featured: one large lead sermon + a compact side list ──────────────
   if (featured && sermons.length > 0) {

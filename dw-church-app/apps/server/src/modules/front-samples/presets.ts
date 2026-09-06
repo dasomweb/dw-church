@@ -197,11 +197,14 @@ const P: Record<string, PresetSection[]> = {
     { block_type: 'verse_of_day', props: { eyebrow: '오늘의 말씀 · Verse of the Day' } },
     // 다가오는 행사 — 이벤트 콘텐츠에서 고른 행사 1개 알림바(미선택 시 숨김).
     { block_type: 'featured_event', props: { label: '다가오는 행사', buttonText: '참석 알리기' } },
-    { block_type: 'recent_sermons', props: { title: '이번 주 말씀', variant: 'featured', limit: 4 } },
-    // 주보·광고 — 주보(주보 모듈) + 광고(교회소식 게시판, 관리자가 boardSlug 지정) +
-    // 기도/심방 버튼(Contact 폼). boardSlug 비면 주보만 표시.
-    { block_type: 'news_announcements', props: { title: '주보 · 광고', bulletinLimit: 3, newsLimit: 4, moreUrl: '/bulletins',
-      button1Label: '기도 요청', button1Url: '/contact', button2Label: '심방 신청', button2Url: '/contact' } },
+    // 이번 주 말씀 | 주보·광고 — 2단 (시안 card-00). 좌: 설교 카드 스킨(영상 썸네일 +
+    // 설교 전문 읽기/음성으로 듣기), 우: 주보(주보 모듈)+광고(교회소식 게시판, boardSlug)
+    // +원하는 만큼 추가하는 버튼. 레이아웃 자식으로 실제 데이터 블록이 렌더됨.
+    { block_type: 'layout_columns', props: { layout: 'columns-2', gap: 28, padding: '48px 24px 0', maxWidth: '7xl', children: [
+      { blockType: 'recent_sermons', props: { title: '이번 주 말씀', variant: 'card' } },
+      { blockType: 'news_announcements', props: { title: '주보 · 광고', bulletinLimit: 3, newsLimit: 4, moreUrl: '/bulletins',
+        buttons: [{ text: '기도 요청', url: '/contact' }, { text: '심방 신청', url: '/contact' }] } },
+    ] } },
     { block_type: 'features_grid', props: { title: '이렇게 섬기고 있습니다', columns: '4', variant: 'compact', items: [
       { title: '한글학교', description: '토요일 오전, 2세 아이들이 한국어와 문화를 배웁니다.' },
       { title: 'EM · 청년', description: 'English Ministry 주일 오후 1시, 2세와 유학생이 함께합니다.' },
@@ -295,13 +298,13 @@ function getHeaderStyleForDesign(design: string): string {
 // 레이아웃 대비 과대해서, 샘플 적용 시 tokensV2 로 더 단정한 스케일을 심는다
 // (색/폰트는 프로필에서, 헤더/풋터 토큰은 운영자 설정 보존). 대표님: "타이포가
 // 크고 padding/margin 문제" (2026-09-06).
+// 시안 card-00 값 그대로. 간격은 글로벌로 강제하지 않고 블록별 커스텀이 우선.
 const REFINED_SIZES = {
-  h1: { desktop: 48, tablet: 40, mobile: 32 },
-  h2: { desktop: 30, tablet: 28, mobile: 26 },
+  h1: { desktop: 42, tablet: 36, mobile: 30 },
+  h2: { desktop: 24, tablet: 23, mobile: 22 },
   h3: { desktop: 22, tablet: 21, mobile: 20 },
   h4: { desktop: 18, tablet: 17, mobile: 17 },
 } as const;
-const REFINED_SPACING = { sectionPaddingY: 56, containerPaddingX: 20, gapGrid: 24, sectionMarginY: 0 };
 
 function fontStack(name: string | undefined): string {
   const n = (name || 'Pretendard').trim();
@@ -344,7 +347,8 @@ export function buildTokensV2(profile: ThemeProfile, prev: DesignTokens | undefi
       },
       scales,
     },
-    spacing: { ...base.spacing, ...REFINED_SPACING },
+    // 간격은 글로벌로 강제하지 않음(블록별 커스텀 우선). 기존값 유지.
+    spacing: prev?.spacing ?? base.spacing,
     header: prev?.header ?? base.header,
     footer: prev?.footer ?? base.footer,
   };

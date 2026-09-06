@@ -22,10 +22,9 @@ import { resolveColorToCss } from '@dw-church/design-tokens';
  * section chrome — here.
  */
 
-// 수평 패딩만 유틸 클래스로; 수직은 --section-py-md 토큰(정적 블록 SectionShell 과
-// 동일)으로 줘서 데이터/정적 블록의 상하 여백이 일치하게 한다(대표님: padding/margin
-// 불일치 2026-09-06). blockStyle.spacing.padding 이 있으면 그게 우선.
-const DEFAULT_PADDING = 'px-4 sm:px-6';
+// 기본 여백(고정값). 블록별 커스텀(props.blockStyle.spacing.padding)이 있으면 항상
+// 그게 우선한다 — 글로벌 토큰에 묶지 않는다(대표님: 커스텀 우선, 글로벌 영향 금지).
+const DEFAULT_PADDING = 'px-4 py-10 sm:px-6 sm:py-16';
 
 interface DataSectionProps {
   /** The block's props bag — DataSection reads props.blockStyle from it. */

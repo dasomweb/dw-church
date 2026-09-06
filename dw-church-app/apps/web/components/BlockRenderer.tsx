@@ -23,6 +23,7 @@ import { EventGridBlock } from './blocks/EventGridBlock';
 import { FeaturedEventBlock } from './blocks/FeaturedEventBlock';
 import { VerseOfDayBlock } from './blocks/VerseOfDayBlock';
 import { NewsAnnouncementsBlock } from './blocks/NewsAnnouncementsBlock';
+import { LayoutBlock } from './blocks/LayoutBlock';
 import { BoardBlock } from './blocks/BoardBlock';
 import { BannerSliderBlock } from './blocks/BannerSliderBlock';
 import { CellGridBlock } from './blocks/CellGridBlock';
@@ -53,6 +54,13 @@ const CHURCH_BLOCKS: Record<string, AnyBlock> = {
   featured_event: FeaturedEventBlock as AnyBlock, // 다가오는 행사 — 관리자가 고른 이벤트 1개 알림바 (미선택/종료일 경과 시 렌더 안 함)
   verse_of_day: VerseOfDayBlock as AnyBlock, // 오늘의 말씀 — 말씀 모듈의 현재 말씀 1개 (없으면 렌더 안 함)
   news_announcements: NewsAnnouncementsBlock as AnyBlock, // 주보·광고 — 주보(주보 모듈)+광고(교회소식 게시판, 카테고리 배지)+액션 버튼
+  // 레이아웃 컨테이너 — 스토어프론트 렌더러로 자식을 그려서 데이터 블록(설교/주보 등)이
+  // 컬럼 안에서도 실제로 렌더되게(shared 렌더러는 플레이스홀더만). 말씀|주보 2단 등에 필요.
+  layout_row: LayoutBlock as AnyBlock,
+  layout_columns: LayoutBlock as AnyBlock,
+  layout_section: LayoutBlock as AnyBlock,
+  two_columns: LayoutBlock as AnyBlock,
+  three_columns: LayoutBlock as AnyBlock,
   board: BoardBlock as AnyBlock,
   banner_slider: BannerSliderBlock as AnyBlock,
   hero_image_slider: BannerSliderBlock as AnyBlock,

@@ -23,6 +23,7 @@ export { VideoCategorySelectField } from './VideoCategorySelectField';
 export { BoardSelectField } from './BoardSelectField';
 export { AlbumCategorySelectField } from './AlbumCategorySelectField';
 export { EventSelectField } from './EventSelectField';
+export { ButtonsField, type ButtonItem } from './ButtonsField';
 export {
   LayoutField,
   type LayoutFieldProps,

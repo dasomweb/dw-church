@@ -61,7 +61,9 @@ export type ElementKind =
   | 'event-select'
   // Native <input type="date"> — stores YYYY-MM-DD. Used for the featured_event
   // "종료일"(auto-hide) and similar single-date props.
-  | 'date';
+  | 'date'
+  // 버튼 배열 편집(추가/삭제) — props[path] = [{text,url}]. ButtonsField.
+  | 'buttons';
 
 export interface ElementSpec {
   /** Display label in the inspector. */
@@ -1510,6 +1512,7 @@ const RECENT_SERMONS = churchBlock(
     { key: 'variant', label: 'Columns', type: 'select', choices: [
       { value: 'grid-4', label: '4 columns' }, { value: 'grid-3', label: '3 columns' },
       { value: 'grid-2', label: '2 columns' }, { value: 'list', label: 'List' },
+      { value: 'featured', label: '피처드(대표+목록)' }, { value: 'card', label: '단일 카드(영상 썸네일)' },
     ]},
   ]},
 );
@@ -1608,11 +1611,8 @@ const NEWS_ANNOUNCEMENTS: BlockElementRegistry = {
       { label: '교회소식 게시판', path: 'boardSlug', kind: 'board-select', hint: '게시판 관리에서 만든 교회소식 게시판 선택. 글의 분류(친교/교육/구역)가 배지로 표시됩니다.' },
       { label: '광고 개수', path: 'newsLimit', kind: 'number', hint: '기본 4' },
     ]},
-    { title: '버튼 (Contact 폼 연결)', elements: [
-      { label: '버튼1 텍스트', path: 'button1Label', kind: 'text', hint: '기본 기도 요청' },
-      { label: '버튼1 링크', path: 'button1Url', kind: 'url', hint: '기본 /contact', disableDynamic: true },
-      { label: '버튼2 텍스트', path: 'button2Label', kind: 'text', hint: '기본 심방 신청' },
-      { label: '버튼2 링크', path: 'button2Url', kind: 'url', hint: '기본 /contact', disableDynamic: true },
+    { title: '버튼 (원하는 만큼 추가)', elements: [
+      { label: '버튼 목록', path: 'buttons', kind: 'buttons', hint: '기도 요청 · 심방 신청 등 원하는 버튼을 추가. 링크를 Contact 폼(/contact) 등으로 연결.' },
     ]},
   ],
 };

@@ -15,7 +15,7 @@ interface Row {
   date?: string;
 }
 
-interface ActionButton { label: string; url: string }
+interface ActionButton { text?: string; label?: string; url: string }
 
 function fmtDate(raw: unknown): string {
   if (!raw) return '';
@@ -39,15 +39,9 @@ export async function NewsAnnouncementsBlock({ props, slug }: NewsAnnouncementsB
   const boardSlug = (props.boardSlug as string) || '';
   const moreUrl = (props.moreUrl as string) || '/bulletins';
   const bulletinBadge = (props.bulletinBadge as string) || '주보';
-  // Action buttons — flat props so the inspector can edit them (기도 요청 / 심방
-  // 신청 → Contact 폼). Falls back to a props.buttons[] array (preset-provided).
-  const flatButtons: ActionButton[] = [
-    { label: (props.button1Label as string) ?? '', url: (props.button1Url as string) || '/contact' },
-    { label: (props.button2Label as string) ?? '', url: (props.button2Url as string) || '/contact' },
-  ].filter((b) => b.label.trim());
-  const buttons: ActionButton[] = flatButtons.length > 0
-    ? flatButtons
-    : ((Array.isArray(props.buttons) ? props.buttons : []) as ActionButton[]);
+  // 버튼은 원하는 만큼 추가하는 배열([{text,url}]) — 인스펙터 ButtonsField 로 편집.
+  const buttons = ((Array.isArray(props.buttons) ? props.buttons : []) as ActionButton[])
+    .filter((b) => (b.text ?? b.label ?? '').trim());
 
   const rows: Row[] = [];
 
@@ -76,9 +70,7 @@ export async function NewsAnnouncementsBlock({ props, slug }: NewsAnnouncementsB
 
   if (rows.length === 0 && buttons.length === 0) return null;
 
-  return (
-    <DataSection props={props} defaultBg="var(--dw-surface)">
-      <div className="mx-auto max-w-7xl">
+  const card = (
         <div className="rounded-2xl border border-black/[0.06] bg-white p-5 shadow-sm sm:p-7">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-bold font-heading sm:text-xl" style={getElementStyle(props, 'title')}>{title}</h2>
@@ -118,13 +110,19 @@ export async function NewsAnnouncementsBlock({ props, slug }: NewsAnnouncementsB
                     ? 'inline-flex items-center rounded-full bg-[var(--dw-primary,#2563eb)] px-5 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90'
                     : 'inline-flex items-center rounded-full border border-gray-300 px-5 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50'}
                 >
-                  {b.label}
+                  {b.text ?? b.label}
                 </Link>
               ))}
             </div>
           )}
         </div>
-      </div>
+  );
+
+  // 레이아웃 컬럼 안에서는 섹션 크롬 없이 카드만(맨 카드 2단).
+  if (props._inLayout) return card;
+  return (
+    <DataSection props={props} defaultBg="var(--dw-surface)">
+      <div className="mx-auto max-w-7xl">{card}</div>
     </DataSection>
   );
 }
