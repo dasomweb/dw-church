@@ -18,17 +18,36 @@ const FONT_KEY = 'tl-font-scale';
 const SCALES = [1, 1.18] as const; // 기본 / 크게
 const BASE_PX = 16;
 
+const LANG_COOKIE = 'tl-lang';
+
 interface HeaderTopBarProps {
   text: string;
   kakaoUrl?: string;
   showFontSize?: boolean;
   showKakao?: boolean;
+  showLanguage?: boolean;
   /** Dark header → light text/borders on the bar. */
   dark?: boolean;
 }
 
-export function HeaderTopBar({ text, kakaoUrl, showFontSize = true, showKakao = true, dark = false }: HeaderTopBarProps) {
+export function HeaderTopBar({ text, kakaoUrl, showFontSize = true, showKakao = true, showLanguage = false, dark = false }: HeaderTopBarProps) {
   const [scale, setScale] = useState(1);
+  const [lang, setLang] = useState<'ko' | 'en'>('ko');
+
+  // Restore language choice from cookie for the toggle's active state.
+  useEffect(() => {
+    try {
+      const m = document.cookie.match(/(?:^|; )tl-lang=(ko|en)/);
+      if (m) setLang(m[1] as 'ko' | 'en');
+    } catch { /* ignore */ }
+  }, []);
+
+  const switchLang = (next: 'ko' | 'en') => {
+    if (next === lang) return;
+    try { document.cookie = `${LANG_COOKIE}=${next}; path=/; max-age=31536000`; } catch { /* ignore */ }
+    // Full reload so the server re-renders the page in the chosen language.
+    window.location.reload();
+  };
 
   // Restore the saved scale on mount and apply it.
   useEffect(() => {
@@ -49,7 +68,7 @@ export function HeaderTopBar({ text, kakaoUrl, showFontSize = true, showKakao = 
   };
 
   const hasKakao = showKakao && !!kakaoUrl;
-  if (!text && !showFontSize && !hasKakao) return null;
+  if (!text && !showFontSize && !hasKakao && !showLanguage) return null;
 
   const fg = dark ? 'rgba(255,255,255,0.85)' : 'var(--dw-text, #374151)';
   const faint = dark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.10)';
@@ -60,6 +79,32 @@ export function HeaderTopBar({ text, kakaoUrl, showFontSize = true, showKakao = 
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-1.5 text-xs sm:px-6">
         <p className="min-w-0 truncate">{text}</p>
         <div className="flex shrink-0 items-center gap-3">
+          {showLanguage && (
+            <>
+              <div className="flex items-center overflow-hidden rounded-full" style={{ border: `1px solid ${faint}` }}>
+                {(['ko', 'en'] as const).map((l) => {
+                  const active = lang === l;
+                  return (
+                    <button
+                      key={l}
+                      type="button"
+                      onClick={() => switchLang(l)}
+                      aria-pressed={active}
+                      className="px-2.5 py-0.5 leading-none transition-colors"
+                      style={{
+                        fontWeight: active ? 700 : 400,
+                        backgroundColor: active ? (dark ? 'rgba(255,255,255,0.9)' : 'var(--dw-primary, #111827)') : 'transparent',
+                        color: active ? (dark ? '#111827' : '#ffffff') : fg,
+                      }}
+                    >
+                      {l === 'ko' ? '한국어' : 'ENGLISH'}
+                    </button>
+                  );
+                })}
+              </div>
+              {(showFontSize || hasKakao) && <span aria-hidden style={{ color: faint }}>|</span>}
+            </>
+          )}
           {showFontSize && (
             <div className="flex items-center gap-1.5">
               <span className="hidden sm:inline opacity-70">글자 크기</span>

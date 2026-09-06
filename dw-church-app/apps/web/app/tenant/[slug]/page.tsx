@@ -1,6 +1,7 @@
-import { getHomePage } from '@/lib/api';
+import { getHomePage, translateTexts } from '@/lib/api';
 import { BlockRenderer } from '@/components/BlockRenderer';
 import { buildTenantMetadata } from '@/lib/metadata';
+import { getRequestLang, collectTranslatable, applyTranslations } from '@/lib/i18n';
 import type { Metadata } from 'next';
 
 interface TenantHomeProps {
@@ -34,14 +35,23 @@ export default async function TenantHomePage({ params, searchParams }: TenantHom
     );
   }
 
+  let sections = page.sections
+    .filter((s: { isVisible: boolean }) => s.isVisible)
+    .sort((a: { sortOrder: number }, b: { sortOrder: number }) => a.sortOrder - b.sortOrder);
+
+  // 영어 토글 시 정적 블록 텍스트를 자동번역(캐시 우선). 기본 ko 는 무변경.
+  const lang = await getRequestLang();
+  if (lang === 'en') {
+    const texts = collectTranslatable(sections);
+    const map = await translateTexts(slug, texts, 'en');
+    sections = applyTranslations(sections, map);
+  }
+
   return (
     <div>
-      {page.sections
-        .filter((s) => s.isVisible)
-        .sort((a, b) => a.sortOrder - b.sortOrder)
-        .map((section) => (
-          <BlockRenderer key={section.id} section={section} slug={slug} page={currentPage} />
-        ))}
+      {sections.map((section: { id: string }) => (
+        <BlockRenderer key={section.id} section={section as never} slug={slug} page={currentPage} />
+      ))}
     </div>
   );
 }

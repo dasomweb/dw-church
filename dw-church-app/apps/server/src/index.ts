@@ -89,6 +89,7 @@ async function main(): Promise<void> {
   const { bannerRoutes } = await import('./modules/banners/routes.js');
   const { eventRoutes } = await import('./modules/events/routes.js');
   const { verseRoutes } = await import('./modules/verses/routes.js');
+  const { i18nRoutes } = await import('./modules/i18n/routes.js');
   const { staffRoutes } = await import('./modules/staff/routes.js');
   const { historyRoutes } = await import('./modules/history/routes.js');
   const { categoryRoutes } = await import('./modules/categories/routes.js');
@@ -183,6 +184,7 @@ async function main(): Promise<void> {
   await app.register(bannerRoutes, { prefix: '/api/v1' });
   await app.register(eventRoutes, { prefix: '/api/v1' });
   await app.register(verseRoutes, { prefix: '/api/v1' });
+  await app.register(i18nRoutes, { prefix: '/api/v1' });
   await app.register(staffRoutes, { prefix: '/api/v1' });
   await app.register(historyRoutes, { prefix: '/api/v1' });
   await app.register(categoryRoutes, { prefix: '/api/v1' });
@@ -540,6 +542,24 @@ async function main(): Promise<void> {
         await prisma.$executeRawUnsafe(
           `CREATE INDEX IF NOT EXISTS "verses_pick_idx" ON "${schema}".verses ("status", "verse_date" DESC, "created_at" DESC)`,
         );
+        createHits++;
+      } catch { /* skip on error */ }
+
+      // 0d-3. translations — 영어(다국어) 자동번역 캐시. source_hash+lang PK.
+      //       is_override=관리자 보정본(자동번역이 덮어쓰지 않음). 문구당 최초 1회만
+      //       Claude 호출, 이후 캐시. Created here so existing tenants gain it on deploy.
+      try {
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".translations (
+            "source_hash" VARCHAR(64) NOT NULL,
+            "lang"        VARCHAR(10) NOT NULL,
+            "source"      TEXT NOT NULL,
+            "text"        TEXT NOT NULL,
+            "is_override" BOOLEAN DEFAULT false,
+            "updated_at"  TIMESTAMPTZ DEFAULT NOW(),
+            PRIMARY KEY ("source_hash", "lang")
+          )
+        `);
         createHits++;
       } catch { /* skip on error */ }
 

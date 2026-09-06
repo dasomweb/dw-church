@@ -597,6 +597,10 @@ function HeaderTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChang
               <input type="checkbox" checked={header.utilityShowKakao} onChange={(e) => setH('utilityShowKakao', e.target.checked)} disabled={saving} />
               카카오톡 채널 링크 표시 (설정의 카카오톡 채널 URL 사용)
             </label>
+            <label className="flex items-center gap-2 rounded-lg border border-gray-200 p-3 bg-white text-xs font-medium text-gray-700">
+              <input type="checkbox" checked={header.utilityShowLanguage} onChange={(e) => setH('utilityShowLanguage', e.target.checked)} disabled={saving} />
+              한국어/ENGLISH 언어 토글 표시 (ENGLISH 클릭 시 콘텐츠 자동 영어 번역)
+            </label>
           </div>
         )}
       </div>

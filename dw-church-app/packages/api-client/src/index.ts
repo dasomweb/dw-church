@@ -27,6 +27,7 @@ export type {
   LinkTarget,
   Event,
   Verse,
+  TranslationRow,
   Staff,
   StaffSnsLinks,
   History,

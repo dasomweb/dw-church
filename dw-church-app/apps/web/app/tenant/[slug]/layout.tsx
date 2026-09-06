@@ -461,6 +461,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
             kakaoUrl={kakaoUrl}
             showFontSize={hc.utilityShowFontSize}
             showKakao={hc.utilityShowKakao}
+            showLanguage={hc.utilityShowLanguage}
             dark={isDarkHeader}
           />
         </div>

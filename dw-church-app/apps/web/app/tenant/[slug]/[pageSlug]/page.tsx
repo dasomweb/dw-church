@@ -1,5 +1,6 @@
-import { getPageBySlug } from '@/lib/api';
+import { getPageBySlug, translateTexts } from '@/lib/api';
 import { BlockRenderer } from '@/components/BlockRenderer';
+import { getRequestLang, collectTranslatable, applyTranslations } from '@/lib/i18n';
 import { notFound } from 'next/navigation';
 
 interface DynamicPageProps {
@@ -19,14 +20,22 @@ export default async function DynamicPage({ params, searchParams }: DynamicPageP
     notFound();
   }
 
+  let sections = page.sections
+    .filter((s: { isVisible: boolean }) => s.isVisible)
+    .sort((a: { sortOrder: number }, b: { sortOrder: number }) => a.sortOrder - b.sortOrder);
+
+  const lang = await getRequestLang();
+  if (lang === 'en') {
+    const texts = collectTranslatable(sections);
+    const map = await translateTexts(slug, texts, 'en');
+    sections = applyTranslations(sections, map);
+  }
+
   return (
     <div>
-      {page.sections
-        .filter((s) => s.isVisible)
-        .sort((a, b) => a.sortOrder - b.sortOrder)
-        .map((section) => (
-          <BlockRenderer key={section.id} section={section} slug={slug} page={currentPage} />
-        ))}
+      {sections.map((section: { id: string }) => (
+        <BlockRenderer key={section.id} section={section as never} slug={slug} page={currentPage} />
+      ))}
     </div>
   );
 }

@@ -447,6 +447,23 @@ export async function getCurrentVerse(slug: string): Promise<any> {
   return unwrap(res);
 }
 
+// ─── i18n (영어 자동번역) ─────────────────────────────────────
+
+/** 문구 배열을 번역(캐시 우선, 서버). 실패 시 빈 맵 → 프론트는 원문 유지. */
+export async function translateTexts(slug: string, texts: string[], lang: string): Promise<Record<string, string>> {
+  if (!texts.length || lang === 'ko') return {};
+  try {
+    const res = await apiFetch<any>(slug, `/api/v1/i18n/translate`, {
+      method: 'POST',
+      body: JSON.stringify({ texts, lang }),
+      revalidate: false,
+    });
+    return (res?.data?.translations ?? res?.translations ?? {}) as Record<string, string>;
+  } catch {
+    return {};
+  }
+}
+
 // ─── Boards (게시판) ──────────────────────────────────────────
 
 export async function getBoardBySlug(slug: string, boardSlug: string): Promise<any> {

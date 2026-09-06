@@ -207,6 +207,14 @@ export interface Verse {
   updatedAt: string;
 }
 
+// ─── i18n (영어 번역 보정) ──────────────────────────────────
+export interface TranslationRow {
+  source: string;
+  text: string;
+  isOverride: boolean;
+  updatedAt: string;
+}
+
 // ─── Staff (New) ────────────────────────────────────────────
 export interface StaffSnsLinks {
   facebook?: string;

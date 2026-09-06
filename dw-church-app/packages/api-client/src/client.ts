@@ -15,6 +15,7 @@ import type {
   Column,
   Event,
   Verse,
+  TranslationRow,
   History,
   Newcomer,
   NewcomerStatus,
@@ -643,6 +644,20 @@ export class DWChurchClient {
 
   async deleteVerse(id: string): Promise<void> {
     return this.api.delete(`${this.namespace}/verses/${id}`);
+  }
+
+  // ─── i18n (영어 번역 보정) ───────────────────────────────
+  async getTranslations(lang = 'en'): Promise<TranslationRow[]> {
+    const res = await this.api.get<{ data: TranslationRow[] } | TranslationRow[]>(`${this.namespace}/i18n/overrides`, { lang });
+    return (res as { data?: TranslationRow[] })?.data ?? (res as TranslationRow[]) ?? [];
+  }
+
+  async setTranslationOverride(source: string, lang: string, text: string): Promise<void> {
+    await this.api.put(`${this.namespace}/i18n/overrides`, { source, lang, text });
+  }
+
+  async deleteTranslation(source: string, lang: string): Promise<void> {
+    await this.api.delete(`${this.namespace}/i18n/overrides?source=${encodeURIComponent(source)}&lang=${encodeURIComponent(lang)}`);
   }
 
   // ─── Staff ──────────────────────────────────────────────
