@@ -9,6 +9,7 @@ import type {
 interface MenuRow {
   id: string;
   label: string;
+  label_en: string | null;
   page_id: string | null;
   external_url: string | null;
   parent_id: string | null;
@@ -20,7 +21,7 @@ interface MenuRow {
 
 export async function listMenus(schema: string): Promise<(MenuRow & { page_slug?: string })[]> {
   return prisma.$queryRawUnsafe<(MenuRow & { page_slug?: string })[]>(
-    `SELECT m.id, m.label, m.page_id, m.external_url, m.parent_id, m.sort_order, m.is_visible,
+    `SELECT m.id, m.label, m.label_en, m.page_id, m.external_url, m.parent_id, m.sort_order, m.is_visible,
             m.created_at, m.updated_at, p.slug AS page_slug
      FROM "${schema}".menus m
      LEFT JOIN "${schema}".pages p ON p.id = m.page_id
@@ -33,10 +34,11 @@ export async function createMenu(
   input: CreateMenuInput,
 ): Promise<MenuRow> {
   const rows = await prisma.$queryRawUnsafe<MenuRow[]>(
-    `INSERT INTO "${schema}".menus (label, page_id, external_url, parent_id, sort_order, is_visible)
-     VALUES ($1, $2::uuid, $3, $4::uuid, $5, $6)
-     RETURNING id, label, page_id, external_url, parent_id, sort_order, is_visible, created_at, updated_at`,
+    `INSERT INTO "${schema}".menus (label, label_en, page_id, external_url, parent_id, sort_order, is_visible)
+     VALUES ($1, $2, $3::uuid, $4, $5::uuid, $6, $7)
+     RETURNING id, label, label_en, page_id, external_url, parent_id, sort_order, is_visible, created_at, updated_at`,
     input.label,
+    input.labelEn ?? '',
     input.pageId ?? null,
     input.externalUrl ?? null,
     input.parentId ?? null,
@@ -59,6 +61,10 @@ export async function updateMenu(
   if (input.label !== undefined) {
     setClauses.push(`label = $${paramIndex++}`);
     params.push(input.label);
+  }
+  if (input.labelEn !== undefined) {
+    setClauses.push(`label_en = $${paramIndex++}`);
+    params.push(input.labelEn ?? '');
   }
   if (input.pageId !== undefined) {
     setClauses.push(`page_id = $${paramIndex++}::uuid`);
@@ -92,7 +98,7 @@ export async function updateMenu(
     `UPDATE "${schema}".menus
      SET ${setClauses.join(', ')}
      WHERE id = $${paramIndex}::uuid
-     RETURNING id, label, page_id, external_url, parent_id, sort_order, is_visible, created_at, updated_at`,
+     RETURNING id, label, label_en, page_id, external_url, parent_id, sort_order, is_visible, created_at, updated_at`,
     ...params,
   );
 
@@ -139,7 +145,7 @@ export async function reorderMenus(
   }
 
   return prisma.$queryRawUnsafe<MenuRow[]>(
-    `SELECT id, label, page_id, external_url, parent_id, sort_order, is_visible, created_at, updated_at
+    `SELECT id, label, label_en, page_id, external_url, parent_id, sort_order, is_visible, created_at, updated_at
      FROM "${schema}".menus
      ORDER BY sort_order ASC, created_at ASC`,
   );

@@ -14,7 +14,7 @@ import { HeaderTopBar } from '@/components/HeaderTopBar';
 import { DEFAULT_DESIGN_TOKENS, type DesignTokens } from '@dw-church/design-tokens';
 // Types inlined to avoid importing @dw-church/api-client in server components
 type ChurchSettings = Record<string, string>;
-type MenuItem = { id: string; label: string; pageId?: string; pageSlug?: string; externalUrl?: string; parentId?: string; sortOrder: number; isVisible: boolean; children?: MenuItem[] };
+type MenuItem = { id: string; label: string; labelEn?: string | null; pageId?: string; pageSlug?: string; externalUrl?: string; parentId?: string; sortOrder: number; isVisible: boolean; children?: MenuItem[] };
 type Theme = {
   colors: Record<string, string>;
   fonts: Record<string, string>;
@@ -509,6 +509,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                       style={{ color: navLinkColor, fontSize: 'var(--brand-nav-font-size, 14px)', fontWeight: 'var(--brand-nav-font-weight, 500)' }}
                     >
                       {item.label}
+                      {item.labelEn ? <span className="ml-1.5 text-[0.8em] font-normal opacity-60">{item.labelEn}</span> : null}
                       {item.children && item.children.length > 0 && (
                         <svg className="w-3 h-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 9l-7 7-7-7" /></svg>
                       )}
@@ -580,6 +581,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                     style={{ color: navLinkColor, fontSize: 'var(--brand-nav-font-size, 14px)', fontWeight: 'var(--brand-nav-font-weight, 500)' }}
                   >
                     {item.label}
+                    {item.labelEn ? <span className="ml-1.5 text-[0.8em] font-normal opacity-60">{item.labelEn}</span> : null}
                     {item.children && item.children.length > 0 && (
                       <svg className="w-3 h-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 9l-7 7-7-7" /></svg>
                     )}

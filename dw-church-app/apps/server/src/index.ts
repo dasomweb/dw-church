@@ -468,6 +468,14 @@ async function main(): Promise<void> {
         createHits++;
       } catch { /* skip on error */ }
 
+      // 0b-2. menus.label_en — 한·영 병기 네비게이션(한인 이민교회). 기존 테넌트에도 컬럼 추가.
+      try {
+        await prisma.$executeRawUnsafe(
+          `ALTER TABLE "${schema}".menus ADD COLUMN IF NOT EXISTS "label_en" VARCHAR(200) DEFAULT ''`,
+        );
+        alterHits++;
+      } catch { /* skip on error */ }
+
       // 0c. schedules — 예배 및 모임 content module. Each row is a titled GROUP
       //     ({ title, columns, rows }) rendered as a table by the schedule_board
       //     Data Block. Created here so existing tenants gain the table on deploy.

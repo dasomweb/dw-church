@@ -13,6 +13,7 @@ import { useToast } from '../components';
 
 interface MenuFormData {
   label: string;
+  labelEn: string;
   pageId: string;
   externalUrl: string;
   isVisible: boolean;
@@ -21,6 +22,7 @@ interface MenuFormData {
 interface FlatNode {
   id: string;
   label: string;
+  labelEn: string | null;
   parentId: string | null;
   pageId: string | null;
   externalUrl: string | null;
@@ -48,7 +50,7 @@ function buildFlatList(items: MenuItem[]): FlatNode[] {
   const flat: FlatNode[] = [];
   const walk = (nodes: TreeNode[], depth: number) => {
     for (const node of nodes) {
-      flat.push({ id: node.id, label: node.label, parentId: node.parentId || null, pageId: node.pageId || null, externalUrl: node.externalUrl || null, isVisible: node.isVisible, depth });
+      flat.push({ id: node.id, label: node.label, labelEn: node.labelEn ?? null, parentId: node.parentId || null, pageId: node.pageId || null, externalUrl: node.externalUrl || null, isVisible: node.isVisible, depth });
       walk(node.children, depth + 1);
     }
   };
@@ -96,13 +98,13 @@ export default function MenuEditor() {
   const flatList = menuItems ? buildFlatList(menuItems) : [];
 
   const handleEdit = (node: FlatNode) => {
-    reset({ label: node.label, pageId: node.pageId || '', externalUrl: node.externalUrl || '', isVisible: node.isVisible });
+    reset({ label: node.label, labelEn: node.labelEn || '', pageId: node.pageId || '', externalUrl: node.externalUrl || '', isVisible: node.isVisible });
     setEditingId(node.id);
     setShowCreateForm(false);
   };
 
   const handleCreate = () => {
-    reset({ label: '', pageId: '', externalUrl: '', isVisible: true });
+    reset({ label: '', labelEn: '', pageId: '', externalUrl: '', isVisible: true });
     setShowCreateForm(true);
     setEditingId(null);
   };
@@ -193,6 +195,7 @@ export default function MenuEditor() {
   const onSubmitCreate = (data: MenuFormData) => {
     createMenu.mutate({
       label: data.label,
+      labelEn: data.labelEn || undefined,
       pageId: data.pageId || undefined,
       externalUrl: data.externalUrl || undefined,
       sortOrder: flatList.length,
@@ -208,6 +211,7 @@ export default function MenuEditor() {
       id: editingId,
       data: {
         label: data.label,
+        labelEn: data.labelEn || undefined,
         pageId: data.pageId || undefined,
         externalUrl: data.externalUrl || undefined,
         isVisible: data.isVisible,
@@ -225,6 +229,10 @@ export default function MenuEditor() {
           <label className="block text-xs font-medium mb-1">라벨</label>
           <input {...register('label', { required: '라벨을 입력하세요' })} className="w-full border rounded px-3 py-2 text-sm" />
           {errors.label && <p className="text-red-500 text-xs mt-1">{errors.label.message}</p>}
+        </div>
+        <div>
+          <label className="block text-xs font-medium mb-1">영문 라벨 <span className="text-gray-400 font-normal">(선택 · 한·영 병기)</span></label>
+          <input {...register('labelEn')} placeholder="예: About" className="w-full border rounded px-3 py-2 text-sm" />
         </div>
         <div>
           <label className="block text-xs font-medium mb-1">페이지 연결</label>

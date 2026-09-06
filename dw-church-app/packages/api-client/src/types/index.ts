@@ -538,6 +538,8 @@ export interface Page {
 export interface MenuItem {
   id: string;
   label: string;
+  /** 영문 병기 라벨 (한인 이민교회 한·영 네비게이션). */
+  labelEn?: string | null;
   pageId?: string | null;
   pageSlug?: string | null;
   externalUrl?: string | null;

@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const createMenuSchema = z.object({
   label: z.string().min(1).max(100),
+  labelEn: z.string().max(200).optional().nullable(),
   pageId: z.string().uuid().nullable().optional(),
   externalUrl: z.string().url().nullable().optional(),
   parentId: z.string().uuid().nullable().optional(),
@@ -11,6 +12,7 @@ export const createMenuSchema = z.object({
 
 export const updateMenuSchema = z.object({
   label: z.string().min(1).max(100).optional(),
+  labelEn: z.string().max(200).nullable().optional(),
   pageId: z.string().uuid().nullable().optional(),
   externalUrl: z.string().url().nullable().optional(),
   parentId: z.string().uuid().nullable().optional(),
