@@ -75,8 +75,17 @@ function ImgSlot({ label, ratio = '16 / 9', tone = 'light', className = '', src 
 
 // R2 자체호스팅 실제 이미지 (핫링크 금지 준수)
 const R2 = 'https://pub-674328f08783498389f7857dc6e1ab00.r2.dev';
+// 히어로 — 대표님 지정 이미지(예배·손 든 성도·십자가). PNG 1.5MB → 1600px JPEG 83KB로
+// 리사이즈·재압축 후 R2 자체호스팅(핫링크 금지 준수).
+const IMG_HERO = `${R2}/_samples/frontpage/hero-worship.jpg`;
 const IMG_CASE_LAGRANGE = `${R2}/shared/gallery/2031c682-e6c5-4d9b-ba41-f09b352bc57d.jpg`;
 const IMG_CASE_WAKE = `${R2}/shared/gallery/d7586ffd-b75d-4b6f-b80c-710d95574711.jpg`;
+// section 4 관리자 캡처 — 대표님이 직접 캡처한 실제 관리자 화면. 리사이즈(1440px JPEG) 후
+// R2 자체호스팅. 아직 못 받은 슬롯은 undefined → 라벨 플레이스홀더로 표시.
+const IMG_ADMIN_MEMBERS = `${R2}/_samples/marketing/admin-members.jpg`;   // 교인 명부 · 세대/가족
+const IMG_ADMIN_SERMON = `${R2}/_samples/marketing/admin-sermon.jpg`;     // 설교 등록
+const IMG_ADMIN_NEWCOMER: string | undefined = undefined;                // 대기 — 새가족 접수 · 목장 조직
+const IMG_ADMIN_I18N: string | undefined = undefined;                     // 대기 — 한/영 지면 비교
 
 // ── 페이지 ───────────────────────────────────────────────────────────────────
 export default function LandingPage() {
@@ -87,34 +96,36 @@ export default function LandingPage() {
       {/* ══ 1 · 히어로 (흰 바탕) ══ */}
       <section className="bg-white">
         <div className={`${CONTAINER} py-12 sm:py-20`}>
-          {/* 히어로 이미지는 제거 — 적절한 실제 사진 확보 전까지 텍스트 단독 히어로. */}
-          <div className="max-w-2xl">
-            <Label>미주 한인 이민교회를 위한 교회 시스템</Label>
-            <h1
-              className="mt-4 text-[34px] text-[#16181d] sm:text-[52px]"
-              style={{ fontWeight: 750, letterSpacing: '-0.035em', lineHeight: 1.18 }}
-            >
-              교회의 한 주가<br className="hidden sm:block" /> 여기서 돌아갑니다.
-            </h1>
-            <p className="mt-5 max-w-xl text-[16px] text-[#4b5464] sm:text-[17.5px]" style={{ lineHeight: 1.85 }}>
-              성도가 보는 홈페이지부터 교인 명부와 목장, 새가족까지 한 자리에서 이어집니다. 만드는 일과 기술은 저희가 맡습니다.
-            </p>
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-              <a
-                href="/apply"
-                className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-[#2b7fff] px-7 text-[16px] font-semibold text-white transition-colors hover:bg-[#1466d6]"
+          <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
+            <div>
+              <Label>미주 한인 이민교회를 위한 교회 시스템</Label>
+              <h1
+                className="mt-4 text-[32px] text-[#16181d] sm:text-[48px]"
+                style={{ fontWeight: 750, letterSpacing: '-0.035em', lineHeight: 1.2 }}
               >
-                상담 신청
-              </a>
-              <a
-                href="https://dasom.truelight.app"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex min-h-[48px] items-center justify-center rounded-xl border border-[#d5dae2] bg-white px-7 text-[16px] font-semibold text-[#16181d] transition-colors hover:bg-[#f5f6f8]"
-              >
-                실제 사이트 보기
-              </a>
+                교회의 한 주가<br className="hidden sm:block" /> 여기서 돌아갑니다.
+              </h1>
+              <p className="mt-5 max-w-xl text-[16px] text-[#4b5464] sm:text-[17.5px]" style={{ lineHeight: 1.85 }}>
+                성도가 보는 홈페이지부터 교인 명부와 목장, 새가족까지 한 자리에서 이어집니다. 만드는 일과 기술은 저희가 맡습니다.
+              </p>
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                <a
+                  href="/apply"
+                  className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-[#2b7fff] px-7 text-[16px] font-semibold text-white transition-colors hover:bg-[#1466d6]"
+                >
+                  상담 신청
+                </a>
+                <a
+                  href="https://dasom.truelight.app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-[48px] items-center justify-center rounded-xl border border-[#d5dae2] bg-white px-7 text-[16px] font-semibold text-[#16181d] transition-colors hover:bg-[#f5f6f8]"
+                >
+                  실제 사이트 보기
+                </a>
+              </div>
             </div>
+            <ImgSlot label="히어로 — 주일 예배 · 손 든 성도" ratio="16 / 9" src={IMG_HERO} />
           </div>
         </div>
         {/* 신뢰 스트립 */}
@@ -200,6 +211,7 @@ export default function LandingPage() {
                 body: '교적관리가 시스템 안에 있습니다. 세대·가족 관계, 직분과 출석, 심방과 성례, 전입·전출까지. 목장과 구역은 그 교적 위에서 조직되고, 새가족은 온라인으로 등록되는 순간 교인으로 이어집니다. 명단을 따로 옮겨 적을 일이 없습니다.',
                 muted: '도구로 만든 홈페이지는 명부와 완전히 따로 있습니다. 그래서 교적은 엑셀로, 목장은 메신저로, 새가족은 종이로 남습니다.',
                 img: '[IMG] 관리자 — 교인 명부 · 세대/가족 화면',
+                src: IMG_ADMIN_MEMBERS,
               },
               {
                 eyebrow: '매주 반복되는 일',
@@ -207,6 +219,7 @@ export default function LandingPage() {
                 body: '영상 주소를 붙이면 제목과 썸네일, 날짜가 따라 들어옵니다. 설교자와 본문으로 정리되고, 성도는 설교자 이름으로 지난 설교를 찾습니다. 주보는 파일 하나로 날짜별로 쌓입니다.',
                 muted: '일반 도구에서는 매주 페이지를 새로 만들고, 썸네일을 따로 올리고, 목록에 손으로 링크를 걸어야 합니다. 그 차이가 오십두 번 쌓입니다.',
                 img: '[IMG] 관리자 — 설교 등록 화면',
+                src: IMG_ADMIN_SERMON,
               },
               {
                 eyebrow: '처음 오시는 분부터',
@@ -214,6 +227,7 @@ export default function LandingPage() {
                 body: '처음 오신 분이 홈페이지에서 직접 남기고 가시면, 담당 교역자에게 바로 전달되고 정착 과정을 이어서 볼 수 있습니다. 목장에 배정되는 순간까지 한 자리에서 이어집니다.',
                 muted: '수련회 참가, 차량 신청, 봉사 지원 같은 교회 양식도 직접 만들어 접수하고, 관리자 화면에서 처리합니다.',
                 img: '[IMG] 관리자 — 새가족 접수 · 목장 조직 화면',
+                src: IMG_ADMIN_NEWCOMER,
               },
               {
                 eyebrow: '이민교회의 자리',
@@ -221,12 +235,13 @@ export default function LandingPage() {
                 body: '한국어로 올린 내용이 영어로도 보이고, 교회 고유의 표현은 직접 고쳐 두실 수 있습니다. 영어 페이지를 따로 만들고 따로 관리하는 일이 사라집니다.',
                 muted: '쓰고 계신 사이트가 있으면 설교·주보·앨범만 그 사이트에 얹어 단계적으로 넘어오실 수도 있습니다.',
                 img: '[IMG] 한/영 지면 비교 화면',
+                src: IMG_ADMIN_I18N,
               },
             ].map((scene, i) => (
               <div key={scene.title} className="grid items-center gap-8 lg:grid-cols-2 lg:gap-14">
                 {/* 짝수 행: 캡처 왼쪽 / 홀수 행: 캡처 오른쪽 */}
                 <div className={i % 2 === 1 ? 'lg:order-2' : ''}>
-                  <ImgSlot label={scene.img} ratio="16 / 10" />
+                  <ImgSlot label={scene.img} ratio="16 / 10" src={scene.src} className="border border-[#e7e9ee] shadow-sm" />
                 </div>
                 <div className={i % 2 === 1 ? 'lg:order-1' : ''}>
                   <Label>{scene.eyebrow}</Label>
