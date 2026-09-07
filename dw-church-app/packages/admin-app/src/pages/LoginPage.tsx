@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useLogin, DWChurchApiError } from '@dw-church/api-client';
@@ -17,8 +17,11 @@ export default function LoginPage() {
   const [searchParams] = useSearchParams();
   const { slug: urlSlug } = useParams<{ slug?: string }>();
   const prefillEmail = searchParams.get('email') ?? '';
+  const prefillPassword = searchParams.get('password') ?? '';
+  const autoLogin = searchParams.get('auto') === '1';
   const redirectParam = searchParams.get('redirect');
   const [errorMsg, setErrorMsg] = useState('');
+  const autoFired = useRef(false);
 
   // When the super admin opens this page from the tenant detail modal
   // (?email=support-<slug>@truelight.app), drop any existing session so the
@@ -34,7 +37,7 @@ export default function LoginPage() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginFormData>({ defaultValues: { email: prefillEmail } });
+  } = useForm<LoginFormData>({ defaultValues: { email: prefillEmail, password: prefillPassword } });
 
   const postLoginDestination = (session: { user?: { isSuperAdmin?: boolean; tenantSlug?: string } }) => {
     // Explicit redirect param wins (set when auth gate kicked us here).
@@ -58,6 +61,7 @@ export default function LoginPage() {
       setSession(session);
       navigate(postLoginDestination(session), { replace: true });
     } catch (err: unknown) {
+      autoFired.current = false; // 자동로그인 실패 시 재시도/수동입력 허용
       if (err instanceof DWChurchApiError) {
         if (err.status === 401) {
           setErrorMsg('이메일 또는 비밀번호가 올바르지 않습니다.');
@@ -70,6 +74,33 @@ export default function LoginPage() {
       }
     }
   };
+
+  // 데모 부스 자동 로그인: /login?email=..&password=..&auto=1 (임시 데모 계정 전용).
+  // iPad 부스에서 QR 스캔 → 폼 입력 없이 바로 로그인. auto=1 명시가 있어야만 동작하며
+  // 실패하면 폼이 그대로 남아 수동 입력 가능. (데모 테넌트는 매일 새벽 스냅샷으로 초기화됨)
+  useEffect(() => {
+    if (autoLogin && prefillEmail && prefillPassword && !autoFired.current && !loginMutation.isPending) {
+      autoFired.current = true;
+      void onSubmit({ email: prefillEmail, password: prefillPassword });
+    }
+    // onSubmit is stable enough for this one-shot; deps kept minimal intentionally.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoLogin, prefillEmail, prefillPassword]);
+
+  // 자동로그인 진행 중에는 부스 화면에 폼 대신 로딩 화면을 보여준다(오류 시 폼 노출).
+  if (autoLogin && prefillEmail && prefillPassword && !errorMsg) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white px-6 text-center">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-600 mb-5">
+          <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18L19.35 7.5 12 10.82 4.65 7.5 12 4.18z" />
+          </svg>
+        </div>
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent mb-4" />
+        <p className="text-sm text-gray-500">데모 관리자에 접속 중입니다…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex">
