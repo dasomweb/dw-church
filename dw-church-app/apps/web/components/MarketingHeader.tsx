@@ -51,7 +51,7 @@ export default function MarketingHeader() {
         </nav>
         {/* Desktop actions */}
         <div className="hidden items-center gap-4 lg:flex">
-          <a href="https://admin.truelight.app" className="whitespace-nowrap text-[15px] text-[#4b5464] transition-colors hover:text-[#16181d]">
+          <a href="/login" className="whitespace-nowrap text-[15px] text-[#4b5464] transition-colors hover:text-[#16181d]">
             로그인
           </a>
           <a
@@ -86,7 +86,7 @@ export default function MarketingHeader() {
                 {n.label}
               </a>
             ))}
-            <a href="https://admin.truelight.app" onClick={() => setMenuOpen(false)} className={mobileLinkClass}>
+            <a href="/login" onClick={() => setMenuOpen(false)} className={mobileLinkClass}>
               로그인
             </a>
             <a

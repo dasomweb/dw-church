@@ -69,6 +69,19 @@ export async function middleware(request: NextRequest) {
         url.search = request.nextUrl.search;
         return NextResponse.redirect(url, 308);
       }
+      // Unified login entry: truelight.app/login (+ the other auth surfaces and
+      // the super-admin console) live on the admin app. Tenant staff log in on
+      // their own church domain (<tenant>/login); this entry is for super-admin
+      // and anyone who lands on the marketing "로그인" link.
+      if (
+        pathname === '/login' || pathname === '/forgot-password' ||
+        pathname === '/reset-password' || pathname === '/register' ||
+        pathname === '/super-admin' || pathname.startsWith('/super-admin/')
+      ) {
+        const url = new URL(`https://admin.truelight.app/admin${pathname}`);
+        url.search = request.nextUrl.search;
+        return NextResponse.redirect(url, 307);
+      }
     }
     return NextResponse.next();
   }

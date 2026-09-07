@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useLogin, DWChurchApiError } from '@dw-church/api-client';
 import { useAuthStore } from '../stores/auth';
+import { detectHostMode } from '../lib/tenant-scope';
 
 interface LoginFormData {
   email: string;
@@ -38,6 +39,9 @@ export default function LoginPage() {
   const postLoginDestination = (session: { user?: { isSuperAdmin?: boolean; tenantSlug?: string } }) => {
     // Explicit redirect param wins (set when auth gate kicked us here).
     if (redirectParam) return redirectParam;
+    // Host mode (tenant's own domain): the admin lives at the root (/) — no
+    // /t/:slug. The session's tenantSlug scopes everything.
+    if (detectHostMode()) return '/';
     // Super admin always lands on the platform dashboard.
     if (session.user?.isSuperAdmin) return '/super-admin';
     // Prefer the URL slug (so support logins land inside the tenant they

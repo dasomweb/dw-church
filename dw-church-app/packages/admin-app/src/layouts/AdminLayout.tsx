@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useLogout, useChurchSettings } from '@dw-church/api-client';
 import { useAuthStore } from '../stores/auth';
 import { useEntitlements } from '../hooks/useEntitlements';
 import { NAV_FEATURE, featureAllowed } from '../lib/plan-features';
+import { useTenantScope, tenantPath } from '../lib/tenant-scope';
 
 // Nav item paths are relative to the current tenant root (/t/:slug). An empty
 // string means the tenant dashboard (/t/:slug), "sermons" becomes
@@ -130,7 +131,7 @@ export function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { slug = '' } = useParams<{ slug: string }>();
+  const { slug, basePath } = useTenantScope();
   const logoutMutation = useLogout();
   const session = useAuthStore((s) => s.session);
   const logout = useAuthStore((s) => s.logout);
@@ -140,14 +141,15 @@ export function AdminLayout() {
   // see everything (they have the full super-admin console for support).
   const { features } = useEntitlements(slug);
 
-  // Absolute tenant paths — each sidebar link lives under /t/:slug.
-  const tenantRoot = `/t/${slug}`;
-  const pathFor = (to: string) => (to ? `${tenantRoot}/${to}` : tenantRoot);
+  // Sidebar links build from the tenant scope's basePath: "/t/:slug" on the
+  // admin console, "" (root) on the tenant's own domain (host mode).
+  const pathFor = (to: string) => tenantPath(basePath, to);
 
-  // Page title lookup: strip "/t/:slug/" prefix, use the next segment.
-  const leaf = location.pathname.startsWith(tenantRoot)
-    ? location.pathname.slice(tenantRoot.length).replace(/^\/+/, '').split('/')[0]
-    : '';
+  // Page title lookup: strip the basePath prefix, use the next segment.
+  const rel = basePath && location.pathname.startsWith(basePath)
+    ? location.pathname.slice(basePath.length)
+    : location.pathname;
+  const leaf = rel.replace(/^\/+/, '').split('/')[0];
   const pageTitle = pageTitlesByLeaf[leaf ?? ''] || '관리';
   const user = session?.user;
   const isSuperAdmin = !!user?.isSuperAdmin;
@@ -177,7 +179,7 @@ export function AdminLayout() {
       // ignore logout API errors
     }
     logout();
-    navigate(`/t/${slug}/login`);
+    navigate(basePath ? `${basePath}/login` : '/login');
   };
 
   return (

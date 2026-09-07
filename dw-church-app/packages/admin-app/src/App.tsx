@@ -30,6 +30,7 @@ import { DWChurchProvider } from '@dw-church/ui-components';
 import { AdminLayout } from './layouts/AdminLayout';
 import { useAuthStore, isTokenExpiringSoon } from './stores/auth';
 import { ToastProvider } from './components';
+import { detectHostMode, TenantScopeProvider, useTenantScope } from './lib/tenant-scope';
 
 // Lazy-loaded pages — Auth
 const LoginPage = lazyWithReload(() => import('./pages/LoginPage'));
@@ -204,11 +205,12 @@ function RoleHomeRedirect() {
   return <Navigate to="/login" replace />;
 }
 
-// Onboarding is unified on the standalone /t/:slug/onboarding page; the old
-// in-admin /t/:slug/intake route now just redirects there.
+// Onboarding is unified on the standalone onboarding page; the old in-admin
+// intake route now just redirects there. Scope-aware: on the admin console it
+// goes to /t/:slug/onboarding, on a tenant domain to /onboarding.
 function IntakeRedirect() {
-  const { slug = '' } = useParams<{ slug: string }>();
-  return <Navigate to={`/t/${slug}/onboarding`} replace />;
+  const { basePath } = useTenantScope();
+  return <Navigate to={`${basePath}/onboarding`} replace />;
 }
 
 /**
@@ -229,8 +231,89 @@ function TenantAdminLayout({ client }: { client: DWChurchClient }) {
   useEffect(() => {
     if (slug) client.setTenantSlug(slug);
   }, [slug, client]);
-  return <AdminLayout />;
+  return (
+    <TenantScopeProvider value={{ slug, basePath: `/t/${slug}`, hostMode: false }}>
+      <AdminLayout />
+    </TenantScopeProvider>
+  );
 }
+
+/**
+ * Host-mode layout — the tenant admin served on the tenant's OWN domain
+ * (<tenant>/admin). There is no :slug in the URL; the slug comes from the
+ * logged-in user's session (JWT tenantSlug), which also scopes every API call.
+ * basePath is "" so sidebar links live at the admin root (/sermons, /members…).
+ */
+function TenantHostLayout({ client }: { client: DWChurchClient }) {
+  const session = useAuthStore((s) => s.session);
+  const slug = session?.user?.tenantSlug ?? '';
+  if (slug) client.setTenantSlug(slug);
+  useEffect(() => {
+    if (slug) client.setTenantSlug(slug);
+  }, [slug, client]);
+  return (
+    <TenantScopeProvider value={{ slug, basePath: '', hostMode: true }}>
+      <AdminLayout />
+    </TenantScopeProvider>
+  );
+}
+
+// The tenant-admin child routes — shared by BOTH mounts: the admin console
+// (/t/:slug/*) and a tenant's own domain (host mode, /*). Defined once so the
+// two trees never drift. Only one tree renders at a time (see App), so reusing
+// the same <Route> elements in both is safe.
+const tenantChildRoutes = (
+  <>
+    <Route index element={<Dashboard />} />
+    <Route path="analytics" element={<AnalyticsPage />} />
+    {/* Unified onto the standalone onboarding — old /intake links redirect. */}
+    <Route path="intake" element={<IntakeRedirect />} />
+    <Route path="bulletins" element={<BulletinManagement />} />
+    <Route path="sermons" element={<SermonManagement />} />
+    <Route path="columns" element={<ColumnManagement />} />
+    <Route path="albums" element={<AlbumManagement />} />
+    <Route path="videos" element={<VideoManagement />} />
+    <Route path="schedules" element={<ScheduleManagement />} />
+    <Route path="banners" element={<BannerManagement />} />
+    <Route path="events" element={<EventManagement />} />
+    <Route path="staff" element={<StaffManagement />} />
+    <Route path="history" element={<HistoryManagement />} />
+    <Route path="verses" element={<VerseManagement />} />
+    <Route path="translations" element={<TranslationManagement />} />
+    <Route path="cells" element={<CellManagement />} />
+    <Route path="newcomers" element={<NewcomerManagement />} />
+    <Route path="member-dashboard" element={<MemberDashboard />} />
+    <Route path="members" element={<MemberManagement />} />
+    <Route path="households" element={<HouseholdManagement />} />
+    <Route path="appointments" element={<AppointmentManagement />} />
+    <Route path="attendance" element={<AttendanceManagement />} />
+    <Route path="member-visits" element={<VisitManagement />} />
+    <Route path="member-records" element={<SacramentTransferManagement />} />
+    <Route path="member-codes" element={<MemberCodeManagement />} />
+    <Route path="member-settings" element={<MemberSettings />} />
+    <Route path="group-dashboard" element={<SmallGroupDashboard />} />
+    <Route path="groups" element={<SmallGroupOrg />} />
+    <Route path="group-reports" element={<GroupReports />} />
+    <Route path="group-monitor" element={<ReportMonitoring />} />
+    <Route path="group-queue" element={<PlacementQueue />} />
+    <Route path="group-courses" element={<CourseManagement />} />
+    <Route path="group-terms" element={<CourseTerms />} />
+    <Route path="group-notices" element={<GroupNotices />} />
+    <Route path="group-resources" element={<GroupResources />} />
+    <Route path="group-settings" element={<SmallGroupSettings />} />
+    <Route path="forms" element={<FormBuilderManagement />} />
+    <Route path="form-submissions" element={<FormSubmissionsManagement />} />
+    <Route path="boards" element={<BoardManagement />} />
+    <Route path="pages" element={<PageEditor />} />
+    <Route path="menus" element={<MenuEditor />} />
+    <Route path="theme" element={<ThemeDeprecatedNotice />} />
+    <Route path="users" element={<UserManagement />} />
+    <Route path="domains" element={<DomainSettings />} />
+    <Route path="settings" element={<SettingsPage />} />
+    <Route path="billing" element={<BillingPage />} />
+    <Route path="addons" element={<AddonMarketplace />} />
+  </>
+);
 
 const REFRESH_CHECK_INTERVAL_MS = 4 * 60 * 1000;
 
@@ -239,6 +322,9 @@ export function App({ config }: { config: AppConfig }) {
   const hydrate = useAuthStore((s) => s.hydrate);
   const refresh = useAuthStore((s) => s.refresh);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  // Host mode = running on a tenant's own domain (<tenant>/admin) vs the platform
+  // admin console. Decided once from window.location (stable for the SPA's life).
+  const hostMode = useMemo(() => detectHostMode(), []);
 
   useEffect(() => { hydrate(); }, [hydrate]);
 
@@ -266,8 +352,31 @@ export function App({ config }: { config: AppConfig }) {
   return (
     <ToastProvider>
       <DWChurchProvider client={client}>
-        <BrowserRouter>
+        {/* basename follows Vite base ('/admin' in prod, '' in dev) so the SPA
+            works served under /admin on admin.truelight.app AND <tenant>/admin. */}
+        <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
           <Suspense fallback={<PageLoader />}>
+            {hostMode ? (
+            <Routes>
+              {/* ── Host mode: the tenant's OWN domain (<tenant>/admin). No
+                  /t/:slug in the URL — the slug comes from the session. ── */}
+              <Route path="/login" element={<PublicOnly><LoginPage /></PublicOnly>} />
+              <Route path="/forgot-password" element={<PublicOnly><ForgotPasswordPage /></PublicOnly>} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
+              <Route
+                path="/"
+                element={
+                  <RequireAuth>
+                    <TenantHostLayout client={client} />
+                  </RequireAuth>
+                }
+              >
+                {tenantChildRoutes}
+              </Route>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+            ) : (
             <Routes>
               {/* Public */}
               <Route path="/login" element={<PublicOnly><LoginPage /></PublicOnly>} />
@@ -381,60 +490,14 @@ export function App({ config }: { config: AppConfig }) {
                   </RequireAuth>
                 }
               >
-                <Route index element={<Dashboard />} />
-                <Route path="analytics" element={<AnalyticsPage />} />
-                {/* Unified onto the standalone onboarding — old /intake links redirect. */}
-                <Route path="intake" element={<IntakeRedirect />} />
-                <Route path="bulletins" element={<BulletinManagement />} />
-                <Route path="sermons" element={<SermonManagement />} />
-                <Route path="columns" element={<ColumnManagement />} />
-                <Route path="albums" element={<AlbumManagement />} />
-                <Route path="videos" element={<VideoManagement />} />
-                <Route path="schedules" element={<ScheduleManagement />} />
-                <Route path="banners" element={<BannerManagement />} />
-                <Route path="events" element={<EventManagement />} />
-                <Route path="staff" element={<StaffManagement />} />
-                <Route path="history" element={<HistoryManagement />} />
-                <Route path="verses" element={<VerseManagement />} />
-                <Route path="translations" element={<TranslationManagement />} />
-                <Route path="cells" element={<CellManagement />} />
-                <Route path="newcomers" element={<NewcomerManagement />} />
-                <Route path="member-dashboard" element={<MemberDashboard />} />
-                <Route path="members" element={<MemberManagement />} />
-                <Route path="households" element={<HouseholdManagement />} />
-                <Route path="appointments" element={<AppointmentManagement />} />
-                <Route path="attendance" element={<AttendanceManagement />} />
-                <Route path="member-visits" element={<VisitManagement />} />
-                <Route path="member-records" element={<SacramentTransferManagement />} />
-                <Route path="member-codes" element={<MemberCodeManagement />} />
-                <Route path="member-settings" element={<MemberSettings />} />
-                <Route path="group-dashboard" element={<SmallGroupDashboard />} />
-                <Route path="groups" element={<SmallGroupOrg />} />
-                <Route path="group-reports" element={<GroupReports />} />
-                <Route path="group-monitor" element={<ReportMonitoring />} />
-                <Route path="group-queue" element={<PlacementQueue />} />
-                <Route path="group-courses" element={<CourseManagement />} />
-                <Route path="group-terms" element={<CourseTerms />} />
-                <Route path="group-notices" element={<GroupNotices />} />
-                <Route path="group-resources" element={<GroupResources />} />
-                <Route path="group-settings" element={<SmallGroupSettings />} />
-                <Route path="forms" element={<FormBuilderManagement />} />
-                <Route path="form-submissions" element={<FormSubmissionsManagement />} />
-                <Route path="boards" element={<BoardManagement />} />
-                <Route path="pages" element={<PageEditor />} />
-                <Route path="menus" element={<MenuEditor />} />
-                <Route path="theme" element={<ThemeDeprecatedNotice />} />
-                <Route path="users" element={<UserManagement />} />
-                <Route path="domains" element={<DomainSettings />} />
-                <Route path="settings" element={<SettingsPage />} />
-                <Route path="billing" element={<BillingPage />} />
-                <Route path="addons" element={<AddonMarketplace />} />
+                {tenantChildRoutes}
               </Route>
 
               {/* Root: role-based redirect */}
               <Route path="/" element={<RoleHomeRedirect />} />
               <Route path="*" element={<RoleHomeRedirect />} />
             </Routes>
+            )}
           </Suspense>
         </BrowserRouter>
       </DWChurchProvider>

@@ -20,7 +20,7 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
       { label: '도움센터', href: '/#contact' }, // 전용 도움센터 라우트 신설 전까지 상담 섹션으로
       { label: '상담 신청', href: '/apply' },
       { label: '결제 조건', href: '/terms' },
-      { label: '관리자 로그인', href: 'https://admin.truelight.app' },
+      { label: '관리자 로그인', href: '/login' },
     ],
   },
   {

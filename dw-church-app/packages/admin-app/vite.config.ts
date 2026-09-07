@@ -2,7 +2,11 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 
-export default defineConfig({
+// base '/admin/' in production: the SPA is served under the /admin path on BOTH
+// admin.truelight.app (super-admin) and each tenant's own domain (<tenant>/admin
+// for staff), so all hashed assets must resolve under /admin/. Dev stays at '/'.
+export default defineConfig(({ mode }) => ({
+  base: mode === 'production' ? '/admin/' : '/',
   plugins: [react()],
   resolve: {
     alias: {
@@ -21,4 +25,4 @@ export default defineConfig({
   server: {
     port: 3001,
   },
-});
+}));

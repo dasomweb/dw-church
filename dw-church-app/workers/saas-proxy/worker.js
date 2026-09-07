@@ -129,9 +129,39 @@ export default {
 
     // Platform hosts pass through unchanged — Railway has certs for them.
     // Required also to prevent infinite loop on customers.truelight.app
-    // (where the proxied outbound lands).
+    // (where the proxied outbound lands). This also means the admin service's
+    // own host (admin.truelight.app) is reached directly by the admin-path
+    // proxy below without re-entering this branch's tenant logic.
     if (PLATFORM_HOSTS.has(incoming.hostname)) {
       return fetch(request);
+    }
+
+    // ── Tenant admin surface on the tenant's OWN domain ──────────
+    // The tenant admin now lives at <tenant>/admin (same origin as the
+    // storefront the members see) so tenants never touch admin.truelight.app.
+    // The admin SPA (Vite base '/admin/') + its auth entry paths are served by
+    // the ADMIN service, not the storefront (web). Proxy those paths to
+    // admin.truelight.app (a platform host Railway has a cert for). The browser
+    // URL stays on the tenant domain, so the SPA runs same-origin with the
+    // storefront and detects "host mode" from window.location.
+    //   - /admin, /admin/*        → the SPA + its hashed assets
+    //   - /login, /forgot-password, /reset-password, /register
+    //       → admin server 302s these to /admin/… (friendly tenant URLs)
+    const p = incoming.pathname;
+    const isAdminPath =
+      p === '/admin' || p.startsWith('/admin/') ||
+      p === '/login' || p === '/forgot-password' || p === '/reset-password' || p === '/register';
+    if (isAdminPath) {
+      const adminUpstream = new URL(incoming.pathname + incoming.search, 'https://admin.truelight.app');
+      const adminHeaders = new Headers(request.headers);
+      adminHeaders.delete('cf-connecting-ip');
+      adminHeaders.delete('cf-ipcountry');
+      return fetch(new Request(adminUpstream.toString(), {
+        method: request.method,
+        headers: adminHeaders,
+        body: ['GET', 'HEAD'].includes(request.method) ? undefined : request.body,
+        redirect: 'manual',
+      }));
     }
 
     // Everything else (tenant subdomains + custom tenant domains) →
