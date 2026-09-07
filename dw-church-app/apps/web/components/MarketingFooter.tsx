@@ -2,31 +2,41 @@
 
 import { useSiteBrand } from './useSiteBrand';
 
-// truelight.app 마케팅 푸터 — 시안 v2. 딥 밴드(#0f1b2d), 국문 단일.
-// 모든 마케팅 페이지가 공유. 세로 패딩은 super-admin(사이트 설정)에서 조정.
+// truelight.app 마케팅 푸터 — "웹사이트 전체 시안" 기준. 딥 밴드(#0b1420), 5단.
+// 연락처는 실제값(info@dasomweb.com · Suwanee, GA) — 시안의 hello@truelight.app 플레이스홀더 대체.
 const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   {
-    title: '서비스',
+    title: '시스템',
     links: [
-      { label: '맡기는 방식', href: '/#approach' },
-      { label: '교회 행정', href: '/#admin' },
-      { label: '요금', href: '/#pricing' },
-      { label: '함께한 교회', href: '/#churches' },
+      { label: '시스템 소개', href: '/system' },
+      { label: '홈페이지', href: '/website' },
+      { label: '교적관리', href: '/membership' },
+      { label: '맞춤 제작', href: '/apply' },
+    ],
+  },
+  {
+    title: '요금',
+    links: [
+      { label: '요금 안내', href: '/pricing' },
+      { label: '초기 구축', href: '/pricing' },
+      { label: '부가기능', href: '/pricing' },
+      { label: '결제 조건', href: '/terms' },
     ],
   },
   {
     title: '지원',
     links: [
-      { label: '도움센터', href: '/#contact' }, // 전용 도움센터 라우트 신설 전까지 상담 섹션으로
-      { label: '상담 신청', href: '/apply' },
-      { label: '결제 조건', href: '/terms' },
+      { label: '도움센터', href: '/help' },
+      { label: '도입 상담', href: '/apply' },
+      { label: '개척교회 지원', href: '/support-program' },
       { label: '관리자 로그인', href: '/login' },
     ],
   },
   {
     title: '회사',
     links: [
-      { label: 'DASOMWEB 소개', href: '/#contact' }, // 전용 회사소개 페이지 신설 전까지 상담 섹션으로
+      { label: '회사 소개', href: '/company' },
+      { label: '도입 사례', href: '/churches' },
       { label: '이용약관', href: '/terms' },
       { label: '개인정보처리방침', href: '/privacy' },
     ],
@@ -38,38 +48,33 @@ export default function MarketingFooter() {
   const padY = brand?.footerPaddingY ?? 56;
 
   return (
-    <footer className="bg-[#0f1b2d] px-5 text-white sm:px-10" style={{ paddingTop: padY, paddingBottom: padY }}>
-      <div className="mx-auto max-w-[1080px]">
-        <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+    <footer className="bg-[#0b1420] px-5 text-[#8497b3] sm:px-6" style={{ paddingTop: padY, paddingBottom: 28 }}>
+      <div className="mx-auto max-w-[1200px]">
+        <div className="grid gap-10 border-b border-[#1d2b40] pb-9 md:grid-cols-[1.5fr_1fr_1fr_1fr_1fr]">
           <div>
-            <span className="text-lg font-bold tracking-tight text-white">TRUE <span className="text-[#4d93ff]">LIGHT</span></span>
-            <p className="mt-3 max-w-xs text-[14px] leading-[1.75] text-[#aab6c7]">
-              미주 한인 이민교회의 온라인 사역과 교회 행정을 함께 맡는 시스템.
-            </p>
-            <p className="mt-4 text-[14px] text-[#aab6c7]">
-              <a href="mailto:info@dasomweb.com" className="text-[#dbe3ee] hover:text-white">info@dasomweb.com</a>
-              <span className="text-[#7f8da3]"> · </span>
-              <a href="tel:+14708395151" className="text-[#dbe3ee] hover:text-white">1-470-839-5151</a>
-            </p>
-            <p className="mt-2 text-[13px]" style={{ color: '#7f8da3', lineHeight: 1.6 }}>
-              1172 Satellite Blvd NW Ste 110, Suwanee, GA 30024<br />
-              상담 시간 · 월–금 오전 9시–오후 5시 (EST)
-            </p>
+            <div className="mb-3.5 flex items-center gap-2.5">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#2b7fff] text-[11.5px] font-extrabold text-white">TL</div>
+              <b className="text-[16px] tracking-[-0.03em] text-white">TRUE LIGHT</b>
+            </div>
+            <p className="mb-3.5 max-w-xs text-[13.5px] leading-[1.85]">미주 한인교회를 위한 교회 행정 통합 시스템.</p>
+            <div className="text-[13.5px] leading-[1.95]">
+              <a href="mailto:info@dasomweb.com" className="text-[#c3d3ea] hover:text-white">info@dasomweb.com</a><br />
+              <a href="tel:+14708395151" className="text-[#c3d3ea] hover:text-white">1-470-839-5151</a><br />
+              <span className="text-[#7f8da3]">1172 Satellite Blvd NW Ste 110, Suwanee, GA 30024</span>
+            </div>
           </div>
           {COLUMNS.map((col) => (
             <div key={col.title}>
-              <h4 className="mb-3 text-[13px] font-bold tracking-[0.04em] text-white">{col.title}</h4>
-              <ul className="space-y-2.5 text-[14px] text-[#aab6c7]">
+              <b className="mb-3.5 block text-[13px] text-white">{col.title}</b>
+              <ul className="space-y-2 text-[13.5px]">
                 {col.links.map((l) => (
-                  <li key={l.label}><a href={l.href} className="transition-colors hover:text-white">{l.label}</a></li>
+                  <li key={l.label + l.href}><a href={l.href} className="transition-colors hover:text-white">{l.label}</a></li>
                 ))}
               </ul>
             </div>
           ))}
         </div>
-        <div className="mt-10 border-t border-white/10 pt-6 text-[12.5px] text-[#7f8da3]">
-          © 2026 TRUE LIGHT. All rights reserved.
-        </div>
+        <div className="pt-[22px] text-[12.5px] text-[#7f8da3]">© {new Date().getFullYear()} TRUE LIGHT · Suwanee, GA · info@dasomweb.com</div>
       </div>
     </footer>
   );
