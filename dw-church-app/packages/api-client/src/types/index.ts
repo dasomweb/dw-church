@@ -293,6 +293,26 @@ export interface Newcomer {
 // The public intake form submits only the visitor-facing fields.
 export type NewcomerSubmission = Omit<Newcomer, 'id' | 'status' | 'memo' | 'createdAt' | 'updatedAt'>;
 
+// 정착 히스토리 — 새가족 한 명의 후속 기록(연락/심방/상담/모임/정착/기타)
+export type NewcomerHistoryType = 'contact' | 'visit' | 'counsel' | 'meeting' | 'settled' | 'etc';
+
+export interface NewcomerHistoryEntry {
+  id: string;
+  newcomerId: string;
+  entryDate: string; // 기록 일자
+  type: NewcomerHistoryType;
+  content: string;
+  author?: string | null;
+  createdAt?: string;
+}
+
+export type NewcomerHistoryInput = {
+  entryDate: string;
+  type: NewcomerHistoryType;
+  content: string;
+  author?: string | null;
+};
+
 // ─── Form submissions (문의 / 목장사역보고서 / 커스텀 폼) ─────────────
 // Generic content module: one record per storefront-form submission. `payload`
 // holds the raw field answers (the form's fields are defined by the block).

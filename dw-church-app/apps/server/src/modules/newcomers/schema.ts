@@ -41,3 +41,26 @@ export const updateNewcomerSchema = z.object({
 
 export type CreateNewcomerInput = z.infer<typeof createNewcomerSchema>;
 export type UpdateNewcomerInput = z.infer<typeof updateNewcomerSchema>;
+
+/**
+ * 정착 히스토리 — 한 새가족의 후속 기록(연락/심방/상담/모임참석/정착/기타).
+ * 새가족 팀이 날짜별로 진행 상황을 남긴다. 프론트(api-client)는 camelCase로 보내고
+ * service가 snake_case 컬럼으로 매핑한다.
+ */
+export const NEWCOMER_HISTORY_TYPES = [
+  'contact', // 연락
+  'visit', // 심방
+  'counsel', // 상담
+  'meeting', // 모임 참석
+  'settled', // 정착
+  'etc', // 기타
+] as const;
+
+export const createNewcomerHistorySchema = z.object({
+  entryDate: z.string().min(1).max(40), // 기록 일자 (YYYY-MM-DD 등 자유형식)
+  type: z.enum(NEWCOMER_HISTORY_TYPES).default('contact'),
+  content: z.string().min(1).max(4000), // 기록 내용
+  author: z.string().max(100).optional().nullable(), // 담당자
+});
+
+export type CreateNewcomerHistoryInput = z.infer<typeof createNewcomerHistorySchema>;

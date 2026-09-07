@@ -589,6 +589,22 @@ async function main(): Promise<void> {
         await prisma.$executeRawUnsafe(
           `CREATE INDEX IF NOT EXISTS "newcomers_status_idx" ON "${schema}".newcomer_registrations ("status", "created_at" DESC)`,
         );
+        // 0e-2. newcomer_history — 정착 히스토리(연락/심방/상담/모임/정착 등 날짜별 기록).
+        //       새가족 한 명당 여러 후속 기록이 시간순으로 쌓인다. 새가족 삭제 시 CASCADE.
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".newcomer_history (
+            "id"           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "newcomer_id"  UUID NOT NULL REFERENCES "${schema}".newcomer_registrations("id") ON DELETE CASCADE,
+            "entry_date"   VARCHAR(40) NOT NULL,
+            "type"         VARCHAR(30) NOT NULL DEFAULT 'contact',
+            "content"      TEXT NOT NULL,
+            "author"       VARCHAR(100),
+            "created_at"   TIMESTAMPTZ DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(
+          `CREATE INDEX IF NOT EXISTS "newcomer_history_nid_idx" ON "${schema}".newcomer_history ("newcomer_id", "entry_date" DESC, "created_at" DESC)`,
+        );
         createHits++;
       } catch { /* skip on error */ }
 

@@ -1,14 +1,19 @@
 import { useState } from 'react';
-import type { Newcomer, NewcomerStatus } from '@dw-church/api-client';
+import type { Newcomer, NewcomerStatus, NewcomerSubmission, NewcomerHistoryType } from '@dw-church/api-client';
 import {
   useNewcomers,
+  useCreateNewcomer,
   useUpdateNewcomer,
   useDeleteNewcomer,
+  useNewcomerHistory,
+  useAddNewcomerHistory,
+  useDeleteNewcomerHistory,
 } from '@dw-church/api-client';
-import { FormField, selectClass, textareaClass, useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
+import { FormField, inputClass, selectClass, textareaClass, useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
 
-// 새가족 등록은 작성 폼이 아니라 "제출함(인박스)". 방문자가 사이트(스토어프론트)
-// 폼으로 남긴 신청을 교역자가 확인/분류/메모하는 화면이다. 등록 생성 훅은 없음.
+// 새가족 관리 = (1) 새가족 팀이 서면으로 받은 정보를 직접 "등록"하는 폼 +
+// (2) 홈페이지 신청 인박스 + (3) 한 명의 "정착 히스토리"(연락/심방/상담/모임/정착)를
+// 날짜별로 기록하는 모듈. 통상 새가족은 방문자가 직접 신청하지 않고 새가족 팀이 기입한다.
 
 const STATUS_LABELS: Record<NewcomerStatus, string> = {
   new: '신규',
@@ -17,7 +22,6 @@ const STATUS_LABELS: Record<NewcomerStatus, string> = {
   archived: '보관',
 };
 
-// 상태별 배지 색상
 const STATUS_BADGE: Record<NewcomerStatus, string> = {
   new: 'bg-blue-100 text-blue-700',
   contacted: 'bg-amber-100 text-amber-700',
@@ -33,13 +37,50 @@ const STATUS_FILTERS: { value: '' | NewcomerStatus; label: string }[] = [
   { value: 'archived', label: '보관' },
 ];
 
-// ISO 날짜를 읽기 쉬운 한국어 형식으로 변환
-function formatDate(iso?: string): string {
+// 정착 히스토리 유형
+const HISTORY_TYPE_LABELS: Record<NewcomerHistoryType, string> = {
+  contact: '연락',
+  visit: '심방',
+  counsel: '상담',
+  meeting: '모임참석',
+  settled: '정착',
+  etc: '기타',
+};
+
+const HISTORY_TYPE_BADGE: Record<NewcomerHistoryType, string> = {
+  contact: 'bg-sky-100 text-sky-700',
+  visit: 'bg-violet-100 text-violet-700',
+  counsel: 'bg-amber-100 text-amber-700',
+  meeting: 'bg-teal-100 text-teal-700',
+  settled: 'bg-green-100 text-green-700',
+  etc: 'bg-gray-100 text-gray-600',
+};
+
+// ISO/자유형식 날짜를 읽기 쉬운 한국어 형식으로 변환
+function formatDate(iso?: string | null): string {
   if (!iso) return '-';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
 }
+
+function today(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+const EMPTY_FORM: NewcomerSubmission = {
+  name: '',
+  phone: '',
+  email: '',
+  address: '',
+  birthDate: '',
+  gender: '',
+  prevChurch: '',
+  visitPath: '',
+  faithStatus: '',
+  familyInfo: '',
+  prayerRequest: '',
+};
 
 export default function NewcomerManagement() {
   const [statusFilter, setStatusFilter] = useState<'' | NewcomerStatus>('');
@@ -48,9 +89,13 @@ export default function NewcomerManagement() {
   // 상세 패널의 편집 가능한 로컬 상태 (메모 / 상태). 저장 버튼을 눌러야 서버 반영.
   const [memoDraft, setMemoDraft] = useState('');
   const [statusDraft, setStatusDraft] = useState<NewcomerStatus>('new');
+  // 스태프 직접 등록 모달
+  const [showCreate, setShowCreate] = useState(false);
+  const [form, setForm] = useState<NewcomerSubmission>(EMPTY_FORM);
 
   const { showToast } = useToast();
   const { data: newcomers, isLoading, error } = useNewcomers(statusFilter || undefined);
+  const createMutation = useCreateNewcomer();
   const updateMutation = useUpdateNewcomer();
   const deleteMutation = useDeleteNewcomer();
 
@@ -89,10 +134,37 @@ export default function NewcomerManagement() {
     );
   };
 
+  const setF = (patch: Partial<NewcomerSubmission>) => setForm((prev) => ({ ...prev, ...patch }));
+
+  const handleCreate = () => {
+    if (!form.name?.trim()) { showToast('error', '이름은 필수입니다.'); return; }
+    // 빈 문자열은 서버에서 무시되므로 그대로 전송해도 무방
+    createMutation.mutate(form, {
+      onSuccess: (created) => {
+        showToast('success', '새가족을 등록했습니다.');
+        setShowCreate(false);
+        setForm(EMPTY_FORM);
+        if (created?.id) setSelectedId(created.id);
+      },
+      onError: () => { showToast('error', '등록 중 오류가 발생했습니다.'); },
+    });
+  };
+
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold">새가족 관리</h2>
+    <div className="p-4 sm:p-6">
+      <div className="flex flex-col gap-3 mb-6 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-xl font-bold">새가족 관리</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            새가족 팀이 서면으로 받은 정보를 직접 등록하거나, 홈페이지 신청을 확인하고 정착 과정을 기록합니다.
+          </p>
+        </div>
+        <button
+          onClick={() => { setForm(EMPTY_FORM); setShowCreate(true); }}
+          className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-5 py-2.5 text-sm font-medium transition-all"
+        >
+          ＋ 새가족 등록
+        </button>
       </div>
 
       {/* 상태 필터 */}
@@ -116,21 +188,21 @@ export default function NewcomerManagement() {
       {newcomers && sorted.length === 0 && !isLoading && (
         <EmptyState
           icon="🙌"
-          title="등록된 새가족 신청이 없습니다"
-          description="사이트의 새가족 등록 폼으로 신청이 들어오면 여기에 표시됩니다."
+          title="등록된 새가족이 없습니다"
+          description="상단의 ‘새가족 등록’으로 서면 정보를 직접 입력하거나, 홈페이지 신청이 들어오면 여기에 표시됩니다."
         />
       )}
 
       {sorted.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          {/* 신청 목록 */}
+          {/* 명단 */}
           <div className="lg:col-span-3 border border-gray-200 rounded-lg overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 text-left">
                   <th className="px-4 py-2.5 font-medium text-gray-600">이름</th>
                   <th className="px-4 py-2.5 font-medium text-gray-600 w-36">연락처</th>
-                  <th className="px-4 py-2.5 font-medium text-gray-600 w-28">신청일</th>
+                  <th className="px-4 py-2.5 font-medium text-gray-600 w-28">등록일</th>
                   <th className="px-4 py-2.5 font-medium text-gray-600 w-32 text-center">상태</th>
                 </tr>
               </thead>
@@ -171,22 +243,22 @@ export default function NewcomerManagement() {
           {/* 상세 패널 */}
           <div className="lg:col-span-2">
             {selected ? (
-              <div className="border border-gray-200 rounded-lg p-5 space-y-4 sticky top-6">
-                <div className="flex items-start justify-between">
+              <div className="border border-gray-200 rounded-lg p-5 space-y-4 lg:sticky lg:top-6">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <h3 className="text-lg font-bold text-gray-900">{selected.name}</h3>
-                    <p className="text-xs text-gray-400 mt-0.5">신청일: {formatDate(selected.createdAt)}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">등록일: {formatDate(selected.createdAt)}</p>
                   </div>
                   <button
                     onClick={() => setDeleteTarget({ id: selected.id, name: selected.name || '' })}
                     disabled={deleteMutation.isPending}
-                    className="text-xs text-red-600 hover:underline disabled:opacity-50"
+                    className="self-start text-xs text-red-600 hover:underline disabled:opacity-50"
                   >
                     삭제
                   </button>
                 </div>
 
-                {/* 제출 내용 (읽기 전용) */}
+                {/* 기본 정보 (읽기 전용) */}
                 <dl className="text-sm divide-y divide-gray-100 border-y border-gray-100">
                   <DetailRow label="전화번호" value={selected.phone} />
                   <DetailRow label="이메일" value={selected.email} />
@@ -200,7 +272,7 @@ export default function NewcomerManagement() {
                   <DetailRow label="기도 제목" value={selected.prayerRequest} />
                 </dl>
 
-                {/* 교역자 메모 + 상태 (편집) */}
+                {/* 상태 + 교역자 메모 (편집) */}
                 <FormField label="상태">
                   <select
                     value={statusDraft}
@@ -217,8 +289,8 @@ export default function NewcomerManagement() {
                   <textarea
                     value={memoDraft}
                     onChange={(e) => setMemoDraft(e.target.value)}
-                    rows={4}
-                    placeholder="상담 내용, 후속 조치 등을 기록하세요"
+                    rows={3}
+                    placeholder="요약 메모 (정착 과정은 아래 히스토리에 기록)"
                     className={textareaClass}
                   />
                 </FormField>
@@ -228,14 +300,92 @@ export default function NewcomerManagement() {
                   disabled={updateMutation.isPending}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-6 py-2.5 text-sm font-medium transition-all disabled:opacity-50"
                 >
-                  {updateMutation.isPending ? '저장 중...' : '저장'}
+                  {updateMutation.isPending ? '저장 중...' : '상태·메모 저장'}
                 </button>
+
+                {/* 정착 히스토리 */}
+                <NewcomerHistoryPanel newcomerId={selected.id} />
               </div>
             ) : (
               <div className="border border-dashed border-gray-200 rounded-lg p-8 text-center text-sm text-gray-400">
-                신청을 선택하면 상세 내용이 표시됩니다.
+                명단에서 새가족을 선택하면 상세 내용과 정착 히스토리가 표시됩니다.
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* 스태프 직접 등록 모달 */}
+      {showCreate && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 sm:items-center">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-5 shadow-xl sm:p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900">새가족 등록</h3>
+              <button onClick={() => setShowCreate(false)} className="text-gray-400 hover:text-gray-600" aria-label="닫기">✕</button>
+            </div>
+            <p className="mb-4 text-xs text-gray-500">서면으로 받은 새가족 카드를 그대로 입력하세요. 이름만 필수입니다.</p>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FormField label="이름 *">
+                <input className={inputClass} value={form.name} onChange={(e) => setF({ name: e.target.value })} placeholder="예: 김성실" />
+              </FormField>
+              <FormField label="전화번호">
+                <input className={inputClass} value={form.phone ?? ''} onChange={(e) => setF({ phone: e.target.value })} placeholder="(201) 555-0100" />
+              </FormField>
+              <FormField label="이메일">
+                <input className={inputClass} value={form.email ?? ''} onChange={(e) => setF({ email: e.target.value })} placeholder="name@example.com" />
+              </FormField>
+              <FormField label="성별">
+                <select className={selectClass} value={form.gender ?? ''} onChange={(e) => setF({ gender: e.target.value })}>
+                  <option value="">선택 안 함</option>
+                  <option value="남">남</option>
+                  <option value="여">여</option>
+                </select>
+              </FormField>
+              <FormField label="생년월일 / 연령대">
+                <input className={inputClass} value={form.birthDate ?? ''} onChange={(e) => setF({ birthDate: e.target.value })} placeholder="1990-03-15 또는 30대" />
+              </FormField>
+              <FormField label="신앙 상태">
+                <input className={inputClass} value={form.faithStatus ?? ''} onChange={(e) => setF({ faithStatus: e.target.value })} placeholder="초신자 / 기신자 / 수평이동" />
+              </FormField>
+              <div className="sm:col-span-2">
+                <FormField label="주소">
+                  <input className={inputClass} value={form.address ?? ''} onChange={(e) => setF({ address: e.target.value })} placeholder="주소" />
+                </FormField>
+              </div>
+              <FormField label="이전 교회">
+                <input className={inputClass} value={form.prevChurch ?? ''} onChange={(e) => setF({ prevChurch: e.target.value })} placeholder="이전 출석 교회" />
+              </FormField>
+              <FormField label="방문 경로">
+                <input className={inputClass} value={form.visitPath ?? ''} onChange={(e) => setF({ visitPath: e.target.value })} placeholder="지인 소개 / 검색 / 이사 등" />
+              </FormField>
+              <div className="sm:col-span-2">
+                <FormField label="가족 정보">
+                  <textarea className={textareaClass} rows={2} value={form.familyInfo ?? ''} onChange={(e) => setF({ familyInfo: e.target.value })} placeholder="동반 가족, 자녀 등" />
+                </FormField>
+              </div>
+              <div className="sm:col-span-2">
+                <FormField label="기도 제목">
+                  <textarea className={textareaClass} rows={2} value={form.prayerRequest ?? ''} onChange={(e) => setF({ prayerRequest: e.target.value })} placeholder="기도 제목" />
+                </FormField>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button
+                onClick={() => setShowCreate(false)}
+                className="rounded-xl border border-gray-200 px-5 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleCreate}
+                disabled={createMutation.isPending}
+                className="rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-medium text-white transition-all hover:bg-blue-700 disabled:opacity-50"
+              >
+                {createMutation.isPending ? '등록 중...' : '등록'}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -243,7 +393,7 @@ export default function NewcomerManagement() {
       <ConfirmDialog
         open={!!deleteTarget}
         title="삭제 확인"
-        message={`"${deleteTarget?.name}"의 신청을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
+        message={`"${deleteTarget?.name}"의 정보를 삭제하시겠습니까? 정착 히스토리도 함께 삭제되며 되돌릴 수 없습니다.`}
         confirmLabel="삭제"
         variant="danger"
         onConfirm={() => {
@@ -255,6 +405,113 @@ export default function NewcomerManagement() {
         }}
         onCancel={() => setDeleteTarget(null)}
       />
+    </div>
+  );
+}
+
+// 정착 히스토리 패널 — 날짜별 후속 기록(연락/심방/상담/모임/정착) 타임라인 + 추가 폼
+function NewcomerHistoryPanel({ newcomerId }: { newcomerId: string }) {
+  const { showToast } = useToast();
+  const { data: history, isLoading } = useNewcomerHistory(newcomerId);
+  const addMutation = useAddNewcomerHistory();
+  const deleteMutation = useDeleteNewcomerHistory();
+
+  const [entryDate, setEntryDate] = useState(today());
+  const [type, setType] = useState<NewcomerHistoryType>('contact');
+  const [content, setContent] = useState('');
+
+  const entries = history ?? [];
+
+  const handleAdd = () => {
+    if (!content.trim()) { showToast('error', '기록 내용을 입력하세요.'); return; }
+    addMutation.mutate(
+      { newcomerId, data: { entryDate, type, content } },
+      {
+        onSuccess: () => {
+          showToast('success', '히스토리를 추가했습니다.');
+          setContent('');
+          setType('contact');
+          setEntryDate(today());
+        },
+        onError: () => { showToast('error', '오류가 발생했습니다.'); },
+      },
+    );
+  };
+
+  const handleDelete = (historyId: string) => {
+    deleteMutation.mutate(
+      { newcomerId, historyId },
+      {
+        onSuccess: () => { showToast('success', '삭제되었습니다.'); },
+        onError: () => { showToast('error', '오류가 발생했습니다.'); },
+      },
+    );
+  };
+
+  return (
+    <div className="border-t border-gray-100 pt-4">
+      <h4 className="mb-3 text-sm font-bold text-gray-800">정착 히스토리</h4>
+
+      {/* 기록 추가 폼 */}
+      <div className="space-y-2 rounded-lg bg-gray-50 p-3">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <input
+            type="date"
+            value={entryDate}
+            onChange={(e) => setEntryDate(e.target.value)}
+            className={inputClass}
+          />
+          <select value={type} onChange={(e) => setType(e.target.value as NewcomerHistoryType)} className={selectClass}>
+            {(Object.keys(HISTORY_TYPE_LABELS) as NewcomerHistoryType[]).map((t) => (
+              <option key={t} value={t}>{HISTORY_TYPE_LABELS[t]}</option>
+            ))}
+          </select>
+        </div>
+        <textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          rows={2}
+          placeholder="예: 담당 목자와 첫 통화, 다음 주 예배 후 식사 약속"
+          className={textareaClass}
+        />
+        <button
+          onClick={handleAdd}
+          disabled={addMutation.isPending}
+          className="w-full rounded-lg bg-gray-800 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-gray-900 disabled:opacity-50"
+        >
+          {addMutation.isPending ? '추가 중...' : '＋ 기록 추가'}
+        </button>
+      </div>
+
+      {/* 타임라인 */}
+      <div className="mt-4 space-y-3">
+        {isLoading && <p className="text-xs text-gray-400">불러오는 중...</p>}
+        {!isLoading && entries.length === 0 && (
+          <p className="text-xs text-gray-400">아직 기록이 없습니다. 연락·심방·상담 등 정착 과정을 남겨 보세요.</p>
+        )}
+        {entries.map((e) => (
+          <div key={e.id} className="flex gap-3 border-l-2 border-gray-200 pl-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={`rounded px-2 py-0.5 text-xs font-medium ${HISTORY_TYPE_BADGE[e.type] ?? HISTORY_TYPE_BADGE.etc}`}>
+                  {HISTORY_TYPE_LABELS[e.type] ?? '기타'}
+                </span>
+                <span className="text-xs text-gray-500">{formatDate(e.entryDate)}</span>
+                {e.author && <span className="text-xs text-gray-400">· {e.author}</span>}
+              </div>
+              <p className="mt-1 whitespace-pre-wrap break-words text-sm text-gray-800">{e.content}</p>
+            </div>
+            <button
+              onClick={() => handleDelete(e.id)}
+              disabled={deleteMutation.isPending}
+              className="shrink-0 text-xs text-gray-300 hover:text-red-500 disabled:opacity-50"
+              aria-label="기록 삭제"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

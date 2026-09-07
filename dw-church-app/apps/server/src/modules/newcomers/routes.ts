@@ -1,8 +1,9 @@
 import type { FastifyInstance } from 'fastify';
 import { requireAuth, requireFeature } from '../../middleware/auth.js';
 import { getSchema } from '../../utils/get-schema.js';
-import { createNewcomerSchema, updateNewcomerSchema } from './schema.js';
+import { createNewcomerSchema, updateNewcomerSchema, createNewcomerHistorySchema } from './schema.js';
 import * as newcomerService from './service.js';
+import * as historyService from './history-service.js';
 
 /**
  * 새가족 등록·관리 routes (Pro tier — feature 'newcomer_registration').
@@ -43,6 +44,26 @@ export async function newcomerRoutes(app: FastifyInstance) {
   app.delete('/newcomers/:id', { preHandler: [requireAuth, requireFeature('newcomer_registration')] }, async (request, reply) => {
     const { id } = request.params as { id: string };
     await newcomerService.deleteNewcomer(getSchema(request), id);
+    return reply.status(204).send();
+  });
+
+  // ─── 정착 히스토리 (연락/심방/상담/모임/정착 등 날짜별 기록) — 관리자 전용 ───
+  app.get('/newcomers/:id/history', { preHandler: [requireAuth, requireFeature('newcomer_registration')] }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const data = await historyService.listNewcomerHistory(getSchema(request), id);
+    return reply.send({ data });
+  });
+
+  app.post('/newcomers/:id/history', { preHandler: [requireAuth, requireFeature('newcomer_registration')] }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const input = createNewcomerHistorySchema.parse(request.body);
+    const created = await historyService.addNewcomerHistory(getSchema(request), id, input);
+    return reply.status(201).send({ data: created });
+  });
+
+  app.delete('/newcomers/:id/history/:historyId', { preHandler: [requireAuth, requireFeature('newcomer_registration')] }, async (request, reply) => {
+    const { historyId } = request.params as { historyId: string };
+    await historyService.deleteNewcomerHistory(getSchema(request), historyId);
     return reply.status(204).send();
   });
 }

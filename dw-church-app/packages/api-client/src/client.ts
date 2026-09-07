@@ -20,6 +20,8 @@ import type {
   Newcomer,
   NewcomerStatus,
   NewcomerSubmission,
+  NewcomerHistoryEntry,
+  NewcomerHistoryInput,
   FormSubmission,
   FormSubmissionStatus,
   Form,
@@ -759,6 +761,12 @@ export class DWChurchClient {
     return unwrapData(res);
   }
 
+  /** 관리자 직접 등록 — 새가족 팀이 서면 문서를 기입할 때. 서버 POST는 동일. */
+  async createNewcomer(data: NewcomerSubmission): Promise<Newcomer> {
+    const res = await this.api.post(`${this.namespace}/newcomers`, data);
+    return unwrapData(res);
+  }
+
   async updateNewcomer(id: string, data: Partial<Newcomer>): Promise<Newcomer> {
     const res = await this.api.put(`${this.namespace}/newcomers/${id}`, data);
     return unwrapData(res);
@@ -766,6 +774,21 @@ export class DWChurchClient {
 
   async deleteNewcomer(id: string): Promise<void> {
     return this.api.delete(`${this.namespace}/newcomers/${id}`);
+  }
+
+  // ─── 정착 히스토리 (연락/심방/상담/모임/정착 등 날짜별 기록) ──────────
+  async getNewcomerHistory(newcomerId: string): Promise<NewcomerHistoryEntry[]> {
+    const res = await this.api.get(`${this.namespace}/newcomers/${newcomerId}/history`);
+    return unwrapData(res);
+  }
+
+  async addNewcomerHistory(newcomerId: string, data: NewcomerHistoryInput): Promise<NewcomerHistoryEntry> {
+    const res = await this.api.post(`${this.namespace}/newcomers/${newcomerId}/history`, data);
+    return unwrapData(res);
+  }
+
+  async deleteNewcomerHistory(newcomerId: string, historyId: string): Promise<void> {
+    return this.api.delete(`${this.namespace}/newcomers/${newcomerId}/history/${historyId}`);
   }
 
   // ─── Form submissions (문의 / 목장사역보고서 / 커스텀 폼 인박스) ──────

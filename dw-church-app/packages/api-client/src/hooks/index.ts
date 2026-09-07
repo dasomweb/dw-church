@@ -22,6 +22,9 @@ import type {
   Cell,
   Newcomer,
   NewcomerStatus,
+  NewcomerSubmission,
+  NewcomerHistoryEntry,
+  NewcomerHistoryInput,
   FormSubmission,
   FormSubmissionStatus,
   Form,
@@ -131,6 +134,7 @@ export const queryKeys = {
     all: ['newcomers'] as const,
     list: (status?: string) => ['newcomers', 'list', status] as const,
     detail: (id: string) => ['newcomers', 'detail', id] as const,
+    history: (id: string) => ['newcomers', 'history', id] as const,
   },
   forms: {
     all: ['forms'] as const,
@@ -921,6 +925,16 @@ export function useNewcomers(status?: NewcomerStatus) {
   });
 }
 
+// 관리자 직접 등록 — 새가족 팀이 서면 문서를 기입할 때
+export function useCreateNewcomer() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: NewcomerSubmission) => client!.createNewcomer(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.newcomers.all }),
+  });
+}
+
 export function useUpdateNewcomer() {
   const client = useDWChurchClient();
   const queryClient = useQueryClient();
@@ -936,6 +950,41 @@ export function useDeleteNewcomer() {
   return useMutation({
     mutationFn: (id: string) => client!.deleteNewcomer(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.newcomers.all }),
+  });
+}
+
+// ─── 정착 히스토리 Hooks ────────────────────────────────────
+export function useNewcomerHistory(newcomerId: string | null) {
+  const client = useDWChurchClient();
+  return useQuery<NewcomerHistoryEntry[]>({
+    queryKey: queryKeys.newcomers.history(newcomerId ?? ''),
+    queryFn: () => client!.getNewcomerHistory(newcomerId!),
+    enabled: !!client && !!newcomerId,
+    staleTime: STALE_TIME,
+  });
+}
+
+export function useAddNewcomerHistory() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ newcomerId, data }: { newcomerId: string; data: NewcomerHistoryInput }) =>
+      client!.addNewcomerHistory(newcomerId, data),
+    onSuccess: (_res, { newcomerId }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.newcomers.history(newcomerId) });
+    },
+  });
+}
+
+export function useDeleteNewcomerHistory() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ newcomerId, historyId }: { newcomerId: string; historyId: string }) =>
+      client!.deleteNewcomerHistory(newcomerId, historyId),
+    onSuccess: (_res, { newcomerId }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.newcomers.history(newcomerId) });
+    },
   });
 }
 

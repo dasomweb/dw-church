@@ -36,6 +36,9 @@ export type {
   Newcomer,
   NewcomerStatus,
   NewcomerSubmission,
+  NewcomerHistoryType,
+  NewcomerHistoryEntry,
+  NewcomerHistoryInput,
   FormSubmission,
   FormSubmissionStatus,
   Form,
@@ -173,8 +176,12 @@ export {
   useDeleteCell,
   // Newcomers (새가족)
   useNewcomers,
+  useCreateNewcomer,
   useUpdateNewcomer,
   useDeleteNewcomer,
+  useNewcomerHistory,
+  useAddNewcomerHistory,
+  useDeleteNewcomerHistory,
   // Form submissions (폼 제출 인박스)
   useFormSubmissions,
   useUpdateFormSubmission,
