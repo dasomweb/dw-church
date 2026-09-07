@@ -71,10 +71,10 @@ const albums = (variant = 'grid-4'): PresetSection => ({ block_type: 'album_gall
 const verse = (): PresetSection => ({ block_type: 'verse_of_day', props: { eyebrow: '오늘의 말씀 · Verse of the Day' } });
 
 // ── 시안 11(라이브 종합형) 시그니처 섹션 블록들 (card-11 콘텐츠 그대로) ──
-const heroOverlap = (): PresetSection => ({
+const heroOverlap = (title?: string, subtitle?: string): PresetSection => ({
   block_type: 'hero_overlap',
   props: {
-    eyebrow: 'SAEGIL CHURCH', title: '함께 자라고\n함께 살아가는 교회', subtitle: '주일 아침, 당신의 자리를 비워두고 기다립니다.',
+    eyebrow: 'SAEGIL CHURCH', title: title ?? '함께 자라고\n함께 살아가는 교회', subtitle: subtitle ?? '주일 아침, 당신의 자리를 비워두고 기다립니다.',
     backgroundImageUrl: `${IMG}/worship-2.jpg`,
     cards: [
       { title: '주일예배', rows: [{ label: '1부', value: '오전 9:00' }, { label: '2부', value: '오전 11:00' }, { label: 'EM (English)', value: '오후 1:00' }] },
@@ -130,7 +130,7 @@ const bentoGrid = (): PresetSection => ({
   props: {
     columns: 6,
     tiles: [
-      { kind: 'photo', colSpan: 4, rowSpan: 3, imageUrl: `${IMG}/worship-2.jpg`, title: '따뜻한 이웃이 되는 교회', subtitle: '주일 9:00 · 11:00  |  수요 19:30' },
+      { kind: 'photo', colSpan: 4, rowSpan: 3, imageUrl: `${IMG}/worship-2.jpg`, title: '주만 바라보는 믿음의 여정', subtitle: '성령의 바람을 타고 기쁨으로 전진합니다.' },
       { kind: 'card', colSpan: 2, bg: 'brand', eyebrow: '이번 주일', title: '8월 16일', subtitle: '1부 9:00 · 2부 11:00' },
       { kind: 'photo', colSpan: 2, rowSpan: 2, imageUrl: `${IMG}/sermon-1.jpg`, eyebrow: '▶ 최신 설교', title: '우리를 부르시는 손길' },
       { kind: 'list', colSpan: 3, title: '주보 · 공지', moreLabel: '더보기', items: [{ label: '8월 16일 주일 주보', date: '08.15' }, { label: '가을 성경공부 신청', date: '08.12' }, { label: '주일학교 교사 모집', date: '08.05' }] },
@@ -185,7 +185,7 @@ const P: Record<string, PresetSection[]> = {
   // card-00.html 그대로. 사진 = R2 group-1(예배/친교). custom_html 통짜가 아니라 편집 가능.
   '00': [
     { block_type: 'hero_banner', props: { variant: 'image-overlay', width: 'contained', height: 'md', textAlign: 'left',
-      title: '타국에서 만난 또 하나의 가족', subtitle: 'A Korean-American church family in Los Angeles since 2019',
+      title: '예배의 감격, 삶의 예배로', subtitle: '진정한 예배자가 세상을 변화시킵니다.',
       backgroundImageUrl: `${IMG}/group-1.jpg`, overlayColor: '#090f1c', overlayOpacity: 0.5,
       buttonText: '예배 안내', buttonUrl: '/worship', secondaryButtonText: '처음 오시나요?', secondaryButtonUrl: '/newcomer' } },
     { block_type: 'info_columns', props: { columns: '3', items: [
@@ -228,35 +228,35 @@ const P: Record<string, PresetSection[]> = {
     location(),
     contact(),
   ],
-  '01': [hero('A Church Where We Grow Together', '한 자리를 비워 두고 기다립니다', { variant: 'split-image', imageUrl: `${IMG}/worship-1.jpg`, imageSide: 'right', backgroundImageUrl: `${IMG}/worship-1.jpg` }), infoColumns(), verse(), sermons('grid-3'), newcomer(), announce(), location(), contact()],
-  '02': [hero('낯선 곳에서의 첫 걸음, 함께 걷겠습니다', '정착과 신앙, 우리가 돕겠습니다', { backgroundImageUrl: `${IMG}/group-1.jpg` }), newcomer(), infoColumns(), verse(), sermons('grid-3'), location(), contact()],
-  '03': [hero('말씀 앞에 함께 섭니다', '', { variant: 'text-only', bgMode: 'gradient', height: 'md' }), infoColumns(), verse(), bulletins('grid-2'), sermons('list'), board(), announce(), location()],
-  '04': [hero('이번 주, 우리 교회는', '한 주의 예배와 모임을 안내합니다', { backgroundImageUrl: `${IMG}/church-2.jpg` }), weekSchedule(), infoColumns(), verse(), events(), sermons('grid-4'), bulletins('grid-4'), location(), contact()],
+  '01': [hero('십자가의 복음, 생명의 능력', '영혼을 살리는 구원의 소식이 이곳에 있습니다.', { variant: 'split-image', imageUrl: `${IMG}/worship-1.jpg`, imageSide: 'right', backgroundImageUrl: `${IMG}/worship-1.jpg` }), infoColumns(), verse(), sermons('grid-3'), newcomer(), announce(), location(), contact()],
+  '02': [hero('주님의 제자, 세상의 빛', '삶으로 순종하며 그리스도를 전파합니다.', { backgroundImageUrl: `${IMG}/group-1.jpg` }), newcomer(), infoColumns(), verse(), sermons('grid-3'), location(), contact()],
+  '03': [hero('은혜가 흐르는 공동체', '사랑으로 섬기며 함께 세워가는 교회입니다.', { variant: 'text-only', bgMode: 'gradient', height: 'md' }), infoColumns(), verse(), bulletins('grid-2'), sermons('list'), board(), announce(), location()],
+  '04': [hero('말씀의 반석 위에 굳건히', '진리의 생수로 매일 새롭게 채워집니다.', { backgroundImageUrl: `${IMG}/church-2.jpg` }), weekSchedule(), infoColumns(), verse(), events(), sermons('grid-4'), bulletins('grid-4'), location(), contact()],
   // 소형·개척 교회
-  '05': [hero('작지만 서로를 아는 교회', '', { backgroundImageUrl: `${IMG}/church-1.jpg` }), pastor({ variant: 'left' }), infoColumns(), verse(), sermons('grid-3'), quickLinks(), location(), contact()],
-  '06': [hero('여기 한 자리를 비워 두었습니다', '넉넉한 마음으로 맞이합니다', { variant: 'text-only', bgMode: 'gradient', height: 'md' }), pastor(), infoColumns(), verse(), sermons('list'), contact()],
-  '07': [hero('주일 오전 11시, 이곳에서 만나요', '오시는 길을 안내합니다', { backgroundImageUrl: `${IMG}/church-1.jpg` }), location(), infoColumns(), announce(), sermons('grid-3'), contact()],
-  '08': [hero('언제 어디서나, 함께 예배합니다', '', { height: 'md', backgroundImageUrl: `${IMG}/worship-2.jpg` }), infoColumns(), verse(), sermons('grid-2'), bulletins('grid-2'), location(), contact()],
+  '05': [hero('기도의 불을 피우는 시간', '하나님의 뜻을 구하며 무릎으로 나아갑니다.', { backgroundImageUrl: `${IMG}/church-1.jpg` }), pastor({ variant: 'left' }), infoColumns(), verse(), sermons('grid-3'), quickLinks(), location(), contact()],
+  '06': [hero('온 세상 향한 복음의 발걸음', '국경과 세대를 넘어 사랑을 전합니다.', { variant: 'text-only', bgMode: 'gradient', height: 'md' }), pastor(), infoColumns(), verse(), sermons('list'), contact()],
+  '07': [hero('처음 사랑의 감격 그대로', '성령의 인도하심 속에 날마다 새로워집니다.', { backgroundImageUrl: `${IMG}/church-1.jpg` }), location(), infoColumns(), announce(), sermons('grid-3'), contact()],
+  '08': [hero('한 영혼을 향한 주의 마음', '잃은 양을 찾아 품는 생명의 공동체입니다.', { height: 'md', backgroundImageUrl: `${IMG}/worship-2.jpg` }), infoColumns(), verse(), sermons('grid-2'), bulletins('grid-2'), location(), contact()],
   '09': [hero('함께 모이는 우리 교회', '', { height: 'md', backgroundImageUrl: `${IMG}/group-2.jpg` }), infoColumns(), sermons('list'), board(), location(), contact()],
-  '10': [hero('거실에 둘러앉아 말씀을 나눕니다', '가정처럼 따뜻한 공동체', { backgroundImageUrl: `${IMG}/group-1.jpg` }), weekSchedule(), verse(), pastor(), albums('grid-3'), sermons('grid-3'), contact()],
+  '10': [hero('세상 속의 소금과 빛', '거룩한 영향력으로 일상을 물들입니다.', { backgroundImageUrl: `${IMG}/group-1.jpg` }), weekSchedule(), verse(), pastor(), albums('grid-3'), sermons('grid-3'), contact()],
   // 완성도 레이아웃 시안
-  '11': [heroOverlap(), verse(), announce(), sermonFeature(), ministries(), newsSplit(), galleryMosaic(), givingBand()],
-  '12': [hero('함께 자라고 함께 살아가는 교회', '', { backgroundImageUrl: `${IMG}/worship-1.jpg` }), infoColumns(), sermons('featured'), bulletins('grid-3'), events(), columns(), quickLinks(), location(), contact()],
+  '11': [heroOverlap('십자가 사랑,\n영원한 소망', '고난 속에서도 다시 일어서는 힘입니다.'), verse(), announce(), sermonFeature(), ministries(), newsSplit(), galleryMosaic(), givingBand()],
+  '12': [hero('참된 진리와 자유의 삶', '말씀 안에서 온전한 회복을 누립니다.', { backgroundImageUrl: `${IMG}/worship-1.jpg` }), infoColumns(), sermons('featured'), bulletins('grid-3'), events(), columns(), quickLinks(), location(), contact()],
   '13': [bentoGrid(), location(), contact()],
-  '14': [hero('고요한 저녁, 말씀 앞에 나아갑니다', '누구든 오실 수 있습니다', { backgroundImageUrl: `${IMG}/worship-2.jpg`, overlayOpacity: 0.55 }), infoColumns(), sermons('grid-3'), newcomer(), albums('grid-4'), location(), contact()],
+  '14': [hero('다음세대를 세우는 보석', '하나님의 꿈을 품고 미래를 준비합니다.', { backgroundImageUrl: `${IMG}/worship-2.jpg`, overlayOpacity: 0.55 }), infoColumns(), sermons('grid-3'), newcomer(), albums('grid-4'), location(), contact()],
   '15': [dashboardBanner(), quickTiles(), sermons('grid-2'), board(), weekSchedule(), albums('grid-4'), location(), contact()],
   '16': [
-    hero('주일 11시, 함께 모입니다', 'LA 코리아타운에서 32년째 한인 가족들과 함께합니다', { backgroundImageUrl: `${IMG}/worship-2.jpg`, textAlign: 'center' }),
+    hero('연약함을 품는 따뜻한 품', '그리스도의 사랑으로 서로를 세워줍니다.', { backgroundImageUrl: `${IMG}/worship-2.jpg`, textAlign: 'center' }),
     story('예배', '말씀 앞에 함께 섭니다', '주일 오전 9시와 11시, 수요일 저녁 7시 30분, 매일 새벽 5시 30분에 모입니다. 예배 순서와 주차 안내는 미리 확인하실 수 있습니다.', `${IMG}/worship-2.jpg`, 'left', '예배 시간 전체 보기'),
     story('말씀', '우리를 부르시는 손길', '로마서 8장 28절 · 김성호 담임목사 · 8월 9일 주일 2부. 지난 설교는 영상과 설교문으로 모두 남아 있습니다.', `${IMG}/sermon-1.jpg`, 'right', '설교 영상 보기'),
     story('공동체', '함께 신앙생활 합니다', '구역 모임과 주일학교, EM이 매주 모입니다. 처음 오신 분은 새가족반에서 여섯 주 동안 함께합니다.', `${IMG}/group-1.jpg`, 'left', '소그룹 둘러보기'),
     bulletins('grid-3'), galleryMosaic(), givingBand(),
   ],
-  '17': [hero('우리는 서로의 이웃입니다', '', { variant: 'text-only', bgMode: 'gradient', height: 'md', textAlign: 'center' }), infoColumns(), sermons('grid-3'), albums('grid-3'), location(), contact()],
-  '18': [hero('이번 주 교회는 이렇게 모입니다', '', { backgroundImageUrl: `${IMG}/church-2.jpg` }), weekSchedule(), events(), sermons('grid-4'), albums('grid-4'), location(), contact()],
-  '19': [hero('함께한 시간들', '교회의 사진이 이야기가 됩니다', { variant: 'page-hero', backgroundImageUrl: `${IMG}/retreat-1.jpg` }), galleryMosaic(), sermonFeature(), newcomer(), contact()],
-  '20': [heroOverlap(), verse(), sermonFeature(), ministries(), newsSplit(), galleryMosaic(), givingBand()],
-  '21': [hero('주일 11시, 당신의 자리가 있습니다', '', { height: 'full', backgroundImageUrl: `${IMG}/worship-2.jpg`, overlayOpacity: 0.5 }), infoColumns(), sermons('grid-4'), newcomer(), albums('grid-4'), location(), contact()],
+  '17': [hero('하늘 소망을 품은 백성', '영원한 본향을 향해 함께 걸어갑니다.', { variant: 'text-only', bgMode: 'gradient', height: 'md', textAlign: 'center' }), infoColumns(), sermons('grid-3'), albums('grid-3'), location(), contact()],
+  '18': [hero('순종으로 드리는 삶의 제사', '매일의 일상을 거룩한 예배로 드립니다.', { backgroundImageUrl: `${IMG}/church-2.jpg` }), weekSchedule(), events(), sermons('grid-4'), albums('grid-4'), location(), contact()],
+  '19': [hero('성령으로 하나 된 공동체', '사랑의 줄로 굳게 묶인 하나님의 가족입니다.', { variant: 'page-hero', backgroundImageUrl: `${IMG}/retreat-1.jpg` }), galleryMosaic(), sermonFeature(), newcomer(), contact()],
+  '20': [heroOverlap('어두운 세상의 등대', '그리스도의 빛을 세상에 비추는 교회입니다.'), verse(), sermonFeature(), ministries(), newsSplit(), galleryMosaic(), givingBand()],
+  '21': [hero('은혜와 진리가 충만한 곳', '참된 평안과 구원의 감격이 넘칩니다.', { height: 'full', backgroundImageUrl: `${IMG}/worship-2.jpg`, overlayOpacity: 0.5 }), infoColumns(), sermons('grid-4'), newcomer(), albums('grid-4'), location(), contact()],
 };
 
 // ── per-design THEME profiles (colors + fonts) ──────────────────────────────
