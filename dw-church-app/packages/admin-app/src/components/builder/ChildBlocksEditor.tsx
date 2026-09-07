@@ -15,6 +15,7 @@ import { ImageUpload } from '../../components';
 import { useImageFieldApi } from './property-fields/useImageFieldApi';
 import { BoardSelectField } from './property-fields/BoardSelectField';
 import { BoardMultiSelectField } from './property-fields/BoardMultiSelectField';
+import { ButtonsField, type ButtonItem } from './property-fields/ButtonsField';
 
 type Child = { blockType: string; props: Record<string, unknown> };
 type EditableField = BlockDef['editableFields'][number];
@@ -147,6 +148,11 @@ function ChildField({ field, value, onChange, uploadImage }: {
       ) : (
         <Row label={field.label}><BoardSelectField value={String(v ?? '')} onChange={(s) => onChange(s)} /></Row>
       );
+    case 'buttons':
+      // 버튼 배열(라벨 + 링크). LinkField 로 각 버튼의 이동 대상을 URL 또는 페이지/
+      // 메뉴 검색선택으로 지정. 대표님 2026-09-06: 자식 블록(레이아웃 안 news_announcements
+      // 등)의 버튼도 여기서 편집 가능해야 함(예전엔 "최상위에서 편집" 안내만 떴음).
+      return <Row label={field.label}><ButtonsField value={Array.isArray(v) ? (v as ButtonItem[]) : []} onChange={(arr) => onChange(arr)} /></Row>;
     case 'textarea':
     case 'richtext':
       return <Row label={field.label}><textarea rows={3} className={INP} value={String(v ?? '')} onChange={(e) => onChange(e.target.value)} /></Row>;

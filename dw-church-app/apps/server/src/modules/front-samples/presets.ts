@@ -214,7 +214,7 @@ const P: Record<string, PresetSection[]> = {
     // +원하는 만큼 추가하는 버튼. 레이아웃 자식으로 실제 데이터 블록이 렌더됨.
     { block_type: 'layout_columns', props: { layout: 'columns-2', gap: 28, padding: '48px 24px 0', maxWidth: '7xl', children: [
       { blockType: 'recent_sermons', props: { title: '이번 주 말씀', variant: 'card' } },
-      { blockType: 'news_announcements', props: { title: '주보 · 광고', bulletinLimit: 3, newsLimit: 4, moreUrl: '/bulletins',
+      { blockType: 'news_announcements', props: { title: '주보 · 광고', newsLimit: 4, moreUrl: '/bulletins',
         buttons: [{ text: '기도 요청', url: '/contact' }, { text: '심방 신청', url: '/contact' }] } },
     ] } },
     { block_type: 'features_grid', props: { title: '이렇게 섬기고 있습니다', columns: '4', variant: 'compact', items: [

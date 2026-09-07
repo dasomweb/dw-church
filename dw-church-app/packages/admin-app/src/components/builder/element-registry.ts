@@ -1612,7 +1612,6 @@ const NEWS_ANNOUNCEMENTS: BlockElementRegistry = {
       { label: '더보기 링크', path: 'moreUrl', kind: 'url', hint: '기본 /bulletins', disableDynamic: true },
     ]},
     { title: '주보 (주보 모듈)', elements: [
-      { label: '주보 개수', path: 'bulletinLimit', kind: 'number', hint: '기본 3' },
       { label: '주보 배지 라벨', path: 'bulletinBadge', kind: 'text', hint: '기본 주보' },
     ]},
     { title: '광고 (교회소식 게시판)', elements: [
