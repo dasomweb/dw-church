@@ -178,9 +178,12 @@ function PublicOnly({ children }: { children: React.ReactNode }) {
 
   if (isAuthenticated && !wantsLoginForm) {
     const user = useAuthStore.getState().session?.user;
-    const fallback = user?.isSuperAdmin
-      ? '/super-admin'
-      : user?.tenantSlug ? `/t/${user.tenantSlug}` : '/login';
+    // Host mode (tenant's own domain): the dashboard is at the root.
+    const fallback = detectHostMode()
+      ? '/'
+      : user?.isSuperAdmin
+        ? '/super-admin'
+        : user?.tenantSlug ? `/t/${user.tenantSlug}` : '/login';
     return <Navigate to={fallback} replace />;
   }
 

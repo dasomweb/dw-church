@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useDWChurchClient } from '@dw-church/api-client';
 import { useEntitlements } from '../hooks/useEntitlements';
 import { featureAllowed } from '../lib/plan-features';
+import { useTenantScope } from '../lib/tenant-scope';
 
 /**
  * MB-01 교적 현황 — 화면 시안(교적관리 화면 시안.dc.html) 그대로 구현.
@@ -20,8 +21,8 @@ export default function MemberDashboard() {
   const apiClient = useDWChurchClient();
   const api = apiClient!.adapter;
   const navigate = useNavigate();
-  const { slug = '' } = useParams<{ slug: string }>();
-  const go = (p: string) => navigate(`/t/${slug}/${p}`);
+  const { slug, basePath } = useTenantScope();
+  const go = (p: string) => navigate(`${basePath}/${p}`);
   const { features } = useEntitlements(slug);
   const hasSmallgroup = featureAllowed(features, 'smallgroup'); // 스몰그룹 있을 때만 구역별 출석 노출
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useTenantScope } from '../lib/tenant-scope';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
 import { inputClass, useToast, EmptyState } from '../components';
@@ -41,8 +41,11 @@ export default function AttendanceManagement() {
   const [weeks, setWeeks] = useState(4);
   const [showSvcMgr, setShowSvcMgr] = useState(false);
   const [nameQ, setNameQ] = useState('');
-  const { slug = '' } = useParams<{ slug: string }>();
-  const checkinUrl = `${window.location.origin}/t/${slug}/checkin`;
+  const { slug } = useTenantScope();
+  // Mobile check-in QR link → the admin console route, which works from both
+  // admin.truelight.app AND a tenant domain (host mode has no /checkin route
+  // yet). slug comes from the scope (the session's tenant slug in host mode).
+  const checkinUrl = `https://admin.truelight.app/admin/t/${slug}/checkin`;
   const shareCheckin = async () => {
     try { await navigator.clipboard.writeText(checkinUrl); showToast('success', '모바일 출석 링크를 복사했습니다. 구역 리더에게 보내세요.'); }
     catch { showToast('error', checkinUrl); }

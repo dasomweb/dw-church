@@ -11,10 +11,11 @@
  * Future: this whole route can be dropped once we're sure no tenants
  * have it bookmarked. For now it's a courteous 404 substitute.
  */
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { useTenantScope } from '../lib/tenant-scope';
 
 export default function ThemeDeprecatedNotice() {
-  const { slug = '' } = useParams<{ slug: string }>();
+  const { basePath } = useTenantScope();
 
   return (
     <div className="max-w-2xl mx-auto py-12 px-4">
@@ -39,13 +40,13 @@ export default function ThemeDeprecatedNotice() {
 
         <div className="mt-6 flex gap-2 justify-center">
           <Link
-            to={`/t/${slug}`}
+            to={basePath || '/'}
             className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
           >
             대시보드로 돌아가기
           </Link>
           <Link
-            to={`/t/${slug}/settings`}
+            to={`${basePath}/settings`}
             className="px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50"
           >
             기본 설정

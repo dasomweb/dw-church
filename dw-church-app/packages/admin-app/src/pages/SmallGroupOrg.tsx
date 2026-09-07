@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
 import { inputClass, useToast, EmptyState } from '../components';
 import { MemberPicker, type PickMember } from '../components/MemberPicker';
+import { useTenantScope } from '../lib/tenant-scope';
 
 /**
  * GR-02/GR-03 조직 · 상세 · 명단 배정 — 스몰그룹 조직 트리(parent_id 최대 3단)를
@@ -209,7 +210,7 @@ function GroupDetail({ group, preset, levelDefs, tree, members, api, showToast, 
 }) {
   const t = preset?.terminology ?? { org: '조직', member: '구성원', leader: '리더' };
   const navigate = useNavigate();
-  const { slug = '' } = useParams<{ slug: string }>();
+  const { basePath } = useTenantScope();
   const [editing, setEditing] = useState(false);
   const [splitting, setSplitting] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -373,7 +374,7 @@ function GroupDetail({ group, preset, levelDefs, tree, members, api, showToast, 
       {tab === 'reports' && (
         <div className="bg-white border border-[#e5e7eb] rounded-[14px] px-[22px] py-5">
           <div className="flex items-center mb-3"><b className="text-[14px]">최근 리포트</b>
-            <button onClick={() => navigate(`/t/${slug}/group-reports`)} className="ml-auto text-[12.5px] font-bold text-[#1466d6]">리포트 작성</button></div>
+            <button onClick={() => navigate(`${basePath}/group-reports`)} className="ml-auto text-[12.5px] font-bold text-[#1466d6]">리포트 작성</button></div>
           {(group.recentReports?.length ?? 0) === 0 ? <p className="text-[12.5px] text-[#8b93a3]">아직 리포트가 없습니다.</p> : (
             <div className="divide-y divide-[#f2f4f7]">
               {group.recentReports.map((r: any, i: number) => (
@@ -405,7 +406,7 @@ function GroupDetail({ group, preset, levelDefs, tree, members, api, showToast, 
               })}
             </div>
           )}
-          <button onClick={() => navigate(`/t/${slug}/group-terms`)} className="text-[12px] text-[#1466d6] font-bold mt-4">차수·출결로 이동</button>
+          <button onClick={() => navigate(`${basePath}/group-terms`)} className="text-[12px] text-[#1466d6] font-bold mt-4">차수·출결로 이동</button>
         </div>
       )}
 

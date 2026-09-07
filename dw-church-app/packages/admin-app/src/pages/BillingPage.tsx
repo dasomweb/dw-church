@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useTenantScope } from '../lib/tenant-scope';
 import { useAuthStore } from '../stores/auth';
 import { useToast } from '../components';
 
@@ -69,7 +69,7 @@ export default function BillingPage() {
   const { showToast } = useToast();
   const session = useAuthStore((s) => s.session);
   const token = session?.accessToken;
-  const { slug = '' } = useParams<{ slug: string }>();
+  const { basePath } = useTenantScope();
 
   const [info, setInfo] = useState<BillingInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,7 +77,7 @@ export default function BillingPage() {
   const [invoiceMonth, setInvoiceMonth] = useState<string>('all');
 
   const headers = { Authorization: `Bearer ${token || ''}` };
-  const billingPath = `/t/${slug}/billing`;
+  const billingPath = `${basePath}/billing`;
 
   useEffect(() => {
     let cancelled = false;

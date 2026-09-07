@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   useBulletins,
   useSermons,
@@ -9,6 +9,7 @@ import {
   useDWChurchClient,
 } from '@dw-church/api-client';
 import { useAuthStore } from '../stores/auth';
+import { useTenantScope } from '../lib/tenant-scope';
 
 function StatCard({
   label,
@@ -96,8 +97,8 @@ export default function Dashboard() {
   const albums = useAlbums({ perPage: 3 });
   const events = useEvents({ perPage: 1 });
   const staff = useStaff({ perPage: 1 });
-  const { slug = '' } = useParams<{ slug: string }>();
-  const tPath = (p: string) => (p ? `/t/${slug}/${p}` : `/t/${slug}`);
+  const { basePath } = useTenantScope();
+  const tPath = (p: string) => (p ? `${basePath}/${p}` : (basePath || '/'));
   const navigate = useNavigate();
   const apiClient = useDWChurchClient();
   const isSuperAdmin = !!useAuthStore((s) => s.session)?.user?.isSuperAdmin;
@@ -115,12 +116,12 @@ export default function Dashboard() {
       try {
         const res = await apiClient!.getIntake();
         if (!cancelled && res.status !== 'submitted' && res.status !== 'built') {
-          navigate(`/t/${slug}/onboarding`, { replace: true });
+          navigate(`${basePath}/onboarding`, { replace: true });
         }
       } catch { /* network error — leave them on the dashboard */ }
     })();
     return () => { cancelled = true; };
-  }, [apiClient, slug, isSuperAdmin, role, navigate]);
+  }, [apiClient, basePath, isSuperAdmin, role, navigate]);
 
   return (
     <div className="space-y-8">

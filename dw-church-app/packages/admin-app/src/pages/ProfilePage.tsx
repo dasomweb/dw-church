@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUpdateProfile } from '@dw-church/api-client';
 import { useAuthStore } from '../stores/auth';
 import { useToast } from '../components';
+import { detectHostMode } from '../lib/tenant-scope';
 
 const profileSchema = z.object({
   name: z.string().min(1, '이름을 입력해주세요'),
@@ -42,9 +43,13 @@ export default function ProfilePage() {
   const updateProfile = useUpdateProfile();
   const { showToast } = useToast();
   const navigate = useNavigate();
-  const homePath = user?.isSuperAdmin
-    ? '/super-admin'
-    : user?.tenantSlug ? `/t/${user.tenantSlug}` : '/login';
+  // ProfilePage renders OUTSIDE the tenant layout (no TenantScope context), so
+  // decide the home path from the host: on a tenant's own domain it's the root.
+  const homePath = detectHostMode()
+    ? '/'
+    : user?.isSuperAdmin
+      ? '/super-admin'
+      : user?.tenantSlug ? `/t/${user.tenantSlug}` : '/login';
 
   const {
     register: registerProfile,

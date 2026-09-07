@@ -12,7 +12,8 @@
  * `currentPlan` is optional — when set, it nudges the message with
  * "현재 Basic 입니다" line.
  */
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useTenantScope } from '../lib/tenant-scope';
 
 interface PlanUpgradeModalProps {
   open: boolean;
@@ -36,13 +37,13 @@ export function PlanUpgradeModal({
   currentPlan,
 }: PlanUpgradeModalProps) {
   const navigate = useNavigate();
-  const { slug = '' } = useParams<{ slug: string }>();
+  const { basePath } = useTenantScope();
 
   if (!open) return null;
 
   const goBilling = () => {
     onClose();
-    navigate(`/t/${slug}/billing`);
+    navigate(`${basePath}/billing`);
   };
 
   const requiredLabel = requiredPlans.map((p) => PLAN_PRICE_LABEL[p] ?? p).join(' 또는 ');

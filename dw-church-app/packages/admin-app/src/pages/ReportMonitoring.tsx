@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useDWChurchClient } from '@dw-church/api-client';
 import { useToast, EmptyState } from '../components';
+import { useTenantScope } from '../lib/tenant-scope';
 
 /**
  * RP-03 리포트 모니터링 — 화면 시안 그대로. 주차 × 조직 격자(채워진 셀) + 제출률 +
@@ -21,7 +22,7 @@ export default function ReportMonitoring() {
   const apiClient = useDWChurchClient();
   const api = apiClient!.adapter;
   const navigate = useNavigate();
-  const { slug = '' } = useParams<{ slug: string }>();
+  const { basePath } = useTenantScope();
   const { showToast } = useToast();
   const [weeks, setWeeks] = useState(8);
   const [parentId, setParentId] = useState('');
@@ -116,7 +117,7 @@ export default function ReportMonitoring() {
               </span>
               <div className="ml-auto flex gap-2.5">
                 <button onClick={exportCsv} className="text-[13px] font-bold text-[#3c4353] border border-[#dfe3ea] bg-white rounded-[9px] px-4 py-2.5 hover:bg-[#f7f8fa]">CSV 내보내기</button>
-                <button onClick={() => { if (grid.unsubmittedLatest.length === 0) { showToast('success', '미제출 조직이 없습니다.'); return; } navigate(`/t/${slug}/group-notices`); }}
+                <button onClick={() => { if (grid.unsubmittedLatest.length === 0) { showToast('success', '미제출 조직이 없습니다.'); return; } navigate(`${basePath}/group-notices`); }}
                   className="text-[13.5px] font-bold bg-[#1466d6] text-white rounded-[9px] px-[18px] py-2.5 hover:bg-[#0f4fa8]">미제출 {t.org} 공지</button>
               </div>
             </div>

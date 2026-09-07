@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useDWChurchClient } from '@dw-church/api-client';
+import { useTenantScope } from '../lib/tenant-scope';
 
 /**
  * GR-01 소그룹 현황 — 화면 시안(목장 시스템 화면 시안.dc.html)을 그대로 구현.
@@ -14,8 +15,8 @@ export default function SmallGroupDashboard() {
   const apiClient = useDWChurchClient();
   const api = apiClient!.adapter;
   const navigate = useNavigate();
-  const { slug = '' } = useParams<{ slug: string }>();
-  const go = (p: string) => navigate(`/t/${slug}/${p}`);
+  const { basePath } = useTenantScope();
+  const go = (p: string) => navigate(`${basePath}/${p}`);
 
   const presetQ = useQuery({ queryKey: ['group-preset'], queryFn: async () => (await api.get<{ data: any }>('/api/v1/group-preset') as any).data });
   const statsQ = useQuery({ queryKey: ['group-stats'], queryFn: async () => (await api.get<{ data: Stats }>('/api/v1/group-stats') as any).data as Stats });
