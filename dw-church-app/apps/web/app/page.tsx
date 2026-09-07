@@ -75,7 +75,6 @@ function ImgSlot({ label, ratio = '16 / 9', tone = 'light', className = '', src 
 
 // R2 자체호스팅 실제 이미지 (핫링크 금지 준수)
 const R2 = 'https://pub-674328f08783498389f7857dc6e1ab00.r2.dev';
-const IMG_HERO = `${R2}/_samples/frontpage/worship-2.jpg`;
 const IMG_CASE_LAGRANGE = `${R2}/shared/gallery/2031c682-e6c5-4d9b-ba41-f09b352bc57d.jpg`;
 const IMG_CASE_WAKE = `${R2}/shared/gallery/d7586ffd-b75d-4b6f-b80c-710d95574711.jpg`;
 
@@ -88,36 +87,34 @@ export default function LandingPage() {
       {/* ══ 1 · 히어로 (흰 바탕) ══ */}
       <section className="bg-white">
         <div className={`${CONTAINER} py-12 sm:py-20`}>
-          <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
-            <div>
-              <Label>미주 한인 이민교회를 위한 교회 시스템</Label>
-              <h1
-                className="mt-4 text-[32px] text-[#16181d] sm:text-[48px]"
-                style={{ fontWeight: 750, letterSpacing: '-0.035em', lineHeight: 1.2 }}
+          {/* 히어로 이미지는 제거 — 적절한 실제 사진 확보 전까지 텍스트 단독 히어로. */}
+          <div className="max-w-2xl">
+            <Label>미주 한인 이민교회를 위한 교회 시스템</Label>
+            <h1
+              className="mt-4 text-[34px] text-[#16181d] sm:text-[52px]"
+              style={{ fontWeight: 750, letterSpacing: '-0.035em', lineHeight: 1.18 }}
+            >
+              교회의 한 주가<br className="hidden sm:block" /> 여기서 돌아갑니다.
+            </h1>
+            <p className="mt-5 max-w-xl text-[16px] text-[#4b5464] sm:text-[17.5px]" style={{ lineHeight: 1.85 }}>
+              성도가 보는 홈페이지부터 교인 명부와 목장, 새가족까지 한 자리에서 이어집니다. 만드는 일과 기술은 저희가 맡습니다.
+            </p>
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+              <a
+                href="/apply"
+                className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-[#2b7fff] px-7 text-[16px] font-semibold text-white transition-colors hover:bg-[#1466d6]"
               >
-                교회의 한 주가<br className="hidden sm:block" /> 여기서 돌아갑니다.
-              </h1>
-              <p className="mt-5 max-w-xl text-[16px] text-[#4b5464] sm:text-[17.5px]" style={{ lineHeight: 1.85 }}>
-                성도가 보는 홈페이지부터 교인 명부와 목장, 새가족까지 한 자리에서 이어집니다. 만드는 일과 기술은 저희가 맡습니다.
-              </p>
-              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                <a
-                  href="/apply"
-                  className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-[#2b7fff] px-7 text-[16px] font-semibold text-white transition-colors hover:bg-[#1466d6]"
-                >
-                  상담 신청
-                </a>
-                <a
-                  href="https://dasom.truelight.app"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex min-h-[48px] items-center justify-center rounded-xl border border-[#d5dae2] bg-white px-7 text-[16px] font-semibold text-[#16181d] transition-colors hover:bg-[#f5f6f8]"
-                >
-                  실제 사이트 보기
-                </a>
-              </div>
+                상담 신청
+              </a>
+              <a
+                href="https://dasom.truelight.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-[48px] items-center justify-center rounded-xl border border-[#d5dae2] bg-white px-7 text-[16px] font-semibold text-[#16181d] transition-colors hover:bg-[#f5f6f8]"
+              >
+                실제 사이트 보기
+              </a>
             </div>
-            <ImgSlot label="[IMG] 히어로 — 주일 예배·환대 장면" ratio="16 / 9" src={IMG_HERO} />
           </div>
         </div>
         {/* 신뢰 스트립 */}
