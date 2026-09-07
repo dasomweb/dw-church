@@ -6,10 +6,24 @@
  * 저장하면 편집된 전체 HTML을 서버(public.front_sample_edits)에 보관하고,
  * 갤러리는 기본 HTML 위에 이 편집본을 덮어 렌더한다. (자동 저장 없음 — 저장 클릭 시에만)
  */
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CanvasSample } from './canvas/canvas-index';
 import { useAdminApi } from '../shared/use-admin-api';
 import { useAuthStore } from '../../stores/auth';
+
+// 미디어(이미지) 라이브러리 분류 — GalleryTab 과 동일 셋. 교회 관련부터.
+const LIB_CATEGORIES: [string, string][] = [
+  ['church', '교회'], ['cross', '십자가'], ['bible', '성경'], ['sky', '하늘'],
+  ['nature', '자연'], ['flower', '꽃'], ['park', '공원'], ['abstract', '추상'],
+];
+interface LibImage { id: string; url: string; title: string; category: string; isActive?: boolean }
+// admin.<domain> → api.<domain>, 아니면 VITE_API_BASE_URL (onFile 과 동일 규칙).
+function apiBase(): string {
+  const host = window.location.hostname;
+  return host.startsWith('admin.')
+    ? `https://api.${host.replace('admin.', '')}`
+    : ((import.meta.env.VITE_API_BASE_URL as string) || '');
+}
 
 const SAMPLE_BASE = 'https://pub-674328f08783498389f7857dc6e1ab00.r2.dev/_samples/frontpage';
 // 슬롯 클릭 시 고를 수 있는 기본 샘플 사진 풀.
@@ -69,6 +83,24 @@ export default function FrontSampleEditor({
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
+  // 미디어 라이브러리(shared-images) — 픽커 열 때 1회 로드, 분류 필터.
+  const [lib, setLib] = useState<LibImage[]>([]);
+  const [libCat, setLibCat] = useState('church');
+  const [libLoaded, setLibLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!pickerOpen || libLoaded) return;
+    (async () => {
+      try {
+        const res = await fetch(`${apiBase()}/api/v1/shared-images?active=all`, {
+          headers: { Authorization: `Bearer ${session?.accessToken || ''}` },
+        });
+        const j = (await res.json()) as { data?: LibImage[] };
+        setLib((j.data ?? []).filter((i) => i.isActive !== false));
+      } catch { /* 라이브러리 로드 실패해도 기본 샘플은 사용 가능 */ }
+      finally { setLibLoaded(true); }
+    })();
+  }, [pickerOpen, libLoaded, session?.accessToken]);
 
   const setupEditor = useCallback(() => {
     const doc = iframeRef.current?.contentDocument;
@@ -219,7 +251,43 @@ export default function FrontSampleEditor({
                 <p className="mt-2 text-[11px] text-gray-400">업로드 시 자동으로 최대 1600px JPEG로 최적화되어 저장됩니다.</p>
               </div>
               <div className="flex-1 overflow-auto p-4">
-                <div className="mb-2 text-[11px] font-semibold text-gray-500">샘플 사진에서 고르기</div>
+                {/* 미디어 라이브러리(이미지 라이브러리)에서 고르기 — 분류별 */}
+                <div className="mb-2 flex items-center justify-between">
+                  <div className="text-[11px] font-semibold text-gray-500">미디어 라이브러리에서 고르기</div>
+                  {!libLoaded && <span className="text-[10px] text-gray-400">불러오는 중…</span>}
+                </div>
+                {libLoaded && lib.length === 0 ? (
+                  <p className="mb-4 rounded-lg bg-gray-50 px-3 py-3 text-[11px] text-gray-400">
+                    이미지 라이브러리에 사진이 없습니다. [이미지 라이브러리] 메뉴에서 사진을 추가하면 여기에 분류별로 나타납니다.
+                  </p>
+                ) : (
+                  <>
+                    <div className="mb-2 flex flex-wrap gap-1">
+                      {LIB_CATEGORIES.map(([id, label]) => {
+                        const n = lib.filter((i) => i.category === id).length;
+                        return (
+                          <button key={id} type="button" onClick={() => setLibCat(id)}
+                            className={`rounded-full px-2.5 py-0.5 text-[11px] transition-colors ${libCat === id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                            {label}{n ? ` ${n}` : ''}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="mb-5 grid grid-cols-3 gap-2">
+                      {lib.filter((i) => i.category === libCat).map((img) => (
+                        <button key={img.id} onClick={() => applyImage(img.url)}
+                          className="group overflow-hidden rounded-lg border border-gray-200 hover:border-blue-400" title={img.title}>
+                          <div className="h-16 w-full bg-cover bg-center" style={{ backgroundImage: `url('${img.url}')` }} />
+                        </button>
+                      ))}
+                      {libLoaded && lib.filter((i) => i.category === libCat).length === 0 && (
+                        <div className="col-span-3 py-3 text-center text-[11px] text-gray-400">이 분류에 사진이 없습니다.</div>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                <div className="mb-2 text-[11px] font-semibold text-gray-500">기본 샘플 사진</div>
                 <div className="grid grid-cols-3 gap-2">
                   {POOL.map(([key, label]) => (
                     <button key={key} onClick={() => applyImage(`${SAMPLE_BASE}/${key}.jpg`)}
