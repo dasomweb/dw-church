@@ -60,6 +60,17 @@ export async function entitlementRoutes(app: FastifyInstance) {
     });
   });
 
+  // PUBLIC — storefront hard-gating. Returns the effective feature map for the
+  // current tenant (X-Tenant-Slug) so the public site can skip rendering blocks
+  // whose add-on is OFF (예: 스몰그룹 미사용 시 목장 블록 숨김). No auth: this only
+  // exposes which features are enabled, which the rendered page already reveals.
+  app.get('/storefront/features', async (req, reply) => {
+    const tenant = req.tenant;
+    if (!tenant?.id) return reply.send({ data: { features: {} } });
+    const overrides = await overridesForTenant(tenant.id);
+    return reply.send({ data: { features: effectiveFeatures(tenant.plan, overrides) } });
+  });
+
   app.get('/admin/tenants/:id/feature-overrides', { preHandler: [requireSuperAdmin] }, async (req, reply) => {
     const { id } = req.params as { id: string };
     const rows = await prisma.$queryRawUnsafe<{ plan: string; feature_overrides: Record<string, unknown> | null }[]>(

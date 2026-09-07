@@ -186,6 +186,47 @@ async function resolveSectionEntries(slug: string, sections: any[]): Promise<any
   }));
 }
 
+// ─── Storefront add-on hard-gating ──────────────────────────────────────────
+// Blocks that belong to a paid add-on: if the tenant's add-on is OFF, the public
+// site must NOT render them (예: 스몰그룹 미사용 시 목장 블록 숨김). Mirrors the
+// admin BLOCK_FEATURE map (packages/admin-app plan-features.ts). Base blocks
+// (sermons/albums/contact_form/…) are ungated and always render.
+const STOREFRONT_BLOCK_FEATURE: Record<string, string> = {
+  cell_grid: 'smallgroup',
+  cell_report: 'smallgroup',
+  newcomer_info: 'newcomer',
+  newcomer_form: 'newcomer',
+};
+
+/** Effective add-on feature map for the tenant (public endpoint). {} on failure
+ *  so a features outage never blanks the site (fail-open — only add-on blocks
+ *  are affected, and hiding them requires an explicit `false`). */
+export async function getStorefrontFeatures(slug: string): Promise<Record<string, boolean>> {
+  try {
+    const res = await apiFetch<any>(slug, `/api/v1/storefront/features`, { revalidate: false });
+    return (unwrap(res)?.features ?? {}) as Record<string, boolean>;
+  } catch {
+    return {};
+  }
+}
+
+/** Drop sections (and layout children) whose add-on feature is explicitly OFF. */
+function filterSectionsByFeatures(sections: any[], features: Record<string, boolean>): any[] {
+  const allowed = (blockType: string): boolean => {
+    const key = STOREFRONT_BLOCK_FEATURE[blockType];
+    return !key || features[key] !== false;
+  };
+  return sections
+    .filter((s: any) => allowed(s.blockType))
+    .map((s: any) => {
+      const children = s?.props?.children;
+      if (Array.isArray(children)) {
+        return { ...s, props: { ...s.props, children: children.filter((c: any) => allowed(c?.blockType)) } };
+      }
+      return s;
+    });
+}
+
 export async function getHomePage(slug: string): Promise<any> {
   const pages = await getPages(slug);
   const home = pages.find((p: any) => p.isHome || p.slug === 'home');
@@ -194,16 +235,17 @@ export async function getHomePage(slug: string): Promise<any> {
   // Get sections for this page
   const sectionsRes = await apiFetch(slug, `/api/v1/pages/${home.id}/sections`, { revalidate: false });
   const sections = unwrap(sectionsRes) ?? [];
+  const features = await getStorefrontFeatures(slug);
 
   return {
     ...home,
-    sections: await resolveSectionEntries(slug, sections.map((s: any) => ({
+    sections: filterSectionsByFeatures(await resolveSectionEntries(slug, sections.map((s: any) => ({
       id: s.id,
       blockType: s.blockType,
       props: s.props ?? {},
       sortOrder: s.sortOrder ?? 0,
       isVisible: s.isVisible ?? true,
-    }))),
+    }))), features),
   };
 }
 
@@ -214,16 +256,17 @@ export async function getPageBySlug(tenantSlug: string, pageSlug: string): Promi
 
   const sectionsRes = await apiFetch(tenantSlug, `/api/v1/pages/${page.id}/sections`, { revalidate: false });
   const sections = unwrap(sectionsRes) ?? [];
+  const features = await getStorefrontFeatures(tenantSlug);
 
   return {
     ...page,
-    sections: await resolveSectionEntries(tenantSlug, sections.map((s: any) => ({
+    sections: filterSectionsByFeatures(await resolveSectionEntries(tenantSlug, sections.map((s: any) => ({
       id: s.id,
       blockType: s.blockType,
       props: s.props ?? {},
       sortOrder: s.sortOrder ?? 0,
       isVisible: s.isVisible ?? true,
-    }))),
+    }))), features),
   };
 }
 
