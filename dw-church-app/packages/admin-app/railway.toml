@@ -12,8 +12,11 @@ dockerfilePath = "packages/admin-app/Dockerfile"
 # also sets cache headers (no-cache index.html, immutable hashed assets) and
 # proxies /api. The old `serve -s dist` command broke deploys — `serve` isn't
 # installed in the runner image, so the container started then exited.
+# healthcheck hits /admin/ (200 index.html). "/" now 302-redirects to /admin/
+# (SPA served under Vite base '/admin/'), and Railway health checks treat a 3xx
+# as unhealthy — so pointing at "/" would fail every deploy.
 startCommand = "node server.js"
-healthcheckPath = "/"
+healthcheckPath = "/admin/"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
