@@ -15,10 +15,12 @@
     "@dw-church/ui-components": "workspace:*",
     "@tanstack/react-query": "^5.75.5",
     "next": "^15.3.3",
+    "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "autoprefixer": "^10.4.21",
