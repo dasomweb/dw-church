@@ -43,9 +43,22 @@ function Lead({ children, dark = false, className = '' }: { children: React.Reac
 
 // 이미지 슬롯 — 실제 사진/캡처가 들어갈 자리. 회색 라운드 패널 + 국문 라벨.
 // 외부 이미지 핫링크 금지(디자인 시스템). 나중에 R2 자체호스팅 자산으로 교체.
-function ImgSlot({ label, ratio = '16 / 9', tone = 'light', className = '' }: { label: string; ratio?: string; tone?: 'light' | 'dark'; className?: string }) {
+function ImgSlot({ label, ratio = '16 / 9', tone = 'light', className = '', src }: { label: string; ratio?: string; tone?: 'light' | 'dark'; className?: string; src?: string }) {
   const bg = tone === 'dark' ? '#16233a' : '#eef1f4';
   const fg = tone === 'dark' ? '#93a3bd' : '#8b93a3';
+  // 실제 R2 자체호스팅 이미지가 있으면 채우고, 없으면 라벨 플레이스홀더.
+  if (src) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt={label.replace(/^\[IMG\]\s*/, '')}
+        loading="lazy"
+        className={`w-full overflow-hidden rounded-xl object-cover ${className}`}
+        style={{ aspectRatio: ratio, background: bg }}
+      />
+    );
+  }
   return (
     <div
       className={`flex items-center justify-center overflow-hidden rounded-xl ${className}`}
@@ -59,6 +72,12 @@ function ImgSlot({ label, ratio = '16 / 9', tone = 'light', className = '' }: { 
     </div>
   );
 }
+
+// R2 자체호스팅 실제 이미지 (핫링크 금지 준수)
+const R2 = 'https://pub-674328f08783498389f7857dc6e1ab00.r2.dev';
+const IMG_HERO = `${R2}/_samples/frontpage/worship-2.jpg`;
+const IMG_CASE_LAGRANGE = `${R2}/shared/gallery/2031c682-e6c5-4d9b-ba41-f09b352bc57d.jpg`;
+const IMG_CASE_WAKE = `${R2}/shared/gallery/d7586ffd-b75d-4b6f-b80c-710d95574711.jpg`;
 
 // ── 페이지 ───────────────────────────────────────────────────────────────────
 export default function LandingPage() {
@@ -98,14 +117,14 @@ export default function LandingPage() {
                 </a>
               </div>
             </div>
-            <ImgSlot label="[IMG] 히어로 — 주일 예배·환대 장면" ratio="16 / 9" />
+            <ImgSlot label="[IMG] 히어로 — 주일 예배·환대 장면" ratio="16 / 9" src={IMG_HERO} />
           </div>
         </div>
         {/* 신뢰 스트립 */}
         <div className="border-t border-[#eceef2] bg-white">
           <div className={`${CONTAINER} py-5`}>
             <ul className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-center text-[14px] text-[#61697a]">
-              {['한인 이민교회만 맡아 왔습니다', '디자인·구축은 사람이 직접', '함께한 교회 ○곳', '오픈까지 평균 ○주'].map((item, i) => (
+              {['한인 이민교회만 맡아 왔습니다', '디자인·구축은 사람이 직접', '함께한 교회 2곳', '오픈까지 평균 ○주'].map((item, i) => (
                 <li key={item} className="flex items-center gap-6">
                   {i > 0 && <span aria-hidden className="text-[#c9cfda]">·</span>}
                   <span>{item}</span>
@@ -267,11 +286,11 @@ export default function LandingPage() {
           </Lead>
           <div className="mt-10 grid gap-6 md:grid-cols-2">
             {[
-              { img: '[IMG] 라그란지 한인침례교회 화면', name: '라그란지 한인침례교회', desc: '예배 안내와 설교를 중심으로 구성. 조지아 라그란지.' },
-              { img: '[IMG] 웨이크처치 화면', name: '웨이크처치', desc: '쓰던 도메인을 그대로 연결해 오픈. 조지아 뷰포드.' },
+              { img: '[IMG] 라그란지 한인침례교회 화면', name: '라그란지 한인침례교회', desc: '예배 안내와 설교를 중심으로 구성. 조지아 라그란지.', src: IMG_CASE_LAGRANGE },
+              { img: '[IMG] 웨이크처치 화면', name: '웨이크처치', desc: '쓰던 도메인을 그대로 연결해 오픈. 조지아 뷰포드.', src: IMG_CASE_WAKE },
             ].map((c) => (
               <div key={c.name} className="overflow-hidden rounded-xl border border-[#e7e9ee] bg-white">
-                <ImgSlot label={c.img} ratio="16 / 10" className="rounded-none" />
+                <ImgSlot label={c.img} ratio="16 / 10" className="rounded-none" src={c.src} />
                 <div className="p-6">
                   <h3 className="text-[19px] text-[#16181d]" style={{ fontWeight: 750, letterSpacing: '-0.02em' }}>{c.name}</h3>
                   <p className="mt-2 text-[15px] text-[#4b5464]" style={{ lineHeight: 1.75 }}>{c.desc}</p>

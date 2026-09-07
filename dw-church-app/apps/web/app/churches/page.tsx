@@ -7,7 +7,19 @@ import MarketingFooter from '../../components/MarketingFooter';
 const CONTAINER = 'mx-auto w-full max-w-[1080px] px-5 sm:px-10';
 
 // 이미지 슬롯 — 실제 캡처가 들어갈 자리. 회색 라운드 패널 + 국문 라벨.
-function ImgSlot({ label }: { label: string }) {
+function ImgSlot({ label, src }: { label: string; src?: string }) {
+  if (src) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt={label.replace(/^\[IMG\]\s*/, '')}
+        loading="lazy"
+        className="w-full overflow-hidden object-cover"
+        style={{ aspectRatio: '16 / 10', background: '#f2f3f6' }}
+      />
+    );
+  }
   return (
     <div
       className="flex items-center justify-center overflow-hidden"
@@ -22,13 +34,16 @@ function ImgSlot({ label }: { label: string }) {
   );
 }
 
-const CASES: { img: string; name: string; size: string; request: string; result: string }[] = [
+// R2 자체호스팅 실제 교회 사례 스크린샷 (case-studies).
+const R2 = 'https://pub-674328f08783498389f7857dc6e1ab00.r2.dev';
+const CASES: { img: string; name: string; size: string; request: string; result: string; src?: string }[] = [
   {
     img: '[IMG] 라그란지 한인침례교회 화면',
     name: '라그란지 한인침례교회',
     size: '○○명 · 조지아 라그란지',
     request: '처음 오시는 분이 예배 시간과 오시는 길을 바로 찾을 수 있게',
     result: '예배 안내와 설교를 중심으로 구성. 오픈까지 ○주.',
+    src: `${R2}/shared/gallery/2031c682-e6c5-4d9b-ba41-f09b352bc57d.jpg`,
   },
   {
     img: '[IMG] 웨이크처치 화면',
@@ -36,6 +51,7 @@ const CASES: { img: string; name: string; size: string; request: string; result:
     size: '○○명 · 조지아 뷰포드',
     request: '쓰던 도메인을 유지하면서 사이트만 새로',
     result: '자체 도메인 연결로 오픈. 이후 기술 관리는 저희가 담당.',
+    src: `${R2}/shared/gallery/d7586ffd-b75d-4b6f-b80c-710d95574711.jpg`,
   },
 ];
 
@@ -57,7 +73,7 @@ export default function ChurchesPage() {
             <div className="mt-10 grid gap-6 md:grid-cols-2">
               {CASES.map((c) => (
                 <div key={c.name} className="overflow-hidden rounded-xl border border-[#e7e9ee] bg-white">
-                  <ImgSlot label={c.img} />
+                  <ImgSlot label={c.img} src={c.src} />
                   <div className="p-6">
                     <h2 className="text-[19px] text-[#16181d]" style={{ fontWeight: 750, letterSpacing: '-0.02em' }}>{c.name}</h2>
                     <dl className="mt-4 space-y-3 text-[15px]">
