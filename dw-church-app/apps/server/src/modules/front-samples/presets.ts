@@ -30,7 +30,7 @@ const hero = (
   props: {
     variant: 'image-overlay', title, subtitle, height: 'lg', textAlign: 'center',
     width: 'full-bleed', backgroundImageUrl: `${IMG}/worship-2.jpg`,
-    overlayColor: '#0b1220', overlayOpacity: 0.45,
+    overlayColor: '#0b1220', overlayOpacity: 45, // 0–100 스케일(렌더러 buildOverlayStyle 이 /100). 0.45 로 넣으면 alpha 0.0045 → 사실상 투명(대표님 2026-09-06 오버레이 미적용 원인).
     buttonText: '예배 안내', buttonUrl: '/worship',
     secondaryButtonText: '오시는 길', secondaryButtonUrl: '/location',
     ...o,
@@ -186,7 +186,7 @@ const P: Record<string, PresetSection[]> = {
   '00': [
     { block_type: 'hero_banner', props: { variant: 'image-overlay', width: 'contained', height: 'md', textAlign: 'left',
       title: '예배의 감격, 삶의 예배로', subtitle: '진정한 예배자가 세상을 변화시킵니다.',
-      backgroundImageUrl: `${IMG}/group-1.jpg`, overlayColor: '#090f1c', overlayOpacity: 0.5,
+      backgroundImageUrl: `${IMG}/group-1.jpg`, overlayColor: '#090f1c', overlayOpacity: 50,
       buttonText: '예배 안내', buttonUrl: '/worship', secondaryButtonText: '처음 오시나요?', secondaryButtonUrl: '/newcomer' } },
     { block_type: 'info_columns', props: { columns: '3', items: [
       { title: '주일예배 Sunday', rows: [
@@ -242,7 +242,7 @@ const P: Record<string, PresetSection[]> = {
   '11': [heroOverlap('십자가 사랑,\n영원한 소망', '고난 속에서도 다시 일어서는 힘입니다.'), verse(), announce(), sermonFeature(), ministries(), newsSplit(), galleryMosaic(), givingBand()],
   '12': [hero('참된 진리와 자유의 삶', '말씀 안에서 온전한 회복을 누립니다.', { backgroundImageUrl: `${IMG}/worship-1.jpg` }), infoColumns(), sermons('featured'), bulletins('grid-3'), events(), columns(), quickLinks(), location(), contact()],
   '13': [bentoGrid(), location(), contact()],
-  '14': [hero('다음세대를 세우는 보석', '하나님의 꿈을 품고 미래를 준비합니다.', { backgroundImageUrl: `${IMG}/worship-2.jpg`, overlayOpacity: 0.55 }), infoColumns(), sermons('grid-3'), newcomer(), albums('grid-4'), location(), contact()],
+  '14': [hero('다음세대를 세우는 보석', '하나님의 꿈을 품고 미래를 준비합니다.', { backgroundImageUrl: `${IMG}/worship-2.jpg`, overlayOpacity: 55 }), infoColumns(), sermons('grid-3'), newcomer(), albums('grid-4'), location(), contact()],
   '15': [dashboardBanner(), quickTiles(), sermons('grid-2'), board(), weekSchedule(), albums('grid-4'), location(), contact()],
   '16': [
     hero('연약함을 품는 따뜻한 품', '그리스도의 사랑으로 서로를 세워줍니다.', { backgroundImageUrl: `${IMG}/worship-2.jpg`, textAlign: 'center' }),
@@ -255,7 +255,7 @@ const P: Record<string, PresetSection[]> = {
   '18': [hero('순종으로 드리는 삶의 제사', '매일의 일상을 거룩한 예배로 드립니다.', { backgroundImageUrl: `${IMG}/church-2.jpg` }), weekSchedule(), events(), sermons('grid-4'), albums('grid-4'), location(), contact()],
   '19': [hero('성령으로 하나 된 공동체', '사랑의 줄로 굳게 묶인 하나님의 가족입니다.', { variant: 'page-hero', backgroundImageUrl: `${IMG}/retreat-1.jpg` }), galleryMosaic(), sermonFeature(), newcomer(), contact()],
   '20': [heroOverlap('어두운 세상의 등대', '그리스도의 빛을 세상에 비추는 교회입니다.'), verse(), sermonFeature(), ministries(), newsSplit(), galleryMosaic(), givingBand()],
-  '21': [hero('은혜와 진리가 충만한 곳', '참된 평안과 구원의 감격이 넘칩니다.', { height: 'full', backgroundImageUrl: `${IMG}/worship-2.jpg`, overlayOpacity: 0.5 }), infoColumns(), sermons('grid-4'), newcomer(), albums('grid-4'), location(), contact()],
+  '21': [hero('은혜와 진리가 충만한 곳', '참된 평안과 구원의 감격이 넘칩니다.', { height: 'full', backgroundImageUrl: `${IMG}/worship-2.jpg`, overlayOpacity: 50 }), infoColumns(), sermons('grid-4'), newcomer(), albums('grid-4'), location(), contact()],
 };
 
 // ── per-design THEME profiles (colors + fonts) ──────────────────────────────

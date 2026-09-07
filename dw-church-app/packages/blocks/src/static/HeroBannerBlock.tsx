@@ -27,6 +27,9 @@ import type { SectionBackgroundPosition } from '../elements';
 import {
   SECTION_HEIGHT_MAP,
   SECTION_ALIGN_MAP,
+  SECTION_VALIGN_ITEMS_MAP,
+  SECTION_VALIGN_MAP,
+  resolveVerticalAlign,
   resolveSectionWidth,
   resolveContentWidth as resolveSectionContentWidth,
   contentWidthClass as sectionContentWidthClass,
@@ -140,6 +143,8 @@ function ImageOverlayHero({ props }: HeroBannerBlockProps) {
 
   const heightClass = HEIGHT_MAP[height] || HEIGHT_MAP.lg;
   const alignClass = ALIGN_MAP[textAlign] || ALIGN_MAP.center;
+  // Vertical align — 콘텐츠의 세로 위치(위/가운데/아래). 미설정 = 가운데(기존).
+  const vItemsClass = SECTION_VALIGN_ITEMS_MAP[resolveVerticalAlign(props)] || 'items-center';
   const isContained = resolveWidth(props) === 'contained';
   const contentWidth = resolveContentWidth(props);
   const hasBg = Boolean(bgImage) || Boolean(bgVideoUrl);
@@ -147,7 +152,7 @@ function ImageOverlayHero({ props }: HeroBannerBlockProps) {
   return (
     <section className={`relative ${isContained ? 'px-4 sm:px-6 py-8' : ''}`}>
       <div
-        className={`relative flex ${heightClass} items-center justify-center bg-gradient-to-br from-[var(--dw-primary)] to-[var(--dw-secondary)] overflow-hidden ${isContained ? 'mx-auto max-w-7xl rounded-3xl' : ''}`}
+        className={`relative flex ${heightClass} ${vItemsClass} justify-center bg-gradient-to-br from-[var(--dw-primary)] to-[var(--dw-secondary)] overflow-hidden ${isContained ? 'mx-auto max-w-7xl rounded-3xl' : ''}`}
       >
         {/* Brand-gradient base (theme tokens, NOT a hardcoded colour) shows
          * while the LCP background image is still downloading — no black
@@ -227,9 +232,10 @@ function SplitImageHero({ props }: HeroBannerBlockProps) {
   const renderLegacyEyebrow = !eyebrow && subtitle && subtitle.length <= 40;
   const eyebrowText = eyebrow || (renderLegacyEyebrow ? subtitle : '');
 
+  const vJustifyClass = SECTION_VALIGN_MAP[resolveVerticalAlign(props)] || 'justify-center';
   const textCol = (
     <div
-      className="flex flex-col justify-center px-6 sm:px-12 lg:px-16 py-14 sm:py-20"
+      className={`flex flex-col ${vJustifyClass} px-6 sm:px-12 lg:px-16 py-14 sm:py-20`}
       style={{ gap: 'var(--block-gap, 1rem)' }}
     >
       <EyebrowElement
@@ -330,13 +336,14 @@ function PageHero({ props }: HeroBannerBlockProps) {
   const height = (props.height as string) || 'sm';
   const heightClass = HEIGHT_MAP[height] || HEIGHT_MAP.sm;
   const alignClass = ALIGN_MAP[textAlign] || ALIGN_MAP.left;
+  const vItemsClass = SECTION_VALIGN_ITEMS_MAP[resolveVerticalAlign(props)] || 'items-center';
   const isContained = resolveWidth(props) === 'contained';
   const contentWidth = resolveContentWidth(props);
 
   return (
     <section className={isContained ? 'px-4 sm:px-6 py-4' : ''}>
       <div
-        className={`relative flex ${heightClass} items-center overflow-hidden ${isContained ? 'mx-auto max-w-7xl rounded-2xl' : ''}`}
+        className={`relative flex ${heightClass} ${vItemsClass} overflow-hidden ${isContained ? 'mx-auto max-w-7xl rounded-2xl' : ''}`}
       >
         {bgImage ? (
           <SectionBackground
@@ -412,6 +419,7 @@ function TextOnlyHero({ props }: HeroBannerBlockProps) {
 
   const heightClass = HEIGHT_MAP[height] || HEIGHT_MAP.md;
   const alignClass = ALIGN_MAP[textAlign] || ALIGN_MAP.center;
+  const vItemsClass = SECTION_VALIGN_ITEMS_MAP[resolveVerticalAlign(props)] || 'items-center';
   const isContained = resolveWidth(props) === 'contained';
   const contentWidth = resolveContentWidth(props);
   // Brand-token-driven background — gradient between brand tokens or the
@@ -426,7 +434,7 @@ function TextOnlyHero({ props }: HeroBannerBlockProps) {
   return (
     <section className={isContained ? 'px-4 sm:px-6 py-8' : ''}>
       <div
-        className={`flex ${heightClass} items-center justify-center ${bgClass} ${isContained ? 'mx-auto max-w-7xl rounded-3xl' : ''}`}
+        className={`flex ${heightClass} ${vItemsClass} justify-center ${bgClass} ${isContained ? 'mx-auto max-w-7xl rounded-3xl' : ''}`}
       >
         {/* Content wrapper — padding + alignment + container width cap.
          * The operator's `contentWidth` prop decides whether this wrapper

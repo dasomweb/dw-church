@@ -44,7 +44,10 @@ export function LayoutBlock({ props, slug }: LayoutBlockProps) {
   // No '#000000' fallback — empty overlayColor renders as transparent
   // (no overlay). See feedback-no-hardcoded-defaults.
   const overlayColor = (props.overlayColor as string) || '';
-  const overlayOpacity = typeof props.overlayOpacity === 'number' ? props.overlayOpacity : 0;
+  // 0–100 스케일. 과거 0–1 소수 데이터 하위호환: 0<v<=1 이면 퍼센트로 승격(×100)
+  // (SectionBackground.normalizeOverlayOpacity 와 동일 규칙, 대표님 2026-09-06).
+  const rawOverlayOpacity = typeof props.overlayOpacity === 'number' ? props.overlayOpacity : 0;
+  const overlayOpacity = rawOverlayOpacity > 0 && rawOverlayOpacity <= 1 ? rawOverlayOpacity * 100 : rawOverlayOpacity;
   const borderColor = (props.borderColor as string) || undefined;
   const borderWidth = (props.borderWidth as number) || 0;
   const borderRadius = (props.borderRadius as number) || 0;

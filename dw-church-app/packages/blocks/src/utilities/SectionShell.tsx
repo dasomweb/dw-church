@@ -39,6 +39,8 @@ import {
   contentWidthClass,
   SECTION_HEIGHT_MAP,
   SECTION_ALIGN_MAP,
+  SECTION_VALIGN_MAP,
+  resolveVerticalAlign,
 } from './section-shell';
 
 export interface SectionShellProps {
@@ -100,11 +102,13 @@ export function SectionShell({
   let outerWidthClass = '';
   let innerWidthClass = '';
   let textAlignClass = '';
+  let vAlignClass = '';
   if (applyLayout) {
     const height = (props.height as string) || '';
     const width = resolveSectionWidth(props);
     const contentWidth = resolveContentWidth(props);
     const textAlign = (props.textAlign as string) || (props.align as string) || '';
+    const vAlign = resolveVerticalAlign(props);
     outerHeightClass = SECTION_HEIGHT_MAP[height] ?? '';
     // outer width: contained = mx-auto max-w-7xl rounded-3xl (matches Hero)
     // full-bleed (default) = no wrapper, section extends edge-to-edge.
@@ -113,12 +117,18 @@ export function SectionShell({
     // contained even when background is full-bleed).
     innerWidthClass = contentWidthClass(contentWidth);
     textAlignClass = SECTION_ALIGN_MAP[textAlign] ?? '';
+    // Vertical align — only when the operator explicitly picked one. Makes
+    // the outer box a flex column and distributes the content within the
+    // Height min-height (top/middle/bottom). Left unset = natural top flow
+    // so existing sections don't shift.
+    vAlignClass = vAlign ? `flex flex-col ${SECTION_VALIGN_MAP[vAlign] ?? ''}` : '';
   }
 
   const mergedClass = [
     needsClip ? 'relative overflow-hidden' : '',
     outerWidthClass,
     outerHeightClass,
+    vAlignClass,
     className ?? '',
   ]
     .filter(Boolean)

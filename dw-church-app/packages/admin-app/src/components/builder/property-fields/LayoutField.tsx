@@ -30,11 +30,13 @@ export type HeightPreset =
   | 'xl'
   | 'full';
 export type TextAlignChoice = 'left' | 'center' | 'right';
+export type VerticalAlignChoice = 'top' | 'middle' | 'bottom';
 export type WidthChoice = 'full-bleed' | 'contained';
 
 export interface LayoutFieldValue {
   height?: HeightPreset;
   textAlign?: TextAlignChoice;
+  verticalAlign?: VerticalAlignChoice;
   width?: WidthChoice;
   contentWidth?: WidthChoice;
 }
@@ -46,6 +48,7 @@ export interface LayoutFieldProps {
   enabledFields?: {
     height?: boolean;
     textAlign?: boolean;
+    verticalAlign?: boolean;
     width?: boolean;
     contentWidth?: boolean;
   };
@@ -77,6 +80,7 @@ export function LayoutField({
   const show = {
     height: enabledFields?.height ?? true,
     textAlign: enabledFields?.textAlign ?? true,
+    verticalAlign: enabledFields?.verticalAlign ?? true,
     width: enabledFields?.width ?? true,
     contentWidth: enabledFields?.contentWidth ?? true,
   };
@@ -110,6 +114,21 @@ export function LayoutField({
             <option value="left">Left</option>
             <option value="center">Center</option>
             <option value="right">Right</option>
+          </select>
+        </LabeledField>
+      )}
+
+      {show.verticalAlign && (
+        <LabeledField label="Vertical Align" hint="높이(Height)가 있을 때 콘텐츠의 세로 위치 — 위 / 가운데 / 아래">
+          <select
+            value={value.verticalAlign ?? ''}
+            onChange={(e) => onChange({ verticalAlign: (e.target.value || undefined) as VerticalAlignChoice | undefined })}
+            className="w-full text-xs border border-gray-300 rounded px-2 py-1.5 bg-white focus:border-blue-500 outline-none"
+          >
+            <option value="">— 기본값</option>
+            <option value="top">위 (Top)</option>
+            <option value="middle">가운데 (Middle)</option>
+            <option value="bottom">아래 (Bottom)</option>
           </select>
         </LabeledField>
       )}

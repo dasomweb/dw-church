@@ -165,9 +165,19 @@ function overlayHasColor(overlay: OverlayConfig | undefined): boolean {
   );
 }
 
+// overlayOpacity 는 0–100 스케일(인스펙터 "투명도 (%)" · 렌더러 기준). 과거 프리셋이
+// 0–1 소수(0.45 / 0.5 등)로 저장한 데이터 하위호환: 0 < v <= 1 이면 퍼센트로 승격(×100).
+// 대표님 2026-09-06: overlayOpacity 0.5 가 alpha 0.005 로 렌더돼 오버레이가 사실상
+// 투명하던(“왜 적용이 안돼”) 버그 fix. presets.ts 도 0–100 으로 정정함.
+function normalizeOverlayOpacity(v: number | undefined): number {
+  const n = typeof v === 'number' ? v : 50;
+  const pct = n > 0 && n <= 1 ? n * 100 : n;
+  return Math.min(100, Math.max(0, pct));
+}
+
 function buildOverlayStyle(overlay: OverlayConfig | undefined): CSSProperties | undefined {
   if (!overlay) return undefined;
-  const alpha = Math.min(100, Math.max(0, overlay.opacity ?? 50)) / 100;
+  const alpha = normalizeOverlayOpacity(overlay.opacity) / 100;
   const mode: OverlayMode = overlay.mode ?? 'classic';
 
   if (mode === 'classic' || mode === 'flat') {

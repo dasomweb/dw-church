@@ -87,6 +87,7 @@ export interface ElementSpec {
     enabledFields?: {
       height?: boolean;
       textAlign?: boolean;
+      verticalAlign?: boolean;
       width?: boolean;
       contentWidth?: boolean;
     };

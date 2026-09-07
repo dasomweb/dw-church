@@ -225,6 +225,7 @@ function extractLayoutValue(props: Record<string, unknown>): LayoutFieldValue {
   return {
     height: props.height as LayoutFieldValue['height'],
     textAlign: (props.textAlign ?? props.align) as LayoutFieldValue['textAlign'],
+    verticalAlign: props.verticalAlign as LayoutFieldValue['verticalAlign'],
     width: props.width as LayoutFieldValue['width'],
     contentWidth: props.contentWidth as LayoutFieldValue['contentWidth'],
   };
@@ -1021,8 +1022,13 @@ export function ElementInspector({
                 ))}
 
               {/* Items editor lives on Content tab — operator-authored
-                  data, same conceptual surface as the registry fields. */}
-              {activeTab === 'content' && Array.isArray((draft as Record<string, unknown>).items) && (
+                  data, same conceptual surface as the registry fields.
+                  Skip it when the block's registry already edits `items`
+                  through a dedicated field (e.g. info_columns → kind
+                  'info-columns' via InfoColumnsField) so the operator
+                  doesn't see a redundant "Items — not supported" panel. */}
+              {activeTab === 'content' && Array.isArray((draft as Record<string, unknown>).items) &&
+                !registry.sections.some((s) => s.elements.some((e) => e.path === 'items')) && (
                 <section>
                   <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                     Items ({((draft as Record<string, unknown>).items as unknown[]).length})
@@ -1572,10 +1578,11 @@ function FieldControl({
   if (spec.kind === 'layout' && propsBag && onPropsPatch) {
     const adaptLayoutPatch = (patch: Partial<LayoutFieldValue>): Record<string, unknown> => {
       const out: Record<string, unknown> = {};
-      if ('height' in patch)       out.height = patch.height;
-      if ('textAlign' in patch)    out.textAlign = patch.textAlign;
-      if ('width' in patch)        out.width = patch.width;
-      if ('contentWidth' in patch) out.contentWidth = patch.contentWidth;
+      if ('height' in patch)        out.height = patch.height;
+      if ('textAlign' in patch)     out.textAlign = patch.textAlign;
+      if ('verticalAlign' in patch) out.verticalAlign = patch.verticalAlign;
+      if ('width' in patch)         out.width = patch.width;
+      if ('contentWidth' in patch)  out.contentWidth = patch.contentWidth;
       return out;
     };
     return (

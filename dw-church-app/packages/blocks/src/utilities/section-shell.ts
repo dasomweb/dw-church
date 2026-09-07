@@ -41,6 +41,33 @@ export const SECTION_ALIGN_MAP: Record<string, string> = {
 };
 
 /**
+ * Vertical alignment of a section's content within its Height box. Applied
+ * as flex justify on a `flex flex-col` outer container (top=start, middle=
+ * center, bottom=end). Only meaningful when the section has a Height set —
+ * without a min-height there's no extra vertical space to distribute.
+ * 대표님 2026-09-06: "모든 블록 디자인 시스템에 Valign 이 빠져있다".
+ */
+export const SECTION_VALIGN_MAP: Record<string, string> = {
+  top: 'justify-start',
+  middle: 'justify-center',
+  bottom: 'justify-end',
+};
+
+/** flex align-items class for blocks whose Height box is a single flex ROW
+ *  (HeroBanner). top=start, middle=center, bottom=end. */
+export const SECTION_VALIGN_ITEMS_MAP: Record<string, string> = {
+  top: 'items-start',
+  middle: 'items-center',
+  bottom: 'items-end',
+};
+
+/** Read the operator's vertical-align choice ('' when unset). */
+export function resolveVerticalAlign(props: Record<string, unknown>): string {
+  const v = props.verticalAlign as string | undefined;
+  return v === 'top' || v === 'middle' || v === 'bottom' ? v : '';
+}
+
+/**
  * Resolve outer background width. Operator picks 'contained' to wrap the
  * background+overlay in mx-auto max-w-7xl + rounded corners; 'full-bleed'
  * (default) lets the background extend to the viewport edges.
