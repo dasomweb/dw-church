@@ -18,8 +18,11 @@ export const NAV_FEATURE: Record<string, string> = {
   boards: 'boards',
   events: 'events',
   banners: 'banners',
-  cells: 'cells',
+  cells: 'smallgroup',          // 목장 → 스몰그룹 애드온으로 통합 (대표님 2026-09-07)
   newcomers: 'newcomer',
+  forms: 'forms',              // 폼 만들기 애드온
+  'form-submissions': 'forms', // 폼 제출 인박스 애드온
+  translations: 'translation', // 영어 번역 보정 애드온
   members: 'membership',        // 교적관리 애드온
   'member-dashboard': 'membership',
   households: 'membership',
@@ -51,8 +54,8 @@ export const BLOCK_FEATURE: Record<string, string> = {
   event_grid: 'events',
   banner_slider: 'banners',
   hero_image_slider: 'banners',
-  cell_grid: 'cells',
-  cell_report: 'cells',
+  cell_grid: 'smallgroup',   // 목장 프론트 노출 → 스몰그룹 애드온
+  cell_report: 'smallgroup',
   newcomer_info: 'newcomer',
   newcomer_form: 'newcomer',
 };

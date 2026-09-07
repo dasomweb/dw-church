@@ -80,8 +80,9 @@ describe('cells — add-on gate (목장)', () => {
     expect(res.json().error?.code).toBe('PLAN_UPGRADE_REQUIRED');
   });
 
-  it('POST /cells WITH the 목장 add-on (override) → 201', async () => {
-    await withAddon({ cells: true });
+  it('POST /cells WITH the 목장(스몰그룹) add-on (override) → 201', async () => {
+    // 목장 관리는 스몰그룹 애드온으로 통합됨(대표님 2026-09-07). 스몰그룹은 교적(membership) 의존.
+    await withAddon({ membership: true, smallgroup: true });
     const res = await app.inject({
       method: 'POST', url: '/api/v1/cells',
       headers: { 'x-tenant-slug': 'base', authorization: `Bearer ${token('base')}` },

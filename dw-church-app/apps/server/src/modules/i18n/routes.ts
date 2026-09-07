@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { requireAuth } from '../../middleware/auth.js';
+import { requireAuth, requireFeature } from '../../middleware/auth.js';
 import { getSchema } from '../../utils/get-schema.js';
 import * as i18n from './service.js';
 
@@ -24,19 +24,19 @@ export async function i18nRoutes(app: FastifyInstance) {
   });
 
   // 관리자 보정.
-  app.get('/i18n/overrides', { preHandler: [requireAuth] }, async (request, reply) => {
+  app.get('/i18n/overrides', { preHandler: [requireAuth, requireFeature('translation')] }, async (request, reply) => {
     const lang = ((request.query as Record<string, unknown>).lang as string) || 'en';
     const rows = await i18n.listTranslations(getSchema(request), lang);
     return reply.send({ data: rows });
   });
 
-  app.put('/i18n/overrides', { preHandler: [requireAuth] }, async (request, reply) => {
+  app.put('/i18n/overrides', { preHandler: [requireAuth, requireFeature('translation')] }, async (request, reply) => {
     const { source, lang, text } = overrideBody.parse(request.body);
     await i18n.setOverride(getSchema(request), source, lang, text);
     return reply.send({ data: { ok: true } });
   });
 
-  app.delete('/i18n/overrides', { preHandler: [requireAuth] }, async (request, reply) => {
+  app.delete('/i18n/overrides', { preHandler: [requireAuth, requireFeature('translation')] }, async (request, reply) => {
     const q = request.query as Record<string, unknown>;
     const source = String(q.source || '');
     const lang = String(q.lang || 'en');

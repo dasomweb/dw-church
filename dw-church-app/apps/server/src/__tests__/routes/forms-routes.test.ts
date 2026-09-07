@@ -52,6 +52,12 @@ beforeAll(async () => {
 });
 afterAll(async () => { await app.close(); });
 
+// Grant the 'forms' add-on for the NEXT requireFeature check (one gated request).
+async function withForms(): Promise<void> {
+  const { prisma } = await import('../../config/database.js');
+  vi.mocked(prisma.$queryRawUnsafe).mockResolvedValueOnce([{ feature_overrides: { forms: true } }] as never);
+}
+
 describe('forms — public submission', () => {
   it('POST /forms/contact (no auth) → 201', async () => {
     const res = await app.inject({
@@ -90,6 +96,7 @@ describe('forms — admin inbox (auth gate)', () => {
   });
 
   it('GET /form-submissions with token → 200', async () => {
+    await withForms();
     const res = await app.inject({
       method: 'GET', url: '/api/v1/form-submissions?formType=contact',
       headers: { 'x-tenant-slug': 'demo', authorization: `Bearer ${token('demo')}` },
@@ -99,6 +106,7 @@ describe('forms — admin inbox (auth gate)', () => {
   });
 
   it('PUT /form-submissions/:id updates status → 200', async () => {
+    await withForms();
     const res = await app.inject({
       method: 'PUT', url: '/api/v1/form-submissions/f1',
       headers: { 'x-tenant-slug': 'demo', authorization: `Bearer ${token('demo')}` },
@@ -109,6 +117,7 @@ describe('forms — admin inbox (auth gate)', () => {
   });
 
   it('DELETE /form-submissions/:id → 204', async () => {
+    await withForms();
     const res = await app.inject({
       method: 'DELETE', url: '/api/v1/form-submissions/f1',
       headers: { 'x-tenant-slug': 'demo', authorization: `Bearer ${token('demo')}` },

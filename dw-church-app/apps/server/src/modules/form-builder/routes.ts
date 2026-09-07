@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { requireAuth } from '../../middleware/auth.js';
+import { requireAuth, requireFeature } from '../../middleware/auth.js';
 import { getSchema } from '../../utils/get-schema.js';
 import {
   createFormSchema,
@@ -46,24 +46,24 @@ function toFieldDefs(fields: Record<string, unknown>[]): FieldDef[] {
 
 export async function formBuilderRoutes(app: FastifyInstance) {
   // ── Admin: forms ──────────────────────────────────────────────────
-  app.get('/form-defs', { preHandler: [requireAuth] }, async (request, reply) => {
+  app.get('/form-defs', { preHandler: [requireAuth, requireFeature('forms')] }, async (request, reply) => {
     return reply.send({ data: await svc.listForms(getSchema(request)) });
   });
 
-  app.post('/form-defs', { preHandler: [requireAuth] }, async (request, reply) => {
+  app.post('/form-defs', { preHandler: [requireAuth, requireFeature('forms')] }, async (request, reply) => {
     const input = createFormSchema.parse(request.body);
     const created = await svc.createForm(getSchema(request), input);
     return reply.status(201).send({ data: created });
   });
 
-  app.get('/form-defs/:id', { preHandler: [requireAuth] }, async (request, reply) => {
+  app.get('/form-defs/:id', { preHandler: [requireAuth, requireFeature('forms')] }, async (request, reply) => {
     const { id } = request.params as { id: string };
     const found = await svc.getFormWithFields(getSchema(request), id, 'id');
     if (!found) return reply.status(404).send({ error: { code: 'NOT_FOUND', message: '폼을 찾을 수 없습니다' } });
     return reply.send({ data: found });
   });
 
-  app.put('/form-defs/:id', { preHandler: [requireAuth] }, async (request, reply) => {
+  app.put('/form-defs/:id', { preHandler: [requireAuth, requireFeature('forms')] }, async (request, reply) => {
     const { id } = request.params as { id: string };
     const input = updateFormSchema.parse(request.body);
     const row = await svc.updateForm(getSchema(request), id, input);
@@ -71,28 +71,28 @@ export async function formBuilderRoutes(app: FastifyInstance) {
     return reply.send({ data: row });
   });
 
-  app.delete('/form-defs/:id', { preHandler: [requireAuth] }, async (request, reply) => {
+  app.delete('/form-defs/:id', { preHandler: [requireAuth, requireFeature('forms')] }, async (request, reply) => {
     const { id } = request.params as { id: string };
     await svc.deleteForm(getSchema(request), id);
     return reply.status(204).send();
   });
 
   // ── Admin: fields ─────────────────────────────────────────────────
-  app.post('/form-defs/:id/fields', { preHandler: [requireAuth] }, async (request, reply) => {
+  app.post('/form-defs/:id/fields', { preHandler: [requireAuth, requireFeature('forms')] }, async (request, reply) => {
     const { id } = request.params as { id: string };
     const input = createFieldSchema.parse(request.body);
     const created = await svc.createField(getSchema(request), id, input);
     return reply.status(201).send({ data: created });
   });
 
-  app.put('/form-defs/:id/fields/reorder', { preHandler: [requireAuth] }, async (request, reply) => {
+  app.put('/form-defs/:id/fields/reorder', { preHandler: [requireAuth, requireFeature('forms')] }, async (request, reply) => {
     const { id } = request.params as { id: string };
     const { fieldIds } = reorderFieldsSchema.parse(request.body);
     await svc.reorderFields(getSchema(request), id, fieldIds);
     return reply.send({ data: { ok: true } });
   });
 
-  app.put('/form-fields/:id', { preHandler: [requireAuth] }, async (request, reply) => {
+  app.put('/form-fields/:id', { preHandler: [requireAuth, requireFeature('forms')] }, async (request, reply) => {
     const { id } = request.params as { id: string };
     const input = updateFieldSchema.parse(request.body);
     const row = await svc.updateField(getSchema(request), id, input);
@@ -100,7 +100,7 @@ export async function formBuilderRoutes(app: FastifyInstance) {
     return reply.send({ data: row });
   });
 
-  app.delete('/form-fields/:id', { preHandler: [requireAuth] }, async (request, reply) => {
+  app.delete('/form-fields/:id', { preHandler: [requireAuth, requireFeature('forms')] }, async (request, reply) => {
     const { id } = request.params as { id: string };
     await svc.deleteField(getSchema(request), id);
     return reply.status(204).send();

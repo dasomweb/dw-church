@@ -1651,6 +1651,8 @@ async function main(): Promise<void> {
       ['pwa', '모바일 앱(PWA)', 30, 30, 10],
       ['membership', '교적관리 (명부·세대·가족·조직)', 40, 40, 11],
       ['smallgroup', '스몰그룹 (목장·구역·셀·사역별)', 35, 35, 12],
+      ['forms', '폼 만들기·제출', 15, 15, 13],
+      ['translation', '영어 번역 보정', 15, 15, 14],
     ];
     for (const [key, label, monthly, yearly, sort] of featureSeed) {
       await prisma.$executeRawUnsafe(

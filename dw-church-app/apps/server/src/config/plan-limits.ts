@@ -75,11 +75,15 @@ export function planLimits(plan: string | null | undefined): PlanLimits {
 // (via GET /admin/entitlements) and requireFeature() gates routes against.
 export const FEATURE_TIERS: Record<string, PlanTier[]> = {
   // ── 교회 행정 애드온 (유료, 어느 티어에도 미포함 → override 로 활성화) ──
-  cells: [],                  // 목장(셀) 관리
-  newcomer: [],               // 새가족 안내 + 새가족 등록 폼
+  cells: [],                  // 목장(셀) — [구/deprecated] 스몰그룹 애드온으로 통합됨.
+                              // 키는 레거시 override 데이터 보존을 위해 유지하되,
+                              // 목장 nav·블록·라우트 게이팅은 이제 smallgroup 이 담당.
+  newcomer: [],               // 새가족 안내 + 새가족 등록 폼 (별도 애드온)
   newcomer_registration: [],  // 새가족 온라인 등록·관리 (교인 관리)
   membership: [],             // 교적관리 (교인 명부·세대·가족·조직·출석·심방·성례·이동)
-  smallgroup: [],             // 스몰그룹 (목장/구역/셀/사역별 — 조직·리포트·교육·공지·자료실)
+  smallgroup: [],             // 스몰그룹 (목장/구역/셀/사역별) — 목장 관리 + 프론트 목장 노출 포함
+  forms: [],                  // 폼(양식) 만들기 + 폼 제출 인박스 (별도 애드온)
+  translation: [],            // 영어 번역 보정 (관리자 오버라이드) (별도 애드온)
   // ── PWA 는 자체 애드온 플래그(web_app_addon 컬럼)로 스토어프론트에서 제어 ──
   pwa: ['pro'],               // 모바일 앱(PWA) — admin 게이팅만; 구매는 web_app_addon
 };
@@ -100,6 +104,7 @@ export const FEATURE_DEPS: Record<string, string[]> = {
 export const FEATURE_LABELS: Record<string, string> = {
   membership: '교적관리', smallgroup: '스몰그룹', newcomer: '새가족',
   newcomer_registration: '새가족 온라인 등록', cells: '목장(셀)',
+  forms: '폼 만들기·제출', translation: '영어 번역 보정',
 };
 
 export function featureDeps(feature: string): string[] {

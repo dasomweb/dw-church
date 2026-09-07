@@ -23,13 +23,13 @@ export async function cellRoutes(app: FastifyInstance) {
     return reply.send({ data: cell });
   });
 
-  app.post('/cells', { preHandler: [requireAuth, requireFeature('cells')] }, async (request, reply) => {
+  app.post('/cells', { preHandler: [requireAuth, requireFeature('smallgroup')] }, async (request, reply) => {
     const input = createCellSchema.parse(request.body);
     const cell = await cellService.createCell(getSchema(request), input);
     return reply.status(201).send({ data: cell });
   });
 
-  app.put('/cells/:id', { preHandler: [requireAuth, requireFeature('cells')] }, async (request, reply) => {
+  app.put('/cells/:id', { preHandler: [requireAuth, requireFeature('smallgroup')] }, async (request, reply) => {
     const { id } = request.params as { id: string };
     const input = updateCellSchema.parse(request.body);
     const cell = await cellService.updateCell(getSchema(request), id, input);
@@ -37,7 +37,7 @@ export async function cellRoutes(app: FastifyInstance) {
     return reply.send({ data: cell });
   });
 
-  app.delete('/cells/:id', { preHandler: [requireAuth, requireFeature('cells')] }, async (request, reply) => {
+  app.delete('/cells/:id', { preHandler: [requireAuth, requireFeature('smallgroup')] }, async (request, reply) => {
     const { id } = request.params as { id: string };
     await cellService.deleteCell(getSchema(request), id);
     return reply.status(204).send();

@@ -24,10 +24,12 @@ const FEATURES: { key: string; label: string; group: string }[] = [
   { key: 'banners', label: '메인 배너 슬라이드', group: '웹사이트 콘텐츠' },
   // 교회 행정 애드온 — 교적관리가 토대. 새가족·스몰그룹은 교적 없이는 동작 안 함.
   { key: 'membership', label: '교적관리 (명부·세대·출석·심방·성례)', group: '교회 행정 애드온' },
-  { key: 'smallgroup', label: '스몰그룹 (목장·구역·셀·사역별) · 교적 필요', group: '교회 행정 애드온' },
-  { key: 'cells', label: '목장(셀) 관리 [구]', group: '교회 행정 애드온' },
+  { key: 'smallgroup', label: '스몰그룹 (목장·구역·셀·사역별 + 프론트 목장 노출) · 교적 필요', group: '교회 행정 애드온' },
   { key: 'newcomer', label: '새가족 안내·등록 폼 · 교적 필요', group: '교회 행정 애드온' },
   { key: 'newcomer_registration', label: '새가족 온라인 등록·교인관리 · 교적 필요', group: '교회 행정 애드온' },
+  // 폼·번역은 교적 의존 없는 독립 애드온.
+  { key: 'forms', label: '폼 만들기 · 폼 제출 인박스', group: '부가기능 애드온' },
+  { key: 'translation', label: '영어 번역 보정 (자동번역 + 관리자 교정)', group: '부가기능 애드온' },
   { key: 'pwa', label: '모바일 앱(PWA)', group: '기타' },
 ];
 
