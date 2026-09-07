@@ -20,7 +20,7 @@ export default function SupportProgramPage() {
       <section className="bg-white">
         <div className={`${CONTAINER} py-16 sm:py-20`}>
           <div className="max-w-[760px]">
-            <p className="text-[16px] leading-[1.85] text-[#4a5262] sm:text-[17px]">개척교회나 아직 자립하지 못한 교회는 첫 1년 동안 낮은 비용으로 시작하시고, 그 교회를 함께 세워 주시는 교회는 구독료를 감면받습니다. 복잡한 서류는 받지 않습니다 — 상담에서 교회 사정과 함께 세우실 교회를 말씀해 주시면 됩니다.</p>
+            <p className="text-[16px] leading-[1.85] text-[#4a5262] sm:text-[17px]">개척교회나 아직 자립하지 못한 교회는 첫 1년 동안 낮은 비용으로 시작하시고, 그 교회를 함께 세워 주시는 교회는 구독료를 감면받습니다. 재정 증빙 같은 번거로운 서류까지 요구하지는 않습니다. 다만 정통 신앙 확인을 위해 소속 교단·교협과 담임목사 안수 교단은 확인합니다 — 상담에서 교회 사정과 함께 세우실 교회를 말씀해 주시면 됩니다.</p>
           </div>
 
           <div className="mt-10 grid gap-5 lg:grid-cols-3">
