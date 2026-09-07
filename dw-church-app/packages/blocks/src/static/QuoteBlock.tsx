@@ -40,11 +40,11 @@ export function QuoteBlock({ props }: QuoteBlockProps) {
     return (
       <SectionShell props={props} style={{ paddingBlock: 'var(--section-py-lg)' }} applyLayout>
         <div
+          className="px-6 py-6 sm:px-10 sm:py-[30px]"
           style={{
             borderLeft: '4px solid var(--dw-primary, var(--brand, #1466d6))',
             background: 'var(--dw-surface, var(--surface, #f7f8fa))',
             borderRadius: '0 var(--radius-lg, 16px) var(--radius-lg, 16px) 0',
-            padding: '30px 40px',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 40,
           }}
         >

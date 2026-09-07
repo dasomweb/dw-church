@@ -161,7 +161,8 @@ function AnnouncementBar({ props }: CtaSectionBlockProps) {
       <div
         style={{
           background: 'var(--fg, #16181d)', color: '#fff', borderRadius: 'var(--radius-lg, 16px)',
-          padding: '20px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          // fluid padding: shrinks on phones, tops out at the original 20px 28px on ≥560px (desktop unchanged)
+          padding: 'clamp(14px, 4vw, 20px) clamp(16px, 5vw, 28px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           gap: 24, flexWrap: 'wrap',
         }}
       >
@@ -175,7 +176,7 @@ function AnnouncementBar({ props }: CtaSectionBlockProps) {
           </div>
         </div>
         {btnText && (
-          <a href={btnUrl} style={{ display: 'inline-flex', alignItems: 'center', height: 42, padding: '0 20px', borderRadius: 999, background: '#fff', color: 'var(--fg, #16181d)', fontSize: 14, fontWeight: 600, flex: 'none', textDecoration: 'none' }}>{btnText}</a>
+          <a href={btnUrl} className="w-full justify-center sm:w-auto sm:justify-start" style={{ display: 'inline-flex', alignItems: 'center', height: 42, padding: '0 20px', borderRadius: 999, background: '#fff', color: 'var(--fg, #16181d)', fontSize: 14, fontWeight: 600, flex: 'none', textDecoration: 'none' }}>{btnText}</a>
         )}
       </div>
     </SectionShell>

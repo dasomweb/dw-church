@@ -10,6 +10,8 @@
  *   kind 'list'  : outline 카드 + title/moreLabel + items[{label,date}]
  *   kind 'pair'  : outline 카드 2개(각 title/text)
  */
+import type { CSSProperties } from 'react';
+
 const C = {
   brand: 'var(--dw-primary, var(--brand, #1466d6))',
   fg: 'var(--dw-text, var(--fg, #16181d))',
@@ -29,15 +31,19 @@ interface Tile {
 interface Props { props: Record<string, unknown>; slug?: string }
 
 function TileView({ t }: { t: Tile }) {
-  const span = { gridColumn: `span ${t.colSpan ?? 2}`, gridRow: `span ${t.rowSpan ?? 1}` } as const;
+  // Mobile (<md): every tile is a full-width single-column row in source order —
+  //   colSpan/rowSpan are ignored (col-[1/-1]) so nothing is cramped.
+  // Desktop (md+): the bento spans are restored from props via CSS vars.
+  const spanCls = 'col-[1/-1] row-auto md:[grid-column:var(--tc)] md:[grid-row:var(--tr)]';
+  const spanVar = { ['--tc' as string]: `span ${t.colSpan ?? 2}`, ['--tr' as string]: `span ${t.rowSpan ?? 1}` } as CSSProperties;
   if (t.kind === 'photo') {
     return (
-      <div style={{ ...span, position: 'relative', borderRadius: C.radiusLg, overflow: 'hidden', minHeight: 132 }}>
+      <div className={spanCls} style={{ ...spanVar, position: 'relative', borderRadius: C.radiusLg, overflow: 'hidden', minHeight: 132 }}>
         {t.imageUrl && <div style={{ position: 'absolute', inset: 0, backgroundImage: `url('${t.imageUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center' }} />}
         {(t.title || t.subtitle || t.eyebrow) && <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg,rgba(9,15,28,.05) 40%,rgba(9,15,28,.72))', pointerEvents: 'none' }} />}
-        <div style={{ position: 'absolute', left: 28, right: 20, bottom: 24, pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', left: 'clamp(16px,4vw,28px)', right: 20, bottom: 'clamp(16px,4vw,24px)', pointerEvents: 'none' }}>
           {t.eyebrow && <div style={{ fontSize: 13, color: 'rgba(255,255,255,.75)', marginBottom: 6 }}>{t.eyebrow}</div>}
-          {t.title && <div style={{ fontSize: (t.rowSpan ?? 1) >= 3 ? 34 : 19, fontWeight: 700, color: '#fff', lineHeight: 1.3 }}>{t.title}</div>}
+          {t.title && <div style={{ fontSize: (t.rowSpan ?? 1) >= 3 ? 'clamp(22px,5vw,34px)' : 19, fontWeight: 700, color: '#fff', lineHeight: 1.3 }}>{t.title}</div>}
           {t.subtitle && <div style={{ fontSize: 15, color: 'rgba(255,255,255,.8)', marginTop: 8 }}>{t.subtitle}</div>}
         </div>
       </div>
@@ -45,7 +51,7 @@ function TileView({ t }: { t: Tile }) {
   }
   if (t.kind === 'list') {
     return (
-      <div style={{ ...span, border: `1px solid ${C.border}`, borderRadius: C.radiusLg, padding: '24px 26px' }}>
+      <div className={spanCls} style={{ ...spanVar, border: `1px solid ${C.border}`, borderRadius: C.radiusLg, padding: 'clamp(16px,4vw,24px) clamp(16px,4vw,26px)' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
           <b style={{ fontSize: 17, color: C.fg }}>{t.title}</b>
           {t.moreLabel && <span style={{ fontSize: 13, color: C.muted }}>{t.moreLabel}</span>}
@@ -63,9 +69,9 @@ function TileView({ t }: { t: Tile }) {
   }
   if (t.kind === 'pair') {
     return (
-      <div style={{ ...span, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div className={`${spanCls} grid grid-cols-1 gap-4 md:grid-cols-2`} style={spanVar}>
         {(t.cards ?? []).map((c, i) => (
-          <div key={i} style={{ border: `1px solid ${C.border}`, borderRadius: C.radiusLg, padding: 24, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div key={i} style={{ border: `1px solid ${C.border}`, borderRadius: C.radiusLg, padding: 'clamp(16px,4vw,24px)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <b style={{ fontSize: 17, color: C.fg, marginBottom: 6 }}>{c.title}</b>
             <span style={{ fontSize: 14, color: C.muted, lineHeight: 1.7 }}>{c.text}</span>
           </div>
@@ -78,9 +84,9 @@ function TileView({ t }: { t: Tile }) {
   const bg = isBrand ? C.brand : t.bg === 'surface' ? C.surface : 'transparent';
   const border = t.bg === 'outline' || !t.bg ? `1px solid ${C.border}` : 'none';
   return (
-    <div style={{ ...span, background: bg, border, borderRadius: C.radiusLg, padding: 26, display: 'flex', flexDirection: 'column', justifyContent: 'center', color: isBrand ? '#fff' : C.fg }}>
+    <div className={spanCls} style={{ ...spanVar, background: bg, border, borderRadius: C.radiusLg, padding: 'clamp(16px,4vw,26px)', display: 'flex', flexDirection: 'column', justifyContent: 'center', color: isBrand ? '#fff' : C.fg }}>
       {t.eyebrow && <div style={{ fontSize: 13, color: isBrand ? 'rgba(255,255,255,.75)' : C.muted, marginBottom: 6 }}>{t.eyebrow}</div>}
-      {t.title && <div style={{ fontSize: t.subtitle && !t.text ? 24 : 17, fontWeight: 700, marginBottom: t.text ? 8 : 4 }}>{t.title}</div>}
+      {t.title && <div style={{ fontSize: t.subtitle && !t.text ? 'clamp(19px,4vw,24px)' : 17, fontWeight: 700, marginBottom: t.text ? 8 : 4 }}>{t.title}</div>}
       {t.subtitle && <div style={{ fontSize: 15, color: isBrand ? 'rgba(255,255,255,.85)' : C.muted }}>{t.subtitle}</div>}
       {t.text && <span style={{ fontSize: 14, color: isBrand ? 'rgba(255,255,255,.85)' : C.muted, lineHeight: 1.7 }}>{t.text}</span>}
     </div>
@@ -92,12 +98,13 @@ export function BentoGridBlock({ props }: Props) {
   const cols = Number(props.columns) || 6;
   if (tiles.length === 0) return null;
   return (
-    <div style={{ padding: 32 }}>
-      <style dangerouslySetInnerHTML={{ __html: `
-.dw-bento{display:grid;grid-template-columns:repeat(${cols},1fr);grid-auto-rows:132px;gap:16px}
-@media (max-width:768px){.dw-bento{grid-template-columns:1fr;grid-auto-rows:auto}.dw-bento>*{grid-column:1 / -1 !important;grid-row:auto !important;min-height:150px}}
-` }} />
-      <div className="dw-bento">
+    <div style={{ padding: 'clamp(16px,4vw,32px)' }}>
+      {/* Mobile (<md): single column, tiles stack full-width in source order.
+          Desktop (md+): the props-driven bento grid (columns/auto-rows/gap). */}
+      <div
+        className="grid grid-cols-1 auto-rows-auto gap-4 md:auto-rows-[132px] md:[grid-template-columns:var(--bento-cols)]"
+        style={{ ['--bento-cols' as string]: `repeat(${cols},1fr)` } as CSSProperties}
+      >
         {tiles.map((t, i) => <TileView key={i} t={t} />)}
       </div>
     </div>

@@ -24,36 +24,32 @@ export function DashboardBannerBlock({ props }: DashboardBannerBlockProps) {
   return (
     <SectionShell props={props} applyLayout style={{ paddingBlock: 'var(--section-py-sm)' }}>
       <div
+        className="flex flex-wrap items-center justify-between gap-5 sm:gap-8 p-5 sm:px-9 sm:py-8"
         style={{
           background: 'var(--dw-primary, var(--brand, #1466d6))',
           color: '#fff',
           borderRadius: 'var(--radius-lg, 16px)',
-          padding: '32px 36px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 32,
-          flexWrap: 'wrap',
         }}
       >
-        <div style={{ minWidth: 0 }}>
+        <div className="min-w-0">
           {eyebrow && (
-            <div style={{ fontSize: 14, color: 'rgba(255,255,255,.75)', marginBottom: 8 }}>{eyebrow}</div>
+            <div className="text-sm mb-2" style={{ color: 'rgba(255,255,255,.75)' }}>{eyebrow}</div>
           )}
           {title && (
-            <div className="font-heading" style={{ fontSize: 28, fontWeight: 700, marginBottom: 6, lineHeight: 1.25 }}>{title}</div>
+            <div className="font-heading text-2xl sm:text-[28px]" style={{ fontWeight: 700, marginBottom: 6, lineHeight: 1.25 }}>{title}</div>
           )}
           {subtitle && (
-            <div style={{ fontSize: 16, color: 'rgba(255,255,255,.85)' }}>{subtitle}</div>
+            <div className="text-sm sm:text-base" style={{ color: 'rgba(255,255,255,.85)' }}>{subtitle}</div>
           )}
         </div>
         {(btnText || btn2Text) && (
-          <div style={{ display: 'flex', gap: 10, flex: 'none', flexWrap: 'wrap' }}>
+          <div className="flex flex-wrap gap-2.5 w-full sm:w-auto sm:flex-none">
             {btnText && (
               <a
                 href={btnUrl}
+                className="inline-flex items-center justify-center w-full sm:w-auto"
                 style={{
-                  display: 'inline-flex', alignItems: 'center', height: 46, padding: '0 22px',
+                  height: 46, padding: '0 22px',
                   borderRadius: 999, background: '#fff', color: 'var(--dw-primary, var(--brand, #1466d6))',
                   fontSize: 15, fontWeight: 600, textDecoration: 'none',
                 }}
@@ -62,8 +58,9 @@ export function DashboardBannerBlock({ props }: DashboardBannerBlockProps) {
             {btn2Text && (
               <a
                 href={btn2Url}
+                className="inline-flex items-center justify-center w-full sm:w-auto"
                 style={{
-                  display: 'inline-flex', alignItems: 'center', height: 46, padding: '0 22px',
+                  height: 46, padding: '0 22px',
                   borderRadius: 999, border: '1px solid rgba(255,255,255,.5)', color: '#fff',
                   fontSize: 15, fontWeight: 600, textDecoration: 'none',
                 }}

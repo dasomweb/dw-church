@@ -27,21 +27,21 @@ export function HeroOverlapBlock({ props }: Props) {
   const cards = Array.isArray(props.cards) ? (props.cards as Card[]) : [];
 
   return (
-    <div style={{ position: 'relative', padding: '0 56px', background: `linear-gradient(180deg, ${C.surface} 0%, ${C.surface} 62%, ${C.bg} 62%)` }}>
-      <div style={{ position: 'relative', paddingTop: 44 }}>
-        <div style={{ position: 'relative', height: 470, borderRadius: C.radius, overflow: 'hidden' }}>
+    <div className="relative px-4 sm:px-6 lg:px-14" style={{ background: `linear-gradient(180deg, ${C.surface} 0%, ${C.surface} 62%, ${C.bg} 62%)` }}>
+      <div className="relative pt-8 lg:pt-11">
+        <div className="relative h-[320px] sm:h-[400px] lg:h-[470px] overflow-hidden" style={{ borderRadius: C.radius }}>
           {bg && <div style={{ position: 'absolute', inset: 0, backgroundImage: `url('${bg}')`, backgroundSize: 'cover', backgroundPosition: 'center' }} />}
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg,rgba(9,15,28,.62) 0%,rgba(9,15,28,.25) 55%,rgba(9,15,28,0) 100%)', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', left: 52, top: 96, maxWidth: 520, pointerEvents: 'none' }}>
-            {eyebrow && <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: '.08em', color: '#cfe0fb', marginBottom: 18 }}>{eyebrow}</div>}
-            {title && <h1 style={{ margin: '0 0 20px', fontSize: 52, fontWeight: 700, color: '#fff', lineHeight: 1.28, whiteSpace: 'pre-line' }}>{title}</h1>}
-            {subtitle && <p style={{ margin: 0, fontSize: 18, lineHeight: 1.7, color: 'rgba(255,255,255,.86)' }}>{subtitle}</p>}
+          <div className="absolute left-4 right-4 top-8 sm:left-8 sm:right-8 sm:top-16 lg:left-[52px] lg:right-auto lg:top-24 max-w-[520px]" style={{ pointerEvents: 'none' }}>
+            {eyebrow && <div className="text-sm mb-3 sm:mb-[18px]" style={{ fontWeight: 600, letterSpacing: '.08em', color: '#cfe0fb' }}>{eyebrow}</div>}
+            {title && <h1 className="text-[32px] sm:text-[42px] lg:text-[52px] mb-4 lg:mb-5" style={{ marginTop: 0, fontWeight: 700, color: '#fff', lineHeight: 1.28, whiteSpace: 'pre-line' }}>{title}</h1>}
+            {subtitle && <p className="text-[15px] sm:text-base lg:text-[18px]" style={{ margin: 0, lineHeight: 1.7, color: 'rgba(255,255,255,.86)' }}>{subtitle}</p>}
           </div>
         </div>
         {cards.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.25fr', gap: 1, background: C.border, border: `1px solid ${C.border}`, borderRadius: C.radius, overflow: 'hidden', margin: '-64px 40px 0', position: 'relative', boxShadow: '0 18px 40px rgba(15,25,45,.13)' }}>
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_1.25fr] relative -mt-8 mx-4 sm:-mt-12 sm:mx-8 lg:-mt-16 lg:mx-10" style={{ gap: 1, background: C.border, border: `1px solid ${C.border}`, borderRadius: C.radius, overflow: 'hidden', boxShadow: '0 18px 40px rgba(15,25,45,.13)' }}>
             {cards.map((card, i) => (
-              <div key={i} style={{ background: C.bg, padding: '26px 30px' }}>
+              <div key={i} className="px-5 py-5 sm:px-[30px] sm:py-[26px]" style={{ background: C.bg }}>
                 {card.title && <div style={{ fontSize: 13, fontWeight: 600, color: C.brand, marginBottom: 12 }}>{card.title}</div>}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 15, lineHeight: 1.5 }}>
                   {(card.rows ?? []).map((r, j) => (

@@ -29,10 +29,10 @@ export function NewsSplitBlock({ props }: Props) {
   const links = Array.isArray(props.links) ? (props.links as string[]) : [];
 
   return (
-    <div style={{ padding: '76px 56px 0', display: 'grid', gridTemplateColumns: '1.35fr 1fr', gap: 40 }}>
+    <div className="grid grid-cols-1 lg:grid-cols-[1.35fr_1fr] gap-8 lg:gap-10 pt-12 sm:pt-14 lg:pt-[76px] px-4 sm:px-6 lg:px-14 pb-0">
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 22, borderBottom: `1px solid ${C.border}`, paddingBottom: 14, marginBottom: 8 }}>
-          <span style={{ fontSize: 20, fontWeight: 700, color: C.fg }}>{title}</span>
+        <div className="flex items-center flex-wrap gap-[22px] pb-3.5 mb-2" style={{ borderBottom: `1px solid ${C.border}` }}>
+          <span className="text-lg sm:text-xl" style={{ fontWeight: 700, color: C.fg }}>{title}</span>
           {tabs.map((t, i) => <span key={i} style={{ fontSize: 16, color: C.muted }}>{t}</span>)}
           <span style={{ marginLeft: 'auto', fontSize: 14, color: C.muted }}>{moreLabel}</span>
         </div>
@@ -46,8 +46,8 @@ export function NewsSplitBlock({ props }: Props) {
           ))}
         </div>
       </div>
-      <div style={{ background: C.surface, borderRadius: C.radiusLg, padding: '28px 30px' }}>
-        {sideTitle && <div style={{ fontSize: 20, fontWeight: 700, color: C.fg, marginBottom: 6 }}>{sideTitle}</div>}
+      <div className="p-5 sm:p-6 lg:py-7 lg:px-[30px]" style={{ background: C.surface, borderRadius: C.radiusLg }}>
+        {sideTitle && <div className="text-lg sm:text-xl" style={{ fontWeight: 700, color: C.fg, marginBottom: 6 }}>{sideTitle}</div>}
         {sideDesc && <p style={{ margin: '0 0 20px', fontSize: 15, lineHeight: 1.7, color: C.muted }}>{sideDesc}</p>}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {buttons.map((b, i) => (
