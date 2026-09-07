@@ -1,66 +1,71 @@
 'use client';
 
-import Link from 'next/link';
-import { useMarketingLang } from './useMarketingLang';
 import { useSiteBrand } from './useSiteBrand';
 
-// Global truelight.app marketing footer — shared by every marketing page.
-// Vertical padding is operator-configurable via marketing-config.
-const COPY = {
-  ko: {
-    tagline: '현대 교회를 위한 전문 홈페이지 플랫폼.',
-    platform: '플랫폼', featuresLink: '기능', pricing: '요금제', embed: '위젯 임베드',
-    support: '지원', contact: '문의하기', customerSupport: '고객지원', adminLogin: '관리자 로그인',
-    company: '회사', terms: '이용약관', privacy: '개인정보처리방침',
+// truelight.app 마케팅 푸터 — 시안 v2. 딥 밴드(#0f1b2d), 국문 단일.
+// 모든 마케팅 페이지가 공유. 세로 패딩은 super-admin(사이트 설정)에서 조정.
+const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
+  {
+    title: '서비스',
+    links: [
+      { label: '맡기는 방식', href: '/#approach' },
+      { label: '교회 행정', href: '/#admin' },
+      { label: '요금', href: '/#pricing' },
+      { label: '함께한 교회', href: '/#churches' },
+    ],
   },
-  en: {
-    tagline: 'Professional church website platform for modern ministries.',
-    platform: 'Platform', featuresLink: 'Features', pricing: 'Pricing', embed: 'Widget Embed',
-    support: 'Support', contact: 'Contact Us', customerSupport: 'Customer Support', adminLogin: 'Admin Login',
-    company: 'Company', terms: 'Terms of Service', privacy: 'Privacy Policy',
+  {
+    title: '지원',
+    links: [
+      { label: '도움센터', href: '/#contact' }, // 전용 도움센터 라우트 신설 전까지 상담 섹션으로
+      { label: '상담 신청', href: '/apply' },
+      { label: '결제 조건', href: '/terms' },
+      { label: '관리자 로그인', href: 'https://admin.truelight.app' },
+    ],
   },
-} as const;
+  {
+    title: '회사',
+    links: [
+      { label: 'DASOMWEB 소개', href: '/#contact' }, // 전용 회사소개 페이지 신설 전까지 상담 섹션으로
+      { label: '이용약관', href: '/terms' },
+      { label: '개인정보처리방침', href: '/privacy' },
+    ],
+  },
+];
 
 export default function MarketingFooter() {
-  const { lang } = useMarketingLang();
   const brand = useSiteBrand();
-  const t = COPY[lang];
-  const padY = brand?.footerPaddingY ?? 48;
+  const padY = brand?.footerPaddingY ?? 56;
 
   return (
-    <footer className="border-t border-gray-200 bg-white px-4 sm:px-6" style={{ paddingTop: padY, paddingBottom: padY }}>
-      <div className="mx-auto max-w-7xl">
-        <div className="grid gap-8 md:grid-cols-4">
+    <footer className="bg-[#0f1b2d] px-5 text-white sm:px-10" style={{ paddingTop: padY, paddingBottom: padY }}>
+      <div className="mx-auto max-w-[1080px]">
+        <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
-            <span className="text-lg font-bold text-gray-900">TRUE <span className="text-blue-600">LIGHT</span></span>
-            <p className="mt-3 text-sm text-gray-500">{t.tagline}</p>
+            <span className="text-lg font-bold tracking-tight text-white">TRUE <span className="text-[#4d93ff]">LIGHT</span></span>
+            <p className="mt-3 max-w-xs text-[14px] leading-[1.75] text-[#aab6c7]">
+              미주 한인 이민교회의 온라인 사역과 교회 행정을 함께 맡는 시스템.
+            </p>
+            <p className="mt-4 text-[14px] text-[#aab6c7]">
+              <a href="mailto:hello@truelight.app" className="text-[#dbe3ee] hover:text-white">hello@truelight.app</a>
+            </p>
+            <p className="mt-1 text-[13px]" style={{ color: '#7f8da3' }}>
+              연락처 · 상담 시간 ○○○
+            </p>
           </div>
-          <div>
-            <h4 className="mb-3 text-sm font-bold text-gray-900">{t.platform}</h4>
-            <ul className="space-y-2 text-sm text-gray-500">
-              <li><Link href="/features" className="hover:text-gray-700">{t.featuresLink}</Link></li>
-              <li><a href="/#plans" className="hover:text-gray-700">{t.pricing}</a></li>
-              <li><Link href="/embed" className="hover:text-gray-700">{t.embed}</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="mb-3 text-sm font-bold text-gray-900">{t.support}</h4>
-            <ul className="space-y-2 text-sm text-gray-500">
-              <li><a href="mailto:info@truelight.app" className="hover:text-gray-700">{t.contact}</a></li>
-              <li><a href="mailto:support@truelight.app" className="hover:text-gray-700">{t.customerSupport}</a></li>
-              <li><a href="https://admin.truelight.app" className="hover:text-gray-700">{t.adminLogin}</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="mb-3 text-sm font-bold text-gray-900">{t.company}</h4>
-            <ul className="space-y-2 text-sm text-gray-500">
-              <li><a href="/terms" className="hover:text-gray-700">{t.terms}</a></li>
-              <li><a href="/privacy" className="hover:text-gray-700">{t.privacy}</a></li>
-            </ul>
-          </div>
+          {COLUMNS.map((col) => (
+            <div key={col.title}>
+              <h4 className="mb-3 text-[13px] font-bold tracking-[0.04em] text-white">{col.title}</h4>
+              <ul className="space-y-2.5 text-[14px] text-[#aab6c7]">
+                {col.links.map((l) => (
+                  <li key={l.label}><a href={l.href} className="transition-colors hover:text-white">{l.label}</a></li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
-        <div className="mt-10 border-t border-gray-200 pt-6 text-center text-xs text-gray-400">
-          &copy; {new Date().getFullYear()} TRUE LIGHT by DASOMWEB. All rights reserved.
+        <div className="mt-10 border-t border-white/10 pt-6 text-[12.5px] text-[#7f8da3]">
+          © 2026 TRUE LIGHT. All rights reserved.
         </div>
       </div>
     </footer>
