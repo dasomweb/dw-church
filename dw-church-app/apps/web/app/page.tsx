@@ -121,7 +121,7 @@ export default function LandingPage() {
                   rel="noopener noreferrer"
                   className="inline-flex min-h-[48px] items-center justify-center rounded-xl border border-[#d5dae2] bg-white px-7 text-[16px] font-semibold text-[#16181d] transition-colors hover:bg-[#f5f6f8]"
                 >
-                  실제 사이트 보기
+                  데모 사이트 보기
                 </a>
               </div>
             </div>
@@ -132,7 +132,7 @@ export default function LandingPage() {
         <div className="border-t border-[#eceef2] bg-white">
           <div className={`${CONTAINER} py-5`}>
             <ul className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-center text-[14px] text-[#61697a]">
-              {['한인 이민교회만 맡아 왔습니다', '디자인·구축은 사람이 직접', '함께한 교회 2곳', '오픈까지 평균 ○주'].map((item, i) => (
+              {['미주 한인 이민교회 전용', '디자인·구축·이관까지 직접', '홈페이지부터 교적·목장까지', '호스팅·보안·백업 포함'].map((item, i) => (
                 <li key={item} className="flex items-center gap-6">
                   {i > 0 && <span aria-hidden className="text-[#c9cfda]">·</span>}
                   <span>{item}</span>
