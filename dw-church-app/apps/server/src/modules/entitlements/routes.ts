@@ -182,9 +182,12 @@ export async function entitlementRoutes(app: FastifyInstance) {
       tenant.id,
     );
     const pendingSet = new Set(pending.map((p) => p.feature_key));
+    // 마켓플레이스에서 숨길 키 — 'cells'(목장)는 스몰그룹 애드온으로 통합되어 별도
+    // 신청 대상이 아니다(대표님 2026-09-07).
+    const HIDDEN = new Set(['cells']);
     // 애드온(어느 티어에도 미포함)만 노출. 활성 여부는 의존성까지 반영.
     const items = priceRows
-      .filter((r) => r.is_active && isAddon(r.feature_key))
+      .filter((r) => r.is_active && isAddon(r.feature_key) && !HIDDEN.has(r.feature_key))
       .map((r) => ({
         key: r.feature_key,
         label: FEATURE_LABELS[r.feature_key] ?? r.label,
@@ -202,7 +205,8 @@ export async function entitlementRoutes(app: FastifyInstance) {
     const tenant = req.tenant;
     if (!tenant?.id) throw new AppError('NO_TENANT', 400, '테넌트를 확인할 수 없습니다.');
     const { featureKey, note } = requestBody.parse(req.body ?? {});
-    if (!isAddon(featureKey)) throw new AppError('BAD_FEATURE', 400, '신청할 수 없는 기능입니다.');
+    // 'cells'(목장)는 스몰그룹에 통합 — 별도 신청 불가.
+    if (!isAddon(featureKey) || featureKey === 'cells') throw new AppError('BAD_FEATURE', 400, '신청할 수 없는 기능입니다.');
     const overrides = await overridesForTenant(tenant.id);
     if (isFeatureEffective(tenant.plan, overrides, featureKey)) {
       throw new AppError('ALREADY_ACTIVE', 400, '이미 사용 중인 기능입니다.');
