@@ -13,6 +13,8 @@ import { useState } from 'react';
 import { BLOCK_DEFS, type BlockDef } from '../../pages/PageEditor';
 import { ImageUpload } from '../../components';
 import { useImageFieldApi } from './property-fields/useImageFieldApi';
+import { BoardSelectField } from './property-fields/BoardSelectField';
+import { BoardMultiSelectField } from './property-fields/BoardMultiSelectField';
 
 type Child = { blockType: string; props: Record<string, unknown> };
 type EditableField = BlockDef['editableFields'][number];
@@ -137,6 +139,14 @@ function ChildField({ field, value, onChange, uploadImage }: {
       return <Row label={field.label}><input type="number" className={INP} value={Number(v ?? 0)} onChange={(e) => onChange(Number(e.target.value))} /></Row>;
     case 'select':
       return <Row label={field.label}><select className={`${SEL} w-full`} value={String(v ?? '')} onChange={(e) => onChange(e.target.value)}>{(field.options ?? []).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></Row>;
+    case 'board-select':
+      // 게시판(콘텐츠 모듈)을 dropdown 으로 선택. multi=true 면 여러 게시판(boardSlugs[]),
+      // 아니면 단일 slug. 대표님: "게시판도 선택해서 가져올 수 있도록 dropdown, 여러개를".
+      return field.multi ? (
+        <Row label={field.label}><BoardMultiSelectField value={Array.isArray(v) ? (v as string[]) : []} onChange={(arr) => onChange(arr)} /></Row>
+      ) : (
+        <Row label={field.label}><BoardSelectField value={String(v ?? '')} onChange={(s) => onChange(s)} /></Row>
+      );
     case 'textarea':
     case 'richtext':
       return <Row label={field.label}><textarea rows={3} className={INP} value={String(v ?? '')} onChange={(e) => onChange(e.target.value)} /></Row>;

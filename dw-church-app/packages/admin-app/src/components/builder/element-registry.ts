@@ -54,6 +54,9 @@ export type ElementKind =
   | 'video-category'
   // Dynamic select of the tenant's registered boards (slug value).
   | 'board-select'
+  // Multi-select of the tenant's registered boards → props[path] = string[] of
+  // slugs. Used by the board block so the operator picks one OR several boards.
+  | 'board-multi-select'
   // Dynamic select of the tenant's registered album categories (slug value).
   | 'album-category'
   // Dynamic select of the tenant's registered events (event id value). Used by
@@ -63,7 +66,9 @@ export type ElementKind =
   // "종료일"(auto-hide) and similar single-date props.
   | 'date'
   // 버튼 배열 편집(추가/삭제) — props[path] = [{text,url}]. ButtonsField.
-  | 'buttons';
+  | 'buttons'
+  // info_columns 칸 편집 — props[path] = [{title,variant,rows:[{label,value}]}]. InfoColumnsField.
+  | 'info-columns';
 
 export interface ElementSpec {
   /** Display label in the inspector. */
@@ -846,7 +851,9 @@ const BOARD: BlockElementRegistry = {
       { label: 'Headline', path: 'title', kind: 'text' },
     ]},
     { title: 'Data', elements: [
-      { label: 'Board slug', path: 'boardSlug', kind: 'board-select', hint: '게시판 관리에서 설정한 slug. 예: notices, faq, careers' },
+      // 게시판(콘텐츠 모듈)을 dropdown 으로 하나 또는 여러 개 선택 → props.boardSlugs[].
+      // 대표님 2026-09-06: slug 직접 입력 대신 선택, 여러개 가능.
+      { label: '게시판 선택 (여러 개 가능)', path: 'boardSlugs', kind: 'board-multi-select', hint: '게시판 관리에서 만든 게시판을 골라 담습니다. 여러 개 선택 시 게시판별로 나뉘어 표시됩니다.' },
       { label: 'Limit', path: 'limit', kind: 'number', hint: '표시할 글 개수. 기본 10' },
     ]},
   ],
@@ -1616,6 +1623,20 @@ const NEWS_ANNOUNCEMENTS: BlockElementRegistry = {
     ]},
   ],
 };
+// 정보 컬럼 (한눈에) — 칸(제목·형식)+행(라벨·값)을 직접 편집. content/cardItems 대신
+// 실제 렌더 shape(items[{title,variant,rows}])를 그대로 편집(대표님: 데이터 수정 가능하게).
+const INFO_COLUMNS: BlockElementRegistry = {
+  sections: [
+    { title: 'Header', elements: [
+      { label: '라벨(윗글)', path: 'eyebrow', kind: 'text' },
+      { label: '제목', path: 'title', kind: 'text' },
+      { label: '칸 수', path: 'columns', kind: 'select', choices: [{ value: '2', label: '2칸' }, { value: '3', label: '3칸' }, { value: '4', label: '4칸' }] },
+    ]},
+    { title: '정보 칸 (제목·형식 + 행 라벨/값)', elements: [
+      { label: '칸 편집', path: 'items', kind: 'info-columns', hint: '칸을 추가하고, 칸마다 형식(값 오른쪽/라벨+설명)과 행(라벨·값)을 편집합니다.' },
+    ]},
+  ],
+};
 const STAFF_GRID = churchBlock(
   { title: 'Header', fields: [{ key: 'title', label: '제목', type: 'text' }]},
   { title: 'Data', fields: [
@@ -1855,6 +1876,7 @@ export const ELEMENT_REGISTRY: Record<string, BlockElementRegistry> = {
   section_header:   TEXT_ONLY,
 
   features_grid:   FEATURES_GRID,
+  info_columns:    INFO_COLUMNS,
   stats_counter:   STATS_COUNTER,
   testimonials:    TESTIMONIALS,
   pricing_table:   PRICING_TABLE,

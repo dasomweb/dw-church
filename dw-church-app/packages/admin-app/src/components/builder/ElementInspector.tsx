@@ -11,7 +11,7 @@ import {
   type BlockElementRegistry,
   type ElementSpec,
 } from './element-registry';
-import { ImageField, useImageFieldApi, LinkField, ColorField, SpacingField, MediaPicker, LabeledField, CollapsibleGroup, TypographyTokenField, OverlayField, BorderField, LinkButtonField, LayoutField, DesignField, ScheduleGroupsField, VideoCategorySelectField, BoardSelectField, AlbumCategorySelectField, EventSelectField, ButtonsField, type ButtonItem, type ScheduleGroup } from './property-fields';
+import { ImageField, useImageFieldApi, LinkField, ColorField, SpacingField, MediaPicker, LabeledField, CollapsibleGroup, TypographyTokenField, OverlayField, BorderField, LinkButtonField, LayoutField, DesignField, ScheduleGroupsField, VideoCategorySelectField, BoardSelectField, BoardMultiSelectField, AlbumCategorySelectField, EventSelectField, ButtonsField, type ButtonItem, InfoColumnsField, type InfoItem, type ScheduleGroup } from './property-fields';
 import { RichEditor } from '../RichEditor';
 import { DynamicSourcePicker, DynamicChip } from './property-fields/DynamicSourcePicker';
 import { isDynamicRef, dynamicContextsForPageKind, type DynamicContext } from '@dw-church/blocks/builder';
@@ -1835,6 +1835,12 @@ function FieldControl({
           onChange={(v) => onChange(v)}
         />
       )}
+      {spec.kind === 'board-multi-select' && (
+        <BoardMultiSelectField
+          value={Array.isArray(value) ? (value as string[]) : []}
+          onChange={(v) => onChange(v)}
+        />
+      )}
       {spec.kind === 'album-category' && (
         <AlbumCategorySelectField
           value={(value as string) ?? ''}
@@ -1858,6 +1864,12 @@ function FieldControl({
       {spec.kind === 'buttons' && (
         <ButtonsField
           value={Array.isArray(value) ? (value as ButtonItem[]) : []}
+          onChange={(v) => onChange(v)}
+        />
+      )}
+      {spec.kind === 'info-columns' && (
+        <InfoColumnsField
+          value={Array.isArray(value) ? (value as InfoItem[]) : []}
           onChange={(v) => onChange(v)}
         />
       )}

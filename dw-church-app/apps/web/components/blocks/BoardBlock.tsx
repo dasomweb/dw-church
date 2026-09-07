@@ -7,50 +7,73 @@ interface BoardBlockProps {
 }
 
 export async function BoardBlock({ props, slug }: BoardBlockProps) {
-  const boardSlug = (props.boardSlug as string) || '';
   const limit = (props.limit as number) ?? 10;
   const title = (props.title as string) || '';
   const variant = (props.variant as string) || 'list';
 
-  if (!boardSlug) {
+  // 게시판 소스: props.boardSlugs (여러 개 선택) 우선, 없으면 단일 props.boardSlug
+  // 하위호환. 대표님 2026-09-06: dropdown 으로 여러 게시판 선택.
+  const rawSlugs = Array.isArray(props.boardSlugs) ? (props.boardSlugs as unknown[]) : [];
+  const slugs = rawSlugs
+    .map((s) => String(s ?? '').trim())
+    .filter(Boolean);
+  if (slugs.length === 0 && props.boardSlug) slugs.push(String(props.boardSlug).trim());
+
+  if (slugs.length === 0) {
     return (
       <DataSection props={props}>
         <div className="mx-auto max-w-7xl text-center text-gray-400 text-sm">
-          게시판 슬러그를 설정해주세요.
+          게시판을 선택해주세요.
         </div>
       </DataSection>
     );
   }
 
-  let board: any = null;
-  let posts: any[] = [];
+  // 선택한 게시판을 각각 fetch. 실패/미존재 게시판은 조용히 건너뛴다.
+  const resolved = await Promise.all(
+    slugs.map(async (boardSlug) => {
+      try {
+        const board: any = await getBoardBySlug(slug, boardSlug);
+        if (!board?.id) return null;
+        const result: any = await getBoardPosts(slug, board.id, { perPage: limit });
+        const posts: any[] = Array.isArray(result) ? result : (result?.data ?? []);
+        return { board, posts };
+      } catch {
+        return null;
+      }
+    }),
+  );
+  const boards = resolved.filter((b): b is { board: any; posts: any[] } => !!b);
 
-  try {
-    board = await getBoardBySlug(slug, boardSlug);
-    if (board?.id) {
-      const result = await getBoardPosts(slug, board.id, { perPage: limit });
-      posts = Array.isArray(result) ? result : (result?.data ?? []);
-    }
-  } catch {
-    posts = [];
-  }
+  if (boards.length === 0) return null;
 
-  if (!board) return null;
-
-  const displayTitle = title || board.title || '게시판';
+  // 단일 게시판: title(설정) 또는 게시판 이름을 섹션 제목으로(기존 동작 유지).
+  // 여러 게시판: 상단 공통 제목(설정) + 게시판별 소제목으로 나눠 표시.
+  const multi = boards.length > 1;
+  const sectionTitle = multi ? title : (title || boards[0]!.board.title || '게시판');
 
   return (
     <DataSection props={props} defaultBg="var(--dw-surface)">
       <div className="mx-auto max-w-7xl">
-        <h2 className="mb-8 text-center text-2xl sm:text-3xl font-bold font-heading">{displayTitle}</h2>
-
-        {posts.length === 0 ? (
-          <p className="text-center text-gray-400">등록된 게시글이 없습니다.</p>
-        ) : variant === 'list' ? (
-          <BoardListView posts={posts} />
-        ) : (
-          <BoardGridView posts={posts} columns={variant === 'grid-3' ? 3 : 2} />
+        {sectionTitle && (
+          <h2 className="mb-8 text-center text-2xl sm:text-3xl font-bold font-heading">{sectionTitle}</h2>
         )}
+        <div className="space-y-10">
+          {boards.map(({ board, posts }) => (
+            <div key={board.id}>
+              {multi && (
+                <h3 className="mb-4 text-lg sm:text-xl font-bold font-heading">{board.title}</h3>
+              )}
+              {posts.length === 0 ? (
+                <p className="text-center text-gray-400">등록된 게시글이 없습니다.</p>
+              ) : variant === 'list' ? (
+                <BoardListView posts={posts} />
+              ) : (
+                <BoardGridView posts={posts} columns={variant === 'grid-3' ? 3 : 2} />
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     </DataSection>
   );

@@ -21,9 +21,11 @@ export {
 } from './ScheduleGroupsField';
 export { VideoCategorySelectField } from './VideoCategorySelectField';
 export { BoardSelectField } from './BoardSelectField';
+export { BoardMultiSelectField } from './BoardMultiSelectField';
 export { AlbumCategorySelectField } from './AlbumCategorySelectField';
 export { EventSelectField } from './EventSelectField';
 export { ButtonsField, type ButtonItem } from './ButtonsField';
+export { InfoColumnsField, type InfoItem, type InfoRow } from './InfoColumnsField';
 export {
   LayoutField,
   type LayoutFieldProps,

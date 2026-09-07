@@ -302,6 +302,21 @@ const DATA_BLOCK_LABELS: Record<string, string> = {
   recent_blog_posts: 'Recent Blog Posts',
   album_gallery: 'Album Gallery',
   board: 'Board',
+  // 교회 콘텐츠 모듈 데이터 블록 — apps/web 에서 async fetch 하는 블록들.
+  // shared BLOCK_MAP 에 없어 layout 컨테이너의 자식으로 렌더될 때 "Unknown
+  // block type" 노란 경고가 뜨던 버그 fix (대표님 2026-09-06: layout_columns
+  // 안 recent_sermons 가 Unknown 으로 표시됨). 최상위는 BuilderCanvas 가
+  // CHURCH_BLOCK_LABELS 로 가로채지만 중첩 자식은 여기 shared 렌더러를 타므로
+  // 반드시 여기에도 placeholder 라벨이 있어야 한다.
+  recent_sermons: '설교 목록 (Data Block)',
+  recent_bulletins: '주보 목록 (Data Block)',
+  recent_columns: '목회칼럼 목록 (Data Block)',
+  staff_grid: '교역자 (Data Block)',
+  cell_grid: '목장 (Data Block)',
+  history_timeline: '교회 연혁 (Data Block)',
+  event_grid: '행사 (Data Block)',
+  video_board: '영상 게시판 (Data Block)',
+  schedule_board: '예배 및 모임 (Data Block)',
   products_showcase: 'Products Showcase',
   recent_products: 'Recent Products',
   contact_info: 'Contact Info',
