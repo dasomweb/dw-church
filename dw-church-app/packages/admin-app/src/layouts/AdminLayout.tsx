@@ -80,6 +80,7 @@ const navGroups: (NavItem | NavGroup)[] = [
     { to: 'domains', label: '도메인', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" /></svg> },
     { to: 'users', label: '사용자', icon: I('M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z') },
     { to: 'billing', label: '결제', icon: I('M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z') },
+    { to: 'addons', label: '부가기능', icon: I('M12 6v6m0 0v6m0-6h6m-6 0H6') },
   ]},
 ];
 

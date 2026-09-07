@@ -101,6 +101,8 @@ const TenantOwnerPanel = lazyWithReload(() => import('./super-admin/pages/Tenant
 const TenantThemeEditor = lazyWithReload(() => import('./super-admin/pages/TenantThemeEditor'));
 const TenantPageEditor = lazyWithReload(() => import('./super-admin/pages/TenantPageEditor'));
 const TenantFeaturePermissions = lazyWithReload(() => import('./super-admin/pages/TenantFeaturePermissions'));
+const TenantAddonRequests = lazyWithReload(() => import('./super-admin/pages/TenantAddonRequests'));
+const AddonMarketplace = lazyWithReload(() => import('./pages/AddonMarketplace'));
 const TenantDangerZone = lazyWithReload(() => import('./super-admin/pages/TenantDangerZone'));
 const TenantBackups = lazyWithReload(() => import('./super-admin/pages/TenantBackups'));
 const TenantAIContext = lazyWithReload(() => import('./super-admin/pages/TenantAIContext'));
@@ -327,6 +329,7 @@ export function App({ config }: { config: AppConfig }) {
                 <Route path="users" element={<TenantOwnerPanel />} />
                 <Route path="billing" element={<BillingPage />} />
                 <Route path="feature-permissions" element={<TenantFeaturePermissions />} />
+                <Route path="addon-requests" element={<TenantAddonRequests />} />
                 <Route path="backups" element={<TenantBackups />} />
                 <Route path="danger" element={<TenantDangerZone />} />
               </Route>
@@ -425,6 +428,7 @@ export function App({ config }: { config: AppConfig }) {
                 <Route path="domains" element={<DomainSettings />} />
                 <Route path="settings" element={<SettingsPage />} />
                 <Route path="billing" element={<BillingPage />} />
+                <Route path="addons" element={<AddonMarketplace />} />
               </Route>
 
               {/* Root: role-based redirect */}

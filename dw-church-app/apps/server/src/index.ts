@@ -1665,6 +1665,35 @@ async function main(): Promise<void> {
     app.log.warn(`feature_pricing table migration skipped: ${err}`);
   }
 
+  // --- addon_requests (테넌트 자가 애드온 신청 → 슈퍼어드민 승인 = 활성+과금) ---
+  // 대표님 2026-09-07: "테넌트가 추가 비용 신청을 통해 사용". 테넌트가 부가기능을
+  // 신청하면 여기 requested 로 쌓이고, 슈퍼어드민이 승인하면 feature_overrides 에
+  // 반영되어 활성화된다(청구는 기능권한의 Stripe 반영으로).
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "addon_requests" (
+        "id"          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+        "tenant_id"   UUID        NOT NULL,
+        "feature_key" VARCHAR(40) NOT NULL,
+        "status"      VARCHAR(20) NOT NULL DEFAULT 'requested',
+        "note"        TEXT        NOT NULL DEFAULT '',
+        "requested_by" VARCHAR(120) NOT NULL DEFAULT '',
+        "resolved_by"  VARCHAR(120) NOT NULL DEFAULT '',
+        "created_at"  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        "resolved_at" TIMESTAMPTZ
+      )
+    `);
+    await prisma.$executeRawUnsafe(
+      `CREATE INDEX IF NOT EXISTS "addon_requests_tenant_idx" ON "addon_requests" ("tenant_id")`,
+    );
+    // 한 테넌트가 같은 기능을 중복 신청(pending)하지 못하도록 부분 유니크.
+    await prisma.$executeRawUnsafe(
+      `CREATE UNIQUE INDEX IF NOT EXISTS "addon_requests_pending_uq" ON "addon_requests" ("tenant_id","feature_key") WHERE status = 'requested'`,
+    );
+  } catch (err) {
+    app.log.warn(`addon_requests table migration skipped: ${err}`);
+  }
+
   // --- promo_settings (단일 행 프로모션 — 기간 한정 쿠폰, 슈퍼어드민 관리) ---
   try {
     await prisma.$executeRawUnsafe(`
