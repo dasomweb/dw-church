@@ -236,7 +236,6 @@ const P: Record<string, PresetSection[]> = {
   '05': [hero('기도의 불을 피우는 시간', '하나님의 뜻을 구하며 무릎으로 나아갑니다.', { backgroundImageUrl: `${IMG}/church-1.jpg` }), pastor({ variant: 'left' }), infoColumns(), verse(), sermons('grid-3'), quickLinks(), location(), contact()],
   '06': [hero('온 세상 향한 복음의 발걸음', '국경과 세대를 넘어 사랑을 전합니다.', { variant: 'text-only', bgMode: 'gradient', height: 'md' }), pastor(), infoColumns(), verse(), sermons('list'), contact()],
   '07': [hero('처음 사랑의 감격 그대로', '성령의 인도하심 속에 날마다 새로워집니다.', { backgroundImageUrl: `${IMG}/church-1.jpg` }), location(), infoColumns(), announce(), sermons('grid-3'), contact()],
-  '08': [hero('한 영혼을 향한 주의 마음', '잃은 양을 찾아 품는 생명의 공동체입니다.', { height: 'md', backgroundImageUrl: `${IMG}/worship-2.jpg` }), infoColumns(), verse(), sermons('grid-2'), bulletins('grid-2'), location(), contact()],
   '09': [hero('함께 모이는 우리 교회', '', { height: 'md', backgroundImageUrl: `${IMG}/group-2.jpg` }), infoColumns(), sermons('list'), board(), location(), contact()],
   '10': [hero('세상 속의 소금과 빛', '거룩한 영향력으로 일상을 물들입니다.', { backgroundImageUrl: `${IMG}/group-1.jpg` }), weekSchedule(), verse(), pastor(), albums('grid-3'), sermons('grid-3'), contact()],
   // 완성도 레이아웃 시안

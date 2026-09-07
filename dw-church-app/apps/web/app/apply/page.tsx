@@ -28,7 +28,6 @@ const DESIGNS: { id: string; name: string; group: string; thumb: string }[] = [
   { id: '05', name: '목사 인사말형', group: '소형·개척 교회', thumb: 'church-1' },
   { id: '06', name: '여백 중심형', group: '소형·개척 교회', thumb: 'sky-1' },
   { id: '07', name: '지도 우선형', group: '소형·개척 교회', thumb: 'church-1' },
-  { id: '08', name: '모바일 홈형', group: '소형·개척 교회', thumb: 'worship-2' },
   { id: '09', name: '모바일 메뉴형', group: '소형·개척 교회', thumb: 'group-2' },
   { id: '10', name: '가정교회형', group: '소형·개척 교회', thumb: 'group-1' },
   { id: '11', name: '라이브 종합형', group: '완성도 레이아웃 시안', thumb: 'worship-2' },

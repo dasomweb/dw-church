@@ -14,7 +14,6 @@ export const CANVAS_SAMPLES: CanvasSample[] = [
   { "id": "05", "file": "card-05.html", "group": "소형·개척 교회", "code": "06", "name": "목사 인사말형", "desc": "사진 히어로 + 목사 인사말 소개" },
   { "id": "06", "file": "card-06.html", "group": "소형·개척 교회", "code": "07", "name": "여백 중심형", "desc": "넓은 여백·중앙 정렬 소개형" },
   { "id": "07", "file": "card-07.html", "group": "소형·개척 교회", "code": "08", "name": "지도 우선형", "desc": "좌측 지도 + 우측 오시는 길 안내" },
-  { "id": "08", "file": "card-08.html", "group": "소형·개척 교회", "code": "09", "name": "모바일 홈형", "desc": "모바일 폭·하단 고정바·생중계 배너" },
   { "id": "09", "file": "card-09.html", "group": "소형·개척 교회", "code": "10", "name": "모바일 메뉴형", "desc": "모바일 메뉴 드로어 (✕ 닫기)" },
   { "id": "10", "file": "card-10.html", "group": "소형·개척 교회", "code": "11", "name": "가정교회형", "desc": "좌우 히어로 + 가정교회 모임 소개" },
   { "id": "11", "file": "card-11.html", "group": "완성도 레이아웃 시안", "code": "12", "name": "라이브 종합형", "desc": "생중계 배너 + 겹침 안내카드 종합" },
