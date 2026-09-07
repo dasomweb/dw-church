@@ -1,448 +1,340 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { TermsConsentModal } from '../../components/TermsConsentModal';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import MarketingHeader from '../../components/MarketingHeader';
+import MarketingFooter from '../../components/MarketingFooter';
+import KakaoInquiryButton from '../../components/KakaoInquiryButton';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// /apply — 상담 신청 (시안 상세 §1). 상담 우선 모델: 플랜 직접 선택·쿠폰·미리보기
+// UI는 제거하고, 교회 사정을 듣기 위한 문의 폼만 남긴다.
+// 제출은 기존 실서비스 인테이크 파이프라인(POST /api/v1/applications)을 그대로 사용한다.
+//   교회명→churchName · 담당자·직함→contactName · 이메일→email · 전화→phone
+//   지금 쓰는 사이트→existingUrl · 소속 교단→denomination · 교인 규모→memberProfile
+//   지금 가장 불편한 것→message (상담유형 카테고리를 앞에 붙여 전달)
+// 성공 시 /apply/done 으로 이동(?email= 프리필). 색·타입은 랜딩 v2 디자인 시스템.
+// ─────────────────────────────────────────────────────────────────────────────
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.truelight.app';
-
-const PLANS = [
-  { id: 'basic', label: '기본', monthly: 99, yearly: 79, setup: 500 },
-  { id: 'plus', label: '플러스', monthly: 149, yearly: 119, setup: 700 },
-  { id: 'pro', label: '프로', monthly: 199, yearly: 159, setup: 1000 },
-] as const;
+const CONTAINER = 'mx-auto w-full max-w-[1080px] px-5 sm:px-10';
 
 const inputCls =
-  'w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none';
+  'w-full rounded-lg border border-[#d5dae2] px-3.5 py-3 text-[16px] text-[#16181d] outline-none placeholder:text-[#a3aab8] focus:border-[#2b7fff] focus:ring-1 focus:ring-[#2b7fff]';
+const fieldLabelCls = 'mb-1.5 block text-[13.5px] font-semibold text-[#16181d]';
 
-// 신청자가 고르는 홈페이지 디자인 시안(22종). 실제 시안 HTML은
-// /public/front-samples/card-<id>.html 로 서빙 → 미리보기 iframe 으로 렌더.
-// 서버 presets.ts 의 id 와 1:1 대응한다. (thumb 필드는 레거시, 미사용)
-const DESIGNS: { id: string; name: string; group: string; thumb: string }[] = [
-  { id: '00', name: '사진 히어로형', group: '미주 한인 이민교회', thumb: 'worship-2' },
-  { id: '01', name: '영문 우선형', group: '미주 한인 이민교회', thumb: 'worship-1' },
-  { id: '02', name: '정착 안내형', group: '미주 한인 이민교회', thumb: 'group-1' },
-  { id: '03', name: '큰 글씨형', group: '미주 한인 이민교회', thumb: 'church-2' },
-  { id: '04', name: '주간 일정형', group: '미주 한인 이민교회', thumb: 'church-2' },
-  { id: '05', name: '목사 인사말형', group: '소형·개척 교회', thumb: 'church-1' },
-  { id: '06', name: '여백 중심형', group: '소형·개척 교회', thumb: 'sky-1' },
-  { id: '07', name: '지도 우선형', group: '소형·개척 교회', thumb: 'church-1' },
-  { id: '09', name: '모바일 메뉴형', group: '소형·개척 교회', thumb: 'group-2' },
-  { id: '10', name: '가정교회형', group: '소형·개척 교회', thumb: 'group-1' },
-  { id: '11', name: '라이브 종합형', group: '완성도 레이아웃 시안', thumb: 'worship-2' },
-  { id: '12', name: '좌측 사이드바', group: '완성도 레이아웃 시안', thumb: 'worship-1' },
-  { id: '13', name: '매거진 타일', group: '완성도 레이아웃 시안', thumb: 'serving-2' },
-  { id: '14', name: '다크 네이비', group: '완성도 레이아웃 시안', thumb: 'sermon-1' },
-  { id: '15', name: '회원 대시보드', group: '완성도 레이아웃 시안', thumb: 'church-2' },
-  { id: '16', name: '스토리 스크롤', group: '완성도 레이아웃 시안', thumb: 'serving-1' },
-  { id: '17', name: '중앙 정렬형', group: '완성도 레이아웃 시안', thumb: 'worship-1' },
-  { id: '18', name: '이번주 안내형', group: '완성도 레이아웃 시안', thumb: 'church-2' },
-  { id: '19', name: '사진 갤러리', group: '완성도 레이아웃 시안', thumb: 'retreat-1' },
-  { id: '20', name: '히어로 겹침형', group: '완성도 레이아웃 시안', thumb: 'worship-2' },
-  { id: '21', name: '풀블리드 히어로', group: '완성도 레이아웃 시안', thumb: 'pray-1' },
-];
+// 상담유형 — 4카드(2x2). 기본 첫 항목 선택. id 는 내부 값, title 은 메시지 앞에 붙는 라벨.
+const CATEGORIES = [
+  { id: 'homepage', title: '홈페이지 상담', desc: '새로 만들거나 지금 사이트를 바꾸려는 교회' },
+  { id: 'admin', title: '교회 행정까지', desc: '교적관리·목장·새가족을 함께 두려는 교회' },
+  { id: 'plant', title: '개척·미자립교회 지원', desc: '지원을 받으려는 교회, 함께 세우려는 교회' },
+  { id: 'existing', title: '이미 쓰고 있어요', desc: '기존 교회의 문의와 요청' },
+] as const;
+
+// 교인 규모 — pill 선택. 값 자체가 memberProfile 로 전달된다.
+const SIZES = ['50명 이하', '50–150', '150–500', '500명 이상'] as const;
 
 function ApplyForm() {
+  const router = useRouter();
   const params = useSearchParams();
-  const [form, setForm] = useState<Record<string, string>>({ billingPeriod: 'yearly' });
-  const [agreed, setAgreed] = useState(false);
-  const [showTerms, setShowTerms] = useState(false);
-  const [state, setState] = useState<'idle' | 'submitting' | 'done' | 'error'>('idle');
-  const [previewId, setPreviewId] = useState<string | null>(null);
-  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
-  const [appliedPromo, setAppliedPromo] = useState<{ discountPercent: number; targetPlans: string[]; label?: string } | null>(null);
-  const [couponChecking, setCouponChecking] = useState(false);
-  const [couponError, setCouponError] = useState('');
 
-  // Preselect plan / period from the landing pricing cards (?plan=basic&period=yearly).
+  const [form, setForm] = useState<Record<string, string>>({
+    memberProfile: SIZES[0],
+  });
+  const [category, setCategory] = useState<string>(CATEGORIES[0].id);
+  const [confirmed, setConfirmed] = useState(false); // 신앙/약관 확인 (선택)
+  const [state, setState] = useState<'idle' | 'submitting' | 'error'>('idle');
+
+  // 랜딩 상담 폼(native GET → /apply)에서 넘어온 값 프리필.
+  // 랜딩 필드명: church / contact / email / phone / size / need.
   useEffect(() => {
-    const plan = params.get('plan');
-    const period = params.get('period');
+    const pick = (k: string) => params.get(k) || '';
     setForm((f) => ({
       ...f,
-      ...(plan && PLANS.some((p) => p.id === plan) ? { plan } : {}),
-      ...(period === 'monthly' || period === 'yearly' ? { billingPeriod: period } : {}),
+      churchName: f.churchName || pick('church'),
+      contactName: f.contactName || pick('contact'),
+      email: f.email || pick('email'),
+      phone: f.phone || pick('phone'),
+      memberProfile: pick('size') || f.memberProfile || SIZES[0],
+      message: f.message || pick('need'),
     }));
   }, [params]);
 
-  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
+  const set =
+    (k: string) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setForm((f) => ({ ...f, [k]: e.target.value }));
 
-  const applyCoupon = async () => {
-    const code = (form.couponCode || '').trim();
-    if (!code) return;
-    setCouponChecking(true);
-    setCouponError('');
-    try {
-      const res = await fetch(`${API_BASE}/api/v1/promo/validate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
-      });
-      if (!res.ok) { setAppliedPromo(null); setCouponError('사용할 수 없는 쿠폰 코드입니다.'); return; }
-      const json = await res.json();
-      const p = json.data;
-      setAppliedPromo({ discountPercent: p.discountPercent, targetPlans: p.targetPlans || [], label: p.label });
-    } catch {
-      setAppliedPromo(null);
-      setCouponError('확인 중 오류가 발생했습니다.');
-    } finally {
-      setCouponChecking(false);
-    }
-  };
+  const canSubmit = !!form.churchName?.trim() && !!form.email?.trim();
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.churchName?.trim() || !form.email?.trim() || !agreed) return;
+    if (!canSubmit || state === 'submitting') return;
     setState('submitting');
+
+    // 상담유형을 메시지 앞에 붙여 전달 — 예: "[상담유형: 교회 행정까지] …"
+    const catTitle = CATEGORIES.find((c) => c.id === category)?.title;
+    const baseMsg = (form.message || '').trim();
+    const message = catTitle ? `[상담유형: ${catTitle}]${baseMsg ? ' ' + baseMsg : ''}` : baseMsg || undefined;
+
     try {
       const res = await fetch(`${API_BASE}/api/v1/applications`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          churchName: form.churchName,
-          contactName: form.contactName || undefined,
-          email: form.email,
-          phone: form.phone || undefined,
-          churchAddress: form.churchAddress || undefined,
-          denomination: form.denomination || undefined,
-          plantingType: form.plantingType || undefined,
+          churchName: (form.churchName ?? "").trim(),
+          email: (form.email ?? "").trim(),
+          contactName: form.contactName?.trim() || undefined,
+          phone: form.phone?.trim() || undefined,
+          existingUrl: form.existingUrl?.trim() || undefined,
+          denomination: form.denomination?.trim() || undefined,
           memberProfile: form.memberProfile || undefined,
-          localContext: form.localContext || undefined,
-          couponCode: appliedPromo ? (form.couponCode || '').trim() : undefined,
-          designChoice: form.designChoice || undefined,
-          faithAffirmed: true,
-          termsAccepted: true,
-          plan: form.plan || undefined,
-          billingPeriod: form.billingPeriod || undefined,
-          existingUrl: form.existingUrl || undefined,
-          desiredDomain: form.desiredDomain || undefined,
-          message: form.message || undefined,
+          message,
+          // 신앙/약관 확인은 선택 — 체크한 경우에만 함께 전달.
+          ...(confirmed ? { faithAffirmed: true, termsAccepted: true } : {}),
         }),
       });
       if (!res.ok) throw new Error(String(res.status));
-      setState('done');
+      router.push(`/apply/done?email=${encodeURIComponent((form.email ?? "").trim())}`);
     } catch {
       setState('error');
     }
   };
 
-  if (state === 'done') {
-    return (
-      <div className="mx-auto max-w-xl rounded-2xl border border-gray-200 bg-white p-10 text-center shadow-sm">
-        <div className="mb-3 text-4xl">🙏</div>
-        <h2 className="mb-2 text-2xl font-bold text-gray-900">신청이 접수되었습니다</h2>
-        <p className="text-sm leading-relaxed text-gray-500">
-          신청서를 검토한 뒤 결제 안내와 함께 이메일로 연락드리겠습니다.<br />
-          교회를 위한 홈페이지, 정성껏 만들어 드리겠습니다.
-        </p>
-        <Link href="/" className="mt-6 inline-block rounded-lg bg-gray-100 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-200">
-          홈으로
-        </Link>
-      </div>
-    );
-  }
-
   return (
-    <form onSubmit={submit} className="mx-auto max-w-xl space-y-5 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
+    <div className="grid gap-10 lg:grid-cols-[1.6fr_1fr] lg:gap-14">
+      {/* ── 좌측: 상담유형 + 폼 ── */}
       <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">교회 이름 <span className="text-red-500">*</span></label>
-        <input required value={form.churchName || ''} onChange={set('churchName')} className={inputCls} placeholder="예: 은혜교회" />
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">담당자 이름</label>
-          <input value={form.contactName || ''} onChange={set('contactName')} className={inputCls} />
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">연락처</label>
-          <input value={form.phone || ''} onChange={set('phone')} className={inputCls} placeholder="예: (213) 555-0100" />
-        </div>
-      </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">이메일 <span className="text-red-500">*</span></label>
-        <input required type="email" value={form.email || ''} onChange={set('email')} className={inputCls} placeholder="name@email.com" />
-      </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">교회 주소</label>
-        <input value={form.churchAddress || ''} onChange={set('churchAddress')} className={inputCls} placeholder="예: 123 Main St, Los Angeles, CA 90012" />
-      </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">소속 교단</label>
-        <input value={form.denomination || ''} onChange={set('denomination')} className={inputCls} placeholder="소속 교단 (선택 입력, 무교단·독립교회면 비워두세요)" />
-        <p className="mt-1 text-xs text-gray-400">본 서비스는 역사적 정통 기독교 신앙을 고백하는 교회를 위한 것입니다. 무교단·독립교회도 신청하실 수 있습니다.</p>
-      </div>
-
-      <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">개척/사역 유형 <span className="text-gray-400">(선택)</span></label>
-        <select
-          value={form.plantingType || ''}
-          onChange={(e) => setForm((f) => ({ ...f, plantingType: e.target.value }))}
-          className={inputCls}
-        >
-          <option value="">선택 안 함</option>
-          <option value="standard">전통/표준 개척</option>
-          <option value="covocational">자비량/이중직 (미자립)</option>
-          <option value="multisite">다중 사이트 / 캠퍼스</option>
-          <option value="multiethnic">다민족/다언어 (한인 이민 등)</option>
-          <option value="replant">교회 재개척</option>
-          <option value="micro">마이크로 / 가정교회</option>
-          <option value="other">기타</option>
-        </select>
-        <p className="mt-1 text-xs text-gray-400">교회가 우선으로 두는 사역 방향에 맞춰 사이트를 구성합니다.</p>
-      </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">교회 구성원 <span className="text-gray-400">(선택)</span></label>
-        <textarea value={form.memberProfile || ''} onChange={set('memberProfile')} rows={2} className={inputCls} placeholder="예: 30~40대 자녀 둔 가정이 많음, 주재원·한국에서 막 오신 분들 비중이 높음" />
-      </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">지역 환경 <span className="text-gray-400">(선택)</span></label>
-        <textarea value={form.localContext || ''} onChange={set('localContext')} rows={2} className={inputCls} placeholder="예: 인근에 초·중·고 학군 밀집, 근처 대학교, 한인 기업/지사 다수" />
-        <p className="mt-1 text-xs text-gray-400">주변 학군·대학·한인 기업 등 지역 환경은 타깃 세대와 사역 방향에 영향을 줍니다.</p>
-      </div>
-
-      <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">홈페이지 디자인 <span className="text-gray-400">(선택)</span></label>
-        <p className="mb-2 text-xs text-gray-400">시안을 눌러 <b>미리보기</b>로 확인한 뒤 선택하세요. 셋업 과정에서 교회에 맞게 조정됩니다.</p>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {DESIGNS.map((d) => {
-            const on = form.designChoice === d.id;
+        {/* 무엇을 도와드릴까요 */}
+        <span className="inline-block text-[12.5px] font-extrabold tracking-[0.06em] text-[#1466d6]">
+          무엇을 도와드릴까요
+        </span>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          {CATEGORIES.map((c) => {
+            const on = category === c.id;
             return (
-              <div key={d.id} className={`overflow-hidden rounded-lg border transition-colors ${on ? 'border-blue-600 ring-2 ring-blue-200' : 'border-gray-200'}`}>
-                <button type="button" onClick={() => setPreviewId(d.id)} title="미리보기" className="relative block w-full overflow-hidden bg-white" style={{ height: 150 }}>
-                  <iframe src={`/front-samples/card-${d.id}.html`} tabIndex={-1} title={d.name}
-                    className="pointer-events-none origin-top-left" style={{ width: 1280, height: 1560, transform: 'scale(0.295)', border: 0 }} />
-                  <span className="absolute inset-x-0 bottom-0 bg-black/55 px-2 py-1 text-center text-[11px] font-medium text-white">🔍 미리보기</span>
-                  {on && <span className="absolute right-1.5 top-1.5 rounded bg-blue-600 px-1.5 py-0.5 text-[10px] font-bold text-white">선택됨</span>}
-                </button>
-                <div className="flex items-center justify-between gap-1 px-2 py-1.5">
-                  <div className="min-w-0">
-                    <div className="truncate text-xs font-semibold text-gray-800">{d.name}</div>
-                    <div className="truncate text-[10px] text-gray-400">{d.group}</div>
-                  </div>
-                  <button type="button" onClick={() => setForm((f) => ({ ...f, designChoice: on ? '' : d.id }))}
-                    className={`flex-none rounded-md px-2.5 py-1 text-[11px] font-semibold ${on ? 'bg-blue-600 text-white' : 'border border-gray-300 text-gray-700 hover:bg-gray-50'}`}>
-                    {on ? '선택됨' : '선택'}
-                  </button>
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setCategory(c.id)}
+                aria-pressed={on}
+                className={`rounded-xl border p-5 text-left transition-colors ${
+                  on ? 'border-2 border-[#1466d6] bg-[#f4f8ff]' : 'border border-[#e7e9ee] bg-white hover:border-[#c9cfda]'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    aria-hidden
+                    className={`flex h-5 w-5 flex-none items-center justify-center rounded-full border text-[11px] ${
+                      on ? 'border-[#1466d6] bg-[#1466d6] text-white' : 'border-[#c9cfda] text-transparent'
+                    }`}
+                  >
+                    ✓
+                  </span>
+                  <span className="text-[16px] font-bold text-[#16181d]">{c.title}</span>
                 </div>
-              </div>
+                <p className="mt-2 text-[14px] text-[#61697a]" style={{ lineHeight: 1.6 }}>
+                  {c.desc}
+                </p>
+              </button>
             );
           })}
         </div>
-      </div>
 
-      {previewId && (() => {
-        const d = DESIGNS.find((x) => x.id === previewId);
-        if (!d) return null;
-        const on = form.designChoice === d.id;
-        return (
-          <div className="fixed inset-0 z-50 flex flex-col bg-black/70" onClick={() => setPreviewId(null)}>
-            <div className="flex items-center justify-between gap-3 bg-white px-4 py-3" onClick={(e) => e.stopPropagation()}>
-              <div className="min-w-0">
-                <div className="truncate text-sm font-bold text-gray-900">{d.name}</div>
-                <div className="truncate text-[11px] text-gray-500">{d.group}</div>
-              </div>
-              <div className="flex flex-none items-center gap-2">
-                <div className="flex rounded-lg border border-gray-200 p-0.5 text-xs">
-                  {(['desktop', 'mobile'] as const).map((dv) => (
-                    <button key={dv} type="button" onClick={() => setPreviewDevice(dv)}
-                      className={`rounded-md px-3 py-1 font-medium ${previewDevice === dv ? 'bg-blue-600 text-white' : 'text-gray-600'}`}>
-                      {dv === 'desktop' ? '데스크톱' : '모바일'}
-                    </button>
-                  ))}
-                </div>
-                <button type="button" onClick={() => { setForm((f) => ({ ...f, designChoice: d.id })); setPreviewId(null); }}
-                  className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">
-                  {on ? '선택됨 ✓' : '이 디자인으로 선택'}
-                </button>
-                <button type="button" onClick={() => setPreviewId(null)} className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">닫기 ✕</button>
-              </div>
-            </div>
-            <div className="flex-1 overflow-auto bg-gray-100 p-3 sm:p-4" onClick={(e) => e.stopPropagation()}>
-              {/* fixed 1280px canvas so every sample renders at its native design
-                  width (full-bleed heroes fill the full 1280); narrower viewports
-                  scroll horizontally instead of squishing the layout. */}
-              <div className="mx-auto bg-white shadow-xl" style={{ width: previewDevice === 'mobile' ? 390 : 1280, maxWidth: previewDevice === 'mobile' ? '100%' : 'none', height: '100%' }}>
-                <iframe src={`/front-samples/card-${d.id}.html`} title={`${d.name} 미리보기`} className="h-full w-full" style={{ border: 0 }} />
-              </div>
+        {/* 폼 (웜 배경 카드) */}
+        <form onSubmit={submit} className="mt-6 rounded-2xl border border-[#e7e4de] bg-[#fbfaf8] p-6 sm:p-8">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block">
+              <span className={fieldLabelCls}>교회명 *</span>
+              <input value={form.churchName || ''} onChange={set('churchName')} autoComplete="organization" className={inputCls} />
+            </label>
+            <label className="block">
+              <span className={fieldLabelCls}>담당자 · 직함</span>
+              <input value={form.contactName || ''} onChange={set('contactName')} autoComplete="name" className={inputCls} />
+            </label>
+            <label className="block">
+              <span className={fieldLabelCls}>이메일 *</span>
+              <input type="email" value={form.email || ''} onChange={set('email')} autoComplete="email" className={inputCls} />
+            </label>
+            <label className="block">
+              <span className={fieldLabelCls}>전화</span>
+              <input type="tel" value={form.phone || ''} onChange={set('phone')} autoComplete="tel" className={inputCls} />
+            </label>
+          </div>
+
+          {/* 교인 규모 — pill 선택 */}
+          <div className="mt-4">
+            <span className={fieldLabelCls}>교인 규모</span>
+            <div className="flex flex-wrap gap-2">
+              {SIZES.map((s) => {
+                const on = form.memberProfile === s;
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, memberProfile: s }))}
+                    aria-pressed={on}
+                    className={`min-h-[44px] rounded-full border px-4 text-[15px] font-medium transition-colors ${
+                      on ? 'border-[#1466d6] bg-[#f4f8ff] text-[#1466d6]' : 'border-[#d5dae2] bg-white text-[#4b5464] hover:border-[#c9cfda]'
+                    }`}
+                  >
+                    {s}
+                  </button>
+                );
+              })}
             </div>
           </div>
-        );
-      })()}
 
-      <div>
-        <label className="mb-2 block text-sm font-medium text-gray-700">관심 플랜</label>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {PLANS.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => setForm((f) => ({ ...f, plan: p.id }))}
-              className={`rounded-lg border px-3 py-2 text-center text-sm transition-colors ${
-                form.plan === p.id ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-300 text-gray-600 hover:border-gray-400'
-              }`}
-            >
-              <div className="font-semibold">{p.label}</div>
-              <div className="text-xs text-gray-400">${form.billingPeriod === 'yearly' ? p.yearly : p.monthly}/월</div>
-            </button>
-          ))}
-        </div>
-        <div className="mt-2 flex gap-2 text-xs">
-          {(['monthly', 'yearly'] as const).map((b) => (
-            <button
-              key={b}
-              type="button"
-              onClick={() => setForm((f) => ({ ...f, billingPeriod: b }))}
-              className={`rounded-md px-3 py-1 font-medium transition-colors ${
-                form.billingPeriod === b ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'
-              }`}
-            >
-              {b === 'monthly' ? '월 결제' : '연 결제 (약 20% 할인)'}
-            </button>
-          ))}
-        </div>
-        {(() => {
-          const sel = PLANS.find((p) => p.id === form.plan);
-          if (!sel) return null;
-          const yearly = form.billingPeriod === 'yearly';
-          const price = yearly ? sel.yearly : sel.monthly;
-          const discounted = !!appliedPromo && appliedPromo.targetPlans.includes(sel.id);
-          const setupAfter = discounted ? Math.round(sel.setup * (1 - appliedPromo!.discountPercent / 100)) : sel.setup;
-          return (
-            <div className="mt-3 rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-900">
-              <span className="font-semibold">{sel.label}</span> · {yearly ? '연 결제' : '월 결제'} →{' '}
-              <span className="font-bold">${price}/월</span>
-              {yearly && <span className="text-blue-700"> (연 1회 청구)</span>}
-              <span className="block text-xs text-blue-700 mt-0.5">
-                + 셋업비{' '}
-                {discounted ? (
-                  <>
-                    <s className="text-blue-400">${sel.setup}</s>{' '}
-                    <b className="text-green-700">${setupAfter}</b>{' '}
-                    <span className="text-green-700">({appliedPromo!.discountPercent}%↓)</span>
-                  </>
-                ) : (
-                  `$${sel.setup}`
-                )}{' '}
-                (1회)
-              </span>
-            </div>
-          );
-        })()}
-
-        {/* 쿠폰 코드 */}
-        <div className="mt-3">
-          <div className="flex gap-2">
-            <input
-              value={form.couponCode || ''}
-              onChange={(e) => { set('couponCode')(e); setAppliedPromo(null); setCouponError(''); }}
-              className={`${inputCls} flex-1`}
-              placeholder="쿠폰 코드 (있으면 입력)"
+          <label className="mt-4 block">
+            <span className={fieldLabelCls}>지금 쓰는 사이트 (있으면)</span>
+            <input value={form.existingUrl || ''} onChange={set('existingUrl')} placeholder="https://" className={inputCls} />
+          </label>
+          <label className="mt-4 block">
+            <span className={fieldLabelCls}>소속 교단 · 교협</span>
+            <input value={form.denomination || ''} onChange={set('denomination')} placeholder="예: 미주한인예수교장로회" className={inputCls} />
+          </label>
+          <label className="mt-4 block">
+            <span className={fieldLabelCls}>지금 가장 불편한 것</span>
+            <textarea
+              value={form.message || ''}
+              onChange={set('message')}
+              rows={4}
+              placeholder="편하게 적어 주세요. 홈페이지가 없거나, 오래됐거나, 교적이 흩어져 있는 것도 좋습니다."
+              className={inputCls}
             />
-            <button
-              type="button"
-              onClick={applyCoupon}
-              disabled={couponChecking || !(form.couponCode || '').trim()}
-              className="rounded-lg bg-gray-800 px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-900 disabled:opacity-50"
-            >
-              {couponChecking ? '확인 중...' : '적용'}
-            </button>
-          </div>
-          {appliedPromo && (
-            <p className="mt-1 text-xs text-green-600">✓ {appliedPromo.label || '쿠폰 적용됨'} — 기본 셋업비 {appliedPromo.discountPercent}% 할인</p>
+          </label>
+
+          {/* 신앙/약관 확인 (선택) */}
+          <label className="mt-5 flex cursor-pointer items-start gap-2.5 text-[14px] text-[#4b5464]">
+            <input
+              type="checkbox"
+              checked={confirmed}
+              onChange={(e) => setConfirmed(e.target.checked)}
+              className="mt-0.5 h-[18px] w-[18px] flex-none accent-[#1466d6]"
+            />
+            <span style={{ lineHeight: 1.6 }}>
+              정통 기독교 신앙을 고백하는 교회이며,{' '}
+              <a href="/terms" className="font-semibold text-[#1466d6] hover:underline">이용약관</a>에 동의합니다. (선택)
+            </span>
+          </label>
+
+          {state === 'error' && (
+            <p className="mt-4 text-[14px] text-[#61697a]">
+              보내는 중 문제가 생겼습니다. 잠시 후 다시 시도하시거나 <a href="mailto:hello@truelight.app" className="font-semibold text-[#1466d6] hover:underline">hello@truelight.app</a> 로 알려 주세요.
+            </p>
           )}
-          {couponError && <p className="mt-1 text-xs text-red-500">{couponError}</p>}
+
+          <button
+            type="submit"
+            disabled={!canSubmit || state === 'submitting'}
+            className="mt-6 flex min-h-[48px] w-full items-center justify-center rounded-xl bg-[#2b7fff] px-6 text-[16px] font-semibold text-white transition-colors hover:bg-[#1466d6] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {state === 'submitting' ? '보내는 중…' : '상담 신청 보내기'}
+          </button>
+          <p className="mt-4 text-center text-[13.5px] text-[#61697a]" style={{ lineHeight: 1.7 }}>
+            보내시면 확인 메일이 바로 가고, 영업일 ○일 안에 담당자가 연락드립니다. 결제나 계약이 지금 일어나지는 않습니다.
+          </p>
+        </form>
+      </div>
+
+      {/* ── 우측 사이드 (3카드) ── */}
+      <aside className="flex flex-col gap-5">
+        {/* 이후 어떻게 진행되나요 */}
+        <div className="rounded-xl border border-[#e7e9ee] bg-white p-6">
+          <h2 className="text-[17px] font-bold text-[#16181d]">이후 어떻게 진행되나요</h2>
+          <ol className="mt-4 space-y-4">
+            {[
+              '담당자가 연락드려 교회 사정을 듣습니다.',
+              '어떤 구성이 맞을지와 비용을 정리해 보내 드립니다.',
+              '동의하시면 결제 안내를 보내고, 확인 후 디자인·구축을 시작합니다.',
+              '완성된 화면을 확인하시고 오픈합니다.',
+            ].map((step, i) => (
+              <li key={step} className="flex gap-3">
+                <span className="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-[#f4f8ff] text-[13px] font-bold text-[#1466d6]">
+                  {i + 1}
+                </span>
+                <span className="text-[14.5px] text-[#4b5464]" style={{ lineHeight: 1.65 }}>{step}</span>
+              </li>
+            ))}
+          </ol>
         </div>
-      </div>
 
-      <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">기존 웹사이트 주소 <span className="text-gray-400">(있으면 — 콘텐츠 마이그레이션용)</span></label>
-        <input value={form.existingUrl || ''} onChange={set('existingUrl')} className={inputCls} placeholder="https://" />
-      </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">연결할 도메인 <span className="text-gray-400">(보유 또는 구입 예정 — 타사 도메인 연동 지원)</span></label>
-        <input value={form.desiredDomain || ''} onChange={set('desiredDomain')} className={inputCls} placeholder="예: yourchurch.org" />
-        <p className="mt-1 text-xs text-gray-400">보유하신 도메인을 사이트에 연결해 드립니다. 도메인이 없으면 구입 방법도 안내해 드립니다.</p>
-      </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">교회 소개 / 요청사항</label>
-        <textarea value={form.message || ''} onChange={set('message')} rows={4} className={inputCls} placeholder="교회 규모, 원하시는 분위기, 꼭 들어갈 내용 등을 자유롭게 적어주세요." />
-      </div>
-
-      {/* Clickwrap consent — must open Terms, scroll to the end, and accept (required) */}
-      {agreed ? (
-        <div className="flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-          <span className="mt-0.5 text-base leading-none">✓</span>
-          <span>
-            이용약관 및 신앙고백에 동의하셨습니다.{' '}
-            <button type="button" onClick={() => setShowTerms(true)} className="text-green-700 underline">다시 보기</button>
-          </span>
+        {/* 직접 연락 */}
+        <div className="rounded-xl border border-[#e7e9ee] bg-white p-6">
+          <h2 className="text-[17px] font-bold text-[#16181d]">직접 연락</h2>
+          <dl className="mt-4 space-y-3 text-[14.5px]">
+            <div className="flex justify-between gap-4">
+              <dt className="text-[#61697a]">이메일</dt>
+              <dd><a href="mailto:hello@truelight.app" className="font-medium text-[#1466d6] hover:underline">hello@truelight.app</a></dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-[#61697a]">전화</dt>
+              <dd className="font-medium text-[#16181d]">○○○-○○○-○○○○</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-[#61697a]">상담 시간</dt>
+              <dd className="font-medium text-[#16181d]">○○○</dd>
+            </div>
+          </dl>
+          <p className="mt-4 border-t border-[#eceef2] pt-4 text-[13.5px] text-[#61697a]" style={{ lineHeight: 1.65 }}>
+            전화·이메일이 편하지 않으시면 화면 오른쪽 아래 카카오톡 문의 버튼으로도 연락하실 수 있습니다.
+          </p>
         </div>
-      ) : (
-        <button
-          type="button"
-          onClick={() => setShowTerms(true)}
-          className="flex w-full items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-left text-sm text-amber-800 transition-colors hover:bg-amber-100"
-        >
-          <span className="mt-0.5 text-base leading-none">📄</span>
-          <span>
-            <strong>이용약관 및 신앙고백 읽고 동의하기</strong> <span className="text-red-500">*</span>
-            <span className="mt-0.5 block text-xs text-amber-700">신청 전 약관과 신앙고백을 끝까지 읽고 동의해 주세요. (필수)</span>
-          </span>
-        </button>
-      )}
 
-      {state === 'error' && (
-        <p className="text-sm text-red-600">신청 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.</p>
-      )}
-      <button
-        type="submit"
-        disabled={state === 'submitting' || !form.churchName?.trim() || !form.email?.trim() || !agreed}
-        className="w-full rounded-xl bg-blue-600 py-3.5 text-sm font-bold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
-      >
-        {state === 'submitting' ? '제출 중...' : '신청서 제출'}
-      </button>
-
-      <TermsConsentModal
-        open={showTerms}
-        onClose={() => setShowTerms(false)}
-        onAgree={() => setAgreed(true)}
-      />
-      <p className="text-center text-xs text-gray-400">
-        제출 후 결제 절차는 없습니다 — 검토 후 결제 안내를 이메일로 보내드립니다.
-      </p>
-    </form>
+        {/* 결정 전에 보실 것 (웜 배경) */}
+        <div className="rounded-xl border border-[#e7e4de] bg-[#fbfaf8] p-6">
+          <h2 className="text-[17px] font-bold text-[#16181d]">결정 전에 보실 것</h2>
+          <ul className="mt-4 space-y-3 text-[15px]">
+            {[
+              { label: '함께한 교회 보기', href: '/churches' },
+              { label: '결제 조건 보기', href: '/billing' },
+              { label: '도움센터', href: '/help' },
+            ].map((l) => (
+              <li key={l.href}>
+                <a href={l.href} className="flex items-center justify-between gap-2 font-medium text-[#16181d] hover:text-[#1466d6]">
+                  {l.label}
+                  <span aria-hidden className="text-[#1466d6]">→</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </aside>
+    </div>
   );
 }
 
 export default function ApplyPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-100 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
-              <span className="text-sm font-bold text-white">T</span>
+    <div className="min-h-screen bg-white">
+      <MarketingHeader />
+      <main>
+        <section className="bg-white">
+          <div className={`${CONTAINER} py-12 sm:py-20`}>
+            <div className="max-w-2xl">
+              <h1 className="text-[32px] text-[#16181d] sm:text-[44px]" style={{ fontWeight: 750, letterSpacing: '-0.035em', lineHeight: 1.2 }}>
+                우리 교회 이야기부터 들려주세요
+              </h1>
+              <p className="mt-5 text-[16px] text-[#4b5464] sm:text-[17.5px]" style={{ lineHeight: 1.85 }}>
+                지금 사이트가 없어도, 무엇이 필요한지 아직 정하지 못했어도 괜찮습니다. 교회 사정을 듣고 어떤 구성이 맞을지 먼저 정리해 드립니다.
+              </p>
             </div>
-            <span className="text-lg font-bold tracking-tight text-gray-900">TRUE <span className="text-blue-600">LIGHT</span></span>
-          </Link>
-          <Link href="/#plans" className="text-sm text-gray-600 hover:text-gray-900">요금제</Link>
-        </div>
-      </header>
-
-      <main className="px-4 py-12 sm:px-6 sm:py-16">
-        <div className="mb-8 text-center">
-          <h1 className="mb-3 text-3xl font-bold text-gray-900">홈페이지 신청</h1>
-          <p className="text-sm leading-relaxed text-gray-500">
-            아래 신청서를 작성해 주시면 검토 후 결제 안내를 보내드립니다.<br />
-            결제가 확인되면 디자인 셋업과 기본 구성을 시작합니다.
-          </p>
-        </div>
-        <Suspense fallback={<div className="mx-auto max-w-xl rounded-2xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-400">불러오는 중...</div>}>
-          <ApplyForm />
-        </Suspense>
+            <div className="mt-10">
+              <Suspense
+                fallback={
+                  <div className="rounded-2xl border border-[#e7e9ee] bg-white p-8 text-center text-[15px] text-[#61697a]">
+                    불러오는 중…
+                  </div>
+                }
+              >
+                <ApplyForm />
+              </Suspense>
+            </div>
+          </div>
+        </section>
       </main>
+      <MarketingFooter />
+      <KakaoInquiryButton />
     </div>
   );
 }
