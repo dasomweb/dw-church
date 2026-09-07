@@ -87,7 +87,7 @@ export default function SacramentTransferManagement() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <h1 className="text-xl font-bold">성례 · 이동 대장</h1>
         <div className="ml-auto flex gap-1 bg-gray-100 rounded-lg p-1">
           {(['sacrament', 'transfer'] as const).map((t) => (

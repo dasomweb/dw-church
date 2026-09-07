@@ -59,7 +59,7 @@ export default function GroupResources() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-bold">자료실</h1>
           <p className="text-sm text-gray-500 mt-1">주간 교안·양식 등을 분류와 열람권한을 정해 올립니다.</p>

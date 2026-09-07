@@ -327,7 +327,7 @@ export default function MemberManagement() {
         {!m ? <div className="p-8 text-center text-sm" style={{ color: C.faint }}>불러오는 중…</div> : (
           <>
             {/* 헤더 카드 */}
-            <div className="bg-white rounded-[14px] flex gap-6 items-center mb-4" style={{ border: `1px solid ${C.border}`, padding: '24px 26px' }}>
+            <div className="bg-white rounded-[14px] flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-4 p-4 sm:p-6" style={{ border: `1px solid ${C.border}` }}>
               {m.photoUrl
                 ? <img src={m.photoUrl} alt="" className="rounded-[16px] object-cover shrink-0" style={{ width: 88, height: 88 }} />
                 : <div className="rounded-[16px] flex items-center justify-center text-[12px] font-bold shrink-0" style={{ width: 88, height: 88, background: C.avatarBg2, color: C.faintest }}>사진</div>}
@@ -345,7 +345,7 @@ export default function MemberManagement() {
                   {m.registeredOn && <span>등록 {ymd(m.registeredOn)}</span>}
                 </div>
               </div>
-              <div className="ml-auto flex gap-2 shrink-0">
+              <div className="flex flex-wrap gap-2 w-full sm:w-auto sm:ml-auto sm:shrink-0">
                 {m.phone && <a href={`tel:${m.phone}`} className={btnOutline} style={{ color: C.text, borderColor: C.border2 }}>전화</a>}
                 {m.phone && <a href={`sms:${m.phone}`} className={btnOutline} style={{ color: C.text, borderColor: C.border2 }}>문자</a>}
                 <button onClick={() => setTab('visits')} className={btnOutline} style={{ color: C.brand, background: C.brandBg, borderColor: 'transparent' }}>심방 기록</button>
@@ -445,7 +445,7 @@ export default function MemberManagement() {
                   </div>
                 )}
                 <div className="flex flex-wrap gap-2 items-center pt-3" style={{ borderTop: `1px solid ${C.line}` }}>
-                  <div className="w-64"><MemberPicker members={(allMembersQ.data ?? []).filter((c) => c.id !== m.id) as any} value={relTo} onChange={setRelTo} placeholder="가족 교인 검색" /></div>
+                  <div className="w-full sm:w-64"><MemberPicker members={(allMembersQ.data ?? []).filter((c) => c.id !== m.id) as any} value={relTo} onChange={setRelTo} placeholder="가족 교인 검색" /></div>
                   <select className={`${inputClass} w-auto`} value={relType} onChange={(e) => setRelType(e.target.value as any)}>
                     <option value="spouse">배우자</option><option value="child">자녀</option><option value="parent">부모</option><option value="sibling">형제</option>
                   </select>
@@ -660,7 +660,7 @@ export default function MemberManagement() {
       <div className="flex items-center gap-3 flex-wrap mb-5">
         <b className="text-[17px]">교인 명부</b>
         <span className="text-[12.5px]" style={{ color: C.muted }}>{total.toLocaleString()}명 중 <b className="font-bold" style={{ color: C.ink }}>{items.length}명</b> 표시</span>
-        <div className="ml-auto flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto sm:ml-auto sm:justify-end">
           <button onClick={() => setShowImport((v) => !v)} className={btnOutline} style={{ color: C.text, borderColor: C.border2 }}>엑셀 가져오기</button>
           <button onClick={() => window.print()} className={btnOutline} style={{ color: C.text, borderColor: C.border2 }}>인쇄 · 내보내기</button>
           <button onClick={openCreate} className={btnPrimary} style={{ background: C.brand }}>교인 등록</button>

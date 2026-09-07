@@ -109,7 +109,7 @@ export default function CourseManagement() {
             <h2 className="text-sm font-semibold text-gray-800">{editing.id ? '과정 수정' : '새 과정'}</h2>
             <label className="block"><span className="text-xs font-medium text-gray-600">과정 이름 *</span>
               <input className={inputClass} value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} autoFocus /></label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label className="block"><span className="text-xs font-medium text-gray-600">단계</span>
                 <input className={inputClass} value={editing.stage} placeholder="예: 1단계" onChange={(e) => setEditing({ ...editing, stage: e.target.value })} /></label>
               <label className="block"><span className="text-xs font-medium text-gray-600">구분</span>

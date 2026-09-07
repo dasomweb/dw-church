@@ -76,7 +76,8 @@ export default function SmallGroupDashboard() {
             <b className="text-[14.5px]">연합별 현황</b>
             <button onClick={() => go('groups')} className="ml-auto text-[12.5px] font-bold text-[#1466d6] hover:text-[#0f4fa8]">{t.org} 편성 보기</button>
           </div>
-          <div className="grid grid-cols-[minmax(0,1fr)_64px_72px_minmax(0,1.1fr)] gap-2.5 px-[22px] py-[11px] bg-[#fafbfc] border-b border-[#eef0f4] text-[11.5px] font-extrabold text-[#8b93a3]">
+          <div className="overflow-x-auto">
+          <div className="grid grid-cols-[minmax(0,1fr)_64px_72px_minmax(0,1.1fr)] gap-2.5 min-w-[520px] px-4 sm:px-[22px] py-[11px] bg-[#fafbfc] border-b border-[#eef0f4] text-[11.5px] font-extrabold text-[#8b93a3]">
             <span>연합</span><span>{t.org}</span><span>{t.member}</span><span>리포트 제출</span>
           </div>
           {unions.length === 0 ? (
@@ -84,7 +85,7 @@ export default function SmallGroupDashboard() {
           ) : unions.map((u) => {
             const pct = u.reportTotal ? Math.round((u.reportSubmitted / u.reportTotal) * 100) : 0;
             return (
-              <div key={u.id} className="grid grid-cols-[minmax(0,1fr)_64px_72px_minmax(0,1.1fr)] gap-2.5 px-[22px] py-3.5 border-b border-[#f2f4f7] text-[13px] items-center">
+              <div key={u.id} className="grid grid-cols-[minmax(0,1fr)_64px_72px_minmax(0,1.1fr)] gap-2.5 min-w-[520px] px-4 sm:px-[22px] py-3.5 border-b border-[#f2f4f7] text-[13px] items-center">
                 <div><b className="block font-bold">{u.name}</b><span className="text-[11.5px] text-[#8b93a3]">{u.leaderName ? `${t.leader} ${u.leaderName}` : '—'}</span></div>
                 <span>{u.groupCount}</span>
                 <span>{u.memberCount}</span>
@@ -95,11 +96,12 @@ export default function SmallGroupDashboard() {
               </div>
             );
           })}
+          </div>
           <div className="px-[22px] py-4 border-b border-[#eef0f4]"><b className="text-[14.5px]">분가 검토 대상</b></div>
           <div className="flex flex-col gap-2.5 px-[22px] pb-5 pt-3.5 text-[13px]">
             {splits.length === 0 ? <span className="text-[12.5px] text-[#8b93a3]">권장 인원을 넘는 {t.org}이(가) 없습니다.</span>
               : splits.map((g) => (
-                <div key={g.id} className="flex items-center gap-3">
+                <div key={g.id} className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   <b className="font-bold">{g.name}{g.leaderName ? ` · ${g.leaderName}` : ''}</b>
                   <span className="text-[#61697a]">{g.memberCount}명 · 권장 14명 초과</span>
                   <button onClick={() => go('groups')} className="ml-auto text-[12.5px] font-bold text-[#1466d6] hover:text-[#0f4fa8]">분가 처리</button>

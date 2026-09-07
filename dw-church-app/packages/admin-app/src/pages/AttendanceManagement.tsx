@@ -192,8 +192,8 @@ export default function AttendanceManagement() {
                             const on = cur === st; const meta = STATUS_META[st]!;
                             return (
                               <button key={st} onClick={() => setMark(r.memberId, st)}
-                                className="rounded-[11px] flex items-center justify-center text-[14px] transition-colors"
-                                style={{ width: 72, height: 52, fontWeight: on ? 700 : 600, ...(on ? { background: meta.color, color: '#fff' } : { color: C.muted, border: `1px solid ${C.border2}` }) }}>{meta.label}</button>
+                                className="w-16 sm:w-[72px] rounded-[11px] flex items-center justify-center text-[14px] transition-colors"
+                                style={{ height: 52, fontWeight: on ? 700 : 600, ...(on ? { background: meta.color, color: '#fff' } : { color: C.muted, border: `1px solid ${C.border2}` }) }}>{meta.label}</button>
                             );
                           })}
                         </div>
@@ -201,8 +201,8 @@ export default function AttendanceManagement() {
                     );
                   })}
                 </div>
-                <div className="sticky bottom-0 mt-3 flex items-center gap-4 rounded-[13px]" style={{ background: '#fff', border: `1px solid ${C.border}`, padding: '14px 18px' }}>
-                  <span className="text-[13px]" style={{ color: C.muted }}>미체크 {unchecked}명은 결석으로 저장됩니다</span>
+                <div className="sticky bottom-0 mt-3 flex flex-wrap items-center gap-3 rounded-[13px]" style={{ background: '#fff', border: `1px solid ${C.border}`, padding: '14px 18px' }}>
+                  <span className="flex-1 min-w-0 text-[13px]" style={{ color: C.muted }}>미체크 {unchecked}명은 결석으로 저장됩니다</span>
                   <button disabled={saving} onClick={() => void save()} className="ml-auto text-[14.5px] font-bold text-white rounded-[10px] px-7 py-3 disabled:opacity-50" style={{ background: C.brand }}>{saving ? '저장 중…' : '출석 저장'}</button>
                 </div>
               </>

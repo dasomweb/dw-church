@@ -98,7 +98,7 @@ export default function HouseholdManagement() {
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 flex items-start gap-4">
               <div className="flex-1">
                 <h2 className="text-xl font-bold text-gray-900">{h.name || '(무제 세대)'}</h2>
-                <div className="mt-2 text-sm text-gray-600 grid grid-cols-2 gap-y-1 gap-x-6 max-w-lg">
+                <div className="mt-2 text-sm text-gray-600 grid grid-cols-1 sm:grid-cols-2 gap-y-1 gap-x-6 max-w-lg">
                   <span>구역 · {h.region || '—'}</span><span>전화 · {h.phone || '—'}</span>
                   <span className="col-span-2">주소 · {h.address || '—'}</span>
                 </div>

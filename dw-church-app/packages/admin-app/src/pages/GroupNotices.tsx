@@ -50,7 +50,7 @@ export default function GroupNotices() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-bold">공지</h1>
           <p className="text-sm text-gray-500 mt-1">{t.leader ?? '리더'}·구성원에게 전할 공지를 등록합니다. 발송은 발송 설정에 계정을 등록해야 실제로 나갑니다.</p>
@@ -86,7 +86,7 @@ export default function GroupNotices() {
               <input className={inputClass} value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} autoFocus /></label>
             <label className="block"><span className="text-xs font-medium text-gray-600">내용</span>
               <textarea className={textareaClass} rows={5} value={editing.body} onChange={(e) => setEditing({ ...editing, body: e.target.value })} /></label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label className="block"><span className="text-xs font-medium text-gray-600">대상</span>
                 <select className={inputClass} value={editing.target?.scope ?? 'all'} onChange={(e) => setEditing({ ...editing, target: { ...editing.target, scope: e.target.value } })}>
                   {Object.entries(SCOPE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}

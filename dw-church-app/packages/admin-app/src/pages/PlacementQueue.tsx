@@ -70,7 +70,7 @@ export default function PlacementQueue() {
 
   return (
     <div className="space-y-4 max-w-4xl">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-xl font-bold">배치 대기</h1>
           <p className="text-sm text-gray-500 mt-1">아직 {t.org}에 소속되지 않은 교인을 모아 두고 배치합니다. 과정 수료자와 참석 문의도 여기에 쌓입니다.</p>
@@ -106,12 +106,14 @@ export default function PlacementQueue() {
                       <span className="block text-xs text-gray-400 truncate">{[q.householdName, q.address, q.note].filter(Boolean).join(' · ') || '—'}</span>
                     </span>
                     {placeFor === q.id ? (
-                      <div className="flex items-center gap-2">
-                        <select className={`${inputClass} sm:w-44`} value={placeGroupId} onChange={(e) => setPlaceGroupId(e.target.value)}>
-                          <option value="">{t.org} 선택</option>
-                          {groups.map((g) => <option key={g.id} value={g.id}>{g.name}{g.leaderName ? ` · ${g.leaderName}` : ''}</option>)}
-                        </select>
-                        <Button size="sm" disabled={busy} onClick={() => void place(q.id)}>배치</Button>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                          <select className={`${inputClass} w-full sm:w-44`} value={placeGroupId} onChange={(e) => setPlaceGroupId(e.target.value)}>
+                            <option value="">{t.org} 선택</option>
+                            {groups.map((g) => <option key={g.id} value={g.id}>{g.name}{g.leaderName ? ` · ${g.leaderName}` : ''}</option>)}
+                          </select>
+                          <Button size="sm" disabled={busy} onClick={() => void place(q.id)}>배치</Button>
+                        </div>
                         <button onClick={() => { setPlaceFor(null); setPlaceGroupId(''); }} className="text-xs text-gray-400 hover:text-gray-600">취소</button>
                       </div>
                     ) : (

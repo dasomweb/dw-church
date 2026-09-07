@@ -221,7 +221,7 @@ function NewTermForm({ api, courseId, busy, setBusy, showToast, onDone }: {
     finally { setBusy(false); }
   };
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
       <label className="block"><span className="text-[11px] text-gray-500">차수명</span><input className={inputClass} placeholder="예: 12기" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></label>
       <label className="block"><span className="text-[11px] text-gray-500">시작일</span><input type="date" className={inputClass} value={f.startDate} onChange={(e) => setF({ ...f, startDate: e.target.value })} /></label>
       <label className="block"><span className="text-[11px] text-gray-500">요일</span><input className={inputClass} placeholder="예: 수" value={f.weekday} onChange={(e) => setF({ ...f, weekday: e.target.value })} /></label>

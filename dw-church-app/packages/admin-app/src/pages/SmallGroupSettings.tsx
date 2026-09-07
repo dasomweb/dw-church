@@ -135,7 +135,7 @@ export default function SmallGroupSettings() {
 
       {/* 계층 */}
       <Card>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
             <h2 className="text-sm font-semibold text-gray-800">계층 구조</h2>
             <p className="text-xs text-gray-500 mt-1">위에서 아래로 상위→하위 (최대 3단). 리더 호칭과 필수 여부를 정합니다.</p>

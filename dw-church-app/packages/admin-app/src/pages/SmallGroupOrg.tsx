@@ -55,7 +55,7 @@ export default function SmallGroupOrg() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-bold">{orgName} 조직</h1>
           <p className="text-sm text-gray-500 mt-1">조직 트리를 만들고 리더·모임 정보와 명단을 관리합니다.</p>
@@ -278,7 +278,7 @@ function GroupDetail({ group, preset, levelDefs, tree, members, api, showToast, 
   return (
     <div className="text-[#16181d]">
       {/* 헤더 카드 (GR-03) */}
-      <div className="bg-white border border-[#e5e7eb] rounded-[14px] px-6 py-[22px] flex gap-5 items-center mb-4">
+      <div className="bg-white border border-[#e5e7eb] rounded-[14px] px-4 sm:px-6 py-[22px] flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 mb-4">
         {group.photoUrl
           ? <img src={group.photoUrl} alt="" className="w-[72px] h-[72px] rounded-[14px] object-cover shrink-0" />
           : <div className="w-[72px] h-[72px] rounded-[14px] bg-[#eef1f5] text-[#a3aab8] flex items-center justify-center text-[11.5px] font-bold shrink-0">사진</div>}
@@ -292,7 +292,7 @@ function GroupDetail({ group, preset, levelDefs, tree, members, api, showToast, 
             {metaParts.map((p, i) => <span key={i}>{p}</span>)}
           </div>
         </div>
-        <div className="ml-auto flex gap-2 shrink-0 flex-wrap justify-end">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto sm:ml-auto sm:shrink-0 sm:justify-end">
           <button onClick={() => { setTab('members'); setShowAdd(true); }} className="text-[13px] font-bold border border-[#dfe3ea] text-[#3c4353] px-4 py-2.5 rounded-[9px] hover:bg-[#f7f8fa]">명단 배정</button>
           {roster.length > 0 && <button onClick={() => setSplitting(true)} className="text-[13px] font-bold bg-[#e8f0fe] text-[#1466d6] px-4 py-2.5 rounded-[9px] hover:bg-[#dbe8fc]">분가 처리</button>}
           <button onClick={() => setEditing(true)} className="text-[13px] font-bold border border-[#dfe3ea] text-[#3c4353] px-4 py-2.5 rounded-[9px] hover:bg-[#f7f8fa]">수정</button>
@@ -301,17 +301,17 @@ function GroupDetail({ group, preset, levelDefs, tree, members, api, showToast, 
       </div>
 
       {/* 탭 */}
-      <div className="flex gap-1 border-b border-[#e5e7eb] mb-5">
+      <div className="flex gap-1 border-b border-[#e5e7eb] mb-5 overflow-x-auto">
         {TABS.map(([k, label]) => (
           <button key={k} onClick={() => setTab(k as any)}
-            className={`text-[13.5px] px-4 py-[11px] -mb-px ${tab === k ? 'font-bold text-[#1466d6] border-b-2 border-[#1466d6]' : 'font-semibold text-[#61697a] hover:text-[#3c4353]'}`}>{label}</button>
+            className={`text-[13.5px] px-4 py-[11px] -mb-px whitespace-nowrap shrink-0 ${tab === k ? 'font-bold text-[#1466d6] border-b-2 border-[#1466d6]' : 'font-semibold text-[#61697a] hover:text-[#3c4353]'}`}>{label}</button>
         ))}
       </div>
 
       {tab === 'members' && (
         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] gap-4">
           {/* 목원 테이블 */}
-          <div className="bg-white border border-[#e5e7eb] rounded-[14px] overflow-hidden">
+          <div className="bg-white border border-[#e5e7eb] rounded-[14px] overflow-x-auto">
             {showAdd && (
               <div className="flex flex-wrap items-end gap-2 bg-[#f7f8fa] p-3 border-b border-[#eef0f4]">
                 <div className="flex-1 min-w-[200px]"><span className="text-[11px] text-[#61697a]">교인 추가</span>
@@ -324,7 +324,7 @@ function GroupDetail({ group, preset, levelDefs, tree, members, api, showToast, 
                 <button onClick={() => setShowAdd(false)} className="text-xs text-[#8b93a3] px-2 py-2">닫기</button>
               </div>
             )}
-            <div className="grid grid-cols-[minmax(0,1.3fr)_84px_minmax(0,1fr)_84px_72px] gap-2.5 px-[18px] py-[11px] bg-[#fafbfc] border-b border-[#eef0f4] text-[11.5px] font-extrabold text-[#8b93a3]">
+            <div className="grid grid-cols-[minmax(0,1.3fr)_84px_minmax(0,1fr)_84px_72px] gap-2.5 min-w-[560px] px-3 sm:px-[18px] py-[11px] bg-[#fafbfc] border-b border-[#eef0f4] text-[11.5px] font-extrabold text-[#8b93a3]">
               <span>{t.member}</span><span>역할</span><span>세대</span><span>합류</span><span>최근 참석</span>
             </div>
             {roster.length === 0 ? <p className="text-sm text-[#8b93a3] py-8 text-center">아직 명단이 비어 있습니다. ‘명단 배정’으로 추가하세요.</p>
@@ -333,7 +333,7 @@ function GroupDetail({ group, preset, levelDefs, tree, members, api, showToast, 
 
           {/* 우측: 최근 리포트 + 이수 현황 요약 */}
           <div className="flex flex-col gap-3.5">
-            <div className="bg-white border border-[#e5e7eb] rounded-[14px] px-[22px] py-5">
+            <div className="bg-white border border-[#e5e7eb] rounded-[14px] px-4 sm:px-[22px] py-5">
               <b className="text-[14px] block mb-3">최근 리포트</b>
               {(group.recentReports?.length ?? 0) === 0 ? <p className="text-[12.5px] text-[#8b93a3]">아직 리포트가 없습니다.</p> : (
                 <div className="flex flex-col gap-[11px] text-[12.5px]">
@@ -350,7 +350,7 @@ function GroupDetail({ group, preset, levelDefs, tree, members, api, showToast, 
                 </div>
               )}
             </div>
-            <div className="bg-white border border-[#e5e7eb] rounded-[14px] px-[22px] py-5">
+            <div className="bg-white border border-[#e5e7eb] rounded-[14px] px-4 sm:px-[22px] py-5">
               <b className="text-[14px] block mb-3">이수 현황 요약</b>
               {(group.courseSummary?.length ?? 0) === 0 ? <p className="text-[12.5px] text-[#8b93a3]">등록된 과정이 없습니다.</p> : (
                 <div className="flex flex-col gap-3 text-[12.5px]">
@@ -372,7 +372,7 @@ function GroupDetail({ group, preset, levelDefs, tree, members, api, showToast, 
       )}
 
       {tab === 'reports' && (
-        <div className="bg-white border border-[#e5e7eb] rounded-[14px] px-[22px] py-5">
+        <div className="bg-white border border-[#e5e7eb] rounded-[14px] px-4 sm:px-[22px] py-5">
           <div className="flex items-center mb-3"><b className="text-[14px]">최근 리포트</b>
             <button onClick={() => navigate(`${basePath}/group-reports`)} className="ml-auto text-[12.5px] font-bold text-[#1466d6]">리포트 작성</button></div>
           {(group.recentReports?.length ?? 0) === 0 ? <p className="text-[12.5px] text-[#8b93a3]">아직 리포트가 없습니다.</p> : (
@@ -390,7 +390,7 @@ function GroupDetail({ group, preset, levelDefs, tree, members, api, showToast, 
       )}
 
       {tab === 'courses' && (
-        <div className="bg-white border border-[#e5e7eb] rounded-[14px] px-[22px] py-5 max-w-2xl">
+        <div className="bg-white border border-[#e5e7eb] rounded-[14px] px-4 sm:px-[22px] py-5 max-w-2xl">
           <b className="text-[14px] block mb-3">이수 현황 요약 <span className="text-[#8b93a3] font-normal">({t.member} {group.memberTotal || roster.length}명 기준)</span></b>
           {(group.courseSummary?.length ?? 0) === 0 ? <p className="text-[12.5px] text-[#8b93a3]">등록된 과정이 없습니다.</p> : (
             <div className="flex flex-col gap-3.5 text-[13px]">
@@ -411,7 +411,7 @@ function GroupDetail({ group, preset, levelDefs, tree, members, api, showToast, 
       )}
 
       {tab === 'public' && (
-        <div className="bg-white border border-[#e5e7eb] rounded-[14px] px-[22px] py-5 max-w-2xl">
+        <div className="bg-white border border-[#e5e7eb] rounded-[14px] px-4 sm:px-[22px] py-5 max-w-2xl">
           <div className="flex items-center mb-3"><b className="text-[14px]">공개 소개</b>
             <span className={`ml-auto text-[11.5px] font-extrabold px-2 py-[3px] rounded-full ${group.isPublic ? 'text-[#0d7a35] bg-[#e9f7ee]' : 'text-[#61697a] bg-[#f2f4f7]'}`}>{group.isPublic ? '홈페이지 공개' : '비공개'}</span></div>
           <p className="text-[13px] text-[#3c4353] whitespace-pre-wrap min-h-[40px]">{group.intro || '아직 공개 소개가 없습니다. ‘수정’에서 소개·사진·공개 여부를 설정하세요.'}</p>
@@ -428,7 +428,7 @@ function RosterRow({ m, recentTotal, onRole, onRemove }: {
   m: any; recentTotal: number; onRole: (id: string, role: string) => void; onRemove: (id: string, name: string) => void;
 }) {
   return (
-    <div className={`grid grid-cols-[minmax(0,1.3fr)_84px_minmax(0,1fr)_84px_72px] gap-2.5 px-[18px] py-3 border-b border-[#f2f4f7] text-[13px] items-center ${m.isTemporary ? 'bg-[#fffdf7]' : ''}`}>
+    <div className={`grid grid-cols-[minmax(0,1.3fr)_84px_minmax(0,1fr)_84px_72px] gap-2.5 min-w-[560px] px-3 sm:px-[18px] py-3 border-b border-[#f2f4f7] text-[13px] items-center ${m.isTemporary ? 'bg-[#fffdf7]' : ''}`}>
       <div className="flex items-center gap-2.5 min-w-0">
         {m.memberPhoto ? <img src={m.memberPhoto} alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
           : <span className="w-7 h-7 rounded-full bg-[#dfe3ea] text-[#61697a] flex items-center justify-center text-[10.5px] font-extrabold shrink-0">{(m.memberName || '·')[0]}</span>}
@@ -505,7 +505,7 @@ function SplitForm({ group, preset, members, api, showToast, onCancel, onDone }:
       </div>
       <div>
         <span className="text-xs font-medium text-gray-600">새 {t.org}으로 옮길 {t.member} <span className="text-gray-400">({moveIds.length})</span></span>
-        <div className="mt-2 grid grid-cols-2 gap-1.5 max-h-64 overflow-y-auto">
+        <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-64 overflow-y-auto">
           {roster.map((m) => (
             <label key={m.id} className="flex items-center gap-2 text-sm bg-gray-50 rounded-lg px-3 py-2 cursor-pointer">
               <input type="checkbox" checked={!!move[m.memberId]} onChange={(e) => setMove((p) => ({ ...p, [m.memberId]: e.target.checked }))} className="rounded" />
