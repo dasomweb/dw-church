@@ -159,7 +159,8 @@ export default function RevenueModelTab() {
               <li>1년차 <b>$39</b> · 초기구축 $200 (공개는 "첫 1년"까지만)</li>
               <li>2·3년차 <b>단계적 인상</b>(예 $59 → $79 → $99), 1년 종료 시 갱신에서 제안</li>
               <li>최장 2년 지원(내부 상한) — 공개·명시 금지</li>
-              <li>돕는 교회: 정상 자립교회만, 월 $20 감면, 최대 3교회</li>
+              <li><b>감면 셋업 = 검증 템플릿 빠른 대행</b>(셀프 아님·저노동, 풀 커스텀 구축은 정상 요금만) → 셋업 손실·담합 차단</li>
+              <li>돕는 교회: 정상 자립교회, <b>정기 후원</b>(한 교회씩 이어서 계속) — 후원하는 동안 월 $20 감면</li>
             </ul>
           </div>
           <div>
@@ -183,9 +184,9 @@ export default function RevenueModelTab() {
         </div>
       </div>
 
-      {/* 계산기 */}
-      <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'minmax(0,300px) minmax(0,1fr)' }}>
-        <div style={card}>
+      {/* 계산기 — 좁은 화면에서 입력 패널/결과가 자연히 아래로 쌓이도록 flex-wrap */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-start' }}>
+        <div style={{ ...card, flex: '1 1 280px', maxWidth: 340 }}>
           <div style={{ fontSize: 12, fontWeight: 800, color: C.muted, marginBottom: 12, textTransform: 'uppercase' }}>가정</div>
           <label style={{ display: 'block', fontSize: 12.5, color: C.muted, marginBottom: 3 }}>신규 교회 / 년</label>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 5, marginBottom: 10 }}>
@@ -211,7 +212,7 @@ export default function RevenueModelTab() {
           <Field label="행정 애드온 채택률 (%)" id="addon" val={p.addon} set={set} />
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0, flex: '999 1 440px' }}>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {kpi('Y5 ARR — 전략(라이트)', fmtK(la.arr), `활성 ${Math.round(la.active).toLocaleString()}교회`)}
             {kpi('Y5 ARR — 무전략(Drop)', fmtK(lb.arr), `활성 ${Math.round(lb.active).toLocaleString()}교회`)}
