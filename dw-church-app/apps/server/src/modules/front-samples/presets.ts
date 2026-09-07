@@ -189,9 +189,21 @@ const P: Record<string, PresetSection[]> = {
       backgroundImageUrl: `${IMG}/group-1.jpg`, overlayColor: '#090f1c', overlayOpacity: 0.5,
       buttonText: '예배 안내', buttonUrl: '/worship', secondaryButtonText: '처음 오시나요?', secondaryButtonUrl: '/newcomer' } },
     { block_type: 'info_columns', props: { columns: '3', items: [
-      { title: '주일예배 Sunday', content: '한국어 예배 · 11:00 AM\nEM (English) · 1:00 PM\n주일학교 · 11:00 AM' },
-      { title: '주중 Weekday', content: '금요 기도회 · 8:00 PM\n새벽기도 (Zoom) · 5:30 AM\n구역 모임 · 토 7:00 PM' },
-      { title: '처음 오시는 분께 First time?', content: '장소 · 채플을 함께 사용합니다\n주차 · 무료 주차장 · 스트리트 파킹\n자녀 · Nursery 운영 · 예배 후 전교인 점심' },
+      { title: '주일예배 Sunday', rows: [
+        { label: '한국어 예배', value: '11:00 AM' },
+        { label: 'EM (English)', value: '1:00 PM' },
+        { label: '주일학교', value: '11:00 AM' },
+      ] },
+      { title: '주중 Weekday', rows: [
+        { label: '금요 기도회', value: '8:00 PM' },
+        { label: '새벽기도 (Zoom)', value: '5:30 AM' },
+        { label: '구역 모임', value: '토 7:00 PM' },
+      ] },
+      { title: '처음 오시는 분께 First time?', variant: 'list', rows: [
+        { label: '장소', value: 'First Presbyterian Church 채플을 함께 사용합니다' },
+        { label: '주차', value: '교회 뒤편 무료 주차장 · 스트리트 파킹 가능' },
+        { label: '자녀', value: 'Nursery 운영 · 예배 후 전교인 점심' },
+      ] },
     ] } },
     // 오늘의 말씀 — 말씀 콘텐츠 모듈의 현재 말씀(관리자 등록 전엔 숨김).
     { block_type: 'verse_of_day', props: { eyebrow: '오늘의 말씀 · Verse of the Day' } },
