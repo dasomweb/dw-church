@@ -34,6 +34,7 @@ app.use(
 // references the current chunk hashes). SPA fallback: any /admin/* → index.html.
 const staticOpts = {
   index: false,
+  redirect: false, // never let static issue its own trailing-slash redirects
   setHeaders(res, filePath) {
     res.setHeader(
       'Cache-Control',
@@ -42,11 +43,15 @@ const staticOpts = {
   },
 };
 app.use('/admin', express.static(DIST, staticOpts));
-app.get('/admin', (_req, res) => res.redirect(302, '/admin/'));
-app.get('/admin/*', (_req, res) => {
+// SPA shell for /admin, /admin/ and any /admin/* route (index.html, 200). Listed
+// explicitly because path-to-regexp's "/admin/*" does NOT match the bare
+// "/admin/" (empty wildcard) — that gap sent the healthcheck to the catch-all
+// (→ 302) and failed every deploy.
+const sendIndex = (_req, res) => {
   res.setHeader('Cache-Control', 'no-cache');
   res.sendFile(path.join(DIST, 'index.html'));
-});
+};
+app.get(['/admin', '/admin/', '/admin/*'], sendIndex);
 
 // Everything else → the canonical /admin-prefixed URL. This covers:
 //   - "/"                       → /admin/
