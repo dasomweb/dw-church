@@ -160,8 +160,20 @@ export const designTokenHeaderSchema = z
 // field existed still parse.
 export const designTokenFooterSchema = z
   .object({
-    /** Layout: columns (logo + 오시는 길 + Social), centered, or minimal. */
-    variant: z.enum(['columns', 'centered', 'minimal']).default('columns'),
+    /** Footer layout — 9 variants faithful to the Claude Design "Footer 모음"
+     *  (시안 푸터 9종, 대표님 2026-09-06):
+     *    columns   (11a) 3열 사이트맵 + 로고 블록
+     *    history   (11b) 상단 연혁 한 줄 밴드 + 3열
+     *    minimal   (11c) 얇은 한 줄 바
+     *    navy      (11d) 딥 네이비 컴팩트 + 2열
+     *    centered  (11e) 중앙 정렬
+     *    compact   (11f) 소형·개척 2단(정보 + SNS)
+     *    bilingual (11g) 한·영 병기 + 2열
+     *    large     (11h) 큰 글씨 한 단
+     *    app       (11i) 모바일/앱형(중앙 정렬 · 탭바는 Pro MobileAppNav) */
+    variant: z
+      .enum(['columns', 'history', 'minimal', 'navy', 'centered', 'compact', 'bilingual', 'large', 'app'])
+      .default('columns'),
     /** Footer background color (hex). Default = dark navy. */
     background: z.string().default('#0b1622'),
     /** Body text color (hex). */

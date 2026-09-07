@@ -11,6 +11,7 @@ import AnalyticsBeacon from '@/components/AnalyticsBeacon';
 import { BrandTokensStyle } from '@/components/BrandTokensStyle';
 import { PreviewBridge } from '@/components/PreviewBridge';
 import { HeaderTopBar } from '@/components/HeaderTopBar';
+import { TenantFooter, type FooterNavCol } from '@/components/TenantFooter';
 import { DEFAULT_DESIGN_TOKENS, type DesignTokens } from '@dw-church/design-tokens';
 // Types inlined to avoid importing @dw-church/api-client in server components
 type ChurchSettings = Record<string, string>;
@@ -166,52 +167,6 @@ const PLATFORM_HOSTS = new Set([
   'localhost:3002',
 ]);
 
-// ─── Footer social icons ─────────────────────────────────────
-// Brand-colored rounded buttons (matches the standard church footer). Each
-// renders only when the matching link is set in church settings.
-function SocialButton({ href, bg, label, children }: { href: string; bg: string; label: string; children: React.ReactNode }) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={label}
-      title={label}
-      className="inline-flex h-9 w-9 items-center justify-center rounded-md transition-opacity hover:opacity-85"
-      style={{ backgroundColor: bg }}
-    >
-      {children}
-    </a>
-  );
-}
-function KakaoIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="#3A1D1D" aria-hidden="true">
-      <path d="M12 3C6.48 3 2 6.58 2 10.99c0 2.84 1.93 5.33 4.84 6.74-.16.55-.83 2.87-.86 3.05 0 0-.02.15.08.21.1.06.22.01.22.01.29-.04 3.37-2.2 3.96-2.61.55.08 1.12.12 1.76.12 5.52 0 10-3.58 10-7.52C22 6.58 17.52 3 12 3z" />
-    </svg>
-  );
-}
-function InstagramIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="#fff" stroke="none" />
-    </svg>
-  );
-}
-function YoutubeIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
-      <path d="M21.6 7.2a2.5 2.5 0 0 0-1.76-1.77C18.25 5 12 5 12 5s-6.25 0-7.84.43A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.76 1.77C5.75 19 12 19 12 19s6.25 0 7.84-.43a2.5 2.5 0 0 0 1.76-1.77A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8zM10 15V9l5.2 3-5.2 3z" />
-    </svg>
-  );
-}
-function FacebookIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
-      <path d="M14 8.5h2.5V5.5h-2.5c-2 0-3.5 1.5-3.5 3.5v2H8.5V14H10.5v6h3v-6h2.3l.7-3h-3v-1.5c0-.6.4-1 1-1z" />
-    </svg>
-  );
-}
 
 export default async function TenantLayout({ children, params }: TenantLayoutProps) {
   const { slug } = await params;
@@ -348,6 +303,19 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   // Footer link columns — the nav menu groups (교회소개/예배/교육/공동체 …)
   // that have children. Rendered as footer columns when fc.showNav (tokens.footer).
   const footerNavGroups = topLevelItems.filter((g) => (g.children?.length ?? 0) > 0);
+  // Resolve footer nav groups → serializable columns (label + children href)
+  // for the TenantFooter component (9 layout variants). navHref is the SAME
+  // resolver the header uses.
+  const footerNavCols: FooterNavCol[] = footerNavGroups.map((g) => ({
+    id: g.id,
+    label: g.label,
+    children: (g.children ?? []).map((c) => ({ id: c.id, label: c.label, href: navHref(c) })),
+  }));
+  // 'history' footer variant "교회 연혁 보기 →" 링크 — 연혁 관련 메뉴가 있으면 그리로,
+  // 없으면 관례적 /about-history. (없는 페이지 링크는 피하려 nav 우선 탐색)
+  const historyHref =
+    footerNavCols.flatMap((c) => c.children).find((c) => /history|연혁/i.test(c.href) || /연혁/.test(c.label))?.href
+    ?? '/about-history';
 
   // Items for the web-app bottom nav — same top-level visible menu items,
   // resolved to { label, href } via the SAME navHref helper the header uses.
@@ -633,82 +601,30 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
         {children}
       </main>
 
-      {/* Footer */}
-      <footer role="contentinfo" style={{ backgroundColor: fc.background, color: fc.text }}>
-        {fc.variant === 'minimal' ? (
-          <>
-            {fc.tagline && (
-              <div className="mx-auto max-w-7xl px-4 pt-6 text-center text-sm sm:px-6">{fc.tagline}</div>
-            )}
-            <div className="mx-auto max-w-7xl px-4 py-6 text-center text-xs sm:px-6">{copyright}</div>
-          </>
-        ) : (
-          <>
-            {/* 교회 한 줄 소개(tagline) — 풋터 상단 밴드. tokens.footer.tagline */}
-            {fc.tagline && (
-              <div style={{ borderBottom: `1px solid ${fc.text}22` }}>
-                <div className={`mx-auto max-w-7xl px-4 py-4 text-sm leading-relaxed sm:px-6 ${fc.variant === 'centered' ? 'text-center' : ''}`}>
-                  {fc.tagline}
-                </div>
-              </div>
-            )}
-            <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-              <div className={`flex flex-col gap-10 ${fc.variant === 'centered' ? 'items-center text-center' : 'lg:flex-row lg:justify-between'}`}>
-                {/* 좌측: 브랜드 + 오시는 길 + 소셜 */}
-                <div className={`grid gap-8 sm:grid-cols-3 ${fc.variant === 'centered' ? 'justify-items-center' : 'lg:flex lg:gap-12'}`}>
-                  {fc.showLogo && (
-                    <div>
-                      {footerShowText ? (
-                        <span className="text-lg font-bold font-heading" style={{ color: fc.heading }}>{footerBrandText}</span>
-                      ) : (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={footerLogo} alt={churchName} className="w-auto object-contain" style={{ height: 56 }} />
-                      )}
-                    </div>
-                  )}
-                  <div>
-                    <h3 className="mb-3 text-sm font-semibold" style={{ color: fc.heading }}>{fc.directionsLabel}</h3>
-                    {footerAddress && <p className="text-sm leading-relaxed">{footerAddress}</p>}
-                    {footerPhone && <p className="mt-1.5 text-sm">{footerPhone}</p>}
-                    {footerEmail && <p className="mt-1.5 text-sm">{footerEmail}</p>}
-                  </div>
-                  <div>
-                    <h3 className="mb-3 text-sm font-semibold" style={{ color: fc.heading }}>{fc.socialLabel}</h3>
-                    <div className={`flex gap-2 ${fc.variant === 'centered' ? 'justify-center' : ''}`}>
-                      {kakaoUrl && <SocialButton href={kakaoUrl} bg="#FEE500" label="KakaoTalk"><KakaoIcon /></SocialButton>}
-                      {instagramUrl && <SocialButton href={instagramUrl} bg="#E1306C" label="Instagram"><InstagramIcon /></SocialButton>}
-                      {youtubeUrl && <SocialButton href={youtubeUrl} bg="#FF0000" label="YouTube"><YoutubeIcon /></SocialButton>}
-                      {facebookUrl && <SocialButton href={facebookUrl} bg="#1877F2" label="Facebook"><FacebookIcon /></SocialButton>}
-                    </div>
-                  </div>
-                </div>
-                {/* 우측: 메뉴 그룹 링크 열 (tokens.footer.showNav) */}
-                {fc.showNav && footerNavGroups.length > 0 && (
-                  <nav aria-label="풋터 메뉴" className={`grid grid-cols-2 gap-8 sm:flex sm:gap-12 lg:gap-16 ${fc.variant === 'centered' ? 'justify-center' : ''}`}>
-                    {footerNavGroups.map((group) => (
-                      <div key={group.id}>
-                        <h3 className="mb-3 text-sm font-semibold" style={{ color: fc.heading }}>{group.label}</h3>
-                        <ul className="space-y-2">
-                          {group.children!.map((child) => (
-                            <li key={child.id}>
-                              <Link href={navHref(child)} className="text-sm opacity-80 transition-opacity hover:opacity-100" style={{ color: fc.text }}>
-                                {child.label}
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </nav>
-                )}
-              </div>
-            </div>
-            <div className="px-4 py-5 text-center text-xs" style={{ borderTop: `1px solid ${fc.text}22` }}>
-              {copyright}
-            </div>
-          </>
-        )}
-      </footer>
+      {/* Footer — 9 layout variants (Claude Design "Footer 모음"); design from
+          tokens.footer(fc), content from church settings. See TenantFooter. */}
+      <TenantFooter
+        variant={fc.variant}
+        background={fc.background}
+        text={fc.text}
+        heading={fc.heading}
+        showLogo={fc.showLogo}
+        showText={footerShowText}
+        brandText={footerBrandText}
+        logo={footerLogo}
+        churchName={churchName}
+        address={footerAddress}
+        phone={footerPhone}
+        email={footerEmail}
+        directionsLabel={fc.directionsLabel}
+        socialLabel={fc.socialLabel}
+        tagline={fc.tagline}
+        showNav={fc.showNav}
+        navCols={footerNavCols}
+        social={{ kakao: kakaoUrl, instagram: instagramUrl, youtube: youtubeUrl, facebook: facebookUrl }}
+        copyright={copyright}
+        historyHref={historyHref}
+      />
 
       {/* App-style bottom navigation — Pro-plan only, mobile only. */}
       {pwaEnabled && <MobileAppNav items={appNavItems} />}

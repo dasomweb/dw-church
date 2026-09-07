@@ -671,10 +671,17 @@ const FOOTER_DEFAULTS = {
   showNav: true,
 };
 
-const FOOTER_VARIANTS: { value: 'columns' | 'centered' | 'minimal'; label: string }[] = [
-  { value: 'columns', label: '컬럼 (로고 · 오시는 길 · 소셜)' },
-  { value: 'centered', label: '중앙 정렬' },
-  { value: 'minimal', label: '미니멀 (저작권만)' },
+// 시안 푸터 9종(Claude Design "Footer 모음")과 일대일. 대표님 2026-09-06.
+const FOOTER_VARIANTS: { value: 'columns' | 'history' | 'minimal' | 'navy' | 'centered' | 'compact' | 'bilingual' | 'large' | 'app'; label: string }[] = [
+  { value: 'columns', label: '3열 사이트맵 + 로고 블록 (11a)' },
+  { value: 'history', label: '상단 연혁 한 줄 + 3열 (11b)' },
+  { value: 'minimal', label: '얇은 한 줄 바 (11c)' },
+  { value: 'navy', label: '딥 네이비 컴팩트 (11d)' },
+  { value: 'centered', label: '중앙 정렬 (11e)' },
+  { value: 'compact', label: '소형·개척 2단 (11f)' },
+  { value: 'bilingual', label: '한·영 병기 + 2열 (11g)' },
+  { value: 'large', label: '큰 글씨 한 단 (11h)' },
+  { value: 'app', label: '모바일·앱형 중앙 정렬 (11i)' },
 ];
 
 function FooterTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChange: (t: DesignTokens | ((prev: DesignTokens) => DesignTokens)) => void; saving: boolean }) {
