@@ -90,6 +90,7 @@ const DomainSettings = lazyWithReload(() => import('./pages/DomainSettings'));
 const SuperAdminDashboard = lazyWithReload(() => import('./pages/SuperAdminDashboardV2'));
 const ProfilePage = lazyWithReload(() => import('./pages/ProfilePage'));
 const BillingPage = lazyWithReload(() => import('./pages/BillingPage'));
+const SupportRequest = lazyWithReload(() => import('./pages/SupportRequest'));
 
 // Super-admin per-tenant console (Phase 2). Lives at /super-admin/t/:slug/*
 // — a distinct surface from the tenant-admin /t/:slug, with its own
@@ -315,6 +316,7 @@ const tenantChildRoutes = (
     <Route path="settings" element={<SettingsPage />} />
     <Route path="billing" element={<BillingPage />} />
     <Route path="addons" element={<AddonMarketplace />} />
+    <Route path="support" element={<SupportRequest />} />
   </>
 );
 

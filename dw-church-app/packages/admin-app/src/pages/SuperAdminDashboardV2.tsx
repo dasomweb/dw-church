@@ -11,6 +11,7 @@ import EmailSettingsTab from '../super-admin/tabs/EmailSettingsTab';
 import EmailTemplatesTab from '../super-admin/tabs/EmailTemplatesTab';
 import AddressBookTab from '../super-admin/tabs/AddressBookTab';
 import PricingTab from '../super-admin/tabs/PricingTab';
+import RevenueModelTab from '../super-admin/tabs/RevenueModelTab';
 import FrontSamplesTab from '../super-admin/tabs/FrontSamplesTab';
 import ClaudeDesignTab from '../super-admin/tabs/ClaudeDesignTab';
 import SupportTab from '../super-admin/tabs/SupportTab';
@@ -36,7 +37,7 @@ import SiteDesignTab from '../super-admin/tabs/SiteDesignTab';
 // ─── Constants ───────────────────────────────────────────
 // PLAN_PRICES / PLAN_COLORS moved to ../super-admin/shared/constants.
 
-type TabId = 'monitoring' | 'overview' | 'tenants' | 'applications' | 'demo' | 'intake' | 'reference' | 'pricing' | 'billing' | 'email' | 'emailTemplates' | 'broadcast' | 'addressBook' | 'support' | 'domains' | 'users' | 'storage' | 'gallery' | 'siteSettings' | 'siteBanner' | 'siteDesign' | 'caseStudies' | 'frontSamples' | 'claudeDesign';
+type TabId = 'monitoring' | 'overview' | 'tenants' | 'applications' | 'demo' | 'intake' | 'reference' | 'pricing' | 'revenueModel' | 'billing' | 'email' | 'emailTemplates' | 'broadcast' | 'addressBook' | 'support' | 'domains' | 'users' | 'storage' | 'gallery' | 'siteSettings' | 'siteBanner' | 'siteDesign' | 'caseStudies' | 'frontSamples' | 'claudeDesign';
 
 const TABS: { id: TabId; label: string; icon: JSX.Element }[] = [
   { id: 'monitoring', label: '모니터링', icon: TabIcon('M3 3v18h18M19 9l-5 5-4-4-3 3') },
@@ -47,6 +48,7 @@ const TABS: { id: TabId; label: string; icon: JSX.Element }[] = [
   { id: 'intake', label: '초기 입력', icon: TabIcon('M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3') },
   { id: 'reference', label: '참조 데이터', icon: TabIcon('M12 6.25C10.83 5.48 9.25 5 7.5 5S4.17 5.48 3 6.25v13C4.17 18.48 5.75 18 7.5 18s3.33.48 4.5 1.25m0-13C13.17 5.48 14.75 5 16.5 5s3.33.48 4.5 1.25v13C19.83 18.48 18.25 18 16.5 18s-3.33.48-4.5 1.25m0-13v13') },
   { id: 'pricing', label: '상품/가격', icon: TabIcon('M7 7h.01M3 5v4.586a2 2 0 00.586 1.414l8 8a2 2 0 002.828 0l4.586-4.586a2 2 0 000-2.828l-8-8A2 2 0 009.586 3H5a2 2 0 00-2 2z') },
+  { id: 'revenueModel', label: '수익 모델', icon: TabIcon('M3 3v18h18M8 13l3-3 3 3 4-4') },
   { id: 'billing', label: '과금', icon: TabIcon('M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z') },
   { id: 'email', label: '이메일/SMTP', icon: TabIcon('M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z') },
   { id: 'emailTemplates', label: '이메일 템플릿', icon: TabIcon('M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2') },
@@ -400,6 +402,7 @@ export default function SuperAdminDashboardV2() {
         {activeTab === 'intake' && <IntakeTab />}
         {activeTab === 'reference' && <ReferenceDataTab />}
         {activeTab === 'pricing' && <PricingTab />}
+        {activeTab === 'revenueModel' && <RevenueModelTab />}
         {activeTab === 'frontSamples' && <FrontSamplesTab />}
         {activeTab === 'claudeDesign' && <ClaudeDesignTab />}
         {activeTab === 'billing' && <BillingTab />}

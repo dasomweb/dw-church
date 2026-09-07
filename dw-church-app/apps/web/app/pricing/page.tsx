@@ -34,9 +34,9 @@ export default function PricingPage() {
                 <h2 className="mt-2 text-[23px] font-extrabold tracking-[-0.03em] sm:text-[26px]">모든 교회 같은 값</h2>
                 <p className="mt-2 text-[15.5px] leading-[1.8] text-[#4a5262]">성도가 보는 지면 12가지가 전부 포함됩니다. 등급을 나눠 기능을 잠가 두지 않습니다.</p>
               </div>
-              <div className="shrink-0">
-                <span className="text-[44px] font-extrabold tracking-[-0.03em]">$99</span>
-                <span className="ml-1 text-[17px] text-[#61697a]">/월</span>
+              <div className="shrink-0 sm:text-right">
+                <div><span className="text-[44px] font-extrabold tracking-[-0.03em]">$99</span><span className="ml-1 text-[17px] text-[#61697a]">/월</span></div>
+                <div className="mt-1 text-[13px] text-[#61697a]">연 결제 시 2개월 무료</div>
               </div>
             </div>
             <div className="mt-6 flex flex-wrap gap-2">
@@ -96,10 +96,10 @@ export default function PricingPage() {
 
           {/* D. 사용량 */}
           <div className="mt-12">
-            <Eyebrow>사용량 · 저장공간과 트래픽</Eyebrow>
-            <h2 className="mt-2 text-[23px] font-extrabold tracking-[-0.03em] sm:text-[26px]">대부분 포함 범위 안에서 운영하십니다</h2>
-            <p className="mt-2 max-w-2xl text-[15.5px] leading-[1.8] text-[#4a5262]">구독료에는 교회가 일반적으로 쓰시는 만큼의 저장공간과 트래픽이 포함됩니다. 설교 영상을 직접 올리시거나 사진·영상이 크게 늘어 포함 범위를 넘어서면 초과분에 대한 사용료가 별도로 발생합니다.</p>
-            <p className="mt-4 text-[14.5px] leading-[1.8] text-[#61697a]">설교 영상은 유튜브를 연결해 쓰시면 저장공간과 트래픽을 거의 쓰지 않습니다. 포함 범위와 초과 단가는 상담에서 안내드립니다.</p>
+            <Eyebrow>사용량 · 트래픽과 저장공간</Eyebrow>
+            <h2 className="mt-2 text-[23px] font-extrabold tracking-[-0.03em] sm:text-[26px]">트래픽은 무제한, 저장공간만 관리합니다</h2>
+            <p className="mt-2 max-w-2xl text-[15.5px] leading-[1.8] text-[#4a5262]">성도가 홈페이지를 아무리 많이 열어 보셔도 트래픽 요금은 없습니다(공정 사용 기준). 과금은 저장공간뿐 — 구독료에 일반적인 사용량이 포함되고, 사진·파일이 크게 늘어 포함 범위를 넘어서면 초과분에 대해서만 사용료가 발생합니다.</p>
+            <p className="mt-4 text-[14.5px] leading-[1.8] text-[#61697a]">설교 영상은 유튜브를 연결해 쓰시면 저장공간을 거의 쓰지 않습니다. 포함 범위와 초과 단가는 상담에서 안내드립니다.</p>
           </div>
 
           {/* 개척 지원 / 결제 조건 링크 */}

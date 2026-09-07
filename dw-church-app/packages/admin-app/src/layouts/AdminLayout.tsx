@@ -82,6 +82,7 @@ const navGroups: (NavItem | NavGroup)[] = [
     { to: 'users', label: '사용자', icon: I('M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z') },
     { to: 'billing', label: '결제', icon: I('M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z') },
     { to: 'addons', label: '부가기능', icon: I('M12 6v6m0 0v6m0-6h6m-6 0H6') },
+    { to: 'support', label: '고객지원', icon: I('M18.364 5.636a9 9 0 010 12.728m0 0l-3.536-3.536m3.536 3.536L18.364 18.364M5.636 5.636a9 9 0 000 12.728m0 0l3.536-3.536M5.636 5.636L9.172 9.172M9 12a3 3 0 116 0 3 3 0 01-6 0z') },
   ]},
 ];
 
@@ -119,6 +120,7 @@ const pageTitlesByLeaf: Record<string, string> = {
   domains: '도메인 설정',
   billing: '결제 관리',
   settings: '설정',
+  support: '고객지원 문의',
 };
 
 const ROLE_LABELS: Record<string, string> = {
