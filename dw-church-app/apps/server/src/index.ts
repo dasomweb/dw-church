@@ -391,11 +391,32 @@ async function main(): Promise<void> {
           OR schema_name LIKE 'tenant_%'`,
     );
 
+    // 배포 팬아웃 제거: 부팅마다 전 스키마를 순회하며 ~30개 idempotent DDL을 돌리면
+    // 테넌트가 100~1000개로 늘 때 배포 시 DB에 수만 번 왕복이 발생한다(병목).
+    // 스키마별 버전 스탬프를 두고, 이미 현재 버전으로 반영된 스키마는 건너뛴다.
+    // ⚠️ 아래 per-schema DDL 블록을 하나라도 바꾸면(테이블/컬럼 추가) SCHEMA_VERSION을
+    //    올려라 → 기존 테넌트가 "다음 배포 때 한 번만" 다시 반영하고 이후 다시 건너뛴다.
+    const SCHEMA_VERSION = 1;
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS public.tenant_schema_versions (
+        "schema_name" TEXT PRIMARY KEY,
+        "version"     INT NOT NULL DEFAULT 0,
+        "updated_at"  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    const stampRows = await prisma.$queryRawUnsafe<{ schema_name: string; version: number }[]>(
+      `SELECT schema_name, version FROM public.tenant_schema_versions`,
+    );
+    const schemaStamps = new Map(stampRows.map((r) => [r.schema_name, Number(r.version)]));
+
     let alterHits = 0;
     let createHits = 0;
+    let skippedSchemas = 0;
 
     for (const s of schemas) {
       const schema = s.schema_name;
+      // 이미 현재 SCHEMA_VERSION 까지 반영된 스키마는 통째로 건너뛴다(팬아웃 차단).
+      if ((schemaStamps.get(schema) ?? 0) >= SCHEMA_VERSION) { skippedSchemas++; continue; }
 
       // 0. videos + video_categories — 영상 게시판 content module. Cloned from
       //    the albums module shape (youtube_url + video_date date instead of an
@@ -1252,9 +1273,19 @@ async function main(): Promise<void> {
         await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "group_resources_cat_idx" ON "${schema}".group_resources ("category")`);
         createHits++;
       } catch { /* skip */ }
+
+      // 이 스키마의 현재 버전 DDL 반영 완료 — 스탬프 기록(다음 부팅부터 건너뜀).
+      try {
+        await prisma.$executeRawUnsafe(
+          `INSERT INTO public.tenant_schema_versions ("schema_name", "version", "updated_at")
+           VALUES ($1, $2, NOW())
+           ON CONFLICT ("schema_name") DO UPDATE SET "version" = EXCLUDED."version", "updated_at" = NOW()`,
+          schema, SCHEMA_VERSION,
+        );
+      } catch { /* stamp 실패해도 다음 부팅에 재시도되므로 무시 */ }
     }
-    if (alterHits || createHits) {
-      app.log.info(`Tenant schema drift repair — ALTER: ${alterHits}, CREATE: ${createHits}`);
+    if (alterHits || createHits || skippedSchemas) {
+      app.log.info(`Tenant schema sync — ALTER: ${alterHits}, CREATE: ${createHits}, skipped(up-to-date): ${skippedSchemas}`);
     }
   } catch (err) {
     app.log.warn(`Tenant schema drift repair skipped: ${err}`);
@@ -1904,6 +1935,23 @@ async function main(): Promise<void> {
   // Must be registered BEFORE listen — Fastify rejects hooks added after boot.
   const { registerDemoEditTracker } = await import('./modules/demo-tenant/edit-tracker.js');
   registerDemoEditTracker(app);
+
+  // Storefront cache invalidation: after an AUTHENTICATED tenant mutation succeeds,
+  // purge that tenant's Next.js cache tag so a publish shows on the public site
+  // immediately (see apps/web/lib/api.ts + revalidate-web.ts). onResponse runs
+  // AFTER the reply is sent, so it never adds latency. We require an Authorization
+  // header so public writes done during storefront SSR (i18n translate, contact /
+  // newcomer form submits — none of which change cached storefront content) don't
+  // trigger a purge storm. Debounced per tenant. No-op unless REVALIDATE_SECRET set.
+  const { purgeTenantCache } = await import('./utils/revalidate-web.js');
+  app.addHook('onResponse', async (request, reply) => {
+    const m = request.method;
+    if (m === 'GET' || m === 'HEAD' || m === 'OPTIONS') return;
+    if (reply.statusCode >= 400) return;
+    if (!request.headers.authorization) return; // authenticated writes only
+    const slug = (request.headers['x-tenant-slug'] as string | undefined)?.trim();
+    if (slug) purgeTenantCache(slug);
+  });
 
   // --- Start ---
   await app.listen({ port: env.PORT, host: '0.0.0.0' });

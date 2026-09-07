@@ -4,23 +4,36 @@
  * Server-side API helpers for DW Church SaaS.
  * Uses plain fetch() with X-Tenant-Slug header for tenant identification.
  *
- * ISR caching strategy:
- *   revalidate: false  – settings, theme, menus, history (rarely change)
- *   revalidate: false  – pages, banners, staff
- *   revalidate: false   – content lists & individual items (sermons, bulletins, …)
- *   revalidate: false – search results (never cache)
+ * ISR caching strategy (per-tenant, tag-invalidated):
+ *   CACHE_CHROME  – settings, theme, tokens, menus, pages, sections, features
+ *                   (every page renders these; rarely change)
+ *   CACHE_CONTENT – content lists & items (sermons, bulletins, staff, …)
+ *   false         – search results & mutations (never cache)
+ *
+ * ⚠️ CACHE-KEY COLLISION GUARD: Next.js keys its Data Cache by URL, NOT by
+ * request headers. Since every tenant hits the same API path and differs only
+ * by the X-Tenant-Slug *header*, a cached response would be shared across
+ * tenants (tenant A seeing tenant B's data). We therefore append a harmless
+ * `_t=<slug>` query param to CACHED requests so each tenant gets a distinct
+ * cache key. The server identifies the tenant by header and ignores `_t`.
+ * (no-store requests skip this — they are never cached, so no collision.)
  */
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.truelight.app';
+
+// Cache windows (seconds). Worst-case public staleness after an admin publish;
+// the server also fires a per-tenant tag purge on every mutation for immediacy.
+const CACHE_CHROME = 300;
+const CACHE_CONTENT = 120;
 
 // ─── Generic fetch helper ────────────────────────────────────
 
 async function apiFetch<T>(
   slug: string,
   path: string,
-  init?: RequestInit & { revalidate?: number | false },
+  init?: RequestInit & { revalidate?: number | false; tags?: string[] },
 ): Promise<T> {
-  const { revalidate, ...rest } = init ?? {};
+  const { revalidate, tags, ...rest } = init ?? {};
 
   const fetchInit: RequestInit = {
     ...rest,
@@ -31,17 +44,19 @@ async function apiFetch<T>(
     },
   };
 
+  const url = new URL(`${API_BASE}${path}`);
+
   // Apply caching strategy
   if (revalidate === false) {
     fetchInit.cache = 'no-store';
-  } else if (revalidate !== undefined) {
-    fetchInit.next = { revalidate };
   } else {
-    // Default: revalidate every 60 seconds
-    fetchInit.next = { revalidate: false };
+    const seconds = revalidate === undefined ? CACHE_CHROME : revalidate;
+    // Per-tenant tag lets the server purge one tenant's whole cache on publish.
+    fetchInit.next = { revalidate: seconds, tags: [`tenant:${slug}`, ...(tags ?? [])] };
+    url.searchParams.set('_t', slug); // collision guard — see file header
   }
 
-  const res = await fetch(`${API_BASE}${path}`, fetchInit);
+  const res = await fetch(url.toString(), fetchInit);
   if (!res.ok) {
     throw new Error(`API error ${res.status}: ${res.statusText} (${API_BASE}${path})`);
   }
@@ -97,17 +112,17 @@ function unwrap(res: any): any {
 // ─── Settings & Navigation ───────────────────────────────────
 
 export async function getChurchSettings(slug: string): Promise<any> {
-  const res = await apiFetch(slug, `/api/v1/settings`, { revalidate: false });
+  const res = await apiFetch(slug, `/api/v1/settings`, { revalidate: CACHE_CHROME });
   return unwrap(res);
 }
 
 export async function getMenuItems(slug: string): Promise<any[]> {
-  const res = await apiFetch(slug, `/api/v1/menus`, { revalidate: false });
+  const res = await apiFetch(slug, `/api/v1/menus`, { revalidate: CACHE_CHROME });
   return unwrap(res) ?? [];
 }
 
 export async function getTheme(slug: string): Promise<any> {
-  const res = await apiFetch(slug, `/api/v1/theme`, { revalidate: false });
+  const res = await apiFetch(slug, `/api/v1/theme`, { revalidate: CACHE_CHROME });
   return unwrap(res);
 }
 
@@ -146,20 +161,20 @@ export async function getSiteMeta(slug: string): Promise<{
  * source of truth across storefront + admin live preview + AI Designer.
  */
 export async function getThemeTokens(slug: string): Promise<any> {
-  const res = await apiFetch(slug, `/api/v1/theme/tokens`, { revalidate: false });
+  const res = await apiFetch(slug, `/api/v1/theme/tokens`, { revalidate: CACHE_CHROME });
   return unwrap(res);
 }
 
 // ─── Pages ───────────────────────────────────────────────────
 
 export async function getPages(slug: string): Promise<any[]> {
-  const res = await apiFetch(slug, `/api/v1/pages`, { revalidate: false });
+  const res = await apiFetch(slug, `/api/v1/pages`, { revalidate: CACHE_CHROME });
   return unwrap(res) ?? [];
 }
 
 /** Fetch a single reusable content entry (CONTENT layer). */
 export async function getContentEntry(slug: string, id: string): Promise<any> {
-  const res = await apiFetch(slug, `/api/v1/content-entries/${id}`, { revalidate: false });
+  const res = await apiFetch(slug, `/api/v1/content-entries/${id}`, { revalidate: CACHE_CHROME });
   return unwrap(res);
 }
 
@@ -203,7 +218,7 @@ const STOREFRONT_BLOCK_FEATURE: Record<string, string> = {
  *  are affected, and hiding them requires an explicit `false`). */
 export async function getStorefrontFeatures(slug: string): Promise<Record<string, boolean>> {
   try {
-    const res = await apiFetch<any>(slug, `/api/v1/storefront/features`, { revalidate: false });
+    const res = await apiFetch<any>(slug, `/api/v1/storefront/features`, { revalidate: CACHE_CHROME });
     return (unwrap(res)?.features ?? {}) as Record<string, boolean>;
   } catch {
     return {};
@@ -233,7 +248,7 @@ export async function getHomePage(slug: string): Promise<any> {
   if (!home) throw new Error('Home page not found');
 
   // Get sections for this page
-  const sectionsRes = await apiFetch(slug, `/api/v1/pages/${home.id}/sections`, { revalidate: false });
+  const sectionsRes = await apiFetch(slug, `/api/v1/pages/${home.id}/sections`, { revalidate: CACHE_CHROME });
   const sections = unwrap(sectionsRes) ?? [];
   const features = await getStorefrontFeatures(slug);
 
@@ -254,7 +269,7 @@ export async function getPageBySlug(tenantSlug: string, pageSlug: string): Promi
   const page = pages.find((p: any) => p.slug === pageSlug);
   if (!page) throw new Error('Page not found');
 
-  const sectionsRes = await apiFetch(tenantSlug, `/api/v1/pages/${page.id}/sections`, { revalidate: false });
+  const sectionsRes = await apiFetch(tenantSlug, `/api/v1/pages/${page.id}/sections`, { revalidate: CACHE_CHROME });
   const sections = unwrap(sectionsRes) ?? [];
   const features = await getStorefrontFeatures(tenantSlug);
 
@@ -289,7 +304,7 @@ export async function getDetailTemplate(
   const template = pages.find((p: any) => p.kind === kind && (p.status === 'published' || p.status === undefined));
   if (!template) return null;
 
-  const sectionsRes = await apiFetch(tenantSlug, `/api/v1/pages/${template.id}/sections`, { revalidate: false });
+  const sectionsRes = await apiFetch(tenantSlug, `/api/v1/pages/${template.id}/sections`, { revalidate: CACHE_CHROME });
   const sections = (unwrap(sectionsRes) ?? []) as any[];
   const mapped = sections
     .map((s: any) => ({
@@ -325,7 +340,7 @@ export async function getSermons(
 }
 
 export async function getSermon(slug: string, id: string): Promise<any> {
-  const res = await apiFetch(slug, `/api/v1/sermons/${id}`, { revalidate: false });
+  const res = await apiFetch(slug, `/api/v1/sermons/${id}`, { revalidate: CACHE_CONTENT });
   return aliasFields(unwrap(res), 'sermon');
 }
 
@@ -339,13 +354,13 @@ export async function getBulletins(
   if (params?.page) p.set('page', String(params.page));
   if (params?.perPage) p.set('perPage', String(params.perPage));
   const qs = p.toString();
-  const res = await apiFetch<any>(slug, `/api/v1/bulletins${qs ? '?' + qs : ''}`, { revalidate: false });
+  const res = await apiFetch<any>(slug, `/api/v1/bulletins${qs ? '?' + qs : ''}`, { revalidate: CACHE_CONTENT });
   if (res?.data) res.data = aliasArray(res.data, 'bulletin');
   return res;
 }
 
 export async function getBulletin(slug: string, id: string): Promise<any> {
-  const res = await apiFetch(slug, `/api/v1/bulletins/${id}`, { revalidate: false });
+  const res = await apiFetch(slug, `/api/v1/bulletins/${id}`, { revalidate: CACHE_CONTENT });
   return aliasFields(unwrap(res), 'bulletin');
 }
 
@@ -360,11 +375,11 @@ export async function getAlbums(
   if (params?.perPage) p.set('perPage', String(params.perPage));
   if (params?.category) p.set('category', params.category);
   const qs = p.toString();
-  return apiFetch(slug, `/api/v1/albums${qs ? '?' + qs : ''}`, { revalidate: false });
+  return apiFetch(slug, `/api/v1/albums${qs ? '?' + qs : ''}`, { revalidate: CACHE_CONTENT });
 }
 
 export async function getAlbum(slug: string, id: string): Promise<any> {
-  const res = await apiFetch(slug, `/api/v1/albums/${id}`, { revalidate: false });
+  const res = await apiFetch(slug, `/api/v1/albums/${id}`, { revalidate: CACHE_CONTENT });
   return unwrap(res);
 }
 
@@ -419,13 +434,13 @@ export async function getSchedules(slug: string): Promise<any[]> {
 // ─── Staff ───────────────────────────────────────────────────
 
 export async function getStaff(slug: string): Promise<any[]> {
-  const res = await apiFetch(slug, `/api/v1/staff`, { revalidate: false });
+  const res = await apiFetch(slug, `/api/v1/staff`, { revalidate: CACHE_CONTENT });
   const items = unwrap(res) ?? [];
   return aliasArray(items, 'staff');
 }
 
 export async function getStaffMember(slug: string, id: string): Promise<any> {
-  const res = await apiFetch(slug, `/api/v1/staff/${id}`, { revalidate: false });
+  const res = await apiFetch(slug, `/api/v1/staff/${id}`, { revalidate: CACHE_CONTENT });
   return aliasFields(unwrap(res), 'staff');
 }
 
@@ -447,14 +462,14 @@ export async function getColumns(
 }
 
 export async function getColumn(slug: string, id: string): Promise<any> {
-  const res = await apiFetch(slug, `/api/v1/columns/${id}`, { revalidate: false });
+  const res = await apiFetch(slug, `/api/v1/columns/${id}`, { revalidate: CACHE_CONTENT });
   return unwrap(res);
 }
 
 // ─── History ─────────────────────────────────────────────────
 
 export async function getHistory(slug: string): Promise<any[]> {
-  const res = await apiFetch(slug, `/api/v1/history`, { revalidate: false });
+  const res = await apiFetch(slug, `/api/v1/history`, { revalidate: CACHE_CONTENT });
   return unwrap(res) ?? [];
 }
 
@@ -475,18 +490,18 @@ export async function getEvents(
   if (params?.page) p.set('page', String(params.page));
   if (params?.perPage) p.set('perPage', String(params.perPage));
   const qs = p.toString();
-  return apiFetch(slug, `/api/v1/events${qs ? '?' + qs : ''}`, { revalidate: false });
+  return apiFetch(slug, `/api/v1/events${qs ? '?' + qs : ''}`, { revalidate: CACHE_CONTENT });
 }
 
 export async function getEvent(slug: string, id: string): Promise<any> {
-  const res = await apiFetch(slug, `/api/v1/events/${id}`, { revalidate: false });
+  const res = await apiFetch(slug, `/api/v1/events/${id}`, { revalidate: CACHE_CONTENT });
   return unwrap(res);
 }
 
 // ─── Verses (오늘의 말씀) ──────────────────────────────────────
 
 export async function getCurrentVerse(slug: string): Promise<any> {
-  const res = await apiFetch(slug, `/api/v1/verses/current`, { revalidate: false });
+  const res = await apiFetch(slug, `/api/v1/verses/current`, { revalidate: CACHE_CONTENT });
   return unwrap(res);
 }
 
@@ -510,7 +525,7 @@ export async function translateTexts(slug: string, texts: string[], lang: string
 // ─── Boards (게시판) ──────────────────────────────────────────
 
 export async function getBoardBySlug(slug: string, boardSlug: string): Promise<any> {
-  const res = await apiFetch(slug, `/api/v1/boards/${boardSlug}`, { revalidate: false });
+  const res = await apiFetch(slug, `/api/v1/boards/${boardSlug}`, { revalidate: CACHE_CONTENT });
   return unwrap(res);
 }
 
@@ -523,12 +538,12 @@ export async function getBoardPosts(
   if (params?.page) p.set('page', String(params.page));
   if (params?.perPage) p.set('perPage', String(params.perPage));
   const qs = p.toString();
-  return apiFetch(slug, `/api/v1/boards/${boardId}/posts${qs ? '?' + qs : ''}`, { revalidate: false });
+  return apiFetch(slug, `/api/v1/boards/${boardId}/posts${qs ? '?' + qs : ''}`, { revalidate: CACHE_CONTENT });
 }
 
 // ─── Banners ─────────────────────────────────────────────────
 
 export async function getBanners(slug: string): Promise<any[]> {
-  const res = await apiFetch(slug, `/api/v1/banners?active=true`, { revalidate: false });
+  const res = await apiFetch(slug, `/api/v1/banners?active=true`, { revalidate: CACHE_CONTENT });
   return unwrap(res) ?? [];
 }

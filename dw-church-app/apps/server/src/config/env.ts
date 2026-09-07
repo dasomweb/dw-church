@@ -59,6 +59,13 @@ const envSchema = z.object({
   // super-admin monitoring page. Default is the production apex.
   WEB_BASE_URL: z.string().default('https://truelight.app'),
 
+  // Shared secret for POST {WEB_BASE_URL}/api/v1/../api/revalidate (Next.js
+  // on-demand ISR purge). After a tenant mutation the server fires a per-tenant
+  // tag purge so the storefront reflects a publish immediately. Empty = purge
+  // disabled (storefront still refreshes on its time-based revalidate window).
+  // Must match the web app's REVALIDATE_SECRET.
+  REVALIDATE_SECRET: z.string().default(''),
+
   // Monitoring (optional)
   SENTRY_DSN: z.string().default(''),
 
