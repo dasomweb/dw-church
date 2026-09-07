@@ -115,6 +115,24 @@ export const designTokenRadiusSchema = z.object({
 // still parse (and old AI-builder tokensV2 snapshots don't 400 on save).
 export const designTokenHeaderSchema = z
   .object({
+    /** Header layout — 12 variants faithful to the Claude Design "Header 모음"
+     *  (시안 헤더 12종, 12a–12l). 'standard' 기본값 → 기존 테넌트 무변경;
+     *  layout.headerStyle(legacy centered/dark/transparent/sidebar) 는 storefront
+     *  에서 이 값이 'standard' 일 때 폴백으로 계속 적용된다.
+     *    standard(12a) live(12b) transparent(12c) center-split(12d) dark(12e)
+     *    search-account(12f) sidebar(12g) bilingual(12h) english(12i)
+     *    large(12j) mega(12k) mobile(12l) */
+    variant: z
+      .enum(['standard', 'live', 'transparent', 'center-split', 'dark', 'search-account', 'sidebar', 'bilingual', 'english', 'large', 'mega', 'mobile'])
+      .default('standard'),
+    /** 생중계 배너(variant 'live', 12b) — 텍스트 + 버튼 링크. URL 비면 버튼 숨김. */
+    liveBannerText: z.string().default('지금 예배가 진행 중입니다'),
+    liveBannerButtonLabel: z.string().default('생중계 보기'),
+    liveBannerUrl: z.string().default(''),
+    /** 검색 + 계정(variant 'search-account', 12f). searchUrl 로 GET 검색, 계정 링크. */
+    searchUrl: z.string().default('/search'),
+    accountLabel: z.string().default('교인 로그인'),
+    accountUrl: z.string().default(''),
     /** Storefront logo <img> height in px (default 40 = the old hard-coded h-10). */
     logoHeight: z.number().int().positive().default(40),
     /** Desktop header nav-link font size in px (default 14 = the old text-sm). */
@@ -145,6 +163,9 @@ export const designTokenHeaderSchema = z
     givingUrl: z.string().default('/giving'),
   })
   .default({
+    variant: 'standard',
+    liveBannerText: '지금 예배가 진행 중입니다', liveBannerButtonLabel: '생중계 보기', liveBannerUrl: '',
+    searchUrl: '/search', accountLabel: '교인 로그인', accountUrl: '',
     logoHeight: 40, navFontSize: 14, navFontWeight: 500, brandTextEn: '',
     utilityBarEnabled: false, utilityBarText: '', utilityShowFontSize: true,
     utilityShowKakao: true, utilityShowLanguage: false,

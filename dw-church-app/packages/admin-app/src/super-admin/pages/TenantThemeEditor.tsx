@@ -466,11 +466,30 @@ function TypographyTab({ tokens, onChange, saving }: { tokens: DesignTokens; onC
 // header (apps/web/.../tenant/[slug]/layout.tsx). Defaults 40/14 match the
 // previous hard-coded h-10 logo + text-sm nav.
 const HEADER_DEFAULTS = {
+  variant: 'standard',
+  liveBannerText: '지금 예배가 진행 중입니다', liveBannerButtonLabel: '생중계 보기', liveBannerUrl: '',
+  searchUrl: '/search', accountLabel: '교인 로그인', accountUrl: '',
   logoHeight: 40, navFontSize: 14, navFontWeight: 500, brandTextEn: '',
   utilityBarEnabled: false, utilityBarText: '', utilityShowFontSize: true,
   utilityShowKakao: true, utilityShowLanguage: false,
   givingEnabled: false, givingLabel: '온라인 헌금', givingUrl: '/giving',
 } as const;
+
+// 시안 헤더 12종(Claude Design "Header 모음")과 일대일. 대표님 2026-09-07.
+const HEADER_VARIANTS: { value: string; label: string }[] = [
+  { value: 'standard', label: '표준 1단 (12a)' },
+  { value: 'live', label: '생중계 배너 + 유틸 바 (12b)' },
+  { value: 'transparent', label: '사진 위 투명 헤더 (12c)' },
+  { value: 'center-split', label: '중앙 로고 (12d)' },
+  { value: 'dark', label: '다크 (12e)' },
+  { value: 'search-account', label: '검색 + 계정 (12f)' },
+  { value: 'sidebar', label: '좌측 사이드바 (12g)' },
+  { value: 'bilingual', label: '한·영 병기 (12h)' },
+  { value: 'english', label: '영어 우선 (12i)' },
+  { value: 'large', label: '큰 글씨 (12j)' },
+  { value: 'mega', label: '메가메뉴 (12k)' },
+  { value: 'mobile', label: '모바일·앱형 (12l)' },
+];
 
 const NAV_WEIGHT_OPTIONS: { value: number; label: string }[] = [
   { value: 300, label: 'Light (300)' },
@@ -501,8 +520,44 @@ function HeaderTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChang
     { key: 'navFontSize', label: '메뉴 폰트 크기', hint: '상단 메뉴 글자 크기 (px). 12~24 권장.',   min: 10, max: 32 },
   ];
 
+  const variant = (header as { variant?: string }).variant ?? 'standard';
+
   return (
     <section className="space-y-6">
+      {/* 헤더 레이아웃 12종 선택 (시안 헤더 12종) */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-1">헤더 레이아웃</h3>
+        <p className="text-xs text-gray-500 mb-3">시안에서 쓰인 헤더 12종 중 선택합니다. 색·로고·메뉴는 아래에서 조절.</p>
+        <select
+          value={variant}
+          onChange={(e) => setH('variant', e.target.value)}
+          disabled={saving}
+          className="w-full max-w-md rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500 bg-white"
+        >
+          {HEADER_VARIANTS.map((v) => <option key={v.value} value={v.value}>{v.label}</option>)}
+        </select>
+        {variant === 'live' && (
+          <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+            <label className="text-xs text-gray-600">생중계 문구
+              <input value={header.liveBannerText} onChange={(e) => setH('liveBannerText', e.target.value)} disabled={saving} className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-sm" /></label>
+            <label className="text-xs text-gray-600">버튼 라벨
+              <input value={header.liveBannerButtonLabel} onChange={(e) => setH('liveBannerButtonLabel', e.target.value)} disabled={saving} className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-sm" /></label>
+            <label className="text-xs text-gray-600">생중계 URL (비우면 버튼 숨김)
+              <input value={header.liveBannerUrl} onChange={(e) => setH('liveBannerUrl', e.target.value)} disabled={saving} placeholder="https://youtube.com/..." className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-sm" /></label>
+          </div>
+        )}
+        {variant === 'search-account' && (
+          <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+            <label className="text-xs text-gray-600">검색 URL (GET ?q=)
+              <input value={header.searchUrl} onChange={(e) => setH('searchUrl', e.target.value)} disabled={saving} className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-sm" /></label>
+            <label className="text-xs text-gray-600">계정 버튼 라벨
+              <input value={header.accountLabel} onChange={(e) => setH('accountLabel', e.target.value)} disabled={saving} className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-sm" /></label>
+            <label className="text-xs text-gray-600">계정 링크
+              <input value={header.accountUrl} onChange={(e) => setH('accountUrl', e.target.value)} disabled={saving} placeholder="/login" className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-sm" /></label>
+          </div>
+        )}
+      </div>
+
       <div>
         <h3 className="text-sm font-semibold text-gray-900 mb-1">헤더 (로고 · 메뉴)</h3>
         <p className="text-xs text-gray-500 mb-4">

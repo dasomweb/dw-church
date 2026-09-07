@@ -79,6 +79,13 @@ export const DEFAULT_DESIGN_TOKENS: DesignTokens = {
   // Header chrome — 40px logo / 14px nav match the storefront's previous
   // hard-coded `h-10` logo + `text-sm` nav, so unset tenants look unchanged.
   header: {
+    variant: 'standard',
+    liveBannerText: '지금 예배가 진행 중입니다',
+    liveBannerButtonLabel: '생중계 보기',
+    liveBannerUrl: '',
+    searchUrl: '/search',
+    accountLabel: '교인 로그인',
+    accountUrl: '',
     logoHeight: 40,
     navFontSize: 14,
     navFontWeight: 500,

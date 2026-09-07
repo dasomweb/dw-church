@@ -12,6 +12,7 @@ import { BrandTokensStyle } from '@/components/BrandTokensStyle';
 import { PreviewBridge } from '@/components/PreviewBridge';
 import { HeaderTopBar } from '@/components/HeaderTopBar';
 import { TenantFooter, type FooterNavCol } from '@/components/TenantFooter';
+import { TenantHeader, type HeaderNavItem, type HeaderVariant } from '@/components/TenantHeader';
 import { DEFAULT_DESIGN_TOKENS, type DesignTokens } from '@dw-church/design-tokens';
 // Types inlined to avoid importing @dw-church/api-client in server components
 type ChurchSettings = Record<string, string>;
@@ -66,30 +67,6 @@ function googleFontsHref(stacks: (string | undefined)[]): string | null {
     .map((f) => `family=${encodeURIComponent(f)}:wght@400;500;600;700`)
     .join('&');
   return `https://fonts.googleapis.com/css2?${q}&display=swap`;
-}
-
-function getHeaderClasses(style: string | undefined): string {
-  switch (style) {
-    case 'centered':
-      return 'sticky top-0 z-50 border-b border-gray-200 bg-[var(--dw-background)]';
-    case 'transparent':
-      return 'sticky top-0 z-50 bg-transparent';
-    case 'dark':
-      return 'sticky top-0 z-50 border-b border-gray-700';
-    default:
-      return 'sticky top-0 z-50 border-b bg-[var(--dw-background)] border-gray-200';
-  }
-}
-
-function getHeaderStyle(style: string | undefined): React.CSSProperties {
-  switch (style) {
-    case 'dark':
-      return { backgroundColor: 'var(--dw-text)', color: 'var(--dw-background)' };
-    case 'transparent':
-      return {};
-    default:
-      return {};
-  }
 }
 
 // ─── Viewport ────────────────────────────────────────────────
@@ -224,9 +201,9 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   const layout = theme?.layout;
 
   const headerStyle = layout?.headerStyle ?? 'default';
-  // 'sidebar' layout (시안 12): fixed left nav on desktop, top bar + hamburger on
-  // mobile. Gated — tenants without this headerStyle are completely unaffected.
-  const isSidebar = headerStyle === 'sidebar';
+  // isSidebar / isDarkHeader / navLinkColor now derive from the resolved header
+  // variant (tokens.header.variant → legacy headerStyle fallback), computed below
+  // once `hc` is available.
 
   // The super-admin theme editor saves to the DESIGN TOKENS (--brand-*), but
   // dw-church block components read the legacy --dw-* vars. Bridge them so
@@ -252,10 +229,6 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
     // 제거해 단일 소스(SoT)만 남긴다 — layout 이중 소스 드리프트 원천 제거.
   };
 
-  // Determine text colors for dark header
-  const isDarkHeader = headerStyle === 'dark';
-
-  const navLinkColor = isDarkHeader ? 'var(--dw-background)' : 'var(--dw-text)';
 
   // Branding (SEO/favicon handled in generateMetadata above)
   const logoUrl = settings?.logoUrl ?? settings?.logo_url ?? null;
@@ -268,8 +241,17 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   // CONTENT (주소/전화/SNS) comes from church settings. Copyright auto-fills with
   // the current year + church name when the operator leaves it blank.
   const fc = tokens.footer ?? DEFAULT_DESIGN_TOKENS.footer;
-  // Header design (logo/nav sizes + 상단 유틸바 + Giving CTA + 영문 브랜드).
+  // Header design (logo/nav sizes + 상단 유틸바 + Giving CTA + 영문 브랜드 + 12종 variant).
   const hc = tokens.header ?? DEFAULT_DESIGN_TOKENS.header;
+  // Resolved header variant (시안 헤더 12종). tokens.header.variant wins; when unset
+  // ('standard') fall back to the legacy layout.headerStyle so existing tenants are
+  // completely unchanged. 'sidebar' layout: fixed left nav on desktop, top bar on mobile.
+  const legacyToVariant = (s: string): string =>
+    s === 'centered' ? 'center-split' : s === 'dark' ? 'dark' : s === 'transparent' ? 'transparent' : s === 'sidebar' ? 'sidebar' : 'standard';
+  const headerVariant = (hc.variant && hc.variant !== 'standard') ? hc.variant : legacyToVariant(headerStyle);
+  const isSidebar = headerVariant === 'sidebar';
+  const isDarkHeader = headerVariant === 'dark';
+  const navLinkColor = isDarkHeader ? 'var(--dw-background)' : 'var(--dw-text)';
   const copyright = (fc.copyright ?? '').trim()
     || `© ${new Date().getFullYear()} ${churchName}. All rights Reserved.`;
   // Footer brand: logo image OR text. Footer-specific logo (e.g. a light logo
@@ -316,6 +298,21 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   const historyHref =
     footerNavCols.flatMap((c) => c.children).find((c) => /history|연혁/i.test(c.href) || /연혁/.test(c.label))?.href
     ?? '/about-history';
+
+  // Resolve top-level nav → serializable items (label + href + children) for the
+  // TenantHeader component (12 layout variants). navHref = the SAME resolver.
+  const headerNavItems: HeaderNavItem[] = sortedVisibleItems.map((item) => ({
+    id: item.id,
+    label: item.label,
+    labelEn: (item as { labelEn?: string }).labelEn,
+    href: navHref(item),
+    children: (item.children ?? []).map((c) => ({
+      id: c.id,
+      label: c.label,
+      labelEn: (c as { labelEn?: string }).labelEn,
+      href: navHref(c),
+    })),
+  }));
 
   // Items for the web-app bottom nav — same top-level visible menu items,
   // resolved to { label, href } via the SAME navHref helper the header uses.
@@ -421,174 +418,34 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
         </aside>
       )}
 
-      {/* 상단 유틸리티 바 (예배·주소 한 줄 + 글자크기 + 카카오톡) */}
-      {hc.utilityBarEnabled && (
-        <div className={isSidebar ? 'md:hidden' : ''}>
+      {/* Header — 12 layout variants (Claude Design "Header 모음"). Utility bar +
+          mobile menu + install button are passed as nodes; sidebar desktop aside
+          is rendered below. Existing tenants (variant 'standard') are unchanged. */}
+      <TenantHeader
+        variant={headerVariant as HeaderVariant}
+        homeHref={homeHref}
+        logoUrl={logoUrl}
+        churchName={churchName}
+        brandTextEn={hc.brandTextEn}
+        navItems={headerNavItems}
+        navLinkColor={navLinkColor}
+        giving={{ enabled: hc.givingEnabled, url: hc.givingUrl, label: hc.givingLabel }}
+        live={{ text: hc.liveBannerText, buttonLabel: hc.liveBannerButtonLabel, url: hc.liveBannerUrl }}
+        search={{ url: hc.searchUrl }}
+        account={{ label: hc.accountLabel, url: hc.accountUrl }}
+        utilityBar={hc.utilityBarEnabled ? (
           <HeaderTopBar
             text={hc.utilityBarText}
             kakaoUrl={kakaoUrl}
             showFontSize={hc.utilityShowFontSize}
             showKakao={hc.utilityShowKakao}
-            showLanguage={hc.utilityShowLanguage}
+            showLanguage={hc.utilityShowLanguage || headerVariant === 'bilingual' || headerVariant === 'english'}
             dark={isDarkHeader}
           />
-        </div>
-      )}
-
-      {/* Header */}
-      <header
-        role="banner"
-        className={`${getHeaderClasses(headerStyle)}${isSidebar ? ' md:hidden' : ''}`}
-        style={getHeaderStyle(headerStyle)}
-      >
-        {headerStyle === 'centered' ? (
-          /* Centered header: logo above, nav below, both centered */
-          <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
-            <div className="flex flex-col items-center gap-3">
-              <Link href={homeHref} className="flex items-center gap-2.5">
-                {logoUrl && (
-                  <img
-                    src={logoUrl}
-                    alt={churchName}
-                    className="w-auto object-contain"
-                    // Operator-tunable logo height (super-admin 테마 → 헤더).
-                    // Falls back to 40px (the previous hard-coded h-10).
-                    style={{ height: 'var(--brand-logo-height, 40px)' }}
-                  />
-                )}
-                {(!logoUrl || hc.brandTextEn) && (
-                  <span className="flex flex-col leading-tight">
-                    {!logoUrl && (
-                      <span className="text-lg sm:text-xl font-bold font-heading" style={{ color: isDarkHeader ? 'var(--dw-background)' : 'var(--dw-primary)' }}>{churchName}</span>
-                    )}
-                    {hc.brandTextEn && (
-                      <span className="text-[11px] font-medium uppercase tracking-wide opacity-60" style={{ color: isDarkHeader ? 'var(--dw-background)' : 'var(--dw-muted, #6b7280)' }}>{hc.brandTextEn}</span>
-                    )}
-                  </span>
-                )}
-              </Link>
-              <nav aria-label="주 메뉴" className="hidden gap-5 md:flex items-center">
-                {sortedVisibleItems.map((item) => (
-                  <div key={item.id} className="relative group">
-                    <Link
-                      href={navHref(item)}
-                      className="font-medium transition-colors hover:opacity-80 py-2 inline-flex items-center gap-0.5"
-                      // Operator-tunable nav font size (super-admin 테마 → 헤더).
-                      // Inline fontSize overrides the old text-sm; 14px fallback = text-sm.
-                      style={{ color: navLinkColor, fontSize: 'var(--brand-nav-font-size, 14px)', fontWeight: 'var(--brand-nav-font-weight, 500)' }}
-                    >
-                      {item.label}
-                      {item.labelEn ? <span className="ml-1.5 text-[0.8em] font-normal opacity-60">{item.labelEn}</span> : null}
-                      {item.children && item.children.length > 0 && (
-                        <svg className="w-3 h-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 9l-7 7-7-7" /></svg>
-                      )}
-                    </Link>
-                    {item.children && item.children.length > 0 && (
-                      <div className="absolute left-0 top-full pt-1 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-150 z-50">
-                        <div className="bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[160px]">
-                          {item.children.map((child) => (
-                            <Link
-                              key={child.id}
-                              href={navHref(child)}
-                              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[var(--dw-primary)] transition-colors"
-                            >
-                              {child.label}
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </nav>
-              {hc.givingEnabled && (
-                <Link
-                  href={hc.givingUrl}
-                  className="hidden items-center rounded-full px-5 py-2 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90 md:inline-flex"
-                  style={{ backgroundColor: 'var(--dw-primary, #2563eb)' }}
-                >
-                  {hc.givingLabel}
-                </Link>
-              )}
-            </div>
-            <div className="absolute right-4 top-4 sm:right-6 md:hidden flex items-center gap-2">
-              {pwaEnabled && <InstallAppButton className="hidden sm:inline-flex" />}
-              <MobileMenu navItems={sortedVisibleItems} basePath={basePath} />
-            </div>
-          </div>
-        ) : (
-          /* Default / transparent / dark header: left logo, right nav */
-          <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
-            <Link href={homeHref} className="flex items-center gap-2.5">
-              {logoUrl && (
-                <img
-                  src={logoUrl}
-                  alt={churchName}
-                  className="w-auto object-contain"
-                  // Operator-tunable logo height (super-admin 테마 → 헤더). 40px fallback = old h-10.
-                  style={{ height: 'var(--brand-logo-height, 40px)' }}
-                />
-              )}
-              {(!logoUrl || hc.brandTextEn) && (
-                <span className="flex flex-col leading-tight">
-                  {!logoUrl && (
-                    <span className="text-lg sm:text-xl font-bold font-heading" style={{ color: isDarkHeader ? 'var(--dw-background)' : 'var(--dw-primary)' }}>{churchName}</span>
-                  )}
-                  {hc.brandTextEn && (
-                    <span className="text-[11px] font-medium uppercase tracking-wide opacity-60" style={{ color: isDarkHeader ? 'var(--dw-background)' : 'var(--dw-muted, #6b7280)' }}>{hc.brandTextEn}</span>
-                  )}
-                </span>
-              )}
-            </Link>
-            <nav aria-label="주 메뉴" className="hidden gap-5 md:flex items-center">
-              {sortedVisibleItems.map((item) => (
-                <div key={item.id} className="relative group">
-                  <Link
-                    href={navHref(item)}
-                    className="font-medium transition-colors hover:opacity-80 py-2 inline-flex items-center gap-0.5"
-                    // Operator-tunable nav font size (super-admin 테마 → 헤더). 14px fallback = text-sm.
-                    style={{ color: navLinkColor, fontSize: 'var(--brand-nav-font-size, 14px)', fontWeight: 'var(--brand-nav-font-weight, 500)' }}
-                  >
-                    {item.label}
-                    {item.labelEn ? <span className="ml-1.5 text-[0.8em] font-normal opacity-60">{item.labelEn}</span> : null}
-                    {item.children && item.children.length > 0 && (
-                      <svg className="w-3 h-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 9l-7 7-7-7" /></svg>
-                    )}
-                  </Link>
-                  {item.children && item.children.length > 0 && (
-                    <div className="absolute left-0 top-full pt-1 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-150 z-50">
-                      <div className="bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[160px]">
-                        {item.children.map((child) => (
-                          <Link
-                            key={child.id}
-                            href={navHref(child)}
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[var(--dw-primary)] transition-colors"
-                          >
-                            {child.label}
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </nav>
-            {hc.givingEnabled && (
-              <Link
-                href={hc.givingUrl}
-                className="hidden items-center rounded-full px-5 py-2 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90 md:inline-flex"
-                style={{ backgroundColor: 'var(--dw-primary, #2563eb)' }}
-              >
-                {hc.givingLabel}
-              </Link>
-            )}
-            <div className="flex items-center gap-2 md:hidden">
-              {pwaEnabled && <InstallAppButton />}
-              <MobileMenu navItems={sortedVisibleItems} basePath={basePath} />
-            </div>
-          </div>
-        )}
-      </header>
+        ) : null}
+        mobileMenu={<MobileMenu navItems={sortedVisibleItems} basePath={basePath} />}
+        installButton={pwaEnabled ? <InstallAppButton /> : null}
+      />
 
       {/* Main */}
       {/* Extra bottom padding on mobile (pwa only) so the fixed app bottom nav
