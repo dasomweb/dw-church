@@ -220,7 +220,7 @@ function ApplyForm() {
 
           {state === 'error' && (
             <p className="mt-4 text-[14px] text-[#61697a]">
-              보내는 중 문제가 생겼습니다. 잠시 후 다시 시도하시거나 <a href="mailto:hello@truelight.app" className="font-semibold text-[#1466d6] hover:underline">hello@truelight.app</a> 로 알려 주세요.
+              보내는 중 문제가 생겼습니다. 잠시 후 다시 시도하시거나 <a href="mailto:info@dasomweb.com" className="font-semibold text-[#1466d6] hover:underline">info@dasomweb.com</a> 로 알려 주세요.
             </p>
           )}
 
@@ -265,15 +265,19 @@ function ApplyForm() {
           <dl className="mt-4 space-y-3 text-[14.5px]">
             <div className="flex justify-between gap-4">
               <dt className="text-[#61697a]">이메일</dt>
-              <dd><a href="mailto:hello@truelight.app" className="font-medium text-[#1466d6] hover:underline">hello@truelight.app</a></dd>
+              <dd><a href="mailto:info@dasomweb.com" className="font-medium text-[#1466d6] hover:underline">info@dasomweb.com</a></dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-[#61697a]">전화</dt>
-              <dd className="font-medium text-[#16181d]">○○○-○○○-○○○○</dd>
+              <dd><a href="tel:+14708395151" className="font-medium text-[#16181d] hover:text-[#1466d6]">1-470-839-5151</a></dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-[#61697a]">상담 시간</dt>
-              <dd className="font-medium text-[#16181d]">○○○</dd>
+              <dd className="font-medium text-[#16181d]">월–금 오전 9시–오후 5시 (EST)</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="shrink-0 text-[#61697a]">주소</dt>
+              <dd className="text-right font-medium text-[#16181d]" style={{ lineHeight: 1.55 }}>1172 Satellite Blvd NW Ste 110,<br />Suwanee, GA 30024</dd>
             </div>
           </dl>
           <p className="mt-4 border-t border-[#eceef2] pt-4 text-[13.5px] text-[#61697a]" style={{ lineHeight: 1.65 }}>

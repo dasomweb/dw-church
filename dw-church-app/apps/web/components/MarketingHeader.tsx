@@ -78,7 +78,8 @@ export default function MarketingHeader() {
       </div>
       {/* Mobile dropdown menu */}
       {menuOpen && (
-        <nav className="border-t border-[#eceef2] bg-white lg:hidden">
+        // 전체 화면 오버레이 — 콘텐츠를 밀어내지 않고 위를 덮어(히어로가 뒤로 안 보이게).
+        <nav className="absolute left-0 right-0 top-full h-[100dvh] overflow-y-auto border-t border-[#eceef2] bg-white lg:hidden">
           <div className="mx-auto flex max-w-[1080px] flex-col px-5 py-2">
             {NAV.map((n) => (
               <a key={n.href} href={n.href} onClick={() => setMenuOpen(false)} className={mobileLinkClass}>

@@ -589,15 +589,16 @@ export default function LandingPage() {
 
       <MarketingFooter />
 
-      {/* 모바일 하단 고정 CTA 바 — 데스크톱에서는 숨김. 라벨은 가운데 정렬이라
-          우하단 카카오 FAB(z-50, 설정 시에만 노출)가 오른쪽 위에 떠도 가려지지 않는다. */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#eceef2] bg-white/95 px-4 py-3 backdrop-blur-sm lg:hidden">
+      {/* 모바일 하단 고정 CTA 바 — 상담 신청 + 카카오톡 문의 반반(50/50). 데스크톱 숨김.
+          카카오 풍선 FAB 는 데스크톱 전용이므로 모바일에서 겹치지 않는다. */}
+      <div className="fixed inset-x-0 bottom-0 z-40 flex gap-2 border-t border-[#eceef2] bg-white/95 px-3 py-3 backdrop-blur-sm lg:hidden">
         <a
           href="/apply"
-          className="flex min-h-[48px] items-center justify-center rounded-xl bg-[#2b7fff] px-6 text-[16px] font-semibold text-white hover:bg-[#1466d6]"
+          className="flex min-h-[48px] flex-1 items-center justify-center rounded-xl bg-[#2b7fff] px-4 text-[16px] font-semibold text-white hover:bg-[#1466d6]"
         >
           상담 신청
         </a>
+        <KakaoInquiryButton className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-[#FEE500] px-4 text-[16px] font-bold text-[#191600] hover:brightness-95" />
       </div>
       {/* 하단 고정 바가 콘텐츠를 가리지 않도록 모바일 여백 확보(딥 푸터 색을 이어 흰 띠 방지) */}
       <div className="h-20 bg-[#0f1b2d] lg:hidden" aria-hidden />

@@ -47,10 +47,13 @@ export default function MarketingFooter() {
               미주 한인 이민교회의 온라인 사역과 교회 행정을 함께 맡는 시스템.
             </p>
             <p className="mt-4 text-[14px] text-[#aab6c7]">
-              <a href="mailto:hello@truelight.app" className="text-[#dbe3ee] hover:text-white">hello@truelight.app</a>
+              <a href="mailto:info@dasomweb.com" className="text-[#dbe3ee] hover:text-white">info@dasomweb.com</a>
+              <span className="text-[#7f8da3]"> · </span>
+              <a href="tel:+14708395151" className="text-[#dbe3ee] hover:text-white">1-470-839-5151</a>
             </p>
-            <p className="mt-1 text-[13px]" style={{ color: '#7f8da3' }}>
-              연락처 · 상담 시간 ○○○
+            <p className="mt-2 text-[13px]" style={{ color: '#7f8da3', lineHeight: 1.6 }}>
+              1172 Satellite Blvd NW Ste 110, Suwanee, GA 30024<br />
+              상담 시간 · 월–금 오전 9시–오후 5시 (EST)
             </p>
           </div>
           {COLUMNS.map((col) => (
