@@ -16,12 +16,28 @@ const MUTED = 'var(--dw-text-muted, #61697a)';
 const BORDER = 'var(--dw-border, #e5e7eb)';
 const SURFACE = 'var(--dw-surface, #f7f8fa)';
 
+const WD = ['일', '월', '화', '수', '목', '금', '토'];
+
 function fmtDate(iso?: string | null): string {
   if (!iso) return '';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso ?? '';
-  const wd = ['일', '월', '화', '수', '목', '금', '토'][d.getDay()];
-  return `${d.getMonth() + 1}월 ${d.getDate()}일 ${wd}요일`;
+  return `${d.getMonth() + 1}월 ${d.getDate()}일 ${WD[d.getDay()]}요일`;
+}
+
+// 요일 한 글자(월/화/…) — 주간 목록 배지용. 날짜 없으면 null.
+function weekdayOf(iso?: string | null): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return WD[d.getDay()];
+}
+// 짧은 날짜(9월 8일) — 주간 목록 부제용.
+function shortDate(iso?: string | null): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return `${d.getMonth() + 1}월 ${d.getDate()}일`;
 }
 
 export function DevotionReaderClient({ devotions, eyebrow }: { devotions: Devo[]; eyebrow: string }) {
@@ -49,14 +65,18 @@ export function DevotionReaderClient({ devotions, eyebrow }: { devotions: Devo[]
                   style={{ borderColor: BORDER }}
                 >
                   <span
-                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[12px] font-bold"
                     style={active
                       ? { background: BRAND, color: '#fff' }
                       : { border: `1px solid ${BORDER}`, color: MUTED }}
-                  >{i + 1}</span>
+                  >{weekdayOf(d.devoDate) ?? (i + 1)}</span>
                   <span className="min-w-0">
                     <span className="block truncate text-[14px]" style={{ fontWeight: active ? 700 : 400 }}>{d.title}</span>
-                    {d.scriptureRef && <span className="mt-0.5 block text-[12px]" style={{ color: MUTED }}>{d.scriptureRef}</span>}
+                    {(shortDate(d.devoDate) || d.scriptureRef) && (
+                      <span className="mt-0.5 block text-[12px]" style={{ color: MUTED }}>
+                        {[shortDate(d.devoDate), d.scriptureRef].filter(Boolean).join(' · ')}
+                      </span>
+                    )}
                   </span>
                 </button>
               );
