@@ -26,5 +26,6 @@ export const CANVAS_SAMPLES: CanvasSample[] = [
   { "id": "18", "file": "card-18.html", "group": "완성도 레이아웃 시안", "code": "19", "name": "이번주 안내형", "desc": "좌우 히어로 + 이번 주 안내·갤러리" },
   { "id": "19", "file": "card-19.html", "group": "완성도 레이아웃 시안", "code": "20", "name": "사진 갤러리", "desc": "필터 칩 + 사진 타일 갤러리 중심" },
   { "id": "20", "file": "card-20.html", "group": "완성도 레이아웃 시안", "code": "21", "name": "히어로 겹침형", "desc": "히어로 위 겹치는 예배 안내 카드" },
-  { "id": "21", "file": "card-21.html", "group": "완성도 레이아웃 시안", "code": "22", "name": "풀블리드 히어로", "desc": "전체화면 사진 히어로 + 큰 글씨" }
+  { "id": "21", "file": "card-21.html", "group": "완성도 레이아웃 시안", "code": "22", "name": "풀블리드 히어로", "desc": "전체화면 사진 히어로 + 큰 글씨" },
+  { "id": "22", "file": "card-22.html", "group": "소형·개척 교회", "code": "23", "name": "원고·음성형", "desc": "영상 없이 원고·음성·카카오톡 배포 · 설교 매거진 + 개인 묵상 (개척교회형)" }
 ];

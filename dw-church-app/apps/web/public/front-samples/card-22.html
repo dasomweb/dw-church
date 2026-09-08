@@ -1,0 +1,181 @@
+<!doctype html><html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Serif+KR:wght@500;700&display=swap">
+<style>
+:root{--brand:#1466d6;--primary:#2b7fff;--bg:#ffffff;--surface:#f7f8fa;--border:#e5e7eb;--fg:#16181d;--fg-muted:#61697a;
+--font-sans:'Pretendard','Inter',system-ui,sans-serif;--font-latin:'Inter',system-ui,sans-serif;--font-mono:ui-monospace,Menlo,monospace;
+--radius-sm:8px;--radius:12px;--radius-lg:16px;--leading-body:1.75;--leading-tight:1.35;--tracking-title:-0.025em;--tracking-body:-0.003em}
+
+*{box-sizing:border-box}
+body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:var(--font-sans);font-size:16px;line-height:var(--leading-body);letter-spacing:var(--tracking-body);-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word}
+:lang(en){font-family:var(--font-latin);letter-spacing:0;word-break:normal}
+h1,h2,h3{line-height:var(--leading-tight);letter-spacing:var(--tracking-title);margin:0 0 8px}
+image-slot{display:block;position:relative;width:100%;height:100%;min-height:120px;background:linear-gradient(135deg,#e2e8f2,#eef1f6)}
+image-slot::after{content:attr(placeholder);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9aa7bd;font-size:13px;font-weight:600;letter-spacing:0}
+image-slot[data-filled]{background-size:cover;background-position:center;background-repeat:no-repeat}
+image-slot[data-filled]::after{content:none}
+image-slot[shape="circle"],image-slot[shape="pill"]{border-radius:999px}
+</style></head>
+<body>
+<div style="font-family:var(--font-sans)">
+  <!-- 유틸바 -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:42px;background:var(--surface);border-bottom:1px solid var(--border);font-size:13px;color:var(--fg-muted)">
+    <span>주일예배 11:00 AM · 1200 S Brookhurst St, Anaheim, CA · 건물 주차장 무료</span>
+    <div style="display:flex;align-items:center;gap:16px"><div style="display:flex;align-items:center;gap:8px"><span>글자 크기</span><span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:24px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);font-size:12px;font-weight:600">가</span><span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:24px;border-radius:var(--radius-sm);background:var(--fg);color:#fff;font-size:15px;font-weight:600">가</span></div><span style="color:var(--border)">|</span><span>카카오톡 채널</span><span style="color:var(--border)">|</span><span>(714) 000-0000</span></div>
+  </div>
+  <!-- 헤더 -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:74px;border-bottom:1px solid var(--border)">
+    <div style="display:flex;align-items:center;gap:11px"><div style="width:32px;height:32px;border-radius:50%;background:var(--brand)"></div><div><div style="font-size:17px;font-weight:700;line-height:1.2">한걸음교회</div><div style="font-size:11px;letter-spacing:.04em;color:var(--fg-muted)">ONE STEP KOREAN CHURCH · ANAHEIM</div></div></div>
+    <nav style="display:flex;align-items:center;gap:28px;font-size:15px;font-weight:500;color:#333842"><b style="color:var(--brand)">이번 주 말씀</b><span>개인 묵상</span><span>교회 소개</span><span>모임 안내</span><span>오시는 길</span></nav>
+    <span style="display:inline-flex;align-items:center;height:38px;padding:0 18px;border:1px solid var(--border);border-radius:999px;font-size:14px;font-weight:600">처음 오시나요?</span>
+  </div>
+
+  <!-- 1. 커버 -->
+  <div style="padding:48px 48px 0;display:grid;grid-template-columns:1.1fr 1fr;gap:44px;align-items:stretch">
+    <div style="align-self:center">
+      <div style="display:flex;gap:8px;margin-bottom:20px"><span style="display:inline-flex;align-items:center;height:26px;padding:0 11px;border-radius:999px;background:#eaf2ff;color:var(--brand);font-size:12px;font-weight:600">이번 주 말씀</span><span style="display:inline-flex;align-items:center;height:26px;padding:0 11px;border-radius:999px;background:var(--surface);color:var(--fg-muted);font-size:12px;font-weight:600">요한복음 4장</span></div>
+      <h1 style="margin:0 0 16px;font-size:42px;font-weight:700;line-height:1.3;letter-spacing:var(--tracking-title)">광야에서도<br>마르지 않는 샘</h1>
+      <p style="margin:0 0 22px;font-size:17px;line-height:1.85;color:var(--fg-muted)">낯선 땅에서 지치는 날이 있습니다. 그러나 우리를 살리는 샘은 환경이 아니라 그분께 있습니다.</p>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:26px;font-size:14px;color:var(--fg-muted)"><div style="width:32px;height:32px;border-radius:50%;background:var(--surface)"></div>이정민 목사 · 8월 9일 주일 · 읽는 데 6분</div>
+      <div style="display:flex;gap:10px"><span style="display:inline-flex;align-items:center;height:46px;padding:0 24px;border-radius:999px;background:var(--brand);color:#fff;font-size:15px;font-weight:600">전문 읽기</span><span style="display:inline-flex;align-items:center;height:46px;padding:0 24px;border:1px solid var(--border);border-radius:999px;background:var(--bg);font-size:15px;font-weight:600">음성 듣기</span></div>
+      <div style="margin-top:18px;font-size:13.5px;color:var(--fg-muted);line-height:1.7">영상 대신 원고와 음성으로 올립니다. 카카오톡 채널로도 매주 보내드립니다.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="width:100%;aspect-ratio:16/9;border-radius:var(--radius-lg);overflow:hidden;flex:none"><image-slot id="ch-22-cover" shape="rect" placeholder="예배 사진 또는 말씀 이미지" data-filled style="background-image:url('https://pub-674328f08783498389f7857dc6e1ab00.r2.dev/_samples/frontpage/worship-2.jpg')"></image-slot></div>
+      <div style="flex:1;border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px 24px;display:flex;flex-direction:column;justify-content:center">
+        <div style="font-size:12px;font-weight:600;color:var(--brand);margin-bottom:14px">이번 주 함께 볼 것</div>
+        <div style="display:flex;flex-direction:column;gap:11px;font-size:14.5px">
+          <div style="display:flex;align-items:center;gap:11px"><b style="width:52px;flex:none;font-weight:600">질문지</b><span style="color:var(--fg-muted);flex:1">관찰 2 · 심화 2</span><span style="color:var(--fg-muted)">→</span></div>
+          <div style="display:flex;align-items:center;gap:11px"><b style="width:52px;flex:none;font-weight:600">나눔</b><span style="color:var(--fg-muted);flex:1">적용 3 · 목요일 모임</span><span style="color:var(--fg-muted)">→</span></div>
+          <div style="display:flex;align-items:center;gap:11px"><b style="width:52px;flex:none;font-weight:600">묵상</b><span style="color:var(--fg-muted);flex:1">6일 · 오늘 Day 3</span><span style="color:var(--fg-muted)">→</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 본문 발췌 -->
+  <div style="padding:60px 48px 0">
+    <div style="max-width:860px">
+      <div style="font-size:13px;font-weight:600;color:var(--brand);margin-bottom:16px">본문에서</div>
+      <p style="margin:0 0 14px;font-size:23px;font-weight:600;line-height:1.75;letter-spacing:var(--tracking-title)">“내가 주는 물을 마시는 자는 영원히 목마르지 아니하리니”</p>
+      <div style="font-size:14px;color:var(--fg-muted);padding-bottom:26px;border-bottom:1px solid var(--border)">요한복음 4:14</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:36px;padding-top:26px">
+        <p style="margin:0;font-size:16.5px;line-height:1.95;color:var(--fg-muted)">사마리아 여인은 매일 우물을 찾았습니다. 그 반복이 그의 삶이었고, 목마름은 해결되지 않았습니다. 이민의 시간도 그렇게 흐릅니다.</p>
+        <p style="margin:0;font-size:16.5px;line-height:1.95;color:var(--fg-muted)">예수는 우물을 없애지 않으셨습니다. 대신 다른 샘을 말하셨습니다. 사는 자리는 그대로여도, 견디게 하는 힘의 출처는 바뀔 수 있습니다.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 이번 주 질문 -->
+  <div style="margin:64px 0 0;padding:48px;background:var(--surface)">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--brand);margin-bottom:8px">이번 주 질문</div>
+        <h2 style="margin:0;font-size:28px;font-weight:700">읽고, 파고들고, 나눕니다</h2>
+        <p style="margin:10px 0 0;font-size:15.5px;line-height:1.8;color:var(--fg-muted)">관찰과 심화는 혼자 답하고, 적용은 목요일 모임에서 함께 이야기합니다.</p>
+      </div>
+      <div style="display:flex;gap:10px;flex:none"><span style="display:inline-flex;align-items:center;height:46px;padding:0 24px;border-radius:999px;background:var(--brand);color:#fff;font-size:15px;font-weight:600">질문지 PDF</span><span style="display:inline-flex;align-items:center;height:46px;padding:0 24px;border:1px solid var(--border);border-radius:999px;background:var(--bg);font-size:15px;font-weight:600">인쇄용 한 장</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:26px 28px;display:flex;flex-direction:column">
+        <div style="margin-bottom:16px"><span style="display:inline-flex;align-items:center;height:26px;padding:0 11px;border-radius:999px;background:#eaf2ff;color:var(--brand);font-size:12px;font-weight:600">질문지 · 관찰</span></div>
+        <div style="font-size:19px;font-weight:700;margin-bottom:5px">본문에 무엇이 쓰여 있는가</div>
+        <div style="font-size:13.5px;color:var(--fg-muted);line-height:1.7;padding-bottom:18px;border-bottom:1px solid var(--border)">읽으면 답이 보이는 질문입니다.</div>
+        <div style="display:flex;flex-direction:column;gap:14px;padding-top:18px">
+          <div style="display:flex;gap:12px"><span style="font-size:12.5px;font-weight:600;color:var(--brand);flex:none;padding-top:3px">01</span><span style="font-size:15px;line-height:1.75">예수와 여인이 만난 시간과 장소는 어디입니까?</span></div><div style="display:flex;gap:12px"><span style="font-size:12.5px;font-weight:600;color:var(--brand);flex:none;padding-top:3px">02</span><span style="font-size:15px;line-height:1.75">예수가 말한 두 종류의 물은 각각 무엇입니까?</span></div>
+        </div>
+        <div style="margin-top:auto;padding-top:18px;font-size:13px;color:var(--fg-muted);display:flex;align-items:center;justify-content:space-between"><span>질문 2 · 약 5분</span><span>→</span></div>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:26px 28px;display:flex;flex-direction:column">
+        <div style="margin-bottom:16px"><span style="display:inline-flex;align-items:center;height:26px;padding:0 11px;border-radius:999px;background:#eaf2ff;color:var(--brand);font-size:12px;font-weight:600">질문지 · 심화</span></div>
+        <div style="font-size:19px;font-weight:700;margin-bottom:5px">왜 그렇게 말씀하셨는가</div>
+        <div style="font-size:13.5px;color:var(--fg-muted);line-height:1.7;padding-bottom:18px;border-bottom:1px solid var(--border)">뜻을 한 겹 더 들어가 봅니다.</div>
+        <div style="display:flex;flex-direction:column;gap:14px;padding-top:18px">
+          <div style="display:flex;gap:12px"><span style="font-size:12.5px;font-weight:600;color:var(--brand);flex:none;padding-top:3px">03</span><span style="font-size:15px;line-height:1.75">왜 우물을 없애지 않고 다른 샘을 말하셨습니까?</span></div><div style="display:flex;gap:12px"><span style="font-size:12.5px;font-weight:600;color:var(--brand);flex:none;padding-top:3px">04</span><span style="font-size:15px;line-height:1.75">여인이 물동이를 두고 간 것은 무엇을 보여줍니까?</span></div>
+        </div>
+        <div style="margin-top:auto;padding-top:18px;font-size:13px;color:var(--fg-muted);display:flex;align-items:center;justify-content:space-between"><span>질문 2 · 약 10분</span><span>→</span></div>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:26px 28px;display:flex;flex-direction:column">
+        <div style="margin-bottom:16px"><span style="display:inline-flex;align-items:center;height:26px;padding:0 11px;border-radius:999px;background:#eaf2ff;color:var(--brand);font-size:12px;font-weight:600">나눔 질문 · 적용</span></div>
+        <div style="font-size:19px;font-weight:700;margin-bottom:5px">내 삶에서는 어떻게 되는가</div>
+        <div style="font-size:13.5px;color:var(--fg-muted);line-height:1.7;padding-bottom:18px;border-bottom:1px solid var(--border)">목요일 모임에서 함께 나눕니다.</div>
+        <div style="display:flex;flex-direction:column;gap:14px;padding-top:18px">
+          <div style="display:flex;gap:12px"><span style="font-size:12.5px;font-weight:600;color:var(--brand);flex:none;padding-top:3px">01</span><span style="font-size:15px;line-height:1.75">요즘 반복해서 길어 올리는 “우물”은 무엇입니까?</span></div><div style="display:flex;gap:12px"><span style="font-size:12.5px;font-weight:600;color:var(--brand);flex:none;padding-top:3px">02</span><span style="font-size:15px;line-height:1.75">그 우물이 채워주지 못한 목마름은 무엇이었나요?</span></div><div style="display:flex;gap:12px"><span style="font-size:12.5px;font-weight:600;color:var(--brand);flex:none;padding-top:3px">03</span><span style="font-size:15px;line-height:1.75">이번 한 주, 누구에게 이 샘을 나누고 싶습니까?</span></div>
+        </div>
+        <div style="margin-top:auto;padding-top:18px;font-size:13px;color:var(--fg-muted);display:flex;align-items:center;justify-content:space-between"><span>질문 3 · 모임에서 30분</span><span>→</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 개인 묵상 진입 -->
+  <div style="padding:64px 48px 0">
+    <div style="border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;display:grid;grid-template-columns:1fr 1.15fr">
+      <div style="min-height:260px"><image-slot id="ch-22-dev" shape="rect" placeholder="묵상 이미지" data-filled style="background-image:url('https://pub-674328f08783498389f7857dc6e1ab00.r2.dev/_samples/frontpage/pray-1.jpg')"></image-slot></div>
+      <div style="padding:38px 40px;display:flex;flex-direction:column;justify-content:center">
+        <div style="display:flex;gap:8px;margin-bottom:16px"><span style="display:inline-flex;align-items:center;height:26px;padding:0 11px;border-radius:999px;background:#eaf2ff;color:var(--brand);font-size:12px;font-weight:600">개인 묵상</span><span style="display:inline-flex;align-items:center;height:26px;padding:0 11px;border-radius:999px;background:var(--surface);color:var(--fg-muted);font-size:12px;font-weight:600">오늘 · 전체 6일</span></div>
+        <h2 style="margin:0 0 12px;font-size:28px;font-weight:700;line-height:1.35">하루 10분,<br>혼자 여는 말씀</h2>
+        <p style="margin:0 0 20px;font-size:15.5px;line-height:1.85;color:var(--fg-muted)">이번 주 설교 본문을 6일에 걸쳐 나눠 읽습니다. 오늘은 <b style="color:var(--fg);font-weight:600">우물가에서 멈춰 선 시간</b>입니다.</p>
+        <div style="display:flex;gap:10px"><span style="display:inline-flex;align-items:center;height:46px;padding:0 24px;border-radius:999px;background:var(--brand);color:#fff;font-size:15px;font-weight:600">오늘 묵상 보기</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. 카드뉴스 + 소식 -->
+  <div style="padding:64px 48px 0;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:stretch">
+    <div style="display:flex;flex-direction:column">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:18px">
+        <div><div style="font-size:13px;font-weight:600;color:var(--brand);margin-bottom:8px">카드뉴스</div><h2 style="margin:0;font-size:24px;font-weight:700">한 장으로 보내는 소식</h2></div>
+        <span style="font-size:13.5px;color:var(--fg-muted)">전체 →</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div><div style="width:100%;aspect-ratio:1/1;border-radius:var(--radius);overflow:hidden"><image-slot id="ch-22-cn1" shape="rect" placeholder="말씀 카드 카드뉴스" data-filled style="background-image:url('https://pub-674328f08783498389f7857dc6e1ab00.r2.dev/_samples/frontpage/sermon-1.jpg')"></image-slot></div><div style="margin-top:11px;font-size:15.5px;font-weight:600">말씀 카드</div><div style="font-size:13px;color:var(--fg-muted);margin-top:4px;line-height:1.6">광야에서도 마르지 않는 샘</div></div><div><div style="width:100%;aspect-ratio:1/1;border-radius:var(--radius);overflow:hidden"><image-slot id="ch-22-cn2" shape="rect" placeholder="모임 안내 카드뉴스" data-filled style="background-image:url('https://pub-674328f08783498389f7857dc6e1ab00.r2.dev/_samples/frontpage/group-1.jpg')"></image-slot></div><div style="margin-top:11px;font-size:15.5px;font-weight:600">모임 안내</div><div style="font-size:13px;color:var(--fg-muted);margin-top:4px;line-height:1.6">목요 성경공부가 시작됩니다</div></div>
+      </div>
+      <div style="margin-top:auto;padding-top:20px;font-size:13.5px;color:var(--fg-muted);line-height:1.75">카카오톡 채널로 매주 한 장씩 보내드립니다.</div>
+    </div>
+    <div style="display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;gap:20px;border-bottom:1px solid var(--border);padding-bottom:14px;margin-bottom:6px"><span style="font-size:20px;font-weight:700">소식 · 주보</span><span style="margin-left:auto;font-size:13.5px;color:var(--fg-muted)">더보기 +</span></div>
+      <div style="display:flex;align-items:center;gap:14px;padding:15px 0;border-bottom:1px solid var(--border)"><span style="display:inline-flex;align-items:center;height:26px;padding:0 11px;border-radius:999px;background:#eaf2ff;color:var(--brand);font-size:12px;font-weight:600">주보</span><span style="font-size:15.5px;flex:1">8월 16일 주보 (PDF)</span><span style="font-size:13.5px;color:var(--fg-muted)">08.15</span></div><div style="display:flex;align-items:center;gap:14px;padding:15px 0;border-bottom:1px solid var(--border)"><span style="display:inline-flex;align-items:center;height:26px;padding:0 11px;border-radius:999px;background:var(--surface);color:var(--fg-muted);font-size:12px;font-weight:600">모임</span><span style="font-size:15.5px;flex:1">목요 성경공부 시작합니다 (8/21)</span><span style="font-size:13.5px;color:var(--fg-muted)">08.10</span></div><div style="display:flex;align-items:center;gap:14px;padding:15px 0;border-bottom:1px solid var(--border)"><span style="display:inline-flex;align-items:center;height:26px;padding:0 11px;border-radius:999px;background:var(--surface);color:var(--fg-muted);font-size:12px;font-weight:600">안내</span><span style="font-size:15.5px;flex:1">가을 나들이 — 9월 21일 주일 오후</span><span style="font-size:13.5px;color:var(--fg-muted)">08.04</span></div><div style="display:flex;align-items:center;gap:14px;padding:15px 0;border-bottom:1px solid var(--border)"><span style="display:inline-flex;align-items:center;height:26px;padding:0 11px;border-radius:999px;background:var(--surface);color:var(--fg-muted);font-size:12px;font-weight:600">기도</span><span style="font-size:15.5px;flex:1">8월 교회 기도 제목</span><span style="font-size:13.5px;color:var(--fg-muted)">08.01</span></div>
+      <div style="margin-top:auto;padding-top:20px;display:flex;gap:10px"><span style="display:inline-flex;align-items:center;height:46px;padding:0 24px;border-radius:999px;background:var(--brand);color:#fff;font-size:15px;font-weight:600">기도 요청</span><span style="display:inline-flex;align-items:center;height:46px;padding:0 24px;border:1px solid var(--border);border-radius:999px;background:var(--bg);font-size:15px;font-weight:600">심방 신청</span></div>
+    </div>
+  </div>
+
+  <!-- 6. 예배 · 오시는 길 -->
+  <div style="margin:64px 0 0;padding:48px;background:var(--surface)">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px">
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:26px 28px;display:flex;flex-direction:column">
+        <div style="font-size:12px;font-weight:600;color:var(--brand);margin-bottom:14px">예배와 모임</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:16px">
+          <div style="display:flex;justify-content:space-between"><span>주일예배</span><b style="font-weight:600">11:00 AM</b></div><div style="display:flex;justify-content:space-between"><span>목요 성경공부</span><b style="font-weight:600">8:00 PM</b></div><div style="display:flex;justify-content:space-between"><span>새벽기도 (Zoom)</span><b style="font-weight:600">5:30 AM</b></div>
+        </div>
+        <div style="margin-top:auto;padding-top:18px;border-top:1px solid var(--border);font-size:13.5px;color:var(--fg-muted);line-height:1.75">예배는 약 70분입니다.<br>예배 후 함께 점심을 먹습니다.</div>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:26px 28px;display:flex;flex-direction:column">
+        <div style="font-size:12px;font-weight:600;color:var(--brand);margin-bottom:14px">처음 오시는 분께</div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:14.5px;line-height:1.55">
+          <div style="display:flex;gap:12px"><b style="width:38px;flex:none;font-weight:600">주차</b><span style="color:var(--fg-muted)">건물 주차장 무료 · 스트리트 파킹</span></div><div style="display:flex;gap:12px"><b style="width:38px;flex:none;font-weight:600">자녀</b><span style="color:var(--fg-muted)">예배 중 놀이방 운영</span></div><div style="display:flex;gap:12px"><b style="width:38px;flex:none;font-weight:600">복장</b><span style="color:var(--fg-muted)">편한 옷차림으로 오세요</span></div><div style="display:flex;gap:12px"><b style="width:38px;flex:none;font-weight:600">헌금</b><span style="color:var(--fg-muted)">처음 오신 분은 하지 않습니다</span></div><div style="display:flex;gap:12px"><b style="width:38px;flex:none;font-weight:600">식사</b><span style="color:var(--fg-muted)">예배 후 다 함께 점심</span></div>
+        </div>
+        <div style="margin-top:auto;padding-top:18px;border-top:1px solid var(--border);font-size:13.5px;font-weight:600;display:flex;align-items:center;justify-content:space-between"><span>예배 순서 보기</span><span style="color:var(--fg-muted)">→</span></div>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:26px 28px;display:flex;flex-direction:column">
+        <div style="font-size:12px;font-weight:600;color:var(--brand);margin-bottom:14px">오시는 길</div>
+        <div style="font-size:16px;line-height:1.7">1200 S Brookhurst St<br>Anaheim, CA 92804</div>
+        <div style="font-size:13.5px;color:var(--fg-muted);line-height:1.75;margin-top:8px">Cornerstone Church 채플을 함께 사용합니다.<br>5번 프리웨이 Brookhurst 출구에서 2분.</div>
+        <div style="margin-top:auto;padding-top:18px;display:flex;flex-direction:column;gap:9px">
+          <span style="display:inline-flex;align-items:center;justify-content:center;height:44px;border-radius:var(--radius);background:var(--brand);color:#fff;font-size:14.5px;font-weight:600">길찾기</span>
+          <span style="display:inline-flex;align-items:center;justify-content:center;height:44px;border-radius:var(--radius);border:1px solid var(--border);font-size:14.5px;font-weight:600">전화 문의</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:34px 48px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:32px;font-size:15px;color:var(--fg-muted)">
+    <span>2023년 오렌지카운티에서 스무 명으로 시작한 작은 한인교회입니다. 미주한인예수교장로회(KAPC) 소속.</span>
+    <span style="flex:none;color:var(--fg);font-weight:600">교회 이야기 →</span>
+  </div>
+  <div style="padding:34px 48px;background:var(--surface);display:flex;justify-content:space-between;align-items:flex-end;gap:32px;font-size:14px;line-height:1.9;color:var(--fg-muted)">
+    <span><b style="color:var(--fg);font-size:15px">한걸음교회 One Step Korean Church</b> · 2023년 개척 · 미주한인예수교장로회(KAPC)<br>1200 S Brookhurst St, Anaheim, CA 92804 · (714) 000-0000 · 담임 이정민 목사</span>
+    <div style="display:flex;gap:8px;flex:none"><span style="display:inline-flex;align-items:center;height:34px;padding:0 14px;border:1px solid var(--border);border-radius:999px;background:var(--bg);font-size:13px;font-weight:600">카카오톡 채널</span><span style="display:inline-flex;align-items:center;height:34px;padding:0 14px;border:1px solid var(--border);border-radius:999px;background:var(--bg);font-size:13px;font-weight:600">인스타그램</span><span style="display:inline-flex;align-items:center;height:34px;padding:0 14px;border:1px solid var(--border);border-radius:999px;background:var(--bg);font-size:13px;font-weight:600">이메일 소식지</span></div>
+  </div>
+</div>
+</body></html>

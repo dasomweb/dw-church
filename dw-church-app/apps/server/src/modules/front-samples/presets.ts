@@ -177,6 +177,26 @@ const story = (eyebrow: string, title: string, content: string, imageUrl: string
   props: { eyebrow, title, content, imageUrl, variant: layout, bgMode: 'none', buttonText, buttonUrl: '#' },
 });
 
+// ── 시안 15a(소형·개척교회형 — 영상 없이 원고·음성) 시그니처 섹션 ──────────────
+// 콘텐츠(설교/묵상/행사)는 절대 시드하지 않는다 — 관리자가 각 모듈에 등록하면
+// 아래 데이터 블록들이 채워진다([[feedback_no_seed_content]] / CLAUDE.md).
+// 설교 매거진 compact = 영상 없이 이미지 + "함께 볼 것" 카드 + 본문발췌 2단 + 질문.
+const sermonMagazineCompact = (): PresetSection => ({ block_type: 'sermon_magazine', props: { variant: 'compact', title: '이번 주 말씀' } });
+// 개인 묵상 진입 카드 — 트래킹(진행률/노트) 없이 오늘 묵상으로 유도(빈 경우 숨김).
+const devotionTeaser = (): PresetSection => ({ block_type: 'devotion_reader', props: { variant: 'teaser', eyebrow: '개인 묵상', title: '하루 10분, 혼자 여는 말씀' } });
+// 카드뉴스(행사 → 정사각 소식 카드) + 소식·주보 를 2단으로. 카드뉴스는 이벤트 블록
+// 재사용(variant:'cardnews') — 대표님 지시 "이벤트 블록이 비슷한 기능".
+const cardNewsAndNotices = (): PresetSection => ({ block_type: 'layout_columns', props: { layout: 'columns-2', gap: 40, padding: '48px 24px 0', maxWidth: '7xl', children: [
+  { blockType: 'event_grid', props: { variant: 'cardnews', eyebrow: '카드뉴스', title: '한 장으로 보내는 소식', limit: 2 } },
+  { blockType: 'news_announcements', props: { title: '소식 · 주보', newsLimit: 4, moreUrl: '/bulletins', buttons: [{ text: '기도 요청', url: '/contact' }, { text: '심방 신청', url: '/contact' }] } },
+] } });
+// 예배·처음 오시는 분·오시는 길 3열 (시안 15a 하단). 값은 셋업 때 실제 정보로 교체.
+const worshipVisitColumns = (): PresetSection => ({ block_type: 'info_columns', props: { columns: '3', items: [
+  { title: '예배와 모임', rows: [{ label: '주일예배', value: '오전 11:00' }, { label: '수요예배', value: '저녁 7:30' }, { label: '새벽기도', value: '오전 5:30' }] },
+  { title: '처음 오시는 분께', variant: 'list', rows: [{ label: '주차', value: '무료 주차 · 스트리트 파킹' }, { label: '자녀', value: '예배 중 놀이방 운영' }, { label: '복장', value: '편한 옷차림으로 오세요' }, { label: '식사', value: '예배 후 다 함께 점심' }] },
+  { title: '오시는 길', variant: 'list', rows: [{ label: '주소', value: '교회 주소를 입력하세요' }, { label: '안내', value: '예배 순서와 오시는 길 확인' }] },
+] } });
+
 // ── the 22 presets, keyed by sample id ──────────────────────────────────────
 const P: Record<string, PresetSection[]> = {
   // 미주 한인 이민교회
@@ -256,6 +276,9 @@ const P: Record<string, PresetSection[]> = {
   '19': [hero('성령으로 하나 된 공동체', '사랑의 줄로 굳게 묶인 하나님의 가족입니다.', { variant: 'page-hero', backgroundImageUrl: `${IMG}/retreat-1.jpg` }), galleryMosaic(), sermonFeature(), newcomer(), contact()],
   '20': [heroOverlap('어두운 세상의 등대', '그리스도의 빛을 세상에 비추는 교회입니다.'), verse(), sermonFeature(), ministries(), newsSplit(), galleryMosaic(), givingBand()],
   '21': [hero('은혜와 진리가 충만한 곳', '참된 평안과 구원의 감격이 넘칩니다.', { height: 'full', backgroundImageUrl: `${IMG}/worship-2.jpg`, overlayOpacity: 50 }), infoColumns(), sermons('grid-4'), newcomer(), albums('grid-4'), location(), contact()],
+  // 시안 15a — 소형·개척교회형. 영상 없이 원고·음성 중심 설교 매거진 + 개인 묵상 진입 +
+  // 카드뉴스/소식 2단 + 예배·오시는 길 3열. 데이터 블록은 관리자가 각 모듈에 등록하면 채워짐.
+  '22': [sermonMagazineCompact(), devotionTeaser(), cardNewsAndNotices(), worshipVisitColumns(), location(), contact()],
 };
 
 // ── per-design THEME profiles (colors + fonts) ──────────────────────────────
@@ -290,7 +313,7 @@ const EDITORIAL: ThemeProfile = {
 const THEME_PRESETS: Record<string, ThemeProfile> = {
   '05': WARM, '10': WARM,
   '06': SERIF_MINIMAL, '17': SERIF_MINIMAL,
-  '11': EDITORIAL, '13': EDITORIAL, '16': EDITORIAL, '20': EDITORIAL,
+  '11': EDITORIAL, '13': EDITORIAL, '16': EDITORIAL, '20': EDITORIAL, '22': EDITORIAL,
   '14': DARK,
 };
 function getThemeProfile(design: string): ThemeProfile {

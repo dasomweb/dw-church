@@ -9,6 +9,8 @@ interface EventGridBlockClientProps {
   events: Event[];
   slug: string;
   columns?: number;
+  /** 'cardnews'(15a) = 정사각 타일, 캡션(제목+설명)만, 큰 전체보기 버튼 없음. */
+  variant?: string;
 }
 
 const GRID_COLS: Record<number, string> = {
@@ -26,9 +28,36 @@ function dateBadge(raw: string | undefined): { day: string; month: string } | nu
   return { day: String(d.getDate()), month: MONTHS[d.getMonth()] ?? '' };
 }
 
-export function EventGridBlockClient({ events, slug, columns = 3 }: EventGridBlockClientProps) {
+export function EventGridBlockClient({ events, slug, columns = 3, variant }: EventGridBlockClientProps) {
   const router = useRouter();
   const gridClass = GRID_COLS[columns] || GRID_COLS[3];
+
+  // 15a 카드뉴스 — 정사각(1:1) 타일 + 아래 캡션(제목/설명), 날짜 배지·큰 버튼 없음.
+  if (variant === 'cardnews') {
+    return (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
+        {events.map((event: any) => (
+          <button
+            key={event.id}
+            onClick={() => router.push(`/events/${event.id}`)}
+            className="group text-left"
+          >
+            <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-100">
+              {(event.backgroundImageUrl || event.thumbnailUrl) ? (
+                <Image src={event.backgroundImageUrl || event.thumbnailUrl} alt={event.title} fill className="object-cover transition-transform duration-500 group-hover:scale-105" sizes="(max-width: 640px) 100vw, 33vw" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-3xl text-white/90" style={{ background: 'linear-gradient(135deg, var(--dw-primary, #1466d6), var(--dw-secondary, #64748b))' }}>🗞️</div>
+              )}
+            </div>
+            <div className="mt-2.5 text-[15.5px] font-semibold leading-snug transition-colors group-hover:text-[var(--dw-primary)]">{event.title}</div>
+            {(event.location || event.eventDate) && (
+              <div className="mt-1 text-[13px] leading-[1.6] text-gray-400 line-clamp-2">{event.location || event.eventDate}</div>
+            )}
+          </button>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div>
