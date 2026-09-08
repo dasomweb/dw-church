@@ -522,6 +522,13 @@ export async function translateTexts(slug: string, texts: string[], lang: string
   }
 }
 
+// ─── Devotions (말씀 묵상 / QT) ───────────────────────────────
+
+export async function getDevotions(slug: string): Promise<any[]> {
+  const res = await apiFetch(slug, `/api/v1/devotions`, { revalidate: CACHE_CONTENT });
+  return unwrap(res) ?? [];
+}
+
 // ─── Boards (게시판) ──────────────────────────────────────────
 
 export async function getBoardBySlug(slug: string, boardSlug: string): Promise<any> {

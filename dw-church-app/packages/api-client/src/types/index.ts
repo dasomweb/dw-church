@@ -300,6 +300,26 @@ export interface Newcomer {
 // The public intake form submits only the visitor-facing fields.
 export type NewcomerSubmission = Omit<Newcomer, 'id' | 'status' | 'memo' | 'createdAt' | 'updatedAt'>;
 
+// ─── Devotion (말씀 묵상 / QT) ───────────────────────────────
+// 읽기 전용 콘텐츠(사용자 트래킹 없음). 저작권상 성경 본문 전문은 저장 안 함 —
+// scriptureRef(참조) + 창작 묵상(reflection/question/prayer)만.
+export interface Devotion {
+  id: string;
+  title: string;
+  devoDate?: string | null;
+  dayLabel?: string | null;
+  scriptureRef?: string | null;
+  verse?: string | null;
+  reflection?: string | null;
+  question?: string | null;
+  prayer?: string | null;
+  imageUrl?: string | null;
+  sortOrder?: number;
+  status?: PostStatus;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 // 정착 히스토리 — 새가족 한 명의 후속 기록(연락/심방/상담/모임/정착/기타)
 export type NewcomerHistoryType = 'contact' | 'visit' | 'counsel' | 'meeting' | 'settled' | 'etc';
 

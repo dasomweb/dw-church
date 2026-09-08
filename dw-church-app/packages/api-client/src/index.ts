@@ -39,6 +39,7 @@ export type {
   NewcomerHistoryType,
   NewcomerHistoryEntry,
   NewcomerHistoryInput,
+  Devotion,
   FormSubmission,
   FormSubmissionStatus,
   Form,
@@ -182,6 +183,11 @@ export {
   useNewcomerHistory,
   useAddNewcomerHistory,
   useDeleteNewcomerHistory,
+  // Devotions (말씀 묵상)
+  useDevotions,
+  useCreateDevotion,
+  useUpdateDevotion,
+  useDeleteDevotion,
   // Form submissions (폼 제출 인박스)
   useFormSubmissions,
   useUpdateFormSubmission,

@@ -22,6 +22,7 @@ import type {
   NewcomerSubmission,
   NewcomerHistoryEntry,
   NewcomerHistoryInput,
+  Devotion,
   FormSubmission,
   FormSubmissionStatus,
   Form,
@@ -774,6 +775,31 @@ export class DWChurchClient {
 
   async deleteNewcomer(id: string): Promise<void> {
     return this.api.delete(`${this.namespace}/newcomers/${id}`);
+  }
+
+  // ─── Devotions (말씀 묵상 / QT) — 관리자 업로드, 공개 읽기 ──────────
+  async getDevotions(): Promise<Devotion[]> {
+    const res = await this.api.get(`${this.namespace}/devotions`);
+    return unwrapData(res);
+  }
+
+  async getDevotion(id: string): Promise<Devotion> {
+    const res = await this.api.get(`${this.namespace}/devotions/${id}`);
+    return unwrapData(res);
+  }
+
+  async createDevotion(data: Partial<Devotion>): Promise<Devotion> {
+    const res = await this.api.post(`${this.namespace}/devotions`, data);
+    return unwrapData(res);
+  }
+
+  async updateDevotion(id: string, data: Partial<Devotion>): Promise<Devotion> {
+    const res = await this.api.put(`${this.namespace}/devotions/${id}`, data);
+    return unwrapData(res);
+  }
+
+  async deleteDevotion(id: string): Promise<void> {
+    return this.api.delete(`${this.namespace}/devotions/${id}`);
   }
 
   // ─── 정착 히스토리 (연락/심방/상담/모임/정착 등 날짜별 기록) ──────────

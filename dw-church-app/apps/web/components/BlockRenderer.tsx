@@ -13,6 +13,7 @@ import type { BlockStyle } from '@dw-church/design-tokens';
 // ── Content-module data blocks (fetch from REST API) ──────────────────
 import { RecentSermonsBlock } from './blocks/RecentSermonsBlock';
 import { SermonMagazineBlock } from './blocks/SermonMagazineBlock';
+import { DevotionBlock } from './blocks/DevotionBlock';
 import { RecentBulletinsBlock } from './blocks/RecentBulletinsBlock';
 import { RecentColumnsBlock } from './blocks/RecentColumnsBlock';
 import { AlbumGalleryBlock } from './blocks/AlbumGalleryBlock';
@@ -45,6 +46,7 @@ type AnyBlock = (p: { props: Record<string, unknown>; slug: string; page?: numbe
 const CHURCH_BLOCKS: Record<string, AnyBlock> = {
   recent_sermons: RecentSermonsBlock as AnyBlock,
   sermon_magazine: SermonMagazineBlock as AnyBlock, // 설교 매거진(13a) — 이번 주 설교 커버+써머리+질문(관찰·심화·적용)
+  devotion_reader: DevotionBlock as AnyBlock, // 말씀 묵상(14a) — 주간 목록 + 오늘 묵상(읽기 전용, 트래킹 없음)
 
   recent_bulletins: RecentBulletinsBlock as AnyBlock,
   recent_columns: RecentColumnsBlock as AnyBlock,

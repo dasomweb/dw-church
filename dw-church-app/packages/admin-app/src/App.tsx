@@ -55,6 +55,7 @@ const TranslationManagement = lazyWithReload(() => import('./pages/TranslationMa
 const CellManagement = lazyWithReload(() => import('./pages/CellManagement'));
 const NewcomerManagement = lazyWithReload(() => import('./pages/NewcomerManagement'));
 const NewcomerRegister = lazyWithReload(() => import('./pages/NewcomerRegister'));
+const DevotionManagement = lazyWithReload(() => import('./pages/DevotionManagement'));
 const MemberManagement = lazyWithReload(() => import('./pages/MemberManagement'));
 const HouseholdManagement = lazyWithReload(() => import('./pages/HouseholdManagement'));
 const MemberCodeManagement = lazyWithReload(() => import('./pages/MemberCodeManagement'));
@@ -284,6 +285,7 @@ const tenantChildRoutes = (
     <Route path="staff" element={<StaffManagement />} />
     <Route path="history" element={<HistoryManagement />} />
     <Route path="verses" element={<VerseManagement />} />
+    <Route path="devotions" element={<DevotionManagement />} />
     <Route path="translations" element={<TranslationManagement />} />
     <Route path="cells" element={<CellManagement />} />
     <Route path="newcomers" element={<NewcomerManagement />} />

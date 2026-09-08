@@ -25,6 +25,7 @@ import type {
   NewcomerSubmission,
   NewcomerHistoryEntry,
   NewcomerHistoryInput,
+  Devotion,
   FormSubmission,
   FormSubmissionStatus,
   Form,
@@ -135,6 +136,11 @@ export const queryKeys = {
     list: (status?: string) => ['newcomers', 'list', status] as const,
     detail: (id: string) => ['newcomers', 'detail', id] as const,
     history: (id: string) => ['newcomers', 'history', id] as const,
+  },
+  devotions: {
+    all: ['devotions'] as const,
+    list: () => ['devotions', 'list'] as const,
+    detail: (id: string) => ['devotions', 'detail', id] as const,
   },
   forms: {
     all: ['forms'] as const,
@@ -985,6 +991,44 @@ export function useDeleteNewcomerHistory() {
     onSuccess: (_res, { newcomerId }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.newcomers.history(newcomerId) });
     },
+  });
+}
+
+// ─── Devotion (말씀 묵상 / QT) Hooks ────────────────────────
+export function useDevotions() {
+  const client = useDWChurchClient();
+  return useQuery<Devotion[]>({
+    queryKey: queryKeys.devotions.list(),
+    queryFn: () => client!.getDevotions(),
+    enabled: !!client,
+    staleTime: STALE_TIME,
+  });
+}
+
+export function useCreateDevotion() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Partial<Devotion>) => client!.createDevotion(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.devotions.all }),
+  });
+}
+
+export function useUpdateDevotion() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Devotion> }) => client!.updateDevotion(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.devotions.all }),
+  });
+}
+
+export function useDeleteDevotion() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => client!.deleteDevotion(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.devotions.all }),
   });
 }
 

@@ -81,6 +81,7 @@ export const blockTypes = [
   // 섹션 추가(POST /sections)가 400 나던 것들. (설교 매거진·특징 그리드·오늘의 말씀·
   // 주보광고·다가오는 행사·단계 목록·버튼 그룹·오시는길·로고 타이틀)
   'sermon_magazine',
+  'devotion_reader',
   'features_grid',
   'steps_list',
   'verse_of_day',
