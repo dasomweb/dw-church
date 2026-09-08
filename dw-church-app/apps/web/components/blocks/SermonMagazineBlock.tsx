@@ -82,11 +82,13 @@ export async function SermonMagazineBlock({ props, slug }: Props) {
             </div>
             <div className="mt-7 flex flex-wrap gap-2.5">
               <Link href={`/sermons/${sermon.id}`} className="inline-flex h-[46px] items-center rounded-full px-6 text-[15px] font-semibold text-white transition-opacity hover:opacity-90" style={{ background: BRAND }}>전문 읽기</Link>
-              {/* compact(15a): 영상 대신 음성 듣기 우선. default: 영상 보기. */}
+              {/* compact(15a): 음성(오디오) 우선, 없으면 영상 폴백. default: 영상 보기. */}
               {compact
-                ? (audioUrl && (
-                    <a href={audioUrl} target="_blank" rel="noreferrer" className="inline-flex h-[46px] items-center rounded-full border px-6 text-[15px] font-semibold" style={{ borderColor: BORDER }}>음성 듣기</a>
-                  ))
+                ? (audioUrl
+                    ? <a href={audioUrl} target="_blank" rel="noreferrer" className="inline-flex h-[46px] items-center rounded-full border px-6 text-[15px] font-semibold" style={{ borderColor: BORDER }}>음성 듣기</a>
+                    : (sermon.youtubeUrl && (
+                        <a href={sermon.youtubeUrl} target="_blank" rel="noreferrer" className="inline-flex h-[46px] items-center rounded-full border px-6 text-[15px] font-semibold" style={{ borderColor: BORDER }}>영상으로 보기</a>
+                      )))
                 : (sermon.youtubeUrl && (
                     <a href={sermon.youtubeUrl} target="_blank" rel="noreferrer" className="inline-flex h-[46px] items-center rounded-full border px-6 text-[15px] font-semibold" style={{ borderColor: BORDER }}>영상으로 보기</a>
                   ))}

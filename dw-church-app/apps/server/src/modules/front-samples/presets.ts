@@ -184,10 +184,15 @@ const story = (eyebrow: string, title: string, content: string, imageUrl: string
 const sermonMagazineCompact = (): PresetSection => ({ block_type: 'sermon_magazine', props: { variant: 'compact', title: '이번 주 말씀' } });
 // 개인 묵상 진입 카드 — 트래킹(진행률/노트) 없이 오늘 묵상으로 유도(빈 경우 숨김).
 const devotionTeaser = (): PresetSection => ({ block_type: 'devotion_reader', props: { variant: 'teaser', eyebrow: '개인 묵상', title: '하루 10분, 혼자 여는 말씀' } });
-// 카드뉴스(행사 → 정사각 소식 카드) + 소식·주보 를 2단으로. 카드뉴스는 이벤트 블록
-// 재사용(variant:'cardnews') — 대표님 지시 "이벤트 블록이 비슷한 기능".
+// 카드뉴스(운영자 업로드 이미지 카드 — 시안 15a는 'browse files' 업로드 슬롯) +
+// 소식·주보 를 2단으로. 카드뉴스는 정적 features_grid(image-card)로 항상 렌더(콘텐츠
+// 의존 없음). 행사 데이터로 카드뉴스를 쓰고 싶으면 event_grid variant:'cardnews' 사용
+// 가능(대표님 "이벤트 블록이 비슷한 기능"). 시안 충실 = 업로드 카드 → features_grid.
 const cardNewsAndNotices = (): PresetSection => ({ block_type: 'layout_columns', props: { layout: 'columns-2', gap: 40, padding: '48px 24px 0', maxWidth: '7xl', children: [
-  { blockType: 'event_grid', props: { variant: 'cardnews', eyebrow: '카드뉴스', title: '한 장으로 보내는 소식', limit: 2 } },
+  { blockType: 'features_grid', props: { variant: 'image-card', columns: '2', eyebrow: '카드뉴스', title: '한 장으로 보내는 소식', items: [
+    { title: '말씀 카드', description: '이번 주 말씀을 한 장으로', imageUrl: '' },
+    { title: '모임 안내', description: '이번 주 모임 소식', imageUrl: '' },
+  ] } },
   { blockType: 'news_announcements', props: { title: '소식 · 주보', newsLimit: 4, moreUrl: '/bulletins', buttons: [{ text: '기도 요청', url: '/contact' }, { text: '심방 신청', url: '/contact' }] } },
 ] } });
 // 예배·처음 오시는 분·오시는 길 3열 (시안 15a 하단). 값은 셋업 때 실제 정보로 교체.
