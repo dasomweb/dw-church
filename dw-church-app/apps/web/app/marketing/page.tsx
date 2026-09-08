@@ -18,9 +18,10 @@ const auto = (email: string, pw: string) =>
   `https://dasom.truelight.app/login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(pw)}&auto=1`;
 
 export default async function MarketingBoothPage() {
-  const [homeSvg, siteSvg, adminSvg, cellSvg, newcomerSvg] = await Promise.all([
+  const [homeSvg, siteSvg, dasomSvg, adminSvg, cellSvg, newcomerSvg] = await Promise.all([
     QRCode.toString('https://truelight.app', QR_OPTS),
     QRCode.toString('https://dasom.truelight.app', QR_OPTS),
+    QRCode.toString('https://dasomweb.com', QR_OPTS),
     QRCode.toString(auto('demo@truelight.app', 'demo1234'), QR_OPTS),
     QRCode.toString(auto('cell@truelight.app', 'cell1234'), QR_OPTS),
     QRCode.toString(auto('newcomer@truelight.app', 'newcomer1234'), QR_OPTS),
@@ -55,6 +56,13 @@ export default async function MarketingBoothPage() {
               <div className="mkq-qrbox" dangerouslySetInnerHTML={{ __html: siteSvg }} />
               <a className="mkq-url" href="https://dasom.truelight.app">dasom.truelight.app</a>
               <p className="mkq-desc">완성된 교회 홈페이지를 그대로.</p>
+            </div>
+            <div className="mkq-card">
+              <span className="mkq-eyebrow">제작사</span>
+              <h2>다솜웹</h2>
+              <div className="mkq-qrbox" dangerouslySetInnerHTML={{ __html: dasomSvg }} />
+              <a className="mkq-url" href="https://dasomweb.com">dasomweb.com</a>
+              <p className="mkq-desc">이 서비스를 만든 곳 · 웹·행정 시스템 제작.</p>
             </div>
           </div>
         </section>
