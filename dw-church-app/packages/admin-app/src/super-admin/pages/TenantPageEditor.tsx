@@ -131,8 +131,10 @@ export default function TenantPageEditor() {
   const [creating, setCreating] = useState(false);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [addSearch, setAddSearch] = useState(''); // '+ 블록' 피커 검색어
-  // 랩탑에서 프리뷰/인스펙터 공간 확보 — 페이지 목록 패널을 접을 수 있게.
+  // 랩탑에서 프리뷰 공간 확보 — 좌/우 패널을 각각 접을 수 있게.
   const [pagesOpen, setPagesOpen] = useState(true);
+  const [sectionsOpen, setSectionsOpen] = useState(true);
+  const [inspectorOpen, setInspectorOpen] = useState(true);
   // Verbatim content import (paste → AI structures → blocks).
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState('');
@@ -685,11 +687,22 @@ export default function TenantPageEditor() {
         )}
       </aside>
 
-      {/* Pane 2 — Sections */}
-      <section className="w-52 lg:w-60 shrink-0 border-r bg-gray-50 overflow-y-auto">
+      {/* Pane 2 — Sections (접기 가능) */}
+      {!sectionsOpen && (
+        <button
+          type="button"
+          onClick={() => setSectionsOpen(true)}
+          title="섹션 목록 펼치기"
+          className="flex w-6 shrink-0 items-start justify-center border-r bg-gray-50 pt-3 text-xs text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+        >›</button>
+      )}
+      <section className={`${sectionsOpen ? 'w-52 lg:w-60' : 'hidden'} shrink-0 border-r bg-gray-50 overflow-y-auto`}>
         <div className="p-3 border-b bg-white space-y-2">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider">섹션</h2>
+            <div className="flex items-center gap-1">
+              <button type="button" onClick={() => setSectionsOpen(false)} title="섹션 목록 접기" className="text-sm leading-none text-gray-400 hover:text-gray-700">‹</button>
+              <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider">섹션</h2>
+            </div>
             {selectedPage && (
               <div className="relative flex items-center gap-1">
                 <button
@@ -709,9 +722,12 @@ export default function TenantPageEditor() {
                   + 블록
                 </button>
                 {addMenuOpen && (
-                  <div className="absolute right-0 top-full z-20 mt-1 w-[min(92vw,620px)] rounded-xl border border-gray-200 bg-white shadow-xl">
-                    {/* 검색 */}
-                    <div className="border-b border-gray-100 p-2.5">
+                  <>
+                  {/* 고정 중앙 모달 — 섹션 패널 overflow 에 잘리지 않도록 fixed 로 띄움 */}
+                  <div className="fixed inset-0 z-[55] bg-black/20" onClick={() => setAddMenuOpen(false)} />
+                  <div className="fixed left-1/2 top-1/2 z-[60] w-[min(94vw,640px)] max-h-[82vh] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
+                    {/* 검색 + 닫기 */}
+                    <div className="flex items-center gap-2 border-b border-gray-100 p-3">
                       <input
                         autoFocus
                         value={addSearch}
@@ -719,8 +735,9 @@ export default function TenantPageEditor() {
                         placeholder="블록 검색 (예: 설교, 예배, 폼, 매거진)"
                         className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
                       />
+                      <button type="button" onClick={() => setAddMenuOpen(false)} className="shrink-0 rounded-lg px-2 py-2 text-gray-400 hover:bg-gray-100 hover:text-gray-700" aria-label="닫기">✕</button>
                     </div>
-                    <div className="max-h-[60vh] overflow-y-auto p-2.5">
+                    <div className="max-h-[70vh] overflow-y-auto p-3">
                       {(() => {
                         const q = addSearch.trim().toLowerCase();
                         const groups = ADD_BLOCK_CATALOG
@@ -749,6 +766,7 @@ export default function TenantPageEditor() {
                       })()}
                     </div>
                   </div>
+                  </>
                 )}
               </div>
             )}
@@ -878,10 +896,21 @@ export default function TenantPageEditor() {
         )}
       </section>
 
-      {/* Pane 4 — Inspector (right) */}
-      <section className="w-80 xl:w-96 shrink-0 border-l overflow-y-auto bg-white">
+      {/* Pane 4 — Inspector (right, 접기 가능) */}
+      {!inspectorOpen && (
+        <button
+          type="button"
+          onClick={() => setInspectorOpen(true)}
+          title="인스펙터(속성) 펼치기"
+          className="flex w-6 shrink-0 items-start justify-center border-l bg-white pt-3 text-xs text-gray-400 hover:bg-gray-50 hover:text-gray-700"
+        >‹</button>
+      )}
+      <section className={`${inspectorOpen ? 'w-80 xl:w-96' : 'hidden'} shrink-0 border-l overflow-y-auto bg-white`}>
         <div className="p-3 border-b flex items-center justify-between">
-          <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider">인스펙터</h2>
+          <div className="flex items-center gap-1">
+            <button type="button" onClick={() => setInspectorOpen(false)} title="인스펙터 접기" className="text-sm leading-none text-gray-400 hover:text-gray-700">›</button>
+            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider">인스펙터</h2>
+          </div>
           {hasChanges && <span className="text-[10px] text-amber-600">미게시 변경</span>}
         </div>
         {selectedSection ? (
