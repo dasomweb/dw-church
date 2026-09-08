@@ -415,7 +415,13 @@ export function BlockRenderer({ section, slug, editorMode, onElementClick }: Blo
         }}
         style={{ cursor: 'default' }}
       >
-        {wrap(<Component props={resolvedProps} slug={slug} />)}
+        {/* 빈 블록도 에디터에선 보이도록: 컴포넌트가 null(항목 미입력 등)을 반환하면
+            이 슬롯이 :empty 가 되어 안내 placeholder 를 표시한다. 스토어프론트(editorMode
+            false)는 이 경로를 안 타므로 실제 사이트엔 영향 없음(빈 블록은 여전히 숨김). */}
+        <div className="dc-editor-slot" data-empty-label={`${section.blockType} — 인스펙터에서 내용을 추가하면 표시됩니다`}>
+          {wrap(<Component props={resolvedProps} slug={slug} />)}
+        </div>
+        <style dangerouslySetInnerHTML={{ __html: '.dc-editor-slot:empty::before{content:attr(data-empty-label);display:block;margin:1rem auto;max-width:56rem;padding:2.5rem 1.5rem;text-align:center;color:#9ca3af;font-size:14px;line-height:1.6;border:2px dashed #e5e7eb;border-radius:12px;background:#fafafa}' }} />
       </div>
     );
   }
