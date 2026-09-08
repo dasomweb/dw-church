@@ -46,14 +46,14 @@ export default async function MarketingBoothPage() {
               <span className="mkq-eyebrow">서비스 소개</span>
               <h2>홈페이지 둘러보기</h2>
               <div className="mkq-qrbox" dangerouslySetInnerHTML={{ __html: homeSvg }} />
-              <div className="mkq-url">truelight.app</div>
+              <a className="mkq-url" href="https://truelight.app">truelight.app</a>
               <p className="mkq-desc">요금·기능·도입 사례를 한눈에.</p>
             </div>
             <div className="mkq-card">
               <span className="mkq-eyebrow">데모 사이트</span>
               <h2>성도가 보는 화면</h2>
               <div className="mkq-qrbox" dangerouslySetInnerHTML={{ __html: siteSvg }} />
-              <div className="mkq-url">dasom.truelight.app</div>
+              <a className="mkq-url" href="https://dasom.truelight.app">dasom.truelight.app</a>
               <p className="mkq-desc">완성된 교회 홈페이지를 그대로.</p>
             </div>
           </div>
@@ -67,6 +67,7 @@ export default async function MarketingBoothPage() {
               <span className="mkq-eyebrow">관리자 · 전체</span>
               <h2>운영 화면 전체</h2>
               <div className="mkq-qrbox" dangerouslySetInnerHTML={{ __html: adminSvg }} />
+              <a className="mkq-url" href={auto('demo@truelight.app', 'demo1234')}>dasom.truelight.app/login</a>
               <p className="mkq-desc">설교·주보·교적·목장·새가족까지 전부.</p>
               <div className="mkq-cred"><span>demo@truelight.app</span><b>demo1234</b></div>
             </div>
@@ -74,6 +75,7 @@ export default async function MarketingBoothPage() {
               <span className="mkq-eyebrow">목자</span>
               <h2>목장 보고서</h2>
               <div className="mkq-qrbox" dangerouslySetInnerHTML={{ __html: cellSvg }} />
+              <a className="mkq-url" href={auto('cell@truelight.app', 'cell1234')}>dasom.truelight.app/login</a>
               <p className="mkq-desc">담당 목장만 보이고 리포트를 제출.</p>
               <div className="mkq-cred"><span>cell@truelight.app</span><b>cell1234</b></div>
             </div>
@@ -81,6 +83,7 @@ export default async function MarketingBoothPage() {
               <span className="mkq-eyebrow">새가족 담당자</span>
               <h2>새가족 관리</h2>
               <div className="mkq-qrbox" dangerouslySetInnerHTML={{ __html: newcomerSvg }} />
+              <a className="mkq-url" href={auto('newcomer@truelight.app', 'newcomer1234')}>dasom.truelight.app/login</a>
               <p className="mkq-desc">새가족 등록서·정착 관리만.</p>
               <div className="mkq-cred"><span>newcomer@truelight.app</span><b>newcomer1234</b></div>
             </div>
@@ -121,7 +124,8 @@ const CSS = `
   .mkq-desc{margin:0;font-size:12.5px;line-height:1.5;color:var(--muted)}
   .mkq-qrbox{background:#fff;border-radius:14px;padding:11px;border:1px solid var(--line);line-height:0;width:clamp(150px,16vw,182px);height:clamp(150px,16vw,182px)}
   .mkq-qrbox svg{display:block;width:100%;height:100%}
-  .mkq-url{font-size:13.5px;font-weight:700;color:var(--ink);word-break:break-all}
+  .mkq-url{font-size:13.5px;font-weight:700;color:var(--brand);word-break:break-all;text-decoration:none;border-bottom:1px solid transparent}
+  .mkq-url:hover{border-bottom-color:var(--brand)}
   .mkq-cred{display:flex;flex-direction:column;gap:1px;width:100%;background:#eef4ff;border:1px solid #d7e5ff;border-radius:10px;padding:6px 10px;font-size:12px}
   .mkq-cred span{color:var(--muted)} .mkq-cred b{color:var(--brand-deep);font-size:13px}
   .mkq-foot{font-size:12px;color:var(--muted);text-align:center;line-height:1.6}
