@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getSermons } from '@/lib/api';
+import { getSermons, getDevotions } from '@/lib/api';
 import { getElementStyle } from '@/lib/element-style';
 import { DataSection } from './DataSection';
 
@@ -55,6 +55,19 @@ export async function SermonMagazineBlock({ props, slug }: Props) {
   const summaryParas = (sermon.summary ?? '').split(/\n{2,}|\n/).map((p) => p.trim()).filter(Boolean);
   const audioUrl = (sermon.audioUrl || (props.audioUrl as string)) ?? '';
 
+  // compact(15a) 커버 우측 카드 = "오늘의 기도" — QT(말씀 묵상)에서 해당일(오늘) 묵상의
+  // 기도를 가져와 표시(대표님 지시: 질문지/나눔 대신 오늘의 기도). 오늘 날짜 묵상이 없으면
+  // 첫 묵상, 기도가 아예 없으면 기존 "이번 주 함께 볼 것" 요약으로 폴백.
+  let todayDevo: { prayer?: string | null; dayLabel?: string | null; scriptureRef?: string | null; title?: string } | null = null;
+  if (compact) {
+    try {
+      const devos = (await getDevotions(slug)) as any[];
+      const todayStr = new Date().toISOString().slice(0, 10);
+      todayDevo = devos.find((d) => String(d.devoDate || '').slice(0, 10) === todayStr) ?? devos[0] ?? null;
+    } catch { todayDevo = null; }
+  }
+  const todayPrayer = (todayDevo?.prayer || '').trim();
+
   const BRAND = 'var(--dw-primary, #1466d6)';
   const MUTED = 'var(--dw-text-muted, #61697a)';
   const BORDER = 'var(--dw-border, #e5e7eb)';
@@ -108,29 +121,46 @@ export async function SermonMagazineBlock({ props, slug }: Props) {
                   <img src={sermon.thumbnailUrl} alt={sermon.title ?? ''} className="h-full w-full object-cover" />
                 )}
               </div>
-              <div className="rounded-2xl border px-6 py-5" style={{ borderColor: BORDER }}>
-                <div className="mb-3.5 text-[12px] font-semibold" style={{ color: BRAND }}>이번 주 함께 볼 것</div>
-                <div className="flex flex-col gap-2.5 text-[14.5px]">
-                  {hasQuestions && (
-                    <div className="flex items-center gap-3">
-                      <b className="w-[52px] shrink-0 font-semibold">질문지</b>
-                      <span className="flex-1" style={{ color: MUTED }}>{[obs.length && `관찰 ${obs.length}`, deep.length && `심화 ${deep.length}`].filter(Boolean).join(' · ')}</span>
-                    </div>
-                  )}
-                  {app.length > 0 && (
-                    <div className="flex items-center gap-3">
-                      <b className="w-[52px] shrink-0 font-semibold">나눔</b>
-                      <span className="flex-1" style={{ color: MUTED }}>적용 {app.length} · 모임에서</span>
-                    </div>
-                  )}
-                  {sermon.scripture && (
-                    <div className="flex items-center gap-3">
-                      <b className="w-[52px] shrink-0 font-semibold">본문</b>
-                      <span className="flex-1" style={{ color: MUTED }}>{sermon.scripture}</span>
+              {todayPrayer ? (
+                /* 오늘의 기도 — QT(말씀 묵상) 해당일 기도 */
+                <div className="rounded-2xl border px-6 py-5" style={{ borderColor: BORDER }}>
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <span className="text-[12px] font-semibold" style={{ color: BRAND }}>오늘의 기도</span>
+                    {todayDevo?.dayLabel && <span className="text-[11px]" style={{ color: MUTED }}>· {todayDevo.dayLabel}</span>}
+                  </div>
+                  <p className="m-0 text-[14.5px] leading-[1.8]" style={{ color: MUTED }}>{todayPrayer}</p>
+                  {(todayDevo?.title || todayDevo?.scriptureRef) && (
+                    <div className="mt-3 border-t pt-2.5 text-[12px]" style={{ borderColor: BORDER, color: MUTED }}>
+                      {[todayDevo?.title, todayDevo?.scriptureRef].filter(Boolean).join(' · ')}
                     </div>
                   )}
                 </div>
-              </div>
+              ) : (
+                /* QT 기도가 없을 때 폴백 — 이번 주 함께 볼 것 요약 */
+                <div className="rounded-2xl border px-6 py-5" style={{ borderColor: BORDER }}>
+                  <div className="mb-3.5 text-[12px] font-semibold" style={{ color: BRAND }}>이번 주 함께 볼 것</div>
+                  <div className="flex flex-col gap-2.5 text-[14.5px]">
+                    {hasQuestions && (
+                      <div className="flex items-center gap-3">
+                        <b className="w-[52px] shrink-0 font-semibold">질문지</b>
+                        <span className="flex-1" style={{ color: MUTED }}>{[obs.length && `관찰 ${obs.length}`, deep.length && `심화 ${deep.length}`].filter(Boolean).join(' · ')}</span>
+                      </div>
+                    )}
+                    {app.length > 0 && (
+                      <div className="flex items-center gap-3">
+                        <b className="w-[52px] shrink-0 font-semibold">나눔</b>
+                        <span className="flex-1" style={{ color: MUTED }}>적용 {app.length} · 모임에서</span>
+                      </div>
+                    )}
+                    {sermon.scripture && (
+                      <div className="flex items-center gap-3">
+                        <b className="w-[52px] shrink-0 font-semibold">본문</b>
+                        <span className="flex-1" style={{ color: MUTED }}>{sermon.scripture}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <Link href={`/sermons/${sermon.id}`} className="relative block w-full overflow-hidden rounded-2xl" style={{ aspectRatio: '16/9', background: SURFACE }}>
