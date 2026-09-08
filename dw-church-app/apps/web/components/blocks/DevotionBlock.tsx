@@ -48,7 +48,8 @@ export async function DevotionBlock({ props, slug }: Props) {
 
     return (
       <DataSection props={props} defaultBg="var(--dw-bg, #fff)">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        {/* 가로 패딩은 DataSection 이 제공 — 이중 여백 방지 */}
+        <div className="mx-auto max-w-6xl">
           <div className="grid grid-cols-1 overflow-hidden rounded-2xl border md:grid-cols-[1fr_1.15fr]" style={{ borderColor: BORDER }}>
             <div className="min-h-[240px]" style={{ background: SURFACE }}>
               {imageUrl && (
@@ -78,7 +79,8 @@ export async function DevotionBlock({ props, slug }: Props) {
 
   return (
     <DataSection props={props} defaultBg="var(--dw-bg, #fff)">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      {/* 가로 패딩은 DataSection 이 제공 — 이중 여백 방지 */}
+      <div className="mx-auto max-w-6xl">
         <div className="mb-8">
           <div className="text-[13px] font-semibold" style={{ color: 'var(--dw-primary, #1466d6)' }}>말씀 묵상 · Quiet Time</div>
           <h2 className="mt-1.5 font-heading text-[26px] font-bold sm:text-[32px]" style={getElementStyle(props, 'title')}>{title}</h2>

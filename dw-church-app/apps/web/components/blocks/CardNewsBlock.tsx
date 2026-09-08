@@ -34,7 +34,8 @@ export async function CardNewsBlock({ props, slug }: Props) {
 
   return (
     <DataSection props={props} defaultBg="var(--dw-bg, #fff)">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+      {/* 가로 패딩은 DataSection 이 제공 — 이중 여백 방지 */}
+      <div className="mx-auto max-w-7xl">
         <div className="mb-4">
           {eyebrow && <div className="mb-2 text-[13px] font-semibold" style={{ color: BRAND }}>{eyebrow}</div>}
           <h2 className="font-heading text-[22px] font-bold sm:text-2xl" style={getElementStyle(props, 'title')}>{title}</h2>

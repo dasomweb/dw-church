@@ -65,7 +65,8 @@ export async function SermonMagazineBlock({ props, slug }: Props) {
 
   return (
     <DataSection props={props} defaultBg="var(--dw-bg, #fff)">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      {/* 가로 패딩은 DataSection 이 제공(px-4 sm:px-6) — 여기서 또 넣으면 이중 여백. */}
+      <div className="mx-auto max-w-6xl">
         {/* 1. 커버 */}
         <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[1.1fr_1fr]">
           <div>
