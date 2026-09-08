@@ -8,7 +8,7 @@ import { CardNewsCarouselClient } from './CardNewsCarouselClient';
 // 없으면 props.items(정적 카드) 폴백, 그것도 없으면 섹션 숨김.
 interface Props { props: Record<string, unknown>; slug: string }
 
-interface Card { title?: string; description?: string; caption?: string; imageUrl?: string; linkUrl?: string; href?: string }
+interface Card { title?: string; category?: string; description?: string; caption?: string; imageUrl?: string; linkUrl?: string; href?: string }
 
 export async function CardNewsBlock({ props, slug }: Props) {
   const eyebrow = (props.eyebrow as string) || '카드뉴스';

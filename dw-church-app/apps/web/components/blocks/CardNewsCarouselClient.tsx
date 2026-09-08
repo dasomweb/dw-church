@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 // 카드뉴스 캐러셀 — 한 장씩 넘겨 보는 뷰(화살표·점·스와이프). 교회 톤의 차분한
 // 배경 위에 흰 카드. 카드 1장이면 컨트롤 숨김.
-interface Card { title?: string; description?: string; caption?: string; imageUrl?: string; linkUrl?: string; href?: string }
+interface Card { title?: string; category?: string; description?: string; caption?: string; imageUrl?: string; linkUrl?: string; href?: string }
 
 const BRAND = 'var(--dw-primary, #1466d6)';
 const MUTED = 'var(--dw-text-muted, #61697a)';
@@ -29,6 +29,9 @@ export function CardNewsCarouselClient({ cards }: { cards: Card[] }) {
         <img src={c.imageUrl} alt={c.title ?? ''} className="h-full w-full object-cover" />
       ) : (
         <div className="flex h-full w-full items-center justify-center text-4xl text-white/90" style={{ background: 'linear-gradient(135deg, var(--dw-primary, #1466d6), var(--dw-secondary, #64748b))' }}>🗞️</div>
+      )}
+      {c.category && (
+        <span className="absolute left-3 top-3 inline-flex h-[26px] items-center rounded-full px-3 text-[12px] font-semibold shadow-sm" style={{ background: 'rgba(255,255,255,.92)', color: BRAND }}>{c.category}</span>
       )}
     </div>
   );

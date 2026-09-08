@@ -5,6 +5,7 @@ import type { CreateCardnewsInput, UpdateCardnewsInput } from './schema.js';
 // snake_case → FetchAdapter 가 다시 camelize.
 const COLUMN_MAP: Record<string, string> = {
   title: 'title',
+  category: 'category',
   description: 'description',
   imageUrl: 'image_url',
   linkUrl: 'link_url',

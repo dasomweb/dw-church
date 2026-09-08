@@ -325,6 +325,7 @@ export interface Devotion {
 export interface Cardnews {
   id: string;
   title: string;
+  category?: string | null;
   description?: string | null;
   imageUrl?: string | null;
   linkUrl?: string | null;

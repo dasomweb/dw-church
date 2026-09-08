@@ -12,6 +12,7 @@ export const createCardnewsSchema = z.object({
   // 카드뉴스는 이미지 우선 — 제목은 선택(멀티 업로드 시 비어 있을 수 있음). DB 는
   // title NOT NULL 이므로 빈 문자열로 저장(널 아님).
   title: z.string().max(300).optional().default(''),       // 카드 제목(선택)
+  category: z.string().max(100).optional().nullable(),     // 카테고리(말씀 카드·모임 안내 등, 자유 입력)
   description: z.string().max(2000).optional().nullable(), // 카드 설명(한 줄)
   imageUrl: z.string().max(1000).optional().nullable(),    // 정사각 카드 이미지
   linkUrl: z.string().max(1000).optional().nullable(),     // 클릭 시 이동(선택)

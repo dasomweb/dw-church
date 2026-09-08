@@ -7,10 +7,10 @@ import { FormField, inputClass, selectClass, textareaClass, ImageUpload, MultiIm
 // 홈페이지 "카드뉴스" 블록이 여기 등록된 게시 카드를 자동으로 불러와 표시합니다.
 
 type FormState = {
-  title: string; description: string; imageUrl: string; linkUrl: string;
+  title: string; category: string; description: string; imageUrl: string; linkUrl: string;
   sortOrder: number; status: 'published' | 'draft';
 };
-const EMPTY: FormState = { title: '', description: '', imageUrl: '', linkUrl: '', sortOrder: 0, status: 'published' };
+const EMPTY: FormState = { title: '', category: '', description: '', imageUrl: '', linkUrl: '', sortOrder: 0, status: 'published' };
 
 export default function CardnewsManagement() {
   const { data: list, isLoading, error } = useCardnews();
@@ -27,10 +27,13 @@ export default function CardnewsManagement() {
   // 멀티파일 업로드 — 여러 이미지를 스테이징 후 각 장을 카드로 생성.
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkUrls, setBulkUrls] = useState<string[]>([]);
+  const [bulkCategory, setBulkCategory] = useState('');
   const [bulkSaving, setBulkSaving] = useState(false);
 
   const setF = (p: Partial<FormState>) => setForm((s) => ({ ...s, ...p }));
   const cards = list ?? [];
+  // 기존 카드에서 쓰인 카테고리 목록(자동완성용).
+  const categories = Array.from(new Set(cards.map((c) => c.category).filter(Boolean))) as string[];
 
   // 카드 이미지는 R2 로 업로드(정사각, 클라이언트 리사이즈). base64 폴백은 DB 길이 초과.
   const uploadImage = async (file: File): Promise<string> => {
@@ -42,7 +45,7 @@ export default function CardnewsManagement() {
   const openEdit = (c: Cardnews) => {
     setEditingId(c.id);
     setForm({
-      title: c.title ?? '', description: c.description ?? '', imageUrl: c.imageUrl ?? '',
+      title: c.title ?? '', category: c.category ?? '', description: c.description ?? '', imageUrl: c.imageUrl ?? '',
       linkUrl: c.linkUrl ?? '', sortOrder: c.sortOrder ?? 0,
       status: (c.status as 'published' | 'draft') ?? 'published',
     });
@@ -65,10 +68,10 @@ export default function CardnewsManagement() {
     setBulkSaving(true);
     try {
       for (let k = 0; k < bulkUrls.length; k++) {
-        await createM.mutateAsync({ imageUrl: bulkUrls[k], title: '', status: 'published', sortOrder: cards.length + k });
+        await createM.mutateAsync({ imageUrl: bulkUrls[k], title: '', category: bulkCategory || undefined, status: 'published', sortOrder: cards.length + k });
       }
       showToast('success', `${bulkUrls.length}장을 카드뉴스로 추가했습니다.`);
-      setBulkUrls([]); setBulkOpen(false);
+      setBulkUrls([]); setBulkCategory(''); setBulkOpen(false);
     } catch { showToast('error', '일부 업로드에 실패했습니다.'); }
     setBulkSaving(false);
   };
@@ -93,8 +96,12 @@ export default function CardnewsManagement() {
               resize="content"
             />
           </FormField>
-          <FormField label="제목 *">
-            <input className={inputClass} value={form.title} onChange={(e) => setF({ title: e.target.value })} placeholder="예: 말씀 카드" />
+          <FormField label="카테고리 (선택)">
+            <input className={inputClass} list="cardnews-cats" value={form.category} onChange={(e) => setF({ category: e.target.value })} placeholder="예: 말씀 카드 · 모임 안내 (직접 입력하거나 기존에서 선택)" />
+            <datalist id="cardnews-cats">{categories.map((cat) => <option key={cat} value={cat} />)}</datalist>
+          </FormField>
+          <FormField label="제목 (선택)">
+            <input className={inputClass} value={form.title} onChange={(e) => setF({ title: e.target.value })} placeholder="예: 이번 주 말씀 한 장" />
           </FormField>
           <FormField label="설명 (한 줄)">
             <textarea className={textareaClass} rows={2} value={form.description} onChange={(e) => setF({ description: e.target.value })} placeholder="예: 이번 주 말씀을 한 장으로" />
@@ -142,6 +149,10 @@ export default function CardnewsManagement() {
         <div className="mb-6 rounded-2xl border border-blue-200 bg-blue-50/40 p-5">
           <div className="mb-1 text-sm font-semibold text-gray-800">여러 장 한번에 업로드</div>
           <p className="mb-3 text-xs text-gray-500">이미지를 한꺼번에 선택하면 각 장이 카드뉴스 한 장으로 등록됩니다. 제목·설명은 나중에 카드별로 수정할 수 있어요.</p>
+          <div className="mb-3">
+            <input className={inputClass} list="cardnews-cats" value={bulkCategory} onChange={(e) => setBulkCategory(e.target.value)} placeholder="카테고리 (선택) — 업로드하는 모든 장에 적용. 예: 모임 안내" />
+            <datalist id="cardnews-cats">{categories.map((cat) => <option key={cat} value={cat} />)}</datalist>
+          </div>
           <MultiImageUpload value={bulkUrls} onChange={setBulkUrls} onUpload={uploadImage} resize="content" max={30} />
           <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button onClick={() => { setBulkUrls([]); setBulkOpen(false); }} className="rounded-xl border border-gray-200 px-5 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50">취소</button>
@@ -171,6 +182,7 @@ export default function CardnewsManagement() {
                 </span>
               </div>
               <div className="p-3">
+                {c.category && <div className="mb-1"><span className="rounded bg-blue-50 px-1.5 py-0.5 text-[11px] font-medium text-blue-600">{c.category}</span></div>}
                 <div className="truncate text-sm font-semibold text-gray-800">{c.title || <span className="font-normal text-gray-400">(제목 없음)</span>}</div>
                 {c.description && <div className="mt-0.5 truncate text-xs text-gray-400">{c.description}</div>}
                 <div className="mt-2 flex justify-end gap-3">
