@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Cardnews } from '@dw-church/api-client';
 import { useCardnews, useCreateCardnews, useUpdateCardnews, useDeleteCardnews, useDWChurchClient } from '@dw-church/api-client';
-import { FormField, inputClass, selectClass, textareaClass, ImageUpload, useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
+import { FormField, inputClass, selectClass, textareaClass, ImageUpload, MultiImageUpload, useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
 
 // 카드뉴스 관리 — 정사각 이미지 카드로 매주 소식을 전달(Claude Design 15a).
 // 홈페이지 "카드뉴스" 블록이 여기 등록된 게시 카드를 자동으로 불러와 표시합니다.
@@ -24,6 +24,10 @@ export default function CardnewsManagement() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  // 멀티파일 업로드 — 여러 이미지를 스테이징 후 각 장을 카드로 생성.
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkUrls, setBulkUrls] = useState<string[]>([]);
+  const [bulkSaving, setBulkSaving] = useState(false);
 
   const setF = (p: Partial<FormState>) => setForm((s) => ({ ...s, ...p }));
   const cards = list ?? [];
@@ -46,13 +50,27 @@ export default function CardnewsManagement() {
   };
 
   const save = () => {
-    if (!form.title.trim()) { showToast('error', '제목은 필수입니다.'); return; }
+    if (!form.title.trim() && !form.imageUrl) { showToast('error', '제목이나 이미지를 넣어주세요.'); return; }
     const cb = {
       onSuccess: () => { showToast('success', '저장되었습니다.'); setView('list'); },
       onError: () => { showToast('error', '오류가 발생했습니다.'); },
     };
     if (editingId) updateM.mutate({ id: editingId, data: form }, cb);
     else createM.mutate(form, cb);
+  };
+
+  // 멀티파일 업로드 — 스테이징된 이미지 각각을 카드뉴스로 생성(제목 없이, 나중에 편집).
+  const bulkCreate = async () => {
+    if (!bulkUrls.length) { showToast('error', '업로드된 이미지가 없습니다.'); return; }
+    setBulkSaving(true);
+    try {
+      for (let k = 0; k < bulkUrls.length; k++) {
+        await createM.mutateAsync({ imageUrl: bulkUrls[k], title: '', status: 'published', sortOrder: cards.length + k });
+      }
+      showToast('success', `${bulkUrls.length}장을 카드뉴스로 추가했습니다.`);
+      setBulkUrls([]); setBulkOpen(false);
+    } catch { showToast('error', '일부 업로드에 실패했습니다.'); }
+    setBulkSaving(false);
   };
 
   const saving = createM.isPending || updateM.isPending;
@@ -114,8 +132,25 @@ export default function CardnewsManagement() {
           <h2 className="text-xl font-bold">카드뉴스</h2>
           <p className="mt-1 text-sm text-gray-500">정사각 이미지 카드로 소식을 전합니다. 홈페이지 "카드뉴스" 블록에 자동으로 표시됩니다.</p>
         </div>
-        <button onClick={openCreate} className="shrink-0 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700">＋ 카드 추가</button>
+        <div className="flex shrink-0 gap-2">
+          <button onClick={() => setBulkOpen((v) => !v)} className="rounded-xl border border-blue-600 px-4 py-2.5 text-sm font-medium text-blue-600 hover:bg-blue-50">📷 여러 장 업로드</button>
+          <button onClick={openCreate} className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700">＋ 카드 추가</button>
+        </div>
       </div>
+
+      {bulkOpen && (
+        <div className="mb-6 rounded-2xl border border-blue-200 bg-blue-50/40 p-5">
+          <div className="mb-1 text-sm font-semibold text-gray-800">여러 장 한번에 업로드</div>
+          <p className="mb-3 text-xs text-gray-500">이미지를 한꺼번에 선택하면 각 장이 카드뉴스 한 장으로 등록됩니다. 제목·설명은 나중에 카드별로 수정할 수 있어요.</p>
+          <MultiImageUpload value={bulkUrls} onChange={setBulkUrls} onUpload={uploadImage} resize="content" max={30} />
+          <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button onClick={() => { setBulkUrls([]); setBulkOpen(false); }} className="rounded-xl border border-gray-200 px-5 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50">취소</button>
+            <button onClick={bulkCreate} disabled={bulkSaving || bulkUrls.length === 0} className="rounded-xl bg-blue-600 px-7 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
+              {bulkSaving ? '추가 중…' : `이 이미지로 카드 만들기${bulkUrls.length ? ` (${bulkUrls.length}장)` : ''}`}
+            </button>
+          </div>
+        </div>
+      )}
 
       {isLoading && <CardSkeleton />}
       {error && <p className="text-red-500">오류가 발생했습니다.</p>}
@@ -136,7 +171,7 @@ export default function CardnewsManagement() {
                 </span>
               </div>
               <div className="p-3">
-                <div className="truncate text-sm font-semibold text-gray-800">{c.title}</div>
+                <div className="truncate text-sm font-semibold text-gray-800">{c.title || <span className="font-normal text-gray-400">(제목 없음)</span>}</div>
                 {c.description && <div className="mt-0.5 truncate text-xs text-gray-400">{c.description}</div>}
                 <div className="mt-2 flex justify-end gap-3">
                   <button onClick={() => openEdit(c)} className="text-xs font-medium text-blue-600 hover:underline">수정</button>

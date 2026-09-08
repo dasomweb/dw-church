@@ -1,11 +1,11 @@
-import Link from 'next/link';
 import { getCardnews } from '@/lib/api';
 import { getElementStyle } from '@/lib/element-style';
 import { DataSection } from './DataSection';
+import { CardNewsCarouselClient } from './CardNewsCarouselClient';
 
 // 카드뉴스 (Claude Design 15a) — 데이터 블록. 카드뉴스 콘텐츠 모듈(관리자 업로드)의
-// 게시된 카드를 fetch 해서 정사각 이미지 카드 그리드로 표시. 등록 카드가 없으면
-// props.items(정적 카드) 폴백, 그것도 없으면 섹션 숨김. 모바일 = 2열.
+// 게시된 카드를 fetch 해서 한 장씩 넘겨 보는 캐러셀로 표시(교회 톤 배경). 등록 카드가
+// 없으면 props.items(정적 카드) 폴백, 그것도 없으면 섹션 숨김.
 interface Props { props: Record<string, unknown>; slug: string }
 
 interface Card { title?: string; description?: string; caption?: string; imageUrl?: string; linkUrl?: string; href?: string }
@@ -28,43 +28,22 @@ export async function CardNewsBlock({ props, slug }: Props) {
   if (!cards.length) return null; // 아무 카드도 없으면 섹션 숨김
 
   const BRAND = 'var(--dw-primary, #1466d6)';
-  const MUTED = 'var(--dw-text-muted, #61697a)';
-  // 중첩(반폭 컬럼)이면 항상 2열, 전면폭이면 2→3→4 반응형. 모바일은 항상 2열.
-  const gridClass = inLayout ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4';
+  // 교회 톤: 강한 색 대신 브랜드를 살짝 섞은 차분한 배경(경건/정돈). inLayout(반폭)일
+  // 땐 옆 블록과 톤이 튀지 않게 흰 배경.
+  const churchBg = inLayout
+    ? 'var(--dw-bg, #ffffff)'
+    : 'color-mix(in srgb, var(--dw-primary, #1466d6) 6%, var(--dw-bg, #ffffff))';
 
   return (
-    <DataSection props={props} defaultBg="var(--dw-bg, #fff)">
+    <DataSection props={props} defaultBg={churchBg}>
       {/* 가로 패딩은 DataSection 이 제공 — 이중 여백 방지 */}
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-4">
+      <div className="mx-auto max-w-5xl">
+        <div className="mb-6 text-center">
           {eyebrow && <div className="mb-2 text-[13px] font-semibold" style={{ color: BRAND }}>{eyebrow}</div>}
-          <h2 className="font-heading text-[22px] font-bold sm:text-2xl" style={getElementStyle(props, 'title')}>{title}</h2>
+          <h2 className="font-heading text-[22px] font-bold sm:text-[26px]" style={getElementStyle(props, 'title')}>{title}</h2>
         </div>
-        <div className={`grid gap-3 sm:gap-4 ${gridClass}`}>
-          {cards.map((c, i) => {
-            const href = c.linkUrl || c.href || '';
-            const desc = c.description || c.caption || '';
-            const inner = (
-              <>
-                <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-100">
-                  {c.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={c.imageUrl} alt={c.title ?? ''} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-3xl text-white/90" style={{ background: 'linear-gradient(135deg, var(--dw-primary, #1466d6), var(--dw-secondary, #64748b))' }}>🗞️</div>
-                  )}
-                </div>
-                {c.title && <div className="mt-2.5 text-[14px] font-semibold leading-snug sm:text-[15.5px]">{c.title}</div>}
-                {desc && <div className="mt-1 text-[12.5px] leading-[1.5] sm:text-[13px]" style={{ color: MUTED }}>{desc}</div>}
-              </>
-            );
-            return href ? (
-              <Link key={i} href={href} className="group block text-left">{inner}</Link>
-            ) : (
-              <div key={i} className="group text-left">{inner}</div>
-            );
-          })}
-        </div>
+        {/* 한 장씩 넘겨 보는 캐러셀 */}
+        <CardNewsCarouselClient cards={cards} />
       </div>
     </DataSection>
   );
