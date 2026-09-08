@@ -77,6 +77,18 @@ export const blockTypes = [
   // 스토어프론트(@dw-church/blocks)는 이미 렌더하지만 enum 누락으로 저장이 막혀 있었음.
   'custom_form',
   'form_split',
+  // Claude Design 시안 블록 — BlockRenderer/BLOCK_DEFS 에는 있었으나 이 enum 누락으로
+  // 섹션 추가(POST /sections)가 400 나던 것들. (설교 매거진·특징 그리드·오늘의 말씀·
+  // 주보광고·다가오는 행사·단계 목록·버튼 그룹·오시는길·로고 타이틀)
+  'sermon_magazine',
+  'features_grid',
+  'steps_list',
+  'verse_of_day',
+  'news_announcements',
+  'featured_event',
+  'button_group',
+  'directions_split',
+  'logo_title',
 ] as const;
 
 export type BlockType = (typeof blockTypes)[number];

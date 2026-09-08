@@ -145,7 +145,7 @@ export function SuperAdminTenantLayout() {
 
   return (
     <TenantContext.Provider value={ctxValue}>
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="h-screen bg-gray-50 flex">
         {/* Sidebar */}
         <aside className="w-56 bg-white border-r border-gray-200 flex flex-col">
           <div className="h-14 px-4 flex items-center border-b border-gray-200 gap-2">

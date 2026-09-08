@@ -541,7 +541,7 @@ export default function TenantPageEditor() {
         : '게시됨 (PUBLISHED)';
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)]">
+    <div className="flex flex-col h-full min-h-0">
       {/* Top toolbar — NO auto-save. Edits stay local until 저장 / 게시. */}
       <div className="flex items-center justify-between border-b bg-white px-4 py-1.5 shrink-0">
         <span className="text-xs text-gray-500 truncate">
