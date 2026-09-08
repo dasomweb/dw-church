@@ -13,6 +13,7 @@ const COLUMN_MAP: Record<string, string> = {
   faithStatus: 'faith_status',
   familyInfo: 'family_info',
   prayerRequest: 'prayer_request',
+  scanImageUrl: 'scan_image_url',
   status: 'status',
   memo: 'memo',
 };

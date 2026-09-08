@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { NewcomerSubmission } from '@dw-church/api-client';
-import { useCreateNewcomer } from '@dw-church/api-client';
-import { FormField, inputClass, selectClass, textareaClass, useToast } from '../components';
+import { useCreateNewcomer, useDWChurchClient } from '@dw-church/api-client';
+import { FormField, inputClass, selectClass, textareaClass, useToast, ImageUpload } from '../components';
 import { useTenantScope } from '../lib/tenant-scope';
 
 // 새가족 등록서 — 새가족 담당자가 서면으로 받은 등록 카드를 직접 기입하는 전용 페이지.
@@ -12,6 +12,7 @@ import { useTenantScope } from '../lib/tenant-scope';
 const EMPTY: NewcomerSubmission = {
   name: '', phone: '', email: '', address: '', birthDate: '', gender: '',
   prevChurch: '', visitPath: '', faithStatus: '', familyInfo: '', prayerRequest: '',
+  scanImageUrl: '',
 };
 
 // 섹션 제목
@@ -24,9 +25,12 @@ export default function NewcomerRegister() {
   const { basePath } = useTenantScope();
   const { showToast } = useToast();
   const createMutation = useCreateNewcomer();
+  const apiClient = useDWChurchClient();
   const [form, setForm] = useState<NewcomerSubmission>(EMPTY);
 
   const setF = (patch: Partial<NewcomerSubmission>) => setForm((prev) => ({ ...prev, ...patch }));
+  // 종이 신청서 사진 업로드(리사이즈는 ImageUpload가 처리) → R2 tenant_<slug>/newcomer/
+  const uploadScan = async (file: File): Promise<string> => (await apiClient!.uploadFile(file, 'newcomer')).url;
   const goList = () => navigate(`${basePath}/newcomers`);
 
   // continueAfter=true: 저장 후 폼을 비우고 계속 입력(종이 여러 장 연속 등록).
@@ -59,6 +63,19 @@ export default function NewcomerRegister() {
       </div>
 
       <div className="mx-auto max-w-3xl space-y-8 rounded-2xl border border-gray-200 bg-white p-5 sm:p-8">
+        {/* 0. 종이 신청서 사진 (촬영/첨부) */}
+        <section>
+          <SectionTitle>종이 신청서 사진</SectionTitle>
+          <p className="mb-3 text-sm text-gray-500">서면으로 받은 신청서를 사진으로 찍어 첨부해 두면, 원본을 언제든 다시 볼 수 있습니다. (선택)</p>
+          <ImageUpload
+            label=""
+            value={form.scanImageUrl ?? ''}
+            onChange={(url) => setF({ scanImageUrl: url })}
+            onUpload={uploadScan}
+            resize="content"
+          />
+        </section>
+
         {/* 1. 인적사항 */}
         <section>
           <SectionTitle>인적사항</SectionTitle>

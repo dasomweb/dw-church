@@ -272,6 +272,20 @@ export default function NewcomerManagement() {
                   <DetailRow label="기도 제목" value={selected.prayerRequest} />
                 </dl>
 
+                {/* 종이 신청서 스캔 사진 — 썸네일 클릭 시 원본 새 탭 */}
+                {selected.scanImageUrl && (
+                  <div>
+                    <p className="mb-1.5 text-xs font-medium text-gray-500">종이 신청서 사진</p>
+                    <a href={selected.scanImageUrl} target="_blank" rel="noreferrer" className="inline-block" title="원본 보기">
+                      <img
+                        src={selected.scanImageUrl}
+                        alt="종이 신청서 스캔"
+                        className="h-28 w-auto rounded-lg border border-gray-200 object-cover transition-opacity hover:opacity-90"
+                      />
+                    </a>
+                  </div>
+                )}
+
                 {/* 상태 + 교역자 메모 (편집) */}
                 <FormField label="상태">
                   <select

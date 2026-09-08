@@ -284,6 +284,7 @@ export interface Newcomer {
   faithStatus?: string | null;
   familyInfo?: string | null;
   prayerRequest?: string | null;
+  scanImageUrl?: string | null; // 종이 신청서 스캔 사진(R2)
   status?: NewcomerStatus;
   memo?: string | null;
   createdAt?: string;

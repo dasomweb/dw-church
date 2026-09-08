@@ -20,6 +20,7 @@ export const createNewcomerSchema = z.object({
   faithStatus: z.string().max(100).optional().nullable(), // 신앙 상태 (초신자/기신자 등)
   familyInfo: z.string().max(1000).optional().nullable(), // 동반 가족
   prayerRequest: z.string().max(2000).optional().nullable(), // 기도 제목
+  scanImageUrl: z.string().max(1000).optional().nullable(), // 종이 신청서 스캔 사진(R2)
 });
 
 export const updateNewcomerSchema = z.object({
@@ -37,6 +38,7 @@ export const updateNewcomerSchema = z.object({
   faithStatus: z.string().max(100).optional().nullable(),
   familyInfo: z.string().max(1000).optional().nullable(),
   prayerRequest: z.string().max(2000).optional().nullable(),
+  scanImageUrl: z.string().max(1000).optional().nullable(),
 });
 
 export type CreateNewcomerInput = z.infer<typeof createNewcomerSchema>;
