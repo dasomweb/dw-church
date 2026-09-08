@@ -22,6 +22,7 @@ import { ScheduleBoardBlock } from './blocks/ScheduleBoardBlock';
 import { StaffGridBlock } from './blocks/StaffGridBlock';
 import { HistoryTimelineBlock } from './blocks/HistoryTimelineBlock';
 import { EventGridBlock } from './blocks/EventGridBlock';
+import { CardNewsBlock } from './blocks/CardNewsBlock';
 import { FeaturedEventBlock } from './blocks/FeaturedEventBlock';
 import { VerseOfDayBlock } from './blocks/VerseOfDayBlock';
 import { NewsAnnouncementsBlock } from './blocks/NewsAnnouncementsBlock';
@@ -56,10 +57,9 @@ const CHURCH_BLOCKS: Record<string, AnyBlock> = {
   staff_grid: StaffGridBlock as AnyBlock,
   history_timeline: HistoryTimelineBlock as AnyBlock,
   event_grid: EventGridBlock as AnyBlock,
-  // 카드뉴스(15a) — 운영자 업로드 정사각 이미지 카드. EventGridBlock 을 cardnews
-  // 모드로 강제(정적 props.items 렌더). 독립 블록이라 variant 를 항상 cardnews 로.
-  cardnews: ((p: { props: Record<string, unknown>; slug: string }) =>
-    EventGridBlock({ props: { ...p.props, variant: 'cardnews' }, slug: p.slug })) as AnyBlock,
+  // 카드뉴스(15a) — 카드뉴스 콘텐츠 모듈(관리자 업로드)의 게시 카드를 fetch 해서
+  // 정사각 카드 그리드로 표시. 모듈 카드 없으면 블록 정적 items 폴백.
+  cardnews: CardNewsBlock as AnyBlock,
   featured_event: FeaturedEventBlock as AnyBlock, // 다가오는 행사 — 관리자가 고른 이벤트 1개 알림바 (미선택/종료일 경과 시 렌더 안 함)
   verse_of_day: VerseOfDayBlock as AnyBlock, // 오늘의 말씀 — 말씀 모듈의 현재 말씀 1개 (없으면 렌더 안 함)
   news_announcements: NewsAnnouncementsBlock as AnyBlock, // 주보·광고 — 주보(주보 모듈)+광고(교회소식 게시판, 카테고리 배지)+액션 버튼

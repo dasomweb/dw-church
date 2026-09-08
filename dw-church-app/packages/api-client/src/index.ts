@@ -40,6 +40,7 @@ export type {
   NewcomerHistoryEntry,
   NewcomerHistoryInput,
   Devotion,
+  Cardnews,
   FormSubmission,
   FormSubmissionStatus,
   Form,
@@ -188,6 +189,11 @@ export {
   useCreateDevotion,
   useUpdateDevotion,
   useDeleteDevotion,
+  // Cardnews (카드뉴스)
+  useCardnews,
+  useCreateCardnews,
+  useUpdateCardnews,
+  useDeleteCardnews,
   // Form submissions (폼 제출 인박스)
   useFormSubmissions,
   useUpdateFormSubmission,

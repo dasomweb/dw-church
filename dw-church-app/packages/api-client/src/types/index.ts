@@ -320,6 +320,20 @@ export interface Devotion {
   updatedAt?: string;
 }
 
+// ─── Cardnews (카드뉴스) ─────────────────────────────────────
+// 정사각 이미지 카드로 매주 소식을 전달하는 콘텐츠(관리자 업로드, 공개 읽기).
+export interface Cardnews {
+  id: string;
+  title: string;
+  description?: string | null;
+  imageUrl?: string | null;
+  linkUrl?: string | null;
+  sortOrder?: number;
+  status?: PostStatus;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 // 정착 히스토리 — 새가족 한 명의 후속 기록(연락/심방/상담/모임/정착/기타)
 export type NewcomerHistoryType = 'contact' | 'visit' | 'counsel' | 'meeting' | 'settled' | 'etc';
 

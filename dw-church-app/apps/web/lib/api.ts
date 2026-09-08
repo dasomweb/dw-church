@@ -529,6 +529,12 @@ export async function getDevotions(slug: string): Promise<any[]> {
   return unwrap(res) ?? [];
 }
 
+// ─── Cardnews (카드뉴스) ──────────────────────────────────────
+export async function getCardnews(slug: string): Promise<any[]> {
+  const res = await apiFetch(slug, `/api/v1/cardnews`, { revalidate: CACHE_CONTENT });
+  return unwrap(res) ?? [];
+}
+
 // ─── Boards (게시판) ──────────────────────────────────────────
 
 export async function getBoardBySlug(slug: string, boardSlug: string): Promise<any> {

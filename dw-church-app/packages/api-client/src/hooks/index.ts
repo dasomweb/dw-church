@@ -26,6 +26,7 @@ import type {
   NewcomerHistoryEntry,
   NewcomerHistoryInput,
   Devotion,
+  Cardnews,
   FormSubmission,
   FormSubmissionStatus,
   Form,
@@ -136,6 +137,11 @@ export const queryKeys = {
     list: (status?: string) => ['newcomers', 'list', status] as const,
     detail: (id: string) => ['newcomers', 'detail', id] as const,
     history: (id: string) => ['newcomers', 'history', id] as const,
+  },
+  cardnews: {
+    all: ['cardnews'] as const,
+    list: () => ['cardnews', 'list'] as const,
+    detail: (id: string) => ['cardnews', 'detail', id] as const,
   },
   devotions: {
     all: ['devotions'] as const,
@@ -1029,6 +1035,44 @@ export function useDeleteDevotion() {
   return useMutation({
     mutationFn: (id: string) => client!.deleteDevotion(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.devotions.all }),
+  });
+}
+
+// ─── Cardnews (카드뉴스) Hooks ──────────────────────────────
+export function useCardnews() {
+  const client = useDWChurchClient();
+  return useQuery<Cardnews[]>({
+    queryKey: queryKeys.cardnews.list(),
+    queryFn: () => client!.getCardnews(),
+    enabled: !!client,
+    staleTime: STALE_TIME,
+  });
+}
+
+export function useCreateCardnews() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Partial<Cardnews>) => client!.createCardnews(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.cardnews.all }),
+  });
+}
+
+export function useUpdateCardnews() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Cardnews> }) => client!.updateCardnews(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.cardnews.all }),
+  });
+}
+
+export function useDeleteCardnews() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => client!.deleteCardnews(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.cardnews.all }),
   });
 }
 

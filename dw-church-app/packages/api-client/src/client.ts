@@ -23,6 +23,7 @@ import type {
   NewcomerHistoryEntry,
   NewcomerHistoryInput,
   Devotion,
+  Cardnews,
   FormSubmission,
   FormSubmissionStatus,
   Form,
@@ -800,6 +801,31 @@ export class DWChurchClient {
 
   async deleteDevotion(id: string): Promise<void> {
     return this.api.delete(`${this.namespace}/devotions/${id}`);
+  }
+
+  // ─── Cardnews (카드뉴스) — 관리자 업로드, 공개 읽기 ──────────────────
+  async getCardnews(): Promise<Cardnews[]> {
+    const res = await this.api.get(`${this.namespace}/cardnews`);
+    return unwrapData(res);
+  }
+
+  async getCardnewsItem(id: string): Promise<Cardnews> {
+    const res = await this.api.get(`${this.namespace}/cardnews/${id}`);
+    return unwrapData(res);
+  }
+
+  async createCardnews(data: Partial<Cardnews>): Promise<Cardnews> {
+    const res = await this.api.post(`${this.namespace}/cardnews`, data);
+    return unwrapData(res);
+  }
+
+  async updateCardnews(id: string, data: Partial<Cardnews>): Promise<Cardnews> {
+    const res = await this.api.put(`${this.namespace}/cardnews/${id}`, data);
+    return unwrapData(res);
+  }
+
+  async deleteCardnews(id: string): Promise<void> {
+    return this.api.delete(`${this.namespace}/cardnews/${id}`);
   }
 
   // ─── 정착 히스토리 (연락/심방/상담/모임/정착 등 날짜별 기록) ──────────

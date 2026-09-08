@@ -110,6 +110,7 @@ async function main(): Promise<void> {
   const { cellRoutes } = await import('./modules/cells/routes.js');
   const { newcomerRoutes } = await import('./modules/newcomers/routes.js');
   const { devotionRoutes } = await import('./modules/devotions/routes.js');
+  const { cardnewsRoutes } = await import('./modules/cardnews/routes.js');
   const { applicationRoutes } = await import('./modules/applications/routes.js');
   const { referenceDenominationRoutes } = await import('./modules/reference-denominations/routes.js');
   const { supportRoutes } = await import('./modules/support/routes.js');
@@ -204,6 +205,7 @@ async function main(): Promise<void> {
   await app.register(cellRoutes, { prefix: '/api/v1' }); // /cells (목장, Plus/Pro)
   await app.register(newcomerRoutes, { prefix: '/api/v1' }); // /newcomers (새가족, Pro)
   await app.register(devotionRoutes, { prefix: '/api/v1' }); // /devotions (말씀 묵상 QT)
+  await app.register(cardnewsRoutes, { prefix: '/api/v1' }); // /cardnews (카드뉴스)
   await app.register(applicationRoutes, { prefix: '/api/v1' }); // /applications + /admin/applications
   await app.register(referenceDenominationRoutes, { prefix: '/api/v1' }); // /admin/reference-denominations
   await app.register(supportRoutes, { prefix: '/api/v1' }); // /support-tickets + /admin/support-tickets
@@ -413,7 +415,7 @@ async function main(): Promise<void> {
     // 스키마별 버전 스탬프를 두고, 이미 현재 버전으로 반영된 스키마는 건너뛴다.
     // ⚠️ 아래 per-schema DDL 블록을 하나라도 바꾸면(테이블/컬럼 추가) SCHEMA_VERSION을
     //    올려라 → 기존 테넌트가 "다음 배포 때 한 번만" 다시 반영하고 이후 다시 건너뛴다.
-    const SCHEMA_VERSION = 4; // ↑4: devotions(말씀 묵상 QT) 테이블 추가
+    const SCHEMA_VERSION = 5; // ↑5: cardnews(카드뉴스) 테이블 추가
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS public.tenant_schema_versions (
         "schema_name" TEXT PRIMARY KEY,
@@ -670,6 +672,28 @@ async function main(): Promise<void> {
         `);
         await prisma.$executeRawUnsafe(
           `CREATE INDEX IF NOT EXISTS "devotions_order_idx" ON "${schema}".devotions ("sort_order", "devo_date" DESC)`,
+        );
+        createHits++;
+      } catch { /* skip on error */ }
+
+      // 0e-4. cardnews — 카드뉴스 content module (Claude Design 15a 기반).
+      //       정사각 이미지 카드로 매주 소식을 전달. cardnews 데이터 블록이 fetch.
+      try {
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".cardnews (
+            "id"          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "title"       VARCHAR(300) NOT NULL,
+            "description" VARCHAR(2000),
+            "image_url"   VARCHAR(1000),
+            "link_url"    VARCHAR(1000),
+            "sort_order"  INT DEFAULT 0,
+            "status"      VARCHAR(20) DEFAULT 'published' CHECK (status IN ('draft','published','archived')),
+            "created_at"  TIMESTAMPTZ DEFAULT NOW(),
+            "updated_at"  TIMESTAMPTZ DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(
+          `CREATE INDEX IF NOT EXISTS "cardnews_order_idx" ON "${schema}".cardnews ("sort_order", "created_at" DESC)`,
         );
         createHits++;
       } catch { /* skip on error */ }
