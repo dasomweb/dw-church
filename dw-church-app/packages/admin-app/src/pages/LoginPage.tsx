@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useLogin, DWChurchApiError } from '@dw-church/api-client';
 import { useAuthStore } from '../stores/auth';
 import { detectHostMode } from '../lib/tenant-scope';
+import { firstStaffPath } from '../lib/capabilities';
 
 interface LoginFormData {
   email: string;
@@ -39,17 +40,21 @@ export default function LoginPage() {
     formState: { errors },
   } = useForm<LoginFormData>({ defaultValues: { email: prefillEmail, password: prefillPassword } });
 
-  const postLoginDestination = (session: { user?: { isSuperAdmin?: boolean; tenantSlug?: string } }) => {
+  const postLoginDestination = (session: { user?: { isSuperAdmin?: boolean; tenantSlug?: string; role?: string; permissions?: string[] } }) => {
     // Explicit redirect param wins (set when auth gate kicked us here).
     if (redirectParam) return redirectParam;
+    // Scoped staff land directly on their first permitted page (the layout guard
+    // is the safety net; this avoids a flash of the owner dashboard).
+    const staffLeaf = session.user?.role === 'staff' ? firstStaffPath(session.user.permissions ?? []) : null;
     // Host mode (tenant's own domain): the admin lives at the root (/) — no
     // /t/:slug. The session's tenantSlug scopes everything.
-    if (detectHostMode()) return '/';
+    if (detectHostMode()) return staffLeaf ? `/${staffLeaf}` : '/';
     // Super admin always lands on the platform dashboard.
     if (session.user?.isSuperAdmin) return '/super-admin';
     // Prefer the URL slug (so support logins land inside the tenant they
     // signed in for), fall back to the user's own tenant slug.
     const slug = urlSlug || session.user?.tenantSlug;
+    if (staffLeaf) return slug ? `/t/${slug}/${staffLeaf}` : `/${staffLeaf}`;
     return slug ? `/t/${slug}` : '/';
   };
 

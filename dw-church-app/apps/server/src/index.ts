@@ -23,6 +23,8 @@ declare module 'fastify' {
       tenantId: string;
       tenantSlug: string;
       role: string;
+      permissions?: string[];
+      memberId?: string | null;
     };
   }
 }
@@ -361,6 +363,19 @@ async function main(): Promise<void> {
     );
   } catch (err) {
     app.log.warn(`tenants.feature_overrides migration skipped: ${err}`);
+  }
+
+  // Scoped-staff RBAC: users.permissions (capability list) + users.member_id
+  // (link a login to a 교적 member so a 목자 is scoped to the group they lead).
+  try {
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE public.users ADD COLUMN IF NOT EXISTS permissions jsonb NOT NULL DEFAULT '[]'::jsonb`,
+    );
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE public.users ADD COLUMN IF NOT EXISTS member_id uuid`,
+    );
+  } catch (err) {
+    app.log.warn(`users RBAC columns migration skipped: ${err}`);
   }
 
   // Front-sample editor overrides: the full edited HTML per design sample,

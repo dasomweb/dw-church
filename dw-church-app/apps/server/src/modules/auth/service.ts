@@ -9,6 +9,7 @@ import { sendEmail } from '../../config/email.js';
 import { welcomeEmail, passwordResetEmail, inviteEmail } from '../../config/email-templates.js';
 import { planLimits, normalizePlan } from '../../config/plan-limits.js';
 import type { RegisterInput, LoginInput, InviteInput } from './schema.js';
+import { sanitizePermissions } from './capabilities.js';
 
 const BCRYPT_ROUNDS = 12;
 const ACCESS_TOKEN_LIFETIME_MS = 3600000; // 1 hour
@@ -29,6 +30,8 @@ function buildTokenResponse(user: {
   role: string;
   tenantId: string | null;
   tenantSlug: string | null;
+  permissions?: unknown;
+  memberId?: string | null;
 }) {
   const payload = {
     userId: user.id,
@@ -36,6 +39,10 @@ function buildTokenResponse(user: {
     tenantId: user.tenantId ?? '',
     tenantSlug: user.tenantSlug ?? '',
     role: user.role,
+    // Scoped-staff RBAC: capability list travels in the JWT so requireAuth can
+    // enforce without a DB hit. Empty for non-staff. memberId scopes 목자 access.
+    permissions: sanitizePermissions(user.permissions),
+    memberId: user.memberId ?? null,
   };
 
   return {
@@ -142,6 +149,8 @@ export async function login(input: LoginInput) {
     role: user.role,
     tenantId: user.tenantId,
     tenantSlug: user.tenantSlug,
+    permissions: user.permissions,
+    memberId: user.memberId,
   });
 
   return {
@@ -154,6 +163,8 @@ export async function login(input: LoginInput) {
       tenantId: user.tenantId ?? '',
       tenantSlug: user.tenantSlug ?? '',
       isSuperAdmin: checkIsSuperAdmin(user.role, user.email),
+      permissions: sanitizePermissions(user.permissions),
+      memberId: user.memberId ?? null,
     },
   };
 }
@@ -179,6 +190,8 @@ export async function refreshSession(refreshToken: string) {
     role: user.role,
     tenantId: user.tenantId,
     tenantSlug: user.tenantSlug,
+    permissions: user.permissions,
+    memberId: user.memberId,
   });
 
   return {
@@ -191,6 +204,8 @@ export async function refreshSession(refreshToken: string) {
       tenantId: user.tenantId ?? '',
       tenantSlug: user.tenantSlug ?? '',
       isSuperAdmin: checkIsSuperAdmin(user.role, user.email),
+      permissions: sanitizePermissions(user.permissions),
+      memberId: user.memberId ?? null,
     },
   };
 }
@@ -416,6 +431,8 @@ export async function switchTenant(userId: string, tenantId: string, tenantSlug:
     role: user.role,
     tenantId: user.tenantId,
     tenantSlug: user.tenantSlug,
+    permissions: user.permissions,
+    memberId: user.memberId,
   });
 
   return {
@@ -428,6 +445,8 @@ export async function switchTenant(userId: string, tenantId: string, tenantSlug:
       tenantId: user.tenantId ?? '',
       tenantSlug: user.tenantSlug ?? '',
       isSuperAdmin: checkIsSuperAdmin(user.role, user.email),
+      permissions: sanitizePermissions(user.permissions),
+      memberId: user.memberId ?? null,
     },
   };
 }

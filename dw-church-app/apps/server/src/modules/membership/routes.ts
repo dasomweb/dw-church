@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
-import { requireAuth, requireFeature } from '../../middleware/auth.js';
+import { requireAuth, requireAdmin, requireFeature } from '../../middleware/auth.js';
 import { getSchema } from '../../utils/get-schema.js';
+import * as staffAccess from './staff-access-service.js';
 import {
   createMemberSchema, updateMemberSchema, listMembersQuerySchema,
   createHouseholdSchema, updateHouseholdSchema, listHouseholdsQuerySchema,
@@ -57,6 +58,36 @@ export async function membershipRoutes(app: FastifyInstance) {
     const ok = await svc.deleteMember(getSchema(request), id);
     if (!ok) return reply.status(404).send(NOT_FOUND('교인'));
     return reply.send({ data: { deleted: true } });
+  });
+
+  // ── Staff 권한 (교적 멤버 → 스태프 지정) — 오너/관리자 전용 ──────────
+  const adminGate = { preHandler: [requireAdmin, requireFeature('membership')] };
+
+  app.get('/members/:id/staff-access', adminGate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const slug = request.user?.tenantSlug ?? '';
+    return reply.send({ data: await staffAccess.getMemberStaffAccess(id, slug) });
+  });
+
+  app.post('/members/:id/staff-access', adminGate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const body = (request.body ?? {}) as { permissions?: unknown; email?: string };
+    const result = await staffAccess.setMemberStaffAccess({
+      schema: getSchema(request),
+      memberId: id,
+      tenantId: request.user?.tenantId ?? '',
+      tenantSlug: request.user?.tenantSlug ?? '',
+      permissions: body.permissions,
+      email: body.email,
+    });
+    return reply.send({ data: result });
+  });
+
+  app.delete('/members/:id/staff-access', adminGate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const slug = request.user?.tenantSlug ?? '';
+    await staffAccess.revokeMemberStaffAccess(id, slug);
+    return reply.send({ data: { revoked: true } });
   });
 
   // ── households ───────────────────────────────────────────

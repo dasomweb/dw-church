@@ -11,6 +11,9 @@ export interface JwtPayload {
   tenantId: string;
   tenantSlug: string;
   role: string;
+  // Scoped-staff RBAC (role='staff'): capability list + linked 교적 member.
+  permissions?: string[];
+  memberId?: string | null;
 }
 
 export function signAccessToken(payload: JwtPayload): string {

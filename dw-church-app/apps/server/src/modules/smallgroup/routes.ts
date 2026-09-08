@@ -156,6 +156,15 @@ export async function smallgroupRoutes(app: FastifyInstance) {
     return reply.send({ data: await rep.monitoringGrid(getSchema(request), q) });
   });
 
+  // 목자(group_report 스코프 staff)용 — 내가 인도하는 목장만. /api/v1/groups 는
+  // group_report 권한으로 접근 불가하므로, 리포트 작성 화면이 이걸로 목장을 채운다.
+  // /meeting-reports/:id 보다 먼저 등록.
+  app.get('/meeting-reports/my-groups', gate, async (request, reply) => {
+    const memberId = request.user?.memberId;
+    if (!memberId) return reply.send({ data: [] });
+    return reply.send({ data: await svc.listGroups(getSchema(request), { leaderMemberId: memberId } as any) });
+  });
+
   // 작성 화면 초안 (RP-01) — 기존 리포트 or 조직 명단 기반 빈 초안.
   app.get('/meeting-reports/draft', gate, async (request, reply) => {
     const { groupId, date } = request.query as { groupId?: string; date?: string };

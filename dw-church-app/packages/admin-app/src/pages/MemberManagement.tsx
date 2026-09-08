@@ -4,8 +4,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
 import { inputClass, textareaClass, ImageUpload, useToast, EmptyState } from '../components';
 import { MemberPicker } from '../components/MemberPicker';
+import { StaffAccessModal } from '../components/StaffAccessModal';
 import { useEntitlements } from '../hooks/useEntitlements';
 import { featureAllowed } from '../lib/plan-features';
+import { useAuthStore } from '../stores/auth';
 
 /**
  * 교적관리 — 화면 시안(교적관리 화면 시안.dc.html)을 그대로 구현.
@@ -88,6 +90,10 @@ export default function MemberManagement() {
   const [view, setView] = useState<'list' | 'edit' | 'detail'>('list');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [staffModalOpen, setStaffModalOpen] = useState(false);
+  // 오너/관리자만 스태프 권한을 지정할 수 있다(서버 requireAdmin와 일치).
+  const myRole = useAuthStore((s) => s.session?.user?.role) ?? '';
+  const canManageStaff = ['owner', 'admin', 'super_admin'].includes(myRole);
   const [form, setForm] = useState<Form>(emptyForm);
   const [saving, setSaving] = useState(false);
 
@@ -320,9 +326,19 @@ export default function MemberManagement() {
           <div className="ml-auto flex items-center gap-2.5">
             {m && <button onClick={() => void remove(m)} className="text-[13px] font-bold px-2.5 py-2.5" style={{ color: C.danger }}>삭제</button>}
             <button onClick={() => window.print()} className={btnOutline} style={{ color: C.text, borderColor: C.border2 }}>교인카드 인쇄</button>
+            {m && canManageStaff && <button onClick={() => setStaffModalOpen(true)} className={btnOutline} style={{ color: C.brand, borderColor: C.border2 }}>스태프 권한</button>}
             {m && <button onClick={() => openEdit(m)} className={btnPrimary} style={{ background: C.brand }}>정보 수정</button>}
           </div>
         </div>
+
+        {staffModalOpen && m && (
+          <StaffAccessModal
+            memberId={m.id}
+            memberName={m.name}
+            defaultEmail={m.email}
+            onClose={() => setStaffModalOpen(false)}
+          />
+        )}
 
         {!m ? <div className="p-8 text-center text-sm" style={{ color: C.faint }}>불러오는 중…</div> : (
           <>

@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useLogout, useChurchSettings } from '@dw-church/api-client';
 import { useAuthStore } from '../stores/auth';
 import { useEntitlements } from '../hooks/useEntitlements';
 import { NAV_FEATURE, featureAllowed } from '../lib/plan-features';
 import { useTenantScope, tenantPath } from '../lib/tenant-scope';
+import { staffCanSeeNav, firstStaffPath } from '../lib/capabilities';
 
 // Nav item paths are relative to the current tenant root (/t/:slug). An empty
 // string means the tenant dashboard (/t/:slug), "sermons" becomes
@@ -34,6 +35,7 @@ const navGroups: (NavItem | NavGroup)[] = [
     { to: 'boards', label: '게시판', icon: I('M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01') },
     { to: 'cells', label: '목장', icon: I('M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6') },
     { to: 'newcomers', label: '새가족', icon: I('M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z') },
+    { to: 'newcomers-register', label: '새가족 등록서', icon: I('M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z') },
     { to: 'forms', label: '폼 만들기', icon: I('M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z') },
     { to: 'form-submissions', label: '폼 제출', icon: I('M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z') },
     { to: 'translations', label: '영어 번역 보정', icon: I('M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9L11 15m0 0l-1.5-3m1.5 3l3 6M18 21l3-6m-3 6l-1.5-3m1.5 3H15') },
@@ -107,6 +109,7 @@ const pageTitlesByLeaf: Record<string, string> = {
   boards: '게시판 관리',
   cells: '목장 관리',
   newcomers: '새가족 관리',
+  'newcomers-register': '새가족 등록서',
   'forms': '폼 만들기',
   'form-submissions': '폼 제출 관리',
   translations: '영어 번역 보정',
@@ -127,6 +130,10 @@ const ROLE_LABELS: Record<string, string> = {
   owner: '소유자',
   admin: '관리자',
   editor: '편집자',
+  staff: '스태프',
+  member: '멤버',
+  support: '지원',
+  super_admin: '슈퍼관리자',
 };
 
 export function AdminLayout() {
@@ -155,6 +162,22 @@ export function AdminLayout() {
   const pageTitle = pageTitlesByLeaf[leaf ?? ''] || '관리';
   const user = session?.user;
   const isSuperAdmin = !!user?.isSuperAdmin;
+  // Scoped staff (role='staff'): nav is limited to the capabilities granted from
+  // the 교적 Staff 지정. Owners/admins are unaffected. perms travels in the session.
+  const isStaff = user?.role === 'staff';
+  const perms = (user?.permissions ?? []) as string[];
+
+  // Route guard: a scoped staff that lands on (or navigates to) a page outside
+  // its capabilities is bounced to its first permitted page. Runs on leaf change.
+  useEffect(() => {
+    if (!isStaff) return;
+    const lf = leaf ?? '';
+    if (lf === 'support') return; // 고객지원은 항상 허용
+    if (lf === '' || !staffCanSeeNav(perms, lf)) {
+      navigate(pathFor(firstStaffPath(perms)), { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isStaff, leaf, JSON.stringify(perms)]);
 
   // 접이식 네비 그룹 — 현재 위치한 그룹만 기본 펼침, 나머지는 접힘(사용자가 펼치면
   // 저장). 모듈/애드온이 늘어도 왼쪽이 길어지지 않게 한다. (활성 그룹은 항상 펼침.)
@@ -223,7 +246,8 @@ export function AdminLayout() {
         <nav className="p-3 overflow-y-auto" style={{ height: 'calc(100% - 4rem)' }}>
           {navGroups.map((entry, i) => {
             if ('to' in entry) {
-              // Single nav item (대시보드)
+              // Single nav item (대시보드). 스태프는 자신의 권한에 해당하는 것만.
+              if (isStaff && !staffCanSeeNav(perms, entry.to)) return null;
               const dest = pathFor(entry.to);
               return (
                 <NavLink
@@ -249,8 +273,9 @@ export function AdminLayout() {
             }
             const groupItems = entry.items
               .filter((item) => !item.superAdminOnly || isSuperAdmin)
-              .filter((item) => isSuperAdmin || featureAllowed(features, NAV_FEATURE[item.to]));
-            if (groupItems.length === 0) return null; // 애드온 미보유 → 그룹 통째로 숨김
+              .filter((item) => isSuperAdmin || featureAllowed(features, NAV_FEATURE[item.to]))
+              .filter((item) => !isStaff || staffCanSeeNav(perms, item.to)); // 스태프 권한 스코프
+            if (groupItems.length === 0) return null; // 애드온 미보유/권한 없음 → 그룹 숨김
             const isActiveGroup = entry.label === activeGroupLabel;
             const open = isGroupOpen(entry.label);
             return (

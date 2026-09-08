@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
 import { inputClass, textareaClass, useToast } from '../components';
+import { useAuthStore } from '../stores/auth';
 
 /**
  * RP-01/04 모임 리포트 작성 · 열람 · 확인. 조직과 모임일을 고르면 초안을 불러와
@@ -38,8 +39,28 @@ export default function GroupReports() {
   const [status, setStatus] = useState('draft');
   const [confirmer, setConfirmer] = useState('');
 
+  // 목자(group_report 스코프 staff): /api/v1/groups 접근 불가 → 자기 목장만 오는
+  // /meeting-reports/my-groups 로 채우고 목장을 자동 선택·잠금한다.
+  const user = useAuthStore((s) => s.session?.user);
+  const perms = (user?.permissions ?? []) as string[];
+  const scopedLeader = user?.role === 'staff' && perms.includes('group_report') && !perms.includes('smallgroup');
+
   const presetQ = useQuery({ queryKey: ['group-preset'], queryFn: async () => (await api.get<{ data: Preset }>('/api/v1/group-preset') as any).data as Preset });
-  const groupsQ = useQuery({ queryKey: ['groups-flat'], queryFn: async () => (await api.get<{ data: any[] }>('/api/v1/groups') as any).data as any[] });
+  const groupsQ = useQuery({
+    queryKey: ['groups-flat', scopedLeader],
+    queryFn: async () => {
+      const path = scopedLeader ? '/api/v1/meeting-reports/my-groups' : '/api/v1/groups';
+      return (await api.get<{ data: any[] }>(path) as any).data as any[];
+    },
+  });
+
+  // 목자면 자기 목장을 자동 선택(대개 1개). 목장이 없으면 안내만.
+  useEffect(() => {
+    if (scopedLeader && !groupId && (groupsQ.data?.length ?? 0) > 0) {
+      setGroupId(groupsQ.data![0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scopedLeader, groupsQ.data]);
 
   const t = presetQ.data?.terminology ?? { org: '조직', member: '구성원', report: '리포트' };
   const items: any[] = presetQ.data?.reportItems ?? [];
@@ -112,10 +133,17 @@ export default function GroupReports() {
 
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-wrap items-end gap-3">
         <label className="flex-1 min-w-[200px]"><span className="text-xs font-medium text-gray-600">{t.org}</span>
-          <select className={inputClass} value={groupId} onChange={(e) => setGroupId(e.target.value)}>
+          <select className={inputClass} value={groupId} onChange={(e) => setGroupId(e.target.value)} disabled={scopedLeader}>
             <option value="">{t.org} 선택</option>
             {(groupsQ.data ?? []).map((g) => <option key={g.id} value={g.id}>{g.name}{g.leaderName ? ` · ${g.leaderName}` : ''}</option>)}
-          </select></label>
+          </select>
+          {scopedLeader && (groupsQ.data?.length ?? 0) === 0 && (
+            <span className="mt-1 block text-xs text-amber-600">담당 {t.org}이(가) 없습니다. 관리자에게 목장 배정을 요청하세요.</span>
+          )}
+          {scopedLeader && (groupsQ.data?.length ?? 0) > 0 && (
+            <span className="mt-1 block text-xs text-gray-400">담당하시는 {t.org}만 표시됩니다.</span>
+          )}
+        </label>
         <label><span className="text-xs font-medium text-gray-600">모임일</span>
           <input type="date" className={inputClass} value={date} onChange={(e) => setDate(e.target.value)} /></label>
         {status !== 'draft' && (

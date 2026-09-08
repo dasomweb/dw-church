@@ -6,6 +6,7 @@ import { AppError } from './error-handler.js';
 import { validateSchemaName } from '../utils/validate-schema.js';
 import { tiersForFeature, isAddon, isFeatureEffective, missingDeps, FEATURE_LABELS } from '../config/plan-limits.js';
 import type { JwtPayload } from '../config/jwt.js';
+import { sanitizePermissions, staffMayAccess } from '../modules/auth/capabilities.js';
 
 function extractToken(request: FastifyRequest): string | null {
   const header = request.headers.authorization;
@@ -26,13 +27,22 @@ async function resolveUser(
     throw new AppError('UNAUTHORIZED', 401, 'Invalid or expired token');
   }
 
+  const permissions = sanitizePermissions(payload.permissions);
   request.user = {
     id: payload.userId,
     email: payload.email,
     tenantId: payload.tenantId ?? '',
     tenantSlug: payload.tenantSlug ?? '',
     role: payload.role ?? 'member',
+    permissions,
+    memberId: payload.memberId ?? null,
   };
+
+  // Scoped-staff RBAC: a role='staff' user may only reach endpoints its capability
+  // list allows (see capabilities.ts). Owners/admins/super_admin/support bypass.
+  if (request.user.role === 'staff' && !staffMayAccess(permissions, request.url)) {
+    throw new AppError('FORBIDDEN', 403, '이 기능에 대한 접근 권한이 없습니다');
+  }
 
   // Cross-tenant protection:
   // tenantMiddleware (global preHandler) may have resolved request.tenant

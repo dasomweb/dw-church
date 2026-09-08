@@ -633,8 +633,11 @@ export interface AuthUser {
   name: string;
   tenantId: string;
   tenantSlug: string;
-  role: 'owner' | 'admin' | 'editor';
+  role: 'owner' | 'admin' | 'editor' | 'staff' | 'member';
   isSuperAdmin?: boolean;
+  // Scoped-staff RBAC: capability list (role='staff') + linked 교적 member.
+  permissions?: string[];
+  memberId?: string | null;
 }
 
 export interface RegisterInput {

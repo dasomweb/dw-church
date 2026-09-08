@@ -55,6 +55,11 @@ model User {
   tenantId            String?   @map("tenant_id") @db.Uuid
   tenantSlug          String?   @map("tenant_slug") @db.VarChar(100)
   isActive            Boolean   @default(true) @map("is_active")
+  // Scoped-staff RBAC: role='staff' users carry an explicit capability list
+  // (e.g. ["newcomer","group_report"]). memberId links the login to a 교적 member
+  // (tenant schema) so a 목자 is scoped to the group(s) that member leads.
+  permissions         Json      @default("[]") @map("permissions")
+  memberId            String?   @map("member_id") @db.Uuid
   // Non-null only for temporary / time-boxed credentials (e.g. tenant support users).
   // Login rejected when passwordExpiresAt < now().
   passwordExpiresAt   DateTime? @map("password_expires_at") @db.Timestamptz
