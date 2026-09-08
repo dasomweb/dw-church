@@ -131,6 +131,8 @@ export default function TenantPageEditor() {
   const [creating, setCreating] = useState(false);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [addSearch, setAddSearch] = useState(''); // '+ 블록' 피커 검색어
+  // 랩탑에서 프리뷰/인스펙터 공간 확보 — 페이지 목록 패널을 접을 수 있게.
+  const [pagesOpen, setPagesOpen] = useState(true);
   // Verbatim content import (paste → AI structures → blocks).
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState('');
@@ -596,10 +598,21 @@ export default function TenantPageEditor() {
       </div>
 
       <div className="flex flex-1 min-h-0">
-      {/* Pane 1 — Pages */}
-      <aside className="w-48 shrink-0 border-r bg-white overflow-y-auto">
+      {/* Pane 1 — Pages (접기 가능 — 랩탑에서 프리뷰/인스펙터 공간 확보) */}
+      {!pagesOpen && (
+        <button
+          type="button"
+          onClick={() => setPagesOpen(true)}
+          title="페이지 목록 펼치기"
+          className="flex w-6 shrink-0 items-start justify-center border-r bg-white pt-3 text-xs text-gray-400 hover:bg-gray-50 hover:text-gray-700"
+        >›</button>
+      )}
+      <aside className={`${pagesOpen ? 'w-44 lg:w-48' : 'hidden'} shrink-0 border-r bg-white overflow-y-auto`}>
         <div className="p-3 border-b flex items-center justify-between gap-1">
-          <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider">페이지</h2>
+          <div className="flex items-center gap-1">
+            <button type="button" onClick={() => setPagesOpen(false)} title="페이지 목록 접기" className="text-sm leading-none text-gray-400 hover:text-gray-700">‹</button>
+            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider">페이지</h2>
+          </div>
           <div className="flex items-center gap-1">
           <button
             type="button"
@@ -673,7 +686,7 @@ export default function TenantPageEditor() {
       </aside>
 
       {/* Pane 2 — Sections */}
-      <section className="w-60 shrink-0 border-r bg-gray-50 overflow-y-auto">
+      <section className="w-52 lg:w-60 shrink-0 border-r bg-gray-50 overflow-y-auto">
         <div className="p-3 border-b bg-white space-y-2">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider">섹션</h2>
@@ -866,7 +879,7 @@ export default function TenantPageEditor() {
       </section>
 
       {/* Pane 4 — Inspector (right) */}
-      <section className="w-96 shrink-0 border-l overflow-y-auto bg-white">
+      <section className="w-80 xl:w-96 shrink-0 border-l overflow-y-auto bg-white">
         <div className="p-3 border-b flex items-center justify-between">
           <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider">인스펙터</h2>
           {hasChanges && <span className="text-[10px] text-amber-600">미게시 변경</span>}

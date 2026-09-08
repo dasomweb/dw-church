@@ -309,6 +309,7 @@ const DATA_BLOCK_LABELS: Record<string, string> = {
   // CHURCH_BLOCK_LABELS 로 가로채지만 중첩 자식은 여기 shared 렌더러를 타므로
   // 반드시 여기에도 placeholder 라벨이 있어야 한다.
   recent_sermons: '설교 목록 (Data Block)',
+  sermon_magazine: '설교 매거진 (이번 주 설교 커버·써머리·질문 — Data Block)',
   recent_bulletins: '주보 목록 (Data Block)',
   recent_columns: '목회칼럼 목록 (Data Block)',
   staff_grid: '교역자 (Data Block)',
