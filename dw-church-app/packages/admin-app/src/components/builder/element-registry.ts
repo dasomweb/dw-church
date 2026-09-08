@@ -1278,6 +1278,13 @@ export const ITEM_FIELDS_BY_TYPE: Record<string, ItemFieldDef[]> = {
     { label: 'Caption (override SKU)', key: 'caption', kind: 'text', hint: '비우면 제품의 SKU 자동 표시' },
     { label: 'Short description (override)', key: 'shortDescription', kind: 'html', hint: '비우면 제품 설명 자동 표시' },
   ],
+  // 카드뉴스 — 정사각 이미지 카드(제목·설명·이미지). super-admin 인스펙터에서
+  // 카드 추가/삭제/이미지 업로드. 테넌트 PageEditor 는 cardItems 위젯으로 편집.
+  cardnews: [
+    { label: '제목', key: 'title', kind: 'text' },
+    { label: '설명', key: 'description', kind: 'text' },
+    { label: '이미지', key: 'imageUrl', kind: 'image' },
+  ],
   features_grid: [
     { label: 'Title', key: 'title', kind: 'text' },
     { label: 'Description', key: 'description', kind: 'html' },
