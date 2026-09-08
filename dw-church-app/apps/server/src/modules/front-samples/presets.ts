@@ -189,7 +189,7 @@ const devotionTeaser = (): PresetSection => ({ block_type: 'devotion_reader', pr
 // 의존 없음). 행사 데이터로 카드뉴스를 쓰고 싶으면 event_grid variant:'cardnews' 사용
 // 가능(대표님 "이벤트 블록이 비슷한 기능"). 시안 충실 = 업로드 카드 → features_grid.
 const cardNewsAndNotices = (): PresetSection => ({ block_type: 'layout_columns', props: { layout: 'columns-2', gap: 40, padding: '48px 24px 0', maxWidth: '7xl', children: [
-  { blockType: 'features_grid', props: { variant: 'image-card', columns: '2', eyebrow: '카드뉴스', title: '한 장으로 보내는 소식', items: [
+  { blockType: 'event_grid', props: { variant: 'cardnews', eyebrow: '카드뉴스', title: '한 장으로 보내는 소식', items: [
     { title: '말씀 카드', description: '이번 주 말씀을 한 장으로', imageUrl: '' },
     { title: '모임 안내', description: '이번 주 모임 소식', imageUrl: '' },
   ] } },

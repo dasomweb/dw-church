@@ -33,14 +33,17 @@ export function EventGridBlockClient({ events, slug, columns = 3, variant }: Eve
   const gridClass = GRID_COLS[columns] || GRID_COLS[3];
 
   // 15a 카드뉴스 — 정사각(1:1) 타일 + 아래 캡션(제목/설명), 날짜 배지·큰 버튼 없음.
+  // 정적 카드(event._static)는 운영자 업로드 이미지 카드 — href 있으면 이동, 없으면 비이동.
   if (variant === 'cardnews') {
     return (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
-        {events.map((event: any) => (
+        {events.map((event: any, idx: number) => {
+          const nav = event._static ? (event.id ? () => router.push(event.id) : undefined) : () => router.push(`/events/${event.id}`);
+          return (
           <button
-            key={event.id}
-            onClick={() => router.push(`/events/${event.id}`)}
-            className="group text-left"
+            key={event.id || idx}
+            onClick={nav}
+            className={`group text-left ${nav ? '' : 'cursor-default'}`}
           >
             <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-100">
               {(event.backgroundImageUrl || event.thumbnailUrl) ? (
@@ -54,7 +57,8 @@ export function EventGridBlockClient({ events, slug, columns = 3, variant }: Eve
               <div className="mt-1 text-[13px] leading-[1.6] text-gray-400 line-clamp-2">{event.location || event.eventDate}</div>
             )}
           </button>
-        ))}
+          );
+        })}
       </div>
     );
   }
