@@ -188,7 +188,7 @@ export default function MobileMenu({ navItems, basePath = '' }: MobileMenuProps)
         role="dialog"
         aria-modal="true"
         aria-label="Navigation menu"
-        className={`fixed inset-y-0 right-0 z-50 flex flex-col w-72 bg-[var(--dw-background)] shadow-xl transition-transform duration-300 ease-in-out ${
+        className={`fixed inset-y-0 right-0 z-50 flex flex-col w-80 max-w-[85vw] bg-[var(--dw-background)] shadow-xl transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
@@ -232,7 +232,7 @@ export default function MobileMenu({ navItems, basePath = '' }: MobileMenuProps)
                     <Link
                       href={navHref(item)}
                       onClick={close}
-                      className="block rounded-md px-3 py-3 text-base font-medium text-[var(--dw-text)] hover:bg-gray-100 hover:text-[var(--dw-primary)] transition-colors"
+                      className="block rounded-md px-3 py-3.5 text-lg font-medium text-[var(--dw-text)] hover:bg-gray-100 hover:text-[var(--dw-primary)] transition-colors"
                     >
                       {item.label}
                     </Link>
@@ -248,7 +248,7 @@ export default function MobileMenu({ navItems, basePath = '' }: MobileMenuProps)
                       <Link
                         href={navHref(item)}
                         onClick={close}
-                        className="flex-1 rounded-md px-3 py-3 text-base font-semibold text-[var(--dw-text)] hover:bg-gray-100 hover:text-[var(--dw-primary)] transition-colors"
+                        className="flex-1 rounded-md px-3 py-3.5 text-lg font-semibold text-[var(--dw-text)] hover:bg-gray-100 hover:text-[var(--dw-primary)] transition-colors"
                       >
                         {item.label}
                       </Link>
@@ -256,7 +256,7 @@ export default function MobileMenu({ navItems, basePath = '' }: MobileMenuProps)
                       <button
                         type="button"
                         onClick={() => toggleExpanded(item.id)}
-                        className="flex-1 text-left rounded-md px-3 py-3 text-base font-semibold text-[var(--dw-text)] hover:bg-gray-100 transition-colors"
+                        className="flex-1 text-left rounded-md px-3 py-3.5 text-lg font-semibold text-[var(--dw-text)] hover:bg-gray-100 transition-colors"
                       >
                         {item.label}
                       </button>
@@ -290,7 +290,7 @@ export default function MobileMenu({ navItems, basePath = '' }: MobileMenuProps)
                           <Link
                             href={navHref(child)}
                             onClick={close}
-                            className="block rounded-md px-3 py-2.5 text-sm font-medium text-[var(--dw-text)] opacity-90 hover:bg-gray-100 hover:text-[var(--dw-primary)] hover:opacity-100 transition-colors"
+                            className="block rounded-md px-3 py-3 text-[16px] font-medium text-[var(--dw-text)] opacity-90 hover:bg-gray-100 hover:text-[var(--dw-primary)] hover:opacity-100 transition-colors"
                           >
                             {child.label}
                           </Link>
