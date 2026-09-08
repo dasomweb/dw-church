@@ -18,26 +18,35 @@ const SURFACE = 'var(--dw-surface, #f7f8fa)';
 
 const WD = ['일', '월', '화', '수', '목', '금', '토'];
 
-function fmtDate(iso?: string | null): string {
-  if (!iso) return '';
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso ?? '';
-  return `${d.getMonth() + 1}월 ${d.getDate()}일 ${WD[d.getDay()]}요일`;
+// YYYY-MM-DD 를 반드시 "로컬" 자정으로 파싱한다. new Date('2026-09-07') 는 UTC 로
+// 해석돼 미국 동부(UTC-4/-5) 로컬 getter 에서 하루 밀림(월→일, 7일→6일) → 요일/날짜
+// 오류. 날짜만 있는 문자열은 y/m/d 로 직접 생성해 이 버그를 피한다.
+function parseLocal(iso?: string | null): Date | null {
+  if (!iso) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  const d = m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(iso);
+  return Number.isNaN(d.getTime()) ? null : d;
 }
 
-// 요일 한 글자(월/화/…) — 주간 목록 배지용. 날짜 없으면 null.
-function weekdayOf(iso?: string | null): string | null {
-  if (!iso) return null;
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return null;
-  return WD[d.getDay()];
+// 일요일은 교회 용어 "주일"로 표기(대표님 지시). 나머지는 월/화/…, 긴 형태는 …요일.
+function dayShort(d: Date): string { return d.getDay() === 0 ? '주일' : WD[d.getDay()]; }
+function dayLong(d: Date): string { return d.getDay() === 0 ? '주일' : `${WD[d.getDay()]}요일`; }
+
+function fmtDate(iso?: string | null): string {
+  const d = parseLocal(iso);
+  if (!d) return iso ?? '';
+  return `${d.getMonth() + 1}월 ${d.getDate()}일 ${dayLong(d)}`;
 }
-// 짧은 날짜(9월 8일) — 주간 목록 부제용.
+
+// 요일 배지(월/화/…/주일) — 주간 목록용. 날짜 없으면 null.
+function weekdayOf(iso?: string | null): string | null {
+  const d = parseLocal(iso);
+  return d ? dayShort(d) : null;
+}
+// 짧은 날짜(9월 7일) — 주간 목록 부제용.
 function shortDate(iso?: string | null): string {
-  if (!iso) return '';
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
-  return `${d.getMonth() + 1}월 ${d.getDate()}일`;
+  const d = parseLocal(iso);
+  return d ? `${d.getMonth() + 1}월 ${d.getDate()}일` : '';
 }
 
 export function DevotionReaderClient({ devotions, eyebrow }: { devotions: Devo[]; eyebrow: string }) {
@@ -65,7 +74,7 @@ export function DevotionReaderClient({ devotions, eyebrow }: { devotions: Devo[]
                   style={{ borderColor: BORDER }}
                 >
                   <span
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[12px] font-bold"
+                    className="flex h-7 min-w-[1.75rem] shrink-0 items-center justify-center rounded-full px-1.5 text-[12px] font-bold"
                     style={active
                       ? { background: BRAND, color: '#fff' }
                       : { border: `1px solid ${BORDER}`, color: MUTED }}
@@ -89,7 +98,8 @@ export function DevotionReaderClient({ devotions, eyebrow }: { devotions: Devo[]
       <div className="max-w-3xl">
         <div className="mb-4 flex flex-wrap items-center gap-2">
           {cur.dayLabel && <span className="inline-flex h-[26px] items-center rounded-full px-3 text-[12px] font-semibold" style={{ background: 'color-mix(in srgb, var(--dw-primary, #1466d6) 12%, #fff)', color: BRAND }}>{cur.dayLabel}</span>}
-          {fmtDate(cur.devoDate) && <span className="inline-flex h-[26px] items-center rounded-full px-3 text-[12px] font-semibold" style={{ background: SURFACE, color: MUTED }}>{fmtDate(cur.devoDate)}</span>}
+          {/* dayLabel(요일) 뱃지와 요일 중복 방지 — 상세는 날짜만 표시. dayLabel 없으면 요일 포함 */}
+          {(cur.dayLabel ? shortDate(cur.devoDate) : fmtDate(cur.devoDate)) && <span className="inline-flex h-[26px] items-center rounded-full px-3 text-[12px] font-semibold" style={{ background: SURFACE, color: MUTED }}>{cur.dayLabel ? shortDate(cur.devoDate) : fmtDate(cur.devoDate)}</span>}
         </div>
         <h3 className="font-heading text-[26px] font-bold leading-[1.32] sm:text-[34px]">{cur.title}</h3>
         {cur.scriptureRef && (
