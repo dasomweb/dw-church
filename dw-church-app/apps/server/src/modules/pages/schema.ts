@@ -82,6 +82,7 @@ export const blockTypes = [
   // 주보광고·다가오는 행사·단계 목록·버튼 그룹·오시는길·로고 타이틀)
   'sermon_magazine',
   'devotion_reader',
+  'cardnews',
   'features_grid',
   'steps_list',
   'verse_of_day',

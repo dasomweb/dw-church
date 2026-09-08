@@ -1584,6 +1584,41 @@ const EVENT_GRID = churchBlock(
     ]},
   ]},
 );
+// 설교 매거진 (13a/15a) — 이번 주 설교 1편(설교 모듈 fetch). 레이아웃(매거진/간결형)
+// + 상단 라벨만 인스펙터에서 편집. 본문/질문은 설교 관리에서 편집.
+const SERMON_MAGAZINE = churchBlock(
+  { title: '표시', fields: [
+    { key: 'title', label: '상단 라벨', type: 'text', hint: '예: 이번 주 말씀' },
+    { key: 'variant', label: '레이아웃', type: 'select', choices: [
+      { value: 'default', label: '매거진 (영상 썸네일)' },
+      { value: 'compact', label: '간결형 (영상 없이·개척교회)' },
+    ]},
+  ]},
+);
+// 말씀 묵상 QT (14a/15a) — 게시된 묵상 fetch. 레이아웃(리더/진입카드) + 라벨 편집.
+// 진입 카드(teaser) variant 는 홈용 소개 카드 — 소개 문구·이미지 추가 편집.
+const DEVOTION_READER = churchBlock(
+  { title: '표시', fields: [
+    { key: 'variant', label: '레이아웃', type: 'select', choices: [
+      { value: 'default', label: '리더 (주간 목록 + 오늘 묵상)' },
+      { value: 'teaser', label: '진입 카드 (홈용)' },
+    ]},
+    { key: 'title', label: '제목', type: 'text' },
+    { key: 'eyebrow', label: '좌측 라벨 / 소제목', type: 'text', hint: '리더=좌측 목록 라벨, 진입카드=소제목 배지' },
+  ]},
+  { title: '진입 카드 (teaser 전용)', fields: [
+    { key: 'description', label: '소개 문구', type: 'textarea', hint: '진입 카드 레이아웃에서만 사용' },
+    { key: 'imageUrl', label: '이미지', type: 'image', hint: '진입 카드 좌측 이미지 (비우면 최신 묵상 이미지)' },
+  ]},
+);
+// 카드뉴스 (15a) — 운영자 업로드 정사각 이미지 카드(콘텐츠 의존 없음). 이미지 카드
+// 항목(items)은 테넌트 PageEditor 의 cardItems 위젯에서 편집(스칼라 인스펙터에서는 생략).
+const CARDNEWS = churchBlock(
+  { title: '표시', fields: [
+    { key: 'eyebrow', label: '라벨(윗글)', type: 'text', hint: '예: 카드뉴스' },
+    { key: 'title', label: '제목', type: 'text', hint: '예: 한 장으로 보내는 소식' },
+  ]},
+);
 // 다가오는 행사 — 이벤트 하나를 골라 상단 알림바로 노출. eventId 없으면
 // 스토어프론트에서 아예 렌더 안 함. endDate 지나도 자동 숨김.
 const FEATURED_EVENT = churchBlock(
@@ -1807,6 +1842,9 @@ export const ELEMENT_REGISTRY: Record<string, BlockElementRegistry> = {
   pastor_message:   PASTOR_MESSAGE,
   church_intro:     CHURCH_INTRO,
   recent_sermons:   RECENT_SERMONS,
+  sermon_magazine:  SERMON_MAGAZINE,
+  devotion_reader:  DEVOTION_READER,
+  cardnews:         CARDNEWS,
   recent_bulletins: RECENT_BULLETINS,
   recent_columns:   RECENT_COLUMNS,
   video_board:      VIDEO_BOARD,
