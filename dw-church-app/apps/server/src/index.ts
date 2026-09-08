@@ -411,7 +411,7 @@ async function main(): Promise<void> {
     // 스키마별 버전 스탬프를 두고, 이미 현재 버전으로 반영된 스키마는 건너뛴다.
     // ⚠️ 아래 per-schema DDL 블록을 하나라도 바꾸면(테이블/컬럼 추가) SCHEMA_VERSION을
     //    올려라 → 기존 테넌트가 "다음 배포 때 한 번만" 다시 반영하고 이후 다시 건너뛴다.
-    const SCHEMA_VERSION = 2; // ↑2: newcomer_registrations.scan_image_url (OCR 스캔 사진)
+    const SCHEMA_VERSION = 3; // ↑3: sermons 설교 스터디 필드(한줄요약·써머리·관찰·심화·적용질문)
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS public.tenant_schema_versions (
         "schema_name" TEXT PRIMARY KEY,
@@ -759,6 +759,17 @@ async function main(): Promise<void> {
           alterHits++;
         } catch { /* table may not exist; skip */ }
       }
+
+      // 1b-2. 설교 스터디 필드 (13a 설교 매거진 — 한줄요약·써머리·관찰·심화·적용질문).
+      //       질문 3종은 문자열 배열(jsonb). 설교 상세/매거진 블록이 렌더.
+      try {
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".sermons ADD COLUMN IF NOT EXISTS "one_line_summary" VARCHAR(400)`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".sermons ADD COLUMN IF NOT EXISTS "summary" TEXT`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".sermons ADD COLUMN IF NOT EXISTS "observation_questions" JSONB NOT NULL DEFAULT '[]'::jsonb`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".sermons ADD COLUMN IF NOT EXISTS "deep_questions" JSONB NOT NULL DEFAULT '[]'::jsonb`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".sermons ADD COLUMN IF NOT EXISTS "application_questions" JSONB NOT NULL DEFAULT '[]'::jsonb`);
+        alterHits++;
+      } catch { /* sermons table may not exist; skip */ }
 
       // 1c. pages.kind — content-detail templates. 'static' (default) is a
       //     normal page; 'sermon_detail' / 'column_detail' / 'bulletin_detail'

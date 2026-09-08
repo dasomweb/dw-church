@@ -11,7 +11,7 @@ import {
   useDWChurchClient,
 } from '@dw-church/api-client';
 import { useQueryClient } from '@tanstack/react-query';
-import { FormField, FormSection, FormRow, inputClass, selectClass, useToast, ConfirmDialog, EmptyState, TableSkeleton, CategoryManager, ImageUpload } from '../components';
+import { FormField, FormSection, FormRow, inputClass, selectClass, textareaClass, useToast, ConfirmDialog, EmptyState, TableSkeleton, CategoryManager, ImageUpload } from '../components';
 import YoutubeImportButton from '../components/YoutubeImportButton';
 import { useBulkDelete } from '../components/useBulkDelete';
 
@@ -158,6 +158,9 @@ interface SermonFormData {
 export default function SermonManagement() {
   const [view, setView] = useState<'list' | 'edit'>('list');
   const [editingItem, setEditingItem] = useState<Sermon | null>(null);
+  // 설교 스터디 (13a 설교 매거진) — 배열/긴글이라 react-hook-form 대신 로컬 상태로 관리.
+  const EMPTY_STUDY = { oneLineSummary: '', summary: '', observation: [] as string[], deep: [] as string[], application: [] as string[] };
+  const [study, setStudy] = useState(EMPTY_STUDY);
   const [params, setParams] = useState<SermonListParams>({ page: 1, perPage: 10, search: '' });
   const [deleteTarget, setDeleteTarget] = useState<{id: string; name: string} | null>(null);
 
@@ -229,11 +232,19 @@ export default function SermonManagement() {
       thumbnailUrl: item.thumbnailUrl,
       status: item.status,
     });
+    setStudy({
+      oneLineSummary: item.oneLineSummary ?? '',
+      summary: item.summary ?? '',
+      observation: item.observationQuestions ?? [],
+      deep: item.deepQuestions ?? [],
+      application: item.applicationQuestions ?? [],
+    });
     setView('edit');
   };
 
   const handleCreate = () => {
     setEditingItem(null);
+    setStudy(EMPTY_STUDY);
     // 새 설교는 기본 '공개(published)' — 업로드하면 바로 홈페이지에 보이도록.
     // (임시저장 default 는 "올렸는데 안 보인다" 혼란의 원인이었음. 서버 스키마·
     //  YouTube 가져오기 default 와도 일치.) 필요하면 폼에서 임시저장 선택 가능.
@@ -256,6 +267,12 @@ export default function SermonManagement() {
       category: '',
       thumbnailUrl: formData.thumbnailUrl,
       status: formData.status,
+      // 설교 스터디 필드
+      oneLineSummary: study.oneLineSummary,
+      summary: study.summary,
+      observationQuestions: study.observation,
+      deepQuestions: study.deep,
+      applicationQuestions: study.application,
     };
     if (editingItem) {
       updateMutation.mutate(
@@ -421,6 +438,34 @@ export default function SermonManagement() {
               )}
             </div>
             <input type="hidden" {...register('categoryIds')} />
+          </FormSection>
+
+          {/* 설교 스터디 (13a 설교 매거진 — 한줄요약·써머리·관찰·심화·적용질문) */}
+          <FormSection title="설교 스터디 (매거진·질문지)">
+            <p className="mb-3 text-xs text-gray-500">홈페이지 설교 매거진과 설교 질문지에 표시됩니다. 비워두면 해당 항목은 표시되지 않습니다.</p>
+            <FormField label="한 줄 요약">
+              <input
+                className={inputClass}
+                value={study.oneLineSummary}
+                onChange={(e) => setStudy((s) => ({ ...s, oneLineSummary: e.target.value }))}
+                placeholder="예: 우리를 살리는 샘은 환경이 아니라 그분께 있습니다"
+              />
+            </FormField>
+            <FormField label="써머리 (설교 요약)">
+              <textarea
+                className={textareaClass}
+                rows={4}
+                value={study.summary}
+                onChange={(e) => setStudy((s) => ({ ...s, summary: e.target.value }))}
+                placeholder="설교의 핵심을 2~3문단으로 정리"
+              />
+            </FormField>
+            <QuestionList label="관찰 질문" hint="본문에 무엇이 쓰여 있는가 — 읽으면 답이 보이는 질문"
+              values={study.observation} onChange={(v) => setStudy((s) => ({ ...s, observation: v }))} />
+            <QuestionList label="심화 질문" hint="왜 그렇게 말씀하셨는가 — 뜻을 한 겹 더 파고드는 질문"
+              values={study.deep} onChange={(v) => setStudy((s) => ({ ...s, deep: v }))} />
+            <QuestionList label="적용 질문" hint="내 삶에서는 어떻게 되는가 — 나눔/구역 모임 질문"
+              values={study.application} onChange={(v) => setStudy((s) => ({ ...s, application: v }))} />
           </FormSection>
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-6 py-4 flex items-center justify-between">
@@ -636,5 +681,44 @@ export default function SermonManagement() {
         />
       )}
     </div>
+  );
+}
+
+// 설교 질문 리스트 편집기 (관찰/심화/적용 공용) — 추가·수정·삭제·순서.
+function QuestionList({ label, hint, values, onChange }: {
+  label: string; hint: string; values: string[]; onChange: (v: string[]) => void;
+}) {
+  const [draft, setDraft] = useState('');
+  const add = () => { const s = draft.trim(); if (!s) return; onChange([...values, s]); setDraft(''); };
+  const edit = (i: number, v: string) => onChange(values.map((x, j) => (j === i ? v : x)));
+  const remove = (i: number) => onChange(values.filter((_, j) => j !== i));
+  return (
+    <FormField label={label}>
+      <p className="mb-2 text-xs text-gray-400">{hint}</p>
+      <div className="space-y-2">
+        {values.map((q, i) => (
+          <div key={i} className="flex items-start gap-2">
+            <span className="mt-2.5 w-6 shrink-0 text-right text-xs font-semibold text-blue-600">{String(i + 1).padStart(2, '0')}</span>
+            <textarea
+              className={textareaClass}
+              rows={2}
+              value={q}
+              onChange={(e) => edit(i, e.target.value)}
+            />
+            <button type="button" onClick={() => remove(i)} className="mt-2 shrink-0 text-xs text-gray-400 hover:text-red-600">삭제</button>
+          </div>
+        ))}
+        <div className="flex items-center gap-2">
+          <input
+            className={inputClass}
+            value={draft}
+            placeholder={`${label} 추가`}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }}
+          />
+          <button type="button" onClick={add} className="shrink-0 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200">＋ 추가</button>
+        </div>
+      </div>
+    </FormField>
   );
 }

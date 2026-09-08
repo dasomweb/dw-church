@@ -23,6 +23,12 @@ export interface Sermon {
   categoryIds: string[];
   category: string;
   status: PostStatus;
+  // 설교 스터디 (13a 설교 매거진) — 한줄요약·써머리 + 질문 3종(문자열 배열)
+  oneLineSummary?: string | null;
+  summary?: string | null;
+  observationQuestions?: string[];
+  deepQuestions?: string[];
+  applicationQuestions?: string[];
   createdAt: string;
   modifiedAt: string;
 }

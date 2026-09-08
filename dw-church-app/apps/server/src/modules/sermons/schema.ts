@@ -13,6 +13,12 @@ export const createSermonSchema = z.object({
   category: z.string().optional().nullable(),
   status: z.enum(['draft', 'published']).default('published'),
   categoryIds: z.array(z.string()).optional().default([]),
+  // 설교 스터디 (13a 설교 매거진). 한줄요약·써머리(요약 본문) + 질문 3종(문자열 배열).
+  oneLineSummary: z.string().max(400).optional().nullable(),
+  summary: z.string().max(8000).optional().nullable(),
+  observationQuestions: z.array(z.string().max(1000)).optional(),
+  deepQuestions: z.array(z.string().max(1000)).optional(),
+  applicationQuestions: z.array(z.string().max(1000)).optional(),
 }).passthrough();
 
 export const updateSermonSchema = createSermonSchema.partial();

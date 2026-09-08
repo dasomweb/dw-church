@@ -186,8 +186,10 @@ export async function createSermon(schema: string, input: CreateSermonInput) {
   const preacherId = await resolvePreacherId(schema, input.preacher);
 
   const rows = await prisma.$queryRawUnsafe<[{ id: string }]>(
-    `INSERT INTO "${schema}".sermons (title, scripture, youtube_url, sermon_date, thumbnail_url, preacher_id, status)
-     VALUES ($1, $2, $3, $4, $5, $6::uuid, $7)
+    `INSERT INTO "${schema}".sermons
+       (title, scripture, youtube_url, sermon_date, thumbnail_url, preacher_id, status,
+        one_line_summary, summary, observation_questions, deep_questions, application_questions)
+     VALUES ($1, $2, $3, $4, $5, $6::uuid, $7, $8, $9, $10::jsonb, $11::jsonb, $12::jsonb)
      RETURNING id`,
     input.title,
     input.scripture ?? null,
@@ -196,6 +198,11 @@ export async function createSermon(schema: string, input: CreateSermonInput) {
     thumbnailUrl,
     preacherId,
     input.status ?? 'published',
+    input.oneLineSummary ?? null,
+    input.summary ?? null,
+    JSON.stringify(input.observationQuestions ?? []),
+    JSON.stringify(input.deepQuestions ?? []),
+    JSON.stringify(input.applicationQuestions ?? []),
   );
 
   const sermonId = rows[0].id;
@@ -239,6 +246,12 @@ export async function updateSermon(schema: string, id: string, input: UpdateSerm
     values.push(await resolvePreacherId(schema, input.preacher));
   }
   if (input.status !== undefined) { setClauses.push(`status = $${paramIndex++}`); values.push(input.status); }
+  // 설교 스터디 필드
+  if (input.oneLineSummary !== undefined) { setClauses.push(`one_line_summary = $${paramIndex++}`); values.push(input.oneLineSummary); }
+  if (input.summary !== undefined) { setClauses.push(`summary = $${paramIndex++}`); values.push(input.summary); }
+  if (input.observationQuestions !== undefined) { setClauses.push(`observation_questions = $${paramIndex++}::jsonb`); values.push(JSON.stringify(input.observationQuestions)); }
+  if (input.deepQuestions !== undefined) { setClauses.push(`deep_questions = $${paramIndex++}::jsonb`); values.push(JSON.stringify(input.deepQuestions)); }
+  if (input.applicationQuestions !== undefined) { setClauses.push(`application_questions = $${paramIndex++}::jsonb`); values.push(JSON.stringify(input.applicationQuestions)); }
 
   if (setClauses.length > 0) {
     setClauses.push(`updated_at = NOW()`);
