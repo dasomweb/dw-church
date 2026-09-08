@@ -17,6 +17,7 @@ import { useToast } from '../../components';
 import { useSuperAdminTenant } from '../SuperAdminTenantLayout';
 import { useEntitlements } from '../../hooks/useEntitlements';
 import { BLOCK_FEATURE, featureAllowed } from '../../lib/plan-features';
+import { BLOCK_DEFS } from '../../pages/PageEditor';
 import { ElementInspector } from '../../components/builder/ElementInspector';
 import { BuilderCanvas } from '../../components/builder/BuilderCanvas';
 import { LivePreviewPane } from '../../components/builder/LivePreviewPane';
@@ -48,64 +49,21 @@ const PAGE_KINDS: { value: string; label: string }[] = [
 // the server's blockTypes enum (pages/schema.ts) and have a BlockRenderer
 // mapping (apps/web/components/BlockRenderer.tsx).
 interface AddBlock { value: string; label: string; props?: Record<string, unknown> }
-const ADD_BLOCK_CATALOG: { category: string; blocks: AddBlock[] }[] = [
-  { category: '히어로', blocks: [
-    { value: 'hero_banner', label: '히어로 배너', props: { title: '제목', subtitle: '', height: 'md', layout: 'full', textAlign: 'center', overlayColor: '#000000', overlayOpacity: 50 } },
-    { value: 'banner_slider', label: '배너 슬라이더', props: { category: 'main' } },
-    { value: 'hero_split', label: '분할 히어로', props: { title: '', imagePosition: 'right' } },
-  ]},
-  { category: '소개', blocks: [
-    { value: 'pastor_message', label: '담임목사 인사', props: { title: '담임목사 인사', pastorName: '', message: '', layout: 'right' } },
-    { value: 'church_intro', label: '교회 소개', props: { title: '', content: '' } },
-    { value: 'mission_vision', label: '미션 / 비전', props: { title: '', content: '' } },
-  ]},
-  { category: '콘텐츠', blocks: [
-    { value: 'recent_sermons', label: '설교 목록', props: { title: '최근 설교', limit: 6 } },
-    { value: 'recent_bulletins', label: '주보 목록', props: { title: '주보', limit: 6 } },
-    { value: 'recent_columns', label: '칼럼 목록', props: { title: '목회칼럼', limit: 6 } },
-    { value: 'album_gallery', label: '앨범', props: { title: '앨범', limit: 6, category: '' } },
-    { value: 'video_board', label: '영상 게시판', props: { title: '영상', category: '', limit: 6 } },
-    { value: 'staff_grid', label: '교역자', props: { title: '섬기는 사람들', limit: 20 } },
-    { value: 'cell_grid', label: '목장', props: { title: '목장 안내', limit: 24 } },
-    { value: 'event_grid', label: '행사', props: { title: '교회 행사', limit: 4 } },
-    { value: 'history_timeline', label: '교회 연혁', props: { title: '교회 연혁' } },
-    { value: 'board', label: '게시판', props: { title: '게시판', boardSlug: '', limit: 10 } },
-  ]},
-  { category: '텍스트', blocks: [
-    { value: 'section_header', label: '섹션 헤더', props: { title: '' } },
-    { value: 'text_only', label: '텍스트', props: { title: '', content: '' } },
-    { value: 'text_image', label: '텍스트 + 이미지', props: { title: '', content: '', imageUrl: '' } },
-    { value: 'quote_block', label: '인용 / 말씀', props: { quote: '' } },
-  ]},
-  { category: '교회 정보', blocks: [
-    { value: 'worship_times', label: '예배 시간', props: { title: '예배 안내', services: [] } },
-    { value: 'location_map', label: '지도 / 약도', props: { title: '오시는 길', address: '' } },
-    { value: 'contact_info', label: '연락처', props: { title: '연락처' } },
-    { value: 'newcomer_info', label: '새가족 안내', props: { title: '처음 오신 분들을 환영합니다' } },
-    { value: 'giving_info', label: '헌금 안내', props: { title: '헌금 안내', intro: '', zelle: '', bankInfo: '', mailingName: '', mailingAddress: '', note: '', qrImageUrl: '' } },
-    { value: 'schedule_split', label: '예배 및 모임 (이미지+표)', props: { imageUrl: '', imagePosition: 'left', groups: [{ title: '주일 예배', columns: ['예배', '시간', '장소'], rows: [['1부 예배', '오전 9:00', '본당']] }] } },
-    { value: 'schedule_board', label: '예배 및 모임', props: { imageUrl: '', imagePosition: 'left' } },
-  ]},
-  { category: 'CTA / 미디어', blocks: [
-    { value: 'call_to_action', label: 'CTA 배너', props: { title: '', ctaLabel: '', ctaUrl: '' } },
-    { value: 'image_gallery', label: '이미지 갤러리', props: { title: '', images: [] } },
-    { value: 'video', label: '비디오', props: {} },
-  ]},
-  { category: '폼/신청서', blocks: [
-    // '폼 만들기'에서 만든 폼을 slug로 불러와 표시. (폼 제출 → 폼 제출 인박스)
-    { value: 'custom_form', label: '커스텀 폼 (만든 폼)', props: { formSlug: '', title: '', subtitle: '' } },
-    // 폼 + 텍스트 2단 배치 (Form + Text).
-    { value: 'form_split', label: '폼 + 텍스트 (2단)', props: { formSlug: '', layout: 'form-left', title: '문의하기', subtitle: '', content: '' } },
-    // 고정 필드 문의 폼 (별도 폼 제작 없이 바로 사용).
-    { value: 'contact_form', label: '문의 폼', props: { title: '문의하기', description: '궁금하신 점을 남겨주시면 빠르게 답변드리겠습니다.', submitLabel: '보내기', successMessage: '문의가 접수되었습니다. 감사합니다.', fields: [{ name: 'name', label: '이름', type: 'text', required: true }, { name: 'phone', label: '연락처', type: 'tel' }, { name: 'email', label: '이메일', type: 'email' }, { name: 'message', label: '문의 내용', type: 'textarea', required: true }] } },
-    { value: 'cell_report', label: '목장사역보고서', props: { title: '목장 사역 보고서', subtitle: '한 주간의 목장 모임을 보고해 주세요.' } },
-  ]},
-  { category: '레이아웃', blocks: [
-    { value: 'layout_section', label: '섹션 컨테이너', props: { layout: 'section', padding: '40px 24px', children: [] } },
-    { value: 'layout_columns', label: '컬럼 (2열)', props: { layout: 'columns-2', gap: 24, padding: '24px', children: [] } },
-    { value: 'divider', label: '구분선', props: {} },
-  ]},
-];
+
+// "+ 블록" 카탈로그 — 테넌트 PageEditor 의 BLOCK_DEFS(단일 소스)에서 자동 파생.
+// 예전엔 하드코딩 부분집합이라 신규 블록(설교 매거진·features_grid·오늘의 말씀 등
+// 25종)이 빠져 있었음. 이제 BLOCK_DEFS 에 블록을 추가하면 여기 자동 반영된다.
+// value 는 서버 blockTypes enum + BlockRenderer 매핑과 일치.
+const ADD_BLOCK_CATALOG: { category: string; blocks: AddBlock[] }[] = (() => {
+  const groups: { category: string; blocks: AddBlock[] }[] = [];
+  const byCat = new Map<string, AddBlock[]>();
+  for (const d of BLOCK_DEFS) {
+    let arr = byCat.get(d.category);
+    if (!arr) { arr = []; byCat.set(d.category, arr); groups.push({ category: d.category, blocks: arr }); }
+    arr.push({ value: d.type, label: d.label, props: (d.defaultProps ?? {}) as Record<string, unknown> });
+  }
+  return groups;
+})();
 
 // This console uses raw fetch (not the api-client), so responses arrive in
 // the server's snake_case. Normalize to the camelCase the UI/inspector
