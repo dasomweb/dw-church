@@ -48,7 +48,7 @@ const PAGE_KINDS: { value: string; label: string }[] = [
 // placeholder content instead of an empty box. Block `value`s must exist in
 // the server's blockTypes enum (pages/schema.ts) and have a BlockRenderer
 // mapping (apps/web/components/BlockRenderer.tsx).
-interface AddBlock { value: string; label: string; props?: Record<string, unknown> }
+interface AddBlock { value: string; label: string; icon?: string; desc?: string; props?: Record<string, unknown> }
 
 // "+ 블록" 카탈로그 — 테넌트 PageEditor 의 BLOCK_DEFS(단일 소스)에서 자동 파생.
 // 예전엔 하드코딩 부분집합이라 신규 블록(설교 매거진·features_grid·오늘의 말씀 등
@@ -60,7 +60,7 @@ const ADD_BLOCK_CATALOG: { category: string; blocks: AddBlock[] }[] = (() => {
   for (const d of BLOCK_DEFS) {
     let arr = byCat.get(d.category);
     if (!arr) { arr = []; byCat.set(d.category, arr); groups.push({ category: d.category, blocks: arr }); }
-    arr.push({ value: d.type, label: d.label, props: (d.defaultProps ?? {}) as Record<string, unknown> });
+    arr.push({ value: d.type, label: d.label, icon: (d as { icon?: string }).icon, desc: (d as { description?: string }).description, props: (d.defaultProps ?? {}) as Record<string, unknown> });
   }
   return groups;
 })();
@@ -130,6 +130,7 @@ export default function TenantPageEditor() {
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
+  const [addSearch, setAddSearch] = useState(''); // '+ 블록' 피커 검색어
   // Verbatim content import (paste → AI structures → blocks).
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState('');
@@ -688,34 +689,52 @@ export default function TenantPageEditor() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setAddMenuOpen((v) => !v)}
+                  onClick={() => { setAddMenuOpen((v) => !v); setAddSearch(''); }}
                   title="블록 추가"
                   className="rounded border border-gray-300 px-1.5 py-0.5 text-[11px] text-gray-600 hover:bg-gray-50"
                 >
                   + 블록
                 </button>
                 {addMenuOpen && (
-                  <div className="absolute right-0 top-full z-20 mt-1 max-h-[28rem] w-48 overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg">
-                    {ADD_BLOCK_CATALOG
-                      .map((group) => ({ ...group, blocks: group.blocks.filter((b) => featureAllowed(features, BLOCK_FEATURE[b.value])) }))
-                      .filter((group) => group.blocks.length > 0)
-                      .map((group) => (
-                      <div key={group.category}>
-                        <div className="px-3 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                          {group.category}
-                        </div>
-                        {group.blocks.map((b) => (
-                          <button
-                            key={b.value}
-                            type="button"
-                            onClick={() => addBlock(b.value, b.props ?? {})}
-                            className="block w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-blue-50"
-                          >
-                            {b.label}
-                          </button>
-                        ))}
-                      </div>
-                    ))}
+                  <div className="absolute right-0 top-full z-20 mt-1 w-[min(92vw,620px)] rounded-xl border border-gray-200 bg-white shadow-xl">
+                    {/* 검색 */}
+                    <div className="border-b border-gray-100 p-2.5">
+                      <input
+                        autoFocus
+                        value={addSearch}
+                        onChange={(e) => setAddSearch(e.target.value)}
+                        placeholder="블록 검색 (예: 설교, 예배, 폼, 매거진)"
+                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </div>
+                    <div className="max-h-[60vh] overflow-y-auto p-2.5">
+                      {(() => {
+                        const q = addSearch.trim().toLowerCase();
+                        const groups = ADD_BLOCK_CATALOG
+                          .map((group) => ({ ...group, blocks: group.blocks.filter((b) => featureAllowed(features, BLOCK_FEATURE[b.value]) && (!q || b.label.toLowerCase().includes(q) || group.category.toLowerCase().includes(q) || (b.desc ?? '').toLowerCase().includes(q))) }))
+                          .filter((group) => group.blocks.length > 0);
+                        if (groups.length === 0) return <div className="py-8 text-center text-sm text-gray-400">검색 결과가 없습니다</div>;
+                        return groups.map((group) => (
+                          <div key={group.category} className="mb-3 last:mb-0">
+                            <div className="px-1 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-gray-400">{group.category}</div>
+                            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+                              {group.blocks.map((b) => (
+                                <button
+                                  key={b.value}
+                                  type="button"
+                                  onClick={() => addBlock(b.value, b.props ?? {})}
+                                  title={b.desc || b.label}
+                                  className="flex items-center gap-2 rounded-lg border border-gray-200 px-2.5 py-2 text-left transition-colors hover:border-blue-300 hover:bg-blue-50"
+                                >
+                                  <span className="shrink-0 text-base leading-none">{b.icon || '▫'}</span>
+                                  <span className="min-w-0 truncate text-xs font-medium text-gray-700">{b.label}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ));
+                      })()}
+                    </div>
                   </div>
                 )}
               </div>
