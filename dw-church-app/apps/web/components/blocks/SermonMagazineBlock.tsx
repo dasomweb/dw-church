@@ -179,7 +179,7 @@ export async function SermonMagazineBlock({ props, slug }: Props) {
 
         {/* 3. 이번 주 질문 — 관찰·심화·적용 */}
         {hasQuestions && (
-          <div className="mt-16 rounded-2xl p-6 sm:p-10" style={{ background: SURFACE }}>
+          <div className="mt-16 rounded-2xl p-4 sm:px-8 sm:py-10" style={{ background: SURFACE }}>
             <div className="mb-6">
               <div className="mb-2 text-[13px] font-semibold" style={{ color: BRAND }}>이번 주 질문</div>
               <h3 className="font-heading text-[24px] font-bold sm:text-[28px]">읽고, 파고들고, 나눕니다</h3>
@@ -201,7 +201,7 @@ function QuestionCard({ tag, heading, desc, items, brand, muted, border }: {
 }) {
   if (items.length === 0) return null;
   return (
-    <div className="flex flex-col rounded-xl border bg-white p-6" style={{ borderColor: border }}>
+    <div className="flex flex-col rounded-xl border bg-white p-5 sm:p-6" style={{ borderColor: border }}>
       <div className="mb-4">
         <span style={{ display: 'inline-flex', alignItems: 'center', height: 26, padding: '0 11px', borderRadius: 999, background: 'color-mix(in srgb, var(--dw-primary, #1466d6) 12%, #fff)', color: brand, fontSize: 12, fontWeight: 600 }}>설교 질문지 · {tag}</span>
       </div>
