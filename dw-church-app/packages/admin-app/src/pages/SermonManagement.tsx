@@ -684,17 +684,26 @@ export default function SermonManagement() {
   );
 }
 
-// 설교 질문 리스트 편집기 (관찰/심화/적용 공용) — 추가·수정·삭제·순서.
+// 여러 줄 텍스트 → 질문 배열. 각 줄의 앞 번호(1. / 2) / -, • 등)를 떼고 빈 줄 제거.
+function splitQuestions(text: string): string[] {
+  return text
+    .split(/\r?\n/)
+    .map((s) => s.replace(/^\s*(?:\d+\s*[.)]|[-•*·])\s*/, '').trim())
+    .filter(Boolean);
+}
+
+// 설교 질문 리스트 편집기 (관찰/심화/적용 공용) — 추가·수정·삭제.
+// 여러 질문을 한 번에: 줄바꿈으로 붙여넣으면 각 줄이 개별 질문으로 등록(번호/불릿 자동 제거).
 function QuestionList({ label, hint, values, onChange }: {
   label: string; hint: string; values: string[]; onChange: (v: string[]) => void;
 }) {
   const [draft, setDraft] = useState('');
-  const add = () => { const s = draft.trim(); if (!s) return; onChange([...values, s]); setDraft(''); };
+  const addMany = () => { const lines = splitQuestions(draft); if (!lines.length) return; onChange([...values, ...lines]); setDraft(''); };
   const edit = (i: number, v: string) => onChange(values.map((x, j) => (j === i ? v : x)));
   const remove = (i: number) => onChange(values.filter((_, j) => j !== i));
   return (
     <FormField label={label}>
-      <p className="mb-2 text-xs text-gray-400">{hint}</p>
+      <p className="mb-2 text-xs text-gray-400">{hint} · <span className="text-blue-500">여러 개는 줄바꿈으로 한 번에 붙여넣으세요.</span></p>
       <div className="space-y-2">
         {values.map((q, i) => (
           <div key={i} className="flex items-start gap-2">
@@ -708,15 +717,21 @@ function QuestionList({ label, hint, values, onChange }: {
             <button type="button" onClick={() => remove(i)} className="mt-2 shrink-0 text-xs text-gray-400 hover:text-red-600">삭제</button>
           </div>
         ))}
-        <div className="flex items-center gap-2">
-          <input
-            className={inputClass}
+        <div className="flex items-start gap-2">
+          <textarea
+            className={textareaClass}
+            rows={2}
             value={draft}
-            placeholder={`${label} 추가`}
+            placeholder={`${label} 입력 — 여러 개는 줄바꿈으로 붙여넣으면 한 번에 등록됩니다`}
             onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }}
+            onPaste={(e) => {
+              const text = e.clipboardData.getData('text');
+              const lines = splitQuestions(text);
+              if (lines.length > 1) { e.preventDefault(); onChange([...values, ...lines]); setDraft(''); }
+            }}
+            onKeyDown={(e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); addMany(); } }}
           />
-          <button type="button" onClick={add} className="shrink-0 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200">＋ 추가</button>
+          <button type="button" onClick={addMany} className="mt-0.5 shrink-0 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200">＋ 추가</button>
         </div>
       </div>
     </FormField>
