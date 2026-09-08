@@ -12,6 +12,7 @@ import type { BlockStyle } from '@dw-church/design-tokens';
 
 // ── Content-module data blocks (fetch from REST API) ──────────────────
 import { RecentSermonsBlock } from './blocks/RecentSermonsBlock';
+import { SermonMagazineBlock } from './blocks/SermonMagazineBlock';
 import { RecentBulletinsBlock } from './blocks/RecentBulletinsBlock';
 import { RecentColumnsBlock } from './blocks/RecentColumnsBlock';
 import { AlbumGalleryBlock } from './blocks/AlbumGalleryBlock';
@@ -43,6 +44,8 @@ type AnyBlock = (p: { props: Record<string, unknown>; slug: string; page?: numbe
 // Church blocks override the shared map by block_type.
 const CHURCH_BLOCKS: Record<string, AnyBlock> = {
   recent_sermons: RecentSermonsBlock as AnyBlock,
+  sermon_magazine: SermonMagazineBlock as AnyBlock, // 설교 매거진(13a) — 이번 주 설교 커버+써머리+질문(관찰·심화·적용)
+
   recent_bulletins: RecentBulletinsBlock as AnyBlock,
   recent_columns: RecentColumnsBlock as AnyBlock,
   album_gallery: AlbumGalleryBlock as AnyBlock,
