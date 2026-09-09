@@ -2035,7 +2035,10 @@ async function main(): Promise<void> {
     if (m === 'GET' || m === 'HEAD' || m === 'OPTIONS') return;
     if (reply.statusCode >= 400) return;
     if (!request.headers.authorization) return; // authenticated writes only
-    const slug = (request.headers['x-tenant-slug'] as string | undefined)?.trim();
+    // 해석된 테넌트 slug 를 쓴다: 테넌트 관리자는 자기 도메인+JWT 로 인증해 x-tenant-slug
+    // 헤더 없이도 request.tenant 가 세팅됨(auth/tenant 미들웨어). 헤더만 보면 관리자 변경
+    // (카드뉴스 업로드 등)이 퍼지 안 돼 스토어프론트가 stale 로 남는다.
+    const slug = request.tenant?.slug || (request.headers['x-tenant-slug'] as string | undefined)?.trim();
     if (slug) purgeTenantCache(slug);
   });
 
