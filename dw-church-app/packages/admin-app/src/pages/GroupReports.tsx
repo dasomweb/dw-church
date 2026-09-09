@@ -85,7 +85,9 @@ export default function GroupReports() {
 
   useEffect(() => { if (groupId) void loadDraft(groupId, date); /* eslint-disable-next-line */ }, [groupId, date]);
 
-  const presentCount = useMemo(() => Object.values(att).filter((a) => a.status === 'present' || a.status === 'online').length, [att]);
+  // 정책 B: 현장(present)과 온라인을 분리 집계 — 현장만 '참석'으로.
+  const presentCount = useMemo(() => Object.values(att).filter((a) => a.status === 'present').length, [att]);
+  const onlineCount = useMemo(() => Object.values(att).filter((a) => a.status === 'online').length, [att]);
 
   const cycleAtt = (mid: string) => setAtt((prev) => {
     const cur = prev[mid]?.status ?? 'present';
@@ -159,7 +161,7 @@ export default function GroupReports() {
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-gray-800">참석 체크</h3>
-              <span className="text-sm text-gray-500">참석 <b className="text-gray-800">{presentCount}</b> / {roster.length}</span>
+              <span className="text-sm text-gray-500">현장 <b className="text-gray-800">{presentCount}</b> / {roster.length}{onlineCount > 0 && <> · 온라인 <b className="text-blue-600">{onlineCount}</b></>}</span>
             </div>
             {roster.length === 0 ? <p className="text-sm text-gray-400 py-3 text-center">이 {t.org}에 명단이 없습니다. 먼저 조직에서 명단을 배정하세요.</p> : (
               <div className="flex flex-wrap gap-2">

@@ -172,7 +172,8 @@ export async function getGroup(schema: string, id: string) {
   group.recentTotal = repIds.length;
   if (repIds.length) {
     const att = await prisma.$queryRawUnsafe<any[]>(
-      `SELECT member_id, COUNT(*) FILTER (WHERE status IN ('present','online'))::int AS present
+      // 정책 B: 목원별 최근 '참석'은 현장(present)만 집계(온라인은 출석에 포함하지 않음).
+      `SELECT member_id, COUNT(*) FILTER (WHERE status = 'present')::int AS present
        FROM "${schema}".report_attendance WHERE report_id = ANY($1::uuid[]) GROUP BY member_id`,
       `{${repIds.join(',')}}`,
     );

@@ -54,7 +54,7 @@ export async function draftReport(schema: string, groupId: string, meetingDate: 
   const g = (await prisma.$queryRawUnsafe<any[]>(`SELECT name FROM "${schema}".groups WHERE id = $1::uuid`, groupId))[0];
   return {
     id: null, group_id: groupId, group_name: g?.name ?? '', meeting_date: meetingDate,
-    status: 'draft', items: {}, private_items: {}, attendance_count: 0, newcomer_count: 0,
+    status: 'draft', items: {}, private_items: {}, attendance_count: 0, online_count: 0, newcomer_count: 0,
     attendance: roster.map((r) => ({ member_id: r.member_id, member_name: r.member_name, member_photo: r.member_photo, role: r.role, status: 'present', brought_newcomer: false })),
   };
 }
@@ -62,20 +62,23 @@ export async function draftReport(schema: string, groupId: string, meetingDate: 
 /** (group_id, meeting_date) upsert + 출석 교체 + 인원 집계. */
 export async function upsertReport(schema: string, input: UpsertReportInput) {
   const att = input.attendance ?? [];
-  const attendanceCount = att.filter((a) => a.status === 'present' || a.status === 'online').length;
+  // 정책 B: 온라인은 현장 출석과 구분해 별도 집계. attendance_count = 현장(present)만,
+  // online_count = 온라인. 출석률·현장 인원에 온라인이 섞이지 않게 한다(교적 출석과 통일).
+  const attendanceCount = att.filter((a) => a.status === 'present').length;
+  const onlineCount = att.filter((a) => a.status === 'online').length;
   const newcomerCount = input.newcomerCount ?? att.filter((a) => a.broughtNewcomer).length;
   const rows = await prisma.$queryRawUnsafe<any[]>(
     `INSERT INTO "${schema}".meeting_reports
-       (group_id, meeting_date, author, status, items, private_items, attendance_count, newcomer_count)
-     VALUES ($1::uuid, $2::date, $3, $4, $5::jsonb, $6::jsonb, $7, $8)
+       (group_id, meeting_date, author, status, items, private_items, attendance_count, online_count, newcomer_count)
+     VALUES ($1::uuid, $2::date, $3, $4, $5::jsonb, $6::jsonb, $7, $8, $9)
      ON CONFLICT (group_id, meeting_date) DO UPDATE SET
        author = EXCLUDED.author, status = EXCLUDED.status, items = EXCLUDED.items,
        private_items = EXCLUDED.private_items, attendance_count = EXCLUDED.attendance_count,
-       newcomer_count = EXCLUDED.newcomer_count, updated_at = NOW()
+       online_count = EXCLUDED.online_count, newcomer_count = EXCLUDED.newcomer_count, updated_at = NOW()
      RETURNING *`,
     input.groupId, input.meetingDate, input.author ?? '', input.status,
     JSON.stringify(input.items ?? {}), JSON.stringify(input.privateItems ?? {}),
-    attendanceCount, newcomerCount,
+    attendanceCount, onlineCount, newcomerCount,
   );
   const report = rows[0];
   if (input.attendance !== undefined) {

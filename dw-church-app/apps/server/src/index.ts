@@ -415,7 +415,7 @@ async function main(): Promise<void> {
     // 스키마별 버전 스탬프를 두고, 이미 현재 버전으로 반영된 스키마는 건너뛴다.
     // ⚠️ 아래 per-schema DDL 블록을 하나라도 바꾸면(테이블/컬럼 추가) SCHEMA_VERSION을
     //    올려라 → 기존 테넌트가 "다음 배포 때 한 번만" 다시 반영하고 이후 다시 건너뛴다.
-    const SCHEMA_VERSION = 6; // ↑6: cardnews.category 컬럼 추가
+    const SCHEMA_VERSION = 7; // ↑7: meeting_reports.online_count(온라인 출석 별도 집계, 정책 B)
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS public.tenant_schema_versions (
         "schema_name" TEXT PRIMARY KEY,
@@ -1222,6 +1222,7 @@ async function main(): Promise<void> {
             "items"         JSONB        NOT NULL DEFAULT '{}'::jsonb,
             "private_items" JSONB        NOT NULL DEFAULT '{}'::jsonb,
             "attendance_count" INT       NOT NULL DEFAULT 0,
+            "online_count"     INT       NOT NULL DEFAULT 0,
             "newcomer_count"   INT       NOT NULL DEFAULT 0,
             "confirmer"     VARCHAR(120) NOT NULL DEFAULT '',
             "confirm_comment" VARCHAR(2000) NOT NULL DEFAULT '',
@@ -1231,6 +1232,8 @@ async function main(): Promise<void> {
             UNIQUE ("group_id", "meeting_date")
           )
         `);
+        // 온라인 출석 별도 집계(정책 B) — 기존 meeting_reports 테이블에 컬럼 추가.
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".meeting_reports ADD COLUMN IF NOT EXISTS "online_count" INT NOT NULL DEFAULT 0`);
         await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "meeting_reports_group_idx" ON "${schema}".meeting_reports ("group_id", "meeting_date")`);
         await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "meeting_reports_status_idx" ON "${schema}".meeting_reports ("status")`);
         await prisma.$executeRawUnsafe(`
