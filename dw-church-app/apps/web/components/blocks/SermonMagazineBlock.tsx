@@ -128,7 +128,7 @@ export async function SermonMagazineBlock({ props, slug }: Props) {
                     <span className="text-[12px] font-semibold" style={{ color: BRAND }}>오늘의 기도</span>
                     {todayDevo?.dayLabel && <span className="text-[11px]" style={{ color: MUTED }}>· {todayDevo.dayLabel}</span>}
                   </div>
-                  <p className="m-0 text-[14.5px] leading-[1.8]" style={{ color: MUTED }}>{todayPrayer}</p>
+                  <p className="m-0 text-[15px] leading-[1.8]" style={{ color: MUTED }}>{todayPrayer}</p>
                   {(todayDevo?.title || todayDevo?.scriptureRef) && (
                     <div className="mt-3 border-t pt-2.5 text-[12px]" style={{ borderColor: BORDER, color: MUTED }}>
                       {[todayDevo?.title, todayDevo?.scriptureRef].filter(Boolean).join(' · ')}
@@ -139,7 +139,7 @@ export async function SermonMagazineBlock({ props, slug }: Props) {
                 /* QT 기도가 없을 때 폴백 — 이번 주 함께 볼 것 요약 */
                 <div className="rounded-2xl border px-6 py-5" style={{ borderColor: BORDER }}>
                   <div className="mb-3.5 text-[12px] font-semibold" style={{ color: BRAND }}>이번 주 함께 볼 것</div>
-                  <div className="flex flex-col gap-2.5 text-[14.5px]">
+                  <div className="flex flex-col gap-2.5 text-[15px]">
                     {hasQuestions && (
                       <div className="flex items-center gap-3">
                         <b className="w-[52px] shrink-0 font-semibold">질문지</b>
@@ -188,7 +188,7 @@ export async function SermonMagazineBlock({ props, slug }: Props) {
               {summaryParas.length > 1 && (
                 <div className="grid grid-cols-1 gap-9 pt-6 md:grid-cols-2">
                   {summaryParas.slice(1).map((p, i) => (
-                    <p key={i} className="m-0 text-[16.5px] leading-[1.95]" style={{ color: MUTED }}>{p}</p>
+                    <p key={i} className="m-0 text-[17px] leading-[1.95]" style={{ color: MUTED }}>{p}</p>
                   ))}
                 </div>
               )}
@@ -201,7 +201,7 @@ export async function SermonMagazineBlock({ props, slug }: Props) {
               )}
               <div className="space-y-4">
                 {summaryParas.map((p, i) => (
-                  <p key={i} className="text-[16.5px] leading-[1.95]" style={{ color: MUTED }}>{p}</p>
+                  <p key={i} className="text-[17px] leading-[1.95]" style={{ color: MUTED }}>{p}</p>
                 ))}
               </div>
             </div>
@@ -242,7 +242,7 @@ function QuestionCard({ tag, heading, desc, items, brand, muted, border }: {
         {items.map((q, i) => (
           <div key={i} className="flex gap-3">
             <span className="shrink-0 pt-0.5 text-[12.5px] font-semibold" style={{ color: brand }}>{String(i + 1).padStart(2, '0')}</span>
-            <span className="text-[15px] leading-[1.75]">{q}</span>
+            <span className="text-[16px] leading-[1.75]">{q}</span>
           </div>
         ))}
       </div>

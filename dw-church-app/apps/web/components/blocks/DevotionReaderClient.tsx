@@ -80,7 +80,7 @@ export function DevotionReaderClient({ devotions, eyebrow }: { devotions: Devo[]
                       : { border: `1px solid ${BORDER}`, color: MUTED }}
                   >{weekdayOf(d.devoDate) ?? (i + 1)}</span>
                   <span className="min-w-0">
-                    <span className="block truncate text-[14px]" style={{ fontWeight: active ? 700 : 400 }}>{d.title}</span>
+                    <span className="block truncate text-[15px]" style={{ fontWeight: active ? 700 : 400 }}>{d.title}</span>
                     {(shortDate(d.devoDate) || d.scriptureRef) && (
                       <span className="mt-0.5 block text-[12px]" style={{ color: MUTED }}>
                         {[shortDate(d.devoDate), d.scriptureRef].filter(Boolean).join(' · ')}
