@@ -26,6 +26,13 @@
   --radius-lg: 16px;
 }
 
+/* 관리자 콘솔 기준 폰트 크기 상향(2026-09-09): 기본 16→18px(112.5%). Tailwind 텍스트·
+   간격이 rem 기반이라 root 를 키우면 전 화면이 비례 확대돼 한국어 가독성이 좋아진다.
+   (%로 두어 브라우저 글자크기 설정도 존중.) 대표님: "폰트가 너무 작다". */
+html {
+  font-size: 112.5%;
+}
+
 html, body {
   font-family: var(--font-sans);
   letter-spacing: -0.003em;
