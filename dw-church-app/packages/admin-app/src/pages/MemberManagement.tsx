@@ -581,7 +581,7 @@ export default function MemberManagement() {
             <span className="text-[12.5px] block mb-[18px]" style={{ color: C.faint }}>이름·성별·생년월일이 필수입니다. 나머지는 나중에 채울 수 있습니다.</span>
             <div className="flex flex-col sm:flex-row gap-6">
               <div className="shrink-0 w-[108px]">
-                <ImageUpload label="" value={form.photoUrl} onChange={(u) => set('photoUrl', u)} onUpload={uploadPhoto} aspectRatio="3/4" resize="block" />
+                <ImageUpload compact label="" value={form.photoUrl} onChange={(u) => set('photoUrl', u)} onUpload={uploadPhoto} aspectRatio="3/4" resize="block" />
                 <span className="block text-[11px] text-center mt-1.5" style={{ color: C.faintest }}>3:4 권장</span>
               </div>
               <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-4">

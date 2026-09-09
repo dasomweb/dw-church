@@ -19,6 +19,9 @@ interface ImageUploadProps {
   /** Output encoding. Default 'jpeg' (smallest). Use 'auto' for logos/favicons/
    *  icons so a transparent PNG keeps its PNG type + alpha (still resized). */
   format?: OutputFormat;
+  /** 좁은 슬롯(교인 사진 등, 프로필/아바타)용 콤팩트 모드. 긴 안내문·URL 입력을 빼고
+   *  프레임 자체를 업로드 버튼으로 + 작은 라이브러리 링크만 둔다(글자 세로 줄바꿈 방지). */
+  compact?: boolean;
 }
 
 export function ImageUpload({
@@ -31,6 +34,7 @@ export function ImageUpload({
   placeholder = '이미지를 선택하거나 URL을 입력하세요',
   resize = 'block',
   format = 'jpeg',
+  compact = false,
 }: ImageUploadProps) {
   const [mode, setMode] = useState<'url' | 'preview'>(value ? 'preview' : 'url');
   const [urlInput, setUrlInput] = useState(value || '');
@@ -117,6 +121,49 @@ export function ImageUpload({
     setMode('url');
     if (fileRef.current) fileRef.current.value = '';
   };
+
+  // ── 콤팩트 모드 (교인 사진 등 좁은 슬롯) — 파일 업로드만. 미디어 라이브러리·URL 없음.
+  //    프레임 자체가 업로드 버튼이라 좁은 폭에서도 안내문이 글자단위로 깨지지 않는다.
+  if (compact) {
+    const previewing = mode === 'preview' && value;
+    return (
+      <div>
+        {label && <p className="text-sm font-medium text-gray-700 mb-1.5">{label}</p>}
+        <input ref={fileRef} type="file" accept={accept} className="hidden" onChange={handleFile} />
+        {previewing ? (
+          <>
+            <div className="relative rounded-lg overflow-hidden border border-gray-200 bg-gray-50" style={{ aspectRatio }}>
+              <img src={value} alt="미리보기" className="w-full h-full object-contain" />
+            </div>
+            <div className="mt-1.5 flex gap-1.5">
+              <button type="button" onClick={() => fileRef.current?.click()} className="flex-1 rounded-lg bg-gray-100 px-2 py-1.5 text-[12px] font-medium text-gray-700 transition-colors hover:bg-gray-200">변경</button>
+              <button type="button" onClick={handleRemove} className="flex-1 rounded-lg bg-red-50 px-2 py-1.5 text-[12px] font-medium text-red-600 transition-colors hover:bg-red-100">삭제</button>
+            </div>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={() => !uploading && fileRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); if (!uploading) setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files?.[0]; if (f && !uploading) void processFile(f); }}
+            className={`flex w-full flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed px-1.5 text-center transition-colors ${uploading ? 'pointer-events-none border-gray-300 opacity-60' : dragOver ? 'border-blue-500 bg-blue-50/60' : 'border-gray-300 hover:border-blue-400'}`}
+            style={{ aspectRatio }}
+          >
+            {uploading ? (
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
+            ) : (
+              <>
+                <svg className="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                <span className="text-[11px] leading-tight text-gray-500" style={{ wordBreak: 'keep-all' }}>사진 추가</span>
+              </>
+            )}
+          </button>
+        )}
+        {resizeError && <p className="mt-1 text-[11px] text-red-600">{resizeError}</p>}
+      </div>
+    );
+  }
 
   if (mode === 'preview' && value) {
     return (
