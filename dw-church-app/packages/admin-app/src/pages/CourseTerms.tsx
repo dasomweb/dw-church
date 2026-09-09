@@ -89,6 +89,21 @@ export default function CourseTerms() {
     try { await api.delete(`/api/v1/enrollments/${eid}`); qc.invalidateQueries({ queryKey: ['course-term', termId] }); } catch (e: any) { showToast('error', e?.message || '실패'); }
   };
 
+  // #5 차수 삭제 — 잘못 만든 차수를 되돌릴 수단. 서버 FK(enrollments→course_terms)는
+  // ON DELETE CASCADE 라 수강·출결 기록도 함께 정리된다.
+  const deleteTerm = async () => {
+    if (!termId || !term) return;
+    if (!window.confirm(`${term.courseName} ${term.name} 차수를 삭제할까요? 이 차수의 수강·출결 기록도 함께 삭제됩니다.`)) return;
+    setBusy(true);
+    try {
+      await api.delete(`/api/v1/course-terms/${termId}`);
+      setTermId(null);
+      qc.invalidateQueries({ queryKey: ['course-terms', courseId] });
+      showToast('success', '차수를 삭제했습니다.');
+    } catch (e: any) { showToast('error', e?.message || '삭제 실패'); }
+    finally { setBusy(false); }
+  };
+
   const complete = async () => {
     const below = enrollments.filter((e) => e.status !== 'completed' && presentOf(e.id) < criteria);
     const msg = below.length
@@ -155,6 +170,7 @@ export default function CourseTerms() {
             <div className="flex gap-2">
               <Button variant="outline" disabled={busy} onClick={() => void saveAtt()}>출결 저장</Button>
               <button disabled={busy} onClick={() => void complete()} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50">수료 확정</button>
+              <button disabled={busy} onClick={() => void deleteTerm()} className="text-sm font-medium text-gray-400 px-3 py-2 rounded-lg hover:text-red-600 hover:bg-red-50 disabled:opacity-50">차수 삭제</button>
             </div>
           </div>
 

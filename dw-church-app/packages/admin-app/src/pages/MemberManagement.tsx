@@ -113,6 +113,9 @@ export default function MemberManagement() {
   // 등록(MB-04) 세대 모드
   const [hhMode, setHhMode] = useState<'existing' | 'new'>('new');
   const [hhRelation, setHhRelation] = useState('spouse');
+  // 신규 세대 생성 입력(비우면 교인 이름으로 자동 명명)
+  const [hhNewName, setHhNewName] = useState('');
+  const [hhNewRegion, setHhNewRegion] = useState('');
 
   // Excel(CSV) import
   const [showImport, setShowImport] = useState(false);
@@ -215,14 +218,29 @@ export default function MemberManagement() {
     } catch (e: any) { showToast('error', e?.message || '추가 실패'); }
   };
   const removeRelation = async (id: string) => {
-    try { await api.delete(`/api/v1/member-relations/${id}`); refreshDetail(); }
+    if (!id) { showToast('error', '관계 정보를 찾을 수 없습니다.'); return; }
+    try { await api.delete(`/api/v1/member-relations/${id}`); refreshDetail(); showToast('success', '가족 관계를 해제했습니다.'); }
     catch (e: any) { showToast('error', e?.message || '삭제 실패'); }
   };
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       const body: Record<string, unknown> = { ...form };
-      for (const k of ['birthDate', 'registeredOn', 'householdId', 'gender'] as const) if (!body[k]) delete body[k];
+      // #1 세대: '신규 세대 생성' 모드면 세대를 먼저 만들고 그 id 로 편입(본인 세대주). 이렇게
+      // 해야 가족 연결·세대 표시가 양방향으로 동작한다(이전엔 세대를 아예 안 만들어 세대 미지정).
+      if (hhMode === 'new') {
+        const hhName = hhNewName.trim() || `${form.name.trim()} 세대`;
+        const created = (await api.post<{ data: any }>('/api/v1/households', {
+          name: hhName, ...(hhNewRegion.trim() ? { region: hhNewRegion.trim() } : {}),
+        }) as any).data;
+        body.householdId = created.id;
+        body.isHead = form.isHead;
+      } else {
+        body.isHead = false;
+      }
+      // 성별·생년월일은 필수(doSave 에서 검증)라 항상 포함. 선택 필드만 빈 값 제거.
+      for (const k of ['registeredOn'] as const) if (!body[k]) delete body[k];
+      if (!body.householdId) delete body.householdId;
       if (editingId) return api.put(`/api/v1/members/${editingId}`, body);
       return api.post('/api/v1/members', body);
     },
@@ -233,7 +251,7 @@ export default function MemberManagement() {
     onError: (e: any) => showToast('error', e?.message || '저장 실패'),
   });
 
-  const openCreate = () => { setEditingId(null); setForm(emptyForm); setHhMode('new'); setView('edit'); };
+  const openCreate = () => { setEditingId(null); setForm(emptyForm); setHhMode('new'); setHhNewName(''); setHhNewRegion(''); setView('edit'); };
   const openEdit = (m: Member) => {
     setEditingId(m.id);
     setForm({
@@ -245,6 +263,7 @@ export default function MemberManagement() {
       householdId: m.householdId ?? '', isHead: !!m.isHead, photoUrl: m.photoUrl ?? '', note: m.note ?? '',
     });
     setHhMode(m.householdId ? 'existing' : 'new');
+    setHhNewName(''); setHhNewRegion('');
     setView('edit');
   };
   const openDetail = (id: string) => { setDetailId(id); setTab('basic'); setView('detail'); };
@@ -533,8 +552,14 @@ export default function MemberManagement() {
       : undefined;
     const households = householdsQ.data ?? [];
     const hhInput = inputClass;
-    const canSave = !!form.name.trim() && !saving && !saveMutation.isPending;
-    const doSave = () => { if (!form.name.trim()) { showToast('error', '이름을 입력하세요.'); return; } setSaving(true); saveMutation.mutate(undefined, { onSettled: () => setSaving(false) }); };
+    const canSave = !!form.name.trim() && !!form.gender && !!form.birthDate && !saving && !saveMutation.isPending;
+    // #3 필수값 검증 — 이름·성별·생년월일이 모두 있어야 저장(이전엔 이름만 확인해 성별·생년월일 없이 저장됨).
+    const doSave = () => {
+      if (!form.name.trim()) { showToast('error', '이름을 입력하세요.'); return; }
+      if (!form.gender) { showToast('error', '성별을 선택하세요.'); return; }
+      if (!form.birthDate) { showToast('error', '생년월일을 입력하세요.'); return; }
+      setSaving(true); saveMutation.mutate(undefined, { onSettled: () => setSaving(false) });
+    };
 
     return (
       <div className="max-w-[1000px]" style={{ color: C.ink }}>
@@ -553,7 +578,7 @@ export default function MemberManagement() {
           {/* 인적사항 */}
           <div className="bg-white rounded-[14px]" style={{ border: `1px solid ${C.border}`, padding: '22px 24px' }}>
             <b className="text-[14.5px] block mb-1">인적사항</b>
-            <span className="text-[12.5px] block mb-[18px]" style={{ color: C.faint }}>이름과 생년월일만 필수입니다. 나머지는 나중에 채울 수 있습니다.</span>
+            <span className="text-[12.5px] block mb-[18px]" style={{ color: C.faint }}>이름·성별·생년월일이 필수입니다. 나머지는 나중에 채울 수 있습니다.</span>
             <div className="flex flex-col sm:flex-row gap-6">
               <div className="shrink-0 w-[108px]">
                 <ImageUpload label="" value={form.photoUrl} onChange={(u) => set('photoUrl', u)} onUpload={uploadPhoto} aspectRatio="3/4" resize="block" />
@@ -638,9 +663,16 @@ export default function MemberManagement() {
               </>
             )}
             {hhMode === 'new' && (
-              <label className="flex items-center gap-2 text-[13px]" style={{ color: C.text }}>
-                <input type="checkbox" checked={form.isHead} onChange={(e) => set('isHead', e.target.checked)} className="rounded" /> 본인을 세대주로 지정
-              </label>
+              <div className="flex flex-col gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Lbl label="세대 이름"><input className={hhInput} value={hhNewName} onChange={(e) => setHhNewName(e.target.value)} placeholder={form.name.trim() ? `${form.name.trim()} 세대` : '예: 김은혜 세대'} /></Lbl>
+                  <Lbl label="구역"><input className={hhInput} value={hhNewRegion} onChange={(e) => setHhNewRegion(e.target.value)} placeholder="예: 1구역 (선택)" /></Lbl>
+                </div>
+                <label className="flex items-center gap-2 text-[13px]" style={{ color: C.text }}>
+                  <input type="checkbox" checked={form.isHead} onChange={(e) => set('isHead', e.target.checked)} className="rounded" /> 본인을 세대주로 지정
+                </label>
+                <span className="text-[12px]" style={{ color: C.faint }}>세대 이름을 비워두면 ‘{form.name.trim() || '교인'} 세대’로 자동 생성됩니다.</span>
+              </div>
             )}
           </div>
 
