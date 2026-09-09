@@ -4,14 +4,13 @@ import { useDWChurchClient } from '@dw-church/api-client';
 import { inputClass, textareaClass, useToast, EmptyState, Button } from '../components';
 
 /**
- * NT-01/02 공지 — 리더/구성원 대상 공지. 실제 알림톡·문자·메일 발송은 교회 발송
- * 계정(발송 설정)이 있어야 나가므로, 여기서는 공지 저장 + 어떤 채널로 안내했는지
- * 기록(체크)만 관리한다. 고정·게시기간 지원.
+ * NT-01/02 공지 — 리더/구성원 대상 공지. 알림톡·문자(SMS)는 카카오 비즈니스 채널/
+ * 발송 대행사 연동이 필요해 제거했고(미구현), 메일 안내 채널만 둔다. 고정·게시기간 지원.
  */
 type Notice = Record<string, any>;
 const SCOPE_LABEL: Record<string, string> = { all: '전체', leaders: '리더', group: '특정 조직' };
 
-const blank = (): Notice => ({ title: '', body: '', target: { scope: 'all' }, isPinned: false, publishFrom: '', publishTo: '', sendAlrimtalk: false, sendEmail: false, sendSms: false });
+const blank = (): Notice => ({ title: '', body: '', target: { scope: 'all' }, isPinned: false, publishFrom: '', publishTo: '', sendEmail: false });
 
 export default function GroupNotices() {
   const apiClient = useDWChurchClient();
@@ -44,16 +43,16 @@ export default function GroupNotices() {
     if (!window.confirm('이 공지를 삭제할까요?')) return;
     try { await api.delete(`/api/v1/group-notices/${n.id}`); qc.invalidateQueries({ queryKey: ['group-notices'] }); if (editing?.id === n.id) setEditing(null); } catch (e: any) { showToast('error', e?.message || '실패'); }
   };
-  const openEdit = (n: Notice) => setEditing({ ...n, target: n.target ?? { scope: 'all' }, isPinned: n.isPinned, publishFrom: n.publishFrom ?? '', publishTo: n.publishTo ?? '', sendAlrimtalk: n.sendAlrimtalk, sendEmail: n.sendEmail, sendSms: n.sendSms });
+  const openEdit = (n: Notice) => setEditing({ ...n, target: n.target ?? { scope: 'all' }, isPinned: n.isPinned, publishFrom: n.publishFrom ?? '', publishTo: n.publishTo ?? '', sendEmail: n.sendEmail });
 
-  const channels = (n: Notice) => [n.sendAlrimtalk && '알림톡', n.sendEmail && '메일', n.sendSms && '문자'].filter(Boolean).join('·');
+  const channels = (n: Notice) => [n.sendEmail && '메일'].filter(Boolean).join('·');
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-bold">공지</h1>
-          <p className="text-sm text-gray-500 mt-1">{t.leader ?? '리더'}·구성원에게 전할 공지를 등록합니다. 발송은 발송 설정에 계정을 등록해야 실제로 나갑니다.</p>
+          <p className="text-sm text-gray-500 mt-1">{t.leader ?? '리더'}·구성원에게 전할 공지를 등록합니다.</p>
         </div>
         <Button onClick={() => setEditing(blank())}>+ 공지 작성</Button>
       </div>
@@ -98,11 +97,9 @@ export default function GroupNotices() {
                 <input type="date" className={inputClass} value={editing.publishTo} onChange={(e) => setEditing({ ...editing, publishTo: e.target.value })} /></label>
             </div>
             <div className="pt-1 border-t border-gray-50">
-              <span className="text-xs font-medium text-gray-500">안내 채널 (발송 계정 등록 시 실제 발송)</span>
+              <span className="text-xs font-medium text-gray-500">안내 채널</span>
               <div className="flex gap-3 mt-1.5">
-                <label className="flex items-center gap-1.5 text-sm"><input type="checkbox" checked={!!editing.sendAlrimtalk} onChange={(e) => setEditing({ ...editing, sendAlrimtalk: e.target.checked })} className="rounded" /> 알림톡</label>
                 <label className="flex items-center gap-1.5 text-sm"><input type="checkbox" checked={!!editing.sendEmail} onChange={(e) => setEditing({ ...editing, sendEmail: e.target.checked })} className="rounded" /> 메일</label>
-                <label className="flex items-center gap-1.5 text-sm"><input type="checkbox" checked={!!editing.sendSms} onChange={(e) => setEditing({ ...editing, sendSms: e.target.checked })} className="rounded" /> 문자</label>
               </div>
             </div>
             <div className="flex gap-2 pt-1">

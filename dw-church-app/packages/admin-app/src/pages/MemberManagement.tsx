@@ -764,7 +764,6 @@ export default function MemberManagement() {
             <div className="rounded-[10px] flex items-center gap-3 mb-3.5" style={{ background: C.brandBg, border: `1px solid ${C.brandBg2}`, padding: '10px 14px' }}>
               <b className="text-[13px]" style={{ color: C.brand }}>{selIds.length}명 선택</b>
               <div className="flex gap-[7px] ml-auto flex-wrap">
-                <button onClick={() => showToast('success', '알림톡 발송은 발송 설정(알림톡 계정) 등록 후 사용할 수 있습니다.')} className="text-[12.5px] font-bold rounded-[8px] px-3 py-1.5 bg-white" style={{ color: C.brand, border: `1px solid ${C.brandBg2}` }}>알림톡 발송</button>
                 <button onClick={() => showToast('success', `${selIds.length}명 — 세대·구역 이동은 각 교인 상세의 세대에서 처리합니다.`)} className="text-[12.5px] font-bold rounded-[8px] px-3 py-1.5 bg-white" style={{ color: C.brand, border: `1px solid ${C.brandBg2}` }}>구역 이동</button>
                 <button onClick={() => window.print()} className="text-[12.5px] font-bold rounded-[8px] px-3 py-1.5 bg-white" style={{ color: C.brand, border: `1px solid ${C.brandBg2}` }}>교인카드 인쇄</button>
                 <button onClick={clearSel} className="text-[12.5px] font-bold rounded-[8px] px-2.5 py-1.5" style={{ color: C.faint }}>선택 해제</button>
