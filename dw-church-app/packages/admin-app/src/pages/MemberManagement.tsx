@@ -228,11 +228,13 @@ export default function MemberManagement() {
       const body: Record<string, unknown> = { ...form };
       // #1 세대: '신규 세대 생성' 모드면 세대를 먼저 만들고 그 id 로 편입(본인 세대주). 이렇게
       // 해야 가족 연결·세대 표시가 양방향으로 동작한다(이전엔 세대를 아예 안 만들어 세대 미지정).
+      let createdHouseholdId: string | null = null;
       if (hhMode === 'new') {
         const hhName = hhNewName.trim() || `${form.name.trim()} 세대`;
         const created = (await api.post<{ data: any }>('/api/v1/households', {
           name: hhName, ...(hhNewRegion.trim() ? { region: hhNewRegion.trim() } : {}),
         }) as any).data;
+        createdHouseholdId = created.id;
         body.householdId = created.id;
         body.isHead = form.isHead;
       } else {
@@ -241,8 +243,37 @@ export default function MemberManagement() {
       // 성별·생년월일은 필수(doSave 에서 검증)라 항상 포함. 선택 필드만 빈 값 제거.
       for (const k of ['registeredOn'] as const) if (!body[k]) delete body[k];
       if (!body.householdId) delete body.householdId;
-      if (editingId) return api.put(`/api/v1/members/${editingId}`, body);
-      return api.post('/api/v1/members', body);
+
+      // 교인 저장. 이어지는 세대주 지정·가족 관계 배선을 위해 저장된 교인 id 를 확보한다.
+      let memberId: string | null = editingId;
+      if (editingId) {
+        await api.put(`/api/v1/members/${editingId}`, body);
+      } else {
+        memberId = ((await api.post<{ data: any }>('/api/v1/members', body) as any).data?.id) ?? null;
+      }
+
+      // M-4: '신규 세대 + 본인을 세대주로 지정' 이면 households.head_member_id 를 이 교인으로
+      // 연결한다. members.is_head 만으로는 세대 상세의 세대주 표시가 안 됨(세대주 표시는
+      // head_member_id 조인에서 옴). 이 연결이 없어 "세대주 지정 방법이 없다"(M-4)가 났음.
+      if (createdHouseholdId && form.isHead && memberId) {
+        await api.put(`/api/v1/households/${createdHouseholdId}`, { headMemberId: memberId });
+      }
+
+      // N-1: '기존 세대 편입' + 관계 선택 시, 세대 대표(세대주 우선, 없으면 첫 구성원)와 가족
+      // 관계를 만든다. 이전엔 세대만 연결하고 관계는 저장 안 했음. 방향은 "새 교인이 세대주의
+      // [관계]"가 되도록 from=세대대표·to=새 교인 (관계=자녀 → 새 교인이 자녀). 서버가 상호
+      // 엣지를 자동 생성한다. 신규 등록에서만 수행(수정 시엔 가족 탭에서 직접 관리).
+      if (!editingId && hhMode === 'existing' && body.householdId && hhRelation && memberId) {
+        const detail = (await api.get<{ data: any }>(`/api/v1/households/${body.householdId as string}`) as any).data;
+        const others = ((detail?.members ?? []) as any[]).filter((mm) => mm.id !== memberId);
+        const anchor = others.find((mm) => mm.isHead) ?? others[0];
+        if (anchor) {
+          await api.post('/api/v1/member-relations', {
+            fromMemberId: anchor.id, toMemberId: memberId, relationType: hhRelation,
+          });
+        }
+      }
+      return { id: memberId };
     },
     onSuccess: () => {
       showToast('success', editingId ? '수정되었습니다.' : '교인을 등록했습니다.');
