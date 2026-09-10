@@ -308,7 +308,14 @@ export default function MemberManagement() {
 
   const remove = async (m: Member) => {
     if (!window.confirm(`${m.name} 교인을 삭제할까요?`)) return;
-    try { await api.delete(`/api/v1/members/${m.id}`); showToast('success', '삭제되었습니다.'); invalidate(); }
+    try {
+      await api.delete(`/api/v1/members/${m.id}`);
+      showToast('success', '삭제되었습니다.');
+      invalidate();
+      // M-9: 삭제 성공 후 삭제된 상세에 머물면(재조회 404) 실패로 오인해 다시 누른다.
+      // 그 교인 상세를 보고 있었다면 목록으로 되돌린다.
+      if (detailId === m.id) { setDetailId(null); setView('list'); }
+    }
     catch (e: any) { showToast('error', e?.message || '삭제 실패'); }
   };
 

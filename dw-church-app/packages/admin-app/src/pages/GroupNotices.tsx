@@ -62,17 +62,26 @@ export default function GroupNotices() {
           {noticesQ.isLoading ? <div className="p-8 text-center text-sm text-gray-400">불러오는 중…</div>
             : notices.length === 0 ? <EmptyState icon="📣" title="공지가 없습니다" description="첫 공지를 작성하세요." />
             : (
+              // 각 행에 '수정·삭제' 버튼을 명시적으로 노출한다. 이전엔 행 전체가 클릭
+              // 버튼이라 수정/삭제 진입이 안 보여 QA 가 '조작 버튼이 공지 작성뿐'이라
+              // 보고(G-3). 버튼 중첩(button in button)은 무효 마크업이라 행을 div 로.
               <div className="divide-y divide-gray-50">
                 {notices.map((n) => (
-                  <button key={n.id} onClick={() => openEdit(n)} className="w-full text-left p-4 hover:bg-gray-50 block">
-                    <div className="flex items-center gap-2">
-                      {n.isPinned && <span className="text-[10px] font-bold text-amber-600">📌 고정</span>}
-                      <b className="text-sm text-gray-800">{n.title}</b>
-                      <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">{SCOPE_LABEL[n.target?.scope] ?? '전체'}</span>
-                      {channels(n) && <span className="text-[11px] text-blue-500">{channels(n)}</span>}
+                  <div key={n.id} className="flex items-start gap-2 p-4 hover:bg-gray-50">
+                    <button onClick={() => openEdit(n)} className="min-w-0 flex-1 text-left">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {n.isPinned && <span className="text-[10px] font-bold text-amber-600">📌 고정</span>}
+                        <b className="text-sm text-gray-800">{n.title}</b>
+                        <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">{SCOPE_LABEL[n.target?.scope] ?? '전체'}</span>
+                        {channels(n) && <span className="text-[11px] text-blue-500">{channels(n)}</span>}
+                      </div>
+                      {n.body && <p className="text-xs text-gray-400 mt-1 line-clamp-2">{n.body}</p>}
+                    </button>
+                    <div className="flex shrink-0 gap-1">
+                      <button onClick={() => openEdit(n)} className="rounded-lg px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100">수정</button>
+                      <button onClick={() => void del(n)} className="rounded-lg px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50">삭제</button>
                     </div>
-                    {n.body && <p className="text-xs text-gray-400 mt-1 line-clamp-2">{n.body}</p>}
-                  </button>
+                  </div>
                 ))}
               </div>
             )}
