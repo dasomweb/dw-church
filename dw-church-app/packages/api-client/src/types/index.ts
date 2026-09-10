@@ -321,7 +321,12 @@ export interface Devotion {
 }
 
 // ─── Cardnews (카드뉴스) ─────────────────────────────────────
-// 정사각 이미지 카드로 매주 소식을 전달하는 콘텐츠(관리자 업로드, 공개 읽기).
+// 한 주제를 여러 4:5 이미지 카드로 넘겨 보는 "덱" 콘텐츠(관리자 업로드, 공개 읽기).
+// 표지=imageUrl=첫 카드. 레거시 flat 행은 cards 가 비어 있고 imageUrl 만 있음.
+export interface CardnewsCard {
+  imageUrl: string;
+  caption?: string;
+}
 export interface Cardnews {
   id: string;
   title: string;
@@ -329,6 +334,7 @@ export interface Cardnews {
   description?: string | null;
   imageUrl?: string | null;
   linkUrl?: string | null;
+  cards?: CardnewsCard[];   // 덱을 이루는 카드들(이미지+캡션)
   sortOrder?: number;
   status?: PostStatus;
   createdAt?: string;

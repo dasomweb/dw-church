@@ -9,9 +9,22 @@ const COLUMN_MAP: Record<string, string> = {
   description: 'description',
   imageUrl: 'image_url',
   linkUrl: 'link_url',
+  cards: 'cards',
   sortOrder: 'sort_order',
   status: 'status',
 };
+// jsonb 컬럼은 문자열화 + ::jsonb 캐스트가 필요.
+const JSONB_COLS = new Set(['cards']);
+
+// 표지 자동 동기화: cards 가 오면 표지(image_url)를 첫 카드로 맞춘다(레퍼런스 규칙:
+// 표지=첫 카드). 운영자가 명시적으로 imageUrl 을 준 경우엔 존중.
+function withCoverSync<T extends Record<string, unknown>>(input: T): T {
+  const cards = input.cards as { imageUrl?: string }[] | undefined;
+  if (Array.isArray(cards) && cards.length && !input.imageUrl) {
+    return { ...input, imageUrl: cards[0]?.imageUrl ?? null };
+  }
+  return input;
+}
 
 export async function listCardnews(schema: string, opts: { status?: string } = {}) {
   const params: unknown[] = [];
@@ -32,17 +45,18 @@ export async function getCardnews(schema: string, id: string) {
   return rows[0] ?? null;
 }
 
-export async function createCardnews(schema: string, input: CreateCardnewsInput) {
+export async function createCardnews(schema: string, rawInput: CreateCardnewsInput) {
+  const input = withCoverSync(rawInput as Record<string, unknown>);
   const cols: string[] = [];
   const placeholders: string[] = [];
   const values: unknown[] = [];
   let i = 1;
   for (const [key, col] of Object.entries(COLUMN_MAP)) {
-    const v = (input as Record<string, unknown>)[key];
+    const v = input[key];
     if (v !== undefined) {
       cols.push(`"${col}"`);
-      placeholders.push(`$${i++}`);
-      values.push(v);
+      if (JSONB_COLS.has(col)) { placeholders.push(`$${i++}::jsonb`); values.push(JSON.stringify(v)); }
+      else { placeholders.push(`$${i++}`); values.push(v); }
     }
   }
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
@@ -52,13 +66,17 @@ export async function createCardnews(schema: string, input: CreateCardnewsInput)
   return rows[0];
 }
 
-export async function updateCardnews(schema: string, id: string, input: UpdateCardnewsInput) {
+export async function updateCardnews(schema: string, id: string, rawInput: UpdateCardnewsInput) {
+  const input = withCoverSync(rawInput as Record<string, unknown>);
   const setClauses: string[] = [];
   const values: unknown[] = [];
   let i = 1;
   for (const [key, col] of Object.entries(COLUMN_MAP)) {
-    const v = (input as Record<string, unknown>)[key];
-    if (v !== undefined) { setClauses.push(`"${col}" = $${i++}`); values.push(v); }
+    const v = input[key];
+    if (v !== undefined) {
+      if (JSONB_COLS.has(col)) { setClauses.push(`"${col}" = $${i++}::jsonb`); values.push(JSON.stringify(v)); }
+      else { setClauses.push(`"${col}" = $${i++}`); values.push(v); }
+    }
   }
   if (setClauses.length === 0) return getCardnews(schema, id);
   setClauses.push('updated_at = NOW()');

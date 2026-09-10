@@ -1618,10 +1618,14 @@ const DEVOTION_READER = churchBlock(
     { key: 'imageUrl', label: '이미지', type: 'image', hint: '진입 카드 좌측 이미지 (비우면 최신 묵상 이미지)' },
   ]},
 );
-// 카드뉴스 (15a) — 운영자 업로드 정사각 이미지 카드(콘텐츠 의존 없음). 이미지 카드
-// 항목(items)은 테넌트 PageEditor 의 cardItems 위젯에서 편집(스칼라 인스펙터에서는 생략).
+// 카드뉴스 — 여러 4:5 카드로 넘겨 보는 덱(카드뉴스 관리에서 업로드). 표지 그리드/레일.
+// 실제 카드는 [카드뉴스 관리]에서 등록하며, 표지를 누르면 몰입형 뷰어가 열린다.
 const CARDNEWS = churchBlock(
   { title: '표시', fields: [
+    { key: 'variant', label: '레이아웃', type: 'select', choices: [
+      { value: 'grid', label: '그리드' },
+      { value: 'rail', label: '가로 레일 (홈용)' },
+    ]},
     { key: 'eyebrow', label: '라벨(윗글)', type: 'text', hint: '예: 카드뉴스' },
     { key: 'title', label: '제목', type: 'text', hint: '예: 한 장으로 보내는 소식' },
   ]},
