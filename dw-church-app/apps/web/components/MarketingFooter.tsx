@@ -29,7 +29,7 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
       { label: '도움센터', href: '/help' },
       { label: '도입 상담', href: '/apply' },
       { label: '개척교회 지원', href: '/support-program' },
-      // 로그인 입구는 공개 마케팅 사이트에 노출하지 않는다(각 교회 자기 사이트에서만 진입).
+      { label: '로그인', href: '/login' },
     ],
   },
   {

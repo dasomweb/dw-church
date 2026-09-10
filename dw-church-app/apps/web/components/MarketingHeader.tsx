@@ -20,8 +20,9 @@ const NAV = [
 const UTILITY = [
   { label: '도입 문의', href: '/apply' },
   { label: '도움센터', href: '/help' },
-  // 관리자 로그인 링크는 공개 마케팅 사이트에 노출하지 않는다(로그인 입구를 온 사이트에
-  // 광고하지 않음). 로그인은 각 교회(테넌트) 자기 사이트에서만 진입한다.
+  // /login = 테넌트 관리자 진입점(슈퍼어드민 문이 아님). 로그인하면 각 교회 관리자는
+  // 자기 도메인으로, 일반회원은 권한없음, 슈퍼어드민은 슈퍼어드민 콘솔로 라우팅된다.
+  { label: '로그인', href: '/login' },
 ];
 
 export default function MarketingHeader() {
@@ -81,6 +82,9 @@ export default function MarketingHeader() {
           </nav>
           {/* Desktop actions */}
           <div className="ml-auto hidden items-center gap-3 lg:flex">
+            <a href="/login" className="whitespace-nowrap px-3 py-[11px] text-[14px] font-bold text-[#3c4353] transition-colors hover:text-[#1466d6]">
+              로그인
+            </a>
             <a href="/apply" className="whitespace-nowrap rounded-[9px] border border-[#cdd3de] px-5 py-[11px] text-[14px] font-bold text-[#16181d] transition-colors hover:bg-[#f5f6f8]">
               데모 신청
             </a>
