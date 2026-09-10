@@ -7,6 +7,7 @@ import { validateSchemaName } from '../utils/validate-schema.js';
 import { tiersForFeature, isAddon, isFeatureEffective, missingDeps, FEATURE_LABELS } from '../config/plan-limits.js';
 import type { JwtPayload } from '../config/jwt.js';
 import { sanitizePermissions, staffMayAccess } from '../modules/auth/capabilities.js';
+import { recordSecurityEvent } from '../modules/security/service.js';
 
 function extractToken(request: FastifyRequest): string | null {
   const header = request.headers.authorization;
@@ -52,6 +53,18 @@ async function resolveUser(
   // Override with the JWT's tenant, or 403 for role 'support' (the narrow
   // per-tenant maintenance role must never cross tenants, even by accident).
   if (payload.tenantSlug && request.tenant && request.tenant.slug !== payload.tenantSlug) {
+    // 다른 테넌트 접근 시도 — super_admin 을 제외하고 감사 로그에 남긴다(슈퍼어드민
+    // 모니터링). 데이터 노출은 아래에서 재바인딩/차단으로 막힌다.
+    if (payload.role !== 'super_admin') {
+      void recordSecurityEvent({
+        eventType: 'cross_tenant_access',
+        actorUserId: payload.userId, actorEmail: payload.email, actorRole: payload.role ?? null,
+        actorTenantSlug: payload.tenantSlug, targetTenantSlug: request.tenant.slug,
+        targetPath: request.url, ip: request.ip,
+        userAgent: (request.headers['user-agent'] as string | undefined) ?? null,
+        detail: 'X-Tenant-Slug/subdomain 이 JWT 테넌트와 불일치',
+      });
+    }
     if (payload.role === 'support') {
       throw new AppError('FORBIDDEN', 403, 'Support session cannot access another tenant');
     }
@@ -140,6 +153,13 @@ export async function requireSuperAdmin(
 ): Promise<void> {
   await requireAuth(request, reply);
   if (request.user?.role !== 'super_admin') {
+    void recordSecurityEvent({
+      eventType: 'super_admin_denied',
+      actorUserId: request.user?.id ?? null, actorEmail: request.user?.email ?? null,
+      actorRole: request.user?.role ?? null, actorTenantSlug: request.user?.tenantSlug ?? null,
+      targetPath: request.url, ip: request.ip,
+      userAgent: (request.headers['user-agent'] as string | undefined) ?? null,
+    });
     throw new AppError('FORBIDDEN', 403, 'Super admin access required');
   }
 }

@@ -17,7 +17,7 @@ const ACCESS_TOKEN_LIFETIME_MS = 3600000; // 1 hour
 /**
  * Check super admin: role from DB, with env var fallback for bootstrap.
  */
-function checkIsSuperAdmin(role: string | undefined, email: string): boolean {
+export function checkIsSuperAdmin(role: string | undefined, email: string): boolean {
   if (role === 'super_admin') return true;
   if (email && env.SUPER_ADMIN_EMAILS.includes(email)) return true;
   return false;

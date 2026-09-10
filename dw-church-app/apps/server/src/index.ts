@@ -62,7 +62,8 @@ async function main(): Promise<void> {
         !request.url.startsWith('/api/v1/auth/') &&
         !request.url.startsWith('/api/v1/admin') &&
         !request.url.startsWith('/api/v1/billing') &&
-        !request.url.startsWith('/api/v1/migration')) {
+        !request.url.startsWith('/api/v1/migration') &&
+        !request.url.startsWith('/api/v1/security-events')) {  // 전역 감사 로그 — 테넌트 무관
       await tenantMiddleware(request, reply);
     }
   });
@@ -111,6 +112,7 @@ async function main(): Promise<void> {
   const { newcomerRoutes } = await import('./modules/newcomers/routes.js');
   const { devotionRoutes } = await import('./modules/devotions/routes.js');
   const { cardnewsRoutes } = await import('./modules/cardnews/routes.js');
+  const { securityRoutes } = await import('./modules/security/routes.js');
   const { applicationRoutes } = await import('./modules/applications/routes.js');
   const { referenceDenominationRoutes } = await import('./modules/reference-denominations/routes.js');
   const { supportRoutes } = await import('./modules/support/routes.js');
@@ -206,6 +208,7 @@ async function main(): Promise<void> {
   await app.register(newcomerRoutes, { prefix: '/api/v1' }); // /newcomers (새가족, Pro)
   await app.register(devotionRoutes, { prefix: '/api/v1' }); // /devotions (말씀 묵상 QT)
   await app.register(cardnewsRoutes, { prefix: '/api/v1' }); // /cardnews (카드뉴스)
+  await app.register(securityRoutes, { prefix: '/api/v1' }); // /security-events (접근 위반 감사 로그)
   await app.register(applicationRoutes, { prefix: '/api/v1' }); // /applications + /admin/applications
   await app.register(referenceDenominationRoutes, { prefix: '/api/v1' }); // /admin/reference-denominations
   await app.register(supportRoutes, { prefix: '/api/v1' }); // /support-tickets + /admin/support-tickets
@@ -357,6 +360,33 @@ async function main(): Promise<void> {
     );
   } catch (err) {
     app.log.warn(`site_visits table migration skipped: ${err}`);
+  }
+
+  // --- Security: shared public.security_events table (access-violation audit) ---
+  // Global (not per-tenant): records cross-tenant access attempts, super-admin
+  // denials, central-login-by-member, switch-tenant denials. Super-admin monitors.
+  try {
+    await prisma.$executeRawUnsafe(
+      `CREATE TABLE IF NOT EXISTS public.security_events (
+         id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+         created_at         TIMESTAMPTZ  NOT NULL DEFAULT now(),
+         event_type         VARCHAR(40)  NOT NULL,
+         actor_user_id      VARCHAR(64),
+         actor_email        VARCHAR(200),
+         actor_role         VARCHAR(40),
+         actor_tenant_slug  VARCHAR(100),
+         target_tenant_slug VARCHAR(100),
+         target_path        VARCHAR(500),
+         ip                 VARCHAR(64),
+         user_agent         VARCHAR(500),
+         detail             VARCHAR(1000)
+       )`,
+    );
+    await prisma.$executeRawUnsafe(
+      `CREATE INDEX IF NOT EXISTS security_events_created_idx ON public.security_events (created_at DESC)`,
+    );
+  } catch (err) {
+    app.log.warn(`security_events table migration skipped: ${err}`);
   }
 
   // Per-tenant feature overrides (super-admin "기능 권한" exceptions on top of

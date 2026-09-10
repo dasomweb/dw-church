@@ -37,6 +37,7 @@ const LoginPage = lazyWithReload(() => import('./pages/LoginPage'));
 const RegisterPage = lazyWithReload(() => import('./pages/RegisterPage'));
 const ForgotPasswordPage = lazyWithReload(() => import('./pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazyWithReload(() => import('./pages/ResetPasswordPage'));
+const AccessDenied = lazyWithReload(() => import('./pages/AccessDenied'));
 
 // Lazy-loaded pages — Admin
 const Dashboard = lazyWithReload(() => import('./pages/Dashboard'));
@@ -156,7 +157,6 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 function RequireTenantAccess({ children }: { children: React.ReactNode }) {
   const { slug = '' } = useParams<{ slug: string }>();
   const session = useAuthStore((s) => s.session);
-  const location = useLocation();
 
   const isSuper = !!session?.user?.isSuperAdmin;
   const userSlug = session?.user?.tenantSlug ?? '';
@@ -164,8 +164,15 @@ function RequireTenantAccess({ children }: { children: React.ReactNode }) {
   if (isSuper) return <>{children}</>;
   if (slug && userSlug === slug) return <>{children}</>;
 
-  const redirect = encodeURIComponent(location.pathname + location.search);
-  return <Navigate to={`/t/${slug}/login?redirect=${redirect}`} replace />;
+  // 다른 테넌트 관리 페이지 접근 시도 → 무음 리다이렉트 대신 '권한없음' 표시 + 감사 로그
+  // (대표님 정책). 자기 테넌트가 있으면 자기 홈으로 돌아가는 링크를 준다.
+  return (
+    <AccessDenied
+      eventType="cross_tenant_access"
+      targetTenantSlug={slug}
+      homeTo={userSlug ? `/t/${userSlug}` : '/login'}
+    />
+  );
 }
 
 /** Already authed? Bounce away from login/register unless intentionally forcing the form. */
@@ -196,7 +203,11 @@ function PublicOnly({ children }: { children: React.ReactNode }) {
 
 function RequireSuperAdmin({ children }: { children: React.ReactNode }) {
   const session = useAuthStore((s) => s.session);
-  if (!session?.user?.isSuperAdmin) return <Navigate to="/login" replace />;
+  if (!session?.user?.isSuperAdmin) {
+    // 슈퍼어드민 접근 시도(비-슈퍼) → '권한없음' 표시 + 감사 로그.
+    const userSlug = session?.user?.tenantSlug ?? '';
+    return <AccessDenied eventType="super_admin_denied" homeTo={userSlug ? `/t/${userSlug}` : '/login'} />;
+  }
   return <>{children}</>;
 }
 

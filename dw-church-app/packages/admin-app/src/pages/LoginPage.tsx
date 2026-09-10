@@ -1,10 +1,31 @@
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useLogin, DWChurchApiError } from '@dw-church/api-client';
+import { useLogin, DWChurchApiError, useDWChurchClient } from '@dw-church/api-client';
 import { useAuthStore } from '../stores/auth';
 import { detectHostMode } from '../lib/tenant-scope';
 import { firstStaffPath } from '../lib/capabilities';
+import { reportSecurityEvent } from '../lib/security';
+
+// truelight.app/login(중앙 콘솔)은 admin.truelight.app 로 서빙된다. 여기서 로그인한
+// 테넌트 관리자는 자기 테넌트 도메인 관리자로 보낸다(대표님 정책).
+const CENTRAL_CONSOLE_HOST = 'admin.truelight.app';
+const isCentralConsole = () =>
+  typeof window !== 'undefined' && window.location.hostname === CENTRAL_CONSOLE_HOST;
+
+// 크로스 오리진 세션 핸드오프: 중앙 콘솔에서 인증한 세션을 테넌트 도메인으로 넘길 때
+// URL fragment(#s=...)로 전달한다(fragment 는 서버로 전송되지 않음). UTF-8(한글 이름 등)
+// 안전하게 base64 인코딩.
+function encodeHandoff(session: unknown): string {
+  return encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(session)))));
+}
+function decodeHandoff(hash: string): any | null {
+  try {
+    const m = /[#&]s=([^&]+)/.exec(hash);
+    if (!m || !m[1]) return null;
+    return JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(m[1])))));
+  } catch { return null; }
+}
 
 interface LoginFormData {
   email: string;
@@ -14,6 +35,7 @@ interface LoginFormData {
 export default function LoginPage() {
   const navigate = useNavigate();
   const loginMutation = useLogin();
+  const apiClient = useDWChurchClient();
   const setSession = useAuthStore((s) => s.setSession);
   const [searchParams] = useSearchParams();
   const { slug: urlSlug } = useParams<{ slug?: string }>();
@@ -33,6 +55,23 @@ export default function LoginPage() {
       setSession(null);
     }
   }, [prefillEmail, setSession]);
+
+  // 세션 핸드오프 수신: 중앙 콘솔에서 자기 테넌트 도메인으로 넘어오면 URL fragment 의
+  // 세션을 복원하고 fragment 를 즉시 제거한 뒤 관리자 홈으로 진입한다.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!window.location.hash.includes('s=')) return;
+    const session = decodeHandoff(window.location.hash);
+    if (session?.accessToken) {
+      setSession(session);
+      // fragment 제거(히스토리에 토큰이 남지 않게).
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      const staffLeaf = session.user?.role === 'staff' ? firstStaffPath(session.user.permissions ?? []) : null;
+      navigate(staffLeaf ? `/${staffLeaf}` : '/', { replace: true });
+    }
+    // 최초 마운트 1회만.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const {
     register,
@@ -63,6 +102,35 @@ export default function LoginPage() {
     sessionStorage.removeItem('dw-church-session');
     try {
       const session = await loginMutation.mutateAsync(data);
+
+      // 중앙 콘솔(admin.truelight.app = truelight.app/login) 정책 라우팅:
+      //  - 슈퍼어드민 → 슈퍼어드민 콘솔.
+      //  - 테넌트 관리자(owner/admin/staff/editor) → 자기 테넌트 도메인 관리자로 세션 핸드오프.
+      //  - 일반회원(member) → 권한없음(중앙 로그인 대상 아님) + 감사 로그. (회원은 <테넌트>/login 사용)
+      if (isCentralConsole()) {
+        const u = session.user;
+        if (u?.isSuperAdmin) {
+          setSession(session);
+          navigate('/super-admin', { replace: true });
+          return;
+        }
+        const role = u?.role ?? 'member';
+        const slug = u?.tenantSlug;
+        if (role === 'member' || !slug) {
+          // 방금 발급된 토큰을 클라이언트에 즉시 부착해 위반을 기록(서버 requireAuth).
+          try { apiClient?.setToken(session.accessToken); } catch { /* noop */ }
+          await reportSecurityEvent(apiClient, { eventType: 'central_login_denied', targetPath: '/login' });
+          setSession(null);
+          setErrorMsg('이 계정은 중앙 관리자 로그인 대상이 아닙니다. 소속 교회 홈페이지 주소 뒤에 /login 을 붙여 로그인하세요.');
+          return;
+        }
+        // 테넌트 관리자 → 자기 테넌트 도메인으로. 서브도메인은 커스텀 도메인이 있으면
+        // 미들웨어가 자동 308 하므로 커스텀 도메인에도 도달한다.
+        setSession(session);
+        window.location.href = `https://${slug}.truelight.app/admin/login#s=${encodeHandoff(session)}`;
+        return;
+      }
+
       setSession(session);
       navigate(postLoginDestination(session), { replace: true });
     } catch (err: unknown) {

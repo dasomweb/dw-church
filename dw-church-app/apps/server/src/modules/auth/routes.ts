@@ -11,6 +11,8 @@ import {
   changePasswordSchema,
 } from './schema.js';
 import * as authService from './service.js';
+import { checkIsSuperAdmin } from './service.js';
+import { recordSecurityEvent } from '../security/service.js';
 import { prisma } from '../../config/database.js';
 import { AppError } from '../../middleware/error-handler.js';
 
@@ -117,11 +119,24 @@ export default async function authRoutes(app: FastifyInstance): Promise<void> {
     return reply.send({ data: quota });
   });
 
-  // PUT /auth/switch-tenant — Owner can switch to a tenant they own
+  // PUT /auth/switch-tenant — super-admin only. Previously any authenticated
+  // user could rebind their session (JWT) to ANY active tenant with no ownership
+  // check → cross-tenant access. Now restricted to super_admin; denials logged.
   app.put(
     '/switch-tenant',
     { preHandler: [requireAuth] },
     async (request, reply) => {
+      if (!checkIsSuperAdmin(request.user!.role, request.user!.email)) {
+        void recordSecurityEvent({
+          eventType: 'switch_tenant_denied',
+          actorUserId: request.user!.id, actorEmail: request.user!.email,
+          actorRole: request.user!.role, actorTenantSlug: request.user!.tenantSlug,
+          targetTenantSlug: (request.body as { tenantSlug?: string })?.tenantSlug ?? null,
+          targetPath: request.url, ip: request.ip,
+          userAgent: (request.headers['user-agent'] as string | undefined) ?? null,
+        });
+        throw new AppError('FORBIDDEN', 403, '테넌트 전환 권한이 없습니다');
+      }
       const { tenantSlug } = request.body as { tenantSlug: string };
       if (!tenantSlug) {
         throw new AppError('VALIDATION_ERROR', 400, 'tenantSlug is required');
