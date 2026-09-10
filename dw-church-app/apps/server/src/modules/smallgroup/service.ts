@@ -1,5 +1,6 @@
 import { prisma } from '../../config/database.js';
 import { AppError } from '../../middleware/error-handler.js';
+import { onlineCountsAsAttendance } from '../membership/service.js';
 import {
   presetPayload, resolveTerminology, PRESETS,
   type GroupModel,
@@ -171,9 +172,11 @@ export async function getGroup(schema: string, id: string) {
   const repIds = recentReps.map((r) => r.id);
   group.recentTotal = repIds.length;
   if (repIds.length) {
+    // 온라인 출석 집계 = 교회 재량(member_settings). true 면 목원별 '참석'에 온라인도 더한다.
+    const onlineCounts = await onlineCountsAsAttendance(schema);
+    const attendedCond = onlineCounts ? `status IN ('present','online')` : `status = 'present'`;
     const att = await prisma.$queryRawUnsafe<any[]>(
-      // 정책 B: 목원별 최근 '참석'은 현장(present)만 집계(온라인은 출석에 포함하지 않음).
-      `SELECT member_id, COUNT(*) FILTER (WHERE status = 'present')::int AS present
+      `SELECT member_id, COUNT(*) FILTER (WHERE ${attendedCond})::int AS present
        FROM "${schema}".report_attendance WHERE report_id = ANY($1::uuid[]) GROUP BY member_id`,
       `{${repIds.join(',')}}`,
     );

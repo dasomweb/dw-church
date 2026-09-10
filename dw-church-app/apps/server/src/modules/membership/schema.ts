@@ -20,6 +20,7 @@ export const updateMemberSettingsSchema = z.object({
   requireForOffice: z.boolean().optional(),                         // 직분 요건 적용
   defaultBaptismTerm: z.string().trim().max(20).optional(),         // 기본 세례 용어(세례/침례)
   positionDistinction: z.boolean().optional(),                      // 본교회/타교회 직분 구분 사용
+  onlineCountsAsAttendance: z.boolean().optional(),                 // 온라인 예배를 출석으로 집계(교회 재량)
 });
 export type UpdateMemberSettingsInput = z.infer<typeof updateMemberSettingsSchema>;
 

@@ -1,5 +1,6 @@
 import { prisma } from '../../config/database.js';
 import { monitoringGrid } from './reports-service.js';
+import { onlineCountsAsAttendance } from '../membership/service.js';
 
 /**
  * GR-01 소그룹 현황 대시보드 집계. 화면 시안 그대로의 카드/표를 채우는 실제 데이터
@@ -37,14 +38,16 @@ export async function dashboardStats(schema: string) {
   let queueTotal = 0;
   for (const r of q) { queueBy[r.source] = r.n; queueTotal += r.n; }
 
-  // 이번 주 모임 참석률 + 초신자 동반 (최근 7일 리포트).
+  // 이번 주 모임 참석률 + 초신자 동반 (최근 7일 리포트). 온라인 출석 집계는 교회 재량
+  // (member_settings) — true 면 온라인도 참석으로 더한다(교적과 동일 기준).
+  const onlineCounts = await onlineCountsAsAttendance(schema);
   const recent = await prisma.$queryRawUnsafe<any[]>(
-    `SELECT group_id, attendance_count, newcomer_count FROM "${schema}".meeting_reports
+    `SELECT group_id, attendance_count, online_count, newcomer_count FROM "${schema}".meeting_reports
      WHERE meeting_date >= (CURRENT_DATE - INTERVAL '7 days')`,
   );
   let att = 0, rosterOfReported = 0, newcomers = 0;
   for (const r of recent) {
-    att += r.attendance_count || 0;
+    att += (r.attendance_count || 0) + (onlineCounts ? (r.online_count || 0) : 0);
     newcomers += r.newcomer_count || 0;
     rosterOfReported += byId.get(r.group_id)?.member_count || 0;
   }

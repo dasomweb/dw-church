@@ -40,6 +40,7 @@ export default function MemberSettings() {
         requiredSacraments: settingsQ.data.requiredSacraments ?? [],
         defaultBaptismTerm: settingsQ.data.defaultBaptismTerm ?? '세례',
         positionDistinction: settingsQ.data.positionDistinction ?? true,
+        onlineCountsAsAttendance: settingsQ.data.onlineCountsAsAttendance ?? false,
       });
     }
   }, [settingsQ.data, form]);
@@ -109,6 +110,10 @@ export default function MemberSettings() {
 
       <Card title="직분 구분" desc="본 교회에서 임명한 직분과 타 교회에서 받은 직분을 구분해 입력·표시합니다. 끄면 교인 폼의 '타 교회에서 받은 직분' 항목이 숨겨집니다.">
         <Toggle on={form.positionDistinction} onChange={(v) => set('positionDistinction', v)} label="본 교회 / 타 교회 직분 구분 사용" />
+      </Card>
+
+      <Card title="온라인 예배 출석 집계" desc="온라인 예배를 '출석'으로 집계할지 교회가 선택합니다. 켜면 출석률에 온라인이 포함되고, 온라인으로 참석한 교인은 장기결석·심방 대상에서 제외됩니다(교적·스몰그룹 공통). 끄면(기본) 현장 출석만 출석률로 세고, 온라인은 별도 숫자로만 표시합니다. 보수적으로 현장 예배만 출석으로 보는 교회는 꺼 두세요.">
+        <Toggle on={form.onlineCountsAsAttendance} onChange={(v) => set('onlineCountsAsAttendance', v)} label="온라인 예배를 출석으로 집계" />
       </Card>
 
       <div>

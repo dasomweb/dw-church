@@ -46,6 +46,7 @@ function statusTone(s: string): { fg: string; bg: string } {
 
 const GENDER_LABEL: Record<string, string> = { M: '남', F: '여' };
 const REL_LABEL: Record<string, string> = { spouse: '배우자', child: '자녀', parent: '부모', sibling: '형제' };
+const TRANSFER_LABEL: Record<string, string> = { in: '전입', out: '전출', dismissal: '이명', death: '별세' };
 // 심방 유형 표시 라벨. 저장값은 VisitManagement 폼 기준 한글('심방'/'전화심방'/'상담').
 // (이전엔 영문 키 visit/phone/counsel 로 매핑해 저장값과 안 맞아 전부 '심방'으로 오표기됐음.)
 // 레거시 영문값도 관용 처리하고, 미상 값은 원본을 그대로 표시.
@@ -169,6 +170,7 @@ export default function MemberManagement() {
     queryFn: async () => (await api.get<{ data: any }>('/api/v1/member-settings') as any).data,
   });
   const showPositionDistinction = settingsQ.data?.positionDistinction !== false;
+  const recognitionEnabled = settingsQ.data?.recognitionEnabled !== false;
 
   const detailQ = useQuery({
     queryKey: ['member', detailId],
@@ -192,6 +194,12 @@ export default function MemberManagement() {
     queryKey: ['member-sacraments', detailId],
     enabled: !!detailId && view === 'detail',
     queryFn: async () => (await api.get<{ data: any[] }>('/api/v1/member-sacraments', { memberId: detailId }) as any).data as any[],
+  });
+  // 이동 이력 — '이동·변경이력' 탭(M-6). 이전엔 정적 안내문만 있어 비어 보였음.
+  const transfersQ = useQuery({
+    queryKey: ['member-transfers', detailId],
+    enabled: !!detailId && view === 'detail',
+    queryFn: async () => (await api.get<{ data: any[] }>('/api/v1/member-transfers', { memberId: detailId }) as any).data as any[],
   });
 
   // 소속 목장 · 이수 이력 (스몰그룹 애드온 켠 테넌트만)
@@ -377,6 +385,7 @@ export default function MemberManagement() {
     const relations: any[] = m?.relations ?? [];
     const visits: any[] = visitsQ.data ?? [];
     const sacraments: any[] = sacramentsQ.data ?? [];
+    const transfers: any[] = transfersQ.data ?? [];
     const TABS: [typeof tab, string][] = [
       ['basic', '기본정보'], ['family', `가족 ${relations.length}`], ['attendance', '출석'],
       ['visits', `심방 ${visits.length}`], ['sacraments', `성례 ${sacraments.length}`], ['history', '이동·변경이력'],
@@ -570,7 +579,13 @@ export default function MemberManagement() {
                         <b className="font-bold flex-0">{s.sacType || '성례'}</b>
                         <span style={{ color: C.muted }}>{ymd(s.sacDate)}</span>
                         {s.officiant && <span style={{ color: C.faint }}>· {s.officiant}</span>}
-                        {s.recognized === false && <span className="text-[11.5px] ml-auto rounded-full px-2 py-0.5" style={{ color: C.warn, background: C.warnBg }}>미인정</span>}
+                        {s.place && <span style={{ color: C.faint }}>· {s.place}</span>}
+                        {/* 본 교회 인정 상태를 양쪽 다 표시(M-10) — 인정=파랑, 미인정=주황. */}
+                        {recognitionEnabled && (
+                          s.recognized === false
+                            ? <span className="text-[11.5px] ml-auto rounded-full px-2 py-0.5" style={{ color: C.warn, background: C.warnBg }}>미인정</span>
+                            : <span className="text-[11.5px] ml-auto rounded-full px-2 py-0.5" style={{ color: C.brand, background: C.brandBg }}>본교회 인정</span>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -579,8 +594,21 @@ export default function MemberManagement() {
             )}
 
             {tab === 'history' && (
-              <Panel title="이동 · 변경이력" max>
-                <p className="text-[13px]" style={{ color: C.faint }}>전입·전출 등 이동 처리와 정보 변경 이력이 이곳에 시간순으로 쌓입니다.</p>
+              <Panel title={`이동 · 변경이력 ${transfers.length}`} max>
+                {transfers.length === 0 ? (
+                  <p className="text-[13px]" style={{ color: C.faint }}>전입·전출 등 이동 처리 이력이 이곳에 시간순으로 쌓입니다. ‘성례·이동 대장’에서 이동을 처리하면 여기에 표시됩니다.</p>
+                ) : (
+                  <div className="flex flex-col gap-2.5">
+                    {transfers.map((t) => (
+                      <div key={t.id} className="flex items-center gap-3 text-[13px] rounded-[10px] px-4 py-3" style={{ background: C.surface }}>
+                        <b className="font-bold" style={{ color: C.brand }}>{TRANSFER_LABEL[t.trType] ?? t.trType}</b>
+                        <span style={{ color: C.muted }}>{ymd(t.trDate) || '—'}</span>
+                        {t.counterpart && <span style={{ color: C.faint }}>· {t.counterpart}</span>}
+                        {t.reason && <span style={{ color: C.faint }} className="ml-auto truncate">{t.reason}</span>}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </Panel>
             )}
           </>

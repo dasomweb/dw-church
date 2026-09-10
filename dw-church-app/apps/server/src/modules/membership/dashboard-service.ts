@@ -1,4 +1,5 @@
 import { prisma } from '../../config/database.js';
+import { onlineCountsAsAttendance } from './service.js';
 
 /**
  * MB-01 교적 현황 대시보드 집계 — 화면 시안 그대로의 카드/표/차트를 채우는 실제
@@ -8,6 +9,11 @@ import { prisma } from '../../config/database.js';
  */
 export async function memberDashboard(schema: string) {
   const q = <T = any>(sql: string, ...p: unknown[]) => prisma.$queryRawUnsafe<T[]>(sql, ...p);
+  // 온라인 출석 집계 = 교회 재량(기본 false). true 면 출석률·장기결석·구역출석에서
+  // 온라인을 현장과 함께 '출석'으로 센다. false 면 현장만(온라인은 별도 숫자만).
+  const onlineCounts = await onlineCountsAsAttendance(schema);
+  // '출석'으로 인정하는 status 집합의 SQL 조건.
+  const attendedCond = onlineCounts ? `a.status IN ('present','online')` : `a.status = 'present'`;
 
   // 재적/세대/미편성
   const [{ registered = 0 } = {}] = await q<{ registered: number }>(
@@ -29,7 +35,9 @@ export async function memberDashboard(schema: string) {
        FROM "${schema}".member_attendance WHERE att_date = $1::date`, last_date);
     present = row?.present ?? 0; online = row?.online ?? 0;
   }
-  const attendanceRate = registered ? Math.round((present / registered) * 100) : 0;
+  // 출석률: 설정에 따라 현장만 또는 현장+온라인.
+  const attendedForRate = onlineCounts ? present + online : present;
+  const attendanceRate = registered ? Math.round((attendedForRate / registered) * 100) : 0;
 
   // 새가족(30일) + 미배정
   const [{ newcomers = 0 } = {}] = await q<{ newcomers: number }>(
@@ -40,15 +48,14 @@ export async function memberDashboard(schema: string) {
      WHERE m.reg_status = 'newcomer'
        AND NOT EXISTS (SELECT 1 FROM "${schema}".group_members gm WHERE gm.member_id = m.id AND gm.end_date IS NULL)`);
 
-  // 장기 결석 (4주+): 최근 4주 안에 '현장' 출석 기록이 없는 재적 교인.
-  // 온라인 출석 정책 B = 온라인은 출석률·장기결석에 미포함(현장 present 만 집계).
-  // records-service.longAbsentees 와 정의를 통일한다(이전엔 여기만 online 을 포함해 불일치).
+  // 장기 결석 (4주+): 최근 4주 안에 '출석' 기록이 없는 재적 교인. 온라인을 출석으로
+  // 세는 교회(onlineCounts)면 온라인 참석자는 장기결석에서 제외된다(심방 대상 아님).
   const [{ longAbsent = 0 } = {}] = await q<{ longAbsent: number }>(
     `SELECT COUNT(*)::int AS "longAbsent" FROM "${schema}".members m
      WHERE m.reg_status = 'active'
        AND NOT EXISTS (
          SELECT 1 FROM "${schema}".member_attendance a
-         WHERE a.member_id = m.id AND a.status = 'present' AND a.att_date >= CURRENT_DATE - 28)`);
+         WHERE a.member_id = m.id AND ${attendedCond} AND a.att_date >= CURRENT_DATE - 28)`);
 
   // 이번 달 생일자
   const [{ birthdays = 0 } = {}] = await q<{ birthdays: number }>(
@@ -62,7 +69,7 @@ export async function memberDashboard(schema: string) {
     byGroup = await q(
       `SELECT g.name,
               COUNT(DISTINCT gm.member_id)::int AS total,
-              COUNT(DISTINCT CASE WHEN a.status = 'present' THEN a.member_id END)::int AS present
+              COUNT(DISTINCT CASE WHEN ${attendedCond} THEN a.member_id END)::int AS present
        FROM "${schema}".group_members gm
        JOIN "${schema}".groups g ON g.id = gm.group_id AND g.status = 'active'
        LEFT JOIN "${schema}".member_attendance a ON a.member_id = gm.member_id AND a.att_date = $1::date

@@ -415,7 +415,7 @@ async function main(): Promise<void> {
     // 스키마별 버전 스탬프를 두고, 이미 현재 버전으로 반영된 스키마는 건너뛴다.
     // ⚠️ 아래 per-schema DDL 블록을 하나라도 바꾸면(테이블/컬럼 추가) SCHEMA_VERSION을
     //    올려라 → 기존 테넌트가 "다음 배포 때 한 번만" 다시 반영하고 이후 다시 건너뛴다.
-    const SCHEMA_VERSION = 8; // ↑8: cardnews.cards(덱=여러 4:5 카드+캡션, jsonb) — 카드뉴스 뷰어
+    const SCHEMA_VERSION = 9; // ↑9: member_settings.online_counts_as_attendance(온라인 출석 집계 재량 토글)
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS public.tenant_schema_versions (
         "schema_name" TEXT PRIMARY KEY,
@@ -1119,10 +1119,14 @@ async function main(): Promise<void> {
             "require_for_office"   BOOLEAN     NOT NULL DEFAULT FALSE,
             "default_baptism_term" VARCHAR(20) NOT NULL DEFAULT '세례',
             "position_distinction" BOOLEAN     NOT NULL DEFAULT TRUE,
+            "online_counts_as_attendance" BOOLEAN NOT NULL DEFAULT FALSE,
             "updated_at"           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
             CONSTRAINT "member_settings_single_row" CHECK (id = 1)
           )
         `);
+        // 온라인 예배를 출석으로 집계할지 = 교회 재량(기본 OFF=보수적). 출석률·장기결석
+        // 계산이 이 값을 따른다(교적·스몰그룹 공통). 기존 테넌트에도 추가.
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".member_settings ADD COLUMN IF NOT EXISTS "online_counts_as_attendance" BOOLEAN NOT NULL DEFAULT FALSE`);
         await prisma.$executeRawUnsafe(`INSERT INTO "${schema}".member_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING`);
         createHits++;
       } catch { /* skip */ }

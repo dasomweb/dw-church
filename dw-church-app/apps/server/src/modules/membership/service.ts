@@ -359,6 +359,18 @@ const DEFAULT_CODES: Array<[string, string[]]> = [
   ['org_type', ['구역', '부서', '기관', '교회학교']],
   ['sacrament_type', ['세례', '침례', '유아세례', '헌아식', '입교', '성찬', '학습']],
 ];
+// 온라인 예배를 출석으로 집계할지(교회 재량, 기본 false=보수적). 출석률·장기결석
+// 계산이 이 값을 따른다. 교적·스몰그룹 양 모듈이 공용으로 읽는다(같은 스키마의
+// member_settings). 테이블/컬럼/행이 없으면 보수적 기본(false).
+export async function onlineCountsAsAttendance(schema: string): Promise<boolean> {
+  try {
+    const rows = await prisma.$queryRawUnsafe<{ v: boolean }[]>(
+      `SELECT online_counts_as_attendance AS v FROM "${schema}".member_settings WHERE id = 1`,
+    );
+    return rows[0]?.v === true;
+  } catch { return false; }
+}
+
 // ── 교적 설정(member_settings, 단일 행) ───────────────────────
 export async function getMemberSettings(schema: string) {
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(`SELECT * FROM "${schema}".member_settings WHERE id = 1`);
@@ -372,6 +384,7 @@ export async function updateMemberSettings(schema: string, input: Record<string,
   const map: Record<string, string> = {
     recognitionEnabled: 'recognition_enabled', requireForOffice: 'require_for_office',
     defaultBaptismTerm: 'default_baptism_term', positionDistinction: 'position_distinction',
+    onlineCountsAsAttendance: 'online_counts_as_attendance',
   };
   const set: string[] = [];
   const vals: unknown[] = [];

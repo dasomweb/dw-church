@@ -255,7 +255,7 @@ export async function membershipRoutes(app: FastifyInstance) {
   // ── 이동(transfers) ──────────────────────────────────────
   app.get('/member-transfers', gate, async (request, reply) => {
     const q = request.query as any;
-    return reply.send({ data: await rec.listTransfers(getSchema(request), { type: q.type }) });
+    return reply.send({ data: await rec.listTransfers(getSchema(request), { type: q.type, memberId: q.memberId }) });
   });
   app.post('/member-transfers', gate, async (request, reply) => {
     const input = createTransferSchema.parse(request.body);

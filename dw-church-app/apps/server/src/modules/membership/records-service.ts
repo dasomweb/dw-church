@@ -1,4 +1,5 @@
 import { prisma } from '../../config/database.js';
+import { onlineCountsAsAttendance } from './service.js';
 
 /**
  * 교적관리 Phase 2~4 레코드 — 출석(예배 정의 + 출석), 심방, 성례, 이동, 통계.
@@ -77,17 +78,20 @@ export async function recordAttendance(
   return { saved };
 }
 
-/** N주 이상 연속 결석(최근 '출석' 기록이 cutoff 이전이거나 없음) 교인. */
+/** N주 이상 연속 결석(최근 '출석' 기록이 cutoff 이전이거나 없음) 교인.
+ *  온라인을 출석으로 세는 교회(설정)면 온라인 참석자는 장기결석에서 제외된다(M-5). */
 export async function longAbsentees(schema: string, weeks = 4) {
+  const onlineCounts = await onlineCountsAsAttendance(schema);
+  const attended = onlineCounts ? `a.status IN ('present','online')` : `a.status = 'present'`;
   return prisma.$queryRawUnsafe<Record<string, unknown>[]>(
     `SELECT m.id, m.name, m.position, m.phone, m.photo_url,
-            MAX(a.att_date) FILTER (WHERE a.status = 'present') AS last_present
+            MAX(a.att_date) FILTER (WHERE ${attended}) AS last_present
        FROM "${schema}".members m
        LEFT JOIN "${schema}".member_attendance a ON a.member_id = m.id
       WHERE m.reg_status IN ('active','newcomer')
       GROUP BY m.id, m.name, m.position, m.phone, m.photo_url
-     HAVING MAX(a.att_date) FILTER (WHERE a.status = 'present') IS NULL
-         OR MAX(a.att_date) FILTER (WHERE a.status = 'present') < (CURRENT_DATE - ($1::int * 7))
+     HAVING MAX(a.att_date) FILTER (WHERE ${attended}) IS NULL
+         OR MAX(a.att_date) FILTER (WHERE ${attended}) < (CURRENT_DATE - ($1::int * 7))
       ORDER BY last_present ASC NULLS FIRST, m.name ASC`,
     weeks,
   );
@@ -166,9 +170,11 @@ export async function deleteSacrament(schema: string, id: string) {
 // ── 이동(transfers) ───────────────────────────────────────────
 // 이동 유형 → 처리 후 교인 등록상태 자동 변경.
 const TRANSFER_STATUS: Record<string, string> = { in: 'active', out: 'transferred', dismissal: 'transferred', death: 'deceased' };
-export function listTransfers(schema: string, q: { type?: string }) {
+export function listTransfers(schema: string, q: { type?: string; memberId?: string }) {
   const where: string[] = []; const params: unknown[] = []; let i = 1;
   if (q.type) { where.push(`t.tr_type = $${i++}`); params.push(q.type); }
+  // memberId 필터 — 교인 상세의 '이동·변경이력' 탭이 이 교인의 이동만 조회(M-6).
+  if (q.memberId) { where.push(`t.member_id = $${i++}::uuid`); params.push(q.memberId); }
   const w = where.length ? `WHERE ${where.join(' AND ')}` : '';
   return prisma.$queryRawUnsafe<Record<string, unknown>[]>(
     `SELECT t.*, m.name AS member_name FROM "${schema}".member_transfers t
