@@ -69,10 +69,16 @@ export async function middleware(request: NextRequest) {
         url.search = request.nextUrl.search;
         return NextResponse.redirect(url, 308);
       }
+      // truelight.app/admin → 슈퍼어드민 콘솔(admin.truelight.app). 슈퍼어드민 전용
+      // 진입점. (테넌트 관리자는 자기 도메인 /admin 을 쓴다 — 여기로 오지 않는다.)
+      if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+        return NextResponse.redirect(new URL('https://admin.truelight.app/admin/super-admin'), 307);
+      }
       // Unified login entry: truelight.app/login (+ the other auth surfaces and
       // the super-admin console) live on the admin app. Tenant staff log in on
-      // their own church domain (<tenant>/login); this entry is for super-admin
-      // and anyone who lands on the marketing "로그인" link.
+      // their own church domain (<tenant>/login); truelight.app/login is the
+      // central tenant-admin entry (the admin SPA redirects each admin to their
+      // own tenant domain after login — see LoginPage.postLoginDestination).
       if (
         pathname === '/login' || pathname === '/forgot-password' ||
         pathname === '/reset-password' || pathname === '/register' ||

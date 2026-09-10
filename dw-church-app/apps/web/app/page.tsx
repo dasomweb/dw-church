@@ -159,7 +159,7 @@ export default function FrontPage() {
               <div className="p-7 sm:p-8">
                 <Eyebrow>지원 프로그램</Eyebrow>
                 <h3 className="mt-3 text-[22px] font-extrabold tracking-[-0.042em] sm:text-[24px]">개척 및 미자립교회를 돕습니다</h3>
-                <p className="mt-3 text-[15.5px] leading-[1.8] text-[#4a5262]">첫 1년 월 $39, 초기 구축 $200으로 시작하십니다. 그 교회를 함께 세우시는 교회는 구독료 월 $20을 감면받습니다.</p>
+                <p className="mt-3 text-[15.5px] leading-[1.8] text-[#4a5262]">돕는 교회가 함께 세울 때, 개척·미자립교회는 첫 1년 월 $39·초기 구축 $200으로 시작하고, 돕는 교회는 1년간 구독료 월 $20을 감면받으십니다.</p>
                 <a href="/support-program" className="mt-5 inline-block text-[14.5px] font-bold text-[#1466d6] hover:underline">지원 프로그램 보기 →</a>
               </div>
             </div>

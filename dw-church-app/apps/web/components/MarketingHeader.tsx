@@ -20,7 +20,8 @@ const NAV = [
 const UTILITY = [
   { label: '도입 문의', href: '/apply' },
   { label: '도움센터', href: '/help' },
-  { label: '관리자 로그인', href: '/login' },
+  // 관리자 로그인 링크는 공개 마케팅 사이트에 노출하지 않는다(로그인 입구를 온 사이트에
+  // 광고하지 않음). 로그인은 각 교회(테넌트) 자기 사이트에서만 진입한다.
 ];
 
 export default function MarketingHeader() {

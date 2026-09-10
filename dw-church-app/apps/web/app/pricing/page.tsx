@@ -106,7 +106,7 @@ export default function PricingPage() {
           <div className="mt-12 grid gap-5 md:grid-cols-2">
             <div className="rounded-[16px] border border-[#dbe6f7] bg-[#f4f8ff] p-7">
               <h3 className="text-[19px] font-extrabold tracking-[-0.03em]">개척·미자립교회 지원</h3>
-              <p className="mt-2.5 text-[15px] leading-[1.8] text-[#4a5262]">첫 1년은 월 $39, 초기 구축은 $200으로 시작하실 수 있습니다. 개척교회를 후원하시는 교회는 구독료에서 월 $20을 감면해 드립니다.</p>
+              <p className="mt-2.5 text-[15px] leading-[1.8] text-[#4a5262]">첫 1년은 월 $39, 초기 구축은 $200으로 시작하실 수 있습니다. 개척교회를 후원하시는 교회는 1년간 구독료에서 월 $20을 감면해 드립니다.</p>
               <a href="/support-program" className="mt-4 inline-block text-[14.5px] font-bold text-[#1466d6] hover:underline">지원 프로그램 보기 →</a>
             </div>
             <div className="rounded-[16px] border border-[#e5e7eb] p-7">
