@@ -40,13 +40,15 @@ export async function memberDashboard(schema: string) {
      WHERE m.reg_status = 'newcomer'
        AND NOT EXISTS (SELECT 1 FROM "${schema}".group_members gm WHERE gm.member_id = m.id AND gm.end_date IS NULL)`);
 
-  // 장기 결석 (4주+): 최근 4주 안에 출석(present/online) 기록이 없는 재적 교인
+  // 장기 결석 (4주+): 최근 4주 안에 '현장' 출석 기록이 없는 재적 교인.
+  // 온라인 출석 정책 B = 온라인은 출석률·장기결석에 미포함(현장 present 만 집계).
+  // records-service.longAbsentees 와 정의를 통일한다(이전엔 여기만 online 을 포함해 불일치).
   const [{ longAbsent = 0 } = {}] = await q<{ longAbsent: number }>(
     `SELECT COUNT(*)::int AS "longAbsent" FROM "${schema}".members m
      WHERE m.reg_status = 'active'
        AND NOT EXISTS (
          SELECT 1 FROM "${schema}".member_attendance a
-         WHERE a.member_id = m.id AND a.status IN ('present','online') AND a.att_date >= CURRENT_DATE - 28)`);
+         WHERE a.member_id = m.id AND a.status = 'present' AND a.att_date >= CURRENT_DATE - 28)`);
 
   // 이번 달 생일자
   const [{ birthdays = 0 } = {}] = await q<{ birthdays: number }>(
@@ -60,7 +62,7 @@ export async function memberDashboard(schema: string) {
     byGroup = await q(
       `SELECT g.name,
               COUNT(DISTINCT gm.member_id)::int AS total,
-              COUNT(DISTINCT CASE WHEN a.status IN ('present','online') THEN a.member_id END)::int AS present
+              COUNT(DISTINCT CASE WHEN a.status = 'present' THEN a.member_id END)::int AS present
        FROM "${schema}".group_members gm
        JOIN "${schema}".groups g ON g.id = gm.group_id AND g.status = 'active'
        LEFT JOIN "${schema}".member_attendance a ON a.member_id = gm.member_id AND a.att_date = $1::date
@@ -89,7 +91,7 @@ export async function memberDashboard(schema: string) {
   const todos: { text: string; note?: string; noteAmber?: boolean }[] = [];
   if (newcomerUnassigned > 0) todos.push({ text: `새가족 ${newcomerUnassigned}명 구역 배정`, note: '미배정 새가족', noteAmber: true });
   if (longAbsent > 0) todos.push({ text: `장기결석 ${longAbsent}명 심방 배정`, note: '4주 이상 미출석' });
-  if (birthdays > 0) todos.push({ text: `이번 달 생일자 ${birthdays}명 축하 알림톡`, note: '템플릿 준비됨' });
+  if (birthdays > 0) todos.push({ text: `이번 달 생일자 ${birthdays}명 축하 인사`, note: '생일 축하' });
 
   return {
     cards: {

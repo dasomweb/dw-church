@@ -11,6 +11,8 @@ import { MemberPicker } from '../components/MemberPicker';
  */
 type Row = Record<string, any>;
 const TYPE_OPTS: [string, string][] = [['심방', '심방'], ['전화심방', '전화'], ['상담', '상담']];
+// 목록 표시 라벨 = 폼 버튼 라벨과 동일(저장값 '전화심방'→'전화'). 미상 값은 원본 표시.
+const TYPE_LABEL: Record<string, string> = Object.fromEntries(TYPE_OPTS.map(([v, l]) => [v, l]));
 const VIS_OPTS: [string, string][] = [['self', '본인만'], ['pastors', '교역자'], ['all', '전체']];
 const VIS_LABEL: Record<string, string> = { self: '본인만', pastors: '교역자', all: '전체' };
 const emptyForm = { memberId: '', visitor: '', visitDate: '', visitType: '심방', content: '', prayer: '', followup: '', visibility: 'pastors', status: 'done' };
@@ -163,7 +165,7 @@ export default function VisitManagement() {
                   <tr key={r.id} style={{ borderBottom: `1px solid ${C.line2}` }} className="hover:bg-[#f7f8fa]">
                     <td className="px-4 py-3 font-bold cursor-pointer" onClick={() => openEdit(r)}>{r.memberName}</td>
                     <td className="px-4 py-3" style={{ color: C.muted }}>{ymd(r.visitDate) || '—'}</td>
-                    <td className="px-4 py-3" style={{ color: C.muted }}>{r.visitType}</td>
+                    <td className="px-4 py-3" style={{ color: C.muted }}>{TYPE_LABEL[r.visitType] ?? r.visitType}</td>
                     <td className="px-4 py-3" style={{ color: C.muted }}>{r.visitor || '—'}</td>
                     <td className="px-4 py-3 text-xs" style={{ color: C.faint }}>{VIS_LABEL[r.visibility] ?? r.visibility}</td>
                     <td className="px-4 py-3"><span className="text-xs font-bold" style={{ color: r.status === 'planned' ? C.warn : C.muted }}>{r.status === 'planned' ? '예정' : '완료'}</span></td>

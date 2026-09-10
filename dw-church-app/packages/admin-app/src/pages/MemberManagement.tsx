@@ -46,6 +46,13 @@ function statusTone(s: string): { fg: string; bg: string } {
 
 const GENDER_LABEL: Record<string, string> = { M: '남', F: '여' };
 const REL_LABEL: Record<string, string> = { spouse: '배우자', child: '자녀', parent: '부모', sibling: '형제' };
+// 심방 유형 표시 라벨. 저장값은 VisitManagement 폼 기준 한글('심방'/'전화심방'/'상담').
+// (이전엔 영문 키 visit/phone/counsel 로 매핑해 저장값과 안 맞아 전부 '심방'으로 오표기됐음.)
+// 레거시 영문값도 관용 처리하고, 미상 값은 원본을 그대로 표시.
+const VISIT_TYPE_LABEL: Record<string, string> = {
+  '심방': '심방', '전화심방': '전화', '상담': '상담',
+  visit: '심방', phone: '전화', counsel: '상담',
+};
 const initial = (name?: string) => (name || '·').trim().charAt(0) || '·';
 const yearOf = (d?: string) => (d ? String(d).slice(0, 4) : '');
 const ymd = (d?: string) => (d ? String(d).slice(0, 10) : '');
@@ -471,7 +478,7 @@ export default function MemberManagement() {
                         {visits.slice(0, 4).map((v) => (
                           <div key={v.id} className="flex gap-2.5">
                             <span className="rounded-full mt-[7px] shrink-0" style={{ width: 7, height: 7, background: C.brand }} />
-                            <div><b className="font-bold">{({ visit: '심방', phone: '전화', counsel: '상담' } as any)[v.visitType] ?? '심방'}</b> {v.content || v.prayer || ''} {v.visitor && <span style={{ color: C.faint }}>· {v.visitor}</span>}<span style={{ color: C.faint }}> · {ymd(v.visitDate)}</span></div>
+                            <div><b className="font-bold">{VISIT_TYPE_LABEL[v.visitType] ?? v.visitType ?? '심방'}</b> {v.content || v.prayer || ''} {v.visitor && <span style={{ color: C.faint }}>· {v.visitor}</span>}<span style={{ color: C.faint }}> · {ymd(v.visitDate)}</span></div>
                           </div>
                         ))}
                       </div>
@@ -533,7 +540,7 @@ export default function MemberManagement() {
                     {visits.map((v) => (
                       <div key={v.id} className="rounded-[12px] p-4" style={{ border: `1px solid ${C.border}` }}>
                         <div className="flex items-center gap-2 mb-1.5 text-[13px]">
-                          <b className="font-bold">{({ visit: '심방', phone: '전화', counsel: '상담' } as any)[v.visitType] ?? '심방'}</b>
+                          <b className="font-bold">{VISIT_TYPE_LABEL[v.visitType] ?? v.visitType ?? '심방'}</b>
                           <span style={{ color: C.faint }}>{ymd(v.visitDate)}</span>
                           {v.visitor && <span style={{ color: C.faint }}>· {v.visitor}</span>}
                         </div>
