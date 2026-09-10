@@ -26,7 +26,7 @@ export default function SupportProgramPage() {
           <div className="mt-10 grid gap-5 lg:grid-cols-3">
             {[
               { t: '돕는 교회', price: '1년간 구독료 월 $20 감면', d: 'TrueLight에서 정상 요금으로 서비스를 받고 있는 교회가 개척·미자립 교회를 후원할 때, 첫 1년간 그 교회를 지원합니다.' },
-              { t: '개척·미자립교회', price: '첫 1년 월 $39 · 셋업 $200', d: '함께 세우는 돕는 교회가 있을 때 적용됩니다.' },
+              { t: '개척·미자립교회', price: '첫 1년 월 $39 · 셋업 $200', d: 'TrueLight에서 개척 및 미자립교회의 웹사이트를 지원합니다. 이 요금은 함께 세우는 돕는 교회가 있을 때 적용됩니다.' },
               { t: '교회 행정은 나중에', price: '홈페이지만으로 시작', d: '웹사이트 서비스 구독에만 한정됩니다. 교적관리·목장사역 등 교적 관리 시스템은 포함되지 않습니다.' },
             ].map((c) => (
               <div key={c.t} className="rounded-[16px] border border-[#e5e7eb] p-6 sm:p-7">
