@@ -35,7 +35,10 @@ export async function CardNewsBlock({ props, slug }: Props) {
   const eyebrow = (props.eyebrow as string) || '카드뉴스';
   const title = (props.title as string) || '한 장으로 보내는 소식';
   const inLayout = props._inLayout === true;
-  const variant = (props.variant === 'rail' ? 'rail' : 'grid') as 'grid' | 'rail';
+  // 기본은 캐러셀(한 장씩 넘겨 보기). 그리드/가로 레일도 선택 가능. 'cardnews'(레거시
+  // 기본값) 등 미지정 값은 캐러셀로 폴백.
+  const v = props.variant;
+  const variant = (v === 'grid' || v === 'rail' ? v : 'carousel') as 'carousel' | 'grid' | 'rail';
 
   // 1) 카드뉴스 모듈에서 게시 덱 fetch.
   let rows: Row[] = [];

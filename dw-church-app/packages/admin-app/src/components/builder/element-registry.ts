@@ -1623,6 +1623,7 @@ const DEVOTION_READER = churchBlock(
 const CARDNEWS = churchBlock(
   { title: '표시', fields: [
     { key: 'variant', label: '레이아웃', type: 'select', choices: [
+      { value: 'carousel', label: '캐러셀 (한 장씩 넘김)' },
       { value: 'grid', label: '그리드' },
       { value: 'rail', label: '가로 레일 (홈용)' },
     ]},
