@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
-import { inputClass, textareaClass, useToast, EmptyState } from '../components';
+import { inputClass, textareaClass, useToast, useConfirm, EmptyState } from '../components';
 import { MemberPicker } from '../components/MemberPicker';
 
 /**
@@ -30,6 +30,7 @@ export default function VisitManagement() {
   const apiClient = useDWChurchClient();
   const api = apiClient!.adapter;
   const { showToast } = useToast();
+  const confirm = useConfirm();
   const qc = useQueryClient();
 
   const [view, setView] = useState<'list' | 'edit'>('list');
@@ -67,7 +68,7 @@ export default function VisitManagement() {
     setView('edit');
   };
   const remove = async (r: Row) => {
-    if (!window.confirm('이 심방 기록을 삭제할까요?')) return;
+    if (!(await confirm({ message: '이 심방 기록을 삭제할까요?', variant: 'danger', confirmLabel: '삭제' }))) return;
     try { await api.delete(`/api/v1/member-visits/${r.id}`); void invalidate(); } catch (e: any) { showToast('error', e?.message || '삭제 실패'); }
   };
 

@@ -277,6 +277,13 @@ export async function membershipRoutes(app: FastifyInstance) {
     const q = request.query as { memberId?: string };
     return reply.send({ data: await rec.listAppointments(getSchema(request), { memberId: q.memberId }) });
   });
+  // 임명 정정(M-12): 삭제 + 교인 직분을 남은 최신 임명으로 되돌림.
+  app.delete('/member-appointments/:id', gate, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const ok = await rec.deleteAppointment(getSchema(request), id);
+    if (!ok) return reply.status(404).send(NOT_FOUND('임명'));
+    return reply.send({ data: { deleted: true } });
+  });
 
   // ── 통계(Phase 4) ────────────────────────────────────────
   app.get('/member-stats/report', gate, async (request, reply) => reply.send({ data: await rec.statsReport(getSchema(request)) }));

@@ -11,6 +11,13 @@ import { useTenantScope } from '../lib/tenant-scope';
  */
 type Stats = Record<string, any>;
 
+// 돌봄 요청 날짜(YYYY-MM-DD)를 'M월 D일'로. 문자열을 직접 파싱해 TZ 밀림을 피한다.
+const fmtCareDate = (d?: string): string => {
+  if (!d) return '';
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d));
+  return m ? `${Number(m[2])}월 ${Number(m[3])}일` : String(d).slice(0, 10);
+};
+
 export default function SmallGroupDashboard() {
   const apiClient = useDWChurchClient();
   const api = apiClient!.adapter;
@@ -138,7 +145,7 @@ export default function SmallGroupDashboard() {
                 {care.map((c, i) => (
                   <div key={i} className="flex gap-2.5">
                     <span className="w-[7px] h-[7px] rounded-full bg-[#f5b423] mt-[7px] shrink-0" />
-                    <div><b className="font-bold">{c.groupName}</b> {c.text}{c.date && <span className="text-[#8b93a3]"> · {c.date}</span>}</div>
+                    <div><b className="font-bold">{c.groupName}</b> {c.text}{c.date && <span className="text-[#8b93a3]"> · {fmtCareDate(c.date)}</span>}</div>
                   </div>
                 ))}
               </div>

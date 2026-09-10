@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
-import { inputClass, useToast, Button } from '../components';
+import { inputClass, useToast, useConfirm, Button } from '../components';
 import { serverErr } from '../lib/server-err';
 
 /**
@@ -23,6 +23,7 @@ export default function MemberCodeManagement() {
   const apiClient = useDWChurchClient();
   const api = apiClient!.adapter;
   const { showToast } = useToast();
+  const confirm = useConfirm();
   const qc = useQueryClient();
 
   const [cat, setCat] = useState('position');
@@ -58,7 +59,7 @@ export default function MemberCodeManagement() {
     catch (e) { showToast('error', serverErr(e, '변경 실패')); }
   };
   const remove = async (c: Code) => {
-    if (!window.confirm(`'${c.label}' 코드를 삭제할까요? (사용 중이면 삭제되지 않습니다)`)) return;
+    if (!(await confirm({ message: `'${c.label}' 코드를 삭제할까요? (사용 중이면 삭제되지 않습니다)`, variant: 'danger', confirmLabel: '삭제' }))) return;
     try { await api.delete(`/api/v1/member-codes/${c.id}`); invalidate(); }
     catch (e) { showToast('error', serverErr(e, '삭제 실패')); }
   };

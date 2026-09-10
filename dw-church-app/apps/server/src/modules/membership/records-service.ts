@@ -234,6 +234,28 @@ export function listAppointments(schema: string, q: { memberId?: string } = {}) 
   );
 }
 
+// 직분 임명 정정(M-12): 잘못 등록한 임명을 삭제하고, 그 교인의 현재 직분을 남은
+// 최신 임명으로 되돌린다(남은 임명이 없으면 직분을 비운다). 명부의 직분은 최신
+// 임명이 정본이므로 이렇게 해야 오등록이 깔끔히 정정된다.
+export async function deleteAppointment(schema: string, id: string): Promise<boolean> {
+  const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
+    `DELETE FROM "${schema}".member_appointments WHERE id = $1::uuid RETURNING member_id`, id,
+  );
+  const memberId = rows[0]?.member_id as string | undefined;
+  if (!memberId) return false;
+  const latest = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
+    `SELECT position, courtesy FROM "${schema}".member_appointments
+      WHERE member_id = $1::uuid ORDER BY appointed_on DESC NULLS LAST, created_at DESC LIMIT 1`, memberId,
+  );
+  const pos = (latest[0]?.position as string) ?? '';
+  const courtesy = (latest[0]?.courtesy as boolean) ?? false;
+  await prisma.$executeRawUnsafe(
+    `UPDATE "${schema}".members SET position = $1, position_courtesy = $2, updated_at = NOW() WHERE id = $3::uuid`,
+    pos, courtesy, memberId,
+  );
+  return true;
+}
+
 // ── 통계(Phase 4) ─────────────────────────────────────────────
 export async function statsReport(schema: string) {
   const gender = await prisma.$queryRawUnsafe<{ gender: string; n: number }[]>(

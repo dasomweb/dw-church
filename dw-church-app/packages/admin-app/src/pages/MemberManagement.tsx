@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
-import { inputClass, textareaClass, ImageUpload, useToast, EmptyState } from '../components';
+import { inputClass, textareaClass, ImageUpload, useToast, useConfirm, EmptyState } from '../components';
 import { MemberPicker } from '../components/MemberPicker';
 import { StaffAccessModal } from '../components/StaffAccessModal';
 import { useEntitlements } from '../hooks/useEntitlements';
@@ -88,6 +88,7 @@ export default function MemberManagement() {
   const apiClient = useDWChurchClient();
   const api = apiClient!.adapter;
   const { showToast } = useToast();
+  const confirm = useConfirm();
   const qc = useQueryClient();
 
   const { slug = '' } = useParams<{ slug: string }>();
@@ -307,7 +308,7 @@ export default function MemberManagement() {
   const openDetail = (id: string) => { setDetailId(id); setTab('basic'); setView('detail'); };
 
   const remove = async (m: Member) => {
-    if (!window.confirm(`${m.name} 교인을 삭제할까요?`)) return;
+    if (!(await confirm({ message: `${m.name} 교인을 삭제할까요? 되돌릴 수 없습니다.`, variant: 'danger', confirmLabel: '삭제' }))) return;
     try {
       await api.delete(`/api/v1/members/${m.id}`);
       showToast('success', '삭제되었습니다.');

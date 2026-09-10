@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
-import { inputClass, useToast, EmptyState, Button } from '../components';
+import { inputClass, useToast, useConfirm, EmptyState, Button } from '../components';
 import { MemberPicker } from '../components/MemberPicker';
 
 /**
@@ -15,6 +15,7 @@ export default function AppointmentManagement() {
   const apiClient = useDWChurchClient();
   const api = apiClient!.adapter;
   const { showToast } = useToast();
+  const confirm = useConfirm();
   const qc = useQueryClient();
 
   const [position, setPosition] = useState('');
@@ -65,6 +66,22 @@ export default function AppointmentManagement() {
       void qc.invalidateQueries({ queryKey: ['member-stats'] });
     } catch (e: any) { showToast('error', e?.message || '임명 실패'); }
     finally { setApplying(false); }
+  };
+
+  // 임명 정정(M-12): 잘못 등록한 임명을 삭제. 서버가 그 교인의 현재 직분을 남은
+  // 최신 임명으로 되돌린다(없으면 직분 비움).
+  const removeAppt = async (a: Row) => {
+    if (!(await confirm({
+      message: `'${a.memberName}'의 '${a.position}' 임명을 정정(삭제)할까요? 이 교인의 현재 직분은 남은 최신 임명으로 되돌아갑니다.`,
+      variant: 'danger', confirmLabel: '정정',
+    }))) return;
+    try {
+      await api.delete(`/api/v1/member-appointments/${a.id}`);
+      showToast('success', '임명을 정정했습니다.');
+      void qc.invalidateQueries({ queryKey: ['appointments'] });
+      void qc.invalidateQueries({ queryKey: ['members'] });
+      void qc.invalidateQueries({ queryKey: ['member-stats'] });
+    } catch (e: any) { showToast('error', e?.message || '정정 실패'); }
   };
 
   const meta = (m: Row) => [m.householdRegion, m.position ? `현: ${m.position}` : '', m.regStatus === 'newcomer' ? '새가족' : ''].filter(Boolean).join(' · ');
@@ -122,7 +139,7 @@ export default function AppointmentManagement() {
         {apptQ.isLoading ? <div className="p-8 text-center text-sm text-gray-400">불러오는 중…</div> :
           (apptQ.data?.length ?? 0) === 0 ? <EmptyState icon="🕊️" title="임명 내역이 없습니다" description="위에서 교인을 담아 직분을 임명하세요." /> : (
             <table className="w-full text-sm">
-              <thead><tr className="border-b border-gray-100 text-left text-xs text-gray-500"><th className="px-4 py-3 font-medium">교인</th><th className="px-4 py-3 font-medium">직분</th><th className="px-4 py-3 font-medium">임명일</th><th className="px-4 py-3 font-medium">구분</th><th className="px-4 py-3 font-medium">메모</th></tr></thead>
+              <thead><tr className="border-b border-gray-100 text-left text-xs text-gray-500"><th className="px-4 py-3 font-medium">교인</th><th className="px-4 py-3 font-medium">직분</th><th className="px-4 py-3 font-medium">임명일</th><th className="px-4 py-3 font-medium">구분</th><th className="px-4 py-3 font-medium">메모</th><th className="px-4 py-3 font-medium text-right">작업</th></tr></thead>
               <tbody>
                 {(apptQ.data ?? []).map((a) => (
                   <tr key={a.id} className="border-b border-gray-50">
@@ -131,6 +148,7 @@ export default function AppointmentManagement() {
                     <td className="px-4 py-3 text-gray-600">{a.appointedOn ? String(a.appointedOn).slice(0, 10) : '—'}</td>
                     <td className="px-4 py-3"><span className={`text-xs font-medium rounded-full px-2 py-0.5 ${a.courtesy ? 'bg-gray-100 text-gray-500' : 'bg-blue-50 text-blue-700'}`}>{a.courtesy ? '타교회' : '본교회'}</span></td>
                     <td className="px-4 py-3 text-gray-500">{a.note || '—'}</td>
+                    <td className="px-4 py-3 text-right"><button onClick={() => void removeAppt(a)} className="text-xs font-medium text-red-500 hover:text-red-600">정정·삭제</button></td>
                   </tr>
                 ))}
               </tbody>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
-import { inputClass, useToast, EmptyState, Button } from '../components';
+import { inputClass, useToast, useConfirm, EmptyState, Button } from '../components';
 import { MemberPicker } from '../components/MemberPicker';
 
 /**
@@ -21,6 +21,7 @@ export default function SacramentTransferManagement() {
   const apiClient = useDWChurchClient();
   const api = apiClient!.adapter;
   const { showToast } = useToast();
+  const confirm = useConfirm();
   const qc = useQueryClient();
   const [tab, setTab] = useState<'sacrament' | 'transfer'>('sacrament');
   const [adding, setAdding] = useState(false);
@@ -78,8 +79,8 @@ export default function SacramentTransferManagement() {
       void qc.invalidateQueries({ queryKey: ['members'] });
     } catch (e: any) { showToast('error', e?.message || '처리 실패'); }
   };
-  const removeSac = async (id: string) => { if (!window.confirm('삭제할까요?')) return; try { await api.delete(`/api/v1/member-sacraments/${id}`); void qc.invalidateQueries({ queryKey: ['sacraments'] }); } catch (e: any) { showToast('error', e?.message || '실패'); } };
-  const removeTr = async (id: string) => { if (!window.confirm('삭제할까요? (명부 상태는 되돌려지지 않습니다)')) return; try { await api.delete(`/api/v1/member-transfers/${id}`); void qc.invalidateQueries({ queryKey: ['transfers'] }); } catch (e: any) { showToast('error', e?.message || '실패'); } };
+  const removeSac = async (id: string) => { if (!(await confirm({ message: '이 성례 기록을 삭제할까요?', variant: 'danger', confirmLabel: '삭제' }))) return; try { await api.delete(`/api/v1/member-sacraments/${id}`); void qc.invalidateQueries({ queryKey: ['sacraments'] }); } catch (e: any) { showToast('error', e?.message || '실패'); } };
+  const removeTr = async (id: string) => { if (!(await confirm({ message: '이 이동 기록을 삭제할까요? (명부 상태는 되돌려지지 않습니다)', variant: 'danger', confirmLabel: '삭제' }))) return; try { await api.delete(`/api/v1/member-transfers/${id}`); void qc.invalidateQueries({ queryKey: ['transfers'] }); } catch (e: any) { showToast('error', e?.message || '실패'); } };
 
   const memberSelect = (val: string, onChange: (v: string) => void) => (
     <MemberPicker members={(membersQ.data ?? []) as any} value={val} onChange={onChange} placeholder="이름 검색으로 교인 선택" />

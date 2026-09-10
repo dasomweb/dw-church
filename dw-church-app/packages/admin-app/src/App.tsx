@@ -29,7 +29,7 @@ import { DWChurchClient } from '@dw-church/api-client';
 import { DWChurchProvider } from '@dw-church/ui-components';
 import { AdminLayout } from './layouts/AdminLayout';
 import { useAuthStore, isTokenExpiringSoon } from './stores/auth';
-import { ToastProvider } from './components';
+import { ToastProvider, ConfirmProvider } from './components';
 import { detectHostMode, TenantScopeProvider, useTenantScope } from './lib/tenant-scope';
 
 // Lazy-loaded pages — Auth
@@ -362,6 +362,7 @@ export function App({ config }: { config: AppConfig }) {
 
   return (
     <ToastProvider>
+      <ConfirmProvider>
       <DWChurchProvider client={client}>
         {/* basename follows Vite base ('/admin' in prod, '' in dev) so the SPA
             works served under /admin on admin.truelight.app AND <tenant>/admin. */}
@@ -512,6 +513,7 @@ export function App({ config }: { config: AppConfig }) {
           </Suspense>
         </BrowserRouter>
       </DWChurchProvider>
+      </ConfirmProvider>
     </ToastProvider>
   );
 }

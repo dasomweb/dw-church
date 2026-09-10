@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDWChurchClient } from '@dw-church/api-client';
-import { inputClass, textareaClass, useToast, EmptyState, Button } from '../components';
+import { inputClass, textareaClass, useToast, useConfirm, EmptyState, Button } from '../components';
 
 /**
  * 교적관리 — 세대(가족) 관리 (FM-01 목록 · FM-02 상세). 세대는 가족 단위이며
@@ -17,6 +17,7 @@ export default function HouseholdManagement() {
   const apiClient = useDWChurchClient();
   const api = apiClient!.adapter;
   const { showToast } = useToast();
+  const confirm = useConfirm();
   const qc = useQueryClient();
 
   const [view, setView] = useState<'list' | 'edit' | 'detail'>('list');
@@ -73,7 +74,7 @@ export default function HouseholdManagement() {
     const warn = n > 0
       ? `'${h.name || '이 세대'}'에 구성원 ${n}명이 있습니다. 삭제하면 세대·구역 연결만 해제되고 교인은 명부에 남습니다. 계속할까요?`
       : `'${h.name || '이 세대'}'를 삭제할까요?`;
-    if (!window.confirm(warn)) return;
+    if (!(await confirm({ message: warn, variant: 'danger', confirmLabel: '삭제' }))) return;
     try { await api.delete(`/api/v1/households/${h.id}`); showToast('success', '삭제되었습니다.'); invalidate(); void qc.invalidateQueries({ queryKey: ['members'] }); }
     catch (e: any) { showToast('error', e?.message || '삭제 실패'); }
   };

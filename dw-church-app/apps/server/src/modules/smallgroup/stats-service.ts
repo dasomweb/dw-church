@@ -84,7 +84,10 @@ export async function dashboardStats(schema: string) {
 
   // 돌봄 요청 — 최근 리포트의 비공개 항목(care) 채워진 것.
   const careRows = await prisma.$queryRawUnsafe<any[]>(
-    `SELECT r.group_id, g.name AS group_name, r.private_items, r.meeting_date
+    // meeting_date 는 DATE — to_char 로 YYYY-MM-DD 문자열로 반환한다. 캐스트 없이
+    // 반환하면 JS Date(UTC 자정)→JSON ISO 타임스탬프로 화면에 그대로 찍혔다(G-5).
+    `SELECT r.group_id, g.name AS group_name, r.private_items,
+            to_char(r.meeting_date, 'YYYY-MM-DD') AS meeting_date
      FROM "${schema}".meeting_reports r JOIN "${schema}".groups g ON g.id = r.group_id
      WHERE r.private_items->>'care' IS NOT NULL AND r.private_items->>'care' <> ''
      ORDER BY r.meeting_date DESC LIMIT 6`,

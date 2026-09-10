@@ -395,10 +395,16 @@ export async function updateMemberSettings(schema: string, input: Record<string,
 }
 
 export async function seedCodesIfEmpty(schema: string): Promise<number> {
-  const existing = await prisma.$queryRawUnsafe<{ n: number }[]>(`SELECT count(*)::int AS n FROM "${schema}".member_codes`);
-  if ((existing[0]?.n ?? 0) > 0) return 0;
+  // 카테고리별로 비어 있을 때만 시드한다. 이전엔 테이블에 코드가 하나라도 있으면
+  // 전체를 건너뛰어, 나중에 추가된 카테고리(sacrament_type 등)가 기존 테넌트에
+  // 백필되지 않아 '성례유형' 코드 목록이 빈 채로 남았다(M-8). 카테고리 단위로
+  // 검사하면 신규 카테고리만 안전하게 채운다(기존 항목 중복 없음).
   let seeded = 0;
   for (const [category, labels] of DEFAULT_CODES) {
+    const existing = await prisma.$queryRawUnsafe<{ n: number }[]>(
+      `SELECT count(*)::int AS n FROM "${schema}".member_codes WHERE category = $1`, category,
+    );
+    if ((existing[0]?.n ?? 0) > 0) continue;
     for (let s = 0; s < labels.length; s++) {
       await prisma.$executeRawUnsafe(
         `INSERT INTO "${schema}".member_codes (category, label, sort_order) VALUES ($1, $2, $3)`,
