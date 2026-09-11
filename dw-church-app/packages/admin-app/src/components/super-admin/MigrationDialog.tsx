@@ -37,7 +37,12 @@ interface ApplyResult {
   history: number; boards: number; pages: number; worshipTimes: number; menus: number;
 }
 
-interface PageLite { pageSlug: string; pageKind?: 'static' | 'dynamic'; moduleType?: string }
+interface PageLite {
+  pageSlug: string;
+  pageKind?: 'static' | 'dynamic';
+  moduleType?: string;
+  blocks?: { blockType: string }[];   // 제안된 블록 판별용
+}
 
 // GET /jobs/:id — polled while the background crawl/apply runs. status flows
 // draft→extracting→…→classified (dry-run done) / done (applied) / failed.
@@ -48,16 +53,43 @@ interface JobLite {
   errorMessage?: string | null;
 }
 
-// 데이터 블록이 연결되는 콘텐츠 모듈 라벨(리뷰 표시용).
-const MODULE_LABEL: Record<string, string> = {
-  bulletins: '주보', sermons: '설교', albums: '앨범', columns: '칼럼',
-  events: '행사·공지', staff: '교역자', history: '연혁', boards: '게시판',
-};
 // 페이지 슬러그 → 사람이 읽는 이름(대략).
 const SLUG_LABEL: Record<string, string> = {
   home: '홈', welcome: '환영/인사말', vision: '비전', directions: '오시는 길',
   worship: '예배 안내', newcomer: '새가족', mission: '선교', about: '교회 소개',
 };
+
+// 리뷰 드롭다운 — 페이지마다 어떤 블록을 넣을지 선택. 'static'=디자인 그대로.
+// 서버 CHOICE_TO_BLOCK_TYPE 와 키가 일치해야 함.
+const BLOCK_CHOICES: { key: string; label: string }[] = [
+  { key: 'static', label: '정적 (디자인 그대로)' },
+  { key: 'worship', label: '예배시간' },
+  { key: 'directions', label: '오시는 길 지도' },
+  { key: 'contact', label: '연락처' },
+  { key: 'history', label: '연혁' },
+  { key: 'bulletins', label: '주보' },
+  { key: 'sermons', label: '설교' },
+  { key: 'albums', label: '앨범' },
+  { key: 'columns', label: '칼럼' },
+  { key: 'events', label: '행사' },
+  { key: 'staff', label: '교역자' },
+  { key: 'boards', label: '게시판' },
+];
+// 블록 타입 → 제안 choice (서버 BLOCK_TYPE_TO_CHOICE 와 동일).
+const BLOCK_TYPE_TO_CHOICE: Record<string, string> = {
+  worship_times: 'worship', location_map: 'directions', contact_info: 'contact',
+  history_timeline: 'history', recent_bulletins: 'bulletins', recent_sermons: 'sermons',
+  sermon_magazine: 'sermons', album_gallery: 'albums', recent_columns: 'columns',
+  event_grid: 'events', staff_grid: 'staff', board: 'boards',
+};
+/** 에이전트가 이 페이지에 넣은 블록으로부터 제안 choice 계산(없으면 static). */
+function suggestedChoice(p: PageLite): string {
+  for (const b of p.blocks ?? []) {
+    const c = BLOCK_TYPE_TO_CHOICE[b.blockType];
+    if (c) return c;
+  }
+  return 'static';
+}
 
 type Phase = 'input' | 'review' | 'done';
 
@@ -72,12 +104,14 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
   const [jobId, setJobId] = useState<string | null>(null);
   const [counts, setCounts] = useState<DetectedCounts | null>(null);
   const [pages, setPages] = useState<PageLite[]>([]);
+  // 페이지별 블록 선택(리뷰 드롭다운). 기본값은 에이전트 제안(suggestedChoice).
+  const [choice, setChoice] = useState<Record<string, string>>({});
   const [applyResult, setApplyResult] = useState<ApplyResult | null>(null);
 
   useEffect(() => {
     if (!open) return;
     setPhase('input'); setSourceUrl(''); setError(null);
-    setJobId(null); setCounts(null); setPages([]); setApplyResult(null);
+    setJobId(null); setCounts(null); setPages([]); setChoice({}); setApplyResult(null);
   }, [open, tenant.id]);
 
   if (!open) return null;
@@ -140,6 +174,8 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
       const cd = job.classifiedData ?? {};
       const pc = cd.pageContents ?? [];
       setPages(pc);
+      // 각 페이지의 드롭다운 기본값 = 에이전트 제안.
+      setChoice(Object.fromEntries(pc.map((p) => [p.pageSlug, suggestedChoice(p)])));
       setCounts({ pages: pc.length, menus: cd.menus?.length ?? 0, images: cd.images?.length ?? 0 });
       setPhase('review');
     } catch (err) {
@@ -154,8 +190,13 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
     if (!jobId) return;
     setRunning(true); setError(null);
     try {
+      // 페이지별 드롭다운 선택을 오버라이드로 전달(서버가 블록 배치에 반영).
+      const blockOverrides = pages.map((p) => ({
+        pageSlug: p.pageSlug,
+        choice: choice[p.pageSlug] ?? suggestedChoice(p),
+      }));
       const res = await fetch(`${baseUrl}/api/v1/migration/jobs/${jobId}/apply`, {
-        method: 'POST', headers: authHeaders, body: JSON.stringify({ include: 'static' }),
+        method: 'POST', headers: authHeaders, body: JSON.stringify({ include: 'static', blockOverrides }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -174,8 +215,6 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
     }
   };
 
-  const staticPages = pages.filter((p) => p.pageKind !== 'dynamic');
-  const dynamicPages = pages.filter((p) => p.pageKind === 'dynamic');
   const nothingFound = counts && (counts.pages ?? 0) === 0;
   const slugLabel = (s: string) => SLUG_LABEL[s] ?? s;
 
@@ -251,7 +290,8 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
             ) : (
               <>
                 <p className="text-xs text-gray-600">
-                  아래 구성으로 가져옵니다. 각 페이지가 정적/기능형으로 올바르게 판단됐는지 확인하세요.
+                  각 페이지에 넣을 블록입니다. 제안이 틀렸으면 드롭다운에서 바꾸세요
+                  (예: 주보로 제안됐지만 실제 게시판, 또는 예배시간·연혁·오시는 길 기능 블록).
                 </p>
 
                 <div className="grid grid-cols-3 gap-2 text-center">
@@ -260,41 +300,37 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
                   <Stat label="이미지" value={counts.images} />
                 </div>
 
-                {/* 정적 페이지 — 디자인 재현 */}
-                {staticPages.length > 0 && (
-                  <div className="rounded-lg border border-gray-200 overflow-hidden">
-                    <div className="bg-gray-50 px-3 py-2 text-[11px] font-semibold text-gray-700">
-                      정적 페이지 · 디자인 재현 ({staticPages.length})
-                    </div>
-                    <div className="max-h-32 overflow-y-auto divide-y divide-gray-50">
-                      {staticPages.map((p) => (
-                        <div key={p.pageSlug} className="px-3 py-1.5 text-[13px] text-gray-800">{slugLabel(p.pageSlug)}</div>
-                      ))}
-                    </div>
+                <div className="rounded-lg border border-gray-200 overflow-hidden">
+                  <div className="bg-gray-50 px-3 py-2 text-[11px] font-semibold text-gray-700 flex items-center justify-between">
+                    <span>페이지별 블록 ({pages.length})</span>
+                    <span className="text-gray-400 font-normal">제안 = AI 판단 · 바꿀 수 있음</span>
                   </div>
-                )}
-
-                {/* 기능형 페이지 — 데이터 블록 배치 */}
-                {dynamicPages.length > 0 && (
-                  <div className="rounded-lg border border-indigo-200 overflow-hidden">
-                    <div className="bg-indigo-50 px-3 py-2 text-[11px] font-semibold text-indigo-800">
-                      기능형 페이지 · 기능 블록 배치 ({dynamicPages.length})
-                    </div>
-                    <div className="max-h-40 overflow-y-auto divide-y divide-indigo-50">
-                      {dynamicPages.map((p) => (
-                        <div key={p.pageSlug} className="flex items-center justify-between px-3 py-1.5 text-[13px]">
-                          <span className="text-gray-800">{slugLabel(p.pageSlug)}</span>
-                          <span className="text-indigo-700 font-medium">
-                            → {MODULE_LABEL[p.moduleType ?? ''] ?? '기능'} 블록
+                  <div className="max-h-64 overflow-y-auto divide-y divide-gray-50">
+                    {pages.map((p) => {
+                      const val = choice[p.pageSlug] ?? suggestedChoice(p);
+                      const changed = val !== suggestedChoice(p);
+                      return (
+                        <div key={p.pageSlug} className="flex items-center justify-between gap-2 px-3 py-2">
+                          <span className="min-w-0 flex-1 truncate text-[13px] text-gray-800" title={p.pageSlug}>
+                            {slugLabel(p.pageSlug)}
                           </span>
+                          <select
+                            value={val}
+                            onChange={(e) => setChoice((c) => ({ ...c, [p.pageSlug]: e.target.value }))}
+                            className={`shrink-0 rounded-md border px-2 py-1 text-[12px] ${changed ? 'border-indigo-400 bg-indigo-50 text-indigo-800 font-medium' : 'border-gray-300 text-gray-700'}`}
+                          >
+                            {BLOCK_CHOICES.map((o) => (
+                              <option key={o.key} value={o.key}>{o.label}</option>
+                            ))}
+                          </select>
                         </div>
-                      ))}
-                    </div>
-                    <div className="bg-indigo-50/50 px-3 py-1.5 text-[10.5px] text-indigo-700">
-                      데이터(글·사진)는 각 모듈의 [📥 URL에서 가져오기]로 채우면 이 블록에 표시됩니다.
-                    </div>
+                      );
+                    })}
                   </div>
-                )}
+                  <div className="bg-blue-50/60 px-3 py-1.5 text-[10.5px] text-blue-800">
+                    기능 블록의 데이터(글·사진)는 각 모듈의 [📥 URL에서 가져오기]로 채우면 이 블록에 표시됩니다.
+                  </div>
+                </div>
               </>
             )}
 

@@ -461,12 +461,23 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
     // same way /migrate-url does. Default ALL (this is an explicit apply of an
     // already-reviewed job, so applying everything classified is the right
     // default here — unlike the cheap-first STATIC default of a fresh run).
-    const body = (request.body ?? {}) as { include?: IncludeKey[] | 'static' | 'dynamic' | 'all' };
+    const body = (request.body ?? {}) as {
+      include?: IncludeKey[] | 'static' | 'dynamic' | 'all';
+      // Review dropdowns — per-page block the operator confirmed/changed.
+      blockOverrides?: { pageSlug: string; choice: string }[];
+    };
     let includeList: IncludeKey[];
     if (body.include === 'static') includeList = STATIC_INCLUDE;
     else if (body.include === 'dynamic') includeList = DYNAMIC_INCLUDE;
     else if (Array.isArray(body.include)) includeList = body.include;
     else includeList = ALL_INCLUDE;
+
+    // Honor the operator's per-page block choices from the review dropdowns
+    // BEFORE applying, and persist them onto the job so the record matches.
+    if (Array.isArray(body.blockOverrides) && body.blockOverrides.length > 0 && data.pageContents?.length) {
+      applyBlockChoices(data.pageContents, body.blockOverrides);
+      await updateJobClassifiedData(job.id, data);
+    }
 
     // Fire-and-forget: apply includes R2 image uploads (resize + upload each),
     // which can take minutes → don't hold the request. The dialog polls
@@ -538,6 +549,93 @@ function annotatePageKinds(pages: ClassifiedPageContent[]): void {
       page.moduleType = DATA_BLOCK_MODULE[dataBlock.blockType];
     } else {
       page.pageKind = 'static';
+    }
+  }
+}
+
+// ── Block-choice override (review dropdown) ────────────────
+// The review lets the operator pick, per page, which block goes there — because
+// the agent's guess can be wrong (제안=주보지만 실제 게시판) OR a "static" page
+// actually carries a functional widget (예배시간·지도·연혁). A "choice" is the
+// dropdown value; 'static' keeps the page's design blocks as-is.
+type BlockChoice =
+  | 'static' | 'worship' | 'directions' | 'contact' | 'history'
+  | 'bulletins' | 'sermons' | 'albums' | 'columns' | 'events' | 'staff' | 'boards';
+
+// choice → the block type to place (functional widgets incl. the static-typed
+// worship_times/location_map/contact_info that operators treat as "기능 블록").
+const CHOICE_TO_BLOCK_TYPE: Record<Exclude<BlockChoice, 'static'>, string> = {
+  worship: 'worship_times',
+  directions: 'location_map',
+  contact: 'contact_info',
+  history: 'history_timeline',
+  bulletins: 'recent_bulletins',
+  sermons: 'recent_sermons',
+  albums: 'album_gallery',
+  columns: 'recent_columns',
+  events: 'event_grid',
+  staff: 'staff_grid',
+  boards: 'board',
+};
+// Reverse: block type → the choice it represents (for detecting a page's current
+// block so an unchanged choice is a no-op that PRESERVES the agent's props).
+const BLOCK_TYPE_TO_CHOICE: Record<string, BlockChoice> = {
+  worship_times: 'worship',
+  location_map: 'directions',
+  contact_info: 'contact',
+  history_timeline: 'history',
+  recent_bulletins: 'bulletins',
+  recent_sermons: 'sermons',
+  sermon_magazine: 'sermons',
+  album_gallery: 'albums',
+  recent_columns: 'columns',
+  event_grid: 'events',
+  staff_grid: 'staff',
+  board: 'boards',
+};
+const CHOICE_LABEL: Record<BlockChoice, string> = {
+  static: '정적', worship: '예배시간', directions: '오시는 길', contact: '연락처',
+  history: '연혁', bulletins: '주보', sermons: '설교', albums: '앨범',
+  columns: '칼럼', events: '행사', staff: '교역자', boards: '게시판',
+};
+
+/** The choice a page currently represents = the first block that maps to one. */
+function currentChoice(page: ClassifiedPageContent): BlockChoice {
+  for (const b of page.blocks) {
+    const c = BLOCK_TYPE_TO_CHOICE[b.blockType];
+    if (c) return c;
+  }
+  return 'static';
+}
+
+/**
+ * Apply the operator's per-page block choices (from the review dropdowns) to the
+ * classified pages, in place. A choice equal to the page's current block is a
+ * no-op (keeps the agent's block + props). A DIFFERENT choice replaces the
+ * page's blocks: 'static' strips the functional block (leaving a hero placeholder
+ * if nothing remains); any functional choice makes the page a single matching
+ * block shell (title only — the module/editor fills the rest).
+ */
+function applyBlockChoices(
+  pages: ClassifiedPageContent[],
+  overrides: { pageSlug: string; choice: string }[],
+): void {
+  const map = new Map(overrides.map((o) => [o.pageSlug, o.choice as BlockChoice]));
+  for (const page of pages) {
+    const choice = map.get(page.pageSlug);
+    if (!choice || choice === currentChoice(page)) continue; // unchanged → preserve
+    if (choice === 'static') {
+      page.blocks = page.blocks.filter((b) => !BLOCK_TYPE_TO_CHOICE[b.blockType]);
+      if (page.blocks.length === 0) {
+        page.blocks = [{ blockType: 'hero_banner', props: { title: page.pageSlug } }];
+      }
+      page.pageKind = 'static';
+      page.moduleType = undefined;
+    } else {
+      const blockType = CHOICE_TO_BLOCK_TYPE[choice];
+      page.blocks = [{ blockType, props: { title: CHOICE_LABEL[choice] } }];
+      page.pageKind = 'dynamic';
+      page.moduleType = DATA_BLOCK_MODULE[blockType];
     }
   }
 }
