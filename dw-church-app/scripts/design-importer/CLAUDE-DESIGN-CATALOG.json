@@ -148,7 +148,7 @@
       "use": "일반 폼 — application_form_embed / form_split / contact_form."
     }
   ],
-  "themeEndpoint": "PUT /api/v1/theme (themes/routes.ts) — apply the theme FIRST (STEP 1), before composing pages.",
+  "themeEndpoint": "PUT /api/v1/theme/tokens (themes/routes.ts) — apply the theme FIRST (STEP 1), before composing pages.",
   "groups": {
     "hero": "히어로",
     "content": "컨텐츠",

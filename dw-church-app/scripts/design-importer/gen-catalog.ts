@@ -24,7 +24,7 @@ import { dirname, join } from 'node:path';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REGISTRY = join(HERE, '../../packages/blocks/src/registry.json');
 
-interface RegBlock {
+export interface RegBlock {
   label?: string;
   group?: string;
   flags?: { isHidden?: boolean; isAlias?: boolean };
@@ -33,7 +33,7 @@ interface RegBlock {
   description?: string;
   aiHint?: string;
 }
-interface Registry {
+export interface Registry {
   version: number;
   groups: Record<string, string>;
   blocks: Record<string, RegBlock>;
@@ -82,11 +82,31 @@ function trim(s: string | undefined, n = 200): string {
   return one.length > n ? one.slice(0, n - 1) + '…' : one;
 }
 
-function main(): void {
-  const reg = JSON.parse(readFileSync(REGISTRY, 'utf8')) as Registry;
-  const entries = Object.entries(reg.blocks);
+export interface CatalogBlock {
+  block_type: string; label: string; group: string;
+  surface: 'palette' | 'importer' | 'alias'; aliasOf?: string;
+  keyProps: string[]; reproduces: string;
+}
+export interface Catalog {
+  generatedAt: string;
+  project: string;
+  counts: { total: number; palette: number; importer: number; alias: number };
+  tokens: {
+    systemSlots: { role: string; cssVar: string; use: string }[];
+    customsOpenEnded: boolean;
+    autoPairedForegrounds: string;
+    typographyScales: string[];
+    fontRoles: string[];
+  };
+  modules: { name: string; table: string; use: string }[];
+  themeEndpoint: string;
+  groups: Record<string, string>;
+  blocks: CatalogBlock[];
+}
 
-  const blocks = entries.map(([type, b]) => ({
+/** Pure: registry → catalog object (unit-testable). */
+export function buildCatalog(reg: Registry): Catalog {
+  const blocks: CatalogBlock[] = Object.entries(reg.blocks).map(([type, b]) => ({
     block_type: type,
     label: b.label ?? '',
     group: b.group ?? '',
@@ -95,12 +115,10 @@ function main(): void {
     keyProps: Object.keys(b.defaultProps ?? {}),
     reproduces: trim(b.aiHint || b.description),
   }));
-
   const palette = blocks.filter((b) => b.surface === 'palette').length;
   const importer = blocks.filter((b) => b.surface === 'importer').length;
   const alias = blocks.filter((b) => b.surface === 'alias').length;
-
-  const catalog = {
+  return {
     generatedAt: new Date().toISOString().slice(0, 10),
     project: 'True Light / DW Church',
     counts: { total: blocks.length, palette, importer, alias },
@@ -112,14 +130,18 @@ function main(): void {
       fontRoles: FONT_ROLES,
     },
     modules: MODULES.map(([name, table, use]) => ({ name, table, use })),
-    themeEndpoint: 'PUT /api/v1/theme (themes/routes.ts) — apply the theme FIRST (STEP 1), before composing pages.',
+    themeEndpoint: 'PUT /api/v1/theme/tokens (themes/routes.ts) — apply the theme FIRST (STEP 1), before composing pages.',
     groups: reg.groups,
     blocks,
   };
+}
 
-  writeFileSync(join(HERE, 'CLAUDE-DESIGN-CATALOG.json'), JSON.stringify(catalog, null, 2) + '\n');
-
-  // ── Markdown (prompt attachment) ──
+/** Pure: catalog → the Markdown prompt attachment (unit-testable). */
+export function renderCatalogMd(catalog: Catalog): string {
+  const { blocks } = catalog;
+  const palette = catalog.counts.palette;
+  const importer = catalog.counts.importer;
+  const alias = catalog.counts.alias;
   const md: string[] = [];
   md.push('# True Light / DW Church — Capabilities Catalog (for Claude Design import)');
   md.push('');
@@ -174,19 +196,28 @@ function main(): void {
     }
     md.push('');
   };
-  for (const [g, label] of Object.entries(reg.groups)) {
+  for (const [g, label] of Object.entries(catalog.groups)) {
     const list = byGroup.get(g);
     if (list && list.length) emitGroup(label, g, list);
   }
   for (const [g, list] of byGroup) {
-    if (reg.groups[g]) continue;
+    if (catalog.groups[g]) continue;
     emitGroup(g, g, list);
   }
+  return md.join('\n');
+}
 
-  writeFileSync(join(HERE, 'CLAUDE-DESIGN-CATALOG.md'), md.join('\n'));
-  console.log(`✓ catalog generated — ${blocks.length} blocks (${palette} palette + ${importer} importer + ${alias} alias)`);
+function main(): void {
+  const reg = JSON.parse(readFileSync(REGISTRY, 'utf8')) as Registry;
+  const catalog = buildCatalog(reg);
+  writeFileSync(join(HERE, 'CLAUDE-DESIGN-CATALOG.json'), JSON.stringify(catalog, null, 2) + '\n');
+  writeFileSync(join(HERE, 'CLAUDE-DESIGN-CATALOG.md'), renderCatalogMd(catalog));
+  const { total, palette, importer, alias } = catalog.counts;
+  console.log(`✓ catalog generated — ${total} blocks (${palette} palette + ${importer} importer + ${alias} alias)`);
   console.log('  → scripts/design-importer/CLAUDE-DESIGN-CATALOG.json');
   console.log('  → scripts/design-importer/CLAUDE-DESIGN-CATALOG.md');
 }
 
-main();
+// Run as a script (tsx), but not when imported by a test.
+import { argv } from 'node:process';
+if (argv[1] && argv[1].replace(/\\/g, '/').endsWith('gen-catalog.ts')) main();
