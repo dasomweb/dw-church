@@ -340,12 +340,7 @@ export default function SuperAdminDashboardV2() {
               <h1 className="text-lg font-bold text-gray-900">플랫폼 관리</h1>
               <p className="mt-0.5 text-xs text-gray-500">운영 콘솔</p>
             </div>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="w-full inline-flex items-center justify-center gap-1.5 bg-blue-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-700 shadow-sm transition-colors"
-            >
-              <span className="text-base leading-none">＋</span> 교회 추가
-            </button>
+            {/* 교회 추가 버튼은 사이드바가 아니라 '교회 관리' 콘텐츠 우측 상단에 둔다(대표님 지시). */}
             <nav className="flex gap-4 lg:block lg:space-y-4 overflow-x-auto lg:overflow-visible">
               {NAV_GROUPS.map((group) => (
                 <div key={group.label} className="shrink-0">
@@ -395,7 +390,7 @@ export default function SuperAdminDashboardV2() {
             onGoToApplications={() => setActiveTab('applications')}
           />
         )}
-        {activeTab === 'tenants' && <TenantsTab refreshKey={tenantsRefreshKey} />}
+        {activeTab === 'tenants' && <TenantsTab refreshKey={tenantsRefreshKey} onCreateChurch={() => setShowCreateModal(true)} />}
         {activeTab === 'applications' && <ApplicationsTab />}
         {activeTab === 'demo' && <DemoTab />}
         {activeTab === 'siteSettings' && <SiteSettingsTab />}

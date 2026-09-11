@@ -479,7 +479,7 @@ function TenantDetailModal({
 // ═══════════════════════════════════════════════════════════
 // ─── Tab: Tenants ────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════
-export default function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) {
+export default function TenantsTab({ refreshKey = 0, onCreateChurch }: { refreshKey?: number; onCreateChurch?: () => void }) {
   const apiFetch = useAdminApi();
   const { showToast } = useToast();
 
@@ -570,7 +570,7 @@ export default function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) 
 
   return (
     <div className="space-y-4">
-      {/* Search */}
+      {/* Search + 교회 추가 (콘텐츠 우측 상단) */}
       <div className="flex items-center gap-3">
         <input
           type="text"
@@ -584,16 +584,24 @@ export default function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) 
             초기화
           </button>
         )}
+        {onCreateChurch && (
+          <button
+            onClick={onCreateChurch}
+            className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+          >
+            <span className="text-base leading-none">＋</span> 교회 추가
+          </button>
+        )}
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      {/* Table — 감싸는 프레임(카드 박스·가로 스크롤) 없이 페이지에 그대로 편다(대표님 지시). */}
+      <div>
         {loading ? (
           <Spinner />
         ) : filteredTenants.length === 0 ? (
           <EmptyState message={search ? '검색 결과가 없습니다.' : '등록된 교회가 없습니다.'} />
         ) : (
-          <div className="overflow-x-auto">
+          <div>
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 text-left text-gray-500 font-medium text-xs whitespace-nowrap">
@@ -628,104 +636,42 @@ export default function TenantsTab({ refreshKey = 0 }: { refreshKey?: number }) 
                     <td className="px-3 py-3 text-gray-500 text-right tabular-nums">{t.stats?.userCount ?? '-'}</td>
                     <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">{t.lastActivityAt ? formatDate(t.lastActivityAt) : '-'}</td>
                     <td className="px-4 py-3">
-                      <div className="flex gap-1 flex-nowrap items-center justify-end">
-                        {/* 사이트 — 스토어프론트를 새 탭에서 열기. 가장 가벼운 액션.
-                            B2BSmart 의 row 순서 (사이트/보기/AI빌더/수정) 와 동일. */}
-                        <a
-                          href={t.customDomain ? `https://${t.customDomain}` : `https://${t.slug}.truelight.app`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-2 py-1 text-sm text-gray-600 border border-gray-200 hover:bg-gray-50 rounded transition-colors"
-                          title={`${t.name} — 실제 사이트(스토어프론트)를 새 탭에서 보기`}
-                          aria-label="사이트"
-                        >
-                          🌐
-                        </a>
-                        {/* 요약 — 테넌트 상세 모달 (빠른 트리아지: 통계 + 이름/플랜 편집 +
-                            지원 계정 발급 + 사이트 방문). 일상 운영의 메인 surface. */}
-                        <button
-                          onClick={() => setViewingTenantId(t.id)}
-                          className="px-2 py-1 text-sm text-blue-600 border border-blue-200 hover:bg-blue-50 rounded transition-colors"
-                          title={`${t.name} — 빠른 요약(통계·플랜) + 지원 계정`}
-                          aria-label="요약"
-                        >
-                          📊
-                        </button>
-                        {/* 가져오기 — Phase 12-δ: 기존 사이트 URL 입력으로 자동
-                            마이그레이션. 이모지 제거로 헤더 공간 절약. */}
-                        <button
-                          onClick={() => setMigrateTenant(t)}
-                          className="px-2 py-1 text-sm text-emerald-700 border border-emerald-200 hover:bg-emerald-50 rounded transition-colors"
-                          title={`${t.name} — 기존 교회 사이트를 AI가 분석해 사이트맵·섹션·디자인을 자동 구성 (정적 구조/디자인. 설교·주보 등 동적 콘텐츠는 각 관리 페이지에서 개별 가져오기)`}
-                          aria-label="마이그레이션"
-                        >
-                          🚚
-                        </button>
-                        {/* AI 빌더 — Phase 11-A1: AIBuilderModal (PlannerWizard 8-step).
-                            기존 ✨ 이모지 제거 + 한 줄 유지. */}
-                        <button
-                          onClick={() => setAiBuilderTenant(t)}
-                          className="px-2 py-1 text-sm bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded hover:from-violet-600 hover:to-purple-700 transition-colors shadow-sm"
-                          title={`${t.name} — AI로 사이트 자동 생성 시작 (AI 빌더)`}
-                          aria-label="AI 빌더"
-                        >
-                          ✨
-                        </button>
-                        {/* 진입 — 슈퍼어드민 세션으로 테넌트 관리자 화면(/t/:slug)에 바로
-                            진입. 게이트가 super_admin 을 통과시키고, AdminLayout 이
-                            X-Tenant-Slug 를 이 테넌트로 맞춰 콘텐츠 모듈(설교/주보/칼럼…)을
-                            그대로 운영할 수 있음. 지원 계정 로그인 불필요. */}
-                        <button
-                          onClick={() => {
-                            // Open the tenant admin in a NEW TAB so the super-admin
-                            // dashboard stays put. sessionStorage is per-tab, so hand
-                            // the session off via localStorage first or the new tab
-                            // boots logged out.
-                            handoffSessionToNewTab();
-                            window.open(`${window.location.origin}/t/${t.slug}`, '_blank', 'noopener');
-                          }}
-                          className="px-2 py-1 text-sm bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors"
-                          title={`${t.name} — 교회(테넌트) 관리자 화면 (새 탭). 교회 운영자가 보는 설교·주보·칼럼 등 콘텐츠 관리 화면으로 진입합니다.`}
-                          aria-label="교회 관리자"
-                        >
-                          👤
-                        </button>
-                        {/* 콘솔 — 슈퍼어드민 per-tenant 깊은 편집 콘솔 (/super-admin/t/:slug). */}
-                        <button
-                          onClick={() => {
-                            window.location.href = `${window.location.origin}/super-admin/t/${t.slug}`;
-                          }}
-                          className="px-2 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
-                          title={`${t.name} — 슈퍼어드민 편집 콘솔. 페이지 빌더·테마·디자인 등 사이트를 직접 만드는 화면으로 진입합니다.`}
-                          aria-label="사이트 편집"
-                        >
-                          🎨
-                        </button>
-                        {/* ⋮ 더보기 — 비활성화/삭제 (드물게 쓰는 destructive). 한 줄
-                            유지 + 실수로 누를 위험 낮추기. CSS-only dropdown은
-                            blur 처리 까다로워서 details/summary 의 native toggle 사용. */}
+                      {/* 행 액션 = 라벨이 있는 '관리 ▾' 드롭다운 하나. 아이콘만 쓰면 뭔지
+                          모르고, 버튼을 나열하면 표가 넘쳐 프레임에 갇힌다(대표님 지적).
+                          details/summary = blur 처리 불필요한 native toggle. */}
+                      <div className="flex justify-end">
                         <details className="relative">
                           <summary
-                            className="list-none cursor-pointer px-2 py-1 text-xs text-gray-500 border border-gray-200 hover:bg-gray-50 rounded whitespace-nowrap select-none"
-                            title="더보기"
+                            className="list-none cursor-pointer inline-flex items-center gap-1 rounded border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 select-none"
+                            title={`${t.name} — 관리 작업`}
                           >
-                            ⋮
+                            관리 <span className="text-[10px] text-gray-400">▾</span>
                           </summary>
-                          <div className="absolute right-0 mt-1 z-20 w-36 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                          <div className="absolute right-0 z-20 mt-1 w-52 overflow-hidden rounded-lg border border-gray-200 bg-white text-left shadow-lg">
+                            <a
+                              href={t.customDomain ? `https://${t.customDomain}` : `https://${t.slug}.truelight.app`}
+                              target="_blank" rel="noopener noreferrer"
+                              className="block px-3 py-2 text-xs text-gray-700 hover:bg-gray-50"
+                            >🌐 사이트 보기</a>
+                            <button onClick={() => setViewingTenantId(t.id)} className="block w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50">📊 요약 · 지원 계정</button>
+                            <button onClick={() => setMigrateTenant(t)} className="block w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50">🚚 마이그레이션</button>
+                            <button onClick={() => setAiBuilderTenant(t)} className="block w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50">✨ AI 빌더</button>
+                            <button
+                              onClick={() => {
+                                handoffSessionToNewTab();
+                                window.open(`${window.location.origin}/t/${t.slug}`, '_blank', 'noopener');
+                              }}
+                              className="block w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50"
+                            >👤 교회 관리자 (새 탭)</button>
+                            <button
+                              onClick={() => { window.location.href = `${window.location.origin}/super-admin/t/${t.slug}`; }}
+                              className="block w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50"
+                            >🎨 사이트 편집 콘솔</button>
                             <button
                               onClick={() => handleToggleActive(t)}
-                              className={`block w-full px-3 py-2 text-left text-xs transition-colors ${
-                                t.isActive ? 'text-amber-600 hover:bg-amber-50' : 'text-green-600 hover:bg-green-50'
-                              }`}
-                            >
-                              {t.isActive ? '비활성화' : '활성화'}
-                            </button>
-                            <button
-                              onClick={() => handleDelete(t)}
-                              className="block w-full px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
-                            >
-                              삭제
-                            </button>
+                              className={`block w-full border-t border-gray-100 px-3 py-2 text-left text-xs ${t.isActive ? 'text-amber-600 hover:bg-amber-50' : 'text-green-600 hover:bg-green-50'}`}
+                            >{t.isActive ? '비활성화' : '활성화'}</button>
+                            <button onClick={() => handleDelete(t)} className="block w-full px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50">삭제</button>
                           </div>
                         </details>
                       </div>
