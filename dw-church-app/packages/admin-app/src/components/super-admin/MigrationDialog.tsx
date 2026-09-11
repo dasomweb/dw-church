@@ -38,16 +38,14 @@ interface ApplyResult {
 }
 
 interface PageLite { pageSlug: string; pageKind?: 'static' | 'dynamic'; moduleType?: string }
-interface ClassifyResponse {
-  data: {
-    jobId: string;
-    classifiedData?: { pageContents?: PageLite[] };
-    classifiedCounts: DetectedCounts;
-    warnings?: string[];
-  };
-}
-interface ApplyResponse {
-  data: { jobId: string; applyResult: ApplyResult };
+
+// GET /jobs/:id — polled while the background crawl/apply runs. status flows
+// draft→extracting→…→classified (dry-run done) / done (applied) / failed.
+interface JobLite {
+  status: string;
+  classifiedData?: { pageContents?: PageLite[]; menus?: unknown[]; images?: unknown[] };
+  applyResult?: ApplyResult;
+  errorMessage?: string | null;
 }
 
 // 데이터 블록이 연결되는 콘텐츠 모듈 라벨(리뷰 표시용).
@@ -74,13 +72,12 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
   const [jobId, setJobId] = useState<string | null>(null);
   const [counts, setCounts] = useState<DetectedCounts | null>(null);
   const [pages, setPages] = useState<PageLite[]>([]);
-  const [warnings, setWarnings] = useState<string[]>([]);
   const [applyResult, setApplyResult] = useState<ApplyResult | null>(null);
 
   useEffect(() => {
     if (!open) return;
     setPhase('input'); setSourceUrl(''); setError(null);
-    setJobId(null); setCounts(null); setPages([]); setWarnings([]); setApplyResult(null);
+    setJobId(null); setCounts(null); setPages([]); setApplyResult(null);
   }, [open, tenant.id]);
 
   if (!open) return null;
@@ -102,7 +99,26 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
     'Content-Type': 'application/json',
   };
 
-  // ── STEP 1 → 2 : 분석(dry-run). 구조만 판단, 적용 안 함. ──
+  // 크롤/적용은 서버에서 백그라운드로 돌고(수 분 소요) HTTP 요청을 붙잡지 않는다.
+  // 그래서 jobId 를 받은 뒤 GET /jobs/:id 를 폴링해 완료를 기다린다. 요청이 끊겨도
+  // 잡은 서버에서 계속 진행되므로 큰 사이트도 타임아웃 없이 결과를 받는다.
+  const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+  const pollJob = async (id: string, terminal: string[], maxMs = 15 * 60 * 1000): Promise<JobLite> => {
+    const start = Date.now();
+    while (Date.now() - start < maxMs) {
+      await sleep(6000);
+      try {
+        const res = await fetch(`${baseUrl}/api/v1/migration/jobs/${id}`, { headers: authHeaders });
+        if (!res.ok) continue; // 일시적 오류 — 계속 폴링
+        const body = await res.json() as { data?: JobLite };
+        const job = body.data;
+        if (job && terminal.includes(job.status)) return job;
+      } catch { /* 네트워크 흔들림 — 계속 폴링 */ }
+    }
+    throw new Error('시간이 너무 오래 걸립니다. 잠시 후 [마이그레이션 기록]에서 상태를 확인하세요.');
+  };
+
+  // ── STEP 1 → 2 : 분석(dry-run). 구조만 판단, 적용 안 함. 백그라운드 + 폴링. ──
   const analyze = async () => {
     const url = sourceUrl.trim();
     if (!url) { showToast('error', '사이트 URL 을 입력하세요.'); return; }
@@ -117,11 +133,14 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
         const body = await res.json().catch(() => ({}));
         throw new Error(body?.error?.message ?? `HTTP ${res.status}`);
       }
-      const body = await res.json() as ClassifyResponse;
-      setJobId(body.data.jobId);
-      setCounts(body.data.classifiedCounts);
-      setPages(body.data.classifiedData?.pageContents ?? []);
-      setWarnings(body.data.warnings ?? []);
+      const { data } = await res.json() as { data: { jobId: string } };
+      setJobId(data.jobId);
+      const job = await pollJob(data.jobId, ['classified', 'done', 'failed']);
+      if (job.status === 'failed') throw new Error(job.errorMessage || '분석 실패');
+      const cd = job.classifiedData ?? {};
+      const pc = cd.pageContents ?? [];
+      setPages(pc);
+      setCounts({ pages: pc.length, menus: cd.menus?.length ?? 0, images: cd.images?.length ?? 0 });
       setPhase('review');
     } catch (err) {
       setError(err instanceof Error ? err.message : '분석 실패');
@@ -142,10 +161,12 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
         const body = await res.json().catch(() => ({}));
         throw new Error(body?.error?.message ?? `HTTP ${res.status}`);
       }
-      const body = await res.json() as ApplyResponse;
-      setApplyResult(body.data.applyResult);
+      await res.json(); // { jobId, async } — 결과는 폴링으로.
+      const job = await pollJob(jobId, ['done', 'failed']);
+      if (job.status === 'failed' || !job.applyResult) throw new Error(job.errorMessage || '적용 실패');
+      setApplyResult(job.applyResult);
       setPhase('done');
-      onCompleted?.({ applyResult: body.data.applyResult });
+      onCompleted?.({ applyResult: job.applyResult });
     } catch (err) {
       setError(err instanceof Error ? err.message : '적용 실패');
     } finally {
@@ -275,12 +296,6 @@ export function MigrationDialog({ tenant, open, onClose, onCompleted }: Migratio
                   </div>
                 )}
               </>
-            )}
-
-            {warnings.length > 0 && (
-              <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-[11px] text-amber-900 space-y-0.5">
-                {warnings.map((w, i) => <div key={i}>⚠ {w}</div>)}
-              </div>
             )}
 
             <div className="flex gap-2 pt-1">

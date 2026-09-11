@@ -239,7 +239,7 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
     const tenant = await prisma.tenant.findFirst({ where: { slug: tenantSlug } });
     if (!tenant) throw new AppError('NOT_FOUND', 404, `Tenant "${tenantSlug}" not found`);
 
-    // Create a job so the wizard can later look up history / retry.
+    // Create a job so the dialog can poll it while the crawl runs.
     const job = await createJob(
       tenantSlug,
       sourceUrl,
@@ -247,7 +247,15 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
       request.user?.id ?? null,
     );
 
-    try {
+    // Fire-and-forget: a Chromium crawl of a whole site takes minutes, which
+    // exceeds HTTP client/edge timeouts (the request dies but the crawl keeps
+    // running). So we DON'T hold the request — kick the crawl off in the
+    // background (it updates the job's status + classifiedData as it goes) and
+    // return the jobId immediately. The dialog polls GET /jobs/:id until status
+    // is 'classified' (dry-run done) / 'done' (applied) / 'failed'. Every error
+    // is caught here so this detached task can never crash the process.
+    void (async () => {
+     try {
       // Phase 12-γ.6 (2026-06-04) — AGENT-DRIVEN migration.
       // User mandate: AI orchestrates, crawler is a tool. Gemini receives
       // the URL + goal, then chooses among fetch_url / fetch_sitemap /
@@ -336,20 +344,6 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
         }
       }
 
-      // Surface the same fields the dialog used to read so its UI stays
-      // backwards-compatible.
-      const llmStats = {
-        pagesProcessed: agentIterations,
-        llmAdded: 0,
-        breakdown: Object.fromEntries(
-          agentToolCalls.reduce<Map<string, number>>((acc, t) => {
-            acc.set(t.name, (acc.get(t.name) ?? 0) + 1);
-            return acc;
-          }, new Map()).entries(),
-        ),
-        warnings: agentWarnings,
-      };
-
       // Sitemap (네비게이션) — the migrated tenant's nav must mirror the
       // source site, not the generic default seed menu. The agent extracts
       // the source nav into classified.menus; if it came back empty, derive
@@ -359,54 +353,32 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
         classified.menus = deriveMenusFromPages(classified.pageContents);
       }
 
+      // Persist the classified structure so the polling dialog can read it.
       await updateJobClassifiedData(job.id, classified);
 
-      const youtubeCount = body.youtubeChannelUrl ? classified.sermons.filter((s) => s.youtubeUrl).length : 0;
-      const classifiedCounts = buildClassifiedCounts(classified, youtubeCount, llmStats);
-
-      // Dry-run (apply:false): stop here and return the classified structure for
-      // the REVIEW screen. classifiedData is persisted on the job, so the
-      // subsequent POST /jobs/:id/apply commits WITHOUT re-crawling.
       if (body.apply === false) {
+        // Dry-run: stop at 'classified'. The dialog reads job.classifiedData for
+        // the review, then POST /jobs/:id/apply commits it (no re-crawl).
         await updateJobStatus(job.id, 'classified');
-        return reply.send({
-          data: {
-            jobId: job.id,
-            applied: false,
-            classifiedData: classified,
-            classifiedCounts,
-            warnings: (llmStats.warnings ?? []).slice(0, 10),
-          },
-        });
+      } else {
+        // One-shot apply (legacy/back-compat; the dialog uses the 2-step flow).
+        await updateJobStatus(job.id, 'applying');
+        const result = await applyAll(tenantSlug, classified, { include: includeList });
+        await updateJobApplyResult(job.id, result);
+        await updateJobStatus(job.id, 'done');
       }
+     } catch (err) {
+       const msg = err instanceof Error ? err.message : 'Migration failed';
+       request.log.error({ migrationStep: 'migrate-url-bg', jobId: job.id }, msg);
+       await updateJobStatus(job.id, 'failed', msg).catch(() => {});
+     } finally {
+       // Release the shared headless-chromium so it doesn't linger in memory.
+       await closeBrowser().catch(() => {});
+     }
+    })();
 
-      // Apply — selective per `include` (the dialog sends 'static': structure +
-      // design + data-block shells, NOT dynamic data).
-      await updateJobStatus(job.id, 'applying');
-      const result = await applyAll(tenantSlug, classified, { include: includeList });
-      await updateJobApplyResult(job.id, result);
-      await updateJobStatus(job.id, 'done');
-
-      return reply.send({
-        data: {
-          jobId: job.id,
-          applied: true,
-          applyResult: result,
-          classifiedCounts,
-          // Phase 12-γ.5 — echo back what was actually applied vs skipped.
-          appliedTypes: includeList,
-          usedLlm: useLlm,
-        },
-      });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Migration failed';
-      await updateJobStatus(job.id, 'failed', msg);
-      throw new AppError('INTERNAL_ERROR', 500, msg);
-    } finally {
-      // Release the shared headless-chromium so it doesn't linger in memory
-      // after the crawl finishes.
-      await closeBrowser().catch(() => {});
-    }
+    // Return immediately — the dialog polls GET /jobs/:id for progress/result.
+    return reply.send({ data: { jobId: job.id, async: true } });
   });
 
   // NOTE: the manual WordPress WXR (.xml) upload import was RETIRED in the
@@ -496,27 +468,23 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
     else if (Array.isArray(body.include)) includeList = body.include;
     else includeList = ALL_INCLUDE;
 
-    await updateJobStatus(job.id, 'applying');
+    // Fire-and-forget: apply includes R2 image uploads (resize + upload each),
+    // which can take minutes → don't hold the request. The dialog polls
+    // GET /jobs/:id until status is 'done' / 'failed' and reads job.applyResult.
+    void (async () => {
+      try {
+        await updateJobStatus(job.id, 'applying');
+        const result = await applyAll(job.tenantSlug, data, { include: includeList });
+        await updateJobApplyResult(job.id, result);
+        await updateJobStatus(job.id, 'done');
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Apply failed';
+        request.log.error({ migrationStep: 'apply-bg', jobId: job.id }, msg);
+        await updateJobStatus(job.id, 'failed', msg).catch(() => {});
+      }
+    })();
 
-    try {
-      const result = await applyAll(job.tenantSlug, data, { include: includeList });
-      await updateJobApplyResult(job.id, result);
-      await updateJobStatus(job.id, 'done');
-      const youtubeCount = data.sermons.filter((s) => s.youtubeUrl).length;
-      return reply.send({
-        data: {
-          jobId: job.id,
-          applied: true,
-          applyResult: result,
-          appliedTypes: includeList,
-          classifiedCounts: buildClassifiedCounts(data, youtubeCount, { pagesProcessed: 0, llmAdded: 0, breakdown: {}, warnings: [] }),
-        },
-      });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Apply failed';
-      await updateJobStatus(job.id, 'failed', msg);
-      throw new AppError('INTERNAL_ERROR', 500, msg);
-    }
+    return reply.send({ data: { jobId: job.id, async: true } });
   });
 
   // ── Tenant Pages Reference (kept from old routes) ──
@@ -538,55 +506,6 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
       return reply.send({ data: [] });
     }
   });
-}
-
-/**
- * Count of SEO-derived ChurchInfo fields that got filled.
- * Used by MigrationDialog to tell operator at-a-glance whether the
- * source site had usable head metadata. See project_migration_seo_extraction.
- */
-function countSeoFields(info: ClassifiedData['churchInfo']): number {
-  const fields: (keyof ClassifiedData['churchInfo'])[] = [
-    'seoTitle', 'seoDescription', 'seoKeywords',
-    'ogImageUrl', 'logoUrl', 'locale', 'slogan',
-  ];
-  return fields.filter((k) => Boolean(info[k])).length;
-}
-
-/**
- * Build the classifiedCounts object the dialog reads. "탐지(detected)" figures —
- * distinct from applyResult, which is what was actually written. Shared by the
- * dry-run response, the one-shot apply response, and /jobs/:id/apply so the
- * three stay in sync. Includes the static/dynamic page split for the review
- * screen (how many pages are static layout vs. functional/data-block pages).
- */
-function buildClassifiedCounts(
-  classified: ClassifiedData,
-  youtubeVideos: number,
-  llm: { pagesProcessed: number; llmAdded: number; breakdown: Record<string, number>; warnings: string[] },
-): Record<string, unknown> {
-  return {
-    sermons: classified.sermons.length,
-    bulletins: classified.bulletins.length,
-    columns: classified.columns.length,
-    events: classified.events.length,
-    albums: classified.albums.length,
-    staff: classified.staff.length,
-    history: classified.history.length,
-    boards: classified.boards.length,
-    boardPosts: classified.boards.reduce((s, b) => s + b.posts.length, 0),
-    menus: classified.menus.length,
-    pages: classified.pageContents.length,
-    staticPages: classified.pageContents.filter((p) => p.pageKind === 'static').length,
-    dynamicPages: classified.pageContents.filter((p) => p.pageKind === 'dynamic').length,
-    images: classified.images.length,
-    youtubeVideos,
-    seoFieldsFilled: countSeoFields(classified.churchInfo),
-    llmPagesAnalyzed: llm.pagesProcessed,
-    llmItemsAdded: llm.llmAdded,
-    llmBreakdown: llm.breakdown ?? {},
-    llmWarnings: (llm.warnings ?? []).slice(0, 10),
-  };
 }
 
 /** Data-block type → the Content Module it displays. A page carrying one of
