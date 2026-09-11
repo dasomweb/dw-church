@@ -27,10 +27,13 @@ export async function securityRoutes(app: FastifyInstance): Promise<void> {
     return reply.status(201).send({ data: { recorded: true } });
   });
 
-  app.get('/security-events', { preHandler: [requireSuperAdmin] }, async (request, reply) => {
+  const listHandler = async (request: any, reply: any) => {
     const q = request.query as { limit?: string; type?: string };
     return reply.send({
       data: await listSecurityEvents({ limit: q.limit ? Number(q.limit) : undefined, type: q.type }),
     });
-  });
+  };
+  app.get('/security-events', { preHandler: [requireSuperAdmin] }, listHandler);
+  // /admin/* 별칭 — 슈퍼어드민 콘솔의 useAdminApi 가 /api/v1/admin/* 로 호출하므로.
+  app.get('/admin/security-events', { preHandler: [requireSuperAdmin] }, listHandler);
 }

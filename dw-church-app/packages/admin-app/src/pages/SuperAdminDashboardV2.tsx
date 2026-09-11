@@ -24,6 +24,7 @@ import DomainsTab from '../super-admin/tabs/DomainsTab';
 import ApplicationsTab from '../super-admin/tabs/ApplicationsTab';
 import UsersTab from '../super-admin/tabs/UsersTab';
 import MonitoringTab from '../super-admin/tabs/MonitoringTab';
+import SecurityTab from '../super-admin/tabs/SecurityTab';
 import OverviewTab from '../super-admin/tabs/OverviewTab';
 import TenantsTab from '../super-admin/tabs/TenantsTab';
 import CaseStudiesTab from '../super-admin/tabs/CaseStudiesTab';
@@ -37,10 +38,11 @@ import SiteDesignTab from '../super-admin/tabs/SiteDesignTab';
 // ─── Constants ───────────────────────────────────────────
 // PLAN_PRICES / PLAN_COLORS moved to ../super-admin/shared/constants.
 
-type TabId = 'monitoring' | 'overview' | 'tenants' | 'applications' | 'demo' | 'intake' | 'reference' | 'pricing' | 'revenueModel' | 'billing' | 'email' | 'emailTemplates' | 'broadcast' | 'addressBook' | 'support' | 'domains' | 'users' | 'storage' | 'gallery' | 'siteSettings' | 'siteBanner' | 'siteDesign' | 'caseStudies' | 'frontSamples' | 'claudeDesign';
+type TabId = 'monitoring' | 'security' | 'overview' | 'tenants' | 'applications' | 'demo' | 'intake' | 'reference' | 'pricing' | 'revenueModel' | 'billing' | 'email' | 'emailTemplates' | 'broadcast' | 'addressBook' | 'support' | 'domains' | 'users' | 'storage' | 'gallery' | 'siteSettings' | 'siteBanner' | 'siteDesign' | 'caseStudies' | 'frontSamples' | 'claudeDesign';
 
 const TABS: { id: TabId; label: string; icon: JSX.Element }[] = [
   { id: 'monitoring', label: '모니터링', icon: TabIcon('M3 3v18h18M19 9l-5 5-4-4-3 3') },
+  { id: 'security', label: '보안', icon: TabIcon('M12 3l7 4v5c0 4-3 7-7 8-4-1-7-4-7-8V7l7-4z') },
   { id: 'overview', label: '개요', icon: TabIcon('M4 5h6v6H4zM14 5h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z') },
   { id: 'tenants', label: '교회 관리', icon: TabIcon('M3 21h18M5 21V7l7-4 7 4v14M9 21v-4a3 3 0 016 0v4M9 9h.01M15 9h.01') },
   { id: 'applications', label: '신청서', icon: TabIcon('M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2') },
@@ -384,6 +386,7 @@ export default function SuperAdminDashboardV2() {
             onRefresh={() => void fetchStats()}
           />
         )}
+        {activeTab === 'security' && <SecurityTab />}
         {activeTab === 'overview' && (
           <OverviewTab
             stats={stats}

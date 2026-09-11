@@ -31,13 +31,14 @@ import { AdminLayout } from './layouts/AdminLayout';
 import { useAuthStore, isTokenExpiringSoon } from './stores/auth';
 import { ToastProvider, ConfirmProvider } from './components';
 import { detectHostMode, TenantScopeProvider, useTenantScope } from './lib/tenant-scope';
+// 권한없음 화면은 가드가 즉시 렌더해야 하므로 지연로딩하지 않는다(작은 컴포넌트).
+import AccessDenied from './pages/AccessDenied';
 
 // Lazy-loaded pages — Auth
 const LoginPage = lazyWithReload(() => import('./pages/LoginPage'));
 const RegisterPage = lazyWithReload(() => import('./pages/RegisterPage'));
 const ForgotPasswordPage = lazyWithReload(() => import('./pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazyWithReload(() => import('./pages/ResetPasswordPage'));
-const AccessDenied = lazyWithReload(() => import('./pages/AccessDenied'));
 
 // Lazy-loaded pages — Admin
 const Dashboard = lazyWithReload(() => import('./pages/Dashboard'));
