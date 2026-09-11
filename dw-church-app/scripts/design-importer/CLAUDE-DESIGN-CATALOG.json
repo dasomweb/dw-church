@@ -1,0 +1,1243 @@
+{
+  "generatedAt": "2026-09-11",
+  "project": "True Light / DW Church",
+  "counts": {
+    "total": 89,
+    "palette": 72,
+    "importer": 8,
+    "alias": 9
+  },
+  "tokens": {
+    "systemSlots": [
+      {
+        "role": "primary",
+        "cssVar": "--brand-primary",
+        "use": "Brand color — primary buttons, links, active states."
+      },
+      {
+        "role": "secondary",
+        "cssVar": "--brand-secondary",
+        "use": "Deeper brand tone — footer / accent band (NOT a black dark-band; church tone stays light)."
+      },
+      {
+        "role": "accent",
+        "cssVar": "--brand-accent",
+        "use": "Eyebrows, small emphasis, secondary highlight (may equal primary)."
+      },
+      {
+        "role": "text",
+        "cssVar": "--brand-text",
+        "use": "Body / heading ink."
+      },
+      {
+        "role": "muted",
+        "cssVar": "--brand-muted",
+        "use": "Secondary / caption text."
+      },
+      {
+        "role": "background",
+        "cssVar": "--brand-background",
+        "use": "Page background (white / warm off-white)."
+      },
+      {
+        "role": "border",
+        "cssVar": "--brand-border",
+        "use": "Hairlines, card borders, dividers."
+      },
+      {
+        "role": "surface",
+        "cssVar": "--brand-surface",
+        "use": "Alt band / card surface (subtle warm tint)."
+      },
+      {
+        "role": "onDark",
+        "cssVar": "--brand-onDark",
+        "use": "Text ON a photo/overlay hero (light ink). Used sparingly — see church tone note."
+      },
+      {
+        "role": "onDarkMuted",
+        "cssVar": "--brand-onDarkMuted",
+        "use": "Muted text on a photo/overlay hero."
+      }
+    ],
+    "customsOpenEnded": true,
+    "autoPairedForegrounds": "`--brand-{slot}-fg` are WCAG-AA auto-paired by contrast.ts — do not assign.",
+    "typographyScales": [
+      "h1",
+      "h2",
+      "h3",
+      "h4",
+      "h5",
+      "h6",
+      "body",
+      "caption",
+      "overline",
+      "label",
+      "button"
+    ],
+    "fontRoles": [
+      "heading",
+      "body",
+      "korean"
+    ]
+  },
+  "modules": [
+    {
+      "name": "sermons",
+      "table": "sermons",
+      "use": "설교 — data blocks: recent_sermons, sermon_feature (+ sermon study fields → sermon_magazine)."
+    },
+    {
+      "name": "bulletins",
+      "table": "bulletins",
+      "use": "주보(weekly bulletin, PDF cover) — data block: recent_bulletins."
+    },
+    {
+      "name": "columns",
+      "table": "columns_pastoral",
+      "use": "목회칼럼/묵상 — data block: recent_columns."
+    },
+    {
+      "name": "albums",
+      "table": "albums",
+      "use": "앨범/갤러리 — data block: album_gallery."
+    },
+    {
+      "name": "events",
+      "table": "events",
+      "use": "행사·소식 — data block: event_grid."
+    },
+    {
+      "name": "staff",
+      "table": "staff",
+      "use": "교역자/섬기는 이 — data block: staff_grid (opt-in)."
+    },
+    {
+      "name": "history",
+      "table": "history",
+      "use": "교회 연혁 — data block: history_timeline."
+    },
+    {
+      "name": "boards",
+      "table": "boards / board_posts",
+      "use": "게시판/공지 — data block: board (boardSlug: notices/free/...)."
+    },
+    {
+      "name": "banners",
+      "table": "banners",
+      "use": "메인 배너 슬라이더 — data block: banner_slider (category=main/sub). NOT auto-migrated."
+    },
+    {
+      "name": "cells",
+      "table": "cells",
+      "use": "목장/소그룹 — data block: cell_grid."
+    },
+    {
+      "name": "schedules",
+      "table": "schedules",
+      "use": "예배·모임 시간표 — data block: schedule_board (or static worship_schedule block)."
+    },
+    {
+      "name": "newcomers",
+      "table": "newcomers",
+      "use": "새가족 — public FORM block: newcomer_form (+ static newcomer_info)."
+    },
+    {
+      "name": "forms",
+      "table": "form_submissions",
+      "use": "일반 폼 — application_form_embed / form_split / contact_form."
+    }
+  ],
+  "themeEndpoint": "PUT /api/v1/theme (themes/routes.ts) — apply the theme FIRST (STEP 1), before composing pages.",
+  "groups": {
+    "hero": "히어로",
+    "content": "컨텐츠",
+    "media": "미디어",
+    "data": "데이터 블록",
+    "conversion": "컨버전",
+    "layout": "레이아웃",
+    "catalog": "카탈로그",
+    "product": "제품",
+    "blog": "블로그"
+  },
+  "blocks": [
+    {
+      "block_type": "hero_banner",
+      "label": "히어로 배너",
+      "group": "hero",
+      "surface": "palette",
+      "keyProps": [
+        "variant",
+        "height",
+        "width"
+      ],
+      "reproduces": "Page hero — title/subtitle/CTA on image overlay or split-image. Always emit as the first block of a page."
+    },
+    {
+      "block_type": "hero_full_width",
+      "label": "히어로 (풀폭)",
+      "group": "hero",
+      "surface": "alias",
+      "aliasOf": "hero_banner",
+      "keyProps": [
+        "variant",
+        "width",
+        "height"
+      ],
+      "reproduces": "Legacy alias of hero_banner with width=full-bleed and height=lg."
+    },
+    {
+      "block_type": "hero_split",
+      "label": "히어로 (분할)",
+      "group": "hero",
+      "surface": "alias",
+      "aliasOf": "hero_banner",
+      "keyProps": [
+        "variant",
+        "imageSide",
+        "height"
+      ],
+      "reproduces": "Legacy alias of hero_banner with variant=split-image."
+    },
+    {
+      "block_type": "hero_image_slider",
+      "label": "히어로 슬라이더",
+      "group": "hero",
+      "surface": "alias",
+      "aliasOf": "banner_slider",
+      "keyProps": [
+        "category"
+      ],
+      "reproduces": "Legacy alias of banner_slider — pulls from /api/v1/banners?category=main."
+    },
+    {
+      "block_type": "banner_slider",
+      "label": "배너 슬라이더",
+      "group": "data",
+      "surface": "palette",
+      "keyProps": [
+        "category"
+      ],
+      "reproduces": "Auto-rotating banner carousel — pulls from /api/v1/banners. category=main for landing, sub for inner pages."
+    },
+    {
+      "block_type": "business_intro",
+      "label": "회사 소개",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "imageUrl"
+      ],
+      "reproduces": "Company introduction block — title + HTML content + side image. Use for the about/company page."
+    },
+    {
+      "block_type": "mission_vision",
+      "label": "미션 & 비전",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [],
+      "reproduces": "Mission/vision statement card — emphasizes core values."
+    },
+    {
+      "block_type": "text_image",
+      "label": "텍스트 + 이미지",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "content",
+        "imageUrl",
+        "layout"
+      ],
+      "reproduces": "Side-by-side text and image. Use for service intros, CEO greetings, feature spotlights."
+    },
+    {
+      "block_type": "text_only",
+      "label": "텍스트만",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "content"
+      ],
+      "reproduces": "Plain HTML content block. Use for legal copy, hours of operation as <ul>, FAQ-style intro."
+    },
+    {
+      "block_type": "quote_block",
+      "label": "인용구",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "content"
+      ],
+      "reproduces": "Pull quote — customer testimonial single or brand slogan callout."
+    },
+    {
+      "block_type": "section_header",
+      "label": "섹션 헤더",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "subtitle"
+      ],
+      "reproduces": "Standalone section title + subtitle for separating major page regions."
+    },
+    {
+      "block_type": "image_gallery",
+      "label": "이미지 갤러리",
+      "group": "media",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "images"
+      ],
+      "reproduces": "Static image gallery — content is in props.images (URL list), not fetched from albums."
+    },
+    {
+      "block_type": "video",
+      "label": "비디오",
+      "group": "media",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "youtubeUrl"
+      ],
+      "reproduces": "YouTube embed by URL."
+    },
+    {
+      "block_type": "recent_blog_posts",
+      "label": "최근 블로그 글",
+      "group": "blog",
+      "surface": "palette",
+      "keyProps": [
+        "limit",
+        "variant"
+      ],
+      "reproduces": "Latest blog posts grid — pulls from /api/v1/blog. variant: grid-2/grid-3/grid-4/list."
+    },
+    {
+      "block_type": "album_gallery",
+      "label": "앨범 갤러리",
+      "group": "data",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "limit",
+        "variant"
+      ],
+      "reproduces": "Album cover grid — pulls from /api/v1/albums. variant: grid-2/grid-3/grid-4/masonry."
+    },
+    {
+      "block_type": "recent_sermons",
+      "label": "최근 설교",
+      "group": "data",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "limit",
+        "variant"
+      ],
+      "reproduces": "Recent sermons grid — pulls from /api/v1/sermons (YouTube + title + preacher + date + scripture). Use on the home page and the 설교/sermons page. variant: grid-2/grid-3/grid-4/list."
+    },
+    {
+      "block_type": "recent_bulletins",
+      "label": "최근 주보",
+      "group": "data",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "limit",
+        "variant"
+      ],
+      "reproduces": "Weekly bulletins (주보) grid — pulls from /api/v1/bulletins (PDF cover + date + view/download). Use on the 주보/bulletins page. variant: grid-3/grid-4/list."
+    },
+    {
+      "block_type": "recent_columns",
+      "label": "최근 목회칼럼",
+      "group": "data",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "limit",
+        "variant"
+      ],
+      "reproduces": "Pastoral columns grid — pulls from /api/v1/columns (title + author + date + excerpt). Use on the 목회칼럼/columns page. variant: grid-2/grid-3/list."
+    },
+    {
+      "block_type": "video_board",
+      "label": "영상 (YouTube)",
+      "group": "data",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "category",
+        "limit",
+        "variant"
+      ],
+      "reproduces": "YouTube video board — pulls from /api/v1/videos, filterable by category. Use for 찬양/예배실황/간증 video pages. variant: grid-2/grid-3/grid-4."
+    },
+    {
+      "block_type": "schedule_board",
+      "label": "예배 및 모임 시간",
+      "group": "data",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "imagePosition",
+        "imageUrl"
+      ],
+      "reproduces": "Worship & meeting schedule — pulls from /api/v1/schedules (grouped tables, each with a name). imagePosition: left/right/none. Use on the 예배안내/worship page and the home page."
+    },
+    {
+      "block_type": "pastor_message",
+      "label": "담임목사 인사말",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "pastorName",
+        "message",
+        "imageUrl"
+      ],
+      "reproduces": "Senior pastor's greeting — photo + message body. Author the message text (title=greeting headline, message=body). Use on the 교회소개/about and home pages."
+    },
+    {
+      "block_type": "worship_schedule",
+      "label": "예배 시간 안내 (정적)",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "items"
+      ],
+      "reproduces": "Static worship-times table — author items: [{label, time, place}] directly. For a DB-managed grouped schedule use schedule_board instead."
+    },
+    {
+      "block_type": "newcomer_info",
+      "label": "새가족 안내",
+      "group": "conversion",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "subtitle",
+        "description",
+        "buttonText",
+        "buttonUrl"
+      ],
+      "reproduces": "New-family welcome + register CTA. Author title/subtitle/description + buttonText/buttonUrl. Use as a conversion section on home and the 새가족 page."
+    },
+    {
+      "block_type": "giving_info",
+      "label": "헌금 안내",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "intro",
+        "zelle",
+        "bankInfo",
+        "mailingName",
+        "mailingAddress",
+        "note",
+        "qrImageUrl"
+      ],
+      "reproduces": "Giving INFO page (not a payment processor) — shows how to give: Zelle id, bank transfer, mailing address for checks, optional QR. Author the text/image fields; empty methods are hidden."
+    },
+    {
+      "block_type": "board",
+      "label": "게시판",
+      "group": "data",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "boardSlug",
+        "limit"
+      ],
+      "reproduces": "Board/forum widget — pulls from /api/v1/boards/{boardSlug}/posts. Use boardSlug like notices/faq/careers/resources."
+    },
+    {
+      "block_type": "cell_grid",
+      "label": "목장 안내",
+      "group": "data",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "limit",
+        "columns"
+      ],
+      "reproduces": "목장(small-group/cell) grid — pulls from /api/v1/cells. Each card shows the 목장 name, leader, meeting day/time, location. USE on a 목장/공동체/소그룹 page. Data block: write only the section title."
+    },
+    {
+      "block_type": "newcomer_form",
+      "label": "새가족 등록 폼",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "subtitle"
+      ],
+      "reproduces": "Newcomer self-registration FORM (not the 안내 block) — a public form that drops into the 새가족 관리 inbox. Author only title/subtitle. USE on a 새가족/처음오신분 page when the church wants visitors to register onl…"
+    },
+    {
+      "block_type": "products_showcase",
+      "label": "제품 카탈로그 (그리드/포트폴리오/매거진)",
+      "group": "product",
+      "surface": "palette",
+      "keyProps": [
+        "variant",
+        "source",
+        "limit"
+      ],
+      "reproduces": "Products catalog block — variant: grid/portfolio/magazine. source: recent/featured."
+    },
+    {
+      "block_type": "application_form_embed",
+      "label": "신청서 양식",
+      "group": "data",
+      "surface": "palette",
+      "keyProps": [
+        "formSlug",
+        "displayMode",
+        "eyebrow",
+        "title",
+        "subtitle",
+        "ctaLabel",
+        "successMessage",
+        "ctaAfterUrl",
+        "ctaAfterLabel"
+      ],
+      "reproduces": "Embed an application form by slug. displayMode: inline (full form on page) or cta-modal (CTA → modal)."
+    },
+    {
+      "block_type": "form_split",
+      "label": "Form + Text (2 columns)",
+      "group": "data",
+      "surface": "palette",
+      "keyProps": [
+        "formSlug",
+        "layout",
+        "title",
+        "subtitle",
+        "content"
+      ],
+      "reproduces": "Two-column block: application form (by formSlug) on one side, title+subtitle+content text on the other. layout form-left or form-right."
+    },
+    {
+      "block_type": "product_detail_view",
+      "label": "제품 상세 뷰",
+      "group": "product",
+      "surface": "palette",
+      "keyProps": [
+        "productSlug",
+        "variant",
+        "showSku",
+        "showSpecs",
+        "showGallery",
+        "showPrice",
+        "specsTitle",
+        "priceFieldKey",
+        "showQuantity",
+        "galleryLayout",
+        "contentPlacement",
+        "benefits",
+        "showCta",
+        "ctaLabel",
+        "ctaHref"
+      ],
+      "reproduces": "Single product detail view. variant: commerce (2-col gallery + info/spec/price/cta) / editorial / minimal / spec-sheet."
+    },
+    {
+      "block_type": "blog_post_view",
+      "label": "블로그 글 뷰",
+      "group": "blog",
+      "surface": "palette",
+      "keyProps": [
+        "showBackLink",
+        "showMeta",
+        "showCover",
+        "showContent",
+        "showBottom",
+        "showYoutube",
+        "listHref",
+        "listLabel"
+      ],
+      "reproduces": "Single blog post detail view. title + meta + cover + HTML content + bottom image + youtube embed."
+    },
+    {
+      "block_type": "recent_products",
+      "label": "최근 제품",
+      "group": "product",
+      "surface": "palette",
+      "keyProps": [
+        "limit"
+      ],
+      "reproduces": "Shortcut for products_showcase with source=recent. Use when the AI wants the simplest 'newest N products' list."
+    },
+    {
+      "block_type": "staff_grid",
+      "label": "교역자 그리드",
+      "group": "data",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "limit",
+        "layout",
+        "photoStyle",
+        "columns",
+        "showItems"
+      ],
+      "reproduces": "Clergy/staff data block — pulls from /api/v1/staff (photo + name + role + bio). Use on the 교역자/staff page. For a non-DB hand-authored team list use team_members."
+    },
+    {
+      "block_type": "history_timeline",
+      "label": "교회 연혁 (자동)",
+      "group": "data",
+      "surface": "palette",
+      "keyProps": [
+        "title"
+      ],
+      "reproduces": "Church history timeline — pulls from /api/v1/history (year-ordered milestones). Use on the 연혁/history page. For a hand-authored static timeline use the timeline block."
+    },
+    {
+      "block_type": "event_grid",
+      "label": "행사/소식 그리드",
+      "group": "data",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "limit"
+      ],
+      "reproduces": "Church events/news grid — pulls from /api/v1/events (title + date + image). Use on the 행사/events page and home. variant: grid-2/grid-3/grid-4."
+    },
+    {
+      "block_type": "location_map",
+      "label": "지도",
+      "group": "conversion",
+      "surface": "palette",
+      "keyProps": [
+        "address",
+        "zoom"
+      ],
+      "reproduces": "Map embed by address or lat/lng. Pair with contact_info on the contact page."
+    },
+    {
+      "block_type": "map_embed",
+      "label": "지도 (임베드)",
+      "group": "conversion",
+      "surface": "alias",
+      "aliasOf": "location_map",
+      "keyProps": [
+        "address"
+      ],
+      "reproduces": "Legacy alias of location_map."
+    },
+    {
+      "block_type": "contact_info",
+      "label": "연락처 정보",
+      "group": "data",
+      "surface": "palette",
+      "keyProps": [],
+      "reproduces": "Contact info auto-pulled from tenant settings (phone/email/address/social)."
+    },
+    {
+      "block_type": "address_info",
+      "label": "주소 정보",
+      "group": "conversion",
+      "surface": "alias",
+      "aliasOf": "contact_info",
+      "keyProps": [],
+      "reproduces": "Legacy alias of contact_info that emphasizes the address/map line."
+    },
+    {
+      "block_type": "contact_form",
+      "label": "문의 폼",
+      "group": "conversion",
+      "surface": "palette",
+      "keyProps": [],
+      "reproduces": "Lead-capture / general inquiry form. Submits to internal contact endpoint."
+    },
+    {
+      "block_type": "newsletter_signup",
+      "label": "뉴스레터 신청",
+      "group": "conversion",
+      "surface": "alias",
+      "aliasOf": "subscribe_form",
+      "keyProps": [],
+      "reproduces": "Legacy alias of subscribe_form."
+    },
+    {
+      "block_type": "subscribe_form",
+      "label": "뉴스레터 구독",
+      "group": "conversion",
+      "surface": "palette",
+      "keyProps": [
+        "bgMode"
+      ],
+      "reproduces": "Inline email newsletter form. POST { email } to submitEndpoint."
+    },
+    {
+      "block_type": "call_to_action",
+      "label": "CTA (구버전)",
+      "group": "conversion",
+      "surface": "alias",
+      "aliasOf": "cta_section",
+      "keyProps": [
+        "title",
+        "buttonText",
+        "buttonUrl"
+      ],
+      "reproduces": "Legacy alias of cta_section (variant=boxed-card)."
+    },
+    {
+      "block_type": "cta_section",
+      "label": "CTA (행동 유도)",
+      "group": "conversion",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "buttonText",
+        "buttonUrl",
+        "variant"
+      ],
+      "reproduces": "Conversion CTA. Pick variant: inline-banner=full-width strip, boxed-card=highlighted box, image-overlay=hero-style full-bleed background image with eyebrow+title+subtitle+CTA centered on top (best fo…"
+    },
+    {
+      "block_type": "stats_counter",
+      "label": "통계 카운터",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "columns",
+        "items",
+        "align",
+        "bgMode"
+      ],
+      "reproduces": "N-column number+label grid for KPIs / 회사 성과 지표."
+    },
+    {
+      "block_type": "pricing_table",
+      "label": "가격표",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "items",
+        "currency",
+        "showToggle"
+      ],
+      "reproduces": "2/3/4 plan tier cards side-by-side. Set featured=true on the recommended plan."
+    },
+    {
+      "block_type": "team_members",
+      "label": "팀 멤버",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "columns",
+        "items",
+        "photoStyle"
+      ],
+      "reproduces": "Team avatar grid (manual items) — for AI-generated content not pulled from /staff."
+    },
+    {
+      "block_type": "logo_bar",
+      "label": "로고 바",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "items",
+        "grayscale",
+        "align"
+      ],
+      "reproduces": "Partner / customer logo strip. grayscale=true with hover restore."
+    },
+    {
+      "block_type": "faq_accordion",
+      "label": "FAQ",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "items",
+        "columns",
+        "defaultOpen"
+      ],
+      "reproduces": "FAQ accordion using <details><summary> — no JS required."
+    },
+    {
+      "block_type": "testimonials",
+      "label": "고객 후기",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "items",
+        "layout",
+        "bgMode"
+      ],
+      "reproduces": "Quote + author + role/company cards. layout: grid-2/grid-3/single."
+    },
+    {
+      "block_type": "features_grid",
+      "label": "기능 그리드",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "items",
+        "columns",
+        "cardStyle",
+        "align"
+      ],
+      "reproduces": "Icon + title + description cards in a grid. columns: 2/3/4."
+    },
+    {
+      "block_type": "info_columns",
+      "label": "정보 컬럼 (한눈에)",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "columns",
+        "items"
+      ],
+      "reproduces": "2-4 labeled info cells (eyebrow label + value), hairline grid. Use for service times / location / first-time-visitor at-a-glance."
+    },
+    {
+      "block_type": "week_schedule",
+      "label": "이번 주 일정",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "items"
+      ],
+      "reproduces": "This-week agenda as a row list: day badge + event/time/place. Distinct from schedule_board tables."
+    },
+    {
+      "block_type": "hero_overlap",
+      "label": "히어로 + 겹침 안내카드",
+      "group": "hero",
+      "surface": "palette",
+      "keyProps": [
+        "eyebrow",
+        "title",
+        "subtitle",
+        "backgroundImageUrl",
+        "cards"
+      ],
+      "reproduces": "Hero image with an overlapping 3-column info card (service times / first-time). cards:[{title, rows:[{label,value}]}]."
+    },
+    {
+      "block_type": "sermon_feature",
+      "label": "설교 피처드 (대표+목록)",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "eyebrow",
+        "title",
+        "featured",
+        "items"
+      ],
+      "reproduces": "Featured sermon: big card + side list. featured:{imageUrl,title,meta}, items:[{imageUrl,title,meta}]."
+    },
+    {
+      "block_type": "news_split",
+      "label": "소식 + 나눔 카드 (2단)",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "items",
+        "sideTitle",
+        "buttons",
+        "links"
+      ],
+      "reproduces": "News list + side card with CTAs. items:[{tag,title,date}], buttons:[{label,primary}], links:[]."
+    },
+    {
+      "block_type": "bento_grid",
+      "label": "매거진 벤토 그리드",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "columns",
+        "tiles"
+      ],
+      "reproduces": "Magazine bento grid. tiles:[{colSpan,rowSpan,kind:'photo'|'card'|'list'|'pair', ...}]."
+    },
+    {
+      "block_type": "dashboard_banner",
+      "label": "대시보드 환영 배너",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "eyebrow",
+        "title",
+        "subtitle",
+        "buttonText",
+        "buttonUrl",
+        "secondaryButtonText",
+        "secondaryButtonUrl"
+      ],
+      "reproduces": "Brand-colored welcome banner card. eyebrow(date)+title+subtitle + primary/secondary pill buttons."
+    },
+    {
+      "block_type": "custom_html",
+      "label": "커스텀 HTML (시안 그대로)",
+      "group": "content",
+      "surface": "importer",
+      "keyProps": [
+        "html"
+      ],
+      "reproduces": "Renders raw HTML verbatim. Set by exact-design apply; do not emit from AI."
+    },
+    {
+      "block_type": "quick_links",
+      "label": "바로가기",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "items"
+      ],
+      "reproduces": "Side widget: title + arrow-linked shortcut list. items: [{title, content(=url), icon?}]. variant 'tiles' renders a 6-col icon+label grid."
+    },
+    {
+      "block_type": "check_list",
+      "label": "체크 리스트",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "items",
+        "columns",
+        "iconStyle"
+      ],
+      "reproduces": "Bulleted feature list with check/arrow/dot icons."
+    },
+    {
+      "block_type": "steps_list",
+      "label": "단계별 안내",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "items",
+        "layout",
+        "bgMode"
+      ],
+      "reproduces": "Process / 'How we work' steps. layout: vertical (full-width rows) or grid (3-up overview)."
+    },
+    {
+      "block_type": "process_steps",
+      "label": "프로세스 단계",
+      "group": "content",
+      "surface": "alias",
+      "aliasOf": "steps_list",
+      "keyProps": [
+        "items",
+        "layout"
+      ],
+      "reproduces": "Legacy alias of steps_list."
+    },
+    {
+      "block_type": "category_tabs",
+      "label": "카테고리 탭",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "tabs",
+        "cards",
+        "bgMode"
+      ],
+      "reproduces": "Tabbed category filter + card grid (Stanislav-style 'Unsere Kategorien'). cards belong to a tab via tab field."
+    },
+    {
+      "block_type": "tabs_filter",
+      "label": "카테고리 탭 (alias)",
+      "group": "content",
+      "surface": "alias",
+      "aliasOf": "category_tabs",
+      "keyProps": [
+        "tabs",
+        "cards"
+      ],
+      "reproduces": "Legacy alias of category_tabs."
+    },
+    {
+      "block_type": "timeline",
+      "label": "타임라인",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "subtitle",
+        "variant",
+        "items"
+      ],
+      "reproduces": "Dated milestone timeline. Use for 회사 연혁 (company history) when items are static (not pulled from /history)."
+    },
+    {
+      "block_type": "comparison_table",
+      "label": "비교표",
+      "group": "content",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "columns",
+        "rows"
+      ],
+      "reproduces": "Feature parity grid with one highlighted column. Use for plan comparisons or 'us vs them' charts."
+    },
+    {
+      "block_type": "before_after",
+      "label": "비포 / 애프터",
+      "group": "media",
+      "surface": "palette",
+      "keyProps": [
+        "beforeImageUrl",
+        "afterImageUrl",
+        "labelBefore",
+        "labelAfter"
+      ],
+      "reproduces": "Image-comparison slider with draggable handle."
+    },
+    {
+      "block_type": "hotspot_image",
+      "label": "핫스팟 이미지",
+      "group": "media",
+      "surface": "palette",
+      "keyProps": [
+        "imageUrl",
+        "hotspots"
+      ],
+      "reproduces": "Annotated image with numbered popovers — for product features / floor plans."
+    },
+    {
+      "block_type": "shoppable_image",
+      "label": "쇼퍼블 이미지",
+      "group": "media",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "subtitle",
+        "imageUrl",
+        "items"
+      ],
+      "reproduces": "Editorial photo with hotspots that link to product detail pages. hotspots: [{x,y,productId}]."
+    },
+    {
+      "block_type": "lookbook_slider",
+      "label": "룩북 슬라이더",
+      "group": "media",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "subtitle",
+        "items",
+        "bgMode"
+      ],
+      "reproduces": "Horizontal scroll-snap rail of editorial images, optional per-item link."
+    },
+    {
+      "block_type": "countdown_sale",
+      "label": "카운트다운 세일",
+      "group": "conversion",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "subtitle",
+        "endAt",
+        "buttonText",
+        "buttonUrl",
+        "expiredText",
+        "bgMode"
+      ],
+      "reproduces": "Live countdown to endAt (ISO datetime); switches to expiredText when passed."
+    },
+    {
+      "block_type": "catalog_archive",
+      "label": "카탈로그 아카이브",
+      "group": "catalog",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "limit",
+        "variant"
+      ],
+      "reproduces": "Published/archived catalog issues grid — pulls from /api/v1/catalogs. variant: grid-2/grid-3/grid-4."
+    },
+    {
+      "block_type": "catalog_showcase",
+      "label": "카탈로그 쇼케이스",
+      "group": "catalog",
+      "surface": "palette",
+      "keyProps": [
+        "catalogSlug",
+        "displayStyle",
+        "title",
+        "subtitle",
+        "ctaLabel",
+        "imagePosition"
+      ],
+      "reproduces": "Single catalog cover card + CTA → modal with full reader. Set catalogSlug to the target catalog."
+    },
+    {
+      "block_type": "catalog_cover",
+      "label": "카탈로그 표지",
+      "group": "catalog",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "tagline",
+        "year",
+        "imageUrl",
+        "brandName"
+      ],
+      "reproduces": "A5 landscape catalog cover page. Title + tagline + year + cover image + brand."
+    },
+    {
+      "block_type": "catalog_toc",
+      "label": "카탈로그 목차",
+      "group": "catalog",
+      "surface": "palette",
+      "keyProps": [],
+      "reproduces": "Auto-generated table of contents for a catalog issue."
+    },
+    {
+      "block_type": "catalog_product_page",
+      "label": "카탈로그 제품 페이지",
+      "group": "catalog",
+      "surface": "palette",
+      "keyProps": [
+        "productId",
+        "show"
+      ],
+      "reproduces": "Single-product A5 landscape spread: hero image + secondary images + title + description + SKU/variant. props.productId selects which product."
+    },
+    {
+      "block_type": "catalog_product_gallery",
+      "label": "카탈로그 제품 화보",
+      "group": "catalog",
+      "surface": "palette",
+      "keyProps": [
+        "productId",
+        "rangeStart",
+        "galleryLayout",
+        "style"
+      ],
+      "reproduces": "Magazine-style photo spread of product.images[rangeStart..]. galleryLayout: auto / mosaic variant. style follows the catalog starter."
+    },
+    {
+      "block_type": "catalog_back_cover",
+      "label": "카탈로그 뒷표지",
+      "group": "catalog",
+      "surface": "palette",
+      "keyProps": [
+        "title",
+        "message",
+        "contactLine",
+        "imageUrl"
+      ],
+      "reproduces": "A5 landscape catalog back cover. Thank-you message + contact line + optional image."
+    },
+    {
+      "block_type": "divider",
+      "label": "구분선",
+      "group": "layout",
+      "surface": "palette",
+      "keyProps": [
+        "spacing"
+      ],
+      "reproduces": "Visual divider between sections. spacing: sm/md/lg."
+    },
+    {
+      "block_type": "spacer",
+      "label": "여백",
+      "group": "layout",
+      "surface": "palette",
+      "keyProps": [
+        "size"
+      ],
+      "reproduces": "Empty vertical spacer with optional divider line. Use for fine-grained section spacing."
+    },
+    {
+      "block_type": "layout_row",
+      "label": "행 (레이아웃)",
+      "group": "layout",
+      "surface": "importer",
+      "keyProps": [
+        "children"
+      ],
+      "reproduces": "Layout container — horizontal row of child blocks. Hidden from palette; only added inside another layout."
+    },
+    {
+      "block_type": "layout_columns",
+      "label": "컬럼 (레이아웃)",
+      "group": "layout",
+      "surface": "importer",
+      "keyProps": [
+        "columns",
+        "children"
+      ],
+      "reproduces": "Layout container — N columns of child blocks. Hidden from palette."
+    },
+    {
+      "block_type": "layout_section",
+      "label": "섹션 (레이아웃)",
+      "group": "layout",
+      "surface": "importer",
+      "keyProps": [
+        "children"
+      ],
+      "reproduces": "Layout container — wraps children with section padding. Hidden from palette."
+    },
+    {
+      "block_type": "two_columns",
+      "label": "2단 컬럼",
+      "group": "layout",
+      "surface": "importer",
+      "keyProps": [
+        "children"
+      ],
+      "reproduces": "Two-column layout. Hidden from palette; agent uses layout_columns with columns:2 instead."
+    },
+    {
+      "block_type": "three_columns",
+      "label": "3단 컬럼",
+      "group": "layout",
+      "surface": "importer",
+      "keyProps": [
+        "children"
+      ],
+      "reproduces": "Three-column layout. Hidden from palette; agent uses layout_columns with columns:3 instead."
+    },
+    {
+      "block_type": "tabs",
+      "label": "탭",
+      "group": "layout",
+      "surface": "importer",
+      "keyProps": [
+        "tabs",
+        "children"
+      ],
+      "reproduces": "Tabbed container. Hidden from palette."
+    },
+    {
+      "block_type": "accordion",
+      "label": "아코디언",
+      "group": "layout",
+      "surface": "importer",
+      "keyProps": [
+        "items",
+        "children"
+      ],
+      "reproduces": "Accordion container. Hidden from palette; for FAQ-style stacks use faq_accordion instead."
+    }
+  ]
+}
