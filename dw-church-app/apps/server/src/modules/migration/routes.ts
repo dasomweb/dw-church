@@ -33,15 +33,16 @@ import {
   deleteJob,
 } from './job.js';
 import { extractFromHtml } from './extractors/html-scraper.js';
-import { parseWxr } from './extractors/wxr.js';
 import { closeBrowser } from './extractors/browser-render.js';
 import { extractFromYouTubeChannel } from './extractors/youtube.js';
+import { collectWpModules } from './extractors/wp-rest.js';
 import { classify } from './classifier.js';
 import { runMigrationAgent } from './migration-agent.js';
+import type { MigrationFocus } from './migration-agent.js';
 import { applyAll, STATIC_INCLUDE, DYNAMIC_INCLUDE, ALL_INCLUDE } from './appliers/index.js';
 import type { IncludeKey } from './appliers/index.js';
 import { deriveMenusFromPages } from './appliers/config.js';
-import type { ClassifiedData, RawExtractedData } from './types.js';
+import type { ClassifiedData, ClassifiedPageContent, PageModuleType, RawExtractedData } from './types.js';
 
 // ─── Auth ──────────────────────────────────────���────────────
 
@@ -214,6 +215,11 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
       // Optional speed lever — skip the LLM enrichment pass when operator
       // just wants a fast structural import. Defaults to true.
       useLlm?: boolean;
+      // STEP 4 — 3단계(분류→리뷰→적용). apply:false runs extract+classify only,
+      // persists classifiedData to the job, and returns it for the review
+      // screen WITHOUT applying. The operator then confirms the include set and
+      // POST /jobs/:id/apply commits it. Defaults to true (one-shot, back-compat).
+      apply?: boolean;
     };
     const sourceUrl = (body.sourceUrl ?? '').trim();
     const tenantSlug = (body.tenantSlug ?? '').trim();
@@ -256,16 +262,33 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
       let agentToolCalls: { name: string; ok: boolean }[] = [];
       let agentWarnings: string[] = [];
 
+      // STEP 2 — WP REST bulk-collect the dynamic archive when the source is
+      // WordPress. Deterministic + fully paginated: the agent's tool-loop can't
+      // pull a whole post archive (it summarises ~30 items/call, hard turn cap),
+      // which is why migrations came back "완료" with almost nothing. Detection
+      // is a cheap /wp-json probe. When WP fills the dynamics, the agent focuses
+      // on static LAYOUT only (no duplicate posts, more reliable).
+      const wantsDynamic = includeList.some((k) => DYNAMIC_INCLUDE.includes(k));
+      let wpPostCount = 0;
+      let wpIsWordPress = false;
+      let wpModules: Awaited<ReturnType<typeof collectWpModules>> | null = null;
+      if (useLlm && wantsDynamic) {
+        wpModules = await collectWpModules(sourceUrl, (msg) => request.log.info({ migrationStep: 'wp-rest' }, msg));
+        wpIsWordPress = wpModules.isWordPress;
+        wpPostCount = wpModules.postCount;
+      }
+
       if (useLlm) {
         const agentStart = Date.now();
-        // Static-only import → focus the agent on page layouts (more reliable);
-        // it won't waste turns chasing individual posts (those migrate per-module).
-        const staticOnly = includeList.every((k) => STATIC_INCLUDE.includes(k));
+        // Agent focus: static LAYOUT only when we don't need it to crawl posts
+        // (static-only import, OR WordPress where WP REST already has dynamics);
+        // else 'all' so a non-WordPress source's list pages still get crawled.
+        const agentFocus: MigrationFocus = (!wantsDynamic || wpIsWordPress) ? 'static' : 'all';
         const agentResult = await runMigrationAgent(
           sourceUrl,
           body.youtubeChannelUrl ?? null,
           (msg) => request.log.info({ migrationStep: 'agent' }, msg),
-          staticOnly ? 'static' : 'all',
+          agentFocus,
         );
         classified = agentResult.data;
         agentIterations = agentResult.iterations;
@@ -295,6 +318,24 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
         classified = classify(rawData);
         // Skip LLM enrichment when explicitly off.
       }
+
+      // STEP 2 — merge the WP REST bulk archive into the module arrays (only the
+      // types the operator included). In 'static' focus the agent left these
+      // EMPTY, so this is the real dynamic content and there's no duplication.
+      if (wpModules?.isWordPress) {
+        const inc = new Set(includeList);
+        if (inc.has('bulletins')) classified.bulletins.push(...wpModules.bulletins);
+        if (inc.has('sermons'))   classified.sermons.push(...wpModules.sermons);
+        if (inc.has('albums'))    classified.albums.push(...wpModules.albums);
+        if (inc.has('columns'))   classified.columns.push(...wpModules.columns);
+        if (inc.has('events'))    classified.events.push(...wpModules.events);
+        if (inc.has('boards'))    classified.boards.push(...wpModules.boards);
+        classified.images.push(...wpModules.images);
+      }
+
+      // STEP 3 — tag each page static vs dynamic (+ which module a dynamic page
+      // feeds) so the review screen can group them. Derived from block types.
+      annotatePageKinds(classified.pageContents);
 
       // Still pull the YouTube channel videos via the dedicated extractor
       // — the agent can't realistically walk a channel's RSS, and the
@@ -342,40 +383,39 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
 
       await updateJobClassifiedData(job.id, classified);
 
+      const youtubeCount = body.youtubeChannelUrl ? classified.sermons.filter((s) => s.youtubeUrl).length : 0;
+      const classifiedCounts = buildClassifiedCounts(classified, youtubeCount, llmStats, wpPostCount);
+
+      // STEP 4 — dry-run (apply:false): stop here and return the classified data
+      // for the REVIEW screen. classifiedData is persisted on the job, so the
+      // subsequent POST /jobs/:id/apply commits WITHOUT re-crawling.
+      if (body.apply === false) {
+        await updateJobStatus(job.id, 'classified');
+        return reply.send({
+          data: {
+            jobId: job.id,
+            applied: false,
+            wordpress: wpIsWordPress,
+            classifiedData: classified,
+            classifiedCounts,
+            warnings: (llmStats.warnings ?? []).slice(0, 10),
+          },
+        });
+      }
+
       // 3. Apply — selective per `include`.
       await updateJobStatus(job.id, 'applying');
       const result = await applyAll(tenantSlug, classified, { include: includeList });
       await updateJobApplyResult(job.id, result);
+      await updateJobStatus(job.id, 'done');
 
       return reply.send({
         data: {
           jobId: job.id,
+          applied: true,
+          wordpress: wpIsWordPress,
           applyResult: result,
-          classifiedCounts: {
-            sermons: classified.sermons.length,
-            bulletins: classified.bulletins.length,
-            columns: classified.columns.length,
-            events: classified.events.length,
-            albums: classified.albums.length,
-            staff: classified.staff.length,
-            history: classified.history.length,
-            boards: classified.boards.length,
-            menus: classified.menus.length,
-            pages: classified.pageContents.length,
-            images: classified.images.length,
-            youtubeVideos: body.youtubeChannelUrl ? classified.sermons.filter((s) => s.youtubeUrl).length : 0,
-            // Phase 12-γ.2: count of SEO fields populated (out of 7).
-            // Operator can see at-a-glance whether source site had usable
-            // meta. See project_migration_seo_extraction.
-            seoFieldsFilled: countSeoFields(classified.churchInfo),
-            // Phase 12-γ.4: AI analysis stats. pagesAnalyzed = total
-            // pages LLM examined; llmAdded = items LLM contributed
-            // beyond rule-based output.
-            llmPagesAnalyzed: llmStats.pagesProcessed,
-            llmItemsAdded: llmStats.llmAdded,
-            llmBreakdown: llmStats.breakdown ?? {},
-            llmWarnings: (llmStats.warnings ?? []).slice(0, 10),
-          },
+          classifiedCounts,
           // Phase 12-γ.5 — echo back what was actually applied vs skipped.
           appliedTypes: includeList,
           usedLlm: useLlm,
@@ -392,72 +432,10 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
     }
   });
 
-  // ── WordPress WXR import (upload the WP export .xml) ──
-  // Sources content from an uploaded WordPress export instead of crawling, so it
-  // works even when the source host's WAF blocks our crawler. Parses WXR →
-  // reuses the SAME classify() + applyAll() pipeline. Multipart: field `file`
-  // (the .xml), query `tenantSlug`, optional query `include` (default 'all').
-  app.post('/import-wxr', { preHandler: [requireSuperAdmin] }, async (request, reply) => {
-    const { tenantSlug, include } = request.query as { tenantSlug?: string; include?: string };
-    const slug = (tenantSlug ?? '').trim();
-    if (!slug) throw new AppError('VALIDATION_ERROR', 400, 'tenantSlug (query) required');
-
-    const data = await request.file();
-    if (!data) throw new AppError('VALIDATION_ERROR', 400, 'WXR 파일(file)이 필요합니다.');
-    const xml = (await data.toBuffer()).toString('utf8');
-    if (!/<rss|<wp:|<channel/i.test(xml)) {
-      throw new AppError('VALIDATION_ERROR', 400, 'WordPress 내보내기(WXR) XML 파일이 아닙니다.');
-    }
-
-    const rawData = parseWxr(xml);
-    if (rawData.pages.length === 0) {
-      throw new AppError('VALIDATION_ERROR', 400, 'WXR에서 가져올 페이지/글을 찾지 못했습니다.');
-    }
-    const includeList = include === 'static' ? STATIC_INCLUDE : include === 'dynamic' ? DYNAMIC_INCLUDE : ALL_INCLUDE;
-
-    const job = await createJob(slug, 'wxr-upload', null, request.user?.id ?? null);
-    try {
-      await updateJobRawData(job.id, rawData);
-      const classified = classify(rawData);
-      await updateJobClassifiedData(job.id, classified);
-      await updateJobStatus(job.id, 'applying');
-      const result = await applyAll(slug, classified, { include: includeList });
-      await updateJobApplyResult(job.id, result);
-      await updateJobStatus(job.id, 'done');
-      return reply.send({
-        data: {
-          jobId: job.id,
-          pagesFound: rawData.pages.length,
-          applyResult: result,
-          appliedTypes: includeList,
-          // Same shape as /migrate-url so the admin result panel is reused.
-          classifiedCounts: {
-            sermons: classified.sermons.length,
-            bulletins: classified.bulletins.length,
-            columns: classified.columns.length,
-            events: classified.events.length,
-            albums: classified.albums.length,
-            staff: classified.staff.length,
-            history: classified.history.length,
-            boards: classified.boards.length,
-            menus: classified.menus.length,
-            pages: classified.pageContents.length,
-            images: classified.images.length,
-            youtubeVideos: 0,
-            seoFieldsFilled: countSeoFields(classified.churchInfo),
-            llmPagesAnalyzed: 0,
-            llmItemsAdded: 0,
-            llmBreakdown: {},
-            llmWarnings: [],
-          },
-        },
-      });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'WXR import failed';
-      await updateJobStatus(job.id, 'failed', msg);
-      throw new AppError('INTERNAL_ERROR', 500, msg);
-    }
-  });
+  // NOTE: the manual WordPress WXR (.xml) upload import was RETIRED in the
+  // migration redesign — replaced by automatic WP REST bulk collection
+  // (extractors/wp-rest.ts) which pulls the same posts/media without asking the
+  // operator to export and upload a file. Do NOT reintroduce a WXR upload path.
 
   // ── Per-content migration (per-module) ──
   // Migrate ONE dynamic content type (sermons/bulletins/columns/albums/…) from
@@ -530,13 +508,33 @@ export default async function migrationRoutes(app: FastifyInstance): Promise<voi
       throw new AppError('VALIDATION_ERROR', 400, 'No classified data to apply. Run classify first.');
     }
 
+    // STEP 4 — the review screen sends the confirmed include set. Resolve the
+    // same way /migrate-url does. Default ALL (this is an explicit apply of an
+    // already-reviewed job, so applying everything classified is the right
+    // default here — unlike the cheap-first STATIC default of a fresh run).
+    const body = (request.body ?? {}) as { include?: IncludeKey[] | 'static' | 'dynamic' | 'all' };
+    let includeList: IncludeKey[];
+    if (body.include === 'static') includeList = STATIC_INCLUDE;
+    else if (body.include === 'dynamic') includeList = DYNAMIC_INCLUDE;
+    else if (Array.isArray(body.include)) includeList = body.include;
+    else includeList = ALL_INCLUDE;
+
     await updateJobStatus(job.id, 'applying');
 
     try {
-      const result = await applyAll(job.tenantSlug, data);
+      const result = await applyAll(job.tenantSlug, data, { include: includeList });
       await updateJobApplyResult(job.id, result);
-      const updated = await getJob(job.id);
-      return reply.send({ data: updated });
+      await updateJobStatus(job.id, 'done');
+      const youtubeCount = data.sermons.filter((s) => s.youtubeUrl).length;
+      return reply.send({
+        data: {
+          jobId: job.id,
+          applied: true,
+          applyResult: result,
+          appliedTypes: includeList,
+          classifiedCounts: buildClassifiedCounts(data, youtubeCount, { pagesProcessed: 0, llmAdded: 0, breakdown: {}, warnings: [] }, 0),
+        },
+      });
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Apply failed';
       await updateJobStatus(job.id, 'failed', msg);
@@ -576,4 +574,76 @@ function countSeoFields(info: ClassifiedData['churchInfo']): number {
     'ogImageUrl', 'logoUrl', 'locale', 'slogan',
   ];
   return fields.filter((k) => Boolean(info[k])).length;
+}
+
+/**
+ * Build the classifiedCounts object the dialog reads. "탐지(detected)" figures —
+ * distinct from applyResult, which is what was actually written. Shared by the
+ * dry-run response, the one-shot apply response, and /jobs/:id/apply so the
+ * three stay in sync. Adds static/dynamic page split + WP post count for the
+ * review screen (STEP 3/5).
+ */
+function buildClassifiedCounts(
+  classified: ClassifiedData,
+  youtubeVideos: number,
+  llm: { pagesProcessed: number; llmAdded: number; breakdown: Record<string, number>; warnings: string[] },
+  wpPostCount: number,
+): Record<string, unknown> {
+  return {
+    sermons: classified.sermons.length,
+    bulletins: classified.bulletins.length,
+    columns: classified.columns.length,
+    events: classified.events.length,
+    albums: classified.albums.length,
+    staff: classified.staff.length,
+    history: classified.history.length,
+    boards: classified.boards.length,
+    boardPosts: classified.boards.reduce((s, b) => s + b.posts.length, 0),
+    menus: classified.menus.length,
+    pages: classified.pageContents.length,
+    staticPages: classified.pageContents.filter((p) => p.pageKind === 'static').length,
+    dynamicPages: classified.pageContents.filter((p) => p.pageKind === 'dynamic').length,
+    images: classified.images.length,
+    youtubeVideos,
+    wpPostCount,
+    seoFieldsFilled: countSeoFields(classified.churchInfo),
+    llmPagesAnalyzed: llm.pagesProcessed,
+    llmItemsAdded: llm.llmAdded,
+    llmBreakdown: llm.breakdown ?? {},
+    llmWarnings: (llm.warnings ?? []).slice(0, 10),
+  };
+}
+
+/** Data-block type → the Content Module it displays. A page carrying one of
+ *  these is a DYNAMIC list page; anything else is STATIC. */
+const DATA_BLOCK_MODULE: Record<string, PageModuleType> = {
+  recent_bulletins: 'bulletins',
+  recent_sermons: 'sermons',
+  sermon_magazine: 'sermons',
+  recent_columns: 'columns',
+  album_gallery: 'albums',
+  event_grid: 'events',
+  staff_grid: 'staff',
+  history_timeline: 'history',
+  board: 'boards',
+};
+
+/**
+ * STEP 3 — tag each classified page static vs dynamic (and, for dynamic pages,
+ * which Content Module its data block feeds) so the review screen can group
+ * them and show "이 페이지 → 이 모듈". Derived from the page's block types
+ * (robust — doesn't depend on the LLM emitting the field). Mutates in place;
+ * leaves an already-set pageKind untouched.
+ */
+function annotatePageKinds(pages: ClassifiedPageContent[]): void {
+  for (const page of pages) {
+    if (page.pageKind) continue;
+    const dataBlock = page.blocks.find((b) => DATA_BLOCK_MODULE[b.blockType]);
+    if (dataBlock) {
+      page.pageKind = 'dynamic';
+      page.moduleType = DATA_BLOCK_MODULE[dataBlock.blockType];
+    } else {
+      page.pageKind = 'static';
+    }
+  }
 }

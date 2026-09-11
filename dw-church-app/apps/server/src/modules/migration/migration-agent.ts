@@ -99,6 +99,12 @@ export async function runMigrationAgent(
   const data = emptyClassifiedData();
   const toolCalls: AgentResult['toolCalls'] = [];
   const warnings: string[] = [];
+  // Honesty gate: true once a fetch_url / try_wp_rest actually returned REAL
+  // page content (200 + non-trivial body, or WP-REST items). When the whole
+  // crawl is blocked by a WAF this stays false, and the loop below accepts an
+  // empty commit and warns INSTEAD of forcing the model to fabricate page
+  // shells from menu labels. Fabricated content is worse than an honest empty.
+  let fetchedRealContent = false;
 
   if (!env.ANTHROPIC_API_KEY) {
     warnings.push('ANTHROPIC_API_KEY 미설정 — agent 비활성');
@@ -130,8 +136,13 @@ ClassifiedData JSON.${focusDirective}
 
 CRITICAL RULES — follow these or migration fails:
 
-1. NEVER commit_result with empty arrays unless you have EXHAUSTED all
-   fetch strategies. Empty result = failure.
+1. Build the result ONLY from content you ACTUALLY fetched. If your fetches
+   returned real pages, use them fully. But if EVERY fetch was blocked (stripped
+   text < 500 chars, HTTP 202/403/429, or 'no body') and you could not read ANY
+   real page after trying the strategies below, commit_result with EMPTY arrays —
+   an honest empty result is CORRECT and expected. NEVER invent pages, sermons,
+   staff, or text from menu/nav labels alone: a fabricated site is worse than an
+   empty result and will be rejected downstream.
 
 2. ALWAYS try multiple strategies before giving up. If fetch_url returns
    small text (textLength < 500), HTTP 202/403/429, or 'no body', the
@@ -249,6 +260,12 @@ You have at most ${MAX_ITERATIONS} tool calls. Use them. Don't give up early.`,
       const url = String(args.url ?? '');
       if (!url) return { error: 'url required' };
       const result = await fetchUrl(url);
+      // Real content = HTTP 200 with a non-trivial stripped body. A blocked/WAF
+      // page comes back as a small body (renderHtml already rejects <500 chars)
+      // or a 4xx/202 — those must NOT flip the honesty gate.
+      if (result.status === 200 && typeof result.textLength === 'number' && result.textLength >= 300) {
+        fetchedRealContent = true;
+      }
       onProgress?.(`result:fetch_url status=${result.status} textLen=${result.textLength} linkCount=${Array.isArray(result.links) ? result.links.length : 0}`);
       return result;
     }
@@ -262,6 +279,8 @@ You have at most ${MAX_ITERATIONS} tool calls. Use them. Don't give up early.`,
       const baseUrl = String(args.baseUrl ?? sourceUrl);
       const endpoint = String(args.endpoint ?? '/wp-json/wp/v2/posts');
       const result = await tryWpRest(baseUrl, endpoint);
+      // WP REST returning items is real content the crawl actually read.
+      if (typeof result.total === 'number' && result.total > 0) fetchedRealContent = true;
       onProgress?.(`result:try_wp_rest endpoint=${endpoint} status=${result.status ?? 'fail'} total=${result.total ?? 0}`);
       return result;
     }
@@ -277,13 +296,23 @@ You have at most ${MAX_ITERATIONS} tool calls. Use them. Don't give up early.`,
       const itemCount = countIncoming(payload);
       onProgress?.(`commit_result.payload itemCount=${itemCount} keys=${Object.keys(payload ?? {}).join(',')}`);
       if (itemCount === 0) {
-        // REJECT empty commits — don't let Gemini "give up" with empty arrays.
-        // The functionResponse below feeds this message back so it retries.
+        if (!fetchedRealContent) {
+          // Honest failure: we never read ANY real page (WAF-blocked / every
+          // fetch empty). Accept the empty commit and warn — do NOT force the
+          // model to invent pages from menu labels. An empty result the dialog
+          // reports as "차단됨" is correct; a fabricated site is not. No
+          // 'rejected' key → the loop treats this as a (empty) commit and ends.
+          warnings.push('크롤이 차단되어 실제 페이지 콘텐츠를 하나도 가져오지 못했습니다 — 빈 결과로 정직하게 종료(메뉴 라벨로 가짜 페이지를 만들지 않음).');
+          return { ok: true, blocked: true, committed: 0, itemCountInPayload: 0 };
+        }
+        // We DID read real pages but the model committed empty arrays — nudge it
+        // to build FROM THE PAGES IT ACTUALLY FETCHED (in the conversation), not
+        // to invent anything. The functionResponse feeds this back so it retries.
         return {
           ok: false,
           rejected: true,
           itemCountInPayload: 0,
-          error: 'REJECTED: classifiedData was empty. You already fetched real pages — their text is in this conversation. Build a real payload now: for each content page add a pageContents entry (hero_banner first using the page heading + banner image, then text_image blocks per section with their heading/body/image), plus churchInfo (name/address/phone/email), worshipTimes, menus, and every sermon/column/event/staff/album/bulletin you saw. Then call commit_result again. Do NOT submit empty arrays.',
+          error: 'REJECTED: classifiedData was empty, but you already fetched real pages — their text is in this conversation. Build the payload ONLY from pages you actually fetched: for each such content page add a pageContents entry (hero_banner first using the page heading + banner image, then text_image blocks per section with their heading/body/image), plus churchInfo (name/address/phone/email), worshipTimes, menus, and every sermon/column/event/staff/album/bulletin you actually saw. Do NOT invent pages you did not fetch. Then call commit_result again.',
         };
       }
       mergeAgentResult(data, payload);
@@ -365,9 +394,15 @@ You have at most ${MAX_ITERATIONS} tool calls. Use them. Don't give up early.`,
           warnings.push(`agent ended without commit; final text: ${text.slice(0, 200)}`);
         }
       }
+      if (!committed && !parsedText && !fetchedRealContent) {
+        // No real page was ever fetched — the crawl is blocked. Ending honestly
+        // here (empty result + warning) beats nudging the model to fabricate.
+        warnings.push('크롤이 차단되어 실제 콘텐츠 없이 종료 — 메뉴 라벨로 가짜 페이지를 만들지 않음.');
+        break;
+      }
       if (!committed && !parsedText && forcedCommitNudges < MAX_FORCED_COMMIT_NUDGES) {
         forcedCommitNudges++;
-        pushUserText(`STOP investigating. You have already fetched the source pages — their full text is in this conversation above. Call commit_result NOW with a populated ClassifiedData built from what you gathered: map page bodies into pageContents (담임목사 인사말 → pastor_message, 교회 소개/비전 → church_intro/mission_vision, 오시는 길 → location_map, 연락처 → contact_info), worshipTimes from any 예배 시간표, churchInfo (name/address/phone), and menus from the nav links. Use empty arrays ONLY for content types that genuinely do not exist on this site. Use the commit_result tool.`);
+        pushUserText(`STOP investigating. You have already fetched the source pages — their full text is in this conversation above. Call commit_result NOW with a populated ClassifiedData built ONLY from pages you actually fetched: map page bodies into pageContents (담임목사 인사말 → pastor_message, 교회 소개/비전 → church_intro/mission_vision, 오시는 길 → location_map, 연락처 → contact_info), worshipTimes from any 예배 시간표, churchInfo (name/address/phone), and menus from the nav links. Use empty arrays ONLY for content types that genuinely do not exist on this site. Do NOT invent pages you did not fetch. Use the commit_result tool.`);
         continue;
       }
       break;
@@ -379,7 +414,10 @@ You have at most ${MAX_ITERATIONS} tool calls. Use them. Don't give up early.`,
   // an explicit checklist of the pages it fetched, then accept EITHER a
   // populated commit_result tool call OR a text reply containing the JSON
   // (parseAgentJson). Empty payloads are rejected and retried.
-  if (!committed) {
+  // Guarded by fetchedRealContent: if the crawl never read a real page, this
+  // retry loop is skipped entirely — there is nothing to build from and we will
+  // not pressure the model into fabricating a site.
+  if (!committed && fetchedRealContent) {
     const fetchedUrls = [...new Set(
       toolCalls
         .filter((t) => t.name === 'fetch_url')
@@ -429,7 +467,11 @@ Emit a commit_result whose classifiedData is POPULATED — an empty object is a 
   }
 
   if (!committed) {
-    warnings.push(`agent stopped after ${iterations} iterations without commit_result`);
+    warnings.push(
+      fetchedRealContent
+        ? `실제 페이지는 읽었으나 ${iterations}회 반복 내에 구조화(commit_result)를 완료하지 못했습니다.`
+        : `크롤이 차단되어 ${iterations}회 반복 동안 실제 콘텐츠를 가져오지 못했습니다 — 빈 결과로 종료(가짜 페이지 없음).`,
+    );
   }
   return { data, iterations, toolCalls, warnings };
 }

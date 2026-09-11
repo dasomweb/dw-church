@@ -58,5 +58,23 @@ COPY --from=base /app/apps/server/package.json ./apps/server/package.json
 COPY --from=base /app/packages/design-tokens ./packages/design-tokens
 
 WORKDIR /app/apps/server
+
+# Install Chromium for Playwright — the migration crawler renders pages in a
+# REAL headless browser so JS-challenge WAFs (SiteGround/Sucuri/Cloudflare) let
+# it through (a bare fetch/proxy gets blocked). This install belongs HERE, in
+# the Dockerfile Railway actually builds (dw-church-app/Dockerfile.server) — it
+# was previously only in the unused apps/server/Dockerfile, so production never
+# had the browser and every crawl silently fell back to a blocked plain fetch.
+# WORKDIR is apps/server so `npx playwright` resolves the CLI from
+# apps/server/node_modules (strict pnpm). PLAYWRIGHT_BROWSERS_PATH is a fixed
+# path set BEFORE install so the download lands there AND the root runtime user
+# finds it at launch (chromium.launch in extractors/browser-render.ts).
+# --with-deps adds the required apt libs. Non-fatal: if the download/apt step
+# fails the API still deploys and the crawler falls back to plain fetch — don't
+# take the whole server down over an optional enhancement. ⚠ Adds ~400MB to the
+# image and a few minutes to the build (accepted: this is what fixes the crawl).
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+RUN npx playwright install --with-deps chromium || echo "WARN: playwright chromium install failed — migration crawler will fall back to plain fetch"
+
 EXPOSE 3000
 CMD ["node", "dist/index.js"]

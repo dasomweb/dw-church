@@ -236,8 +236,28 @@ export interface ClassifiedMenu {
   sortOrder: number;
 }
 
+/** STEP 3 (static/dynamic routing) — a page is either STATIC (its content is
+ *  entered directly as block props: 인사말·소개·오시는 길) or DYNAMIC (a list
+ *  page — 주보·앨범·설교·칼럼·행사·교역자·게시판 — that displays a Content
+ *  Module's data through a Data Block). The review UI groups by this. */
+export type PageKind = 'static' | 'dynamic';
+
+/** The content module a DYNAMIC page's data block pulls from. Mirrors the
+ *  dynamic IncludeKey set + 'history'. Empty for static pages. */
+export type PageModuleType =
+  | 'bulletins' | 'sermons' | 'albums' | 'columns'
+  | 'events' | 'staff' | 'history' | 'boards';
+
 export interface ClassifiedPageContent {
   pageSlug: string;
+  /** STEP 3 — static page vs dynamic list page. Optional for backward-compat
+   *  with already-persisted jobs; the agent/classifier now set it, and the
+   *  review UI groups pages by it. When absent it's inferred from the page's
+   *  first data-block type at review time. */
+  pageKind?: PageKind;
+  /** For a DYNAMIC page, which Content Module its data block displays. Lets the
+   *  review screen show "이 페이지 → 이 모듈". Undefined for static pages. */
+  moduleType?: PageModuleType;
   blocks: {
     blockType: string;
     props: Record<string, unknown>;
