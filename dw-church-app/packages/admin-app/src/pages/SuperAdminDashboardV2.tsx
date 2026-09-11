@@ -72,7 +72,7 @@ const TABS: { id: TabId; label: string; icon: JSX.Element }[] = [
 // Grouped navigation for the modern sidebar — related surfaces sit together so
 // the 16-item list reads as a few intuitive sections instead of one long row.
 const NAV_GROUPS: { label: string; ids: TabId[] }[] = [
-  { label: '대시보드', ids: ['monitoring', 'overview'] },
+  { label: '대시보드', ids: ['monitoring', 'security', 'overview'] },
   { label: '운영', ids: ['tenants', 'applications', 'demo', 'intake', 'support'] },
   { label: '매출 · 상품', ids: ['pricing', 'billing'] },
   { label: '이메일', ids: ['email', 'emailTemplates', 'broadcast', 'addressBook'] },
