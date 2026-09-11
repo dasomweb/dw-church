@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { useAdminApi } from '../shared/use-admin-api';
 
 /**
@@ -10,6 +10,7 @@ interface SecurityEvent {
   id: string;
   createdAt: string;
   eventType: string;
+  actorUserId: string | null;
   actorEmail: string | null;
   actorRole: string | null;
   actorTenantSlug: string | null;
@@ -46,12 +47,23 @@ const fmt = (s?: string) => {
   return isNaN(+d) ? s : d.toLocaleString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
 };
 
+// 상세 패널의 한 필드(라벨 + 값). wide=두 칼럼 폭, mono=고정폭+줄바꿈(경로·UA·ID).
+function Detail({ label, value, mono, wide }: { label: string; value: string; mono?: boolean; wide?: boolean }) {
+  return (
+    <div className={wide ? 'sm:col-span-2' : ''}>
+      <dt className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">{label}</dt>
+      <dd className={`mt-0.5 text-gray-800 ${mono ? 'break-all font-mono text-[12px]' : ''}`}>{value}</dd>
+    </div>
+  );
+}
+
 export default function SecurityTab() {
   const apiFetch = useAdminApi();
   const [events, setEvents] = useState<SecurityEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('all');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true); setError('');
@@ -106,6 +118,7 @@ export default function SecurityTab() {
           <table className="w-full text-sm" style={{ minWidth: 900 }}>
             <thead>
               <tr className="border-b border-gray-100 text-left text-xs text-gray-500">
+                <th className="px-2 py-3 font-medium" aria-label="펼치기" />
                 <th className="px-4 py-3 font-medium">시각</th>
                 <th className="px-4 py-3 font-medium">유형</th>
                 <th className="px-4 py-3 font-medium">행위자</th>
@@ -116,17 +129,45 @@ export default function SecurityTab() {
               </tr>
             </thead>
             <tbody>
-              {shown.map((e) => (
-                <tr key={e.id} className="border-b border-gray-50 align-top">
-                  <td className="whitespace-nowrap px-4 py-3 text-gray-600 tabular-nums">{fmt(e.createdAt)}</td>
-                  <td className="px-4 py-3"><span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[11.5px] font-semibold ${TYPE_TONE[e.eventType] ?? 'bg-gray-100 text-gray-600'}`}>{TYPE_LABEL[e.eventType] ?? e.eventType}</span></td>
-                  <td className="px-4 py-3 text-gray-800">{e.actorEmail || '—'}</td>
-                  <td className="px-4 py-3 text-gray-500">{e.actorRole || '—'}{e.actorTenantSlug ? ` · ${e.actorTenantSlug}` : ''}</td>
-                  <td className="px-4 py-3 text-gray-600">{e.targetTenantSlug || '—'}</td>
-                  <td className="px-4 py-3 text-gray-500"><span className="break-all">{e.targetPath || '—'}</span></td>
-                  <td className="whitespace-nowrap px-4 py-3 text-gray-400">{e.ip || '—'}</td>
-                </tr>
-              ))}
+              {shown.map((e) => {
+                const open = expandedId === e.id;
+                return (
+                  <Fragment key={e.id}>
+                    <tr
+                      onClick={() => setExpandedId(open ? null : e.id)}
+                      className={`cursor-pointer border-b border-gray-50 align-top hover:bg-gray-50 ${open ? 'bg-gray-50' : ''}`}
+                    >
+                      <td className="px-2 py-3 text-gray-400">{open ? '▾' : '▸'}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-gray-600 tabular-nums">{fmt(e.createdAt)}</td>
+                      <td className="px-4 py-3"><span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[11.5px] font-semibold ${TYPE_TONE[e.eventType] ?? 'bg-gray-100 text-gray-600'}`}>{TYPE_LABEL[e.eventType] ?? e.eventType}</span></td>
+                      <td className="px-4 py-3 text-gray-800">{e.actorEmail || '—'}</td>
+                      <td className="px-4 py-3 text-gray-500">{e.actorRole || '—'}{e.actorTenantSlug ? ` · ${e.actorTenantSlug}` : ''}</td>
+                      <td className="px-4 py-3 text-gray-600">{e.targetTenantSlug || '—'}</td>
+                      <td className="px-4 py-3 text-gray-500"><span className="break-all">{e.targetPath || '—'}</span></td>
+                      <td className="whitespace-nowrap px-4 py-3 text-gray-400">{e.ip || '—'}</td>
+                    </tr>
+                    {open && (
+                      <tr className="border-b border-gray-100 bg-gray-50/60">
+                        <td />
+                        <td colSpan={7} className="px-4 py-4">
+                          <dl className="grid grid-cols-1 gap-x-8 gap-y-2 text-[13px] sm:grid-cols-2">
+                            <Detail label="발생 시각" value={new Date(e.createdAt).toLocaleString('ko-KR')} />
+                            <Detail label="유형" value={`${TYPE_LABEL[e.eventType] ?? e.eventType} (${e.eventType})`} />
+                            <Detail label="행위자" value={e.actorEmail || '—'} />
+                            <Detail label="행위자 역할 · 소속" value={`${e.actorRole || '—'}${e.actorTenantSlug ? ` · ${e.actorTenantSlug}` : ''}`} />
+                            <Detail label="행위자 ID" value={e.actorUserId || '—'} mono />
+                            <Detail label="대상 테넌트" value={e.targetTenantSlug || '—'} />
+                            <Detail label="대상 경로" value={e.targetPath || '—'} mono wide />
+                            <Detail label="IP" value={e.ip || '—'} mono />
+                            <Detail label="User-Agent" value={e.userAgent || '—'} wide />
+                            <Detail label="상세" value={e.detail || '—'} wide />
+                          </dl>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>
