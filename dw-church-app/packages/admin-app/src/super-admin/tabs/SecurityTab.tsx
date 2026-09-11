@@ -56,8 +56,10 @@ export default function SecurityTab() {
   const load = useCallback(async () => {
     setLoading(true); setError('');
     try {
-      const data = await apiFetch<SecurityEvent[]>('/security-events?limit=200');
-      setEvents(Array.isArray(data) ? data : []);
+      // useAdminApi 는 서버 응답 봉투 {data:[...]} 를 언랩하지 않고 그대로 준다.
+      const res = await apiFetch<{ data?: SecurityEvent[] } | SecurityEvent[]>('/security-events?limit=200');
+      const list = Array.isArray(res) ? res : (res?.data ?? []);
+      setEvents(list);
     } catch (e) {
       setError(e instanceof Error ? e.message : '불러오지 못했습니다.');
     } finally {
