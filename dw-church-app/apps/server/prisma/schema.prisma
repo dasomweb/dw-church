@@ -1,5 +1,12 @@
 generator client {
   provider = "prisma-client-js"
+  // Bundle query engines for BOTH Debian OpenSSL variants. The api-server
+  // production image runs `playwright install --with-deps chromium`, whose apt
+  // step pulls in OpenSSL 3.0.x — but the engine was generated for the build
+  // stage's 1.1.x (native), so the runtime crash-looped
+  // (PrismaClientInitializationError: could not locate Query Engine for
+  // debian-openssl-3.0.x). Listing both makes Prisma resilient to that shift.
+  binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
 }
 
 datasource db {
