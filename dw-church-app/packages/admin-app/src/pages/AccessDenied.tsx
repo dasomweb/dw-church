@@ -41,8 +41,7 @@ export default function AccessDenied({
       </div>
       <h1 className="text-xl font-bold text-gray-900">접근 권한이 없습니다</h1>
       <p className="mt-2 max-w-sm text-sm text-gray-500">
-        이 페이지에 접근할 권한이 없습니다. 접근 시도는 보안 기록에 남습니다.
-        소속 교회 관리자 페이지는 교회 사이트에서 로그인해 이용하세요.
+        이 페이지에 접근할 권한이 없습니다. 소속 교회 관리자 페이지는 교회 사이트에서 로그인해 이용하세요.
       </p>
       <Link
         to={home}
