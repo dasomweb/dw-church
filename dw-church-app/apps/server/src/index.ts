@@ -115,6 +115,7 @@ async function main(): Promise<void> {
   const { cardnewsRoutes } = await import('./modules/cardnews/routes.js');
   const { securityRoutes } = await import('./modules/security/routes.js');
   const { designOauthRoutes } = await import('./modules/design-oauth/routes.js');
+  const { designImportRoutes } = await import('./modules/design-import/routes.js');
   const { applicationRoutes } = await import('./modules/applications/routes.js');
   const { referenceDenominationRoutes } = await import('./modules/reference-denominations/routes.js');
   const { supportRoutes } = await import('./modules/support/routes.js');
@@ -212,6 +213,7 @@ async function main(): Promise<void> {
   await app.register(cardnewsRoutes, { prefix: '/api/v1' }); // /cardnews (카드뉴스)
   await app.register(securityRoutes, { prefix: '/api/v1' }); // /security-events (접근 위반 감사 로그)
   await app.register(designOauthRoutes, { prefix: '/api/v1' }); // /design/oauth/* (Claude Design OAuth 연결)
+  await app.register(designImportRoutes, { prefix: '/api/v1' }); // /design/import/* (Claude Design 캔버스 가져오기)
   await app.register(applicationRoutes, { prefix: '/api/v1' }); // /applications + /admin/applications
   await app.register(referenceDenominationRoutes, { prefix: '/api/v1' }); // /admin/reference-denominations
   await app.register(supportRoutes, { prefix: '/api/v1' }); // /support-tickets + /admin/support-tickets

@@ -1,18 +1,20 @@
 /**
- * Claude Design OAuth routes (super-admin). Lets the console connect to the
- * operator's claude.ai Design account so the server can fetch a canvas via the
- * design MCP. See service.ts for the OAuth mechanics.
+ * Claude Design OAuth routes. Connects the console to the operator's claude.ai
+ * Design account via a one-time LOCAL connector (Anthropic's design MCP OAuth is
+ * native-app / loopback-only — a server-hosted https callback can never register;
+ * see service.ts for the verified constraint).
  *
- *   POST   /design/oauth/start     → { authorizeUrl }   (super-admin; open in popup)
- *   GET    /design/oauth/callback  → HTML (PUBLIC; OAuth redirect, state-validated)
- *   GET    /design/oauth/status    → { connected, scope, expiresAt }  (super-admin)
- *   DELETE /design/oauth           → disconnect  (super-admin)
+ *   POST   /design/oauth/local/init      → { connectToken, command }  (super-admin)
+ *   POST   /design/oauth/local/complete  → { ok }  (PUBLIC; connect_token-authed — the connector posts tokens)
+ *   GET    /design/oauth/status          → { connected, scope, expiresAt }  (super-admin)
+ *   DELETE /design/oauth                 → disconnect  (super-admin)
  */
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { requireAuth } from '../../middleware/auth.js';
 import { AppError } from '../../middleware/error-handler.js';
 import { env } from '../../config/env.js';
-import { startAuth, handleCallback, getStatus, disconnect } from './service.js';
+import { initLocalConnect, completeLocalConnect, getStatus, disconnect, getAccessToken } from './service.js';
+import { probeTools } from './mcp-client.js';
 
 async function requireSuperAdmin(request: FastifyRequest, reply: FastifyReply): Promise<void> {
   await requireAuth(request, reply);
@@ -25,37 +27,37 @@ async function requireSuperAdmin(request: FastifyRequest, reply: FastifyReply): 
 
 const userIdOf = (request: FastifyRequest): string => request.user?.id ?? request.user?.email ?? '';
 
-/** Popup page: notify the opener (admin) and self-close. */
-function popupHtml(ok: boolean, msg: string): string {
-  const payload = JSON.stringify({ type: 'design-oauth', ok });
-  const color = ok ? '#16a34a' : '#dc2626';
-  return `<!doctype html><meta charset="utf-8"><title>Claude Design</title>` +
-    `<body style="font-family:system-ui,sans-serif;padding:48px;text-align:center;color:#16181d">` +
-    `<p style="font-size:16px;font-weight:600;color:${color}">${ok ? '✓ ' : '✗ '}${msg}</p>` +
-    `<p style="font-size:13px;color:#61697a">이 창은 자동으로 닫힙니다. 안 닫히면 직접 닫아 주세요.</p>` +
-    `<script>try{window.opener&&window.opener.postMessage(${payload},'*')}catch(e){}setTimeout(function(){window.close()},1200)</script>` +
-    `</body>`;
-}
-
 export async function designOauthRoutes(app: FastifyInstance): Promise<void> {
-  app.post('/design/oauth/start', { preHandler: [requireSuperAdmin] }, async (request, reply) => {
+  // Mint the single-use connect_token + local command for the operator.
+  app.post('/design/oauth/local/init', { preHandler: [requireSuperAdmin] }, async (request, reply) => {
     const userId = userIdOf(request);
     if (!userId) throw new AppError('UNAUTHORIZED', 401, 'no user');
-    const { authorizeUrl } = await startAuth(userId);
-    return reply.send({ data: { authorizeUrl } });
+    return reply.send({ data: await initLocalConnect(userId) });
   });
 
-  // PUBLIC — the browser lands here from claude.ai after consent (no auth header);
-  // the unguessable `state` (stored server-side with the user) authenticates it.
-  app.get('/design/oauth/callback', async (request, reply) => {
-    const { code, state, error } = request.query as { code?: string; state?: string; error?: string };
-    if (error) return reply.type('text/html').send(popupHtml(false, `Claude Design 인증 취소/오류: ${error}`));
-    if (!code || !state) return reply.type('text/html').send(popupHtml(false, 'code/state 누락'));
+  // PUBLIC — the local connector posts the tokens it obtained. Authenticated by
+  // the unguessable, single-use, 15-min connect_token (validated server-side), so
+  // no TrueLight JWT ever leaves the operator's browser.
+  app.post('/design/oauth/local/complete', async (request, reply) => {
+    const body = (request.body ?? {}) as {
+      connectToken?: string; clientId?: string; accessToken?: string;
+      refreshToken?: string | null; expiresIn?: number | null; scope?: string | null;
+    };
+    if (!body.connectToken || !body.clientId || !body.accessToken) {
+      throw new AppError('BAD_REQUEST', 400, 'connectToken/clientId/accessToken 필수');
+    }
     try {
-      await handleCallback(code, state);
-      return reply.type('text/html').send(popupHtml(true, 'Claude Design 연결됨'));
+      await completeLocalConnect({
+        connectToken: body.connectToken,
+        clientId: body.clientId,
+        accessToken: body.accessToken,
+        refreshToken: body.refreshToken ?? null,
+        expiresIn: body.expiresIn ?? null,
+        scope: body.scope ?? null,
+      });
+      return reply.send({ data: { ok: true } });
     } catch (e) {
-      return reply.type('text/html').send(popupHtml(false, e instanceof Error ? e.message : '연결 실패'));
+      throw new AppError('BAD_REQUEST', 400, e instanceof Error ? e.message : '연결 실패');
     }
   });
 
@@ -66,5 +68,14 @@ export async function designOauthRoutes(app: FastifyInstance): Promise<void> {
   app.delete('/design/oauth', { preHandler: [requireSuperAdmin] }, async (request, reply) => {
     await disconnect(userIdOf(request));
     return reply.send({ data: { connected: false } });
+  });
+
+  // Diagnostic — verify the stored token actually reaches the design MCP and
+  // dump the live tools/list (names + inputSchemas). Finalizes fetch args against
+  // reality on first connect; never guessed.
+  app.post('/design/oauth/mcp/probe', { preHandler: [requireSuperAdmin] }, async (request, reply) => {
+    const token = await getAccessToken(userIdOf(request));
+    const tools = await probeTools(token);
+    return reply.send({ data: { tools } });
   });
 }
