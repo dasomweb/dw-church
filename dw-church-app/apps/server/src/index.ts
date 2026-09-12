@@ -63,6 +63,7 @@ async function main(): Promise<void> {
         !request.url.startsWith('/api/v1/admin') &&
         !request.url.startsWith('/api/v1/billing') &&
         !request.url.startsWith('/api/v1/migration') &&
+        !request.url.startsWith('/api/v1/design/') &&  // Claude Design OAuth/import — 테넌트는 핸들러에서 처리(design-sets 는 제외)
         !request.url.startsWith('/api/v1/security-events')) {  // 전역 감사 로그 — 테넌트 무관
       await tenantMiddleware(request, reply);
     }
@@ -113,6 +114,7 @@ async function main(): Promise<void> {
   const { devotionRoutes } = await import('./modules/devotions/routes.js');
   const { cardnewsRoutes } = await import('./modules/cardnews/routes.js');
   const { securityRoutes } = await import('./modules/security/routes.js');
+  const { designOauthRoutes } = await import('./modules/design-oauth/routes.js');
   const { applicationRoutes } = await import('./modules/applications/routes.js');
   const { referenceDenominationRoutes } = await import('./modules/reference-denominations/routes.js');
   const { supportRoutes } = await import('./modules/support/routes.js');
@@ -209,6 +211,7 @@ async function main(): Promise<void> {
   await app.register(devotionRoutes, { prefix: '/api/v1' }); // /devotions (말씀 묵상 QT)
   await app.register(cardnewsRoutes, { prefix: '/api/v1' }); // /cardnews (카드뉴스)
   await app.register(securityRoutes, { prefix: '/api/v1' }); // /security-events (접근 위반 감사 로그)
+  await app.register(designOauthRoutes, { prefix: '/api/v1' }); // /design/oauth/* (Claude Design OAuth 연결)
   await app.register(applicationRoutes, { prefix: '/api/v1' }); // /applications + /admin/applications
   await app.register(referenceDenominationRoutes, { prefix: '/api/v1' }); // /admin/reference-denominations
   await app.register(supportRoutes, { prefix: '/api/v1' }); // /support-tickets + /admin/support-tickets
@@ -387,6 +390,17 @@ async function main(): Promise<void> {
     );
   } catch (err) {
     app.log.warn(`security_events table migration skipped: ${err}`);
+  }
+
+  // --- Claude Design OAuth: shared public.design_oauth* tables ---
+  // Global (not per-tenant): the super-admin's claude.ai Design OAuth token +
+  // DCR client + pending PKCE states, so the console can fetch a canvas via the
+  // design MCP and import it. See modules/design-oauth/service.ts.
+  try {
+    const { ensureDesignOauthTables } = await import('./modules/design-oauth/service.js');
+    await ensureDesignOauthTables();
+  } catch (err) {
+    app.log.warn(`design_oauth table migration skipped: ${err}`);
   }
 
   // Per-tenant feature overrides (super-admin "기능 권한" exceptions on top of
