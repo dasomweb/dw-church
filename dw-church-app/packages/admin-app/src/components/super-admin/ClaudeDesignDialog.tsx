@@ -113,7 +113,13 @@ export function ClaudeDesignDialog({ tenant, open, onClose }: Props) {
 
         <div className="mt-4 flex gap-2">
           <button onClick={onClose} className="flex-1 rounded-lg border border-gray-200 py-2.5 text-sm text-gray-700 hover:bg-gray-50">닫기</button>
-          <button onClick={copy} disabled={!raw.trim()} className="flex-1 rounded-lg bg-blue-600 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">{copied ? '복사됨 ✓' : '요청 복사 (tenant·mode 포함)'}</button>
+          <button onClick={copy} disabled={!raw.trim()} className="flex-1 rounded-lg bg-blue-600 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">{copied ? '복사됨 ✓ — 개발 채팅에 붙여넣기' : '요청 복사 (tenant·mode 포함)'}</button>
+        </div>
+        <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-[11px] leading-relaxed text-blue-900">
+          <b>다음 단계</b> — 이 다이얼로그는 "실행"이 아니라 <b>요청 만들기</b>입니다(서버는 Claude
+          Design 인증 불가). ① 위 <b>요청 복사</b> → ② <b>Claude Code(개발) 채팅에 붙여넣기</b> →
+          ③ 개발이 DesignSync로 시안 정독 → 매핑표 확인 → 테마+페이지 반영. 전면개편이면 먼저
+          백업 후 초기화합니다.
         </div>
       </div>
     </div>
