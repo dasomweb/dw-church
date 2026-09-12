@@ -38,7 +38,7 @@ function prune<T extends Record<string, unknown>>(o: T): Partial<T> {
 }
 
 /** Full, schema-valid DesignTokens from a styleguide (defaults fill the rest). */
-function buildChurchTheme(sg: Styleguide): DesignTokens {
+export function buildChurchTheme(sg: Styleguide): DesignTokens {
   const t = structuredClone(DEFAULT_DESIGN_TOKENS) as DesignTokens;
   const sys = t.colors.system as Record<string, unknown>;
   t.colors.system = { ...sys, ...prune(sg.colors) } as typeof t.colors.system;

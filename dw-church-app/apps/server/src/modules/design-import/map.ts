@@ -83,14 +83,20 @@ export function extractTypeScale(html: string): Partial<Record<ScaleName, { size
 
   // Body = the dominant real body size (14–18); 13-and-below is caption/label.
   const body = mode(sizes.filter((s) => s >= 14 && s <= 18)) ?? 16;
-  // Headings = distinct sizes ABOVE body, largest first → take top 4 (descending
-  // by construction; proportional fallbacks keep it strictly stepped when the
-  // canvas has fewer than 4 distinct heading sizes).
+  // Headings = distinct sizes ABOVE body. Snap each level to a real canvas size
+  // near its ideal ratio of h1 (h2≈0.70, h3≈0.48, h4≈0.36) AND strictly below
+  // the level above — so adjacent design sizes (34/32) don't collapse into
+  // near-equal h3/h4; we get a properly stepped scale (e.g. 56/40/26/20).
   const heads = uniqDesc.filter((s) => s > body);
+  const pickBelow = (target: number, prev: number): number => {
+    const cands = heads.filter((s) => s < prev);
+    if (cands.length === 0) return Math.max(body + 2, Math.min(Math.round(target), prev - 2));
+    return cands.reduce((best, s) => (Math.abs(s - target) < Math.abs(best - target) ? s : best), cands[0]!);
+  };
   const h1 = Math.min(heads[0] ?? Math.round(body * 3.2), 72);
-  const h2 = heads[1] ?? Math.max(body + 8, Math.round(h1 * 0.62));
-  const h3 = heads[2] ?? Math.max(body + 5, Math.round(h2 * 0.72));
-  const h4 = heads[3] ?? Math.max(body + 2, Math.round(h3 * 0.8));
+  const h2 = pickBelow(h1 * 0.70, h1);
+  const h3 = pickBelow(h1 * 0.48, h2);
+  const h4 = pickBelow(h1 * 0.36, h3);
   const caption = uniqDesc.filter((s) => s <= 13).sort((a, b) => b - a)[0] ?? Math.max(10, body - 3);
   return {
     h1: { size: h1, weight: headW },
