@@ -1,134 +1,106 @@
 # Claude Design → True Light / DW Church 준비 프롬프트
 
-> **목적:** Claude Design 시안을 우리 블록 시스템에 **결정적으로(deterministic)**
-> 옮기려면, 시안 쪽에 "무엇이 어떻게 있어야 하는지"가 명확히 정리돼 있어야 한다.
-> 이 문서는 시안을 만들거나 정리할 때 Claude Design 프로젝트에 그대로 붙여 넣는
-> **준비 프롬프트**다. 항목이 빠지면 임포터는 추론하게 되고, 추론은 곧 어긋난
-> 결과가 된다.
+> **목적:** Claude Design 에서 만드는 `.dc.html` 캔버스 시안을, 우리 블록 시스템에
+> **결정적으로(deterministic)** 이식할 수 있게 하는 **기본 프롬프트**다. 매 프로젝트마다
+> 이 프롬프트를 Claude Design 에 붙여넣어 시안을 만들면(또는 기존 시안을 다듬으면),
+> Claude Code(개발)가 추론 없이 그대로 우리 블록에 매핑한다. 항목이 빠지면 매핑이
+> 추론으로 떨어지고, 추론은 어긋난 결과가 된다.
 >
-> 함께 볼 것: 실제 임포트 방식 [CLAUDE-DESIGN-IMPORT-GUIDE.md](./CLAUDE-DESIGN-IMPORT-GUIDE.md),
-> 토큰 계약 [CLAUDE-DESIGN-TOKENS.md](./CLAUDE-DESIGN-TOKENS.md).
+> 실제 매핑 규칙(섹션→block_type)은 [CLAUDE-DESIGN-IMPORT-GUIDE.md](./CLAUDE-DESIGN-IMPORT-GUIDE.md)
+> "매핑 규칙", 토큰 계약은 [CLAUDE-DESIGN-TOKENS.md](./CLAUDE-DESIGN-TOKENS.md).
 
 ---
 
 ## 반드시 함께 첨부할 2개 파일
 
-프롬프트만 주면 Claude Design 이 **레퍼런스 없이 추측**한다. 아래 2개를 **함께
-붙여넣어야** 자기 디자인을 우리 **실제 블록명·토큰 역할**에 매핑하고, 매칭 안 되는
-것만 `NEEDS_BLOCK` 으로 표시한다.
+프롬프트만 주면 Claude Design 이 레퍼런스 없이 추측한다. 아래 2개를 **함께 붙여넣어야**
+자기 디자인을 우리 실제 block_type·토큰 역할에 매핑한다.
 
-1. **[CLAUDE-DESIGN-CATALOG.md](./CLAUDE-DESIGN-CATALOG.md)** — 블록 카탈로그(89블록:
-   block_type·key props·용도) + 토큰 역할 + 콘텐츠 모듈. `gen-catalog.ts` 자동생성.
+1. **[CLAUDE-DESIGN-CATALOG.md](./CLAUDE-DESIGN-CATALOG.md)** — 블록 카탈로그(block_type·
+   key props·용도) + 토큰 역할 + 콘텐츠 모듈. `gen-catalog.ts` 자동생성(블록 추가 시 재실행).
 2. **[CLAUDE-DESIGN-TOKENS.md](./CLAUDE-DESIGN-TOKENS.md)** — 토큰 계약 + STEP1 선적용.
 
-이 첨부가 있으면 `match(재사용) / skin(디자인만 다름) / new(개발 필요)` 분류를
-Claude Design 이 스스로 해서 돌려준다.
+---
+
+## 📋 기본 프롬프트 (Claude Design 에 붙여넣기 — 위 2개 파일과 함께)
+
+```
+너는 [교회명] 웹사이트 리뉴얼 .dc.html 캔버스 시안을 만든다. 이 시안은 True Light
+(DW Church) 블록 시스템에 결정적으로(deterministic) 이식된다 — 새로 생성하는 게
+아니라 있는 그대로 우리 블록으로 재현한다. 첨부한 CLAUDE-DESIGN-CATALOG.md(실제
+block_type·토큰역할·콘텐츠모듈)와 CLAUDE-DESIGN-TOKENS.md(토큰 계약)를 반드시 사용한다.
+
+[ 디자인 시스템 / 톤 ]
+- dasomweb 디자인 시스템(_ds)과 _tokens.css 토큰만 사용. 팔레트는 우리 10 토큰 역할
+  (primary·secondary·accent·text·muted·background·border·surface·onDark·onDarkMuted)에
+  배정(자유 hex 금지, -fg 는 자동 대비쌍). 타이포=Pretendard, radius sm/md/lg.
+- 교회 톤: 밝고 따뜻·경건. 검정/다크 배경 밴드 금지(onDark 는 히어로 사진 위 텍스트만).
+- 한국어 우선(이중언어면 한 페이지 + 섹션 오버레이, /ko·/en 복제 금지).
+
+[ 구조 — 매핑이 결정적이 되도록 (중요) ]
+- 화면 = 페이지. 각 화면 컨테이너에 data-screen-label="NN 이름" 과
+  data-page-slug="home|about|staff|worship|sermons|news|albums|sunday-school|pasture|…"
+  를 단다(slug 는 카탈로그/현 사이트 기준 canonical).
+- 헤더/푸터는 <dc-import name="…Header/…Footer"> 로 분리(페이지 블록 아님).
+- 각 섹션 최상위 요소에 data-block="<카탈로그의 block_type>" 을 단다. 예:
+  hero_banner, features_grid, worship_schedule, text_image, quote_block, text_only,
+  info_columns, location_map, contact_info, staff_grid, recent_sermons, event_grid,
+  album_gallery, board, cell_grid, call_to_action. 매칭 안 되면
+  data-block="NEEDS_BLOCK: 무엇이 필요한지".
+- 동적 리스트(설교·소식·앨범·교역자·목장 등)는 <sc-for list="{{ 이름 }}"> 로 표현한다
+  (→ 데이터 블록). 정적 콘텐츠는 인라인 verbatim.
+- 모든 페이지는 CTA(call_to_action)로 끝난다.
+
+[ 내용 ]
+- 카피는 현 사이트/실제 내용 verbatim(lorem 금지). 픽셀 위치가 아니라 구조+내용.
+- 운영정보(예배시간·주소·전화·담임목사명·헌금계좌)는 "교회 확인 필요"로 표시(비권위).
+- 설교·주보·앨범·게시글 개별 글은 지어내지 않는다 — 데이터 블록 자리만 두면 모듈이 채운다.
+- 이미지는 역할(hero/배경/인물)과 비율 표기. 테넌트 R2 자가호스팅, 개발 중 placeholder 허용.
+
+화면 순서대로, 섹션 순서·구조(컬럼/그룹/탭/스텝)를 그대로 재현하라.
+```
+
+핵심 두 가지만 지키면 매핑이 100% 결정적이 된다: **① `data-page-slug`(화면=페이지),
+② 섹션마다 `data-block`(우리 block_type).** (없어도 `sc-for` 리스트명 + 구조 패턴으로
+추론은 가능하지만, 명시하면 추론이 사라진다.)
 
 ---
 
-## 📋 프롬프트 (Claude Design 프로젝트에 붙여넣기 — 위 2개 파일과 함께)
+## 📨 완성 시안을 개발(Claude Code)에 넘기는 형식 (핸드오프)
+
+Claude Design 작업이 끝나면 아래 형식으로 준다(지금까지 쓰던 그대로 + 2줄 추가):
 
 ```
-You are preparing a KOREAN CHURCH website design that will be imported,
-deterministically, into True Light (DW Church)'s existing block system — not
-rebuilt from scratch. You are given two attachments: CLAUDE-DESIGN-CATALOG.md
-(the real block types, token roles, and content modules) and
-CLAUDE-DESIGN-TOKENS.md (the token contract). USE THEM: map every section to a
-`block_type` + `variant` from the catalog, assign colors to the catalog's TOKEN
-ROLES (not free hex), and tag anything with no matching block as
-`NEEDS_BLOCK: <what it needs>` (that goes to our dev queue). Organize the design
-as a STRUCTURED SPEC — section by section, tokens and named blocks, verbatim
-content — never pixel positions.
+Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login)
+to import this project:
+https://claude.ai/design/p/<PROJECT_ID>?file=<구현할 .dc.html>
 
-CHURCH TONE (hard rules):
-- Light, warm, reverent. NO black / dark background bands. The `onDark` role is
-  only for text over a hero background PHOTO + overlay, never whole dark sections.
-- Korean-first content (한국어). Provide an English overlay only if the church is
-  bilingual (one page + per-section overlay, never /ko //en duplicates).
-- Real church usage, warm plain Korean — not marketing jargon.
+Focus on these files:
+- `<구현할 .dc.html>`
+Also read: `_ds/…/_tokens.css`, `_ds/…/_ds_bundle.js`, `image-slot.js`, `support.js`
 
-Deliver the following, clearly separated:
-
-1. DESIGN SYSTEM (one place, reused by every page)
-   - Palette assigned to the catalog's TOKEN ROLES: the 10 system slots
-     (primary, secondary, accent, text, muted, background, border, surface,
-     onDark, onDarkMuted). Any extra color is a named CUSTOM or a per-block prop
-     — never a new system slot. Do NOT assign `-fg` (auto-paired for contrast).
-   - Typography: heading font, body font, Korean font (Pretendard ok); the 11
-     type scales (h1–h6, body, caption, overline, label, button) with
-     size / weight / letter-spacing per role — fill only the ones you use.
-   - Radius (sm/md/lg/full) and section vertical rhythm (sm/md/lg).
-   - State it once. Every page references these roles, never raw hex.
-
-2. PAGES (one block per page, top to bottom)
-   For each page: page NAME, ROUTE/SLUG, and an ordered list of SECTIONS.
-   For each section:
-     - the PATTERN / block_type from the catalog (hero, features_grid, steps_list,
-       pastor greeting text_image, worship_schedule, faq_accordion, cta_section, …),
-     - the VARIANT / tone (light band vs surface tint, card vs hairline, columns),
-     - the exact CONTENT verbatim (headings, body, labels, list items),
-     - the STRUCTURE (columns, split, sticky sidebar, groups, chips/tabs, steps).
-   RULE: every page MUST end with a CTA section.
-
-3. NAVIGATION & CHROME
-   - Top nav items + order; SUBMENUS (which parent, which children).
-   - Header CTA (e.g. 새가족 / 오시는 길 / 예배 안내) label + target; utility bar
-     (한/영, Giving) if any.
-   - Footer: church name/line, one contact line, address, service times, copyright.
-
-4. MOBILE (per section, not "figure it out")
-   - What stacks to 1 column, what hides, how tabs/chips behave, image placement.
-     If it's a plain vertical stack, say so.
-
-5. FUNCTIONAL / INTERACTIVE
-   - Filters/tabs: which exist, default state, what each shows.
-   - Forms: every field + label + placeholder, submit label, success message
-     (새가족 등록 newcomer_form / 문의 contact_form / 신청서 application_form_embed).
-   - Cross-links: card → which detail page; breadcrumbs; contact routing.
-   - Dynamic data: which sections come from a CONTENT MODULE (설교/주보/칼럼/앨범/
-     행사/교역자/연혁/게시판/배너/목장) vs static content. Name the module + data block.
-
-6. CONTENT & DATA SOURCES
-   - Mark which copy is final vs placeholder.
-   - Flag OPERATIONAL FACTS to confirm with the church (예배 시간, 주소, 전화,
-     담임목사명, 계좌/헌금 정보) — NOT authoritative in the mockup.
-   - Sermons/bulletins/albums/board POSTS are imported per-module later (the design
-     just places the data block) — do not invent individual posts.
-
-7. IMAGES / ASSETS
-   - List each image, its role (hero, portrait, background), aspect ratio.
-   - Images are self-hosted per tenant on R2; placeholders are fine during build,
-     replaced by generated/real images later.
-
-Output as headed sections in this exact order. Be explicit and verbatim — an
-importer treats anything vague as "reproduce structurally," anything omitted as
-"does not exist."
+Implement: `<구현할 .dc.html>`
+→ tenant: <slug>          # 어느 테넌트에 적용할지
+→ mode: 전면개편 | 부분추가   # 전면개편이면 백업 후 초기화
 ```
+
+개발(Claude Code)이 할 것: 수신·전체 정독 → (전면개편이면) 백업+초기화(reset-tenant)
+→ **매핑표(화면→페이지→블록, match/skin/new/NEEDS_BLOCK) 먼저 보고** → 확인받고 →
+테마 STEP1 → 페이지별 조합·라이브 검증 → 후속(스킨/메뉴/이미지 R2) 목록.
 
 ---
 
-## ✅ 임포트-준비 체크리스트
-
-시안을 임포트하기 전에 아래가 시안 문서에 **명시**돼 있는지 확인. 비면 그 부분은
-임포터가 추론한다 → 채운 뒤 시작.
+## ✅ 임포트-준비 체크리스트 (시안이 이걸 담았나)
 
 **디자인 시스템**
-- [ ] 팔레트가 **역할명 + hex** (10 슬롯). "따뜻한 느낌" 아니라 정확한 값.
-- [ ] **다크 배경 밴드 없음** (교회 톤). onDark 는 히어로 사진 위만.
-- [ ] 타입 스케일 역할별 size/weight/letter-spacing + heading/body/korean 폰트.
-- [ ] radius(sm/md/lg/full) · 섹션 리듬(sm/md/lg).
+- [ ] 팔레트가 **역할명 + hex** (10 슬롯). 다크 배경 밴드 없음. Pretendard + radius.
 
-**페이지별**
-- [ ] 페이지마다 이름 + slug + 섹션 순서.
-- [ ] 섹션마다 block_type · 변형 · 내용(verbatim) · 구조.
+**구조**
+- [ ] 화면마다 `data-screen-label` + `data-page-slug`.
+- [ ] 헤더/푸터 `dc-import` 분리.
+- [ ] 섹션마다 `data-block="block_type"`(미매칭은 `NEEDS_BLOCK`).
+- [ ] 동적 리스트는 `sc-for`, 정적은 인라인 verbatim.
 - [ ] 모든 페이지가 CTA 로 끝남.
-- [ ] 정적 콘텐츠 vs 데이터 모듈(설교/주보/칼럼/앨범/행사/교역자/연혁/게시판/목장) 구분.
 
-**내비 & 크롬**
-- [ ] 상단 nav·순서, 서브메뉴. 헤더 CTA·유틸바(한/영·Giving). 푸터(교회명·연락·주소·예배시간).
-
-**모바일 / 기능 / 내용**
-- [ ] 섹션별 모바일 동작. 폼 필드·성공 메시지. 크로스링크.
-- [ ] 확정 카피 vs placeholder. **운영 정보(예배시간·주소·전화·헌금)** 는 "교회 확인 필요".
-- [ ] 각 섹션이 카탈로그 `block_type`+variant 로 매핑(미매칭은 `NEEDS_BLOCK`). 한국어 우선.
-- [ ] 이미지 목록·역할·비율(테넌트 R2 자체호스팅; 개발 중 placeholder 허용).
+**내용**
+- [ ] 확정 카피 vs placeholder / 운영정보 "교회 확인 필요" / 개별 글 미창작 / 이미지 역할·비율.

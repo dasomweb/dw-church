@@ -47,19 +47,67 @@
 
 한 단위 = 이 8스텝. 다 통과하기 전엔 다음 페이지를 컨텍스트에 끌어오지 않는다.
 
-## 분류 — match / skin / new / 개발 큐
+## 매핑 규칙 (섹션 → block_type) ★
 
+각 시안 섹션을 우리 block_type 으로 옮기는 순서: **① 신호 읽기 → ② 룩업(표1·2) →
+③ match/skin/new 판정 → ④ 리뷰표로 확인 → ⑤ 적용.** (엠마오 임포트로 검증됨.)
+
+### ① 섹션에서 읽는 신호
+| 시안 신호 | 의미 | 처리 |
+|---|---|---|
+| `<dc-import name="…Header/Footer">` | 크롬 | 페이지 블록 아님 → 테마 헤더/푸터 |
+| `<sc-for list="{{ 이름 }}">` | **동적 리스트** | 리스트 **이름**으로 데이터 블록 직결(표1) — 가장 확실 |
+| 인라인 텍스트·카드·이미지 | **정적** | 구조 패턴으로 정적 블록(표2) |
+| `data-block="…"` (PREP-PROMPT로 요청) | **명시** | 그대로 사용 → 추론 0, 결정적 |
+| `data-page-slug="…"` | 페이지 슬러그 | 그 화면의 page slug |
+
+### ② 룩업
+**표1 — sc-for 리스트명 → 데이터 블록 (결정적)**
+```
+sermons/sermonGrid/sermonList → recent_sermons  (큰 1개는 sermon_feature)
+news/newsList                 → board(notices) 또는 event_grid
+words(하루를 여는 말씀)        → recent_columns
+worship                       → worship_schedule
+staff                         → staff_grid
+gallery/galleryTop/…          → album_gallery
+school                        → features_grid (주일학교 부서)
+cell(목장)                    → cell_grid
+depts(장로·집사·부서)         → info_columns  (미매칭이면 NEEDS_BLOCK)
+```
+**표2 — 정적 패턴 → 정적 블록 (data-block 주석 없을 때만 추론)**
+```
+배경이미지+헤드라인+구절+버튼(첫 섹션) → hero_banner
+카드 N개(eyebrow+제목+설명)            → features_grid
+{라벨,시간} 열 띠 / 예배·시간·장소 표    → worship_schedule
+이미지+제목+문단                        → text_image
+큰 인용문+성경구절                       → quote_block
+제목 아래 긴 문단                        → text_only
+지도자리+주소                            → location_map (+contact_info)
+라벨-값 셀 N개                           → info_columns
+제목+버튼 1개 띠                         → call_to_action
+로고 줄                                  → logo_bar
+```
+
+### ③ match / skin / new
 | 상황 | 처리 |
 |------|------|
-| 카탈로그 블록 + 변형으로 표현됨 | **match** (재사용) |
-| props·기능은 맞고 디자인 구성만 다름 | **skin** (기존 블록 + 프리셋 변형) |
-| 구조/기능이 어떤 블록에도 안 맞음 | **new block** (`isHidden` 게이팅) |
-| 블록/모듈 자체가 없음 | **개발 큐** (`NEEDS_BLOCK`) — 결정은 사람이 |
+| 후보 블록 있고 props에 시안 내용이 다 담김 | **match** (즉시 사용, 내용 verbatim) |
+| 기능·props 맞고 **모양만 다름** | **skin** — 일단 match로 심고 "variant 필요" 플래그, 코드 스킨은 후속 |
+| 어떤 블록 구조에도 안 맞음 | **new / NEEDS_BLOCK** — 가장 가까운 블록으로 두고 플래그, 신규는 사람 결정 |
+| 상세 화면(설교/게시글/갤러리 상세) | **매핑 안 함** — 모듈 상세 라우트가 자동 렌더 |
 
-**신규 블록 배선 = 5곳** (하나라도 빠지면 안 됨): 렌더 컴포넌트(`packages/blocks`) →
-공유 BlockRenderer 매핑 → 서버 block_type enum → `registry.json`(metadata,
-`flags.isHidden`) → 관리자 인스펙터. **동적 콘텐츠**는 정적 디자인 블록을 감싸 모듈
-데이터를 fetch 하는 **데이터 블록**으로(설교/주보/앨범/행사/게시판/목장 등).
+**신규 블록 배선 = 5곳** (하나라도 빠지면 깨짐): 렌더 컴포넌트(`packages/blocks`) →
+공유 BlockRenderer 매핑 → 서버 block_type enum(`pages/schema.ts`) → `registry.json`
+(metadata, `flags.isHidden`) → 관리자 인스펙터. ⚠ 서버 enum(71) ⊂ registry(89) — pages
+API 조합은 71 한정. **동적 콘텐츠**는 모듈 데이터를 fetch 하는 **데이터 블록**으로.
+
+### ④ 리뷰표 (적용 전 확인)
+```
+NN 화면 → <slug>
+  <섹션 요약>  → <block_type>  [match|skin|new]
+  …
+```
+대표님이 "OK / 이건 skin 하지 말고 그대로 / 이건 새 블록" 정한 뒤 ⑤ 적용.
 
 ## 진행 원장 (Progress Ledger)
 
