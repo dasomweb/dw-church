@@ -83,6 +83,7 @@ export async function getTheme(schema: string): Promise<ThemeResponse> {
     `SELECT id, name, is_active, settings, created_at, updated_at
      FROM "${schema}".themes
      WHERE is_active = true
+     ORDER BY ((settings -> 'tokensV2') IS NOT NULL) DESC, updated_at DESC NULLS LAST
      LIMIT 1`,
   );
 
@@ -112,9 +113,13 @@ export async function getTheme(schema: string): Promise<ThemeResponse> {
  */
 export async function getThemeTokens(schema: string): Promise<DesignTokens> {
   const rows = await prisma.$queryRawUnsafe<ThemeRow[]>(
+    // Some tenants have >1 is_active row (data drift). Deterministically prefer
+    // the row that actually carries tokensV2, then the most recently updated —
+    // otherwise a bare LIMIT 1 could read a stale row and drop the saved design.
     `SELECT id, name, is_active, settings, created_at, updated_at
      FROM "${schema}".themes
      WHERE is_active = true
+     ORDER BY ((settings -> 'tokensV2') IS NOT NULL) DESC, updated_at DESC NULLS LAST
      LIMIT 1`,
   );
   const settings = (rows[0]?.settings ?? {}) as LegacyThemeBlob;
@@ -131,28 +136,21 @@ export async function updateThemeTokens(
   schema: string,
   tokens: DesignTokens,
 ): Promise<DesignTokens> {
-  const existing = await prisma.$queryRawUnsafe<ThemeRow[]>(
-    `SELECT id, settings FROM "${schema}".themes WHERE is_active = true LIMIT 1`,
+  // Write tokensV2 into EVERY active row (not just LIMIT 1). Some tenants have
+  // duplicate is_active rows, and a bare LIMIT 1 write could land on a row the
+  // reader doesn't pick → saved design silently ignored (the mdemmauschurch bug).
+  // jsonb_set injects tokensV2 without clobbering each row's legacy colors/fonts.
+  const updated = await prisma.$executeRawUnsafe(
+    `UPDATE "${schema}".themes
+     SET settings = jsonb_set(COALESCE(settings, '{}'::jsonb), '{tokensV2}', $1::jsonb, true), updated_at = NOW()
+     WHERE is_active = true`,
+    JSON.stringify(tokens),
   );
-  const current = (existing[0]?.settings ?? {}) as Record<string, unknown>;
-  const merged = { ...current, tokensV2: tokens };
-
-  if (existing.length > 0) {
-    await prisma.$executeRawUnsafe(
-      // id is a uuid column; $executeRawUnsafe binds the JS string param as
-      // text, so `id = $2` errors 42883 (operator does not exist: uuid = text).
-      // Explicit ::uuid cast fixes the save (theme tokens were 500-ing).
-      `UPDATE "${schema}".themes
-       SET settings = $1::jsonb, updated_at = NOW()
-       WHERE id = $2::uuid`,
-      JSON.stringify(merged),
-      existing[0]!.id,
-    );
-  } else {
+  if (!updated) {
     await prisma.$executeRawUnsafe(
       `INSERT INTO "${schema}".themes (name, is_active, settings)
-       VALUES ('modern', true, $1::jsonb)`,
-      JSON.stringify(merged),
+       VALUES ('modern', true, jsonb_build_object('tokensV2', $1::jsonb))`,
+      JSON.stringify(tokens),
     );
   }
   return tokens;

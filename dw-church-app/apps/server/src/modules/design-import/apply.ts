@@ -46,6 +46,19 @@ function buildChurchTheme(sg: Styleguide): DesignTokens {
     const fam = t.typography.families as Record<string, unknown>;
     t.typography.families = { ...fam, ...prune(sg.fonts) } as typeof t.typography.families;
   }
+  // Apply the design's TYPE SCALE (else imports keep the 72px default → huge heads).
+  if (sg.scale) {
+    const scales = t.typography.scales as Record<string, { size: { desktop: number; tablet?: number; mobile?: number }; weight: number }>;
+    for (const [name, v] of Object.entries(sg.scale)) {
+      if (!v || !scales[name]) continue;
+      const desktop = Math.max(10, Math.round(v.size));
+      scales[name] = {
+        ...scales[name],
+        size: { desktop, tablet: Math.max(11, Math.round(desktop * 0.88)), mobile: Math.max(11, Math.round(desktop * 0.76)) },
+        ...(v.weight ? { weight: v.weight } : {}),
+      };
+    }
+  }
   return t;
 }
 

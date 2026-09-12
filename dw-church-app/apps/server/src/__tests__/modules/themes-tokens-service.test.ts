@@ -63,31 +63,35 @@ describe('getThemeTokens', () => {
 });
 
 describe('updateThemeTokens', () => {
-  it('merges tokensV2 into existing settings (UPDATE path)', async () => {
-    vi.mocked(prisma.$queryRawUnsafe).mockResolvedValueOnce([
-      { id: 'r1', settings: { colors: { primary: '#000' }, customCss: '/* keep */' } },
-    ] as never);
+  it('writes tokensV2 into ALL active rows via jsonb_set (UPDATE path)', async () => {
+    // jsonb_set injects tokensV2 in-place (legacy colors/customCss preserved in
+    // SQL), and WHERE is_active=true covers duplicate-active rows — the fix for
+    // the "saved design ignored" bug. $executeRawUnsafe returns the rowcount.
+    vi.mocked(prisma.$executeRawUnsafe).mockResolvedValueOnce(2 as never);
 
-    const tokens = { ...DEFAULT_DESIGN_TOKENS };
+    const tokens = JSON.parse(JSON.stringify(DEFAULT_DESIGN_TOKENS));
+    tokens.colors.system.primary = '#123456';
     await updateThemeTokens('tenant_grace', tokens);
 
     const call = vi.mocked(prisma.$executeRawUnsafe).mock.calls[0];
     expect(call?.[0]).toMatch(/UPDATE/i);
-    const payload = JSON.parse(call?.[1] as string);
-    expect(payload.tokensV2.colors.system.primary).toBe(tokens.colors.system.primary);
-    // The legacy editor data must not be erased.
-    expect(payload.colors.primary).toBe('#000');
-    expect(payload.customCss).toBe('/* keep */');
+    expect(call?.[0]).toMatch(/jsonb_set/i);
+    expect(call?.[0]).toMatch(/is_active\s*=\s*true/i);
+    const payload = JSON.parse(call?.[1] as string); // $1 is the tokens snapshot
+    expect(payload.colors.system.primary).toBe('#123456');
+    expect(vi.mocked(prisma.$executeRawUnsafe).mock.calls.length).toBe(1); // no INSERT
   });
 
-  it('creates a new theme row when none exists (INSERT path)', async () => {
-    vi.mocked(prisma.$queryRawUnsafe).mockResolvedValueOnce([] as never);
+  it('creates a row when no active theme exists (INSERT path)', async () => {
+    vi.mocked(prisma.$executeRawUnsafe)
+      .mockResolvedValueOnce(0 as never) // UPDATE affected 0 rows
+      .mockResolvedValueOnce(1 as never); // INSERT
 
     await updateThemeTokens('tenant_grace', DEFAULT_DESIGN_TOKENS);
 
-    const call = vi.mocked(prisma.$executeRawUnsafe).mock.calls[0];
-    expect(call?.[0]).toMatch(/INSERT/i);
-    const payload = JSON.parse(call?.[1] as string);
-    expect(payload.tokensV2).toBeTruthy();
+    const insertCall = vi.mocked(prisma.$executeRawUnsafe).mock.calls[1];
+    expect(insertCall?.[0]).toMatch(/INSERT/i);
+    const payload = JSON.parse(insertCall?.[1] as string);
+    expect(payload.colors.system).toBeTruthy(); // $1 is the tokens snapshot
   });
 });

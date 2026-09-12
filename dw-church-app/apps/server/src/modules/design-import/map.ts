@@ -18,10 +18,14 @@ export type SystemSlot =
   | 'primary' | 'secondary' | 'accent' | 'text' | 'muted'
   | 'background' | 'border' | 'surface' | 'onDark' | 'onDarkMuted';
 
+export type ScaleName = 'h1' | 'h2' | 'h3' | 'h4' | 'body' | 'caption';
 export interface Styleguide {
   name: string;
   colors: Partial<Record<SystemSlot, string>>;
   fonts?: { heading?: string; body?: string; korean?: string };
+  /** Type scale (px + weight) extracted from the canvas → tokensV2.typography.scales.
+   *  Without this, imports keep the default h1=72px → "abnormally large" headings. */
+  scale?: Partial<Record<ScaleName, { size: number; weight?: number }>>;
 }
 export interface SectionSpec { blockType: string; props: Record<string, unknown> }
 export interface PageSpec { name: string; slug: string; sections: SectionSpec[]; sortOrder: number }
@@ -56,6 +60,48 @@ export function styleguideFromTokensCss(css: string | undefined, name = 'Claude 
   return { name, colors, fonts: fam ? { heading: fam, body: fam, korean: fam } : undefined };
 }
 
+/**
+ * Extract a type scale (px + heading weight) from the canvas's inline font-size
+ * declarations so the design's actual sizes reach tokensV2.typography.scales.
+ * The canvas uses arbitrary px (e.g. hero 56, section 28, card 20, body 15) — we
+ * bucket them into our named scales. Heuristic, but far better than the 72px
+ * default that made imported heroes "abnormally large".
+ */
+export function extractTypeScale(html: string): Partial<Record<ScaleName, { size: number; weight?: number }>> {
+  const sizes = [...html.matchAll(/font-size:\s*(\d+(?:\.\d+)?)px/gi)].map((m) => parseFloat(m[1]!)).filter((n) => n >= 8 && n <= 160);
+  if (sizes.length === 0) return {};
+  const uniqDesc = [...new Set(sizes)].sort((a, b) => b - a);
+  const mode = (arr: number[]): number | undefined => {
+    if (!arr.length) return undefined;
+    const c = new Map<number, number>();
+    for (const n of arr) c.set(n, (c.get(n) ?? 0) + 1);
+    return [...c.entries()].sort((a, b) => b[1] - a[1] || b[0] - a[0])[0]![0];
+  };
+  // Dominant heading weight (>=600) — church designs are usually 700/800.
+  const weights = [...html.matchAll(/font-weight:\s*(\d{3})/gi)].map((m) => parseInt(m[1]!, 10)).filter((w) => w >= 600);
+  const headW = mode(weights) ?? 800;
+
+  // Body = the dominant real body size (14–18); 13-and-below is caption/label.
+  const body = mode(sizes.filter((s) => s >= 14 && s <= 18)) ?? 16;
+  // Headings = distinct sizes ABOVE body, largest first → take top 4 (descending
+  // by construction; proportional fallbacks keep it strictly stepped when the
+  // canvas has fewer than 4 distinct heading sizes).
+  const heads = uniqDesc.filter((s) => s > body);
+  const h1 = Math.min(heads[0] ?? Math.round(body * 3.2), 72);
+  const h2 = heads[1] ?? Math.max(body + 8, Math.round(h1 * 0.62));
+  const h3 = heads[2] ?? Math.max(body + 5, Math.round(h2 * 0.72));
+  const h4 = heads[3] ?? Math.max(body + 2, Math.round(h3 * 0.8));
+  const caption = uniqDesc.filter((s) => s <= 13).sort((a, b) => b - a)[0] ?? Math.max(10, body - 3);
+  return {
+    h1: { size: h1, weight: headW },
+    h2: { size: h2, weight: headW },
+    h3: { size: h3, weight: Math.max(600, headW - 100) },
+    h4: { size: h4, weight: 600 },
+    body: { size: body, weight: 400 },
+    caption: { size: caption, weight: 400 },
+  };
+}
+
 // ── LLM map (per screen) ────────────────────────────────────────────────────
 
 const CATALOG_STR = CATALOG_BLOCKS.map((b) => `- ${b.t} (${b.g}): ${b.d}`).join('\n');
@@ -75,7 +121,14 @@ const MAP_SYSTEM =
   '- Use camelCase prop keys matching our elements: title, subtitle, content, imageUrl, backgroundImageUrl, buttonText, buttonUrl, items (arrays), overlayOpacity.\n' +
   '- Keep image src URLs as-is in props (they are re-hosted to R2 later).\n' +
   '- FIRST block of a page is usually hero_banner. Every page ENDS with call_to_action.\n' +
-  '- Church tone: never a black/near-black section background.';
+  '- Church tone: never a black/near-black section background.\n' +
+  '- PREFER these token-driven blocks (they honor the theme typography/colors): ' +
+  'hero_banner, text_image, text_only, features_grid, quote_block, cta_section, worship_schedule, ' +
+  'section_header, staff_grid, recent_sermons, board, album_gallery, event_grid, cell_grid, recent_columns, verse_of_day, news_announcements.\n' +
+  '- DO NOT use these blocks (they hardcode font sizes and ignore the theme) — use the replacement: ' +
+  'sermon_feature→text_image, hero_overlap→hero_banner, bento_grid→features_grid, news_split→features_grid, ' +
+  'dashboard_banner→hero_banner, info_columns→features_grid, quick_links→features_grid, ' +
+  'week_schedule→worship_schedule, schedule_board→worship_schedule, logo_bar→features_grid, steps_list→features_grid.';
 
 interface EmitSection { block_type?: string; blockType?: string; props?: Record<string, unknown> }
 
@@ -100,6 +153,16 @@ const EMIT_TOOL = {
 
 const VALID_BLOCKS = new Set(CATALOG_BLOCKS.map((b) => b.t));
 
+/** Hardcoded (Group-B) blocks that ignore theme typography → forced to their
+ *  token-driven equivalent so the imported design's type scale actually shows.
+ *  (Audited 2026-09-12; belt-and-suspenders vs the LLM ignoring the prompt steer.) */
+export const BLOCK_REPLACE: Record<string, string> = {
+  sermon_feature: 'text_image', hero_overlap: 'hero_banner', bento_grid: 'features_grid',
+  news_split: 'features_grid', dashboard_banner: 'hero_banner', info_columns: 'features_grid',
+  quick_links: 'features_grid', week_schedule: 'worship_schedule', schedule_board: 'worship_schedule',
+  logo_bar: 'features_grid', steps_list: 'features_grid',
+};
+
 async function mapScreen(label: string, slug: string, screenHtml: string): Promise<{ sections: SectionSpec[]; warning?: string }> {
   const user =
     `Screen label: ${label}\nPage slug: ${slug}\n\n` +
@@ -121,8 +184,9 @@ async function mapScreen(label: string, slug: string, screenHtml: string): Promi
   const raw = tool?.input?.sections ?? [];
   const sections: SectionSpec[] = [];
   for (const s of raw) {
-    const bt = (s.block_type ?? s.blockType ?? '').trim();
-    if (!bt) continue;
+    const rawBt = (s.block_type ?? s.blockType ?? '').trim();
+    if (!rawBt) continue;
+    const bt = BLOCK_REPLACE[rawBt] ?? rawBt; // force hardcoded blocks → token-driven
     if (!VALID_BLOCKS.has(bt)) { sections.push({ blockType: bt, props: { ...(s.props ?? {}), _unknownBlock: true } }); continue; }
     sections.push({ blockType: bt, props: s.props ?? {} });
   }
@@ -162,7 +226,9 @@ export async function mapCanvas(
   }
   onProgress('매핑 완료', done, pageScreens.length);
 
-  return { styleguide: styleguideFromTokensCss(tokensCss, churchName), pages, warnings };
+  const styleguide = styleguideFromTokensCss(tokensCss, churchName);
+  styleguide.scale = extractTypeScale(canvasHtml); // design's real sizes → tokensV2
+  return { styleguide, pages, warnings };
 }
 
 function cleanName(label: string): string {
