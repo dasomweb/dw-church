@@ -3,12 +3,13 @@
  *
  * ⚠ 정직: Claude Design 임포트는 서버 런타임이 아니라 **개발(Claude Code)이 DesignSync
  * (claude.ai 로그인 에이전트 도구)로 실행**한다 — admin 앱은 Claude Design 에 인증할 수
- * 없다. 그래서 이 화면은 "실행 버튼"이 아니라, 이 테넌트에 어떤 Claude Design 시안을
- * 반영할지 **요청(핸드오프)을 만들어 복사**해 개발에 넘기는 진입점이다.
- * (마이그레이션=서버 크롤 / AI빌더=생성 / Claude Design=완성 시안 결정적 재현 — 별개 기능.)
+ * 없다. 그래서 이 화면은 "실행 버튼"이 아니라, Claude Design 이 준 `claude_design MCP …`
+ * 요청 블록을 **붙여넣으면 파싱해서**(프로젝트·파일 확인) + 이 테넌트/모드를 붙여
+ * **개발에 넘길 최종 요청을 복사**해 주는 진입점이다.
+ * (마이그레이션=서버 크롤 / AI빌더=생성 / Claude Design=완성 시안 결정적 재현 — 별개.)
  * 절차·매핑 규칙: scripts/design-importer/CLAUDE-DESIGN-IMPORT-GUIDE.md.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useToast } from '../index';
 
 interface Props {
@@ -16,49 +17,54 @@ interface Props {
   open: boolean;
   onClose: () => void;
 }
-
 type Mode = '전면개편' | '부분추가';
 
-function handoffText(projectLink: string, file: string, slug: string, mode: Mode): string {
-  const f = file.trim() || '<구현할 .dc.html>';
-  return [
-    'Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:',
-    projectLink.trim() || '<claude.ai/design/p/... 링크>',
-    '',
-    'Focus on these files (the whole project is readable):',
-    `- \`${f}\``,
-    'Also read the design system + helpers the selection imports:',
-    '- `_ds/<design-system>/_tokens.css`',
-    '- `_ds/<design-system>/_ds_bundle.js`',
-    '- `image-slot.js`',
-    '- `support.js`',
-    '',
-    `Implement: \`${f}\``,
-    `→ tenant: ${slug}`,
-    `→ mode: ${mode}`,
-  ].join('\n');
+interface Parsed { projectId: string | null; projectLink: string | null; file: string | null }
+
+/** Claude Design 이 준 요청 블록에서 프로젝트/파일을 파싱한다. */
+export function parseClaudeDesignRequest(raw: string): Parsed {
+  const link = raw.match(/https:\/\/claude\.ai\/design\/p\/[^\s'"`)]+/)?.[0] ?? null;
+  const projectId = (link ?? raw).match(/design\/p\/([A-Za-z0-9-]+)/)?.[1] ?? null;
+  // file: ?file= 우선 → Implement: `…` → 첫 .dc.html 백틱
+  let file: string | null = null;
+  const fromParam = (link ?? raw).match(/[?&]file=([^&\s'"`]+)/)?.[1];
+  if (fromParam) { try { file = decodeURIComponent(fromParam.replace(/\+/g, ' ')); } catch { file = fromParam; } }
+  if (!file) file = raw.match(/Implement:\s*`?([^`\n]+\.dc\.html)`?/i)?.[1]?.trim() ?? null;
+  if (!file) file = raw.match(/`([^`]+\.dc\.html)`/)?.[1]?.trim() ?? null;
+  return { projectId, projectLink: link, file };
 }
 
 export function ClaudeDesignDialog({ tenant, open, onClose }: Props) {
   const { showToast } = useToast();
-  const [link, setLink] = useState('');
-  const [file, setFile] = useState('');
+  const [raw, setRaw] = useState('');
   const [mode, setMode] = useState<Mode>('전면개편');
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!open) return;
-    setLink(''); setFile(''); setMode('전면개편'); setCopied(false);
+    setRaw(''); setMode('전면개편'); setCopied(false);
   }, [open, tenant.id]);
+
+  const parsed = useMemo(() => parseClaudeDesignRequest(raw), [raw]);
 
   if (!open) return null;
 
-  const text = handoffText(link, file, tenant.slug, mode);
+  // 최종 요청 = 붙여넣은 블록 + (없으면) tenant/mode 2줄 추가.
+  const finalText = (() => {
+    let t = raw.trim();
+    if (!t) return '';
+    if (!/→\s*tenant\s*:/i.test(t)) t += `\n→ tenant: ${tenant.slug}`;
+    else t = t.replace(/→\s*tenant\s*:.*/i, `→ tenant: ${tenant.slug}`);
+    if (!/→\s*mode\s*:/i.test(t)) t += `\n→ mode: ${mode}`;
+    else t = t.replace(/→\s*mode\s*:.*/i, `→ mode: ${mode}`);
+    return t;
+  })();
+
   const copy = async () => {
-    try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1600); showToast('success', '요청을 복사했습니다 — 개발(Claude Code)에 붙여넣으세요.'); }
+    if (!finalText) { showToast('error', 'Claude Design 요청 블록을 붙여넣으세요.'); return; }
+    try { await navigator.clipboard.writeText(finalText); setCopied(true); setTimeout(() => setCopied(false), 1600); showToast('success', '요청 복사됨 — 개발(Claude Code)에 붙여넣으세요.'); }
     catch { showToast('error', '복사 실패 — 아래 텍스트를 직접 선택해 복사하세요.'); }
   };
-  const inputCls = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
@@ -73,43 +79,41 @@ export function ClaudeDesignDialog({ tenant, open, onClose }: Props) {
 
         <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-900">
           Claude Design 임포트는 <b>개발(Claude Code)이 DesignSync로 실행</b>합니다(admin 앱은
-          Claude Design 인증 불가). 여기서 <b>요청을 만들어 복사</b>해 개발에 넘기면, 개발이
-          시안을 전체 정독 → 매핑표 확인 → 테마+페이지로 반영합니다. (마이그레이션·AI빌더와 별개)
+          Claude Design 인증 불가). Claude Design 이 준 <b>요청 블록을 그대로 붙여넣으면</b> 파싱해
+          이 테넌트로 넘길 최종 요청을 만들어 드립니다.
         </div>
 
-        <div className="space-y-2">
-          <div>
-            <label className="mb-1 block text-xs font-medium text-gray-700">Claude Design 프로젝트 링크</label>
-            <input className={inputCls} placeholder="https://claude.ai/design/p/…?file=…" value={link} onChange={(e) => setLink(e.target.value)} />
+        <label className="mb-1 block text-xs font-medium text-gray-700">Claude Design 요청 붙여넣기</label>
+        <textarea
+          value={raw} onChange={(e) => setRaw(e.target.value)} autoFocus rows={7}
+          placeholder={'Use the claude_design MCP (…) to import this project:\nhttps://claude.ai/design/p/…?file=…\n\nFocus on these files:\n- `…리뉴얼.dc.html`\n\nImplement: `…리뉴얼.dc.html`'}
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-[11px] leading-relaxed outline-none focus:border-blue-500"
+        />
+
+        {/* 파싱 미리보기 */}
+        {raw.trim() && (
+          <div className="mt-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-[11px] text-gray-700 space-y-0.5">
+            <div>프로젝트: {parsed.projectId ? <span className="font-mono text-gray-900">{parsed.projectId}</span> : <span className="text-red-600">감지 실패 — 링크가 있는지 확인</span>}</div>
+            <div>파일: {parsed.file ? <span className="font-medium text-gray-900">{parsed.file}</span> : <span className="text-red-600">감지 실패 — Implement 줄 확인</span>}</div>
+            <div>테넌트: <span className="font-medium text-gray-900">{tenant.slug}</span> · 모드: <span className="font-medium text-gray-900">{mode}</span></div>
           </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-gray-700">구현할 파일 (.dc.html)</label>
-            <input className={inputCls} placeholder="예: 엠마오교회 리뉴얼.dc.html" value={file} onChange={(e) => setFile(e.target.value)} />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-gray-700">반영 방식</label>
-            <div className="flex gap-2">
-              {(['전면개편', '부분추가'] as Mode[]).map((m) => (
-                <button key={m} onClick={() => setMode(m)}
-                  className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium ${mode === m ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}>
-                  {m}{m === '전면개편' ? ' (백업 후 초기화)' : ''}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+        )}
 
         <div className="mt-3">
-          <div className="mb-1 flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-700">개발에 넘길 요청 (미리보기)</span>
-            {link.trim() && <a href={link.trim()} target="_blank" rel="noopener noreferrer" className="text-[11px] font-medium text-blue-600 hover:underline">↗ 프로젝트 열기</a>}
+          <label className="mb-1 block text-xs font-medium text-gray-700">반영 방식</label>
+          <div className="flex gap-2">
+            {(['전면개편', '부분추가'] as Mode[]).map((m) => (
+              <button key={m} onClick={() => setMode(m)}
+                className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium ${mode === m ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}>
+                {m}{m === '전면개편' ? ' (백업 후 초기화)' : ''}
+              </button>
+            ))}
           </div>
-          <pre className="max-h-44 overflow-auto whitespace-pre-wrap rounded-lg border border-gray-200 bg-gray-50 p-3 text-[11px] leading-relaxed text-gray-800">{text}</pre>
         </div>
 
         <div className="mt-4 flex gap-2">
           <button onClick={onClose} className="flex-1 rounded-lg border border-gray-200 py-2.5 text-sm text-gray-700 hover:bg-gray-50">닫기</button>
-          <button onClick={copy} className="flex-1 rounded-lg bg-blue-600 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">{copied ? '복사됨 ✓' : '요청 복사'}</button>
+          <button onClick={copy} disabled={!raw.trim()} className="flex-1 rounded-lg bg-blue-600 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">{copied ? '복사됨 ✓' : '요청 복사 (tenant·mode 포함)'}</button>
         </div>
       </div>
     </div>
