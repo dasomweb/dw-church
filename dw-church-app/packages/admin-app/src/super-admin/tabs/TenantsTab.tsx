@@ -3,6 +3,7 @@ import { handoffSessionToNewTab } from '../../stores/auth';
 import { useToast } from '../../components';
 import { AIBuilderModal } from '../../components/super-admin/AIBuilderModal';
 import { MigrationDialog } from '../../components/super-admin/MigrationDialog';
+import { ClaudeDesignDialog } from '../../components/super-admin/ClaudeDesignDialog';
 import { useAdminApi } from '../shared/use-admin-api';
 import { Spinner, EmptyState, StatusBadge, VerifyBadge } from '../shared/admin-ui';
 import { formatDate, formatBytes } from '../shared/format';
@@ -497,6 +498,8 @@ export default function TenantsTab({ refreshKey = 0, onCreateChurch }: { refresh
   // Phase 12-δ: MigrationDialog — 행의 "📥 가져오기" 버튼이 누르면 열림.
   // URL 입력 → /migrate-url 호출 → 결과 카운트 표시.
   const [migrateTenant, setMigrateTenant] = useState<Tenant | null>(null);
+  // Claude Design 반영 요청(핸드오프) 다이얼로그 — 드롭다운 "🎨 Claude Design".
+  const [claudeDesignTenant, setClaudeDesignTenant] = useState<Tenant | null>(null);
 
   // Delete safeguard — GitHub/Railway 방식. 단순 confirm 대신 slug 를 직접
   // 타이핑해야 삭제 버튼이 활성화됨 (되돌릴 수 없는 작업이라 오삭제 방지).
@@ -656,6 +659,7 @@ export default function TenantsTab({ refreshKey = 0, onCreateChurch }: { refresh
                             <button onClick={() => setViewingTenantId(t.id)} className="block w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50">📊 요약 · 지원 계정</button>
                             <button onClick={() => setMigrateTenant(t)} className="block w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50">🚚 마이그레이션</button>
                             <button onClick={() => setAiBuilderTenant(t)} className="block w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50">✨ AI 빌더</button>
+                            <button onClick={() => setClaudeDesignTenant(t)} className="block w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50">🎨 Claude Design</button>
                             <button
                               onClick={() => {
                                 handoffSessionToNewTab();
@@ -724,6 +728,13 @@ export default function TenantsTab({ refreshKey = 0, onCreateChurch }: { refresh
         onClose={() => setMigrateTenant(null)}
         onCompleted={() => void fetchTenants()}
       />
+      {claudeDesignTenant && (
+        <ClaudeDesignDialog
+          tenant={{ id: claudeDesignTenant.id, slug: claudeDesignTenant.slug, name: claudeDesignTenant.name }}
+          open={!!claudeDesignTenant}
+          onClose={() => setClaudeDesignTenant(null)}
+        />
+      )}
       {editingTenant && (
         <EditTenantModal
           tenant={editingTenant}
