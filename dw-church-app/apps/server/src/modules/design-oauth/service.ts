@@ -71,12 +71,21 @@ const API_BASE = process.env.API_PUBLIC_BASE || 'https://api.truelight.app';
 
 export interface LocalConnectInit {
   connectToken: string;
-  /** Exact one-line command the operator runs locally (repo root). */
+  /**
+   * Copy-paste PowerShell command that runs the connector with an ABSOLUTE script
+   * path — works from any folder, no `cd` needed (the operator kept hitting
+   * MODULE_NOT_FOUND running it from the home dir). Override the repo location with
+   * DESIGN_CONNECT_DIR if the local checkout is elsewhere.
+   */
   command: string;
   /** api base the connector posts back to (only non-default is passed as arg). */
   apiBase: string;
   expiresInMinutes: number;
 }
+
+// Local checkout path where scripts/design-connect.mjs lives. Single-operator
+// internal tool → a sensible default with an env override (never a secret).
+const CONNECT_DIR = process.env.DESIGN_CONNECT_DIR || 'H:\\GitHub\\dw-church\\dw-church-app';
 
 /**
  * Mint a single-use connect_token bound to this super-admin and return the local
@@ -93,10 +102,9 @@ export async function initLocalConnect(userId: string): Promise<LocalConnectInit
     connectToken,
     userId,
   );
-  const isDefaultBase = API_BASE === 'https://api.truelight.app';
-  const command = isDefaultBase
-    ? `node scripts/design-connect.mjs ${connectToken}`
-    : `node scripts/design-connect.mjs ${connectToken} ${API_BASE}`;
+  const scriptPath = `${CONNECT_DIR}\\scripts\\design-connect.mjs`;
+  const baseArg = API_BASE === 'https://api.truelight.app' ? '' : ` ${API_BASE}`;
+  const command = `node "${scriptPath}" ${connectToken}${baseArg}`;
   return { connectToken, command, apiBase: API_BASE, expiresInMinutes: CONNECT_TTL_MIN };
 }
 

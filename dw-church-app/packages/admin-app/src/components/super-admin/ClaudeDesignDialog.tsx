@@ -180,9 +180,9 @@ export function ClaudeDesignDialog({ tenant, open, onClose }: Props) {
             </div>
           ) : connectCmd ? (
             <div>
-              <p className="mb-2 text-xs text-gray-600">아래 명령을 <b>로컬 터미널(레포 루트)</b>에서 1번 실행하세요. 브라우저에서 claude.ai 로그인/동의 후 자동으로 연결됩니다.</p>
+              <p className="mb-2 text-xs text-gray-600">아래 명령을 <b>로컬 PowerShell</b>에 붙여넣어 1번 실행하세요(전체 경로라 <b>아무 폴더</b>에서나 됩니다). 브라우저에서 claude.ai 로그인/동의 후 자동으로 연결됩니다.</p>
               <div className="flex items-stretch gap-2">
-                <code className="flex-1 overflow-x-auto rounded-lg bg-gray-900 px-3 py-2 font-mono text-[11px] text-gray-100">{connectCmd}</code>
+                <code className="flex-1 overflow-x-auto whitespace-nowrap rounded-lg bg-gray-900 px-3 py-2 font-mono text-[11px] text-gray-100">{connectCmd}</code>
                 <button onClick={copyCmd} className="shrink-0 rounded-lg border border-gray-300 px-3 text-xs font-medium text-gray-700 hover:bg-gray-50">{cmdCopied ? '복사됨 ✓' : '복사'}</button>
               </div>
               <div className="mt-2 flex items-center gap-2 text-xs text-blue-600"><span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />연결 대기 중… (명령 실행 후 자동 감지, 15분 내)</div>

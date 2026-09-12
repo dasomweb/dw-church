@@ -72,7 +72,8 @@ describe('design-oauth — local connect lifecycle', () => {
     expect(res.statusCode).toBe(200);
     const { connectToken, command } = res.json().data;
     expect(connectToken).toBeTruthy();
-    expect(command).toContain('node scripts/design-connect.mjs');
+    expect(command).toContain('design-connect.mjs');
+    expect(command).toContain('node "'); // absolute, quoted path → runs from any folder
     expect(command).toContain(connectToken);
   });
 
