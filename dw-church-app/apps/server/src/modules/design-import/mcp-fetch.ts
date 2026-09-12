@@ -12,6 +12,8 @@ export interface FetchedCanvas {
   files: unknown;
   /** Which tools/args were used — surfaced so a first-connect mismatch is visible. */
   toolNote: string;
+  /** The live tools/list (names + inputSchemas) — for first-connect confirmation. */
+  tools: McpTool[];
 }
 
 /** Pick args for a tool by matching its inputSchema property names to our values. */
@@ -82,5 +84,6 @@ export async function fetchCanvas(
     html,
     files,
     toolNote: `list=${listTool?.name ?? '(none)'} get=${getTool.name}`,
+    tools,
   };
 }

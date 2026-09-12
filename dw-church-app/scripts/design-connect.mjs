@@ -60,7 +60,11 @@ async function main() {
       probe.close(() => resolve(p));
     });
   });
-  const redirectUri = `http://127.0.0.1:${port}/cb`;
+  // Path MUST be /callback: Anthropic's canonical design client allows loopback
+  // redirects port-agnostically but only at http://127.0.0.1/callback (or
+  // localhost). A different path (e.g. /cb) → "redirect URI not supported by
+  // client" at consent. (Claude Code's own loopback flow hardcodes /callback.)
+  const redirectUri = `http://127.0.0.1:${port}/callback`;
 
   // 2. Dynamic Client Registration (loopback → accepted). Public client, PKCE.
   const regRes = await fetch(REGISTER_ENDPOINT, {
@@ -91,7 +95,7 @@ async function main() {
   const done = new Promise((resolve, reject) => {
     const server = createServer(async (req, res) => {
       const url = new URL(req.url, redirectUri);
-      if (url.pathname !== '/cb') { res.writeHead(404).end(); return; }
+      if (url.pathname !== '/callback') { res.writeHead(404).end(); return; }
       const html = (ok, msg) =>
         `<!doctype html><meta charset="utf-8"><title>TrueLight × Claude Design</title>` +
         `<body style="font-family:system-ui,sans-serif;padding:56px;text-align:center;color:#16181d">` +

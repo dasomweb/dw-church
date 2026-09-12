@@ -36,6 +36,22 @@ export async function designImportRoutes(app: FastifyInstance): Promise<void> {
     const fetched = await fetchCanvas(token, { projectId: body.projectId, file: body.file });
     const parsed = parseCanvas(fetched.html);
 
+    // First-connect confirmation: log the LIVE tool schemas + canvas shape so the
+    // fetch args + real .dc.html format are verified against reality (not guessed)
+    // before apply is wired. Never logs token values.
+    request.log.info(
+      {
+        designImportPreview: true,
+        tools: fetched.tools.map((t) => ({ name: t.name, inputSchema: t.inputSchema })),
+        toolNote: fetched.toolNote,
+        htmlLength: fetched.html.length,
+        canvasHead: fetched.html.slice(0, 1200),
+        pages: parsed.pages.map((p) => ({ slug: p.slug, sections: p.sections.map((s) => s.blockType), dynamicLists: p.dynamicLists })),
+        warnings: parsed.warnings,
+      },
+      'design-import preview (live MCP)',
+    );
+
     return reply.send({
       data: {
         toolNote: fetched.toolNote,
