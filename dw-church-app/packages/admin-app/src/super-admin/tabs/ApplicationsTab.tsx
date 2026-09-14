@@ -4,7 +4,7 @@ import { useAdminApi } from '../shared/use-admin-api';
 import { Spinner, EmptyState } from '../shared/admin-ui';
 import { formatDate } from '../shared/format';
 import { PLAN_COLORS } from '../shared/constants';
-import type { Application, ApplicationStatus } from '../shared/types';
+import type { Application, ApplicationStatus, ApplicationStage } from '../shared/types';
 
 // ═══════════════════════════════════════════════════════════
 // ─── Tab: Applications (신청서 — website-build inbox) ──────
@@ -54,6 +54,18 @@ const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
   converted: '전환됨',
   rejected: '반려',
 };
+
+// 도입 파이프라인 7단계 라벨/순서 (정식 신청서 /start).
+const STAGE_LABELS: Record<ApplicationStage, string> = {
+  submitted: '신청 접수',
+  signed: '서명 완료',
+  approved: '승인',
+  dev_intake: '개발 초기입력',
+  in_development: '개발 진행',
+  completed: '완성',
+  live: '서비스 시작',
+};
+const STAGE_ORDER: ApplicationStage[] = ['submitted', 'signed', 'approved', 'dev_intake', 'in_development', 'completed', 'live'];
 
 const APPLICATION_STATUS_COLORS: Record<ApplicationStatus, string> = {
   new: 'bg-blue-100 text-blue-700',
@@ -247,6 +259,7 @@ function ApplicationDetailModal({
   const { showToast } = useToast();
 
   const [status, setStatus] = useState<ApplicationStatus>(application.status);
+  const [stage, setStage] = useState<ApplicationStage>(application.stage ?? 'submitted');
   const [adminNote, setAdminNote] = useState(application.adminNote ?? '');
   const [paymentLink, setPaymentLink] = useState(application.paymentLink ?? '');
   // 슈퍼어드민이 직접 "정통 교단(이단 아님)" 확인했는지 여부. 저장 시 PATCH 본문에 포함.
@@ -292,7 +305,7 @@ function ApplicationDetailModal({
     try {
       await apiFetch(`/applications/${application.id}`, {
         method: 'PATCH',
-        body: JSON.stringify({ status, adminNote, paymentLink, denominationVerified }),
+        body: JSON.stringify({ status, stage, adminNote, paymentLink, denominationVerified }),
       });
       showToast('success', '저장되었습니다.');
       onChanged();
@@ -409,6 +422,39 @@ function ApplicationDetailModal({
           <Row label="신청일" value={formatDate(application.createdAt)} />
         </div>
 
+        {/* 도입 파이프라인 · 견적 · 후원 (정식 신청서 /start 제출분) */}
+        {(application.quote || application.buildScope || application.subsidyRequested || application.signedName) && (
+          <div className="mb-4 rounded-lg border border-blue-100 bg-blue-50/50 px-4 py-3">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="text-xs font-bold text-blue-800">도입 파이프라인</span>
+              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-semibold text-blue-700">
+                {STAGE_LABELS[application.stage ?? 'submitted']}
+              </span>
+              {application.signedName && (
+                <span className="text-[11px] text-gray-500">
+                  서명: {application.signedName}{application.signedAt ? ` · ${formatDate(application.signedAt)}` : ''}
+                </span>
+              )}
+            </div>
+            {application.quote && (
+              <div className="rounded-md bg-white px-3 py-2 text-sm">
+                <div className="flex justify-between"><span className="text-gray-600">{application.quote.subscriptionLabel}</span><span className="font-semibold">${application.quote.subscriptionMonthly}/월</span></div>
+                {application.quote.addons.map((a) => (
+                  <div key={a.key} className="flex justify-between text-[13px] text-gray-500"><span className="pl-2">{a.label}</span><span>${a.amount}/월</span></div>
+                ))}
+                <div className="mt-1 flex justify-between border-t border-gray-100 pt-1 font-bold"><span>매달 합계</span><span>${application.quote.monthlyTotal}/월</span></div>
+                <div className="flex justify-between text-gray-600"><span>초기 구축 · {application.quote.setupLabel}</span><span>${application.quote.oneTimeTotal}{application.quote.setupFrom ? '~' : ''}</span></div>
+              </div>
+            )}
+            {application.subsidyRequested && (
+              <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] text-amber-800">
+                🌱 개척·미자립 감면 신청 · 후원 교회: <b>{application.sponsorChurch || '(미기재)'}</b>
+                <div className="mt-0.5 text-[11px] text-amber-700">승인 시 후원 교회를 실제 납부 테넌트로 연결하세요(다음 단계에서 sponsorship 생성).</div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Editable controls */}
         <div className="space-y-3">
           <div className="rounded-lg border border-gray-200 bg-gray-50/60 px-3 py-2">
@@ -439,6 +485,20 @@ function ApplicationDetailModal({
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">파이프라인 단계</label>
+            <select
+              value={stage}
+              onChange={(e) => setStage(e.target.value as ApplicationStage)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            >
+              {STAGE_ORDER.map((s) => (
+                <option key={s} value={s}>{STAGE_LABELS[s]}</option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-gray-400">신청 접수 → 서명 → 승인 → 개발 초기입력 → 개발 진행 → 완성 → 서비스 시작</p>
           </div>
 
           <div>

@@ -101,4 +101,28 @@ export interface Application {
   denominationStatus: 'recognized' | 'watch' | 'cult' | null;
   denominationMatch: string | null;
   denominationVerified: boolean;
+  // 도입 파이프라인 ① (정식 신청서 /start)
+  stage?: ApplicationStage | null;
+  buildScope?: string | null; // new|departments|migration
+  addons?: string[] | null;
+  subsidyRequested?: boolean | null;
+  sponsorChurch?: string | null;
+  quote?: ApplicationQuote | null;
+  signedName?: string | null;
+  signedAt?: string | null;
+}
+
+export type ApplicationStage = 'submitted' | 'signed' | 'approved' | 'dev_intake' | 'in_development' | 'completed' | 'live';
+
+export interface ApplicationQuote {
+  subsidy: boolean;
+  subscriptionMonthly: number;
+  subscriptionLabel: string;
+  setupOneTime: number;
+  setupLabel: string;
+  setupFrom: boolean;
+  addons: { key: string; label: string; amount: number }[];
+  addonsMonthly: number;
+  monthlyTotal: number;
+  oneTimeTotal: number;
 }
