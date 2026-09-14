@@ -3,8 +3,9 @@ import { requireSuperAdmin } from '../../middleware/auth.js';
 import { AppError } from '../../middleware/error-handler.js';
 import { sendEmail } from '../../config/email.js';
 import { renderTemplate } from '../email-templates/service.js';
-import { createApplicationSchema, updateApplicationSchema } from './schema.js';
+import { createApplicationSchema, updateApplicationSchema, quoteApplicationSchema } from './schema.js';
 import * as applicationService from './service.js';
+import { computeQuote } from './quote.js';
 import { classifyDenomination } from '../reference-denominations/service.js';
 
 // Attach the 이단 필터 classification (✓ 정규 / ? 미확인 / 🚩 이단의심) to an
@@ -36,6 +37,17 @@ export async function applicationRoutes(app: FastifyInstance) {
         .catch((err) => console.error('[email] application_received failed:', err));
     }
     return reply.status(201).send({ data: created });
+  });
+
+  // ── Public: live quote preview (신청서에서 구성 고를 때 요금 계산) ──
+  app.post('/applications/quote', async (request, reply) => {
+    const input = quoteApplicationSchema.parse(request.body);
+    const quote = await computeQuote({
+      buildScope: input.buildScope ?? null,
+      addons: input.addons ?? null,
+      subsidyRequested: input.subsidyRequested ?? false,
+    });
+    return reply.send({ data: quote });
   });
 
   // ── Super-admin: manage the inbox ──

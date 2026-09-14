@@ -394,6 +394,80 @@ function FeaturePricingCard() {
   );
 }
 
+// 초기 구축비(1회) — 구축 범위별 단가. 신청서 견적 자동계산이 이 값을 읽음.
+interface SetupPrice { scopeKey: string; label: string; price: number; fromPrice: boolean; isActive: boolean }
+
+function SetupPricingCard() {
+  const apiFetch = useAdminApi();
+  const { showToast } = useToast();
+  const [rows, setRows] = useState<SetupPrice[]>([]);
+  const [draft, setDraft] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await apiFetch<{ data: SetupPrice[] } | SetupPrice[]>('/setup-pricing');
+      const list = Array.isArray(res) ? res : res.data ?? [];
+      setRows(list);
+      setDraft(Object.fromEntries(list.map((r) => [r.scopeKey, String(r.price)])));
+    } catch { setRows([]); } finally { setLoading(false); }
+  }, [apiFetch]);
+  useEffect(() => { void load(); }, [load]);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const changed = rows.filter((r) => draft[r.scopeKey] !== undefined && Number(draft[r.scopeKey]) !== r.price);
+      for (const r of changed) {
+        await apiFetch(`/setup-pricing/${r.scopeKey}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ price: Math.max(0, Math.round(Number(draft[r.scopeKey]) || 0)) }),
+        });
+      }
+      showToast('success', changed.length ? `구축비 ${changed.length}개 저장됨` : '변경사항 없음');
+      await load();
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '구축비 저장 실패');
+    } finally { setSaving(false); }
+  };
+
+  if (loading) return null;
+  const inp = 'w-24 border border-gray-300 rounded px-2 py-1 text-sm text-right focus:ring-2 focus:ring-blue-500 outline-none';
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <h3 className="text-sm font-bold text-gray-900 mb-1">초기 구축비 (1회)</h3>
+      <p className="text-xs text-gray-500 mb-3">구축 범위별 1회 비용입니다. 신청서 견적 자동계산이 이 값을 읽습니다. "부터"는 자료 분량에 따라 변동되는 항목입니다.</p>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-xs text-gray-400 border-b border-gray-100">
+              <th className="py-1.5 pr-3 font-medium">범위</th>
+              <th className="py-1.5 px-2 font-medium text-right">1회 비용($)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.scopeKey} className="border-b border-gray-50">
+                <td className="py-1.5 pr-3 text-gray-800">{r.label}{r.fromPrice ? <span className="ml-1 text-[11px] text-gray-400">(부터)</span> : null}<span className="ml-1.5 text-[10px] font-mono text-gray-300">{r.scopeKey}</span></td>
+                <td className="py-1.5 px-2 text-right">
+                  <input type="number" min={0} className={inp} value={draft[r.scopeKey] ?? ''}
+                    onChange={(e) => setDraft((d) => ({ ...d, [r.scopeKey]: e.target.value }))} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <button onClick={() => void save()} disabled={saving}
+        className="mt-4 bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+        {saving ? '저장 중...' : '구축비 저장'}
+      </button>
+    </div>
+  );
+}
+
 export default function PricingTab() {
   const apiFetch = useAdminApi();
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -435,6 +509,8 @@ export default function PricingTab() {
       </div>
 
       <PromoCard />
+
+      <SetupPricingCard />
 
       <FeaturePricingCard />
 

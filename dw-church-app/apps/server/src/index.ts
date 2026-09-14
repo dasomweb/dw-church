@@ -1525,6 +1525,17 @@ async function main(): Promise<void> {
     // Link to the provisioned tenant (set when payment auto-creates the tenant).
     // Doubles as the idempotency guard so a re-delivered webhook never double-provisions.
     await prisma.$executeRawUnsafe(`ALTER TABLE "service_applications" ADD COLUMN IF NOT EXISTS "tenant_slug" VARCHAR(255)`);
+    // --- 도입 파이프라인(신청→사인→승인→개발입력→개발→완성→서비스시작) 확장 ---
+    // status(신청 인박스 상태)는 그대로 두고, 7단계 파이프라인은 stage 로 추적한다.
+    await prisma.$executeRawUnsafe(`ALTER TABLE "service_applications" ADD COLUMN IF NOT EXISTS "stage" VARCHAR(24) NOT NULL DEFAULT 'submitted'`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE "service_applications" ADD COLUMN IF NOT EXISTS "build_scope" VARCHAR(24)`); // new|departments|migration
+    await prisma.$executeRawUnsafe(`ALTER TABLE "service_applications" ADD COLUMN IF NOT EXISTS "addons" JSONB NOT NULL DEFAULT '[]'::jsonb`); // 선택한 행정 애드온 feature_key[]
+    await prisma.$executeRawUnsafe(`ALTER TABLE "service_applications" ADD COLUMN IF NOT EXISTS "subsidy_requested" BOOLEAN NOT NULL DEFAULT false`); // 개척·미자립 감면 신청
+    await prisma.$executeRawUnsafe(`ALTER TABLE "service_applications" ADD COLUMN IF NOT EXISTS "sponsor_church" VARCHAR(200)`); // 신청 시 후원 교회명(승인 때 테넌트로 연결)
+    await prisma.$executeRawUnsafe(`ALTER TABLE "service_applications" ADD COLUMN IF NOT EXISTS "quote" JSONB`); // 자동 견적 스냅샷(제출 시점)
+    await prisma.$executeRawUnsafe(`ALTER TABLE "service_applications" ADD COLUMN IF NOT EXISTS "signed_name" VARCHAR(120)`); // 간이 e-sign 서명자
+    await prisma.$executeRawUnsafe(`ALTER TABLE "service_applications" ADD COLUMN IF NOT EXISTS "signed_at" TIMESTAMPTZ`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE "service_applications" ADD COLUMN IF NOT EXISTS "dev_intake" JSONB`); // 개발 초기입력(도메인·로고·예배시간·자료 출처 등)
   } catch (err) {
     app.log.warn(`service_applications table migration skipped: ${err}`);
   }
@@ -1831,14 +1842,16 @@ async function main(): Promise<void> {
       ['boards', '게시판', 10, 10, 4],
       ['events', '행사', 10, 10, 5],
       ['banners', '메인 배너 슬라이드', 10, 10, 6],
-      ['cells', '목장(셀) 관리', 25, 25, 7],
-      ['newcomer', '새가족 안내·등록 폼', 25, 25, 8],
-      ['newcomer_registration', '새가족 온라인 등록·교인관리', 30, 30, 9],
-      ['pwa', '모바일 앱(PWA)', 30, 30, 10],
-      ['membership', '교적관리 (명부·세대·가족·조직)', 40, 40, 11],
-      ['smallgroup', '스몰그룹 (목장·구역·셀·사역별)', 35, 35, 12],
-      ['forms', '폼 만들기·제출', 15, 15, 13],
-      ['translation', '영어 번역 보정', 15, 15, 14],
+      // 행정 애드온 단가 — 4종 묶음(교적·스몰그룹·새가족·교회양식) $69 에 준함
+      // (개별합 $90 → 묶음 $69, ~23% 할인). 영어번역·PWA 는 묶음 외 별도.
+      ['cells', '목장(셀) 관리', 25, 25, 7], // [deprecated] smallgroup 으로 통합
+      ['newcomer', '새가족 안내·등록 폼', 20, 20, 8],
+      ['newcomer_registration', '새가족 온라인 등록·교인관리', 25, 25, 9],
+      ['pwa', '모바일 앱(PWA)', 20, 20, 10],
+      ['membership', '교적관리 (명부·세대·가족·조직)', 30, 30, 11],
+      ['smallgroup', '스몰그룹 (목장·구역·셀·사역별)', 25, 25, 12],
+      ['forms', '폼 만들기·제출 (교회 양식)', 15, 15, 13],
+      ['translation', '영어 번역 보정', 12, 12, 14],
     ];
     for (const [key, label, monthly, yearly, sort] of featureSeed) {
       await prisma.$executeRawUnsafe(
@@ -1849,6 +1862,68 @@ async function main(): Promise<void> {
     }
   } catch (err) {
     app.log.warn(`feature_pricing table migration skipped: ${err}`);
+  }
+
+  // --- setup_pricing (초기 구축 범위별 1회 비용, 슈퍼어드민 관리) ---
+  // 현행 요금표: 새로 시작 $600 / 부서·사역까지 $900 / 기존 이관 $1,400부터.
+  // 개척·미자립 감면 구축은 별도($200) — subsidy_setup 키로 함께 관리.
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "setup_pricing" (
+        "id"         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+        "scope_key"  VARCHAR(24) NOT NULL UNIQUE,
+        "label"      VARCHAR(60) NOT NULL DEFAULT '',
+        "price"      INT         NOT NULL DEFAULT 0,
+        "from_price" BOOLEAN     NOT NULL DEFAULT false,
+        "sort_order" INT         NOT NULL DEFAULT 0,
+        "is_active"  BOOLEAN     NOT NULL DEFAULT true,
+        "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    const setupSeed: [string, string, number, boolean, number][] = [
+      ['new', '새로 시작하는 교회', 600, false, 0],
+      ['departments', '부서·사역 화면까지', 900, false, 1],
+      ['migration', '기존 사이트 이관까지', 1400, true, 2],
+      ['subsidy_setup', '개척·미자립 (검증 템플릿)', 200, false, 3],
+    ];
+    for (const [key, label, price, fromP, sort] of setupSeed) {
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO "setup_pricing" (scope_key, label, price, from_price, sort_order)
+         VALUES ($1, $2, $3, $4, $5) ON CONFLICT (scope_key) DO NOTHING`,
+        key, label, price, fromP, sort,
+      );
+    }
+  } catch (err) {
+    app.log.warn(`setup_pricing table migration skipped: ${err}`);
+  }
+
+  // --- sponsorships (개척·미자립 후원 관계) ---
+  // 후원받는 교회(subsidized)와 후원 교회(sponsor) 모두 테넌트. 양쪽 콘솔·슈퍼어드민에
+  // 「후원 받는 중 / 후원 중」 표시의 단일 출처. 후원 교회 = 정상요금 납부 테넌트만.
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "sponsorships" (
+        "id"                   UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+        "subsidized_tenant_id" UUID        NOT NULL,
+        "sponsor_tenant_id"    UUID,
+        "status"               VARCHAR(16) NOT NULL DEFAULT 'proposed' CHECK (status IN ('proposed','active','ended')),
+        "subsidized_monthly"   INT         NOT NULL DEFAULT 39,
+        "setup_fee"            INT         NOT NULL DEFAULT 200,
+        "sponsor_discount"     INT         NOT NULL DEFAULT 20,
+        "start_date"           DATE,
+        "end_date"             DATE,
+        "application_id"       UUID,
+        "note"                 TEXT,
+        "approved_by"          VARCHAR(200),
+        "approved_at"          TIMESTAMPTZ,
+        "created_at"           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        "updated_at"           TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "sponsorships_subsidized_idx" ON "sponsorships" ("subsidized_tenant_id")`);
+    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "sponsorships_sponsor_idx" ON "sponsorships" ("sponsor_tenant_id")`);
+  } catch (err) {
+    app.log.warn(`sponsorships table migration skipped: ${err}`);
   }
 
   // --- addon_requests (테넌트 자가 애드온 신청 → 슈퍼어드민 승인 = 활성+과금) ---

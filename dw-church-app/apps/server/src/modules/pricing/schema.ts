@@ -22,3 +22,16 @@ export const updatePricingSchema = z.object({
 });
 
 export type UpdatePricingInput = z.infer<typeof updatePricingSchema>;
+
+/**
+ * Setup pricing — 초기 구축비(1회) 범위별 SoT. 현행: new $600 / departments $900 /
+ * migration $1,400부터 / subsidy_setup $200. from_price = "…부터"(변동가) 표기.
+ */
+export const updateSetupPricingSchema = z.object({
+  label: z.string().max(60).optional(),
+  price: z.number().int().min(0).max(1000000).optional(),
+  fromPrice: z.boolean().optional(),
+  isActive: z.boolean().optional(),
+});
+
+export type UpdateSetupPricingInput = z.infer<typeof updateSetupPricingSchema>;
