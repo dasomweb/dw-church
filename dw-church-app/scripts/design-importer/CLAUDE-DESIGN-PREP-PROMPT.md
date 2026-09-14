@@ -34,6 +34,14 @@ block_type·토큰역할·콘텐츠모듈)와 CLAUDE-DESIGN-TOKENS.md(토큰 계
 - dasomweb 디자인 시스템(_ds)과 _tokens.css 토큰만 사용. 팔레트는 우리 10 토큰 역할
   (primary·secondary·accent·text·muted·background·border·surface·onDark·onDarkMuted)에
   배정(자유 hex 금지, -fg 는 자동 대비쌍). 타이포=Pretendard, radius sm/md/lg.
+- **디자인 시스템 페이지를 만들면 반드시 우리 토큰 이름으로 산출**(어휘 통일):
+  · 타입 = **H 시스템** — 페이지제목→`h1` · 섹션제목→`h2` · 하위제목→`h3` · (더 작은 제목 `h4~h6`)
+    · 본문→`body` · 보조→`caption` · EYEBROW/섹션라벨→`overline` · 라벨·버튼→`label`/`button`
+    (각 스케일에 size/weight/lineHeight/letterSpacing 명시)
+  · 색 = 10 슬롯(`--brand→primary`·`--fg→text`·`--fg-muted→muted`·`--surface→surface`·`--border→border`,
+    배경 흰색→`background`) + **커스텀**: 딥네이비(어두운 밴드·풋터)→`deep-navy`, 분류색→`area-design/saas/platform/production/development`
+  · radius = `sm`(배지 8)·`md`(버튼·입력 11)·`lg`(컨테이너 16)·`full`(칩 pill) · 여백 = `containerPaddingX`·`sectionPaddingY`·`gapGrid`·`containerMax`
+  (전체 매핑표: CLAUDE-DESIGN-TOKENS.md "Claude Design 산출 ↔ 우리 토큰 매핑".)
 - 교회 톤: 밝고 따뜻·경건. 검정/다크 배경 밴드 금지(onDark 는 히어로 사진 위 텍스트만).
 - 한국어 우선(이중언어면 한 페이지 + 섹션 오버레이, /ko·/en 복제 금지).
 

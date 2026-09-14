@@ -483,7 +483,8 @@ export default function PricingTab() {
         apiFetch<{ data: FeaturePrice[] } | FeaturePrice[]>('/feature-pricing').catch(() => [] as FeaturePrice[]),
       ]);
       const list = Array.isArray(planRes) ? planRes : planRes.data ?? [];
-      setPlans([...list].sort((a, b) => a.sortOrder - b.sortOrder));
+      // 단일 요금제로 통합됨 — 폐기된 플러스/프로(is_active=false)는 상품/가격에서 숨김.
+      setPlans([...list].filter((p) => p.isActive).sort((a, b) => a.sortOrder - b.sortOrder));
       const priceList = Array.isArray(priceRes) ? priceRes : priceRes.data ?? [];
       setFeaturePrices(Object.fromEntries(priceList.map((r) => [r.featureKey, { label: r.label, monthly: r.monthly }])));
     } catch {

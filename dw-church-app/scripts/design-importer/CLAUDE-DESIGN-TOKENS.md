@@ -78,6 +78,42 @@ section padding as these, not fixed px.
 
 ---
 
+## Claude Design 산출 ↔ 우리 토큰 매핑 (어휘 통일)
+
+Claude Design 이 만드는 "디자인 시스템" 페이지는 우리와 **다른 라벨**을 쓴다(페이지제목/섹션제목/…, --brand/--fg/…, --area-*). 아래 표로 **우리 이름(H 시스템 등)으로 환산**해서 theme(tokensV2)에 넣는다. 값(px·weight·hex)은 디자인이 정한 그대로.
+
+**타입 — 우리는 H 시스템(h1~h6). Claude Design 라벨 → 우리 스케일:**
+| Claude Design | 우리 토큰 | 비고 |
+|---|---|---|
+| 페이지 제목 | `h1` | 예 52/800/-0.05em |
+| 섹션 제목 | `h2` | 예 38/800/-0.045em |
+| 하위 제목 | `h3` | 예 24/800/-0.04em |
+| (더 작은 제목) | `h4·h5·h6` | 필요 시 |
+| 본문 | `body` | 예 17/400/1.7 |
+| 보조 설명 | `caption` | 예 14/400 |
+| EYEBROW·섹션 라벨 | `overline` | 예 11.5/800/+0.14em, transform uppercase |
+| 라벨·버튼 텍스트 | `label` / `button` | 중간굵기 500·600 |
+
+**색 — Claude Design var → 우리 슬롯/커스텀:**
+| Claude Design | 우리 |
+|---|---|
+| `--brand` | `primary` |
+| `--fg` | `text` |
+| `--fg-muted` | `muted` |
+| `--surface` | `surface` |
+| `--border` | `border` |
+| 배경(흰색) | `background` |
+| 딥 네이비(어두운 밴드·풋터) | custom **`deep-navy`** (→ `--brand-deep-navy`). 풋터/다크밴드에만. 교회 톤 유지(넓은 섹션 다크금지). |
+| `--area-design/saas/platform/production/development` | custom **`area-design` 등** (→ `--brand-area-*`). 분류 배지·상단 액센트에만(넓은 면 금지). |
+
+**radius — Claude Design 4단계 → 우리 4슬롯:**
+`sm`=배지·작은입력(8) · `md`=버튼·입력(11) · `lg`=컨테이너(16) · `full`=칩 pill(≥100). 값은 디자인대로.
+
+**여백 — Claude Design → 우리 spacing:**
+좌우 페이지여백 → `containerPaddingX`(예 48) · 섹션 상하 → `sectionPaddingY`(예 80–88) · 카드 사이 → `gapGrid`(예 16) · 본문 최대폭 → `containerMax`(예 1000). (2단 사이 간격(예 44)은 별도 토큰 없음 → 블록 레이아웃에서 처리.)
+
+**버튼·폼 치수**(height 48 · radius 11 · 폼 세로여백 14 등)는 현재 블록이 고정으로 렌더 — 토큰화 대상 아님(radius 는 위 md 로 반영). 필요해지면 별도 controls 토큰으로 확장.
+
 ## Styleguide → theme mapping (how STEP 1 runs)
 
 1. Read the design's **styleguide** (DesignSync / DW-MCP) — palette as named
