@@ -101,7 +101,15 @@ export async function entitlementRoutes(app: FastifyInstance) {
     return reply.send({ data: { plan: normalizePlan(rows[0].plan), overrides: clean, effective: effectiveFeatures(rows[0].plan, clean) } });
   });
 
-  // ── Feature à-la-carte price catalog (super-admin) ──────────────────
+  // ── Feature à-la-carte price catalog ────────────────────────────────
+  // PUBLIC: active add-on prices — the /start 신청서 견적 화면이 읽는다.
+  app.get('/feature-pricing', async (_req, reply) => {
+    const rows = await prisma.$queryRawUnsafe<FeaturePriceRow[]>(
+      `SELECT feature_key, label, monthly, yearly, sort_order, is_active FROM public.feature_pricing WHERE is_active = true ORDER BY sort_order ASC`,
+    );
+    return reply.send({ data: rows });
+  });
+
   app.get('/admin/feature-pricing', { preHandler: [requireSuperAdmin] }, async (_req, reply) => {
     const rows = await prisma.$queryRawUnsafe<FeaturePriceRow[]>(
       `SELECT feature_key, label, monthly, yearly, sort_order, is_active FROM public.feature_pricing ORDER BY sort_order ASC`,
