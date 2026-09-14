@@ -321,7 +321,8 @@ function FeaturePricingCard() {
     try {
       // useAdminApi already prefixes /api/v1/admin — path must NOT include /admin.
       const res = await apiFetch<{ data: FeaturePrice[] } | FeaturePrice[]>('/feature-pricing');
-      const list = Array.isArray(res) ? res : res.data ?? [];
+      // 판매 대상 행정 애드온만 — $99 에 포함된 콘텐츠 기능·폐기 항목(is_active=false)은 숨김.
+      const list = (Array.isArray(res) ? res : res.data ?? []).filter((r) => r.isActive);
       setRows(list);
       setDraft(Object.fromEntries(list.map((r) => [r.featureKey, { monthly: String(r.monthly), yearly: String(r.yearly) }])));
     } catch {

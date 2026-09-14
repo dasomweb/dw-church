@@ -13,14 +13,14 @@ import type { Tenant, TenantsResponse, Application } from '../shared/types';
 // (status = paid/converted) 의 plan × 셋업비를 누적한다.
 
 // ─── Billing constants (Phase 3) ─────────────────────────
-// 4-tier 가격표 (2026-06 확정, 신청서/과금 집계용). PLAN_PRICES(개요 MRR용,
-// basic/pro 2-tier 레거시)와 별개 — 과금 탭은 light/basic/plus/pro 4단계로 집계.
-const BILLING_MONTHLY: Record<string, number> = { light: 59, basic: 99, plus: 149, pro: 199 };
-const BILLING_SETUP: Record<string, number> = { light: 300, basic: 500, plus: 700, pro: 1000 };
-// 과금 탭에 노출할 플랜 순서 (enterprise/free 등 그 외는 '기타'로 합산).
-const BILLING_PLAN_ORDER = ['light', 'basic', 'plus', 'pro'] as const;
+// 요금 모델(2026-09 확정): 티어 사다리 폐기 → 홈페이지 구독 단일가 $99/월.
+// 초기 구축비는 별도 상품(범위별)이라 여기 per-plan setup 은 0(실제 구축비는 신청서 견적).
+const BILLING_MONTHLY: Record<string, number> = { basic: 99 };
+const BILLING_SETUP: Record<string, number> = { basic: 0 };
+// 과금 탭에 노출할 플랜 (단일). 그 외 plan 값은 '기타'로 합산.
+const BILLING_PLAN_ORDER = ['basic'] as const;
 const BILLING_PLAN_LABELS: Record<string, string> = {
-  light: 'Light', basic: 'Basic', plus: 'Plus', pro: 'Pro', 기타: '기타',
+  basic: '홈페이지 구독', 기타: '기타',
 };
 
 export default function BillingTab() {

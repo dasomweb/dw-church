@@ -1833,25 +1833,18 @@ async function main(): Promise<void> {
         "updated_at"  TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `);
-    // [key, label, monthly, yearly, sort] — placeholder prices; edit in 요금 관리.
+    // 판매 대상 = 행정 애드온만. 콘텐츠 기능(앨범·연혁·칼럼·영상·게시판·행사·배너)은
+    // $99 구독에 포함이라 애드온으로 팔지 않음(시드 안 함). 폐기된 cells(→smallgroup)도 제외.
+    // 4종 묶음(교적·스몰그룹·새가족·교회양식) $69 에 준함(개별합 $90 → 묶음 $69, ~23%↓).
+    // 영어번역·PWA·새가족등록은 묶음 외 별도. [key, label, monthly, yearly, sort]
     const featureSeed: [string, string, number, number, number][] = [
-      ['albums', '사진 앨범', 10, 10, 0],
-      ['history', '교회 연혁', 5, 5, 1],
-      ['columns', '목회 칼럼', 10, 10, 2],
-      ['video', '영상 게시판', 10, 10, 3],
-      ['boards', '게시판', 10, 10, 4],
-      ['events', '행사', 10, 10, 5],
-      ['banners', '메인 배너 슬라이드', 10, 10, 6],
-      // 행정 애드온 단가 — 4종 묶음(교적·스몰그룹·새가족·교회양식) $69 에 준함
-      // (개별합 $90 → 묶음 $69, ~23% 할인). 영어번역·PWA 는 묶음 외 별도.
-      ['cells', '목장(셀) 관리', 25, 25, 7], // [deprecated] smallgroup 으로 통합
-      ['newcomer', '새가족 안내·등록 폼', 20, 20, 8],
-      ['newcomer_registration', '새가족 온라인 등록·교인관리', 25, 25, 9],
-      ['pwa', '모바일 앱(PWA)', 20, 20, 10],
-      ['membership', '교적관리 (명부·세대·가족·조직)', 30, 30, 11],
-      ['smallgroup', '스몰그룹 (목장·구역·셀·사역별)', 25, 25, 12],
-      ['forms', '폼 만들기·제출 (교회 양식)', 15, 15, 13],
-      ['translation', '영어 번역 보정', 12, 12, 14],
+      ['membership', '교적관리 (명부·세대·가족·조직)', 30, 30, 0],
+      ['smallgroup', '스몰그룹 (목장·구역·셀·사역별)', 25, 25, 1],
+      ['newcomer', '새가족 안내·등록 폼', 20, 20, 2],
+      ['forms', '폼 만들기·제출 (교회 양식)', 15, 15, 3],
+      ['newcomer_registration', '새가족 온라인 등록·교인관리', 25, 25, 4],
+      ['translation', '영어 번역 보정', 12, 12, 5],
+      ['pwa', '모바일 앱(PWA)', 20, 20, 6],
     ];
     for (const [key, label, monthly, yearly, sort] of featureSeed) {
       await prisma.$executeRawUnsafe(
