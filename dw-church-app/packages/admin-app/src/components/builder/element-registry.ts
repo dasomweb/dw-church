@@ -986,6 +986,66 @@ const FEATURES_GRID: BlockElementRegistry = {
   ],
 };
 
+// 가치 카드 그리드 (values_grid) — 밑줄 제목 + N열 카드(오버라인/제목/설명).
+// 카드 항목은 Content 탭의 ItemsEditor(ITEM_FIELDS_BY_TYPE.values_grid)로 편집.
+const VALUES_GRID: BlockElementRegistry = {
+  sections: [
+    { title: 'Header', elements: [
+      { label: '제목', path: 'title', kind: 'text' },
+      { label: '제목 밑줄', path: 'showRule', kind: 'bool', hint: '제목 아래 굵은 밑줄 표시' },
+    ]},
+    { title: 'Block Options', elements: [
+      { label: 'Columns (desktop)', path: 'columns', kind: 'select', choices: [
+        { value: '2', label: '2 columns' }, { value: '3', label: '3 columns' }, { value: '4', label: '4 columns' },
+      ]},
+      { label: 'Columns (mobile)', path: 'mobileColumns', kind: 'select', choices: [
+        { value: '1', label: '1 column' }, { value: '2', label: '2 columns' },
+      ], hint: '휴대폰에서 한 줄에 몇 칸' },
+    ]},
+    ...commonSectionStyleSections({ bgModeChoices: DEFAULT_BG_MODE_CHOICES, designHint: '비우면 위 Background preset 사용' }),
+  ],
+};
+
+// 항목 리스트 (detail_rows) — 밑줄 제목 + 도입문 + 행(좌 제목/라벨, 우 설명/보조문).
+// 행 항목은 Content 탭의 ItemsEditor(ITEM_FIELDS_BY_TYPE.detail_rows)로 편집.
+const DETAIL_ROWS: BlockElementRegistry = {
+  sections: [
+    { title: 'Header', elements: [
+      { label: '제목', path: 'title', kind: 'text' },
+      { label: '도입문', path: 'intro', kind: 'html', hint: '제목 밑줄 아래 소개 문단(선택)' },
+      { label: '제목 밑줄', path: 'showRule', kind: 'bool', hint: '제목 아래 굵은 밑줄 표시' },
+    ]},
+    ...commonSectionStyleSections({ bgModeChoices: DEFAULT_BG_MODE_CHOICES, designHint: '비우면 위 Background preset 사용' }),
+  ],
+};
+
+// 제목+본문+이미지 세로 (prose_image) — 밑줄 제목 + 리치텍스트 + 전체폭 이미지.
+const PROSE_IMAGE: BlockElementRegistry = {
+  sections: [
+    { title: 'Content', elements: [
+      { label: 'Eyebrow (선택)', path: 'eyebrow', kind: 'text', hint: '제목 위 작은 라벨' },
+      { label: '제목', path: 'title', kind: 'text' },
+      { label: '본문', path: 'body', kind: 'html' },
+      { label: '이미지', path: 'imageUrl', kind: 'image' },
+      { label: '이미지 위치', path: 'imagePosition', kind: 'select', choices: [
+        { value: 'below', label: '본문 아래' }, { value: 'above', label: '본문 위' },
+      ]},
+      { label: '제목 밑줄', path: 'showRule', kind: 'bool', hint: '제목 아래 굵은 밑줄 표시' },
+    ]},
+    ...commonSectionStyleSections({ bgModeChoices: DEFAULT_BG_MODE_CHOICES, designHint: '비우면 위 Background preset 사용' }),
+  ],
+};
+
+// 페이지 헤더 + 서브메뉴 (page_subnav) — 데이터 블록(메뉴 트리 fetch). 스타일은
+// 데이터 블록 공통 Advanced(blockStyle) 탭에서. 여기선 콘텐츠 필드만 노출.
+const PAGE_SUBNAV = churchBlock(
+  { title: 'Content', fields: [
+    { key: 'title', label: '제목(비우면 상위 메뉴명)', type: 'text' },
+    { key: 'parentMenu', label: '연결할 상위 메뉴 (슬러그/이름)', type: 'text', hint: '비우면 현재 페이지가 속한 메뉴 그룹을 자동 선택' },
+    { key: 'breadcrumbHome', label: '브레드크럼 홈 라벨', type: 'text', hint: '기본 "홈"' },
+  ]},
+);
+
 const STATS_COUNTER: BlockElementRegistry = {
   sections: [
     { title: 'Header', elements: [
@@ -1284,6 +1344,19 @@ export const ITEM_FIELDS_BY_TYPE: Record<string, ItemFieldDef[]> = {
     { label: '제목', key: 'title', kind: 'text' },
     { label: '설명', key: 'description', kind: 'text' },
     { label: '이미지', key: 'imageUrl', kind: 'image' },
+  ],
+  // 가치 카드 — 오버라인(작은 라벨) + 제목 + 설명.
+  values_grid: [
+    { label: 'Overline (작은 라벨)', key: 'overline', kind: 'text', hint: '카드 제목 위 (예: WALKING WITH JESUS)' },
+    { label: 'Title', key: 'title', kind: 'text' },
+    { label: 'Description', key: 'description', kind: 'html' },
+  ],
+  // 항목 행 — 좌: 제목+라벨 / 우: 설명+보조문(meta).
+  detail_rows: [
+    { label: 'Title (좌측 제목)', key: 'title', kind: 'text' },
+    { label: 'Label (좌측 작은 라벨)', key: 'label', kind: 'text' },
+    { label: 'Description (우측 설명)', key: 'description', kind: 'html' },
+    { label: 'Meta (우측 보조문)', key: 'meta', kind: 'text', hint: '예: 회중예배 — 새벽·수요·주일' },
   ],
   features_grid: [
     { label: 'Title', key: 'title', kind: 'text' },
@@ -1926,6 +1999,10 @@ export const ELEMENT_REGISTRY: Record<string, BlockElementRegistry> = {
   section_header:   TEXT_ONLY,
 
   features_grid:   FEATURES_GRID,
+  values_grid:     VALUES_GRID,
+  detail_rows:     DETAIL_ROWS,
+  prose_image:     PROSE_IMAGE,
+  page_subnav:     PAGE_SUBNAV,
   info_columns:    INFO_COLUMNS,
   stats_counter:   STATS_COUNTER,
   testimonials:    TESTIMONIALS,

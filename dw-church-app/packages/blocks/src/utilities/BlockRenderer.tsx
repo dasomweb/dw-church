@@ -17,6 +17,8 @@ import { LogoTitleBlock } from '../static/LogoTitleBlock';
 import { ButtonGroupBlock } from '../static/ButtonGroupBlock';
 import { DirectionsSplitBlock } from '../static/DirectionsSplitBlock';
 import { ScheduleSplitBlock } from '../static/ScheduleSplitBlock';
+import { ProseImageBlock } from '../static/ProseImageBlock';
+import { PageSubnavBlock } from '../static/PageSubnavBlock';
 import { SubscribeFormBlock } from '../static/SubscribeFormBlock';
 import { ContactFormBlock } from '../static/ContactFormBlock';
 import { SpacerBlock } from '../static/SpacerBlock';
@@ -41,6 +43,8 @@ import { LogoBarBlock } from '../list-based/LogoBarBlock';
 import { FaqAccordionBlock } from '../list-based/FaqAccordionBlock';
 import { TestimonialsBlock } from '../list-based/TestimonialsBlock';
 import { FeaturesGridBlock } from '../list-based/FeaturesGridBlock';
+import { ValuesGridBlock } from '../list-based/ValuesGridBlock';
+import { DetailRowsBlock } from '../list-based/DetailRowsBlock';
 import { InfoColumnsBlock } from '../list-based/InfoColumnsBlock';
 import { WeekScheduleBlock } from '../list-based/WeekScheduleBlock';
 import { QuickLinksBlock } from '../list-based/QuickLinksBlock';
@@ -157,6 +161,10 @@ export const BLOCK_MAP: Record<string, SyncBlockComponent> = {
   button_group: ButtonGroupBlock,
   directions_split: DirectionsSplitBlock,
   schedule_split:   ScheduleSplitBlock,
+  prose_image:  ProseImageBlock,
+  // page_subnav: sync preview here (editor canvas); storefront overrides
+  // with the async, menu-fetching + active-highlighting version.
+  page_subnav:  PageSubnavBlock,
 
   location_map:  LocationMapBlock,
   map_embed:     LocationMapBlock,
@@ -210,6 +218,8 @@ export const BLOCK_MAP: Record<string, SyncBlockComponent> = {
   faq_accordion:   FaqAccordionBlock,
   testimonials:    TestimonialsBlock,
   features_grid:   FeaturesGridBlock,
+  values_grid:     ValuesGridBlock,
+  detail_rows:     DetailRowsBlock,
   info_columns:    InfoColumnsBlock,
   week_schedule:   WeekScheduleBlock,
   quick_links:     QuickLinksBlock,

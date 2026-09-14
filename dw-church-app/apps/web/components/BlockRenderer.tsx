@@ -39,6 +39,9 @@ import { CustomFormBlock } from './blocks/CustomFormBlock';
 // identically with full design-token support. ContactInfoBlock stays here
 // because it's an async Server Component (fetches church settings).
 import { ContactInfoBlock } from './blocks/ContactInfoBlock';
+// page_subnav is async (fetches the live menu tree + highlights the current
+// page) so it overrides the shared sync preview here.
+import { PageSubnavBlock } from './blocks/PageSubnavBlock';
 
 type PageSection = { id: string; blockType: string; props: Record<string, unknown>; sortOrder: number; isVisible: boolean };
 type AnyBlock = (p: { props: Record<string, unknown>; slug: string; page?: number }) => React.ReactNode | Promise<React.ReactNode>;
@@ -82,6 +85,8 @@ const CHURCH_BLOCKS: Record<string, AnyBlock> = {
   // worship_schedule come from the shared @dw-church/blocks set.
   contact_info: ContactInfoBlock as AnyBlock,
   address_info: ContactInfoBlock as AnyBlock,
+  // 페이지 헤더 + 서브메뉴 — 라이브 메뉴 트리 fetch + 현재 페이지 밑줄(usePathname).
+  page_subnav: PageSubnavBlock as AnyBlock,
 };
 
 const BLOCK_MAP: Record<string, AnyBlock> = {

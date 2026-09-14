@@ -91,6 +91,12 @@ export const blockTypes = [
   'button_group',
   'directions_split',
   'logo_title',
+  // 신규 범용 블록 (2026-09-14) — 어느 테넌트든 쓰는 플랫폼 블록.
+  // 서브메뉴 페이지헤더 · 제목+본문+이미지(세로) · 가치 카드그리드 · 항목 리스트.
+  'page_subnav',
+  'prose_image',
+  'values_grid',
+  'detail_rows',
 ] as const;
 
 export type BlockType = (typeof blockTypes)[number];

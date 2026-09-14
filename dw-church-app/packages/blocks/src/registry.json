@@ -549,6 +549,46 @@
       "useCases": ["서비스 페이지 'Key Features'", "랜딩 페이지 'Why us'", "제품 페이지 '주요 기능'"],
       "aiHint": "Icon + title + description cards in a grid. columns: 2/3/4."
     },
+    "values_grid": {
+      "label": "가치 카드 그리드",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "title": "", "columns": "3", "items": [] },
+      "description": "굵은 밑줄 제목 + N열 카드. 각 카드에 오버라인(작은 라벨) + 제목 + 설명. 핵심 가치·사역 방향·약속 정리에 적합.",
+      "tags": ["values", "principles", "cards", "grid", "overline", "eyebrow", "core-values", "mission"],
+      "useCases": ["소개 페이지 '핵심 가치' 3-up", "우리의 약속", "사역 철학 카드"],
+      "aiHint": "Ruled section heading + N cards, each with an OVERLINE eyebrow + title + body. items:[{overline,title,description}]. columns: 2/3/4."
+    },
+    "detail_rows": {
+      "label": "항목 리스트 (제목+설명)",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "title": "", "intro": "", "items": [] },
+      "description": "굵은 밑줄 제목 + 도입문 + 행 리스트. 각 행 = 좌측 제목/라벨 + 우측 설명/보조문. 방향·원칙·정책을 정의형 리스트로.",
+      "tags": ["definition-list", "rows", "directions", "principles", "detail", "two-column-rows"],
+      "useCases": ["목회 방향 정의 리스트", "사역 원칙 상세", "정책·가치 설명 리스트"],
+      "aiHint": "Ruled heading + intro + rows. Each row: LEFT title+label / RIGHT description+meta. items:[{title,label,description,meta}]."
+    },
+    "prose_image": {
+      "label": "제목+본문+이미지 (세로)",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "title": "", "body": "", "imageUrl": "", "imagePosition": "below" },
+      "description": "굵은 밑줄 제목 + 본문(리치텍스트) + 전체폭 이미지(아래/위). 한 컬럼 읽기 레이아웃. 설립 목적·소개 줄글에 적합. text_image(좌우분할)와 구분됨.",
+      "tags": ["prose", "article", "heading-rule", "body", "full-width-image", "intro", "about"],
+      "useCases": ["소개 페이지 설립 목적", "비전 설명 줄글", "긴 소개 + 대표 이미지"],
+      "aiHint": "One-column reading layout: ruled heading + rich-text body + full-width image (below by default). NOT a side-by-side split."
+    },
+    "page_subnav": {
+      "label": "페이지 헤더 + 서브메뉴",
+      "group": "content",
+      "flags": { "isDataBlock": true },
+      "defaultProps": { "title": "", "parentMenu": "" },
+      "description": "인터페이지 상단 헤더 밴드 — 브레드크럼 + 페이지 제목 + 상위 메뉴에 연결된 하위 메뉴 가로줄(현재 페이지 밑줄 표시). 메뉴 구조에서 자동 생성.",
+      "tags": ["page-header", "breadcrumb", "subnav", "section-nav", "menu", "interior-page", "active-underline"],
+      "useCases": ["소개 하위 페이지 상단", "부서 페이지 상단 서브내비", "메뉴 그룹 인터페이지 헤더"],
+      "aiHint": "Interior page header: breadcrumb + title + submenu row tied to a top-level menu, current page underlined. Pulls from /api/v1/menus. parentMenu selects the group (empty = auto from current page)."
+    },
     "info_columns": {
       "label": "정보 컬럼 (한눈에)",
       "group": "content",
