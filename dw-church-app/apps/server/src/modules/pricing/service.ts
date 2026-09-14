@@ -3,9 +3,14 @@ import type { UpdatePricingInput } from './schema.js';
 
 const TABLE = 'public.plan_pricing';
 
-export async function listPricing() {
+/**
+ * List plan pricing. `activeOnly` (public /pricing) hides deactivated rows —
+ * e.g. the retired plus/pro tiers after the move to the single $99 plan; the
+ * admin 요금 관리 view passes false to still see/manage them.
+ */
+export async function listPricing(activeOnly = false) {
   return prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-    `SELECT * FROM ${TABLE} ORDER BY sort_order ASC`,
+    `SELECT * FROM ${TABLE} ${activeOnly ? 'WHERE is_active = true' : ''} ORDER BY sort_order ASC`,
   );
 }
 

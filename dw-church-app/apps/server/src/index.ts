@@ -1640,7 +1640,7 @@ async function main(): Promise<void> {
       { labelKo: '데모 체험', labelEn: 'Try the Demo', url: '', variant: 'demo' },
     ];
     const SEED_HERO_SLIDES = [
-      { headlineKo: '솔루션 오픈 기념 · 디자인 셋업비 30% OFF', headlineEn: 'Launch Special · 30% Off Design Setup', sublineKo: '라이트·기본형 1년 구독 고객 · 8월 31일까지', sublineEn: 'Light·Basic 1-year plans · Through Aug 31', imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1680&h=720&fit=crop', buttons: [{ labelKo: '런칭 혜택 신청', labelEn: 'Claim Launch Offer', url: '/apply', variant: 'primary' }, { labelKo: '요금제 보기', labelEn: 'See Plans', url: '/#plans', variant: 'outline' }] },
+      // (구 런칭 배너 "라이트·기본 · 8/31까지 30% OFF" 제거 — 만료 + 폐기된 티어명)
       { headlineKo: '교회 웹사역을 쉽고 편리하게', headlineEn: 'Church web ministry made simple', sublineKo: '복잡한 준비 없이 교회의 온라인 사역을 시작할 수 있습니다.', sublineEn: 'Start your church’s online ministry without the complicated setup.', imageUrl: 'https://images.unsplash.com/photo-1507692049790-de58290a4334?w=1680&h=720&fit=crop', buttons: DEFAULT_BTNS },
       { headlineKo: '누구나 손쉽게 관리할 수 있습니다', headlineEn: 'Easy for anyone to manage', sublineKo: '어려운 설정이나 기술 없이 교회가 직접 콘텐츠를 올리고 관리합니다.', sublineEn: 'Your church adds and manages content directly — no technical skills needed.', imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1680&h=720&fit=crop', buttons: DEFAULT_BTNS },
       { headlineKo: '교회는 사역에만 집중할 수 있습니다', headlineEn: 'Focus on what matters most', sublineKo: '복잡한 기술과 관리는 솔루션이 처리하므로 교회는 본연의 사역에 전념할 수 있습니다.', sublineEn: 'The platform handles the technical side, so your church can focus on its ministry.', imageUrl: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1680&h=720&fit=crop', buttons: DEFAULT_BTNS },
@@ -1785,13 +1785,13 @@ async function main(): Promise<void> {
         "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `);
-    // Seed the 4 tiers ONCE (whole-dollar amounts; super admin edits afterward).
-    // 라이트는 기본으로 통합됨 — 기본이 진입(base) 티어. (기존 light 요금행은
-    // 마이그레이션 스크립트로 삭제; 여기선 더 이상 시드하지 않는다.)
+    // 요금 모델(2026-09 확정): 티어 사다리(라이트/기본/플러스/프로) 폐기 →
+    // 홈페이지 구독 단일가 $99/월(연결제 2개월 무료 ≈ 월환산 $83). 초기 구축비는
+    // 별도 상품(범위별), 교회 행정은 애드온(feature_pricing)이라 여기 setup_fee=0.
+    // 단일 행만 시드; plus/pro 는 더 이상 시드하지 않음(구 데이터는 비활성 처리).
+    // 값은 슈퍼어드민 요금 관리에서 조정.
     const pricingSeed: [string, string, number, number, number, number][] = [
-      ['basic', '기본', 99, 79, 500, 0],
-      ['plus', '플러스', 149, 119, 700, 1],
-      ['pro', '프로', 199, 159, 1000, 2],
+      ['basic', '홈페이지 구독', 99, 83, 0, 0],
     ];
     for (const [key, label, monthly, yearly, setupFee, sort] of pricingSeed) {
       await prisma.$executeRawUnsafe(
