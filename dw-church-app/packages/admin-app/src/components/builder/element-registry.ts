@@ -1038,13 +1038,18 @@ const PROSE_IMAGE: BlockElementRegistry = {
 
 // 페이지 헤더 + 서브메뉴 (page_subnav) — 데이터 블록(메뉴 트리 fetch). 스타일은
 // 데이터 블록 공통 Advanced(blockStyle) 탭에서. 여기선 콘텐츠 필드만 노출.
-const PAGE_SUBNAV = churchBlock(
-  { title: 'Content', fields: [
-    { key: 'title', label: '제목(비우면 상위 메뉴명)', type: 'text' },
-    { key: 'parentMenu', label: '연결할 상위 메뉴 (슬러그/이름)', type: 'text', hint: '비우면 현재 페이지가 속한 메뉴 그룹을 자동 선택' },
-    { key: 'breadcrumbHome', label: '브레드크럼 홈 라벨', type: 'text', hint: '기본 "홈"' },
-  ]},
-);
+// NOTE: plain object (churchBlock/CHURCH_KIND 는 파일 아래에서 정의되므로, 이
+// 위치에서 churchBlock() 을 호출하면 CHURCH_KIND TDZ ReferenceError 로 모듈이
+// 통째로 죽는다 — 반드시 리터럴로 정의한다).
+const PAGE_SUBNAV: BlockElementRegistry = {
+  sections: [
+    { title: 'Content', elements: [
+      { label: '제목(비우면 상위 메뉴명)', path: 'title', kind: 'text' },
+      { label: '연결할 상위 메뉴 (슬러그/이름)', path: 'parentMenu', kind: 'text', hint: '비우면 현재 페이지가 속한 메뉴 그룹을 자동 선택' },
+      { label: '브레드크럼 홈 라벨', path: 'breadcrumbHome', kind: 'text', hint: '기본 "홈"' },
+    ]},
+  ],
+};
 
 const STATS_COUNTER: BlockElementRegistry = {
   sections: [
