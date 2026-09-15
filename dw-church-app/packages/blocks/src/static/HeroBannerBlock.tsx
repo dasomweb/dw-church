@@ -409,23 +409,24 @@ function PageHero({ props }: HeroBannerBlockProps) {
   );
 }
 
-/* ─── 5. photo-scrim (full-bleed photo + directional light scrim, DARK text) ─
- * Church-home hero: a background photo with a directional light "scrim" built
- * from the SURFACE token — opaque on the readable side, fading to reveal the
- * photo on the other. Unlike image-overlay (dark scrim → light onDark text),
- * the readable side stays LIGHT so the eyebrow/title/verse render in the normal
- * dark ink (--dw-text). `scrimSide` (left|right) picks which side is readable;
- * the multi-line title honours embedded line breaks (white-space: pre-line). */
+/* ─── 5. photo-scrim (full-bleed photo hero for DARK text on a LIGHT scrim) ─
+ * Same full-bleed photo shell as image-overlay, but the content ink defaults to
+ * the normal DARK text (--dw-text) so it reads on a LIGHT scrim. The scrim
+ * itself is NOT baked in here — it's the operator's Style → Background Overlay
+ * (readOverlayProps → SectionBackground), so it's tunable/removable per section
+ * (e.g. a left→right light gradient: gradient mode, color1 'surface', angle 90).
+ * The multi-line title honours embedded line breaks (white-space: pre-line). */
 function PhotoScrimHero({ props }: HeroBannerBlockProps) {
   const eyebrow = (props.eyebrow as string) || '';
   const title = (props.title as string) || '';
   const subtitle = (props.subtitle as string) || '';
   const bgImage = (props.backgroundImageUrl as string) || '';
   const bgImageMobile = (props.backgroundImageUrlMobile as string) || undefined;
+  const bgImagePosition = (props.backgroundImagePosition as SectionBackgroundPosition | undefined);
   const height = (props.height as string) || 'lg';
   const textAlign = (props.textAlign as string) || 'left';
-  // Which side stays light + readable (dark text sits there). Default left.
-  const scrimSide = (props.scrimSide as string) === 'right' ? 'right' : 'left';
+  // Scrim = operator's Style overlay (NOT hardcoded). Same vocab every hero uses.
+  const overlay = readOverlayProps(props);
 
   const heightClass = HEIGHT_MAP[height] || HEIGHT_MAP.lg;
   const alignClass = ALIGN_MAP[textAlign] || ALIGN_MAP.left;
@@ -433,31 +434,23 @@ function PhotoScrimHero({ props }: HeroBannerBlockProps) {
   const isContained = resolveWidth(props) === 'contained';
   const contentWidth = resolveContentWidth(props);
 
-  // Directional light scrim from the SURFACE token → recolors with the theme.
-  const angle = scrimSide === 'right' ? '270deg' : '90deg';
-  const sc = (pct: number) => `color-mix(in srgb, var(--dw-surface, #f7f8fa), transparent ${pct}%)`;
-  const scrim = `linear-gradient(${angle}, ${sc(3)} 0%, ${sc(15)} 52%, ${sc(55)} 100%)`;
-
   return (
     <section className={`relative ${isContained ? 'px-4 sm:px-6 py-8' : ''}`}>
       <div
         className={`relative flex ${heightClass} ${vItemsClass} overflow-hidden bg-[var(--dw-surface,#f7f8fa)] ${isContained ? 'mx-auto max-w-7xl rounded-3xl' : ''}`}
       >
         {bgImage && (
-          <ImageElement
-            url={bgImage}
-            mobileUrl={bgImageMobile}
-            alt=""
+          <SectionBackground
+            imageUrl={bgImage}
+            mobileImageUrl={bgImageMobile}
+            position={bgImagePosition}
+            overlay={overlay}
+            rounded={isContained ? '3xl' : undefined}
             props={props}
-            elementKey="backgroundImageUrl"
             sizeCategory="hero-bg"
-            imageFetchPriority="high"
-            imageLoading="eager"
-            fillParent
-            className="absolute inset-0 w-full h-full object-cover"
+            isLcp
           />
         )}
-        <div aria-hidden="true" className="absolute inset-0" style={{ background: scrim }} />
         <div
           className={`relative z-10 w-full px-6 sm:px-10 py-12 sm:py-16 ${contentWidthClass(contentWidth)} ${alignClass}`}
           style={{ display: 'flex', flexDirection: 'column', gap: 'var(--block-gap, 1.25rem)', color: 'var(--dw-text, #16181d)' }}
