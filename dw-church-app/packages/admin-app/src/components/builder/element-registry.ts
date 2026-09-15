@@ -200,11 +200,17 @@ const HERO_BANNER: BlockElementRegistry = {
         { label: 'Layout', path: 'variant', kind: 'select', choices: [
           { value: 'image-overlay', label: 'Background Image + Overlay' },
           { value: 'split-image', label: 'Split (Image + Text)' },
+          { value: 'photo-scrim', label: 'Photo + Light Scrim (밝은 스크림 · 어두운 텍스트)' },
           { value: 'page-hero', label: 'Compact (sub-page header)' },
           { value: 'text-only', label: 'Text Only' },
         ]},
+        // photo-scrim: which side stays light + readable (dark text sits there).
+        { label: 'Scrim Side (photo-scrim)', path: 'scrimSide', kind: 'select', choices: [
+          { value: 'left', label: '왼쪽 밝게 (텍스트 좌측)' },
+          { value: 'right', label: '오른쪽 밝게 (텍스트 우측)' },
+        ], hint: 'photo-scrim 변형 전용 — 사진 위 밝은 스크림이 어느 쪽을 덮을지' },
         { label: 'Eyebrow', path: 'eyebrow', kind: 'text', hint: 'Small category label above the headline' },
-        { label: 'Headline', path: 'title', kind: 'text' },
+        { label: 'Headline', path: 'title', kind: 'text', hint: 'photo-scrim 은 줄바꿈(Enter) 유지 — 여러 줄 제목 가능' },
         { label: 'Subtitle', path: 'subtitle', kind: 'text' },
         { label: 'Description', path: 'description', kind: 'text', hint: 'Split-image variant only' },
         { label: 'Background Image', path: 'backgroundImageUrl', kind: 'image' },
