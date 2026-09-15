@@ -95,6 +95,8 @@ function variantBase(variant: ButtonVariant): CSSProperties {
         background: 'var(--brand-primary)',
         color: 'var(--brand-primary-fg, #fff)',
         border: '1px solid var(--brand-primary)',
+        // Theme button design shadow (--brand-button-shadow, default 'none').
+        boxShadow: 'var(--brand-button-shadow, none)',
       };
   }
 }
@@ -121,7 +123,9 @@ export function ButtonElement({
     fontFamily: 'var(--brand-font-body)',
     paddingInline: 'var(--brand-button-pad-x, 1.25rem)',
     paddingBlock: 'var(--brand-button-pad-y, 0.625rem)',
-    borderRadius: 'var(--brand-radius-md, 8px)',
+    // Button-specific radius (theme 버튼 디자인). Falls back to the global md
+    // radius so pre-existing tenants (no button design set) are unchanged.
+    borderRadius: 'var(--brand-button-radius, var(--brand-radius-md, 8px))',
     cursor: 'pointer',
     display: 'inline-block',
     textDecoration: 'none',

@@ -131,6 +131,7 @@ function cloneTokens(t: DesignTokens): DesignTokens {
     spacing: { ...D.spacing, ...(t.spacing ?? {}) },
     header: { ...D.header, ...(t.header ?? {}) },
     footer: { ...D.footer, ...(t.footer ?? {}) },
+    button: { ...D.button, ...(t.button ?? {}) },
   };
 }
 
@@ -169,6 +170,7 @@ function buildFromLegacyShape(theme: Omit<LegacyThemeBlob, 'tokensV2'>): DesignT
     spacing: { ...DEFAULT_DESIGN_TOKENS.spacing },
     header: { ...DEFAULT_DESIGN_TOKENS.header },
     footer: { ...DEFAULT_DESIGN_TOKENS.footer },
+    button: { ...DEFAULT_DESIGN_TOKENS.button },
   };
 }
 

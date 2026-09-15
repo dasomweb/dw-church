@@ -116,6 +116,15 @@ export const DEFAULT_DESIGN_TOKENS: DesignTokens = {
     tagline: '',
     showNav: true,
   },
+  // Button design — reproduces ButtonElement's prior look: rounded corners
+  // inheriting radius.md (radius omitted), 20/10 padding, no shadow. Operators
+  // change these in 테마설정 → 버튼 to restyle every button site-wide.
+  button: {
+    shape: 'rounded',
+    paddingX: 20,
+    paddingY: 10,
+    shadow: false,
+  },
 };
 
 /**

@@ -105,6 +105,31 @@ export const designTokenRadiusSchema = z.object({
   full: z.number().int().nonnegative(),
 });
 
+// ─── Button design tokens ──────────────────────────────────────────────────
+//
+// Global button DESIGN (shape / padding / shadow) — distinct from the `button`
+// TYPOGRAPHY scale (size/weight of the label). Emitted as --brand-button-radius
+// / --brand-button-pad-x / --brand-button-pad-y / --brand-button-shadow and
+// consumed by ButtonElement. Every field's default reproduces ButtonElement's
+// prior hardcoded fallbacks (radius = inherit radius.md, pad 20/10, no shadow),
+// so tenants that never set a button design render byte-for-byte unchanged.
+export const designTokenButtonSchema = z
+  .object({
+    /** Corner shape. 'rounded' (default) uses `radius` when set, else inherits
+     *  the global radius.md; 'pill' = fully round; 'square' = 0. */
+    shape: z.enum(['rounded', 'pill', 'square']).default('rounded'),
+    /** Explicit corner radius (px) for shape='rounded'. Omitted → inherit
+     *  radius.md (so existing tenants are unchanged). */
+    radius: z.number().int().nonnegative().optional(),
+    /** Horizontal padding (px). Default 20 = the old 1.25rem fallback. */
+    paddingX: z.number().int().nonnegative().default(20),
+    /** Vertical padding (px). Default 10 = the old 0.625rem fallback. */
+    paddingY: z.number().int().nonnegative().default(10),
+    /** Drop shadow on filled buttons. Default off (matches prior look). */
+    shadow: z.boolean().default(false),
+  })
+  .default({ shape: 'rounded', paddingX: 20, paddingY: 10, shadow: false });
+
 // ─── Header tokens ─────────────────────────────────────────────────────────
 //
 // Per-tenant header chrome the operator tunes in the super-admin theme editor:
@@ -268,6 +293,10 @@ export const designTokensSchema = z.object({
   /** Footer design (variant, colors, labels, copyright). `.default` so
    *  pre-existing token blobs without a footer key still parse. */
   footer: designTokenFooterSchema,
+  /** Global button design (shape / padding / shadow). `.default` so
+   *  pre-existing token blobs without a button key still parse, and the
+   *  defaults reproduce ButtonElement's prior look (no visible change). */
+  button: designTokenButtonSchema,
 });
 
 export type SystemColorTokens = z.infer<typeof systemColorTokensSchema>;
@@ -276,6 +305,7 @@ export type TypographyScaleSpec = z.infer<typeof typographyScaleSpecSchema>;
 export type DesignTokenTypography = z.infer<typeof designTokenTypographySchema>;
 export type DesignTokenHeader = z.infer<typeof designTokenHeaderSchema>;
 export type DesignTokenFooter = z.infer<typeof designTokenFooterSchema>;
+export type DesignTokenButton = z.infer<typeof designTokenButtonSchema>;
 export type DesignTokens = z.infer<typeof designTokensSchema>;
 
 // ─── BlockStyle — per-block override container ─────────────────────────────

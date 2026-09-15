@@ -26,6 +26,7 @@ import {
   meetsContrast,
   WCAG_AA_NORMAL,
   type DesignTokens,
+  type DesignTokenButton,
   type SystemColorTokens,
   type FontSizePresetName,
   type SpacingPresetName,
@@ -35,7 +36,7 @@ import { useAuthStore } from '../../stores/auth';
 import { useToast, ImageUpload } from '../../components';
 import { useSuperAdminTenant } from '../SuperAdminTenantLayout';
 
-type TabId = 'design-sets' | 'palette' | 'typography' | 'header' | 'footer' | 'spacing' | 'custom';
+type TabId = 'design-sets' | 'palette' | 'typography' | 'header' | 'footer' | 'button' | 'spacing' | 'custom';
 
 // 2026-06-01 (Phase 10-α): "테마셋" 탭 추가. 슈퍼어드민의 일반적인 흐름은
 // "테마셋 선택" → 필요 시 가벼운 override (팔레트/타이포). 따라서 테마셋이
@@ -53,6 +54,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'typography', label: '타이포그래피' },
   { id: 'header',     label: '헤더' },
   { id: 'footer',     label: '풋터' },
+  { id: 'button',     label: '버튼' },
   { id: 'spacing',    label: '여백 / 간격' },
   { id: 'custom',     label: '커스텀 CSS' },
 ];
@@ -231,6 +233,7 @@ export default function TenantThemeEditor() {
       {tab === 'typography' && <TypographyTab tokens={tokens} onChange={applyTokens} saving={saving} />}
       {tab === 'header' && <HeaderTab tokens={tokens} onChange={applyTokens} saving={saving} />}
       {tab === 'footer' && <FooterTab tokens={tokens} onChange={applyTokens} saving={saving} />}
+      {tab === 'button' && <ButtonTab tokens={tokens} onChange={applyTokens} saving={saving} />}
       {tab === 'spacing' && <SpacingTab tokens={tokens} onChange={applyTokens} saving={saving} />}
       {tab === 'custom' && <CustomCssTab value={customCss} onChange={(v) => { setCustomCss(v); setCssDirty(true); }} onSave={() => saveCustomCss(customCss)} saving={saving} cssDirty={cssDirty} />}
     </div>
@@ -1007,6 +1010,135 @@ const SPACING_FIELDS: { key: keyof DesignTokens['spacing']; label: string; hint:
   { key: 'gapGrid',           label: '그리드 간격',   hint: '카드/그리드 칸 사이 간격' },
   { key: 'sectionMarginY',    label: '섹션 사이 간격', hint: '섹션과 섹션 사이 바깥 여백(margin)' },
 ];
+
+// ─── Button (버튼: 모양 / 패딩 / 그림자) ────────────────────────────────
+// Global button DESIGN — persists under tokens.button and emits as
+// --brand-button-radius / --brand-button-pad-x / --brand-button-pad-y /
+// --brand-button-shadow, consumed by ButtonElement site-wide. Defaults
+// reproduce the prior look (rounded=radius.md, 20/10 padding, no shadow) so a
+// tenant that never opens this tab is unchanged.
+const BUTTON_DEFAULTS: DesignTokenButton = { shape: 'rounded', paddingX: 20, paddingY: 10, shadow: false };
+
+const BUTTON_SHAPES: { value: DesignTokenButton['shape']; label: string; hint: string }[] = [
+  { value: 'rounded', label: '둥근 모서리', hint: '반경 지정(비우면 테마 기본)' },
+  { value: 'pill',    label: '알약형',      hint: '완전히 둥근 끝' },
+  { value: 'square',  label: '각진 모서리',  hint: '반경 0' },
+];
+
+function ButtonTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChange: (t: DesignTokens | ((prev: DesignTokens) => DesignTokens)) => void; saving: boolean }) {
+  const button: DesignTokenButton = { ...BUTTON_DEFAULTS, ...(tokens.button ?? {}) };
+  const setB = <K extends keyof DesignTokenButton>(k: K, v: DesignTokenButton[K]) => {
+    onChange((prev) => ({
+      ...prev,
+      button: { ...BUTTON_DEFAULTS, ...(prev.button ?? {}), [k]: v },
+    }));
+  };
+
+  // Effective preview radius: pill = fully round, square = 0, rounded = explicit
+  // radius or the theme's md radius when left blank (matches the storefront).
+  const previewRadius = button.shape === 'pill' ? 9999 : button.shape === 'square' ? 0 : (button.radius ?? tokens.radius.md);
+  const primary = tokens.colors.system.primary || '#2563eb';
+  const shadowCss = button.shadow ? '0 8px 24px rgba(0,0,0,0.12)' : 'none';
+
+  return (
+    <section className="space-y-6">
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-1">버튼 디자인</h3>
+        <p className="text-xs text-gray-500 mb-3">사이트 전역 버튼(CTA)의 모양·패딩·그림자를 정합니다. 색상은 팔레트의 primary를 따릅니다.</p>
+      </div>
+
+      {/* 미리보기 */}
+      <div className="rounded-lg border border-gray-200 bg-gray-50 p-5 flex flex-wrap items-center gap-3">
+        <span
+          style={{
+            background: primary, color: '#fff', border: `1px solid ${primary}`,
+            paddingInline: button.paddingX, paddingBlock: button.paddingY,
+            borderRadius: previewRadius, boxShadow: shadowCss,
+            fontSize: 15, fontWeight: 700, display: 'inline-block',
+          }}
+        >예배 안내 보기</span>
+        <span
+          style={{
+            background: 'transparent', color: primary, border: `1px solid ${primary}`,
+            paddingInline: button.paddingX, paddingBlock: button.paddingY,
+            borderRadius: previewRadius,
+            fontSize: 15, fontWeight: 700, display: 'inline-block',
+          }}
+        >온라인 예배 참여</span>
+        <span className="text-[11px] text-gray-400 ml-auto">실시간 미리보기</span>
+      </div>
+
+      {/* 모양 */}
+      <div>
+        <h4 className="text-xs font-semibold text-gray-700 mb-2">모서리 모양</h4>
+        <div className="grid grid-cols-3 gap-3">
+          {BUTTON_SHAPES.map((s) => {
+            const active = button.shape === s.value;
+            return (
+              <button
+                key={s.value}
+                type="button"
+                disabled={saving}
+                onClick={() => setB('shape', s.value)}
+                className={`text-left rounded-lg border p-3 transition-colors disabled:opacity-50 ${active ? 'border-blue-600 bg-blue-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}
+              >
+                <div className="text-sm font-semibold">{s.label}</div>
+                <div className="text-[11px] text-gray-500 mt-0.5">{s.hint}</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 숫자 조절 */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <label className="text-xs text-gray-600">
+          모서리 반경 (px)
+          <input
+            type="number" min={0} max={60}
+            value={button.shape === 'rounded' ? (button.radius ?? '') : ''}
+            placeholder={button.shape === 'rounded' ? `기본 ${tokens.radius.md}` : '해당 없음'}
+            disabled={saving || button.shape !== 'rounded'}
+            onChange={(e) => setB('radius', e.target.value === '' ? undefined : Math.max(0, Number(e.target.value) || 0))}
+            className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-sm disabled:bg-gray-100 disabled:opacity-60"
+          />
+          <span className="block text-[10px] text-gray-400 mt-0.5">둥근 모서리일 때만. 비우면 테마 기본({tokens.radius.md}px)</span>
+        </label>
+        <label className="text-xs text-gray-600">
+          좌우 패딩 (px)
+          <input
+            type="number" min={0} max={80}
+            value={button.paddingX}
+            disabled={saving}
+            onChange={(e) => setB('paddingX', Math.max(0, Number(e.target.value) || 0))}
+            className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-sm disabled:opacity-50"
+          />
+        </label>
+        <label className="text-xs text-gray-600">
+          상하 패딩 (px)
+          <input
+            type="number" min={0} max={60}
+            value={button.paddingY}
+            disabled={saving}
+            onChange={(e) => setB('paddingY', Math.max(0, Number(e.target.value) || 0))}
+            className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-sm disabled:opacity-50"
+          />
+        </label>
+      </div>
+
+      {/* 그림자 */}
+      <label className="flex items-center gap-2 text-sm text-gray-700">
+        <input
+          type="checkbox"
+          checked={button.shadow}
+          disabled={saving}
+          onChange={(e) => setB('shadow', e.target.checked)}
+        />
+        채워진 버튼에 그림자 추가
+      </label>
+    </section>
+  );
+}
 
 function SpacingTab({ tokens, onChange, saving }: { tokens: DesignTokens; onChange: (t: DesignTokens | ((prev: DesignTokens) => DesignTokens)) => void; saving: boolean }) {
   // Functional update: build on the LATEST tokens so editing several spacing/radius

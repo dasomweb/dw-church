@@ -50,6 +50,7 @@ export type {
   DesignTokenTypography,
   DesignTokenHeader,
   DesignTokenFooter,
+  DesignTokenButton,
   DesignTokens,
   BlockStyle,
   ColorValue,

@@ -110,6 +110,21 @@ export function tokensToCssVars(tokens: DesignTokens): CssVarMap {
   vars['--brand-nav-font-size'] = `${tokens.header?.navFontSize ?? 14}px`;
   vars['--brand-nav-font-weight'] = `${tokens.header?.navFontWeight ?? 500}`;
 
+  // Button design (shape → radius, padding, shadow). Consumed by ButtonElement.
+  // Defaults reproduce the prior hardcoded fallbacks so tenants that never set a
+  // button design are unchanged: shape 'rounded' with no explicit radius emits a
+  // reference to --brand-radius-md (exactly what ButtonElement used before);
+  // padding 20/10 = the old 1.25rem/0.625rem; shadow none.
+  const btn = tokens.button;
+  const btnShape = btn?.shape ?? 'rounded';
+  vars['--brand-button-radius'] =
+    btnShape === 'pill' ? '9999px'
+      : btnShape === 'square' ? '0px'
+        : (typeof btn?.radius === 'number' ? `${btn.radius}px` : 'var(--brand-radius-md, 8px)');
+  vars['--brand-button-pad-x'] = `${btn?.paddingX ?? 20}px`;
+  vars['--brand-button-pad-y'] = `${btn?.paddingY ?? 10}px`;
+  vars['--brand-button-shadow'] = btn?.shadow ? '0 8px 24px rgba(0,0,0,0.12)' : 'none';
+
   return vars;
 }
 
