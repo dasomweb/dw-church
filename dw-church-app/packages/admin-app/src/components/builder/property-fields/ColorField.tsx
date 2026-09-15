@@ -53,11 +53,18 @@ export function ColorField({
   onBlur,
 }: ColorFieldProps) {
   const isHex = typeof value === 'string' && HEX_RE.test(value.trim());
-  // Picker swatch shows the current hex when one is set, or '#000000'
-  // as a neutral starting point when the value is a palette key / unset.
-  // Always clickable — operators got blocked when a palette key
-  // disabled the swatch ("왜 안 열려?") with no signal why.
-  const pickerValue = isHex ? value : '#000000';
+  // Resolve a palette KEY ('surface' / 'primary' / …) to its real hex so the
+  // swatch shows the ACTUAL color, not a misleading black. Without this,
+  // 'surface' (near-white) rendered as a black swatch → operators couldn't tell
+  // a light overlay color was even light ("white overlay가 왜 생기냐" 혼란).
+  const paletteHex = !isHex && value && Array.isArray(palette)
+    ? palette.find((p) => p.key === value.trim())?.hex
+    : undefined;
+  // Picker swatch shows the current hex when one is set, the resolved palette
+  // color for a palette key, or '#000000' as a neutral start when truly unset.
+  // Always clickable — operators got blocked when a palette key disabled the
+  // swatch ("왜 안 열려?") with no signal why.
+  const pickerValue = isHex ? value : (paletteHex ?? '#000000');
   // The visual palette popup wins over the simpler keys dropdown when
   // both are supplied (the popup covers the same surface, more clearly).
   const hasVisualPalette = palette && palette.length > 0;

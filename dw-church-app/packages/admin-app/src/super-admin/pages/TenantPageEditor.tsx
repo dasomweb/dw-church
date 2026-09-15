@@ -106,6 +106,11 @@ export default function TenantPageEditor() {
   // Slugs of pages currently linked from the live nav menu — lets the page
   // list show which pages are actually reachable from the site's menu.
   const [menuSlugs, setMenuSlugs] = useState<Set<string>>(new Set());
+  // Tenant theme palette (color key → hex) so the inspector's color fields show
+  // the ACTUAL applied color (swatch + 🎨 Global Colors), not a black swatch for
+  // every palette key. Without this the inspector had NO palette wired → 모든
+  // 색상 필드가 적용된 색을 확인할 수 없었음 (대표님 2026-09-15).
+  const [palette, setPalette] = useState<Record<string, string> | undefined>(undefined);
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
   const [sections, setSections] = useState<Section[]>([]);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
@@ -216,6 +221,25 @@ export default function TenantPageEditor() {
         }
         setMenuSlugs(slugs);
       } catch { /* non-fatal — badges just won't show */ }
+    })();
+    return () => { cancelled = true; };
+  }, [tenant?.slug, baseUrl, headers]);
+
+  // Load the tenant theme tokens → build the color palette (system slots +
+  // customs) the inspector's color fields resolve/show. Same endpoint the
+  // storefront + BuilderCanvas use.
+  useEffect(() => {
+    if (!tenant?.slug || !baseUrl) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`${baseUrl}/api/v1/theme/tokens`, { headers, cache: 'no-store' });
+        if (!res.ok) return;
+        const body = await res.json() as { data?: unknown };
+        const tokens = (body?.data ?? body) as { colors?: { system?: Record<string, string>; custom?: Record<string, string> } } | null;
+        if (cancelled || !tokens?.colors) return;
+        setPalette({ ...(tokens.colors.system ?? {}), ...(tokens.colors.custom ?? {}) });
+      } catch { /* palette optional — fields still work with hex input */ }
     })();
     return () => { cancelled = true; };
   }, [tenant?.slug, baseUrl, headers]);
@@ -940,6 +964,7 @@ export default function TenantPageEditor() {
             // that element's design-token-applied font/color (read live from
             // the in-process canvas DOM by the inspector's useAppliedStyle).
             elementKey={selectedElementKey}
+            palette={palette}
             onClose={() => { setSelectedSectionId(null); setSelectedElementKey('__section__'); }}
             onPropsChange={handlePropsChange}
             onStyleOverridesChange={handleStyleChange}
