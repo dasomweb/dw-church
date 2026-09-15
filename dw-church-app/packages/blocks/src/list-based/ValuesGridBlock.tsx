@@ -83,8 +83,9 @@ export function ValuesGridBlock({ props }: ValuesGridBlockProps) {
                 text={it.body || it.description || ''}
                 props={props}
                 elementKey={`items[${i}].description`}
-                defaultTag="p"
+                defaultTag="div"
                 defaultSize="body"
+                html
                 baseStyle={{ color: 'var(--brand-muted, var(--text-muted, #6b7280))' }}
               />
             </li>
