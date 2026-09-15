@@ -97,6 +97,7 @@ export const blockTypes = [
   'prose_image',
   'values_grid',
   'detail_rows',
+  'info_bar',
 ] as const;
 
 export type BlockType = (typeof blockTypes)[number];

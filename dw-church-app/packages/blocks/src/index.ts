@@ -98,6 +98,7 @@ export { TestimonialsBlock } from './list-based/TestimonialsBlock';
 export { FeaturesGridBlock } from './list-based/FeaturesGridBlock';
 export { ValuesGridBlock } from './list-based/ValuesGridBlock';
 export { DetailRowsBlock } from './list-based/DetailRowsBlock';
+export { InfoBarBlock } from './list-based/InfoBarBlock';
 export { CheckListBlock } from './list-based/CheckListBlock';
 export { StepsListBlock } from './list-based/StepsListBlock';
 export { TabsBlock } from './list-based/TabsBlock';

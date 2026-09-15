@@ -589,6 +589,16 @@
       "useCases": ["소개 하위 페이지 상단", "부서 페이지 상단 서브내비", "메뉴 그룹 인터페이지 헤더"],
       "aiHint": "Interior page header: breadcrumb + title + submenu row tied to a top-level menu, current page underlined. Pulls from /api/v1/menus. parentMenu selects the group (empty = auto from current page)."
     },
+    "info_bar": {
+      "label": "정보 바 (예배시간 등)",
+      "group": "content",
+      "flags": {},
+      "defaultProps": { "items": [], "background": "primary", "align": "left" },
+      "description": "전체폭 컬러 밴드에 작은 라벨 + 굵은 값 셀 N개를 가로로. 예배시간 바(주일 1부/2부/금요기도회/새벽예배)·빠른 정보·통계 스트립에. info_columns(흰 헤어라인 그리드)와 구분됨.",
+      "tags": ["bar", "band", "worship-times", "quick-info", "stats", "service-times", "strip"],
+      "useCases": ["히어로 아래 예배시간 바", "상단 빠른 정보 스트립", "핵심 수치 밴드"],
+      "aiHint": "Full-bleed colored band of N label+value cells. items:[{label,value}]. background palette key (default primary), white text. Distinct from info_columns."
+    },
     "info_columns": {
       "label": "정보 컬럼 (한눈에)",
       "group": "content",

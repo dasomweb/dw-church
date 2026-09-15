@@ -1022,6 +1022,23 @@ const DETAIL_ROWS: BlockElementRegistry = {
   ],
 };
 
+// 정보 바 (info_bar) — 컬러 밴드에 라벨+값 셀 N개. 셀은 Content 탭 ItemsEditor로.
+// 자체 밴드 배경(background prop)을 그리므로 공통 Style 탭은 붙이지 않는다.
+const INFO_BAR: BlockElementRegistry = {
+  sections: [
+    { title: 'Content', elements: [
+      { label: '밴드 배경', path: 'background', kind: 'color', hint: 'palette key(primary/accent…) 또는 hex. 기본 primary' },
+      { label: '글자 색', path: 'textColor', kind: 'color', hint: '기본 흰색' },
+      { label: '정렬', path: 'align', kind: 'select', choices: [
+        { value: 'left', label: '좌측' }, { value: 'center', label: '가운데' },
+      ]},
+      { label: 'Columns (mobile)', path: 'mobileColumns', kind: 'select', choices: [
+        { value: '1', label: '1열' }, { value: '2', label: '2열' },
+      ], hint: '휴대폰에서 한 줄에 몇 칸' },
+    ]},
+  ],
+};
+
 // 제목+본문+이미지 세로 (prose_image) — 밑줄 제목 + 리치텍스트 + 전체폭 이미지.
 const PROSE_IMAGE: BlockElementRegistry = {
   sections: [
@@ -1358,6 +1375,11 @@ export const ITEM_FIELDS_BY_TYPE: Record<string, ItemFieldDef[]> = {
     { label: 'Overline (작은 라벨)', key: 'overline', kind: 'text', hint: '카드 제목 위 (예: WALKING WITH JESUS)' },
     { label: 'Title', key: 'title', kind: 'text' },
     { label: 'Description', key: 'description', kind: 'html' },
+  ],
+  // 정보 바 셀 — 라벨 + 값 (label/value). 블록은 title/description 폴백도 읽음.
+  info_bar: [
+    { label: 'Label (라벨)', key: 'label', kind: 'text' },
+    { label: 'Value (값)', key: 'value', kind: 'text' },
   ],
   // 항목 행 — 좌: 제목+라벨 / 우: 설명+보조문(meta).
   detail_rows: [
@@ -2009,6 +2031,7 @@ export const ELEMENT_REGISTRY: Record<string, BlockElementRegistry> = {
   features_grid:   FEATURES_GRID,
   values_grid:     VALUES_GRID,
   detail_rows:     DETAIL_ROWS,
+  info_bar:        INFO_BAR,
   prose_image:     PROSE_IMAGE,
   page_subnav:     PAGE_SUBNAV,
   info_columns:    INFO_COLUMNS,
