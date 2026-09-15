@@ -412,6 +412,12 @@ export function BlockRenderer({ section, slug, editorMode, onElementClick }: Blo
         data-section-id={section.id}
         data-section-block-type={section.blockType}
         onClick={(e) => {
+          // In the editor canvas a click SELECTS an element for editing — it must
+          // never trigger the block's own interactions. Block the default (esp.
+          // <a href> button navigation, form submits) so clicking a CTA button /
+          // card link opens its inspector instead of leaving the editor. (대표님
+          // 2026-09-15: "버튼 클릭하면 링크 따라 이동한다".)
+          e.preventDefault();
           // Walk up from the click target to the nearest [data-element].
           // If found, it's an element edit. Otherwise it's a section-level click.
           let el: HTMLElement | null = e.target as HTMLElement;
