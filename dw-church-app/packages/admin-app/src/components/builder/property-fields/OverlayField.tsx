@@ -29,7 +29,7 @@
  */
 
 import type { CSSProperties } from 'react';
-import { ColorWithOpacity } from './ColorField';
+import { ColorField } from './ColorField';
 import { LabeledField } from './LabeledField';
 
 export interface OverlayFieldValue {
@@ -64,37 +64,55 @@ export interface OverlayFieldProps {
   palette?: Array<{ key: string; label?: string; hex: string }>;
 }
 
-/**
- * Map an OverlayFieldValue to a CSS-properties preview that the panel
- * paints inside a small swatch. Each stop color already carries its own
- * alpha channel (ColorWithOpacity stores values as rgba(r,g,b,a)) so
- * the preview just slots them straight into the CSS shorthand — no
- * separate opacity multiplier needed. Production buildOverlayStyle
- * follows the same flow.
- */
-function previewStyle(value: OverlayFieldValue): CSSProperties {
-  if (value.mode === 'gradient') {
-    const color1 = value.color1 ?? 'rgba(0,0,0,0)';
-    const color2 = value.color2 ?? value.color ?? '#000000';
-    const loc1 = value.location1 ?? 0;
-    const loc2 = value.location2 ?? 100;
-    if (value.gradientType === 'radial') {
-      return { backgroundImage: `radial-gradient(circle, ${color1} ${loc1}%, ${color2} ${loc2}%)` };
-    }
-    const angle = value.angle ?? 180;
-    return { backgroundImage: `linear-gradient(${angle}deg, ${color1} ${loc1}%, ${color2} ${loc2}%)` };
-  }
-  // classic
-  return { backgroundColor: value.color ?? 'rgba(0,0,0,0.5)' };
+/** Resolve a palette KEY → hex for the preview swatch; hex/rgba pass through. */
+function resolvePreviewColor(c: string | undefined, palette?: Array<{ key: string; hex: string }>): string {
+  const v = (c ?? '').trim();
+  if (!v) return 'transparent';
+  return palette?.find((p) => p.key === v)?.hex ?? v;
 }
 
+/** Apply 0..1 alpha to a hex color for the preview; non-hex passes through. */
+function previewAlpha(color: string, a: number): string {
+  const m = /^#([0-9a-f]{6}|[0-9a-f]{3})$/i.exec(color);
+  if (!m) return color; // 'transparent' / rgba / named — leave as-is
+  let body = m[1]!;
+  if (body.length === 3) body = body.split('').map((c) => c + c).join('');
+  const r = parseInt(body.slice(0, 2), 16);
+  const g = parseInt(body.slice(2, 4), 16);
+  const b = parseInt(body.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
+}
+
+/**
+ * Overlay editor — Classic (single color) / Gradient (two stops). The single
+ * Opacity slider is ALWAYS shown and drives the whole overlay's alpha, which
+ * `buildOverlayStyle` applies uniformly (via resolveOverlayColor) to BOTH
+ * palette keys and hex — the previous ColorWithOpacity baked the alpha into
+ * rgba, which only worked for hex and left palette colors with NO opacity
+ * control (대표님 2026-09-15: "classic 오버레이 값이 반영되게 조절이 안 된다").
+ * Colors are palette keys or hex; the token/hex resolves at render time.
+ */
 export function OverlayField({ value, onChange, palette }: OverlayFieldProps) {
   const mode = value.mode ?? 'classic';
+  const opacity = typeof value.opacity === 'number' ? value.opacity : 50;
+  const a = Math.max(0, Math.min(100, opacity)) / 100;
+
+  const preview: CSSProperties = mode === 'gradient'
+    ? (() => {
+        const c1 = previewAlpha(resolvePreviewColor(value.color1, palette), a);
+        const c2 = previewAlpha(resolvePreviewColor(value.color2 ?? value.color, palette), a);
+        const loc1 = value.location1 ?? 0;
+        const loc2 = value.location2 ?? 100;
+        if (value.gradientType === 'radial') {
+          return { backgroundImage: `radial-gradient(circle, ${c1} ${loc1}%, ${c2} ${loc2}%)` };
+        }
+        return { backgroundImage: `linear-gradient(${value.angle ?? 180}deg, ${c1} ${loc1}%, ${c2} ${loc2}%)` };
+      })()
+    : { backgroundColor: previewAlpha(resolvePreviewColor(value.color, palette), a) };
 
   return (
     <div className="space-y-3">
-      {/* Mode toggle — Classic / Gradient (same affordance as Elementor's
-          Background Type segmented control). */}
+      {/* Mode toggle — Classic / Gradient. */}
       <LabeledField label="Background Type">
         <div className="inline-flex rounded border border-gray-300 overflow-hidden">
           <button
@@ -114,30 +132,30 @@ export function OverlayField({ value, onChange, palette }: OverlayFieldProps) {
         </div>
       </LabeledField>
 
-      {/* Live preview — small swatch row so the operator confirms the
-          overlay reads as intended before saving. */}
-      <div
-        className="h-8 rounded border border-gray-200"
-        style={previewStyle(value)}
-        title="Overlay preview"
-      />
+      {/* Live preview swatch. */}
+      <div className="h-8 rounded border border-gray-200" style={preview} title="Overlay preview" />
+
+      {/* Opacity — ALWAYS visible, works for palette keys AND hex. */}
+      <LabeledField label="Opacity (%)" hint="오버레이 투명도 — 팔레트 색/hex 모두 이 슬라이더로 조절">
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={opacity}
+          onChange={(e) => onChange({ opacity: Number(e.target.value) })}
+          className="w-full"
+        />
+        <p className="mt-1 text-[10px] text-gray-500 font-mono">{opacity}%</p>
+      </LabeledField>
 
       {mode === 'classic' ? (
-        <LabeledField label="Color" hint="색상 + 투명도가 한 값으로 저장됩니다 (rgba)">
-          <ColorWithOpacity
-            value={value.color ?? ''}
-            onChange={(next) => onChange({ color: next })}
-            palette={palette}
-          />
+        <LabeledField label="Color" hint="팔레트 키(primary/text…) 또는 hex. 투명도는 위 Opacity">
+          <ColorField value={value.color ?? ''} onChange={(next) => onChange({ color: next })} palette={palette} />
         </LabeledField>
       ) : (
         <>
-          <LabeledField label="Color 1" hint="첫 stop 의 색 + 투명도">
-            <ColorWithOpacity
-              value={value.color1 ?? ''}
-              onChange={(next) => onChange({ color1: next })}
-              palette={palette}
-            />
+          <LabeledField label="Color 1" hint="첫 stop 색 (팔레트 키/hex)">
+            <ColorField value={value.color1 ?? ''} onChange={(next) => onChange({ color1: next })} palette={palette} />
           </LabeledField>
           <LabeledField label="Location 1 (%)">
             <input
@@ -151,12 +169,8 @@ export function OverlayField({ value, onChange, palette }: OverlayFieldProps) {
             <p className="mt-1 text-[10px] text-gray-500 font-mono">{value.location1 ?? 0}%</p>
           </LabeledField>
 
-          <LabeledField label="Color 2" hint="두 번째 stop 의 색 + 투명도 (fade-out 은 alpha 0)">
-            <ColorWithOpacity
-              value={value.color2 ?? ''}
-              onChange={(next) => onChange({ color2: next })}
-              palette={palette}
-            />
+          <LabeledField label="Color 2" hint="두 번째 stop 색. 비우면 fade-out(투명)">
+            <ColorField value={value.color2 ?? ''} onChange={(next) => onChange({ color2: next })} palette={palette} />
           </LabeledField>
           <LabeledField label="Location 2 (%)">
             <input
