@@ -39,6 +39,8 @@ export default function YoutubeImportButton({ target, categories, preachers = []
   const [channelTitle, setChannelTitle] = useState('');
   const [sources, setSources] = useState<YoutubeSource[]>([]);
 
+  // 여러 분류(재생목록/채널전체/라이브)를 동시에 선택해 합쳐서 가져오기.
+  const [selectedSources, setSelectedSources] = useState<Set<string>>(new Set());
   const [videos, setVideos] = useState<YoutubeImportVideo[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
@@ -48,6 +50,7 @@ export default function YoutubeImportButton({ target, categories, preachers = []
 
   const reset = () => {
     setStage('input'); setChannel(''); setChannelTitle(''); setSources([]);
+    setSelectedSources(new Set());
     setVideos([]); setSelected(new Set()); setStatus('published'); setCategoryId(''); setPreacher('');
   };
   const close = () => { setOpen(false); reset(); };
@@ -65,14 +68,34 @@ export default function YoutubeImportButton({ target, categories, preachers = []
     } finally { setBusy(false); }
   };
 
-  const loadVideos = async (src: YoutubeSource) => {
+  const srcKey = (s: YoutubeSource) => `${s.type}:${s.id}`;
+  const toggleSource = (s: YoutubeSource) => setSelectedSources((prev) => {
+    const n = new Set(prev); const k = srcKey(s); n.has(k) ? n.delete(k) : n.add(k); return n;
+  });
+
+  // Fetch videos from EVERY selected source and merge them (dedupe by videoId,
+  // oldest-first) so the operator can import several 재생목록/분류 at once.
+  const loadVideos = async () => {
     if (!client) return;
+    const picked = sources.filter((s) => selectedSources.has(srcKey(s)));
+    if (picked.length === 0) { showToast('error', '분류를 하나 이상 선택하세요.'); return; }
     setBusy(true);
     try {
-      const res = await client.youtubeImportFetch(src, target);
-      setVideos(res.videos);
+      const results = await Promise.all(picked.map((s) => client.youtubeImportFetch(s, target)));
+      const map = new Map<string, YoutubeImportVideo>();
+      for (const r of results) {
+        for (const v of r.videos) {
+          // First occurrence wins; prefer an alreadyImported flag if any source reports it.
+          const existing = map.get(v.videoId);
+          if (!existing) map.set(v.videoId, v);
+          else if (v.alreadyImported && !existing.alreadyImported) map.set(v.videoId, v);
+        }
+      }
+      const merged = [...map.values()].sort((a, b) =>
+        (a.publishedAt ?? a.sermonDate ?? '').localeCompare(b.publishedAt ?? b.sermonDate ?? ''));
+      setVideos(merged);
       // Default-select all NEW (not already imported) videos.
-      setSelected(new Set(res.videos.filter((v) => !v.alreadyImported).map((v) => v.videoId)));
+      setSelected(new Set(merged.filter((v) => !v.alreadyImported).map((v) => v.videoId)));
       setStage('videos');
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : '영상을 불러오지 못했습니다.');
@@ -156,27 +179,36 @@ export default function YoutubeImportButton({ target, categories, preachers = []
                 </div>
               )}
 
-              {/* Stage 2 — pick a source */}
+              {/* Stage 2 — pick one or MORE sources (분류) */}
               {stage === 'sources' && (
                 <div className="space-y-2">
-                  <p className="text-xs text-gray-500 mb-2">가져올 <strong>분류</strong>를 선택하세요.</p>
-                  {sources.map((s) => (
-                    <button
-                      key={`${s.type}:${s.id}`}
-                      onClick={() => void loadVideos(s)}
-                      disabled={busy}
-                      className="w-full text-left border rounded-lg px-4 py-3 hover:bg-gray-50 disabled:opacity-50 flex items-center gap-3"
-                    >
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        s.type === 'uploads' ? 'bg-blue-100 text-blue-700'
-                        : s.type === 'live' ? 'bg-red-100 text-red-700'
-                        : 'bg-gray-100 text-gray-600'}`}>{SOURCE_LABEL[s.type]}</span>
-                      <span className="flex-1 text-sm font-medium text-gray-800 truncate">{s.title}</span>
-                      {s.count != null && <span className="text-xs text-gray-400">{s.count}개</span>}
-                    </button>
-                  ))}
-                  <div className="pt-2">
+                  <p className="text-xs text-gray-500 mb-2">가져올 <strong>분류</strong>를 <strong>여러 개</strong> 선택할 수 있습니다. (선택한 분류의 영상을 합쳐서 불러옵니다)</p>
+                  {sources.map((s) => {
+                    const checked = selectedSources.has(srcKey(s));
+                    return (
+                      <label
+                        key={srcKey(s)}
+                        className={`w-full text-left border rounded-lg px-4 py-3 flex items-center gap-3 cursor-pointer transition-colors ${checked ? 'border-blue-500 bg-blue-50' : 'hover:bg-gray-50'}`}
+                      >
+                        <input type="checkbox" checked={checked} onChange={() => toggleSource(s)} disabled={busy} />
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          s.type === 'uploads' ? 'bg-blue-100 text-blue-700'
+                          : s.type === 'live' ? 'bg-red-100 text-red-700'
+                          : 'bg-gray-100 text-gray-600'}`}>{SOURCE_LABEL[s.type]}</span>
+                        <span className="flex-1 text-sm font-medium text-gray-800 truncate">{s.title}</span>
+                        {s.count != null && <span className="text-xs text-gray-400">{s.count}개</span>}
+                      </label>
+                    );
+                  })}
+                  <div className="flex items-center justify-between pt-2">
                     <button onClick={() => setStage('input')} className="text-xs text-gray-500 hover:text-gray-800">← 채널 다시 입력</button>
+                    <button
+                      onClick={() => void loadVideos()}
+                      disabled={busy || selectedSources.size === 0}
+                      className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50"
+                    >
+                      {busy ? '불러오는 중…' : `선택한 분류에서 영상 불러오기${selectedSources.size ? ` (${selectedSources.size})` : ''}`}
+                    </button>
                   </div>
                 </div>
               )}
