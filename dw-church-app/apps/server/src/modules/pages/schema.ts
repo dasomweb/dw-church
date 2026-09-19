@@ -15,6 +15,7 @@ export const blockTypes = [
   // Content (dynamic widgets)
   'recent_sermons',
   'recent_bulletins',
+  'online_bulletin',
   'recent_columns',
   'album_gallery',
   'video_board',

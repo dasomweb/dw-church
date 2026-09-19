@@ -324,6 +324,7 @@ const DATA_BLOCK_LABELS: Record<string, string> = {
   sermon_magazine: '설교 매거진 (이번 주 설교 커버·써머리·질문 — Data Block)',
   devotion_reader: '말씀 묵상 QT (주간 목록 + 오늘 묵상 — Data Block)',
   recent_bulletins: '주보 목록 (Data Block)',
+  online_bulletin: '온라인 주보 (최신 발행분 — 사이트에서 스크롤로 표시, Data Block)',
   recent_columns: '목회칼럼 목록 (Data Block)',
   staff_grid: '교역자 (Data Block)',
   cell_grid: '목장 (Data Block)',

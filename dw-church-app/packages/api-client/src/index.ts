@@ -41,6 +41,9 @@ export type {
   NewcomerHistoryInput,
   Devotion,
   Cardnews,
+  OnlineBulletin,
+  OnlineBulletinContent,
+  OnlineHymn,
   FormSubmission,
   FormSubmissionStatus,
   Form,
@@ -104,6 +107,12 @@ export {
   useUpdateBulletin,
   useDeleteBulletin,
   useRelatedBulletins,
+  // Online Bulletins (온라인 주보)
+  useOnlineBulletins,
+  useOnlineBulletin,
+  useCreateOnlineBulletin,
+  useUpdateOnlineBulletin,
+  useDeleteOnlineBulletin,
   // Sermons
   useSermons,
   useSermon,

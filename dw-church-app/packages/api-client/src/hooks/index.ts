@@ -6,6 +6,7 @@ import type {
   Board,
   BoardPost,
   Bulletin,
+  OnlineBulletin,
   Sermon,
   Column,
   Album,
@@ -69,6 +70,11 @@ export const queryKeys = {
     list: (params?: ListParams) => ['bulletins', 'list', params] as const,
     detail: (id: string) => ['bulletins', 'detail', id] as const,
     related: (id: string) => ['bulletins', 'related', id] as const,
+  },
+  onlineBulletins: {
+    all: ['online-bulletins'] as const,
+    list: (params?: ListParams) => ['online-bulletins', 'list', params] as const,
+    detail: (id: string) => ['online-bulletins', 'detail', id] as const,
   },
   sermons: {
     all: ['sermons'] as const,
@@ -315,6 +321,55 @@ export function useDeleteBulletin() {
   return useMutation({
     mutationFn: (id: string) => client!.deleteBulletin(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.bulletins.all }),
+  });
+}
+
+// ─── Online Bulletin Hooks (온라인 주보) ─────────────────────
+export function useOnlineBulletins(params?: ListParams) {
+  const client = useDWChurchClient();
+  return useQuery<PaginatedResponse<OnlineBulletin>>({
+    queryKey: queryKeys.onlineBulletins.list(params),
+    queryFn: () => client!.getOnlineBulletins(params),
+    enabled: !!client,
+    staleTime: STALE_TIME,
+  });
+}
+
+export function useOnlineBulletin(id: string) {
+  const client = useDWChurchClient();
+  return useQuery<OnlineBulletin>({
+    queryKey: queryKeys.onlineBulletins.detail(id),
+    queryFn: () => client!.getOnlineBulletin(id),
+    enabled: !!client && !!id,
+    staleTime: STALE_TIME,
+  });
+}
+
+export function useCreateOnlineBulletin() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Omit<OnlineBulletin, 'id' | 'createdAt' | 'updatedAt'>) => client!.createOnlineBulletin(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.onlineBulletins.all }),
+  });
+}
+
+export function useUpdateOnlineBulletin() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<OnlineBulletin> }) =>
+      client!.updateOnlineBulletin(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.onlineBulletins.all }),
+  });
+}
+
+export function useDeleteOnlineBulletin() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => client!.deleteOnlineBulletin(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.onlineBulletins.all }),
   });
 }
 

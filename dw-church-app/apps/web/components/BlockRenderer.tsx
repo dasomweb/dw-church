@@ -42,6 +42,7 @@ import { ContactInfoBlock } from './blocks/ContactInfoBlock';
 // page_subnav is async (fetches the live menu tree + highlights the current
 // page) so it overrides the shared sync preview here.
 import { PageSubnavBlock } from './blocks/PageSubnavBlock';
+import { OnlineBulletinBlock } from './blocks/OnlineBulletinBlock';
 
 type PageSection = { id: string; blockType: string; props: Record<string, unknown>; sortOrder: number; isVisible: boolean };
 type AnyBlock = (p: { props: Record<string, unknown>; slug: string; page?: number }) => React.ReactNode | Promise<React.ReactNode>;
@@ -53,6 +54,7 @@ const CHURCH_BLOCKS: Record<string, AnyBlock> = {
   devotion_reader: DevotionBlock as AnyBlock, // 말씀 묵상(14a) — 주간 목록 + 오늘 묵상(읽기 전용, 트래킹 없음)
 
   recent_bulletins: RecentBulletinsBlock as AnyBlock,
+  online_bulletin: OnlineBulletinBlock as AnyBlock, // 온라인 주보 — 최신 발행분 스크롤 렌더
   recent_columns: RecentColumnsBlock as AnyBlock,
   album_gallery: AlbumGalleryBlock as AnyBlock,
   video_board: VideoBoardBlock as AnyBlock,

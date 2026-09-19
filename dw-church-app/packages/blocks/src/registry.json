@@ -589,6 +589,16 @@
       "useCases": ["소개 하위 페이지 상단", "부서 페이지 상단 서브내비", "메뉴 그룹 인터페이지 헤더"],
       "aiHint": "Interior page header: breadcrumb + title + submenu row tied to a top-level menu, current page underlined. Pulls from /api/v1/menus. parentMenu selects the group (empty = auto from current page)."
     },
+    "online_bulletin": {
+      "label": "온라인 주보",
+      "group": "data",
+      "flags": { "isDataBlock": true },
+      "defaultProps": {},
+      "description": "온라인 주보 관리에 등록한 최신 발행 주보를 스크롤 다운으로 전체 표시(예배순서·찬양악보·대표기도·성경본문·기도제목·마지막찬양·주일광고·소그룹 나눔 질문). 문서 업로드형 주보(recent_bulletins)와 별개.",
+      "tags": ["bulletin", "online-bulletin", "worship-order", "order-of-service", "주보", "예배순서", "scripture", "prayer", "small-group"],
+      "useCases": ["온라인 주보 전용 페이지", "주일 예배 안내 스크롤 페이지"],
+      "aiHint": "Full online worship bulletin, scroll-down. Fetches the latest published online_bulletin. Distinct from recent_bulletins (uploaded PDF/image bulletins). No items in props — content comes from the 온라인 주보 module."
+    },
     "info_bar": {
       "label": "정보 바 (예배시간 등)",
       "group": "content",

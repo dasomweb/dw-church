@@ -62,6 +62,20 @@ CREATE TABLE tenant_template.bulletins (
 );
 CREATE INDEX idx_bulletins_date ON tenant_template.bulletins(bulletin_date DESC);
 
+-- ─── Online Bulletins (온라인 주보) ─────────────────────────
+-- 문서 업로드형 bulletins 와 별개. 예배순서·찬양악보·대표기도·성경본문·기도제목·
+-- 마지막찬양·주일광고·소그룹질문을 content(jsonb) 에 담아 스크롤로 표시.
+CREATE TABLE tenant_template.online_bulletins (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title           VARCHAR(500) NOT NULL,
+    service_date    DATE NOT NULL,
+    content         JSONB DEFAULT '{}',
+    status          VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_online_bulletins_date ON tenant_template.online_bulletins(service_date DESC);
+
 -- ─── Pastoral Columns ───────────────────────────────────────
 CREATE TABLE tenant_template.columns_pastoral (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -8,6 +8,7 @@ import type {
   Board,
   BoardPost,
   Bulletin,
+  OnlineBulletin,
   Category,
   Cell,
   ChurchSettings,
@@ -378,6 +379,31 @@ export class DWChurchClient {
 
   async getRelatedBulletins(id: string, limit = 4): Promise<Bulletin[]> {
     return this.api.get(`${this.namespace}/bulletins/${id}/related`, { limit });
+  }
+
+  // ─── Online Bulletins (온라인 주보) ─────────────────────
+  async getOnlineBulletins(params?: ListParams): Promise<PaginatedResponse<OnlineBulletin>> {
+    return this.api.get(`${this.namespace}/online-bulletins`, toQueryParams(params));
+  }
+
+  async getOnlineBulletin(id: string): Promise<OnlineBulletin> {
+    return this.api.get(`${this.namespace}/online-bulletins/${id}`);
+  }
+
+  async getLatestOnlineBulletin(): Promise<OnlineBulletin> {
+    return this.api.get(`${this.namespace}/online-bulletins/latest`);
+  }
+
+  async createOnlineBulletin(data: Omit<OnlineBulletin, 'id' | 'createdAt' | 'updatedAt'>): Promise<OnlineBulletin> {
+    return this.api.post(`${this.namespace}/online-bulletins`, data);
+  }
+
+  async updateOnlineBulletin(id: string, data: Partial<OnlineBulletin>): Promise<OnlineBulletin> {
+    return this.api.put(`${this.namespace}/online-bulletins/${id}`, data);
+  }
+
+  async deleteOnlineBulletin(id: string): Promise<void> {
+    return this.api.delete(`${this.namespace}/online-bulletins/${id}`);
   }
 
   // ─── Sermons ────────────────────────────────────────────

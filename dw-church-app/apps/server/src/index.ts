@@ -86,6 +86,7 @@ async function main(): Promise<void> {
 
   const { sermonRoutes } = await import('./modules/sermons/routes.js');
   const { bulletinRoutes } = await import('./modules/bulletins/routes.js');
+  const { onlineBulletinRoutes } = await import('./modules/online-bulletins/routes.js');
   const { columnRoutes } = await import('./modules/columns/routes.js');
   const { albumRoutes } = await import('./modules/albums/routes.js');
   const { videoRoutes } = await import('./modules/videos/routes.js');
@@ -186,6 +187,7 @@ async function main(): Promise<void> {
   await app.register(aiJobsRoutes,         { prefix: '/api/v1' }); // /ai/jobs/*
   await app.register(sermonRoutes, { prefix: '/api/v1' });
   await app.register(bulletinRoutes, { prefix: '/api/v1' });
+  await app.register(onlineBulletinRoutes, { prefix: '/api/v1' }); // /online-bulletins (온라인 주보)
   await app.register(columnRoutes, { prefix: '/api/v1' });
   await app.register(albumRoutes, { prefix: '/api/v1' });
   await app.register(videoRoutes, { prefix: '/api/v1' });
@@ -461,7 +463,7 @@ async function main(): Promise<void> {
     // 스키마별 버전 스탬프를 두고, 이미 현재 버전으로 반영된 스키마는 건너뛴다.
     // ⚠️ 아래 per-schema DDL 블록을 하나라도 바꾸면(테이블/컬럼 추가) SCHEMA_VERSION을
     //    올려라 → 기존 테넌트가 "다음 배포 때 한 번만" 다시 반영하고 이후 다시 건너뛴다.
-    const SCHEMA_VERSION = 9; // ↑9: member_settings.online_counts_as_attendance(온라인 출석 집계 재량 토글)
+    const SCHEMA_VERSION = 10; // ↑10: online_bulletins 테이블 추가(온라인 주보 콘텐츠 모듈)
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS public.tenant_schema_versions (
         "schema_name" TEXT PRIMARY KEY,
@@ -512,6 +514,27 @@ async function main(): Promise<void> {
         `);
         await prisma.$executeRawUnsafe(
           `CREATE INDEX IF NOT EXISTS "videos_date_idx" ON "${schema}".videos ("video_date" DESC)`,
+        );
+        createHits++;
+      } catch { /* skip on error */ }
+
+      // 0b. online_bulletins — 온라인 주보 content module (문서 주보 bulletins 와 별개).
+      //     예배순서·찬양악보·대표기도·성경본문·기도제목·마지막찬양·주일광고·소그룹질문을
+      //     content(jsonb) 한 필드에 담아 스크롤 다운으로 표시.
+      try {
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".online_bulletins (
+            "id"           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "title"        VARCHAR(500) NOT NULL,
+            "service_date" DATE NOT NULL,
+            "content"      JSONB DEFAULT '{}',
+            "status"       VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+            "created_at"   TIMESTAMPTZ DEFAULT NOW(),
+            "updated_at"   TIMESTAMPTZ DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(
+          `CREATE INDEX IF NOT EXISTS "online_bulletins_date_idx" ON "${schema}".online_bulletins ("service_date" DESC)`,
         );
         createHits++;
       } catch { /* skip on error */ }

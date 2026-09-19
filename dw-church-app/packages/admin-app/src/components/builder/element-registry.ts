@@ -1634,6 +1634,13 @@ const RECENT_SERMONS = churchBlock(
     ]},
   ]},
 );
+// 온라인 주보 — 데이터 블록. 내용은 '온라인 주보 관리'에서 입력하고, 블록은 최신
+// 발행분을 자동 표시. bulletinId 를 넣으면 특정 주보 고정.
+const ONLINE_BULLETIN = churchBlock(
+  { title: '온라인 주보', fields: [
+    { key: 'bulletinId', label: '특정 주보 ID (비우면 최신 발행분)', type: 'text', hint: '내용은 관리자 > 온라인 주보 관리에서 입력합니다' },
+  ]},
+);
 const RECENT_BULLETINS = churchBlock(
   { title: 'Header', fields: [{ key: 'title', label: '제목', type: 'text' }]},
   { title: 'Data', fields: [
@@ -1961,6 +1968,7 @@ export const ELEMENT_REGISTRY: Record<string, BlockElementRegistry> = {
   devotion_reader:  DEVOTION_READER,
   cardnews:         CARDNEWS,
   recent_bulletins: RECENT_BULLETINS,
+  online_bulletin:  ONLINE_BULLETIN,
   recent_columns:   RECENT_COLUMNS,
   video_board:      VIDEO_BOARD,
   schedule_board:   SCHEDULE_BOARD,

@@ -364,6 +364,29 @@ export async function getBulletin(slug: string, id: string): Promise<any> {
   return aliasFields(unwrap(res), 'bulletin');
 }
 
+// ─── Online Bulletins (온라인 주보) ──────────────────────────
+export async function getOnlineBulletins(
+  slug: string,
+  params?: { page?: number; perPage?: number },
+): Promise<any> {
+  const p = new URLSearchParams();
+  if (params?.page) p.set('page', String(params.page));
+  if (params?.perPage) p.set('perPage', String(params.perPage));
+  const qs = p.toString();
+  return apiFetch<any>(slug, `/api/v1/online-bulletins${qs ? '?' + qs : ''}`, { revalidate: CACHE_CONTENT });
+}
+
+export async function getOnlineBulletin(slug: string, id: string): Promise<any> {
+  const res = await apiFetch(slug, `/api/v1/online-bulletins/${id}`, { revalidate: CACHE_CONTENT });
+  return unwrap(res);
+}
+
+/** Latest published online bulletin — used by the online_bulletin data block. */
+export async function getLatestOnlineBulletin(slug: string): Promise<any> {
+  const res = await apiFetch(slug, `/api/v1/online-bulletins/latest`, { revalidate: CACHE_CONTENT });
+  return unwrap(res);
+}
+
 // ─── Albums ──────────────────────────────────────────────────
 
 export async function getAlbums(

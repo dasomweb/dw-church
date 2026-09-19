@@ -11,6 +11,32 @@ export interface Bulletin {
   modifiedAt: string;
 }
 
+// ─── Online Bulletin (온라인 주보) ───────────────────────────
+// 문서 업로드형 Bulletin 과 별개. content 에 예배순서·찬양악보·대표기도·성경본문·
+// 기도제목·마지막찬양·주일광고·소그룹질문을 담아 스크롤로 표시.
+export interface OnlineHymn { title: string; hymnNo: string; imageUrls: string[]; note: string }
+export interface OnlineBulletinContent {
+  serviceTitle?: string;
+  presider?: string;
+  worshipOrder?: { label: string; detail: string; person: string }[];
+  hymns?: OnlineHymn[];
+  representativePrayer?: { person: string; content: string };
+  scripture?: { reference: string; text: string };
+  prayerRequests?: { title: string; detail: string }[];
+  closingHymn?: OnlineHymn;
+  announcements?: { title: string; body: string }[];
+  study?: { observation: string[]; correlation: string[]; application: string[] };
+}
+export interface OnlineBulletin {
+  id: string;
+  title: string;
+  serviceDate: string;
+  content: OnlineBulletinContent;
+  status: PostStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ─── Sermon ─────────────────────────────────────────────────
 export interface Sermon {
   id: string;
