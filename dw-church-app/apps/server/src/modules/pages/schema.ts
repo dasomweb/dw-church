@@ -86,6 +86,13 @@ export const blockTypes = [
   'cardnews',
   'features_grid',
   'steps_list',
+  // b2bsmart 모던 블록 — 렌더러(BLOCK_MAP)엔 있었으나 pages enum 누락으로 저장 400
+  // 나던 것들. AI 페이지 생성 다양성(A)에서 사용 + 운영자 수동 추가도 가능하게.
+  'cta_section',
+  'stats_counter',
+  'faq_accordion',
+  'testimonials',
+  'check_list',
   'verse_of_day',
   'news_announcements',
   'featured_event',
