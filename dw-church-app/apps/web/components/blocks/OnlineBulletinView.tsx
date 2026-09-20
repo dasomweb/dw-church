@@ -19,8 +19,30 @@ const textColor = 'var(--dw-text, #16181d)';
 export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any> }) {
   const [lang, setLang] = useState<'ko' | 'en'>('ko');
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const [toggleTop, setToggleTop] = useState(64); // 사이트 헤더 아래로 토글을 내리는 실측값(px)
   const en = lang === 'en';
+
+  // 사이트 헤더(sticky/fixed)의 실제 높이를 재서 토글이 헤더에 가리지 않게 top 을 잡는다.
+  // 헤더 변형(유틸바/센터드/라이브배너)마다 높이가 달라 하드코딩 대신 측정.
+  useEffect(() => {
+    setMounted(true);
+    const measure = () => {
+      let bottom = 0;
+      for (const el of Array.from(document.querySelectorAll('header')) as HTMLElement[]) {
+        const pos = getComputedStyle(el).position;
+        if (pos !== 'sticky' && pos !== 'fixed') continue;
+        const r = el.getBoundingClientRect();
+        if (r.height > 0 && r.top <= 4) bottom = Math.max(bottom, r.bottom);
+      }
+      setToggleTop(Math.round(bottom || 52) + 8);
+    };
+    measure();
+    let raf = 0;
+    const onChange = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(measure); };
+    window.addEventListener('resize', onChange);
+    window.addEventListener('scroll', onChange, { passive: true });
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', onChange); window.removeEventListener('scroll', onChange); };
+  }, []);
 
   const content = (bulletin.content ?? {}) as Record<string, any>;
   const serviceDate = bulletin.serviceDate ? String(bulletin.serviceDate).slice(0, 10) : '';
@@ -242,7 +264,7 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
       {/* 한/영 토글 — body 로 포털해 화면 우측 상단 고정(fixed). 상위 transform 에 갇히지 않고
           어떤 스택 위에도 뜬다. 사이트 헤더(sticky top-0 z-50) 아래에 위치(top 오프셋은 CSS). */}
       {hasEnglish && mounted && createPortal(
-        <div className="ob-toggle">
+        <div style={{ position: 'fixed', top: toggleTop, right: 12, zIndex: 60 }}>
           <div className="inline-flex rounded-full overflow-hidden shadow-md" style={{ border: `1px solid ${primary}`, background: 'var(--dw-background, #fff)' }}>
             <button type="button" aria-label="한국어" aria-pressed={!en} onClick={() => setLang('ko')} style={tabStyle(!en)}>한</button>
             <button type="button" aria-label="English" aria-pressed={en} onClick={() => setLang('en')} style={tabStyle(en)}>EN</button>
@@ -291,11 +313,9 @@ function tabStyle(on: boolean): CSSProperties {
 //   → 페이지 스크롤 그대로 두면서 섹션 단위로 스냅. 긴 섹션(설교노트)은 proximity 로 안 갇힘.
 //   데스크톱(≥768px)은 규칙 없음 = 기존 연속 스크롤 그대로.
 const SNAP_CSS = `
-.ob-toggle { position: fixed; right: 12px; top: 84px; z-index: 40; }
 @media (max-width: 767px) {
-  .ob-toggle { top: 64px; }
-  html { scroll-snap-type: y proximity; scroll-padding-top: 60px; }
-  .ob-snap > section { min-height: 100svh; scroll-snap-align: start; scroll-snap-stop: always; }
+  html { scroll-snap-type: y mandatory; scroll-padding-top: 8px; }
+  .ob-snap > section { min-height: 100vh; min-height: 100svh; scroll-snap-align: start; scroll-snap-stop: always; }
   .ob-snap > header { scroll-snap-align: start; }
 }
 `;
