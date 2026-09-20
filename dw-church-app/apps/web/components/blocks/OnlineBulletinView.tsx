@@ -140,9 +140,9 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
               const person = pick(r.person, r.personEn);
               return (
                 <div key={i} className="flex gap-3 py-2.5 items-baseline">
-                  <div className="w-24 shrink-0 font-semibold" style={{ color: textColor }}>{label}</div>
-                  <div className="flex-1 min-w-0" style={{ color: textColor }}>{detail}</div>
-                  {person && <div className="shrink-0 text-right" style={{ color: muted, fontSize: 'var(--fs-sm,14px)' }}>{person}</div>}
+                  <div className="shrink-0 font-semibold text-left" style={{ color: textColor }} dangerouslySetInnerHTML={{ __html: label }} />
+                  <div className="flex-1 min-w-0 text-right" style={{ color: textColor }} dangerouslySetInnerHTML={{ __html: detail }} />
+                  {person && <div className="shrink-0 text-right" style={{ color: muted, fontSize: 'var(--fs-sm,14px)' }} dangerouslySetInnerHTML={{ __html: person }} />}
                 </div>
               );
             })}
@@ -182,8 +182,8 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
               const body = pick(a.body, a.bodyEn);
               return (
                 <div key={i} className="rounded-lg p-4" style={{ background: 'var(--dw-surface, #f7f8fa)', border: `1px solid var(--border, rgba(0,0,0,0.06))` }}>
-                  {title && <p className="font-semibold" style={{ color: textColor }}>{title}</p>}
-                  {body && <p className="mt-1 whitespace-pre-line" style={{ color: 'var(--brand-muted, #4b5563)', lineHeight: 1.7 }}>{body}</p>}
+                  {title && <p className="font-semibold" style={{ color: textColor }} dangerouslySetInnerHTML={{ __html: title }} />}
+                  {body && <p className="mt-1 whitespace-pre-line" style={{ color: 'var(--brand-muted, #4b5563)', lineHeight: 1.7 }} dangerouslySetInnerHTML={{ __html: body }} />}
                 </div>
               );
             })}
@@ -243,7 +243,7 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
               return (
                 <li key={i} className="flex gap-2">
                   <span style={{ color: primary }}>•</span>
-                  <span style={{ color: textColor }}>{title && <b>{title}</b>}{title && detail ? ' — ' : ''}{detail}</span>
+                  <span style={{ color: textColor }} dangerouslySetInnerHTML={{ __html: `${title ? `<b>${title}</b>` : ''}${title && detail ? ' — ' : ''}${detail}` }} />
                 </li>
               );
             })}
@@ -460,9 +460,9 @@ function HymnItem({ h, en }: { h: Hymn; en: boolean }) {
       )}
       {imgs.length > 0 && <ImageViewer images={imgs} alt={h.title || '악보'} />}
       {(lyrics || '').trim() && (
-        <div className="mt-3 whitespace-pre-line" style={{ color: textColor, lineHeight: 1.9 }}>{lyrics}</div>
+        <div className="mt-3 whitespace-pre-line" style={{ color: textColor, lineHeight: 1.9 }} dangerouslySetInnerHTML={{ __html: lyrics || '' }} />
       )}
-      {h.note && <p className="mt-2 text-sm" style={{ color: muted }}>{h.note}</p>}
+      {h.note && <p className="mt-2 text-sm" style={{ color: muted }} dangerouslySetInnerHTML={{ __html: h.note }} />}
     </div>
   );
 }
@@ -477,7 +477,7 @@ function QuestionGroup({ label, items }: { label: string; items?: string[] }) {
         {list.map((q, i) => (
           <li key={i} className="flex gap-2" style={{ color: textColor, lineHeight: 1.7 }}>
             <span className="shrink-0" style={{ color: 'var(--brand-muted, #9ca3af)' }}>{i + 1}.</span>
-            <span className="whitespace-pre-line">{q}</span>
+            <span className="whitespace-pre-line" dangerouslySetInnerHTML={{ __html: q }} />
           </li>
         ))}
       </ol>
