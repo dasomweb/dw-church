@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect, type ReactNode, type CSSProperties } from 'react';
+import { useState, useEffect, useRef, type ReactNode, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 
 // 온라인 주보 스토어프론트 뷰(클라이언트) — 한/영 토글 담당.
 // 예배순서·찬양 가사·대표기도·교회소식·성경 본문(개역개정/ESV)·설교 노트·어린이 설교 노트
 // ·기도 제목·소그룹 질문이 한/영 병기 시 토글로 전환(영어 없으면 한국어 폴백).
-// 모바일은 섹션 단위 스냅 스크롤(한 페이지씩), 한/영 토글은 상단 우측에 작게 떠서 따라다님.
-// 서버 컴포넌트(OnlineBulletinBlock)가 fetch 한 bulletin(plain JSON)을 그대로 받음.
+// 모바일·태블릿(≤1024px): 섹션을 좌우로 넘기는 가로 페이저 + 각 패널 안에서 세로 스크롤
+//   (좌우 화살표 + 현재 섹션명·번호 내비). 데스크톱: 기존 세로 스크롤.
+// 찬양 악보·어린이 카툰: 이미지 한 장씩 + 작은 썸네일 버튼 전환(ImageViewer).
+// 한/영 토글은 상단 우측 고정. 서버(OnlineBulletinBlock)가 fetch 한 bulletin(plain JSON)을 받음.
 
 interface Hymn { title?: string; hymnNo?: string; imageUrls?: string[]; note?: string; lyrics?: string; lyricsEn?: string }
 
@@ -20,6 +22,11 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
   const [lang, setLang] = useState<'ko' | 'en'>('ko');
   const [mounted, setMounted] = useState(false);
   const [toggleTop, setToggleTop] = useState(64); // 사이트 헤더 아래로 토글을 내리는 실측값(px)
+  const [headerH, setHeaderH] = useState(56);     // 사이트 헤더 높이(px) — 패널 상단 여백용
+  const pagerRef = useRef<HTMLDivElement>(null);
+  const [page, setPage] = useState(0);            // 현재 가로 페이지(섹션) 인덱스
+  const [pageLabel, setPageLabel] = useState(''); // 현재 페이지 섹션명(내비 표시용)
+  const [pagerActive, setPagerActive] = useState(false); // ≤1024px 가로 페이지 모드
   const en = lang === 'en';
 
   // 사이트 헤더(sticky/fixed)의 실제 높이를 재서 토글이 헤더에 가리지 않게 top 을 잡는다.
@@ -34,7 +41,9 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
         const r = el.getBoundingClientRect();
         if (r.height > 0 && r.top <= 4) bottom = Math.max(bottom, r.bottom);
       }
-      setToggleTop(Math.round(bottom || 52) + 8);
+      const hb = Math.round(bottom || 52);
+      setHeaderH(hb);
+      setToggleTop(hb + 8);
     };
     measure();
     let raf = 0;
@@ -43,6 +52,39 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
     window.addEventListener('scroll', onChange, { passive: true });
     return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', onChange); window.removeEventListener('scroll', onChange); };
   }, []);
+
+  // ≤1024px(모바일·태블릿)에서만 가로 페이지(섹션 옆으로 넘기기) 모드.
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1024px)');
+    const update = () => setPagerActive(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
+  // 가로 스크롤 위치 → 현재 페이지 인덱스 + 섹션명(카운터/화살표/라벨용).
+  useEffect(() => {
+    const el = pagerRef.current;
+    if (!el || !pagerActive) return;
+    const onScroll = () => {
+      const w = el.clientWidth || 1;
+      const idx = Math.round(el.scrollLeft / w);
+      setPage(idx);
+      const child = el.children[idx] as HTMLElement | undefined;
+      const h = child?.querySelector('h1,h2');
+      setPageLabel((h?.textContent || '').trim());
+    };
+    onScroll();
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, [pagerActive]);
+
+  const goPage = (i: number) => {
+    const el = pagerRef.current;
+    if (!el) return;
+    const max = el.children.length - 1;
+    el.scrollTo({ left: Math.max(0, Math.min(i, max)) * el.clientWidth, behavior: 'smooth' });
+  };
 
   const content = (bulletin.content ?? {}) as Record<string, any>;
   const serviceDate = bulletin.serviceDate ? String(bulletin.serviceDate).slice(0, 10) : '';
@@ -202,12 +244,7 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
       visible: hasCartoon,
       render: (n) => (
         <Section key="cartoon" n={n} title="어린이 설교 카툰">
-          <div className="space-y-4">
-            {cartoonImgs.map((u, k) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img key={k} src={u} alt={cartoonCaption || '어린이 설교 카툰'} className="w-full rounded-xl" style={{ border: `1px solid var(--border, rgba(0,0,0,0.06))` }} loading="lazy" />
-            ))}
-          </div>
+          <ImageViewer images={cartoonImgs} alt={cartoonCaption || '어린이 설교 카툰'} />
           {cartoonCaption && <p className="mt-3 text-center text-sm" style={{ color: muted }}>{cartoonCaption}</p>}
         </Section>
       ),
@@ -258,9 +295,11 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
 
   const visible = items.filter((it) => it.visible);
 
+  const pageCount = visible.length + 1; // 헤더 패널 + 섹션들
   return (
-    <div className="ob-snap mx-auto max-w-3xl" style={{ color: textColor }}>
-      <style>{SNAP_CSS}</style>
+    <div className="mx-auto max-w-3xl" style={{ color: textColor }}>
+      <style>{HPAGER_CSS}</style>
+
       {/* 한/영 토글 — body 로 포털해 화면 우측 상단 고정(fixed). 상위 transform 에 갇히지 않고
           어떤 스택 위에도 뜬다. 사이트 헤더(sticky top-0 z-50) 아래에 위치(top 오프셋은 CSS). */}
       {hasEnglish && mounted && createPortal(
@@ -273,6 +312,20 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
         document.body,
       )}
 
+      {/* 가로 페이지 내비(모바일·태블릿) — 좌우 화살표 + 현재 섹션명·번호 */}
+      {mounted && pagerActive && pageCount > 1 && createPortal(
+        <>
+          <button type="button" aria-label="이전 섹션" onClick={() => goPage(page - 1)} disabled={page <= 0} style={navBtn('left', page <= 0)}>‹</button>
+          <button type="button" aria-label="다음 섹션" onClick={() => goPage(page + 1)} disabled={page >= pageCount - 1} style={navBtn('right', page >= pageCount - 1)}>›</button>
+          <div style={{ position: 'fixed', bottom: 'calc(env(safe-area-inset-bottom, 0px) + 14px)', left: '50%', transform: 'translateX(-50%)', zIndex: 60, display: 'flex', alignItems: 'center', gap: 8, maxWidth: 'calc(100vw - 120px)', padding: '7px 16px', borderRadius: 999, background: 'var(--dw-background, #fff)', border: `1px solid ${primary}`, boxShadow: '0 4px 14px rgba(0,0,0,.12)', fontSize: 13, fontWeight: 700, color: primary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {pageLabel && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{pageLabel}</span>}
+            <span style={{ color: muted, fontWeight: 600 }}>{page + 1} / {pageCount}</span>
+          </div>
+        </>,
+        document.body,
+      )}
+
+      <div className="ob-hpager" ref={pagerRef} style={{ ['--ob-top' as string]: `${headerH}px` } as CSSProperties}>
       {/* Header */}
       <header className="text-center pb-8 mb-4 border-b" style={{ borderColor: border }}>
         {content.serviceTitle && (
@@ -290,8 +343,33 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
       </header>
 
       {visible.map((it, i) => it.render(i + 1))}
+      </div>
     </div>
   );
+}
+
+function navBtn(side: 'left' | 'right', disabled: boolean): CSSProperties {
+  return {
+    position: 'fixed',
+    top: '50%',
+    [side]: 10,
+    transform: 'translateY(-50%)',
+    zIndex: 60,
+    width: 40,
+    height: 40,
+    display: 'grid',
+    placeItems: 'center',
+    borderRadius: 999,
+    background: 'var(--dw-background, #fff)',
+    border: `1px solid ${primary}`,
+    color: primary,
+    fontSize: 24,
+    lineHeight: 1,
+    paddingBottom: 3,
+    cursor: disabled ? 'default' : 'pointer',
+    opacity: disabled ? 0.35 : 1,
+    boxShadow: '0 4px 14px rgba(0,0,0,.12)',
+  } as CSSProperties;
 }
 
 function tabStyle(on: boolean): CSSProperties {
@@ -308,15 +386,37 @@ function tabStyle(on: boolean): CSSProperties {
   };
 }
 
-// 한/영 토글: 화면 우측 상단 고정(fixed). 사이트 헤더(sticky top-0)가 가리지 않도록 top 오프셋.
-// 모바일 스냅: 중첩 스크롤러가 아니라 "문서(html) 스크롤"에 스냅을 걸고 섹션에 snap-align.
-//   → 페이지 스크롤 그대로 두면서 섹션 단위로 스냅. 긴 섹션(설교노트)은 proximity 로 안 갇힘.
-//   데스크톱(≥768px)은 규칙 없음 = 기존 연속 스크롤 그대로.
-const SNAP_CSS = `
-@media (max-width: 767px) {
-  html { scroll-snap-type: y mandatory; scroll-padding-top: 8px; }
-  .ob-snap > section { min-height: 100vh; min-height: 100svh; scroll-snap-align: start; scroll-snap-stop: always; }
-  .ob-snap > header { scroll-snap-align: start; }
+// 모바일·태블릿(≤1024px): 섹션을 "옆으로" 넘기는 가로 페이저 + 각 패널 안에서 세로 스크롤.
+//   패널 상단 여백(--ob-top = 사이트 헤더 높이)으로 섹션 제목이 헤더에 가리지 않게 한다.
+//   데스크톱(>1024px): 규칙 없음 = 기존 세로 연속 스크롤.
+const HPAGER_CSS = `
+@media (max-width: 1024px) {
+  .ob-hpager {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    height: 100svh;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .ob-hpager::-webkit-scrollbar { display: none; }
+  .ob-hpager > * {
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100svh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    -webkit-overflow-scrolling: touch;
+    box-sizing: border-box;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: calc(var(--ob-top, 56px) + 12px);
+    padding-bottom: 40px;
+  }
 }
 `;
 
@@ -333,6 +433,34 @@ function Section({ n, title, eyebrow, children }: { n: number; title: string; ey
   );
 }
 
+// 한 화면에 이미지 한 장 + 작은 썸네일 버튼으로 전환(찬양 악보·어린이 카툰용).
+function ImageViewer({ images, alt }: { images: string[]; alt: string }) {
+  const list = (images ?? []).filter(Boolean);
+  const [idx, setIdx] = useState(0);
+  if (list.length === 0) return null;
+  const active = Math.min(idx, list.length - 1);
+  return (
+    <div>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={list[active]} alt={alt} className="w-full rounded-xl" style={{ border: `1px solid var(--border, rgba(0,0,0,0.06))` }} loading="lazy" />
+      {list.length > 1 && (
+        <div className="mt-3 flex flex-wrap gap-2 justify-center">
+          {list.map((u, k) => {
+            const on = k === active;
+            return (
+              <button key={k} type="button" onClick={() => setIdx(k)} aria-label={`${alt} ${k + 1}`} aria-current={on}
+                style={{ width: 52, height: 52, borderRadius: 10, overflow: 'hidden', padding: 0, cursor: 'pointer', background: 'none', border: on ? `2px solid ${primary}` : `1px solid ${border}`, boxShadow: on ? '0 2px 8px rgba(0,0,0,.12)' : 'none', flex: '0 0 auto' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={u} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} loading="lazy" />
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function HymnItem({ h, en }: { h: Hymn; en: boolean }) {
   const imgs = h.imageUrls ?? [];
   const lyrics = en && (h.lyricsEn || '').trim() ? h.lyricsEn : h.lyrics;
@@ -343,14 +471,7 @@ function HymnItem({ h, en }: { h: Hymn; en: boolean }) {
           {h.hymnNo && <span style={{ color: primary }}>{h.hymnNo} </span>}{h.title}
         </div>
       )}
-      {imgs.length > 0 && (
-        <div className="space-y-3">
-          {imgs.map((u, k) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img key={k} src={u} alt={h.title || '악보'} className="w-full rounded-lg" style={{ border: `1px solid var(--border, rgba(0,0,0,0.06))` }} loading="lazy" />
-          ))}
-        </div>
-      )}
+      {imgs.length > 0 && <ImageViewer images={imgs} alt={h.title || '악보'} />}
       {(lyrics || '').trim() && (
         <div className="mt-3 whitespace-pre-line" style={{ color: textColor, lineHeight: 1.9 }}>{lyrics}</div>
       )}
