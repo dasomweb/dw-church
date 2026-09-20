@@ -9,7 +9,8 @@ import { createPortal } from 'react-dom';
 // 모든 화면: 섹션을 좌우로 넘기는 가로 페이저(CSS scroll-snap x) + 각 패널 세로 스크롤.
 //   모바일: 스와이프 + 좌측 상단 페이지 번호. PC·태블릿(≥768px): 좌우 화살표 버튼 + 번호.
 //   첫 페이지(헤더)는 세로 중앙 정렬. 찬양/카툰 이미지는 한 장씩 + 썸네일(ImageViewer).
-// 한/영 토글은 상단 우측 고정. 서버(OnlineBulletinBlock)가 fetch 한 bulletin(plain JSON)을 받음.
+// 좌측 상단: 페이지 번호 + 한/영 토글. 우측 상단: 글자 크기(가-/가+, --ob-fs 로 본문 폰트 % 스케일).
+// 서버(OnlineBulletinBlock)가 fetch 한 bulletin(plain JSON)을 받음.
 
 interface Hymn { title?: string; hymnNo?: string; imageUrls?: string[]; note?: string; lyrics?: string; lyricsEn?: string }
 
@@ -25,7 +26,17 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
   const [headerH, setHeaderH] = useState(56);     // 사이트 헤더 높이(px) — 패널 상단 여백용
   const pagerRef = useRef<HTMLDivElement>(null);
   const [page, setPage] = useState(0);            // 현재 가로 페이지(섹션) 인덱스
+  const [fontScale, setFontScale] = useState(100); // 본문 글자 크기(%) — 100~160
   const en = lang === 'en';
+
+  useEffect(() => {
+    try { const v = Number(localStorage.getItem('ob-fs')); if (v >= 100 && v <= 160) setFontScale(v); } catch { /* ignore */ }
+  }, []);
+  const setFs = (v: number) => {
+    const c = Math.max(100, Math.min(160, v));
+    setFontScale(c);
+    try { localStorage.setItem('ob-fs', String(c)); } catch { /* ignore */ }
+  };
 
   // 사이트 헤더(sticky/fixed)의 실제 높이를 재서 토글이 헤더에 가리지 않게 top 을 잡는다.
   // 헤더 변형(유틸바/센터드/라이브배너)마다 높이가 달라 하드코딩 대신 측정.
@@ -289,21 +300,31 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
     <div className="mx-auto max-w-3xl" style={{ color: textColor }}>
       <style>{HPAGER_CSS}</style>
 
-      {/* 한/영 토글 — 화면 우측 상단 고정(portal). */}
-      {hasEnglish && mounted && createPortal(
-        <div style={{ position: 'fixed', top: toggleTop, right: 12, zIndex: 60 }}>
-          <div className="inline-flex rounded-full overflow-hidden shadow-md" style={{ border: `1px solid ${primary}`, background: 'var(--dw-background, #fff)' }}>
-            <button type="button" aria-label="한국어" aria-pressed={!en} onClick={() => setLang('ko')} style={tabStyle(!en)}>한</button>
-            <button type="button" aria-label="English" aria-pressed={en} onClick={() => setLang('en')} style={tabStyle(en)}>EN</button>
-          </div>
+      {/* 좌측 상단: 페이지 번호 + 한/영 토글 (portal) */}
+      {mounted && createPortal(
+        <div style={{ position: 'fixed', top: toggleTop, left: 12, zIndex: 60, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
+          {pageCount > 1 && (
+            <div style={{ padding: '5px 12px', borderRadius: 999, background: 'var(--dw-background, #fff)', border: `1px solid ${primary}`, color: primary, fontSize: 13, fontWeight: 800, boxShadow: '0 4px 14px rgba(0,0,0,.10)', fontVariantNumeric: 'tabular-nums' }}>
+              {page + 1} / {pageCount}
+            </div>
+          )}
+          {hasEnglish && (
+            <div className="inline-flex rounded-full overflow-hidden shadow-md" style={{ border: `1px solid ${primary}`, background: 'var(--dw-background, #fff)' }}>
+              <button type="button" aria-label="한국어" aria-pressed={!en} onClick={() => setLang('ko')} style={tabStyle(!en)}>한</button>
+              <button type="button" aria-label="English" aria-pressed={en} onClick={() => setLang('en')} style={tabStyle(en)}>EN</button>
+            </div>
+          )}
         </div>,
         document.body,
       )}
 
-      {/* 상단 좌측 페이지 번호(현재/전체) — 모든 화면 */}
-      {mounted && pageCount > 1 && createPortal(
-        <div style={{ position: 'fixed', top: toggleTop, left: 12, zIndex: 60, padding: '5px 12px', borderRadius: 999, background: 'var(--dw-background, #fff)', border: `1px solid ${primary}`, color: primary, fontSize: 13, fontWeight: 800, boxShadow: '0 4px 14px rgba(0,0,0,.10)', fontVariantNumeric: 'tabular-nums' }}>
-          {page + 1} / {pageCount}
+      {/* 우측 상단: 글자 크기 확대/축소 (portal) */}
+      {mounted && createPortal(
+        <div style={{ position: 'fixed', top: toggleTop, right: 12, zIndex: 60 }}>
+          <div className="inline-flex rounded-full overflow-hidden shadow-md" style={{ border: `1px solid ${primary}`, background: 'var(--dw-background, #fff)' }}>
+            <button type="button" aria-label="글자 작게" onClick={() => setFs(fontScale - 15)} disabled={fontScale <= 100} style={fsBtnStyle(fontScale <= 100)}>가－</button>
+            <button type="button" aria-label="글자 크게" onClick={() => setFs(fontScale + 15)} disabled={fontScale >= 160} style={fsBtnStyle(fontScale >= 160)}>가＋</button>
+          </div>
         </div>,
         document.body,
       )}
@@ -317,7 +338,7 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
         document.body,
       )}
 
-      <div className="ob-hpager" ref={pagerRef} style={{ ['--ob-top' as string]: `${headerH}px` } as CSSProperties}>
+      <div className="ob-hpager" ref={pagerRef} style={{ ['--ob-top' as string]: `${headerH}px`, ['--ob-fs' as string]: `${fontScale}%` } as CSSProperties}>
       {/* Header (첫 페이지: 세로 중앙 정렬) */}
       <header className="text-center pb-8 border-b" style={{ borderColor: border }}>
         {showServiceTitle && (
@@ -351,6 +372,14 @@ function navBtn(side: 'left' | 'right', disabled: boolean): CSSProperties {
     cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.35 : 1,
     boxShadow: '0 4px 14px rgba(0,0,0,.12)',
   } as CSSProperties;
+}
+
+function fsBtnStyle(disabled: boolean): CSSProperties {
+  return {
+    padding: '5px 12px', minWidth: 40, fontSize: 14, fontWeight: 800, lineHeight: 1.2,
+    cursor: disabled ? 'default' : 'pointer', border: 'none', background: 'transparent',
+    color: primary, opacity: disabled ? 0.35 : 1,
+  };
 }
 
 function tabStyle(on: boolean): CSSProperties {
@@ -396,6 +425,7 @@ const HPAGER_CSS = `
   padding-right: 16px;
   padding-top: calc(var(--ob-top, 56px) + 12px);
   padding-bottom: 40px;
+  font-size: var(--ob-fs, 100%);
 }
 /* 첫 페이지(헤더 패널)는 세로 가운데 정렬 */
 .ob-hpager > header {
