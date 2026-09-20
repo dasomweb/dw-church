@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect, type ReactNode, type CSSProperties } from 'react';
+import { useState, useEffect, useRef, type ReactNode, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 
 // 온라인 주보 스토어프론트 뷰(클라이언트) — 한/영 토글 담당.
 // 예배순서·찬양 가사·대표기도·교회소식·성경 본문(개역개정/ESV)·설교 노트·어린이 설교 노트
 // ·기도 제목·소그룹 질문이 한/영 병기 시 토글로 전환(영어 없으면 한국어 폴백).
-// 모바일·태블릿(≤1024px): 섹션을 좌우로 스와이프(순수 CSS scroll-snap, 화살표·카운터 없음)
-//   + 각 패널 안에서 세로 스크롤. 데스크톱(>1024px): 기존 세로 스크롤.
-// 찬양 악보·어린이 카툰: 이미지 한 장씩 + 작은 썸네일 버튼 전환(ImageViewer).
+// 모든 화면: 섹션을 좌우로 넘기는 가로 페이저(CSS scroll-snap x) + 각 패널 세로 스크롤.
+//   모바일: 스와이프 + 좌측 상단 페이지 번호. PC·태블릿(≥768px): 좌우 화살표 버튼 + 번호.
+//   첫 페이지(헤더)는 세로 중앙 정렬. 찬양/카툰 이미지는 한 장씩 + 썸네일(ImageViewer).
 // 한/영 토글은 상단 우측 고정. 서버(OnlineBulletinBlock)가 fetch 한 bulletin(plain JSON)을 받음.
 
 interface Hymn { title?: string; hymnNo?: string; imageUrls?: string[]; note?: string; lyrics?: string; lyricsEn?: string }
@@ -23,6 +23,8 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
   const [mounted, setMounted] = useState(false);
   const [toggleTop, setToggleTop] = useState(64); // 사이트 헤더 아래로 토글을 내리는 실측값(px)
   const [headerH, setHeaderH] = useState(56);     // 사이트 헤더 높이(px) — 패널 상단 여백용
+  const pagerRef = useRef<HTMLDivElement>(null);
+  const [page, setPage] = useState(0);            // 현재 가로 페이지(섹션) 인덱스
   const en = lang === 'en';
 
   // 사이트 헤더(sticky/fixed)의 실제 높이를 재서 토글이 헤더에 가리지 않게 top 을 잡는다.
@@ -48,6 +50,23 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
     window.addEventListener('scroll', onChange, { passive: true });
     return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', onChange); window.removeEventListener('scroll', onChange); };
   }, []);
+
+  // 가로 페이저 현재 인덱스 추적(상단 번호·화살표용).
+  useEffect(() => {
+    const el = pagerRef.current;
+    if (!el) return;
+    const onScroll = () => { setPage(Math.round(el.scrollLeft / (el.clientWidth || 1))); };
+    onScroll();
+    el.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => { el.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onScroll); };
+  }, []);
+  const goPage = (i: number) => {
+    const el = pagerRef.current;
+    if (!el) return;
+    const max = el.children.length - 1;
+    el.scrollTo({ left: Math.max(0, Math.min(i, max)) * el.clientWidth, behavior: 'smooth' });
+  };
 
   const content = (bulletin.content ?? {}) as Record<string, any>;
   const serviceDate = bulletin.serviceDate ? String(bulletin.serviceDate).slice(0, 10) : '';
@@ -257,13 +276,20 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
   ];
 
   const visible = items.filter((it) => it.visible);
+  const pageCount = visible.length + 1; // 헤더 패널 + 섹션들
+
+  // 헤더 중복 제거: 제목에 이미 예배명/날짜가 들어 있으면 별도 표기 생략.
+  const bTitle = String(bulletin.title ?? '');
+  const showServiceTitle = !!content.serviceTitle && !bTitle.includes(content.serviceTitle);
+  const [dy, dm, dd] = serviceDate ? serviceDate.split('-') : [];
+  const titleHasDate = !!dy && !!dm && !!dd && bTitle.includes(dy) && bTitle.includes(String(Number(dm))) && bTitle.includes(String(Number(dd)));
+  const showDate = !!serviceDate && !titleHasDate;
 
   return (
     <div className="mx-auto max-w-3xl" style={{ color: textColor }}>
       <style>{HPAGER_CSS}</style>
 
-      {/* 한/영 토글 — body 로 포털해 화면 우측 상단 고정(fixed). 상위 transform 에 갇히지 않고
-          어떤 스택 위에도 뜬다. 사이트 헤더(sticky top-0 z-50) 아래에 위치(top 오프셋은 CSS). */}
+      {/* 한/영 토글 — 화면 우측 상단 고정(portal). */}
       {hasEnglish && mounted && createPortal(
         <div style={{ position: 'fixed', top: toggleTop, right: 12, zIndex: 60 }}>
           <div className="inline-flex rounded-full overflow-hidden shadow-md" style={{ border: `1px solid ${primary}`, background: 'var(--dw-background, #fff)' }}>
@@ -274,27 +300,57 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
         document.body,
       )}
 
-      <div className="ob-hpager" style={{ ['--ob-top' as string]: `${headerH}px` } as CSSProperties}>
-      {/* Header */}
-      <header className="text-center pb-8 mb-4 border-b" style={{ borderColor: border }}>
-        {content.serviceTitle && (
+      {/* 상단 좌측 페이지 번호(현재/전체) — 모든 화면 */}
+      {mounted && pageCount > 1 && createPortal(
+        <div style={{ position: 'fixed', top: toggleTop, left: 12, zIndex: 60, padding: '5px 12px', borderRadius: 999, background: 'var(--dw-background, #fff)', border: `1px solid ${primary}`, color: primary, fontSize: 13, fontWeight: 800, boxShadow: '0 4px 14px rgba(0,0,0,.10)', fontVariantNumeric: 'tabular-nums' }}>
+          {page + 1} / {pageCount}
+        </div>,
+        document.body,
+      )}
+
+      {/* 좌우 넘김 화살표 — PC·태블릿만(모바일은 CSS로 숨김, 스와이프 사용) */}
+      {mounted && pageCount > 1 && createPortal(
+        <>
+          <button type="button" aria-label="이전 섹션" className="ob-arrow" onClick={() => goPage(page - 1)} disabled={page <= 0} style={navBtn('left', page <= 0)}>‹</button>
+          <button type="button" aria-label="다음 섹션" className="ob-arrow" onClick={() => goPage(page + 1)} disabled={page >= pageCount - 1} style={navBtn('right', page >= pageCount - 1)}>›</button>
+        </>,
+        document.body,
+      )}
+
+      <div className="ob-hpager" ref={pagerRef} style={{ ['--ob-top' as string]: `${headerH}px` } as CSSProperties}>
+      {/* Header (첫 페이지: 세로 중앙 정렬) */}
+      <header className="text-center pb-8 border-b" style={{ borderColor: border }}>
+        {showServiceTitle && (
           <div style={{ color: primary, fontWeight: 800, letterSpacing: '0.05em', fontSize: 'var(--fs-sm, 14px)' }}>
             {content.serviceTitle}
           </div>
         )}
-        <h1 style={{ fontSize: 'var(--brand-h2, 30px)', fontWeight: 800, fontFamily: 'var(--brand-font-heading)', marginTop: 8 }}>
-          {String(bulletin.title ?? '')}
+        <h1 style={{ fontSize: 'var(--brand-h2, 30px)', fontWeight: 800, fontFamily: 'var(--brand-font-heading)', marginTop: showServiceTitle ? 8 : 0 }}>
+          {bTitle}
         </h1>
-        <div className="mt-2 flex items-center justify-center gap-3" style={{ color: muted, fontSize: 'var(--fs-sm, 14px)' }}>
-          {serviceDate && <span>{serviceDate}</span>}
-          {content.presider && <span>· 인도 {content.presider}</span>}
-        </div>
+        {(showDate || content.presider) && (
+          <div className="mt-2 flex items-center justify-center gap-3" style={{ color: muted, fontSize: 'var(--fs-sm, 14px)' }}>
+            {showDate && <span>{serviceDate}</span>}
+            {content.presider && <span>{showDate ? '· ' : ''}인도 {content.presider}</span>}
+          </div>
+        )}
       </header>
 
       {visible.map((it, i) => it.render(i + 1))}
       </div>
     </div>
   );
+}
+
+function navBtn(side: 'left' | 'right', disabled: boolean): CSSProperties {
+  return {
+    position: 'fixed', top: '50%', [side]: 12, transform: 'translateY(-50%)', zIndex: 60,
+    width: 44, height: 44, display: 'grid', placeItems: 'center', borderRadius: 999,
+    background: 'var(--dw-background, #fff)', border: `1px solid ${primary}`, color: primary,
+    fontSize: 26, lineHeight: 1, paddingBottom: 3,
+    cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.35 : 1,
+    boxShadow: '0 4px 14px rgba(0,0,0,.12)',
+  } as CSSProperties;
 }
 
 function tabStyle(on: boolean): CSSProperties {
@@ -315,34 +371,40 @@ function tabStyle(on: boolean): CSSProperties {
 //   패널 상단 여백(--ob-top = 사이트 헤더 높이)으로 섹션 제목이 헤더에 가리지 않게 한다.
 //   데스크톱(>1024px): 규칙 없음 = 기존 세로 연속 스크롤.
 const HPAGER_CSS = `
-@media (max-width: 1024px) {
-  .ob-hpager {
-    display: flex;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scroll-snap-type: x mandatory;
-    height: 100svh;
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-  .ob-hpager::-webkit-scrollbar { display: none; }
-  .ob-hpager > * {
-    flex: 0 0 100%;
-    width: 100%;
-    height: 100svh;
-    overflow-y: auto;
-    overflow-x: hidden;
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
-    -webkit-overflow-scrolling: touch;
-    box-sizing: border-box;
-    padding-left: 16px;
-    padding-right: 16px;
-    padding-top: calc(var(--ob-top, 56px) + 12px);
-    padding-bottom: 40px;
-  }
+.ob-hpager {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  height: 100svh;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
+.ob-hpager::-webkit-scrollbar { display: none; }
+.ob-hpager > * {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100svh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-top: calc(var(--ob-top, 56px) + 12px);
+  padding-bottom: 40px;
+}
+/* 첫 페이지(헤더 패널)는 세로 가운데 정렬 */
+.ob-hpager > header {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+/* 모바일은 스와이프로 넘김 → 화살표 숨김. PC·태블릿(≥768px)만 표시 */
+@media (max-width: 767px) { .ob-arrow { display: none !important; } }
 `;
 
 function Section({ n, title, eyebrow, children }: { n: number; title: string; eyebrow?: string; children: ReactNode }) {
