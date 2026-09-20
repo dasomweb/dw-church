@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, type ReactNode, type CSSProperties } from 'react';
+import { useState, useEffect, type ReactNode, type CSSProperties } from 'react';
+import { createPortal } from 'react-dom';
 
 // 온라인 주보 스토어프론트 뷰(클라이언트) — 한/영 토글 담당.
 // 예배순서·찬양 가사·대표기도·교회소식·성경 본문(개역개정/ESV)·설교 노트·어린이 설교 노트
@@ -17,6 +18,8 @@ const textColor = 'var(--dw-text, #16181d)';
 
 export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any> }) {
   const [lang, setLang] = useState<'ko' | 'en'>('ko');
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const en = lang === 'en';
 
   const content = (bulletin.content ?? {}) as Record<string, any>;
@@ -236,15 +239,16 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
   return (
     <div className="ob-snap mx-auto max-w-3xl" style={{ color: textColor }}>
       <style>{SNAP_CSS}</style>
-      {/* 한/영 토글 — 작은 알약형으로 상단 우측에 떠서 스크롤 따라다님(영어 콘텐츠가 있을 때만).
-          h-0 오버레이라 콘텐츠 레이아웃을 밀지 않음. */}
-      {hasEnglish && (
-        <div className="sticky top-2 z-20 h-0 flex justify-end pointer-events-none">
-          <div className="inline-flex rounded-full overflow-hidden shadow-md pointer-events-auto" style={{ border: `1px solid ${primary}`, background: 'var(--dw-background, #fff)' }}>
+      {/* 한/영 토글 — body 로 포털해 화면 우측 상단 고정(fixed). 상위 transform 에 갇히지 않고
+          어떤 스택 위에도 뜬다. 사이트 헤더(sticky top-0 z-50) 아래에 위치(top 오프셋은 CSS). */}
+      {hasEnglish && mounted && createPortal(
+        <div className="ob-toggle">
+          <div className="inline-flex rounded-full overflow-hidden shadow-md" style={{ border: `1px solid ${primary}`, background: 'var(--dw-background, #fff)' }}>
             <button type="button" aria-label="한국어" aria-pressed={!en} onClick={() => setLang('ko')} style={tabStyle(!en)}>한</button>
             <button type="button" aria-label="English" aria-pressed={en} onClick={() => setLang('en')} style={tabStyle(en)}>EN</button>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {/* Header */}
@@ -270,10 +274,11 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
 
 function tabStyle(on: boolean): CSSProperties {
   return {
-    padding: '4px 12px',
-    fontSize: 12,
+    padding: '7px 15px',
+    minWidth: 42,
+    fontSize: 13,
     fontWeight: 800,
-    lineHeight: 1.4,
+    lineHeight: 1.3,
     cursor: 'pointer',
     border: 'none',
     background: on ? primary : 'transparent',
@@ -281,17 +286,15 @@ function tabStyle(on: boolean): CSSProperties {
   };
 }
 
-// 모바일 전용 섹션 단위 스냅(한 페이지씩 업/다운). 긴 섹션(설교노트 등)이 갇히지
-// 않도록 proximity 사용. 데스크톱(≥768px)은 규칙이 없어 기존 연속 스크롤 그대로.
+// 한/영 토글: 화면 우측 상단 고정(fixed). 사이트 헤더(sticky top-0)가 가리지 않도록 top 오프셋.
+// 모바일 스냅: 중첩 스크롤러가 아니라 "문서(html) 스크롤"에 스냅을 걸고 섹션에 snap-align.
+//   → 페이지 스크롤 그대로 두면서 섹션 단위로 스냅. 긴 섹션(설교노트)은 proximity 로 안 갇힘.
+//   데스크톱(≥768px)은 규칙 없음 = 기존 연속 스크롤 그대로.
 const SNAP_CSS = `
+.ob-toggle { position: fixed; right: 12px; top: 84px; z-index: 40; }
 @media (max-width: 767px) {
-  .ob-snap {
-    height: 100vh; height: 100svh;
-    overflow-y: auto;
-    scroll-snap-type: y proximity;
-    scroll-padding-top: 8px;
-    -webkit-overflow-scrolling: touch;
-  }
+  .ob-toggle { top: 64px; }
+  html { scroll-snap-type: y proximity; scroll-padding-top: 60px; }
   .ob-snap > section { min-height: 100svh; scroll-snap-align: start; scroll-snap-stop: always; }
   .ob-snap > header { scroll-snap-align: start; }
 }
