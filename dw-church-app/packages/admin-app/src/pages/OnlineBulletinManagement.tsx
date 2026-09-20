@@ -117,6 +117,69 @@ export default function OnlineBulletinManagement() {
     return apiClient.translate(clean, 'en');
   };
 
+  // 단일 문구 번역(가사 등). 실패/빈값 시 '' 반환.
+  const translateOne = async (text: string): Promise<string> => {
+    const t = (text || '').trim();
+    if (!t) return '';
+    const map = await translateMany([t]);
+    return map[t] ?? '';
+  };
+
+  const translateWorship = async () => {
+    if (wo.length === 0) { showToast('error', '먼저 예배 순서를 입력하세요.'); return; }
+    setBusy('worship');
+    try {
+      const map = await translateMany(wo.flatMap((r) => [r.label, r.detail, r.person]));
+      setContent({
+        worshipOrder: wo.map((r) => ({
+          ...r,
+          labelEn: r.label?.trim() ? (map[r.label.trim()] ?? r.labelEn ?? '') : '',
+          detailEn: r.detail?.trim() ? (map[r.detail.trim()] ?? r.detailEn ?? '') : '',
+          personEn: r.person?.trim() ? (map[r.person.trim()] ?? r.personEn ?? '') : '',
+        })),
+      });
+      showToast('success', '예배 순서를 영어로 번역했습니다. 확인해주세요.');
+    } catch { showToast('error', '번역에 실패했습니다.'); }
+    finally { setBusy(null); }
+  };
+
+  const translatePrayerRep = async () => {
+    const rp = c.representativePrayer ?? { person: '', content: '' };
+    const contentKo = (rp.content ?? '').trim();
+    const personKo = (rp.person ?? '').trim();
+    if (!contentKo && !personKo) { showToast('error', '먼저 대표기도 내용을 입력하세요.'); return; }
+    setBusy('repprayer');
+    try {
+      const map = await translateMany([contentKo, personKo]);
+      setContent({
+        representativePrayer: {
+          ...rp,
+          contentEn: contentKo ? (map[contentKo] ?? rp.contentEn ?? '') : '',
+          personEn: personKo ? (map[personKo] ?? rp.personEn ?? '') : '',
+        },
+      });
+      showToast('success', '대표기도를 영어로 번역했습니다. 확인해주세요.');
+    } catch { showToast('error', '번역에 실패했습니다.'); }
+    finally { setBusy(null); }
+  };
+
+  const translateAnnouncements = async () => {
+    if (anns.length === 0) { showToast('error', '먼저 교회소식을 입력하세요.'); return; }
+    setBusy('anns');
+    try {
+      const map = await translateMany(anns.flatMap((a) => [a.title, a.body]));
+      setContent({
+        announcements: anns.map((a) => ({
+          ...a,
+          titleEn: a.title?.trim() ? (map[a.title.trim()] ?? a.titleEn ?? '') : '',
+          bodyEn: a.body?.trim() ? (map[a.body.trim()] ?? a.bodyEn ?? '') : '',
+        })),
+      });
+      showToast('success', '교회소식을 영어로 번역했습니다. 확인해주세요.');
+    } catch { showToast('error', '번역에 실패했습니다.'); }
+    finally { setBusy(null); }
+  };
+
   const fetchScripture = async () => {
     const ref = (c.scripture?.reference ?? '').trim();
     if (!ref) { showToast('error', '먼저 성경 장절(예: 누가복음 1:46-55)을 입력하세요.'); return; }
@@ -228,7 +291,7 @@ export default function OnlineBulletinManagement() {
             목록으로
           </button>
           <h2 className="text-2xl font-bold text-gray-900">{editingId ? '온라인 주보 수정' : '온라인 주보 작성'}</h2>
-          <p className="text-sm text-gray-500 mt-1">아래 순서대로 입력하면 사이트에서 스크롤 다운으로 표시됩니다. 성경 본문·기도 제목·소그룹 질문은 한/영을 함께 넣으면 사이트에 한/영 전환 버튼이 나옵니다.</p>
+          <p className="text-sm text-gray-500 mt-1">아래 순서대로 입력하면 사이트에서 스크롤 다운으로 표시됩니다. 각 섹션의 🌐 버튼으로 한글→영어 자동번역이 가능하고, 한/영을 함께 넣으면 사이트에 한/영 전환 버튼이 나옵니다.</p>
         </div>
 
         <div className="space-y-6">
@@ -259,15 +322,30 @@ export default function OnlineBulletinManagement() {
             </FormField>
           </FormSection>
 
-          {/* 1. 예배 순서 */}
+          {/* 1. 예배 순서 (한/영) */}
           <FormSection title="1. 예배 순서">
-            <div className="space-y-2">
+            <div className="flex items-center justify-end -mt-1 mb-2">
+              <button type="button" onClick={translateWorship} disabled={busy === 'worship'} className={btnAiClass}>
+                {busy === 'worship' ? '번역 중…' : '🌐 영어 자동번역 (한글 → 영어)'}
+              </button>
+            </div>
+            <div className="space-y-3">
               {wo.map((r, i) => (
-                <div key={i} className="flex gap-2 items-start">
-                  <input value={r.label} onChange={(e) => setContent({ worshipOrder: wo.map((x, idx) => idx === i ? { ...x, label: e.target.value } : x) })} placeholder="순서 (예: 찬양)" className={`${inputClass} w-32`} />
-                  <input value={r.detail} onChange={(e) => setContent({ worshipOrder: wo.map((x, idx) => idx === i ? { ...x, detail: e.target.value } : x) })} placeholder="내용 (예: 찬121 우리 구주 나신 날)" className={`${inputClass} flex-1`} />
-                  <input value={r.person} onChange={(e) => setContent({ worshipOrder: wo.map((x, idx) => idx === i ? { ...x, person: e.target.value } : x) })} placeholder="담당 (예: 인도자)" className={`${inputClass} w-32`} />
-                  <button type="button" onClick={() => setContent({ worshipOrder: wo.filter((_, idx) => idx !== i) })} className={`${btnDelRow} pt-2`}>삭제</button>
+                <div key={i} className="rounded-lg border border-gray-200 p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-medium text-gray-500">순서 {i + 1}</span>
+                    <button type="button" onClick={() => setContent({ worshipOrder: wo.filter((_, idx) => idx !== i) })} className={btnDelRow}>삭제</button>
+                  </div>
+                  <div className="flex gap-2 items-start">
+                    <input value={r.label} onChange={(e) => setContent({ worshipOrder: wo.map((x, idx) => idx === i ? { ...x, label: e.target.value } : x) })} placeholder="순서 (예: 찬양)" className={`${inputClass} w-32`} />
+                    <input value={r.detail} onChange={(e) => setContent({ worshipOrder: wo.map((x, idx) => idx === i ? { ...x, detail: e.target.value } : x) })} placeholder="내용 (예: 찬121 우리 구주 나신 날)" className={`${inputClass} flex-1`} />
+                    <input value={r.person} onChange={(e) => setContent({ worshipOrder: wo.map((x, idx) => idx === i ? { ...x, person: e.target.value } : x) })} placeholder="담당 (예: 인도자)" className={`${inputClass} w-32`} />
+                  </div>
+                  <div className="flex gap-2 items-start mt-2">
+                    <input value={r.labelEn ?? ''} onChange={(e) => setContent({ worshipOrder: wo.map((x, idx) => idx === i ? { ...x, labelEn: e.target.value } : x) })} placeholder="Order (EN)" className={`${inputClass} w-32`} />
+                    <input value={r.detailEn ?? ''} onChange={(e) => setContent({ worshipOrder: wo.map((x, idx) => idx === i ? { ...x, detailEn: e.target.value } : x) })} placeholder="Detail (EN)" className={`${inputClass} flex-1`} />
+                    <input value={r.personEn ?? ''} onChange={(e) => setContent({ worshipOrder: wo.map((x, idx) => idx === i ? { ...x, personEn: e.target.value } : x) })} placeholder="By (EN)" className={`${inputClass} w-32`} />
+                  </div>
                 </div>
               ))}
               <button type="button" onClick={() => setContent({ worshipOrder: [...wo, { label: '', detail: '', person: '' }] })} className={btnGhost}>+ 순서 추가</button>
@@ -278,30 +356,63 @@ export default function OnlineBulletinManagement() {
           <FormSection title="2. 찬양 악보">
             <div className="space-y-4">
               {hymns.map((h, i) => (
-                <HymnEditor key={i} hymn={h} onChange={(patch) => setContent({ hymns: hymns.map((x, idx) => idx === i ? { ...x, ...patch } : x) })} onRemove={() => setContent({ hymns: hymns.filter((_, idx) => idx !== i) })} uploadImage={uploadImage} scanLyrics={scanLyrics} />
+                <HymnEditor key={i} hymn={h} onChange={(patch) => setContent({ hymns: hymns.map((x, idx) => idx === i ? { ...x, ...patch } : x) })} onRemove={() => setContent({ hymns: hymns.filter((_, idx) => idx !== i) })} uploadImage={uploadImage} scanLyrics={scanLyrics} translateLyrics={translateOne} />
               ))}
               <button type="button" onClick={() => setContent({ hymns: [...hymns, { ...EMPTY_HYMN }] })} className={btnGhost}>+ 찬양 추가</button>
             </div>
           </FormSection>
 
-          {/* 3. 대표기도 */}
+          {/* 3. 대표기도 (한/영) */}
           <FormSection title="3. 대표기도">
-            <FormField label="기도자">
-              <input value={c.representativePrayer?.person ?? ''} onChange={(e) => setContent({ representativePrayer: { ...(c.representativePrayer ?? { person: '', content: '' }), person: e.target.value } })} placeholder="예: 김집사" className={inputClass} />
-            </FormField>
-            <FormField label="기도 내용 / 메모 (선택)">
-              <textarea value={c.representativePrayer?.content ?? ''} onChange={(e) => setContent({ representativePrayer: { ...(c.representativePrayer ?? { person: '', content: '' }), content: e.target.value } })} rows={3} className={inputClass} />
-            </FormField>
+            <div className="flex items-center justify-end -mt-1 mb-2">
+              <button type="button" onClick={translatePrayerRep} disabled={busy === 'repprayer'} className={btnAiClass}>
+                {busy === 'repprayer' ? '번역 중…' : '🌐 영어 자동번역'}
+              </button>
+            </div>
+            <FormRow>
+              <FormField label="기도자">
+                <input value={c.representativePrayer?.person ?? ''} onChange={(e) => setContent({ representativePrayer: { ...(c.representativePrayer ?? { person: '', content: '' }), person: e.target.value } })} placeholder="예: 김집사" className={inputClass} />
+              </FormField>
+              <FormField label="By (English)">
+                <input value={c.representativePrayer?.personEn ?? ''} onChange={(e) => setContent({ representativePrayer: { ...(c.representativePrayer ?? { person: '', content: '' }), personEn: e.target.value } })} placeholder="e.g. Deacon Kim" className={inputClass} />
+              </FormField>
+            </FormRow>
+            <FormRow>
+              <FormField label="기도 내용 / 메모 · 한국어 (선택)">
+                <textarea value={c.representativePrayer?.content ?? ''} onChange={(e) => setContent({ representativePrayer: { ...(c.representativePrayer ?? { person: '', content: '' }), content: e.target.value } })} rows={3} className={inputClass} />
+              </FormField>
+              <FormField label="Prayer / memo · English (optional)">
+                <textarea value={c.representativePrayer?.contentEn ?? ''} onChange={(e) => setContent({ representativePrayer: { ...(c.representativePrayer ?? { person: '', content: '' }), contentEn: e.target.value } })} rows={3} className={inputClass} />
+              </FormField>
+            </FormRow>
           </FormSection>
 
-          {/* 4. 교회소식 (구 주일광고 — 대표기도 다음) */}
+          {/* 4. 교회소식 (구 주일광고 — 대표기도 다음, 한/영) */}
           <FormSection title="4. 교회소식">
-            <div className="space-y-2">
+            <div className="flex items-center justify-end -mt-1 mb-2">
+              <button type="button" onClick={translateAnnouncements} disabled={busy === 'anns'} className={btnAiClass}>
+                {busy === 'anns' ? '번역 중…' : '🌐 영어 자동번역 (한글 → 영어)'}
+              </button>
+            </div>
+            <div className="space-y-3">
               {anns.map((a, i) => (
-                <div key={i} className="flex gap-2 items-start">
-                  <input value={a.title} onChange={(e) => setContent({ announcements: anns.map((x, idx) => idx === i ? { ...x, title: e.target.value } : x) })} placeholder="제목" className={`${inputClass} w-48`} />
-                  <textarea value={a.body} onChange={(e) => setContent({ announcements: anns.map((x, idx) => idx === i ? { ...x, body: e.target.value } : x) })} placeholder="내용" rows={2} className={`${inputClass} flex-1`} />
-                  <button type="button" onClick={() => setContent({ announcements: anns.filter((_, idx) => idx !== i) })} className={`${btnDelRow} pt-2`}>삭제</button>
+                <div key={i} className="rounded-lg border border-gray-200 p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-medium text-gray-500">소식 {i + 1}</span>
+                    <button type="button" onClick={() => setContent({ announcements: anns.filter((_, idx) => idx !== i) })} className={btnDelRow}>삭제</button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div className="space-y-2">
+                      <p className="text-[11px] font-semibold text-gray-400">한국어</p>
+                      <input value={a.title} onChange={(e) => setContent({ announcements: anns.map((x, idx) => idx === i ? { ...x, title: e.target.value } : x) })} placeholder="제목" className={inputClass} />
+                      <textarea value={a.body} onChange={(e) => setContent({ announcements: anns.map((x, idx) => idx === i ? { ...x, body: e.target.value } : x) })} placeholder="내용" rows={3} className={inputClass} />
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-[11px] font-semibold text-gray-400">English</p>
+                      <input value={a.titleEn ?? ''} onChange={(e) => setContent({ announcements: anns.map((x, idx) => idx === i ? { ...x, titleEn: e.target.value } : x) })} placeholder="Title" className={inputClass} />
+                      <textarea value={a.bodyEn ?? ''} onChange={(e) => setContent({ announcements: anns.map((x, idx) => idx === i ? { ...x, bodyEn: e.target.value } : x) })} placeholder="Body" rows={3} className={inputClass} />
+                    </div>
+                  </div>
                 </div>
               ))}
               <button type="button" onClick={() => setContent({ announcements: [...anns, { title: '', body: '' }] })} className={btnGhost}>+ 소식 추가</button>
@@ -431,7 +542,7 @@ export default function OnlineBulletinManagement() {
 
           {/* 10. 마지막 찬양 */}
           <FormSection title="10. 마지막 찬양">
-            <HymnEditor hymn={c.closingHymn ?? { ...EMPTY_HYMN }} onChange={(patch) => setContent({ closingHymn: { ...(c.closingHymn ?? EMPTY_HYMN), ...patch } })} uploadImage={uploadImage} scanLyrics={scanLyrics} />
+            <HymnEditor hymn={c.closingHymn ?? { ...EMPTY_HYMN }} onChange={(patch) => setContent({ closingHymn: { ...(c.closingHymn ?? EMPTY_HYMN), ...patch } })} uploadImage={uploadImage} scanLyrics={scanLyrics} translateLyrics={translateOne} />
           </FormSection>
 
           {/* 11. 소그룹 나눔 질문 (한/영) */}
@@ -534,8 +645,9 @@ export default function OnlineBulletinManagement() {
 }
 
 /* ── sub-editors ── */
-function HymnEditor({ hymn, onChange, onRemove, uploadImage, scanLyrics }: { hymn: OnlineHymn; onChange: (patch: Partial<OnlineHymn>) => void; onRemove?: () => void; uploadImage: (f: File) => Promise<string>; scanLyrics: (urls: string[]) => Promise<string> }) {
+function HymnEditor({ hymn, onChange, onRemove, uploadImage, scanLyrics, translateLyrics }: { hymn: OnlineHymn; onChange: (patch: Partial<OnlineHymn>) => void; onRemove?: () => void; uploadImage: (f: File) => Promise<string>; scanLyrics: (urls: string[]) => Promise<string>; translateLyrics: (text: string) => Promise<string> }) {
   const [scanning, setScanning] = useState(false);
+  const [translating, setTranslating] = useState(false);
   const imageUrls = hymn.imageUrls || [];
   const doScan = async () => {
     if (imageUrls.length === 0 || scanning) return;
@@ -545,6 +657,14 @@ function HymnEditor({ hymn, onChange, onRemove, uploadImage, scanLyrics }: { hym
       if (text) onChange({ lyrics: text }); // 스캔 결과로 가사 필드 채움(악보 아래 표시)
     } finally { setScanning(false); }
   };
+  const doTranslate = async () => {
+    if (!(hymn.lyrics || '').trim() || translating) return;
+    setTranslating(true);
+    try {
+      const en = await translateLyrics(hymn.lyrics!);
+      if (en) onChange({ lyricsEn: en });
+    } finally { setTranslating(false); }
+  };
   return (
     <div className="rounded-lg border border-gray-200 p-3 space-y-2">
       <div className="flex gap-2 items-start">
@@ -553,13 +673,21 @@ function HymnEditor({ hymn, onChange, onRemove, uploadImage, scanLyrics }: { hym
         {onRemove && <button type="button" onClick={onRemove} className={`${btnDelRow} pt-2`}>삭제</button>}
       </div>
       <MultiImageUpload value={imageUrls} onChange={(urls) => onChange({ imageUrls: urls })} onUpload={uploadImage} resize="content" max={6} label="악보 이미지" />
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <label className="text-sm font-medium text-gray-700">가사 (악보 아래 표시 — 모바일 대비)</label>
-        <button type="button" onClick={doScan} disabled={imageUrls.length === 0 || scanning} className={btnAiClass} title={imageUrls.length === 0 ? '먼저 악보 이미지를 업로드하세요' : '악보에서 가사를 인식합니다'}>
-          {scanning ? '스캔 중…' : '🔎 악보에서 가사 스캔'}
-        </button>
+        <div className="flex gap-2">
+          <button type="button" onClick={doScan} disabled={imageUrls.length === 0 || scanning} className={btnAiClass} title={imageUrls.length === 0 ? '먼저 악보 이미지를 업로드하세요' : '악보에서 가사를 인식합니다'}>
+            {scanning ? '스캔 중…' : '🔎 악보에서 가사 스캔'}
+          </button>
+          <button type="button" onClick={doTranslate} disabled={!(hymn.lyrics || '').trim() || translating} className={btnAiClass} title={!(hymn.lyrics || '').trim() ? '먼저 한국어 가사를 입력/스캔하세요' : '가사를 영어로 번역합니다'}>
+            {translating ? '번역 중…' : '🌐 가사 영어 번역'}
+          </button>
+        </div>
       </div>
-      <textarea value={hymn.lyrics ?? ''} onChange={(e) => onChange({ lyrics: e.target.value })} rows={5} placeholder="가사 (직접 입력하거나 '악보에서 가사 스캔'을 눌러 채우기)" className={inputClass} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <textarea value={hymn.lyrics ?? ''} onChange={(e) => onChange({ lyrics: e.target.value })} rows={5} placeholder="가사 · 한국어 (직접 입력하거나 '악보에서 가사 스캔')" className={inputClass} />
+        <textarea value={hymn.lyricsEn ?? ''} onChange={(e) => onChange({ lyricsEn: e.target.value })} rows={5} placeholder="Lyrics · English (optional)" className={inputClass} />
+      </div>
       <input value={hymn.note} onChange={(e) => onChange({ note: e.target.value })} placeholder="메모 (선택)" className={inputClass} />
     </div>
   );

@@ -3,10 +3,12 @@
 import { useState, type ReactNode, type CSSProperties } from 'react';
 
 // 온라인 주보 스토어프론트 뷰(클라이언트) — 한/영 토글 담당.
-// 성경 본문(개역개정/ESV)·설교 노트·기도 제목·소그룹 질문은 한/영 병기 시 토글로 전환.
+// 예배순서·찬양 가사·대표기도·교회소식·성경 본문(개역개정/ESV)·설교 노트·어린이 설교 노트
+// ·기도 제목·소그룹 질문이 한/영 병기 시 토글로 전환(영어 없으면 한국어 폴백).
+// 모바일은 섹션 단위 스냅 스크롤(한 페이지씩), 한/영 토글은 상단 우측에 작게 떠서 따라다님.
 // 서버 컴포넌트(OnlineBulletinBlock)가 fetch 한 bulletin(plain JSON)을 그대로 받음.
 
-interface Hymn { title?: string; hymnNo?: string; imageUrls?: string[]; note?: string; lyrics?: string }
+interface Hymn { title?: string; hymnNo?: string; imageUrls?: string[]; note?: string; lyrics?: string; lyricsEn?: string }
 
 const muted = 'var(--brand-muted, #6b7280)';
 const border = 'var(--border, rgba(0,0,0,0.08))';
@@ -51,12 +53,17 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
   const cartoonCaption = pick(childrenCartoon.caption, childrenCartoon.captionEn);
   const hasCartoon = cartoonKo.length > 0 || cartoonEn.length > 0;
 
+  const anyEn = (...vals: (string | undefined)[]) => vals.some((v) => (v || '').trim());
   const hasEnglish = !!(
     (scripture.textEn && scripture.textEn.trim()) ||
     (scripture.referenceEn && scripture.referenceEn.trim()) ||
     (sermonNote.textEn && sermonNote.textEn.trim()) ||
     (childrenSermonNote.textEn && childrenSermonNote.textEn.trim()) ||
     cartoonEn.length > 0 ||
+    worshipOrder.some((r: any) => anyEn(r.labelEn, r.detailEn, r.personEn)) ||
+    hymns.some((h) => anyEn(h.lyricsEn)) || anyEn(closing.lyricsEn) ||
+    anyEn(rp.contentEn, rp.personEn) ||
+    anns.some((a: any) => anyEn(a.titleEn, a.bodyEn)) ||
     prayers.some((p: any) => (p.titleEn && p.titleEn.trim()) || (p.detailEn && p.detailEn.trim())) ||
     ['observation', 'correlation', 'application'].some(
       (k) => Array.isArray(study[`${k}En`]) && study[`${k}En`].some((q: string) => (q || '').trim()),
@@ -78,13 +85,18 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
       render: (n) => (
         <Section key="wo" n={n} title="예배 순서">
           <div className="divide-y" style={{ borderColor: 'var(--border, rgba(0,0,0,0.06))' }}>
-            {worshipOrder.map((r: any, i: number) => (
-              <div key={i} className="flex gap-3 py-2.5 items-baseline">
-                <div className="w-24 shrink-0 font-semibold" style={{ color: textColor }}>{r.label}</div>
-                <div className="flex-1 min-w-0" style={{ color: textColor }}>{r.detail}</div>
-                {r.person && <div className="shrink-0 text-right" style={{ color: muted, fontSize: 'var(--fs-sm,14px)' }}>{r.person}</div>}
-              </div>
-            ))}
+            {worshipOrder.map((r: any, i: number) => {
+              const label = pick(r.label, r.labelEn);
+              const detail = pick(r.detail, r.detailEn);
+              const person = pick(r.person, r.personEn);
+              return (
+                <div key={i} className="flex gap-3 py-2.5 items-baseline">
+                  <div className="w-24 shrink-0 font-semibold" style={{ color: textColor }}>{label}</div>
+                  <div className="flex-1 min-w-0" style={{ color: textColor }}>{detail}</div>
+                  {person && <div className="shrink-0 text-right" style={{ color: muted, fontSize: 'var(--fs-sm,14px)' }}>{person}</div>}
+                </div>
+              );
+            })}
           </div>
         </Section>
       ),
@@ -95,7 +107,7 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
       render: (n) => (
         <Section key="hymns" n={n} title="찬양 악보">
           <div className="space-y-8">
-            {hymns.map((h, i) => <HymnItem key={i} h={h} />)}
+            {hymns.map((h, i) => <HymnItem key={i} h={h} en={en} />)}
           </div>
         </Section>
       ),
@@ -105,8 +117,8 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
       visible: !!(rp.person || rp.content),
       render: (n) => (
         <Section key="rp" n={n} title="대표기도">
-          {rp.person && <p className="font-semibold" style={{ color: textColor }}>{rp.person}</p>}
-          {rp.content && <p className="mt-1 whitespace-pre-line" style={{ color: textColor, lineHeight: 1.8 }}>{rp.content}</p>}
+          {pick(rp.person, rp.personEn) && <p className="font-semibold" style={{ color: textColor }}>{pick(rp.person, rp.personEn)}</p>}
+          {pick(rp.content, rp.contentEn) && <p className="mt-1 whitespace-pre-line" style={{ color: textColor, lineHeight: 1.8 }}>{pick(rp.content, rp.contentEn)}</p>}
         </Section>
       ),
     },
@@ -116,12 +128,16 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
       render: (n) => (
         <Section key="anns" n={n} title="교회소식">
           <div className="space-y-4">
-            {anns.map((a: any, i: number) => (
-              <div key={i} className="rounded-lg p-4" style={{ background: 'var(--dw-surface, #f7f8fa)', border: `1px solid var(--border, rgba(0,0,0,0.06))` }}>
-                {a.title && <p className="font-semibold" style={{ color: textColor }}>{a.title}</p>}
-                {a.body && <p className="mt-1 whitespace-pre-line" style={{ color: 'var(--brand-muted, #4b5563)', lineHeight: 1.7 }}>{a.body}</p>}
-              </div>
-            ))}
+            {anns.map((a: any, i: number) => {
+              const title = pick(a.title, a.titleEn);
+              const body = pick(a.body, a.bodyEn);
+              return (
+                <div key={i} className="rounded-lg p-4" style={{ background: 'var(--dw-surface, #f7f8fa)', border: `1px solid var(--border, rgba(0,0,0,0.06))` }}>
+                  {title && <p className="font-semibold" style={{ color: textColor }}>{title}</p>}
+                  {body && <p className="mt-1 whitespace-pre-line" style={{ color: 'var(--brand-muted, #4b5563)', lineHeight: 1.7 }}>{body}</p>}
+                </div>
+              );
+            })}
           </div>
         </Section>
       ),
@@ -196,7 +212,7 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
       visible: !!(closing.title || (closing.imageUrls?.length ?? 0) > 0 || (closing.lyrics || '').trim()),
       render: (n) => (
         <Section key="ch" n={n} title="마지막 찬양">
-          <HymnItem h={closing} />
+          <HymnItem h={closing} en={en} />
         </Section>
       ),
     },
@@ -218,13 +234,15 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
   const visible = items.filter((it) => it.visible);
 
   return (
-    <div className="mx-auto max-w-3xl" style={{ color: textColor }}>
-      {/* 한/영 토글 (영어 콘텐츠가 있을 때만) */}
+    <div className="ob-snap mx-auto max-w-3xl" style={{ color: textColor }}>
+      <style>{SNAP_CSS}</style>
+      {/* 한/영 토글 — 작은 알약형으로 상단 우측에 떠서 스크롤 따라다님(영어 콘텐츠가 있을 때만).
+          h-0 오버레이라 콘텐츠 레이아웃을 밀지 않음. */}
       {hasEnglish && (
-        <div className="sticky top-2 z-10 flex justify-end mb-2">
-          <div className="inline-flex rounded-full overflow-hidden shadow-sm" style={{ border: `1px solid ${primary}`, background: 'var(--dw-background, #fff)' }}>
-            <button type="button" onClick={() => setLang('ko')} style={tabStyle(!en)}>한국어</button>
-            <button type="button" onClick={() => setLang('en')} style={tabStyle(en)}>English</button>
+        <div className="sticky top-2 z-20 h-0 flex justify-end pointer-events-none">
+          <div className="inline-flex rounded-full overflow-hidden shadow-md pointer-events-auto" style={{ border: `1px solid ${primary}`, background: 'var(--dw-background, #fff)' }}>
+            <button type="button" aria-label="한국어" aria-pressed={!en} onClick={() => setLang('ko')} style={tabStyle(!en)}>한</button>
+            <button type="button" aria-label="English" aria-pressed={en} onClick={() => setLang('en')} style={tabStyle(en)}>EN</button>
           </div>
         </div>
       )}
@@ -252,15 +270,32 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
 
 function tabStyle(on: boolean): CSSProperties {
   return {
-    padding: '5px 16px',
-    fontSize: 13,
-    fontWeight: 700,
+    padding: '4px 12px',
+    fontSize: 12,
+    fontWeight: 800,
+    lineHeight: 1.4,
     cursor: 'pointer',
     border: 'none',
     background: on ? primary : 'transparent',
     color: on ? '#fff' : primary,
   };
 }
+
+// 모바일 전용 섹션 단위 스냅(한 페이지씩 업/다운). 긴 섹션(설교노트 등)이 갇히지
+// 않도록 proximity 사용. 데스크톱(≥768px)은 규칙이 없어 기존 연속 스크롤 그대로.
+const SNAP_CSS = `
+@media (max-width: 767px) {
+  .ob-snap {
+    height: 100vh; height: 100svh;
+    overflow-y: auto;
+    scroll-snap-type: y proximity;
+    scroll-padding-top: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .ob-snap > section { min-height: 100svh; scroll-snap-align: start; scroll-snap-stop: always; }
+  .ob-snap > header { scroll-snap-align: start; }
+}
+`;
 
 function Section({ n, title, eyebrow, children }: { n: number; title: string; eyebrow?: string; children: ReactNode }) {
   return (
@@ -275,8 +310,9 @@ function Section({ n, title, eyebrow, children }: { n: number; title: string; ey
   );
 }
 
-function HymnItem({ h }: { h: Hymn }) {
+function HymnItem({ h, en }: { h: Hymn; en: boolean }) {
   const imgs = h.imageUrls ?? [];
+  const lyrics = en && (h.lyricsEn || '').trim() ? h.lyricsEn : h.lyrics;
   return (
     <div>
       {(h.title || h.hymnNo) && (
@@ -292,8 +328,8 @@ function HymnItem({ h }: { h: Hymn }) {
           ))}
         </div>
       )}
-      {(h.lyrics || '').trim() && (
-        <div className="mt-3 whitespace-pre-line" style={{ color: textColor, lineHeight: 1.9 }}>{h.lyrics}</div>
+      {(lyrics || '').trim() && (
+        <div className="mt-3 whitespace-pre-line" style={{ color: textColor, lineHeight: 1.9 }}>{lyrics}</div>
       )}
       {h.note && <p className="mt-2 text-sm" style={{ color: muted }}>{h.note}</p>}
     </div>
