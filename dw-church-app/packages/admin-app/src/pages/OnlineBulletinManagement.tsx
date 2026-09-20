@@ -376,8 +376,29 @@ export default function OnlineBulletinManagement() {
             </FormRow>
           </FormSection>
 
-          {/* 8. 기도 제목 (한/영) */}
-          <FormSection title="8. 기도 제목">
+          {/* 8. 어린이 설교 카툰 (한/영) — 어린이 설교 노트 아래 */}
+          <FormSection title="8. 어린이 설교 카툰">
+            <p className="text-xs text-gray-500 -mt-1 mb-3">어린이 설교를 요약한 카툰(만화) 이미지. 한국어·영어 각각 올리면 사이트에서 한/영 토글로 전환됩니다. 영어를 안 올리면 한국어 카툰이 항상 표시됩니다.</p>
+            <FormRow>
+              <FormField label="카툰 · 한국어 (이미지)">
+                <MultiImageUpload value={c.childrenCartoon?.imageUrls ?? []} onChange={(urls) => setContent({ childrenCartoon: { ...(c.childrenCartoon ?? {}), imageUrls: urls } })} onUpload={uploadImage} resize="content" max={12} label="한국어 카툰" />
+              </FormField>
+              <FormField label="카툰 · English (images)">
+                <MultiImageUpload value={c.childrenCartoon?.imageUrlsEn ?? []} onChange={(urls) => setContent({ childrenCartoon: { ...(c.childrenCartoon ?? {}), imageUrlsEn: urls } })} onUpload={uploadImage} resize="content" max={12} label="English cartoon" />
+              </FormField>
+            </FormRow>
+            <FormRow>
+              <FormField label="설명 (선택, 한국어)">
+                <input value={c.childrenCartoon?.caption ?? ''} onChange={(e) => setContent({ childrenCartoon: { ...(c.childrenCartoon ?? {}), caption: e.target.value } })} placeholder="카툰 아래 설명" className={inputClass} />
+              </FormField>
+              <FormField label="Caption (optional, English)">
+                <input value={c.childrenCartoon?.captionEn ?? ''} onChange={(e) => setContent({ childrenCartoon: { ...(c.childrenCartoon ?? {}), captionEn: e.target.value } })} placeholder="Caption under cartoon" className={inputClass} />
+              </FormField>
+            </FormRow>
+          </FormSection>
+
+          {/* 9. 기도 제목 (한/영) */}
+          <FormSection title="9. 기도 제목">
             <div className="flex items-center justify-end -mt-1 mb-2">
               <button type="button" onClick={translatePrayers} disabled={busy === 'prayers'} className={btnAiClass}>
                 {busy === 'prayers' ? '번역 중…' : '🌐 영어 자동번역 (한글 → 영어)'}
@@ -408,13 +429,13 @@ export default function OnlineBulletinManagement() {
             </div>
           </FormSection>
 
-          {/* 9. 마지막 찬양 */}
-          <FormSection title="9. 마지막 찬양">
+          {/* 10. 마지막 찬양 */}
+          <FormSection title="10. 마지막 찬양">
             <HymnEditor hymn={c.closingHymn ?? { ...EMPTY_HYMN }} onChange={(patch) => setContent({ closingHymn: { ...(c.closingHymn ?? EMPTY_HYMN), ...patch } })} uploadImage={uploadImage} scanLyrics={scanLyrics} />
           </FormSection>
 
-          {/* 10. 소그룹 나눔 질문 (한/영) */}
-          <FormSection title="10. 소그룹 나눔 질문 (본문 연계)">
+          {/* 11. 소그룹 나눔 질문 (한/영) */}
+          <FormSection title="11. 소그룹 나눔 질문 (본문 연계)">
             <div className="flex items-center justify-between -mt-1 mb-2 gap-2">
               <p className="text-xs text-gray-500">성경 본문과 연결된 관찰·상관·적용 질문 — 소그룹에서 사용합니다.</p>
               <button type="button" onClick={translateStudy} disabled={busy === 'study'} className={`${btnAiClass} shrink-0`}>

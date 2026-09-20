@@ -13,8 +13,8 @@ interface OnlineBulletinBlockProps {
  * 컴포넌트(OnlineBulletinView)가 담당. 발행분이 없으면 null(빈 섹션 미출력).
  *
  * 스크롤 순서: 예배순서 → 찬양악보 → 대표기도 → 교회소식 → 성경본문(개역개정/ESV)
- *   → 설교노트 → 어린이 설교노트 → 기도제목 → 마지막찬양 → 소그룹 나눔 질문.
- * 성경본문·설교노트·어린이설교노트·기도제목·소그룹질문은 한/영 병기 시 토글 전환.
+ *   → 설교노트 → 어린이 설교노트 → 어린이 설교 카툰 → 기도제목 → 마지막찬양 → 소그룹 나눔 질문.
+ * 성경본문·설교노트·어린이설교노트·어린이카툰·기도제목·소그룹질문은 한/영 병기 시 토글 전환.
  */
 export async function OnlineBulletinBlock({ props, slug }: OnlineBulletinBlockProps) {
   const bulletinId = (props.bulletinId as string) || '';

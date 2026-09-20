@@ -28,6 +28,7 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
   const scripture = content.scripture ?? {};
   const sermonNote = content.sermonNote ?? {};
   const childrenSermonNote = content.childrenSermonNote ?? {};
+  const childrenCartoon = content.childrenCartoon ?? {};
   const closing: Hymn = content.closingHymn ?? {};
 
   // ── bilingual pickers ──
@@ -43,11 +44,19 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
   const snText = pick(sermonNote.text, sermonNote.textEn);
   const snChildText = pick(childrenSermonNote.text, childrenSermonNote.textEn);
 
+  // 어린이 카툰 — 영어 이미지가 있고 English 모드면 영어 카툰, 아니면 한국어 카툰(폴백).
+  const cartoonKo: string[] = Array.isArray(childrenCartoon.imageUrls) ? childrenCartoon.imageUrls : [];
+  const cartoonEn: string[] = Array.isArray(childrenCartoon.imageUrlsEn) ? childrenCartoon.imageUrlsEn : [];
+  const cartoonImgs = en && cartoonEn.length > 0 ? cartoonEn : cartoonKo;
+  const cartoonCaption = pick(childrenCartoon.caption, childrenCartoon.captionEn);
+  const hasCartoon = cartoonKo.length > 0 || cartoonEn.length > 0;
+
   const hasEnglish = !!(
     (scripture.textEn && scripture.textEn.trim()) ||
     (scripture.referenceEn && scripture.referenceEn.trim()) ||
     (sermonNote.textEn && sermonNote.textEn.trim()) ||
     (childrenSermonNote.textEn && childrenSermonNote.textEn.trim()) ||
+    cartoonEn.length > 0 ||
     prayers.some((p: any) => (p.titleEn && p.titleEn.trim()) || (p.detailEn && p.detailEn.trim())) ||
     ['observation', 'correlation', 'application'].some(
       (k) => Array.isArray(study[`${k}En`]) && study[`${k}En`].some((q: string) => (q || '').trim()),
@@ -147,7 +156,22 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
         </Section>
       ),
     },
-    // 8. 기도 제목
+    // 8. 어린이 설교 카툰 (어린이 설교 노트 아래)
+    {
+      visible: hasCartoon,
+      render: (n) => (
+        <Section key="cartoon" n={n} title="어린이 설교 카툰">
+          <div className="space-y-4">
+            {cartoonImgs.map((u, k) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={k} src={u} alt={cartoonCaption || '어린이 설교 카툰'} className="w-full rounded-xl" style={{ border: `1px solid var(--border, rgba(0,0,0,0.06))` }} loading="lazy" />
+            ))}
+          </div>
+          {cartoonCaption && <p className="mt-3 text-center text-sm" style={{ color: muted }}>{cartoonCaption}</p>}
+        </Section>
+      ),
+    },
+    // 9. 기도 제목
     {
       visible: prayers.length > 0,
       render: (n) => (

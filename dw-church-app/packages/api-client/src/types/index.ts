@@ -28,6 +28,9 @@ export interface OnlineBulletinContent {
   sermonNote?: { title?: string; text?: string; textEn?: string };
   // 어린이 설교 노트 — 성인 설교 노트와 동일 구조(마크다운). 성경 본문 아래, 성인 노트 다음.
   childrenSermonNote?: { title?: string; text?: string; textEn?: string };
+  // 어린이 설교 요약 카툰 — 어린이 설교 노트 아래. 한국어/영어 각각 이미지(패널) 업로드(R2).
+  // imageUrls=한국어 카툰, imageUrlsEn=영어 카툰. 사이트 한/영 토글로 전환(영어 없으면 한국어 폴백).
+  childrenCartoon?: { imageUrls?: string[]; imageUrlsEn?: string[]; caption?: string; captionEn?: string };
   // 기도 제목 — 항목별 한/영(영어 선택).
   prayerRequests?: { title: string; detail: string; titleEn?: string; detailEn?: string }[];
   closingHymn?: OnlineHymn;
