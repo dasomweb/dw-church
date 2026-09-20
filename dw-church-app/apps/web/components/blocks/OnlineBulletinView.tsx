@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect, useRef, type ReactNode, type CSSProperties } from 'react';
+import { useState, useEffect, type ReactNode, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 
 // 온라인 주보 스토어프론트 뷰(클라이언트) — 한/영 토글 담당.
 // 예배순서·찬양 가사·대표기도·교회소식·성경 본문(개역개정/ESV)·설교 노트·어린이 설교 노트
 // ·기도 제목·소그룹 질문이 한/영 병기 시 토글로 전환(영어 없으면 한국어 폴백).
-// 모바일·태블릿(≤1024px): 섹션을 좌우로 넘기는 가로 페이저 + 각 패널 안에서 세로 스크롤
-//   (좌우 화살표 + 현재 섹션명·번호 내비). 데스크톱: 기존 세로 스크롤.
+// 모바일·태블릿(≤1024px): 섹션을 좌우로 스와이프(순수 CSS scroll-snap, 화살표·카운터 없음)
+//   + 각 패널 안에서 세로 스크롤. 데스크톱(>1024px): 기존 세로 스크롤.
 // 찬양 악보·어린이 카툰: 이미지 한 장씩 + 작은 썸네일 버튼 전환(ImageViewer).
 // 한/영 토글은 상단 우측 고정. 서버(OnlineBulletinBlock)가 fetch 한 bulletin(plain JSON)을 받음.
 
@@ -23,10 +23,6 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
   const [mounted, setMounted] = useState(false);
   const [toggleTop, setToggleTop] = useState(64); // 사이트 헤더 아래로 토글을 내리는 실측값(px)
   const [headerH, setHeaderH] = useState(56);     // 사이트 헤더 높이(px) — 패널 상단 여백용
-  const pagerRef = useRef<HTMLDivElement>(null);
-  const [page, setPage] = useState(0);            // 현재 가로 페이지(섹션) 인덱스
-  const [pageLabel, setPageLabel] = useState(''); // 현재 페이지 섹션명(내비 표시용)
-  const [pagerActive, setPagerActive] = useState(false); // ≤1024px 가로 페이지 모드
   const en = lang === 'en';
 
   // 사이트 헤더(sticky/fixed)의 실제 높이를 재서 토글이 헤더에 가리지 않게 top 을 잡는다.
@@ -52,39 +48,6 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
     window.addEventListener('scroll', onChange, { passive: true });
     return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', onChange); window.removeEventListener('scroll', onChange); };
   }, []);
-
-  // ≤1024px(모바일·태블릿)에서만 가로 페이지(섹션 옆으로 넘기기) 모드.
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 1024px)');
-    const update = () => setPagerActive(mq.matches);
-    update();
-    mq.addEventListener('change', update);
-    return () => mq.removeEventListener('change', update);
-  }, []);
-
-  // 가로 스크롤 위치 → 현재 페이지 인덱스 + 섹션명(카운터/화살표/라벨용).
-  useEffect(() => {
-    const el = pagerRef.current;
-    if (!el || !pagerActive) return;
-    const onScroll = () => {
-      const w = el.clientWidth || 1;
-      const idx = Math.round(el.scrollLeft / w);
-      setPage(idx);
-      const child = el.children[idx] as HTMLElement | undefined;
-      const h = child?.querySelector('h1,h2');
-      setPageLabel((h?.textContent || '').trim());
-    };
-    onScroll();
-    el.addEventListener('scroll', onScroll, { passive: true });
-    return () => el.removeEventListener('scroll', onScroll);
-  }, [pagerActive]);
-
-  const goPage = (i: number) => {
-    const el = pagerRef.current;
-    if (!el) return;
-    const max = el.children.length - 1;
-    el.scrollTo({ left: Math.max(0, Math.min(i, max)) * el.clientWidth, behavior: 'smooth' });
-  };
 
   const content = (bulletin.content ?? {}) as Record<string, any>;
   const serviceDate = bulletin.serviceDate ? String(bulletin.serviceDate).slice(0, 10) : '';
@@ -295,7 +258,6 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
 
   const visible = items.filter((it) => it.visible);
 
-  const pageCount = visible.length + 1; // 헤더 패널 + 섹션들
   return (
     <div className="mx-auto max-w-3xl" style={{ color: textColor }}>
       <style>{HPAGER_CSS}</style>
@@ -312,20 +274,7 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
         document.body,
       )}
 
-      {/* 가로 페이지 내비(모바일·태블릿) — 좌우 화살표 + 현재 섹션명·번호 */}
-      {mounted && pagerActive && pageCount > 1 && createPortal(
-        <>
-          <button type="button" aria-label="이전 섹션" onClick={() => goPage(page - 1)} disabled={page <= 0} style={navBtn('left', page <= 0)}>‹</button>
-          <button type="button" aria-label="다음 섹션" onClick={() => goPage(page + 1)} disabled={page >= pageCount - 1} style={navBtn('right', page >= pageCount - 1)}>›</button>
-          <div style={{ position: 'fixed', bottom: 'calc(env(safe-area-inset-bottom, 0px) + 14px)', left: '50%', transform: 'translateX(-50%)', zIndex: 60, display: 'flex', alignItems: 'center', gap: 8, maxWidth: 'calc(100vw - 120px)', padding: '7px 16px', borderRadius: 999, background: 'var(--dw-background, #fff)', border: `1px solid ${primary}`, boxShadow: '0 4px 14px rgba(0,0,0,.12)', fontSize: 13, fontWeight: 700, color: primary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {pageLabel && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{pageLabel}</span>}
-            <span style={{ color: muted, fontWeight: 600 }}>{page + 1} / {pageCount}</span>
-          </div>
-        </>,
-        document.body,
-      )}
-
-      <div className="ob-hpager" ref={pagerRef} style={{ ['--ob-top' as string]: `${headerH}px` } as CSSProperties}>
+      <div className="ob-hpager" style={{ ['--ob-top' as string]: `${headerH}px` } as CSSProperties}>
       {/* Header */}
       <header className="text-center pb-8 mb-4 border-b" style={{ borderColor: border }}>
         {content.serviceTitle && (
@@ -346,30 +295,6 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
       </div>
     </div>
   );
-}
-
-function navBtn(side: 'left' | 'right', disabled: boolean): CSSProperties {
-  return {
-    position: 'fixed',
-    top: '50%',
-    [side]: 10,
-    transform: 'translateY(-50%)',
-    zIndex: 60,
-    width: 40,
-    height: 40,
-    display: 'grid',
-    placeItems: 'center',
-    borderRadius: 999,
-    background: 'var(--dw-background, #fff)',
-    border: `1px solid ${primary}`,
-    color: primary,
-    fontSize: 24,
-    lineHeight: 1,
-    paddingBottom: 3,
-    cursor: disabled ? 'default' : 'pointer',
-    opacity: disabled ? 0.35 : 1,
-    boxShadow: '0 4px 14px rgba(0,0,0,.12)',
-  } as CSSProperties;
 }
 
 function tabStyle(on: boolean): CSSProperties {
