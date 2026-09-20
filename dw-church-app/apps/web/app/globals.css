@@ -108,6 +108,10 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--dw-font-heading);
+  /* 한글 제목이 단어(어절) 중간에서 깨지지 않게 — "함께 예배하고 싶습니/다" 방지.
+     영어에는 무해(어절 단위 유지 + 긴 단어는 break-word 로 처리). 모바일에서 특히 중요. */
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 /*
