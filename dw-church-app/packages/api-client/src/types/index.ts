@@ -14,18 +14,29 @@ export interface Bulletin {
 // ─── Online Bulletin (온라인 주보) ───────────────────────────
 // 문서 업로드형 Bulletin 과 별개. content 에 예배순서·찬양악보·대표기도·성경본문·
 // 기도제목·마지막찬양·주일광고·소그룹질문을 담아 스크롤로 표시.
-export interface OnlineHymn { title: string; hymnNo: string; imageUrls: string[]; note: string }
+// lyrics = 악보 이미지 아래에 텍스트로 표시하는 가사(모바일에서 악보가 안 보일 때 대비). note = 소메모.
+export interface OnlineHymn { title: string; hymnNo: string; imageUrls: string[]; note: string; lyrics?: string }
 export interface OnlineBulletinContent {
   serviceTitle?: string;
   presider?: string;
   worshipOrder?: { label: string; detail: string; person: string }[];
   hymns?: OnlineHymn[];
   representativePrayer?: { person: string; content: string };
-  scripture?: { reference: string; text: string };
-  prayerRequests?: { title: string; detail: string }[];
+  // 성경 본문 — 한/영 병기(영어는 선택). referenceEn/textEn 이 있으면 사이트에서 한/영 토글.
+  scripture?: { reference: string; text: string; referenceEn?: string; textEn?: string };
+  // 설교 노트 — 문서형(마크다운: 제목/소제목/불릿/인용). text=한국어, textEn=영어(선택).
+  sermonNote?: { title?: string; text?: string; textEn?: string };
+  // 어린이 설교 노트 — 성인 설교 노트와 동일 구조(마크다운). 성경 본문 아래, 성인 노트 다음.
+  childrenSermonNote?: { title?: string; text?: string; textEn?: string };
+  // 기도 제목 — 항목별 한/영(영어 선택).
+  prayerRequests?: { title: string; detail: string; titleEn?: string; detailEn?: string }[];
   closingHymn?: OnlineHymn;
   announcements?: { title: string; body: string }[];
-  study?: { observation: string[]; correlation: string[]; application: string[] };
+  // 소그룹 나눔 질문 — 관찰/상관/적용 각각 한글 배열 + (선택) 영어 배열(같은 순서로 짝).
+  study?: {
+    observation: string[]; correlation: string[]; application: string[];
+    observationEn?: string[]; correlationEn?: string[]; applicationEn?: string[];
+  };
 }
 export interface OnlineBulletin {
   id: string;

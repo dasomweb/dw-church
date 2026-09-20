@@ -677,6 +677,31 @@ export class DWChurchClient {
   }
 
   // ─── i18n (영어 번역 보정) ───────────────────────────────
+  /** 한국어 문구 배열을 즉시 번역(공개 엔드포인트, 캐시 우선). 관리 자동번역용. 반환 {원문: 번역문}. */
+  async translate(texts: string[], lang = 'en'): Promise<Record<string, string>> {
+    const res = await this.api.post<{ data?: { translations?: Record<string, string> }; translations?: Record<string, string> }>(
+      `${this.namespace}/i18n/translate`, { texts, lang },
+    );
+    return (res?.data?.translations ?? res?.translations ?? {}) as Record<string, string>;
+  }
+
+  /** 성경 본문 가져오기 — 한국어 개역개정(ko) + 영어 ESV(en) + 영어 장절(referenceEn). */
+  async fetchScripture(reference: string): Promise<{ ko: string; en: string; referenceEn: string }> {
+    const res = await this.api.post<{ data?: { ko?: string; en?: string; referenceEn?: string }; ko?: string; en?: string; referenceEn?: string }>(
+      `${this.namespace}/i18n/scripture`, { reference },
+    );
+    const p = (res?.data ?? res ?? {}) as { ko?: string; en?: string; referenceEn?: string };
+    return { ko: String(p.ko ?? ''), en: String(p.en ?? ''), referenceEn: String(p.referenceEn ?? '') };
+  }
+
+  /** 찬양 악보 이미지에서 가사 추출(비전 OCR). imageUrls = 업로드된 R2 URL 들. */
+  async scanHymnLyrics(imageUrls: string[]): Promise<string> {
+    const res = await this.api.post<{ data?: { lyrics?: string }; lyrics?: string }>(
+      `${this.namespace}/i18n/scan-hymn`, { imageUrls },
+    );
+    return String((res?.data?.lyrics ?? res?.lyrics ?? '')) as string;
+  }
+
   async getTranslations(lang = 'en'): Promise<TranslationRow[]> {
     const res = await this.api.get<{ data: TranslationRow[] } | TranslationRow[]>(`${this.namespace}/i18n/overrides`, { lang });
     return (res as { data?: TranslationRow[] })?.data ?? (res as TranslationRow[]) ?? [];
