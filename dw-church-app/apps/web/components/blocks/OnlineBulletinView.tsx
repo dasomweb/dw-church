@@ -209,12 +209,7 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
     </div>
   ));
 
-  if (noteHas(sermonNote)) push('설교 노트', (
-    <div>
-      {sermonNote.title && <p className="mb-1 font-extrabold" style={{ color: textColor, fontSize: 18 }}>{sermonNote.title}</p>}
-      <Markdown text={snText} />
-    </div>
-  ));
+  if (noteHas(sermonNote)) push('설교 노트', <SermonNote title={sermonNote.title} text={snText} />);
 
   if (noteHas(childrenSermonNote)) push('어린이 설교 노트', (
     <div>
@@ -428,6 +423,70 @@ function QGroup({ label, items }: { label: string; items?: string[] }) {
           </li>
         ))}
       </ol>
+    </div>
+  );
+}
+
+// 설교 노트를 '## N. 제목' 포인트별 아코디언으로. 포인트가 없으면 일반 마크다운 폴백.
+function splitPoints(md: string): { intro: string; points: { num: string; title: string; body: string }[] } {
+  const lines = (md || '').replace(/\r\n/g, '\n').split('\n');
+  const points: { num: string; title: string; body: string }[] = [];
+  const introLines: string[] = [];
+  let cur: { num: string; title: string; body: string } | null = null;
+  let auto = 0;
+  for (const line of lines) {
+    const t = line.trim();
+    if (/^##\s+/.test(t)) {
+      if (cur) points.push(cur);
+      auto++;
+      let title = t.replace(/^##\s+/, '').trim();
+      let num = String(auto);
+      const m = title.match(/^(\d+)[.)]\s*(.*)$/);
+      if (m) { num = m[1]!; title = m[2]!; }
+      cur = { num, title, body: '' };
+    } else if (/^#\s+/.test(t)) {
+      continue; // 문서 제목(#)은 title 필드로 별도 표시 → 스킵
+    } else if (cur) {
+      cur.body += line + '\n';
+    } else {
+      introLines.push(line);
+    }
+  }
+  if (cur) points.push(cur);
+  return { intro: introLines.join('\n').trim(), points };
+}
+
+function SermonNote({ title, subtitle, text }: { title?: string; subtitle?: string; text?: string }) {
+  const { intro, points } = splitPoints(text || '');
+  const [open, setOpen] = useState<Record<number, boolean>>({ 0: true });
+  const sub = subtitle || intro;
+  return (
+    <div>
+      {title && <p className="font-extrabold" style={{ color: textColor, fontSize: 18 }}>{title}</p>}
+      {sub && <p className="text-sm" style={{ color: muted, marginTop: title ? 6 : 0 }}>{sub}</p>}
+      {points.length === 0 ? (
+        <div style={{ marginTop: 8 }}><Markdown text={text} /></div>
+      ) : (
+        <div className="flex flex-col gap-2.5" style={{ marginTop: 16 }}>
+          {points.map((p, i) => {
+            const isOpen = open[i] ?? false;
+            return (
+              <div key={i} style={{ border: `1px solid ${border}`, borderRadius: 14, overflow: 'hidden' }}>
+                <button type="button" onClick={() => setOpen((o) => ({ ...o, [i]: !isOpen }))} className="flex gap-2.5 w-full items-start" style={{ padding: 16, cursor: 'pointer', background: 'none', border: 'none', textAlign: 'left' }}>
+                  <span style={{ flex: 'none', color: primary, fontWeight: 800, fontSize: 13, marginTop: 2 }}>{p.num}</span>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 16, fontWeight: 700, lineHeight: 1.55, letterSpacing: '-0.02em', color: textColor }}>{p.title}</span>
+                  <span style={{ flex: 'none', color: muted, fontSize: 12, marginTop: 4 }}>{isOpen ? '▴' : '▾'}</span>
+                </button>
+                {isOpen && (
+                  <div style={{ padding: '0 16px 18px', borderTop: `1px solid ${faint}` }}>
+                    <Markdown text={p.body} />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
