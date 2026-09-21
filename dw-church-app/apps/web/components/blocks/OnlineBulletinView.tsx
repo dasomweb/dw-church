@@ -3,56 +3,48 @@
 import { useState, useEffect, useRef, type ReactNode, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 
-// 온라인 주보 스토어프론트 뷰(클라이언트) — 한/영 토글 담당.
-// 예배순서·찬양 가사·대표기도·교회소식·성경 본문(개역개정/ESV)·설교 노트·어린이 설교 노트
-// ·기도 제목·소그룹 질문이 한/영 병기 시 토글로 전환(영어 없으면 한국어 폴백).
-// 모든 화면: 섹션을 좌우로 넘기는 가로 페이저(CSS scroll-snap x) + 각 패널 세로 스크롤.
-//   모바일: 스와이프 + 좌측 상단 페이지 번호. PC·태블릿(≥768px): 좌우 화살표 버튼 + 번호.
-//   첫 페이지(헤더)는 세로 중앙 정렬. 찬양/카툰 이미지는 한 장씩 + 썸네일(ImageViewer).
-// 좌측 상단: 페이지 번호 + 한/영 토글. 우측 상단: 글자 크기(가-/가+, --ob-fs 로 본문 폰트 % 스케일).
-// 서버(OnlineBulletinBlock)가 fetch 한 bulletin(plain JSON)을 받음.
+// 온라인 주보 스토어프론트 뷰 — Claude Design "온라인 주보 개선안" 반영.
+// 세로 스크롤 + 상단 진행바/현재 섹션(목차 바텀시트 점프) + 번호 섹션 + 악보/카툰 썸네일→전체화면 뷰어
+// + 글자 크기(가-/가+) + 한/영 토글 + "다음 섹션" 버튼. 색은 테넌트 테마 토큰(--dw-*)로 구동.
 
 interface Hymn { title?: string; hymnNo?: string; imageUrls?: string[]; note?: string; lyrics?: string; lyricsEn?: string }
 
-const muted = 'var(--brand-muted, #6b7280)';
-const border = 'var(--border, rgba(0,0,0,0.08))';
+const muted = 'var(--brand-muted, #61697a)';
+const border = 'var(--border, #e5e7eb)';
+const faint = 'var(--border, #eceff3)';
 const primary = 'var(--dw-primary, #1466d6)';
 const textColor = 'var(--dw-text, #16181d)';
+const surface = 'var(--dw-surface, #f7f8fa)';
+const bg = 'var(--dw-background, #ffffff)';
+
+const html = (s?: string) => ({ dangerouslySetInnerHTML: { __html: s || '' } });
 
 export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any> }) {
   const [lang, setLang] = useState<'ko' | 'en'>('ko');
   const [mounted, setMounted] = useState(false);
-  const [toggleTop, setToggleTop] = useState(64); // 사이트 헤더 아래로 토글을 내리는 실측값(px)
-  const [headerH, setHeaderH] = useState(56);     // 사이트 헤더 높이(px) — 패널 상단 여백용
-  const pagerRef = useRef<HTMLDivElement>(null);
-  const [page, setPage] = useState(0);            // 현재 가로 페이지(섹션) 인덱스
-  const [fontScale, setFontScale] = useState(100); // 본문 글자 크기(%) — 100~160
+  const [headerH, setHeaderH] = useState(0);      // 사이트 헤더 높이
+  const [barH, setBarH] = useState(96);           // 주보 상단바 높이
+  const [active, setActive] = useState(0);        // 현재 섹션 index
+  const [fontScale, setFontScale] = useState(100);
+  const [toc, setToc] = useState(false);          // 목차 바텀시트
+  const [viewer, setViewer] = useState<{ imgs: string[]; i: number; title: string } | null>(null);
+  const barRef = useRef<HTMLDivElement>(null);
   const en = lang === 'en';
 
-  useEffect(() => {
-    try { const v = Number(localStorage.getItem('ob-fs')); if (v >= 100 && v <= 160) setFontScale(v); } catch { /* ignore */ }
-  }, []);
-  const setFs = (v: number) => {
-    const c = Math.max(100, Math.min(160, v));
-    setFontScale(c);
-    try { localStorage.setItem('ob-fs', String(c)); } catch { /* ignore */ }
-  };
-
-  // 사이트 헤더(sticky/fixed)의 실제 높이를 재서 토글이 헤더에 가리지 않게 top 을 잡는다.
-  // 헤더 변형(유틸바/센터드/라이브배너)마다 높이가 달라 하드코딩 대신 측정.
+  // 사이트 헤더 높이 실측(상단바를 그 아래에 sticky).
   useEffect(() => {
     setMounted(true);
+    try { const v = Number(localStorage.getItem('ob-fs')); if (v >= 100 && v <= 170) setFontScale(v); } catch { /* ignore */ }
     const measure = () => {
-      let bottom = 0;
+      let hb = 0;
       for (const el of Array.from(document.querySelectorAll('header')) as HTMLElement[]) {
         const pos = getComputedStyle(el).position;
         if (pos !== 'sticky' && pos !== 'fixed') continue;
         const r = el.getBoundingClientRect();
-        if (r.height > 0 && r.top <= 4) bottom = Math.max(bottom, r.bottom);
+        if (r.height > 0 && r.top <= 4) hb = Math.max(hb, r.bottom);
       }
-      const hb = Math.round(bottom || 52);
-      setHeaderH(hb);
-      setToggleTop(hb + 8);
+      setHeaderH(Math.round(hb));
+      if (barRef.current) setBarH(Math.round(barRef.current.getBoundingClientRect().height));
     };
     measure();
     let raf = 0;
@@ -62,23 +54,40 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
     return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', onChange); window.removeEventListener('scroll', onChange); };
   }, []);
 
-  // 가로 페이저 현재 인덱스 추적(상단 번호·화살표용).
-  useEffect(() => {
-    const el = pagerRef.current;
-    if (!el) return;
-    const onScroll = () => { setPage(Math.round(el.scrollLeft / (el.clientWidth || 1))); };
-    onScroll();
-    el.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-    return () => { el.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onScroll); };
-  }, []);
-  const goPage = (i: number) => {
-    const el = pagerRef.current;
-    if (!el) return;
-    const max = el.children.length - 1;
-    el.scrollTo({ left: Math.max(0, Math.min(i, max)) * el.clientWidth, behavior: 'smooth' });
+  const setFs = (v: number) => {
+    setFontScale(v);
+    try { localStorage.setItem('ob-fs', String(v)); } catch { /* ignore */ }
   };
+  const FS_LEVELS = [100, 120, 140];
+  const cycleFs = () => { const idx = FS_LEVELS.indexOf(fontScale); setFs(FS_LEVELS[(idx + 1) % FS_LEVELS.length] ?? 100); };
 
+  const jumpOffset = headerH + barH + 8;
+
+  // 현재 보이는 섹션 추적.
+  useEffect(() => {
+    const onScroll = () => {
+      const secs = Array.from(document.querySelectorAll('[data-obsec]')) as HTMLElement[];
+      let cur = 0;
+      for (const s of secs) {
+        if (s.getBoundingClientRect().top - jumpOffset <= 4) cur = Number(s.getAttribute('data-obsec'));
+      }
+      setActive(cur);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [jumpOffset]);
+
+  const jump = (i: number) => {
+    setToc(false);
+    const el = document.querySelector(`[data-obsec="${i}"]`) as HTMLElement | null;
+    if (!el) return;
+    const y = window.scrollY + el.getBoundingClientRect().top - jumpOffset;
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+  };
+  const openViewer = (imgs: string[], i: number, title: string) => setViewer({ imgs: imgs.filter(Boolean), i, title });
+
+  // ── data ──
   const content = (bulletin.content ?? {}) as Record<string, any>;
   const serviceDate = bulletin.serviceDate ? String(bulletin.serviceDate).slice(0, 10) : '';
   const worshipOrder = Array.isArray(content.worshipOrder) ? content.worshipOrder : [];
@@ -93,421 +102,295 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
   const childrenCartoon = content.childrenCartoon ?? {};
   const closing: Hymn = content.closingHymn ?? {};
 
-  // ── bilingual pickers ──
   const pick = (ko?: string, enVal?: string) => (en && (enVal || '').trim() ? enVal! : (ko || ''));
   const mergeEn = (ko?: string[], enArr?: string[]): string[] =>
-    (ko ?? []).map((k, i) => {
-      const e = enArr?.[i];
-      return en && (e || '').trim() ? (e as string) : k;
-    });
+    (ko ?? []).map((k, i) => { const e = enArr?.[i]; return en && (e || '').trim() ? (e as string) : k; });
 
   const scRef = pick(scripture.reference, scripture.referenceEn);
   const scText = pick(scripture.text, scripture.textEn);
   const snText = pick(sermonNote.text, sermonNote.textEn);
   const snChildText = pick(childrenSermonNote.text, childrenSermonNote.textEn);
-
-  // 어린이 카툰 — 영어 이미지가 있고 English 모드면 영어 카툰, 아니면 한국어 카툰(폴백).
   const cartoonKo: string[] = Array.isArray(childrenCartoon.imageUrls) ? childrenCartoon.imageUrls : [];
   const cartoonEn: string[] = Array.isArray(childrenCartoon.imageUrlsEn) ? childrenCartoon.imageUrlsEn : [];
   const cartoonImgs = en && cartoonEn.length > 0 ? cartoonEn : cartoonKo;
-  const cartoonCaption = pick(childrenCartoon.caption, childrenCartoon.captionEn);
-  const hasCartoon = cartoonKo.length > 0 || cartoonEn.length > 0;
 
-  const anyEn = (...vals: (string | undefined)[]) => vals.some((v) => (v || '').trim());
+  const anyEn = (...v: (string | undefined)[]) => v.some((x) => (x || '').trim());
   const hasEnglish = !!(
-    (scripture.textEn && scripture.textEn.trim()) ||
-    (scripture.referenceEn && scripture.referenceEn.trim()) ||
-    (sermonNote.textEn && sermonNote.textEn.trim()) ||
-    (childrenSermonNote.textEn && childrenSermonNote.textEn.trim()) ||
-    cartoonEn.length > 0 ||
+    anyEn(scripture.textEn, scripture.referenceEn, sermonNote.textEn, childrenSermonNote.textEn) || cartoonEn.length > 0 ||
     worshipOrder.some((r: any) => anyEn(r.labelEn, r.detailEn, r.personEn)) ||
-    hymns.some((h) => anyEn(h.lyricsEn)) || anyEn(closing.lyricsEn) ||
-    anyEn(rp.contentEn, rp.personEn) ||
+    hymns.some((h) => anyEn(h.lyricsEn)) || anyEn(closing.lyricsEn) || anyEn(rp.contentEn, rp.personEn) ||
     anns.some((a: any) => anyEn(a.titleEn, a.bodyEn)) ||
-    prayers.some((p: any) => (p.titleEn && p.titleEn.trim()) || (p.detailEn && p.detailEn.trim())) ||
-    ['observation', 'correlation', 'application'].some(
-      (k) => Array.isArray(study[`${k}En`]) && study[`${k}En`].some((q: string) => (q || '').trim()),
-    )
+    prayers.some((p: any) => anyEn(p.titleEn, p.detailEn)) ||
+    ['observation', 'correlation', 'application'].some((k) => Array.isArray(study[`${k}En`]) && study[`${k}En`].some((q: string) => (q || '').trim()))
   );
 
-  const hasStudy = ['observation', 'correlation', 'application'].some(
-    (k) => Array.isArray(study[k]) && study[k].some((q: string) => (q || '').trim()),
-  );
+  const hasStudy = ['observation', 'correlation', 'application'].some((k) => Array.isArray(study[k]) && study[k].some((q: string) => (q || '').trim()));
   const noteHas = (nt: any) => !!((nt.text && nt.text.trim()) || (nt.textEn && nt.textEn.trim()) || (nt.title && nt.title.trim()));
-  const hasSermon = noteHas(sermonNote);
-  const hasChildSermon = noteHas(childrenSermonNote);
 
-  // 표시될 섹션만 모아 순번(1..N)을 매긴다.
-  const items: { visible: boolean; render: (n: number) => ReactNode }[] = [
-    // 1. 예배 순서
-    {
-      visible: worshipOrder.length > 0,
-      render: (n) => (
-        <Section key="wo" n={n} title="예배 순서">
-          <div className="divide-y" style={{ borderColor: 'var(--border, rgba(0,0,0,0.06))' }}>
-            {worshipOrder.map((r: any, i: number) => {
-              const label = pick(r.label, r.labelEn);
-              const detail = pick(r.detail, r.detailEn);
-              const person = pick(r.person, r.personEn);
-              return (
-                <div key={i} className="flex gap-3 py-2.5 items-baseline">
-                  <div className="shrink-0 font-semibold text-left" style={{ color: textColor }} dangerouslySetInnerHTML={{ __html: label }} />
-                  <div className="flex-1 min-w-0 text-right" style={{ color: textColor }} dangerouslySetInnerHTML={{ __html: detail }} />
-                  {person && <div className="shrink-0 text-right" style={{ color: muted, fontSize: 'var(--fs-sm,14px)' }} dangerouslySetInnerHTML={{ __html: person }} />}
-                </div>
-              );
-            })}
-          </div>
-        </Section>
-      ),
-    },
-    // 2. 찬양 악보
-    {
-      visible: hymns.some((h) => (h.imageUrls?.length ?? 0) > 0 || h.title || (h.lyrics || '').trim()),
-      render: (n) => (
-        <Section key="hymns" n={n} title="찬양 악보">
-          <div className="space-y-8">
-            {hymns.map((h, i) => <HymnItem key={i} h={h} en={en} />)}
-          </div>
-        </Section>
-      ),
-    },
-    // 3. 대표기도
-    {
-      visible: !!(rp.person || rp.content),
-      render: (n) => (
-        <Section key="rp" n={n} title="대표기도">
-          {pick(rp.person, rp.personEn) && <p className="font-semibold" style={{ color: textColor }}>{pick(rp.person, rp.personEn)}</p>}
-          {pick(rp.content, rp.contentEn) && <p className="mt-1 whitespace-pre-line" style={{ color: textColor, lineHeight: 1.8 }}>{pick(rp.content, rp.contentEn)}</p>}
-        </Section>
-      ),
-    },
-    // 4. 교회소식 (구 주일광고 — 대표기도 다음)
-    {
-      visible: anns.length > 0,
-      render: (n) => (
-        <Section key="anns" n={n} title="교회소식">
-          <div className="space-y-4">
-            {anns.map((a: any, i: number) => {
-              const title = pick(a.title, a.titleEn);
-              const body = pick(a.body, a.bodyEn);
-              return (
-                <div key={i} className="rounded-lg p-4" style={{ background: 'var(--dw-surface, #f7f8fa)', border: `1px solid var(--border, rgba(0,0,0,0.06))` }}>
-                  {title && <p className="font-semibold" style={{ color: textColor }} dangerouslySetInnerHTML={{ __html: title }} />}
-                  {body && <p className="mt-1 whitespace-pre-line" style={{ color: 'var(--brand-muted, #4b5563)', lineHeight: 1.7 }} dangerouslySetInnerHTML={{ __html: body }} />}
-                </div>
-              );
-            })}
-          </div>
-        </Section>
-      ),
-    },
-    // 5. 성경 본문 (개역개정 / ESV)
-    {
-      visible: !!(scripture.reference || scripture.text || scripture.textEn),
-      render: (n) => (
-        <Section key="sc" n={n} title="성경 본문">
-          {scRef && <p className="mb-2 font-semibold" style={{ color: primary }}>{scRef}</p>}
-          {scText && <p className="whitespace-pre-line" style={{ color: textColor, lineHeight: 1.9 }}>{scText}</p>}
-        </Section>
-      ),
-    },
-    // 6. 설교 노트 (성경 본문 아래)
-    {
-      visible: hasSermon,
-      render: (n) => (
-        <Section key="sn" n={n} title="설교 노트">
-          {sermonNote.title && <p className="mb-3 font-extrabold" style={{ color: textColor, fontSize: 'var(--brand-h3, 22px)', fontFamily: 'var(--brand-font-heading)' }}>{sermonNote.title}</p>}
-          <Markdown text={snText} />
-        </Section>
-      ),
-    },
-    // 7. 어린이 설교 노트
-    {
-      visible: hasChildSermon,
-      render: (n) => (
-        <Section key="csn" n={n} title="어린이 설교 노트">
-          {childrenSermonNote.title && <p className="mb-3 font-extrabold" style={{ color: textColor, fontSize: 'var(--brand-h3, 22px)', fontFamily: 'var(--brand-font-heading)' }}>{childrenSermonNote.title}</p>}
-          <Markdown text={snChildText} />
-        </Section>
-      ),
-    },
-    // 8. 어린이 설교 카툰 (어린이 설교 노트 아래)
-    {
-      visible: hasCartoon,
-      render: (n) => (
-        <Section key="cartoon" n={n} title="어린이 설교 카툰">
-          <ImageViewer images={cartoonImgs} alt={cartoonCaption || '어린이 설교 카툰'} />
-          {cartoonCaption && <p className="mt-3 text-center text-sm" style={{ color: muted }}>{cartoonCaption}</p>}
-        </Section>
-      ),
-    },
-    // 9. 기도 제목
-    {
-      visible: prayers.length > 0,
-      render: (n) => (
-        <Section key="pr" n={n} title="기도 제목">
-          <ul className="space-y-2">
-            {prayers.map((p: any, i: number) => {
-              const title = pick(p.title, p.titleEn);
-              const detail = pick(p.detail, p.detailEn);
-              return (
-                <li key={i} className="flex gap-2">
-                  <span style={{ color: primary }}>•</span>
-                  <span style={{ color: textColor }} dangerouslySetInnerHTML={{ __html: `${title ? `<b>${title}</b>` : ''}${title && detail ? ' — ' : ''}${detail}` }} />
-                </li>
-              );
-            })}
-          </ul>
-        </Section>
-      ),
-    },
-    // 8. 마지막 찬양
-    {
-      visible: !!(closing.title || (closing.imageUrls?.length ?? 0) > 0 || (closing.lyrics || '').trim()),
-      render: (n) => (
-        <Section key="ch" n={n} title="마지막 찬양">
-          <HymnItem h={closing} en={en} />
-        </Section>
-      ),
-    },
-    // 9. 소그룹 나눔 질문
-    {
-      visible: hasStudy,
-      render: (n) => (
-        <Section key="study" n={n} title="소그룹 나눔 질문" eyebrow="이번 주 소그룹에서 함께 나눠요">
-          <div className="space-y-6">
-            <QuestionGroup label="관찰" items={mergeEn(study.observation, study.observationEn)} />
-            <QuestionGroup label="상관" items={mergeEn(study.correlation, study.correlationEn)} />
-            <QuestionGroup label="적용" items={mergeEn(study.application, study.applicationEn)} />
-          </div>
-        </Section>
-      ),
-    },
-  ];
+  // ── build visible sections ──
+  const items: { title: string; node: ReactNode }[] = [];
+  const push = (title: string, node: ReactNode) => items.push({ title, node });
 
-  const visible = items.filter((it) => it.visible);
-  const pageCount = visible.length + 1; // 헤더 패널 + 섹션들
+  if (worshipOrder.length > 0) push('예배 순서', (
+    <div className="ob-rows">
+      {worshipOrder.map((r: any, i: number) => (
+        <div key={i} className="flex gap-3 py-3 items-baseline" style={{ borderBottom: `1px solid ${faint}` }}>
+          <span className="shrink-0 font-semibold" style={{ color: textColor }} {...html(pick(r.label, r.labelEn))} />
+          <span className="flex-1 min-w-0 text-right" style={{ color: textColor }} {...html(pick(r.detail, r.detailEn))} />
+          {(r.person || r.personEn) && <span className="shrink-0 text-right" style={{ color: muted, fontSize: 13 }} {...html(pick(r.person, r.personEn))} />}
+        </div>
+      ))}
+    </div>
+  ));
 
-  // 헤더 중복 제거: 제목에 이미 예배명/날짜가 들어 있으면 별도 표기 생략.
+  if (hymns.some((h) => (h.imageUrls?.length ?? 0) > 0 || h.title || (h.lyrics || '').trim())) push('찬양 악보', (
+    <div className="space-y-7">{hymns.map((h, i) => <HymnItem key={i} h={h} en={en} onOpen={openViewer} />)}</div>
+  ));
+
+  if (rp.person || rp.content || rp.personEn || rp.contentEn) push('대표기도', (
+    <div>
+      {pick(rp.person, rp.personEn) && <p className="font-semibold" style={{ color: textColor, fontSize: 16 }} {...html(pick(rp.person, rp.personEn))} />}
+      {pick(rp.content, rp.contentEn) && <p className="mt-1 whitespace-pre-line" style={{ color: textColor, lineHeight: 1.8 }} {...html(pick(rp.content, rp.contentEn))} />}
+    </div>
+  ));
+
+  if (anns.length > 0) push('교회소식', (
+    <div className="flex flex-col gap-3">
+      {anns.map((a: any, i: number) => (
+        <div key={i} className="flex gap-3">
+          <span className="shrink-0 font-extrabold" style={{ color: primary, fontSize: 13, marginTop: 3 }}>{i + 1}</span>
+          <div className="min-w-0" style={{ lineHeight: 1.7 }}>
+            {pick(a.title, a.titleEn) && <span className="font-semibold" style={{ color: textColor }} {...html(pick(a.title, a.titleEn))} />}
+            {pick(a.body, a.bodyEn) && <div className="whitespace-pre-line" style={{ color: pick(a.title, a.titleEn) ? muted : textColor }} {...html(pick(a.body, a.bodyEn))} />}
+          </div>
+        </div>
+      ))}
+    </div>
+  ));
+
+  if (scRef || scText) push('성경 본문', (
+    <div>
+      {scRef && <p className="font-bold" style={{ color: primary, fontSize: 15 }}>{scRef}</p>}
+      {scText && <p className="mt-3 whitespace-pre-line" style={{ color: textColor, lineHeight: 1.9 }} {...html(scText)} />}
+    </div>
+  ));
+
+  if (noteHas(sermonNote)) push('설교 노트', (
+    <div>
+      {sermonNote.title && <p className="mb-1 font-extrabold" style={{ color: textColor, fontSize: 18 }}>{sermonNote.title}</p>}
+      <Markdown text={snText} />
+    </div>
+  ));
+
+  if (noteHas(childrenSermonNote)) push('어린이 설교 노트', (
+    <div>
+      {childrenSermonNote.title && <p className="mb-1 font-extrabold" style={{ color: textColor, fontSize: 18 }}>{childrenSermonNote.title}</p>}
+      <Markdown text={snChildText} />
+    </div>
+  ));
+
+  if (cartoonKo.length > 0 || cartoonEn.length > 0) push('어린이 설교 카툰', (
+    <ScoreGrid imgs={cartoonImgs} title="어린이 설교 카툰" onOpen={openViewer} />
+  ));
+
+  if (prayers.length > 0) push('기도 제목', (
+    <div className="flex flex-col gap-3">
+      {prayers.map((p: any, i: number) => {
+        const t = pick(p.title, p.titleEn); const d = pick(p.detail, p.detailEn);
+        return (
+          <div key={i} className="flex gap-3" style={{ lineHeight: 1.75 }}>
+            <span className="shrink-0 font-extrabold" style={{ color: primary, fontSize: 13, marginTop: 3 }}>{i + 1}</span>
+            <span className="min-w-0" style={{ color: textColor }} {...html(`${t ? `<b>${t}</b>` : ''}${t && d ? ' — ' : ''}${d}`)} />
+          </div>
+        );
+      })}
+    </div>
+  ));
+
+  if (closing.title || (closing.imageUrls?.length ?? 0) > 0 || (closing.lyrics || '').trim()) push('마지막 찬양', (
+    <HymnItem h={closing} en={en} onOpen={openViewer} />
+  ));
+
+  if (hasStudy) push('소그룹 나눔 질문', (
+    <div>
+      <p className="text-sm" style={{ color: muted }}>이번 주 소그룹에서 함께 나눠요</p>
+      <div className="mt-4 flex flex-col gap-4">
+        <QGroup label="관찰" items={mergeEn(study.observation, study.observationEn)} />
+        <QGroup label="상관" items={mergeEn(study.correlation, study.correlationEn)} />
+        <QGroup label="적용" items={mergeEn(study.application, study.applicationEn)} />
+      </div>
+    </div>
+  ));
+
   const bTitle = String(bulletin.title ?? '');
-  const showServiceTitle = !!content.serviceTitle && !bTitle.includes(content.serviceTitle);
-  const [dy, dm, dd] = serviceDate ? serviceDate.split('-') : [];
-  const titleHasDate = !!dy && !!dm && !!dd && bTitle.includes(dy) && bTitle.includes(String(Number(dm))) && bTitle.includes(String(Number(dd)));
-  const showDate = !!serviceDate && !titleHasDate;
+  const CSS = `
+    .ob-wrap :where(h1,h2,h3,h4,h5,h6){ word-break:keep-all; overflow-wrap:break-word; }
+    .ob-progress::-webkit-scrollbar{ display:none; }
+  `;
 
   return (
-    <div className="mx-auto max-w-3xl" style={{ color: textColor }}>
-      <style>{HPAGER_CSS}</style>
+    <div className="ob-wrap" style={{ color: textColor, background: bg }}>
+      <style>{CSS}</style>
 
-      {/* 좌측 상단: 페이지 번호 + 한/영 토글 (portal) */}
-      {mounted && createPortal(
-        <div style={{ position: 'fixed', top: toggleTop, left: 12, zIndex: 60, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
-          {pageCount > 1 && (
-            <div style={{ padding: '5px 12px', borderRadius: 999, background: 'var(--dw-background, #fff)', border: `1px solid ${primary}`, color: primary, fontSize: 13, fontWeight: 800, boxShadow: '0 4px 14px rgba(0,0,0,.10)', fontVariantNumeric: 'tabular-nums' }}>
-              {page + 1} / {pageCount}
-            </div>
-          )}
-          {hasEnglish && (
-            <div className="inline-flex rounded-full overflow-hidden shadow-md" style={{ border: `1px solid ${primary}`, background: 'var(--dw-background, #fff)' }}>
-              <button type="button" aria-label="한국어" aria-pressed={!en} onClick={() => setLang('ko')} style={tabStyle(!en)}>한</button>
-              <button type="button" aria-label="English" aria-pressed={en} onClick={() => setLang('en')} style={tabStyle(en)}>EN</button>
-            </div>
-          )}
-        </div>,
-        document.body,
-      )}
-
-      {/* 우측 상단: 글자 크기 확대/축소 (portal) */}
-      {mounted && createPortal(
-        <div style={{ position: 'fixed', top: toggleTop, right: 12, zIndex: 60 }}>
-          <div className="inline-flex rounded-full overflow-hidden shadow-md" style={{ border: `1px solid ${primary}`, background: 'var(--dw-background, #fff)' }}>
-            <button type="button" aria-label="글자 작게" onClick={() => setFs(fontScale - 15)} disabled={fontScale <= 100} style={fsBtnStyle(fontScale <= 100)}>가－</button>
-            <button type="button" aria-label="글자 크게" onClick={() => setFs(fontScale + 15)} disabled={fontScale >= 160} style={fsBtnStyle(fontScale >= 160)}>가＋</button>
-          </div>
-        </div>,
-        document.body,
-      )}
-
-      {/* 좌우 넘김 화살표 — PC·태블릿만(모바일은 CSS로 숨김, 스와이프 사용) */}
-      {mounted && pageCount > 1 && createPortal(
-        <>
-          <button type="button" aria-label="이전 섹션" className="ob-arrow" onClick={() => goPage(page - 1)} disabled={page <= 0} style={navBtn('left', page <= 0)}>‹</button>
-          <button type="button" aria-label="다음 섹션" className="ob-arrow" onClick={() => goPage(page + 1)} disabled={page >= pageCount - 1} style={navBtn('right', page >= pageCount - 1)}>›</button>
-        </>,
-        document.body,
-      )}
-
-      <div className="ob-hpager" ref={pagerRef} style={{ ['--ob-top' as string]: `${headerH}px`, ['--ob-fs' as string]: `${fontScale}%` } as CSSProperties}>
-      {/* Header (첫 페이지: 세로 중앙 정렬) */}
-      <header className="text-center pb-8 border-b" style={{ borderColor: border }}>
-        {showServiceTitle && (
-          <div style={{ color: primary, fontWeight: 800, letterSpacing: '0.05em', fontSize: 'var(--fs-sm, 14px)' }}>
-            {content.serviceTitle}
-          </div>
-        )}
-        <h1 style={{ fontSize: 'var(--brand-h2, 30px)', fontWeight: 800, fontFamily: 'var(--brand-font-heading)', marginTop: showServiceTitle ? 8 : 0 }}>
-          {bTitle}
-        </h1>
-        {(showDate || content.presider) && (
-          <div className="mt-2 flex items-center justify-center gap-3" style={{ color: muted, fontSize: 'var(--fs-sm, 14px)' }}>
-            {showDate && <span>{serviceDate}</span>}
-            {content.presider && <span>{showDate ? '· ' : ''}인도 {content.presider}</span>}
-          </div>
-        )}
-      </header>
-
-      {visible.map((it, i) => it.render(i + 1))}
-      </div>
-    </div>
-  );
-}
-
-function navBtn(side: 'left' | 'right', disabled: boolean): CSSProperties {
-  return {
-    position: 'fixed', top: '50%', [side]: 12, transform: 'translateY(-50%)', zIndex: 60,
-    width: 44, height: 44, display: 'grid', placeItems: 'center', borderRadius: 999,
-    background: 'var(--dw-background, #fff)', border: `1px solid ${primary}`, color: primary,
-    fontSize: 26, lineHeight: 1, paddingBottom: 3,
-    cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.35 : 1,
-    boxShadow: '0 4px 14px rgba(0,0,0,.12)',
-  } as CSSProperties;
-}
-
-function fsBtnStyle(disabled: boolean): CSSProperties {
-  return {
-    padding: '5px 12px', minWidth: 40, fontSize: 14, fontWeight: 800, lineHeight: 1.2,
-    cursor: disabled ? 'default' : 'pointer', border: 'none', background: 'transparent',
-    color: primary, opacity: disabled ? 0.35 : 1,
-  };
-}
-
-function tabStyle(on: boolean): CSSProperties {
-  return {
-    padding: '7px 15px',
-    minWidth: 42,
-    fontSize: 13,
-    fontWeight: 800,
-    lineHeight: 1.3,
-    cursor: 'pointer',
-    border: 'none',
-    background: on ? primary : 'transparent',
-    color: on ? '#fff' : primary,
-  };
-}
-
-// 모바일·태블릿(≤1024px): 섹션을 "옆으로" 넘기는 가로 페이저 + 각 패널 안에서 세로 스크롤.
-//   패널 상단 여백(--ob-top = 사이트 헤더 높이)으로 섹션 제목이 헤더에 가리지 않게 한다.
-//   데스크톱(>1024px): 규칙 없음 = 기존 세로 연속 스크롤.
-const HPAGER_CSS = `
-.ob-hpager {
-  display: flex;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scroll-snap-type: x mandatory;
-  height: 100svh;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-.ob-hpager::-webkit-scrollbar { display: none; }
-.ob-hpager > * {
-  flex: 0 0 100%;
-  width: 100%;
-  height: 100svh;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
-  -webkit-overflow-scrolling: touch;
-  box-sizing: border-box;
-  padding-left: 16px;
-  padding-right: 16px;
-  padding-top: calc(var(--ob-top, 56px) + 12px);
-  padding-bottom: 40px;
-  font-size: var(--ob-fs, 100%);
-}
-/* 첫 페이지(헤더 패널)는 세로 가운데 정렬 */
-.ob-hpager > header {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-/* 모바일은 스와이프로 넘김 → 화살표 숨김. PC·태블릿(≥768px)만 표시 */
-@media (max-width: 767px) { .ob-arrow { display: none !important; } }
-`;
-
-function Section({ n, title, eyebrow, children }: { n: number; title: string; eyebrow?: string; children: ReactNode }) {
-  return (
-    <section className="py-8 border-b last:border-0" style={{ borderColor: 'var(--border, rgba(0,0,0,0.06))' }}>
-      <div className="mb-4 flex items-center gap-2.5">
-        <span className="grid place-items-center rounded-full text-white text-sm font-bold shrink-0" style={{ width: 26, height: 26, background: primary }}>{n}</span>
-        <h2 style={{ fontSize: 'var(--brand-h3, 22px)', fontWeight: 800, fontFamily: 'var(--brand-font-heading)', color: textColor }}>{title}</h2>
-      </div>
-      {eyebrow && <p className="-mt-2 mb-4 text-sm" style={{ color: muted }}>{eyebrow}</p>}
-      {children}
-    </section>
-  );
-}
-
-// 한 화면에 이미지 한 장 + 작은 썸네일 버튼으로 전환(찬양 악보·어린이 카툰용).
-function ImageViewer({ images, alt }: { images: string[]; alt: string }) {
-  const list = (images ?? []).filter(Boolean);
-  const [idx, setIdx] = useState(0);
-  if (list.length === 0) return null;
-  const active = Math.min(idx, list.length - 1);
-  return (
-    <div>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={list[active]} alt={alt} className="w-full rounded-xl" style={{ border: `1px solid var(--border, rgba(0,0,0,0.06))` }} loading="lazy" />
-      {list.length > 1 && (
-        <div className="mt-3 flex flex-wrap gap-2 justify-center">
-          {list.map((u, k) => {
-            const on = k === active;
-            return (
-              <button key={k} type="button" onClick={() => setIdx(k)} aria-label={`${alt} ${k + 1}`} aria-current={on}
-                style={{ width: 52, height: 52, borderRadius: 10, overflow: 'hidden', padding: 0, cursor: 'pointer', background: 'none', border: on ? `2px solid ${primary}` : `1px solid ${border}`, boxShadow: on ? '0 2px 8px rgba(0,0,0,.12)' : 'none', flex: '0 0 auto' }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={u} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} loading="lazy" />
+      {/* 상단바: 현재 섹션 + 컨트롤 + 진행바 */}
+      {items.length > 0 && (
+        <div ref={barRef} style={{ position: 'sticky', top: headerH, zIndex: 20, background: bg, borderBottom: `1px solid ${faint}` }}>
+          <div className="flex items-center gap-2" style={{ padding: '10px 14px 8px' }}>
+            <button type="button" onClick={() => setToc(true)} className="flex items-center gap-2 min-w-0" style={{ flex: 1, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}>
+              <span style={{ flex: 'none', width: 22, height: 22, borderRadius: 6, background: primary, color: '#fff', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{String(active + 1).padStart(2, '0')}</span>
+              <span className="truncate font-bold" style={{ color: textColor, fontSize: 15, letterSpacing: '-0.02em' }}>{items[active]?.title ?? ''}</span>
+              <span style={{ flex: 'none', fontSize: 11, color: muted }}>▾</span>
+            </button>
+            <div className="flex items-center gap-1.5" style={{ flex: 'none' }}>
+              <button type="button" aria-label="글자 크기" onClick={cycleFs} style={ctrlBtn}>
+                <span style={{ fontSize: 14, fontWeight: 800 }}>가</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: muted }}>{fontScale}%</span>
               </button>
-            );
-          })}
+              {hasEnglish && (
+                <button type="button" aria-label="한국어/English 전환" aria-pressed={en} onClick={() => setLang(en ? 'ko' : 'en')} style={ctrlBtn}>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: en ? muted : primary }}>한</span>
+                  <span style={{ fontSize: 11, color: '#c4cbd6' }}>/</span>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: en ? primary : muted }}>EN</span>
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="ob-progress flex items-center gap-1" style={{ padding: '0 14px 9px' }}>
+            {items.map((it, i) => (
+              <button key={i} type="button" aria-label={it.title} onClick={() => jump(i)} style={{ flex: 1, height: 3, borderRadius: 999, border: 'none', padding: 0, cursor: 'pointer', background: i === active ? primary : (i < active ? 'color-mix(in srgb, var(--dw-primary,#1466d6) 40%, #ffffff)' : border) }} />
+            ))}
+          </div>
         </div>
+      )}
+
+      {/* 본문 */}
+      <div style={{ maxWidth: 760, margin: '0 auto', padding: '0 22px', fontSize: `${fontScale}%` }}>
+        <div style={{ padding: '22px 0 26px' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', color: primary }}>
+            {serviceDate && <span>{serviceDate.replace(/-/g, '.')}</span>} {content.serviceTitle || '주일예배'}
+          </div>
+          <h1 style={{ margin: '10px 0 0', fontSize: 'var(--brand-h2, 28px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.3, fontFamily: 'var(--brand-font-heading)' }}>{bTitle}</h1>
+          {(sermonNote.title || content.presider) && (
+            <div style={{ marginTop: 10, fontSize: 14, color: muted }}>
+              {scRef && <span>{scRef}</span>}{scRef && content.presider ? ' · ' : ''}{content.presider && <span>{content.presider}</span>}
+            </div>
+          )}
+        </div>
+
+        {items.map((it, i) => (
+          <section key={i} data-obsec={i} style={{ paddingBottom: 36, scrollMarginTop: jumpOffset }}>
+            <div className="flex items-center gap-2.5" style={{ paddingBottom: 12, borderBottom: `1px solid ${textColor}` }}>
+              <span style={{ fontSize: 12, fontWeight: 800, color: primary }}>{String(i + 1).padStart(2, '0')}</span>
+              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, letterSpacing: '-0.03em', color: textColor, fontFamily: 'var(--brand-font-heading)' }}>{it.title}</h2>
+            </div>
+            <div style={{ marginTop: 14 }}>{it.node}</div>
+          </section>
+        ))}
+
+        <div style={{ padding: '24px 0 60px', borderTop: `1px solid ${faint}`, color: muted, fontSize: 12 }}>© {new Date().getFullYear()} {content.churchName || ''} 온라인 주보</div>
+      </div>
+
+      {/* 다음 섹션 버튼 */}
+      {mounted && items.length > 1 && active < items.length - 1 && createPortal(
+        <button type="button" onClick={() => jump(active + 1)} style={{ position: 'fixed', right: 16, bottom: 'calc(env(safe-area-inset-bottom,0px) + 20px)', zIndex: 30, display: 'flex', alignItems: 'center', gap: 8, padding: '11px 16px', borderRadius: 999, background: textColor, color: '#fff', border: 'none', boxShadow: '0 8px 24px rgba(16,24,40,0.28)', cursor: 'pointer', maxWidth: 'calc(100vw - 32px)' }}>
+          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', opacity: 0.75 }}>다음</span>
+          <span className="truncate" style={{ fontSize: 14, fontWeight: 700 }}>{items[active + 1]?.title}</span>
+          <span style={{ fontSize: 13 }}>→</span>
+        </button>,
+        document.body,
+      )}
+
+      {/* 목차 바텀시트 */}
+      {mounted && toc && createPortal(
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50 }}>
+          <div onClick={() => setToc(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(11,18,32,0.4)' }} />
+          <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, background: bg, borderRadius: '20px 20px 0 0', padding: '10px 12px calc(env(safe-area-inset-bottom,0px) + 22px)', maxHeight: '78vh', overflowY: 'auto' }}>
+            <div style={{ width: 38, height: 4, borderRadius: 999, background: border, margin: '6px auto 12px' }} />
+            <div style={{ padding: '0 10px 10px', fontSize: 13, fontWeight: 800, letterSpacing: '0.06em', color: muted }}>목차</div>
+            {items.map((it, i) => (
+              <button key={i} type="button" onClick={() => jump(i)} className="flex items-center gap-3 w-full" style={{ padding: '13px 12px', borderRadius: 12, cursor: 'pointer', border: 'none', textAlign: 'left', background: i === active ? surface : 'transparent' }}>
+                <span style={{ flex: 'none', width: 22, fontSize: 12, fontWeight: 800, color: i === active ? primary : muted }}>{String(i + 1).padStart(2, '0')}</span>
+                <span style={{ flex: 1, fontSize: 16, fontWeight: i === active ? 700 : 500, letterSpacing: '-0.02em', color: textColor }}>{it.title}</span>
+              </button>
+            ))}
+          </div>
+        </div>,
+        document.body,
+      )}
+
+      {/* 이미지 전체화면 뷰어 */}
+      {mounted && viewer && createPortal(
+        <div style={{ position: 'fixed', inset: 0, zIndex: 60, background: '#0b1220', display: 'flex', flexDirection: 'column' }}>
+          <div className="flex items-center justify-between" style={{ padding: 'calc(env(safe-area-inset-top,0px) + 14px) 18px 12px', color: '#eaf1fb' }}>
+            <span style={{ fontSize: 14, fontWeight: 600 }}>{viewer.title}</span>
+            <button type="button" onClick={() => setViewer(null)} style={{ fontSize: 14, fontWeight: 700, cursor: 'pointer', padding: '6px 10px', background: 'none', border: 'none', color: '#eaf1fb' }}>닫기</button>
+          </div>
+          <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 12px' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={viewer.imgs[viewer.i]} alt="악보 전체화면" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: 6, background: '#fff' }} />
+          </div>
+          <div className="flex items-center justify-between gap-3" style={{ padding: '16px 18px calc(env(safe-area-inset-bottom,0px) + 24px)' }}>
+            <button type="button" onClick={() => setViewer({ ...viewer, i: (viewer.i - 1 + viewer.imgs.length) % viewer.imgs.length })} disabled={viewer.imgs.length < 2} style={viewerNav()}>‹</button>
+            <span style={{ fontSize: 13, color: '#9db0cc' }}>{viewer.i + 1} / {viewer.imgs.length}</span>
+            <button type="button" onClick={() => setViewer({ ...viewer, i: (viewer.i + 1) % viewer.imgs.length })} disabled={viewer.imgs.length < 2} style={viewerNav()}>›</button>
+          </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
 }
 
-function HymnItem({ h, en }: { h: Hymn; en: boolean }) {
-  const imgs = h.imageUrls ?? [];
+const ctrlBtn: CSSProperties = {
+  height: 30, padding: '0 10px', border: `1px solid ${border}`, borderRadius: 9, background: bg,
+  display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', color: textColor,
+};
+function viewerNav(): CSSProperties {
+  return { width: 52, height: 44, borderRadius: 12, border: '1px solid #25344f', background: 'transparent', color: '#eaf1fb', fontSize: 18, cursor: 'pointer' };
+}
+
+function ScoreGrid({ imgs, title, onOpen }: { imgs: string[]; title: string; onOpen: (imgs: string[], i: number, title: string) => void }) {
+  const list = (imgs ?? []).filter(Boolean);
+  if (list.length === 0) return null;
+  return (
+    <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+      {list.map((u, k) => (
+        <button key={k} type="button" onClick={() => onOpen(list, k, title)} style={{ aspectRatio: '3 / 4', border: `1px solid ${border}`, borderRadius: 10, overflow: 'hidden', background: surface, padding: 0, cursor: 'pointer' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={u} alt={`${title} ${k + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} loading="lazy" />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function HymnItem({ h, en, onOpen }: { h: Hymn; en: boolean; onOpen: (imgs: string[], i: number, title: string) => void }) {
+  const imgs = (h.imageUrls ?? []).filter(Boolean);
   const lyrics = en && (h.lyricsEn || '').trim() ? h.lyricsEn : h.lyrics;
+  const title = [h.hymnNo, h.title].filter(Boolean).join(' ');
   return (
     <div>
-      {(h.title || h.hymnNo) && (
-        <div className="mb-2 font-semibold" style={{ color: textColor }}>
-          {h.hymnNo && <span style={{ color: primary }}>{h.hymnNo} </span>}{h.title}
-        </div>
-      )}
-      {imgs.length > 0 && <ImageViewer images={imgs} alt={h.title || '악보'} />}
+      {(h.title || h.hymnNo) && <div className="mb-3 font-bold" style={{ color: textColor, fontSize: 17, letterSpacing: '-0.02em' }}>{title}</div>}
+      {imgs.length > 0 && <ScoreGrid imgs={imgs} title={h.title || '악보'} onOpen={onOpen} />}
       {(lyrics || '').trim() && (
-        <div className="mt-3 whitespace-pre-line" style={{ color: textColor, lineHeight: 1.9 }} dangerouslySetInnerHTML={{ __html: lyrics || '' }} />
+        <div className="mt-3 whitespace-pre-line" style={{ padding: 16, borderRadius: 14, background: surface, border: `1px solid ${faint}`, color: textColor, lineHeight: 1.8 }} {...html(lyrics || '')} />
       )}
-      {h.note && <p className="mt-2 text-sm" style={{ color: muted }} dangerouslySetInnerHTML={{ __html: h.note }} />}
+      {h.note && <p className="mt-2 text-sm" style={{ color: muted }} {...html(h.note)} />}
     </div>
   );
 }
 
-function QuestionGroup({ label, items }: { label: string; items?: string[] }) {
+function QGroup({ label, items }: { label: string; items?: string[] }) {
   const list = (items ?? []).filter((q) => (q || '').trim());
   if (list.length === 0) return null;
   return (
     <div>
-      <p className="mb-2 inline-block rounded-full px-3 py-0.5 text-xs font-bold" style={{ background: 'var(--dw-surface, #f7f8fa)', color: primary }}>{label}</p>
-      <ol className="space-y-2">
+      <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', color: primary }}>{label}</div>
+      <ol className="mt-2 flex flex-col gap-2">
         {list.map((q, i) => (
-          <li key={i} className="flex gap-2" style={{ color: textColor, lineHeight: 1.7 }}>
-            <span className="shrink-0" style={{ color: 'var(--brand-muted, #9ca3af)' }}>{i + 1}.</span>
-            <span className="whitespace-pre-line" dangerouslySetInnerHTML={{ __html: q }} />
+          <li key={i} className="flex gap-2" style={{ color: textColor, lineHeight: 1.75 }}>
+            <span className="shrink-0" style={{ color: muted }}>{i + 1}.</span>
+            <span className="min-w-0" {...html(q)} />
           </li>
         ))}
       </ol>
@@ -515,76 +398,47 @@ function QuestionGroup({ label, items }: { label: string; items?: string[] }) {
   );
 }
 
-/* ── mini markdown (설교 노트 서식: # 제목, ## 소제목, **강조**, - 불릿, > 인용) ── */
+/* ── mini markdown (설교 노트: # 제목, ## 소제목, **강조**, - 불릿, 1. 번호, --- 구분선, > 인용) ── */
 function InlineMd({ text }: { text: string }) {
   const parts = (text ?? '').split(/(\*\*[^*]+\*\*)/g);
-  return (
-    <>
-      {parts.map((p, i) =>
-        p.startsWith('**') && p.endsWith('**') ? <strong key={i}>{p.slice(2, -2)}</strong> : <span key={i}>{p}</span>,
-      )}
-    </>
-  );
+  return <>{parts.map((p, i) => (p.startsWith('**') && p.endsWith('**') ? <strong key={i}>{p.slice(2, -2)}</strong> : <span key={i}>{p}</span>))}</>;
 }
-
 function Markdown({ text }: { text?: string }) {
   const lines = (text ?? '').replace(/\r\n/g, '\n').split('\n');
   const out: ReactNode[] = [];
-  let i = 0;
-  let key = 0;
+  let i = 0; let key = 0;
   const HR = /^(-{3,}|\*{3,}|_{3,})$/;
   const OL = /^\d+\.\s+/;
   const at = (j: number) => lines[j] ?? '';
-  const isSpecial = (t: string) =>
-    t.startsWith('#') || t.startsWith('> ') || t.startsWith('- ') || t.startsWith('* ') || HR.test(t) || OL.test(t);
+  const special = (t: string) => t.startsWith('#') || t.startsWith('> ') || t.startsWith('- ') || t.startsWith('* ') || HR.test(t) || OL.test(t);
   while (i < lines.length) {
     const t = at(i).trim();
     if (!t) { i++; continue; }
-    if (HR.test(t)) { out.push(<hr key={key++} style={{ border: 'none', borderTop: `1px solid ${border}`, margin: '22px 0' }} />); i++; continue; }
-    if (t.startsWith('# ')) { out.push(<h3 key={key++} style={{ fontSize: 'var(--brand-h3, 22px)', fontWeight: 800, fontFamily: 'var(--brand-font-heading)', color: textColor, margin: '18px 0 10px' }}><InlineMd text={t.slice(2)} /></h3>); i++; continue; }
+    if (HR.test(t)) { out.push(<hr key={key++} style={{ border: 'none', borderTop: `1px solid ${faint}`, margin: '22px 0' }} />); i++; continue; }
+    if (t.startsWith('# ')) { out.push(<h3 key={key++} style={{ fontSize: 'var(--brand-h3, 22px)', fontWeight: 800, color: textColor, margin: '18px 0 10px', fontFamily: 'var(--brand-font-heading)' }}><InlineMd text={t.slice(2)} /></h3>); i++; continue; }
     if (t.startsWith('## ')) { out.push(<h4 key={key++} style={{ fontSize: '19px', fontWeight: 800, color: textColor, margin: '20px 0 8px' }}><InlineMd text={t.slice(3)} /></h4>); i++; continue; }
-    if (t.startsWith('### ')) { out.push(<h5 key={key++} style={{ fontSize: '16px', fontWeight: 700, color: primary, margin: '16px 0 6px' }}><InlineMd text={t.slice(4)} /></h5>); i++; continue; }
+    if (t.startsWith('### ')) { out.push(<h5 key={key++} style={{ fontSize: '15px', fontWeight: 800, letterSpacing: '0.02em', color: primary, margin: '16px 0 6px' }}><InlineMd text={t.slice(4)} /></h5>); i++; continue; }
     if (t.startsWith('> ')) {
       const q: string[] = [];
       while (i < lines.length && at(i).trim().startsWith('> ')) { q.push(at(i).trim().slice(2)); i++; }
-      out.push(
-        <blockquote key={key++} style={{ borderLeft: `3px solid ${primary}`, paddingLeft: 14, margin: '10px 0', color: 'var(--brand-muted, #4b5563)', lineHeight: 1.8 }}>
-          {q.map((l, k) => <div key={k}><InlineMd text={l} /></div>)}
-        </blockquote>,
-      );
+      out.push(<blockquote key={key++} style={{ borderLeft: `2px solid ${primary}`, paddingLeft: 14, margin: '10px 0', color: muted, lineHeight: 1.8 }}>{q.map((l, k) => <div key={k}><InlineMd text={l} /></div>)}</blockquote>);
       continue;
     }
     if (t.startsWith('- ') || t.startsWith('* ')) {
       const li: string[] = [];
       while (i < lines.length && (at(i).trim().startsWith('- ') || at(i).trim().startsWith('* '))) { li.push(at(i).trim().slice(2)); i++; }
-      out.push(
-        <ul key={key++} className="list-disc pl-5 space-y-1" style={{ margin: '8px 0', color: textColor, lineHeight: 1.8 }}>
-          {li.map((l, k) => <li key={k}><InlineMd text={l} /></li>)}
-        </ul>,
-      );
+      out.push(<ul key={key++} className="list-disc pl-5 space-y-1" style={{ margin: '8px 0', color: textColor, lineHeight: 1.8 }}>{li.map((l, k) => <li key={k}><InlineMd text={l} /></li>)}</ul>);
       continue;
     }
     if (OL.test(t)) {
       const li: string[] = [];
       while (i < lines.length && OL.test(at(i).trim())) { li.push(at(i).trim().replace(OL, '')); i++; }
-      out.push(
-        <ol key={key++} className="list-decimal pl-5 space-y-1" style={{ margin: '8px 0', color: textColor, lineHeight: 1.8 }}>
-          {li.map((l, k) => <li key={k}><InlineMd text={l} /></li>)}
-        </ol>,
-      );
+      out.push(<ol key={key++} className="list-decimal pl-5 space-y-1" style={{ margin: '8px 0', color: textColor, lineHeight: 1.8 }}>{li.map((l, k) => <li key={k}><InlineMd text={l} /></li>)}</ol>);
       continue;
     }
     const para: string[] = [];
-    while (i < lines.length) {
-      const lt = at(i).trim();
-      if (!lt || isSpecial(lt)) break;
-      para.push(lt); i++;
-    }
-    out.push(
-      <p key={key++} style={{ margin: '8px 0', color: textColor, lineHeight: 1.85 }}>
-        {para.map((l, k) => <span key={k}>{k > 0 && <br />}<InlineMd text={l} /></span>)}
-      </p>,
-    );
+    while (i < lines.length) { const lt = at(i).trim(); if (!lt || special(lt)) break; para.push(lt); i++; }
+    out.push(<p key={key++} style={{ margin: '8px 0', color: textColor, lineHeight: 1.85 }}>{para.map((l, k) => <span key={k}>{k > 0 && <br />}<InlineMd text={l} /></span>)}</p>);
   }
   return <>{out}</>;
 }
