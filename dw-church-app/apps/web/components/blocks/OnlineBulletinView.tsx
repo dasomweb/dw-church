@@ -189,11 +189,14 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
     </div>
   ));
 
-  if (noteHas(sermonNote) || noteHas(childrenSermonNote) || cartoonKo.length > 0 || cartoonEn.length > 0) push('설교 노트', (
+  const studyObs = mergeEn(study.observation, study.observationEn);
+  const studyCor = mergeEn(study.correlation, study.correlationEn);
+  const studyApp = mergeEn(study.application, study.applicationEn);
+  if (noteHas(sermonNote) || noteHas(childrenSermonNote) || cartoonKo.length > 0 || cartoonEn.length > 0 || hasStudy) push('설교 노트', (
     <SermonSection
       adultTitle={sermonNote.title} adultText={snText}
       childTitle={childrenSermonNote.title} childText={snChildText}
-      cartoonImgs={cartoonImgs} onOpen={openViewer}
+      cartoonImgs={cartoonImgs} obs={studyObs} cor={studyCor} app={studyApp} onOpen={openViewer}
     />
   ));
 
@@ -215,49 +218,63 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
     <HymnItem h={closing} en={en} onOpen={openViewer} />
   ));
 
-  if (hasStudy) push('소그룹 나눔 질문', (
-    <div>
-      <p className="text-sm" style={{ color: muted }}>이번 주 소그룹에서 함께 나눠요</p>
-      <div className="mt-4 flex flex-col gap-4">
-        <QGroup label="관찰" items={mergeEn(study.observation, study.observationEn)} />
-        <QGroup label="상관" items={mergeEn(study.correlation, study.correlationEn)} />
-        <QGroup label="적용" items={mergeEn(study.application, study.applicationEn)} />
-      </div>
-    </div>
-  ));
-
   const bTitle = String(bulletin.title ?? '');
+  const desc = [bTitle, scRef, content.presider].filter(Boolean).join(' · ');
   const CSS = `
     .ob-wrap :where(h1,h2,h3,h4,h5,h6){ word-break:keep-all; overflow-wrap:break-word; }
-    .ob-progress::-webkit-scrollbar{ display:none; }
+    .ob-progress::-webkit-scrollbar, .ob-side::-webkit-scrollbar{ display:none; }
+    .ob-pc-header{ display:none; }
+    .ob-side{ display:none; }
+    @media (min-width:1024px){
+      .ob-mbar{ display:none !important; }
+      .ob-pc-header{ display:flex; }
+      .ob-body{ display:flex; align-items:flex-start; gap:0; }
+      .ob-side{ display:block; }
+      .ob-next{ display:none !important; }
+    }
   `;
+  const controls = (
+    <div className="flex items-center gap-1.5" style={{ flex: 'none' }}>
+      <button type="button" aria-label="글자 크기" onClick={cycleFs} style={ctrlBtn}>
+        <span style={{ fontSize: 14, fontWeight: 800 }}>가</span>
+        <span style={{ fontSize: 10, fontWeight: 700, color: muted }}>{fontScale}%</span>
+      </button>
+      {hasEnglish && (
+        <button type="button" aria-label="한국어/English 전환" aria-pressed={en} onClick={() => setLang(en ? 'ko' : 'en')} style={ctrlBtn}>
+          <span style={{ fontSize: 12, fontWeight: 800, color: en ? muted : primary }}>한</span>
+          <span style={{ fontSize: 11, color: '#c4cbd6' }}>/</span>
+          <span style={{ fontSize: 12, fontWeight: 800, color: en ? primary : muted }}>EN</span>
+        </button>
+      )}
+    </div>
+  );
 
   return (
     <div className="ob-wrap" style={{ color: textColor, background: bg }}>
       <style>{CSS}</style>
 
-      {/* 상단바: 현재 섹션 + 컨트롤 + 진행바 */}
+      {/* PC·태블릿 헤더 (≥1024) */}
       {items.length > 0 && (
-        <div style={{ position: 'sticky', top: headerH, zIndex: 20, background: bg, borderBottom: `1px solid ${faint}` }}>
+        <div className="ob-pc-header" style={{ position: 'sticky', top: headerH, zIndex: 20, background: bg, borderBottom: `1px solid ${faint}`, alignItems: 'center', gap: 18, padding: '14px 24px' }}>
+          {content.churchName && <div style={{ flex: 'none', fontSize: 17, fontWeight: 800, letterSpacing: '-0.03em', color: textColor }}>{content.churchName}</div>}
+          <div className="min-w-0" style={{ flex: 1, display: 'flex', alignItems: 'baseline', gap: 10 }}>
+            <span style={{ flex: 'none', fontSize: 13, fontWeight: 700, color: primary }}>{serviceDate && serviceDate.replace(/-/g, '.')} {content.serviceTitle || '주일예배'}</span>
+            <span className="truncate" style={{ fontSize: 13, color: muted }}>{desc}</span>
+          </div>
+          {controls}
+        </div>
+      )}
+
+      {/* 모바일 상단바 (<1024): 현재 섹션 + 컨트롤 + 진행바 */}
+      {items.length > 0 && (
+        <div className="ob-mbar" style={{ position: 'sticky', top: headerH, zIndex: 20, background: bg, borderBottom: `1px solid ${faint}` }}>
           <div className="flex items-center gap-2" style={{ padding: '10px 14px 8px' }}>
             <button type="button" onClick={() => setToc(true)} className="flex items-center gap-2 min-w-0" style={{ flex: 1, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}>
               <span style={{ flex: 'none', width: 22, height: 22, borderRadius: 6, background: primary, color: '#fff', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{String(active + 1).padStart(2, '0')}</span>
               <span className="truncate font-bold" style={{ color: textColor, fontSize: 15, letterSpacing: '-0.02em' }}>{items[active]?.title ?? ''}</span>
               <span style={{ flex: 'none', fontSize: 11, color: muted }}>▾</span>
             </button>
-            <div className="flex items-center gap-1.5" style={{ flex: 'none' }}>
-              <button type="button" aria-label="글자 크기" onClick={cycleFs} style={ctrlBtn}>
-                <span style={{ fontSize: 14, fontWeight: 800 }}>가</span>
-                <span style={{ fontSize: 10, fontWeight: 700, color: muted }}>{fontScale}%</span>
-              </button>
-              {hasEnglish && (
-                <button type="button" aria-label="한국어/English 전환" aria-pressed={en} onClick={() => setLang(en ? 'ko' : 'en')} style={ctrlBtn}>
-                  <span style={{ fontSize: 12, fontWeight: 800, color: en ? muted : primary }}>한</span>
-                  <span style={{ fontSize: 11, color: '#c4cbd6' }}>/</span>
-                  <span style={{ fontSize: 12, fontWeight: 800, color: en ? primary : muted }}>EN</span>
-                </button>
-              )}
-            </div>
+            {controls}
           </div>
           <div className="ob-progress flex items-center gap-1" style={{ padding: '0 14px 9px' }}>
             {items.map((it, i) => (
@@ -267,36 +284,52 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
         </div>
       )}
 
-      {/* 본문 */}
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: '0 22px', fontSize: `${fontScale}%` }}>
-        <div style={{ padding: '22px 0 26px' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', color: primary }}>
-            {serviceDate && <span>{serviceDate.replace(/-/g, '.')}</span>} {content.serviceTitle || '주일예배'}
-          </div>
-          <h1 style={{ margin: '10px 0 0', fontSize: 'var(--brand-h2, 28px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.3, fontFamily: 'var(--brand-font-heading)' }}>{bTitle}</h1>
-          {(sermonNote.title || content.presider) && (
-            <div style={{ marginTop: 10, fontSize: 14, color: muted }}>
-              {scRef && <span>{scRef}</span>}{scRef && content.presider ? ' · ' : ''}{content.presider && <span>{content.presider}</span>}
+      {/* 본문: 데스크톱은 좌측 목차 사이드바 + 우측 콘텐츠, 모바일은 콘텐츠만 */}
+      <div className="ob-body" style={{ maxWidth: 1200, margin: '0 auto' }}>
+        {items.length > 0 && (
+          <aside className="ob-side" style={{ flex: 'none', width: 248, alignSelf: 'flex-start', position: 'sticky', top: headerH + 58, maxHeight: `calc(100vh - ${headerH + 74}px)`, overflowY: 'auto', borderRight: `1px solid ${faint}`, padding: '18px 12px', background: surface }}>
+            <div style={{ padding: '0 10px 10px', fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', color: muted }}>목차</div>
+            {items.map((it, i) => (
+              <button key={i} type="button" onClick={() => jump(i)} className="flex items-center gap-2.5 w-full" style={{ padding: '11px 12px', borderRadius: 10, cursor: 'pointer', border: 'none', textAlign: 'left', background: i === active ? bg : 'transparent' }}>
+                <span style={{ flex: 'none', width: 20, fontSize: 11, fontWeight: 800, color: i === active ? primary : muted }}>{String(i + 1).padStart(2, '0')}</span>
+                <span style={{ flex: 1, fontSize: 14, fontWeight: i === active ? 700 : 500, letterSpacing: '-0.02em', color: textColor }}>{it.title}</span>
+              </button>
+            ))}
+          </aside>
+        )}
+
+        <div className="ob-content" style={{ flex: 1, minWidth: 0, maxWidth: 820, margin: '0 auto', padding: '0 22px', fontSize: `${fontScale}%` }}>
+          {active === 0 && (
+            <div style={{ padding: '22px 0 26px' }}>
+              <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', color: primary }}>
+                {serviceDate && <span>{serviceDate.replace(/-/g, '.')}</span>} {content.serviceTitle || '주일예배'}
+              </div>
+              <h1 style={{ margin: '10px 0 0', fontSize: 'var(--brand-h2, 28px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.3, fontFamily: 'var(--brand-font-heading)' }}>{bTitle}</h1>
+              {(scRef || content.presider) && (
+                <div style={{ marginTop: 10, fontSize: 14, color: muted }}>
+                  {scRef && <span>{scRef}</span>}{scRef && content.presider ? ' · ' : ''}{content.presider && <span>{content.presider}</span>}
+                </div>
+              )}
             </div>
           )}
+
+          {items.map((it, i) => (
+            <section key={i} data-obsec={i} style={{ display: i === active ? 'block' : 'none', paddingTop: active === 0 ? 0 : 22, paddingBottom: 36 }}>
+              <div className="flex items-center gap-2.5" style={{ paddingBottom: 12, borderBottom: `1px solid ${textColor}` }}>
+                <span style={{ fontSize: 12, fontWeight: 800, color: primary }}>{String(i + 1).padStart(2, '0')}</span>
+                <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, letterSpacing: '-0.03em', color: textColor, fontFamily: 'var(--brand-font-heading)' }}>{it.title}</h2>
+              </div>
+              <div style={{ marginTop: 14 }}>{it.node}</div>
+            </section>
+          ))}
+
+          <div style={{ padding: '24px 0 60px', borderTop: `1px solid ${faint}`, color: muted, fontSize: 12 }}>© {new Date().getFullYear()} {content.churchName || ''} 온라인 주보</div>
         </div>
-
-        {items.map((it, i) => (
-          <section key={i} data-obsec={i} style={{ display: i === active ? 'block' : 'none', paddingBottom: 36 }}>
-            <div className="flex items-center gap-2.5" style={{ paddingBottom: 12, borderBottom: `1px solid ${textColor}` }}>
-              <span style={{ fontSize: 12, fontWeight: 800, color: primary }}>{String(i + 1).padStart(2, '0')}</span>
-              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, letterSpacing: '-0.03em', color: textColor, fontFamily: 'var(--brand-font-heading)' }}>{it.title}</h2>
-            </div>
-            <div style={{ marginTop: 14 }}>{it.node}</div>
-          </section>
-        ))}
-
-        <div style={{ padding: '24px 0 60px', borderTop: `1px solid ${faint}`, color: muted, fontSize: 12 }}>© {new Date().getFullYear()} {content.churchName || ''} 온라인 주보</div>
       </div>
 
       {/* 다음 섹션 버튼 */}
       {mounted && items.length > 1 && active < items.length - 1 && createPortal(
-        <button type="button" onClick={() => jump(active + 1)} style={{ position: 'fixed', right: 16, bottom: 'calc(env(safe-area-inset-bottom,0px) + 20px)', zIndex: 30, display: 'flex', alignItems: 'center', gap: 8, padding: '11px 16px', borderRadius: 999, background: textColor, color: '#fff', border: 'none', boxShadow: '0 8px 24px rgba(16,24,40,0.28)', cursor: 'pointer', maxWidth: 'calc(100vw - 32px)' }}>
+        <button type="button" className="ob-next" onClick={() => jump(active + 1)} style={{ position: 'fixed', right: 16, bottom: 'calc(env(safe-area-inset-bottom,0px) + 20px)', zIndex: 30, display: 'flex', alignItems: 'center', gap: 8, padding: '11px 16px', borderRadius: 999, background: textColor, color: '#fff', border: 'none', boxShadow: '0 8px 24px rgba(16,24,40,0.28)', cursor: 'pointer', maxWidth: 'calc(100vw - 32px)' }}>
           <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', opacity: 0.75 }}>다음</span>
           <span className="truncate" style={{ fontSize: 14, fontWeight: 700 }}>{items[active + 1]?.title}</span>
           <span style={{ fontSize: 13 }}>→</span>
@@ -492,10 +525,12 @@ function SermonNote({ title, subtitle, text }: { title?: string; subtitle?: stri
 }
 
 // 설교 노트 회중 탭. 청장년=성인노트, Children=취학후(어린이 설교노트), Kids=취학전(설교 카툰), EM/Youth=미등록.
-function SermonSection({ adultTitle, adultText, childTitle, childText, cartoonImgs, onOpen }: {
-  adultTitle?: string; adultText?: string; childTitle?: string; childText?: string; cartoonImgs: string[]; onOpen: (imgs: string[], i: number, title: string) => void;
+function SermonSection({ adultTitle, adultText, childTitle, childText, cartoonImgs, obs, cor, app, onOpen }: {
+  adultTitle?: string; adultText?: string; childTitle?: string; childText?: string; cartoonImgs: string[]; obs: string[]; cor: string[]; app: string[]; onOpen: (imgs: string[], i: number, title: string) => void;
 }) {
-  const hasMain = !!((adultText || '').trim() || (adultTitle || '').trim());
+  const hasMainNote = !!((adultText || '').trim() || (adultTitle || '').trim());
+  const hasStudy = [obs, cor, app].some((a) => (a || []).some((q) => (q || '').trim()));
+  const hasMain = hasMainNote || hasStudy;
   const hasChildren = !!((childText || '').trim() || (childTitle || '').trim());
   const hasKids = cartoonImgs.length > 0;
   const TABS: [string, string][] = [['main', '청장년'], ['em', 'EM'], ['youth', 'Youth'], ['children', 'Children'], ['kids', 'Kids']];
@@ -509,7 +544,21 @@ function SermonSection({ adultTitle, adultText, childTitle, childText, cartoonIm
           return <button key={k} type="button" onClick={() => setTab(k)} style={{ flex: 'none', padding: '8px 14px', borderRadius: 999, border: `1px solid ${on ? primary : border}`, background: on ? primary : bg, color: on ? '#fff' : textColor, fontSize: 13, fontWeight: on ? 800 : 600, letterSpacing: '-0.01em', cursor: 'pointer' }}>{name}</button>;
         })}
       </div>
-      {tab === 'main' && (hasMain ? <SermonNote title={adultTitle} text={adultText} /> : <SermonEmpty label="청장년" />)}
+      {tab === 'main' && (hasMain ? (
+        <div>
+          {hasMainNote && <SermonNote title={adultTitle} text={adultText} />}
+          {hasStudy && (
+            <div style={{ marginTop: hasMainNote ? 18 : 0, padding: 18, borderRadius: 14, background: surface, border: `1px solid ${faint}` }}>
+              <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', color: muted }}>나눔 질문</div>
+              <div className="mt-4 flex flex-col gap-4">
+                <QGroup label="관찰" items={obs} />
+                <QGroup label="상관" items={cor} />
+                <QGroup label="적용" items={app} />
+              </div>
+            </div>
+          )}
+        </div>
+      ) : <SermonEmpty label="청장년" />)}
       {tab === 'children' && (hasChildren ? <SermonNote title={childTitle} text={childText} /> : <SermonEmpty label="Children (취학후)" />)}
       {tab === 'kids' && (hasKids ? (
         <div>
