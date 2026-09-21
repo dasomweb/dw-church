@@ -266,15 +266,17 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
     <div className="ob-wrap" style={{ color: textColor, background: bg }}>
       <style>{CSS}</style>
 
-      {/* PC·태블릿 헤더 (≥1024) */}
+      {/* PC·태블릿 헤더 (≥1024) — 내부 콘텐츠를 본문과 같은 1200px 컬럼에 정렬(풀폭 금지) */}
       {items.length > 0 && (
-        <div className="ob-pc-header" style={{ position: 'sticky', top: headerH, zIndex: 20, background: bg, borderBottom: `1px solid ${faint}`, alignItems: 'center', gap: 18, padding: '14px 24px' }}>
-          {content.churchName && <div style={{ flex: 'none', fontSize: 17, fontWeight: 800, letterSpacing: '-0.03em', color: textColor }}>{content.churchName}</div>}
-          <div className="min-w-0" style={{ flex: 1, display: 'flex', alignItems: 'baseline', gap: 10 }}>
-            <span style={{ flex: 'none', fontSize: 13, fontWeight: 700, color: primary }}>{serviceDate && serviceDate.replace(/-/g, '.')} {content.serviceTitle || '주일예배'}</span>
-            <span className="truncate" style={{ fontSize: 13, color: muted }}>{desc}</span>
+        <div className="ob-pc-header" style={{ position: 'sticky', top: headerH, zIndex: 20, background: bg, borderBottom: `1px solid ${faint}` }}>
+          <div style={{ flex: 1, width: '100%', maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 18, padding: '14px 24px' }}>
+            {content.churchName && <div style={{ flex: 'none', fontSize: 17, fontWeight: 800, letterSpacing: '-0.03em', color: textColor }}>{content.churchName}</div>}
+            <div className="min-w-0" style={{ flex: 1, display: 'flex', alignItems: 'baseline', gap: 10 }}>
+              <span style={{ flex: 'none', fontSize: 13, fontWeight: 700, color: primary }}>{serviceDate && serviceDate.replace(/-/g, '.')} {content.serviceTitle || '주일예배'}</span>
+              <span className="truncate" style={{ fontSize: 13, color: muted }}>{desc}</span>
+            </div>
+            {controls}
           </div>
-          {controls}
         </div>
       )}
 
@@ -473,25 +475,22 @@ function QGroup({ label, items }: { label: string; items?: string[] }) {
   );
 }
 
-// 설교 노트를 '## N. 제목' 포인트별 아코디언으로. 포인트가 없으면 일반 마크다운 폴백.
+// 설교 노트를 '번호 붙은 제목(# 1. / ## 1.)' 포인트별 아코디언으로. 성인=## N., 어린이=# N. 모두 지원.
+// 포인트 앞의 (문서제목 # 제외) 내용은 intro 로 상단에 마크다운 렌더. 포인트가 없으면 전체 마크다운 폴백.
 function splitPoints(md: string): { intro: string; points: { num: string; title: string; body: string }[] } {
   const lines = (md || '').replace(/\r\n/g, '\n').split('\n');
   const points: { num: string; title: string; body: string }[] = [];
   const introLines: string[] = [];
   let cur: { num: string; title: string; body: string } | null = null;
-  let auto = 0;
+  const num = (t: string) => t.match(/^#{1,3}\s+(\d+)[.)]\s*(.*)$/);
   for (const line of lines) {
     const t = line.trim();
-    if (/^##\s+/.test(t)) {
+    const m = num(t);
+    if (m) {
       if (cur) points.push(cur);
-      auto++;
-      let title = t.replace(/^##\s+/, '').trim();
-      let num = String(auto);
-      const m = title.match(/^(\d+)[.)]\s*(.*)$/);
-      if (m) { num = m[1]!; title = m[2]!; }
-      cur = { num, title, body: '' };
-    } else if (/^#\s+/.test(t)) {
-      continue; // 문서 제목(#)은 title 필드로 별도 표시 → 스킵
+      cur = { num: m[1]!, title: (m[2] || '').trim() || m[1]!, body: '' };
+    } else if (/^#\s+/.test(t) && !cur) {
+      continue; // 문서 제목(#)은 title 필드로 별도 표시 → 스킵(첫 포인트 전)
     } else if (cur) {
       cur.body += line + '\n';
     } else {
@@ -502,20 +501,32 @@ function splitPoints(md: string): { intro: string; points: { num: string; title:
   return { intro: introLines.join('\n').trim(), points };
 }
 
-function SermonNote({ title, subtitle, text }: { title?: string; subtitle?: string; text?: string }) {
+function SermonNote({ title, text, pointImages, onOpen }: {
+  title?: string; text?: string;
+  pointImages?: string[]; // 포인트별 카툰 컷(어린이 설교) — points[i] ↔ pointImages[i]
+  onOpen?: (imgs: string[], i: number, title: string) => void;
+}) {
   const { intro, points } = splitPoints(text || '');
   const [open, setOpen] = useState<Record<number, boolean>>({ 0: true });
-  const sub = subtitle || intro;
+  const imgs = (pointImages ?? []).filter(Boolean);
+  if (points.length === 0) {
+    return (
+      <div>
+        {title && <p className="font-extrabold" style={{ color: textColor, fontSize: 18, marginBottom: 8 }}>{title}</p>}
+        <Markdown text={text} />
+        {imgs.length > 0 && onOpen && <div style={{ marginTop: 14 }}><ScoreGrid imgs={imgs} title={title || '설교 카툰'} onOpen={onOpen} /></div>}
+      </div>
+    );
+  }
+  const extra = imgs.slice(points.length);
   return (
     <div>
       {title && <p className="font-extrabold" style={{ color: textColor, fontSize: 18 }}>{title}</p>}
-      {sub && <p className="text-sm" style={{ color: muted, marginTop: title ? 6 : 0 }}>{sub}</p>}
-      {points.length === 0 ? (
-        <div style={{ marginTop: 8 }}><Markdown text={text} /></div>
-      ) : (
-        <div className="flex flex-col gap-2.5" style={{ marginTop: 16 }}>
+      {intro && <div style={{ marginTop: title ? 6 : 0 }}><Markdown text={intro} /></div>}
+      <div className="flex flex-col gap-2.5" style={{ marginTop: 16 }}>
           {points.map((p, i) => {
             const isOpen = open[i] ?? false;
+            const cut = imgs[i]; // 이 포인트에 짝지어진 카툰 컷
             return (
               <div key={i} style={{ border: `1px solid ${border}`, borderRadius: 14, overflow: 'hidden' }}>
                 <button type="button" onClick={() => setOpen((o) => ({ ...o, [i]: !isOpen }))} className="flex gap-2.5 w-full items-start" style={{ padding: 16, cursor: 'pointer', background: 'none', border: 'none', textAlign: 'left' }}>
@@ -524,13 +535,24 @@ function SermonNote({ title, subtitle, text }: { title?: string; subtitle?: stri
                   <span style={{ flex: 'none', color: muted, fontSize: 12, marginTop: 4 }}>{isOpen ? '▴' : '▾'}</span>
                 </button>
                 {isOpen && (
-                  <div style={{ padding: '0 16px 18px', borderTop: `1px solid ${faint}` }}>
+                  <div style={{ padding: '14px 16px 18px', borderTop: `1px solid ${faint}` }}>
+                    {cut && onOpen && (
+                      <button type="button" onClick={() => onOpen(imgs, i, title || '설교 카툰')} style={{ display: 'block', width: '100%', maxWidth: 460, margin: '0 auto 14px', padding: 0, border: `1px solid ${border}`, borderRadius: 12, overflow: 'hidden', background: surface, cursor: 'pointer' }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={cut} alt={`${p.title} 카툰`} style={{ display: 'block', width: '100%', height: 'auto' }} loading="lazy" />
+                      </button>
+                    )}
                     <Markdown text={p.body} />
                   </div>
                 )}
               </div>
             );
           })}
+        </div>
+      {extra.length > 0 && onOpen && (
+        <div style={{ marginTop: 14 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', color: muted, marginBottom: 10 }}>설교 카툰</div>
+          <ScoreGrid imgs={extra} title={title || '설교 카툰'} onOpen={onOpen} />
         </div>
       )}
     </div>
@@ -573,15 +595,15 @@ function SermonSection({ adultTitle, adultText, childTitle, childText, cartoonIm
         </div>
       ) : <SermonEmpty label="청장년" />)}
       {tab === 'children' && (hasChildren ? (
-        <div>
-          {hasChildNote && <SermonNote title={childTitle} text={childText} />}
-          {cartoonImgs.length > 0 && (
-            <div style={{ marginTop: hasChildNote ? 16 : 0 }}>
+        hasChildNote
+          // 어린이 설교 노트 각 포인트에 카툰 컷을 1:1로 짝지어 표시(포인트=설교 · 카툰 1컷, 총 N개)
+          ? <SermonNote title={childTitle} text={childText} pointImages={cartoonImgs} onOpen={onOpen} />
+          : (
+            <div>
               <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', color: muted, marginBottom: 10 }}>설교 카툰</div>
               <ScoreGrid imgs={cartoonImgs} title="어린이 설교 카툰" onOpen={onOpen} />
             </div>
-          )}
-        </div>
+          )
       ) : <SermonEmpty label="Children (취학후)" />)}
       {tab === 'kids' && <SermonEmpty label="Kids (취학전)" />}
       {(tab === 'em' || tab === 'youth') && <SermonEmpty label={tab === 'em' ? 'EM' : 'Youth'} />}
