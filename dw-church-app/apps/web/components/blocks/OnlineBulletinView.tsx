@@ -475,30 +475,41 @@ function QGroup({ label, items }: { label: string; items?: string[] }) {
   );
 }
 
-// 설교 노트를 '번호 붙은 제목(# 1. / ## 1.)' 포인트별 아코디언으로. 성인=## N., 어린이=# N. 모두 지원.
-// 포인트 앞의 (문서제목 # 제외) 내용은 intro 로 상단에 마크다운 렌더. 포인트가 없으면 전체 마크다운 폴백.
-function splitPoints(md: string): { intro: string; points: { num: string; title: string; body: string }[] } {
+// 설교 노트를 '번호 붙은 제목' 포인트별 아코디언으로. 성인=## N., 어린이=# N. 모두 지원.
+// - point 레벨 = 문서 안 번호 제목 중 "가장 얕은(#이 적은)" 레벨 하나만 포인트로 분할
+//   (어린이 노트의 요약 '### 1.' 같은 더 깊은 번호 제목은 포인트가 아니라 본문/아웃트로로 취급)
+// - 포인트 앞 내용 → intro(상단 렌더), 포인트 뒤 얕은 제목부터 끝까지 → outro(하단 렌더)
+function splitPoints(md: string): { intro: string; points: { num: string; title: string; body: string }[]; outro: string } {
   const lines = (md || '').replace(/\r\n/g, '\n').split('\n');
+  const heading = (t: string) => { const m = /^(#{1,6})\s+(.*)$/.exec(t); return m ? { level: m[1]!.length, rest: m[2]!.trim() } : null; };
+  const numbered = (rest: string) => { const m = /^(\d+)[.)]\s*(.*)$/.exec(rest); return m ? { num: m[1]!, title: (m[2] || '').trim() } : null; };
+
+  let pointLevel = Infinity;
+  for (const line of lines) { const h = heading(line.trim()); if (h && numbered(h.rest)) pointLevel = Math.min(pointLevel, h.level); }
+  if (!isFinite(pointLevel)) return { intro: (md || '').trim(), points: [], outro: '' };
+
+  const introLines: string[] = []; const outroLines: string[] = [];
   const points: { num: string; title: string; body: string }[] = [];
-  const introLines: string[] = [];
   let cur: { num: string; title: string; body: string } | null = null;
-  const num = (t: string) => t.match(/^#{1,3}\s+(\d+)[.)]\s*(.*)$/);
+  let phase: 'intro' | 'points' | 'outro' = 'intro';
   for (const line of lines) {
     const t = line.trim();
-    const m = num(t);
-    if (m) {
-      if (cur) points.push(cur);
-      cur = { num: m[1]!, title: (m[2] || '').trim() || m[1]!, body: '' };
-    } else if (/^#\s+/.test(t) && !cur) {
-      continue; // 문서 제목(#)은 title 필드로 별도 표시 → 스킵(첫 포인트 전)
-    } else if (cur) {
-      cur.body += line + '\n';
-    } else {
-      introLines.push(line);
+    const h = heading(t);
+    if (h) {
+      const nm = numbered(h.rest);
+      if (nm && h.level === pointLevel) { if (cur) points.push(cur); cur = { num: nm.num, title: nm.title || nm.num, body: '' }; phase = 'points'; continue; }
+      if (!nm && h.level <= pointLevel) {
+        if (phase === 'intro') { if (h.level === 1) continue; /* 문서 제목류 스킵 */ introLines.push(line); continue; }
+        phase = 'outro'; outroLines.push(line); continue; // 포인트 뒤 얕은 비번호 제목 → 아웃트로 시작
+      }
+      // 더 깊은 제목 / 포인트레벨 아닌 번호 제목 → 현재 phase 본문으로 흘림
     }
+    if (phase === 'intro') introLines.push(line);
+    else if (phase === 'points' && cur) cur.body += line + '\n';
+    else outroLines.push(line);
   }
   if (cur) points.push(cur);
-  return { intro: introLines.join('\n').trim(), points };
+  return { intro: introLines.join('\n').trim(), points, outro: outroLines.join('\n').trim() };
 }
 
 function SermonNote({ title, text, pointImages, onOpen }: {
@@ -506,7 +517,7 @@ function SermonNote({ title, text, pointImages, onOpen }: {
   pointImages?: string[]; // 포인트별 카툰 컷(어린이 설교) — points[i] ↔ pointImages[i]
   onOpen?: (imgs: string[], i: number, title: string) => void;
 }) {
-  const { intro, points } = splitPoints(text || '');
+  const { intro, points, outro } = splitPoints(text || '');
   const [open, setOpen] = useState<Record<number, boolean>>({ 0: true });
   const imgs = (pointImages ?? []).filter(Boolean);
   if (points.length === 0) {
@@ -549,6 +560,7 @@ function SermonNote({ title, text, pointImages, onOpen }: {
             );
           })}
         </div>
+      {outro && <div style={{ marginTop: 20 }}><Markdown text={outro} /></div>}
       {extra.length > 0 && onOpen && (
         <div style={{ marginTop: 14 }}>
           <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', color: muted, marginBottom: 10 }}>설교 카툰</div>
