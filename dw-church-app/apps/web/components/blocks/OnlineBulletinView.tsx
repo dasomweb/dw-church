@@ -486,15 +486,16 @@ function SermonNote({ title, subtitle, text }: { title?: string; subtitle?: stri
   );
 }
 
-// 설교 노트 회중 탭(청장년/EM/Youth/Children/Kids). 청장년=성인노트, Kids=어린이노트+카툰, 나머지=미등록.
+// 설교 노트 회중 탭. 청장년=성인노트, Children=취학후(어린이 설교노트), Kids=취학전(설교 카툰), EM/Youth=미등록.
 function SermonSection({ adultTitle, adultText, childTitle, childText, cartoonImgs, onOpen }: {
   adultTitle?: string; adultText?: string; childTitle?: string; childText?: string; cartoonImgs: string[]; onOpen: (imgs: string[], i: number, title: string) => void;
 }) {
   const hasMain = !!((adultText || '').trim() || (adultTitle || '').trim());
-  const hasKids = !!((childText || '').trim() || (childTitle || '').trim() || cartoonImgs.length > 0);
+  const hasChildren = !!((childText || '').trim() || (childTitle || '').trim());
+  const hasKids = cartoonImgs.length > 0;
   const TABS: [string, string][] = [['main', '청장년'], ['em', 'EM'], ['youth', 'Youth'], ['children', 'Children'], ['kids', 'Kids']];
-  const [tab, setTab] = useState(hasMain ? 'main' : (hasKids ? 'kids' : 'main'));
-  const label = TABS.find((t) => t[0] === tab)?.[1] || '';
+  const first = hasMain ? 'main' : hasChildren ? 'children' : hasKids ? 'kids' : 'main';
+  const [tab, setTab] = useState(first);
   return (
     <div>
       <div className="flex gap-1.5" style={{ overflowX: 'auto', marginBottom: 16, paddingBottom: 2 }}>
@@ -504,18 +505,14 @@ function SermonSection({ adultTitle, adultText, childTitle, childText, cartoonIm
         })}
       </div>
       {tab === 'main' && (hasMain ? <SermonNote title={adultTitle} text={adultText} /> : <SermonEmpty label="청장년" />)}
+      {tab === 'children' && (hasChildren ? <SermonNote title={childTitle} text={childText} /> : <SermonEmpty label="Children (취학후)" />)}
       {tab === 'kids' && (hasKids ? (
         <div>
-          {(childText || childTitle) && <SermonNote title={childTitle} text={childText} />}
-          {cartoonImgs.length > 0 && (
-            <div style={{ marginTop: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', color: muted, marginBottom: 10 }}>설교 카툰</div>
-              <ScoreGrid imgs={cartoonImgs} title="어린이 설교 카툰" onOpen={onOpen} />
-            </div>
-          )}
+          <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', color: muted, marginBottom: 10 }}>설교 카툰</div>
+          <ScoreGrid imgs={cartoonImgs} title="어린이 설교 카툰" onOpen={onOpen} />
         </div>
-      ) : <SermonEmpty label="Kids" />)}
-      {(tab === 'em' || tab === 'youth' || tab === 'children') && <SermonEmpty label={label} />}
+      ) : <SermonEmpty label="Kids (취학전)" />)}
+      {(tab === 'em' || tab === 'youth') && <SermonEmpty label={tab === 'em' ? 'EM' : 'Youth'} />}
     </div>
   );
 }
