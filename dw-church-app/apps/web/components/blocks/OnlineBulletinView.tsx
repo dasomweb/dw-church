@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef, type ReactNode, type CSSProperties } from 'react';
+import { useState, useEffect, type ReactNode, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 
-// 온라인 주보 스토어프론트 뷰 — Claude Design "온라인 주보 개선안" 반영.
-// 세로 스크롤 + 상단 진행바/현재 섹션(목차 바텀시트 점프) + 번호 섹션 + 악보/카툰 썸네일→전체화면 뷰어
-// + 글자 크기(가-/가+) + 한/영 토글 + "다음 섹션" 버튼. 색은 테넌트 테마 토큰(--dw-*)로 구동.
+// 온라인 주보 스토어프론트 뷰 — Claude Design "온라인 주보 개선안 v2" 반영.
+// 한 번에 한 섹션만 표시(나머지 숨김) — 상단 현재섹션(목차 바텀시트)·진행바·"다음 섹션" 버튼으로 전환.
+// 설교 노트 회중 탭 + 아코디언. 찬양/마지막찬양은 곡별 [악보|가사] 세그먼트 토글 카드.
+// 글자크기 순환 + 한/영 토글 + 이미지 전체화면 뷰어. 색은 테넌트 테마 토큰(--dw-*)로 구동.
 
 interface Hymn { title?: string; hymnNo?: string; imageUrls?: string[]; note?: string; lyrics?: string; lyricsEn?: string }
 
@@ -22,13 +23,11 @@ const html = (s?: string) => ({ dangerouslySetInnerHTML: { __html: s || '' } });
 export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any> }) {
   const [lang, setLang] = useState<'ko' | 'en'>('ko');
   const [mounted, setMounted] = useState(false);
-  const [headerH, setHeaderH] = useState(0);      // 사이트 헤더 높이
-  const [barH, setBarH] = useState(96);           // 주보 상단바 높이
+  const [headerH, setHeaderH] = useState(0);      // 사이트 헤더 높이(상단바 sticky 오프셋)
   const [active, setActive] = useState(0);        // 현재 섹션 index
   const [fontScale, setFontScale] = useState(100);
   const [toc, setToc] = useState(false);          // 목차 바텀시트
   const [viewer, setViewer] = useState<{ imgs: string[]; i: number; title: string } | null>(null);
-  const barRef = useRef<HTMLDivElement>(null);
   const en = lang === 'en';
 
   // 사이트 헤더 높이 실측(상단바를 그 아래에 sticky).
@@ -44,7 +43,6 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
         if (r.height > 0 && r.top <= 4) hb = Math.max(hb, r.bottom);
       }
       setHeaderH(Math.round(hb));
-      if (barRef.current) setBarH(Math.round(barRef.current.getBoundingClientRect().height));
     };
     measure();
     let raf = 0;
@@ -61,29 +59,16 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
   const FS_LEVELS = [100, 120, 140];
   const cycleFs = () => { const idx = FS_LEVELS.indexOf(fontScale); setFs(FS_LEVELS[(idx + 1) % FS_LEVELS.length] ?? 100); };
 
-  const jumpOffset = headerH + barH + 8;
-
-  // 현재 보이는 섹션 추적.
-  useEffect(() => {
-    const onScroll = () => {
-      const secs = Array.from(document.querySelectorAll('[data-obsec]')) as HTMLElement[];
-      let cur = 0;
-      for (const s of secs) {
-        if (s.getBoundingClientRect().top - jumpOffset <= 4) cur = Number(s.getAttribute('data-obsec'));
-      }
-      setActive(cur);
-    };
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, [jumpOffset]);
-
+  // v2: 한 번에 한 섹션만 표시. 이동은 목차/진행바/다음버튼으로 active 를 바꾼다(스크롤 추적 없음).
   const jump = (i: number) => {
     setToc(false);
-    const el = document.querySelector(`[data-obsec="${i}"]`) as HTMLElement | null;
-    if (!el) return;
-    const y = window.scrollY + el.getBoundingClientRect().top - jumpOffset;
-    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    setActive(Math.max(0, i));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  const jumpToTitle = (title: string) => {
+    const secs = Array.from(document.querySelectorAll('[data-obsec]')) as HTMLElement[];
+    const idx = secs.findIndex((s) => (s.querySelector('h2')?.textContent || '').trim() === title);
+    if (idx >= 0) jump(idx);
   };
   const openViewer = (imgs: string[], i: number, title: string) => setViewer({ imgs: imgs.filter(Boolean), i, title });
 
@@ -149,11 +134,6 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
     if (l.includes('기도')) return '대표기도';
     return null;
   };
-  const jumpToTitle = (title: string) => {
-    const secs = Array.from(document.querySelectorAll('[data-obsec]')) as HTMLElement[];
-    const idx = secs.findIndex((s) => (s.querySelector('h2')?.textContent || '').trim() === title);
-    if (idx >= 0) jump(idx);
-  };
 
   // ── build visible sections ──
   const items: { title: string; node: ReactNode }[] = [];
@@ -178,7 +158,7 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
   ));
 
   if (hymns.some((h) => (h.imageUrls?.length ?? 0) > 0 || h.title || (h.lyrics || '').trim())) push('찬양 악보', (
-    <div className="space-y-7">{hymns.map((h, i) => <HymnItem key={i} h={h} en={en} onOpen={openViewer} />)}</div>
+    <div className="space-y-3">{hymns.map((h, i) => <HymnItem key={i} h={h} en={en} onOpen={openViewer} />)}</div>
   ));
 
   if (rp.person || rp.content || rp.personEn || rp.contentEn) push('대표기도', (
@@ -258,7 +238,7 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
 
       {/* 상단바: 현재 섹션 + 컨트롤 + 진행바 */}
       {items.length > 0 && (
-        <div ref={barRef} style={{ position: 'sticky', top: headerH, zIndex: 20, background: bg, borderBottom: `1px solid ${faint}` }}>
+        <div style={{ position: 'sticky', top: headerH, zIndex: 20, background: bg, borderBottom: `1px solid ${faint}` }}>
           <div className="flex items-center gap-2" style={{ padding: '10px 14px 8px' }}>
             <button type="button" onClick={() => setToc(true)} className="flex items-center gap-2 min-w-0" style={{ flex: 1, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}>
               <span style={{ flex: 'none', width: 22, height: 22, borderRadius: 6, background: primary, color: '#fff', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{String(active + 1).padStart(2, '0')}</span>
@@ -302,7 +282,7 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
         </div>
 
         {items.map((it, i) => (
-          <section key={i} data-obsec={i} style={{ paddingBottom: 36, scrollMarginTop: jumpOffset }}>
+          <section key={i} data-obsec={i} style={{ display: i === active ? 'block' : 'none', paddingBottom: 36 }}>
             <div className="flex items-center gap-2.5" style={{ paddingBottom: 12, borderBottom: `1px solid ${textColor}` }}>
               <span style={{ fontSize: 12, fontWeight: 800, color: primary }}>{String(i + 1).padStart(2, '0')}</span>
               <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, letterSpacing: '-0.03em', color: textColor, fontFamily: 'var(--brand-font-heading)' }}>{it.title}</h2>
@@ -388,18 +368,43 @@ function ScoreGrid({ imgs, title, onOpen }: { imgs: string[]; title: string; onO
   );
 }
 
+function segBtn(on: boolean): CSSProperties {
+  return { padding: '6px 12px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer', border: 'none', background: on ? bg : 'transparent', color: on ? primary : muted, boxShadow: on ? '0 1px 2px rgba(0,0,0,.08)' : 'none' };
+}
+
+// v2: 곡별 카드 + [악보|가사] 세그먼트 토글(기본 가사). 한쪽만 있으면 토글 없이 그것만.
 function HymnItem({ h, en, onOpen }: { h: Hymn; en: boolean; onOpen: (imgs: string[], i: number, title: string) => void }) {
   const imgs = (h.imageUrls ?? []).filter(Boolean);
-  const lyrics = en && (h.lyricsEn || '').trim() ? h.lyricsEn : h.lyrics;
-  const title = [h.hymnNo, h.title].filter(Boolean).join(' ');
+  const lyrics = (en && (h.lyricsEn || '').trim() ? h.lyricsEn : h.lyrics) || '';
+  const hasImgs = imgs.length > 0;
+  const hasLyrics = lyrics.trim().length > 0;
+  const title = [h.hymnNo, h.title].filter(Boolean).join(' ') || '찬양';
+  const [mode, setMode] = useState<'score' | 'lyrics'>(hasLyrics ? 'lyrics' : 'score');
+  const both = hasImgs && hasLyrics;
+  const showScore = hasImgs && (!hasLyrics || mode === 'score');
+  const showLyrics = hasLyrics && (!hasImgs || mode === 'lyrics');
+  if (!hasImgs && !hasLyrics && !h.title && !h.hymnNo) return null;
   return (
-    <div>
-      {(h.title || h.hymnNo) && <div className="mb-3 font-bold" style={{ color: textColor, fontSize: 17, letterSpacing: '-0.02em' }}>{title}</div>}
-      {imgs.length > 0 && <ScoreGrid imgs={imgs} title={h.title || '악보'} onOpen={onOpen} />}
-      {(lyrics || '').trim() && (
-        <div className="mt-3 whitespace-pre-line" style={{ padding: 16, borderRadius: 14, background: surface, border: `1px solid ${faint}`, color: textColor, lineHeight: 1.8 }} {...html(lyrics || '')} />
+    <div style={{ border: `1px solid ${border}`, borderRadius: 16, overflow: 'hidden' }}>
+      <div className="flex items-center gap-2.5" style={{ padding: '14px 16px' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 17, fontWeight: 800, letterSpacing: '-0.025em', color: textColor }}>{title}</div>
+          <div style={{ marginTop: 2, fontSize: 12, color: muted }}>{hasImgs ? `악보 ${imgs.length}장` : ''}{hasImgs && hasLyrics ? ' · ' : ''}{hasLyrics ? '가사' : ''}</div>
+        </div>
+        {both && (
+          <div style={{ flex: 'none', display: 'flex', padding: 3, borderRadius: 10, background: surface }}>
+            <button type="button" onClick={() => setMode('score')} style={segBtn(mode === 'score')}>악보</button>
+            <button type="button" onClick={() => setMode('lyrics')} style={segBtn(mode === 'lyrics')}>가사</button>
+          </div>
+        )}
+      </div>
+      {(showScore || showLyrics) && (
+        <div style={{ borderTop: `1px solid ${faint}` }}>
+          {showScore && <div style={{ padding: '14px 16px' }}><ScoreGrid imgs={imgs} title={h.title || '악보'} onOpen={onOpen} /></div>}
+          {showLyrics && <div className="whitespace-pre-line" style={{ padding: '14px 16px 18px', color: textColor, lineHeight: 1.8 }} {...html(lyrics)} />}
+        </div>
       )}
-      {h.note && <p className="mt-2 text-sm" style={{ color: muted }} {...html(h.note)} />}
+      {h.note && <p className="text-sm" style={{ padding: '0 16px 14px', color: muted }} {...html(h.note)} />}
     </div>
   );
 }
