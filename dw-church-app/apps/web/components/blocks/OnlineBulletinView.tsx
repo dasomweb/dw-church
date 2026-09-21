@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, type ReactNode, type CSSProperties } from 'react';
+import { useState, useEffect, useRef, type ReactNode, type CSSProperties, type TouchEvent as RTouchEvent } from 'react';
 import { createPortal } from 'react-dom';
 
 // 온라인 주보 스토어프론트 뷰 — Claude Design "온라인 주보 개선안 v2" 반영.
@@ -28,6 +28,7 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
   const [fontScale, setFontScale] = useState(100);
   const [toc, setToc] = useState(false);          // 목차 바텀시트
   const [viewer, setViewer] = useState<{ imgs: string[]; i: number; title: string } | null>(null);
+  const touchRef = useRef<{ x: number; y: number } | null>(null);
   const en = lang === 'en';
 
   // 사이트 헤더 높이 실측(상단바를 그 아래에 sticky).
@@ -220,6 +221,18 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
 
   const bTitle = String(bulletin.title ?? '');
   const desc = [bTitle, scRef, content.presider].filter(Boolean).join(' · ');
+
+  // 모바일 좌우 스와이프 → 섹션 전환(왼쪽=다음, 오른쪽=이전). 세로 스크롤과 구분(수평>수직, 60px+).
+  const swipeStart = (e: RTouchEvent) => { const t = e.touches[0]; touchRef.current = t ? { x: t.clientX, y: t.clientY } : null; };
+  const swipeEnd = (e: RTouchEvent) => {
+    const s = touchRef.current; touchRef.current = null;
+    const t = e.changedTouches[0]; if (!s || !t) return;
+    const dx = t.clientX - s.x; const dy = t.clientY - s.y;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (dx < 0 && active < items.length - 1) jump(active + 1);
+      else if (dx > 0 && active > 0) jump(active - 1);
+    }
+  };
   const CSS = `
     .ob-wrap :where(h1,h2,h3,h4,h5,h6){ word-break:keep-all; overflow-wrap:break-word; }
     .ob-progress::-webkit-scrollbar, .ob-side::-webkit-scrollbar{ display:none; }
@@ -298,7 +311,7 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
           </aside>
         )}
 
-        <div className="ob-content" style={{ flex: 1, minWidth: 0, maxWidth: 820, margin: '0 auto', padding: '0 22px', fontSize: `${fontScale}%` }}>
+        <div className="ob-content" onTouchStart={swipeStart} onTouchEnd={swipeEnd} style={{ flex: 1, minWidth: 0, maxWidth: 820, margin: '0 auto', padding: '0 22px', fontSize: `${fontScale}%` }}>
           {active === 0 && (
             <div style={{ padding: '22px 0 26px' }}>
               <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', color: primary }}>
