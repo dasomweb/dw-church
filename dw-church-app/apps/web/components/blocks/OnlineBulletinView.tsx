@@ -127,19 +127,53 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
   const hasStudy = ['observation', 'correlation', 'application'].some((k) => Array.isArray(study[k]) && study[k].some((q: string) => (q || '').trim()));
   const noteHas = (nt: any) => !!((nt.text && nt.text.trim()) || (nt.textEn && nt.textEn.trim()) || (nt.title && nt.title.trim()));
 
+  // 예배 순서 → 섹션 매핑(라벨 키워드 기반). 존재하는 섹션에만 링크.
+  const has: Record<string, boolean> = {
+    '찬양 악보': hymns.some((h) => (h.imageUrls?.length ?? 0) > 0 || !!h.title || (h.lyrics || '').trim().length > 0),
+    '대표기도': !!(rp.person || rp.content || rp.personEn || rp.contentEn),
+    '교회소식': anns.length > 0,
+    '성경 본문': !!(scRef || scText),
+    '설교 노트': noteHas(sermonNote),
+    '어린이 설교 노트': noteHas(childrenSermonNote),
+    '기도 제목': prayers.length > 0,
+    '마지막 찬양': !!(closing.title || (closing.imageUrls?.length ?? 0) > 0 || (closing.lyrics || '').trim()),
+  };
+  const orderTarget = (label: string): string | null => {
+    const l = label || '';
+    if (l.includes('설교')) return '설교 노트';
+    if (l.includes('성경') || l.includes('봉독')) return '성경 본문';
+    if (l.includes('대표기도')) return '대표기도';
+    if (l.includes('광고') || l.includes('소식')) return '교회소식';
+    if (l.includes('마지막') && (l.includes('찬양') || l.includes('찬송'))) return '마지막 찬양';
+    if (l.includes('찬양') || l.includes('찬송') || l.includes('경배')) return '찬양 악보';
+    if (l.includes('기도')) return '대표기도';
+    return null;
+  };
+  const jumpToTitle = (title: string) => {
+    const secs = Array.from(document.querySelectorAll('[data-obsec]')) as HTMLElement[];
+    const idx = secs.findIndex((s) => (s.querySelector('h2')?.textContent || '').trim() === title);
+    if (idx >= 0) jump(idx);
+  };
+
   // ── build visible sections ──
   const items: { title: string; node: ReactNode }[] = [];
   const push = (title: string, node: ReactNode) => items.push({ title, node });
 
   if (worshipOrder.length > 0) push('예배 순서', (
-    <div className="ob-rows">
-      {worshipOrder.map((r: any, i: number) => (
-        <div key={i} className="flex gap-3 py-3 items-baseline" style={{ borderBottom: `1px solid ${faint}` }}>
-          <span className="shrink-0 font-semibold" style={{ color: textColor }} {...html(pick(r.label, r.labelEn))} />
-          <span className="flex-1 min-w-0 text-right" style={{ color: textColor }} {...html(pick(r.detail, r.detailEn))} />
-          {(r.person || r.personEn) && <span className="shrink-0 text-right" style={{ color: muted, fontSize: 13 }} {...html(pick(r.person, r.personEn))} />}
-        </div>
-      ))}
+    <div>
+      <p className="text-sm" style={{ color: muted, margin: '0 0 10px' }}>순서를 누르면 해당 섹션으로 이동합니다</p>
+      {worshipOrder.map((r: any, i: number) => {
+        const target = orderTarget(r.label || '');
+        const linked = !!(target && has[target]);
+        return (
+          <div key={i} onClick={linked ? () => jumpToTitle(target!) : undefined} className="flex gap-3 py-3 items-baseline" style={{ borderBottom: `1px solid ${faint}`, cursor: linked ? 'pointer' : 'default' }}>
+            <span className="shrink-0 font-semibold" style={{ color: linked ? primary : textColor }} {...html(pick(r.label, r.labelEn))} />
+            <span className="flex-1 min-w-0 text-right" style={{ color: textColor }} {...html(pick(r.detail, r.detailEn))} />
+            {(r.person || r.personEn) && <span className="shrink-0 text-right" style={{ color: muted, fontSize: 13 }} {...html(pick(r.person, r.personEn))} />}
+            {linked && <span className="shrink-0" aria-hidden style={{ color: primary, fontSize: 13 }}>›</span>}
+          </div>
+        );
+      })}
     </div>
   ));
 
