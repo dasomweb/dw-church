@@ -209,17 +209,12 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
     </div>
   ));
 
-  if (noteHas(sermonNote)) push('설교 노트', <SermonNote title={sermonNote.title} text={snText} />);
-
-  if (noteHas(childrenSermonNote)) push('어린이 설교 노트', (
-    <div>
-      {childrenSermonNote.title && <p className="mb-1 font-extrabold" style={{ color: textColor, fontSize: 18 }}>{childrenSermonNote.title}</p>}
-      <Markdown text={snChildText} />
-    </div>
-  ));
-
-  if (cartoonKo.length > 0 || cartoonEn.length > 0) push('어린이 설교 카툰', (
-    <ScoreGrid imgs={cartoonImgs} title="어린이 설교 카툰" onOpen={openViewer} />
+  if (noteHas(sermonNote) || noteHas(childrenSermonNote) || cartoonKo.length > 0 || cartoonEn.length > 0) push('설교 노트', (
+    <SermonSection
+      adultTitle={sermonNote.title} adultText={snText}
+      childTitle={childrenSermonNote.title} childText={snChildText}
+      cartoonImgs={cartoonImgs} onOpen={openViewer}
+    />
   ));
 
   if (prayers.length > 0) push('기도 제목', (
@@ -487,6 +482,48 @@ function SermonNote({ title, subtitle, text }: { title?: string; subtitle?: stri
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+// 설교 노트 회중 탭(청장년/EM/Youth/Children/Kids). 청장년=성인노트, Kids=어린이노트+카툰, 나머지=미등록.
+function SermonSection({ adultTitle, adultText, childTitle, childText, cartoonImgs, onOpen }: {
+  adultTitle?: string; adultText?: string; childTitle?: string; childText?: string; cartoonImgs: string[]; onOpen: (imgs: string[], i: number, title: string) => void;
+}) {
+  const hasMain = !!((adultText || '').trim() || (adultTitle || '').trim());
+  const hasKids = !!((childText || '').trim() || (childTitle || '').trim() || cartoonImgs.length > 0);
+  const TABS: [string, string][] = [['main', '청장년'], ['em', 'EM'], ['youth', 'Youth'], ['children', 'Children'], ['kids', 'Kids']];
+  const [tab, setTab] = useState(hasMain ? 'main' : (hasKids ? 'kids' : 'main'));
+  const label = TABS.find((t) => t[0] === tab)?.[1] || '';
+  return (
+    <div>
+      <div className="flex gap-1.5" style={{ overflowX: 'auto', marginBottom: 16, paddingBottom: 2 }}>
+        {TABS.map(([k, name]) => {
+          const on = tab === k;
+          return <button key={k} type="button" onClick={() => setTab(k)} style={{ flex: 'none', padding: '8px 14px', borderRadius: 999, border: `1px solid ${on ? primary : border}`, background: on ? primary : bg, color: on ? '#fff' : textColor, fontSize: 13, fontWeight: on ? 800 : 600, letterSpacing: '-0.01em', cursor: 'pointer' }}>{name}</button>;
+        })}
+      </div>
+      {tab === 'main' && (hasMain ? <SermonNote title={adultTitle} text={adultText} /> : <SermonEmpty label="청장년" />)}
+      {tab === 'kids' && (hasKids ? (
+        <div>
+          {(childText || childTitle) && <SermonNote title={childTitle} text={childText} />}
+          {cartoonImgs.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', color: muted, marginBottom: 10 }}>설교 카툰</div>
+              <ScoreGrid imgs={cartoonImgs} title="어린이 설교 카툰" onOpen={onOpen} />
+            </div>
+          )}
+        </div>
+      ) : <SermonEmpty label="Kids" />)}
+      {(tab === 'em' || tab === 'youth' || tab === 'children') && <SermonEmpty label={label} />}
+    </div>
+  );
+}
+function SermonEmpty({ label }: { label: string }) {
+  return (
+    <div style={{ padding: '22px 18px', border: `1px dashed ${border}`, borderRadius: 14, textAlign: 'center' }}>
+      <div style={{ fontSize: 15, fontWeight: 700, color: textColor }}>{label} 설교 정리</div>
+      <div style={{ marginTop: 6, fontSize: 13, lineHeight: 1.7, color: muted }}>설교 정리가 아직 등록되지 않았습니다.<br />등록되면 같은 자리에서 바로 열립니다.</div>
     </div>
   );
 }
