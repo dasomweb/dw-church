@@ -544,10 +544,10 @@ function SermonSection({ adultTitle, adultText, childTitle, childText, cartoonIm
   const hasMainNote = !!((adultText || '').trim() || (adultTitle || '').trim());
   const hasStudy = [obs, cor, app].some((a) => (a || []).some((q) => (q || '').trim()));
   const hasMain = hasMainNote || hasStudy;
-  const hasChildren = !!((childText || '').trim() || (childTitle || '').trim());
-  const hasKids = cartoonImgs.length > 0;
+  const hasChildNote = !!((childText || '').trim() || (childTitle || '').trim());
+  const hasChildren = hasChildNote || cartoonImgs.length > 0; // 취학후 = 어린이 설교노트 + 카툰
   const TABS: [string, string][] = [['main', '청장년'], ['em', 'EM'], ['youth', 'Youth'], ['children', 'Children'], ['kids', 'Kids']];
-  const first = hasMain ? 'main' : hasChildren ? 'children' : hasKids ? 'kids' : 'main';
+  const first = hasMain ? 'main' : hasChildren ? 'children' : 'main';
   const [tab, setTab] = useState(first);
   return (
     <div>
@@ -572,13 +572,18 @@ function SermonSection({ adultTitle, adultText, childTitle, childText, cartoonIm
           )}
         </div>
       ) : <SermonEmpty label="청장년" />)}
-      {tab === 'children' && (hasChildren ? <SermonNote title={childTitle} text={childText} /> : <SermonEmpty label="Children (취학후)" />)}
-      {tab === 'kids' && (hasKids ? (
+      {tab === 'children' && (hasChildren ? (
         <div>
-          <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', color: muted, marginBottom: 10 }}>설교 카툰</div>
-          <ScoreGrid imgs={cartoonImgs} title="어린이 설교 카툰" onOpen={onOpen} />
+          {hasChildNote && <SermonNote title={childTitle} text={childText} />}
+          {cartoonImgs.length > 0 && (
+            <div style={{ marginTop: hasChildNote ? 16 : 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', color: muted, marginBottom: 10 }}>설교 카툰</div>
+              <ScoreGrid imgs={cartoonImgs} title="어린이 설교 카툰" onOpen={onOpen} />
+            </div>
+          )}
         </div>
-      ) : <SermonEmpty label="Kids (취학전)" />)}
+      ) : <SermonEmpty label="Children (취학후)" />)}
+      {tab === 'kids' && <SermonEmpty label="Kids (취학전)" />}
       {(tab === 'em' || tab === 'youth') && <SermonEmpty label={tab === 'em' ? 'EM' : 'Youth'} />}
     </div>
   );
