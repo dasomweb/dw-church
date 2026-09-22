@@ -1760,6 +1760,24 @@ const VERSE_OF_DAY = churchBlock(
     { key: 'eyebrow', label: '라벨(윗글)', type: 'text', hint: '예: 오늘의 말씀 · Verse of the Day. 실제 말씀은 [말씀 관리]에서 등록합니다.' },
   ]},
 );
+// 주일설교 묵상 — 대표 설교(설교 모듈 최신)는 자동 fetch, '이번 주 묵상' 사이드바(말씀·책·기도제목)는
+// 여기서 주간 갱신. 이번 주 말씀을 비우면 말씀 모듈 현재 말씀을 자동 사용.
+const SERMON_MEDITATION = churchBlock(
+  { title: '설교', fields: [
+    { key: 'eyebrow', label: '라벨(윗글)', type: 'text', hint: '예: 주일설교. 설교 본문/제목은 [설교 관리]에서 등록한 최신 설교를 자동 표시합니다.' },
+    { key: 'moreLabel', label: '설교 링크 텍스트', type: 'text', hint: '예: 설교 전문 읽기' },
+  ]},
+  { title: '이번 주 묵상', fields: [
+    { key: 'asideTitle', label: '사이드바 제목', type: 'text', hint: '예: 이번 주 묵상' },
+    { key: 'verseText', label: '이번 주 말씀', type: 'textarea', hint: '비우면 [말씀 관리]의 현재 말씀을 자동 사용' },
+    { key: 'verseRef', label: '말씀 출처', type: 'text', hint: '예: 마태복음 5:1–12' },
+    { key: 'bookTitle', label: '함께 읽는 책', type: 'text' },
+    { key: 'bookMeta', label: '책 저자·범위', type: 'text' },
+    { key: 'prayerText', label: '기도 제목 (줄바꿈으로 구분)', type: 'textarea' },
+    { key: 'bulletinLabel', label: '주보 링크 텍스트', type: 'text', hint: '예: 이번 주 주보' },
+    { key: 'bulletinUrl', label: '주보 링크 주소', type: 'text', hint: '기본 /onlinejubo' },
+  ]},
+);
 // 주보·광고 — 주보(주보 모듈) + 광고(교회소식 게시판, board-select) + 액션 버튼.
 // board-select/버튼 flat 필드를 쓰므로 churchBlock 대신 직접 정의.
 const NEWS_ANNOUNCEMENTS: BlockElementRegistry = {
@@ -1965,6 +1983,7 @@ export const ELEMENT_REGISTRY: Record<string, BlockElementRegistry> = {
   church_intro:     CHURCH_INTRO,
   recent_sermons:   RECENT_SERMONS,
   sermon_magazine:  SERMON_MAGAZINE,
+  sermon_meditation: SERMON_MEDITATION,
   devotion_reader:  DEVOTION_READER,
   cardnews:         CARDNEWS,
   recent_bulletins: RECENT_BULLETINS,

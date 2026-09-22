@@ -96,6 +96,8 @@ export const blockTypes = [
   'verse_of_day',
   'news_announcements',
   'featured_event',
+  // 주일설교 묵상 — 대표 설교(설교 모듈) + '이번 주 묵상' 사이드바(말씀·책·기도제목). 에디토리얼 홈용 데이터 블록.
+  'sermon_meditation',
   'button_group',
   'directions_split',
   'logo_title',

@@ -41,7 +41,7 @@ interface HeroBannerBlockProps {
   slug?: string;
 }
 
-type Variant = 'image-overlay' | 'split-image' | 'page-hero' | 'text-only' | 'photo-scrim';
+type Variant = 'image-overlay' | 'split-image' | 'page-hero' | 'text-only' | 'photo-scrim' | 'masthead';
 
 // HEIGHT_MAP / ALIGN_MAP / resolveWidth / resolveContentWidth /
 // contentWidthClass / readOverlayProps 는 모두 utilities/section-shell.ts
@@ -85,6 +85,8 @@ export function HeroBannerBlock({ props, slug }: HeroBannerBlockProps) {
       return <TextOnlyHero props={props} slug={slug} />;
     case 'photo-scrim':
       return <PhotoScrimHero props={props} slug={slug} />;
+    case 'masthead':
+      return <MastheadHero props={props} slug={slug} />;
     case 'image-overlay':
     default:
       return <ImageOverlayHero props={props} slug={slug} />;
@@ -474,6 +476,54 @@ function PhotoScrimHero({ props }: HeroBannerBlockProps) {
           />
           <CtaPair props={props} />
         </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── 6. masthead (신문형 — 이미지 없이 가운데 정렬 제호 + 이중 괘선) ──────
+ * 에디토리얼 홈 상단용. 배경 이미지 없음. 가운데 정렬 eyebrow(영문 라벨) +
+ * 제호(제목) + 태그라인(부제), 아래로 3px double 괘선. meta(예: 날짜)가 있으면
+ * 얇은 1px 괘선 줄로 이어붙인다. 잉크/괘선 색은 --dw-text 토큰. */
+function MastheadHero({ props }: HeroBannerBlockProps) {
+  const eyebrow = (props.eyebrow as string) || '';
+  const title = (props.title as string) || '';
+  const subtitle = (props.subtitle as string) || '';
+  const meta = (props.meta as string) || '';
+  const ink = 'var(--dw-text, #16181d)';
+
+  return (
+    <section className="px-4 sm:px-6" style={{ paddingTop: 'var(--section-py-md)' }}>
+      <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+        <div
+          className="text-center"
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--block-gap, 0.75rem)', borderBottom: `3px double ${ink}`, paddingBottom: 20 }}
+        >
+          <EyebrowElement text={eyebrow} props={props} elementKey="eyebrow" />
+          <HeadingElement
+            text={title}
+            props={props}
+            elementKey="title"
+            defaultTag="h1"
+            defaultSize="h1"
+            baseStyle={{ whiteSpace: 'pre-line' }}
+          />
+          <HeadingElement
+            text={subtitle}
+            props={props}
+            elementKey="subtitle"
+            defaultTag="p"
+            defaultSize="body"
+          />
+        </div>
+        {meta && (
+          <div
+            className="flex flex-wrap items-center justify-between gap-4"
+            style={{ padding: '10px 0', borderBottom: `1px solid ${ink}`, fontSize: 12, letterSpacing: '.06em', color: 'var(--brand-muted, #6f6255)' }}
+          >
+            <span>{meta}</span>
+          </div>
+        )}
       </div>
     </section>
   );
