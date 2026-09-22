@@ -463,7 +463,7 @@ async function main(): Promise<void> {
     // 스키마별 버전 스탬프를 두고, 이미 현재 버전으로 반영된 스키마는 건너뛴다.
     // ⚠️ 아래 per-schema DDL 블록을 하나라도 바꾸면(테이블/컬럼 추가) SCHEMA_VERSION을
     //    올려라 → 기존 테넌트가 "다음 배포 때 한 번만" 다시 반영하고 이후 다시 건너뛴다.
-    const SCHEMA_VERSION = 11; // ↑11: sermons 확장(본문 구성 body·부제·시리즈·예배구분·slug·태그·언어·검색요약·영상시작·공개예약·홈대표·댓글허용)
+    const SCHEMA_VERSION = 12; // ↑12: sermons.manuscript(설교 원고 — 비공개 전문) 추가
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS public.tenant_schema_versions (
         "schema_name" TEXT PRIMARY KEY,
@@ -910,6 +910,8 @@ async function main(): Promise<void> {
         await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".sermons ADD COLUMN IF NOT EXISTS "scheduled_at" TIMESTAMPTZ`);
         await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".sermons ADD COLUMN IF NOT EXISTS "home_featured" BOOLEAN NOT NULL DEFAULT false`);
         await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".sermons ADD COLUMN IF NOT EXISTS "allow_comments" BOOLEAN NOT NULL DEFAULT false`);
+        // 설교 원고 — 비공개 전문(운영자 작업용). 여기서 발췌해 지면 구성(body)으로 보냄. 웹 미노출.
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".sermons ADD COLUMN IF NOT EXISTS "manuscript" TEXT`);
         alterHits++;
       } catch { /* sermons table may not exist; skip */ }
 

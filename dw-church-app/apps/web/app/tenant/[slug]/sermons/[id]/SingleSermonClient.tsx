@@ -2,6 +2,7 @@
 
 import { YoutubeEmbed, DateBadge } from '@dw-church/ui-components';
 import type { Sermon } from '@dw-church/api-client';
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 
 interface SingleSermonClientProps {
@@ -36,6 +37,48 @@ function QCard({ tag, heading, desc, items }: { tag: string; heading: string; de
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// 지면 구성 본문의 간이 서식 렌더 — 관리자 RichArea 저장 규칙과 동일:
+// **굵게** *기울임* [텍스트](URL), 줄 앞 '> ' 인용, 빈 줄 = 단락.
+function renderInline(text: string, kp: string): ReactNode[] {
+  const out: ReactNode[] = [];
+  const re = /(\*\*[^*]+\*\*|\*[^*]+\*|\[[^\]]+\]\([^)]+\))/g;
+  let last = 0; let m: RegExpExecArray | null; let i = 0;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) out.push(text.slice(last, m.index));
+    const tok = m[0];
+    if (tok.startsWith('**')) out.push(<strong key={`${kp}-${i}`}>{tok.slice(2, -2)}</strong>);
+    else if (tok.startsWith('*')) out.push(<em key={`${kp}-${i}`}>{tok.slice(1, -1)}</em>);
+    else { const mm = /\[([^\]]+)\]\(([^)]+)\)/.exec(tok); if (mm) out.push(<a key={`${kp}-${i}`} href={mm[2]} target="_blank" rel="noreferrer" className="underline" style={{ color: BRAND }}>{mm[1]}</a>); }
+    last = m.index + tok.length; i++;
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return out;
+}
+
+function RichText({ text }: { text: string }) {
+  const blocks = (text || '').replace(/\r\n/g, '\n').split(/\n{2,}/).map((b) => b.trim()).filter(Boolean);
+  return (
+    <div className="space-y-4">
+      {blocks.map((b, i) => {
+        const lines = b.split('\n');
+        if (lines.every((l) => l.startsWith('>'))) {
+          const q = lines.map((l) => l.replace(/^>\s?/, ''));
+          return (
+            <blockquote key={i} className="border-l-2 pl-4 text-[17px] italic leading-[1.9]" style={{ borderColor: BRAND, color: MUTED }}>
+              {q.map((l, j) => <span key={j}>{j > 0 && <br />}{renderInline(l, `q${i}-${j}`)}</span>)}
+            </blockquote>
+          );
+        }
+        return (
+          <p key={i} className="text-[17px] leading-[1.95]" style={{ color: 'var(--dw-text, #16181d)' }}>
+            {lines.map((l, j) => <span key={j}>{j > 0 && <br />}{renderInline(l, `p${i}-${j}`)}</span>)}
+          </p>
+        );
+      })}
     </div>
   );
 }
@@ -85,19 +128,12 @@ export function SingleSermonClient({ sermon }: SingleSermonClientProps) {
       {bodySections.length > 0 && (
         <div className="mb-12 max-w-3xl space-y-10">
           {bodySections.map((sec, i) => {
-            const paras = (sec.body ?? '').split(/\n{2,}|\n/).map((t) => t.trim()).filter(Boolean);
             return (
               <section key={i}>
                 {sec.subtitle && (
                   <h2 className="mb-4 font-heading text-[22px] font-bold leading-[1.35] sm:text-[26px]">{sec.subtitle}</h2>
                 )}
-                {paras.length > 0 && (
-                  <div className="space-y-4">
-                    {paras.map((par, j) => (
-                      <p key={j} className="text-[17px] leading-[1.95]" style={{ color: 'var(--dw-text, #16181d)' }}>{par}</p>
-                    ))}
-                  </div>
-                )}
+                {(sec.body || '').trim() && <RichText text={sec.body || ''} />}
                 {sec.imageUrl && (
                   <figure className="mt-6">
                     {/* eslint-disable-next-line @next/next/no-img-element */}

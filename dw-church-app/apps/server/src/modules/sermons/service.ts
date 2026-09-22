@@ -198,9 +198,9 @@ export async function createSermon(schema: string, input: CreateSermonInput) {
        (title, scripture, youtube_url, sermon_date, thumbnail_url, preacher_id, status,
         one_line_summary, summary, observation_questions, deep_questions, application_questions,
         subtitle, service_type, series, slug, body, tags, language, seo_summary,
-        video_start_at, scheduled_at, home_featured, allow_comments)
+        video_start_at, scheduled_at, home_featured, allow_comments, manuscript)
      VALUES ($1, $2, $3, $4, $5, $6::uuid, $7, $8, $9, $10::jsonb, $11::jsonb, $12::jsonb,
-             $13, $14, $15, $16, $17::jsonb, $18::jsonb, $19, $20, $21, $22, $23, $24)
+             $13, $14, $15, $16, $17::jsonb, $18::jsonb, $19, $20, $21, $22, $23, $24, $25)
      RETURNING id`,
     input.title,
     input.scripture ?? null,
@@ -226,6 +226,7 @@ export async function createSermon(schema: string, input: CreateSermonInput) {
     input.scheduledAt ? new Date(input.scheduledAt) : null,
     input.homeFeatured ?? false,
     input.allowComments ?? false,
+    input.manuscript ?? null,
   );
 
   const sermonId = rows[0].id;
@@ -288,6 +289,7 @@ export async function updateSermon(schema: string, id: string, input: UpdateSerm
   if (input.scheduledAt !== undefined) { setClauses.push(`scheduled_at = $${paramIndex++}`); values.push(input.scheduledAt ? new Date(input.scheduledAt) : null); }
   if (input.homeFeatured !== undefined) { setClauses.push(`home_featured = $${paramIndex++}`); values.push(input.homeFeatured); }
   if (input.allowComments !== undefined) { setClauses.push(`allow_comments = $${paramIndex++}`); values.push(input.allowComments); }
+  if (input.manuscript !== undefined) { setClauses.push(`manuscript = $${paramIndex++}`); values.push(input.manuscript); }
 
   if (setClauses.length > 0) {
     setClauses.push(`updated_at = NOW()`);

@@ -90,7 +90,8 @@ export interface Sermon {
   tags?: string[];
   language?: string | null;
   seoSummary?: string | null;
-  body?: SermonBodySection[];    // 본문 구성(멀티 섹션)
+  manuscript?: string | null;   // 설교 원고(비공개 전문)
+  body?: SermonBodySection[];    // 지면 구성(멀티 섹션)
   videoStartAt?: string | null;  // 영상 시작 지점
   scheduledAt?: string | null;   // 공개 예약(ISO)
   homeFeatured?: boolean;        // 홈 대표글

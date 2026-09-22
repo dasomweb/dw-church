@@ -27,7 +27,9 @@ export const createSermonSchema = z.object({
   tags: z.array(z.string().max(60)).optional(),
   language: z.string().max(20).optional().nullable(),
   seoSummary: z.string().max(1000).optional().nullable(),
-  // 리디자인 — 본문 구성(멀티 섹션): 각 단 = 소제목 + 본문(HTML) + 사진 + 캡션 + 대체텍스트
+  // 설교 원고 — 비공개 전문(운영자 작업용, 웹 미노출)
+  manuscript: z.string().max(200000).optional().nullable(),
+  // 리디자인 — 지면 구성(멀티 섹션): 각 단 = 소제목 + 본문 + 사진 + 캡션 + 대체텍스트
   body: z.array(z.object({
     subtitle: z.string().max(300).optional().nullable(),
     body: z.string().max(50000).optional().nullable(),

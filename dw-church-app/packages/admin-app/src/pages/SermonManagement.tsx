@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import type { Sermon, SermonListParams, PostStatus, SermonBodySection } from '@dw-church/api-client';
 import {
@@ -15,7 +15,7 @@ import { FormField, inputClass, selectClass, textareaClass, useToast, ConfirmDia
 import YoutubeImportButton from '../components/YoutubeImportButton';
 import { useBulkDelete } from '../components/useBulkDelete';
 
-// ─── YouTube 썸네일 유틸 ──────────────────────────────────
+// ─── YouTube 유틸 ──────────────────────────────────
 function extractYouTubeId(url: string): string | null {
   if (!url) return null;
   const match = url.match(/(?:v=|\/live\/|\/embed\/|\/shorts\/|\/v\/|youtu\.be\/)([0-9A-Za-z_-]{11})/);
@@ -35,36 +35,72 @@ const SERVICE_TYPES = ['주일설교', '수요예배', '새벽기도', '금요�
 
 interface SermonFormData {
   title: string;
-  subtitle: string;
   scripture: string;
   preacher: string;
   date: string;
   status: PostStatus;
   youtubeUrl: string;
-  videoStartAt: string;
   thumbnailUrl: string;
-  categoryIds: string;
   serviceType: string;
   series: string;
-  slug: string;
   scheduledAt: string;
-  homeFeatured: boolean;
-  allowComments: boolean;
-  language: string;
   seoSummary: string;
 }
 
-// 카드 래퍼 (시안 스타일)
-function Card({ title, action, children }: { title?: string; action?: React.ReactNode; children: React.ReactNode }) {
+// ─── 카드 래퍼 ──────────────────────────────────
+function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return <div className={`rounded-2xl border border-gray-100 bg-white p-6 shadow-sm ${className}`}>{children}</div>;
+}
+
+// ─── 간이 서식 입력 (B/기울임/인용/구절삽입/링크) — 마크다운-라이트 저장 ──────
+// 저장 형식: **굵게** *기울임* > 인용 [텍스트](URL). 스토어프론트가 동일 규칙으로 렌더.
+function RichArea({ inputRef, value, onChange, placeholder, rows = 8, showLink = false, headerAction }: {
+  inputRef?: React.RefObject<HTMLTextAreaElement>;
+  value: string; onChange: (v: string) => void;
+  placeholder?: string; rows?: number; showLink?: boolean; headerAction?: React.ReactNode;
+}) {
+  const localRef = useRef<HTMLTextAreaElement>(null);
+  const ref = inputRef ?? localRef;
+  const apply = (make: (sel: string, v: string, s: number, e: number) => { text: string; ns: number; ne: number }) => {
+    const el = ref.current; if (!el) return;
+    const s = el.selectionStart, e = el.selectionEnd;
+    const { text, ns, ne } = make(value.slice(s, e), value, s, e);
+    onChange(text);
+    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(ns, ne); });
+  };
+  const wrap = (b: string, a: string) => apply((sel, v, s, e) => ({ text: v.slice(0, s) + b + sel + a + v.slice(e), ns: s + b.length, ne: e + b.length }));
+  const prefixLines = (p: string) => apply((sel, v, s, e) => {
+    const ls = v.lastIndexOf('\n', s - 1) + 1;
+    const nl = v.indexOf('\n', e); const le = nl === -1 ? v.length : nl;
+    const block = v.slice(ls, le).split('\n').map((l) => (l.startsWith(p) ? l : p + l)).join('\n');
+    return { text: v.slice(0, ls) + block + v.slice(le), ns: ls, ne: ls + block.length };
+  });
+  const bold = () => wrap('**', '**');
+  const italic = () => wrap('*', '*');
+  const quote = () => prefixLines('> ');
+  const link = () => { const u = window.prompt('링크 URL을 입력하세요', 'https://'); if (u) wrap('[', `](${u})`); };
+  const verse = () => {
+    const r = window.prompt('성경 구절 (예: 요한복음 3:16)');
+    if (!r) return;
+    apply((_sel, v, s) => { const ins = (s > 0 && v[s - 1] !== '\n' ? '\n' : '') + `> ${r}\n`; return { text: v.slice(0, s) + ins + v.slice(s), ns: s + ins.length, ne: s + ins.length }; });
+  };
+  const btn = 'text-sm text-gray-500 hover:text-gray-900';
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-      {(title || action) && (
-        <div className="mb-4 flex items-center justify-between">
-          {title && <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">{title}</h3>}
-          {action}
+    <div className="overflow-hidden rounded-xl border border-gray-200">
+      <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 px-3 py-2">
+        <div className="flex items-center gap-4">
+          <button type="button" onClick={bold} className={`${btn} font-bold`}>B</button>
+          <button type="button" onClick={italic} className={`${btn} italic`}>/</button>
+          <button type="button" onClick={quote} className={btn}>인용</button>
+          <button type="button" onClick={verse} className={btn}>구절 삽입</button>
+          {showLink && <button type="button" onClick={link} className={btn}>링크</button>}
         </div>
-      )}
-      {children}
+        {headerAction}
+      </div>
+      <textarea
+        ref={ref} value={value} onChange={(e) => onChange(e.target.value)} rows={rows} placeholder={placeholder}
+        className="w-full resize-y border-0 px-4 py-3 text-[15px] leading-[1.8] focus:outline-none focus:ring-0"
+      />
     </div>
   );
 }
@@ -72,10 +108,12 @@ function Card({ title, action, children }: { title?: string; action?: React.Reac
 export default function SermonManagement() {
   const [view, setView] = useState<'list' | 'edit'>('list');
   const [editingItem, setEditingItem] = useState<Sermon | null>(null);
+  const [tab, setTab] = useState<'basic' | 'manuscript' | 'layout'>('basic');
   const EMPTY_STUDY = { oneLineSummary: '', summary: '', observation: [] as string[], deep: [] as string[], application: [] as string[] };
   const [study, setStudy] = useState(EMPTY_STUDY);
   const [studyOpen, setStudyOpen] = useState(false);
-  // 본문 구성 (멀티 섹션)
+  const [manuscript, setManuscript] = useState('');
+  const manuscriptRef = useRef<HTMLTextAreaElement>(null);
   const [sections, setSections] = useState<SermonBodySection[]>([{ ...EMPTY_SECTION }]);
   const [activeSec, setActiveSec] = useState(0);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
@@ -102,7 +140,7 @@ export default function SermonManagement() {
 
   const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<SermonFormData>();
 
-  // YouTube URL 입력 시 대표 이미지(썸네일) 자동 생성 — 비어 있을 때만.
+  // YouTube URL → 대표 이미지 자동(비어 있을 때만)
   const youtubeUrl = watch('youtubeUrl') || '';
   const thumbnailUrl = watch('thumbnailUrl') || '';
   const videoId = extractYouTubeId(youtubeUrl);
@@ -144,16 +182,6 @@ export default function SermonManagement() {
       setSavingPreacher(false);
     }
   };
-  const handleDeletePreacher = async (id: string, name: string) => {
-    if (!window.confirm(`설교자 "${name}"을(를) 삭제하시겠습니까?`)) return;
-    try {
-      await apiClient!.adapter.delete(`/api/v1/preachers/${id}`);
-      await queryClient.invalidateQueries({ queryKey: ['taxonomies', 'sermon_preacher'] });
-      showToast('success', `설교자 "${name}" 삭제됨`);
-    } catch (err) {
-      showToast('error', err instanceof Error ? err.message : '삭제 실패 — 이 설교자를 사용하는 설교가 있는지 확인하세요.');
-    }
-  };
 
   const toLocalInput = (iso?: string | null): string => {
     if (!iso) return '';
@@ -165,24 +193,18 @@ export default function SermonManagement() {
 
   const handleEdit = (item: Sermon) => {
     setEditingItem(item);
+    setTab('basic');
     reset({
       title: item.title,
-      subtitle: item.subtitle ?? '',
       scripture: item.scripture,
       preacher: item.preacher,
       date: item.date ? String(item.date).slice(0, 10) : '',
       status: item.status,
       youtubeUrl: item.youtubeUrl,
-      videoStartAt: item.videoStartAt ?? '',
       thumbnailUrl: item.thumbnailUrl,
-      categoryIds: JSON.stringify(item.categoryIds),
       serviceType: item.serviceType ?? '',
       series: item.series ?? '',
-      slug: item.slug ?? '',
       scheduledAt: toLocalInput(item.scheduledAt),
-      homeFeatured: !!item.homeFeatured,
-      allowComments: !!item.allowComments,
-      language: item.language ?? 'ko',
       seoSummary: item.seoSummary ?? '',
     });
     setStudy({
@@ -192,33 +214,30 @@ export default function SermonManagement() {
       deep: item.deepQuestions ?? [],
       application: item.applicationQuestions ?? [],
     });
-    const body = (item.body && item.body.length > 0) ? item.body.map((s) => ({ ...EMPTY_SECTION, ...s })) : [{ ...EMPTY_SECTION }];
-    setSections(body);
+    setStudyOpen((item.observationQuestions?.length ?? 0) + (item.deepQuestions?.length ?? 0) + (item.applicationQuestions?.length ?? 0) > 0 || !!item.summary);
+    setManuscript(item.manuscript ?? '');
+    setSections((item.body && item.body.length > 0) ? item.body.map((s) => ({ ...EMPTY_SECTION, ...s })) : [{ ...EMPTY_SECTION }]);
     setActiveSec(0);
     setTags(item.tags ?? []);
-    setStudyOpen((item.observationQuestions?.length ?? 0) + (item.deepQuestions?.length ?? 0) + (item.applicationQuestions?.length ?? 0) > 0 || !!item.summary);
     setView('edit');
   };
 
   const handleCreate = () => {
     setEditingItem(null);
+    setTab('basic');
     setStudy(EMPTY_STUDY);
     setStudyOpen(false);
+    setManuscript('');
     setSections([{ ...EMPTY_SECTION }]);
     setActiveSec(0);
     setTags([]);
-    reset({
-      title: '', subtitle: '', scripture: '', preacher: '', date: '', status: 'published',
-      youtubeUrl: '', videoStartAt: '', thumbnailUrl: '', categoryIds: '[]',
-      serviceType: '', series: '', slug: '', scheduledAt: '', homeFeatured: false, allowComments: false,
-      language: 'ko', seoSummary: '',
-    });
+    reset({ title: '', scripture: '', preacher: '', date: '', status: 'published', youtubeUrl: '', thumbnailUrl: '', serviceType: '', series: '', scheduledAt: '', seoSummary: '' });
     setView('edit');
   };
 
   const handleDelete = (item: Sermon) => setDeleteTarget({ id: item.id, name: item.title || '' });
 
-  // 본문 구성 조작
+  // ── 지면 구성(단) 조작 ──
   const addSection = () => { setSections((s) => [...s, { ...EMPTY_SECTION }]); setActiveSec(sections.length); };
   const removeSection = (i: number) => {
     setSections((s) => (s.length <= 1 ? [{ ...EMPTY_SECTION }] : s.filter((_, j) => j !== i)));
@@ -231,32 +250,44 @@ export default function SermonManagement() {
     setSections((s) => { const next = [...s]; const [m] = next.splice(from, 1); next.splice(to, 0, m!); return next; });
     setActiveSec(to);
   };
+  // 설교 원고에서 선택 영역 → 새 단
+  const sendSelectionToNewSection = () => {
+    const el = manuscriptRef.current;
+    const sel = el ? manuscript.slice(el.selectionStart, el.selectionEnd).trim() : '';
+    const text = sel || manuscript.trim();
+    if (!text) { showToast('error', '원고에서 보낼 내용을 선택하세요.'); return; }
+    setSections((s) => [...s, { ...EMPTY_SECTION, body: text }]);
+    setActiveSec(sections.length);
+    setTab('layout');
+    showToast('success', '선택 영역을 새 단으로 보냈습니다.');
+  };
+  // 현재 단으로 원고 가져오기(이어붙임)
+  const pullManuscriptToSection = () => {
+    if (!manuscript.trim()) { showToast('error', '먼저 설교 원고 탭에 원고를 입력하세요.'); return; }
+    const cur = sections[activeSec]?.body || '';
+    updateSection(activeSec, { body: cur ? `${cur}\n\n${manuscript.trim()}` : manuscript.trim() });
+    showToast('success', '원고를 이 단으로 가져왔습니다.');
+  };
 
   const buildPayload = (formData: SermonFormData, status: PostStatus) => ({
     title: formData.title,
-    subtitle: formData.subtitle,
     scripture: formData.scripture,
     preacher: formData.preacher,
     date: formData.date,
-    categoryIds: JSON.parse(formData.categoryIds || '[]') as string[],
+    // 카테고리 UI 제거 — 편집 시 기존 값 보존, 신규는 빈 배열(예배구분·태그·시리즈로 분류).
+    categoryIds: editingItem ? editingItem.categoryIds : [],
     category: '',
     thumbnailUrl: formData.thumbnailUrl,
     youtubeUrl: formData.youtubeUrl,
-    videoStartAt: formData.videoStartAt || null,
     status,
     serviceType: formData.serviceType || null,
     series: formData.series || null,
-    slug: formData.slug || null,
-    language: formData.language || 'ko',
     seoSummary: formData.seoSummary || null,
     scheduledAt: formData.scheduledAt || null,
-    homeFeatured: !!formData.homeFeatured,
-    allowComments: !!formData.allowComments,
     tags,
-    body: sections.map((s) => ({
-      subtitle: s.subtitle || '', body: s.body || '', imageUrl: s.imageUrl || '', caption: s.caption || '', alt: s.alt || '',
-    })),
-    // 설교 스터디 (선택 · 매거진/질문지)
+    manuscript,
+    body: sections.map((s) => ({ subtitle: s.subtitle || '', body: s.body || '', imageUrl: s.imageUrl || '', caption: s.caption || '', alt: s.alt || '' })),
+    // 설교 스터디 (선택 · 매거진/질문지) — 하위호환 유지
     oneLineSummary: study.oneLineSummary,
     summary: study.summary,
     observationQuestions: study.observation,
@@ -264,59 +295,67 @@ export default function SermonManagement() {
     applicationQuestions: study.application,
   });
 
-  const save = (status: PostStatus) => handleSubmit((formData) => {
-    const payload = buildPayload(formData, status);
-    const onSuccess = () => { showToast('success', status === 'published' ? '공개되었습니다.' : '임시저장되었습니다.'); setView('list'); };
-    const onError = () => showToast('error', '오류가 발생했습니다.');
-    if (editingItem) updateMutation.mutate({ id: editingItem.id, data: payload }, { onSuccess, onError });
-    else createMutation.mutate(payload, { onSuccess, onError });
-  })();
+  const save = (status: PostStatus) => handleSubmit(
+    (formData) => {
+      const payload = buildPayload(formData, status);
+      const onSuccess = () => { showToast('success', status === 'published' ? '공개되었습니다.' : '임시저장되었습니다.'); setView('list'); };
+      const onError = () => showToast('error', '오류가 발생했습니다.');
+      if (editingItem) updateMutation.mutate({ id: editingItem.id, data: payload }, { onSuccess, onError });
+      else createMutation.mutate(payload, { onSuccess, onError });
+    },
+    () => { setTab('basic'); showToast('error', '필수 항목(제목·성경 본문·설교자·설교일)을 확인하세요.'); },
+  )();
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
   if (view === 'edit') {
     const sec = sections[activeSec] ?? sections[0]!;
     const scheduledAt = watch('scheduledAt');
-    const homeFeatured = watch('homeFeatured');
-    const allowComments = watch('allowComments');
     const statusVal = watch('status');
+    const TabBtn = ({ id, label }: { id: typeof tab; label: string }) => (
+      <button type="button" onClick={() => setTab(id)} className={`border-b-2 px-1 pb-2 text-sm font-medium ${tab === id ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>{label}</button>
+    );
+
     return (
-      <div className="admin-content mx-auto max-w-6xl">
+      <div className="admin-content mx-auto max-w-5xl">
         {/* 상단 바 */}
-        <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div>
             <button type="button" onClick={() => setView('list')} className="mb-1 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
               설교 관리
             </button>
             <h2 className="text-2xl font-bold text-gray-900">{editingItem ? '설교 수정' : '설교 작성'}</h2>
+            <p className="mt-1 text-sm text-gray-500">원고를 나누어 사진과 함께 읽는 글로 펴냅니다.</p>
           </div>
           <div className="flex gap-2">
-            {editingItem && (
-              <button type="button" onClick={() => window.open(`/sermons/${editingItem.id}`, '_blank')} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">미리보기</button>
-            )}
+            {editingItem && <button type="button" onClick={() => window.open(`/sermons/${editingItem.id}`, '_blank')} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">미리보기</button>}
             <button type="button" disabled={isSaving} onClick={() => save('draft')} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50">임시저장</button>
             <button type="button" disabled={isSaving} onClick={() => save('published')} className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-50">공개</button>
           </div>
         </div>
 
-        <form onSubmit={(e) => e.preventDefault()} className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
-          {/* ── 좌측 메인 ── */}
-          <div className="space-y-6">
-            <Card title="기본 정보">
+        {/* 탭 */}
+        <div className="mb-6 flex gap-6 border-b border-gray-200">
+          <TabBtn id="basic" label="기본 정보" />
+          <TabBtn id="manuscript" label="설교 원고" />
+          <TabBtn id="layout" label="지면 구성" />
+        </div>
+
+        <form onSubmit={(e) => e.preventDefault()}>
+          {/* ── 탭 1: 기본 정보 ── */}
+          {tab === 'basic' && (
+            <Card>
               <FormField label="제목" required error={errors.title?.message}>
                 <input {...register('title', { required: '제목을 입력하세요' })} placeholder="예) 심령이 가난한 자는 복이 있나니" className={inputClass} />
               </FormField>
-              <FormField label="부제">
-                <input {...register('subtitle')} placeholder="목록과 카드에 함께 보입니다 (선택)" className={inputClass} />
+              <FormField label="성경 본문" required error={errors.scripture?.message}>
+                <input {...register('scripture', { required: '성경 본문을 입력하세요' })} placeholder="마태복음 5:1–12" className={inputClass} />
               </FormField>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <FormField label="성경 본문">
-                  <input {...register('scripture')} placeholder="마태복음 5:1–12" className={inputClass} />
-                </FormField>
-                <FormField label="설교자">
+                <FormField label="설교자" required error={errors.preacher?.message}>
                   <div className="flex gap-2">
-                    <select {...register('preacher')} className={`${selectClass} flex-1`}>
+                    <select {...register('preacher', { required: '설교자를 선택하세요' })} className={`${selectClass} flex-1`}>
                       <option value="">선택하세요</option>
                       {preachers?.map((p) => <option key={p.id} value={p.name}>{p.name}</option>)}
                     </select>
@@ -332,55 +371,140 @@ export default function SermonManagement() {
                 <FormField label="설교일" required error={errors.date?.message}>
                   <input type="date" {...register('date', { required: '날짜를 선택하세요' })} className={inputClass} />
                 </FormField>
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <FormField label="예배 구분">
-                  <input list="service-types" {...register('serviceType')} placeholder="주일설교" className={inputClass} />
-                  <datalist id="service-types">{SERVICE_TYPES.map((t) => <option key={t} value={t} />)}</datalist>
+                  <select {...register('serviceType')} className={selectClass}>
+                    <option value="">선택</option>
+                    {SERVICE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                  </select>
                 </FormField>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField label="시리즈">
                   <input {...register('series')} placeholder="예: 마태복음 강해 (선택)" className={inputClass} />
                 </FormField>
-                <FormField label="주소 (slug)">
-                  <input {...register('slug')} placeholder="2026-09-20-matthew-5" className={inputClass} />
+                <FormField label="태그">
+                  <div className="flex flex-wrap items-center gap-1.5 rounded-lg border border-gray-200 px-2 py-1.5">
+                    {tags.map((t, i) => (
+                      <span key={i} className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-700">
+                        {t}<button type="button" onClick={() => setTags((ts) => ts.filter((_, j) => j !== i))} className="text-gray-400 hover:text-red-600">×</button>
+                      </span>
+                    ))}
+                    <input value={tagDraft} onChange={(e) => setTagDraft(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); const v = tagDraft.trim(); if (v && !tags.includes(v)) setTags((ts) => [...ts, v]); setTagDraft(''); } }}
+                      placeholder="+ 추가" className="min-w-[80px] flex-1 border-0 text-sm focus:outline-none focus:ring-0" />
+                  </div>
                 </FormField>
+              </div>
+              <FormField label="영상 주소">
+                <input {...register('youtubeUrl', { onBlur: (e) => { const clean = normalizeYoutubeUrl(e.target.value); if (clean !== e.target.value) setValue('youtubeUrl', clean, { shouldDirty: true }); } })} placeholder="YouTube / Vimeo URL" className={inputClass} />
+                {youtubeUrl && !videoId && <p className="mt-1 text-xs text-red-500">유효한 YouTube URL이 아닙니다.</p>}
+              </FormField>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="mb-1.5 text-sm font-medium text-gray-700">대표 이미지</p>
+                  <ImageUpload label="" value={thumbnailUrl} onChange={(url) => setValue('thumbnailUrl', url, { shouldDirty: true })} onUpload={uploadImage} resize="content" aspectRatio="4/3" />
+                  <p className="mt-1 text-xs text-gray-400">4:3 · 권장 1600×1200. YouTube URL 입력 시 자동 생성.</p>
+                  <input type="hidden" {...register('thumbnailUrl')} />
+                </div>
+                <FormField label="요약">
+                  <textarea {...register('seoSummary')} rows={5} placeholder="목록과 검색에 보일 2–3줄 (비워두면 첫 단의 첫 문단)" className={textareaClass} />
+                </FormField>
+              </div>
+              <div className="mt-2 grid grid-cols-1 gap-4 border-t border-gray-100 pt-5 sm:grid-cols-2">
+                <FormField label="상태">
+                  <select {...register('status')} className={selectClass}>
+                    <option value="published">공개</option>
+                    <option value="draft">임시저장</option>
+                    <option value="archived">보관</option>
+                  </select>
+                </FormField>
+                <FormField label="공개 예약">
+                  <input type="datetime-local" {...register('scheduledAt')} className={inputClass} />
+                  {scheduledAt && statusVal === 'published' && <p className="mt-1 text-xs text-gray-400">예약 시각이 지나면 자동으로 노출됩니다.</p>}
+                </FormField>
+              </div>
+
+              {/* 설교 스터디 (선택) — 매거진/질문지. 접이식. */}
+              <div className="mt-5 border-t border-gray-100 pt-4">
+                <button type="button" onClick={() => setStudyOpen((v) => !v)} className="flex w-full items-center justify-between text-left">
+                  <span className="text-xs font-bold uppercase tracking-wider text-gray-500">설교 스터디 (선택 · 매거진)</span>
+                  <span className="text-xs text-gray-400">{studyOpen ? '접기' : '펼치기'}</span>
+                </button>
+                {studyOpen && (
+                  <div className="mt-4">
+                    <p className="mb-3 text-xs text-gray-500">홈 설교 매거진·질문지에 표시됩니다. 비워두면 표시되지 않습니다.</p>
+                    <FormField label="한 줄 요약">
+                      <input className={inputClass} value={study.oneLineSummary} onChange={(e) => setStudy((s) => ({ ...s, oneLineSummary: e.target.value }))} placeholder="예: 환경이 아니라 그분께 생명의 샘이 있습니다" />
+                    </FormField>
+                    <FormField label="써머리">
+                      <textarea className={textareaClass} rows={3} value={study.summary} onChange={(e) => setStudy((s) => ({ ...s, summary: e.target.value }))} placeholder="설교의 핵심을 2~3문단으로" />
+                    </FormField>
+                    <QuestionList label="관찰 질문" hint="본문에 무엇이 쓰여 있는가" values={study.observation} onChange={(v) => setStudy((s) => ({ ...s, observation: v }))} />
+                    <QuestionList label="심화 질문" hint="왜 그렇게 말씀하셨는가" values={study.deep} onChange={(v) => setStudy((s) => ({ ...s, deep: v }))} />
+                    <QuestionList label="적용 질문" hint="내 삶에서는 어떻게 되는가" values={study.application} onChange={(v) => setStudy((s) => ({ ...s, application: v }))} />
+                  </div>
+                )}
               </div>
             </Card>
+          )}
 
-            {/* 본문 구성 */}
-            <Card title={`본문 구성 · ${sections.length}단`} action={<span className="text-xs text-gray-400">번호 왼쪽을 끌어 순서 변경</span>}>
-              <div className="space-y-2">
-                {sections.map((s, i) => (
-                  <div
-                    key={i}
-                    draggable
-                    onDragStart={() => setDragIdx(i)}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={() => { if (dragIdx !== null) moveSection(dragIdx, i); setDragIdx(null); }}
-                    onClick={() => setActiveSec(i)}
-                    className={`flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 ${i === activeSec ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:bg-gray-50'}`}
-                  >
-                    <span className="cursor-grab text-gray-300" aria-hidden>⋮⋮</span>
-                    <span className="text-xs font-bold text-gray-400">{String(i + 1).padStart(2, '0')}</span>
-                    <span className={`flex-1 text-sm ${s.subtitle ? 'font-medium text-gray-900' : 'text-gray-400'}`}>{s.subtitle || '소제목 없음'}</span>
-                  </div>
-                ))}
-                <button type="button" onClick={addSection} className="w-full rounded-lg border border-dashed border-gray-300 py-2.5 text-sm text-gray-500 hover:bg-gray-50">+ 단 추가</button>
+          {/* ── 탭 2: 설교 원고 (비공개) ── */}
+          {tab === 'manuscript' && (
+            <Card>
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-gray-500">설교 원고 · 비공개</span>
+                <span className="text-xs text-gray-400">웹에는 공개되지 않습니다 · 원고를 드래그해 선택한 뒤 단으로 보냅니다</span>
               </div>
+              <RichArea
+                inputRef={manuscriptRef}
+                value={manuscript}
+                onChange={setManuscript}
+                rows={20}
+                placeholder="강단에서 쓴 원고 전문을 그대로 붙여 넣으세요. 길이 제한 없습니다."
+                headerAction={<button type="button" onClick={sendSelectionToNewSection} className="text-sm font-medium" style={{ color: 'var(--brand, #1466d6)' }}>선택 영역을 새 단으로 ›</button>}
+              />
+            </Card>
+          )}
 
-              {/* 선택된 단 편집 */}
-              <div className="mt-5 border-t border-gray-100 pt-5">
+          {/* ── 탭 3: 지면 구성 ── */}
+          {tab === 'layout' && (
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr]">
+              <Card className="self-start">
                 <div className="mb-3 flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-gray-500">{String(activeSec + 1).padStart(2, '0')}단 편집</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-gray-500">지면 구성</span>
+                  <span className="text-xs text-gray-400">끌어서 순서 변경</span>
+                </div>
+                <div className="space-y-2">
+                  {sections.map((s, i) => (
+                    <div key={i} draggable
+                      onDragStart={() => setDragIdx(i)}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() => { if (dragIdx !== null) moveSection(dragIdx, i); setDragIdx(null); }}
+                      onClick={() => setActiveSec(i)}
+                      className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 ${i === activeSec ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                      <span className="cursor-grab text-gray-300" aria-hidden>⋮⋮</span>
+                      <span className="text-xs font-bold text-gray-400">{String(i + 1).padStart(2, '0')}</span>
+                      <span className={`flex-1 truncate text-sm ${s.subtitle ? 'font-medium text-gray-900' : 'text-gray-400'}`}>{s.subtitle || '소제목 없음'}</span>
+                    </div>
+                  ))}
+                  <button type="button" onClick={addSection} className="w-full rounded-lg border border-dashed border-gray-300 py-2.5 text-sm text-gray-500 hover:bg-gray-50">+ 단 추가</button>
+                </div>
+              </Card>
+
+              <Card>
+                <div className="mb-1 flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-700">소제목</label>
                   <button type="button" onClick={() => removeSection(activeSec)} className="text-xs text-gray-400 hover:text-red-600">이 단 삭제</button>
                 </div>
-                <FormField label="소제목">
-                  <input value={sec.subtitle ?? ''} onChange={(e) => updateSection(activeSec, { subtitle: e.target.value })} placeholder="이 단의 소제목" className={inputClass} />
-                </FormField>
-                <FormField label="본문">
-                  <textarea value={sec.body ?? ''} onChange={(e) => updateSection(activeSec, { body: e.target.value })} rows={8} placeholder="설교 원고를 붙여 넣으세요." className={textareaClass} />
-                  <p className="mt-1 text-xs text-gray-400">문단 사이를 비우면 페이지에서 단락으로 나뉩니다.</p>
-                </FormField>
+                <input value={sec.subtitle ?? ''} onChange={(e) => updateSection(activeSec, { subtitle: e.target.value })} placeholder="이 단의 소제목" className={`${inputClass} mb-4`} />
+
+                <div className="mb-1 flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-700">본문</label>
+                  <button type="button" onClick={pullManuscriptToSection} className="text-xs font-medium text-gray-500 hover:text-gray-900">원고에서 가져오기</button>
+                </div>
+                <RichArea showLink value={sec.body ?? ''} onChange={(v) => updateSection(activeSec, { body: v })} rows={10} placeholder="웹에 실릴 글입니다. 읽기 좋게 다듬어 주세요." />
+                <p className="mb-4 mt-1 text-xs text-gray-400">문단 사이를 비우면 페이지에서 단락으로 나뉩니다.</p>
+
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <p className="mb-1.5 text-sm font-medium text-gray-700">이 단의 사진</p>
@@ -395,142 +519,9 @@ export default function SermonManagement() {
                     </FormField>
                   </div>
                 </div>
-              </div>
-            </Card>
-
-            {/* 영상 (음성/주보 PDF 제외 — 대표님 지시) */}
-            <Card title="영상">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <FormField label="영상 주소">
-                  <input
-                    {...register('youtubeUrl', { onBlur: (e) => { const clean = normalizeYoutubeUrl(e.target.value); if (clean !== e.target.value) setValue('youtubeUrl', clean, { shouldDirty: true }); } })}
-                    placeholder="YouTube / Vimeo URL" className={inputClass}
-                  />
-                  {youtubeUrl && !videoId && <p className="mt-1 text-xs text-red-500">유효한 YouTube URL이 아닙니다.</p>}
-                </FormField>
-                <FormField label="영상 시작 지점">
-                  <input {...register('videoStartAt')} placeholder="00:00" className={inputClass} />
-                </FormField>
-              </div>
-            </Card>
-
-            {/* 설교 스터디 (선택) — 매거진/질문지. 접이식. */}
-            <Card
-              title="설교 스터디 (선택)"
-              action={<button type="button" onClick={() => setStudyOpen((v) => !v)} className="text-xs text-gray-500 hover:text-gray-700">{studyOpen ? '접기' : '펼치기'}</button>}
-            >
-              {studyOpen ? (
-                <>
-                  <p className="mb-3 text-xs text-gray-500">홈 설교 매거진·질문지에 표시됩니다. 비워두면 표시되지 않습니다.</p>
-                  <FormField label="한 줄 요약">
-                    <input className={inputClass} value={study.oneLineSummary} onChange={(e) => setStudy((s) => ({ ...s, oneLineSummary: e.target.value }))} placeholder="예: 환경이 아니라 그분께 생명의 샘이 있습니다" />
-                  </FormField>
-                  <FormField label="써머리 (설교 요약)">
-                    <textarea className={textareaClass} rows={3} value={study.summary} onChange={(e) => setStudy((s) => ({ ...s, summary: e.target.value }))} placeholder="설교의 핵심을 2~3문단으로 정리" />
-                  </FormField>
-                  <QuestionList label="관찰 질문" hint="본문에 무엇이 쓰여 있는가" values={study.observation} onChange={(v) => setStudy((s) => ({ ...s, observation: v }))} />
-                  <QuestionList label="심화 질문" hint="왜 그렇게 말씀하셨는가" values={study.deep} onChange={(v) => setStudy((s) => ({ ...s, deep: v }))} />
-                  <QuestionList label="적용 질문" hint="내 삶에서는 어떻게 되는가" values={study.application} onChange={(v) => setStudy((s) => ({ ...s, application: v }))} />
-                </>
-              ) : (
-                <p className="text-xs text-gray-400">매거진 한줄요약·써머리·관찰/심화/적용 질문 (선택)</p>
-              )}
-            </Card>
-          </div>
-
-          {/* ── 우측 사이드바 ── */}
-          <div className="space-y-6">
-            <Card title="게시">
-              <div className="space-y-3 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-500">상태</span>
-                  <select {...register('status')} className="rounded border border-gray-200 px-2 py-1 text-sm font-semibold">
-                    <option value="published">공개</option>
-                    <option value="draft">임시저장</option>
-                    <option value="archived">보관</option>
-                  </select>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-500">공개 예약</span>
-                  <input type="datetime-local" {...register('scheduledAt')} className="rounded border border-gray-200 px-2 py-1 text-sm" />
-                </div>
-                {scheduledAt && statusVal === 'published' && (
-                  <p className="text-xs text-gray-400">예약 시각이 지나면 자동으로 홈페이지에 노출됩니다.</p>
-                )}
-                <label className="flex items-center justify-between">
-                  <span className="text-gray-500">홈 대표글</span>
-                  <span className="flex items-center gap-2">
-                    <input type="checkbox" {...register('homeFeatured')} className="h-4 w-4" />
-                    <span className="text-xs font-semibold text-gray-700">{homeFeatured ? '켜짐' : '꺼짐'}</span>
-                  </span>
-                </label>
-                <label className="flex items-center justify-between">
-                  <span className="text-gray-500">댓글 허용</span>
-                  <span className="flex items-center gap-2">
-                    <input type="checkbox" {...register('allowComments')} className="h-4 w-4" />
-                    <span className="text-xs font-semibold text-gray-700">{allowComments ? '켜짐' : '꺼짐'}</span>
-                  </span>
-                </label>
-              </div>
-            </Card>
-
-            <Card title="대표 이미지">
-              <ImageUpload label="" value={thumbnailUrl} onChange={(url) => setValue('thumbnailUrl', url, { shouldDirty: true })} onUpload={uploadImage} resize="content" aspectRatio="16/9" />
-              <p className="mt-1 text-xs text-gray-400">목록·공유용 이미지 · 권장 1200×675. YouTube URL 입력 시 자동 생성됩니다.</p>
-              <input type="hidden" {...register('thumbnailUrl')} />
-            </Card>
-
-            <Card title="분류" action={<button type="button" onClick={() => setCatManagerOpen(true)} className="rounded-lg bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200">카테고리 관리</button>}>
-              <p className="mb-1.5 text-sm font-medium text-gray-700">카테고리</p>
-              <div className="mb-4 max-h-32 space-y-1 overflow-y-auto rounded border p-2">
-                {(() => {
-                  let selectedIds: string[] = [];
-                  try { selectedIds = JSON.parse(watch('categoryIds') || '[]'); } catch { selectedIds = []; }
-                  return categories?.map((cat) => (
-                    <label key={cat.id} className="flex items-center gap-2 text-sm">
-                      <input type="checkbox" checked={selectedIds.includes(cat.id)} onChange={(e) => {
-                        const next = e.target.checked ? [...new Set([...selectedIds, cat.id])] : selectedIds.filter((x) => x !== cat.id);
-                        setValue('categoryIds', JSON.stringify(next), { shouldDirty: true });
-                      }} className="rounded" />
-                      {cat.name}
-                    </label>
-                  ));
-                })()}
-                {(!categories || categories.length === 0) && <p className="text-sm text-gray-400">카테고리가 없습니다</p>}
-              </div>
-              <input type="hidden" {...register('categoryIds')} />
-
-              <p className="mb-1.5 text-sm font-medium text-gray-700">태그</p>
-              <div className="mb-2 flex flex-wrap gap-1.5">
-                {tags.map((t, i) => (
-                  <span key={i} className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-700">
-                    {t}
-                    <button type="button" onClick={() => setTags((ts) => ts.filter((_, j) => j !== i))} className="text-gray-400 hover:text-red-600">×</button>
-                  </span>
-                ))}
-              </div>
-              <input
-                value={tagDraft}
-                onChange={(e) => setTagDraft(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); const v = tagDraft.trim(); if (v && !tags.includes(v)) setTags((ts) => [...ts, v]); setTagDraft(''); } }}
-                placeholder="태그 입력 후 Enter"
-                className={`${inputClass} mb-4`}
-              />
-
-              <p className="mb-1.5 text-sm font-medium text-gray-700">언어</p>
-              <select {...register('language')} className={selectClass}>
-                <option value="ko">한국어</option>
-                <option value="en">English</option>
-              </select>
-            </Card>
-
-            <Card title="검색 노출">
-              <FormField label="요약">
-                <textarea {...register('seoSummary')} rows={3} placeholder="목록과 검색에 보일 2–3줄" className={textareaClass} />
-                <p className="mt-1 text-xs text-gray-400">비워두면 써머리 또는 첫 문단을 사용합니다.</p>
-              </FormField>
-            </Card>
-          </div>
+              </Card>
+            </div>
+          )}
         </form>
 
         {(createMutation.isError || updateMutation.isError) && <p className="mt-4 text-sm text-red-500">저장 중 오류가 발생했습니다.</p>}
@@ -602,10 +593,7 @@ export default function SermonManagement() {
                 {data.data.map((item) => (
                   <tr key={item.id} className="border-b hover:bg-gray-50">
                     <td className="px-4 py-3"><input type="checkbox" checked={bulk.has(item.id)} onChange={() => bulk.toggle(item.id)} aria-label={`${item.title} 선택`} /></td>
-                    <td className="px-4 py-3 text-sm font-medium">
-                      {item.title}
-                      {item.homeFeatured && <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-semibold text-amber-700">홈 대표</span>}
-                    </td>
+                    <td className="px-4 py-3 text-sm font-medium">{item.title}</td>
                     <td className="px-4 py-3 text-sm">{item.preacher}</td>
                     <td className="px-4 py-3 text-sm">{item.scripture}</td>
                     <td className="px-4 py-3 text-sm">{item.date ? String(item.date).slice(0, 10) : '-'}</td>
@@ -661,7 +649,7 @@ export default function SermonManagement() {
   );
 }
 
-// 여러 줄 텍스트 → 질문 배열. 각 줄의 앞 번호/불릿 제거 + 빈 줄 제거.
+// 여러 줄 텍스트 → 질문 배열 (앞 번호/불릿 제거)
 function splitQuestions(text: string): string[] {
   return text.split(/\r?\n/).map((s) => s.replace(/^\s*(?:\d+\s*[.)]|[-•*·])\s*/, '').trim()).filter(Boolean);
 }

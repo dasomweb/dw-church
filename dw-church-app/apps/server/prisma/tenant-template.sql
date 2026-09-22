@@ -45,6 +45,7 @@ CREATE TABLE tenant_template.sermons (
     series          VARCHAR(200),
     slug            VARCHAR(200),
     body            JSONB NOT NULL DEFAULT '[]'::jsonb,
+    manuscript      TEXT,
     tags            JSONB NOT NULL DEFAULT '[]'::jsonb,
     language        VARCHAR(20) DEFAULT 'ko',
     seo_summary     VARCHAR(1000),
