@@ -118,6 +118,14 @@ export function FeaturesGridBlock({ props }: FeaturesGridBlockProps) {
   // where bgMode='dark' applied text-white globally, leaving white-on-
   // white text inside the (white) cards.
   const cardBackground = (props.cardBackground as string) || '';
+  // 헤더(eyebrow/title/subtitle) 정렬 — 기본 center(기존 동작 유지). 에디토리얼
+  // 레이아웃(좌측 정렬 제목 + 더보기)용으로 'left'/'right' 선택 가능.
+  const headerAlign = ((props.headerAlign as string) ?? 'center') as 'left' | 'center' | 'right';
+  const headerAlignClass = headerAlign === 'left' ? 'text-left' : headerAlign === 'right' ? 'text-right' : 'text-center';
+  // 섹션 하단 '더 보기' 링크(예: 교회 이야기 더 보기 ›). moreLabel+moreHref 둘 다 있어야 노출.
+  const moreLabel = (props.moreLabel as string) || '';
+  const moreHref = (props.moreHref as string) || '';
+  const moreNewTab = props.moreNewTab === true;
   // 2026-05-25: SectionShell + applyLayout=true 로 마이그레이션 — 운영자가
   // LayoutField 의 Height/Align/Width/ContentWidth 바꾸면 즉시 반영.
 
@@ -161,7 +169,7 @@ export function FeaturesGridBlock({ props }: FeaturesGridBlockProps) {
         style={{ display: 'flex', flexDirection: 'column', gap: 'var(--block-gap, 2.5rem)' }}
       >
         {(eyebrow || title || subtitle) && (
-          <header className="text-center">
+          <header className={headerAlignClass}>
             {eyebrow && (
               <EyebrowElement
                 text={eyebrow}
@@ -204,6 +212,18 @@ export function FeaturesGridBlock({ props }: FeaturesGridBlockProps) {
             />
           ))}
         </ul>
+
+        {moreLabel && moreHref && (
+          <div className={headerAlignClass}>
+            <a
+              href={moreHref}
+              {...(moreNewTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+              style={{ color: 'var(--dw-primary, var(--accent, currentColor))', fontWeight: 600, fontSize: '0.95rem', textDecoration: 'none' }}
+            >
+              {moreLabel} ›
+            </a>
+          </div>
+        )}
       </div>
     </SectionShell>
   );

@@ -16,6 +16,10 @@ interface ValueItem {
   /** Card body copy. `body` or legacy `description`. */
   description?: string;
   body?: string;
+  /** Optional link — when set the whole card becomes a link to a detail page. */
+  href?: string;
+  /** Link text shown at the bottom of a linked card (default '자세히 ›'). */
+  linkLabel?: string;
 }
 
 /**
@@ -65,31 +69,48 @@ export function ValuesGridBlock({ props }: ValuesGridBlockProps) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--block-gap, 2.25rem)' }}>
         <SectionHeadingRule props={props} title={title} showRule={showRule} />
         <ul className="b2b-cq-grid list-none p-0 m-0" style={cqVars}>
-          {items.map((it, i) => (
-            <li key={i} style={cardStyle}>
-              <EyebrowElement
-                text={it.overline || ''}
-                props={props}
-                elementKey={`items[${i}].overline`}
-              />
-              <HeadingElement
-                text={it.title || ''}
-                props={props}
-                elementKey={`items[${i}].title`}
-                defaultTag="h3"
-                defaultSize="h4"
-              />
-              <TextBodyElement
-                text={it.body || it.description || ''}
-                props={props}
-                elementKey={`items[${i}].description`}
-                defaultTag="div"
-                defaultSize="body"
-                html
-                baseStyle={{ color: 'var(--brand-muted, var(--text-muted, #6b7280))' }}
-              />
-            </li>
-          ))}
+          {items.map((it, i) => {
+            const inner = (
+              <>
+                <EyebrowElement
+                  text={it.overline || ''}
+                  props={props}
+                  elementKey={`items[${i}].overline`}
+                />
+                <HeadingElement
+                  text={it.title || ''}
+                  props={props}
+                  elementKey={`items[${i}].title`}
+                  defaultTag="h3"
+                  defaultSize="h4"
+                />
+                <TextBodyElement
+                  text={it.body || it.description || ''}
+                  props={props}
+                  elementKey={`items[${i}].description`}
+                  defaultTag="div"
+                  defaultSize="body"
+                  html
+                  baseStyle={{ color: 'var(--brand-muted, var(--text-muted, #6b7280))' }}
+                />
+                {it.href && (
+                  <span style={{ marginTop: 'auto', paddingTop: '0.5rem', color: 'var(--dw-primary, var(--accent, currentColor))', fontWeight: 600, fontSize: '0.9rem' }}>
+                    {it.linkLabel || '자세히'} ›
+                  </span>
+                )}
+              </>
+            );
+            // href 있으면 카드 전체가 상세 페이지로 가는 링크가 된다(제목 포함). 없으면 정적 카드.
+            return (
+              <li key={i} style={cardStyle} className={it.href ? 'hover:-translate-y-0.5 transition-transform' : undefined}>
+                {it.href ? (
+                  <a href={it.href} style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', height: '100%', color: 'inherit', textDecoration: 'none' }}>
+                    {inner}
+                  </a>
+                ) : inner}
+              </li>
+            );
+          })}
         </ul>
       </div>
     </SectionShell>
