@@ -19,6 +19,27 @@ export const createSermonSchema = z.object({
   observationQuestions: z.array(z.string().max(1000)).optional(),
   deepQuestions: z.array(z.string().max(1000)).optional(),
   applicationQuestions: z.array(z.string().max(1000)).optional(),
+  // 리디자인 — 메타
+  subtitle: z.string().max(500).optional().nullable(),
+  serviceType: z.string().max(100).optional().nullable(),   // 예배 구분(주일설교/수요예배…)
+  series: z.string().max(200).optional().nullable(),
+  slug: z.string().max(200).optional().nullable(),
+  tags: z.array(z.string().max(60)).optional(),
+  language: z.string().max(20).optional().nullable(),
+  seoSummary: z.string().max(1000).optional().nullable(),
+  // 리디자인 — 본문 구성(멀티 섹션): 각 단 = 소제목 + 본문(HTML) + 사진 + 캡션 + 대체텍스트
+  body: z.array(z.object({
+    subtitle: z.string().max(300).optional().nullable(),
+    body: z.string().max(50000).optional().nullable(),
+    imageUrl: z.string().max(2000).optional().nullable(),
+    caption: z.string().max(500).optional().nullable(),
+    alt: z.string().max(500).optional().nullable(),
+  }).passthrough()).optional(),
+  // 리디자인 — 영상/게시
+  videoStartAt: z.string().max(20).optional().nullable(),   // 영상 시작 지점(예: 90 또는 1:30)
+  scheduledAt: z.string().optional().nullable(),            // 공개 예약(ISO datetime)
+  homeFeatured: z.boolean().optional(),                     // 홈 대표글
+  allowComments: z.boolean().optional(),                    // 댓글 허용
 }).passthrough();
 
 export const updateSermonSchema = createSermonSchema.partial();

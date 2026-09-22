@@ -10,6 +10,7 @@ export type {
   BoardPostListParams,
   Bulletin,
   Sermon,
+  SermonBodySection,
   Column,
   Album,
   Video,

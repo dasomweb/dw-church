@@ -46,17 +46,26 @@ export function SingleSermonClient({ sermon }: SingleSermonClientProps) {
   const deep = sermon.deepQuestions ?? [];
   const app = sermon.applicationQuestions ?? [];
   const hasQuestions = obs.length + deep.length + app.length > 0;
+  // 본문 구성(멀티 섹션 원고) — 내용 있는 단만.
+  const bodySections = (sermon.body ?? []).filter(
+    (s) => (s?.subtitle || '').trim() || (s?.body || '').trim() || (s?.imageUrl || '').trim(),
+  );
+  const tags = (sermon.tags ?? []).filter(Boolean);
 
   return (
     <div>
       <Link href={`/sermons`} className="mb-6 inline-block text-sm hover:underline" style={{ color: BRAND }}>
         &larr; 설교 목록
       </Link>
-      <h1 className="mb-4 font-heading text-[26px] font-bold leading-[1.3] sm:text-[34px]">{sermon.title}</h1>
+      <h1 className="mb-2 font-heading text-[26px] font-bold leading-[1.3] sm:text-[34px]">{sermon.title}</h1>
+      {sermon.subtitle && (
+        <p className="mb-4 text-[18px] leading-[1.6]" style={{ color: MUTED }}>{sermon.subtitle}</p>
+      )}
       <div className="mb-6 flex flex-wrap items-center gap-4 text-[14px]" style={{ color: MUTED }}>
         <DateBadge date={sermon.date} />
         {sermon.preacher && <span>{sermon.preacher}</span>}
         {sermon.scripture && <span>{sermon.scripture}</span>}
+        {sermon.series && <span>{sermon.series}</span>}
         {sermon.category && <span className="rounded-full bg-gray-100 px-3 py-1 text-xs">{sermon.category}</span>}
       </div>
 
@@ -69,6 +78,36 @@ export function SingleSermonClient({ sermon }: SingleSermonClientProps) {
       {sermon.youtubeUrl && (
         <div className="mb-10">
           <YoutubeEmbed url={sermon.youtubeUrl} />
+        </div>
+      )}
+
+      {/* 본문 구성 (멀티 섹션 설교 원고) */}
+      {bodySections.length > 0 && (
+        <div className="mb-12 max-w-3xl space-y-10">
+          {bodySections.map((sec, i) => {
+            const paras = (sec.body ?? '').split(/\n{2,}|\n/).map((t) => t.trim()).filter(Boolean);
+            return (
+              <section key={i}>
+                {sec.subtitle && (
+                  <h2 className="mb-4 font-heading text-[22px] font-bold leading-[1.35] sm:text-[26px]">{sec.subtitle}</h2>
+                )}
+                {paras.length > 0 && (
+                  <div className="space-y-4">
+                    {paras.map((par, j) => (
+                      <p key={j} className="text-[17px] leading-[1.95]" style={{ color: 'var(--dw-text, #16181d)' }}>{par}</p>
+                    ))}
+                  </div>
+                )}
+                {sec.imageUrl && (
+                  <figure className="mt-6">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={sec.imageUrl} alt={sec.alt || ''} className="w-full rounded-xl" loading="lazy" />
+                    {sec.caption && <figcaption className="mt-2 text-[13px]" style={{ color: MUTED }}>{sec.caption}</figcaption>}
+                  </figure>
+                )}
+              </section>
+            );
+          })}
         </div>
       )}
 
@@ -102,6 +141,15 @@ export function SingleSermonClient({ sermon }: SingleSermonClientProps) {
             <QCard tag="적용" heading="내 삶에서는 어떻게 되는가" desc="모임에서 함께 나눕니다." items={app} />
           </div>
         </section>
+      )}
+
+      {/* 태그 */}
+      {tags.length > 0 && (
+        <div className="mt-10 flex flex-wrap gap-2">
+          {tags.map((t, i) => (
+            <span key={i} className="rounded-full px-3 py-1 text-[13px]" style={{ background: SURFACE, color: MUTED }}>#{t}</span>
+          ))}
+        </div>
       )}
     </div>
   );

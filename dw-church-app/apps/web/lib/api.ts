@@ -323,13 +323,14 @@ export async function getDetailTemplate(
 
 export async function getSermons(
   slug: string,
-  params?: { page?: number; perPage?: number; category?: string; search?: string },
+  params?: { page?: number; perPage?: number; category?: string; search?: string; featured?: boolean },
 ): Promise<any> {
   const p = new URLSearchParams();
   if (params?.page) p.set('page', String(params.page));
   if (params?.perPage) p.set('perPage', String(params.perPage));
   if (params?.category) p.set('category', params.category);
   if (params?.search) p.set('search', params.search);
+  if (params?.featured) p.set('featured', 'true');
   const qs = p.toString();
 
   // No cache for search results, 60s revalidation for regular lists

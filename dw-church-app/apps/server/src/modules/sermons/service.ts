@@ -42,10 +42,11 @@ interface ListParams {
   categoryId?: string;
   orderBy?: string;
   order?: string;
+  featured?: boolean;  // 홈 대표글만
 }
 
 export async function listSermons(schema: string, params: ListParams) {
-  const { page, perPage, search, status, categoryId, orderBy, order } = params;
+  const { page, perPage, search, status, categoryId, orderBy, order, featured } = params;
   const offset = (page - 1) * perPage;
 
   let whereClause = 'WHERE 1=1';
@@ -55,6 +56,13 @@ export async function listSermons(schema: string, params: ListParams) {
   if (status) {
     whereClause += ` AND s.status = $${paramIndex++}`;
     values.push(status);
+    // 공개 예약(scheduled_at)이 미래면 공개 목록에서 숨긴다(예약 시간 지나면 자동 노출·크론 없음).
+    if (status === 'published') {
+      whereClause += ` AND (s.scheduled_at IS NULL OR s.scheduled_at <= NOW())`;
+    }
+  }
+  if (featured) {
+    whereClause += ` AND s.home_featured = true`;
   }
   if (search) {
     whereClause += ` AND (s.title ILIKE $${paramIndex} OR p.name ILIKE $${paramIndex})`;
@@ -188,8 +196,11 @@ export async function createSermon(schema: string, input: CreateSermonInput) {
   const rows = await prisma.$queryRawUnsafe<[{ id: string }]>(
     `INSERT INTO "${schema}".sermons
        (title, scripture, youtube_url, sermon_date, thumbnail_url, preacher_id, status,
-        one_line_summary, summary, observation_questions, deep_questions, application_questions)
-     VALUES ($1, $2, $3, $4, $5, $6::uuid, $7, $8, $9, $10::jsonb, $11::jsonb, $12::jsonb)
+        one_line_summary, summary, observation_questions, deep_questions, application_questions,
+        subtitle, service_type, series, slug, body, tags, language, seo_summary,
+        video_start_at, scheduled_at, home_featured, allow_comments)
+     VALUES ($1, $2, $3, $4, $5, $6::uuid, $7, $8, $9, $10::jsonb, $11::jsonb, $12::jsonb,
+             $13, $14, $15, $16, $17::jsonb, $18::jsonb, $19, $20, $21, $22, $23, $24)
      RETURNING id`,
     input.title,
     input.scripture ?? null,
@@ -203,6 +214,18 @@ export async function createSermon(schema: string, input: CreateSermonInput) {
     JSON.stringify(input.observationQuestions ?? []),
     JSON.stringify(input.deepQuestions ?? []),
     JSON.stringify(input.applicationQuestions ?? []),
+    input.subtitle ?? null,
+    input.serviceType ?? null,
+    input.series ?? null,
+    input.slug ?? null,
+    JSON.stringify(input.body ?? []),
+    JSON.stringify(input.tags ?? []),
+    input.language ?? 'ko',
+    input.seoSummary ?? null,
+    input.videoStartAt ?? null,
+    input.scheduledAt ? new Date(input.scheduledAt) : null,
+    input.homeFeatured ?? false,
+    input.allowComments ?? false,
   );
 
   const sermonId = rows[0].id;
@@ -252,6 +275,19 @@ export async function updateSermon(schema: string, id: string, input: UpdateSerm
   if (input.observationQuestions !== undefined) { setClauses.push(`observation_questions = $${paramIndex++}::jsonb`); values.push(JSON.stringify(input.observationQuestions)); }
   if (input.deepQuestions !== undefined) { setClauses.push(`deep_questions = $${paramIndex++}::jsonb`); values.push(JSON.stringify(input.deepQuestions)); }
   if (input.applicationQuestions !== undefined) { setClauses.push(`application_questions = $${paramIndex++}::jsonb`); values.push(JSON.stringify(input.applicationQuestions)); }
+  // 리디자인 필드
+  if (input.subtitle !== undefined) { setClauses.push(`subtitle = $${paramIndex++}`); values.push(input.subtitle); }
+  if (input.serviceType !== undefined) { setClauses.push(`service_type = $${paramIndex++}`); values.push(input.serviceType); }
+  if (input.series !== undefined) { setClauses.push(`series = $${paramIndex++}`); values.push(input.series); }
+  if (input.slug !== undefined) { setClauses.push(`slug = $${paramIndex++}`); values.push(input.slug); }
+  if (input.body !== undefined) { setClauses.push(`body = $${paramIndex++}::jsonb`); values.push(JSON.stringify(input.body)); }
+  if (input.tags !== undefined) { setClauses.push(`tags = $${paramIndex++}::jsonb`); values.push(JSON.stringify(input.tags)); }
+  if (input.language !== undefined) { setClauses.push(`language = $${paramIndex++}`); values.push(input.language); }
+  if (input.seoSummary !== undefined) { setClauses.push(`seo_summary = $${paramIndex++}`); values.push(input.seoSummary); }
+  if (input.videoStartAt !== undefined) { setClauses.push(`video_start_at = $${paramIndex++}`); values.push(input.videoStartAt); }
+  if (input.scheduledAt !== undefined) { setClauses.push(`scheduled_at = $${paramIndex++}`); values.push(input.scheduledAt ? new Date(input.scheduledAt) : null); }
+  if (input.homeFeatured !== undefined) { setClauses.push(`home_featured = $${paramIndex++}`); values.push(input.homeFeatured); }
+  if (input.allowComments !== undefined) { setClauses.push(`allow_comments = $${paramIndex++}`); values.push(input.allowComments); }
 
   if (setClauses.length > 0) {
     setClauses.push(`updated_at = NOW()`);

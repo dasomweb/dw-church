@@ -412,6 +412,7 @@ export class DWChurchClient {
       ...toQueryParams(params),
       category: params?.category,
       preacher: params?.preacher,
+      ...(params?.featured ? { featured: 'true' } : {}),
     };
     const res = await this.api.get<PaginatedResponse<Sermon>>(`${this.namespace}/sermons`, query);
     return { ...res, data: (res.data ?? []).map(mapSermon) };

@@ -463,7 +463,7 @@ async function main(): Promise<void> {
     // 스키마별 버전 스탬프를 두고, 이미 현재 버전으로 반영된 스키마는 건너뛴다.
     // ⚠️ 아래 per-schema DDL 블록을 하나라도 바꾸면(테이블/컬럼 추가) SCHEMA_VERSION을
     //    올려라 → 기존 테넌트가 "다음 배포 때 한 번만" 다시 반영하고 이후 다시 건너뛴다.
-    const SCHEMA_VERSION = 10; // ↑10: online_bulletins 테이블 추가(온라인 주보 콘텐츠 모듈)
+    const SCHEMA_VERSION = 11; // ↑11: sermons 확장(본문 구성 body·부제·시리즈·예배구분·slug·태그·언어·검색요약·영상시작·공개예약·홈대표·댓글허용)
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS public.tenant_schema_versions (
         "schema_name" TEXT PRIMARY KEY,
@@ -892,6 +892,24 @@ async function main(): Promise<void> {
         await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".sermons ADD COLUMN IF NOT EXISTS "observation_questions" JSONB NOT NULL DEFAULT '[]'::jsonb`);
         await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".sermons ADD COLUMN IF NOT EXISTS "deep_questions" JSONB NOT NULL DEFAULT '[]'::jsonb`);
         await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".sermons ADD COLUMN IF NOT EXISTS "application_questions" JSONB NOT NULL DEFAULT '[]'::jsonb`);
+        alterHits++;
+      } catch { /* sermons table may not exist; skip */ }
+
+      // 1b-3. 설교 리디자인 — 본문 구성(멀티 섹션 body) + 메타(부제·예배구분·시리즈·slug·
+      //       태그·언어·검색요약·영상 시작지점) + 게시(공개예약·홈 대표글·댓글 허용).
+      try {
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".sermons ADD COLUMN IF NOT EXISTS "subtitle" VARCHAR(500)`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".sermons ADD COLUMN IF NOT EXISTS "service_type" VARCHAR(100)`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".sermons ADD COLUMN IF NOT EXISTS "series" VARCHAR(200)`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".sermons ADD COLUMN IF NOT EXISTS "slug" VARCHAR(200)`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".sermons ADD COLUMN IF NOT EXISTS "body" JSONB NOT NULL DEFAULT '[]'::jsonb`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".sermons ADD COLUMN IF NOT EXISTS "tags" JSONB NOT NULL DEFAULT '[]'::jsonb`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".sermons ADD COLUMN IF NOT EXISTS "language" VARCHAR(20) DEFAULT 'ko'`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".sermons ADD COLUMN IF NOT EXISTS "seo_summary" VARCHAR(1000)`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".sermons ADD COLUMN IF NOT EXISTS "video_start_at" VARCHAR(20)`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".sermons ADD COLUMN IF NOT EXISTS "scheduled_at" TIMESTAMPTZ`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".sermons ADD COLUMN IF NOT EXISTS "home_featured" BOOLEAN NOT NULL DEFAULT false`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "${schema}".sermons ADD COLUMN IF NOT EXISTS "allow_comments" BOOLEAN NOT NULL DEFAULT false`);
         alterHits++;
       } catch { /* sermons table may not exist; skip */ }
 

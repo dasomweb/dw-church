@@ -16,9 +16,10 @@ export async function sermonRoutes(app: FastifyInstance) {
     const categoryId = query.categoryId as string | undefined;
     const orderBy = query.orderBy as string | undefined;
     const order = query.order as string | undefined;
+    const featured = query.featured === 'true' || query.featured === '1';
 
     const { data, total } = await sermonService.listSermons(schema, {
-      page, perPage, search, status, categoryId, orderBy, order,
+      page, perPage, search, status, categoryId, orderBy, order, featured,
     });
 
     return reply.send(paginatedResponse(data, total, page, perPage));

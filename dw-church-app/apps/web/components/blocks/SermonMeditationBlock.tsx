@@ -43,11 +43,15 @@ export async function SermonMeditationBlock({ props, slug }: Props) {
   const moreLabel = (props.moreLabel as string) || '설교 전문 읽기';
   const showAside = props.showAside !== false;
 
-  // ── data ──
+  // ── data ── 홈 대표글(home_featured) 우선, 없으면 최신 게시 설교.
   let sermon: SermonLike | null = null;
   try {
-    const res = await getSermons(slug, { perPage: 1 });
-    const list = (Array.isArray(res) ? res : (res?.data ?? [])) as SermonLike[];
+    const feat = await getSermons(slug, { perPage: 1, featured: true });
+    let list = (Array.isArray(feat) ? feat : (feat?.data ?? [])) as SermonLike[];
+    if (list.length === 0) {
+      const res = await getSermons(slug, { perPage: 1 });
+      list = (Array.isArray(res) ? res : (res?.data ?? [])) as SermonLike[];
+    }
     sermon = list[0] ?? null;
   } catch { sermon = null; }
 

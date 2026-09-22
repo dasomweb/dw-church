@@ -56,6 +56,15 @@ export interface OnlineBulletin {
 }
 
 // ─── Sermon ─────────────────────────────────────────────────
+/** 설교 본문 구성 — 한 '단'(섹션): 소제목 + 본문(HTML) + 사진 + 캡션 + 대체텍스트. */
+export interface SermonBodySection {
+  subtitle?: string | null;
+  body?: string | null;
+  imageUrl?: string | null;
+  caption?: string | null;
+  alt?: string | null;
+}
+
 export interface Sermon {
   id: string;
   title: string;
@@ -73,6 +82,19 @@ export interface Sermon {
   observationQuestions?: string[];
   deepQuestions?: string[];
   applicationQuestions?: string[];
+  // 리디자인 — 메타 + 본문 구성 + 게시
+  subtitle?: string | null;
+  serviceType?: string | null;   // 예배 구분
+  series?: string | null;
+  slug?: string | null;
+  tags?: string[];
+  language?: string | null;
+  seoSummary?: string | null;
+  body?: SermonBodySection[];    // 본문 구성(멀티 섹션)
+  videoStartAt?: string | null;  // 영상 시작 지점
+  scheduledAt?: string | null;   // 공개 예약(ISO)
+  homeFeatured?: boolean;        // 홈 대표글
+  allowComments?: boolean;       // 댓글 허용
   createdAt: string;
   modifiedAt: string;
 }
@@ -582,6 +604,7 @@ export interface ListParams {
 export interface SermonListParams extends ListParams {
   category?: string;
   preacher?: string;
+  featured?: boolean;  // 홈 대표글만
 }
 
 export interface VideoListParams extends ListParams {
