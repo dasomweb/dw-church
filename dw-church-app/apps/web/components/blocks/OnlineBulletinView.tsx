@@ -416,6 +416,22 @@ function ScoreGrid({ imgs, title, onOpen }: { imgs: string[]; title: string; onO
   );
 }
 
+// 찬양 악보 — 썸네일 그리드가 아니라 전체폭 세로 리스트로 바로 보이게(클릭 시 확대 뷰어).
+function ScoreList({ imgs, title, onOpen }: { imgs: string[]; title: string; onOpen: (imgs: string[], i: number, title: string) => void }) {
+  const list = (imgs ?? []).filter(Boolean);
+  if (list.length === 0) return null;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {list.map((u, k) => (
+        <button key={k} type="button" onClick={() => onOpen(list, k, title)} style={{ display: 'block', width: '100%', border: `1px solid ${border}`, borderRadius: 10, overflow: 'hidden', background: surface, padding: 0, cursor: 'zoom-in' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={u} alt={`${title} ${k + 1}`} style={{ width: '100%', height: 'auto', display: 'block' }} loading="lazy" />
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function segBtn(on: boolean): CSSProperties {
   return { padding: '6px 12px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer', border: 'none', background: on ? bg : 'transparent', color: on ? primary : muted, boxShadow: on ? '0 1px 2px rgba(0,0,0,.08)' : 'none' };
 }
@@ -448,7 +464,7 @@ function HymnItem({ h, en, onOpen }: { h: Hymn; en: boolean; onOpen: (imgs: stri
       </div>
       {(showScore || showLyrics) && (
         <div style={{ borderTop: `1px solid ${faint}` }}>
-          {showScore && <div style={{ padding: '14px 16px' }}><ScoreGrid imgs={imgs} title={h.title || '악보'} onOpen={onOpen} /></div>}
+          {showScore && <div style={{ padding: '14px 16px' }}><ScoreList imgs={imgs} title={h.title || '악보'} onOpen={onOpen} /></div>}
           {showLyrics && <div className="whitespace-pre-line" style={{ padding: '14px 16px 18px', color: textColor, lineHeight: 1.8 }} {...html(lyrics)} />}
         </div>
       )}

@@ -16,6 +16,14 @@ import { FormField, FormSection, FormRow, inputClass, selectClass, MultiImageUpl
 // 성경본문(개역개정/ESV)·기도제목·소그룹질문은 한/영 병기 + 자동번역 지원.
 
 const EMPTY_HYMN: OnlineHymn = { title: '', hymnNo: '', imageUrls: [], note: '', lyrics: '' };
+
+// 배열 항목 위치 이동(순서 변경)
+function moveItem<T>(arr: T[], from: number, to: number): T[] {
+  const n = [...arr];
+  const [m] = n.splice(from, 1);
+  if (m !== undefined) n.splice(to, 0, m);
+  return n;
+}
 const EMPTY_CONTENT: OnlineBulletinContent = {
   serviceTitle: '주일예배',
   presider: '',
@@ -356,7 +364,12 @@ export default function OnlineBulletinManagement() {
           <FormSection title="2. 찬양 악보">
             <div className="space-y-4">
               {hymns.map((h, i) => (
-                <HymnEditor key={i} hymn={h} onChange={(patch) => setContent({ hymns: hymns.map((x, idx) => idx === i ? { ...x, ...patch } : x) })} onRemove={() => setContent({ hymns: hymns.filter((_, idx) => idx !== i) })} uploadImage={uploadImage} scanLyrics={scanLyrics} translateLyrics={translateOne} />
+                <HymnEditor key={i} hymn={h} index={i}
+                  onChange={(patch) => setContent({ hymns: hymns.map((x, idx) => idx === i ? { ...x, ...patch } : x) })}
+                  onRemove={() => setContent({ hymns: hymns.filter((_, idx) => idx !== i) })}
+                  onMoveUp={i > 0 ? () => setContent({ hymns: moveItem(hymns, i, i - 1) }) : undefined}
+                  onMoveDown={i < hymns.length - 1 ? () => setContent({ hymns: moveItem(hymns, i, i + 1) }) : undefined}
+                  uploadImage={uploadImage} scanLyrics={scanLyrics} translateLyrics={translateOne} />
               ))}
               <button type="button" onClick={() => setContent({ hymns: [...hymns, { ...EMPTY_HYMN }] })} className={btnGhost}>+ 찬양 추가</button>
             </div>
@@ -645,10 +658,13 @@ export default function OnlineBulletinManagement() {
 }
 
 /* ── sub-editors ── */
-function HymnEditor({ hymn, onChange, onRemove, uploadImage, scanLyrics, translateLyrics }: { hymn: OnlineHymn; onChange: (patch: Partial<OnlineHymn>) => void; onRemove?: () => void; uploadImage: (f: File) => Promise<string>; scanLyrics: (urls: string[]) => Promise<string>; translateLyrics: (text: string) => Promise<string> }) {
+function HymnEditor({ hymn, onChange, onRemove, onMoveUp, onMoveDown, index, uploadImage, scanLyrics, translateLyrics }: { hymn: OnlineHymn; onChange: (patch: Partial<OnlineHymn>) => void; onRemove?: () => void; onMoveUp?: () => void; onMoveDown?: () => void; index?: number; uploadImage: (f: File) => Promise<string>; scanLyrics: (urls: string[]) => Promise<string>; translateLyrics: (text: string) => Promise<string> }) {
   const [scanning, setScanning] = useState(false);
   const [translating, setTranslating] = useState(false);
   const imageUrls = hymn.imageUrls || [];
+  // 이미 내용이 있는 찬양은 접힌 상태로, 새(빈) 찬양은 펼친 상태로 시작.
+  const [open, setOpen] = useState(() => !((hymn.title || '').trim() || imageUrls.length > 0));
+  const summary = [hymn.hymnNo, hymn.title].filter(Boolean).join(' ') || (index != null ? `찬양 ${index + 1}` : '찬양');
   const doScan = async () => {
     if (imageUrls.length === 0 || scanning) return;
     setScanning(true);
@@ -666,29 +682,44 @@ function HymnEditor({ hymn, onChange, onRemove, uploadImage, scanLyrics, transla
     } finally { setTranslating(false); }
   };
   return (
-    <div className="rounded-lg border border-gray-200 p-3 space-y-2">
-      <div className="flex gap-2 items-start">
-        <input value={hymn.title} onChange={(e) => onChange({ title: e.target.value })} placeholder="찬양 제목 (예: 우리 구주 나신 날)" className={`${inputClass} flex-1`} />
-        <input value={hymn.hymnNo} onChange={(e) => onChange({ hymnNo: e.target.value })} placeholder="장 (예: 찬121)" className={`${inputClass} w-28`} />
-        {onRemove && <button type="button" onClick={onRemove} className={`${btnDelRow} pt-2`}>삭제</button>}
+    <div className="rounded-lg border border-gray-200">
+      {/* 헤더: 접기/펴기 · 요약 · 순서 이동 · 삭제 */}
+      <div className="flex items-center gap-2 rounded-t-lg bg-gray-50/60 px-3 py-2">
+        <button type="button" onClick={() => setOpen((v) => !v)} className="w-5 text-sm text-gray-400 hover:text-gray-700" aria-label={open ? '접기' : '펴기'}>{open ? '▾' : '▸'}</button>
+        <button type="button" onClick={() => setOpen((v) => !v)} className="flex-1 truncate text-left text-sm font-medium text-gray-800">
+          {summary}
+          <span className="text-gray-400">{imageUrls.length ? ` · 악보 ${imageUrls.length}장` : ''}{(hymn.lyrics || '').trim() ? ' · 가사' : ''}</span>
+        </button>
+        {onMoveUp && <button type="button" onClick={onMoveUp} className="px-1 text-gray-400 hover:text-gray-700" aria-label="위로 이동">▲</button>}
+        {onMoveDown && <button type="button" onClick={onMoveDown} className="px-1 text-gray-400 hover:text-gray-700" aria-label="아래로 이동">▼</button>}
+        {onRemove && <button type="button" onClick={onRemove} className={btnDelRow}>삭제</button>}
       </div>
-      <MultiImageUpload value={imageUrls} onChange={(urls) => onChange({ imageUrls: urls })} onUpload={uploadImage} resize="content" max={6} label="악보 이미지" />
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <label className="text-sm font-medium text-gray-700">가사 (악보 아래 표시 — 모바일 대비)</label>
-        <div className="flex gap-2">
-          <button type="button" onClick={doScan} disabled={imageUrls.length === 0 || scanning} className={btnAiClass} title={imageUrls.length === 0 ? '먼저 악보 이미지를 업로드하세요' : '악보에서 가사를 인식합니다'}>
-            {scanning ? '스캔 중…' : '🔎 악보에서 가사 스캔'}
-          </button>
-          <button type="button" onClick={doTranslate} disabled={!(hymn.lyrics || '').trim() || translating} className={btnAiClass} title={!(hymn.lyrics || '').trim() ? '먼저 한국어 가사를 입력/스캔하세요' : '가사를 영어로 번역합니다'}>
-            {translating ? '번역 중…' : '🌐 가사 영어 번역'}
-          </button>
+
+      {open && (
+        <div className="space-y-2 border-t border-gray-100 p-3">
+          <div className="flex gap-2 items-start">
+            <input value={hymn.title} onChange={(e) => onChange({ title: e.target.value })} placeholder="찬양 제목 (예: 우리 구주 나신 날)" className={`${inputClass} flex-1`} />
+            <input value={hymn.hymnNo} onChange={(e) => onChange({ hymnNo: e.target.value })} placeholder="장 (예: 찬121)" className={`${inputClass} w-28`} />
+          </div>
+          <MultiImageUpload value={imageUrls} onChange={(urls) => onChange({ imageUrls: urls })} onUpload={uploadImage} resize="content" max={6} label="악보 이미지" />
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <label className="text-sm font-medium text-gray-700">가사 (악보 아래 표시 — 모바일 대비)</label>
+            <div className="flex gap-2">
+              <button type="button" onClick={doScan} disabled={imageUrls.length === 0 || scanning} className={btnAiClass} title={imageUrls.length === 0 ? '먼저 악보 이미지를 업로드하세요' : '악보에서 가사를 인식합니다'}>
+                {scanning ? '스캔 중…' : '🔎 악보에서 가사 스캔'}
+              </button>
+              <button type="button" onClick={doTranslate} disabled={!(hymn.lyrics || '').trim() || translating} className={btnAiClass} title={!(hymn.lyrics || '').trim() ? '먼저 한국어 가사를 입력/스캔하세요' : '가사를 영어로 번역합니다'}>
+                {translating ? '번역 중…' : '🌐 가사 영어 번역'}
+              </button>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <textarea value={hymn.lyrics ?? ''} onChange={(e) => onChange({ lyrics: e.target.value })} rows={5} placeholder="가사 · 한국어 (직접 입력하거나 '악보에서 가사 스캔')" className={inputClass} />
+            <textarea value={hymn.lyricsEn ?? ''} onChange={(e) => onChange({ lyricsEn: e.target.value })} rows={5} placeholder="Lyrics · English (optional)" className={inputClass} />
+          </div>
+          <input value={hymn.note} onChange={(e) => onChange({ note: e.target.value })} placeholder="메모 (선택)" className={inputClass} />
         </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-        <textarea value={hymn.lyrics ?? ''} onChange={(e) => onChange({ lyrics: e.target.value })} rows={5} placeholder="가사 · 한국어 (직접 입력하거나 '악보에서 가사 스캔')" className={inputClass} />
-        <textarea value={hymn.lyricsEn ?? ''} onChange={(e) => onChange({ lyricsEn: e.target.value })} rows={5} placeholder="Lyrics · English (optional)" className={inputClass} />
-      </div>
-      <input value={hymn.note} onChange={(e) => onChange({ note: e.target.value })} placeholder="메모 (선택)" className={inputClass} />
+      )}
     </div>
   );
 }
