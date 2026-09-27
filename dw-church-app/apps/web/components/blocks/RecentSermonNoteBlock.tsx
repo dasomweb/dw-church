@@ -40,29 +40,29 @@ export async function RecentSermonNoteBlock({ props, slug }: Props) {
   const scripture = c.scripture || '';
   const img = c.thumbnailUrl || '';
   const date = fmtDate(note.noteDate || note.note_date);
-  const body = excerpt(adult.text || '');
+  const body = excerpt(adult.text || '', 300);
   const moreLabel = (props.moreLabel as string) || '설교노트 보기';
   const moreUrl = (props.moreUrl as string) || '/onlinejubo';
 
   return (
     <DataSection props={props} defaultBg="var(--dw-background, #fff)">
       <div className="mx-auto max-w-6xl">
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:gap-12">
-          {img && (
-            <Link href={moreUrl} className="relative block w-full overflow-hidden lg:flex-[0_1_42%]" style={{ aspectRatio: '4 / 3', background: SURFACE, borderRadius: 4 }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={img} alt={title} className="absolute inset-0 h-full w-full object-cover" />
-            </Link>
-          )}
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
           <div className="min-w-0 lg:flex-1">
             <p style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: '.14em', color: 'var(--dw-secondary, #5e6044)' }}>{eyebrow}</p>
             <h2 style={{ ...SERIF, margin: '12px 0 0', fontSize: 'clamp(26px,3.4vw,40px)', fontWeight: 600, letterSpacing: '-0.025em', lineHeight: 1.25, color: INK }}>{title}</h2>
             <p style={{ margin: '12px 0 0', fontSize: 14, color: MUTED }}>{[date, scripture].filter(Boolean).join(' · ')}</p>
-            {body && <p style={{ margin: '18px 0 0', fontSize: 16, lineHeight: 1.9, color: 'var(--dw-text, #3a3129)' }}>{body}</p>}
-            <p style={{ margin: '20px 0 0', fontSize: 15, fontWeight: 600 }}>
+            {body && <p style={{ margin: '18px 0 0', fontSize: 16, lineHeight: 1.95, color: 'var(--dw-text, #3a3129)' }}>{body}</p>}
+            <p style={{ margin: '22px 0 0', fontSize: 15, fontWeight: 600 }}>
               <Link href={moreUrl} style={{ color: OLIVE }}>{moreLabel} ›</Link>
             </p>
           </div>
+          {img && (
+            <Link href={moreUrl} className="relative block w-full overflow-hidden lg:flex-[0_0_34%] lg:max-w-[340px]" style={{ aspectRatio: '4 / 3', background: SURFACE, borderRadius: 4 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={img} alt={title} className="absolute inset-0 h-full w-full object-cover" />
+            </Link>
+          )}
         </div>
       </div>
     </DataSection>
