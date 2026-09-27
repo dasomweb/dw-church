@@ -124,8 +124,8 @@ export function SermonNoteEditor({ content, onChange }: { content: SermonNoteCon
         </FormField>
         <div>
           <p className="mb-1.5 text-sm font-medium text-gray-700">대표 이미지</p>
-          <ImageUpload label="" value={content.thumbnailUrl ?? ''} onChange={(url) => onChange({ ...content, thumbnailUrl: url })} onUpload={uploadImage} resize="content" aspectRatio="4/3" />
-          <p className="mt-1 text-xs text-gray-400">홈 '최근 설교노트'에 표시됩니다.</p>
+          <ImageUpload label="" value={content.thumbnailUrl ?? ''} onChange={(url) => onChange({ ...content, thumbnailUrl: url })} onUpload={uploadImage} resize="content" aspectRatio="16/9" />
+          <p className="mt-1 text-xs text-gray-400">홈 '최근 설교노트'에 표시됩니다. (16:9 권장)</p>
         </div>
       </div>
 
