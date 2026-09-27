@@ -402,6 +402,32 @@ export async function getSermonNoteByDate(slug: string, date: string): Promise<a
   }
 }
 
+/** 설교노트 목록(설교노트 모듈) — 전용 설교노트 보기 페이지의 '지난 설교노트'용. */
+export async function getSermonNotes(
+  slug: string,
+  params?: { page?: number; perPage?: number },
+): Promise<any> {
+  const p = new URLSearchParams();
+  if (params?.page) p.set('page', String(params.page));
+  if (params?.perPage) p.set('perPage', String(params.perPage));
+  const qs = p.toString();
+  try {
+    return await apiFetch<any>(slug, `/api/v1/sermon-notes${qs ? '?' + qs : ''}`, { revalidate: CACHE_CONTENT });
+  } catch {
+    return { data: [] };
+  }
+}
+
+/** 단일 설교노트(설교노트 모듈) — 전용 설교노트 보기 페이지 상세. 없으면 null. */
+export async function getSermonNote(slug: string, id: string): Promise<any> {
+  try {
+    const res = await apiFetch(slug, `/api/v1/sermon-notes/${id}`, { revalidate: CACHE_CONTENT });
+    return unwrap(res);
+  } catch {
+    return null;
+  }
+}
+
 /** Latest published online bulletin — used by the online_bulletin data block. */
 export async function getLatestOnlineBulletin(slug: string): Promise<any> {
   const res = await apiFetch(slug, `/api/v1/online-bulletins/latest`, { revalidate: CACHE_CONTENT });

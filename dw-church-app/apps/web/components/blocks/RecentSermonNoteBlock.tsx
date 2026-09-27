@@ -42,7 +42,7 @@ export async function RecentSermonNoteBlock({ props, slug }: Props) {
   const date = fmtDate(note.noteDate || note.note_date);
   const body = excerpt(adult.text || '', 300);
   const moreLabel = (props.moreLabel as string) || '설교노트 보기';
-  const moreUrl = (props.moreUrl as string) || '/onlinejubo';
+  const moreUrl = (props.moreUrl as string) || '/sermon-note';
 
   return (
     <DataSection props={props} defaultBg="var(--dw-background, #fff)">

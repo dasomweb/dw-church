@@ -1783,7 +1783,7 @@ const RECENT_SERMON_NOTE = churchBlock(
   { title: '표시', fields: [
     { key: 'eyebrow', label: '라벨(윗글)', type: 'text', hint: '예: 이번 주 설교노트. 내용·대표 이미지는 [설교노트 관리]에서 등록합니다.' },
     { key: 'moreLabel', label: '링크 텍스트', type: 'text', hint: '예: 설교노트 보기' },
-    { key: 'moreUrl', label: '링크 주소', type: 'text', hint: '기본 /onlinejubo' },
+    { key: 'moreUrl', label: '링크 주소', type: 'text', hint: '기본 /sermon-note (설교노트 보기 페이지)' },
   ]},
 );
 // 주보·광고 — 주보(주보 모듈) + 광고(교회소식 게시판, board-select) + 액션 버튼.
