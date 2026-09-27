@@ -345,7 +345,7 @@ export function OnlineBulletinView({ bulletin, sermonNote: moduleNote }: { bulle
       {/* 본문: 데스크톱은 좌측 목차 사이드바 + 우측 콘텐츠, 모바일은 콘텐츠만 */}
       <div className="ob-body" style={{ maxWidth: 1200, margin: '0 auto' }}>
         {items.length > 0 && (
-          <aside className="ob-side" style={{ flex: 'none', width: 248, alignSelf: 'flex-start', position: 'sticky', top: headerH + 58, maxHeight: `calc(100vh - ${headerH + 74}px)`, overflowY: 'auto', borderRight: `1px solid ${faint}`, padding: '18px 12px', background: surface }}>
+          <aside className="ob-side" style={{ flex: 'none', width: 200, alignSelf: 'flex-start', position: 'sticky', top: headerH + 58, maxHeight: `calc(100vh - ${headerH + 74}px)`, overflowY: 'auto', borderRight: `1px solid ${faint}`, padding: '18px 10px', background: surface }}>
             <div style={{ padding: '0 10px 10px', fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', color: muted }}>목차</div>
             {items.map((it, i) => (
               <button key={i} type="button" onClick={() => jump(i)} className="flex items-center gap-2.5 w-full" style={{ padding: '11px 12px', borderRadius: 10, cursor: 'pointer', border: 'none', textAlign: 'left', background: i === active ? bg : 'transparent' }}>
@@ -356,7 +356,7 @@ export function OnlineBulletinView({ bulletin, sermonNote: moduleNote }: { bulle
           </aside>
         )}
 
-        <div className="ob-content" onTouchStart={swipeStart} onTouchEnd={swipeEnd} style={{ flex: 1, minWidth: 0, maxWidth: 820, margin: '0 auto', padding: '0 22px', fontSize: `${fontScale}%` }}>
+        <div className="ob-content" onTouchStart={swipeStart} onTouchEnd={swipeEnd} style={{ flex: 1, minWidth: 0, maxWidth: 940, margin: '0 auto', padding: '0 22px', fontSize: `${fontScale}%` }}>
           {active === 0 && (
             <div style={{ padding: '22px 0 26px' }}>
               <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', color: primary }}>
