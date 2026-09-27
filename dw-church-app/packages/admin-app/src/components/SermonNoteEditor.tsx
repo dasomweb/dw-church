@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import type { SermonNoteContent, SermonNoteCongregation, SermonNoteCongregationKey } from '@dw-church/api-client';
 import { useDWChurchClient } from '@dw-church/api-client';
 import { FormField, inputClass } from './FormField';
-import { MultiImageUpload } from './ImageUpload';
+import { ImageUpload, MultiImageUpload } from './ImageUpload';
 import { useToast } from './Toast';
 
 // 설교노트 편집기 — 온라인 주보 설교노트 섹션과 독립 설교노트 관리에서 "똑같이" 쓰는 공용 컴포넌트.
@@ -118,9 +118,16 @@ export function SermonNoteEditor({ content, onChange }: { content: SermonNoteCon
 
   return (
     <div className="space-y-4">
-      <FormField label="성경 본문 (선택)">
-        <input value={content.scripture ?? ''} onChange={(e) => onChange({ ...content, scripture: e.target.value })} placeholder="예: 요한복음 5:1–18" className={inputClass} />
-      </FormField>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_240px]">
+        <FormField label="성경 본문 (선택)">
+          <input value={content.scripture ?? ''} onChange={(e) => onChange({ ...content, scripture: e.target.value })} placeholder="예: 요한복음 5:1–18" className={inputClass} />
+        </FormField>
+        <div>
+          <p className="mb-1.5 text-sm font-medium text-gray-700">대표 이미지</p>
+          <ImageUpload label="" value={content.thumbnailUrl ?? ''} onChange={(url) => onChange({ ...content, thumbnailUrl: url })} onUpload={uploadImage} resize="content" aspectRatio="4/3" />
+          <p className="mt-1 text-xs text-gray-400">홈 '최근 설교노트'에 표시됩니다.</p>
+        </div>
+      </div>
 
       {/* 회중 탭 */}
       <div className="flex flex-wrap gap-1.5">

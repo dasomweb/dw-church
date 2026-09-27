@@ -43,6 +43,15 @@ export async function getSermonNoteByDate(schema: string, date: string, publishe
   return rows[0] ?? null;
 }
 
+/** 최신 설교노트 — 홈 '최근 설교노트' 블록용. publishedOnly: 익명 스토어프론트는 게시본만. */
+export async function getLatestSermonNote(schema: string, publishedOnly = true) {
+  const where = publishedOnly ? `WHERE status = 'published'` : '';
+  const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
+    `SELECT * FROM "${schema}".sermon_notes ${where} ORDER BY note_date DESC LIMIT 1`,
+  );
+  return rows[0] ?? null;
+}
+
 export async function createSermonNote(schema: string, input: CreateSermonNoteInput) {
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
     `INSERT INTO "${schema}".sermon_notes (title, note_date, content, status)

@@ -76,6 +76,7 @@ export interface SermonNoteCongregation {
 }
 export interface SermonNoteContent {
   scripture?: string;
+  thumbnailUrl?: string;   // 대표 이미지 — 홈 최근 설교노트 블록 등에 사용
   congregations?: {
     adult?: SermonNoteCongregation;
     em?: SermonNoteCongregation;

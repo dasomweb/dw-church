@@ -1778,6 +1778,14 @@ const SERMON_MEDITATION = churchBlock(
     { key: 'bulletinUrl', label: '주보 링크 주소', type: 'text', hint: '기본 /onlinejubo' },
   ]},
 );
+// 최근 설교노트 — 설교노트 모듈 최신 1건(대표 이미지·제목·발췌). 내용/이미지는 [설교노트 관리]에서.
+const RECENT_SERMON_NOTE = churchBlock(
+  { title: '표시', fields: [
+    { key: 'eyebrow', label: '라벨(윗글)', type: 'text', hint: '예: 이번 주 설교노트. 내용·대표 이미지는 [설교노트 관리]에서 등록합니다.' },
+    { key: 'moreLabel', label: '링크 텍스트', type: 'text', hint: '예: 설교노트 보기' },
+    { key: 'moreUrl', label: '링크 주소', type: 'text', hint: '기본 /onlinejubo' },
+  ]},
+);
 // 주보·광고 — 주보(주보 모듈) + 광고(교회소식 게시판, board-select) + 액션 버튼.
 // board-select/버튼 flat 필드를 쓰므로 churchBlock 대신 직접 정의.
 const NEWS_ANNOUNCEMENTS: BlockElementRegistry = {
@@ -1984,6 +1992,7 @@ export const ELEMENT_REGISTRY: Record<string, BlockElementRegistry> = {
   recent_sermons:   RECENT_SERMONS,
   sermon_magazine:  SERMON_MAGAZINE,
   sermon_meditation: SERMON_MEDITATION,
+  recent_sermon_note: RECENT_SERMON_NOTE,
   devotion_reader:  DEVOTION_READER,
   cardnews:         CARDNEWS,
   recent_bulletins: RECENT_BULLETINS,

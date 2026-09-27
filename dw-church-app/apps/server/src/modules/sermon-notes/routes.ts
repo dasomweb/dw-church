@@ -15,6 +15,13 @@ export async function sermonNoteRoutes(app: FastifyInstance) {
     return reply.send(paginatedResponse(data, total, page, perPage));
   });
 
+  // 최신 설교노트 — 홈 '최근 설교노트' 블록. '/:id' 보다 먼저. 익명 → 게시본만.
+  app.get('/sermon-notes/latest', { preHandler: [optionalAuth] }, async (request, reply) => {
+    const note = await service.getLatestSermonNote(getSchema(request), !request.user);
+    if (!note) return reply.status(404).send({ error: { code: 'NOT_FOUND', message: 'No sermon note' } });
+    return reply.send({ data: note });
+  });
+
   // 특정 주일 날짜의 설교노트 — 온라인 주보(스토어프론트) + 온라인 주보 편집기가 사용.
   // '/:id' 보다 먼저 등록해 'by-date' 가 id 로 잡히지 않게. 익명 → 게시본만.
   app.get('/sermon-notes/by-date/:date', { preHandler: [optionalAuth] }, async (request, reply) => {
