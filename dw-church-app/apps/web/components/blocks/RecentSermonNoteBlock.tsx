@@ -49,7 +49,7 @@ export async function RecentSermonNoteBlock({ props, slug }: Props) {
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:gap-12">
           {img && (
-            <Link href={moreUrl} className="relative block w-full overflow-hidden lg:flex-[1_1_52%]" style={{ aspectRatio: '16 / 9', background: SURFACE, borderRadius: 4 }}>
+            <Link href={moreUrl} className="relative block w-full overflow-hidden lg:flex-[1_1_52%]" style={{ aspectRatio: '4 / 3', background: SURFACE, borderRadius: 4 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={img} alt={title} className="absolute inset-0 h-full w-full object-cover" />
             </Link>
