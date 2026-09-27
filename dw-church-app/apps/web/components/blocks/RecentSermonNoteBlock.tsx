@@ -46,7 +46,7 @@ export async function RecentSermonNoteBlock({ props, slug }: Props) {
 
   return (
     <DataSection props={props} defaultBg="var(--dw-background, #fff)">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-7xl">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
           <div className="min-w-0 lg:flex-1">
             <p style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: '.14em', color: 'var(--dw-secondary, #5e6044)' }}>{eyebrow}</p>
