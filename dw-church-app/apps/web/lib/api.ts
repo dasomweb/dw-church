@@ -382,6 +382,16 @@ export async function getOnlineBulletin(slug: string, id: string): Promise<any> 
   return unwrap(res);
 }
 
+/** 특정 주일 날짜의 설교노트(설교노트 모듈) — 온라인 주보가 날짜로 끌어옴. 없으면 null. */
+export async function getSermonNoteByDate(slug: string, date: string): Promise<any> {
+  try {
+    const res = await apiFetch(slug, `/api/v1/sermon-notes/by-date/${date}`, { revalidate: CACHE_CONTENT });
+    return unwrap(res);
+  } catch {
+    return null;
+  }
+}
+
 /** Latest published online bulletin — used by the online_bulletin data block. */
 export async function getLatestOnlineBulletin(slug: string): Promise<any> {
   const res = await apiFetch(slug, `/api/v1/online-bulletins/latest`, { revalidate: CACHE_CONTENT });

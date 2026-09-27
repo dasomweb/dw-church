@@ -87,6 +87,7 @@ async function main(): Promise<void> {
   const { sermonRoutes } = await import('./modules/sermons/routes.js');
   const { bulletinRoutes } = await import('./modules/bulletins/routes.js');
   const { onlineBulletinRoutes } = await import('./modules/online-bulletins/routes.js');
+  const { sermonNoteRoutes } = await import('./modules/sermon-notes/routes.js');
   const { columnRoutes } = await import('./modules/columns/routes.js');
   const { albumRoutes } = await import('./modules/albums/routes.js');
   const { videoRoutes } = await import('./modules/videos/routes.js');
@@ -188,6 +189,7 @@ async function main(): Promise<void> {
   await app.register(sermonRoutes, { prefix: '/api/v1' });
   await app.register(bulletinRoutes, { prefix: '/api/v1' });
   await app.register(onlineBulletinRoutes, { prefix: '/api/v1' }); // /online-bulletins (온라인 주보)
+  await app.register(sermonNoteRoutes, { prefix: '/api/v1' }); // /sermon-notes (설교노트)
   await app.register(columnRoutes, { prefix: '/api/v1' });
   await app.register(albumRoutes, { prefix: '/api/v1' });
   await app.register(videoRoutes, { prefix: '/api/v1' });
@@ -463,7 +465,7 @@ async function main(): Promise<void> {
     // 스키마별 버전 스탬프를 두고, 이미 현재 버전으로 반영된 스키마는 건너뛴다.
     // ⚠️ 아래 per-schema DDL 블록을 하나라도 바꾸면(테이블/컬럼 추가) SCHEMA_VERSION을
     //    올려라 → 기존 테넌트가 "다음 배포 때 한 번만" 다시 반영하고 이후 다시 건너뛴다.
-    const SCHEMA_VERSION = 12; // ↑12: sermons.manuscript(설교 원고 — 비공개 전문) 추가
+    const SCHEMA_VERSION = 13; // ↑13: sermon_notes 테이블 추가(설교노트 콘텐츠 모듈 — 주일별 회중별)
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS public.tenant_schema_versions (
         "schema_name" TEXT PRIMARY KEY,
@@ -535,6 +537,27 @@ async function main(): Promise<void> {
         `);
         await prisma.$executeRawUnsafe(
           `CREATE INDEX IF NOT EXISTS "online_bulletins_date_idx" ON "${schema}".online_bulletins ("service_date" DESC)`,
+        );
+        createHits++;
+      } catch { /* skip on error */ }
+
+      // 0b-2. sermon_notes — 설교노트 content module (온라인 주보와 별개). 주일(note_date)별
+      //       회중(장년/EM/Youth/어린이/Kids)별 설교노트 + 소그룹 나눔질문을 content(jsonb)에 담는다.
+      //       온라인 주보 설교노트 섹션은 해당 주일 날짜로 이 모듈에서 끌어와 표시.
+      try {
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".sermon_notes (
+            "id"         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "title"      VARCHAR(500) DEFAULT '',
+            "note_date"  DATE NOT NULL,
+            "content"    JSONB DEFAULT '{}',
+            "status"     VARCHAR(20) DEFAULT 'published' CHECK (status IN ('draft', 'published', 'archived')),
+            "created_at" TIMESTAMPTZ DEFAULT NOW(),
+            "updated_at" TIMESTAMPTZ DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(
+          `CREATE INDEX IF NOT EXISTS "sermon_notes_date_idx" ON "${schema}".sermon_notes ("note_date" DESC)`,
         );
         createHits++;
       } catch { /* skip on error */ }

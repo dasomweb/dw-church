@@ -96,6 +96,18 @@ CREATE TABLE tenant_template.online_bulletins (
 );
 CREATE INDEX idx_online_bulletins_date ON tenant_template.online_bulletins(service_date DESC);
 
+-- ─── Sermon Notes (설교노트 — 주일별 회중별, 온라인 주보와 별개) ─────
+CREATE TABLE tenant_template.sermon_notes (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title           VARCHAR(500) DEFAULT '',
+    note_date       DATE NOT NULL,
+    content         JSONB DEFAULT '{}',
+    status          VARCHAR(20) DEFAULT 'published' CHECK (status IN ('draft', 'published', 'archived')),
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_sermon_notes_date ON tenant_template.sermon_notes(note_date DESC);
+
 -- ─── Pastoral Columns ───────────────────────────────────────
 CREATE TABLE tenant_template.columns_pastoral (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),

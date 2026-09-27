@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { OnlineBulletin, OnlineBulletinContent, OnlineHymn, ListParams, PostStatus } from '@dw-church/api-client';
+import type { OnlineBulletin, OnlineBulletinContent, OnlineHymn, ListParams, PostStatus, SermonNoteContent } from '@dw-church/api-client';
 import {
   useOnlineBulletins,
   useCreateOnlineBulletin,
@@ -8,6 +8,19 @@ import {
   useDWChurchClient,
 } from '@dw-church/api-client';
 import { FormField, FormSection, FormRow, inputClass, selectClass, MultiImageUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
+import { SermonNoteEditor } from '../components/SermonNoteEditor';
+
+// 온라인 주보 content(임베드)의 옛 설교노트 필드 → 설교노트 모듈 content 로 이관(폴백 프리필).
+function embeddedToNote(content: OnlineBulletinContent | undefined): SermonNoteContent {
+  const c = (content ?? {}) as Record<string, any>;
+  const sn = c.sermonNote ?? {}, cn = c.childrenSermonNote ?? {}, cc = c.childrenCartoon ?? {}, st = c.study ?? {};
+  const note: SermonNoteContent = { congregations: {}, study: {} };
+  if (c.scripture?.reference) note.scripture = c.scripture.reference;
+  if (sn.title || sn.text || sn.textEn) note.congregations!.adult = { title: sn.title, text: sn.text, textEn: sn.textEn };
+  if (cn.title || cn.text || cn.textEn || cc.imageUrls?.length) note.congregations!.children = { title: cn.title, text: cn.text, textEn: cn.textEn, cartoonImageUrls: cc.imageUrls, cartoonImageUrlsEn: cc.imageUrlsEn };
+  note.study = { observation: st.observation, correlation: st.correlation, application: st.application, observationEn: st.observationEn, correlationEn: st.correlationEn, applicationEn: st.applicationEn };
+  return note;
+}
 
 // 온라인 주보 관리 — 문서 주보(BulletinManagement)와 별개. content(jsonb) 한 건에
 // 예배순서·찬양악보·대표기도·교회소식·성경본문·기도제목·마지막찬양·소그룹질문을 입력.
@@ -98,6 +111,8 @@ export default function OnlineBulletinManagement() {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [busy, setBusy] = useState<string | null>(null); // 'scripture' | 'prayers' | 'study'
+  // 설교노트 — 설교노트 모듈(해당 주일 날짜)과 같은 데이터. 임베드 대신 모듈에 저장.
+  const [noteContent, setNoteContent] = useState<SermonNoteContent>({});
 
   const { showToast } = useToast();
   const apiClient = useDWChurchClient();
@@ -115,7 +130,6 @@ export default function OnlineBulletinManagement() {
   const hymns = c.hymns ?? [];
   const prayers = c.prayerRequests ?? [];
   const anns = c.announcements ?? [];
-  const study = c.study ?? { observation: [], correlation: [], application: [] };
 
   // ── AI helpers (자동번역 · 성경 · 가사 스캔) ──
   // 원문(한국어)→영어 일괄 번역. 반환 {원문: 번역문}. 크레딧/키 없으면 원문 유지(무손상).
@@ -225,37 +239,7 @@ export default function OnlineBulletinManagement() {
     finally { setBusy(null); }
   };
 
-  const translateStudy = async () => {
-    const keys = ['observation', 'correlation', 'application'] as const;
-    const all = keys.flatMap((k) => study[k] ?? []);
-    if (!all.some((q) => (q || '').trim())) { showToast('error', '먼저 나눔 질문을 입력하세요.'); return; }
-    setBusy('study');
-    try {
-      const map = await translateMany(all);
-      const next = { ...study } as NonNullable<OnlineBulletinContent['study']>;
-      for (const k of keys) {
-        (next as Record<string, unknown>)[`${k}En`] = (study[k] ?? []).map((q) => (q?.trim() ? (map[q.trim()] ?? '') : ''));
-      }
-      setContent({ study: next });
-      showToast('success', '나눔 질문을 영어로 번역했습니다. 확인해주세요.');
-    } catch { showToast('error', '번역에 실패했습니다.'); }
-    finally { setBusy(null); }
-  };
-
-  // 설교 노트 / 어린이 설교 노트 공용 번역 핸들러(동일 구조).
-  const translateNote = async (field: 'sermonNote' | 'childrenSermonNote') => {
-    const text = (c[field]?.text ?? '').trim();
-    if (!text) { showToast('error', '먼저 노트(한국어)를 입력하세요.'); return; }
-    setBusy(field);
-    try {
-      const map = await translateMany([text]);
-      const enText = map[text] ?? '';
-      if (!enText) { showToast('error', '번역에 실패했습니다. 직접 입력해주세요.'); return; }
-      setContent({ [field]: { ...(c[field] ?? {}), text, textEn: enText } } as Partial<OnlineBulletinContent>);
-      showToast('success', '영어로 번역했습니다. 확인해주세요.');
-    } catch { showToast('error', '번역에 실패했습니다.'); }
-    finally { setBusy(null); }
-  };
+  // 설교노트 번역/입력은 SermonNoteEditor(공용) 안에서 처리 — 여기선 제거됨.
 
   // 악보 이미지 → 가사 OCR. 성공 시 lyrics 문자열 반환(HymnEditor 가 필드에 채움).
   const scanLyrics = async (urls: string[]): Promise<string> => {
@@ -267,7 +251,7 @@ export default function OnlineBulletinManagement() {
     } catch { showToast('error', '스캔에 실패했습니다.'); return ''; }
   };
 
-  const handleCreate = () => { setEditingId(null); setForm(structuredClone(EMPTY_FORM)); setView('edit'); };
+  const handleCreate = () => { setEditingId(null); setForm(structuredClone(EMPTY_FORM)); setNoteContent({}); setView('edit'); };
   const handleEdit = (item: OnlineBulletin) => {
     setEditingId(item.id);
     setForm({
@@ -277,6 +261,14 @@ export default function OnlineBulletinManagement() {
       // Merge over EMPTY_CONTENT so older/partial rows still have every field.
       content: { ...structuredClone(EMPTY_CONTENT), ...(item.content ?? {}) },
     });
+    // 설교노트: 먼저 임베드 폴백으로 채우고, 해당 주일 모듈 항목이 있으면 그걸로 교체.
+    setNoteContent(embeddedToNote(item.content));
+    const date = item.serviceDate ? String(item.serviceDate).slice(0, 10) : '';
+    if (date && apiClient) {
+      apiClient.getSermonNoteByDate(date)
+        .then((n) => { if (n?.content) setNoteContent(n.content as SermonNoteContent); })
+        .catch(() => { /* 모듈 항목 없으면 임베드 폴백 유지 */ });
+    }
     setView('edit');
   };
 
@@ -284,7 +276,17 @@ export default function OnlineBulletinManagement() {
     if (!form.title.trim()) { showToast('error', '제목을 입력하세요.'); return; }
     if (!form.serviceDate) { showToast('error', '예배일을 선택하세요.'); return; }
     const payload = { title: form.title, serviceDate: form.serviceDate, status: form.status, content: form.content };
-    const done = { onSuccess: () => { showToast('success', '저장되었습니다.'); setView('list'); }, onError: () => showToast('error', '오류가 발생했습니다.') };
+    const saveNote = async () => {
+      if (form.serviceDate && apiClient) {
+        // 설교노트는 모듈(해당 주일 날짜)에 업서트 — [설교노트 관리]와 동일 데이터.
+        try { await apiClient.upsertSermonNoteByDate(form.serviceDate, { content: noteContent, status: 'published', title: form.title }); }
+        catch { /* 설교노트 저장 실패가 주보 저장을 막지 않음 */ }
+      }
+    };
+    const done = {
+      onSuccess: () => { void saveNote().finally(() => { showToast('success', '저장되었습니다.'); setView('list'); }); },
+      onError: () => showToast('error', '오류가 발생했습니다.'),
+    };
     if (editingId) updateMutation.mutate({ id: editingId, data: payload }, done);
     else createMutation.mutate(payload as Omit<OnlineBulletin, 'id' | 'createdAt' | 'updatedAt'>, done);
   };
@@ -458,67 +460,13 @@ export default function OnlineBulletinManagement() {
             </FormRow>
           </FormSection>
 
-          {/* 6. 설교 노트 (한/영) — 성경 본문 아래 */}
+          {/* 6. 설교 노트 — 회중별(장년/EM/Youth/어린이/Kids) + 소그룹 나눔질문.
+              [설교노트 관리]와 동일한 편집기. 해당 주일 날짜의 설교노트 모듈에 저장·표시. */}
           <FormSection title="6. 설교 노트">
-            <div className="flex items-center justify-between -mt-1 mb-2 gap-2">
-              <p className="text-xs text-gray-500"># 제목, ## 소제목, **강조**, - 불릿, &gt; 인용 서식을 쓰면 사이트에 정리된 문서로 표시됩니다.</p>
-              <button type="button" onClick={() => translateNote('sermonNote')} disabled={busy === 'sermonNote'} className={`${btnAiClass} shrink-0`}>
-                {busy === 'sermonNote' ? '번역 중…' : '🌐 영어 자동번역'}
-              </button>
-            </div>
-            <FormField label="설교 제목 (선택)">
-              <input value={c.sermonNote?.title ?? ''} onChange={(e) => setContent({ sermonNote: { ...(c.sermonNote ?? {}), title: e.target.value } })} placeholder="예: 요한복음 5장을 통해 우리에게 주시는 교훈" className={inputClass} />
-            </FormField>
-            <FormRow>
-              <FormField label="설교 노트 · 한국어">
-                <textarea value={c.sermonNote?.text ?? ''} onChange={(e) => setContent({ sermonNote: { ...(c.sermonNote ?? {}), text: e.target.value } })} rows={16} placeholder={SERMON_PLACEHOLDER} className={`${inputClass} font-mono text-sm`} />
-              </FormField>
-              <FormField label="설교 노트 · English">
-                <textarea value={c.sermonNote?.textEn ?? ''} onChange={(e) => setContent({ sermonNote: { ...(c.sermonNote ?? {}), textEn: e.target.value } })} rows={16} placeholder="English sermon note (markdown)" className={`${inputClass} font-mono text-sm`} />
-              </FormField>
-            </FormRow>
-          </FormSection>
-
-          {/* 7. 어린이 설교 노트 (한/영) — 성인 설교 노트 다음 */}
-          <FormSection title="7. 어린이 설교 노트">
-            <div className="flex items-center justify-between -mt-1 mb-2 gap-2">
-              <p className="text-xs text-gray-500">어린이 눈높이 설교 정리 — 성인 설교 노트와 동일한 서식(# 제목, ## 소제목, ### 소소제목, **강조**, - 불릿, 1. 번호, --- 구분선, &gt; 인용).</p>
-              <button type="button" onClick={() => translateNote('childrenSermonNote')} disabled={busy === 'childrenSermonNote'} className={`${btnAiClass} shrink-0`}>
-                {busy === 'childrenSermonNote' ? '번역 중…' : '🌐 영어 자동번역'}
-              </button>
-            </div>
-            <FormField label="어린이 설교 제목 (선택)">
-              <input value={c.childrenSermonNote?.title ?? ''} onChange={(e) => setContent({ childrenSermonNote: { ...(c.childrenSermonNote ?? {}), title: e.target.value } })} placeholder="예: 예수님을 바라보아요" className={inputClass} />
-            </FormField>
-            <FormRow>
-              <FormField label="어린이 설교 노트 · 한국어">
-                <textarea value={c.childrenSermonNote?.text ?? ''} onChange={(e) => setContent({ childrenSermonNote: { ...(c.childrenSermonNote ?? {}), text: e.target.value } })} rows={16} placeholder={CHILDREN_SERMON_PLACEHOLDER} className={`${inputClass} font-mono text-sm`} />
-              </FormField>
-              <FormField label="어린이 설교 노트 · English">
-                <textarea value={c.childrenSermonNote?.textEn ?? ''} onChange={(e) => setContent({ childrenSermonNote: { ...(c.childrenSermonNote ?? {}), textEn: e.target.value } })} rows={16} placeholder="English children's sermon note (markdown)" className={`${inputClass} font-mono text-sm`} />
-              </FormField>
-            </FormRow>
-          </FormSection>
-
-          {/* 8. 어린이 설교 카툰 (한/영) — 어린이 설교 노트 아래 */}
-          <FormSection title="8. 어린이 설교 카툰">
-            <p className="text-xs text-gray-500 -mt-1 mb-3">어린이 설교를 요약한 카툰(만화) 이미지. 한국어·영어 각각 올리면 사이트에서 한/영 토글로 전환됩니다. 영어를 안 올리면 한국어 카툰이 항상 표시됩니다.</p>
-            <FormRow>
-              <FormField label="카툰 · 한국어 (이미지)">
-                <MultiImageUpload value={c.childrenCartoon?.imageUrls ?? []} onChange={(urls) => setContent({ childrenCartoon: { ...(c.childrenCartoon ?? {}), imageUrls: urls } })} onUpload={uploadImage} resize="content" max={12} label="한국어 카툰" />
-              </FormField>
-              <FormField label="카툰 · English (images)">
-                <MultiImageUpload value={c.childrenCartoon?.imageUrlsEn ?? []} onChange={(urls) => setContent({ childrenCartoon: { ...(c.childrenCartoon ?? {}), imageUrlsEn: urls } })} onUpload={uploadImage} resize="content" max={12} label="English cartoon" />
-              </FormField>
-            </FormRow>
-            <FormRow>
-              <FormField label="설명 (선택, 한국어)">
-                <input value={c.childrenCartoon?.caption ?? ''} onChange={(e) => setContent({ childrenCartoon: { ...(c.childrenCartoon ?? {}), caption: e.target.value } })} placeholder="카툰 아래 설명" className={inputClass} />
-              </FormField>
-              <FormField label="Caption (optional, English)">
-                <input value={c.childrenCartoon?.captionEn ?? ''} onChange={(e) => setContent({ childrenCartoon: { ...(c.childrenCartoon ?? {}), captionEn: e.target.value } })} placeholder="Caption under cartoon" className={inputClass} />
-              </FormField>
-            </FormRow>
+            <p className="text-xs text-gray-500 -mt-1 mb-3">
+              회중별 설교노트 + 소그룹 나눔질문. <b>설교노트 관리</b>의 해당 주일({form.serviceDate || '예배일 먼저 선택'})과 같은 내용으로 저장되어, 사이트 온라인 주보 설교노트에 표시됩니다.
+            </p>
+            <SermonNoteEditor content={noteContent} onChange={setNoteContent} />
           </FormSection>
 
           {/* 9. 기도 제목 (한/영) */}
@@ -556,19 +504,6 @@ export default function OnlineBulletinManagement() {
           {/* 10. 마지막 찬양 */}
           <FormSection title="10. 마지막 찬양">
             <HymnEditor hymn={c.closingHymn ?? { ...EMPTY_HYMN }} onChange={(patch) => setContent({ closingHymn: { ...(c.closingHymn ?? EMPTY_HYMN), ...patch } })} uploadImage={uploadImage} scanLyrics={scanLyrics} translateLyrics={translateOne} />
-          </FormSection>
-
-          {/* 11. 소그룹 나눔 질문 (한/영) */}
-          <FormSection title="11. 소그룹 나눔 질문 (본문 연계)">
-            <div className="flex items-center justify-between -mt-1 mb-2 gap-2">
-              <p className="text-xs text-gray-500">성경 본문과 연결된 관찰·상관·적용 질문 — 소그룹에서 사용합니다.</p>
-              <button type="button" onClick={translateStudy} disabled={busy === 'study'} className={`${btnAiClass} shrink-0`}>
-                {busy === 'study' ? '번역 중…' : '🌐 영어 자동번역'}
-              </button>
-            </div>
-            <BilingualQuestionList label="관찰 질문" items={study.observation ?? []} itemsEn={study.observationEn ?? []} onChange={(ko, en) => setContent({ study: { ...study, observation: ko, observationEn: en } })} />
-            <BilingualQuestionList label="상관 질문" items={study.correlation ?? []} itemsEn={study.correlationEn ?? []} onChange={(ko, en) => setContent({ study: { ...study, correlation: ko, correlationEn: en } })} />
-            <BilingualQuestionList label="적용 질문" items={study.application ?? []} itemsEn={study.applicationEn ?? []} onChange={(ko, en) => setContent({ study: { ...study, application: ko, applicationEn: en } })} />
           </FormSection>
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-6 py-4 flex items-center justify-end gap-3">
@@ -725,30 +660,3 @@ function HymnEditor({ hymn, onChange, onRemove, onMoveUp, onMoveDown, index, upl
 }
 
 // 관찰/상관/적용 질문 — 한/영 병기. items(한글)·itemsEn(영어)를 같은 인덱스로 짝지어 관리.
-function BilingualQuestionList({ label, items, itemsEn, onChange }: { label: string; items: string[]; itemsEn: string[]; onChange: (items: string[], itemsEn: string[]) => void }) {
-  const ko = items ?? [];
-  const en = itemsEn ?? [];
-  const enAt = (i: number) => en[i] ?? '';
-  const setKo = (i: number, v: string) => onChange(ko.map((x, idx) => idx === i ? v : x), ko.map((_, idx) => idx === i ? enAt(i) : enAt(idx)));
-  const setEn = (i: number, v: string) => onChange(ko, ko.map((_, idx) => idx === i ? v : enAt(idx)));
-  const add = () => onChange([...ko, ''], [...ko.map((_, i) => enAt(i)), '']);
-  const remove = (i: number) => onChange(ko.filter((_, idx) => idx !== i), ko.map((_, idx) => enAt(idx)).filter((_, idx) => idx !== i));
-  return (
-    <div className="mb-4">
-      <p className="text-sm font-medium text-gray-700 mb-1.5">{label}</p>
-      <div className="space-y-2">
-        {ko.map((q, i) => (
-          <div key={i} className="flex gap-2 items-start">
-            <span className="text-xs text-gray-400 font-mono pt-2.5 w-5 shrink-0">{i + 1}.</span>
-            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-2">
-              <textarea value={q} onChange={(e) => setKo(i, e.target.value)} rows={2} placeholder="질문 (한국어)" className={inputClass} />
-              <textarea value={enAt(i)} onChange={(e) => setEn(i, e.target.value)} rows={2} placeholder="Question (English)" className={inputClass} />
-            </div>
-            <button type="button" onClick={() => remove(i)} className={`${btnDelRow} pt-2`}>삭제</button>
-          </div>
-        ))}
-        <button type="button" onClick={add} className={btnGhost}>+ {label} 추가</button>
-      </div>
-    </div>
-  );
-}

@@ -55,6 +55,48 @@ export interface OnlineBulletin {
   updatedAt: string;
 }
 
+// ─── Sermon Note (설교노트 — 주일별 회중별, 온라인 주보와 별개) ───────
+/** 한 회중(장년/EM/Youth/어린이/Kids)의 설교노트 — 제목 + 본문(마크다운, 한/영) + 카툰. */
+export interface SermonNoteCongregation {
+  title?: string;
+  text?: string;
+  textEn?: string;
+  cartoonImageUrls?: string[];
+  cartoonImageUrlsEn?: string[];
+}
+/** 소그룹 나눔질문(관찰/상관/적용, 한/영). */
+export interface SermonNoteStudy {
+  observation?: string[];
+  correlation?: string[];
+  application?: string[];
+  observationEn?: string[];
+  correlationEn?: string[];
+  applicationEn?: string[];
+}
+export interface SermonNoteContent {
+  scripture?: string;
+  congregations?: {
+    adult?: SermonNoteCongregation;
+    em?: SermonNoteCongregation;
+    youth?: SermonNoteCongregation;
+    children?: SermonNoteCongregation;
+    kids?: SermonNoteCongregation;
+  };
+  study?: SermonNoteStudy;
+  [key: string]: unknown;
+}
+export interface SermonNote {
+  id: string;
+  title: string;
+  noteDate: string;
+  content: SermonNoteContent;
+  status: PostStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+/** 회중 키(장년/EM/Youth/어린이/Kids). */
+export type SermonNoteCongregationKey = 'adult' | 'em' | 'youth' | 'children' | 'kids';
+
 // ─── Sermon ─────────────────────────────────────────────────
 /** 설교 본문 구성 — 한 '단'(섹션): 소제목 + 본문(HTML) + 사진 + 캡션 + 대체텍스트. */
 export interface SermonBodySection {

@@ -7,6 +7,7 @@ import type {
   BoardPost,
   Bulletin,
   OnlineBulletin,
+  SermonNote,
   Sermon,
   Column,
   Album,
@@ -75,6 +76,12 @@ export const queryKeys = {
     all: ['online-bulletins'] as const,
     list: (params?: ListParams) => ['online-bulletins', 'list', params] as const,
     detail: (id: string) => ['online-bulletins', 'detail', id] as const,
+  },
+  sermonNotes: {
+    all: ['sermon-notes'] as const,
+    list: (params?: ListParams) => ['sermon-notes', 'list', params] as const,
+    detail: (id: string) => ['sermon-notes', 'detail', id] as const,
+    byDate: (date: string) => ['sermon-notes', 'by-date', date] as const,
   },
   sermons: {
     all: ['sermons'] as const,
@@ -370,6 +377,54 @@ export function useDeleteOnlineBulletin() {
   return useMutation({
     mutationFn: (id: string) => client!.deleteOnlineBulletin(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.onlineBulletins.all }),
+  });
+}
+
+// ─── Sermon Note Hooks (설교노트) ─────────────────────
+export function useSermonNotes(params?: ListParams) {
+  const client = useDWChurchClient();
+  return useQuery<PaginatedResponse<SermonNote>>({
+    queryKey: queryKeys.sermonNotes.list(params),
+    queryFn: () => client!.getSermonNotes(params),
+    enabled: !!client,
+    staleTime: STALE_TIME,
+  });
+}
+
+export function useSermonNote(id: string) {
+  const client = useDWChurchClient();
+  return useQuery<SermonNote>({
+    queryKey: queryKeys.sermonNotes.detail(id),
+    queryFn: () => client!.getSermonNote(id),
+    enabled: !!client && !!id,
+    staleTime: STALE_TIME,
+  });
+}
+
+export function useCreateSermonNote() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Omit<SermonNote, 'id' | 'createdAt' | 'updatedAt'>) => client!.createSermonNote(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.sermonNotes.all }),
+  });
+}
+
+export function useUpdateSermonNote() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<SermonNote> }) => client!.updateSermonNote(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.sermonNotes.all }),
+  });
+}
+
+export function useDeleteSermonNote() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => client!.deleteSermonNote(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.sermonNotes.all }),
   });
 }
 

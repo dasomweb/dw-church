@@ -44,6 +44,7 @@ const ResetPasswordPage = lazyWithReload(() => import('./pages/ResetPasswordPage
 const Dashboard = lazyWithReload(() => import('./pages/Dashboard'));
 const BulletinManagement = lazyWithReload(() => import('./pages/BulletinManagement'));
 const OnlineBulletinManagement = lazyWithReload(() => import('./pages/OnlineBulletinManagement'));
+const SermonNoteManagement = lazyWithReload(() => import('./pages/SermonNoteManagement'));
 const SermonManagement = lazyWithReload(() => import('./pages/SermonManagement'));
 const ColumnManagement = lazyWithReload(() => import('./pages/ColumnManagement'));
 const AlbumManagement = lazyWithReload(() => import('./pages/AlbumManagement'));
@@ -290,6 +291,7 @@ const tenantChildRoutes = (
     <Route path="intake" element={<IntakeRedirect />} />
     <Route path="bulletins" element={<BulletinManagement />} />
     <Route path="online-bulletins" element={<OnlineBulletinManagement />} />
+    <Route path="sermon-notes" element={<SermonNoteManagement />} />
     <Route path="sermons" element={<SermonManagement />} />
     <Route path="columns" element={<ColumnManagement />} />
     <Route path="albums" element={<AlbumManagement />} />

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getLatestOnlineBulletin, getOnlineBulletin, getOnlineBulletins } from '@/lib/api';
+import { getLatestOnlineBulletin, getOnlineBulletin, getOnlineBulletins, getSermonNoteByDate } from '@/lib/api';
 import { DataSection } from './DataSection';
 import { OnlineBulletinView } from './OnlineBulletinView';
 
@@ -42,9 +42,13 @@ export async function OnlineBulletinBlock({ props, slug }: OnlineBulletinBlockPr
   }
   if (!bulletin) return null;
 
+  // 설교노트는 해당 주일 날짜로 설교노트 모듈에서 끌어온다(없으면 온라인 주보 임베드 폴백).
+  const date = String((bulletin.serviceDate as string) || (bulletin.service_date as string) || '').slice(0, 10);
+  const note = date ? await getSermonNoteByDate(slug, date) : null;
+
   return (
     <DataSection props={props} defaultBg="var(--dw-background, #ffffff)">
-      <OnlineBulletinView bulletin={bulletin} />
+      <OnlineBulletinView bulletin={bulletin} sermonNote={note?.content ?? null} />
     </DataSection>
   );
 }

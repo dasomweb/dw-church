@@ -9,6 +9,7 @@ import type {
   BoardPost,
   Bulletin,
   OnlineBulletin,
+  SermonNote,
   Category,
   Cell,
   ChurchSettings,
@@ -404,6 +405,37 @@ export class DWChurchClient {
 
   async deleteOnlineBulletin(id: string): Promise<void> {
     return this.api.delete(`${this.namespace}/online-bulletins/${id}`);
+  }
+
+  // ─── Sermon Notes (설교노트) ─────────────────────────────
+  async getSermonNotes(params?: ListParams): Promise<PaginatedResponse<SermonNote>> {
+    return this.api.get(`${this.namespace}/sermon-notes`, toQueryParams(params));
+  }
+
+  async getSermonNote(id: string): Promise<SermonNote> {
+    return unwrapData(await this.api.get(`${this.namespace}/sermon-notes/${id}`));
+  }
+
+  /** 특정 주일 날짜의 설교노트(없으면 404 → 호출측에서 null 처리). */
+  async getSermonNoteByDate(date: string): Promise<SermonNote> {
+    return unwrapData(await this.api.get(`${this.namespace}/sermon-notes/by-date/${date}`));
+  }
+
+  async createSermonNote(data: Omit<SermonNote, 'id' | 'createdAt' | 'updatedAt'>): Promise<SermonNote> {
+    return unwrapData(await this.api.post(`${this.namespace}/sermon-notes`, data));
+  }
+
+  async updateSermonNote(id: string, data: Partial<SermonNote>): Promise<SermonNote> {
+    return unwrapData(await this.api.put(`${this.namespace}/sermon-notes/${id}`, data));
+  }
+
+  /** 날짜 기준 업서트 — 온라인 주보 편집기에서 해당 주일 설교노트를 저장할 때. */
+  async upsertSermonNoteByDate(date: string, data: Partial<SermonNote>): Promise<SermonNote> {
+    return unwrapData(await this.api.put(`${this.namespace}/sermon-notes/by-date/${date}`, data));
+  }
+
+  async deleteSermonNote(id: string): Promise<void> {
+    return this.api.delete(`${this.namespace}/sermon-notes/${id}`);
   }
 
   // ─── Sermons ────────────────────────────────────────────

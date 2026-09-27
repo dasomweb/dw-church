@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, type ReactNode, type CSSProperties, type TouchEvent as RTouchEvent } from 'react';
 import { createPortal } from 'react-dom';
+import type { SermonNoteContent } from '@dw-church/api-client';
 
 // 온라인 주보 스토어프론트 뷰 — Claude Design "온라인 주보 개선안 v2" 반영.
 // 한 번에 한 섹션만 표시(나머지 숨김) — 상단 현재섹션(목차 바텀시트)·진행바·"다음 섹션" 버튼으로 전환.
@@ -20,7 +21,7 @@ const bg = 'var(--dw-background, #ffffff)';
 
 const html = (s?: string) => ({ dangerouslySetInnerHTML: { __html: s || '' } });
 
-export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any> }) {
+export function OnlineBulletinView({ bulletin, sermonNote: moduleNote }: { bulletin: Record<string, any>; sermonNote?: SermonNoteContent | null }) {
   const [lang, setLang] = useState<'ko' | 'en'>('ko');
   const [mounted, setMounted] = useState(false);
   const [headerH, setHeaderH] = useState(0);      // 사이트 헤더 높이(상단바 sticky 오프셋)
@@ -115,8 +116,38 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
   const cartoonEn: string[] = Array.isArray(childrenCartoon.imageUrlsEn) ? childrenCartoon.imageUrlsEn : [];
   const cartoonImgs = en && cartoonEn.length > 0 ? cartoonEn : cartoonKo;
 
+  // 설교 노트 = 설교노트 모듈(moduleNote, 해당 주일 날짜)이 있으면 그걸로, 없으면 온라인 주보 임베드 폴백.
+  // 회중 5종(장년/EM/Youth/어린이/Kids) + 소그룹 나눔질문.
+  type CongView = { title?: string; text?: string; cartoonImgs?: string[] };
+  const congFrom = (c?: { title?: string | null; text?: string | null; textEn?: string | null; cartoonImageUrls?: string[]; cartoonImageUrlsEn?: string[] }): CongView => {
+    if (!c) return {};
+    const imgs = en && (c.cartoonImageUrlsEn?.length) ? c.cartoonImageUrlsEn : c.cartoonImageUrls;
+    return { title: c.title ?? '', text: pick(c.text ?? '', c.textEn ?? ''), cartoonImgs: (imgs ?? []).filter(Boolean) };
+  };
+  const mg = moduleNote?.congregations;
+  const congregations: Record<'adult' | 'em' | 'youth' | 'children' | 'kids', CongView> = mg
+    ? { adult: congFrom(mg.adult), em: congFrom(mg.em), youth: congFrom(mg.youth), children: congFrom(mg.children), kids: congFrom(mg.kids) }
+    : {
+        adult: { title: sermonNote.title, text: snText, cartoonImgs: [] },
+        em: {}, youth: {},
+        children: { title: childrenSermonNote.title, text: snChildText, cartoonImgs },
+        kids: {},
+      };
+  const studySrc = (moduleNote?.study ?? study) as Record<string, string[]>;
+  const sObs = mergeEn(studySrc.observation, studySrc.observationEn);
+  const sCor = mergeEn(studySrc.correlation, studySrc.correlationEn);
+  const sApp = mergeEn(studySrc.application, studySrc.applicationEn);
+  const congHasContent = (c: CongView) => !!((c.text || '').trim() || (c.title || '').trim() || (c.cartoonImgs?.length));
+  const anyCong = Object.values(congregations).some(congHasContent);
+  const hasStudyData = [sObs, sCor, sApp].some((a) => a.some((q) => (q || '').trim()));
+
   const anyEn = (...v: (string | undefined)[]) => v.some((x) => (x || '').trim());
-  const hasEnglish = !!(
+  // 설교노트 모듈에 영어가 있으면 한/EN 토글 노출.
+  const moduleHasEn = !!moduleNote && (
+    Object.values(moduleNote.congregations ?? {}).some((cc: any) => (cc?.textEn || '').trim() || (cc?.cartoonImageUrlsEn?.length)) ||
+    ['observation', 'correlation', 'application'].some((k) => ((moduleNote.study as any)?.[`${k}En`] ?? []).some((q: string) => (q || '').trim()))
+  );
+  const hasEnglish = moduleHasEn || !!(
     anyEn(scripture.textEn, scripture.referenceEn, sermonNote.textEn, childrenSermonNote.textEn) || cartoonEn.length > 0 ||
     worshipOrder.some((r: any) => anyEn(r.labelEn, r.detailEn, r.personEn)) ||
     hymns.some((h) => anyEn(h.lyricsEn)) || anyEn(closing.lyricsEn) || anyEn(rp.contentEn, rp.personEn) ||
@@ -134,7 +165,7 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
     '대표기도': !!(rp.person || rp.content || rp.personEn || rp.contentEn),
     '교회소식': anns.length > 0,
     '성경 본문': !!(scRef || scText),
-    '설교 노트': noteHas(sermonNote),
+    '설교 노트': anyCong || hasStudyData,
     '어린이 설교 노트': noteHas(childrenSermonNote),
     '기도 제목': prayers.length > 0,
     '마지막 찬양': !!(closing.title || (closing.imageUrls?.length ?? 0) > 0 || (closing.lyrics || '').trim()),
@@ -205,15 +236,8 @@ export function OnlineBulletinView({ bulletin }: { bulletin: Record<string, any>
     </div>
   ));
 
-  const studyObs = mergeEn(study.observation, study.observationEn);
-  const studyCor = mergeEn(study.correlation, study.correlationEn);
-  const studyApp = mergeEn(study.application, study.applicationEn);
-  if (noteHas(sermonNote) || noteHas(childrenSermonNote) || cartoonKo.length > 0 || cartoonEn.length > 0 || hasStudy) push('설교 노트', (
-    <SermonSection
-      adultTitle={sermonNote.title} adultText={snText}
-      childTitle={childrenSermonNote.title} childText={snChildText}
-      cartoonImgs={cartoonImgs} obs={studyObs} cor={studyCor} app={studyApp} onOpen={openViewer}
-    />
+  if (anyCong || hasStudyData) push('설교 노트', (
+    <SermonSection congregations={congregations} obs={sObs} cor={sCor} app={sApp} onOpen={openViewer} />
   ));
 
   if (prayers.length > 0) push('기도 제목', (
@@ -620,18 +644,21 @@ function SermonNote({ title, text, pointImages, onOpen }: {
   );
 }
 
-// 설교 노트 회중 탭. 청장년=성인노트, Children=취학후(어린이 설교노트), Kids=취학전(설교 카툰), EM/Youth=미등록.
-function SermonSection({ adultTitle, adultText, childTitle, childText, cartoonImgs, obs, cor, app, onOpen }: {
-  adultTitle?: string; adultText?: string; childTitle?: string; childText?: string; cartoonImgs: string[]; obs: string[]; cor: string[]; app: string[]; onOpen: (imgs: string[], i: number, title: string) => void;
+// 설교 노트 회중 탭 — 장년(청장년)/EM/Youth/어린이/Kids. 각 회중은 설교노트(마크다운) +
+// (어린이/Kids) 카툰. 소그룹 나눔질문은 청장년(장년) 탭에 표시. 데이터는 설교노트 모듈에서.
+type CongKey = 'adult' | 'em' | 'youth' | 'children' | 'kids';
+function SermonSection({ congregations, obs, cor, app, onOpen }: {
+  congregations: Record<CongKey, { title?: string; text?: string; cartoonImgs?: string[] }>;
+  obs: string[]; cor: string[]; app: string[]; onOpen: (imgs: string[], i: number, title: string) => void;
 }) {
-  const hasMainNote = !!((adultText || '').trim() || (adultTitle || '').trim());
+  const TABS: [CongKey, string][] = [['adult', '청장년'], ['em', 'EM'], ['youth', 'Youth'], ['children', 'Children'], ['kids', 'Kids']];
   const hasStudy = [obs, cor, app].some((a) => (a || []).some((q) => (q || '').trim()));
-  const hasMain = hasMainNote || hasStudy;
-  const hasChildNote = !!((childText || '').trim() || (childTitle || '').trim());
-  const hasChildren = hasChildNote || cartoonImgs.length > 0; // 취학후 = 어린이 설교노트 + 카툰
-  const TABS: [string, string][] = [['main', '청장년'], ['em', 'EM'], ['youth', 'Youth'], ['children', 'Children'], ['kids', 'Kids']];
-  const first = hasMain ? 'main' : hasChildren ? 'children' : 'main';
-  const [tab, setTab] = useState(first);
+  const congHas = (k: CongKey) => { const c = congregations[k]; return !!((c?.text || '').trim() || (c?.title || '').trim() || (c?.cartoonImgs?.length)); };
+  const first: CongKey = (congHas('adult') || hasStudy) ? 'adult' : (TABS.find(([k]) => congHas(k))?.[0] ?? 'adult');
+  const [tab, setTab] = useState<CongKey>(first);
+  const cur = congregations[tab] ?? {};
+  const curNote = !!((cur.text || '').trim() || (cur.title || '').trim() || (cur.cartoonImgs?.length));
+  const showCur = congHas(tab) || (tab === 'adult' && hasStudy);
   return (
     <div>
       <div className="flex gap-1.5" style={{ overflowX: 'auto', marginBottom: 16, paddingBottom: 2 }}>
@@ -640,11 +667,11 @@ function SermonSection({ adultTitle, adultText, childTitle, childText, cartoonIm
           return <button key={k} type="button" onClick={() => setTab(k)} style={{ flex: 'none', padding: '8px 14px', borderRadius: 999, border: `1px solid ${on ? primary : border}`, background: on ? primary : bg, color: on ? '#fff' : textColor, fontSize: 13, fontWeight: on ? 800 : 600, letterSpacing: '-0.01em', cursor: 'pointer' }}>{name}</button>;
         })}
       </div>
-      {tab === 'main' && (hasMain ? (
+      {showCur ? (
         <div>
-          {hasMainNote && <SermonNote title={adultTitle} text={adultText} />}
-          {hasStudy && (
-            <div style={{ marginTop: hasMainNote ? 18 : 0, padding: 18, borderRadius: 14, background: surface, border: `1px solid ${faint}` }}>
+          {curNote && <SermonNote title={cur.title} text={cur.text} pointImages={cur.cartoonImgs} onOpen={onOpen} />}
+          {tab === 'adult' && hasStudy && (
+            <div style={{ marginTop: curNote ? 18 : 0, padding: 18, borderRadius: 14, background: surface, border: `1px solid ${faint}` }}>
               <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', color: muted }}>나눔 질문</div>
               <div className="mt-4 flex flex-col gap-4">
                 <QGroup label="관찰" items={obs} />
@@ -654,20 +681,7 @@ function SermonSection({ adultTitle, adultText, childTitle, childText, cartoonIm
             </div>
           )}
         </div>
-      ) : <SermonEmpty label="청장년" />)}
-      {tab === 'children' && (hasChildren ? (
-        hasChildNote
-          // 어린이 설교 노트 각 포인트에 카툰 컷을 1:1로 짝지어 표시(포인트=설교 · 카툰 1컷, 총 N개)
-          ? <SermonNote title={childTitle} text={childText} pointImages={cartoonImgs} onOpen={onOpen} />
-          : (
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', color: muted, marginBottom: 10 }}>설교 카툰</div>
-              <ScoreList imgs={cartoonImgs} title="어린이 설교 카툰" onOpen={onOpen} />
-            </div>
-          )
-      ) : <SermonEmpty label="Children (취학후)" />)}
-      {tab === 'kids' && <SermonEmpty label="Kids (취학전)" />}
-      {(tab === 'em' || tab === 'youth') && <SermonEmpty label={tab === 'em' ? 'EM' : 'Youth'} />}
+      ) : <SermonEmpty label={TABS.find(([k]) => k === tab)?.[1] ?? ''} />}
     </div>
   );
 }
