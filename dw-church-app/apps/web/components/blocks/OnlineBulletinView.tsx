@@ -117,29 +117,32 @@ export function OnlineBulletinView({ bulletin, sermonNote: moduleNote }: { bulle
   const cartoonImgs = en && cartoonEn.length > 0 ? cartoonEn : cartoonKo;
 
   // 설교 노트 = 설교노트 모듈(moduleNote, 해당 주일 날짜)이 있으면 그걸로, 없으면 온라인 주보 임베드 폴백.
-  // 회중 5종(장년/EM/Youth/어린이/Kids) + 소그룹 나눔질문.
-  type CongView = { title?: string; text?: string; cartoonImgs?: string[] };
-  const congFrom = (c?: { title?: string | null; text?: string | null; textEn?: string | null; cartoonImageUrls?: string[]; cartoonImageUrlsEn?: string[] }): CongView => {
+  // 부서 5종(청장년/EM/Youth/어린이/Kids) — 각 부서에 설교노트 + 부서별 소그룹 나눔질문.
+  type CongView = { title?: string; text?: string; cartoonImgs?: string[]; obs?: string[]; cor?: string[]; app?: string[] };
+  const studyArr = (st?: Record<string, string[] | undefined>) => ({
+    obs: mergeEn(st?.observation, st?.observationEn), cor: mergeEn(st?.correlation, st?.correlationEn), app: mergeEn(st?.application, st?.applicationEn),
+  });
+  const congFrom = (c?: { title?: string | null; text?: string | null; textEn?: string | null; cartoonImageUrls?: string[]; cartoonImageUrlsEn?: string[]; study?: Record<string, string[] | undefined> }): CongView => {
     if (!c) return {};
     const imgs = en && (c.cartoonImageUrlsEn?.length) ? c.cartoonImageUrlsEn : c.cartoonImageUrls;
-    return { title: c.title ?? '', text: pick(c.text ?? '', c.textEn ?? ''), cartoonImgs: (imgs ?? []).filter(Boolean) };
+    return { title: c.title ?? '', text: pick(c.text ?? '', c.textEn ?? ''), cartoonImgs: (imgs ?? []).filter(Boolean), ...studyArr(c.study) };
   };
-  const mg = moduleNote?.congregations;
+  const mg = moduleNote?.congregations as Record<string, any> | undefined;
   const congregations: Record<'adult' | 'em' | 'youth' | 'children' | 'kids', CongView> = mg
-    ? { adult: congFrom(mg.adult), em: congFrom(mg.em), youth: congFrom(mg.youth), children: congFrom(mg.children), kids: congFrom(mg.kids) }
+    ? {
+        // 청장년: 회중별 study 없고 최상위 study 만 있으면(구 데이터) 폴백.
+        adult: (() => { const a = congFrom(mg.adult); if (!mg.adult?.study && moduleNote?.study) Object.assign(a, studyArr(moduleNote.study as any)); return a; })(),
+        em: congFrom(mg.em), youth: congFrom(mg.youth), children: congFrom(mg.children), kids: congFrom(mg.kids),
+      }
     : {
-        adult: { title: sermonNote.title, text: snText, cartoonImgs: [] },
+        adult: { title: sermonNote.title, text: snText, cartoonImgs: [], ...studyArr(study) },
         em: {}, youth: {},
-        children: { title: childrenSermonNote.title, text: snChildText, cartoonImgs },
+        children: { title: childrenSermonNote.title, text: snChildText, cartoonImgs, ...studyArr({}) },
         kids: {},
       };
-  const studySrc = (moduleNote?.study ?? study) as Record<string, string[]>;
-  const sObs = mergeEn(studySrc.observation, studySrc.observationEn);
-  const sCor = mergeEn(studySrc.correlation, studySrc.correlationEn);
-  const sApp = mergeEn(studySrc.application, studySrc.applicationEn);
-  const congHasContent = (c: CongView) => !!((c.text || '').trim() || (c.title || '').trim() || (c.cartoonImgs?.length));
+  const congStudyHas = (c: CongView) => [c.obs, c.cor, c.app].some((a) => (a ?? []).some((q) => (q || '').trim()));
+  const congHasContent = (c: CongView) => !!((c.text || '').trim() || (c.title || '').trim() || (c.cartoonImgs?.length) || congStudyHas(c));
   const anyCong = Object.values(congregations).some(congHasContent);
-  const hasStudyData = [sObs, sCor, sApp].some((a) => a.some((q) => (q || '').trim()));
 
   const anyEn = (...v: (string | undefined)[]) => v.some((x) => (x || '').trim());
   // 설교노트 모듈에 영어가 있으면 한/EN 토글 노출.
@@ -165,7 +168,7 @@ export function OnlineBulletinView({ bulletin, sermonNote: moduleNote }: { bulle
     '대표기도': !!(rp.person || rp.content || rp.personEn || rp.contentEn),
     '교회소식': anns.length > 0,
     '성경 본문': !!(scRef || scText),
-    '설교 노트': anyCong || hasStudyData,
+    '설교 노트': anyCong,
     '어린이 설교 노트': noteHas(childrenSermonNote),
     '기도 제목': prayers.length > 0,
     '마지막 찬양': !!(closing.title || (closing.imageUrls?.length ?? 0) > 0 || (closing.lyrics || '').trim()),
@@ -236,8 +239,8 @@ export function OnlineBulletinView({ bulletin, sermonNote: moduleNote }: { bulle
     </div>
   ));
 
-  if (anyCong || hasStudyData) push('설교 노트', (
-    <SermonSection congregations={congregations} obs={sObs} cor={sCor} app={sApp} onOpen={openViewer} />
+  if (anyCong) push('설교 노트', (
+    <SermonSection congregations={congregations} onOpen={openViewer} />
   ));
 
   if (prayers.length > 0) push('기도 제목', (
@@ -644,21 +647,22 @@ function SermonNote({ title, text, pointImages, onOpen }: {
   );
 }
 
-// 설교 노트 회중 탭 — 장년(청장년)/EM/Youth/어린이/Kids. 각 회중은 설교노트(마크다운) +
-// (어린이/Kids) 카툰. 소그룹 나눔질문은 청장년(장년) 탭에 표시. 데이터는 설교노트 모듈에서.
+// 설교 노트 회중 탭 — 청장년/EM/Youth/어린이/Kids. 각 부서는 설교노트(마크다운) +
+// (어린이/Kids) 카툰 + 부서별 소그룹 나눔질문. 데이터는 설교노트 모듈에서.
 type CongKey = 'adult' | 'em' | 'youth' | 'children' | 'kids';
-function SermonSection({ congregations, obs, cor, app, onOpen }: {
-  congregations: Record<CongKey, { title?: string; text?: string; cartoonImgs?: string[] }>;
-  obs: string[]; cor: string[]; app: string[]; onOpen: (imgs: string[], i: number, title: string) => void;
+interface CongData { title?: string; text?: string; cartoonImgs?: string[]; obs?: string[]; cor?: string[]; app?: string[] }
+function SermonSection({ congregations, onOpen }: {
+  congregations: Record<CongKey, CongData>;
+  onOpen: (imgs: string[], i: number, title: string) => void;
 }) {
   const TABS: [CongKey, string][] = [['adult', '청장년'], ['em', 'EM'], ['youth', 'Youth'], ['children', 'Children'], ['kids', 'Kids']];
-  const hasStudy = [obs, cor, app].some((a) => (a || []).some((q) => (q || '').trim()));
-  const congHas = (k: CongKey) => { const c = congregations[k]; return !!((c?.text || '').trim() || (c?.title || '').trim() || (c?.cartoonImgs?.length)); };
-  const first: CongKey = (congHas('adult') || hasStudy) ? 'adult' : (TABS.find(([k]) => congHas(k))?.[0] ?? 'adult');
+  const studyHas = (c: CongData) => [c?.obs, c?.cor, c?.app].some((a) => (a ?? []).some((q) => (q || '').trim()));
+  const congHas = (k: CongKey) => { const c = congregations[k]; return !!((c?.text || '').trim() || (c?.title || '').trim() || (c?.cartoonImgs?.length) || studyHas(c)); };
+  const first: CongKey = congHas('adult') ? 'adult' : (TABS.find(([k]) => congHas(k))?.[0] ?? 'adult');
   const [tab, setTab] = useState<CongKey>(first);
   const cur = congregations[tab] ?? {};
   const curNote = !!((cur.text || '').trim() || (cur.title || '').trim() || (cur.cartoonImgs?.length));
-  const showCur = congHas(tab) || (tab === 'adult' && hasStudy);
+  const curStudy = studyHas(cur);
   return (
     <div>
       <div className="flex gap-1.5" style={{ overflowX: 'auto', marginBottom: 16, paddingBottom: 2 }}>
@@ -667,16 +671,16 @@ function SermonSection({ congregations, obs, cor, app, onOpen }: {
           return <button key={k} type="button" onClick={() => setTab(k)} style={{ flex: 'none', padding: '8px 14px', borderRadius: 999, border: `1px solid ${on ? primary : border}`, background: on ? primary : bg, color: on ? '#fff' : textColor, fontSize: 13, fontWeight: on ? 800 : 600, letterSpacing: '-0.01em', cursor: 'pointer' }}>{name}</button>;
         })}
       </div>
-      {showCur ? (
+      {(curNote || curStudy) ? (
         <div>
           {curNote && <SermonNote title={cur.title} text={cur.text} pointImages={cur.cartoonImgs} onOpen={onOpen} />}
-          {tab === 'adult' && hasStudy && (
+          {curStudy && (
             <div style={{ marginTop: curNote ? 18 : 0, padding: 18, borderRadius: 14, background: surface, border: `1px solid ${faint}` }}>
               <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', color: muted }}>나눔 질문</div>
               <div className="mt-4 flex flex-col gap-4">
-                <QGroup label="관찰" items={obs} />
-                <QGroup label="상관" items={cor} />
-                <QGroup label="적용" items={app} />
+                <QGroup label="관찰" items={cur.obs ?? []} />
+                <QGroup label="상관" items={cur.cor ?? []} />
+                <QGroup label="적용" items={cur.app ?? []} />
               </div>
             </div>
           )}
@@ -696,8 +700,21 @@ function SermonEmpty({ label }: { label: string }) {
 
 /* ── mini markdown (설교 노트: # 제목, ## 소제목, **강조**, - 불릿, 1. 번호, --- 구분선, > 인용) ── */
 function InlineMd({ text }: { text: string }) {
-  const parts = (text ?? '').split(/(\*\*[^*]+\*\*)/g);
-  return <>{parts.map((p, i) => (p.startsWith('**') && p.endsWith('**') ? <strong key={i}>{p.slice(2, -2)}</strong> : <span key={i}>{p}</span>))}</>;
+  // **굵게** *기울임* [텍스트](URL) 인라인 서식.
+  const s = text ?? '';
+  const out: ReactNode[] = [];
+  const re = /(\*\*[^*]+\*\*|\*[^*]+\*|\[[^\]]+\]\([^)]+\))/g;
+  let last = 0; let m: RegExpExecArray | null; let i = 0;
+  while ((m = re.exec(s)) !== null) {
+    if (m.index > last) out.push(<span key={i++}>{s.slice(last, m.index)}</span>);
+    const t = m[0];
+    if (t.startsWith('**')) out.push(<strong key={i++}>{t.slice(2, -2)}</strong>);
+    else if (t.startsWith('*')) out.push(<em key={i++}>{t.slice(1, -1)}</em>);
+    else { const mm = /\[([^\]]+)\]\(([^)]+)\)/.exec(t); if (mm) out.push(<a key={i++} href={mm[2]} target="_blank" rel="noreferrer" style={{ color: primary, textDecoration: 'underline' }}>{mm[1]}</a>); }
+    last = m.index + t.length;
+  }
+  if (last < s.length) out.push(<span key={i++}>{s.slice(last)}</span>);
+  return <>{out}</>;
 }
 function Markdown({ text }: { text?: string }) {
   const lines = (text ?? '').replace(/\r\n/g, '\n').split('\n');

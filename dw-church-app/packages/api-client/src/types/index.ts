@@ -56,14 +56,6 @@ export interface OnlineBulletin {
 }
 
 // ─── Sermon Note (설교노트 — 주일별 회중별, 온라인 주보와 별개) ───────
-/** 한 회중(장년/EM/Youth/어린이/Kids)의 설교노트 — 제목 + 본문(마크다운, 한/영) + 카툰. */
-export interface SermonNoteCongregation {
-  title?: string;
-  text?: string;
-  textEn?: string;
-  cartoonImageUrls?: string[];
-  cartoonImageUrlsEn?: string[];
-}
 /** 소그룹 나눔질문(관찰/상관/적용, 한/영). */
 export interface SermonNoteStudy {
   observation?: string[];
@@ -72,6 +64,15 @@ export interface SermonNoteStudy {
   observationEn?: string[];
   correlationEn?: string[];
   applicationEn?: string[];
+}
+/** 한 회중(장년/EM/Youth/어린이/Kids)의 설교노트 — 제목 + 본문(마크다운, 한/영) + 카툰 + 회중별 나눔질문. */
+export interface SermonNoteCongregation {
+  title?: string;
+  text?: string;
+  textEn?: string;
+  cartoonImageUrls?: string[];
+  cartoonImageUrlsEn?: string[];
+  study?: SermonNoteStudy;   // 회중별 소그룹 나눔 질문
 }
 export interface SermonNoteContent {
   scripture?: string;
