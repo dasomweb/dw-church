@@ -1,5 +1,9 @@
 # DW Church SaaS 독립 서비스 개발 계획서 (v1.0)
 
+> ⚠️ **이 문서는 과거 계획서(히스토리)다. 현재 구조와 다르다.**
+> 현재는 **Railway 단일 플랫폼**(api-server / web / admin) + Cloudflare(DNS·for SaaS·Worker) 로 운영한다.
+> 현재 기준 문서는 `RAILWAY-DEPLOYMENT.md`, `docs/SETUP.md`, `docs/multitenant-domains/` 참고.
+
 ---
 
 ## 0. 프로젝트 개요
@@ -142,7 +146,7 @@
 | **이메일** | Resend | 개발자 친화적, 저렴 |
 | **결제** | 토스페이먼츠 / Stripe | 국내 + 해외 대응 |
 | **배포 (API)** | DigitalOcean App Platform 또는 Fly.io | 간편, 저렴, 스케일링 |
-| **배포 (FE)** | Vercel 또는 Cloudflare Pages | 무료 티어, CDN |
+| **배포 (FE)** | Railway | 컨테이너, 단일 플랫폼 |
 | **모니터링** | Sentry + Uptime Robot | 에러 추적 + 가동 감시 |
 
 ---

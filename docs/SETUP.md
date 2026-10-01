@@ -111,27 +111,31 @@ In Railway service settings, add your custom domain (e.g. `api.truelight.app`) a
 
 ---
 
-## Vercel Deployment (Web + Admin)
+## Railway Deployment (Web + Admin)
 
-The Next.js web app (`apps/web`) and admin app (`packages/admin-app`) are deployed to Vercel.
+Every service runs on Railway -- there is no other hosting provider in play.
+See `RAILWAY-DEPLOYMENT.md` for the full service layout.
 
 ### Web app (apps/web)
 
-1. Import the repo in Vercel.
-2. Set **Root Directory** to `dw-church-app`.
-3. Set **Build Command** to `pnpm --filter @dw-church/web build`.
-4. Set **Output Directory** to `apps/web/.next`.
-5. Add environment variables:
-   - `NEXT_PUBLIC_API_URL` -- Your Railway API URL (e.g. `https://api.truelight.app`).
-   - `REVALIDATE_SECRET` -- Secret for on-demand ISR revalidation.
+Railway service **web** -- built from `apps/web/Dockerfile` (Next.js standalone output).
+
+- Domains: `truelight.app` + `*.truelight.app` (wildcard)
+- Deploy: `cd dw-church-app && railway up --service web --ci`
+- Environment variables:
+  - `NEXT_PUBLIC_API_URL` -- the API URL (e.g. `https://api.truelight.app`).
+  - `REVALIDATE_SECRET` -- secret for on-demand ISR revalidation.
 
 ### Admin app (packages/admin-app)
 
-1. Create a separate Vercel project for the admin app.
-2. Set **Root Directory** to `dw-church-app`.
-3. Set **Build Command** to `pnpm --filter @dw-church/admin-app build`.
-4. Add environment variables:
-   - `VITE_API_BASE_URL` -- Your Railway API URL (e.g. `https://api.truelight.app`).
+Railway service **admin** -- built from `packages/admin-app/Dockerfile` (Vite SPA served under `/admin`).
+
+- Domain: `admin.truelight.app` (super-admin console). Tenant staff reach the same SPA
+  on their own church domain at `<tenant>/admin`, proxied by the Cloudflare Worker.
+- Deploy: `cd dw-church-app && railway up --service admin --ci`
+- Healthcheck must be `/admin/` (the server 302-redirects `/`).
+- Build arg / environment variable:
+  - `VITE_API_BASE_URL` -- the API URL (e.g. `https://api.truelight.app`).
 
 ---
 

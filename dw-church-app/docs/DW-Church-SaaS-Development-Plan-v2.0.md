@@ -1,6 +1,12 @@
 # DW Church SaaS 독립 서비스 개발 계획서 (v2.0)
 
-> v1.0 대비 변경사항: 스키마 분리 멀티테넌시, Supabase Auth, Vercel 프론트엔드, US East 리전 통일
+> ⚠️ **이 문서는 과거 계획서(히스토리)다. 현재 구조와 다르다.**
+> 아래 본문에 나오는 **Vercel 기반 프론트엔드 구성은 폐기되었고 사용하지 않는다.**
+> 현재는 **Railway 단일 플랫폼**(api-server / web / admin) + Cloudflare(DNS·for SaaS·Worker) 로 운영한다.
+> 현재 기준 배포·구조 문서는 `RAILWAY-DEPLOYMENT.md`, `docs/SETUP.md`,
+> `docs/multitenant-domains/` 를 볼 것. 이 문서의 스택 서술은 참고하지 말 것.
+
+> v1.0 대비 변경사항: 스키마 분리 멀티테넌시, Supabase Auth, 프론트엔드 분리, US East 리전 통일
 
 ---
 

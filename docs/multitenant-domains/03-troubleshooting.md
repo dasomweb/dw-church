@@ -55,7 +55,6 @@ nslookup <tenant-domain> 8.8.8.8
 
 **(나) 다른 hostname 가리킴**:
 - 테넌트가 옛 DNS 안내 (예: 이전 Railway custom domain) 가리키고 있음
-- 또는 Vercel cutover 시도 시기의 `cname.vercel-dns.com` 가리킴
 - 해결: 테넌트에게 새 안내 (`www CNAME customers.truelight.app`) 다시 전달
 
 **(다) DNS 레코드 없음**:
@@ -293,7 +292,6 @@ curl -sI https://<tenant>/ | grep "^x-debug-worker"
 ### 원인
 - Railway 가 새 deploy 안 받음
 - 또는 Next.js 가 middleware 캐시
-- 또는 Vercel 측 deploy 가 트래픽 받는데 우리는 Railway 만 변경
 
 ### 진단
 
@@ -303,8 +301,8 @@ curl -sI https://<tenant>/ | grep "^x-debug-worker"
 # 우리 commit 과 일치하는지
 
 # 또는 응답 헤더로 어디서 도는지
-curl -sI https://<tenant>/ | grep -E "x-railway-edge|x-vercel-id"
-# x-railway-edge → Railway, x-vercel-id → Vercel
+curl -sI https://<tenant>/ | grep -E "x-railway-edge"
+# x-railway-edge 있으면 Railway origin 까지 도달한 것
 ```
 
 ### Fix
@@ -314,8 +312,8 @@ curl -sI https://<tenant>/ | grep -E "x-railway-edge|x-vercel-id"
 - "Wait for CI" 가 켜져 있으면 CI 통과 후 deploy — CI 가 broken 이면 stuck. CI fix 또는 Wait for CI off.
 - 또는 Railway 대시보드에서 수동 redeploy
 
-**Vercel 이 트래픽 받음**:
-- DNS 가 Vercel 가리키는지 확인 (`nslookup <tenant>`)
+**다른 origin 이 트래픽 받음**:
+- DNS 가 어디를 가리키는지 확인 (`nslookup <tenant>`)
 - DNS 가 customers.truelight.app 가리키도록 변경
 
 ---
@@ -443,8 +441,7 @@ SELECT slug, custom_domain FROM public.tenants WHERE custom_domain = 'www.koruso
    위 [§0 표](#0-진단-방법론--어디서-막혔는지-단계별로-좁히기) 와 매칭
 
 2. **vendor 헤더로 origin 식별**:
-   - `x-railway-edge` → Railway 까지 도달
-   - `x-vercel-id` → Vercel (잘못 — Vercel 사용 안 함)
+   - `x-railway-edge` → Railway 까지 도달 (정상)
    - 없음 → Cloudflare 만 거치고 origin 도달 못 함
 
 3. **middleware 디버그 헤더 추가** (필요 시):

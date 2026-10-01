@@ -17,7 +17,7 @@ export default function TenantDangerZone() {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
-  // Two-step confirmation (Vercel-style): the operator must type BOTH the
+  // Two-step confirmation: the operator must type BOTH the
   // tenant slug AND a fixed phrase before the delete button arms. Two distinct
   // inputs make an accidental/auto-filled deletion essentially impossible.
   const [deleteConfirmText, setDeleteConfirmText] = useState('');

@@ -23,7 +23,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  Vercel (US East)                                    │
+│  Railway (US East)                                   │
 │                                                      │
 │  ┌──────────────────┐  truelight.app               │
 │  │  apps/web         │  *.truelight.app             │
@@ -80,7 +80,7 @@ CREATE SCHEMA tenant_sarang;
 교회 등록: slug = "sarang"
 → sarang.truelight.app 즉시 활성화
 → DNS 설정 불필요 (Cloudflare 와일드카드)
-→ Vercel Edge Middleware가 tenant 라우팅
+→ Next.js 미들웨어(Railway)가 tenant 라우팅
 ```
 
 ---
@@ -90,7 +90,7 @@ CREATE SCHEMA tenant_sarang;
 | 영역 | 기술 |
 |------|------|
 | 언어 | TypeScript |
-| API 서버 | Fastify (Vercel Serverless) |
+| API 서버 | Fastify (Railway, 컨테이너) |
 | 프론트엔드 | React 18 + Vite (Admin), Next.js 15 (공개 사이트) |
 | 서버 상태 | TanStack Query v5 |
 | 클라이언트 상태 | Zustand |
@@ -100,7 +100,7 @@ CREATE SCHEMA tenant_sarang;
 | 인증 | Supabase Auth (JWT) |
 | 파일 저장 | Cloudflare R2 (S3 호환) |
 | 결제 | Stripe |
-| 배포 | Vercel (Git push 자동 배포) |
+| 배포 | Railway (Git push 자동 배포) |
 
 ---
 
@@ -343,7 +343,7 @@ Dark, Visual, Simple, Traditional, Youth
 - [x] Stripe 결제 연동 (서버 측)
 - [x] WordPress Connector 플러그인
 - [x] Cloudflare R2 파일 저장
-- [x] Vercel 배포 (3개 프로젝트, 커스텀 도메인)
+- [x] Railway 배포 (api-server·web·admin, 커스텀 도메인)
 - [x] 문서 (API Reference, Admin Manual KR, WP Integration Guide)
 - [x] 테스트 데이터 (8개 CPT × 5개씩)
 
@@ -381,7 +381,7 @@ Dark, Visual, Simple, Traditional, Youth
 |--------|------|
 | Supabase | PostgreSQL + Auth (US East) |
 | Cloudflare R2 | 파일 저장 (dw-church-files 버킷) |
-| Vercel | 배포 (3개 프로젝트) |
+| Railway | 배포 (api-server·web·admin) |
 | Squarespace | 도메인 DNS (truelight.app) |
 
 ---

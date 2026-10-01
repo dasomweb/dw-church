@@ -2,8 +2,6 @@
 .next/
 out/
 
-# Vercel
-.vercel/
 
 # Local env
 .env

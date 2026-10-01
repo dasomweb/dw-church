@@ -1,6 +1,6 @@
 # RAILWAY-DEPLOYMENT.md — Railway 통합 배포 가이드
 
-Vercel → Railway 이전. 모든 프론트/백엔드를 Railway 단일 플랫폼에서 운영.
+모든 프론트/백엔드를 **Railway 단일 플랫폼**에서 운영한다. 다른 호스팅 제공자는 쓰지 않는다.
 
 ---
 
@@ -14,12 +14,12 @@ Railway 프로젝트 (DW Church)
 │   ├── Domain: api.truelight.app
 │   └── Tech: Fastify + Prisma + PostgreSQL
 │
-├── Service 2: web                  (신규 — Vercel에서 이전)
+├── Service 2: web
 │   ├── Source: apps/web/Dockerfile
 │   ├── Domain: truelight.app + *.truelight.app (wildcard)
 │   └── Tech: Next.js 15 (standalone output)
 │
-└── Service 3: admin                (신규 — Vercel에서 이전)
+└── Service 3: admin
     ├── Source: packages/admin-app/Dockerfile
     ├── Domain: admin.truelight.app
     └── Tech: Vite SPA + serve (static)
@@ -170,42 +170,22 @@ railway variables --service web
 
 ---
 
-## Vercel → Railway 마이그레이션 체크리스트
+## 왜 Railway 단일 플랫폼인가
 
-- [x] `apps/web/Dockerfile` 추가 (Next.js standalone)
-- [x] `apps/web/next.config.ts`에 `output: 'standalone'` 추가
-- [x] `packages/admin-app/Dockerfile` 추가 (Vite + serve)
-- [x] `vercel.json` 파일 제거 (apps/server, packages/admin-app)
-- [x] `apps/web/middleware.ts`의 custom domain 로직 — Railway에서도 동일 동작
-- [ ] Railway 대시보드에서 `web` 서비스 생성 및 환경변수 등록
-- [ ] Railway 대시보드에서 `admin` 서비스 생성 및 Build Args 등록
-- [ ] DNS 레코드 업데이트 (Vercel → Railway IP)
-- [ ] Custom domain 추가 (Railway Networking)
-- [ ] SSL 인증서 자동 발급 확인 (Let's Encrypt)
-- [ ] 기존 Vercel 프로젝트 삭제 또는 비활성화
+| 항목 | 효과 |
+|------|------|
+| 프론트/백엔드 통합 | 단일 플랫폼 |
+| 서버리스 제약 | 없음 (실행시간·용량 제한 없음) |
+| Cold start | 없음 (Always on) |
+| 미들웨어 | Node.js Full (Edge Runtime 제약 없음) |
+| 로그 확인 | 하나의 대시보드 |
+| 비용 | 리소스 기반 |
+| 에러 디버깅 | Docker 컨테이너 전체 접근 |
 
 ---
 
-## 이전의 장점
+## 롤백
 
-| 항목 | Vercel (기존) | Railway (이전 후) |
-|------|--------------|-------------------|
-| 프론트/백엔드 통합 | 분산 운영 | 단일 플랫폼 |
-| 서버리스 제약 | 10초/15MB 등 제한 | 제약 없음 |
-| Cold start | 있음 (Next.js API) | 없음 (Always on) |
-| 미들웨어 | Edge Runtime 제약 | Node.js Full |
-| 로그 확인 | 여러 대시보드 | 하나의 대시보드 |
-| 비용 | 함수 실행 시간 기반 | 리소스 기반 |
-| 에러 디버깅 | 제한적 | Docker 컨테이너 전체 접근 |
-
----
-
-## 롤백 계획
-
-문제 발생 시 DNS만 Vercel로 되돌리면 즉시 복구:
-```
-A  @   [Vercel IP]
-A  *   [Vercel IP]
-```
-
-Vercel 프로젝트를 삭제하기 전까지 안전망으로 유지 권장.
+문제 발생 시 Railway 대시보드에서 **이전 deployment 로 redeploy**(Deployments → 해당 빌드 → Redeploy).
+DNS 는 Cloudflare 에서 관리되며 origin 은 Railway 하나뿐이므로, 다른 호스팅으로 전환하는
+롤백 경로는 존재하지 않는다.

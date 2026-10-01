@@ -14,9 +14,12 @@
 
 ## 0. 전제
 
-- 도메인: `truelight.app` — Vercel 에 등록되어 있음 (DNS 호스팅도 Vercel)
-- Railway 서비스 3개: `api-server`, `admin`, `web` — 모두 정상 동작 중
-- 이번 작업: Cloudflare 로 DNS 이전 + Cloudflare for SaaS + Worker 활성화
+- 도메인: `truelight.app` — **DNS 호스팅은 Cloudflare** (이전 완료)
+- Railway 서비스 3개: `api-server`, `admin`, `web` — 모두 정상 동작 중. 호스팅은 Railway 단일 플랫폼
+- 이번 작업: Cloudflare for SaaS + Worker 활성화
+
+> §1 은 zone 을 처음 붙일 때의 1회성 절차다. truelight.app 은 이미 완료된 상태이므로
+> 새 zone 을 추가할 때만 참고한다.
 
 ## 1. Cloudflare 계정 + Zone 셋업
 
@@ -25,21 +28,20 @@
 1. https://dash.cloudflare.com/sign-up 무료 가입
 2. 대시보드 → **+ Add a Site** → `truelight.app` 입력 → **Continue**
 3. 플랜 선택: **Free** (무료) → **Continue**
-4. Cloudflare 가 기존 DNS 레코드 자동 임포트 (Vercel 에 있던 레코드 전부)
-   - 단, **Vercel 에 등록된 모든 레코드가 보일 때까지 잠시 대기** (최대 30초)
+4. Cloudflare 가 기존 DNS 레코드 자동 임포트
+   - **모든 레코드가 보일 때까지 잠시 대기** (최대 30초)
 5. 임포트 결과 검토:
    - `admin` CNAME → Railway target ← 유지
    - `api` CNAME → Railway target ← 유지 (있다면)
-   - 그 외 옛 Vercel A 레코드 → 곧 삭제할 예정 (지금은 두기)
+   - Railway 를 가리키지 않는 옛 레코드 → 곧 삭제할 예정 (지금은 두기)
 6. **Continue** 클릭 → Cloudflare nameserver 2개 표시 (예: `kira.ns.cloudflare.com`, `tom.ns.cloudflare.com`)
 
-### 1.2 Vercel 에서 nameserver 교체
+### 1.2 등록기관(또는 기존 DNS 호스팅)에서 nameserver 교체
 
-1. https://vercel.com/dashboard/domains → **truelight.app** 클릭
-2. **Nameservers** 섹션 → **Edit**
-3. Vercel nameserver 2개 (`ns1.vercel-dns.com`, `ns2.vercel-dns.com`) **삭제**
-4. Cloudflare 가 준 nameserver 2개 **추가** → Save
-5. **전파 대기** (10분~24시간 — 보통 1시간 이내)
+1. 도메인을 관리하는 곳의 **Nameservers** 설정으로 이동
+2. 기존 nameserver **삭제**
+3. Cloudflare 가 준 nameserver 2개 **추가** → Save
+4. **전파 대기** (10분~24시간 — 보통 1시간 이내)
 
 ### 1.3 Zone Active 확인
 
@@ -62,7 +64,7 @@ Cloudflare → truelight.app → **DNS** → **Records**:
 | CNAME | `saas-proxy` | `web-production-1f18f.up.railway.app` (placeholder — Worker route 가 가로챔) | 🟠 Proxied | Cloudflare for SaaS 의 fallback origin (Worker 라우트) |
 | CNAME | `*` (wildcard) | `web-production-1f18f.up.railway.app` | 🟠 Proxied | 테넌트 서브도메인 (lagrangechurch.truelight.app 등) |
 
-기존 옛 Vercel A 레코드들 (`216.150.x.x` 가리키던 것)은 **전부 삭제**.
+Railway 를 가리키지 않는 옛 A 레코드는 **전부 삭제**.
 
 ## 4. Railway web 서비스에 custom domain 등록
 
@@ -172,7 +174,6 @@ curl -sH "Authorization: Bearer <token>" https://api.truelight.app/api/v1/domain
 
 - 신규 테넌트마다 DNS 추가 (wildcard 가 처리)
 - 테넌트 SSL 인증서 수동 관리 (Cloudflare 자동)
-- Vercel 로그인
 - DNS hosting 비용 (Cloudflare 무료)
 - 옛 Railway customDomainCreate 사용 (코드 경로 비활성)
 
