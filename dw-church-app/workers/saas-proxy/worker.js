@@ -47,6 +47,66 @@ const PLATFORM_HOSTS = new Set([
   'saas-proxy.truelight.app',
 ]);
 
+/** 플랫폼 자기 도메인(= 슈퍼어드민 진입구). 여기서는 관리자 콘솔을 리다이렉트 없이
+ *  제자리에서 서빙한다 → `truelight.app/admin/login` (admin.truelight.app/admin/… 의
+ *  'admin' 중복 제거). admin.truelight.app 도 계속 동작한다(기존 북마크/메일). */
+const BARE_ENTRY_HOSTS = new Set(['truelight.app', 'www.truelight.app']);
+
+/** 관리자 SPA + 그 인증 진입 경로 (테넌트 도메인/플랫폼 공통). */
+function isAdminPath(p) {
+  return (
+    p === '/admin' || p.startsWith('/admin/') ||
+    p === '/login' || p === '/forgot-password' || p === '/reset-password' || p === '/register'
+  );
+}
+
+/** 플랫폼 도메인에서만 추가로 열어주는 슈퍼어드민 콘솔 경로. */
+function isPlatformAdminPath(p) {
+  return isAdminPath(p) || p === '/super-admin' || p.startsWith('/super-admin/');
+}
+
+/** admin 서비스로 프록시 (브라우저 주소는 원래 호스트 그대로 유지). */
+function proxyToAdmin(request, incoming) {
+  const adminUpstream = new URL(incoming.pathname + incoming.search, 'https://admin.truelight.app');
+  const adminHeaders = new Headers(request.headers);
+  adminHeaders.delete('cf-connecting-ip');
+  adminHeaders.delete('cf-ipcountry');
+  return fetch(new Request(adminUpstream.toString(), {
+    method: request.method,
+    headers: adminHeaders,
+    body: ['GET', 'HEAD'].includes(request.method) ? undefined : request.body,
+    redirect: 'manual',
+  }));
+}
+
+/**
+ * 이 호스트가 실제로 존재하는 테넌트인가 — 관리자 경로를 열어주기 전 확인.
+ * 없는 서브도메인(예: nosuchchurch.truelight.app)에서 /admin/login 이 로그인 창을
+ * 띄우던 문제를 막는다(스토어프론트는 web 미들웨어가 이미 404 처리하는데, admin
+ * 경로는 web 에 도달하지 않아 검증을 건너뛰었다).
+ * 조회 실패(API 장애 등)는 **fail-open** — 전 테넌트 관리자를 막지 않는다.
+ */
+async function tenantExists(hostname, env) {
+  const apiBase = env.API_BASE || 'https://api.truelight.app';
+  const sub = hostname.match(/^([^.]+)\.truelight\.app$/);
+  try {
+    if (sub) {
+      const res = await fetch(`${apiBase}/api/v1/settings`, {
+        headers: { 'X-Tenant-Slug': sub[1] },
+        cf: { cacheTtl: 60, cacheEverything: true },
+      });
+      return res.ok;
+    }
+    const res = await fetch(
+      `${apiBase}/api/v1/admin/tenants/resolve-domain?domain=${encodeURIComponent(hostname)}`,
+      { cf: { cacheTtl: 60, cacheEverything: true } },
+    );
+    return res.ok;
+  } catch {
+    return true;
+  }
+}
+
 export default {
   /**
    * @param {Request} request
@@ -127,12 +187,28 @@ export default {
       }
     }
 
+    // KILLSWITCH: DISABLE_ADMIN_PROXY=1 (wrangler var/secret) 로 관리자 경로
+    // 가로채기만 끈다. 끄면 그 경로도 평소 흐름(스토어프론트 / 기존 리다이렉트)으로
+    // 흘러가므로 교회 홈페이지는 계속 정상이다.
+    const adminProxyDisabled = ['1', 'true', 'yes'].includes(
+      String(env.DISABLE_ADMIN_PROXY ?? '').toLowerCase(),
+    );
+    const p = incoming.pathname;
+
     // Platform hosts pass through unchanged — Railway has certs for them.
     // Required also to prevent infinite loop on customers.truelight.app
     // (where the proxied outbound lands). This also means the admin service's
     // own host (admin.truelight.app) is reached directly by the admin-path
     // proxy below without re-entering this branch's tenant logic.
+    //
+    // 예외: truelight.app / www — 슈퍼어드민 콘솔을 **제자리에서** 서빙한다.
+    // (기존엔 web 미들웨어가 admin.truelight.app 으로 307 리다이렉트해서
+    //  `admin.truelight.app/admin/login` 처럼 'admin' 이 중복됐다.)
+    // 마케팅 사이트 등 나머지 경로는 기존대로 그대로 통과시킨다.
     if (PLATFORM_HOSTS.has(incoming.hostname)) {
+      if (BARE_ENTRY_HOSTS.has(incoming.hostname) && !adminProxyDisabled && isPlatformAdminPath(p)) {
+        return proxyToAdmin(request, incoming);
+      }
       return fetch(request);
     }
 
@@ -148,27 +224,15 @@ export default {
     //   - /login, /forgot-password, /reset-password, /register
     //       → admin server 302s these to /admin/… (friendly tenant URLs)
     //
-    // KILLSWITCH: DISABLE_ADMIN_PROXY=1 (wrangler var/secret) 로 이 가로채기만 끈다.
-    // 끄면 해당 경로도 그냥 스토어프론트로 흘러가므로(교회 홈페이지는 계속 정상),
-    // admin 서비스 장애 때 테넌트 도메인의 관리자 라우팅을 재배포 없이 분리할 수 있다.
-    const adminProxyDisabled = ['1', 'true', 'yes'].includes(
-      String(env.DISABLE_ADMIN_PROXY ?? '').toLowerCase(),
-    );
-    const p = incoming.pathname;
-    const isAdminPath =
-      p === '/admin' || p.startsWith('/admin/') ||
-      p === '/login' || p === '/forgot-password' || p === '/reset-password' || p === '/register';
-    if (isAdminPath && !adminProxyDisabled) {
-      const adminUpstream = new URL(incoming.pathname + incoming.search, 'https://admin.truelight.app');
-      const adminHeaders = new Headers(request.headers);
-      adminHeaders.delete('cf-connecting-ip');
-      adminHeaders.delete('cf-ipcountry');
-      return fetch(new Request(adminUpstream.toString(), {
-        method: request.method,
-        headers: adminHeaders,
-        body: ['GET', 'HEAD'].includes(request.method) ? undefined : request.body,
-        redirect: 'manual',
-      }));
+    // 단, **존재하는 테넌트일 때만** 열어준다. 없는 서브도메인은 관리자 경로를
+    // 통과시키지 않고 아래 스토어프론트로 흘려보내 web 미들웨어가 404 를 내게 한다
+    // (해시 에셋은 셸 진입 때 이미 검증됐으므로 매 청크마다 조회하지 않는다).
+    if (isAdminPath(p) && !adminProxyDisabled) {
+      const skipCheck = p.startsWith('/admin/assets/');
+      if (skipCheck || (await tenantExists(incoming.hostname, env))) {
+        return proxyToAdmin(request, incoming);
+      }
+      // 없는 테넌트 → fall through → 스토어프론트 404
     }
 
     // Everything else (tenant subdomains + custom tenant domains) →

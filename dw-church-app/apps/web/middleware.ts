@@ -69,10 +69,15 @@ export async function middleware(request: NextRequest) {
         url.search = request.nextUrl.search;
         return NextResponse.redirect(url, 308);
       }
-      // truelight.app/admin → 슈퍼어드민 콘솔(admin.truelight.app). 슈퍼어드민 전용
-      // 진입점. (테넌트 관리자는 자기 도메인 /admin 을 쓴다 — 여기로 오지 않는다.)
+      // 평상시엔 여기까지 오지 않는다 — Cloudflare Worker 가 truelight.app 의
+      // /admin·/login·/super-admin 등을 admin 서비스로 **제자리 프록시**하므로
+      // 주소가 truelight.app/admin/login 로 유지된다.
+      // 아래는 Worker 가 꺼졌을 때(DISABLE_ADMIN_PROXY=1)의 폴백이며, 경로를
+      // 보존해 /admin/login → admin.truelight.app/admin/login 으로 보낸다.
       if (pathname === '/admin' || pathname.startsWith('/admin/')) {
-        return NextResponse.redirect(new URL('https://admin.truelight.app/admin/super-admin'), 307);
+        const url = new URL(`https://admin.truelight.app${pathname}`);
+        url.search = request.nextUrl.search;
+        return NextResponse.redirect(url, 307);
       }
       // Unified login entry: truelight.app/login (+ the other auth surfaces and
       // the super-admin console) live on the admin app. Tenant staff log in on

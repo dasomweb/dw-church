@@ -43,6 +43,10 @@ export function detectHostMode(): boolean {
   if (typeof window === 'undefined') return false;
   const h = window.location.hostname;
   if (h === 'admin.truelight.app') return false; // super-admin / global console
+  // 플랫폼 자기 도메인도 콘솔이다. truelight.app 은 `<sub>.truelight.app` 정규식에
+  // 안 걸려서 맨 아래 `return true`(테넌트 커스텀 도메인)로 빠지던 것을 막는다 —
+  // 그렇게 되면 /super-admin·/t/:slug 라우트가 사라진다.
+  if (h === 'truelight.app' || h === 'www.truelight.app') return false;
   if (h === 'localhost' || h === '127.0.0.1' || h.endsWith('.localhost')) return false; // dev uses /t/:slug
   const sub = h.match(/^([^.]+)\.truelight\.app$/);
   if (sub) return !['www', 'api', 'admin', 'customers', 'saas-proxy'].includes(sub[1] ?? '');

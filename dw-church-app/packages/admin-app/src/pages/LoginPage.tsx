@@ -10,9 +10,11 @@ import { fetchLoginBranding, type LoginBranding } from '../lib/login-branding';
 
 // truelight.app/login(중앙 콘솔)은 admin.truelight.app 로 서빙된다. 여기서 로그인한
 // 테넌트 관리자는 자기 테넌트 도메인 관리자로 보낸다(대표님 정책).
-const CENTRAL_CONSOLE_HOST = 'admin.truelight.app';
+// 중앙 콘솔 호스트 — 플랫폼 자기 도메인(truelight.app/admin/login, 권장 진입구)과
+// 기존 admin 서브도메인(북마크·메일 호환) 둘 다.
+const CENTRAL_CONSOLE_HOSTS = new Set(['truelight.app', 'www.truelight.app', 'admin.truelight.app']);
 const isCentralConsole = () =>
-  typeof window !== 'undefined' && window.location.hostname === CENTRAL_CONSOLE_HOST;
+  typeof window !== 'undefined' && CENTRAL_CONSOLE_HOSTS.has(window.location.hostname);
 
 // 크로스 오리진 세션 핸드오프: 중앙 콘솔에서 인증한 세션을 테넌트 도메인으로 넘길 때
 // URL fragment(#s=...)로 전달한다(fragment 는 서버로 전송되지 않음). UTF-8(한글 이름 등)
