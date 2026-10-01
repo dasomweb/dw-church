@@ -13,8 +13,11 @@ let registered = false;
 async function registerRoutes() {
   if (registered) return;
 
-  // CORS: allow all *.truelight.app, localhost, and env-configured origins
-  await app.register(cors, { origin: true, credentials: true });
+  // CORS — 메인 서버(src/cors.ts)와 동일 정책을 쓴다.
+  // 이전엔 origin:true + credentials:true 였는데, 그건 "요청한 오리진을 그대로 반사 +
+  // 자격증명 허용"이라 임의 사이트가 쿠키/자격증명 실린 요청을 보낼 수 있는 설정이었다.
+  // 인증은 Bearer 토큰이고 쿠키를 쓰지 않으므로 credentials:false 가 맞다.
+  await app.register(cors, { origin: '*', credentials: false });
   app.setErrorHandler(errorHandler);
 
   app.addHook('preHandler', async (request, reply) => {

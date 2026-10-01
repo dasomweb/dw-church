@@ -102,7 +102,12 @@ function smallText(text: string): string {
 
 // ─── Templates ──────────────────────────────────────────
 
-export function welcomeEmail(churchName: string): { subject: string; html: string } {
+// appUrl — 교회 자기 도메인(<slug>.truelight.app 또는 커스텀 도메인)을 넘긴다.
+// 넘기지 않으면 중앙 콘솔로 폴백(슈퍼어드민 등 테넌트가 없는 경우).
+export function welcomeEmail(
+  churchName: string,
+  appUrl = 'https://admin.truelight.app',
+): { subject: string; html: string } {
   return {
     subject: `${churchName} 등록을 환영합니다 — TRUE LIGHT`,
     html: layout(`
@@ -124,7 +129,7 @@ export function welcomeEmail(churchName: string): { subject: string; html: strin
         </tr>
       </table>
 
-      ${button('관리자 페이지 시작하기', 'https://admin.truelight.app')}
+      ${button('관리자 페이지 시작하기', appUrl)}
 
       ${infoBox('도움이 필요하시면 언제든 문의해 주세요.')}
     `),

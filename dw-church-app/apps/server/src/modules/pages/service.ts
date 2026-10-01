@@ -8,6 +8,37 @@ import type {
 } from './schema.js';
 import type { TemplateSection } from './templates.js';
 
+/**
+ * 예약 Page slug — 이 slug 로 페이지를 만들면 스토어프론트에 영원히 안 나온다.
+ *   - admin/login/register/forgot-password/reset-password
+ *       → Cloudflare Worker 가 테넌트 도메인에서 이 경로를 관리자 SPA 로 가로채므로
+ *         스토어프론트까지 도달하지 못함(workers/saas-proxy/worker.js).
+ *   - sermon-note → Next.js 물리 라우트(전용 설교노트 페이지)가 CMS 페이지보다 우선.
+ *   - api        → apps/web 미들웨어 matcher 가 제외하는 경로.
+ * 조용히 안 보이게 두지 말고 생성/수정 단계에서 막는다.
+ * (sermons·bulletins·albums 등은 전용 라우트가 CMS 페이지를 읽어 렌더하므로 예약 아님.)
+ */
+export const RESERVED_PAGE_SLUGS = new Set([
+  'admin',
+  'login',
+  'register',
+  'forgot-password',
+  'reset-password',
+  'sermon-note',
+  'api',
+]);
+
+export function assertSlugAllowed(slug: string | undefined): void {
+  if (!slug) return;
+  if (RESERVED_PAGE_SLUGS.has(slug.trim().toLowerCase())) {
+    throw new AppError(
+      'RESERVED_SLUG',
+      400,
+      `'${slug}' 는 시스템 예약 주소라 페이지 주소로 쓸 수 없습니다(로그인·관리자 화면으로 연결되는 주소입니다). 다른 주소를 입력해 주세요.`,
+    );
+  }
+}
+
 // ══════════════════════════════════════════════════════════════
 // Terminology (MUST follow — see /CLAUDE.md)
 // ══════════════════════════════════════════════════════════════
@@ -110,6 +141,8 @@ export async function createPage(
   schema: string,
   input: CreatePageInput,
 ): Promise<PageRow> {
+  assertSlugAllowed(input.slug);
+
   // If setting as home, unset any existing home page
   if (input.isHome) {
     await prisma.$executeRawUnsafe(
@@ -137,6 +170,8 @@ export async function updatePage(
   id: string,
   input: UpdatePageInput,
 ): Promise<PageRow> {
+  assertSlugAllowed(input.slug);
+
   // Verify page exists
   const existing = await prisma.$queryRawUnsafe<PageRow[]>(
     `SELECT id FROM "${schema}".pages WHERE id = $1::uuid`,

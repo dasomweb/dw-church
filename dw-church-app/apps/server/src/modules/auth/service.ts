@@ -23,6 +23,35 @@ export function checkIsSuperAdmin(role: string | undefined, email: string): bool
   return false;
 }
 
+/**
+ * 메일 링크(비밀번호 재설정·초대·환영)가 가리킬 origin.
+ * 교회는 자기 도메인에서 관리자를 쓰므로(Cloudflare Worker 가 테넌트 도메인의
+ * /login·/reset-password 등을 관리자 SPA 로 프록시) 메일도 자기 도메인으로 보낸다.
+ * 커스텀 도메인 > <slug>.truelight.app > 중앙 콘솔(테넌트 없음) 순.
+ */
+const CENTRAL_ADMIN_ORIGIN = 'https://admin.truelight.app';
+
+function originFor(t: { slug?: string | null; customDomain?: string | null } | null | undefined): string {
+  if (t?.customDomain) return `https://${t.customDomain}`;
+  if (t?.slug) return `https://${t.slug}.truelight.app`;
+  return CENTRAL_ADMIN_ORIGIN;
+}
+
+/** tenantId 로 그 교회의 관리자 origin 을 구한다. 조회 실패해도 메일은 나가야 하므로 폴백. */
+export async function tenantAppOrigin(tenantId: string | null | undefined): Promise<string> {
+  if (!tenantId) return CENTRAL_ADMIN_ORIGIN;
+  try {
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { slug: true, customDomain: true, isActive: true },
+    });
+    if (!tenant || !tenant.isActive) return CENTRAL_ADMIN_ORIGIN;
+    return originFor(tenant);
+  } catch {
+    return CENTRAL_ADMIN_ORIGIN;
+  }
+}
+
 function buildTokenResponse(user: {
   id: string;
   email: string;
@@ -102,8 +131,8 @@ export async function register(input: RegisterInput) {
     tenantSlug: slug,
   });
 
-  // Fire-and-forget welcome email
-  const welcome = welcomeEmail(churchName);
+  // Fire-and-forget welcome email — 새 교회의 자기 도메인으로 안내(커스텀 도메인은 아직 없음).
+  const welcome = welcomeEmail(churchName, `https://${slug}.truelight.app`);
   sendEmail({ to: email, ...welcome }).catch((err) =>
     console.error('[email] Failed to send welcome email:', err),
   );
@@ -255,7 +284,8 @@ export async function forgotPassword(email: string) {
     { expiresIn: '1h' },
   );
 
-  const resetUrl = `https://admin.truelight.app/reset-password?token=${resetToken}`;
+  // 교회 자기 도메인으로 보낸다(없으면 중앙 콘솔 폴백).
+  const resetUrl = `${await tenantAppOrigin(user.tenantId)}/reset-password?token=${resetToken}`;
   const tpl = passwordResetEmail(resetUrl);
 
   // Fire-and-forget
@@ -332,7 +362,7 @@ export async function inviteUser(
   // every login account on this tenant against the plan's maxAdmins.
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },
-    select: { plan: true, name: true },
+    select: { plan: true, name: true, customDomain: true },
   });
   const { maxAdmins } = planLimits(tenant?.plan);
   const currentAccounts = await prisma.user.count({ where: { tenantId } });
@@ -374,7 +404,8 @@ export async function inviteUser(
 
   // Tenant name for the email template (looked up above with the plan).
   const churchName = tenant?.name ?? tenantSlug;
-  const inviteUrl = `https://admin.truelight.app/reset-password?token=${inviteToken}`;
+  // 초대 링크도 그 교회 자기 도메인으로(초대받은 사람이 교회 주소에서 바로 설정).
+  const inviteUrl = `${originFor({ slug: tenantSlug, customDomain: tenant?.customDomain })}/reset-password?token=${inviteToken}`;
   const tpl = inviteEmail(churchName, inviteUrl);
 
   // Fire-and-forget

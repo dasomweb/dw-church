@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
+import { resolveApiBaseUrl } from './lib/api-base';
 import './index.css';
 
 // Support both embedded (WordPress) and standalone (SaaS) modes
@@ -16,15 +17,9 @@ if (rootEl) {
   // We therefore always call the API at its absolute host. Auth is a Bearer token
   // (no cookies), and server CORS is origin:'*' credentials:false, so cross-origin
   // calls from any tenant domain are allowed.
-  const resolveBaseUrl = (): string => {
-    if (rootEl.dataset.restUrl) return rootEl.dataset.restUrl;
-    if (import.meta.env.VITE_API_BASE_URL) return import.meta.env.VITE_API_BASE_URL as string;
-    if (import.meta.env.DEV) return window.location.origin; // vite dev proxy
-    return 'https://api.truelight.app';
-  };
-
+  // 해석 규칙은 lib/api-base.ts 단일 출처(로그인 화면의 공개 조회도 같은 규칙 사용).
   const config = {
-    baseUrl: resolveBaseUrl(),
+    baseUrl: resolveApiBaseUrl(rootEl.dataset.restUrl),
     nonce: rootEl.dataset.nonce || '',
     postId: rootEl.dataset.postId
       ? parseInt(rootEl.dataset.postId, 10)

@@ -49,3 +49,19 @@ export function detectHostMode(): boolean {
   // Any other host is a tenant's custom domain → host mode (slug from session).
   return true;
 }
+
+/**
+ * 호스트에서 바로 읽어낼 수 있는 테넌트 slug — `<slug>.truelight.app` 서브도메인일 때만.
+ * 커스텀 도메인/중앙 콘솔/로컬은 null(호스트만으로는 알 수 없음 → resolve-domain 조회 필요).
+ *
+ * 인증에는 쓰지 않는다(로그인 테넌트는 서버가 이메일로 판정). 로그인 화면이 세션 전에
+ * 그 교회의 공개 정보(이름·로고)를 가져와 브랜딩하는 용도.
+ */
+export function detectHostSlug(): string | null {
+  if (typeof window === 'undefined') return null;
+  const h = window.location.hostname;
+  const sub = h.match(/^([^.]+)\.truelight\.app$/);
+  const s = sub?.[1];
+  if (!s) return null;
+  return ['www', 'api', 'admin', 'customers', 'saas-proxy'].includes(s) ? null : s;
+}

@@ -26,6 +26,11 @@ routes = [
 # which is what fixes the SNI mismatch with Railway.
 [vars]
 FALLBACK_ORIGIN = "customers.truelight.app"
+# Killswitch: "1" 로 바꿔 배포하면 테넌트 도메인의 관리자 경로 가로채기
+# (/admin, /login, /forgot-password, /reset-password, /register)를 끈다.
+# 그 경로들도 스토어프론트로 흘러가므로 교회 홈페이지는 영향 없음.
+# admin 서비스 장애 때 긴급 분리용. 평상시 "0".
+DISABLE_ADMIN_PROXY = "0"
 
 # Secrets ??set via `wrangler secret put SAAS_PROXY_SECRET`
 # (do NOT commit; see README.md for the matching api-server + web env var).

@@ -6,6 +6,7 @@ import { useAuthStore } from '../stores/auth';
 import { detectHostMode } from '../lib/tenant-scope';
 import { firstStaffPath } from '../lib/capabilities';
 import { reportSecurityEvent } from '../lib/security';
+import { fetchLoginBranding, type LoginBranding } from '../lib/login-branding';
 
 // truelight.app/login(중앙 콘솔)은 admin.truelight.app 로 서빙된다. 여기서 로그인한
 // 테넌트 관리자는 자기 테넌트 도메인 관리자로 보낸다(대표님 정책).
@@ -45,6 +46,17 @@ export default function LoginPage() {
   const redirectParam = searchParams.get('redirect');
   const [errorMsg, setErrorMsg] = useState('');
   const autoFired = useRef(false);
+
+  // 교회 자기 도메인이면 그 교회 이름/로고로 로그인 화면을 브랜딩한다.
+  // 실패하면 null 유지 → 기존 플랫폼 브랜딩 그대로(화면이 깨지지 않게).
+  const [branding, setBranding] = useState<LoginBranding | null>(null);
+  useEffect(() => {
+    let alive = true;
+    fetchLoginBranding()
+      .then((b) => { if (alive) setBranding(b); })
+      .catch(() => { /* 브랜딩 실패는 로그인에 영향 없음 */ });
+    return () => { alive = false; };
+  }, []);
 
   // When the super admin opens this page from the tenant detail modal
   // (?email=support-<slug>@truelight.app), drop any existing session so the
@@ -186,9 +198,13 @@ export default function LoginPage() {
         />
         <div className="absolute inset-0 bg-black/20" />
         <div className="relative z-10 flex flex-col justify-end p-12 text-white">
-          <h2 className="text-4xl font-bold mb-3">True Light</h2>
-          <p className="text-lg opacity-90 max-w-md">교회 웹사이트를 쉽고 빠르게 관리하세요</p>
-          <p className="text-sm opacity-60 mt-2">truelight.app</p>
+          <h2 className="text-4xl font-bold mb-3">{branding?.churchName || 'True Light'}</h2>
+          <p className="text-lg opacity-90 max-w-md">
+            {branding ? '교회 홈페이지 관리자' : '교회 웹사이트를 쉽고 빠르게 관리하세요'}
+          </p>
+          <p className="text-sm opacity-60 mt-2">
+            {branding ? window.location.hostname : 'truelight.app'}
+          </p>
         </div>
       </div>
 
@@ -197,12 +213,20 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           {/* Logo (mobile) */}
           <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-600 mb-4">
-              <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18L19.35 7.5 12 10.82 4.65 7.5 12 4.18z" />
-              </svg>
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900">True Light</h1>
+            {branding?.logoUrl ? (
+              <img
+                src={branding.logoUrl}
+                alt=""
+                className="mx-auto mb-4 h-14 w-auto max-w-[200px] object-contain"
+              />
+            ) : (
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-600 mb-4">
+                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18L19.35 7.5 12 10.82 4.65 7.5 12 4.18z" />
+                </svg>
+              </div>
+            )}
+            <h1 className="text-2xl font-bold text-gray-900">{branding?.churchName || 'True Light'}</h1>
             <p className="text-sm text-gray-500 mt-1">관리자 로그인</p>
           </div>
 

@@ -147,11 +147,18 @@ export default {
     //   - /admin, /admin/*        → the SPA + its hashed assets
     //   - /login, /forgot-password, /reset-password, /register
     //       → admin server 302s these to /admin/… (friendly tenant URLs)
+    //
+    // KILLSWITCH: DISABLE_ADMIN_PROXY=1 (wrangler var/secret) 로 이 가로채기만 끈다.
+    // 끄면 해당 경로도 그냥 스토어프론트로 흘러가므로(교회 홈페이지는 계속 정상),
+    // admin 서비스 장애 때 테넌트 도메인의 관리자 라우팅을 재배포 없이 분리할 수 있다.
+    const adminProxyDisabled = ['1', 'true', 'yes'].includes(
+      String(env.DISABLE_ADMIN_PROXY ?? '').toLowerCase(),
+    );
     const p = incoming.pathname;
     const isAdminPath =
       p === '/admin' || p.startsWith('/admin/') ||
       p === '/login' || p === '/forgot-password' || p === '/reset-password' || p === '/register';
-    if (isAdminPath) {
+    if (isAdminPath && !adminProxyDisabled) {
       const adminUpstream = new URL(incoming.pathname + incoming.search, 'https://admin.truelight.app');
       const adminHeaders = new Headers(request.headers);
       adminHeaders.delete('cf-connecting-ip');
