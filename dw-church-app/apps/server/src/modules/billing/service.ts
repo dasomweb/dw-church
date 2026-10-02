@@ -219,7 +219,9 @@ export async function handleWebhook(
               slug,
             );
             if (ownerEmail) {
-              const loginUrl = `https://admin.truelight.app/t/${slug}/login`;
+              // 교회는 자기 도메인에서 관리자를 쓴다 — 콘솔(/t/<slug>/login)이 아니라
+              // host mode 로 안내한다. Worker 가 /login 을 관리자 SPA 로 프록시한다.
+              const loginUrl = `https://${slug}.truelight.app/login`;
               const churchName = (appRow.church_name as string) || 'True Light';
               await sendEmail({
                 to: ownerEmail,

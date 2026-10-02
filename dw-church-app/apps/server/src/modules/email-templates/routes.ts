@@ -8,7 +8,7 @@ import * as svc from './service.js';
 
 // Sample variables so a test send shows a realistic preview.
 const SAMPLE_VARS: Record<string, Record<string, string>> = {
-  welcome: { churchName: '은혜교회', buttonUrl: 'https://admin.truelight.app', buttonText: '관리자 페이지 시작하기' },
+  welcome: { churchName: '은혜교회', buttonUrl: 'https://truelight.app', buttonText: '관리자 페이지 시작하기' },
   application_received: { churchName: '은혜교회', plan: '기본' },
   payment: { churchName: '은혜교회', buttonUrl: 'https://truelight.app', buttonText: '결제하고 시작하기' },
   support_reply: { subject: '로그인 문의', reply: '안녕하세요,\n도와드리겠습니다.' },

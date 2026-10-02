@@ -1676,7 +1676,7 @@ async function main(): Promise<void> {
       )
     `);
     await prisma.$executeRawUnsafe(
-      `INSERT INTO "demo_config" ("id", "login_url") VALUES (1, 'https://admin.truelight.app/t/dasom/login') ON CONFLICT ("id") DO NOTHING`,
+      `INSERT INTO "demo_config" ("id", "login_url") VALUES (1, 'https://dasom.truelight.app/login') ON CONFLICT ("id") DO NOTHING`,
     );
     // Platform marketing config (KakaoTalk inquiry link, etc.) — singleton.
     await prisma.$executeRawUnsafe(`

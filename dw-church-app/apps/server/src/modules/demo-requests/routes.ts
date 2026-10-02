@@ -49,7 +49,8 @@ async function sendDemoAccess(row: Record<string, unknown>): Promise<unknown> {
   const cfg = await demoService.getDemoConfig();
   const html = accessEmailHtml({
     name: (row.name as string) ?? '',
-    loginUrl: (cfg?.login_url as string) || 'https://admin.truelight.app/t/dasom/login',
+    // 데모도 교회가 실제로 쓰는 화면(자기 도메인 host mode)으로 안내한다.
+    loginUrl: (cfg?.login_url as string) || 'https://dasom.truelight.app/login',
     loginEmail: login.email,
     loginPassword: login.password,
     expiresAt: login.expiresAt,
