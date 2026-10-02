@@ -29,7 +29,11 @@ export function checkIsSuperAdmin(role: string | undefined, email: string): bool
  * /login·/reset-password 등을 관리자 SPA 로 프록시) 메일도 자기 도메인으로 보낸다.
  * 커스텀 도메인 > <slug>.truelight.app > 중앙 콘솔(테넌트 없음) 순.
  */
-const CENTRAL_ADMIN_ORIGIN = 'https://admin.truelight.app';
+// 테넌트가 없는 계정(슈퍼어드민 등)의 폴백 — 플랫폼 자기 도메인.
+// truelight.app/reset-password 는 Worker 가 관리자 서비스로 프록시하고
+// /admin/reset-password?token=… 로 302 되며 토큰이 보존된다(검증 완료).
+// admin.truelight.app 도 계속 동작하지만, 주소에 admin 이 중복되지 않는 쪽을 쓴다.
+const CENTRAL_ADMIN_ORIGIN = 'https://truelight.app';
 
 function originFor(t: { slug?: string | null; customDomain?: string | null } | null | undefined): string {
   if (t?.customDomain) return `https://${t.customDomain}`;

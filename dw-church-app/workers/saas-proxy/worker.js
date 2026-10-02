@@ -91,9 +91,13 @@ async function tenantExists(hostname, env) {
   const sub = hostname.match(/^([^.]+)\.truelight\.app$/);
   try {
     if (sub) {
+      // ⚠ 캐시 금지: 테넌트는 URL 이 아니라 X-Tenant-Slug **헤더**로 구분된다.
+      // cacheEverything/cacheTtl 을 쓰면 CF 캐시 키가 URL 만 보므로 한 테넌트의
+      // 응답(특히 없는 테넌트의 404)이 다른 모든 테넌트에 재사용된다 — 실제로
+      // 이 설정 때문에 전 테넌트 관리자 로그인이 404 로 깨졌다.
       const res = await fetch(`${apiBase}/api/v1/settings`, {
         headers: { 'X-Tenant-Slug': sub[1] },
-        cf: { cacheTtl: 60, cacheEverything: true },
+        cf: { cacheTtl: 0 },
       });
       return res.ok;
     }

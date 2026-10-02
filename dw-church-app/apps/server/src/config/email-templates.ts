@@ -106,7 +106,7 @@ function smallText(text: string): string {
 // 넘기지 않으면 중앙 콘솔로 폴백(슈퍼어드민 등 테넌트가 없는 경우).
 export function welcomeEmail(
   churchName: string,
-  appUrl = 'https://admin.truelight.app',
+  appUrl = 'https://truelight.app',
 ): { subject: string; html: string } {
   return {
     subject: `${churchName} 등록을 환영합니다 — TRUE LIGHT`,
