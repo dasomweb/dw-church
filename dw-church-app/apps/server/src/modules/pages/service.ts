@@ -25,6 +25,7 @@ export const RESERVED_PAGE_SLUGS = new Set([
   'forgot-password',
   'reset-password',
   'sermon-note',
+  'sermon-notes',
   'api',
 ]);
 

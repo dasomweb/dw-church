@@ -572,7 +572,10 @@ export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/o
       {past.length > 0 && (
         <section style={{ padding: '72px 22px 0' }}>
           <div style={{ maxWidth: 1080, margin: '0 auto', borderTop: `3px double ${RULE}`, paddingTop: 28 }}>
-            <p style={{ margin: '0 0 22px', fontSize: 12, fontWeight: 700, letterSpacing: '.14em', color: SECONDARY }}>지난 설교노트</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between', alignItems: 'baseline', margin: '0 0 22px' }}>
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: '.14em', color: SECONDARY }}>지난 설교노트</p>
+              <Link href="/sermon-notes" style={{ fontSize: 13, fontWeight: 600, color: PRIMARY }}>전체 보기 ›</Link>
+            </div>
             <div style={{ display: 'grid', gap: 26, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
               {past.map((r) => {
                 const rc = (r.content ?? {}) as SermonNoteContent;
