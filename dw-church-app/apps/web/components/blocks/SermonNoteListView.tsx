@@ -73,17 +73,19 @@ function toRow(n: SermonNote): Row {
   };
 }
 
-function Chip({ label, small = false }: { label: string; small?: boolean }) {
-  return (
-    <span style={{
+function Chip({ label, small = false, href }: { label: string; small?: boolean; href?: string }) {
+  const style = {
       fontSize: small ? 11 : 12,
       fontWeight: 600,
       color: small ? META : SECONDARY,
       border: `1px solid ${small ? FAINT : BORDER}`,
-      borderRadius: 999,
-      padding: small ? '3px 8px' : '4px 10px',
-    }}>{label}</span>
-  );
+    borderRadius: 999,
+    padding: small ? '3px 8px' : '4px 10px',
+    textDecoration: 'none',
+    display: 'inline-block',
+  } as const;
+  // 대상 칩은 그 대상의 노트로 바로 들어가는 링크다(?track=).
+  return href ? <Link href={href} style={style}>{label}</Link> : <span style={style}>{label}</span>;
 }
 
 function Thumb({ src, alt }: { src: string; alt: string }) {
@@ -191,32 +193,38 @@ export function SermonNoteListView({
       {/* ── 최신 노트 피처 ── */}
       {showFeature && latest && (
         <section style={{ padding: '36px 22px 0' }}>
-          <Link href={`/sermon-note/${latest.id}`} style={{
+          <div style={{
             maxWidth: 1080, margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: 40,
-            alignItems: 'center', color: TEXT, textDecoration: 'none',
+            alignItems: 'center', color: TEXT,
           }}>
-            <div style={{ flex: '1 1 420px', minWidth: 0 }}>
+            <Link href={`/sermon-note/${latest.id}`} style={{ flex: '1 1 420px', minWidth: 0, display: 'block' }}>
               <Thumb src={latest.img} alt={latest.title} />
-            </div>
+            </Link>
             <div style={{ flex: '1 1 320px', minWidth: 0 }}>
               <p style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: '.14em', color: PRIMARY }}>
                 이번 주{latest.date ? ` · ${latest.date}` : ''}
               </p>
-              <h2 style={{ ...SERIF, margin: '16px 0 0', fontSize: 'clamp(26px,3.4vw,40px)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.3, textWrap: 'pretty' as const }}>{latest.title}</h2>
+              <h2 style={{ ...SERIF, margin: '16px 0 0', fontSize: 'clamp(26px,3.4vw,40px)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.3, textWrap: 'pretty' as const }}>
+                <Link href={`/sermon-note/${latest.id}`} style={{ color: TEXT, textDecoration: 'none' }}>{latest.title}</Link>
+              </h2>
               {latest.sub && <p style={{ ...SERIF, margin: '14px 0 0', fontSize: 17, lineHeight: 1.7, color: MUTED, textWrap: 'pretty' as const }}>{latest.sub}</p>}
               {(latest.ref || latest.preacher) && (
                 <p style={{ margin: '18px 0 0', fontSize: 13, color: META }}>{[latest.ref, latest.preacher].filter(Boolean).join(' · ')}</p>
               )}
               {latest.trackLabels.length > 0 && (
                 <div style={{ marginTop: 22, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {latest.trackLabels.map((t) => <Chip key={t} label={t} />)}
+                  {latest.trackKeys.map((k, i) => (
+                    <Chip key={k} label={latest.trackLabels[i] ?? k} href={`/sermon-note/${latest.id}?track=${k}`} />
+                  ))}
                 </div>
               )}
-              <p style={{ margin: '26px 0 0', fontSize: 14, fontWeight: 600, color: PRIMARY }}>
-                {track === 'all' ? '설교노트 읽기' : `${trackName(track)} 노트 읽기`} ›
+              <p style={{ margin: '26px 0 0', fontSize: 14, fontWeight: 600 }}>
+                <Link href={track === 'all' ? `/sermon-note/${latest.id}` : `/sermon-note/${latest.id}?track=${track}`} style={{ color: PRIMARY, textDecoration: 'none' }}>
+                  {track === 'all' ? '설교노트 읽기' : `${trackName(track)} 노트 읽기`} ›
+                </Link>
               </p>
             </div>
-          </Link>
+          </div>
         </section>
       )}
 
@@ -238,17 +246,21 @@ export function SermonNoteListView({
             <>
               <div style={{ marginTop: 22, display: 'grid', gap: '36px 30px', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}>
                 {visible.map((n) => (
-                  <Link key={n.id} href={`/sermon-note/${n.id}`} style={{ display: 'block', minWidth: 0, color: TEXT, textDecoration: 'none' }}>
-                    <Thumb src={n.img} alt={n.title} />
-                    <p style={{ margin: '14px 0 0', fontSize: 12, color: FAINT_TEXT }}>{[n.date, n.series].filter(Boolean).join(' · ')}</p>
-                    <h3 style={{ ...SERIF, margin: '8px 0 0', fontSize: 20, fontWeight: 600, letterSpacing: '-0.015em', lineHeight: 1.45, textWrap: 'pretty' as const }}>{n.title}</h3>
-                    {n.ref && <p style={{ margin: '8px 0 0', fontSize: 14, lineHeight: 1.7, color: MUTED }}>{n.ref}</p>}
-                    {n.trackLabels.length > 0 && (
+                  <div key={n.id} style={{ minWidth: 0 }}>
+                    <Link href={`/sermon-note/${n.id}`} style={{ display: 'block', minWidth: 0, color: TEXT, textDecoration: 'none' }}>
+                      <Thumb src={n.img} alt={n.title} />
+                      <p style={{ margin: '14px 0 0', fontSize: 12, color: FAINT_TEXT }}>{[n.date, n.series].filter(Boolean).join(' · ')}</p>
+                      <h3 style={{ ...SERIF, margin: '8px 0 0', fontSize: 20, fontWeight: 600, letterSpacing: '-0.015em', lineHeight: 1.45, textWrap: 'pretty' as const }}>{n.title}</h3>
+                      {n.ref && <p style={{ margin: '8px 0 0', fontSize: 14, lineHeight: 1.7, color: MUTED }}>{n.ref}</p>}
+                    </Link>
+                    {n.trackKeys.length > 0 && (
                       <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                        {n.trackLabels.map((t) => <Chip key={t} label={t} small />)}
+                        {n.trackKeys.map((k, i) => (
+                          <Chip key={k} label={n.trackLabels[i] ?? k} small href={`/sermon-note/${n.id}?track=${k}`} />
+                        ))}
                       </div>
                     )}
-                  </Link>
+                  </div>
                 ))}
               </div>
               {shown < rest.length && (

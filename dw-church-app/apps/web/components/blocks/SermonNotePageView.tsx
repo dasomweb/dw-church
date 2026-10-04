@@ -364,9 +364,11 @@ interface Props {
   note: SermonNote;
   recent?: SermonNote[];
   onlineBulletinHref?: string;
+  /** ?track= 으로 들어온 대상 — 목록의 대상 칩에서 바로 그 대상을 연다(저장된 선택보다 우선). */
+  initialTrack?: string;
 }
 
-export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/onlinejubo' }: Props) {
+export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/onlinejubo', initialTrack }: Props) {
   const content = (note.content ?? {}) as SermonNoteContent;
   const congregations = content.congregations ?? {};
 
@@ -396,11 +398,14 @@ export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/o
     if (n) setFontScale(n);
   };
   useEffect(() => {
+    // URL 의 ?track= 이 있으면 그걸 먼저 따른다(목록의 대상 칩에서 넘어온 경우).
+    const want = (initialTrack ?? '') as SermonNoteCongregationKey;
+    if (want && available.some((t) => t.key === want)) { setTrack(want); return; }
     try {
       const saved = localStorage.getItem('sermon-note-track') as SermonNoteCongregationKey | null;
       if (saved && available.some((t) => t.key === saved)) setTrack(saved);
     } catch { /* localStorage 불가 시 기본값 */ }
-  }, [available]);
+  }, [available, initialTrack]);
   const changeTrack = (k: SermonNoteCongregationKey) => {
     setTrack(k);
     try { localStorage.setItem('sermon-note-track', k); } catch { /* noop */ }
