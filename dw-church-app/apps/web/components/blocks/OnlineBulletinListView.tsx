@@ -93,7 +93,7 @@ export function OnlineBulletinListView({
       {/* ── 제목부 + 연도 탭 ── */}
       <section style={{ padding: inBlock ? '0 22px' : '56px 22px 0' }}>
         <div style={{
-          maxWidth: 1080, margin: '0 auto', borderBottom: `3px double ${RULE}`, paddingBottom: 22,
+          maxWidth: 1280, margin: '0 auto', borderBottom: `3px double ${RULE}`, paddingBottom: 22,
           display: 'flex', flexWrap: 'wrap', gap: '20px 40px', justifyContent: 'space-between', alignItems: 'flex-end',
         }}>
           <div style={{ minWidth: 0 }}>
@@ -127,7 +127,7 @@ export function OnlineBulletinListView({
       {/* ── 최신 주보 피처 ── */}
       {showFeature && latest && (
         <section style={{ padding: '40px 22px 0' }}>
-          <div style={{ maxWidth: 1080, margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: '24px 56px' }}>
+          <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: '24px 56px' }}>
             <Link href={`/online-bulletins/${latest.id}`} style={{ flex: '0 1 260px', minWidth: 0, color: TEXT, textDecoration: 'none' }}>
               <p style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: '.14em', color: PRIMARY }}>
                 {activeYear === years[0] ? '이번 주' : `${activeYear}년 마지막 주보`}
@@ -172,7 +172,7 @@ export function OnlineBulletinListView({
 
       {/* ── 월별 지난 주보 ── */}
       <section style={{ padding: '64px 22px 0' }}>
-        <div style={{ maxWidth: 1080, margin: '0 auto', borderTop: `3px double ${RULE}`, paddingTop: 28 }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', borderTop: `3px double ${RULE}`, paddingTop: 28 }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between', alignItems: 'baseline' }}>
             <p style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: '.14em', color: SECONDARY }}>{activeYear}년 지난 주보</p>
             <p style={{ margin: 0, fontSize: 13, color: FAINT_TEXT }}>{list.length}주</p>
@@ -226,7 +226,7 @@ export function OnlineBulletinListView({
       {showGuide && (guideLeft || guideRight) && (
         <section style={{ padding: '72px 22px 0' }}>
           <div style={{
-            maxWidth: 1080, margin: '0 auto', borderTop: `1px solid ${BORDER}`, paddingTop: 28,
+            maxWidth: 1280, margin: '0 auto', borderTop: `1px solid ${BORDER}`, paddingTop: 28,
             display: 'grid', gap: 30, gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
           }}>
             {guideLeft && (

@@ -157,7 +157,7 @@ export function SermonNoteListView({
       {/* ── 제목부 + 대상 탭 ── */}
       <section style={{ padding: inBlock ? '0 22px' : '56px 22px 0' }}>
         <div style={{
-          maxWidth: 1080, margin: '0 auto', borderBottom: `3px double ${RULE}`, paddingBottom: 22,
+          maxWidth: 1280, margin: '0 auto', borderBottom: `3px double ${RULE}`, paddingBottom: 22,
           display: 'flex', flexWrap: 'wrap', gap: '20px 40px', justifyContent: 'space-between', alignItems: 'flex-end',
         }}>
           <div style={{ minWidth: 0 }}>
@@ -194,7 +194,7 @@ export function SermonNoteListView({
       {showFeature && latest && (
         <section style={{ padding: '36px 22px 0' }}>
           <div style={{
-            maxWidth: 1080, margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: 40,
+            maxWidth: 1280, margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: 40,
             alignItems: 'center', color: TEXT,
           }}>
             <Link href={`/sermon-note/${latest.id}`} style={{ flex: '1 1 420px', minWidth: 0, display: 'block' }}>
@@ -230,7 +230,7 @@ export function SermonNoteListView({
 
       {/* ── 지난 설교노트 ── */}
       <section style={{ padding: '64px 22px 0' }}>
-        <div style={{ maxWidth: 1080, margin: '0 auto', borderTop: `3px double ${RULE}`, paddingTop: 28 }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', borderTop: `3px double ${RULE}`, paddingTop: 28 }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between', alignItems: 'baseline' }}>
             <p style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: '.14em', color: SECONDARY }}>
               {track === 'all' ? '지난 설교노트' : `${trackName(track)} 설교노트`}
@@ -281,7 +281,7 @@ export function SermonNoteListView({
       {showGuide && (
       <section style={{ padding: '72px 22px 0' }}>
         <div style={{
-          maxWidth: 1080, margin: '0 auto', borderTop: `1px solid ${BORDER}`, paddingTop: 28,
+          maxWidth: 1280, margin: '0 auto', borderTop: `1px solid ${BORDER}`, paddingTop: 28,
           display: 'grid', gap: 30, gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
         }}>
           {seriesList.length > 0 && (

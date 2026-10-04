@@ -444,7 +444,7 @@ export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/o
     <div style={{ background: 'var(--dw-background, #ffffff)', color: TEXT }}>
       {/* ── Hero ── */}
       <section style={{ padding: '48px 22px 0' }}>
-        <div style={{ maxWidth: 1080, margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: 44, alignItems: 'flex-end' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: 44, alignItems: 'flex-end' }}>
           <div style={{ flex: '1 1 380px', minWidth: 0 }}>
             <p style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: '.18em', color: PRIMARY }}>SERMON NOTE{fmtDate(note.noteDate) ? ` · ${fmtDate(note.noteDate)}` : ''}</p>
             <h1 style={{ ...SERIF, margin: '18px 0 0', fontSize: 'clamp(34px,5.2vw,60px)', fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1.2 }}>{heroTitle}</h1>
@@ -472,7 +472,7 @@ export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/o
 
       {/* ── 대상별 탭 + 퀵 인덱스 ── */}
       <section style={{ padding: '44px 22px 0' }}>
-        <div style={{ maxWidth: 1080, margin: '0 auto', borderTop: `3px double ${RULE}`, borderBottom: `1px solid ${BORDER}`, display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', justifyContent: 'space-between', gap: '10px 24px' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', borderTop: `3px double ${RULE}`, borderBottom: `1px solid ${BORDER}`, display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', justifyContent: 'space-between', gap: '10px 24px' }}>
           {available.length > 1 ? (
             <div role="tablist" aria-label="설교노트 대상" style={{ display: 'flex', flexWrap: 'wrap', gap: '0 26px' }}>
               {available.map((t) => {
@@ -525,7 +525,7 @@ export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/o
 
       {/* ── 본문 (aside + article) ── */}
       <section style={{ padding: '0 22px' }}>
-        <div style={{ maxWidth: 1080, margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: 56, alignItems: 'flex-start' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: 56, alignItems: 'flex-start' }}>
           <aside style={{ flex: '1 1 220px', minWidth: 0, maxWidth: 260, paddingTop: 44 }}>
             <p style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: '.14em', color: PRIMARY }}>{activeMeta.label} 설교노트</p>
             <p style={{ ...SERIF, margin: '12px 0 0', fontSize: 17, lineHeight: 1.75, color: TEXT, textWrap: 'pretty' as const }}>{lead}</p>
@@ -582,7 +582,7 @@ export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/o
       {/* ── 지난 설교노트 ── */}
       {past.length > 0 && (
         <section style={{ padding: '72px 22px 0' }}>
-          <div style={{ maxWidth: 1080, margin: '0 auto', borderTop: `3px double ${RULE}`, paddingTop: 28 }}>
+          <div style={{ maxWidth: 1280, margin: '0 auto', borderTop: `3px double ${RULE}`, paddingTop: 28 }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between', alignItems: 'baseline', margin: '0 0 22px' }}>
               <p style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: '.14em', color: SECONDARY }}>지난 설교노트</p>
               <Link href="/sermon-notes" style={{ fontSize: 13, fontWeight: 600, color: PRIMARY }}>전체 보기 ›</Link>
