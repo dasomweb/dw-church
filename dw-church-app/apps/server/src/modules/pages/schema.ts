@@ -101,6 +101,7 @@ export const blockTypes = [
   // 최근 설교노트 — 설교노트 모듈 최신 1건(대표 이미지·제목·본문 발췌)을 홈에 표시.
   'recent_sermon_note',
   'sermon_note_list',
+  'online_bulletin_list',
   'button_group',
   'directions_split',
   'logo_title',

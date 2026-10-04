@@ -1797,6 +1797,23 @@ const SERMON_NOTE_LIST = churchBlock(
     { key: 'showGuide', label: '시리즈·읽는 법 안내', type: 'select', choices: [{ value: 'show', label: '표시' }, { value: 'hide', label: '숨김' }] },
   ]},
 );
+// 온라인 주보 목록 — 주보 모듈 전체를 연도 탭 + 월별 그룹으로. 내용은 [온라인 주보 관리]에서.
+const ONLINE_BULLETIN_LIST = churchBlock(
+  { title: '표시', fields: [
+    { key: 'eyebrow', label: '라벨(윗글)', type: 'text', hint: '예: BULLETIN' },
+    { key: 'title', label: '제목', type: 'text', hint: '예: 온라인 주보' },
+    { key: 'description', label: '소개 문구', type: 'textarea' },
+    { key: 'limit', label: '불러올 개수', type: 'number', hint: '기본 60' },
+    { key: 'showFeature', label: '최신 주보 크게 보여주기', type: 'select', choices: [{ value: 'show', label: '표시' }, { value: 'hide', label: '숨김' }] },
+    { key: 'showGuide', label: '하단 안내 영역', type: 'select', choices: [{ value: 'show', label: '표시' }, { value: 'hide', label: '숨김' }] },
+  ]},
+  { title: '안내', fields: [
+    { key: 'guideLeft', label: '주보에 담기는 것', type: 'textarea' },
+    { key: 'guideRight', label: '소식 나누기', type: 'textarea' },
+    { key: 'newsHref', label: '소식 보내기 링크', type: 'url', hint: '비우면 버튼 숨김' },
+    { key: 'newsLabel', label: '소식 보내기 버튼 텍스트', type: 'text' },
+  ]},
+);
 // 주보·광고 — 주보(주보 모듈) + 광고(교회소식 게시판, board-select) + 액션 버튼.
 // board-select/버튼 flat 필드를 쓰므로 churchBlock 대신 직접 정의.
 const NEWS_ANNOUNCEMENTS: BlockElementRegistry = {
@@ -2005,6 +2022,7 @@ export const ELEMENT_REGISTRY: Record<string, BlockElementRegistry> = {
   sermon_meditation: SERMON_MEDITATION,
   recent_sermon_note: RECENT_SERMON_NOTE,
   sermon_note_list: SERMON_NOTE_LIST,
+  online_bulletin_list: ONLINE_BULLETIN_LIST,
   devotion_reader:  DEVOTION_READER,
   cardnews:         CARDNEWS,
   recent_bulletins: RECENT_BULLETINS,
