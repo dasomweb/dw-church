@@ -70,7 +70,9 @@ interface FieldDef {
 export function ContactFormBlock({ props, slug }: ContactFormBlockProps) {
   const title = (props.title as string) || '';
   const description = (props.description as string) || (props.subtitle as string) || '';
-  const variant = (props.variant as string) === 'side-by-side' ? 'side-by-side' : 'stacked';
+  const rawVariant = (props.variant as string) ?? '';
+  const variant =
+    rawVariant === 'side-by-side' ? 'side-by-side' : rawVariant === 'ruled' ? 'ruled' : 'stacked';
   const submitLabel = (props.submitLabel as string) || '';
   const submittingLabel = (props.submittingLabel as string) || '';
   const successMessage = (props.successMessage as string) || '';
@@ -98,7 +100,58 @@ export function ContactFormBlock({ props, slug }: ContactFormBlockProps) {
       style={{ paddingBlock: 'var(--section-py-lg)' }}
       applyLayout
     >
-      {variant === 'side-by-side' ? (
+      {variant === 'ruled' ? (
+        // ruled — 좌측 작은 라벨 + 더블 괘선, 우측 납작한 폼. 에디토리얼 톤
+        // 교회 서브페이지('연락처 남기기')용. 색/폰트는 테마 토큰을 따른다.
+        <div
+          style={{
+            borderTop: '3px double var(--dw-text, #3a3129)',
+            paddingTop: 28,
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '24px 56px',
+          }}
+        >
+          <div style={{ flex: '0 0 200px', minWidth: 0 }}>
+            {title && (
+              <TextBodyElement
+                text={title}
+                props={props}
+                elementKey="title"
+                defaultTag="p"
+                defaultSize="caption"
+                baseStyle={{
+                  margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: '.14em',
+                  color: 'var(--dw-secondary, #5e6044)',
+                }}
+              />
+            )}
+            {description && (
+              <TextBodyElement
+                text={description}
+                props={props}
+                elementKey="description"
+                defaultTag="p"
+                defaultSize="caption"
+                baseStyle={{ margin: '12px 0 0', fontSize: 14, lineHeight: 1.7, color: 'var(--brand-muted, #6f6255)' }}
+              />
+            )}
+          </div>
+          <div style={{ flex: '1 1 420px', minWidth: 0, maxWidth: 620 }}>
+            <FormBody
+              fields={fields}
+              endpoint={endpoint}
+              submitLabel={submitLabel}
+              submittingLabel={submittingLabel}
+              successMessage={successMessage}
+              fallbackErrorMessage={fallbackErrorMessage}
+              tenantSlug={slug}
+              source={props}
+              ruled
+            />
+          </div>
+        </div>
+      ) : variant === 'side-by-side' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-16">
           <div>
             <Header title={title} description={description} source={props} />
@@ -177,6 +230,7 @@ function FormBody({
   fallbackErrorMessage,
   tenantSlug,
   source,
+  ruled,
 }: {
   fields: FieldDef[];
   endpoint: string;
@@ -186,6 +240,8 @@ function FormBody({
   fallbackErrorMessage: string;
   tenantSlug?: string;
   source: Record<string, unknown>;
+  /** ruled variant — 테마 토큰 기반 납작한 입력(테일윈드 gray 계열 대신). */
+  ruled?: boolean;
 }) {
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -226,6 +282,20 @@ function FormBody({
   };
 
   if (status === 'success') {
+    if (ruled) {
+      return (
+        <div style={{ border: '1px solid var(--border, #e2d8cb)', background: 'var(--dw-surface, #fffdf9)', padding: '26px 20px', textAlign: 'center' }}>
+          <TextBodyElement
+            text={successMessage}
+            props={source}
+            elementKey="successMessage"
+            defaultTag="p"
+            defaultSize="body"
+            baseStyle={{ margin: 0, fontSize: 16, color: 'var(--dw-text, #3a3129)' }}
+          />
+        </div>
+      );
+    }
     return (
       <div
         className="rounded-lg bg-green-50 border border-green-200 px-6 py-8 text-center"
@@ -240,6 +310,64 @@ function FormBody({
           className="text-green-800 font-medium"
         />
       </div>
+    );
+  }
+
+  if (ruled) {
+    // 짧은 입력은 2열 auto-fit, textarea 는 아래 전체 폭 — 시안의 '연락처 남기기' 구성.
+    const short = fields.filter((f) => f.type !== 'textarea');
+    const long = fields.filter((f) => f.type === 'textarea');
+    const inputStyle: React.CSSProperties = {
+      width: '100%', background: 'var(--dw-background, #fffdf9)',
+      border: '1px solid var(--border, #e2d8cb)', borderRadius: 2,
+      padding: '13px 15px', fontSize: 16, color: 'var(--dw-text, #3a3129)',
+      fontFamily: 'inherit', outline: 'none',
+    };
+    const labelStyle: React.CSSProperties = { display: 'block', margin: '0 0 8px', fontSize: 13, fontWeight: 600, color: 'var(--brand-muted, #6f6255)' };
+    const field = (f: FieldDef) => (
+      <div key={f.name}>
+        <label htmlFor={`contact-${f.name}`} style={labelStyle}>
+          {f.label}
+          {f.required && <span style={{ color: 'var(--dw-primary, #7b7d5c)', marginLeft: 2 }} aria-hidden="true">*</span>}
+        </label>
+        {f.type === 'textarea' ? (
+          <textarea id={`contact-${f.name}`} name={f.name} required={f.required} placeholder={f.placeholder}
+            rows={3} disabled={status === 'submitting'} style={{ ...inputStyle, minHeight: 84, resize: 'vertical' }} />
+        ) : (
+          <input id={`contact-${f.name}`} type={f.type} name={f.name} required={f.required}
+            placeholder={f.placeholder} disabled={status === 'submitting'} style={inputStyle} />
+        )}
+      </div>
+    );
+    return (
+      <form onSubmit={handleSubmit} noValidate>
+        {short.length > 0 && (
+          <div style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))' }}>
+            {short.map(field)}
+          </div>
+        )}
+        {long.map((f) => <div key={f.name} style={{ marginTop: 14 }}>{field(f)}</div>)}
+        <button
+          data-element="submitLabel"
+          data-element-type="button"
+          type="submit"
+          disabled={status === 'submitting'}
+          style={mergeElementStyle(
+            {
+              marginTop: 20, background: 'var(--dw-text, #3a3129)', color: '#fff', border: 0,
+              padding: '14px 32px', borderRadius: 2, fontSize: 15, fontWeight: 600,
+              fontFamily: 'inherit', cursor: 'pointer',
+            },
+            source,
+            'submitLabel',
+          )}
+        >
+          {status === 'submitting' ? (submittingLabel || submitLabel) : submitLabel}
+        </button>
+        {status === 'error' && error && (
+          <p style={{ margin: '12px 0 0', fontSize: 14, color: 'var(--dw-primary, #7b7d5c)' }}>{error}</p>
+        )}
+      </form>
     );
   }
 
