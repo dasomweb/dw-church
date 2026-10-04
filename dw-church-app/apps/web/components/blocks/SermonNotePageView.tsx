@@ -553,10 +553,16 @@ export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/o
                   {sec.images && sec.images.length > 0 && (
                     <div style={{ marginTop: 22, display: 'grid', gridTemplateColumns: 'minmax(0,1fr)', gap: 12 }}>
                       {sec.images.map((src, k) => (
-                        <div key={k} style={{ position: 'relative', width: '100%', aspectRatio: '4 / 3', background: IMG_BG, overflow: 'hidden' }}>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={src} alt={`${sec.heading} ${k + 1}`} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-                        </div>
+                        // 카툰은 원본 비율 그대로 **전부** 보여야 한다 — 고정 비율 + object-fit:cover 로
+                        // 자르면 말풍선·본문이 잘려 읽을 수 없다(세로로 긴 카툰이 많다).
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          key={k}
+                          src={src}
+                          alt={`${sec.heading} ${k + 1}`}
+                          style={{ display: 'block', width: '100%', height: 'auto', background: IMG_BG }}
+                          loading="lazy"
+                        />
                       ))}
                     </div>
                   )}
