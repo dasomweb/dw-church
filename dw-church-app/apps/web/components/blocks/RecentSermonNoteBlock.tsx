@@ -58,7 +58,7 @@ export async function RecentSermonNoteBlock({ props, slug }: Props) {
             </p>
           </div>
           {img && (
-            <Link href={moreUrl} className="relative block w-full overflow-hidden lg:flex-[0_0_34%] lg:max-w-[340px]" style={{ aspectRatio: '1 / 1', background: SURFACE, borderRadius: 4 }}>
+            <Link href={moreUrl} className="relative block w-full overflow-hidden lg:flex-[0_0_34%] lg:max-w-[340px]" style={{ aspectRatio: '3 / 2', background: SURFACE, borderRadius: 4 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={img} alt={title} className="absolute inset-0 h-full w-full object-cover" />
             </Link>

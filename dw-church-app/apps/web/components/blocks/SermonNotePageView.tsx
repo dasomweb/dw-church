@@ -453,7 +453,7 @@ export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/o
           </div>
           {heroImg && (
             <div style={{ flex: '1 1 380px', minWidth: 0 }}>
-              <div style={{ position: 'relative', width: '100%', aspectRatio: '4 / 3', background: IMG_BG, overflow: 'hidden' }}>
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '3 / 2', background: IMG_BG, overflow: 'hidden' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={heroImg} alt={heroTitle} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
