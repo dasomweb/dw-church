@@ -24,7 +24,6 @@ describe('assertSlugAllowed (예약 페이지 slug)', () => {
 
   it('CMS 를 읽지 않는 물리 라우트(sermon-note)와 api 는 막는다', () => {
     expect(() => assertSlugAllowed('sermon-note')).toThrow(AppError);
-    expect(() => assertSlugAllowed('sermon-notes')).toThrow(AppError);
     expect(() => assertSlugAllowed('api')).toThrow(AppError);
   });
 

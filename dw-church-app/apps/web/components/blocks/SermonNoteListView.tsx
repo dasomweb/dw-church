@@ -97,7 +97,28 @@ function Thumb({ src, alt }: { src: string; alt: string }) {
   );
 }
 
-export function SermonNoteListView({ notes }: { notes: SermonNote[] }) {
+interface ViewProps {
+  notes: SermonNote[];
+  eyebrow?: string;
+  title?: string;
+  description?: string;
+  /** 최신 노트 피처(큰 카드) 표시 여부 */
+  showFeature?: boolean;
+  /** 시리즈 / 읽는 법 안내 섹션 표시 여부 */
+  showGuide?: boolean;
+  /** 데이터 블록으로 쓸 때는 DataSection 이 상하 여백을 주므로 자체 상단 여백을 없앤다. */
+  inBlock?: boolean;
+}
+
+export function SermonNoteListView({
+  notes,
+  eyebrow = 'SERMON NOTES',
+  title = '설교노트',
+  description = '주일 설교를 읽기 좋게 정리했습니다. 장년부터 Kids까지, 세대마다 같은 말씀을 각자의 눈높이로 읽습니다.',
+  showFeature = true,
+  showGuide = true,
+  inBlock = false,
+}: ViewProps) {
   const rows = useMemo(() => (notes ?? []).map(toRow), [notes]);
   const [track, setTrack] = useState<'all' | SermonNoteCongregationKey>('all');
   const [shown, setShown] = useState(PAGE);
@@ -115,7 +136,8 @@ export function SermonNoteListView({ notes }: { notes: SermonNote[] }) {
     (k === 'all' ? '전체' : (TRACKS.find(([t]) => t === k)?.[1] ?? ''));
 
   const latest = filtered[0];
-  const rest = filtered.slice(1);
+  // 최신 피처를 숨기면 목록이 전부(최신 포함)를 보여준다.
+  const rest = showFeature ? filtered.slice(1) : filtered;
   const visible = rest.slice(0, shown);
 
   // 시리즈는 모듈에 없는 값 — 입력된 노트가 있을 때만 집계해 보여준다.
@@ -131,17 +153,17 @@ export function SermonNoteListView({ notes }: { notes: SermonNote[] }) {
   return (
     <div style={{ background: 'var(--dw-background, #ffffff)', color: TEXT }}>
       {/* ── 제목부 + 대상 탭 ── */}
-      <section style={{ padding: '56px 22px 0' }}>
+      <section style={{ padding: inBlock ? '0 22px' : '56px 22px 0' }}>
         <div style={{
           maxWidth: 1080, margin: '0 auto', borderBottom: `3px double ${RULE}`, paddingBottom: 22,
           display: 'flex', flexWrap: 'wrap', gap: '20px 40px', justifyContent: 'space-between', alignItems: 'flex-end',
         }}>
           <div style={{ minWidth: 0 }}>
-            <p style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: '.16em', color: SECONDARY }}>SERMON NOTES</p>
-            <h1 style={{ ...SERIF, margin: '16px 0 0', fontSize: 'clamp(30px,4.4vw,52px)', fontWeight: 600, letterSpacing: '-0.02em' }}>설교노트</h1>
-            <p style={{ margin: '16px 0 0', maxWidth: '28em', fontSize: 17, lineHeight: 1.75, color: MUTED }}>
-              주일 설교를 읽기 좋게 정리했습니다. 장년부터 Kids까지, 세대마다 같은 말씀을 각자의 눈높이로 읽습니다.
-            </p>
+            {eyebrow && <p style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: '.16em', color: SECONDARY }}>{eyebrow}</p>}
+            {title && <h1 style={{ ...SERIF, margin: '16px 0 0', fontSize: 'clamp(30px,4.4vw,52px)', fontWeight: 600, letterSpacing: '-0.02em' }}>{title}</h1>}
+            {description && (
+              <p style={{ margin: '16px 0 0', maxWidth: '28em', fontSize: 17, lineHeight: 1.75, color: MUTED }}>{description}</p>
+            )}
           </div>
           {available.length > 0 && (
             <div role="tablist" aria-label="대상" style={{ display: 'flex', flexWrap: 'wrap', gap: '0 22px' }}>
@@ -167,7 +189,7 @@ export function SermonNoteListView({ notes }: { notes: SermonNote[] }) {
       </section>
 
       {/* ── 최신 노트 피처 ── */}
-      {latest && (
+      {showFeature && latest && (
         <section style={{ padding: '36px 22px 0' }}>
           <Link href={`/sermon-note/${latest.id}`} style={{
             maxWidth: 1080, margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: 40,
@@ -244,6 +266,7 @@ export function SermonNoteListView({ notes }: { notes: SermonNote[] }) {
       </section>
 
       {/* ── 시리즈 / 읽는 법 ── */}
+      {showGuide && (
       <section style={{ padding: '72px 22px 0' }}>
         <div style={{
           maxWidth: 1080, margin: '0 auto', borderTop: `1px solid ${BORDER}`, paddingTop: 28,
@@ -269,8 +292,9 @@ export function SermonNoteListView({ notes }: { notes: SermonNote[] }) {
           </div>
         </div>
       </section>
+      )}
 
-      <div style={{ height: 80 }} />
+      <div style={{ height: inBlock ? 0 : 80 }} />
     </div>
   );
 }

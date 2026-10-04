@@ -15,6 +15,7 @@ import { RecentSermonsBlock } from './blocks/RecentSermonsBlock';
 import { SermonMagazineBlock } from './blocks/SermonMagazineBlock';
 import { SermonMeditationBlock } from './blocks/SermonMeditationBlock';
 import { RecentSermonNoteBlock } from './blocks/RecentSermonNoteBlock';
+import { SermonNoteListBlock } from './blocks/SermonNoteListBlock';
 import { DevotionBlock } from './blocks/DevotionBlock';
 import { RecentBulletinsBlock } from './blocks/RecentBulletinsBlock';
 import { RecentColumnsBlock } from './blocks/RecentColumnsBlock';
@@ -54,7 +55,8 @@ const CHURCH_BLOCKS: Record<string, AnyBlock> = {
   recent_sermons: RecentSermonsBlock as AnyBlock,
   sermon_magazine: SermonMagazineBlock as AnyBlock, // 설교 매거진(13a) — 이번 주 설교 커버+써머리+질문(관찰·심화·적용)
   sermon_meditation: SermonMeditationBlock as AnyBlock, // 주일설교 묵상 — 대표 설교 + '이번 주 묵상' 사이드바(말씀·책·기도제목·주보), 에디토리얼 홈용
-  recent_sermon_note: RecentSermonNoteBlock as AnyBlock, // 최근 설교노트 — 설교노트 모듈 최신 1건(대표 이미지·제목·발췌)
+  recent_sermon_note: RecentSermonNoteBlock as AnyBlock,
+  sermon_note_list: SermonNoteListBlock as AnyBlock, // 설교노트 목록 — 대상 탭·최신 피처·그리드(Data Block) // 최근 설교노트 — 설교노트 모듈 최신 1건(대표 이미지·제목·발췌)
   devotion_reader: DevotionBlock as AnyBlock, // 말씀 묵상(14a) — 주간 목록 + 오늘 묵상(읽기 전용, 트래킹 없음)
 
   recent_bulletins: RecentBulletinsBlock as AnyBlock,
