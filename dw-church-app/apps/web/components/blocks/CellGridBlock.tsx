@@ -1,4 +1,5 @@
 import { getCells } from '@/lib/api';
+import { titleAlignClass } from './title-align';
 import { DataSection } from './DataSection';
 
 interface CellGridBlockProps {
@@ -45,7 +46,7 @@ export async function CellGridBlock({ props, slug }: CellGridBlockProps) {
   return (
     <DataSection props={props} defaultBg="var(--dw-surface)">
       <div className="mx-auto max-w-7xl">
-        <h2 className="mb-8 text-center text-2xl sm:text-3xl font-bold font-heading">{title}</h2>
+        <h2 className={`mb-8 text-2xl sm:text-3xl font-bold font-heading ${titleAlignClass(props)}`}>{title}</h2>
         <div className={`grid grid-cols-1 gap-6 ${gridCols}`}>
           {cells.map((c, i) => {
             const photo = c.photo_url as string | null;

@@ -1,4 +1,5 @@
 import { getSermons } from '@/lib/api';
+import { titleAlignClass } from './title-align';
 import { getElementStyle } from '@/lib/element-style';
 import { DataSection } from './DataSection';
 import { RecentSermonsClient } from './RecentSermonsClient';
@@ -51,7 +52,7 @@ export async function RecentSermonsBlock({ props, slug }: RecentSermonsBlockProp
   return (
     <DataSection props={props} defaultBg="var(--dw-surface)">
       <div className="mx-auto max-w-7xl">
-        <h2 className="mb-8 text-center text-2xl sm:text-3xl font-bold font-heading" style={getElementStyle(props, 'title')}>{title}</h2>
+        <h2 className={`mb-8 text-2xl sm:text-3xl font-bold font-heading ${titleAlignClass(props)}`} style={getElementStyle(props, 'title')}>{title}</h2>
         <RecentSermonsClient sermons={sermons} slug={slug} columns={columns} featured={featured} />
       </div>
     </DataSection>

@@ -1,4 +1,5 @@
 import { getBulletins } from '@/lib/api';
+import { titleAlignClass } from './title-align';
 import { getElementStyle } from '@/lib/element-style';
 import { DataSection } from './DataSection';
 import { RecentBulletinsClient } from './RecentBulletinsClient';
@@ -36,7 +37,7 @@ export async function RecentBulletinsBlock({ props, slug }: RecentBulletinsBlock
   return (
     <DataSection props={props}>
       <div className="mx-auto max-w-7xl">
-        <h2 className="mb-8 text-center text-2xl sm:text-3xl font-bold font-heading" style={getElementStyle(props, 'title')}>{title}</h2>
+        <h2 className={`mb-8 text-2xl sm:text-3xl font-bold font-heading ${titleAlignClass(props)}`} style={getElementStyle(props, 'title')}>{title}</h2>
         <RecentBulletinsClient bulletins={bulletins} slug={slug} columns={columns} />
       </div>
     </DataSection>

@@ -122,6 +122,11 @@ function FacebookIcon() {
 /* ─────────────────────────── Shared helpers ─────────────────────────── */
 
 // Lays out the (up to) 4 social buttons; each renders only when its url is set.
+/** SNS 링크가 하나라도 있는지 — 없으면 푸터에서 해당 칼럼 자체를 숨긴다. */
+function hasSocial(social: TenantFooterProps['social']): boolean {
+  return Object.values(social ?? {}).some((v) => typeof v === 'string' && v.trim() !== '');
+}
+
 function SocialRow({
   social,
   align = 'left',
@@ -334,18 +339,24 @@ function ColumnsBody(props: TenantFooterProps) {
               size={56}
             />
           </div>
-          <div>
-            <h3 className="mb-3 text-sm font-semibold" style={{ color: heading }}>
-              {directionsLabel}
-            </h3>
-            <ContactLines address={address} phone={phone} email={email} text={text} />
-          </div>
-          <div>
-            <h3 className="mb-3 text-sm font-semibold" style={{ color: heading }}>
-              {socialLabel}
-            </h3>
-            <SocialRow social={social} />
-          </div>
+          {/* 내용이 없으면 칼럼 제목만 덩그러니 남아 '미완성'처럼 보이므로 통째로 숨긴다.
+              (주소/전화/이메일이 하나도 없거나, SNS 링크가 하나도 없는 경우) */}
+          {(address || phone || email) && (
+            <div>
+              <h3 className="mb-3 text-sm font-semibold" style={{ color: heading }}>
+                {directionsLabel}
+              </h3>
+              <ContactLines address={address} phone={phone} email={email} text={text} />
+            </div>
+          )}
+          {hasSocial(social) && (
+            <div>
+              <h3 className="mb-3 text-sm font-semibold" style={{ color: heading }}>
+                {socialLabel}
+              </h3>
+              <SocialRow social={social} />
+            </div>
+          )}
         </div>
         {/* RIGHT: nav sitemap */}
         {showNav && navCols.length > 0 && (

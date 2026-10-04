@@ -1,4 +1,5 @@
 import { getBoardBySlug, getBoardPosts } from '@/lib/api';
+import { titleAlignClass } from './title-align';
 import { DataSection } from './DataSection';
 
 interface BoardBlockProps {
@@ -56,7 +57,7 @@ export async function BoardBlock({ props, slug }: BoardBlockProps) {
     <DataSection props={props} defaultBg="var(--dw-surface)">
       <div className="mx-auto max-w-7xl">
         {sectionTitle && (
-          <h2 className="mb-8 text-center text-2xl sm:text-3xl font-bold font-heading">{sectionTitle}</h2>
+          <h2 className={`mb-8 text-2xl sm:text-3xl font-bold font-heading ${titleAlignClass(props)}`}>{sectionTitle}</h2>
         )}
         <div className="space-y-10">
           {boards.map(({ board, posts }) => (

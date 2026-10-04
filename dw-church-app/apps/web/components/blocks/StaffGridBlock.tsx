@@ -1,4 +1,5 @@
 import { getStaff, getChurchSettings } from '@/lib/api';
+import { titleAlignClass } from './title-align';
 import { DataSection } from './DataSection';
 import { StaffGridBlockClient } from './StaffGridBlockClient';
 
@@ -47,7 +48,7 @@ export async function StaffGridBlock({ props, slug }: StaffGridBlockProps) {
   return (
     <DataSection props={props} defaultBg="var(--dw-surface)">
       <div className="mx-auto max-w-7xl">
-        <h2 className="mb-8 text-center text-2xl sm:text-3xl font-bold font-heading">
+        <h2 className={`mb-8 text-2xl sm:text-3xl font-bold font-heading ${titleAlignClass(props)}`}>
           {(props.title as string) || '교역자'}
         </h2>
         <StaffGridBlockClient

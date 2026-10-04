@@ -1,4 +1,5 @@
 import { getVideos } from '@/lib/api';
+import { titleAlignClass } from './title-align';
 import { getElementStyle } from '@/lib/element-style';
 import { DataSection } from './DataSection';
 import { Pagination } from '../Pagination';
@@ -60,7 +61,7 @@ export async function VideoBoardBlock({ props, slug, page = 1 }: VideoBoardBlock
   return (
     <DataSection props={props} defaultBg="var(--dw-background)">
       <div className="mx-auto max-w-7xl">
-        <h2 className="mb-8 text-center text-2xl sm:text-3xl font-bold font-heading" style={getElementStyle(props, 'title')}>{title}</h2>
+        <h2 className={`mb-8 text-2xl sm:text-3xl font-bold font-heading ${titleAlignClass(props)}`} style={getElementStyle(props, 'title')}>{title}</h2>
         {/* Cards + click-to-play modal live in the client half. */}
         <VideoBoardClient videos={videos} gridClass={gridClass} />
         {/* Shared windowed pagination — same component as sermons/albums/etc. */}
