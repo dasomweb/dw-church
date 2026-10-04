@@ -104,6 +104,7 @@ export const blockTypes = [
   'online_bulletin_list',
   'page_header',
   'image_link_list',
+  'highlight_media',
   'button_group',
   'directions_split',
   'logo_title',

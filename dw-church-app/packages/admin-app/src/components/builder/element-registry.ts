@@ -1817,6 +1817,17 @@ const IMAGE_LINK_LIST = churchBlock(
     { key: 'moreHref', label: '더보기 링크', type: 'url' },
   ]},
 );
+// 큰 숫자 + 사진 — 예배 시간처럼 핵심 값 하나를 크게 보여주는 구성.
+const HIGHLIGHT_MEDIA = churchBlock(
+  { title: '표시', fields: [
+    { key: 'eyebrow', label: '라벨(윗글)', type: 'text', hint: '예: 주일예배' },
+    { key: 'bigText', label: '큰 글씨', type: 'text', hint: '예: 11:00' },
+    { key: 'subText', label: '보조 문구', type: 'text', hint: '예: 매주 주일 오전' },
+    { key: 'imageUrl', label: '사진', type: 'image' },
+    { key: 'imageRatio', label: '사진 비율', type: 'select', choices: [{ value: '16/9', label: '16:9' }, { value: '4/3', label: '4:3' }, { value: '3/2', label: '3:2' }] },
+    { key: 'body', label: '설명', type: 'textarea' },
+  ]},
+);
 // 온라인 주보 목록 — 주보 모듈 전체를 연도 탭 + 월별 그룹으로. 내용은 [온라인 주보 관리]에서.
 const ONLINE_BULLETIN_LIST = churchBlock(
   { title: '표시', fields: [
@@ -2045,6 +2056,7 @@ export const ELEMENT_REGISTRY: Record<string, BlockElementRegistry> = {
   online_bulletin_list: ONLINE_BULLETIN_LIST,
   page_header: PAGE_HEADER,
   image_link_list: IMAGE_LINK_LIST,
+  highlight_media: HIGHLIGHT_MEDIA,
   devotion_reader:  DEVOTION_READER,
   cardnews:         CARDNEWS,
   recent_bulletins: RECENT_BULLETINS,

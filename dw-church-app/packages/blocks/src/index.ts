@@ -70,6 +70,7 @@ export type { HeadingTag, HeadingSizeToken, TextBodyTag, ButtonVariant } from '.
 export { HeroBannerBlock } from './static/HeroBannerBlock';
 export { PageHeaderBlock } from './static/PageHeaderBlock';
 export { ImageLinkListBlock } from './static/ImageLinkListBlock';
+export { HighlightMediaBlock } from './static/HighlightMediaBlock';
 export { TextImageBlock } from './static/TextImageBlock';
 export { TextOnlyBlock } from './static/TextOnlyBlock';
 export { LocationMapBlock } from './static/LocationMapBlock';

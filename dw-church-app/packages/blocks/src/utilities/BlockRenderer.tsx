@@ -1,6 +1,7 @@
 import { HeroBannerBlock } from '../static/HeroBannerBlock';
 import { PageHeaderBlock } from '../static/PageHeaderBlock';
 import { ImageLinkListBlock } from '../static/ImageLinkListBlock';
+import { HighlightMediaBlock } from '../static/HighlightMediaBlock';
 import { CtaSectionBlock } from '../static/CtaSectionBlock';
 import { TextImageBlock } from '../static/TextImageBlock';
 import { TextOnlyBlock } from '../static/TextOnlyBlock';
@@ -147,6 +148,7 @@ export const BLOCK_MAP: Record<string, SyncBlockComponent> = {
   hero_banner:      HeroBannerBlock,
   page_header:      PageHeaderBlock,
   image_link_list:  ImageLinkListBlock,
+  highlight_media:  HighlightMediaBlock,
   hero_full_width:  HeroBannerBlock,
 
   hero_split:        TextImageBlock,
