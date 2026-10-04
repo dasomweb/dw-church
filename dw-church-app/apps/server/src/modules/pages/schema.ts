@@ -102,6 +102,8 @@ export const blockTypes = [
   'recent_sermon_note',
   'sermon_note_list',
   'online_bulletin_list',
+  'page_header',
+  'image_link_list',
   'button_group',
   'directions_split',
   'logo_title',

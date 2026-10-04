@@ -68,6 +68,8 @@ export type { HeadingTag, HeadingSizeToken, TextBodyTag, ButtonVariant } from '.
 
 // Static blocks — render purely from props (no items array, no fetching)
 export { HeroBannerBlock } from './static/HeroBannerBlock';
+export { PageHeaderBlock } from './static/PageHeaderBlock';
+export { ImageLinkListBlock } from './static/ImageLinkListBlock';
 export { TextImageBlock } from './static/TextImageBlock';
 export { TextOnlyBlock } from './static/TextOnlyBlock';
 export { LocationMapBlock } from './static/LocationMapBlock';

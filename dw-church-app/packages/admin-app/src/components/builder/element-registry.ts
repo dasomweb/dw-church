@@ -1797,6 +1797,26 @@ const SERMON_NOTE_LIST = churchBlock(
     { key: 'showGuide', label: '시리즈·읽는 법 안내', type: 'select', choices: [{ value: 'show', label: '표시' }, { value: 'hide', label: '숨김' }] },
   ]},
 );
+// 페이지 머리글 — 모든 서브페이지 공통. 라벨 + 제목 + 소개 + 더블 괘선.
+const PAGE_HEADER = churchBlock(
+  { title: '머리글', fields: [
+    { key: 'eyebrow', label: '라벨(윗글)', type: 'text', hint: '예: ABOUT' },
+    { key: 'title', label: '제목', type: 'text', hint: '예: 교회소개' },
+    { key: 'description', label: '소개 문구', type: 'textarea' },
+    { key: 'parentLabel', label: '상위 페이지 이름', type: 'text', hint: '예: 교회소개 (비우면 숨김)' },
+    { key: 'parentHref', label: '상위 페이지 링크', type: 'url' },
+  ]},
+);
+// 사진 + 항목 링크 목록 — 비전/사역/프로그램 요약.
+const IMAGE_LINK_LIST = churchBlock(
+  { title: '표시', fields: [
+    { key: 'eyebrow', label: '라벨(윗글)', type: 'text', hint: '예: 목회 비전' },
+    { key: 'imageUrl', label: '사진', type: 'image' },
+    { key: 'imagePosition', label: '사진 위치', type: 'select', choices: [{ value: 'left', label: '좌측' }, { value: 'right', label: '우측' }] },
+    { key: 'moreLabel', label: '더보기 텍스트', type: 'text', hint: '예: 목회 비전 전문 읽기' },
+    { key: 'moreHref', label: '더보기 링크', type: 'url' },
+  ]},
+);
 // 온라인 주보 목록 — 주보 모듈 전체를 연도 탭 + 월별 그룹으로. 내용은 [온라인 주보 관리]에서.
 const ONLINE_BULLETIN_LIST = churchBlock(
   { title: '표시', fields: [
@@ -2023,6 +2043,8 @@ export const ELEMENT_REGISTRY: Record<string, BlockElementRegistry> = {
   recent_sermon_note: RECENT_SERMON_NOTE,
   sermon_note_list: SERMON_NOTE_LIST,
   online_bulletin_list: ONLINE_BULLETIN_LIST,
+  page_header: PAGE_HEADER,
+  image_link_list: IMAGE_LINK_LIST,
   devotion_reader:  DEVOTION_READER,
   cardnews:         CARDNEWS,
   recent_bulletins: RECENT_BULLETINS,

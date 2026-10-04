@@ -42,6 +42,48 @@ export function ValuesGridBlock({ props }: ValuesGridBlockProps) {
 
   if (items.length === 0) return null;
 
+  // chips variant — 좌측 라벨 + 둥근 칩 목록 + 더보기. 교회소개처럼 가치 '이름'만
+  // 한눈에 훑고 상세로 보내는 자리에 쓴다(카드 그리드가 과한 경우).
+  const variant = (props.variant as string) ?? '';
+  if (variant === 'chips') {
+    const moreLabel = (props.moreLabel as string) ?? '';
+    const moreHref = (props.moreHref as string) ?? '';
+    const TEXT = 'var(--dw-text, #3a3129)';
+    const SECONDARY = 'var(--dw-secondary, #5e6044)';
+    const PRIMARY = 'var(--dw-primary, #7b7d5c)';
+    const BORDER = 'var(--border, #e2d8cb)';
+    return (
+      <SectionShell
+        props={props}
+        className={`b2b-cq-host ${sectionBg.className}`.trim()}
+        style={{ paddingBlock: 'var(--section-py-md)', ...sectionBg.style }}
+        applyLayout
+        defaultContentClass="mx-auto max-w-7xl px-4 sm:px-6"
+      >
+        <div style={{ borderTop: `3px double ${TEXT}`, paddingTop: 28, display: 'flex', flexWrap: 'wrap', gap: '24px 56px' }}>
+          {title && <p style={{ flex: '0 0 200px', margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: '.14em', color: SECONDARY }}>{title}</p>}
+          <div style={{ flex: '1 1 420px', minWidth: 0 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 10px' }}>
+              {items.map((it, i) => {
+                const label = String(it.title ?? '');
+                if (!label) return null;
+                const chip = { fontSize: 14, fontWeight: 600, color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 999, padding: '8px 14px', textDecoration: 'none', display: 'inline-block' } as CSSProperties;
+                return it.href
+                  ? <a key={i} href={it.href} style={chip}>{label}</a>
+                  : <span key={i} style={chip}>{label}</span>;
+              })}
+            </div>
+            {moreLabel && moreHref && (
+              <p style={{ margin: '18px 0 0', fontSize: 14, fontWeight: 600 }}>
+                <a href={moreHref} style={{ color: PRIMARY, textDecoration: 'none' }}>{moreLabel} ›</a>
+              </p>
+            )}
+          </div>
+        </div>
+      </SectionShell>
+    );
+  }
+
   const cqVars = {
     '--cq-base': mobileColumns,
     '--cq-sm': '2',
