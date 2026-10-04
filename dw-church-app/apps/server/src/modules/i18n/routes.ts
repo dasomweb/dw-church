@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { requireAuth, requireFeature } from '../../middleware/auth.js';
+import { requireAuth, requireFeature, requireSuperAdmin } from '../../middleware/auth.js';
 import { getSchema } from '../../utils/get-schema.js';
 import * as i18n from './service.js';
 
@@ -27,8 +27,20 @@ export async function i18nRoutes(app: FastifyInstance) {
   // 스토어프론트 SSR 이 호출(공개). 캐시 우선 → 미스만 번역.
   app.post('/i18n/translate', async (request, reply) => {
     const { texts, lang } = translateBody.parse(request.body);
-    const translations = await i18n.translateTexts(getSchema(request), texts, lang);
-    return reply.send({ data: { translations } });
+    const { translations, failed } = await i18n.translateTexts(getSchema(request), texts, lang);
+    // failed = 번역 실패로 원문을 그대로 돌려준 항목(관리자 자동번역이 구분해야 함).
+    return reply.send({ data: { translations, failed } });
+  });
+
+  // 관리자 자동번역(설교노트 '본문 영어 자동번역' 등) — **슈퍼어드민 전용**.
+  // 공개 /i18n/translate 는 스토어프론트 SSR 렌더링용이라 그대로 두고,
+  // 사람이 눌러서 LLM 비용을 쓰는 경로만 분리해 권한을 건다.
+  // 실패하면 사유(quota=한도·예산 소진, truncated=출력 상한, no_key, error)를 돌려줘
+  // 호출부가 원문을 영어 칸에 쓰지 않고 사용자에게 알릴 수 있게 한다.
+  app.post('/i18n/translate-admin', { preHandler: [requireAuth, requireSuperAdmin] }, async (request, reply) => {
+    const { texts, lang } = translateBody.parse(request.body);
+    const { translations, failed, reason } = await i18n.translateTexts(getSchema(request), texts, lang);
+    return reply.send({ data: { translations, failed, reason } });
   });
 
   // 성경 본문 가져오기(개역개정 + ESV) — 온라인 주보 관리 입력 보조(관리자 전용, 인증 필요).

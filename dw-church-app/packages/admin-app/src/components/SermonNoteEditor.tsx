@@ -4,6 +4,7 @@ import { useDWChurchClient } from '@dw-church/api-client';
 import { FormField, inputClass } from './FormField';
 import { ImageUpload, MultiImageUpload } from './ImageUpload';
 import { useToast } from './Toast';
+import { useAuthStore } from '../stores/auth';
 
 // 설교노트 편집기 — 온라인 주보 설교노트 섹션과 독립 설교노트 관리에서 "똑같이" 쓰는 공용 컴포넌트.
 // 회중(장년/EM/Youth/어린이/Kids)별: 제목 · 본문(리치 텍스트, 한/영) · 어린이/Kids 카툰 · 회중별 소그룹 나눔질문.
@@ -77,11 +78,23 @@ export function SermonNoteEditor({ content, onChange }: { content: SermonNoteCon
   const setStudy = (key: SermonNoteCongregationKey, patch: Partial<Study>) =>
     setCong(key, { study: { ...(cong[key]?.study ?? (key === 'adult' ? content.study : {}) ?? {}), ...patch } });
 
+  // 자동번역(LLM 비용 발생)은 슈퍼어드민만 — 일반 권한에는 버튼 자체를 숨긴다.
+  const isSuperAdmin = useAuthStore((st) => !!st.session?.user?.isSuperAdmin);
   const uploadImage = async (file: File): Promise<string> => (await client!.uploadFile(file, 'sermon-notes')).url;
-  const translateMany = async (texts: string[]): Promise<Record<string, string>> => {
+  // 실패 사유를 사람 말로. 특히 예산/할당량 소진은 반드시 알려야 한다.
+  const failMsg = (reason?: string): string =>
+    reason === 'quota' ? '번역 한도(예산)가 소진되어 번역하지 못했습니다. 관리자에게 문의하세요.'
+    : reason === 'no_key' ? '번역 키가 설정되어 있지 않습니다.'
+    : reason === 'truncated' ? '본문이 너무 길어 번역이 중간에 잘렸습니다. 나눠서 시도해주세요.'
+    : '번역에 실패했습니다. 직접 입력해주세요.';
+
+  const translateMany = async (
+    texts: string[],
+  ): Promise<{ map: Record<string, string>; failed: Set<string>; reason?: string }> => {
     const list = texts.map((t) => (t || '').trim()).filter(Boolean);
-    if (list.length === 0) return {};
-    return client!.translate(list, 'en');
+    if (list.length === 0) return { map: {}, failed: new Set() };
+    const r = await client!.translateAdmin(list, 'en');
+    return { map: r.translations, failed: new Set(r.failed ?? []), reason: r.reason };
   };
 
   const translateNote = async (key: SermonNoteCongregationKey) => {
@@ -89,9 +102,11 @@ export function SermonNoteEditor({ content, onChange }: { content: SermonNoteCon
     if (!text) { showToast('error', '먼저 노트(한국어)를 입력하세요.'); return; }
     setBusy(`note-${key}`);
     try {
-      const map = await translateMany([text]);
+      const { map, failed, reason } = await translateMany([text]);
       const en = map[text] ?? '';
-      if (!en) { showToast('error', '번역에 실패했습니다. 직접 입력해주세요.'); return; }
+      // 서버는 실패해도 원문을 그대로 돌려준다(렌더링 폴백). 그걸 영어 칸에 쓰면
+      // 한글이 그대로 들어가므로, 실패 목록/동일 여부를 보고 막는다.
+      if (!en || failed.has(text) || en === text) { showToast('error', failMsg(reason)); return; }
       setCong(key, { textEn: en });
       showToast('success', '영어로 번역했습니다. 확인해주세요.');
     } catch { showToast('error', '번역에 실패했습니다.'); }
@@ -105,10 +120,18 @@ export function SermonNoteEditor({ content, onChange }: { content: SermonNoteCon
     if (!all.some((q) => (q || '').trim())) { showToast('error', '먼저 나눔 질문을 입력하세요.'); return; }
     setBusy(`study-${key}`);
     try {
-      const map = await translateMany(all);
+      const { map, failed, reason } = await translateMany(all);
       const next: Study = { ...st };
-      for (const k of keys) next[`${k}En`] = (st[k] ?? []).map((q) => (q?.trim() ? (map[q.trim()] ?? '') : ''));
+      // 실패한 항목은 비워 둔다 — 한글을 영어 칸에 넣지 않는다.
+      for (const k of keys) next[`${k}En`] = (st[k] ?? []).map((q) => {
+        const t = (q ?? '').trim();
+        if (!t) return '';
+        const en = map[t] ?? '';
+        return (!en || failed.has(t) || en === t) ? '' : en;
+      });
       setCong(key, { study: next });
+      const anyFail = all.some((q) => { const t = (q ?? '').trim(); return t && (failed.has(t) || (map[t] ?? '') === t || !map[t]); });
+      if (anyFail) { showToast('error', failMsg(reason)); return; }
       showToast('success', '나눔 질문을 영어로 번역했습니다. 확인해주세요.');
     } catch { showToast('error', '번역에 실패했습니다.'); }
     finally { setBusy(null); }
@@ -148,9 +171,11 @@ export function SermonNoteEditor({ content, onChange }: { content: SermonNoteCon
       <div className="rounded-lg border border-gray-200 p-3 space-y-3">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <span className="text-xs font-bold uppercase tracking-wider text-gray-500">{TABS.find(([k]) => k === tab)?.[1]} 설교노트</span>
-          <button type="button" onClick={() => void translateNote(tab)} disabled={busy === `note-${tab}`} className={btnAiClass}>
-            {busy === `note-${tab}` ? '번역 중…' : '🌐 본문 영어 자동번역'}
-          </button>
+          {isSuperAdmin && (
+            <button type="button" onClick={() => void translateNote(tab)} disabled={busy === `note-${tab}`} className={btnAiClass}>
+              {busy === `note-${tab}` ? '번역 중…' : '🌐 본문 영어 자동번역'}
+            </button>
+          )}
         </div>
         <FormField label="제목">
           <input value={cur.title ?? ''} onChange={(e) => setCong(tab, { title: e.target.value })} placeholder="예: 기적에 머물 것인가, 사명으로 나아갈 것인가" className={inputClass} />
@@ -179,9 +204,11 @@ export function SermonNoteEditor({ content, onChange }: { content: SermonNoteCon
         <div className="border-t border-gray-100 pt-3">
           <div className="mb-2 flex items-center justify-between gap-2 flex-wrap">
             <span className="text-xs font-bold uppercase tracking-wider text-gray-500">소그룹 나눔 질문 ({TABS.find(([k]) => k === tab)?.[1]})</span>
-            <button type="button" onClick={() => void translateStudy(tab)} disabled={busy === `study-${tab}`} className={btnAiClass}>
-              {busy === `study-${tab}` ? '번역 중…' : '🌐 질문 영어 자동번역'}
-            </button>
+            {isSuperAdmin && (
+              <button type="button" onClick={() => void translateStudy(tab)} disabled={busy === `study-${tab}`} className={btnAiClass}>
+                {busy === `study-${tab}` ? '번역 중…' : '🌐 질문 영어 자동번역'}
+              </button>
+            )}
           </div>
           <BilingualQuestionList label="관찰 질문" items={curStudy.observation ?? []} itemsEn={curStudy.observationEn ?? []} onChange={(ko, en) => setStudy(tab, { observation: ko, observationEn: en })} />
           <BilingualQuestionList label="상관 질문" items={curStudy.correlation ?? []} itemsEn={curStudy.correlationEn ?? []} onChange={(ko, en) => setStudy(tab, { correlation: ko, correlationEn: en })} />

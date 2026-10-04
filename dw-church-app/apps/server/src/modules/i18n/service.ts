@@ -34,13 +34,17 @@ export async function translateTexts(
   schema: string,
   texts: string[],
   lang: string,
-): Promise<Record<string, string>> {
+): Promise<{ translations: Record<string, string>; failed: string[]; reason?: TranslateFailReason }> {
   const out: Record<string, string> = {};
+  // 번역에 실패해 원문을 그대로 돌려준 항목. 페이지 렌더링은 원문 폴백이 맞지만,
+  // 관리자 자동번역 같은 호출부는 "실패"를 알아야 한글을 영어 칸에 쓰지 않는다.
+  const failed: string[] = [];
+  let failReason: TranslateFailReason | undefined;
   // 공백/중복 제거 + 상한.
   const uniq = Array.from(new Set(texts.map((t) => (t ?? '').trim()).filter(Boolean)));
   if (uniq.length === 0 || lang === 'ko' || !LANG_NAME[lang]) {
     for (const t of uniq) out[t] = t;
-    return out;
+    return { translations: out, failed };
   }
 
   const hashes = uniq.map((t) => hashOf(t, lang));
@@ -58,16 +62,19 @@ export async function translateTexts(
   for (const row of cached) { out[row.source] = row.text; have.add(row.source); }
 
   const misses = uniq.filter((t) => !have.has(t));
-  if (misses.length === 0) return out;
+  if (misses.length === 0) return { translations: out, failed };
 
   // 2) 미스만 Gemini 배치 번역(상한 단위로).
   for (let i = 0; i < misses.length; i += MAX_BATCH) {
     const batch = misses.slice(i, i + MAX_BATCH);
     let translated: string[] | null = null;
     try {
-      translated = await callGeminiTranslate(batch, lang);
+      const r = await callGeminiTranslate(batch, lang);
+      translated = r.texts;
+      if (!translated && r.reason) failReason = r.reason;
     } catch {
       translated = null;
+      failReason = failReason ?? 'error';
     }
     for (let k = 0; k < batch.length; k++) {
       const src = batch[k]!;
@@ -86,16 +93,23 @@ export async function translateTexts(
           );
         } catch { /* cache write best-effort */ }
       } else {
-        out[src] = src; // 실패 → 원문 유지
+        out[src] = src; // 실패 → 원문 유지(렌더링 폴백)
+        failed.push(src);
       }
     }
   }
-  return out;
+  return { translations: out, failed, reason: failed.length ? failReason : undefined };
 }
 
-async function callGeminiTranslate(texts: string[], lang: string): Promise<string[] | null> {
+/** 번역 실패 사유 — 호출부가 사용자에게 "왜" 안 됐는지 알릴 수 있게 구분한다. */
+export type TranslateFailReason = 'no_key' | 'quota' | 'truncated' | 'error';
+
+async function callGeminiTranslate(
+  texts: string[],
+  lang: string,
+): Promise<{ texts: string[] | null; reason?: TranslateFailReason }> {
   const apiKey = env.GEMINI_API_KEY;
-  if (!apiKey) return null;
+  if (!apiKey) return { texts: null, reason: 'no_key' };
   const target = LANG_NAME[lang] ?? lang;
   const system = `You are a professional translator for a Korean-American immigrant church website. `
     + `Translate each Korean string in the JSON array to natural, warm ${target} suitable for a church audience. `
@@ -109,25 +123,41 @@ async function callGeminiTranslate(texts: string[], lang: string): Promise<strin
       body: JSON.stringify({
         system_instruction: { parts: [{ text: system }] },
         contents: [{ parts: [{ text: JSON.stringify(texts) }] }],
-        generationConfig: { temperature: 0.3, maxOutputTokens: 8192, responseMimeType: 'application/json' },
+        generationConfig: {
+          temperature: 0.3,
+          // gemini-2.5-flash 의 thinking 토큰은 maxOutputTokens 예산을 **같이** 쓴다.
+          // 긴 설교노트(5천자+)에서 thinking 이 6.5k 토큰을 먹어 출력이 잘리고
+          // (finishReason=MAX_TOKENS) JSON 파싱이 실패 → 원문 그대로 반환되던 버그.
+          // 번역은 추론이 필요 없으므로 thinking 을 끄고 예산을 넉넉히 준다.
+          thinkingConfig: { thinkingBudget: 0 },
+          maxOutputTokens: 32768,
+          responseMimeType: 'application/json',
+        },
       }),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      // 429 / RESOURCE_EXHAUSTED = 할당량·예산 소진. 사용자에게 그대로 알려야 한다.
+      const body = await res.text().catch(() => '');
+      const quota = res.status === 429 || /RESOURCE_EXHAUSTED|quota|billing/i.test(body);
+      return { texts: null, reason: quota ? 'quota' : 'error' };
+    }
     const data = await res.json();
+    const finish = data?.candidates?.[0]?.finishReason;
     const raw = geminiText(data);
     const json = raw.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
     try {
       const arr = JSON.parse(json);
-      if (Array.isArray(arr) && arr.length === texts.length) return arr.map((x) => String(x ?? ''));
+      if (Array.isArray(arr) && arr.length === texts.length) return { texts: arr.map((x) => String(x ?? '')) };
     } catch {
       const m = json.match(/\[[\s\S]*\]/);
       if (m) {
-        try { const arr = JSON.parse(m[0]); if (Array.isArray(arr) && arr.length === texts.length) return arr.map((x) => String(x ?? '')); } catch { /* fall through */ }
+        try { const arr = JSON.parse(m[0]); if (Array.isArray(arr) && arr.length === texts.length) return { texts: arr.map((x) => String(x ?? '')) }; } catch { /* fall through */ }
       }
     }
-    return null;
+    // 출력 상한에 걸려 잘린 경우 — 길이를 줄이거나 예산을 늘려야 한다.
+    return { texts: null, reason: finish === 'MAX_TOKENS' ? 'truncated' : 'error' };
   } catch {
-    return null;
+    return { texts: null, reason: 'error' };
   }
 }
 

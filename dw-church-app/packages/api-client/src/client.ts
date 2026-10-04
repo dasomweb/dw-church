@@ -718,6 +718,25 @@ export class DWChurchClient {
     return (res?.data?.translations ?? res?.translations ?? {}) as Record<string, string>;
   }
 
+  /**
+   * 관리자 자동번역 — **슈퍼어드민 전용** 엔드포인트. 실패 시 원문을 쓰지 않도록
+   * failed(실패한 원문 목록) + reason(quota|truncated|no_key|error)을 함께 돌려준다.
+   */
+  async translateAdmin(
+    texts: string[],
+    lang = 'en',
+  ): Promise<{ translations: Record<string, string>; failed: string[]; reason?: string }> {
+    const res = await this.api.post<{ data?: { translations?: Record<string, string>; failed?: string[]; reason?: string } }>(
+      `${this.namespace}/i18n/translate-admin`, { texts, lang },
+    );
+    const d = (res as { data?: { translations?: Record<string, string>; failed?: string[]; reason?: string } })?.data ?? (res as never) ?? {};
+    return {
+      translations: (d.translations ?? {}) as Record<string, string>,
+      failed: (d.failed ?? []) as string[],
+      reason: d.reason,
+    };
+  }
+
   /** 성경 본문 가져오기 — 한국어 개역개정(ko) + 영어 ESV(en) + 영어 장절(referenceEn). */
   async fetchScripture(reference: string): Promise<{ ko: string; en: string; referenceEn: string }> {
     const res = await this.api.post<{ data?: { ko?: string; en?: string; referenceEn?: string }; ko?: string; en?: string; referenceEn?: string }>(
