@@ -55,8 +55,15 @@ RUN cd packages/design-tokens && pnpm build
 RUN cd packages/api-client && pnpm build:js
 RUN cd packages/ui-components && pnpm build:js
 
-# Build Vite SPA — no VITE_API_BASE_URL needed, frontend uses same-origin /api
-RUN cd packages/admin-app && pnpm build
+# Build Vite SPA.
+# VITE_API_BASE_URL 은 **빌드 시점에** 번들로 인라인된다(런타임 env 로는 못 들어간다).
+# 이 SPA 는 여러 오리진에서 돈다 — admin.truelight.app, truelight.app/admin(슈퍼어드민
+# 진입), 그리고 각 교회 도메인의 /admin — 그래서 same-origin "/api" 는 쓸 수 없고
+# 항상 API 의 절대 호스트를 불러야 한다. 값이 비면 여러 호출부의 폴백이 ''(same-origin)
+# 으로 떨어져 404 가 난다(실제로 truelight.app/admin/super-admin 이 이 때문에 깨졌다).
+ARG VITE_API_BASE_URL=https://api.truelight.app
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+RUN cd packages/admin-app && echo "[build] VITE_API_BASE_URL=$VITE_API_BASE_URL" && pnpm build
 
 # ─── Production (static + proxy) ──────────────
 FROM node:20-slim AS runner
