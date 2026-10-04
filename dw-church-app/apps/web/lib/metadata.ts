@@ -17,12 +17,16 @@ export async function buildTenantMetadata(slug: string, pageName?: string, descr
   const desc =
     description ?? settings?.seoDescription ?? settings?.seo_description ?? settings?.description ?? `${name} - 교회 웹사이트`;
   const ogImageUrl = settings?.ogImageUrl ?? settings?.og_image_url ?? null;
-  const title = pageName ? `${pageName} | ${name}` : seoTitle;
+  // 레이아웃이 title.template = '%s | {교회명}' 을 걸어두므로, 하위 라우트에서
+  // 교회명을 또 붙이면 "설교노트 | 교회명 | 교회명" 처럼 두 번 나온다(실측 확인).
+  // → pageName 만 돌려주고 교회명은 템플릿이 붙이게 한다.
+  // 루트 페이지(pageName 없음)는 템플릿이 적용되지 않는 같은 세그먼트라 absolute 로 고정.
+  const ogTitle = pageName ? `${pageName} | ${name}` : seoTitle;
   return {
-    title,
+    title: pageName ? pageName : { absolute: seoTitle },
     description: desc,
     openGraph: {
-      title,
+      title: ogTitle,
       description: desc,
       type: 'website',
       ...(ogImageUrl ? { images: [{ url: ogImageUrl, width: 1200, height: 630 }] } : {}),
