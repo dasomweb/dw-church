@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import type { OnlineBulletin, OnlineBulletinContent, OnlineHymn, ListParams, PostStatus, SermonNoteContent } from '@dw-church/api-client';
+import { Link } from 'react-router-dom';
+import type { OnlineBulletin, OnlineBulletinContent, OnlineHymn, ListParams, PostStatus, SermonNoteContent, SermonNoteCongregationKey } from '@dw-church/api-client';
 import {
   useOnlineBulletins,
   useCreateOnlineBulletin,
@@ -8,7 +9,7 @@ import {
   useDWChurchClient,
 } from '@dw-church/api-client';
 import { FormField, FormSection, FormRow, inputClass, selectClass, MultiImageUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
-import { SermonNoteEditor } from '../components/SermonNoteEditor';
+import { useTenantScope } from '../lib/tenant-scope';
 
 // 온라인 주보 content(임베드)의 옛 설교노트 필드 → 설교노트 모듈 content 로 이관(폴백 프리필).
 function embeddedToNote(content: OnlineBulletinContent | undefined): SermonNoteContent {
@@ -20,6 +21,70 @@ function embeddedToNote(content: OnlineBulletinContent | undefined): SermonNoteC
   if (cn.title || cn.text || cn.textEn || cc.imageUrls?.length) note.congregations!.children = { title: cn.title, text: cn.text, textEn: cn.textEn, cartoonImageUrls: cc.imageUrls, cartoonImageUrlsEn: cc.imageUrlsEn };
   note.study = { observation: st.observation, correlation: st.correlation, application: st.application, observationEn: st.observationEn, correlationEn: st.correlationEn, applicationEn: st.applicationEn };
   return note;
+}
+
+// ── 설교노트: 가져와 보여주기(읽기 전용) ──────────────────────
+// 온라인 주보는 설교노트를 **편집하지 않는다**. [설교노트 관리]의 해당 주일 항목을
+// 그대로 가져와 요약만 보여주고, 수정은 그쪽으로 보낸다(단일 출처).
+const CONG_LABELS: [SermonNoteCongregationKey, string][] = [
+  ['adult', '장년'], ['em', 'EM'], ['youth', 'Youth'], ['children', '어린이'], ['kids', 'Kids'],
+];
+
+function SermonNotePulled({ content, serviceDate, basePath }: { content: SermonNoteContent; serviceDate: string; basePath: string }) {
+  const congs = content.congregations ?? {};
+  const filled = CONG_LABELS.filter(([k]) => {
+    const c = congs[k];
+    const st = c?.study;
+    const hasStudy = !!st && (['observation', 'correlation', 'application'] as const).some((x) => (st[x]?.length ?? 0) > 0);
+    return !!(c?.title?.trim() || c?.text?.trim() || (c?.cartoonImageUrls?.length ?? 0) > 0 || hasStudy);
+  });
+  const editHref = `${basePath}/sermon-notes`;
+
+  if (!serviceDate) {
+    return <p className="text-sm text-gray-500">예배일을 먼저 선택하면 그 주일의 설교노트를 가져옵니다.</p>;
+  }
+
+  return (
+    <div>
+      <p className="text-xs text-gray-500 -mt-1 mb-3">
+        <b>{serviceDate}</b> 주일의 설교노트를 <b>설교노트 관리</b>에서 가져와 사이트 온라인 주보에 표시합니다. 내용 수정은 설교노트 관리에서 합니다.
+      </p>
+      {filled.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-5 text-center">
+          <p className="text-sm text-gray-600">이 주일의 설교노트가 아직 없습니다.</p>
+          <Link to={editHref} className="mt-2 inline-block text-sm font-medium text-blue-600 hover:underline">설교노트 관리에서 작성 →</Link>
+        </div>
+      ) : (
+        <div className="rounded-lg border border-gray-200 bg-white">
+          <div className="divide-y divide-gray-100">
+            {filled.map(([k, label]) => {
+              const c = congs[k] ?? {};
+              const st = c.study;
+              const qCount = (['observation', 'correlation', 'application'] as const)
+                .reduce((n, x) => n + (st?.[x]?.length ?? 0), 0);
+              const cartoons = c.cartoonImageUrls?.length ?? 0;
+              return (
+                <div key={k} className="flex items-start gap-3 px-3 py-2.5">
+                  <span className="mt-0.5 shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-[11px] font-semibold text-gray-600">{label}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-gray-900">{c.title?.trim() || '(제목 없음)'}</p>
+                    <p className="mt-0.5 text-xs text-gray-500">
+                      본문 {c.text?.trim() ? `${c.text.trim().length.toLocaleString()}자` : '없음'}
+                      {cartoons > 0 && ` · 카툰 ${cartoons}장`}
+                      {qCount > 0 && ` · 나눔질문 ${qCount}개`}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="border-t border-gray-100 px-3 py-2 text-right">
+            <Link to={editHref} className="text-sm font-medium text-blue-600 hover:underline">설교노트 관리에서 수정 →</Link>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // 온라인 주보 관리 — 문서 주보(BulletinManagement)와 별개. content(jsonb) 한 건에
@@ -116,6 +181,7 @@ export default function OnlineBulletinManagement() {
 
   const { showToast } = useToast();
   const apiClient = useDWChurchClient();
+  const { basePath } = useTenantScope();
   const uploadImage = async (file: File): Promise<string> => (await apiClient!.uploadFile(file, 'online-bulletins')).url;
   const { data, isLoading, error } = useOnlineBulletins(params);
   const createMutation = useCreateOnlineBulletin();
@@ -276,15 +342,10 @@ export default function OnlineBulletinManagement() {
     if (!form.title.trim()) { showToast('error', '제목을 입력하세요.'); return; }
     if (!form.serviceDate) { showToast('error', '예배일을 선택하세요.'); return; }
     const payload = { title: form.title, serviceDate: form.serviceDate, status: form.status, content: form.content };
-    const saveNote = async () => {
-      if (form.serviceDate && apiClient) {
-        // 설교노트는 모듈(해당 주일 날짜)에 업서트 — [설교노트 관리]와 동일 데이터.
-        try { await apiClient.upsertSermonNoteByDate(form.serviceDate, { content: noteContent, status: 'published', title: form.title }); }
-        catch { /* 설교노트 저장 실패가 주보 저장을 막지 않음 */ }
-      }
-    };
+    // 설교노트는 여기서 저장하지 않는다 — [설교노트 관리]가 단일 출처이고,
+    // 주보는 해당 주일 날짜로 가져와 보여주기만 한다.
     const done = {
-      onSuccess: () => { void saveNote().finally(() => { showToast('success', '저장되었습니다.'); setView('list'); }); },
+      onSuccess: () => { showToast('success', '저장되었습니다.'); setView('list'); },
       onError: () => showToast('error', '오류가 발생했습니다.'),
     };
     if (editingId) updateMutation.mutate({ id: editingId, data: payload }, done);
@@ -460,13 +521,10 @@ export default function OnlineBulletinManagement() {
             </FormRow>
           </FormSection>
 
-          {/* 6. 설교 노트 — 회중별(장년/EM/Youth/어린이/Kids) + 소그룹 나눔질문.
-              [설교노트 관리]와 동일한 편집기. 해당 주일 날짜의 설교노트 모듈에 저장·표시. */}
+          {/* 6. 설교 노트 — 여기서 편집하지 않는다. [설교노트 관리]의 해당 주일
+              항목을 **그대로 가져와** 보여주기만 한다(단일 출처). */}
           <FormSection title="6. 설교 노트">
-            <p className="text-xs text-gray-500 -mt-1 mb-3">
-              회중별 설교노트 + 소그룹 나눔질문. <b>설교노트 관리</b>의 해당 주일({form.serviceDate || '예배일 먼저 선택'})과 같은 내용으로 저장되어, 사이트 온라인 주보 설교노트에 표시됩니다.
-            </p>
-            <SermonNoteEditor content={noteContent} onChange={setNoteContent} />
+            <SermonNotePulled content={noteContent} serviceDate={form.serviceDate} basePath={basePath} />
           </FormSection>
 
           {/* 9. 기도 제목 (한/영) */}
