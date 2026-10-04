@@ -493,8 +493,11 @@ function MastheadHero({ props }: HeroBannerBlockProps) {
   const ink = 'var(--dw-text, #16181d)';
 
   return (
-    <section className="px-4 sm:px-6" style={{ paddingTop: 'var(--section-py-md)' }}>
-      <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+    <section style={{ paddingTop: 'var(--section-py-md)' }}>
+      {/* 폭은 플랫폼 표준(max-w-7xl + px-4 sm:px-6) — 헤더/푸터/다른 섹션과 괘선이
+          같은 선에서 시작하고 끝나야 한다. 예전 1080px 고정은 1440 화면에서
+          좌우 100px 씩 안쪽으로 들어가 제호 괘선만 짧아 보였다. */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div
           className="text-center"
           style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--block-gap, 0.75rem)', borderBottom: `3px double ${ink}`, paddingBottom: 20 }}
