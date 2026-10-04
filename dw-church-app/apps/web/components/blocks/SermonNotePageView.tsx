@@ -279,13 +279,15 @@ function buildSections(key: SermonNoteCongregationKey, cong: SermonNoteCongregat
   const pad = (x: number) => String(x).padStart(2, '0');
 
   for (const s of rawSections) {
-    // 제목이 "1. …" / "2) …" 처럼 번호로 시작하면 그 번호를 섹션 번호로 쓰고 제목에선 제거(번호 중복 방지).
-    let heading = s.heading;
-    const m = /^(\d+)[.)]\s+(.*)$/.exec(heading);
-    if (m) { counter = parseInt(m[1]!, 10); heading = m[2]!.trim(); }
-    else { counter += 1; }
+    // 섹션 번호는 **문서상 위치 기준 순차**(시안도 기도제목을 04 로 매긴다).
+    // 제목에 "1. " / "2) " 처럼 번호가 붙어 있으면 제목에서만 떼어낸다 — 그 번호를
+    // 섹션 번호로 쓰면, 번호 없는 섹션(서론 등)이 앞에 올 때 01 이 중복된다.
+    const heading = s.heading.replace(/^(\d+)[.)]\s+/, '').trim();
+    counter += 1;
     const num = pad(counter);
-    const isPrayer = /기도|prayer/i.test(heading);
+    // 퀵인덱스 '기도' 라벨은 제목이 기도로 **시작**할 때만 붙인다 — 느슨하게 포함
+    // 검사를 하면 '결론 · 우리가 기도하는 교회' 같은 섹션까지 기도로 잘못 표시된다.
+    const isPrayer = /^(기도|prayer)/i.test(heading);
     sections.push({
       id: `sec-${key}-${sections.length}`,
       num,
