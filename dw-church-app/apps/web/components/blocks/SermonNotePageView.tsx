@@ -58,7 +58,7 @@ function studyHasItems(s?: SermonNoteStudy): boolean {
 }
 function congHasContent(c?: SermonNoteCongregation): boolean {
   if (!c) return false;
-  return !!(c.title?.trim() || c.text?.trim() || (c.cartoonImageUrls?.length ?? 0) > 0 || studyHasItems(c.study));
+  return !!(c.title?.trim() || c.titleEn?.trim() || c.text?.trim() || (c.cartoonImageUrls?.length ?? 0) > 0 || studyHasItems(c.study));
 }
 // 성경 참조처럼 보이는지 (요한복음 5:6, John 5:6–7 등)
 function looksLikeRef(line: string): boolean {
@@ -277,7 +277,7 @@ function buildSections(key: SermonNoteCongregationKey, cong: SermonNoteCongregat
 
   // 헤딩이 하나도 없으면 전체를 한 섹션으로
   if (rawSections.length === 0 && md.trim()) {
-    rawSections.push({ heading: cong.title?.trim() || '', body: lines });
+    rawSections.push({ heading: ((en ? (cong.titleEn || cong.title) : cong.title) ?? '').trim(), body: lines });
   }
 
   const sections: NoteSection[] = [];
@@ -377,7 +377,7 @@ export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/o
   // 영어 내용이 하나라도 있으면 한/EN 토글 노출.
   const hasEnglish = useMemo(() => Object.values(congregations).some((c) => {
     const cc = c as SermonNoteCongregation | undefined;
-    if ((cc?.textEn || '').trim() || (cc?.cartoonImageUrlsEn?.length ?? 0) > 0) return true;
+    if ((cc?.textEn || '').trim() || (cc?.titleEn || '').trim() || (cc?.cartoonImageUrlsEn?.length ?? 0) > 0) return true;
     const st = cc?.study;
     return (['observationEn', 'correlationEn', 'applicationEn'] as const).some((k) => (st?.[k]?.length ?? 0) > 0);
   }), [congregations]);
@@ -412,7 +412,10 @@ export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/o
   const built = useMemo(() => buildSections(activeKey, activeCong, en), [activeKey, activeCong, en]);
 
   // Hero
-  const heroTitle = note.title?.trim() || (congregations.adult?.title ?? '') || '설교노트';
+  // 영어 보기에서는 영어 제목을 먼저 쓴다(없으면 한국어 폴백).
+  const adultC = congregations.adult;
+  const heroTitle = (en ? (adultC?.titleEn || '').trim() : '')
+    || note.title?.trim() || (adultC?.title ?? '') || (en ? 'Sermon Note' : '설교노트');
   const heroSubtitle = (content['subtitle'] as string) || '';
   const scripture = content.scripture || '';
   const preacher = (content['preacher'] as string) || '';

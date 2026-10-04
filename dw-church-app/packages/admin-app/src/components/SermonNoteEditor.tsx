@@ -99,15 +99,19 @@ export function SermonNoteEditor({ content, onChange }: { content: SermonNoteCon
 
   const translateNote = async (key: SermonNoteCongregationKey) => {
     const text = (cong[key]?.text ?? '').trim();
+    const title = (cong[key]?.title ?? '').trim();
     if (!text) { showToast('error', '먼저 노트(한국어)를 입력하세요.'); return; }
     setBusy(`note-${key}`);
     try {
-      const { map, failed, reason } = await translateMany([text]);
+      // 제목도 함께 번역한다(영어 제목 칸이 비어 있지 않게).
+      const { map, failed, reason } = await translateMany([text, title]);
       const en = map[text] ?? '';
       // 서버는 실패해도 원문을 그대로 돌려준다(렌더링 폴백). 그걸 영어 칸에 쓰면
       // 한글이 그대로 들어가므로, 실패 목록/동일 여부를 보고 막는다.
       if (!en || failed.has(text) || en === text) { showToast('error', failMsg(reason)); return; }
-      setCong(key, { textEn: en });
+      const titleEn = title ? (map[title] ?? '') : '';
+      const okTitle = !!titleEn && !failed.has(title) && titleEn !== title;
+      setCong(key, okTitle ? { textEn: en, titleEn } : { textEn: en });
       showToast('success', '영어로 번역했습니다. 확인해주세요.');
     } catch { showToast('error', '번역에 실패했습니다.'); }
     finally { setBusy(null); }
@@ -177,9 +181,14 @@ export function SermonNoteEditor({ content, onChange }: { content: SermonNoteCon
             </button>
           )}
         </div>
-        <FormField label="제목">
-          <input value={cur.title ?? ''} onChange={(e) => setCong(tab, { title: e.target.value })} placeholder="예: 기적에 머물 것인가, 사명으로 나아갈 것인가" className={inputClass} />
-        </FormField>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <FormField label="제목 · 한국어">
+            <input value={cur.title ?? ''} onChange={(e) => setCong(tab, { title: e.target.value })} placeholder="예: 기적에 머물 것인가, 사명으로 나아갈 것인가" className={inputClass} />
+          </FormField>
+          <FormField label="제목 · ENGLISH">
+            <input value={cur.titleEn ?? ''} onChange={(e) => setCong(tab, { titleEn: e.target.value })} placeholder="예: Stay at the Miracle, or Move to the Mission?" className={inputClass} />
+          </FormField>
+        </div>
         <FormField label="설교노트 · 한국어">
           <NoteRichArea value={cur.text ?? ''} onChange={(v) => setCong(tab, { text: v })} placeholder="설교노트 본문 — 상단 서식 버튼(제목/굵게/인용/불릿/번호/링크)을 활용하세요." />
         </FormField>
