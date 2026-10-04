@@ -17,6 +17,7 @@
 import type { CSSProperties } from 'react';
 import { HeadingElement, TextBodyElement, EyebrowElement, ImageElement } from '../elements';
 import { SectionShell } from '../utilities/SectionShell';
+import { getElementStyle } from '../utilities/element-styles';
 
 interface PastorMessageBlockProps {
   props: Record<string, unknown>;
@@ -82,7 +83,9 @@ export function PastorMessageBlock({ props }: PastorMessageBlockProps) {
         {imageUrl && (
           <div
             className={`relative overflow-hidden ${imageFirst ? 'order-1' : 'order-2'}`}
-            style={{ aspectRatio: '4 / 5', borderRadius: 'var(--r-lg, var(--brand-radius-lg, 16px))', boxShadow: '0 20px 40px -16px rgba(0,0,0,0.25)' }}
+            // 비율은 인스펙터(엘리먼트 스타일)가 있으면 그걸 따른다. 래퍼에 고정값을 박아두면
+            // ImageElement 가 fillParent 로 그 안을 채우므로 사용자가 준 비율이 묻힌다.
+            style={{ aspectRatio: '4 / 5', borderRadius: 'var(--r-lg, var(--brand-radius-lg, 16px))', boxShadow: '0 20px 40px -16px rgba(0,0,0,0.25)', ...getElementStyle(props, 'imageUrl') }}
           >
             <ImageElement
               url={imageUrl}

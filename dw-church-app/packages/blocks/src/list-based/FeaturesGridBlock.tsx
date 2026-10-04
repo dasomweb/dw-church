@@ -1,5 +1,6 @@
 import { HeadingElement, TextBodyElement, ImageElement, EyebrowElement, ButtonElement } from '../elements';
 import { sectionBgStyle } from '../utilities/section-bg';
+import { getElementStyle } from '../utilities/element-styles';
 import { SectionShell } from '../utilities/SectionShell';
 import { Icon } from '../utilities/Icon';
 import { ICONS } from '../icons/icons';
@@ -360,7 +361,8 @@ function ImageCardContent({
     <>
       <div
         className="relative w-full bg-gray-100 overflow-hidden"
-        style={{ aspectRatio: '4 / 3' }}
+        // 인스펙터에서 항목 이미지 비율을 바꾸면 그 값을 따른다(고정값은 기본값).
+        style={{ aspectRatio: '4 / 3', ...getElementStyle(parentProps, `items[${index}].imageUrl`) }}
         aria-hidden={!item.imageUrl}
       >
         {item.imageUrl ? (
