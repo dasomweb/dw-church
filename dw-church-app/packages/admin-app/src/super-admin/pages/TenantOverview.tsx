@@ -10,6 +10,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useSuperAdminTenant } from '../SuperAdminTenantLayout';
 import { useAuthStore } from '../../stores/auth';
 import { useToast } from '../../components';
+import { appPath } from '../../lib/app-url';
 
 interface Card { to: string; icon: string; title: string; subtitle: string }
 
@@ -70,7 +71,7 @@ export default function TenantOverview() {
   // URL, so no temp password / re-login is needed.
   const enterAdmin = () => {
     if (!slug) return;
-    window.open(`/t/${slug}`, '_blank', 'noopener');
+    window.open(appPath(`/t/${slug}`), '_blank', 'noopener');
   };
 
   const siteUrl = tenant?.customDomain

@@ -9,6 +9,7 @@ import { Spinner, EmptyState, StatusBadge, VerifyBadge } from '../shared/admin-u
 import { formatDate, formatBytes } from '../shared/format';
 import { PLAN_COLORS } from '../shared/constants';
 import type { Tenant, TenantDetail, TenantsResponse } from '../shared/types';
+import { appPath, appUrl } from '../../lib/app-url';
 
 // ─── Edit Tenant Modal ───────────────────────────────────
 function EditTenantModal({
@@ -254,7 +255,7 @@ function TenantDetailModal({
   // and post-login drops the support user into /t/<slug>. URL-scoped login
   // keeps the super admin's own tab intact.
   const tenantAdminUrl = detail
-    ? `/t/${detail.slug}/login?email=${encodeURIComponent(`support-${detail.slug}@truelight.app`)}`
+    ? appPath(`/t/${detail.slug}/login?email=${encodeURIComponent(`support-${detail.slug}@truelight.app`)}`)
     : '#';
 
   return (
@@ -663,12 +664,12 @@ export default function TenantsTab({ refreshKey = 0, onCreateChurch }: { refresh
                             <button
                               onClick={() => {
                                 handoffSessionToNewTab();
-                                window.open(`${window.location.origin}/t/${t.slug}`, '_blank', 'noopener');
+                                window.open(appUrl(`/t/${t.slug}`), '_blank', 'noopener');
                               }}
                               className="block w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50"
                             >👤 교회 관리자 (새 탭)</button>
                             <button
-                              onClick={() => { window.location.href = `${window.location.origin}/super-admin/t/${t.slug}`; }}
+                              onClick={() => { window.location.href = appUrl(`/super-admin/t/${t.slug}`); }}
                               className="block w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50"
                             >🎨 사이트 편집 콘솔</button>
                             <button

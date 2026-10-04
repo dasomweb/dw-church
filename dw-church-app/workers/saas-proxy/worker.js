@@ -64,12 +64,11 @@ function isAdminPath(p) {
 function isPlatformAdminPath(p) {
   return (
     isAdminPath(p) ||
-    p === '/super-admin' || p.startsWith('/super-admin/') ||
-    // 슈퍼어드민 콘솔의 테넌트 라우트. SPA 가 origin + `/t/<slug>` 로 새 탭을 열고
-    // (TenantsTab '교회 관리자', 상세모달 '관리자 페이지' = /t/<slug>/login?email=…)
-    // admin 서버가 /admin/t/<slug> 로 302 한다. apps/web 에는 /t 라우트가 없으므로
-    // 여기서 가로채지 않으면 스토어프론트 404 로 떨어진다.
-    p === '/t' || p.startsWith('/t/')
+    // 친화 진입 경로. SPA 의 정식 경로는 /admin/super-admin/… 이고 admin 서버가
+    // 302 로 붙여 준다.
+    // (`/t/<slug>` 는 일부러 넣지 않는다 — 그건 SPA 내부 라우트이지 플랫폼 최상위
+    //  경로가 아니다. 호출부가 appUrl()/appPath() 로 /admin/t/<slug> 를 쓴다.)
+    p === '/super-admin' || p.startsWith('/super-admin/')
   );
 }
 
