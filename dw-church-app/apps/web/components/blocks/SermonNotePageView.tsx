@@ -32,6 +32,8 @@ const SURFACE = 'var(--dw-surface, #f7f2ea)';
 const RULE = 'var(--dw-text, #3a3129)'; // 더블 보더 컬러
 const SERIF = { fontFamily: "var(--dw-font-heading, 'Noto Serif KR', serif)" } as const;
 
+const FS_LEVELS = [85, 100, 115, 130, 150, 170];
+
 const TRACKS: { key: SermonNoteCongregationKey; label: string; sub: string }[] = [
   { key: 'adult', label: '장년', sub: '한국어' },
   { key: 'em', label: 'EM', sub: 'English' },
@@ -233,8 +235,9 @@ interface NoteSection {
 }
 
 // 회중 마크다운을 ## 기준으로 섹션 분해 + 카툰/나눔질문 섹션 추가.
-function buildSections(key: SermonNoteCongregationKey, cong: SermonNoteCongregation): { lead: string; sections: NoteSection[]; centralVerse: { ref: string; text: string } | null } {
-  const md = (cong.text ?? '').replace(/\r\n/g, '\n');
+function buildSections(key: SermonNoteCongregationKey, cong: SermonNoteCongregation, en = false): { lead: string; sections: NoteSection[]; centralVerse: { ref: string; text: string } | null } {
+  // 영어 보기면 영어 필드를 쓰되, 비어 있으면 한국어로 폴백(부분 번역 대응).
+  const md = ((en ? (cong.textEn || cong.text) : cong.text) ?? '').replace(/\r\n/g, '\n');
   const lines = md.split('\n');
 
   // 중심 말씀: 첫 성경 인용 추출
@@ -291,21 +294,22 @@ function buildSections(key: SermonNoteCongregationKey, cong: SermonNoteCongregat
     sections.push({
       id: `sec-${key}-${sections.length}`,
       num,
-      indexLabel: isPrayer ? '기도' : num,
+      indexLabel: isPrayer ? (en ? 'Pray' : '기도') : num,
       heading,
       bodyMd: s.body.join('\n').trim(),
     });
   }
 
   // 카툰 이미지 섹션 (children/kids 등)
-  if ((cong.cartoonImageUrls?.length ?? 0) > 0) {
+  const cartoons = (en ? (cong.cartoonImageUrlsEn?.length ? cong.cartoonImageUrlsEn : cong.cartoonImageUrls) : cong.cartoonImageUrls) ?? [];
+  if (cartoons.length > 0) {
     counter += 1;
     sections.push({
       id: `sec-${key}-${sections.length}`,
       num: pad(counter),
-      indexLabel: '카툰',
-      heading: '그림으로 보는 말씀',
-      images: cong.cartoonImageUrls,
+      indexLabel: en ? 'Art' : '카툰',
+      heading: en ? 'Illustrated Message' : '그림으로 보는 말씀',
+      images: cartoons,
     });
   }
 
@@ -315,8 +319,8 @@ function buildSections(key: SermonNoteCongregationKey, cong: SermonNoteCongregat
     sections.push({
       id: `sec-${key}-${sections.length}`,
       num: pad(counter),
-      indexLabel: '나눔',
-      heading: '나눔 질문',
+      indexLabel: en ? 'Q&A' : '나눔',
+      heading: en ? 'Discussion Questions' : '나눔 질문',
       study: cong.study,
     });
   }
@@ -325,11 +329,13 @@ function buildSections(key: SermonNoteCongregationKey, cong: SermonNoteCongregat
   return { lead, sections, centralVerse };
 }
 
-function StudyBlock({ study }: { study: SermonNoteStudy }) {
+function StudyBlock({ study, en = false }: { study: SermonNoteStudy; en?: boolean }) {
+  // 영어 보기면 영어 질문을, 비어 있으면 한국어로 폴백.
+  const pick = (ko?: string[], e?: string[]) => (en && e?.some((x) => (x || '').trim()) ? e : ko);
   const groups: { label: string; items?: string[] }[] = [
-    { label: '관찰', items: study.observation },
-    { label: '상관', items: study.correlation },
-    { label: '적용', items: study.application },
+    { label: en ? 'Observe' : '관찰', items: pick(study.observation, study.observationEn) },
+    { label: en ? 'Connect' : '상관', items: pick(study.correlation, study.correlationEn) },
+    { label: en ? 'Apply' : '적용', items: pick(study.application, study.applicationEn) },
   ];
   return (
     <div style={{ marginTop: 8 }}>
@@ -365,9 +371,27 @@ export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/o
     () => TRACKS.filter((t) => congHasContent(congregations[t.key])),
     [congregations],
   );
+  // 영어 내용이 하나라도 있으면 한/EN 토글 노출.
+  const hasEnglish = useMemo(() => Object.values(congregations).some((c) => {
+    const cc = c as SermonNoteCongregation | undefined;
+    if ((cc?.textEn || '').trim() || (cc?.cartoonImageUrlsEn?.length ?? 0) > 0) return true;
+    const st = cc?.study;
+    return (['observationEn', 'correlationEn', 'applicationEn'] as const).some((k) => (st?.[k]?.length ?? 0) > 0);
+  }), [congregations]);
+
   const defaultKey: SermonNoteCongregationKey = available.find((t) => t.key === 'adult')?.key ?? available[0]?.key ?? 'adult';
 
   const [track, setTrack] = useState<SermonNoteCongregationKey>(defaultKey);
+  // 한/영 전환 — 영어 내용이 있을 때만 노출(온라인 주보와 동일 패턴).
+  const [lang, setLang] = useState<'ko' | 'en'>('ko');
+  const en = lang === 'en';
+  // 글자 크기 — 본문 컨테이너에 % 로 적용.
+  const [fontScale, setFontScale] = useState(100);
+  const stepFs = (d: number) => {
+    const i = FS_LEVELS.indexOf(fontScale);
+    const n = FS_LEVELS[Math.min(FS_LEVELS.length - 1, Math.max(0, (i < 0 ? 1 : i) + d))];
+    if (n) setFontScale(n);
+  };
   useEffect(() => {
     try {
       const saved = localStorage.getItem('sermon-note-track') as SermonNoteCongregationKey | null;
@@ -382,7 +406,7 @@ export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/o
   const activeKey: SermonNoteCongregationKey = available.some((t) => t.key === track) ? track : defaultKey;
   const activeMeta = TRACKS.find((t) => t.key === activeKey)!;
   const activeCong = congregations[activeKey] ?? {};
-  const built = useMemo(() => buildSections(activeKey, activeCong), [activeKey, activeCong]);
+  const built = useMemo(() => buildSections(activeKey, activeCong, en), [activeKey, activeCong, en]);
 
   // Hero
   const heroTitle = note.title?.trim() || (congregations.adult?.title ?? '') || '설교노트';
@@ -457,6 +481,25 @@ export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/o
           ) : (
             <div style={{ padding: '14px 0 12px', fontSize: 15, fontWeight: 600, color: TEXT }}>{activeMeta.label} 설교노트</div>
           )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+            {/* 글자 크기 */}
+            <div style={{ display: 'flex', alignItems: 'center', height: 30, border: `1px solid ${BORDER}`, borderRadius: 9 }}>
+              <button type="button" aria-label="글자 작게" onClick={() => stepFs(-1)} disabled={fontScale <= FS_LEVELS[0]!}
+                style={{ height: '100%', padding: '0 9px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 800, color: TEXT, opacity: fontScale <= FS_LEVELS[0]! ? 0.35 : 1 }}>가－</button>
+              <span style={{ fontSize: 10, fontWeight: 700, color: META, minWidth: 34, textAlign: 'center' }}>{fontScale}%</span>
+              <button type="button" aria-label="글자 크게" onClick={() => stepFs(1)} disabled={fontScale >= FS_LEVELS[FS_LEVELS.length - 1]!}
+                style={{ height: '100%', padding: '0 9px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 16, fontWeight: 800, color: TEXT, opacity: fontScale >= FS_LEVELS[FS_LEVELS.length - 1]! ? 0.35 : 1 }}>가＋</button>
+            </div>
+            {/* 한 / EN */}
+            {hasEnglish && (
+              <button type="button" aria-label="한국어/English 전환" aria-pressed={en} onClick={() => setLang(en ? 'ko' : 'en')}
+                style={{ height: 30, padding: '0 10px', border: `1px solid ${BORDER}`, borderRadius: 9, background: 'none', display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+                <span style={{ fontSize: 12, fontWeight: 800, color: en ? META : PRIMARY }}>한</span>
+                <span style={{ fontSize: 11, color: FAINT_TEXT }}>/</span>
+                <span style={{ fontSize: 12, fontWeight: 800, color: en ? PRIMARY : META }}>EN</span>
+              </button>
+            )}
+          </div>
           {built.sections.length > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: 13, color: FAINT_TEXT }}>
               {built.sections.map((s) => (
@@ -482,7 +525,7 @@ export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/o
             )}
           </aside>
 
-          <article style={{ flex: '2 1 480px', minWidth: 0, maxWidth: 660, paddingBottom: 24 }}>
+          <article style={{ flex: '2 1 480px', minWidth: 0, maxWidth: 660, paddingBottom: 24, fontSize: `${fontScale}%` }}>
             {built.sections.length === 0 ? (
               <div style={{ padding: '64px 0 24px' }}>
                 <p style={{ ...SERIF, margin: 0, fontSize: 22, fontWeight: 600 }}>이번 주 {activeMeta.label} 노트를 준비하고 있습니다.</p>
@@ -509,7 +552,7 @@ export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/o
                       ))}
                     </div>
                   )}
-                  {sec.study ? <StudyBlock study={sec.study} /> : sec.bodyMd ? <NoteBody md={sec.bodyMd} /> : null}
+                  {sec.study ? <StudyBlock study={sec.study} en={en} /> : sec.bodyMd ? <NoteBody md={sec.bodyMd} /> : null}
                 </section>
               ))
             )}

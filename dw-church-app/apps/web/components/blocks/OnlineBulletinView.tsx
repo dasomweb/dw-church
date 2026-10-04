@@ -21,7 +21,7 @@ const bg = 'var(--dw-background, #ffffff)';
 
 const html = (s?: string) => ({ dangerouslySetInnerHTML: { __html: s || '' } });
 
-export function OnlineBulletinView({ bulletin, sermonNote: moduleNote }: { bulletin: Record<string, any>; sermonNote?: SermonNoteContent | null }) {
+export function OnlineBulletinView({ bulletin, sermonNote: moduleNote, backHref }: { bulletin: Record<string, any>; sermonNote?: SermonNoteContent | null; backHref?: string }) {
   const [lang, setLang] = useState<'ko' | 'en'>('ko');
   const [mounted, setMounted] = useState(false);
   const [headerH, setHeaderH] = useState(0);      // 사이트 헤더 높이(상단바 sticky 오프셋)
@@ -262,7 +262,9 @@ export function OnlineBulletinView({ bulletin, sermonNote: moduleNote }: { bulle
   ));
 
   const bTitle = String(bulletin.title ?? '');
-  const desc = [bTitle, scRef, content.presider].filter(Boolean).join(' · ');
+  // 상단바 왼쪽 칩이 이미 '2026.10.04 주일예배' 를 보여주므로, 같은 내용을 담은
+  // 주보 제목(bulletin.title)을 desc 에 또 넣지 않는다(중복 표시 방지).
+  const desc = [scRef, content.presider].filter(Boolean).join(' · ');
 
   // 모바일 좌우 스와이프 → 섹션 전환(왼쪽=다음, 오른쪽=이전). 세로 스크롤과 구분(수평>수직, 60px+).
   const swipeStart = (e: RTouchEvent) => { const t = e.touches[0]; touchRef.current = t ? { x: t.clientX, y: t.clientY } : null; };
@@ -313,6 +315,9 @@ export function OnlineBulletinView({ bulletin, sermonNote: moduleNote }: { bulle
       {items.length > 0 && (
         <div className="ob-pc-header" style={{ position: 'sticky', top: headerH, zIndex: 20, background: bg, borderBottom: `1px solid ${faint}` }}>
           <div style={{ flex: 1, width: '100%', maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 18, padding: '14px 24px' }}>
+            {backHref && (
+              <a href={backHref} style={{ flex: 'none', fontSize: 13, color: muted, textDecoration: 'none' }}>‹ 목록</a>
+            )}
             {content.churchName && <div style={{ flex: 'none', fontSize: 17, fontWeight: 800, letterSpacing: '-0.03em', color: textColor }}>{content.churchName}</div>}
             <div className="min-w-0" style={{ flex: 1, display: 'flex', alignItems: 'baseline', gap: 10 }}>
               <span style={{ flex: 'none', fontSize: 13, fontWeight: 700, color: primary }}>{serviceDate && serviceDate.replace(/-/g, '.')} {content.serviceTitle || '주일예배'}</span>

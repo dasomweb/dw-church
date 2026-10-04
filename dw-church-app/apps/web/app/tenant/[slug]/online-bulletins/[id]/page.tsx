@@ -2,7 +2,6 @@ import { getOnlineBulletin, getSermonNoteByDate } from '@/lib/api';
 import { OnlineBulletinView } from '@/components/blocks/OnlineBulletinView';
 import { notFound } from 'next/navigation';
 import { buildTenantMetadata } from '@/lib/metadata';
-import Link from 'next/link';
 import type { Metadata } from 'next';
 
 interface OnlineBulletinDetailProps {
@@ -35,11 +34,8 @@ export default async function OnlineBulletinDetailPage({ params }: OnlineBulleti
   const note = date ? await getSermonNoteByDate(slug, date) : null;
 
   return (
-    <div>
-      <div className="mx-auto max-w-3xl px-4 pt-5">
-        <Link href="/onlinejubo" className="text-sm hover:underline" style={{ color: 'var(--dw-primary, #1466d6)' }}>‹ 온라인 주보 목록</Link>
-      </div>
-      <OnlineBulletinView bulletin={bulletin} sermonNote={note?.content ?? null} />
-    </div>
+    // 목록 링크는 주보 상단바 안(왼쪽)에 넣는다 — 바깥에 두면 폭(max-w-3xl)이
+    // 상단바와 어긋나 어정쩡하게 떠 보였다.
+    <OnlineBulletinView bulletin={bulletin} sermonNote={note?.content ?? null} backHref="/onlinejubo" />
   );
 }
