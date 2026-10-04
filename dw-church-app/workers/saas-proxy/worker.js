@@ -62,7 +62,15 @@ function isAdminPath(p) {
 
 /** 플랫폼 도메인에서만 추가로 열어주는 슈퍼어드민 콘솔 경로. */
 function isPlatformAdminPath(p) {
-  return isAdminPath(p) || p === '/super-admin' || p.startsWith('/super-admin/');
+  return (
+    isAdminPath(p) ||
+    p === '/super-admin' || p.startsWith('/super-admin/') ||
+    // 슈퍼어드민 콘솔의 테넌트 라우트. SPA 가 origin + `/t/<slug>` 로 새 탭을 열고
+    // (TenantsTab '교회 관리자', 상세모달 '관리자 페이지' = /t/<slug>/login?email=…)
+    // admin 서버가 /admin/t/<slug> 로 302 한다. apps/web 에는 /t 라우트가 없으므로
+    // 여기서 가로채지 않으면 스토어프론트 404 로 떨어진다.
+    p === '/t' || p.startsWith('/t/')
+  );
 }
 
 /** admin 서비스로 프록시 (브라우저 주소는 원래 호스트 그대로 유지). */
