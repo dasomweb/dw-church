@@ -33,6 +33,9 @@ const RULE = 'var(--dw-text, #3a3129)'; // 더블 보더 컬러
 const SERIF = { fontFamily: "var(--dw-font-heading, 'Noto Serif KR', serif)" } as const;
 
 const FS_LEVELS = [85, 100, 115, 130, 150, 170];
+// 본문 글자 크기 배율 — 인라인 스타일이 고정 px 라 부모 font-size % 로는 안 먹는다.
+// 실제로 커지도록 각 px 값에 배율을 곱한다.
+const z = (px: number, fs: number) => Math.round(px * fs);
 
 const TRACKS: { key: SermonNoteCongregationKey; label: string; sub: string }[] = [
   { key: 'adult', label: '장년', sub: '한국어' },
@@ -92,7 +95,7 @@ function isKeyLine(t: string): boolean {
 
 // ── 에디토리얼 본문 렌더러 ──────────────────────────────────
 // 섹션 본문 마크다운을 시안 블록(성경박스/라벨/리스트/번호/핵심문장/문단)으로 변환.
-function NoteBody({ md }: { md: string }) {
+function NoteBody({ md, fs = 1 }: { md: string; fs?: number }) {
   const lines = (md ?? '').replace(/\r\n/g, '\n').split('\n');
   const out: ReactNode[] = [];
   let i = 0;
@@ -120,11 +123,11 @@ function NoteBody({ md }: { md: string }) {
       else if (filtered.length === 1 && looksLikeRef(filtered[0]!)) { ref = filtered[0]!; verses = []; }
       out.push(
         <blockquote key={key++} style={{ margin: '26px 0 0', padding: '20px 22px', background: SURFACE }}>
-          {ref && <p style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: '.1em', color: SECONDARY }}>{ref}</p>}
+          {ref && <p style={{ margin: 0, fontSize: z(12, fs), fontWeight: 700, letterSpacing: '.1em', color: SECONDARY }}>{ref}</p>}
           {verses.length > 0 && (
             <div style={{ marginTop: ref ? 10 : 0, display: 'grid', gap: 8 }}>
               {verses.map((v, k) => (
-                <p key={k} style={{ ...SERIF, margin: 0, fontSize: 16, lineHeight: 1.95, color: TEXT, textWrap: 'pretty' as const }}><InlineMd text={v} /></p>
+                <p key={k} style={{ ...SERIF, margin: 0, fontSize: z(16, fs), lineHeight: 1.95, color: TEXT, textWrap: 'pretty' as const }}><InlineMd text={v} /></p>
               ))}
             </div>
           )}
@@ -135,12 +138,12 @@ function NoteBody({ md }: { md: string }) {
 
     // 라벨 (### 소제목)
     if (t.startsWith('### ')) {
-      out.push(<p key={key++} style={{ margin: '36px 0 0', fontSize: 12, fontWeight: 700, letterSpacing: '.14em', color: PRIMARY }}><InlineMd text={t.slice(4)} /></p>);
+      out.push(<p key={key++} style={{ margin: '36px 0 0', fontSize: z(12, fs), fontWeight: 700, letterSpacing: '.14em', color: PRIMARY }}><InlineMd text={t.slice(4)} /></p>);
       i++; continue;
     }
     // 소제목보다 상위(# / ##)는 섹션 안에서 강조 헤딩으로
     if (t.startsWith('# ') || t.startsWith('## ')) {
-      out.push(<p key={key++} style={{ ...SERIF, margin: '30px 0 0', fontSize: 21, fontWeight: 600, lineHeight: 1.5, color: TEXT }}><InlineMd text={t.replace(/^#{1,2}\s+/, '')} /></p>);
+      out.push(<p key={key++} style={{ ...SERIF, margin: '30px 0 0', fontSize: z(21, fs), fontWeight: 600, lineHeight: 1.5, color: TEXT }}><InlineMd text={t.replace(/^#{1,2}\s+/, '')} /></p>);
       i++; continue;
     }
 
@@ -166,13 +169,13 @@ function NoteBody({ md }: { md: string }) {
         <div key={key++} style={{ marginTop: 18 }}>
           {items.map((it, k) => (
             <div key={k} style={{ marginTop: k === 0 ? 0 : 20, paddingTop: 18, borderTop: `1px solid ${FAINT}`, display: 'flex', gap: 16 }}>
-              <span style={{ ...SERIF, flex: 'none', width: 24, fontSize: 15, color: FAINT_TEXT }}>{it.no}</span>
+              <span style={{ ...SERIF, flex: 'none', width: 24, fontSize: z(15, fs), color: FAINT_TEXT }}>{it.no}</span>
               <div style={{ minWidth: 0 }}>
-                <p style={{ ...SERIF, margin: 0, fontSize: 18, fontWeight: 600, lineHeight: 1.75, color: TEXT, textWrap: 'pretty' as const }}><InlineMd text={it.text} /></p>
+                <p style={{ ...SERIF, margin: 0, fontSize: z(18, fs), fontWeight: 600, lineHeight: 1.75, color: TEXT, textWrap: 'pretty' as const }}><InlineMd text={it.text} /></p>
                 {it.subs.length > 0 && (
                   <ul style={{ margin: '8px 0 0', padding: 0, listStyle: 'none', display: 'grid', gap: 4 }}>
                     {it.subs.map((s, j) => (
-                      <li key={j} style={{ fontSize: 15, lineHeight: 1.85, color: MUTED }}><InlineMd text={s} /></li>
+                      <li key={j} style={{ fontSize: z(15, fs), lineHeight: 1.85, color: MUTED }}><InlineMd text={s} /></li>
                     ))}
                   </ul>
                 )}
@@ -191,7 +194,7 @@ function NoteBody({ md }: { md: string }) {
       out.push(
         <ul key={key++} style={{ margin: '12px 0 0', padding: 0, listStyle: 'none', display: 'grid', gap: 6 }}>
           {li.map((l, k) => (
-            <li key={k} style={{ ...SERIF, display: 'flex', gap: 12, fontSize: 17, lineHeight: 1.9, color: TEXT }}>
+            <li key={k} style={{ ...SERIF, display: 'flex', gap: 12, fontSize: z(17, fs), lineHeight: 1.9, color: TEXT }}>
               <span style={{ flex: 'none', color: NUM }}>—</span>
               <span style={{ minWidth: 0 }}><InlineMd text={l} /></span>
             </li>
@@ -203,7 +206,7 @@ function NoteBody({ md }: { md: string }) {
 
     // 핵심 문장 (한 줄 전체 **...**)
     if (isKeyLine(t)) {
-      out.push(<p key={key++} style={{ ...SERIF, margin: '14px 0 0', fontSize: 'clamp(19px,2.2vw,22px)', fontWeight: 600, lineHeight: 1.7, color: TEXT, textWrap: 'pretty' as const }}><InlineMd text={t.slice(2, -2)} /></p>);
+      out.push(<p key={key++} style={{ ...SERIF, margin: '14px 0 0', fontSize: `clamp(${z(19, fs)}px, ${(2.2 * fs).toFixed(2)}vw, ${z(22, fs)}px)`, fontWeight: 600, lineHeight: 1.7, color: TEXT, textWrap: 'pretty' as const }}><InlineMd text={t.slice(2, -2)} /></p>);
       i++; continue;
     }
 
@@ -215,7 +218,7 @@ function NoteBody({ md }: { md: string }) {
       para.push(lt); i++;
     }
     out.push(
-      <p key={key++} style={{ ...SERIF, margin: '12px 0 0', fontSize: 17, lineHeight: 2.05, color: TEXT, textWrap: 'pretty' as const }}>
+      <p key={key++} style={{ ...SERIF, margin: '12px 0 0', fontSize: z(17, fs), lineHeight: 2.05, color: TEXT, textWrap: 'pretty' as const }}>
         {para.map((l, k) => <span key={k}>{k > 0 && <br />}<InlineMd text={l} /></span>)}
       </p>,
     );
@@ -329,7 +332,7 @@ function buildSections(key: SermonNoteCongregationKey, cong: SermonNoteCongregat
   return { lead, sections, centralVerse };
 }
 
-function StudyBlock({ study, en = false }: { study: SermonNoteStudy; en?: boolean }) {
+function StudyBlock({ study, en = false, fs = 1 }: { study: SermonNoteStudy; en?: boolean; fs?: number }) {
   // 영어 보기면 영어 질문을, 비어 있으면 한국어로 폴백.
   const pick = (ko?: string[], e?: string[]) => (en && e?.some((x) => (x || '').trim()) ? e : ko);
   const groups: { label: string; items?: string[] }[] = [
@@ -341,10 +344,10 @@ function StudyBlock({ study, en = false }: { study: SermonNoteStudy; en?: boolea
     <div style={{ marginTop: 8 }}>
       {groups.filter((g) => (g.items?.length ?? 0) > 0).map((g, k) => (
         <div key={k} style={{ marginTop: k === 0 ? 20 : 28 }}>
-          <p style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: '.14em', color: PRIMARY }}>{g.label}</p>
+          <p style={{ margin: 0, fontSize: z(12, fs), fontWeight: 700, letterSpacing: '.14em', color: PRIMARY }}>{g.label}</p>
           <ul style={{ margin: '12px 0 0', padding: 0, listStyle: 'none', display: 'grid', gap: 6 }}>
             {g.items!.map((it, j) => (
-              <li key={j} style={{ ...SERIF, display: 'flex', gap: 12, fontSize: 17, lineHeight: 1.9, color: TEXT }}>
+              <li key={j} style={{ ...SERIF, display: 'flex', gap: 12, fontSize: z(17, fs), lineHeight: 1.9, color: TEXT }}>
                 <span style={{ flex: 'none', color: NUM }}>—</span>
                 <span style={{ minWidth: 0 }}><InlineMd text={it} /></span>
               </li>
@@ -422,6 +425,8 @@ export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/o
   const lead = built.lead || '이번 주 설교 노트를 읽기 좋게 정리했습니다.';
   const past = (recent || []).filter((r) => r.id !== note.id).slice(0, 6);
 
+  const fs = fontScale / 100;
+
   const scrollTo = (id: string) => {
     const el = document.getElementById(id);
     if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 120, behavior: 'smooth' });
@@ -481,6 +486,13 @@ export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/o
           ) : (
             <div style={{ padding: '14px 0 12px', fontSize: 15, fontWeight: 600, color: TEXT }}>{activeMeta.label} 설교노트</div>
           )}
+          {built.sections.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: 13, color: FAINT_TEXT }}>
+              {built.sections.map((s) => (
+                <button key={s.id} onClick={() => scrollTo(s.id)} style={{ background: 'none', border: 0, padding: 0, fontFamily: 'inherit', fontSize: 13, color: META, cursor: 'pointer' }}>{s.indexLabel}</button>
+              ))}
+            </div>
+          )}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
             {/* 글자 크기 */}
             <div style={{ display: 'flex', alignItems: 'center', height: 30, border: `1px solid ${BORDER}`, borderRadius: 9 }}>
@@ -500,13 +512,6 @@ export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/o
               </button>
             )}
           </div>
-          {built.sections.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: 13, color: FAINT_TEXT }}>
-              {built.sections.map((s) => (
-                <button key={s.id} onClick={() => scrollTo(s.id)} style={{ background: 'none', border: 0, padding: 0, fontFamily: 'inherit', fontSize: 13, color: META, cursor: 'pointer' }}>{s.indexLabel}</button>
-              ))}
-            </div>
-          )}
         </div>
       </section>
 
@@ -525,7 +530,7 @@ export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/o
             )}
           </aside>
 
-          <article style={{ flex: '2 1 480px', minWidth: 0, maxWidth: 660, paddingBottom: 24, fontSize: `${fontScale}%` }}>
+          <article style={{ flex: '2 1 480px', minWidth: 0, maxWidth: 660, paddingBottom: 24 }}>
             {built.sections.length === 0 ? (
               <div style={{ padding: '64px 0 24px' }}>
                 <p style={{ ...SERIF, margin: 0, fontSize: 22, fontWeight: 600 }}>이번 주 {activeMeta.label} 노트를 준비하고 있습니다.</p>
@@ -538,10 +543,10 @@ export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/o
               built.sections.map((sec) => (
                 <section key={sec.id} id={sec.id} style={{ paddingTop: 52, scrollMarginTop: 120 }}>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
-                    <span style={{ ...SERIF, fontSize: 34, fontWeight: 500, lineHeight: 1, color: NUM }}>{sec.num}</span>
+                    <span style={{ ...SERIF, fontSize: z(34, fs), fontWeight: 500, lineHeight: 1, color: NUM }}>{sec.num}</span>
                     <span style={{ flex: 1, height: 1, background: BORDER }} />
                   </div>
-                  {sec.heading && <h2 style={{ ...SERIF, margin: '16px 0 0', fontSize: 'clamp(23px,2.7vw,30px)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.45, textWrap: 'pretty' as const }}>{sec.heading}</h2>}
+                  {sec.heading && <h2 style={{ ...SERIF, margin: '16px 0 0', fontSize: `clamp(${z(23, fs)}px, ${(2.7 * fs).toFixed(2)}vw, ${z(30, fs)}px)`, fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.45, textWrap: 'pretty' as const }}>{sec.heading}</h2>}
                   {sec.images && sec.images.length > 0 && (
                     <div style={{ marginTop: 22, display: 'grid', gridTemplateColumns: 'minmax(0,1fr)', gap: 12 }}>
                       {sec.images.map((src, k) => (
@@ -552,7 +557,7 @@ export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/o
                       ))}
                     </div>
                   )}
-                  {sec.study ? <StudyBlock study={sec.study} en={en} /> : sec.bodyMd ? <NoteBody md={sec.bodyMd} /> : null}
+                  {sec.study ? <StudyBlock study={sec.study} en={en} fs={fs} /> : sec.bodyMd ? <NoteBody md={sec.bodyMd} fs={fs} /> : null}
                 </section>
               ))
             )}
