@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { apiUrl } from '../lib/api-base';
 import { useTenantScope } from '../lib/tenant-scope';
 import { useAuthStore } from '../stores/auth';
 import { useToast } from '../components';
@@ -83,7 +84,7 @@ export default function BillingPage() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch('/api/v1/billing/info', { headers });
+        const res = await fetch(apiUrl('/api/v1/billing/info'), { headers });
         if (!res.ok) throw new Error('billing info load failed');
         const json = (await res.json()) as { data: BillingInfo };
         if (!cancelled) setInfo(json.data);
@@ -104,7 +105,7 @@ export default function BillingPage() {
     }
     setRedirecting(true);
     try {
-      const res = await fetch('/api/v1/billing/portal', {
+      const res = await fetch(apiUrl('/api/v1/billing/portal'), {
         method: 'POST',
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({ returnUrl: `${window.location.origin}${billingPath}` }),
@@ -127,7 +128,7 @@ export default function BillingPage() {
   const handleCheckout = async (plan: 'basic' | 'pro') => {
     setRedirecting(true);
     try {
-      const res = await fetch('/api/v1/billing/checkout', {
+      const res = await fetch(apiUrl('/api/v1/billing/checkout'), {
         method: 'POST',
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({

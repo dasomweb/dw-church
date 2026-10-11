@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { apiUrl } from '../lib/api-base';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { useRegister } from '@dw-church/api-client';
@@ -39,7 +40,7 @@ export default function RegisterPage() {
     setSlugCheck({ state: 'checking' });
     const handle = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/v1/auth/check-slug?slug=${encodeURIComponent(watchSlug)}`);
+        const res = await fetch(apiUrl(`/api/v1/auth/check-slug?slug=${encodeURIComponent(watchSlug)}`));
         if (!res.ok) { setSlugCheck({ state: 'idle' }); return; }
         const data = (await res.json()) as { available: boolean; reason?: string };
         if (data.available) setSlugCheck({ state: 'ok' });

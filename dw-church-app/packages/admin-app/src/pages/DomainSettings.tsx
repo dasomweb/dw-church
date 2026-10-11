@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { apiUrl } from '../lib/api-base';
 import { useParams } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth';
 import { useToast } from '../components';
@@ -109,7 +110,7 @@ export default function DomainSettings() {
   const reload = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/domains', { headers });
+      const res = await fetch(apiUrl('/api/v1/domains'), { headers });
       const json = (await res.json()) as { data: CustomDomain[] };
       setDomains(json.data ?? []);
     } catch {
@@ -124,7 +125,7 @@ export default function DomainSettings() {
   const loadDiag = async () => {
     setDiagLoading(true);
     try {
-      const res = await fetch('/api/v1/domains/diagnostics', { headers });
+      const res = await fetch(apiUrl('/api/v1/domains/diagnostics'), { headers });
       const json = (await res.json()) as { data: DiagData };
       setDiag(json.data ?? null);
     } catch {
@@ -141,14 +142,16 @@ export default function DomainSettings() {
     if (!domain) return;
     setAdding(true);
     try {
-      const res = await fetch('/api/v1/domains', {
+      const res = await fetch(apiUrl('/api/v1/domains'), {
         method: 'POST',
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({ domain }),
       });
       if (!res.ok) {
+        // 응답이 JSON 이 아닐 수도 있다(잘못된 오리진으로 가서 404 HTML 을 받는 경우).
+        // 그때 맨송맨송한 "도메인 추가 실패" 만 뜨면 원인을 못 찾으므로 상태코드를 붙인다.
         const err = await res.json().catch(() => ({}));
-        throw new Error((err as any)?.error?.message || '도메인 추가 실패');
+        throw new Error((err as any)?.error?.message || `도메인 추가 실패 (HTTP ${res.status})`);
       }
       const json = await res.json() as { data: CustomDomain; instructions: DnsInstruction[] };
       showToast('success', '도메인이 추가되었습니다. DNS 레코드를 설정해주세요.');
@@ -165,7 +168,7 @@ export default function DomainSettings() {
   const handleShowInstructions = async (d: CustomDomain) => {
     if (expanded[d.id]) { setExpanded((prev) => { const n = { ...prev }; delete n[d.id]; return n; }); return; }
     try {
-      const res = await fetch(`/api/v1/domains/${d.id}/instructions`, { headers });
+      const res = await fetch(apiUrl(`/api/v1/domains/${d.id}/instructions`), { headers });
       if (!res.ok) throw new Error('instructions load failed');
       const json = await res.json() as { data: CustomDomain; instructions: DnsInstruction[] };
       setExpanded((prev) => ({ ...prev, [d.id]: json.instructions }));
@@ -177,7 +180,7 @@ export default function DomainSettings() {
   const handleVerify = async (d: CustomDomain) => {
     setVerifying((prev) => ({ ...prev, [d.id]: true }));
     try {
-      const res = await fetch(`/api/v1/domains/${d.id}/verify`, { method: 'POST', headers });
+      const res = await fetch(apiUrl(`/api/v1/domains/${d.id}/verify`), { method: 'POST', headers });
       const json = await res.json() as {
         data: CustomDomain;
         checks: { txtFound: boolean; cnameOk: boolean };
@@ -201,7 +204,7 @@ export default function DomainSettings() {
   const handleRemove = async (d: CustomDomain) => {
     if (!window.confirm(`"${d.domain}" 도메인을 삭제하시겠습니까?`)) return;
     try {
-      const res = await fetch(`/api/v1/domains/${d.id}`, { method: 'DELETE', headers });
+      const res = await fetch(apiUrl(`/api/v1/domains/${d.id}`), { method: 'DELETE', headers });
       if (!res.ok) throw new Error();
       showToast('success', '삭제되었습니다.');
       setDomains((prev) => prev.filter((x) => x.id !== d.id));

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { apiUrl } from '../../lib/api-base';
 import { useToast } from '../../components';
 import { useAuthStore } from '../../stores/auth';
 import { resizeImage } from '../../utils/resize-image';
@@ -38,7 +39,7 @@ export default function GalleryTab() {
   const reload = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/shared-images?active=all', {
+      const res = await fetch(apiUrl('/api/v1/shared-images?active=all'), {
         headers: { Authorization: `Bearer ${token || ''}` },
       });
       const json = (await res.json()) as { data: SharedImage[] };
@@ -74,7 +75,7 @@ export default function GalleryTab() {
         const qs = new URLSearchParams({ title: file.name, category: 'auto' }).toString();
         const body = new FormData();
         body.append('file', toUpload);
-        const res = await fetch(`/api/v1/admin/shared-images/upload?${qs}`, {
+        const res = await fetch(apiUrl(`/api/v1/admin/shared-images/upload?${qs}`), {
           method: 'POST',
           headers: { Authorization: `Bearer ${token || ''}` },
           body,
@@ -96,7 +97,7 @@ export default function GalleryTab() {
   const handleDelete = async (id: string, title: string) => {
     if (!confirm(`"${title}" 이미지를 삭제하시겠습니까?\n사용 중인 테넌트에는 자동으로 복사본이 만들어져 경로가 유지됩니다.`)) return;
     try {
-      const res = await fetch(`/api/v1/admin/shared-images/${id}`, {
+      const res = await fetch(apiUrl(`/api/v1/admin/shared-images/${id}`), {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token || ''}` },
       });
@@ -112,7 +113,7 @@ export default function GalleryTab() {
 
   const handleToggleActive = async (img: SharedImage) => {
     try {
-      const res = await fetch(`/api/v1/admin/shared-images/${img.id}`, {
+      const res = await fetch(apiUrl(`/api/v1/admin/shared-images/${img.id}`), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token || ''}` },
         body: JSON.stringify({ isActive: !img.isActive }),
@@ -269,7 +270,7 @@ function GalleryGenerateModal({
     if (selected.length === 0) { showToast('error', '비율을 하나 이상 선택하세요'); return; }
     setGenerating(true);
     try {
-      const res = await fetch('/api/v1/admin/shared-images/generate', {
+      const res = await fetch(apiUrl('/api/v1/admin/shared-images/generate'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token || ''}` },
         body: JSON.stringify({ prompt: prompt.trim(), aspectRatios: selected }),
@@ -406,7 +407,7 @@ function GalleryUploadModal({
         }).toString();
         const body = new FormData();
         body.append('file', toUpload);
-        const res = await fetch(`/api/v1/admin/shared-images/upload?${qs}`, {
+        const res = await fetch(apiUrl(`/api/v1/admin/shared-images/upload?${qs}`), {
           method: 'POST',
           headers: { Authorization: `Bearer ${token || ''}` },
           body,

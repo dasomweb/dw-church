@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo, Fragment } from 'react';
+import { apiUrl } from '../lib/api-base';
 import { useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import type { Page, PageSection, BlockType } from '@dw-church/api-client';
@@ -809,7 +810,7 @@ function ImageLibraryModal({ onSelect, onClose }: { onSelect: (url: string) => v
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch('/api/v1/shared-images', {
+        const res = await fetch(apiUrl('/api/v1/shared-images'), {
           headers: { Authorization: `Bearer ${token || ''}` },
         });
         if (!res.ok) throw new Error('load failed');
