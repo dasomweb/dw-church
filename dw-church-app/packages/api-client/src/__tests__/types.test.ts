@@ -201,6 +201,7 @@ describe('Type exports - compile-time structure checks', () => {
       seoDescription: 'Welcome to DW Church',
       seoKeywords: 'church, worship',
       ogImageUrl: 'https://church.com/og.png',
+      gaMeasurementId: 'G-AB12CD34EF',
       socialYoutube: '',
       socialInstagram: '',
       socialFacebook: '',

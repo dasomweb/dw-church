@@ -8,6 +8,7 @@ import MobileAppNav from '@/components/MobileAppNav';
 import PwaRegister from '@/components/PwaRegister';
 import InstallAppButton from '@/components/InstallAppButton';
 import AnalyticsBeacon from '@/components/AnalyticsBeacon';
+import GoogleAnalytics from '@/components/GoogleAnalytics';
 import { BrandTokensStyle } from '@/components/BrandTokensStyle';
 import { PreviewBridge } from '@/components/PreviewBridge';
 import { HeaderTopBar } from '@/components/HeaderTopBar';
@@ -267,6 +268,8 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   const footerEmail = settings?.churchEmail ?? settings?.church_email ?? settings?.email ?? '';
   const kakaoUrl = settings?.socialKakaotalkChannel ?? settings?.social_kakaotalk_channel ?? settings?.socialKakaotalk ?? settings?.social_kakaotalk ?? '';
   const instagramUrl = settings?.socialInstagram ?? settings?.social_instagram ?? '';
+  // 교회가 직접 연결한 GA4 측정 ID. 비어 있으면 추적 코드가 아예 안 들어간다.
+  const gaMeasurementId = String(settings?.gaMeasurementId ?? settings?.ga_measurement_id ?? '');
   const youtubeUrl = settings?.socialYoutube ?? settings?.social_youtube ?? '';
   const facebookUrl = settings?.socialFacebook ?? settings?.social_facebook ?? '';
 
@@ -488,6 +491,9 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
 
       {/* First-party page-view tracking (feeds the admin 방문 통계 report). */}
       <AnalyticsBeacon slug={slug} />
+
+      {/* 교회가 설정 → 구글 애널리틱스 에 넣은 GA4 속성. 그 교회 스토어프론트에만 들어간다. */}
+      {gaMeasurementId && <GoogleAnalytics measurementId={gaMeasurementId} slug={slug} />}
     </div>
   );
 }

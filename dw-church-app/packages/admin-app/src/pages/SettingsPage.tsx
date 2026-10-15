@@ -77,6 +77,11 @@ export default function SettingsPage() {
     }
   };
 
+  // GA4 측정 ID 형식 안내 — 스토어프론트도 같은 패턴으로 거르므로(잘못된 값이면
+  // 스크립트를 아예 안 넣는다) 저장 전에 오타를 알려준다. 저장 자체는 막지 않는다.
+  const gaIdValue = String(watch('gaMeasurementId') ?? '').trim();
+  const gaIdInvalid = gaIdValue !== '' && !/^G-[A-Z0-9]{4,}$/i.test(gaIdValue);
+
   if (isLoading) {
     return (
       <div className="max-w-2xl space-y-6">
@@ -230,6 +235,42 @@ export default function SettingsPage() {
                 aspectRatio="1200/630"
               />
               <p className="text-xs text-gray-400 mt-1">SNS(카카오톡/페이스북) 공유 시 표시되는 이미지 (1200x630 권장)</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Analytics section — 교회가 자기 GA4 속성을 직접 연결 */}
+        <section className="bg-white rounded-lg border border-gray-200 p-6">
+          <h2 className="text-base font-semibold text-gray-900 mb-1">구글 애널리틱스 (GA4)</h2>
+          <p className="text-xs text-gray-500 mb-4">
+            교회가 직접 만든 Google Analytics 4 속성을 홈페이지에 연결합니다. 방문자 수·유입 경로를
+            구글 애널리틱스에서 직접 보실 수 있습니다. (관리자 페이지에는 추적 코드가 들어가지 않습니다.)
+          </p>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="gaMeasurementId" className="block text-sm font-medium text-gray-700 mb-1">
+                측정 ID
+              </label>
+              <input
+                id="gaMeasurementId"
+                type="text"
+                {...register('gaMeasurementId')}
+                placeholder="G-XXXXXXXXXX"
+                autoComplete="off"
+                spellCheck={false}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+              />
+              {gaIdInvalid ? (
+                <p className="text-xs text-red-600 mt-1">
+                  형식이 올바르지 않습니다. <span className="font-mono">G-</span> 로 시작하는 측정 ID를 입력해주세요
+                  (예: <span className="font-mono">G-AB12CD34EF</span>). 저장은 되지만 홈페이지에는 적용되지 않습니다.
+                </p>
+              ) : (
+                <p className="text-xs text-gray-400 mt-1">
+                  Google Analytics → 관리 → 데이터 스트림 → 웹 스트림에서 확인할 수 있습니다.
+                  비워두면 추적 코드가 들어가지 않습니다.
+                </p>
+              )}
             </div>
           </div>
         </section>

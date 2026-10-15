@@ -14,6 +14,10 @@ const ALLOWED_KEYS = [
   'seo_description',
   'seo_keywords',
   'og_image_url',
+  // Analytics — 교회가 자기 GA4 속성을 직접 연결한다(플랫폼 공용 계정 아님).
+  // 측정 ID 는 페이지 소스에 그대로 노출되는 공개 값이라 /settings(공개 GET)로
+  // 내려가도 문제 없다.
+  'ga_measurement_id',
   // SNS
   'social_youtube',
   'social_instagram',

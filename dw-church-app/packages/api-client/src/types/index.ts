@@ -566,6 +566,8 @@ export interface ChurchSettings {
   seoDescription: string;
   seoKeywords: string;
   ogImageUrl: string;
+  /** Google Analytics 4 측정 ID (G-XXXXXXXXXX). 교회가 자기 GA4 속성을 직접 연결. */
+  gaMeasurementId: string;
   // SNS
   socialYoutube: string;
   socialInstagram: string;
