@@ -1,4 +1,6 @@
+import { headers } from 'next/headers';
 import { getChurchSettings } from './api';
+import { getCanonicalOrigin, canonicalUrl } from './tenant-site';
 import type { Metadata } from 'next';
 
 export async function buildTenantMetadata(slug: string, pageName?: string, description?: string): Promise<Metadata> {
@@ -22,13 +24,28 @@ export async function buildTenantMetadata(slug: string, pageName?: string, descr
   // → pageName 만 돌려주고 교회명은 템플릿이 붙이게 한다.
   // 루트 페이지(pageName 없음)는 템플릿이 적용되지 않는 같은 세그먼트라 absolute 로 고정.
   const ogTitle = pageName ? `${pageName} | ${name}` : seoTitle;
+
+  // 자체 generateMetadata 를 가진 라우트는 레이아웃의 openGraph 를 **통째로 대체**한다
+  // (Next 는 openGraph 객체 단위로 덮어씀). 그래서 og:url 이 사라지지 않도록
+  // 여기서도 정식 URL 을 계산해 canonical + og:url 을 같이 넣는다.
+  const origin = await getCanonicalOrigin(slug);
+  let reqPath = '/';
+  try {
+    reqPath = (await headers()).get('x-tl-path') || '/';
+  } catch { /* 헤더가 없는 렌더 경로 */ }
+  const canonical = canonicalUrl(origin, slug, reqPath);
+
   return {
+    metadataBase: new URL(origin),
     title: pageName ? pageName : { absolute: seoTitle },
     description: desc,
+    alternates: { canonical },
     openGraph: {
       title: ogTitle,
       description: desc,
       type: 'website',
+      url: canonical,
+      siteName: name,
       ...(ogImageUrl ? { images: [{ url: ogImageUrl, width: 1200, height: 630 }] } : {}),
     },
   };

@@ -41,6 +41,20 @@ function resolveIncomingHostname(request: NextRequest): string {
   return directHost;
 }
 
+/**
+ * 요청 경로를 x-tl-path 로 실어 보낸다.
+ *
+ * 테넌트 레이아웃의 generateMetadata 는 자기가 어떤 경로로 호출됐는지 알 수 없는데,
+ * canonical 태그는 **페이지마다 달라야** 하므로 경로가 필요하다. 미들웨어가
+ * /tenant/<slug>/... 로 rewrite 하기 *전* 의 원래 경로를 넣어준다
+ * (= 교회 도메인에서 사용자가 실제로 본 주소).
+ */
+function withPath(request: NextRequest): { request: { headers: Headers } } {
+  const headers = new Headers(request.headers);
+  headers.set('x-tl-path', request.nextUrl.pathname);
+  return { request: { headers } };
+}
+
 export async function middleware(request: NextRequest) {
   const hostname = resolveIncomingHostname(request);
   const pathname = request.nextUrl.pathname;
@@ -94,7 +108,9 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(url, 307);
       }
     }
-    return NextResponse.next();
+    // 플랫폼 호스트(로컬 개발의 localhost:3002 포함)로 /tenant/<slug>/... 를
+    // 직접 여는 경로. canonical 계산에 원래 경로가 필요하므로 여기서도 실어준다.
+    return NextResponse.next(withPath(request));
   }
 
   // Custom domain handling — host is not a platform host (= tenant's
@@ -124,7 +140,7 @@ export async function middleware(request: NextRequest) {
     if (slug) {
       const url = new URL(`/tenant/${slug}${pathname}`, request.url);
       url.search = request.nextUrl.search;
-      return NextResponse.rewrite(url);
+      return NextResponse.rewrite(url, withPath(request));
     }
 
     // 2) Apex (no www) whose www. version IS mapped → 308 to the www host.
@@ -187,10 +203,10 @@ export async function middleware(request: NextRequest) {
     // Rewrite to /tenant/[slug]/... path (preserve query string)
     const url = new URL(`/tenant/${slug}${pathname}`, request.url);
     url.search = request.nextUrl.search;
-    return NextResponse.rewrite(url);
+    return NextResponse.rewrite(url, withPath(request));
   }
 
-  return NextResponse.next();
+  return NextResponse.next(withPath(request));
 }
 
 export const config = {
@@ -199,5 +215,5 @@ export const config = {
   // which would break service-worker registration + PWA icons. NOTE: .webmanifest
   // is intentionally NOT excluded — it's a dynamic route under /tenant/[slug] and
   // must be rewritten there.
-  matcher: ['/((?!_next|api|favicon.ico|sw.js|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|js|css|woff2?|ttf|map|txt|xml)$).*)'],
+  matcher: ['/((?!_next|api|favicon.ico|sw.js|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|js|css|woff2?|ttf|map)$).*)'],
 };

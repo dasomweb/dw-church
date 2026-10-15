@@ -3,12 +3,14 @@ import type { Metadata, Viewport } from 'next';
 import Link from 'next/link';
 import { headers } from 'next/headers';
 import { getChurchSettings, getMenuItems, getSiteMeta, getTheme, getThemeTokens } from '@/lib/api';
+import { getCanonicalOrigin, canonicalUrl } from '@/lib/tenant-site';
 import MobileMenu from '@/components/MobileMenu';
 import MobileAppNav from '@/components/MobileAppNav';
 import PwaRegister from '@/components/PwaRegister';
 import InstallAppButton from '@/components/InstallAppButton';
 import AnalyticsBeacon from '@/components/AnalyticsBeacon';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
+import { TenantJsonLd } from '@/components/TenantJsonLd';
 import { BrandTokensStyle } from '@/components/BrandTokensStyle';
 import { PreviewBridge } from '@/components/PreviewBridge';
 import { HeaderTopBar } from '@/components/HeaderTopBar';
@@ -98,14 +100,29 @@ export async function generateMetadata({ params }: TenantLayoutProps): Promise<M
   const ogImageUrl = settings?.ogImageUrl ?? settings?.og_image_url ?? null;
   const faviconUrl = settings?.faviconUrl ?? settings?.favicon_url ?? null;
 
+  // canonical — 한 교회가 커스텀 도메인 / <slug>.truelight.app / truelight.app/tenant/<slug>
+  // 세 경로로 열릴 수 있어서, 색인은 정식 주소 하나로 모아야 한다. 경로는 미들웨어가
+  // rewrite 전에 넣어준 x-tl-path 를 쓴다(레이아웃은 자기 경로를 모른다).
+  const origin = await getCanonicalOrigin(slug);
+  let reqPath = '/';
+  try {
+    const h = await headers();
+    reqPath = h.get('x-tl-path') || '/';
+  } catch { /* 정적 렌더 등 헤더가 없을 때는 루트로 */ }
+  const canonical = canonicalUrl(origin, slug, reqPath);
+
   return {
+    metadataBase: new URL(origin),
     title: { default: seoTitle, template: `%s | ${churchName}` },
     description: seoDescription,
     keywords: seoKeywords ? seoKeywords.split(',').map((k: string) => k.trim()) : undefined,
+    alternates: { canonical },
     openGraph: {
       title: seoTitle,
       description: seoDescription,
       type: 'website',
+      url: canonical,
+      siteName: churchName,
       ...(ogImageUrl ? { images: [{ url: ogImageUrl, width: 1200, height: 630 }] } : {}),
     },
     twitter: {
@@ -270,6 +287,15 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   const instagramUrl = settings?.socialInstagram ?? settings?.social_instagram ?? '';
   // 교회가 직접 연결한 GA4 측정 ID. 비어 있으면 추적 코드가 아예 안 들어간다.
   const gaMeasurementId = String(settings?.gaMeasurementId ?? settings?.ga_measurement_id ?? '');
+  // 구조화 데이터용 정식 오리진 + SNS 링크(sameAs).
+  const canonicalOrigin = await getCanonicalOrigin(slug);
+  const sameAsLinks = [
+    settings?.socialYoutube ?? settings?.social_youtube,
+    settings?.socialInstagram ?? settings?.social_instagram,
+    settings?.socialFacebook ?? settings?.social_facebook,
+    settings?.socialTiktok ?? settings?.social_tiktok,
+    settings?.churchWebsite ?? settings?.church_website,
+  ].map((v) => String(v ?? '').trim()).filter(Boolean);
   const youtubeUrl = settings?.socialYoutube ?? settings?.social_youtube ?? '';
   const facebookUrl = settings?.socialFacebook ?? settings?.social_facebook ?? '';
 
@@ -494,6 +520,19 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
 
       {/* 교회가 설정 → 구글 애널리틱스 에 넣은 GA4 속성. 그 교회 스토어프론트에만 들어간다. */}
       {gaMeasurementId && <GoogleAnalytics measurementId={gaMeasurementId} slug={slug} />}
+
+      {/* 구조화 데이터 — 검색엔진 + AI 답변엔진이 읽는 기계 판독용 교회 정보 */}
+      <TenantJsonLd
+        origin={canonicalOrigin}
+        churchName={churchName}
+        description={String(settings?.seoDescription ?? settings?.seo_description ?? '')}
+        logoUrl={logoUrl}
+        imageUrl={String(settings?.ogImageUrl ?? settings?.og_image_url ?? '') || null}
+        address={footerAddress}
+        phone={footerPhone}
+        email={footerEmail}
+        sameAs={sameAsLinks}
+      />
     </div>
   );
 }
