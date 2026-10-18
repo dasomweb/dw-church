@@ -97,6 +97,20 @@ function SermonNotePulled({ content, serviceDate, basePath }: { content: SermonN
 
 const EMPTY_HYMN: OnlineHymn = { title: '', hymnNo: '', imageUrls: [], note: '', lyrics: '' };
 
+/**
+ * 찬양 한 건에 입력된 내용이 있는지.
+ *
+ * 마지막 찬양은 hymns 와 달리 배열이 아니라 단일 객체라 "항목 삭제"가 없었다.
+ * 한 번 입력하면 지울 수 없어서 마지막 찬양이 없는 주에도 지난주 악보가 그대로
+ * 실렸다 — 그래서 [비우기] 를 붙이는데, 빈 상태에서까지 삭제 버튼이 떠 있으면
+ * 혼란스러우니 버튼 노출 판정에 쓴다.
+ */
+export function hasHymnContent(h?: OnlineHymn | null): boolean {
+  if (!h) return false;
+  const filled = [h.title, h.hymnNo, h.note, h.lyrics, h.lyricsEn].some((t) => (t || '').trim().length > 0);
+  return filled || (h.imageUrls || []).length > 0;
+}
+
 // 배열 항목 위치 이동(순서 변경)
 function moveItem<T>(arr: T[], from: number, to: number): T[] {
   const n = [...arr];
@@ -289,6 +303,11 @@ export default function OnlineBulletinManagement() {
   const [copyTarget, setCopyTarget] = useState<OnlineBulletin | null>(null);
   const [copyKeys, setCopyKeys] = useState<string[]>(defaultCopyKeys());
   const [saveAsDefault, setSaveAsDefault] = useState(false);
+  // 마지막 찬양 비우기 — 업로드한 악보 이미지까지 함께 날아가므로 확인을 한 번 받는다.
+  const [clearClosingHymn, setClearClosingHymn] = useState(false);
+  // 비운 뒤 HymnEditor 를 다시 마운트시키는 키. 내용이 있는 찬양은 접힌 채로
+  // 시작하는데, 비우면 곧바로 다시 입력하는 흐름이라 펼친 상태로 되돌려준다.
+  const [closingHymnSeq, setClosingHymnSeq] = useState(0);
 
   const { showToast } = useToast();
   const apiClient = useDWChurchClient();
@@ -742,10 +761,30 @@ export default function OnlineBulletinManagement() {
             </div>
           </FormSection>
 
-          {/* 10. 마지막 찬양 */}
+          {/* 10. 마지막 찬양 — 단일 객체라 항목 삭제 대신 [비우기] 로 초기화한다 */}
           <FormSection title="10. 마지막 찬양">
-            <HymnEditor hymn={c.closingHymn ?? { ...EMPTY_HYMN }} onChange={(patch) => setContent({ closingHymn: { ...(c.closingHymn ?? EMPTY_HYMN), ...patch } })} uploadImage={uploadImage} scanLyrics={scanLyrics} translateLyrics={translateOne} />
+            <HymnEditor key={closingHymnSeq} hymn={c.closingHymn ?? { ...EMPTY_HYMN }}
+              onChange={(patch) => setContent({ closingHymn: { ...(c.closingHymn ?? EMPTY_HYMN), ...patch } })}
+              onRemove={hasHymnContent(c.closingHymn) ? () => setClearClosingHymn(true) : undefined}
+              removeLabel="비우기"
+              uploadImage={uploadImage} scanLyrics={scanLyrics} translateLyrics={translateOne} />
           </FormSection>
+
+          {/* 악보 이미지가 올라가 있으면 오클릭 한 번으로 그 주 악보가 사라지므로 확인을 거친다 */}
+          <ConfirmDialog
+            open={clearClosingHymn}
+            title="마지막 찬양 비우기"
+            message="마지막 찬양의 제목 · 악보 이미지 · 가사를 모두 비웁니다. 저장하면 되돌릴 수 없습니다."
+            confirmLabel="비우기"
+            variant="danger"
+            onConfirm={() => {
+              setContent({ closingHymn: { ...EMPTY_HYMN } });
+              setClosingHymnSeq((n) => n + 1);
+              setClearClosingHymn(false);
+              showToast('success', '마지막 찬양을 비웠습니다. [저장] 을 눌러야 사이트에 반영됩니다.');
+            }}
+            onCancel={() => setClearClosingHymn(false)}
+          />
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-6 py-4 flex items-center justify-end gap-3">
             <button type="button" onClick={() => setView('list')} className="px-5 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900">취소</button>
@@ -899,7 +938,8 @@ export default function OnlineBulletinManagement() {
 }
 
 /* ── sub-editors ── */
-function HymnEditor({ hymn, onChange, onRemove, onMoveUp, onMoveDown, index, uploadImage, scanLyrics, translateLyrics }: { hymn: OnlineHymn; onChange: (patch: Partial<OnlineHymn>) => void; onRemove?: () => void; onMoveUp?: () => void; onMoveDown?: () => void; index?: number; uploadImage: (f: File) => Promise<string>; scanLyrics: (urls: string[]) => Promise<string>; translateLyrics: (text: string) => Promise<string> }) {
+// removeLabel: 배열 항목은 "삭제"지만 단일 객체인 마지막 찬양은 "비우기"가 맞는 말이라 열어둔다.
+function HymnEditor({ hymn, onChange, onRemove, removeLabel = '삭제', onMoveUp, onMoveDown, index, uploadImage, scanLyrics, translateLyrics }: { hymn: OnlineHymn; onChange: (patch: Partial<OnlineHymn>) => void; onRemove?: () => void; removeLabel?: string; onMoveUp?: () => void; onMoveDown?: () => void; index?: number; uploadImage: (f: File) => Promise<string>; scanLyrics: (urls: string[]) => Promise<string>; translateLyrics: (text: string) => Promise<string> }) {
   const [scanning, setScanning] = useState(false);
   const [translating, setTranslating] = useState(false);
   const imageUrls = hymn.imageUrls || [];
@@ -933,7 +973,7 @@ function HymnEditor({ hymn, onChange, onRemove, onMoveUp, onMoveDown, index, upl
         </button>
         {onMoveUp && <button type="button" onClick={onMoveUp} className="px-1 text-gray-400 hover:text-gray-700" aria-label="위로 이동">▲</button>}
         {onMoveDown && <button type="button" onClick={onMoveDown} className="px-1 text-gray-400 hover:text-gray-700" aria-label="아래로 이동">▼</button>}
-        {onRemove && <button type="button" onClick={onRemove} className={btnDelRow}>삭제</button>}
+        {onRemove && <button type="button" onClick={onRemove} className={btnDelRow}>{removeLabel}</button>}
       </div>
 
       {open && (
