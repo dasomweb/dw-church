@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { SectionShell } from '../utilities/SectionShell';
+import { getServiceWorkerRegistration } from '../utilities/sw-ready';
 
 /**
  * notification_prefs — 알림 수신 설정 블록(요청서 §3-3).
@@ -70,9 +71,11 @@ export function NotificationPrefsBlock({ props, slug = '' }: NotificationPrefsBl
       if (!alive) return;
       setGrouped(cats);
 
-      if (typeof window === 'undefined' || !('serviceWorker' in navigator)) { setStatus('no-sub'); return; }
-      const reg = await navigator.serviceWorker.ready.catch(() => null);
-      const sub = reg ? await reg.pushManager.getSubscription() : null;
+      if (typeof window === 'undefined') { setStatus('no-sub'); return; }
+      // ready 를 그냥 await 하면 SW 미등록 교회에서 **영원히 멈춰** 블록이 통째로
+      // 안 그려진다(에러도 안 남). 시간 제한을 둔 헬퍼로 바꾼다.
+      const reg = await getServiceWorkerRegistration();
+      const sub = reg ? await reg.pushManager.getSubscription().catch(() => null) : null;
       if (!alive) return;
       if (!sub) { setStatus('no-sub'); return; }
       setEndpoint(sub.endpoint);

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { SectionShell } from '../utilities/SectionShell';
+import { getServiceWorkerRegistration } from '../utilities/sw-ready';
 
 /**
  * push_subscribe — "알림 받기" 블록.
@@ -99,8 +100,11 @@ export function PushSubscribeBlock({ props, slug = '' }: PushSubscribeBlockProps
       }
 
       if (Notification.permission === 'denied') { if (alive) setState('denied'); return; }
-      const reg = await navigator.serviceWorker.ready.catch(() => null);
-      const existing = reg ? await reg.pushManager.getSubscription() : null;
+      // SW 가 없으면 구독을 만들 수 없다. ready 를 그냥 기다리면 영영 안 끝나므로
+      // 시간 제한을 둔 헬퍼를 쓰고, 없으면 섹션을 숨긴다(눌러도 안 되는 버튼 방지).
+      const reg = await getServiceWorkerRegistration();
+      if (!reg) { if (alive) setState('not-configured'); return; }
+      const existing = await reg.pushManager.getSubscription().catch(() => null);
       if (alive) setState(existing ? 'subscribed' : 'ready');
     })();
     return () => { alive = false; };
@@ -121,7 +125,8 @@ export function PushSubscribeBlock({ props, slug = '' }: PushSubscribeBlockProps
         return;
       }
 
-      const reg = await navigator.serviceWorker.ready;
+      const reg = await getServiceWorkerRegistration();
+      if (!reg) throw new Error('이 브라우저에서는 알림을 사용할 수 없습니다.');
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true, // iOS 는 무음 푸시 금지 — 항상 true
         applicationServerKey: urlBase64ToUint8Array(data.publicKey) as BufferSource,
@@ -153,8 +158,8 @@ export function PushSubscribeBlock({ props, slug = '' }: PushSubscribeBlockProps
   const unsubscribe = useCallback(async () => {
     setState('working');
     try {
-      const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.getSubscription();
+      const reg = await getServiceWorkerRegistration();
+      const sub = reg ? await reg.pushManager.getSubscription() : null;
       if (sub) {
         await fetch(`${API_BASE}/api/v1/push/unsubscribe`, {
           method: 'POST',
