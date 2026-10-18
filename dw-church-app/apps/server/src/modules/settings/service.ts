@@ -18,6 +18,9 @@ const ALLOWED_KEYS = [
   // 측정 ID 는 페이지 소스에 그대로 노출되는 공개 값이라 /settings(공개 GET)로
   // 내려가도 문제 없다.
   'ga_measurement_id',
+  // 온라인 주보 "지난 주보 복제" 시 기본으로 가져올 항목(JSON 문자열 배열).
+  // 교직원이 여러 명이라 브라우저 로컬이 아니라 교회 단위로 공유한다.
+  'bulletin_copy_fields',
   // SNS
   'social_youtube',
   'social_instagram',

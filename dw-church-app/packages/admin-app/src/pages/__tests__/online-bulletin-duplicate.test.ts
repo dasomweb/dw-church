@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import type { OnlineBulletinContent } from '@dw-church/api-client';
-import { addOneWeek, retitleForDate, carryOverContent } from '../OnlineBulletinManagement';
+import {
+  addOneWeek, retitleForDate, carryOverContent,
+  COPY_FIELDS, defaultCopyKeys, parseCopyKeys,
+} from '../OnlineBulletinManagement';
 
 /**
  * 지난 주보 복제 — 날짜 계산과 제목 치환은 조용히 틀리기 쉬운 자리라 고정해둔다.
@@ -60,7 +63,7 @@ describe('carryOverContent', () => {
     study: { observation: ['관찰1'], correlation: ['상관1'], application: ['적용1'] },
   };
 
-  const out = carryOverContent(src);
+  const out = carryOverContent(src, defaultCopyKeys());
 
   it('반복되는 틀은 가져온다', () => {
     expect(out.serviceTitle).toBe('주일 2부 예배');
@@ -88,5 +91,57 @@ describe('carryOverContent', () => {
   it('원본과 참조를 공유하지 않는다 (복제본 수정이 원본을 건드리면 안 됨)', () => {
     out.worshipOrder!.push({ label: '추가', detail: '', person: '' });
     expect(src.worshipOrder).toHaveLength(1);
+  });
+});
+
+describe('복제 항목 선택', () => {
+  const src: OnlineBulletinContent = {
+    worshipOrder: [{ label: '묵도', detail: '', person: '' }],
+    scripture: { reference: '요 5:1-9', text: '본문' },
+    study: { observation: ['관찰1'], correlation: [], application: [] },
+  };
+
+  it('기본값은 매주 반복되는 항목만', () => {
+    expect(defaultCopyKeys().sort()).toEqual(
+      ['announcements', 'prayerRequests', 'serviceInfo', 'worshipOrder'],
+    );
+  });
+
+  it('고른 항목만 가져온다', () => {
+    const out = carryOverContent(src, ['scripture']);
+    expect(out.scripture?.reference).toBe('요 5:1-9');
+    expect(out.worshipOrder).toEqual([]); // 안 골랐으므로 비어야 함
+  });
+
+  it('전체 해제면 아무것도 안 가져온다', () => {
+    const out = carryOverContent(src, []);
+    expect(out.worshipOrder).toEqual([]);
+    expect(out.scripture?.reference).toBe('');
+    expect(out.study?.observation).toEqual([]);
+  });
+
+  it('전체 선택이면 모든 항목을 가져온다', () => {
+    const out = carryOverContent(src, COPY_FIELDS.map((f) => f.key));
+    expect(out.worshipOrder).toEqual(src.worshipOrder);
+    expect(out.scripture).toEqual(src.scripture);
+    expect(out.study).toEqual(src.study);
+  });
+});
+
+describe('parseCopyKeys (저장된 기본값 읽기)', () => {
+  it('저장된 선택을 그대로 쓴다', () => {
+    expect(parseCopyKeys(JSON.stringify(['scripture', 'hymns'])).sort()).toEqual(['hymns', 'scripture']);
+  });
+  it('없거나 깨졌으면 권장값으로 떨어진다', () => {
+    expect(parseCopyKeys(undefined)).toEqual(defaultCopyKeys());
+    expect(parseCopyKeys('')).toEqual(defaultCopyKeys());
+    expect(parseCopyKeys('{not json')).toEqual(defaultCopyKeys());
+    expect(parseCopyKeys(JSON.stringify({ a: 1 }))).toEqual(defaultCopyKeys());
+  });
+  it('모르는 키는 버린다 (항목이 바뀌어도 안전)', () => {
+    expect(parseCopyKeys(JSON.stringify(['worshipOrder', '없어진항목']))).toEqual(['worshipOrder']);
+  });
+  it('빈 배열 선택은 존중한다 (권장값으로 되돌리지 않음)', () => {
+    expect(parseCopyKeys(JSON.stringify([]))).toEqual([]);
   });
 });

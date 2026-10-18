@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { OnlineBulletin, OnlineBulletinContent, OnlineHymn, ListParams, PostStatus, SermonNoteContent, SermonNoteCongregationKey } from '@dw-church/api-client';
 import {
@@ -7,6 +7,8 @@ import {
   useUpdateOnlineBulletin,
   useDeleteOnlineBulletin,
   useDWChurchClient,
+  useChurchSettings,
+  useUpdateChurchSettings,
 } from '@dw-church/api-client';
 import { FormField, FormSection, FormRow, inputClass, selectClass, MultiImageUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
 import { useTenantScope } from '../lib/tenant-scope';
@@ -126,21 +128,74 @@ const EMPTY_FORM: FormState = { title: '', serviceDate: '', status: 'published',
  * 지난주 설교/본문/찬양이 그대로 남아 있으면 "이번 주 주보"에 지난주 내용이
  * 실린 채 게시되는 사고가 난다 — 그래서 **비우는 쪽이 기본**이다.
  */
-/** 가져오는 항목 — 매주 반복되는 틀. */
-export const CARRY_OVER_LABELS = ['예배 순서', '예배 종류 · 인도자', '기도 제목', '교회 소식'];
-/** 비우는 항목 — 그 주일에만 해당하는 내용. */
-export const CLEARED_LABELS = ['찬양 · 악보', '대표 기도', '성경 본문', '설교 노트', '어린이 설교 · 카툰', '마지막 찬양', '소그룹 나눔 질문'];
+/**
+ * 복제 시 가져올 수 있는 항목 목록. 운영자가 체크해서 고르고, 그 선택을
+ * 교회 기본값으로 저장할 수 있다(설정 bulletin_copy_fields).
+ *
+ * defaultOn = 매주 반복되는 틀(기본 체크). 나머지는 그 주일에만 해당하는
+ * 내용이라 기본 해제 — 지난주 설교/본문이 남은 채 "이번 주 주보"로 게시되는
+ * 사고가 이 기능의 가장 위험한 실패다.
+ */
+export interface CopyFieldDef {
+  key: string;
+  label: string;
+  hint?: string;
+  defaultOn: boolean;
+  /** 이 항목이 건드리는 content 키들. */
+  fields: (keyof OnlineBulletinContent)[];
+}
 
-/** 주보 내용에서 **반복되는 틀만** 뽑아낸다(나머지는 EMPTY_CONTENT 기본값). */
-export function carryOverContent(src: OnlineBulletinContent): OnlineBulletinContent {
-  return {
-    ...structuredClone(EMPTY_CONTENT),
-    serviceTitle: src.serviceTitle ?? EMPTY_CONTENT.serviceTitle,
-    presider: src.presider ?? '',
-    worshipOrder: structuredClone(src.worshipOrder ?? []),
-    prayerRequests: structuredClone(src.prayerRequests ?? []),
-    announcements: structuredClone(src.announcements ?? []),
-  };
+export const COPY_FIELDS: CopyFieldDef[] = [
+  { key: 'serviceInfo', label: '예배 종류 · 인도자', defaultOn: true, fields: ['serviceTitle', 'presider'] },
+  { key: 'worshipOrder', label: '예배 순서', hint: '매주 거의 같은 항목', defaultOn: true, fields: ['worshipOrder'] },
+  { key: 'prayerRequests', label: '기도 제목', hint: '여러 주 이어가는 경우가 많음', defaultOn: true, fields: ['prayerRequests'] },
+  { key: 'announcements', label: '교회 소식', hint: '지난 공지가 이어질 수 있음', defaultOn: true, fields: ['announcements'] },
+  { key: 'hymns', label: '찬양 · 악보', hint: '보통 주마다 바뀜', defaultOn: false, fields: ['hymns'] },
+  { key: 'closingHymn', label: '마지막 찬양', defaultOn: false, fields: ['closingHymn'] },
+  { key: 'representativePrayer', label: '대표 기도', defaultOn: false, fields: ['representativePrayer'] },
+  { key: 'scripture', label: '성경 본문', defaultOn: false, fields: ['scripture'] },
+  { key: 'sermonNote', label: '설교 노트', hint: '설교노트 관리에서 따로 작성', defaultOn: false, fields: ['sermonNote'] },
+  { key: 'childrenSermon', label: '어린이 설교 · 카툰', defaultOn: false, fields: ['childrenSermonNote', 'childrenCartoon'] },
+  { key: 'study', label: '소그룹 나눔 질문', hint: '설교 기반이라 주마다 다름', defaultOn: false, fields: ['study'] },
+];
+
+/** 설정에 저장된 값이 없을 때 쓰는 기본 선택. */
+export function defaultCopyKeys(): string[] {
+  return COPY_FIELDS.filter((f) => f.defaultOn).map((f) => f.key);
+}
+
+/**
+ * 저장된 기본값(JSON 문자열 배열) 파싱. 깨졌거나 없으면 defaultCopyKeys().
+ * 모르는 키는 버린다(항목이 바뀌어도 안전하게).
+ */
+export function parseCopyKeys(raw: unknown): string[] {
+  if (typeof raw !== 'string' || !raw.trim()) return defaultCopyKeys();
+  try {
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr)) return defaultCopyKeys();
+    const known = new Set(COPY_FIELDS.map((f) => f.key));
+    return arr.filter((k): k is string => typeof k === 'string' && known.has(k));
+  } catch {
+    return defaultCopyKeys();
+  }
+}
+
+/**
+ * 선택한 항목만 원본에서 가져오고 나머지는 EMPTY_CONTENT 기본값으로 둔다.
+ * structuredClone 으로 복사해 복제본을 고쳐도 원본이 안 바뀌게 한다.
+ */
+export function carryOverContent(src: OnlineBulletinContent, keys: string[]): OnlineBulletinContent {
+  const picked = new Set(keys);
+  const out: OnlineBulletinContent = structuredClone(EMPTY_CONTENT);
+  for (const def of COPY_FIELDS) {
+    if (!picked.has(def.key)) continue;
+    for (const f of def.fields) {
+      const v = src[f];
+      if (v === undefined) continue;
+      (out as Record<string, unknown>)[f] = structuredClone(v);
+    }
+  }
+  return out;
 }
 
 /** YYYY-MM-DD 에 7일 더한다(= 다음 주 같은 요일). 파싱 실패하면 빈 문자열. */
@@ -230,11 +285,23 @@ export default function OnlineBulletinManagement() {
   const [noteContent, setNoteContent] = useState<SermonNoteContent>({});
   // 복제로 연 폼인지 — 무엇을 가져왔고 무엇을 비웠는지 편집 화면에 그대로 보여준다.
   const [duplicatedFrom, setDuplicatedFrom] = useState<string | null>(null);
+  // 복제 대상 + 가져올 항목 선택 다이얼로그.
+  const [copyTarget, setCopyTarget] = useState<OnlineBulletin | null>(null);
+  const [copyKeys, setCopyKeys] = useState<string[]>(defaultCopyKeys());
+  const [saveAsDefault, setSaveAsDefault] = useState(false);
 
   const { showToast } = useToast();
   const apiClient = useDWChurchClient();
   const { basePath } = useTenantScope();
   const uploadImage = async (file: File): Promise<string> => (await apiClient!.uploadFile(file, 'online-bulletins')).url;
+  // 교회 기본값(설정 bulletin_copy_fields) — 저장된 게 없으면 COPY_FIELDS 의 defaultOn.
+  const { data: churchSettings } = useChurchSettings();
+  const updateSettings = useUpdateChurchSettings();
+  const savedCopyKeys = useMemo(
+    () => parseCopyKeys(churchSettings?.bulletinCopyFields),
+    [churchSettings?.bulletinCopyFields],
+  );
+
   const { data, isLoading, error } = useOnlineBulletins(params);
   const createMutation = useCreateOnlineBulletin();
   const updateMutation = useUpdateOnlineBulletin();
@@ -377,15 +444,34 @@ export default function OnlineBulletinManagement() {
 
   const handleCreate = () => { setEditingId(null); setDuplicatedFrom(null); setForm(structuredClone(EMPTY_FORM)); setNoteContent({}); setView('edit'); };
 
+  /** [복제] 클릭 — 바로 복사하지 않고 가져올 항목을 고르게 한다. */
+  const openCopyDialog = (item: OnlineBulletin) => {
+    setCopyKeys(savedCopyKeys);
+    setSaveAsDefault(false);
+    setCopyTarget(item);
+  };
+
   /**
-   * 주보 복제 — 예배 순서 같은 **반복되는 틀**만 가져와 다음 주 주보를 새로 연다.
+   * 선택한 항목만 가져와 다음 주 주보를 새로 연다.
    * 아직 저장하지 않은 새 글이므로 editingId 는 null(= 저장 시 새로 생성).
-   * 상태는 draft 로 둔다 — 내용을 채우기 전에 사이트에 올라가면 안 된다.
+   * 상태는 draft — 내용을 채우기 전에 사이트에 올라가면 안 된다.
    */
-  const handleDuplicate = (item: OnlineBulletin) => {
+  const runDuplicate = () => {
+    const item = copyTarget;
+    if (!item) return;
     const srcDate = item.serviceDate ? String(item.serviceDate).slice(0, 10) : '';
     const nextDate = addOneWeek(srcDate);
-    const content = carryOverContent({ ...structuredClone(EMPTY_CONTENT), ...(item.content ?? {}) });
+    const merged = { ...structuredClone(EMPTY_CONTENT), ...(item.content ?? {}) };
+    const content = carryOverContent(merged, copyKeys);
+
+    // 선택을 교회 기본값으로 저장(다음 복제 때 그대로 체크됨). 실패해도 복제는 진행한다.
+    if (saveAsDefault) {
+      updateSettings.mutate(
+        { bulletinCopyFields: JSON.stringify(copyKeys) } as Parameters<typeof updateSettings.mutate>[0],
+        { onError: () => showToast('error', '기본값 저장에 실패했습니다. 복제는 그대로 진행됩니다.') },
+      );
+    }
+
     setEditingId(null);
     setNoteContent({});
     setForm({
@@ -395,9 +481,10 @@ export default function OnlineBulletinManagement() {
       content,
     });
     setDuplicatedFrom(srcDate ? `${srcDate} 주보` : '이전 주보');
+    setCopyTarget(null);
     setView('edit');
-    showToast('success', '예배 순서·기도 제목·교회 소식을 가져왔습니다. 설교·찬양·본문은 새로 입력해주세요.');
   };
+
   const handleEdit = (item: OnlineBulletin) => {
     setEditingId(item.id);
     setDuplicatedFrom(null);
@@ -452,11 +539,10 @@ export default function OnlineBulletinManagement() {
               {duplicatedFrom}를 복제했습니다 — 아직 저장되지 않았습니다.
             </p>
             <div className="mt-2 grid gap-1.5 text-xs text-amber-800 sm:grid-cols-2">
-              <p><b>가져온 항목</b> · {CARRY_OVER_LABELS.join(' · ')}</p>
-              <p><b>비운 항목</b> · {CLEARED_LABELS.join(' · ')}</p>
+              <p><b>가져온 항목</b> · {COPY_FIELDS.filter((f) => copyKeys.includes(f.key)).map((f) => f.label).join(' · ') || '없음'}</p>
+              <p><b>비운 항목</b> · {COPY_FIELDS.filter((f) => !copyKeys.includes(f.key)).map((f) => f.label).join(' · ') || '없음'}</p>
             </div>
             <p className="mt-2 text-xs text-amber-700">
-              지난주 설교·본문이 그대로 올라가는 일이 없도록 그 주에만 해당하는 내용은 비웠습니다.
               상태는 <b>임시저장</b>이니 작성이 끝나면 <b>공개</b>로 바꿔주세요.
             </p>
           </div>
@@ -681,7 +767,7 @@ export default function OnlineBulletinManagement() {
           {/* 가장 최근 주보를 복제 — 매주 쓰는 길이라 목록 맨 위에 둔다. */}
           {latestBulletin && (
             <button
-              onClick={() => handleDuplicate(latestBulletin)}
+              onClick={() => openCopyDialog(latestBulletin)}
               title={`${String(latestBulletin.serviceDate).slice(0, 10)} 주보의 예배 순서를 가져옵니다`}
               className="border border-blue-200 text-blue-700 hover:bg-blue-50 rounded-lg px-4 py-2 text-sm font-medium"
             >
@@ -725,7 +811,7 @@ export default function OnlineBulletinManagement() {
                     </td>
                     <td className="px-4 py-3 text-sm space-x-2">
                       <button onClick={() => handleEdit(item)} className="text-blue-600 hover:underline">편집</button>
-                      <button onClick={() => handleDuplicate(item)} className="text-gray-600 hover:underline">복제</button>
+                      <button onClick={() => openCopyDialog(item)} className="text-gray-600 hover:underline">복제</button>
                       <button onClick={() => setDeleteTarget({ id: item.id, name: item.title || '' })} disabled={deleteMutation.isPending} className="text-red-600 hover:underline disabled:opacity-50">삭제</button>
                     </td>
                   </tr>
@@ -742,6 +828,58 @@ export default function OnlineBulletinManagement() {
             </div>
           </div>
         </>
+      )}
+
+      {/* 복제 설정 — 어떤 항목을 가져올지 고르고 기본값으로 저장할 수 있다. */}
+      {copyTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-xl">
+            <div className="border-b px-6 py-4">
+              <h3 className="text-base font-bold text-gray-900">지난 주보에서 가져올 항목</h3>
+              <p className="mt-1 text-xs text-gray-500">
+                {String(copyTarget.serviceDate).slice(0, 10)} 주보
+                <span className="mx-1.5">→</span>
+                <b>{addOneWeek(String(copyTarget.serviceDate).slice(0, 10)) || '날짜 미정'}</b> 주보를 새로 만듭니다.
+              </p>
+            </div>
+
+            <div className="px-6 py-4 space-y-1">
+              {COPY_FIELDS.map((f) => {
+                const on = copyKeys.includes(f.key);
+                return (
+                  <label key={f.key} className="flex items-start gap-3 rounded-lg px-2 py-2 hover:bg-gray-50 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={on}
+                      onChange={() => setCopyKeys((prev) => (on ? prev.filter((k) => k !== f.key) : [...prev, f.key]))}
+                      className="mt-0.5 rounded"
+                    />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium text-gray-900">{f.label}</span>
+                      {f.hint && <span className="block text-xs text-gray-500">{f.hint}</span>}
+                    </span>
+                  </label>
+                );
+              })}
+              <div className="flex gap-3 pt-2 text-xs">
+                <button type="button" onClick={() => setCopyKeys(COPY_FIELDS.map((f) => f.key))} className="text-blue-600 hover:underline">전체 선택</button>
+                <button type="button" onClick={() => setCopyKeys([])} className="text-blue-600 hover:underline">전체 해제</button>
+                <button type="button" onClick={() => setCopyKeys(defaultCopyKeys())} className="text-blue-600 hover:underline">권장값</button>
+              </div>
+            </div>
+
+            <div className="border-t px-6 py-4">
+              <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                <input type="checkbox" checked={saveAsDefault} onChange={(e) => setSaveAsDefault(e.target.checked)} className="rounded" />
+                이 선택을 기본값으로 저장 (다음 복제부터 그대로 적용)
+              </label>
+              <div className="mt-4 flex justify-end gap-2">
+                <button type="button" onClick={() => setCopyTarget(null)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">취소</button>
+                <button type="button" onClick={runDuplicate} className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700">가져오기</button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       <ConfirmDialog

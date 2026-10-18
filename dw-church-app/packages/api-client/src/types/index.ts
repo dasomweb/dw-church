@@ -568,6 +568,8 @@ export interface ChurchSettings {
   ogImageUrl: string;
   /** Google Analytics 4 측정 ID (G-XXXXXXXXXX). 교회가 자기 GA4 속성을 직접 연결. */
   gaMeasurementId: string;
+  /** 온라인 주보 복제 시 기본으로 가져올 항목 (JSON 문자열 배열). */
+  bulletinCopyFields?: string;
   // SNS
   socialYoutube: string;
   socialInstagram: string;
