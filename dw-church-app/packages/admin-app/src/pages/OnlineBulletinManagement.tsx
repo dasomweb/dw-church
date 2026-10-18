@@ -118,6 +118,56 @@ const EMPTY_CONTENT: OnlineBulletinContent = {
 interface FormState { title: string; serviceDate: string; status: PostStatus; content: OnlineBulletinContent }
 const EMPTY_FORM: FormState = { title: '', serviceDate: '', status: 'published', content: structuredClone(EMPTY_CONTENT) };
 
+/* ── 지난 주보 복제 ─────────────────────────────────────────────
+ * 주보는 매주 **틀은 거의 같고 내용만 바뀐다**. 예배 순서를 매주 처음부터
+ * 다시 입력하는 게 제일 번거로워서, 틀만 가져오고 그 주에만 해당하는 내용은
+ * 비운 채로 새 주보를 연다.
+ *
+ * 지난주 설교/본문/찬양이 그대로 남아 있으면 "이번 주 주보"에 지난주 내용이
+ * 실린 채 게시되는 사고가 난다 — 그래서 **비우는 쪽이 기본**이다.
+ */
+/** 가져오는 항목 — 매주 반복되는 틀. */
+export const CARRY_OVER_LABELS = ['예배 순서', '예배 종류 · 인도자', '기도 제목', '교회 소식'];
+/** 비우는 항목 — 그 주일에만 해당하는 내용. */
+export const CLEARED_LABELS = ['찬양 · 악보', '대표 기도', '성경 본문', '설교 노트', '어린이 설교 · 카툰', '마지막 찬양', '소그룹 나눔 질문'];
+
+/** 주보 내용에서 **반복되는 틀만** 뽑아낸다(나머지는 EMPTY_CONTENT 기본값). */
+export function carryOverContent(src: OnlineBulletinContent): OnlineBulletinContent {
+  return {
+    ...structuredClone(EMPTY_CONTENT),
+    serviceTitle: src.serviceTitle ?? EMPTY_CONTENT.serviceTitle,
+    presider: src.presider ?? '',
+    worshipOrder: structuredClone(src.worshipOrder ?? []),
+    prayerRequests: structuredClone(src.prayerRequests ?? []),
+    announcements: structuredClone(src.announcements ?? []),
+  };
+}
+
+/** YYYY-MM-DD 에 7일 더한다(= 다음 주 같은 요일). 파싱 실패하면 빈 문자열. */
+export function addOneWeek(ymd: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((ymd || '').slice(0, 10));
+  if (!m) return '';
+  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+  d.setUTCDate(d.getUTCDate() + 7);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * 제목을 새 날짜로 바꾼다. 원본 제목에 원본 날짜가 "2026년 10월 11일" 형태로
+ * 들어 있으면 그 부분만 교체해 교회가 쓰던 제목 형식("…성탄주일예배" 등)을 지킨다.
+ * 없으면 "YYYY년 M월 D일 {예배종류}" 로 새로 만든다.
+ */
+export function retitleForDate(srcTitle: string, srcDate: string, newDate: string, serviceTitle: string): string {
+  const fmt = (ymd: string) => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd);
+    return m ? `${Number(m[1])}년 ${Number(m[2])}월 ${Number(m[3])}일` : '';
+  };
+  const oldK = fmt(srcDate.slice(0, 10));
+  const newK = fmt(newDate);
+  if (oldK && newK && srcTitle.includes(oldK)) return srcTitle.replace(oldK, newK);
+  return `${newK} ${serviceTitle || '주일예배'}`.trim();
+}
+
 const btnGhost = 'text-sm text-blue-600 hover:underline';
 const btnDelRow = 'text-red-500 hover:text-red-700 text-sm shrink-0';
 const btnAiClass = 'inline-flex items-center gap-1 text-xs font-medium text-indigo-600 border border-indigo-200 rounded-lg px-2.5 py-1 hover:bg-indigo-50 disabled:opacity-50';
@@ -178,6 +228,8 @@ export default function OnlineBulletinManagement() {
   const [busy, setBusy] = useState<string | null>(null); // 'scripture' | 'prayers' | 'study'
   // 설교노트 — 설교노트 모듈(해당 주일 날짜)과 같은 데이터. 임베드 대신 모듈에 저장.
   const [noteContent, setNoteContent] = useState<SermonNoteContent>({});
+  // 복제로 연 폼인지 — 무엇을 가져왔고 무엇을 비웠는지 편집 화면에 그대로 보여준다.
+  const [duplicatedFrom, setDuplicatedFrom] = useState<string | null>(null);
 
   const { showToast } = useToast();
   const apiClient = useDWChurchClient();
@@ -188,6 +240,12 @@ export default function OnlineBulletinManagement() {
   const updateMutation = useUpdateOnlineBulletin();
   const deleteMutation = useDeleteOnlineBulletin();
   const isSaving = createMutation.isPending || updateMutation.isPending;
+
+  // "지난 주보 복제" 버튼이 집을 대상 — 목록은 service_date DESC 정렬이라 1페이지 첫 행이
+  // 가장 최근 주보다. 검색 중이거나 2페이지 이후면 "지난 주보"가 아닐 수 있어 숨긴다
+  // (그 경우엔 각 행의 [복제] 를 쓰면 된다).
+  const onFirstUnfilteredPage = (params.page ?? 1) === 1 && !(params.search || '').trim();
+  const latestBulletin = onFirstUnfilteredPage ? data?.data?.[0] : undefined;
 
   // ── content mutation helpers ──
   const c = form.content;
@@ -317,9 +375,32 @@ export default function OnlineBulletinManagement() {
     } catch { showToast('error', '스캔에 실패했습니다.'); return ''; }
   };
 
-  const handleCreate = () => { setEditingId(null); setForm(structuredClone(EMPTY_FORM)); setNoteContent({}); setView('edit'); };
+  const handleCreate = () => { setEditingId(null); setDuplicatedFrom(null); setForm(structuredClone(EMPTY_FORM)); setNoteContent({}); setView('edit'); };
+
+  /**
+   * 주보 복제 — 예배 순서 같은 **반복되는 틀**만 가져와 다음 주 주보를 새로 연다.
+   * 아직 저장하지 않은 새 글이므로 editingId 는 null(= 저장 시 새로 생성).
+   * 상태는 draft 로 둔다 — 내용을 채우기 전에 사이트에 올라가면 안 된다.
+   */
+  const handleDuplicate = (item: OnlineBulletin) => {
+    const srcDate = item.serviceDate ? String(item.serviceDate).slice(0, 10) : '';
+    const nextDate = addOneWeek(srcDate);
+    const content = carryOverContent({ ...structuredClone(EMPTY_CONTENT), ...(item.content ?? {}) });
+    setEditingId(null);
+    setNoteContent({});
+    setForm({
+      title: retitleForDate(item.title || '', srcDate, nextDate, content.serviceTitle ?? ''),
+      serviceDate: nextDate,
+      status: 'draft',
+      content,
+    });
+    setDuplicatedFrom(srcDate ? `${srcDate} 주보` : '이전 주보');
+    setView('edit');
+    showToast('success', '예배 순서·기도 제목·교회 소식을 가져왔습니다. 설교·찬양·본문은 새로 입력해주세요.');
+  };
   const handleEdit = (item: OnlineBulletin) => {
     setEditingId(item.id);
+    setDuplicatedFrom(null);
     setForm({
       title: item.title,
       serviceDate: item.serviceDate ? String(item.serviceDate).slice(0, 10) : '',
@@ -364,6 +445,22 @@ export default function OnlineBulletinManagement() {
           <h2 className="text-2xl font-bold text-gray-900">{editingId ? '온라인 주보 수정' : '온라인 주보 작성'}</h2>
           <p className="text-sm text-gray-500 mt-1">아래 순서대로 입력하면 사이트에서 스크롤 다운으로 표시됩니다. 각 섹션의 🌐 버튼으로 한글→영어 자동번역이 가능하고, 한/영을 함께 넣으면 사이트에 한/영 전환 버튼이 나옵니다.</p>
         </div>
+
+        {duplicatedFrom && (
+          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
+            <p className="text-sm font-semibold text-amber-900">
+              {duplicatedFrom}를 복제했습니다 — 아직 저장되지 않았습니다.
+            </p>
+            <div className="mt-2 grid gap-1.5 text-xs text-amber-800 sm:grid-cols-2">
+              <p><b>가져온 항목</b> · {CARRY_OVER_LABELS.join(' · ')}</p>
+              <p><b>비운 항목</b> · {CLEARED_LABELS.join(' · ')}</p>
+            </div>
+            <p className="mt-2 text-xs text-amber-700">
+              지난주 설교·본문이 그대로 올라가는 일이 없도록 그 주에만 해당하는 내용은 비웠습니다.
+              상태는 <b>임시저장</b>이니 작성이 끝나면 <b>공개</b>로 바꿔주세요.
+            </p>
+          </div>
+        )}
 
         <div className="space-y-6">
           {/* 기본 정보 */}
@@ -580,7 +677,19 @@ export default function OnlineBulletinManagement() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold">온라인 주보 관리</h2>
-        <button onClick={handleCreate} className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium">새 온라인 주보</button>
+        <div className="flex items-center gap-2">
+          {/* 가장 최근 주보를 복제 — 매주 쓰는 길이라 목록 맨 위에 둔다. */}
+          {latestBulletin && (
+            <button
+              onClick={() => handleDuplicate(latestBulletin)}
+              title={`${String(latestBulletin.serviceDate).slice(0, 10)} 주보의 예배 순서를 가져옵니다`}
+              className="border border-blue-200 text-blue-700 hover:bg-blue-50 rounded-lg px-4 py-2 text-sm font-medium"
+            >
+              지난 주보 복제
+            </button>
+          )}
+          <button onClick={handleCreate} className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium">새 온라인 주보</button>
+        </div>
       </div>
 
       <div className="mb-4">
@@ -616,6 +725,7 @@ export default function OnlineBulletinManagement() {
                     </td>
                     <td className="px-4 py-3 text-sm space-x-2">
                       <button onClick={() => handleEdit(item)} className="text-blue-600 hover:underline">편집</button>
+                      <button onClick={() => handleDuplicate(item)} className="text-gray-600 hover:underline">복제</button>
                       <button onClick={() => setDeleteTarget({ id: item.id, name: item.title || '' })} disabled={deleteMutation.isPending} className="text-red-600 hover:underline disabled:opacity-50">삭제</button>
                     </td>
                   </tr>
