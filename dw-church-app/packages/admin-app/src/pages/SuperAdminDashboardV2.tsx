@@ -8,6 +8,7 @@ import DemoTab from '../super-admin/tabs/DemoTab';
 import SiteSettingsTab from '../super-admin/tabs/SiteSettingsTab';
 import BroadcastTab from '../super-admin/tabs/BroadcastTab';
 import EmailSettingsTab from '../super-admin/tabs/EmailSettingsTab';
+import PushSettingsTab from '../super-admin/tabs/PushSettingsTab';
 import EmailTemplatesTab from '../super-admin/tabs/EmailTemplatesTab';
 import AddressBookTab from '../super-admin/tabs/AddressBookTab';
 import PricingTab from '../super-admin/tabs/PricingTab';
@@ -38,7 +39,7 @@ import SiteDesignTab from '../super-admin/tabs/SiteDesignTab';
 // ─── Constants ───────────────────────────────────────────
 // PLAN_PRICES / PLAN_COLORS moved to ../super-admin/shared/constants.
 
-type TabId = 'monitoring' | 'security' | 'overview' | 'tenants' | 'applications' | 'demo' | 'intake' | 'reference' | 'pricing' | 'revenueModel' | 'billing' | 'email' | 'emailTemplates' | 'broadcast' | 'addressBook' | 'support' | 'domains' | 'users' | 'storage' | 'gallery' | 'siteSettings' | 'siteBanner' | 'siteDesign' | 'caseStudies' | 'frontSamples' | 'claudeDesign';
+type TabId = 'monitoring' | 'security' | 'overview' | 'tenants' | 'applications' | 'demo' | 'intake' | 'reference' | 'pricing' | 'revenueModel' | 'billing' | 'email' | 'push' | 'emailTemplates' | 'broadcast' | 'addressBook' | 'support' | 'domains' | 'users' | 'storage' | 'gallery' | 'siteSettings' | 'siteBanner' | 'siteDesign' | 'caseStudies' | 'frontSamples' | 'claudeDesign';
 
 const TABS: { id: TabId; label: string; icon: JSX.Element }[] = [
   { id: 'monitoring', label: '모니터링', icon: TabIcon('M3 3v18h18M19 9l-5 5-4-4-3 3') },
@@ -53,6 +54,7 @@ const TABS: { id: TabId; label: string; icon: JSX.Element }[] = [
   { id: 'revenueModel', label: '수익 모델', icon: TabIcon('M3 3v18h18M8 13l3-3 3 3 4-4') },
   { id: 'billing', label: '과금', icon: TabIcon('M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z') },
   { id: 'email', label: '이메일/SMTP', icon: TabIcon('M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z') },
+  { id: 'push', label: '웹 푸시(알림)', icon: TabIcon('M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9') },
   { id: 'emailTemplates', label: '이메일 템플릿', icon: TabIcon('M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2') },
   { id: 'broadcast', label: '이메일 발송', icon: TabIcon('M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4 4 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a4 4 0 01-1.564-.317z') },
   { id: 'addressBook', label: '주소록', icon: TabIcon('M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z') },
@@ -75,7 +77,7 @@ const NAV_GROUPS: { label: string; ids: TabId[] }[] = [
   { label: '대시보드', ids: ['monitoring', 'security', 'overview'] },
   { label: '운영', ids: ['tenants', 'applications', 'demo', 'intake', 'support'] },
   { label: '매출 · 상품', ids: ['pricing', 'billing'] },
-  { label: '이메일', ids: ['email', 'emailTemplates', 'broadcast', 'addressBook'] },
+  { label: '이메일·알림', ids: ['email', 'push', 'emailTemplates', 'broadcast', 'addressBook'] },
   // truelight.app 마케팅 사이트 관리 일원화 (브랜드/SEO/여백 = 사이트 설정, 배너, 포트폴리오, 디자인).
   { label: 'TrueLight 사이트', ids: ['siteSettings', 'siteBanner', 'caseStudies', 'siteDesign', 'frontSamples', 'claudeDesign'] },
   { label: '시스템', ids: ['domains', 'users', 'storage', 'gallery', 'reference'] },
@@ -405,6 +407,7 @@ export default function SuperAdminDashboardV2() {
         {activeTab === 'claudeDesign' && <ClaudeDesignTab />}
         {activeTab === 'billing' && <BillingTab />}
         {activeTab === 'email' && <EmailSettingsTab />}
+        {activeTab === 'push' && <PushSettingsTab />}
         {activeTab === 'emailTemplates' && <EmailTemplatesTab />}
         {activeTab === 'broadcast' && <BroadcastTab />}
         {activeTab === 'addressBook' && <AddressBookTab />}

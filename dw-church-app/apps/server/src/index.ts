@@ -100,6 +100,7 @@ async function main(): Promise<void> {
   const { historyRoutes } = await import('./modules/history/routes.js');
   const { categoryRoutes } = await import('./modules/categories/routes.js');
   const { settingsRoutes } = await import('./modules/settings/routes.js');
+  const { pushRoutes } = await import('./modules/push/routes.js');
   const { fileRoutes } = await import('./modules/files/routes.js');
   const { contentEntryRoutes } = await import('./modules/content-entries/routes.js');
   const { boardRoutes } = await import('./modules/boards/routes.js');
@@ -202,6 +203,7 @@ async function main(): Promise<void> {
   await app.register(historyRoutes, { prefix: '/api/v1' });
   await app.register(categoryRoutes, { prefix: '/api/v1' });
   await app.register(settingsRoutes, { prefix: '/api/v1' });
+  await app.register(pushRoutes, { prefix: '/api/v1' }); // 웹 푸시(VAPID 키 · 구독 · 테스트 발송)
   await app.register(fileRoutes, { prefix: '/api/v1' });
   await app.register(contentEntryRoutes, { prefix: '/api/v1' }); // /content-entries
   await app.register(aiRoutes, { prefix: '/api/v1' });
@@ -465,7 +467,7 @@ async function main(): Promise<void> {
     // 스키마별 버전 스탬프를 두고, 이미 현재 버전으로 반영된 스키마는 건너뛴다.
     // ⚠️ 아래 per-schema DDL 블록을 하나라도 바꾸면(테이블/컬럼 추가) SCHEMA_VERSION을
     //    올려라 → 기존 테넌트가 "다음 배포 때 한 번만" 다시 반영하고 이후 다시 건너뛴다.
-    const SCHEMA_VERSION = 13; // ↑13: sermon_notes 테이블 추가(설교노트 콘텐츠 모듈 — 주일별 회중별)
+    const SCHEMA_VERSION = 14; // ↑14: push 구독 테이블 추가 / ↑13: sermon_notes 테이블 추가(설교노트 콘텐츠 모듈 — 주일별 회중별)
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS public.tenant_schema_versions (
         "schema_name" TEXT PRIMARY KEY,
@@ -558,6 +560,36 @@ async function main(): Promise<void> {
         `);
         await prisma.$executeRawUnsafe(
           `CREATE INDEX IF NOT EXISTS "sermon_notes_date_idx" ON "${schema}".sermon_notes ("note_date" DESC)`,
+        );
+        createHits++;
+      } catch { /* skip on error */ }
+
+      // 0b-3. push_subscriptions — 성도 기기별 웹 푸시 구독.
+      //       endpoint 는 capability URL(그것만 알면 그 기기로 발송 가능)이라
+      //       테넌트 스키마 안에 두어 교회 간 노출을 원천 차단한다.
+      //       같은 기기가 재구독하면 endpoint 가 같으므로 UNIQUE 로 중복을 막는다.
+      try {
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".push_subscriptions (
+            "id"              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "member_id"       UUID,
+            "endpoint"        TEXT NOT NULL,
+            "p256dh"          TEXT NOT NULL,
+            "auth"            TEXT NOT NULL,
+            "user_agent"      VARCHAR(500) DEFAULT '',
+            "platform"        VARCHAR(40) DEFAULT '',
+            "is_active"       BOOLEAN DEFAULT true,
+            "last_success_at" TIMESTAMPTZ,
+            "last_error"      VARCHAR(200) DEFAULT '',
+            "created_at"      TIMESTAMPTZ DEFAULT NOW(),
+            "updated_at"      TIMESTAMPTZ DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(
+          `CREATE UNIQUE INDEX IF NOT EXISTS "push_subscriptions_endpoint_key" ON "${schema}".push_subscriptions ("endpoint")`,
+        );
+        await prisma.$executeRawUnsafe(
+          `CREATE INDEX IF NOT EXISTS "push_subscriptions_active_idx" ON "${schema}".push_subscriptions ("is_active")`,
         );
         createHits++;
       } catch { /* skip on error */ }
@@ -2072,6 +2104,29 @@ async function main(): Promise<void> {
     await prisma.$executeRawUnsafe(`ALTER TABLE "email_settings" ADD COLUMN IF NOT EXISTS "resend_from" VARCHAR(255) NOT NULL DEFAULT ''`);
   } catch (err) {
     app.log.warn(`email_settings table migration skipped: ${err}`);
+  }
+
+  // --- push_settings (웹 푸시 VAPID 키, 슈퍼어드민 관리, single row) ---
+  // VAPID 는 **보내는 서버(= 플랫폼)의 신원**이지 교회별 계정이 아니다(RFC 8292 §4).
+  // 그래서 테넌트 스키마가 아니라 public 에 한 벌만 둔다. 공개키는 브라우저가
+  // 구독할 때 그대로 받아가므로 숨길 필요가 없고, 개인키만 GET 에서 가린다.
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "push_settings" (
+        "id"           INT          PRIMARY KEY DEFAULT 1,
+        "public_key"   VARCHAR(255) NOT NULL DEFAULT '',
+        "private_key"  VARCHAR(255) NOT NULL DEFAULT '',
+        "subject"      VARCHAR(255) NOT NULL DEFAULT '',
+        "created_at"   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+        "updated_at"   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+        CONSTRAINT "push_settings_single_row" CHECK (id = 1)
+      )
+    `);
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO "push_settings" (id) VALUES (1) ON CONFLICT (id) DO NOTHING`,
+    );
+  } catch (err) {
+    app.log.warn(`push_settings table migration skipped: ${err}`);
   }
 
   // --- marketing_contacts (주소록 — 슈퍼어드민 이메일 마케팅 연락처, CSV import) ---

@@ -35,6 +35,12 @@ const envSchema = z.object({
   // = 'resend' the DB-stored key wins; this env is the fallback.
   RESEND_API_KEY: z.string().default(''),
 
+  // Web Push (VAPID) — 평상시엔 슈퍼어드민이 저장한 public.push_settings 를 쓴다.
+  // 여기는 DB 가 비었을 때의 **폴백**(복구 경로). config/web-push.ts 참고.
+  VAPID_PUBLIC_KEY: z.string().default(''),
+  VAPID_PRIVATE_KEY: z.string().default(''),
+  VAPID_SUBJECT: z.string().default(''),
+
   // Stripe billing (optional — only required if billing is enabled)
   STRIPE_SECRET_KEY: z.string().default(''),
   STRIPE_WEBHOOK_SECRET: z.string().default(''),
