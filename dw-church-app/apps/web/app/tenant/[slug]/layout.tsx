@@ -131,7 +131,11 @@ export async function generateMetadata({ params }: TenantLayoutProps): Promise<M
       description: seoDescription,
       ...(ogImageUrl ? { images: [ogImageUrl] } : {}),
     },
-    icons: faviconUrl ? { icon: faviconUrl, apple: faviconUrl } : undefined,
+    // apple-touch-icon 은 아이폰 홈 화면 아이콘이다(요청서 §5-1). 교회 파비콘이
+    // 없으면 기본 앱 아이콘으로라도 채운다 — 없으면 iOS 가 화면을 캡처해 쓴다.
+    icons: faviconUrl
+      ? { icon: faviconUrl, apple: faviconUrl }
+      : { apple: '/icon-192.png' },
     ...(siteMeta.features.pwa
       ? {
           // Root-relative so it resolves on the tenant's canonical host
