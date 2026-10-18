@@ -42,3 +42,22 @@ export const testPushSchema = z.object({
 export type RegenerateKeysInput = z.infer<typeof regenerateKeysSchema>;
 export type SaveSubscriptionInput = z.infer<typeof saveSubscriptionSchema>;
 export type TestPushInput = z.infer<typeof testPushSchema>;
+
+/** HH:MM 24시간. 빈 문자열이면 "설정 안 함". */
+const timeString = z.string().regex(/^$|^([01]\d|2[0-3]):[0-5]\d$/, 'HH:MM 형식이어야 합니다');
+
+export const prefItemSchema = z.object({
+  category: z.string().min(1).max(40),
+  enabled: z.boolean(),
+  sendTime: timeString.optional(),
+  timezone: z.string().max(60).optional(),
+  quietStart: timeString.optional(),
+  quietEnd: timeString.optional(),
+});
+
+export const savePrefsSchema = z.object({
+  endpoint: z.string().url().max(2000),
+  prefs: z.array(prefItemSchema).max(20),
+});
+
+export type SavePrefsInput = z.infer<typeof savePrefsSchema>;

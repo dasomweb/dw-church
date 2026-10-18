@@ -4,9 +4,10 @@ import { getSchema } from '../../utils/get-schema.js';
 import { getPublicKey } from '../../config/web-push.js';
 import {
   regenerateKeysSchema, updatePushSettingsSchema,
-  saveSubscriptionSchema, unsubscribeSchema, testPushSchema,
+  saveSubscriptionSchema, unsubscribeSchema, testPushSchema, savePrefsSchema,
 } from './schema.js';
 import * as svc from './service.js';
+import { PUSH_CATEGORIES, groupedCategories, isPushCategory } from './categories.js';
 
 /**
  * 웹 푸시 라우트.
@@ -50,6 +51,31 @@ export async function pushRoutes(app: FastifyInstance) {
     const { endpoint } = unsubscribeSchema.parse(request.body);
     await svc.deactivateSubscription(getSchema(request), endpoint);
     return reply.send({ data: { ok: true } });
+  });
+
+  // ── 공개: 알림 항목 목록(수신 설정 화면이 그릴 기준) ────────
+  app.get('/push/categories', async (_request, reply) => {
+    return reply.send({ data: { categories: PUSH_CATEGORIES, grouped: groupedCategories() } });
+  });
+
+  // ── 공개: 수신 설정 읽기/저장(구독=기기 기준) ────────
+  // 로그인 전에도 알림을 켜고 항목을 고를 수 있어야 해서(요청서 §3-1)
+  // member_id 가 아니라 endpoint 로 잡는다. endpoint 를 아는 건 그 기기뿐이다.
+  app.get('/push/prefs', async (request, reply) => {
+    const { endpoint } = request.query as { endpoint?: string };
+    if (!endpoint) {
+      return reply.status(400).send({ error: { code: 'ENDPOINT_REQUIRED', message: 'endpoint 가 필요합니다' } });
+    }
+    const data = await svc.getPrefs(getSchema(request), endpoint);
+    return reply.send({ data });
+  });
+
+  app.put('/push/prefs', async (request, reply) => {
+    const input = savePrefsSchema.parse(request.body);
+    // 모르는 카테고리는 버린다 — 항목이 바뀔도 오래된 클라이언트가 400 을 맞지 않게.
+    const prefs = input.prefs.filter((p) => isPushCategory(p.category));
+    const data = await svc.savePrefs(getSchema(request), input.endpoint, prefs);
+    return reply.send({ data });
   });
 
   // ── 교회 관리자: 구독 현황 + 테스트 발송 ─────────────────────

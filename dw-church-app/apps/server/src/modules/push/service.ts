@@ -172,3 +172,63 @@ export async function countTenantSubscriptions(schema: string): Promise<{ active
   );
   return rows[0] ?? { active: 0, total: 0 };
 }
+
+/* ── 수신 설정 ─────────────────────────────────────────────── */
+
+export interface PrefRow {
+  category: string;
+  enabled: boolean;
+  send_time: string;
+  timezone: string;
+  quiet_start: string;
+  quiet_end: string;
+}
+
+/** 구독(기기) 하나의 항목별 수신 설정. 저장된 게 없으면 빈 배열. */
+export async function getPrefs(schema: string, endpoint: string): Promise<PrefRow[]> {
+  return prisma.$queryRawUnsafe<PrefRow[]>(
+    `SELECT p.category, p.enabled, p.send_time, p.timezone, p.quiet_start, p.quiet_end
+     FROM "${schema}".notification_prefs p
+     JOIN "${schema}".push_subscriptions s ON s.id = p.subscription_id
+     WHERE s.endpoint = $1`,
+    endpoint,
+  );
+}
+
+export interface PrefInput {
+  category: string;
+  enabled: boolean;
+  sendTime?: string;
+  timezone?: string;
+  quietStart?: string;
+  quietEnd?: string;
+}
+
+/**
+ * 항목별 설정 저장(업서트). 구독이 없으면 저장하지 않는다 —
+ * 알림을 켜지 않은 기기의 설정은 보관할 의미가 없다.
+ */
+export async function savePrefs(
+  schema: string, endpoint: string, prefs: PrefInput[],
+): Promise<{ saved: number }> {
+  const sub = await prisma.$queryRawUnsafe<{ id: string }[]>(
+    `SELECT id FROM "${schema}".push_subscriptions WHERE endpoint = $1`,
+    endpoint,
+  );
+  const subId = sub[0]?.id;
+  if (!subId) return { saved: 0 };
+
+  for (const p of prefs) {
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO "${schema}".notification_prefs
+         (subscription_id, category, enabled, send_time, timezone, quiet_start, quiet_end)
+       VALUES ($1::uuid, $2, $3, $4, $5, $6, $7)
+       ON CONFLICT (subscription_id, category) DO UPDATE
+         SET enabled = $3, send_time = $4, timezone = $5,
+             quiet_start = $6, quiet_end = $7, updated_at = NOW()`,
+      subId, p.category, p.enabled,
+      p.sendTime ?? '', p.timezone ?? '', p.quietStart ?? '', p.quietEnd ?? '',
+    );
+  }
+  return { saved: prefs.length };
+}

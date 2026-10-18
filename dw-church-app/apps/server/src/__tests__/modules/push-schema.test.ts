@@ -1,7 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import {
   saveSubscriptionSchema, unsubscribeSchema, testPushSchema, regenerateKeysSchema,
+  savePrefsSchema,
 } from '../../modules/push/schema.js';
+import {
+  PUSH_CATEGORIES, PUSH_CATEGORY_KEYS, SMALL_GROUP_CATEGORY_KEYS,
+  groupedCategories, isPushCategory,
+} from '../../modules/push/categories.js';
 import { normalizeSubject } from '../../config/web-push.js';
 
 /**
@@ -81,5 +86,53 @@ describe('normalizeSubject (RFC 8292 sub 클레임)', () => {
     expect(normalizeSubject('')).toBe('mailto:support@truelight.app');
     expect(normalizeSubject('   ')).toBe('mailto:support@truelight.app');
     expect(normalizeSubject('그냥 글자')).toBe('mailto:support@truelight.app');
+  });
+});
+
+describe('PUSH_CATEGORIES (알림 항목)', () => {
+  it('소그룹예배는 가정·직장·목장 세 갈래로 각각 켜고 끈다', () => {
+    const sg = PUSH_CATEGORIES.filter((c) => c.group === '소그룹예배');
+    expect(sg.map((c) => c.label)).toEqual(['가정', '직장', '목장']);
+    expect(SMALL_GROUP_CATEGORY_KEYS).toHaveLength(3);
+  });
+
+  it('키가 중복되지 않는다', () => {
+    expect(new Set(PUSH_CATEGORY_KEYS).size).toBe(PUSH_CATEGORY_KEYS.length);
+  });
+
+  it('모든 항목이 발송 소스를 가진다 (스케줄러가 어디서 읽을지 알아야 함)', () => {
+    for (const c of PUSH_CATEGORIES) expect(c.source.length).toBeGreaterThan(0);
+  });
+
+  it('기본 발송 시각은 비었거나 HH:MM', () => {
+    for (const c of PUSH_CATEGORIES) {
+      expect(c.defaultTime).toMatch(/^$|^([01]\d|2[0-3]):[0-5]\d$/);
+    }
+  });
+
+  it('groupedCategories 는 순서를 지키며 묶는다', () => {
+    const g = groupedCategories();
+    const sg = g.find((x) => x.group === '소그룹예배');
+    expect(sg?.items).toHaveLength(3);
+    // 소그룹 묶음은 한 덩어리로만 나와야 한다(쪼개지면 화면이 두 번 그려짐).
+    expect(g.filter((x) => x.group === '소그룹예배')).toHaveLength(1);
+  });
+
+  it('isPushCategory 는 모르는 키를 거부한다', () => {
+    expect(isPushCategory('small_group_home')).toBe(true);
+    expect(isPushCategory('group_worship')).toBe(false); // 이전 이름 — 더는 없음
+  });
+});
+
+describe('savePrefsSchema', () => {
+  it('HH:MM 이 아니면 거부한다', () => {
+    const base = { endpoint: 'https://a.example/b', prefs: [{ category: 'daily_verse', enabled: true }] };
+    expect(() => savePrefsSchema.parse({ ...base, prefs: [{ ...base.prefs[0], sendTime: '25:00' }] })).toThrow();
+    expect(() => savePrefsSchema.parse({ ...base, prefs: [{ ...base.prefs[0], sendTime: '6:30' }] })).toThrow();
+    expect(savePrefsSchema.parse({ ...base, prefs: [{ ...base.prefs[0], sendTime: '06:30' }] }).prefs[0]!.sendTime).toBe('06:30');
+  });
+  it('빈 시각은 "설정 안 함"으로 허용', () => {
+    const r = savePrefsSchema.parse({ endpoint: 'https://a.example/b', prefs: [{ category: 'notice', enabled: false, sendTime: '' }] });
+    expect(r.prefs[0]!.sendTime).toBe('');
   });
 });
