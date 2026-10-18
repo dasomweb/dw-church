@@ -336,6 +336,28 @@ const TIMELINE: BlockElementRegistry = {
   ],
 };
 
+const PUSH_SUBSCRIBE: BlockElementRegistry = {
+  sections: [
+    { title: 'Content', elements: [
+      { label: 'Headline', path: 'title', kind: 'text' },
+      { label: 'Description', path: 'description', kind: 'text' },
+      { label: 'Button Label', path: 'buttonLabel', kind: 'text' },
+      { label: 'Subscribed Label', path: 'subscribedLabel', kind: 'text' },
+      { label: 'iOS Install Guide', path: 'iosGuide', kind: 'text' },
+    ]},
+  ],
+};
+
+const NOTIFICATION_PREFS: BlockElementRegistry = {
+  sections: [
+    { title: 'Content', elements: [
+      { label: 'Headline', path: 'title', kind: 'text' },
+      { label: 'Description', path: 'description', kind: 'text' },
+      { label: 'Not Subscribed Notice', path: 'notSubscribedText', kind: 'text' },
+    ]},
+  ],
+};
+
 const CONTACT_FORM: BlockElementRegistry = {
   sections: [
     { title: 'Content', elements: [
@@ -2093,6 +2115,8 @@ export const ELEMENT_REGISTRY: Record<string, BlockElementRegistry> = {
   spacer:            SPACER,
   timeline:          TIMELINE,
   contact_form:      CONTACT_FORM,
+  push_subscribe:    PUSH_SUBSCRIBE,
+  notification_prefs: NOTIFICATION_PREFS,
   cell_report:       CELL_REPORT,
   products_showcase: PRODUCTS_SHOWCASE,
   recent_products:   PRODUCTS_SHOWCASE,

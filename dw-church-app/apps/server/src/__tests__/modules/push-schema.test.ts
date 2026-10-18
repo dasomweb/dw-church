@@ -8,6 +8,7 @@ import {
   groupedCategories, isPushCategory,
 } from '../../modules/push/categories.js';
 import { normalizeSubject } from '../../config/web-push.js';
+import { blockTypes } from '../../modules/pages/schema.js';
 
 /**
  * 웹 푸시 입력 검증.
@@ -134,5 +135,16 @@ describe('savePrefsSchema', () => {
   it('빈 시각은 "설정 안 함"으로 허용', () => {
     const r = savePrefsSchema.parse({ endpoint: 'https://a.example/b', prefs: [{ category: 'notice', enabled: false, sendTime: '' }] });
     expect(r.prefs[0]!.sendTime).toBe('');
+  });
+});
+
+describe('푸시 블록이 페이지 저장 스키마에 등록됐는가', () => {
+  // 서버 zod enum 에 없으면 운영자가 블록을 올려도 **저장이 400** 난다.
+  // 에디터에는 보이는데 저장만 안 되는 형태라 원인을 찾기 어렵다.
+  it.each(['push_subscribe', 'notification_prefs'])('%s 가 저장 가능한 block_type 목록에 있다', (t) => {
+    expect(blockTypes).toContain(t);
+  });
+  it('목록에 중복이 없다', () => {
+    expect(new Set(blockTypes).size).toBe(blockTypes.length);
   });
 });

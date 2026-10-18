@@ -69,6 +69,9 @@ export const blockTypes = [
   'board',
   // Contact form (새가족 등록 등)
   'contact_form',
+  // 웹 푸시 — 알림 받기 버튼 / 수신 설정(항목별 on·off · 시간 · 방해금지)
+  'push_subscribe',
+  'notification_prefs',
   // 목장(셀) Data Block + 새가족 등록 폼 Static Block
   'cell_grid',
   'newcomer_form',

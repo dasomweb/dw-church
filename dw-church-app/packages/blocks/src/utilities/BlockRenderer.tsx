@@ -24,6 +24,8 @@ import { ProseImageBlock } from '../static/ProseImageBlock';
 import { PageSubnavBlock } from '../static/PageSubnavBlock';
 import { SubscribeFormBlock } from '../static/SubscribeFormBlock';
 import { ContactFormBlock } from '../static/ContactFormBlock';
+import { PushSubscribeBlock } from '../static/PushSubscribeBlock';
+import { NotificationPrefsBlock } from '../static/NotificationPrefsBlock';
 import { SpacerBlock } from '../static/SpacerBlock';
 import { BeforeAfterBlock } from '../static/BeforeAfterBlock';
 import { HotspotImageBlock } from '../static/HotspotImageBlock';
@@ -200,6 +202,8 @@ export const BLOCK_MAP: Record<string, SyncBlockComponent> = {
   spacer:            SpacerBlock,
   timeline:          TimelineBlock,
   contact_form:      ContactFormBlock,
+  push_subscribe:    PushSubscribeBlock,
+  notification_prefs: NotificationPrefsBlock,
   comparison_table:  ComparisonTableBlock,
   before_after:      BeforeAfterBlock,
   hotspot_image:     HotspotImageBlock,
