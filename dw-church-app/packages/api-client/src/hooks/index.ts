@@ -38,6 +38,7 @@ import type {
   CreateFormFieldInput,
   UpdateFormFieldInput,
   ChurchSettings,
+  Book,
   ListParams,
   LoginInput,
   MenuItem,
@@ -128,6 +129,11 @@ export const queryKeys = {
     all: ['verses'] as const,
     list: (params?: ListParams) => ['verses', 'list', params] as const,
     current: ['verses', 'current'] as const,
+  },
+  books: {
+    all: ['books'] as const,
+    list: (params?: ListParams) => ['books', 'list', params] as const,
+    categories: ['books', 'categories'] as const,
   },
   staff: {
     all: ['staff'] as const,
@@ -830,6 +836,57 @@ export function useDeleteEvent() {
 
 // ─── Verse Hooks (오늘의 말씀) ──────────────────────────────
 // Returns the array (like useHistory) so management pages can .map / bulk-select.
+/* ── Books (책 추천) ────────────────────── */
+export function useBooks(params?: ListParams & { category?: string }) {
+  const client = useDWChurchClient();
+  return useQuery<Book[]>({
+    queryKey: queryKeys.books.list(params),
+    queryFn: async () => {
+      const res = await client!.getBooks(params);
+      return ((res as unknown as { data?: Book[] })?.data ?? (res as unknown as Book[])) ?? [];
+    },
+    enabled: !!client,
+    staleTime: STALE_TIME,
+  });
+}
+
+export function useBookCategories() {
+  const client = useDWChurchClient();
+  return useQuery<string[]>({
+    queryKey: queryKeys.books.categories,
+    queryFn: () => client!.getBookCategories(),
+    enabled: !!client,
+    staleTime: STALE_TIME,
+  });
+}
+
+export function useCreateBook() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Partial<Book>) => client!.createBook(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.books.all }),
+  });
+}
+
+export function useUpdateBook() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Book> }) => client!.updateBook(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.books.all }),
+  });
+}
+
+export function useDeleteBook() {
+  const client = useDWChurchClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => client!.deleteBook(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.books.all }),
+  });
+}
+
 export function useVerses(params?: ListParams) {
   const client = useDWChurchClient();
   return useQuery<Verse[]>({

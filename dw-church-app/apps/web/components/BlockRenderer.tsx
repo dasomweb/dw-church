@@ -20,6 +20,7 @@ import { OnlineBulletinListBlock } from './blocks/OnlineBulletinListBlock';
 import { DevotionBlock } from './blocks/DevotionBlock';
 import { RecentBulletinsBlock } from './blocks/RecentBulletinsBlock';
 import { RecentColumnsBlock } from './blocks/RecentColumnsBlock';
+import { RecentBooksBlock } from './blocks/RecentBooksBlock';
 import { AlbumGalleryBlock } from './blocks/AlbumGalleryBlock';
 import { VideoBoardBlock } from './blocks/VideoBoardBlock';
 import { ScheduleBoardBlock } from './blocks/ScheduleBoardBlock';
@@ -64,6 +65,7 @@ const CHURCH_BLOCKS: Record<string, AnyBlock> = {
   recent_bulletins: RecentBulletinsBlock as AnyBlock,
   online_bulletin: OnlineBulletinBlock as AnyBlock, // 온라인 주보 — 최신 발행분 스크롤 렌더
   recent_columns: RecentColumnsBlock as AnyBlock,
+  recent_books: RecentBooksBlock as AnyBlock,
   album_gallery: AlbumGalleryBlock as AnyBlock,
   video_board: VideoBoardBlock as AnyBlock,
   schedule_board: ScheduleBoardBlock as AnyBlock,

@@ -848,6 +848,28 @@ export interface UploadedFile {
   url: string;
 }
 
+// ─── Book (책 추천) ───────────────────────────
+/** 교회가 성도에게 권하는 책. 서지 정보보다 **추천사**가 핵심. */
+export interface Book {
+  id: string;
+  title: string;
+  author: string;
+  publisher: string;
+  coverImageUrl: string;
+  /** 분야 — 자유 입력(교회마다 분류가 다르다). */
+  category: string;
+  recommender: string;
+  recommendation: string;
+  link: string;
+  recommendedAt: string;
+  sortOrder: number;
+  /** 대표 추천 — 블록에서 크게 띄우는 한 권. */
+  isFeatured: boolean;
+  status: PostStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ─── Auth / Client Config ───────────────────────────────────
 export interface ClientConfig {
   baseUrl: string;

@@ -55,6 +55,7 @@ const EventManagement = lazyWithReload(() => import('./pages/EventManagement'));
 const StaffManagement = lazyWithReload(() => import('./pages/StaffManagement'));
 const HistoryManagement = lazyWithReload(() => import('./pages/HistoryManagement'));
 const VerseManagement = lazyWithReload(() => import('./pages/VerseManagement'));
+const BookManagement = lazyWithReload(() => import('./pages/BookManagement'));
 const TranslationManagement = lazyWithReload(() => import('./pages/TranslationManagement'));
 const CellManagement = lazyWithReload(() => import('./pages/CellManagement'));
 const NewcomerManagement = lazyWithReload(() => import('./pages/NewcomerManagement'));
@@ -302,6 +303,7 @@ const tenantChildRoutes = (
     <Route path="staff" element={<StaffManagement />} />
     <Route path="history" element={<HistoryManagement />} />
     <Route path="verses" element={<VerseManagement />} />
+    <Route path="books" element={<BookManagement />} />
     <Route path="devotions" element={<DevotionManagement />} />
     <Route path="cardnews" element={<CardnewsManagement />} />
     <Route path="translations" element={<TranslationManagement />} />

@@ -28,6 +28,7 @@ export type {
   LinkTarget,
   Event,
   Verse,
+  Book,
   TranslationRow,
   Staff,
   StaffSnsLinks,
@@ -172,6 +173,12 @@ export {
   useUpdateEvent,
   useDeleteEvent,
   useRelatedEvents,
+  // Books (책 추천)
+  useBooks,
+  useBookCategories,
+  useCreateBook,
+  useUpdateBook,
+  useDeleteBook,
   // Verses (오늘의 말씀)
   useVerses,
   useCreateVerse,

@@ -13,6 +13,7 @@ import type {
   Category,
   Cell,
   ChurchSettings,
+  Book,
   ClientConfig,
   Column,
   Event,
@@ -707,6 +708,34 @@ export class DWChurchClient {
 
   async deleteVerse(id: string): Promise<void> {
     return this.api.delete(`${this.namespace}/verses/${id}`);
+  }
+
+  // ─── Books (책 추천) ───────────────────────
+  async getBooks(params?: ListParams & { category?: string }): Promise<PaginatedResponse<Book>> {
+    return this.api.get(`${this.namespace}/books`, toQueryParams(params));
+  }
+
+  /** 등록된 분야 목록(공개된 책 기준). 블록 필터에 쓴다. */
+  async getBookCategories(): Promise<string[]> {
+    const res = await this.api.get<{ data: string[] } | string[]>(`${this.namespace}/books/categories`);
+    return ((res as { data?: string[] })?.data ?? res ?? []) as string[];
+  }
+
+  async getBook(id: string): Promise<Book> {
+    const res = await this.api.get<{ data: Book } | Book>(`${this.namespace}/books/${id}`);
+    return ((res as { data?: Book })?.data ?? res) as Book;
+  }
+
+  async createBook(data: Partial<Book>): Promise<Book> {
+    return this.api.post(`${this.namespace}/books`, data);
+  }
+
+  async updateBook(id: string, data: Partial<Book>): Promise<Book> {
+    return this.api.put(`${this.namespace}/books/${id}`, data);
+  }
+
+  async deleteBook(id: string): Promise<void> {
+    return this.api.delete(`${this.namespace}/books/${id}`);
   }
 
   // ─── i18n (영어 번역 보정) ───────────────────────────────

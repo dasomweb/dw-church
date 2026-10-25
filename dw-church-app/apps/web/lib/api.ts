@@ -570,6 +570,23 @@ export async function getEvent(slug: string, id: string): Promise<any> {
 
 // ─── Verses (오늘의 말씀) ──────────────────────────────────────
 
+/** 책 추천 목록 — recent_books 블록용. 공개 엔드포인트라 published 만 내려온다. */
+export async function getBooks(
+  slug: string,
+  params?: { page?: number; perPage?: number; category?: string },
+): Promise<any> {
+  const p = new URLSearchParams();
+  if (params?.page) p.set('page', String(params.page));
+  if (params?.perPage) p.set('perPage', String(params.perPage));
+  if (params?.category) p.set('category', params.category);
+  const qs = p.toString();
+  try {
+    return await apiFetch<any>(slug, `/api/v1/books${qs ? '?' + qs : ''}`, { revalidate: CACHE_CONTENT });
+  } catch {
+    return { data: [] };
+  }
+}
+
 export async function getCurrentVerse(slug: string): Promise<any> {
   const res = await apiFetch(slug, `/api/v1/verses/current`, { revalidate: CACHE_CONTENT });
   return unwrap(res);

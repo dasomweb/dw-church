@@ -101,6 +101,7 @@ async function main(): Promise<void> {
   const { categoryRoutes } = await import('./modules/categories/routes.js');
   const { settingsRoutes } = await import('./modules/settings/routes.js');
   const { pushRoutes } = await import('./modules/push/routes.js');
+  const { bookRoutes } = await import('./modules/books/routes.js');
   const { fileRoutes } = await import('./modules/files/routes.js');
   const { contentEntryRoutes } = await import('./modules/content-entries/routes.js');
   const { boardRoutes } = await import('./modules/boards/routes.js');
@@ -203,7 +204,8 @@ async function main(): Promise<void> {
   await app.register(historyRoutes, { prefix: '/api/v1' });
   await app.register(categoryRoutes, { prefix: '/api/v1' });
   await app.register(settingsRoutes, { prefix: '/api/v1' });
-  await app.register(pushRoutes, { prefix: '/api/v1' }); // 웹 푸시(VAPID 키 · 구독 · 테스트 발송)
+  await app.register(pushRoutes, { prefix: '/api/v1' });
+  await app.register(bookRoutes, { prefix: '/api/v1' }); // 책 추천 콘텐츠 모듈 // 웹 푸시(VAPID 키 · 구독 · 테스트 발송)
   await app.register(fileRoutes, { prefix: '/api/v1' });
   await app.register(contentEntryRoutes, { prefix: '/api/v1' }); // /content-entries
   await app.register(aiRoutes, { prefix: '/api/v1' });
@@ -467,7 +469,7 @@ async function main(): Promise<void> {
     // 스키마별 버전 스탬프를 두고, 이미 현재 버전으로 반영된 스키마는 건너뛴다.
     // ⚠️ 아래 per-schema DDL 블록을 하나라도 바꾸면(테이블/컬럼 추가) SCHEMA_VERSION을
     //    올려라 → 기존 테넌트가 "다음 배포 때 한 번만" 다시 반영하고 이후 다시 건너뛴다.
-    const SCHEMA_VERSION = 15; // ↑15: notification_prefs 추가(푸시 수신 설정) / ↑14: push 구독 테이블 추가 / ↑13: sermon_notes 테이블 추가(설교노트 콘텐츠 모듈 — 주일별 회중별)
+    const SCHEMA_VERSION = 16; // ↑16: books 테이블 추가(책 추천) / ↑15: notification_prefs 추가(푸시 수신 설정) / ↑14: push 구독 테이블 추가 / ↑13: sermon_notes 테이블 추가(설교노트 콘텐츠 모듈 — 주일별 회중별)
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS public.tenant_schema_versions (
         "schema_name" TEXT PRIMARY KEY,
@@ -616,6 +618,35 @@ async function main(): Promise<void> {
         `);
         await prisma.$executeRawUnsafe(
           `CREATE UNIQUE INDEX IF NOT EXISTS "notification_prefs_sub_cat_key" ON "${schema}".notification_prefs ("subscription_id", "category")`,
+        );
+        createHits++;
+      } catch { /* skip on error */ }
+
+      // 0b-5. books — 책 추천 콘텐츠 모듈.
+      //       서지 정보보다 **추천사**(누가 왜 권하는가)가 핵심이라
+      //       recommender / recommendation 을 따로 둔다.
+      try {
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "${schema}".books (
+            "id"              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "title"           VARCHAR(300) NOT NULL,
+            "author"          VARCHAR(200) DEFAULT '',
+            "publisher"       VARCHAR(200) DEFAULT '',
+            "cover_image_url" TEXT DEFAULT '',
+            "category"        VARCHAR(80) DEFAULT '',
+            "recommender"     VARCHAR(100) DEFAULT '',
+            "recommendation"  TEXT DEFAULT '',
+            "link"            TEXT DEFAULT '',
+            "recommended_at"  DATE,
+            "sort_order"      INT DEFAULT 0,
+            "is_featured"     BOOLEAN DEFAULT false,
+            "status"          VARCHAR(20) DEFAULT 'published' CHECK (status IN ('draft','published','archived')),
+            "created_at"      TIMESTAMPTZ DEFAULT NOW(),
+            "updated_at"      TIMESTAMPTZ DEFAULT NOW()
+          )
+        `);
+        await prisma.$executeRawUnsafe(
+          `CREATE INDEX IF NOT EXISTS "books_order_idx" ON "${schema}".books ("is_featured" DESC, "sort_order" ASC, "recommended_at" DESC)`,
         );
         createHits++;
       } catch { /* skip on error */ }

@@ -17,6 +17,8 @@ export const blockTypes = [
   'recent_bulletins',
   'online_bulletin',
   'recent_columns',
+  // 책 추천 모듈의 데이터 블록
+  'recent_books',
   'album_gallery',
   'video_board',
   'staff_grid',

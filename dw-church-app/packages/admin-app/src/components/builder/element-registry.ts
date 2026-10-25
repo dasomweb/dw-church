@@ -358,6 +358,24 @@ const NOTIFICATION_PREFS: BlockElementRegistry = {
   ],
 };
 
+const RECENT_BOOKS: BlockElementRegistry = {
+  sections: [
+    { title: 'Content', elements: [
+      { label: 'Headline', path: 'title', kind: 'text' },
+      { label: 'Description', path: 'description', kind: 'text' },
+      { label: 'Link Label', path: 'linkLabel', kind: 'text' },
+    ]},
+    { title: 'Design', elements: [
+      { label: 'Layout', path: 'variant', kind: 'select', choices: [
+        { value: 'grid-3', label: '3 columns (default)' },
+        { value: 'grid-2', label: '2 columns' },
+        { value: 'grid-4', label: '4 columns' },
+        { value: 'list', label: 'List' },
+      ]},
+    ]},
+  ],
+};
+
 const CONTACT_FORM: BlockElementRegistry = {
   sections: [
     { title: 'Content', elements: [
@@ -2114,6 +2132,7 @@ export const ELEMENT_REGISTRY: Record<string, BlockElementRegistry> = {
 
   spacer:            SPACER,
   timeline:          TIMELINE,
+  recent_books:      RECENT_BOOKS,
   contact_form:      CONTACT_FORM,
   push_subscribe:    PUSH_SUBSCRIBE,
   notification_prefs: NOTIFICATION_PREFS,

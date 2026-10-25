@@ -450,6 +450,31 @@
       ],
       "aiHint": "Pastoral columns grid — pulls from /api/v1/columns (title + author + date + excerpt). Use on the 목회칼럼/columns page. variant: grid-2/grid-3/list."
     },
+    "recent_books": {
+      "label": "책 추천",
+      "group": "data",
+      "flags": {
+        "isDataBlock": true
+      },
+      "defaultProps": {
+        "title": "책 추천",
+        "limit": 6
+      },
+      "description": "책 추천 모듈에 등록한 도서를 표지·추천사와 함께 표시. 대표 추천 1권은 크게, 나머지는 그리드. 등록된 책이 없으면 섹션 자동 숨김.",
+      "tags": [
+        "book",
+        "recommendation",
+        "library",
+        "reading",
+        "data"
+      ],
+      "useCases": [
+        "추천 도서 페이지",
+        "홈 하단 이달의 책",
+        "교육·양육 페이지"
+      ],
+      "aiHint": "Church book recommendations with cover, recommender and recommendation text. Featured book shown large."
+    },
     "video_board": {
       "label": "영상 (YouTube)",
       "group": "data",

@@ -37,3 +37,17 @@ describe('푸시 블록 등록', () => {
     }
   });
 });
+
+describe('recent_books 블록 등록', () => {
+  it('레지스트리에 있고 데이터 블록으로 표시된다', () => {
+    const def = BLOCK_REGISTRY['recent_books'];
+    expect(def).toBeDefined();
+    // 콘텐츠 모듈에서 fetch 하는 블록이라 isDataBlock 이어야 팔레트 분류가 맞다.
+    expect(def!.flags?.isDataBlock).toBe(true);
+    expect(def!.label.trim().length).toBeGreaterThan(0);
+    expect(def!.aiHint?.trim().length ?? 0).toBeGreaterThan(0);
+  });
+  it('알려진 블록 타입으로 판정된다', () => {
+    expect(isKnownBlockType('recent_books')).toBe(true);
+  });
+});
