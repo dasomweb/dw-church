@@ -234,7 +234,23 @@ interface NoteSection {
   heading: string;
   bodyMd?: string;
   images?: string[];
+  files?: { url: string; name?: string }[];
   study?: SermonNoteStudy;
+}
+
+/** Kids 설교노트 기본 부모 안내 — 교회가 따로 적지 않으면 이 문구가 나간다.
+ *  (관리자 SermonNoteEditor 의 KIDS_PARENT_GUIDE 와 같은 문장) */
+const KIDS_PARENT_GUIDE = '부모가 아이에게 성경을 가르쳐 주세요.';
+const KIDS_PARENT_GUIDE_EN = 'Parents, please teach the Bible to your child.';
+
+/** URL 에서 파일명 — 서버가 비이미지 파일의 원본 이름을 R2 키에 보존한다. */
+function docName(f: { url: string; name?: string }): string {
+  if (f.name && f.name.trim()) return f.name.trim();
+  try {
+    return decodeURIComponent(new URL(f.url).pathname.split('/').pop() || f.url);
+  } catch {
+    return f.url.split('/').pop() || f.url;
+  }
 }
 
 // 회중 마크다운을 ## 기준으로 섹션 분해 + 카툰/나눔질문 섹션 추가.
@@ -313,6 +329,19 @@ function buildSections(key: SermonNoteCongregationKey, cong: SermonNoteCongregat
       indexLabel: en ? 'Art' : '카툰',
       heading: en ? 'Illustrated Message' : '그림으로 보는 말씀',
       images: cartoons,
+    });
+  }
+
+  // 활동학습 자료 섹션 (어린이·Kids) — 내려받기 목록.
+  const files = cong.activityFiles ?? [];
+  if (files.length > 0) {
+    counter += 1;
+    sections.push({
+      id: `sec-${key}-${sections.length}`,
+      num: pad(counter),
+      indexLabel: en ? 'Files' : '자료',
+      heading: en ? 'Activity Materials' : '활동학습 자료',
+      files,
     });
   }
 
@@ -431,6 +460,12 @@ export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/o
 
   const central = built.centralVerse;
   const lead = built.lead || '이번 주 설교 노트를 읽기 좋게 정리했습니다.';
+  // Kids 는 읽는 사람이 아이가 아니라 **부모**다 — 무엇을 해달라는 안내를 맨 위에 둔다.
+  // 교회가 따로 적지 않으면 기본 문구가 나간다.
+  const parentGuide = activeKey === 'kids'
+    ? ((en ? (activeCong.parentGuideEn || activeCong.parentGuide) : activeCong.parentGuide) || '').trim()
+      || (en ? KIDS_PARENT_GUIDE_EN : KIDS_PARENT_GUIDE)
+    : '';
   const past = (recent || []).filter((r) => r.id !== note.id).slice(0, 6);
 
   const fs = fontScale / 100;
@@ -529,6 +564,13 @@ export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/o
           <aside style={{ flex: '1 1 220px', minWidth: 0, maxWidth: 260, paddingTop: 44 }}>
             <p style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: '.14em', color: PRIMARY }}>{activeMeta.label} 설교노트</p>
             <p style={{ ...SERIF, margin: '12px 0 0', fontSize: 17, lineHeight: 1.75, color: TEXT, textWrap: 'pretty' as const }}>{lead}</p>
+            {parentGuide && (
+              <p style={{
+                margin: '14px 0 0', padding: '10px 12px',
+                borderLeft: `3px solid ${PRIMARY}`, background: 'var(--dw-surface, #f7f2ea)',
+                fontSize: 14, lineHeight: 1.7, color: TEXT, textWrap: 'pretty' as const,
+              }}>{parentGuide}</p>
+            )}
             {(central?.text || central?.ref || scripture) && (
               <div style={{ marginTop: 22, paddingTop: 16, borderTop: `1px solid ${FAINT}` }}>
                 <p style={{ margin: 0, fontSize: 12, color: FAINT_TEXT }}>중심 말씀</p>
@@ -570,6 +612,31 @@ export function SermonNotePageView({ note, recent = [], onlineBulletinHref = '/o
                         />
                       ))}
                     </div>
+                  )}
+                  {sec.files && sec.files.length > 0 && (
+                    <ul style={{ marginTop: 20, padding: 0, listStyle: 'none', display: 'grid', gap: 8 }}>
+                      {sec.files.map((f, k) => (
+                        <li key={k}>
+                          {/* 새 창으로 연다 — 앱(홈 화면 설치) 안에서 PDF 를 열면
+                              돌아올 길이 없어 설교노트를 다시 찾아야 한다. */}
+                          <a
+                            href={f.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: 10,
+                              border: `1px solid ${BORDER}`, borderRadius: 2,
+                              padding: '12px 14px', textDecoration: 'none',
+                              color: 'inherit', fontSize: z(15, fs),
+                            }}
+                          >
+                            <span aria-hidden="true">📄</span>
+                            <span style={{ minWidth: 0, flex: 1 }}>{docName(f)}</span>
+                            <span style={{ fontSize: z(13, fs), color: MUTED }}>{en ? 'Open' : '열기'}</span>
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
                   )}
                   {sec.study ? <StudyBlock study={sec.study} en={en} fs={fs} /> : sec.bodyMd ? <NoteBody md={sec.bodyMd} fs={fs} /> : null}
                 </section>

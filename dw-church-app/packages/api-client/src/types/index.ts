@@ -66,6 +66,13 @@ export interface SermonNoteStudy {
   applicationEn?: string[];
 }
 /** 한 회중(장년/EM/Youth/어린이/Kids)의 설교노트 — 제목 + 본문(마크다운, 한/영) + 카툰 + 회중별 나눔질문. */
+/** 설교노트 첨부 자료(활동학습 PDF·워드 등).
+ *  name 은 화면에 보일 이름 — 비우면 URL 의 파일명을 쓴다. */
+export interface SermonNoteAttachment {
+  url: string;
+  name?: string;
+}
+
 export interface SermonNoteCongregation {
   title?: string;
   titleEn?: string;
@@ -73,6 +80,11 @@ export interface SermonNoteCongregation {
   textEn?: string;
   cartoonImageUrls?: string[];
   cartoonImageUrlsEn?: string[];
+  /** 활동학습 자료 — 어린이·Kids 에서 카튀과 함께 내려받는 PDF·워드. */
+  activityFiles?: SermonNoteAttachment[];
+  /** 부모에게 주는 한 줄 안내(Kids). 비우면 Kids 는 기본 문구가 나간다. */
+  parentGuide?: string;
+  parentGuideEn?: string;
   study?: SermonNoteStudy;   // 회중별 소그룹 나눔 질문
 }
 export interface SermonNoteContent {

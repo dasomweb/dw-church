@@ -3,11 +3,15 @@ import type { SermonNoteContent, SermonNoteCongregation, SermonNoteCongregationK
 import { useDWChurchClient } from '@dw-church/api-client';
 import { FormField, inputClass } from './FormField';
 import { ImageUpload, MultiImageUpload } from './ImageUpload';
+import { MultiFileUpload } from './MultiFileUpload';
 import { useToast } from './Toast';
 import { useAuthStore } from '../stores/auth';
 
 // 설교노트 편집기 — 온라인 주보 설교노트 섹션과 독립 설교노트 관리에서 "똑같이" 쓰는 공용 컴포넌트.
 // 회중(장년/EM/Youth/어린이/Kids)별: 제목 · 본문(리치 텍스트, 한/영) · 어린이/Kids 카툰 · 회중별 소그룹 나눔질문.
+/** Kids 설교노트 기본 부모 안내 문구 — 교회가 비워두면 이게 나간다. */
+export const KIDS_PARENT_GUIDE = '부모가 아이에게 성경을 가르쳐 주세요.';
+
 const btnAiClass = 'inline-flex items-center gap-1 text-xs font-medium text-indigo-600 border border-indigo-200 rounded-lg px-2.5 py-1 hover:bg-indigo-50 disabled:opacity-50';
 const btnGhost = 'text-sm text-blue-600 hover:underline';
 const btnDelRow = 'text-red-500 hover:text-red-700 text-sm shrink-0';
@@ -81,6 +85,9 @@ export function SermonNoteEditor({ content, onChange }: { content: SermonNoteCon
   // 자동번역(LLM 비용 발생)은 슈퍼어드민만 — 일반 권한에는 버튼 자체를 숨긴다.
   const isSuperAdmin = useAuthStore((st) => !!st.session?.user?.isSuperAdmin);
   const uploadImage = async (file: File): Promise<string> => (await client!.uploadFile(file, 'sermon-notes')).url;
+  // 문서(PDF·워드)는 리사이즈 대상이 아니다. 서버가 비이미지 파일은 원본 파일명을
+  // R2 키에 보존하므로 다운로드 시 의미 있는 이름으로 떨어진다.
+  const uploadDoc = async (file: File): Promise<string> => (await client!.uploadFile(file, 'sermon-notes')).url;
   // 실패 사유를 사람 말로. 특히 예산/할당량 소진은 반드시 알려야 한다.
   const failMsg = (reason?: string): string =>
     reason === 'quota' ? '번역 한도(예산)가 소진되어 번역하지 못했습니다. 관리자에게 문의하세요.'
@@ -206,6 +213,31 @@ export function SermonNoteEditor({ content, onChange }: { content: SermonNoteCon
               <p className="mb-1.5 text-sm font-medium text-gray-700">Sermon cartoon · English</p>
               <MultiImageUpload value={cur.cartoonImageUrlsEn ?? []} onChange={(urls) => setCong(tab, { cartoonImageUrlsEn: urls })} onUpload={uploadImage} resize="content" max={12} label="" />
             </div>
+            <div className="md:col-span-2">
+              <MultiFileUpload
+                label="활동학습 자료 (PDF · 워드)"
+                value={cur.activityFiles ?? []}
+                onChange={(files) => setCong(tab, { activityFiles: files })}
+                onUpload={uploadDoc}
+                max={10}
+                help="아이와 함께 풀 활동지·색칠공부 등을 올리면 설교노트 보기 페이지에서 내려받을 수 있습니다. 파일당 25MB까지. 이름 칸을 고치면 사이트에 그 이름으로 보입니다."
+              />
+            </div>
+            {tab === 'kids' && (
+              <div className="md:col-span-2">
+                <FormField label="부모 안내 문구">
+                  <input
+                    value={cur.parentGuide ?? ''}
+                    onChange={(e) => setCong(tab, { parentGuide: e.target.value })}
+                    placeholder={KIDS_PARENT_GUIDE}
+                    className={inputClass}
+                  />
+                </FormField>
+                <p className="mt-1 text-xs text-gray-400">
+                  Kids 설교노트 맨 위에 표시됩니다. 비워두면 기본 문구(&ldquo;{KIDS_PARENT_GUIDE}&rdquo;)가 나갑니다.
+                </p>
+              </div>
+            )}
           </div>
         )}
 

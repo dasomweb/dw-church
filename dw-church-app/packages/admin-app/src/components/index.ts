@@ -8,6 +8,7 @@ export { Button, Card, Badge } from './ui';
 export type { ButtonProps, CardProps, BadgeProps } from './ui';
 export { ImageUpload, MultiImageUpload } from './ImageUpload';
 export { FileUpload } from './FileUpload';
+export { MultiFileUpload, fileNameFromUrl } from './MultiFileUpload';
 export { RichEditor } from './RichEditor';
 export { PlanUpgradeModal, isPlanUpgradeError } from './PlanUpgradeModal';
 export { CategoryManager } from './CategoryManager';
