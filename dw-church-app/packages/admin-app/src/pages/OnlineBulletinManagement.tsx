@@ -1,4 +1,8 @@
 import { useMemo, useState } from 'react';
+import { useEffect, useRef, type CSSProperties } from 'react';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Link } from 'react-router-dom';
 import type { OnlineBulletin, OnlineBulletinContent, OnlineHymn, ListParams, PostStatus, SermonNoteContent, SermonNoteCongregationKey } from '@dw-church/api-client';
 import {
@@ -130,6 +134,33 @@ const EMPTY_CONTENT: OnlineBulletinContent = {
   closingHymn: { ...EMPTY_HYMN },
   study: { observation: [], correlation: [], application: [], observationEn: [], correlationEn: [], applicationEn: [] },
 };
+
+/**
+ * 교회소식 한 줄을 드래그 가능한 컨테이너로 감싼다.
+ *
+ * 교회소식은 저장 데이터에 id 가 없는 **단순 배열**이라, 인덱스를 id 로 쓰면
+ * 드래그 중 항목끼리 id 가 뒤바뀌어 애니메이션이 튄다. 그래서 저장 데이터는
+ * 건드리지 않고 화면용 키(annKeys)를 따로 들고 다닌다.
+ *
+ * 손잡이(⠿)에서만 끌리게 한다 — 카드 전체를 드래그 가능하게 하면 제목·내용
+ * 입력칸에서 텍스트를 선택하려 할 때마다 카드가 끌려간다.
+ */
+function SortableAnnouncement({ id, children }: { id: string; children: (handle: React.HTMLAttributes<HTMLElement>) => React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    // 드래그 중인 카드가 다음 카드 아래로 숨지 않게.
+    zIndex: isDragging ? 10 : undefined,
+    position: isDragging ? 'relative' : undefined,
+  };
+  return (
+    <div ref={setNodeRef} style={style}>
+      {children({ ...attributes, ...listeners })}
+    </div>
+  );
+}
 
 interface FormState { title: string; serviceDate: string; status: PostStatus; content: OnlineBulletinContent }
 const EMPTY_FORM: FormState = { title: '', serviceDate: '', status: 'published', content: structuredClone(EMPTY_CONTENT) };
@@ -340,6 +371,39 @@ export default function OnlineBulletinManagement() {
   const hymns = c.hymns ?? [];
   const prayers = c.prayerRequests ?? [];
   const anns = c.announcements ?? [];
+
+  // 교회소식 드래그용 화면 키. 저장 데이터(announcements)에는 id 가 없어서
+  // 인덱스를 id 로 쓰면 드래그 중 항목끼리 id 가 바뀌어 애니메이션이 튄다.
+  const [annKeys, setAnnKeys] = useState<string[]>([]);
+  const keySeq = useRef(0);
+  useEffect(() => {
+    setAnnKeys((prev) => {
+      if (prev.length === anns.length) return prev;
+      if (prev.length < anns.length) {
+        const add = Array.from({ length: anns.length - prev.length }, () => `ann-${keySeq.current++}`);
+        return [...prev, ...add];
+      }
+      return prev.slice(0, anns.length);
+    });
+  }, [anns.length]);
+
+  const annSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const handleAnnDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const from = annKeys.indexOf(String(active.id));
+    const to = annKeys.indexOf(String(over.id));
+    if (from < 0 || to < 0) return;
+    setContent({ announcements: arrayMove(anns, from, to) });
+    setAnnKeys((prev) => arrayMove(prev, from, to));
+  };
+
+  // 삭제는 저장 데이터와 화면 키를 **같이** 지워야 짝이 안 어긋난다.
+  const removeAnn = (i: number) => {
+    setContent({ announcements: anns.filter((_, idx) => idx !== i) });
+    setAnnKeys((prev) => prev.filter((_, idx) => idx !== i));
+  };
 
   // ── AI helpers (자동번역 · 성경 · 가사 스캔) ──
   // 원문(한국어)→영어 일괄 번역. 반환 {원문: 번역문}. 크레딧/키 없으면 원문 유지(무손상).
@@ -672,12 +736,25 @@ export default function OnlineBulletinManagement() {
                 {busy === 'anns' ? '번역 중…' : '🌐 영어 자동번역 (한글 → 영어)'}
               </button>
             </div>
+            {anns.length > 1 && (
+              <p className="mb-2 text-xs text-gray-400">손잡이(⠿)를 끌어 순서를 바꿀 수 있습니다. 사이트에도 이 순서로 표시됩니다.</p>
+            )}
+            <DndContext sensors={annSensors} collisionDetection={closestCenter} onDragEnd={handleAnnDragEnd}>
+            <SortableContext items={annKeys} strategy={verticalListSortingStrategy}>
             <div className="space-y-3">
               {anns.map((a, i) => (
-                <div key={i} className="rounded-lg border border-gray-200 p-3">
+                <SortableAnnouncement key={annKeys[i] ?? `ann-fallback-${i}`} id={annKeys[i] ?? `ann-fallback-${i}`}>
+                  {(handle) => (
+                <div className="rounded-lg border border-gray-200 p-3 bg-white">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-gray-500">소식 {i + 1}</span>
-                    <button type="button" onClick={() => setContent({ announcements: anns.filter((_, idx) => idx !== i) })} className={btnDelRow}>삭제</button>
+                    <span className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
+                      {/* 손잡이에서만 끌리게 — 카드 전체가 드래그되면 입력칸에서 텍스트 선택이 안 된다. */}
+                      <span {...handle} className="cursor-grab active:cursor-grabbing touch-none text-gray-400 hover:text-gray-600" aria-label="드래그하여 순서 변경" title="드래그하여 순서 변경">
+                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5" /><circle cx="15" cy="6" r="1.5" /><circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" /><circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" /></svg>
+                      </span>
+                      소식 {i + 1}
+                    </span>
+                    <button type="button" onClick={() => removeAnn(i)} className={btnDelRow}>삭제</button>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <div className="space-y-2">
@@ -692,9 +769,13 @@ export default function OnlineBulletinManagement() {
                     </div>
                   </div>
                 </div>
+                  )}
+                </SortableAnnouncement>
               ))}
-              <button type="button" onClick={() => setContent({ announcements: [...anns, { title: '', body: '' }] })} className={btnGhost}>+ 소식 추가</button>
             </div>
+            </SortableContext>
+            </DndContext>
+            <button type="button" onClick={() => setContent({ announcements: [...anns, { title: '', body: '' }] })} className={`${btnGhost} mt-3`}>+ 소식 추가</button>
           </FormSection>
 
           {/* 5. 성경 본문 (개역개정 / ESV) */}
