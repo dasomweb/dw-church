@@ -12,11 +12,14 @@ export async function bookRoutes(app: FastifyInstance) {
     const { page, perPage } = parsePagination(q);
     // 비로그인(스토어프론트)은 공개된 것만, 관리자는 전부.
     const status = (q.status as string) || (request.user ? undefined : 'published');
+    // 관리자는 기간이 지난 항목도 봐야 관리가 된다. 스토어프론트만 기간으로 거른다.
+    const activeOnly = !request.user;
     const { data, total } = await bookService.listBooks(getSchema(request), {
       page, perPage,
       search: q.search as string | undefined,
       category: (q.category as string) || undefined,
       status,
+      activeOnly,
     });
     return reply.send(paginatedResponse(data, total, page, perPage));
   });

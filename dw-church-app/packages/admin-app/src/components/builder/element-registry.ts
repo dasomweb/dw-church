@@ -363,7 +363,6 @@ const RECENT_BOOKS: BlockElementRegistry = {
     { title: 'Content', elements: [
       { label: 'Headline', path: 'title', kind: 'text' },
       { label: 'Description', path: 'description', kind: 'text' },
-      { label: 'Link Label', path: 'linkLabel', kind: 'text' },
     ]},
     { title: 'Design', elements: [
       { label: 'Layout', path: 'variant', kind: 'select', choices: [

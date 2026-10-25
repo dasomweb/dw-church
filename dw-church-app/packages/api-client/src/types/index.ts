@@ -850,21 +850,30 @@ export interface UploadedFile {
 
 // ─── Book (책 추천) ───────────────────────────
 /** 교회가 성도에게 권하는 책. 서지 정보보다 **추천사**가 핵심. */
+export type BookPeriod = 'month' | 'week';
+
 export interface Book {
   id: string;
   title: string;
   author: string;
   publisher: string;
-  coverImageUrl: string;
+  /** 표지·소개 이미지 최대 2장. 배열 순서 = 표시 순서. */
+  coverImageUrls: string[];
   /** 분야 — 자유 입력(교회마다 분류가 다르다). */
   category: string;
-  recommender: string;
   recommendation: string;
-  link: string;
+  /** 구입처 — 미국·한국 둘 다. 비운 쪽은 표시하지 않는다. */
+  linkUs: string;
+  linkKr: string;
   recommendedAt: string;
+  /** 게시 기간 — 비우면 제한 없음. 기간이 지나면 사이트에서 내려간다. */
+  startDate: string;
+  endDate: string;
   sortOrder: number;
   /** 대표 추천 — 블록에서 크게 띄우는 한 권. */
   isFeatured: boolean;
+  /** 대표 추천 표기 — 이달의 / 이번 주. */
+  featuredPeriod: BookPeriod;
   status: PostStatus;
   createdAt: string;
   updatedAt: string;

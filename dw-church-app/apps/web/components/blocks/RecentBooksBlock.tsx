@@ -19,14 +19,18 @@ interface BookRow {
   title: string;
   author?: string;
   publisher?: string;
-  coverImageUrl?: string;
-  cover_image_url?: string;
+  coverImageUrls?: string[];
+  cover_image_urls?: string[];
   category?: string;
-  recommender?: string;
   recommendation?: string;
-  link?: string;
+  linkUs?: string;
+  link_us?: string;
+  linkKr?: string;
+  link_kr?: string;
   isFeatured?: boolean;
   is_featured?: boolean;
+  featuredPeriod?: string;
+  featured_period?: string;
 }
 
 function rows(res: unknown): BookRow[] {
@@ -68,14 +72,19 @@ function Cover({ src, title }: { src?: string; title: string }) {
   );
 }
 
-/** 구매·소개 링크는 외부로 나가므로 새 창 + noopener. */
-function MoreLink({ href, label }: { href?: string; label: string }) {
-  if (!href) return null;
+/** 구입처 — 외부로 나가므로 새 창 + noopener.
+ *  미국·한국 둘 다 비어 있으면 줄 자체를 그리지 않는다. */
+function BuyLinks({ us, kr }: { us?: string; kr?: string }) {
+  if (!us && !kr) return null;
+  const linkStyle = {
+    fontSize: 14, fontWeight: 600, color: PRIMARY, textDecoration: 'none',
+    border: `1px solid ${BORDER}`, borderRadius: 2, padding: '7px 14px',
+  } as const;
   return (
-    <a href={href} target="_blank" rel="noopener noreferrer"
-      style={{ display: 'inline-block', marginTop: 10, fontSize: 14, fontWeight: 600, color: PRIMARY, textDecoration: 'none' }}>
-      {label} ›
-    </a>
+    <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+      {us && <a href={us} target="_blank" rel="noopener noreferrer" style={linkStyle}>미국에서 구입 ›</a>}
+      {kr && <a href={kr} target="_blank" rel="noopener noreferrer" style={linkStyle}>한국에서 구입 ›</a>}
+    </div>
   );
 }
 
@@ -87,7 +96,6 @@ export async function RecentBooksBlock({ props, slug }: Props) {
   const showFeature = String(props.showFeature ?? 'show') !== 'hide';
   const title = String(props.title ?? '책 추천');
   const description = String(props.description ?? '');
-  const linkLabel = String(props.linkLabel ?? '자세히 보기');
 
   const books = rows(await getBooks(slug, { perPage: limit, category: category || undefined }));
   if (books.length === 0) return null;
@@ -106,7 +114,14 @@ export async function RecentBooksBlock({ props, slug }: Props) {
         ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'
         : 'grid-cols-2 sm:grid-cols-2 lg:grid-cols-3';
 
-  const cover = (b: BookRow) => b.coverImageUrl || b.cover_image_url || '';
+  // 표지 배열(최대 2장). 첫 장이 대표, 둘째 장은 대표 추천에서만 함께 보여준다 —
+  // 그리드 카드에 두 장을 넣으면 줄이 들쑥날쑥해진다.
+  const covers = (b: BookRow): string[] => {
+    const a = b.coverImageUrls ?? b.cover_image_urls ?? [];
+    return Array.isArray(a) ? a.filter((x) => typeof x === 'string' && x) : [];
+  };
+  const buyUs = (b: BookRow) => b.linkUs || b.link_us || '';
+  const buyKr = (b: BookRow) => b.linkKr || b.link_kr || '';
 
   return (
     <DataSection props={props} defaultBg="var(--dw-background)">
@@ -130,12 +145,15 @@ export async function RecentBooksBlock({ props, slug }: Props) {
           borderTop: `3px double ${TEXT}`, borderBottom: `1px solid ${BORDER}`,
           padding: '28px 0', marginBottom: 32,
         }}>
-          <div style={{ flex: '0 0 180px', maxWidth: 180 }}>
-            <Cover src={cover(featured)} title={featured.title} />
+          <div style={{ flex: '0 0 180px', maxWidth: 180, display: 'grid', gap: 10 }}>
+            {(covers(featured).length > 0 ? covers(featured) : ['']).map((src, k) => (
+              <Cover key={k} src={src} title={featured.title} />
+            ))}
           </div>
           <div style={{ flex: '1 1 320px', minWidth: 0 }}>
             <p style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: '.14em', color: PRIMARY }}>
-              {featured.category || '이달의 추천'}
+              {(featured.featuredPeriod ?? featured.featured_period) === 'week' ? '이번 주 추천도서' : '이달의 추천도서'}
+              {featured.category ? ` · ${featured.category}` : ''}
             </p>
             <h3 style={{ ...SERIF, margin: '10px 0 0', fontSize: 'clamp(22px,2.8vw,30px)', fontWeight: 600, lineHeight: 1.35, color: TEXT }}>
               {featured.title}
@@ -150,10 +168,7 @@ export async function RecentBooksBlock({ props, slug }: Props) {
                 {featured.recommendation}
               </p>
             )}
-            {featured.recommender && (
-              <p style={{ margin: '12px 0 0', fontSize: 13, color: MUTED }}>— {featured.recommender}</p>
-            )}
-            <MoreLink href={featured.link} label={linkLabel} />
+            <BuyLinks us={buyUs(featured)} kr={buyKr(featured)} />
           </div>
         </div>
       )}
@@ -162,7 +177,7 @@ export async function RecentBooksBlock({ props, slug }: Props) {
         <div className={`grid ${gridClass} gap-6`}>
           {list.map((b) => (
             <article key={b.id} style={{ minWidth: 0 }}>
-              <Cover src={cover(b)} title={b.title} />
+              <Cover src={covers(b)[0]} title={b.title} />
               {b.category && (
                 <p style={{ margin: '12px 0 0', fontSize: 11, fontWeight: 700, letterSpacing: '.12em', color: PRIMARY }}>{b.category}</p>
               )}
@@ -176,8 +191,7 @@ export async function RecentBooksBlock({ props, slug }: Props) {
                   display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden',
                 }}>{b.recommendation}</p>
               )}
-              {b.recommender && <p style={{ margin: '6px 0 0', fontSize: 12, color: MUTED }}>— {b.recommender}</p>}
-              <MoreLink href={b.link} label={linkLabel} />
+              <BuyLinks us={buyUs(b)} kr={buyKr(b)} />
             </article>
           ))}
         </div>

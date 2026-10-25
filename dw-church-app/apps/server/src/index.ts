@@ -469,7 +469,7 @@ async function main(): Promise<void> {
     // 스키마별 버전 스탬프를 두고, 이미 현재 버전으로 반영된 스키마는 건너뛴다.
     // ⚠️ 아래 per-schema DDL 블록을 하나라도 바꾸면(테이블/컬럼 추가) SCHEMA_VERSION을
     //    올려라 → 기존 테넌트가 "다음 배포 때 한 번만" 다시 반영하고 이후 다시 건너뛴다.
-    const SCHEMA_VERSION = 16; // ↑16: books 테이블 추가(책 추천) / ↑15: notification_prefs 추가(푸시 수신 설정) / ↑14: push 구독 테이블 추가 / ↑13: sermon_notes 테이블 추가(설교노트 콘텐츠 모듈 — 주일별 회중별)
+    const SCHEMA_VERSION = 17; // ↑17: books 열 개편(표지2장·미국주한국링크·게시기간) / ↑16: books 테이블 추가(책 추천) / ↑15: notification_prefs 추가(푸시 수신 설정) / ↑14: push 구독 테이블 추가 / ↑13: sermon_notes 테이블 추가(설교노트 콘텐츠 모듈 — 주일별 회중별)
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS public.tenant_schema_versions (
         "schema_name" TEXT PRIMARY KEY,
@@ -632,19 +632,43 @@ async function main(): Promise<void> {
             "title"           VARCHAR(300) NOT NULL,
             "author"          VARCHAR(200) DEFAULT '',
             "publisher"       VARCHAR(200) DEFAULT '',
-            "cover_image_url" TEXT DEFAULT '',
+            "cover_image_urls" JSONB DEFAULT '[]',
             "category"        VARCHAR(80) DEFAULT '',
-            "recommender"     VARCHAR(100) DEFAULT '',
             "recommendation"  TEXT DEFAULT '',
-            "link"            TEXT DEFAULT '',
+            "link_us"         TEXT DEFAULT '',
+            "link_kr"         TEXT DEFAULT '',
             "recommended_at"  DATE,
+            "start_date"      DATE,
+            "end_date"        DATE,
             "sort_order"      INT DEFAULT 0,
             "is_featured"     BOOLEAN DEFAULT false,
+            "featured_period" VARCHAR(10) DEFAULT 'month',
             "status"          VARCHAR(20) DEFAULT 'published' CHECK (status IN ('draft','published','archived')),
             "created_at"      TIMESTAMPTZ DEFAULT NOW(),
             "updated_at"      TIMESTAMPTZ DEFAULT NOW()
           )
         `);
+        // 직전 배포에서 이미 만들어진 테이블에 새 열을 더한다.
+        // 옆 열(cover_image_url / recommender / link)은 지우지 않는다 — 비파괴적으로.
+        for (const col of [
+          `"cover_image_urls" JSONB DEFAULT '[]'`,
+          `"link_us" TEXT DEFAULT ''`,
+          `"link_kr" TEXT DEFAULT ''`,
+          `"start_date" DATE`,
+          `"end_date" DATE`,
+          `"featured_period" VARCHAR(10) DEFAULT 'month'`,
+        ]) {
+          await prisma.$executeRawUnsafe(
+            `ALTER TABLE "${schema}".books ADD COLUMN IF NOT EXISTS ${col}`,
+          ).catch(() => { /* 열이 이미 있으면 무시 */ });
+        }
+        // title 외 전부 선택이라, 예전 배포에서 NOT NULL 로 만들어졌을 수 있는
+        // 열들의 제약을 푸다 — 안 풀면 그 열을 안 보내는 지금 코드가 INSERT 에서 23502 로 죽는다.
+        for (const col of ['cover_image_url', 'recommender', 'link']) {
+          await prisma.$executeRawUnsafe(
+            `ALTER TABLE "${schema}".books ALTER COLUMN "${col}" DROP NOT NULL`,
+          ).catch(() => { /* 열이 없거나 이미 nullable */ });
+        }
         await prisma.$executeRawUnsafe(
           `CREATE INDEX IF NOT EXISTS "books_order_idx" ON "${schema}".books ("is_featured" DESC, "sort_order" ASC, "recommended_at" DESC)`,
         );
@@ -2303,8 +2327,12 @@ async function main(): Promise<void> {
       "SELECT schema_name FROM information_schema.schemata WHERE schema_name LIKE 'tenant_%'"
     );
     for (const s of schemas) {
+      // Postgres 는 ADD CONSTRAINT IF NOT EXISTS 를 지원하지 않는다 — 예전 구문은
+      // 매 부팅마다 테넌트 수만큼 42601 을 뿜고 catch 에 먹혀 조용히 실패했다.
+      // UNIQUE INDEX 는 같은 보장을 주면서 IF NOT EXISTS 를 받고, settings 업서트의
+      // ON CONFLICT (key) 도 유니크 인덱스로 동작한다.
       await prisma.$queryRawUnsafe(
-        `ALTER TABLE "${s.schema_name}".settings ADD CONSTRAINT IF NOT EXISTS settings_key_unique UNIQUE (key)`
+        `CREATE UNIQUE INDEX IF NOT EXISTS settings_key_unique ON "${s.schema_name}".settings (key)`
       ).catch(() => {});
     }
   } catch { /* ignore */ }

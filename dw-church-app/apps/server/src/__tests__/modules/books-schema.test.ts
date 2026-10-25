@@ -20,13 +20,33 @@ describe('createBookSchema', () => {
     expect(() => createBookSchema.parse({})).toThrow();
   });
 
-  it('추천인·추천사·분야를 받는다', () => {
-    const r = createBookSchema.parse({
-      title: 'T', recommender: '담임목사 김○○', recommendation: '한 해를 여는 책으로 권합니다.', category: '신앙일반',
-    });
-    expect(r.recommender).toBe('담임목사 김○○');
+  it('추천사·분야를 받는다', () => {
+    const r = createBookSchema.parse({ title: 'T', recommendation: '한 해를 여는 책으로 권합니다.', category: '신앙일반' });
     expect(r.recommendation).toContain('권합니다');
     expect(r.category).toBe('신앙일반');
+  });
+
+  it('구입처는 미국·한국 두 곳을 따로 받는다', () => {
+    const r = createBookSchema.parse({ title: 'T', linkUs: 'https://amazon.com/x', linkKr: 'https://kyobobook.co.kr/y' });
+    expect(r.linkUs).toContain('amazon');
+    expect(r.linkKr).toContain('kyobobook');
+  });
+
+  it('표지는 최대 2장까지만 받는다', () => {
+    expect(createBookSchema.parse({ title: 'T', coverImageUrls: ['a', 'b'] }).coverImageUrls).toHaveLength(2);
+    expect(() => createBookSchema.parse({ title: 'T', coverImageUrls: ['a', 'b', 'c'] })).toThrow();
+  });
+
+  it('대표 추천 주기는 month/week 만 받는다', () => {
+    expect(createBookSchema.parse({ title: 'T', featuredPeriod: 'week' }).featuredPeriod).toBe('week');
+    expect(() => createBookSchema.parse({ title: 'T', featuredPeriod: 'year' })).toThrow();
+  });
+
+  it('게시 기간을 받는다 (비우면 제한 없음)', () => {
+    const r = createBookSchema.parse({ title: 'T', startDate: '2026-11-01', endDate: '2026-11-30' });
+    expect(r.startDate).toBe('2026-11-01');
+    expect(r.endDate).toBe('2026-11-30');
+    expect(createBookSchema.parse({ title: 'T' }).startDate).toBeUndefined();
   });
 
   it('isFeatured 는 선택이고 기본은 미지정', () => {
@@ -40,9 +60,10 @@ describe('createBookSchema', () => {
   });
 
   it('null 을 명시적으로 비우는 뜻으로 받는다 (수정 시 필드 지우기)', () => {
-    const r = updateBookSchema.parse({ author: null, link: null });
+    const r = updateBookSchema.parse({ author: null, linkUs: null, endDate: null });
     expect(r.author).toBeNull();
-    expect(r.link).toBeNull();
+    expect(r.linkUs).toBeNull();
+    expect(r.endDate).toBeNull();
   });
 
   it('부분 수정이 가능하다', () => {

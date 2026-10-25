@@ -29,6 +29,7 @@ export type {
   Event,
   Verse,
   Book,
+  BookPeriod,
   TranslationRow,
   Staff,
   StaffSnsLinks,
