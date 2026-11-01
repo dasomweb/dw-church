@@ -117,6 +117,9 @@ CREATE TABLE tenant_template.columns_pastoral (
     bottom_image_url    TEXT,
     youtube_url         TEXT,
     thumbnail_url       TEXT,
+    -- 예약 공개: 이 기간에만 사이트에 노출(비우면 제한 없음). 스케줄러 없이 읽을 때 걸러낸다.
+    publish_at          DATE,
+    unpublish_at        DATE,
     status              VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
     created_by          UUID,
     created_at          TIMESTAMPTZ DEFAULT NOW(),

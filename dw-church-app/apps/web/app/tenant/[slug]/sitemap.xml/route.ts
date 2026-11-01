@@ -65,7 +65,7 @@ export async function GET(
   const modules: [string, Paged, string[]][] = [
     ['sermons', (p) => getSermons(slug, { page: p, perPage: PAGE_SIZE }), ['sermonDate', 'sermon_date', 'updatedAt']],
     ['bulletins', (p) => getBulletins(slug, { page: p, perPage: PAGE_SIZE }), ['bulletinDate', 'bulletin_date', 'updatedAt']],
-    ['columns', (p) => getColumns(slug, { page: p, perPage: PAGE_SIZE }), ['createdAt', 'created_at']],
+    ['columns', (p) => getColumns(slug, { page: p, perPage: PAGE_SIZE }), ['publishAt', 'publish_at', 'createdAt', 'created_at']],
     ['events', (p) => getEvents(slug, { page: p, perPage: PAGE_SIZE }), ['startDate', 'start_date', 'updatedAt']],
     ['albums', (p) => getAlbums(slug, { page: p, perPage: PAGE_SIZE }), ['albumDate', 'album_date', 'updatedAt']],
     ['staff', () => getStaff(slug), ['updatedAt', 'updated_at']],

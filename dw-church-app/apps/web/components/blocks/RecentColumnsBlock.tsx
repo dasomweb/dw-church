@@ -63,7 +63,9 @@ export async function RecentColumnsBlock({ props, slug }: RecentColumnsBlockProp
             const colTitle = col.title ?? '';
             const content = col.content ?? '';
             const imageUrl = col.topImageUrl ?? col.top_image_url ?? col.thumbnailUrl ?? col.thumbnail_url ?? '';
-            const date = col.createdAt ?? col.created_at ?? '';
+            // 예약 공개한 칼럼은 등록일이 아니라 공개일을 보여준다 — 미리 써 둔 날짜가
+            // 노출되면 성도에게는 날짜가 거꾸로 보인다.
+            const date = col.publishAt ?? col.publish_at ?? col.createdAt ?? col.created_at ?? '';
             const id = col.id ?? '';
 
             return (

@@ -469,7 +469,7 @@ async function main(): Promise<void> {
     // 스키마별 버전 스탬프를 두고, 이미 현재 버전으로 반영된 스키마는 건너뛴다.
     // ⚠️ 아래 per-schema DDL 블록을 하나라도 바꾸면(테이블/컬럼 추가) SCHEMA_VERSION을
     //    올려라 → 기존 테넌트가 "다음 배포 때 한 번만" 다시 반영하고 이후 다시 건너뛴다.
-    const SCHEMA_VERSION = 17; // ↑17: books 열 개편(표지2장·미국주한국링크·게시기간) / ↑16: books 테이블 추가(책 추천) / ↑15: notification_prefs 추가(푸시 수신 설정) / ↑14: push 구독 테이블 추가 / ↑13: sermon_notes 테이블 추가(설교노트 콘텐츠 모듈 — 주일별 회중별)
+    const SCHEMA_VERSION = 18; // ↑18: columns_pastoral 예약 공개 열(publish_at / unpublish_at) / ↑17: books 열 개편(표지2장·미국/한국 링크·게시기간) / ↑16: books 테이블 추가(책 추천) / ↑15: notification_prefs 추가(푸시 수신 설정) / ↑14: push 구독 테이블 추가 / ↑13: sermon_notes 테이블 추가(설교노트 콘텐츠 모듈 — 주일별 회중별)
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS public.tenant_schema_versions (
         "schema_name" TEXT PRIMARY KEY,
@@ -673,6 +673,21 @@ async function main(): Promise<void> {
           `CREATE INDEX IF NOT EXISTS "books_order_idx" ON "${schema}".books ("is_featured" DESC, "sort_order" ASC, "recommended_at" DESC)`,
         );
         createHits++;
+      } catch { /* skip on error */ }
+
+      // 0a-2. columns_pastoral — 목회칼럼 예약 공개(공개 시작일 / 종료일).
+      //        미리 써 두고 날짜를 넣으면 그 날에 사이트에 나온다(스케줄러 없이
+      //        읽을 때 걸러낸다 — modules/columns/service.ts IN_WINDOW).
+      try {
+        for (const col of [`"publish_at" DATE`, `"unpublish_at" DATE`]) {
+          await prisma.$executeRawUnsafe(
+            `ALTER TABLE "${schema}".columns_pastoral ADD COLUMN IF NOT EXISTS ${col}`,
+          ).catch(() => { /* 열이 이미 있으면 무시 */ });
+        }
+        await prisma.$executeRawUnsafe(
+          `CREATE INDEX IF NOT EXISTS "columns_publish_idx" ON "${schema}".columns_pastoral ("status", "publish_at" DESC)`,
+        );
+        alterHits++;
       } catch { /* skip on error */ }
 
       // 0b. boards + board_posts — some older tenants (e.g. lagrangechurch)

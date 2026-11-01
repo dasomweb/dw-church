@@ -90,7 +90,7 @@ export function ColumnListClient({
                   {truncate(column.content, 100)}
                 </p>
                 <time className="text-xs text-gray-400">
-                  {formatDate(column.createdAt)}
+                  {formatDate(column.publishAt || column.createdAt)}
                 </time>
               </div>
             </article>

@@ -47,7 +47,7 @@ export function SingleColumnClient({ column, slug }: SingleColumnClientProps) {
             {column.title}
           </h1>
           <div className="mt-3 text-sm text-gray-500">
-            <time>{formatDate(column.createdAt)}</time>
+            <time>{formatDate(column.publishAt || column.createdAt)}</time>
           </div>
         </header>
 

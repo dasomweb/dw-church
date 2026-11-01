@@ -11,6 +11,7 @@ import {
 import { FormField, FormSection, FormRow, inputClass, selectClass, ImageUpload, RichEditor, useToast, ConfirmDialog, EmptyState, TableSkeleton } from '../components';
 import { ContentMigrationButton } from '../components/ContentMigrationButton';
 import { useBulkDelete } from '../components/useBulkDelete';
+import { publishBadge, publishRangeText, churchToday } from '../lib/publish-window';
 
 interface ColumnFormData {
   title: string;
@@ -19,8 +20,14 @@ interface ColumnFormData {
   bottomImageUrl: string;
   youtubeUrl: string;
   thumbnailUrl: string;
+  /** 예약 공개 — 공개 시작일 / 종료일 (YYYY-MM-DD, 비우면 제한 없음) */
+  publishAt: string;
+  unpublishAt: string;
   status: PostStatus;
 }
+
+/** 날짜 칸이 ISO 타임스탬프로 와도 input[type=date] 가 먹을 수 있게 자른다. */
+const dayValue = (v?: string | null): string => (v || '').slice(0, 10);
 
 export default function ColumnManagement() {
   const [view, setView] = useState<'list' | 'edit'>('list');
@@ -47,6 +54,8 @@ export default function ColumnManagement() {
       bottomImageUrl: item.bottomImageUrl,
       youtubeUrl: item.youtubeUrl,
       thumbnailUrl: item.thumbnailUrl,
+      publishAt: dayValue(item.publishAt),
+      unpublishAt: dayValue(item.unpublishAt),
       status: item.status,
     });
     setView('edit');
@@ -54,7 +63,7 @@ export default function ColumnManagement() {
 
   const handleCreate = () => {
     setEditingItem(null);
-    reset({ title: '', content: '', topImageUrl: '', bottomImageUrl: '', youtubeUrl: '', thumbnailUrl: '', status: 'published' });
+    reset({ title: '', content: '', topImageUrl: '', bottomImageUrl: '', youtubeUrl: '', thumbnailUrl: '', publishAt: '', unpublishAt: '', status: 'published' });
     setView('edit');
   };
 
@@ -80,6 +89,9 @@ export default function ColumnManagement() {
   };
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
+  // 공개 일정 안내문을 즉시 갱신하려면 watch 로 읽어야 한다(register 만으로는 리렌더 없음).
+  const publishAt = watch('publishAt') || '';
+  const unpublishAt = watch('unpublishAt') || '';
 
   if (view === 'edit') {
     return (
@@ -109,6 +121,34 @@ export default function ColumnManagement() {
                 </select>
               </FormField>
             </FormRow>
+          </FormSection>
+
+          {/* 예약 공개 — 미리 써 두고 날짜만 넣어 두면 그 날 아침에 저절로 올라간다.
+              스케줄러가 없고 사이트가 읽을 때 걸러내는 방식이라, 저장만 해 두면 끝. */}
+          <FormSection title="공개 일정">
+            <FormRow>
+              <FormField label="공개 시작일">
+                <input type="date" {...register('publishAt')} className={inputClass} />
+              </FormField>
+              <FormField label="공개 종료일">
+                <input type="date" {...register('unpublishAt')} className={inputClass} />
+              </FormField>
+            </FormRow>
+            <p className="text-xs text-gray-500">
+              시작일을 넣으면 <b>그 날짜부터</b> 사이트에 보입니다(그 전에는 숨겨지고, 주소를 알아도 열리지 않습니다).
+              종료일을 넣으면 그 날이 지나면 저절로 내려갑니다. 비워 두면 저장하는 즉시 공개되고 계속 걸려 있습니다.
+              기준은 교회 현지 시간(미 동부)이며 오늘은 {churchToday()} 입니다.
+            </p>
+            {publishAt && publishAt > churchToday() && (
+              <p className="rounded-lg bg-blue-50 px-3 py-2 text-xs text-blue-800">
+                {publishAt} 부터 공개됩니다. 그때까지는 사이트에 나오지 않습니다.
+              </p>
+            )}
+            {unpublishAt && publishAt && unpublishAt < publishAt && (
+              <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
+                종료일이 시작일보다 앞서 있습니다 — 이대로 저장하면 사이트에 한 번도 보이지 않습니다.
+              </p>
+            )}
           </FormSection>
 
           <FormSection title="본문">
@@ -232,7 +272,8 @@ export default function ColumnManagement() {
                     <input type="checkbox" checked={bulk.isAllSelected(data.data)} onChange={() => bulk.toggleAll(data.data)} aria-label="전체 선택" />
                   </th>
                   <th className="text-left px-4 py-3 text-sm font-medium">제목</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium">날짜</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium">공개 일정</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium">공개 상태</th>
                   <th className="text-left px-4 py-3 text-sm font-medium">YouTube</th>
                   <th className="text-left px-4 py-3 text-sm font-medium">액션</th>
                 </tr>
@@ -244,7 +285,21 @@ export default function ColumnManagement() {
                       <input type="checkbox" checked={bulk.has(item.id)} onChange={() => bulk.toggle(item.id)} aria-label={`${item.title} 선택`} />
                     </td>
                     <td className="px-4 py-3 text-sm font-medium">{item.title}</td>
-                    <td className="px-4 py-3 text-sm">{item.createdAt}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
+                      {publishRangeText(item.publishAt, item.unpublishAt)}
+                      <span className="ml-2 text-xs text-gray-400">등록 {dayValue(item.createdAt)}</span>
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      {/* 공개 상태여도 일정 밖이면 사이트엔 없다 — 둘을 같이 보여줘야 오해가 없다. */}
+                      {item.status === 'published' ? (() => {
+                        const st = publishBadge(item.publishAt, item.unpublishAt);
+                        return <span className={`rounded px-2 py-1 text-xs ${st.cls}`}>{st.label}</span>;
+                      })() : (
+                        <span className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-600">
+                          {item.status === 'draft' ? '임시저장' : '보관'}
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-sm">
                       {item.youtubeUrl ? (
                         <a href={item.youtubeUrl} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">

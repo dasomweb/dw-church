@@ -166,6 +166,10 @@ export interface Column {
   bottomImageUrl: string;
   youtubeUrl: string;
   thumbnailUrl: string;
+  /** 예약 공개 시작일 (YYYY-MM-DD). 비우면 등록 즉시 공개. */
+  publishAt?: string | null;
+  /** 공개 종료일 (YYYY-MM-DD). 비우면 계속 공개. */
+  unpublishAt?: string | null;
   status: PostStatus;
   createdAt: string;
   modifiedAt: string;

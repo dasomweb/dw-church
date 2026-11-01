@@ -7,6 +7,7 @@ import {
   FormField, FormSection, FormRow, inputClass, selectClass,
   ImageUpload, MultiImageUpload, useToast, ConfirmDialog, EmptyState, TableSkeleton,
 } from '../components';
+import { publishBadge, publishRangeText } from '../lib/publish-window';
 
 /**
  * 책 추천 관리.
@@ -39,23 +40,6 @@ const EMPTY: FormState = {
   startDate: '', endDate: '', isFeatured: false, featuredPeriod: 'month',
   status: 'published',
 };
-
-/** 게시 기간 대비 오늘 상태 — 목록에서 한눈에 보이게. */
-function periodState(start?: string, end?: string): { label: string; cls: string } {
-  const today = new Date().toISOString().slice(0, 10);
-  const s = (start || '').slice(0, 10);
-  const e = (end || '').slice(0, 10);
-  if (s && s > today) return { label: '예정', cls: 'bg-blue-100 text-blue-800' };
-  if (e && e < today) return { label: '종료', cls: 'bg-gray-100 text-gray-500' };
-  return { label: '게시중', cls: 'bg-green-100 text-green-800' };
-}
-
-function periodText(start?: string, end?: string): string {
-  const s = (start || '').slice(0, 10);
-  const e = (end || '').slice(0, 10);
-  if (!s && !e) return '제한 없음';
-  return `${s || '—'} ~ ${e || '—'}`;
-}
 
 export default function BookManagement() {
   const [view, setView] = useState<'list' | 'edit'>('list');
@@ -262,11 +246,11 @@ export default function BookManagement() {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-sm">{b.category || '-'}</td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">{periodText(b.startDate, b.endDate)}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">{publishRangeText(b.startDate, b.endDate)}</td>
                   <td className="px-4 py-3 text-sm">
                     {/* 공개여도 기간이 지나면 사이트엔 안 나온다 — 둘을 같이 보여줘야 오해가 없다. */}
                     {b.status === 'published' ? (() => {
-                      const st = periodState(b.startDate, b.endDate);
+                      const st = publishBadge(b.startDate, b.endDate);
                       return <span className={`rounded px-2 py-1 text-xs ${st.cls}`}>{st.label}</span>;
                     })() : (
                       <span className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-600">

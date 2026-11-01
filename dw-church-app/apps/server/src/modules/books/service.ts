@@ -14,8 +14,14 @@ interface ListParams {
 /** 정렬: 대표 추천 먼저 → 운영자 지정 순서 → 최근 추천일 → 등록 역순. */
 const ORDER = `ORDER BY is_featured DESC, sort_order ASC, recommended_at DESC NULLS LAST, created_at DESC`;
 
-/** 게시 기간 필터 — 비어 있는 날짜는 "제한 없음"으로 본다. */
-const IN_WINDOW = `(start_date IS NULL OR start_date <= CURRENT_DATE) AND (end_date IS NULL OR end_date >= CURRENT_DATE)`;
+/**
+ * 게시 기간 필터 — 비어 있는 날짜는 "제한 없음"으로 본다.
+ * 기준일은 교회 현지 날짜(미 동부). CURRENT_DATE(=UTC) 로 보면 미 동부 저녁 8시에
+ * 날짜가 바뀌어 "이달의 추천도서"가 전날 밤부터 떠 버린다. 목회컬럼과 같은 기준.
+ */
+const CHURCH_TZ = 'America/New_York';
+const TODAY = `(NOW() AT TIME ZONE '${CHURCH_TZ}')::date`;
+const IN_WINDOW = `(start_date IS NULL OR start_date <= ${TODAY}) AND (end_date IS NULL OR end_date >= ${TODAY})`;
 
 export async function listBooks(schema: string, params: ListParams) {
   const { page, perPage, search, status, category, activeOnly } = params;
