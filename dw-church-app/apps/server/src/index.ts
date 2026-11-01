@@ -469,7 +469,7 @@ async function main(): Promise<void> {
     // 스키마별 버전 스탬프를 두고, 이미 현재 버전으로 반영된 스키마는 건너뛴다.
     // ⚠️ 아래 per-schema DDL 블록을 하나라도 바꾸면(테이블/컬럼 추가) SCHEMA_VERSION을
     //    올려라 → 기존 테넌트가 "다음 배포 때 한 번만" 다시 반영하고 이후 다시 건너뛴다.
-    const SCHEMA_VERSION = 18; // ↑18: columns_pastoral 예약 공개 열(publish_at / unpublish_at) / ↑17: books 열 개편(표지2장·미국/한국 링크·게시기간) / ↑16: books 테이블 추가(책 추천) / ↑15: notification_prefs 추가(푸시 수신 설정) / ↑14: push 구독 테이블 추가 / ↑13: sermon_notes 테이블 추가(설교노트 콘텐츠 모듈 — 주일별 회중별)
+    const SCHEMA_VERSION = 19; // ↑19: online_bulletins 기본 상태 published / ↑18: columns_pastoral 예약 공개 열(publish_at / unpublish_at) / ↑17: books 열 개편(표지2장·미국/한국 링크·게시기간) / ↑16: books 테이블 추가(책 추천) / ↑15: notification_prefs 추가(푸시 수신 설정) / ↑14: push 구독 테이블 추가 / ↑13: sermon_notes 테이블 추가(설교노트 콘텐츠 모듈 — 주일별 회중별)
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS public.tenant_schema_versions (
         "schema_name" TEXT PRIMARY KEY,
@@ -534,7 +534,7 @@ async function main(): Promise<void> {
             "title"        VARCHAR(500) NOT NULL,
             "service_date" DATE NOT NULL,
             "content"      JSONB DEFAULT '{}',
-            "status"       VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+            "status"       VARCHAR(20) DEFAULT 'published' CHECK (status IN ('draft', 'published', 'archived')),
             "created_at"   TIMESTAMPTZ DEFAULT NOW(),
             "updated_at"   TIMESTAMPTZ DEFAULT NOW()
           )
@@ -673,6 +673,16 @@ async function main(): Promise<void> {
           `CREATE INDEX IF NOT EXISTS "books_order_idx" ON "${schema}".books ("is_featured" DESC, "sort_order" ASC, "recommended_at" DESC)`,
         );
         createHits++;
+      } catch { /* skip on error */ }
+
+      // 0a-1. online_bulletins — 기본 상태 published.
+      //        모든 INSERT 는 status 를 명시하지만, 열 기본값까지 맞춰 두지 않으면
+      //        상태를 안 보내는 경로가 생길 때 주보가 조용히 숨는다(대표님 지시: 기본=공개).
+      try {
+        await prisma.$executeRawUnsafe(
+          `ALTER TABLE "${schema}".online_bulletins ALTER COLUMN "status" SET DEFAULT 'published'`,
+        ).catch(() => { /* 테이블이 아직 없으면 무시 */ });
+        alterHits++;
       } catch { /* skip on error */ }
 
       // 0a-2. columns_pastoral — 목회칼럼 예약 공개(공개 시작일 / 종료일).

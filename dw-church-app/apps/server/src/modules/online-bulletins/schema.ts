@@ -9,7 +9,8 @@ export const createOnlineBulletinSchema = z.object({
   title: z.string().min(1).max(500),
   serviceDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD'),
   content: z.record(z.unknown()).default({}),
-  status: z.enum(['draft', 'published']).default('draft'),
+  // 기본값은 공개 — 교회가 글을 올리면 바로 보이는 게 기대 동작이다(대표님 지시).
+  status: z.enum(['draft', 'published']).default('published'),
 }).passthrough();
 
 export const updateOnlineBulletinSchema = createOnlineBulletinSchema.partial();

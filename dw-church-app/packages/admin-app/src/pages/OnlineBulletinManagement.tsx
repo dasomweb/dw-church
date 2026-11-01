@@ -560,7 +560,8 @@ export default function OnlineBulletinManagement() {
     setForm({
       title: retitleForDate(item.title || '', srcDate, nextDate, content.serviceTitle ?? ''),
       serviceDate: nextDate,
-      status: 'draft',
+      // 복제본도 공개가 기본 — 새 주보 역시 published 가 기본값이다.
+      status: 'published',
       content,
     });
     setDuplicatedFrom(srcDate ? `${srcDate} 주보` : '이전 주보');
