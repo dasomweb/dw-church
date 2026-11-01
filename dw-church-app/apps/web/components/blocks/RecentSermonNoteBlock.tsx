@@ -89,7 +89,8 @@ export async function RecentSermonNoteBlock({ props, slug }: Props) {
       bulletin && {
         eyebrow: [(props.bulletinLabel as string) || '온라인 주보', shortDate(bulletin.serviceDate || bulletin.service_date)].filter(Boolean).join(' · '),
         title: bulletin.title,
-        href: '/online-bulletin',
+        // 온라인 주보는 목록 페이지가 없고 상세 라우트만 있다 — 최신분으로 바로 보낸다.
+        href: `/online-bulletins/${bulletin.id}`,
       },
     ].filter(Boolean) as RailItem[];
 

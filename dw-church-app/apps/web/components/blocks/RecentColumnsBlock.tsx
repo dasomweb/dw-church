@@ -46,6 +46,78 @@ export async function RecentColumnsBlock({ props, slug }: RecentColumnsBlockProp
     );
   }
 
+  // ── feature-dark: 다크 밴드 저널 ────────────────────────────
+  // 좌측 대표 1편(큰 16:9 카드) + 우측 목록 3편. 잉크 바탕에 흰 글씨라 홈 중간에서
+  // 띠처럼 끊어 주는 자리에 쓴다. 바탕색은 테마 잉크(--dw-text)를 그대로 쓰고,
+  // 운영자가 블록 Style 의 배경으로 덮을 수 있다.
+  if (variant === 'feature-dark') {
+    const ON_DARK = '#fff';
+    const DARK_RULE = 'rgba(255,255,255,.22)';
+    const DARK_IMG = 'rgba(255,255,255,.08)';
+    const SAGE = 'var(--dw-accent, #c9cba8)';
+    const SIDE = Math.max(0, Math.min(6, Math.floor(Number(props.sideLimit) || 3)));
+    const moreLabel = (props.moreLabel as string) || '전체 글';
+    const moreUrl = (props.moreUrl as string) || '';
+
+    const lead = data[0];
+    const side = data.slice(1, 1 + SIDE);
+    const img = (c: any) => c?.topImageUrl ?? c?.top_image_url ?? c?.thumbnailUrl ?? c?.thumbnail_url ?? '';
+    const when = (c: any) => c?.publishAt ?? c?.publish_at ?? c?.createdAt ?? c?.created_at ?? '';
+
+    return (
+      <DataSection props={props} defaultBg="var(--dw-text, #1a1a1a)">
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'space-between', gap: '10px 20px' }}>
+          <h2 style={{ fontFamily: 'var(--dw-font-heading)', margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: '-0.03em', color: ON_DARK }}>{title}</h2>
+          {moreUrl && (
+            <Link href={moreUrl} style={{ fontSize: 13, fontWeight: 600, color: SAGE, textDecoration: 'none' }}>{moreLabel} ›</Link>
+          )}
+        </div>
+
+        <div className="mt-7 flex flex-col gap-8 lg:flex-row lg:gap-10">
+          {lead && (
+            <Link href={`/columns/${lead.id}`} className="min-w-0 lg:flex-1" style={{ color: ON_DARK, textDecoration: 'none' }}>
+              <div style={{ position: 'relative', aspectRatio: '16 / 9', background: DARK_IMG, overflow: 'hidden' }}>
+                {img(lead) && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={img(lead)} alt={lead.title ?? ''} loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                )}
+              </div>
+              <p style={{ margin: '14px 0 0', fontSize: 11, fontWeight: 600, letterSpacing: '.08em', color: SAGE }}>
+                {formatDate(when(lead))}
+              </p>
+              <h3 style={{ fontFamily: 'var(--dw-font-heading)', margin: '8px 0 0', fontSize: 24, fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1.3 }}>
+                {lead.title ?? ''}
+              </h3>
+              {lead.content && (
+                <p style={{ margin: '10px 0 0', maxWidth: '38em', fontSize: 15, lineHeight: 1.7, color: 'rgba(255,255,255,.72)' }}>
+                  {truncate(lead.content, 120)}
+                </p>
+              )}
+            </Link>
+          )}
+
+          {side.length > 0 && (
+            <div className="lg:w-[340px] lg:shrink-0">
+              {side.map((c: any) => (
+                <Link
+                  key={c.id}
+                  href={`/columns/${c.id}`}
+                  className="block"
+                  style={{ borderTop: `1px solid ${DARK_RULE}`, padding: '14px 0 16px', color: ON_DARK, textDecoration: 'none' }}
+                >
+                  <span style={{ display: 'block', fontSize: 11, fontWeight: 600, letterSpacing: '.08em', color: SAGE }}>{formatDate(when(c))}</span>
+                  <span style={{ fontFamily: 'var(--dw-font-heading)', display: 'block', margin: '5px 0 0', fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.4 }}>
+                    {c.title ?? ''}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </DataSection>
+    );
+  }
+
   const gridClass = columns === 1
     ? 'grid-cols-1'
     : columns === 2

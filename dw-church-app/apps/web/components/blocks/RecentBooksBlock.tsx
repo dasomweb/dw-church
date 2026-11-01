@@ -31,6 +31,8 @@ interface BookRow {
   is_featured?: boolean;
   featuredPeriod?: string;
   featured_period?: string;
+  recommendedAt?: string;
+  recommended_at?: string;
 }
 
 function rows(res: unknown): BookRow[] {
@@ -105,6 +107,71 @@ export async function RecentBooksBlock({ props, slug }: Props) {
   const featured = showFeature && (first.isFeatured ?? first.is_featured) ? first : null;
   const list = featured ? books.slice(1) : books;
 
+  // 표지 배열(최대 2장). 첫 장이 대표, 둘째 장은 대표 추천에서만 함께 보여준다 —
+  // 그리드 카드에 두 장을 넣으면 줄이 들쑥날쑥해진다.
+  const covers = (b: BookRow): string[] => {
+    const a = b.coverImageUrls ?? b.cover_image_urls ?? [];
+    return Array.isArray(a) ? a.filter((x) => typeof x === 'string' && x) : [];
+  };
+  const buyUs = (b: BookRow) => b.linkUs || b.link_us || '';
+  const buyKr = (b: BookRow) => b.linkKr || b.link_kr || '';
+
+  // ── feature-row: 이달의 책 한 권을 크게 ─────────────────────
+  // 좌측 2:3 표지 + 우측 라벨/제목/저자/추천사/버튼 2개. 홈에서 "이달의 책" 한
+  // 칸으로 쓰는 자리. 나머지 목록은 그리지 않는다(전용 책 페이지가 담당).
+  if (variant === 'feature-row') {
+    const b = featured ?? first;
+    const INK = 'var(--dw-text, #1a1a1a)';
+    const period = (b.featuredPeriod ?? b.featured_period) === 'week' ? '이번 주 책' : '이달의 책';
+    const when = String(b.recommendedAt ?? b.recommended_at ?? '').slice(0, 10);
+    const month = /^\d{4}-(\d{2})/.exec(when);
+    const eyebrow = [String(props.eyebrow ?? '') || period, month ? `${Number(month[1])}월` : '', b.category || '']
+      .filter(Boolean).join(' · ');
+
+    // 버튼 — 운영자가 주소를 넣으면 그 링크, 안 넣으면 구입처를 그대로 보여준다.
+    const primaryLabel = String(props.primaryLabel ?? '소개 글 읽기');
+    const primaryUrl = String(props.primaryUrl ?? '').trim();
+    const secondaryLabel = String(props.secondaryLabel ?? '지난 책');
+    const secondaryUrl = String(props.secondaryUrl ?? '').trim();
+    const btn = (fill: boolean) => ({
+      display: 'inline-block', fontSize: 14, fontWeight: 600, textDecoration: 'none',
+      padding: '11px 20px', borderRadius: 2,
+      background: fill ? INK : 'transparent', color: fill ? '#fff' : INK,
+      border: `1px solid ${fill ? INK : BORDER}`,
+    } as const);
+
+    return (
+      <DataSection props={props} defaultBg="var(--dw-background)">
+        <div style={{ borderTop: `2px solid ${INK}`, paddingTop: 28, display: 'flex', flexWrap: 'wrap', gap: '24px 40px', alignItems: 'flex-start' }}>
+          <div style={{ flex: '0 0 200px', maxWidth: 200 }}>
+            <Cover src={covers(b)[0]} title={b.title} />
+          </div>
+          <div style={{ flex: '1 1 340px', minWidth: 0 }}>
+            {eyebrow && <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: PRIMARY }}>{eyebrow}</p>}
+            <h2 style={{ ...SERIF, margin: '10px 0 0', fontSize: 'clamp(24px,3vw,34px)', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.25, color: INK }}>
+              {b.title}
+            </h2>
+            {(b.author || b.publisher) && (
+              <p style={{ margin: '8px 0 0', fontSize: 14, color: MUTED }}>{[b.author, b.publisher].filter(Boolean).join(' · ')}</p>
+            )}
+            {b.recommendation && (
+              <p style={{ margin: '16px 0 0', maxWidth: '36em', fontSize: 16, lineHeight: 1.8, color: TEXT, whiteSpace: 'pre-line' }}>
+                {b.recommendation}
+              </p>
+            )}
+            <div style={{ marginTop: 20, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+              {primaryUrl
+                ? <a href={primaryUrl} style={btn(true)}>{primaryLabel}</a>
+                : null}
+              {secondaryUrl && <a href={secondaryUrl} style={btn(false)}>{secondaryLabel}</a>}
+            </div>
+            {!primaryUrl && <BuyLinks us={buyUs(b)} kr={buyKr(b)} />}
+          </div>
+        </div>
+      </DataSection>
+    );
+  }
+
   const cols = variant === 'grid-2' ? 2 : variant === 'grid-4' ? 4 : variant === 'list' ? 1 : 3;
   const gridClass = cols === 1
     ? 'grid-cols-1'
@@ -114,14 +181,6 @@ export async function RecentBooksBlock({ props, slug }: Props) {
         ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'
         : 'grid-cols-2 sm:grid-cols-2 lg:grid-cols-3';
 
-  // 표지 배열(최대 2장). 첫 장이 대표, 둘째 장은 대표 추천에서만 함께 보여준다 —
-  // 그리드 카드에 두 장을 넣으면 줄이 들쑥날쑥해진다.
-  const covers = (b: BookRow): string[] => {
-    const a = b.coverImageUrls ?? b.cover_image_urls ?? [];
-    return Array.isArray(a) ? a.filter((x) => typeof x === 'string' && x) : [];
-  };
-  const buyUs = (b: BookRow) => b.linkUs || b.link_us || '';
-  const buyKr = (b: BookRow) => b.linkKr || b.link_kr || '';
 
   return (
     <DataSection props={props} defaultBg="var(--dw-background)">

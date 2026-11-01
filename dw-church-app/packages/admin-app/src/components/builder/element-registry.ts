@@ -370,7 +370,15 @@ const RECENT_BOOKS: BlockElementRegistry = {
         { value: 'grid-2', label: '2 columns' },
         { value: 'grid-4', label: '4 columns' },
         { value: 'list', label: 'List' },
+        { value: 'feature-row', label: '이달의 책 (표지 + 소개 · 한 권만)' },
       ]},
+    ]},
+    { title: '이달의 책 전용', elements: [
+      { label: '라벨(윗글)', path: 'eyebrow', kind: 'text', hint: '비우면 이달의 책 / 이번 주 책 (추천 주기에 따라)' },
+      { label: '버튼1 텍스트', path: 'primaryLabel', kind: 'text', hint: '기본 소개 글 읽기' },
+      { label: '버튼1 주소', path: 'primaryUrl', kind: 'text', hint: '비우면 버튼 대신 구입처 링크를 보여준다' },
+      { label: '버튼2 텍스트', path: 'secondaryLabel', kind: 'text', hint: '기본 지난 책' },
+      { label: '버튼2 주소', path: 'secondaryUrl', kind: 'text', hint: '비우면 숨김' },
     ]},
   ],
 };
@@ -1043,6 +1051,24 @@ const VALUES_GRID: BlockElementRegistry = {
       { label: 'Columns (mobile)', path: 'mobileColumns', kind: 'select', choices: [
         { value: '1', label: '1 column' }, { value: '2', label: '2 columns' },
       ], hint: '휴대폰에서 한 줄에 몇 칸' },
+      { label: 'Layout', path: 'variant', kind: 'select', choices: [
+        { value: '', label: '카드 그리드 (기본)' },
+        { value: 'chips', label: '칩 목록 (좌측 라벨 + 둥근 칩)' },
+        { value: 'split-links', label: '좌 소개 + 우 링크 목록' },
+      ]},
+    ]},
+    { title: '칩 목록 전용', elements: [
+      { label: '더보기 텍스트', path: 'moreLabel', kind: 'text' },
+      { label: '더보기 주소', path: 'moreHref', kind: 'text' },
+    ]},
+    { title: '좌 소개 + 우 링크 전용', elements: [
+      { label: '라벨(윗글)', path: 'eyebrow', kind: 'text', hint: '예: ATLANTA YEDAM CHURCH' },
+      { label: '소개 문구', path: 'description', kind: 'text' },
+      { label: '링크 목록 라벨', path: 'listTitle', kind: 'text', hint: '예: 우리가 지키려는 것들' },
+      { label: '버튼1 텍스트', path: 'primaryLabel', kind: 'text' },
+      { label: '버튼1 주소', path: 'primaryUrl', kind: 'text' },
+      { label: '버튼2 텍스트', path: 'secondaryLabel', kind: 'text' },
+      { label: '버튼2 주소', path: 'secondaryUrl', kind: 'text' },
     ]},
     ...commonSectionStyleSections({ bgModeChoices: DEFAULT_BG_MODE_CHOICES, designHint: '비우면 위 Background preset 사용' }),
   ],
@@ -1698,7 +1724,13 @@ const RECENT_COLUMNS = churchBlock(
     { key: 'variant', label: 'Columns', type: 'select', choices: [
       { value: 'grid-3', label: '3 columns' }, { value: 'grid-2', label: '2 columns' },
       { value: 'grid-4', label: '4 columns' }, { value: 'list', label: 'List' },
+      { value: 'feature-dark', label: '다크 밴드 (대표 1 + 목록 3)' },
     ]},
+  ]},
+  { title: '다크 밴드 전용', fields: [
+    { key: 'sideLimit', label: '우측 목록 개수', type: 'number', hint: '기본 3 (최대 6)' },
+    { key: 'moreLabel', label: '전체 보기 텍스트', type: 'text', hint: '기본 전체 글' },
+    { key: 'moreUrl', label: '전체 보기 주소', type: 'text', hint: '비우면 링크를 숨긴다' },
   ]},
 );
 const VIDEO_BOARD = churchBlock(
@@ -1823,6 +1855,38 @@ const RECENT_SERMON_NOTE = churchBlock(
     { key: 'eyebrow', label: '라벨(윗글)', type: 'text', hint: '예: 이번 주 설교노트. 내용·대표 이미지는 [설교노트 관리]에서 등록합니다.' },
     { key: 'moreLabel', label: '링크 텍스트', type: 'text', hint: '예: 설교노트 보기' },
     { key: 'moreUrl', label: '링크 주소', type: 'text', hint: '기본 /sermon-note (설교노트 보기 페이지)' },
+    { key: 'variant', label: 'Layout', type: 'select', choices: [
+      { value: 'default', label: '기본 (좌 본문 + 우 썸네일)' },
+      { value: 'hero-split', label: '마스트헤드 (큰 사진 + 우측 링크 레일)' },
+    ]},
+  ]},
+  { title: '마스트헤드 전용', fields: [
+    { key: 'tagLabel', label: '태그', type: 'text', hint: '사진 아래 검은 라벨. 기본 설교노트' },
+    { key: 'author', label: '설교자 표기', type: 'text', hint: '예: John Kwak 목사' },
+    { key: 'worshipTime', label: '예배 시간', type: 'text', hint: '예: 주일 11:00 (비우면 숨김)' },
+    { key: 'worshipLinkLabel', label: '예배 안내 텍스트', type: 'text', hint: '기본 예배 안내' },
+    { key: 'worshipHref', label: '예배 안내 주소', type: 'text' },
+    { key: 'columnLabel', label: '칼럼 레일 라벨', type: 'text', hint: '기본 저널' },
+    { key: 'bulletinLabel', label: '주보 레일 라벨', type: 'text', hint: '기본 온라인 주보' },
+  ]},
+);
+// 통합 피드 — 여러 Content Module 의 최신글을 한 섹션에 합쳐 카테고리 탭으로 걸러 봄.
+// 담을 모듈은 운영자가 정한다(모듈 키 + 라벨). 글 내용은 각 모듈 관리 페이지에서.
+const LATEST_FEED = churchBlock(
+  { title: '표시', fields: [
+    { key: 'title', label: '제목', type: 'text', hint: '예: 최신' },
+    { key: 'sources', label: '담을 모듈', type: 'text', hint: '쉼표로 나열. 라벨을 바꾸려면 키:라벨 — 예) sermon_note:설교노트, column:저널, online_bulletin:주보, book:이달의 책 · 쓸 수 있는 키: sermon_note · column · online_bulletin · sermon · book · event · album · devotion' },
+    { key: 'limit', label: '카드 개수', type: 'number', hint: '기본 4' },
+    { key: 'perSource', label: '모듈별 최대 개수', type: 'number', hint: '한 모듈이 피드를 독점하지 않게 제한. 기본 4' },
+    { key: 'columns', label: '열 수', type: 'select', choices: [{ value: '2', label: '2열' }, { value: '3', label: '3열' }, { value: '4', label: '4열' }] },
+    { key: 'showTabs', label: '카테고리 탭', type: 'select', choices: [{ value: 'show', label: '표시' }, { value: 'hide', label: '숨김' }] },
+    { key: 'allLabel', label: "'전체' 탭 라벨", type: 'text', hint: '기본 전체' },
+  ]},
+  { title: '링크', fields: [
+    { key: 'moreLabel', label: '더보기 텍스트', type: 'text' },
+    { key: 'moreUrl', label: '더보기 주소', type: 'text' },
+    { key: 'bookHref', label: '책 추천 연결 주소', type: 'text', hint: '책은 상세 페이지가 없어서 비우면 카드에 링크를 걸지 않는다' },
+    { key: 'devotionHref', label: '말씀 묵상 연결 주소', type: 'text', hint: '묵상도 상세 페이지가 없어서 비우면 링크 없음' },
   ]},
 );
 // 설교노트 목록 — 설교노트 모듈 전체를 대상 탭 + 카드 그리드로. 내용은 [설교노트 관리]에서.
@@ -2091,6 +2155,7 @@ export const ELEMENT_REGISTRY: Record<string, BlockElementRegistry> = {
   sermon_magazine:  SERMON_MAGAZINE,
   sermon_meditation: SERMON_MEDITATION,
   recent_sermon_note: RECENT_SERMON_NOTE,
+  latest_feed: LATEST_FEED,
   sermon_note_list: SERMON_NOTE_LIST,
   online_bulletin_list: ONLINE_BULLETIN_LIST,
   page_header: PAGE_HEADER,

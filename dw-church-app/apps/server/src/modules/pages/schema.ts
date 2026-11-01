@@ -105,6 +105,8 @@ export const blockTypes = [
   'sermon_meditation',
   // 최근 설교노트 — 설교노트 모듈 최신 1건(대표 이미지·제목·본문 발췌)을 홈에 표시.
   'recent_sermon_note',
+  // 통합 피드 — 설교노트·칼럼·주보·설교·책 등 여러 Content Module 최신글을 한 섹션에 합쳐 탭으로 걸러 봄.
+  'latest_feed',
   'sermon_note_list',
   'online_bulletin_list',
   'page_header',

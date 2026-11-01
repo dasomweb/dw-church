@@ -84,6 +84,87 @@ export function ValuesGridBlock({ props }: ValuesGridBlockProps) {
     );
   }
 
+  // split-links variant — 좌: 소개(라벨+제목+리드+버튼 2개) / 우: 항목 링크 목록 2열.
+  // 교회소개처럼 "우리가 지키려는 것들" 을 한눈에 늘어놓고 각 상세로 보내는 자리.
+  // 카드 그리드보다 밀도가 높아 홈에 넣기 좋다.
+  if (variant === 'split-links') {
+    const INK = 'var(--dw-text, #1a1a1a)';
+    const BODY = 'var(--brand-muted, #55514a)';
+    const SECONDARY = 'var(--dw-secondary, #5e6044)';
+    const RULE = 'var(--border, #e8e4dc)';
+    const eyebrow = (props.eyebrow as string) ?? '';
+    const lead = (props.description as string) ?? '';
+    const listTitle = (props.listTitle as string) ?? '';
+    const primaryLabel = (props.primaryLabel as string) ?? '';
+    const primaryUrl = (props.primaryUrl as string) ?? '';
+    const secondaryLabel = (props.secondaryLabel as string) ?? '';
+    const secondaryUrl = (props.secondaryUrl as string) ?? '';
+    // 제목은 줄바꿈을 그대로 살린다 — 시안의 두 줄 제목(<br>) 을 운영자가 재현할 수 있게.
+    const titleLines = String(title).split(/<br\s*\/?>|\n/).map((t) => t.trim()).filter(Boolean);
+    const btn = (fill: boolean): CSSProperties => ({
+      display: 'inline-block', fontSize: 14, fontWeight: 600, textDecoration: 'none',
+      padding: '11px 20px', borderRadius: 2,
+      background: fill ? INK : 'transparent', color: fill ? '#fff' : INK,
+      border: `1px solid ${fill ? INK : RULE}`,
+    });
+
+    return (
+      <SectionShell
+        props={props}
+        className={`b2b-cq-host ${sectionBg.className}`.trim()}
+        style={{ paddingBlock: 'var(--section-py-md)', ...sectionBg.style }}
+        applyLayout
+        defaultContentClass="mx-auto max-w-7xl px-4 sm:px-6"
+      >
+        <div style={{ display: 'grid', gap: '32px 48px', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
+          <div style={{ minWidth: 0 }}>
+            {eyebrow && (
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: '.14em', color: SECONDARY }}>{eyebrow}</p>
+            )}
+            {titleLines.length > 0 && (
+              <h2 style={{
+                fontFamily: 'var(--dw-font-heading, var(--brand-font-heading, inherit))',
+                margin: '14px 0 0', fontSize: 'clamp(28px,3.4vw,40px)', fontWeight: 800,
+                letterSpacing: '-0.035em', lineHeight: 1.2, color: INK,
+              }}>
+                {titleLines.map((line, i) => <span key={i} style={{ display: 'block' }}>{line}</span>)}
+              </h2>
+            )}
+            {lead && (
+              <p style={{ margin: '16px 0 0', maxWidth: '34em', fontSize: 17, lineHeight: 1.75, color: BODY }}>{lead}</p>
+            )}
+            {(primaryUrl || secondaryUrl) && (
+              <div style={{ marginTop: 22, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                {primaryUrl && primaryLabel && <a href={primaryUrl} style={btn(true)}>{primaryLabel}</a>}
+                {secondaryUrl && secondaryLabel && <a href={secondaryUrl} style={btn(false)}>{secondaryLabel}</a>}
+              </div>
+            )}
+          </div>
+
+          <div style={{ minWidth: 0 }}>
+            {listTitle && (
+              <p style={{ margin: '0 0 6px', fontSize: 12, fontWeight: 700, letterSpacing: '.14em', color: SECONDARY }}>{listTitle}</p>
+            )}
+            <div style={{ display: 'grid', gap: '0 28px', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
+              {items.map((it, i) => {
+                const label = String(it.title ?? '');
+                if (!label) return null;
+                const row: CSSProperties = {
+                  display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10,
+                  borderTop: `1px solid ${RULE}`, padding: '13px 0',
+                  fontSize: 15, fontWeight: 600, color: INK, textDecoration: 'none',
+                };
+                return it.href
+                  ? <a key={i} href={it.href} style={row}><span>{label}</span><span aria-hidden style={{ color: SECONDARY }}>›</span></a>
+                  : <span key={i} style={row}>{label}</span>;
+              })}
+            </div>
+          </div>
+        </div>
+      </SectionShell>
+    );
+  }
+
   const cqVars = {
     '--cq-base': mobileColumns,
     '--cq-sm': '2',

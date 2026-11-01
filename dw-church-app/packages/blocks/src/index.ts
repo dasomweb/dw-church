@@ -52,6 +52,7 @@ export {
   type ResolveContexts,
 } from './utilities/dynamic-data';
 export { Icon } from './utilities/Icon';
+export { FEED_SOURCE_LABELS, DEFAULT_FEED_SOURCES, parseFeedSources, plainExcerpt, type FeedSource } from './utilities/feed-sources';
 export { ICONS, ICON_NAMES, isKnownIcon, type IconDef } from './icons/icons';
 
 // Element primitives — apps/web 측 데이터 블록 (ProductsShowcaseBlock 등)
