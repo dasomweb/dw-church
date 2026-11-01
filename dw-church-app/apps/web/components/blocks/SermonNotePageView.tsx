@@ -102,6 +102,9 @@ function NoteBody({ md, fs = 1 }: { md: string; fs?: number }) {
   let key = 0;
   const at = (j: number) => lines[j] ?? '';
   const HR = /^(-{3,}|\*{3,}|_{3,})$/;
+  // 본문 중간 사진 — 한 줄이 통째로 ![캡션](주소) 일 때만 이미지로 본다.
+  // 문장 안에 섞인 경우까지 처리하면 InlineMd 와 규칙이 겹쳐 오히려 깨진다.
+  const IMG_LINE = /^!\[([^\]]*)\]\(([^)\s]+)\)$/;
   const OL = /^\d+[.)]\s+/;
   const BULLET = (t: string) => /^[-*]\s+/.test(t);
 
@@ -111,6 +114,30 @@ function NoteBody({ md, fs = 1 }: { md: string; fs?: number }) {
 
     // 구분선
     if (HR.test(t)) { out.push(<hr key={key++} style={{ border: 'none', borderTop: `1px solid ${FAINT}`, margin: '26px 0' }} />); i++; continue; }
+
+    // 본문 사진 — 원본 비율 그대로. 설교노트에 들어가는 사진은 도표·악보·사진이
+    // 섞여 있어 고정 비율로 자르면 내용이 잘린다.
+    const img = IMG_LINE.exec(t);
+    if (img) {
+      const caption = (img[1] ?? '').trim();
+      out.push(
+        <figure key={key++} style={{ margin: '26px 0 0' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={img[2]}
+            alt={caption}
+            style={{ display: 'block', width: '100%', height: 'auto', background: SURFACE }}
+            loading="lazy"
+          />
+          {caption && (
+            <figcaption style={{ margin: '8px 0 0', fontSize: z(13, fs), lineHeight: 1.7, color: MUTED }}>
+              {caption}
+            </figcaption>
+          )}
+        </figure>,
+      );
+      i++; continue;
+    }
 
     // 성경 인용 박스 (> ...)
     if (t.startsWith('>')) {

@@ -46,9 +46,13 @@ export function MultiFileUpload({
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
 
-  const handleFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const picked = Array.from(e.target.files ?? []);
+  /** 확장자/타입으로 문서만 추린다 — 드롭은 아무 파일이나 들어올 수 있다. */
+  const isDoc = (f: File) =>
+    /pdf|msword|wordprocessingml/i.test(f.type) || /\.(pdf|docx?|hwpx?)$/i.test(f.name);
+
+  const upload = async (picked: File[]) => {
     if (picked.length === 0) return;
     setError(null);
     const room = max - value.length;
@@ -70,6 +74,24 @@ export function MultiFileUpload({
       setUploading(false);
       if (fileRef.current) fileRef.current.value = '';
     }
+  };
+
+  const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    void upload(Array.from(e.target.files ?? []));
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const dropped = Array.from(e.dataTransfer.files ?? []);
+    const docs = dropped.filter(isDoc);
+    if (docs.length === 0) {
+      setError('PDF 또는 워드 파일만 올릴 수 있습니다.');
+      return;
+    }
+    // 섞여 들어왔으면 문서만 올리고 나머지는 조용히 무시하지 않고 알려준다.
+    if (docs.length < dropped.length) setError(`문서가 아닌 파일 ${dropped.length - docs.length}개는 제외했습니다.`);
+    void upload(docs);
   };
 
   const setName = (i: number, name: string) => {
@@ -117,14 +139,30 @@ export function MultiFileUpload({
       )}
 
       <input ref={fileRef} type="file" accept={accept} multiple onChange={handleFiles} className="hidden" />
-      <button
-        type="button"
-        onClick={() => fileRef.current?.click()}
-        disabled={uploading || value.length >= max}
-        className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+      {/* 파일 선택과 드래그앤드롭 둘 다 받는다 — 교역자는 보통 탐색기에서 끌어다 놓는다. */}
+      <div
+        onDragOver={(e) => { e.preventDefault(); if (!uploading && value.length < max) setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+        onClick={() => { if (!uploading && value.length < max) fileRef.current?.click(); }}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileRef.current?.click(); } }}
+        className={`flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed px-3 py-5 text-center transition-colors ${
+          uploading || value.length >= max
+            ? 'pointer-events-none border-gray-200 opacity-60'
+            : dragOver
+              ? 'border-blue-500 bg-blue-50/60'
+              : 'border-gray-300 hover:border-blue-400'
+        }`}
       >
-        {uploading ? '올리는 중...' : value.length >= max ? `최대 ${max}개` : '＋ 파일 선택 (PDF · 워드)'}
-      </button>
+        <span className="text-sm font-medium text-gray-700">
+          {uploading ? '올리는 중...' : value.length >= max ? `최대 ${max}개까지 올렸습니다` : '파일을 끌어다 놓거나 클릭해서 선택'}
+        </span>
+        {!uploading && value.length < max && (
+          <span className="text-xs text-gray-400">PDF · 워드 · 파일당 25MB · 여러 개 한 번에</span>
+        )}
+      </div>
 
       {help && !error && <p className="mt-1 text-xs text-gray-400">{help}</p>}
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}

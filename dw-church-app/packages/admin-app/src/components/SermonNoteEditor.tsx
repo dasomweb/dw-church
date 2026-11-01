@@ -23,8 +23,14 @@ type Study = NonNullable<SermonNoteCongregation['study']>;
 
 // ── 리치 텍스트 입력 (마크다운 저장) — 스토어프론트가 동일 규칙으로 렌더 ──
 // 제목 #/##/###, **굵게**, *기울임*, > 인용, - 불릿, 1. 번호, [텍스트](URL), --- 구분선.
-function NoteRichArea({ value, onChange, placeholder, rows = 14 }: { value: string; onChange: (v: string) => void; placeholder?: string; rows?: number }) {
+function NoteRichArea({ value, onChange, placeholder, rows = 14, uploadImage }: {
+  value: string; onChange: (v: string) => void; placeholder?: string; rows?: number;
+  /** 주면 툴바에 '사진' 버튼이 생긴다. 올린 뒤 커서 자리에 ![](주소) 를 넣는다. */
+  uploadImage?: (file: File) => Promise<string>;
+}) {
   const ref = useRef<HTMLTextAreaElement>(null);
+  const imgRef = useRef<HTMLInputElement>(null);
+  const [imgBusy, setImgBusy] = useState(false);
   const apply = (make: (sel: string, v: string, s: number, e: number) => { text: string; ns: number; ne: number }) => {
     const el = ref.current; if (!el) return;
     const s = el.selectionStart, e = el.selectionEnd;
@@ -45,6 +51,24 @@ function NoteRichArea({ value, onChange, placeholder, rows = 14 }: { value: stri
     return { text: v.slice(0, s) + ins + v.slice(s), ns: s + ins.length, ne: s + ins.length };
   });
   const link = () => { const u = window.prompt('링크 URL을 입력하세요', 'https://'); if (u) wrap('[', `](${u})`); };
+  // 사진은 **한 줄을 통째로** 차지하게 넣는다 — 스토어프론트 렌더러가 줄 전체가
+  // ![](...) 일 때만 이미지로 본다(문장 중간 혼용은 서식 규칙과 충돌해 안 받는다).
+  const pickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0 || !uploadImage) return;
+    setImgBusy(true);
+    try {
+      for (const f of files) {
+        const url = await uploadImage(f);
+        insertLine(`![](${url})`);
+      }
+    } catch {
+      // 업로드 실패는 본문을 건드리지 않는다 — 깨진 마크다운이 남는 게 더 나쁘다.
+    } finally {
+      setImgBusy(false);
+      if (imgRef.current) imgRef.current.value = '';
+    }
+  };
   const b = 'px-1.5 py-0.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded';
   return (
     <div className="overflow-hidden rounded-lg border border-gray-200">
@@ -60,6 +84,15 @@ function NoteRichArea({ value, onChange, placeholder, rows = 14 }: { value: stri
         <button type="button" onClick={() => prefixLine('1. ')} className={b} title="번호">1.</button>
         <button type="button" onClick={link} className={b} title="링크">링크</button>
         <button type="button" onClick={() => insertLine('---')} className={b} title="구분선">―</button>
+        {uploadImage && (
+          <>
+            <span className="mx-1 text-gray-200">|</span>
+            <button type="button" onClick={() => imgRef.current?.click()} disabled={imgBusy} className={`${b} disabled:opacity-50`} title="본문 중간에 사진 넣기">
+              {imgBusy ? '올리는 중…' : '🖼 사진'}
+            </button>
+            <input ref={imgRef} type="file" accept="image/*" multiple onChange={pickImage} className="hidden" />
+          </>
+        )}
       </div>
       <textarea ref={ref} value={value} onChange={(e) => onChange(e.target.value)} rows={rows} placeholder={placeholder} className="w-full resize-y border-0 px-3 py-2.5 font-mono text-sm leading-[1.7] focus:outline-none focus:ring-0" />
     </div>
@@ -197,10 +230,10 @@ export function SermonNoteEditor({ content, onChange }: { content: SermonNoteCon
           </FormField>
         </div>
         <FormField label="설교노트 · 한국어">
-          <NoteRichArea value={cur.text ?? ''} onChange={(v) => setCong(tab, { text: v })} placeholder="설교노트 본문 — 상단 서식 버튼(제목/굵게/인용/불릿/번호/링크)을 활용하세요." />
+          <NoteRichArea value={cur.text ?? ''} onChange={(v) => setCong(tab, { text: v })} uploadImage={uploadImage} placeholder="설교노트 본문 — 상단 서식 버튼(제목/굵게/인용/불릿/번호/링크/사진)을 활용하세요." />
         </FormField>
         <FormField label="설교노트 · English">
-          <NoteRichArea value={cur.textEn ?? ''} onChange={(v) => setCong(tab, { textEn: v })} placeholder="English sermon note (rich text)" />
+          <NoteRichArea value={cur.textEn ?? ''} onChange={(v) => setCong(tab, { textEn: v })} uploadImage={uploadImage} placeholder="English sermon note (rich text)" />
         </FormField>
 
         {hasCartoon && (
