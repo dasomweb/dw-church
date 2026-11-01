@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, type ReactNode, type CSSProperties, type TouchEvent as RTouchEvent } from 'react';
 import { createPortal } from 'react-dom';
 import type { SermonNoteContent } from '@dw-church/api-client';
+import { NoteBody, type NoteMdTheme } from './note-markdown';
 
 // 온라인 주보 스토어프론트 뷰 — Claude Design "온라인 주보 개선안 v2" 반영.
 // 한 번에 한 섹션만 표시(나머지 숨김) — 상단 현재섹션(목차 바텀시트)·진행바·"다음 섹션" 버튼으로 전환.
@@ -20,6 +21,25 @@ const surface = 'var(--dw-surface, #f7f8fa)';
 const bg = 'var(--dw-background, #ffffff)';
 
 const html = (s?: string) => ({ dangerouslySetInnerHTML: { __html: s || '' } });
+
+// 설교 노트 본문 렌더 테마 — 전용 설교노트 페이지와 같은 공용 렌더러를 쓰되,
+// 색·라운드는 온라인 주보 카드 톤(테넌트 테마 토큰)에 맞춘다.
+const BULLETIN_MD: NoteMdTheme = {
+  text: textColor,
+  muted,
+  primary,
+  secondary: primary,
+  faint: muted,
+  marker: primary,
+  rule: faint,
+  surface,
+  bodyStyle: {},
+  headingStyle: { fontFamily: 'var(--brand-font-heading, inherit)' },
+  radius: 14,
+  quoteAccent: primary,
+  bodySize: 16,
+  bodyLine: 1.85,
+};
 
 export function OnlineBulletinView({ bulletin, sermonNote: moduleNote, backHref }: { bulletin: Record<string, any>; sermonNote?: SermonNoteContent | null; backHref?: string }) {
   const [lang, setLang] = useState<'ko' | 'en'>('ko');
@@ -556,96 +576,25 @@ function QGroup({ label, items }: { label: string; items?: string[] }) {
   );
 }
 
-// 설교 노트를 '번호 붙은 제목' 포인트별 아코디언으로. 성인=## N., 어린이=# N. 모두 지원.
-// - point 레벨 = 문서 안 번호 제목 중 "가장 얕은(#이 적은)" 레벨 하나만 포인트로 분할
-//   (어린이 노트의 요약 '### 1.' 같은 더 깊은 번호 제목은 포인트가 아니라 본문/아웃트로로 취급)
-// - 포인트 앞 내용 → intro(상단 렌더), 포인트 뒤 얕은 제목부터 끝까지 → outro(하단 렌더)
-function splitPoints(md: string): { intro: string; points: { num: string; title: string; body: string }[]; outro: string } {
-  const lines = (md || '').replace(/\r\n/g, '\n').split('\n');
-  const heading = (t: string) => { const m = /^(#{1,6})\s+(.*)$/.exec(t); return m ? { level: m[1]!.length, rest: m[2]!.trim() } : null; };
-  const numbered = (rest: string) => { const m = /^(\d+)[.)]\s*(.*)$/.exec(rest); return m ? { num: m[1]!, title: (m[2] || '').trim() } : null; };
-
-  let pointLevel = Infinity;
-  for (const line of lines) { const h = heading(line.trim()); if (h && numbered(h.rest)) pointLevel = Math.min(pointLevel, h.level); }
-  if (!isFinite(pointLevel)) return { intro: (md || '').trim(), points: [], outro: '' };
-
-  const introLines: string[] = []; const outroLines: string[] = [];
-  const points: { num: string; title: string; body: string }[] = [];
-  let cur: { num: string; title: string; body: string } | null = null;
-  let phase: 'intro' | 'points' | 'outro' = 'intro';
-  for (const line of lines) {
-    const t = line.trim();
-    const h = heading(t);
-    if (h) {
-      const nm = numbered(h.rest);
-      if (nm && h.level === pointLevel) { if (cur) points.push(cur); cur = { num: nm.num, title: nm.title || nm.num, body: '' }; phase = 'points'; continue; }
-      if (!nm && h.level <= pointLevel) {
-        if (phase === 'intro') { if (h.level === 1) continue; /* 문서 제목류 스킵 */ introLines.push(line); continue; }
-        phase = 'outro'; outroLines.push(line); continue; // 포인트 뒤 얕은 비번호 제목 → 아웃트로 시작
-      }
-      // 더 깊은 제목 / 포인트레벨 아닌 번호 제목 → 현재 phase 본문으로 흘림
-    }
-    if (phase === 'intro') introLines.push(line);
-    else if (phase === 'points' && cur) cur.body += line + '\n';
-    else outroLines.push(line);
-  }
-  if (cur) points.push(cur);
-  return { intro: introLines.join('\n').trim(), points, outro: outroLines.join('\n').trim() };
-}
-
+// 설교 노트 — 설교노트 모듈에 **작성된 그대로** 보여준다.
+// 예전에는 번호 제목을 포인트로 쪼개 아코디언으로 접고(첫 항목만 펼침), 카툰을
+// 포인트에 임의로 짝지우고, 뒤쪽 내용을 아웃트로로 밀어 순서를 바꿨다. 목사가 쓴
+// 순서가 뒤바뀌고 일부(# 제목)는 아예 사라져서 전부 걷어냈다.
+// 렌더러는 전용 설교노트 페이지와 **같은 공용 렌더러**(note-markdown)를 쓴다.
 function SermonNote({ title, text, pointImages, onOpen }: {
   title?: string; text?: string;
-  pointImages?: string[]; // 포인트별 카툰 컷(어린이 설교) — points[i] ↔ pointImages[i]
+  pointImages?: string[]; // 설교 카툰(어린이/Kids) — 올린 순서대로 본문 아래에
   onOpen?: (imgs: string[], i: number, title: string) => void;
 }) {
-  const { intro, points, outro } = splitPoints(text || '');
-  const [open, setOpen] = useState<Record<number, boolean>>({ 0: true });
   const imgs = (pointImages ?? []).filter(Boolean);
-  if (points.length === 0) {
-    return (
-      <div>
-        {title && <p className="font-extrabold" style={{ color: textColor, fontSize: 18, marginBottom: 8 }}>{title}</p>}
-        <Markdown text={text} />
-        {imgs.length > 0 && onOpen && <div style={{ marginTop: 14 }}><ScoreList imgs={imgs} title={title || '설교 카툰'} onOpen={onOpen} /></div>}
-      </div>
-    );
-  }
-  const extra = imgs.slice(points.length);
   return (
     <div>
-      {title && <p className="font-extrabold" style={{ color: textColor, fontSize: 18 }}>{title}</p>}
-      {intro && <div style={{ marginTop: title ? 6 : 0 }}><Markdown text={intro} /></div>}
-      <div className="flex flex-col gap-2.5" style={{ marginTop: 16 }}>
-          {points.map((p, i) => {
-            const isOpen = open[i] ?? false;
-            const cut = imgs[i]; // 이 포인트에 짝지어진 카툰 컷
-            return (
-              <div key={i} style={{ border: `1px solid ${border}`, borderRadius: 14, overflow: 'hidden' }}>
-                <button type="button" onClick={() => setOpen((o) => ({ ...o, [i]: !isOpen }))} className="flex gap-2.5 w-full items-start" style={{ padding: 16, cursor: 'pointer', background: 'none', border: 'none', textAlign: 'left' }}>
-                  <span style={{ flex: 'none', color: primary, fontWeight: 800, fontSize: 13, marginTop: 2 }}>{p.num}</span>
-                  <span style={{ flex: 1, minWidth: 0, fontSize: 16, fontWeight: 700, lineHeight: 1.55, letterSpacing: '-0.02em', color: textColor }}>{p.title}</span>
-                  <span style={{ flex: 'none', color: muted, fontSize: 12, marginTop: 4 }}>{isOpen ? '▴' : '▾'}</span>
-                </button>
-                {isOpen && (
-                  <div style={{ padding: '14px 16px 18px', borderTop: `1px solid ${faint}` }}>
-                    {cut && onOpen && (
-                      <button type="button" onClick={() => onOpen(imgs, i, title || '설교 카툰')} style={{ display: 'block', width: '100%', margin: '0 0 14px', padding: 0, border: `1px solid ${border}`, borderRadius: 12, overflow: 'hidden', background: surface, cursor: 'zoom-in' }}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={cut} alt={`${p.title} 카툰`} style={{ display: 'block', width: '100%', height: 'auto' }} loading="lazy" />
-                      </button>
-                    )}
-                    <Markdown text={p.body} />
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      {outro && <div style={{ marginTop: 20 }}><Markdown text={outro} /></div>}
-      {extra.length > 0 && onOpen && (
-        <div style={{ marginTop: 14 }}>
+      {title && <p className="font-extrabold" style={{ color: textColor, fontSize: 18, marginBottom: 8 }}>{title}</p>}
+      <NoteBody md={text ?? ''} theme={BULLETIN_MD} />
+      {imgs.length > 0 && onOpen && (
+        <div style={{ marginTop: 18 }}>
           <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', color: muted, marginBottom: 10 }}>설교 카툰</div>
-          <ScoreList imgs={extra} title={title || '설교 카툰'} onOpen={onOpen} />
+          <ScoreList imgs={imgs} title={title || '설교 카툰'} onOpen={onOpen} />
         </div>
       )}
     </div>
@@ -703,60 +652,3 @@ function SermonEmpty({ label }: { label: string }) {
   );
 }
 
-/* ── mini markdown (설교 노트: # 제목, ## 소제목, **강조**, - 불릿, 1. 번호, --- 구분선, > 인용) ── */
-function InlineMd({ text }: { text: string }) {
-  // **굵게** *기울임* [텍스트](URL) 인라인 서식.
-  const s = text ?? '';
-  const out: ReactNode[] = [];
-  const re = /(\*\*[^*]+\*\*|\*[^*]+\*|\[[^\]]+\]\([^)]+\))/g;
-  let last = 0; let m: RegExpExecArray | null; let i = 0;
-  while ((m = re.exec(s)) !== null) {
-    if (m.index > last) out.push(<span key={i++}>{s.slice(last, m.index)}</span>);
-    const t = m[0];
-    if (t.startsWith('**')) out.push(<strong key={i++}>{t.slice(2, -2)}</strong>);
-    else if (t.startsWith('*')) out.push(<em key={i++}>{t.slice(1, -1)}</em>);
-    else { const mm = /\[([^\]]+)\]\(([^)]+)\)/.exec(t); if (mm) out.push(<a key={i++} href={mm[2]} target="_blank" rel="noreferrer" style={{ color: primary, textDecoration: 'underline' }}>{mm[1]}</a>); }
-    last = m.index + t.length;
-  }
-  if (last < s.length) out.push(<span key={i++}>{s.slice(last)}</span>);
-  return <>{out}</>;
-}
-function Markdown({ text }: { text?: string }) {
-  const lines = (text ?? '').replace(/\r\n/g, '\n').split('\n');
-  const out: ReactNode[] = [];
-  let i = 0; let key = 0;
-  const HR = /^(-{3,}|\*{3,}|_{3,})$/;
-  const OL = /^\d+\.\s+/;
-  const at = (j: number) => lines[j] ?? '';
-  const special = (t: string) => t.startsWith('#') || t.startsWith('> ') || t.startsWith('- ') || t.startsWith('* ') || HR.test(t) || OL.test(t);
-  while (i < lines.length) {
-    const t = at(i).trim();
-    if (!t) { i++; continue; }
-    if (HR.test(t)) { out.push(<hr key={key++} style={{ border: 'none', borderTop: `1px solid ${faint}`, margin: '22px 0' }} />); i++; continue; }
-    if (t.startsWith('# ')) { out.push(<h3 key={key++} style={{ fontSize: 'var(--brand-h3, 22px)', fontWeight: 800, color: textColor, margin: '18px 0 10px', fontFamily: 'var(--brand-font-heading)' }}><InlineMd text={t.slice(2)} /></h3>); i++; continue; }
-    if (t.startsWith('## ')) { out.push(<h4 key={key++} style={{ fontSize: '19px', fontWeight: 800, color: textColor, margin: '20px 0 8px' }}><InlineMd text={t.slice(3)} /></h4>); i++; continue; }
-    if (t.startsWith('### ')) { out.push(<h5 key={key++} style={{ fontSize: '15px', fontWeight: 800, letterSpacing: '0.02em', color: primary, margin: '16px 0 6px' }}><InlineMd text={t.slice(4)} /></h5>); i++; continue; }
-    if (t.startsWith('> ')) {
-      const q: string[] = [];
-      while (i < lines.length && at(i).trim().startsWith('> ')) { q.push(at(i).trim().slice(2)); i++; }
-      out.push(<blockquote key={key++} style={{ borderLeft: `2px solid ${primary}`, paddingLeft: 14, margin: '10px 0', color: muted, lineHeight: 1.8 }}>{q.map((l, k) => <div key={k}><InlineMd text={l} /></div>)}</blockquote>);
-      continue;
-    }
-    if (t.startsWith('- ') || t.startsWith('* ')) {
-      const li: string[] = [];
-      while (i < lines.length && (at(i).trim().startsWith('- ') || at(i).trim().startsWith('* '))) { li.push(at(i).trim().slice(2)); i++; }
-      out.push(<ul key={key++} className="list-disc pl-5 space-y-1" style={{ margin: '8px 0', color: textColor, lineHeight: 1.8 }}>{li.map((l, k) => <li key={k}><InlineMd text={l} /></li>)}</ul>);
-      continue;
-    }
-    if (OL.test(t)) {
-      const li: string[] = [];
-      while (i < lines.length && OL.test(at(i).trim())) { li.push(at(i).trim().replace(OL, '')); i++; }
-      out.push(<ol key={key++} className="list-decimal pl-5 space-y-1" style={{ margin: '8px 0', color: textColor, lineHeight: 1.8 }}>{li.map((l, k) => <li key={k}><InlineMd text={l} /></li>)}</ol>);
-      continue;
-    }
-    const para: string[] = [];
-    while (i < lines.length) { const lt = at(i).trim(); if (!lt || special(lt)) break; para.push(lt); i++; }
-    out.push(<p key={key++} style={{ margin: '8px 0', color: textColor, lineHeight: 1.85 }}>{para.map((l, k) => <span key={k}>{k > 0 && <br />}<InlineMd text={l} /></span>)}</p>);
-  }
-  return <>{out}</>;
-}
