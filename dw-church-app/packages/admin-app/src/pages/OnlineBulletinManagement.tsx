@@ -4,6 +4,7 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type D
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Link } from 'react-router-dom';
+import { bulletinVisibility } from '../lib/publish-window';
 import type { OnlineBulletin, OnlineBulletinContent, OnlineHymn, ListParams, PostStatus, SermonNoteContent, SermonNoteCongregationKey } from '@dw-church/api-client';
 import {
   useOnlineBulletins,
@@ -162,8 +163,8 @@ function SortableAnnouncement({ id, children }: { id: string; children: (handle:
   );
 }
 
-interface FormState { title: string; serviceDate: string; status: PostStatus; content: OnlineBulletinContent }
-const EMPTY_FORM: FormState = { title: '', serviceDate: '', status: 'published', content: structuredClone(EMPTY_CONTENT) };
+interface FormState { title: string; serviceDate: string; publishAt: string; status: PostStatus; content: OnlineBulletinContent }
+const EMPTY_FORM: FormState = { title: '', serviceDate: '', publishAt: '', status: 'published', content: structuredClone(EMPTY_CONTENT) };
 
 /* ── 지난 주보 복제 ─────────────────────────────────────────────
  * 주보는 매주 **틀은 거의 같고 내용만 바뀐다**. 예배 순서를 매주 처음부터
@@ -560,7 +561,10 @@ export default function OnlineBulletinManagement() {
     setForm({
       title: retitleForDate(item.title || '', srcDate, nextDate, content.serviceTitle ?? ''),
       serviceDate: nextDate,
-      // 복제본도 공개가 기본 — 새 주보 역시 published 가 기본값이다.
+      // 복제본은 **그 예배일부터** 공개 — 다음 주 주보를 미리 만들어 두는 동안
+      // 아직 손 안 댄 내용이 사이트에 걸리지 않게. 상태는 공개가 기본이고,
+      // 예배일이 되면 저절로 올라간다(비워 두면 저장 즉시 공개).
+      publishAt: nextDate,
       status: 'published',
       content,
     });
@@ -575,6 +579,7 @@ export default function OnlineBulletinManagement() {
     setForm({
       title: item.title,
       serviceDate: item.serviceDate ? String(item.serviceDate).slice(0, 10) : '',
+      publishAt: String(item.publishAt ?? '').slice(0, 10),
       status: item.status,
       // Merge over EMPTY_CONTENT so older/partial rows still have every field.
       content: { ...structuredClone(EMPTY_CONTENT), ...(item.content ?? {}) },
@@ -593,7 +598,7 @@ export default function OnlineBulletinManagement() {
   const onSubmit = () => {
     if (!form.title.trim()) { showToast('error', '제목을 입력하세요.'); return; }
     if (!form.serviceDate) { showToast('error', '예배일을 선택하세요.'); return; }
-    const payload = { title: form.title, serviceDate: form.serviceDate, status: form.status, content: form.content };
+    const payload = { title: form.title, serviceDate: form.serviceDate, publishAt: form.publishAt, status: form.status, content: form.content };
     // 설교노트는 여기서 저장하지 않는다 — [설교노트 관리]가 단일 출처이고,
     // 주보는 해당 주일 날짜로 가져와 보여주기만 한다.
     const done = {
@@ -655,6 +660,23 @@ export default function OnlineBulletinManagement() {
                 <input value={c.serviceTitle ?? ''} onChange={(e) => setContent({ serviceTitle: e.target.value })} placeholder="주일예배" className={inputClass} />
               </FormField>
             </FormRow>
+            <FormRow>
+              <FormField label="공개 시작일 (비우면 저장 즉시 공개)">
+                <input type="date" value={form.publishAt} onChange={(e) => setForm((f) => ({ ...f, publishAt: e.target.value }))} className={inputClass} />
+              </FormField>
+              <div />
+            </FormRow>
+            {/* 지금 사이트에 보이는지 한 줄로 못 박는다 — 임시저장으로 작업하다
+                공개된 줄 착각하는 사고를 막기 위한 안내(대표님 지적). */}
+            {(() => {
+              const v = bulletinVisibility({ status: form.status, publishAt: form.publishAt, serviceDate: form.serviceDate });
+              return (
+                <div className={`flex items-start gap-2 rounded-xl px-4 py-3 text-sm ${v.visible ? 'bg-green-50 text-green-900' : form.status === 'published' ? 'bg-blue-50 text-blue-900' : 'bg-gray-100 text-gray-700'}`}>
+                  <span className={`shrink-0 rounded px-2 py-0.5 text-xs font-semibold ${v.cls}`}>{v.label}</span>
+                  <span>{v.note}</span>
+                </div>
+              );
+            })()}
             <FormField label="인도 (예배 인도자)">
               <input value={c.presider ?? ''} onChange={(e) => setContent({ presider: e.target.value })} placeholder="예: 곽정민 목사" className={inputClass} />
             </FormField>
@@ -928,7 +950,10 @@ export default function OnlineBulletinManagement() {
                     <td className="px-4 py-3 text-sm">{item.serviceDate ? String(item.serviceDate).slice(0, 10) : '-'}</td>
                     <td className="px-4 py-3 text-sm font-medium">{item.title}</td>
                     <td className="px-4 py-3 text-sm">
-                      <span className={`px-2 py-1 rounded text-xs ${item.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>{item.status}</span>
+                      {(() => {
+                        const v = bulletinVisibility({ status: item.status, publishAt: item.publishAt, serviceDate: item.serviceDate });
+                        return <span className={`px-2 py-1 rounded text-xs ${v.cls}`}>{v.label}</span>;
+                      })()}
                     </td>
                     <td className="px-4 py-3 text-sm space-x-2">
                       <button onClick={() => handleEdit(item)} className="text-blue-600 hover:underline">편집</button>

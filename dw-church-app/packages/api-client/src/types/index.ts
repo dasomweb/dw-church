@@ -50,6 +50,8 @@ export interface OnlineBulletin {
   title: string;
   serviceDate: string;
   content: OnlineBulletinContent;
+  /** 예약 공개 시작일 (YYYY-MM-DD). 비우면 즉시 공개. 예배일에는 무조건 공개된다. */
+  publishAt?: string | null;
   status: PostStatus;
   createdAt: string;
   updatedAt: string;

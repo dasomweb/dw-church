@@ -55,3 +55,33 @@ export function publishRangeText(start?: string | null, end?: string | null): st
   if (!s && !e) return '제한 없음';
   return `${s || '—'} ~ ${e || '—'}`;
 }
+
+/**
+ * 온라인 주보의 현재 공개 상태.
+ *
+ * 일반 게시 기간과 규칙이 다르다 — **예배일에는 무조건 공개된다**(대표님 지시).
+ * 예약일은 "그 전까지만 가려 두는" 장치라, 예약일을 예배일보다 뒤로 잘못 적어도
+ * 예배일이 되면 공개된다. 서버 조회 조건(online-bulletins/service.ts VISIBLE)과 같은 규칙.
+ *
+ * draft 로 작업하다 공개된 줄 착각하는 사고를 막으려고, 편집 화면·목록에
+ * 이 문구를 그대로 띄운다.
+ */
+export function bulletinVisibility(
+  opts: { status?: string | null; publishAt?: string | null; serviceDate?: string | null },
+  today = churchToday(),
+): { visible: boolean; label: string; cls: string; note: string } {
+  const pub = day(opts.publishAt);
+  const svc = day(opts.serviceDate);
+  if (opts.status !== 'published') {
+    return { visible: false, label: '숨김', cls: 'bg-gray-200 text-gray-700', note: '임시저장 상태라 사이트에 보이지 않습니다. 성도에게 보이려면 상태를 ‘공개’로 바꾸세요.' };
+  }
+  if (!pub || pub <= today || (svc && svc <= today)) {
+    return { visible: true, label: '공개중', cls: 'bg-green-100 text-green-800', note: '지금 사이트에서 볼 수 있습니다.' };
+  }
+  return {
+    visible: false,
+    label: `${pub}부터`,
+    cls: 'bg-blue-100 text-blue-800',
+    note: `${pub} 부터 공개됩니다. 그때까지는 사이트에 보이지 않습니다${svc ? ` (예배일 ${svc} 에는 무조건 공개됩니다)` : ''}.`,
+  };
+}

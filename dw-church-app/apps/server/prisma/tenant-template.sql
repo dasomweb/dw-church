@@ -90,7 +90,10 @@ CREATE TABLE tenant_template.online_bulletins (
     title           VARCHAR(500) NOT NULL,
     service_date    DATE NOT NULL,
     content         JSONB DEFAULT '{}',
-    status          VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+    -- 예약 공개: 이 날짜부터 노출. 비우면 즉시. 예배일(service_date)에는 무조건 공개된다.
+    publish_at      DATE,
+    -- 기본은 공개 — 글을 올렸는데 안 보이는 사고를 막는다.
+    status          VARCHAR(20) DEFAULT 'published' CHECK (status IN ('draft', 'published', 'archived')),
     created_at      TIMESTAMPTZ DEFAULT NOW(),
     updated_at      TIMESTAMPTZ DEFAULT NOW()
 );

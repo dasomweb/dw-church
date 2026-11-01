@@ -11,7 +11,7 @@ export async function onlineBulletinRoutes(app: FastifyInstance) {
     const { page, perPage } = parsePagination(query);
     const status = (query.status as string) || (request.user ? undefined : 'published');
     const search = query.search as string | undefined;
-    const { data, total } = await service.listOnlineBulletins(getSchema(request), { page, perPage, search, status });
+    const { data, total } = await service.listOnlineBulletins(getSchema(request), { page, perPage, search, status, activeOnly: !request.user });
     return reply.send(paginatedResponse(data, total, page, perPage));
   });
 
@@ -24,9 +24,9 @@ export async function onlineBulletinRoutes(app: FastifyInstance) {
     return reply.send({ data: bulletin });
   });
 
-  app.get('/online-bulletins/:id', async (request, reply) => {
+  app.get('/online-bulletins/:id', { preHandler: [optionalAuth] }, async (request, reply) => {
     const { id } = request.params as { id: string };
-    const bulletin = await service.getOnlineBulletin(getSchema(request), id);
+    const bulletin = await service.getOnlineBulletin(getSchema(request), id, { activeOnly: !request.user });
     if (!bulletin) return reply.status(404).send({ error: { code: 'NOT_FOUND', message: 'Online bulletin not found' } });
     return reply.send({ data: bulletin });
   });
