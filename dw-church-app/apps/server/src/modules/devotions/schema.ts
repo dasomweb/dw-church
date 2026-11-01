@@ -16,7 +16,8 @@ export const createDevotionSchema = z.object({
   dayLabel: z.string().max(40).optional().nullable(), // 예: "1일차" · "월"
   scriptureRef: z.string().max(200).optional().nullable(), // 시편 1편 (참조 — 본문 전문 아님)
   verse: z.string().max(2000).optional().nullable(), // 핵심 구절 텍스트 (저작권 유의 — 선택)
-  reflection: z.string().max(20000).optional().nullable(), // 묵상 본문 (창작)
+  // 묵상 본문 (창작) — 설교노트와 같은 마크다운. 사진 주소가 섞이면 금방 길어지므로 넉넉히.
+  reflection: z.string().max(60000).optional().nullable(),
   question: z.string().max(4000).optional().nullable(), // 묵상 질문 (창작)
   prayer: z.string().max(4000).optional().nullable(), // 기도 (창작)
   imageUrl: z.string().max(1000).optional().nullable(), // 대표 이미지 (선택)

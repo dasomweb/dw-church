@@ -7,7 +7,7 @@
 //   좌측 aside(트랙 소개 + 중심 말씀) + 우측 article(섹션: 성경박스·라벨·핵심문장·리스트·번호기도·카툰·나눔질문)
 //   지난 설교노트 그리드
 // 색은 grace 테마 토큰(--dw-*)을 우선 사용하고, 시안의 웜 뉴트럴을 폴백으로 둠 → 재사용 가능.
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import type {
   SermonNote,
@@ -16,6 +16,7 @@ import type {
   SermonNoteCongregationKey,
   SermonNoteStudy,
 } from '@dw-church/api-client';
+import { InlineMd, NoteBody, looksLikeRef, z } from './note-markdown';
 
 // ── 색/폰트 토큰 ────────────────────────────────────────────
 const TEXT = 'var(--dw-text, #3a3129)';
@@ -28,14 +29,10 @@ const NUM = '#c2b3a1'; // 섹션 번호 — 시안 웜 뉴트럴
 const BORDER = 'var(--border, #e2d8cb)';
 const FAINT = 'var(--border, #ece2d6)';
 const IMG_BG = 'var(--dw-surface, #f2ece3)';
-const SURFACE = 'var(--dw-surface, #f7f2ea)';
 const RULE = 'var(--dw-text, #3a3129)'; // 더블 보더 컬러
 const SERIF = { fontFamily: "var(--dw-font-heading, 'Noto Serif KR', serif)" } as const;
 
 const FS_LEVELS = [85, 100, 115, 130, 150, 170];
-// 본문 글자 크기 배율 — 인라인 스타일이 고정 px 라 부모 font-size % 로는 안 먹는다.
-// 실제로 커지도록 각 px 값에 배율을 곱한다.
-const z = (px: number, fs: number) => Math.round(px * fs);
 
 const TRACKS: { key: SermonNoteCongregationKey; label: string; sub: string }[] = [
   { key: 'adult', label: '장년', sub: '한국어' },
@@ -59,198 +56,6 @@ function studyHasItems(s?: SermonNoteStudy): boolean {
 function congHasContent(c?: SermonNoteCongregation): boolean {
   if (!c) return false;
   return !!(c.title?.trim() || c.titleEn?.trim() || c.text?.trim() || (c.cartoonImageUrls?.length ?? 0) > 0 || studyHasItems(c.study));
-}
-// 성경 참조처럼 보이는지 (요한복음 5:6, John 5:6–7 등)
-function looksLikeRef(line: string): boolean {
-  return /\d+\s*[:：]\s*\d+/.test(line) || /\d+\s*장/.test(line) || /^[A-Za-z가-힣].{0,20}\d+\s*[:：]/.test(line);
-}
-
-// ── 인라인 마크다운 (**bold** *italic* [text](url)) ──────────
-function InlineMd({ text }: { text: string }) {
-  const s = text ?? '';
-  const out: ReactNode[] = [];
-  const re = /(\*\*[^*]+\*\*|\*[^*]+\*|\[[^\]]+\]\([^)]+\))/g;
-  let last = 0;
-  let m: RegExpExecArray | null;
-  let i = 0;
-  while ((m = re.exec(s)) !== null) {
-    if (m.index > last) out.push(<span key={i++}>{s.slice(last, m.index)}</span>);
-    const t = m[0];
-    if (t.startsWith('**')) out.push(<strong key={i++}>{t.slice(2, -2)}</strong>);
-    else if (t.startsWith('*')) out.push(<em key={i++}>{t.slice(1, -1)}</em>);
-    else {
-      const mm = /\[([^\]]+)\]\(([^)]+)\)/.exec(t);
-      if (mm) out.push(<a key={i++} href={mm[2]} target="_blank" rel="noreferrer" style={{ color: PRIMARY, textDecoration: 'underline' }}>{mm[1]}</a>);
-    }
-    last = m.index + t.length;
-  }
-  if (last < s.length) out.push(<span key={i++}>{s.slice(last)}</span>);
-  return <>{out}</>;
-}
-
-// 한 줄이 통째로 **...** 인지 (핵심 문장 판정)
-function isKeyLine(t: string): boolean {
-  return /^\*\*[^*]+\*\*$/.test(t.trim());
-}
-
-// ── 에디토리얼 본문 렌더러 ──────────────────────────────────
-// 섹션 본문 마크다운을 시안 블록(성경박스/라벨/리스트/번호/핵심문장/문단)으로 변환.
-function NoteBody({ md, fs = 1 }: { md: string; fs?: number }) {
-  const lines = (md ?? '').replace(/\r\n/g, '\n').split('\n');
-  const out: ReactNode[] = [];
-  let i = 0;
-  let key = 0;
-  const at = (j: number) => lines[j] ?? '';
-  const HR = /^(-{3,}|\*{3,}|_{3,})$/;
-  // 본문 중간 사진 — 한 줄이 통째로 ![캡션](주소) 일 때만 이미지로 본다.
-  // 문장 안에 섞인 경우까지 처리하면 InlineMd 와 규칙이 겹쳐 오히려 깨진다.
-  const IMG_LINE = /^!\[([^\]]*)\]\(([^)\s]+)\)$/;
-  const OL = /^\d+[.)]\s+/;
-  const BULLET = (t: string) => /^[-*]\s+/.test(t);
-
-  while (i < lines.length) {
-    const t = at(i).trim();
-    if (!t) { i++; continue; }
-
-    // 구분선
-    if (HR.test(t)) { out.push(<hr key={key++} style={{ border: 'none', borderTop: `1px solid ${FAINT}`, margin: '26px 0' }} />); i++; continue; }
-
-    // 본문 사진 — 원본 비율 그대로. 설교노트에 들어가는 사진은 도표·악보·사진이
-    // 섞여 있어 고정 비율로 자르면 내용이 잘린다.
-    const img = IMG_LINE.exec(t);
-    if (img) {
-      const caption = (img[1] ?? '').trim();
-      out.push(
-        <figure key={key++} style={{ margin: '26px 0 0' }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={img[2]}
-            alt={caption}
-            style={{ display: 'block', width: '100%', height: 'auto', background: SURFACE }}
-            loading="lazy"
-          />
-          {caption && (
-            <figcaption style={{ margin: '8px 0 0', fontSize: z(13, fs), lineHeight: 1.7, color: MUTED }}>
-              {caption}
-            </figcaption>
-          )}
-        </figure>,
-      );
-      i++; continue;
-    }
-
-    // 성경 인용 박스 (> ...)
-    if (t.startsWith('>')) {
-      const q: string[] = [];
-      while (i < lines.length && at(i).trim().startsWith('>')) { q.push(at(i).trim().replace(/^>\s?/, '')); i++; }
-      const filtered = q.filter((l) => l.length > 0);
-      let ref = '';
-      let verses = filtered;
-      if (filtered.length > 1 && looksLikeRef(filtered[0]!)) { ref = filtered[0]!; verses = filtered.slice(1); }
-      else if (filtered.length === 1 && looksLikeRef(filtered[0]!)) { ref = filtered[0]!; verses = []; }
-      out.push(
-        <blockquote key={key++} style={{ margin: '26px 0 0', padding: '20px 22px', background: SURFACE }}>
-          {ref && <p style={{ margin: 0, fontSize: z(12, fs), fontWeight: 700, letterSpacing: '.1em', color: SECONDARY }}>{ref}</p>}
-          {verses.length > 0 && (
-            <div style={{ marginTop: ref ? 10 : 0, display: 'grid', gap: 8 }}>
-              {verses.map((v, k) => (
-                <p key={k} style={{ ...SERIF, margin: 0, fontSize: z(16, fs), lineHeight: 1.95, color: TEXT, textWrap: 'pretty' as const }}><InlineMd text={v} /></p>
-              ))}
-            </div>
-          )}
-        </blockquote>,
-      );
-      continue;
-    }
-
-    // 라벨 (### 소제목)
-    if (t.startsWith('### ')) {
-      out.push(<p key={key++} style={{ margin: '36px 0 0', fontSize: z(12, fs), fontWeight: 700, letterSpacing: '.14em', color: PRIMARY }}><InlineMd text={t.slice(4)} /></p>);
-      i++; continue;
-    }
-    // 소제목보다 상위(# / ##)는 섹션 안에서 강조 헤딩으로
-    if (t.startsWith('# ') || t.startsWith('## ')) {
-      out.push(<p key={key++} style={{ ...SERIF, margin: '30px 0 0', fontSize: z(21, fs), fontWeight: 600, lineHeight: 1.5, color: TEXT }}><InlineMd text={t.replace(/^#{1,2}\s+/, '')} /></p>);
-      i++; continue;
-    }
-
-    // 번호 목록 (기도제목 등) — 번호 뒤 따라오는 불릿은 하위 항목으로
-    if (OL.test(t)) {
-      const items: { no: string; text: string; subs: string[] }[] = [];
-      while (i < lines.length && OL.test(at(i).trim())) {
-        const line = at(i).trim();
-        const mm = /^(\d+)[.)]\s+(.*)$/.exec(line)!;
-        const no = mm[1]!;
-        const text = mm[2]!;
-        i++;
-        const subs: string[] = [];
-        while (i < lines.length) {
-          const nt = at(i).trim();
-          if (!nt) { i++; continue; }
-          if (BULLET(nt)) { subs.push(nt.replace(/^[-*]\s+/, '')); i++; continue; }
-          break;
-        }
-        items.push({ no, text, subs });
-      }
-      out.push(
-        <div key={key++} style={{ marginTop: 18 }}>
-          {items.map((it, k) => (
-            <div key={k} style={{ marginTop: k === 0 ? 0 : 20, paddingTop: 18, borderTop: `1px solid ${FAINT}`, display: 'flex', gap: 16 }}>
-              <span style={{ ...SERIF, flex: 'none', width: 24, fontSize: z(15, fs), color: FAINT_TEXT }}>{it.no}</span>
-              <div style={{ minWidth: 0 }}>
-                <p style={{ ...SERIF, margin: 0, fontSize: z(18, fs), fontWeight: 600, lineHeight: 1.75, color: TEXT, textWrap: 'pretty' as const }}><InlineMd text={it.text} /></p>
-                {it.subs.length > 0 && (
-                  <ul style={{ margin: '8px 0 0', padding: 0, listStyle: 'none', display: 'grid', gap: 4 }}>
-                    {it.subs.map((s, j) => (
-                      <li key={j} style={{ fontSize: z(15, fs), lineHeight: 1.85, color: MUTED }}><InlineMd text={s} /></li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>,
-      );
-      continue;
-    }
-
-    // 불릿 목록 (— 대시)
-    if (BULLET(t)) {
-      const li: string[] = [];
-      while (i < lines.length && BULLET(at(i).trim())) { li.push(at(i).trim().replace(/^[-*]\s+/, '')); i++; }
-      out.push(
-        <ul key={key++} style={{ margin: '12px 0 0', padding: 0, listStyle: 'none', display: 'grid', gap: 6 }}>
-          {li.map((l, k) => (
-            <li key={k} style={{ ...SERIF, display: 'flex', gap: 12, fontSize: z(17, fs), lineHeight: 1.9, color: TEXT }}>
-              <span style={{ flex: 'none', color: NUM }}>—</span>
-              <span style={{ minWidth: 0 }}><InlineMd text={l} /></span>
-            </li>
-          ))}
-        </ul>,
-      );
-      continue;
-    }
-
-    // 핵심 문장 (한 줄 전체 **...**)
-    if (isKeyLine(t)) {
-      out.push(<p key={key++} style={{ ...SERIF, margin: '14px 0 0', fontSize: `clamp(${z(19, fs)}px, ${(2.2 * fs).toFixed(2)}vw, ${z(22, fs)}px)`, fontWeight: 600, lineHeight: 1.7, color: TEXT, textWrap: 'pretty' as const }}><InlineMd text={t.slice(2, -2)} /></p>);
-      i++; continue;
-    }
-
-    // 일반 문단
-    const para: string[] = [];
-    while (i < lines.length) {
-      const lt = at(i).trim();
-      if (!lt || lt.startsWith('>') || lt.startsWith('#') || BULLET(lt) || OL.test(lt) || HR.test(lt)) break;
-      para.push(lt); i++;
-    }
-    out.push(
-      <p key={key++} style={{ ...SERIF, margin: '12px 0 0', fontSize: z(17, fs), lineHeight: 2.05, color: TEXT, textWrap: 'pretty' as const }}>
-        {para.map((l, k) => <span key={k}>{k > 0 && <br />}<InlineMd text={l} /></span>)}
-      </p>,
-    );
-  }
-  return <>{out}</>;
 }
 
 // ── 섹션 모델 ──────────────────────────────────────────────

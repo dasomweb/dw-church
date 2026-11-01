@@ -1,10 +1,13 @@
 'use client';
 import { useState } from 'react';
+import { NoteBody, DEVOTION_MD } from './note-markdown';
 
 // 말씀 묵상 리더 (Claude Design 14a "오늘의 묵상" 기반, 읽기 전용).
 // 좌: 주간 묵상 목록(클릭해 전환) · 우: 선택한 날의 묵상(제목·참조·묵상글·질문·기도).
 // ⚠️ 사용자 트래킹 없음 — 진행률/연속일수/완료버튼/답변입력/개인노트 전부 제외.
 // ⚠️ 저작권 — 성경 본문 전문 없음. 참조만 크게 보여주고 "성경에서 함께 읽어보세요".
+// 묵상 본문(reflection)은 설교노트와 **같은 마크다운 렌더러**(note-markdown)를 쓴다 —
+// 관리자 편집기의 서식 툴바(제목/굵게/인용/불릿/번호/링크/사진)와 규칙이 1:1 로 맞음.
 interface Devo {
   id: string; title?: string; devoDate?: string | null; dayLabel?: string | null;
   scriptureRef?: string | null; verse?: string | null; reflection?: string | null;
@@ -54,7 +57,7 @@ export function DevotionReaderClient({ devotions, eyebrow }: { devotions: Devo[]
   const cur = devotions.find((d) => d.id === selectedId) ?? devotions[0];
   if (!cur) return null;
 
-  const paras = (cur.reflection ?? '').split(/\n{2,}|\n/).map((p) => p.trim()).filter(Boolean);
+  const reflection = (cur.reflection ?? '').trim();
   const questions = (cur.question ?? '').split(/\n+/).map((q) => q.trim()).filter(Boolean);
 
   return (
@@ -122,10 +125,10 @@ export function DevotionReaderClient({ devotions, eyebrow }: { devotions: Devo[]
           </div>
         )}
 
-        {/* 묵상 본문 */}
-        {paras.length > 0 && (
-          <div className="mt-8 space-y-4 text-[17px] leading-[1.95]">
-            {paras.map((p, i) => <p key={i} className="m-0" style={i === 0 ? undefined : { color: MUTED }}>{p}</p>)}
+        {/* 묵상 본문 — 마크다운(제목·굵게·인용·불릿·번호·링크·사진) */}
+        {reflection && (
+          <div className="mt-8">
+            <NoteBody md={reflection} theme={DEVOTION_MD} />
           </div>
         )}
 

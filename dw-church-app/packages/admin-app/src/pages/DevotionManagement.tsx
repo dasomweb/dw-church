@@ -1,22 +1,25 @@
 import { useState } from 'react';
 import type { Devotion } from '@dw-church/api-client';
-import { useDevotions, useCreateDevotion, useUpdateDevotion, useDeleteDevotion } from '@dw-church/api-client';
-import { FormField, inputClass, selectClass, textareaClass, useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
+import { useDevotions, useCreateDevotion, useUpdateDevotion, useDeleteDevotion, useDWChurchClient } from '@dw-church/api-client';
+import { FormField, ImageUpload, NoteRichArea, inputClass, selectClass, textareaClass, useToast, ConfirmDialog, EmptyState, CardSkeleton } from '../components';
 
 // 말씀 묵상(QT) 관리 — 관리자가 하루치 묵상을 업로드. 사용자 트래킹 없음(읽기 전용 콘텐츠).
 // ⚠️ 저작권: 성경 본문 전문은 넣지 않는다. 참조(시편 1편) + 창작 묵상/질문/기도만.
+// 묵상 본문은 설교노트와 **같은 서식(마크다운)** 으로 쓴다 — NoteRichArea 툴바로 입력하고
+// 스토어프론트(note-markdown.tsx)가 같은 규칙으로 렌더한다.
 
 type FormState = {
   title: string; devoDate: string; dayLabel: string; scriptureRef: string;
   verse: string; reflection: string; question: string; prayer: string;
-  sortOrder: number; status: 'published' | 'draft';
+  imageUrl: string; sortOrder: number; status: 'published' | 'draft';
 };
 const EMPTY: FormState = {
   title: '', devoDate: '', dayLabel: '', scriptureRef: '',
-  verse: '', reflection: '', question: '', prayer: '', sortOrder: 0, status: 'published',
+  verse: '', reflection: '', question: '', prayer: '', imageUrl: '', sortOrder: 0, status: 'published',
 };
 
 export default function DevotionManagement() {
+  const client = useDWChurchClient();
   const { data: list, isLoading, error } = useDevotions();
   const createM = useCreateDevotion();
   const updateM = useUpdateDevotion();
@@ -41,7 +44,8 @@ export default function DevotionManagement() {
     setForm({
       title: d.title ?? '', devoDate: d.devoDate ?? '', dayLabel: d.dayLabel ?? '',
       scriptureRef: d.scriptureRef ?? '', verse: d.verse ?? '', reflection: d.reflection ?? '',
-      question: d.question ?? '', prayer: d.prayer ?? '', sortOrder: d.sortOrder ?? 0,
+      question: d.question ?? '', prayer: d.prayer ?? '', imageUrl: d.imageUrl ?? '',
+      sortOrder: d.sortOrder ?? 0,
       status: (d.status as 'published' | 'draft') ?? 'published',
     });
     setView('edit');
@@ -58,6 +62,9 @@ export default function DevotionManagement() {
   };
 
   const saving = createM.isPending || updateM.isPending;
+  // 묵상 사진은 tenant_<slug>/devotions/ 로 모인다. 리사이즈는 각 업로더가 수행
+  // (ImageUpload resize prop · NoteRichArea 내부) — 원본 업로드 금지.
+  const uploadImage = async (file: File): Promise<string> => (await client!.uploadFile(file, 'devotions')).url;
 
   if (view === 'edit') {
     return (
@@ -90,8 +97,22 @@ export default function DevotionManagement() {
           <FormField label="핵심 구절 (선택 — 라이선스 있는 번역본만)">
             <textarea className={textareaClass} rows={2} value={form.verse} onChange={(e) => setF({ verse: e.target.value })} placeholder="저작권상 라이선스가 없으면 비워 두세요. 스토어프론트는 참조만 표시합니다." />
           </FormField>
+          <div>
+            <p className="mb-1.5 text-sm font-medium text-gray-700">대표 이미지 (선택)</p>
+            <ImageUpload label="" value={form.imageUrl} onChange={(url) => setF({ imageUrl: url })} onUpload={uploadImage} resize="content" aspectRatio="16/9" />
+            <p className="mt-1 text-xs text-gray-400">묵상 상단과 홈 &lsquo;개인 묵상&rsquo; 진입 카드에 표시됩니다. (16:9 가로형 권장)</p>
+          </div>
           <FormField label="묵상 본문">
-            <textarea className={textareaClass} rows={8} value={form.reflection} onChange={(e) => setF({ reflection: e.target.value })} placeholder="본문을 묵상하며 나눌 내용을 작성하세요 (문단은 빈 줄로 구분)" />
+            <NoteRichArea
+              value={form.reflection}
+              onChange={(v) => setF({ reflection: v })}
+              uploadImage={uploadImage}
+              rows={12}
+              placeholder="본문을 묵상하며 나눌 내용을 작성하세요 — 상단 서식 버튼(제목/굵게/인용/불릿/번호/링크/사진)을 활용하세요."
+            />
+            <p className="mt-1 text-xs text-gray-400">
+              설교노트와 같은 서식입니다. 인용(&gt;)은 성경 박스로, 사진은 본문 중간에 한 줄로 들어갑니다.
+            </p>
           </FormField>
           <FormField label="묵상 질문">
             <textarea className={textareaClass} rows={3} value={form.question} onChange={(e) => setF({ question: e.target.value })} placeholder="오늘 본문으로 스스로에게 던질 질문 (여러 개면 줄바꿈)" />
