@@ -138,14 +138,23 @@ export function OnlineBulletinView({ bulletin, sermonNote: moduleNote, backHref 
 
   // 설교 노트 = 설교노트 모듈(moduleNote, 해당 주일 날짜)이 있으면 그걸로, 없으면 온라인 주보 임베드 폴백.
   // 부서 5종(청장년/EM/Youth/어린이/Kids) — 각 부서에 설교노트 + 부서별 소그룹 나눔질문.
-  type CongView = { title?: string; text?: string; cartoonImgs?: string[]; obs?: string[]; cor?: string[]; app?: string[] };
+  // 전용 설교노트 페이지와 **같은 항목**을 담는다 — 주보에서만 빠지면 운영자가
+  // 올린 활동자료·부모 안내가 사라진 것처럼 보인다.
+  type CongView = { title?: string; text?: string; cartoonImgs?: string[]; files?: { url: string; name?: string }[]; parentGuide?: string; obs?: string[]; cor?: string[]; app?: string[] };
   const studyArr = (st?: Record<string, string[] | undefined>) => ({
     obs: mergeEn(st?.observation, st?.observationEn), cor: mergeEn(st?.correlation, st?.correlationEn), app: mergeEn(st?.application, st?.applicationEn),
   });
-  const congFrom = (c?: { title?: string | null; text?: string | null; textEn?: string | null; cartoonImageUrls?: string[]; cartoonImageUrlsEn?: string[]; study?: Record<string, string[] | undefined> }): CongView => {
+  const congFrom = (c?: { title?: string | null; text?: string | null; textEn?: string | null; cartoonImageUrls?: string[]; cartoonImageUrlsEn?: string[]; activityFiles?: { url: string; name?: string }[]; parentGuide?: string; parentGuideEn?: string; study?: Record<string, string[] | undefined> }): CongView => {
     if (!c) return {};
     const imgs = en && (c.cartoonImageUrlsEn?.length) ? c.cartoonImageUrlsEn : c.cartoonImageUrls;
-    return { title: c.title ?? '', text: pick(c.text ?? '', c.textEn ?? ''), cartoonImgs: (imgs ?? []).filter(Boolean), ...studyArr(c.study) };
+    return {
+      title: c.title ?? '',
+      text: pick(c.text ?? '', c.textEn ?? ''),
+      cartoonImgs: (imgs ?? []).filter(Boolean),
+      files: (c.activityFiles ?? []).filter((f) => f && f.url),
+      parentGuide: pick(c.parentGuide ?? '', c.parentGuideEn ?? ''),
+      ...studyArr(c.study),
+    };
   };
   const mg = moduleNote?.congregations as Record<string, any> | undefined;
   const congregations: Record<'adult' | 'em' | 'youth' | 'children' | 'kids', CongView> = mg
@@ -161,7 +170,7 @@ export function OnlineBulletinView({ bulletin, sermonNote: moduleNote, backHref 
         kids: {},
       };
   const congStudyHas = (c: CongView) => [c.obs, c.cor, c.app].some((a) => (a ?? []).some((q) => (q || '').trim()));
-  const congHasContent = (c: CongView) => !!((c.text || '').trim() || (c.title || '').trim() || (c.cartoonImgs?.length) || congStudyHas(c));
+  const congHasContent = (c: CongView) => !!((c.text || '').trim() || (c.title || '').trim() || (c.cartoonImgs?.length) || (c.files?.length) || congStudyHas(c));
   const anyCong = Object.values(congregations).some(congHasContent);
 
   const anyEn = (...v: (string | undefined)[]) => v.some((x) => (x || '').trim());
@@ -581,20 +590,55 @@ function QGroup({ label, items }: { label: string; items?: string[] }) {
 // 포인트에 임의로 짝지우고, 뒤쪽 내용을 아웃트로로 밀어 순서를 바꿨다. 목사가 쓴
 // 순서가 뒤바뀌고 일부(# 제목)는 아예 사라져서 전부 걷어냈다.
 // 렌더러는 전용 설교노트 페이지와 **같은 공용 렌더러**(note-markdown)를 쓴다.
-function SermonNote({ title, text, pointImages, onOpen }: {
+/** 파일 표시 이름 — 전용 설교노트 페이지(docName)와 같은 규칙. */
+function docName(f: { url: string; name?: string }): string {
+  if (f.name && f.name.trim()) return f.name.trim();
+  try { return decodeURIComponent(new URL(f.url).pathname.split('/').pop() || f.url); }
+  catch { return f.url.split('/').pop() || f.url; }
+}
+
+function SermonNote({ title, text, pointImages, files, parentGuide, onOpen }: {
   title?: string; text?: string;
   pointImages?: string[]; // 설교 카툰(어린이/Kids) — 올린 순서대로 본문 아래에
+  files?: { url: string; name?: string }[]; // 활동학습 자료(PDF·워드)
+  parentGuide?: string;   // Kids 부모 안내 문구
   onOpen?: (imgs: string[], i: number, title: string) => void;
 }) {
   const imgs = (pointImages ?? []).filter(Boolean);
+  const docs = (files ?? []).filter((f) => f && f.url);
   return (
     <div>
       {title && <p className="font-extrabold" style={{ color: textColor, fontSize: 18, marginBottom: 8 }}>{title}</p>}
+      {/* Kids 부모 안내 — 전용 페이지와 같은 자리(본문 맨 위), 같은 모양. */}
+      {(parentGuide || '').trim() && (
+        <p style={{ margin: '0 0 12px', padding: '10px 12px', borderLeft: `3px solid ${primary}`, background: surface, fontSize: 14, lineHeight: 1.7, color: textColor }}>
+          {parentGuide}
+        </p>
+      )}
       <NoteBody md={text ?? ''} theme={BULLETIN_MD} />
       {imgs.length > 0 && onOpen && (
         <div style={{ marginTop: 18 }}>
           <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', color: muted, marginBottom: 10 }}>설교 카툰</div>
           <ScoreList imgs={imgs} title={title || '설교 카툰'} onOpen={onOpen} />
+        </div>
+      )}
+      {/* 활동학습 자료 — 전용 설교노트 페이지와 같은 내려받기 목록.
+          새 창으로 연다(앱에서 PDF 를 열면 돌아올 길이 없다). */}
+      {docs.length > 0 && (
+        <div style={{ marginTop: 18 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', color: muted, marginBottom: 10 }}>활동학습 자료</div>
+          <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 8 }}>
+            {docs.map((f, k) => (
+              <li key={k}>
+                <a href={f.url} target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, border: `1px solid ${border}`, borderRadius: 12, padding: '12px 14px', textDecoration: 'none', color: 'inherit', fontSize: 15 }}>
+                  <span aria-hidden="true">📄</span>
+                  <span style={{ minWidth: 0, flex: 1 }}>{docName(f)}</span>
+                  <span style={{ fontSize: 13, color: muted }}>열기</span>
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>
@@ -604,18 +648,18 @@ function SermonNote({ title, text, pointImages, onOpen }: {
 // 설교 노트 회중 탭 — 청장년/EM/Youth/어린이/Kids. 각 부서는 설교노트(마크다운) +
 // (어린이/Kids) 카툰 + 부서별 소그룹 나눔질문. 데이터는 설교노트 모듈에서.
 type CongKey = 'adult' | 'em' | 'youth' | 'children' | 'kids';
-interface CongData { title?: string; text?: string; cartoonImgs?: string[]; obs?: string[]; cor?: string[]; app?: string[] }
+interface CongData { title?: string; text?: string; cartoonImgs?: string[]; files?: { url: string; name?: string }[]; parentGuide?: string; obs?: string[]; cor?: string[]; app?: string[] }
 function SermonSection({ congregations, onOpen }: {
   congregations: Record<CongKey, CongData>;
   onOpen: (imgs: string[], i: number, title: string) => void;
 }) {
   const TABS: [CongKey, string][] = [['adult', '청장년'], ['em', 'EM'], ['youth', 'Youth'], ['children', 'Children'], ['kids', 'Kids']];
   const studyHas = (c: CongData) => [c?.obs, c?.cor, c?.app].some((a) => (a ?? []).some((q) => (q || '').trim()));
-  const congHas = (k: CongKey) => { const c = congregations[k]; return !!((c?.text || '').trim() || (c?.title || '').trim() || (c?.cartoonImgs?.length) || studyHas(c)); };
+  const congHas = (k: CongKey) => { const c = congregations[k]; return !!((c?.text || '').trim() || (c?.title || '').trim() || (c?.cartoonImgs?.length) || (c?.files?.length) || studyHas(c)); };
   const first: CongKey = congHas('adult') ? 'adult' : (TABS.find(([k]) => congHas(k))?.[0] ?? 'adult');
   const [tab, setTab] = useState<CongKey>(first);
   const cur = congregations[tab] ?? {};
-  const curNote = !!((cur.text || '').trim() || (cur.title || '').trim() || (cur.cartoonImgs?.length));
+  const curNote = !!((cur.text || '').trim() || (cur.title || '').trim() || (cur.cartoonImgs?.length) || (cur.files?.length) || (cur.parentGuide || '').trim());
   const curStudy = studyHas(cur);
   return (
     <div>
@@ -627,7 +671,7 @@ function SermonSection({ congregations, onOpen }: {
       </div>
       {(curNote || curStudy) ? (
         <div>
-          {curNote && <SermonNote title={cur.title} text={cur.text} pointImages={cur.cartoonImgs} onOpen={onOpen} />}
+          {curNote && <SermonNote title={cur.title} text={cur.text} pointImages={cur.cartoonImgs} files={cur.files} parentGuide={cur.parentGuide} onOpen={onOpen} />}
           {curStudy && (
             <div style={{ marginTop: curNote ? 18 : 0, padding: 18, borderRadius: 14, background: surface, border: `1px solid ${faint}` }}>
               <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', color: muted }}>나눔 질문</div>

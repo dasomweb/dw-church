@@ -47,3 +47,32 @@ describe('온라인 주보 — 설교노트 원문 보존', () => {
     expect(page).toContain("from './note-markdown'");
   });
 });
+
+/**
+ * 주보의 설교노트 섹션은 전용 설교노트 페이지와 **같은 항목**을 보여준다.
+ * 한쪽에만 있는 항목이 생기면, 운영자는 올렸는데 주보에선 사라진 것처럼 보인다.
+ */
+describe('온라인 주보 — 설교노트와 항목 일치', () => {
+  const page = readFileSync(join(WEB, 'SermonNotePageView.tsx'), 'utf-8');
+
+  for (const field of ['activityFiles', 'parentGuide']) {
+    it(`${field} 를 주보도 가져온다`, () => {
+      expect(page).toContain(field);   // 전용 페이지에 있는 항목이고
+      expect(view).toContain(field);   // 주보에도 있어야 한다
+    });
+  }
+
+  it('활동학습 자료를 내려받기 목록으로 그린다', () => {
+    expect(view).toContain('활동학습 자료');
+    expect(view).toContain('rel="noopener noreferrer"');
+    expect(view).toContain('function docName');
+  });
+
+  it('Kids 부모 안내 문구를 본문 위에 그린다', () => {
+    expect(view).toMatch(/parentGuide \|\| ''\)\.trim\(\)/);
+  });
+
+  it('카툰만 있고 본문이 없어도 섹션이 열린다 (자료만 올린 주)', () => {
+    expect(view).toMatch(/curNote = [^;]*files\?\.length/);
+  });
+});
