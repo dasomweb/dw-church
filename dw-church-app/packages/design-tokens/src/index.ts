@@ -82,6 +82,7 @@ export type {
 export {
   tokensToCssVars,
   tokensToCssText,
+  koreanFloorPx,
 } from './to-css-vars.js';
 
 export type {

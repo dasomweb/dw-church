@@ -161,7 +161,9 @@ export const designTokenHeaderSchema = z
     /** Storefront logo <img> height in px (default 40 = the old hard-coded h-10). */
     logoHeight: z.number().int().positive().default(40),
     /** Desktop header nav-link font size in px (default 14 = the old text-sm). */
-    navFontSize: z.number().int().positive().default(14),
+    // 한글 네비 기준 16px (defaults.ts 와 동일). to-css-vars 가 15px 하한을 교므로
+    // 라틴 기준으로 저장된 구 값(14)도 렌더 단계에서 붙는다.
+    navFontSize: z.number().int().positive().default(16),
     /** Desktop header nav-link font weight (100–900, default 500 = medium). */
     navFontWeight: z.number().int().min(100).max(900).default(500),
     /** English brand line shown under the logo/name (한인 이민교회 로고 한·영
@@ -191,7 +193,7 @@ export const designTokenHeaderSchema = z
     variant: 'standard',
     liveBannerText: '지금 예배가 진행 중입니다', liveBannerButtonLabel: '생중계 보기', liveBannerUrl: '',
     searchUrl: '/search', accountLabel: '교인 로그인', accountUrl: '',
-    logoHeight: 40, navFontSize: 14, navFontWeight: 500, brandTextEn: '',
+    logoHeight: 40, navFontSize: 16, navFontWeight: 500, brandTextEn: '',
     utilityBarEnabled: false, utilityBarText: '', utilityShowFontSize: true,
     utilityShowKakao: true, utilityShowLanguage: false,
     givingEnabled: false, givingLabel: '온라인 헌금', givingUrl: '/giving',

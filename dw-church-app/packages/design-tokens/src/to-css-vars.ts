@@ -21,6 +21,37 @@ const SCALE_KEYS: ReadonlyArray<TypographyScaleName> = [
   'body', 'caption', 'overline', 'label', 'button',
 ];
 
+/**
+ * 한글 가독 하한 — 저장된 토큰이 이보다 작아도 하한까지 올려서 내보낸다.
+ *
+ * 왜 클램프가 필요한가. 한글 음절은 em 박스를 거의 꽉 채우고 그 안에 자모 2~4개가
+ * 들어가므로, 12px 에서는 받침(ㄺ·ㅄ·ㅀ)의 획 간격이 1px 아래로 내려가 뭉친다.
+ * 가독 하한이 라틴보다 *높다*. 그런데 한글 하한을 세우기 전에 저장된 스냅샷(구
+ * compact 프리셋: 본문 15 / 캡션 12 등)이 그대로 남아 있어, 그 테넌트는 사이트
+ * 전체가 한 단계 작게 렌더됐다(yedam 에서 실제로 발생). 프리셋을 고쳐도 이미 저장된
+ * 값은 바뀌지 않으므로, 내보내는 쪽에서 하한을 건다 — 데이터 마이그레이션 없이
+ * 전 테넌트가 복구된다. 운영자가 일부러 11px 한글을 고르는 경우는 없다고 본다.
+ *
+ * 하한을 넘는 값은 손대지 않으므로 large/xlarge 선택은 그대로 유지된다.
+ */
+const KOREAN_MIN_PX: Partial<Record<TypographyScaleName, number>> = {
+  // 읽는 텍스트
+  body: 16,
+  h5: 16,
+  // 보조 텍스트 (라벨·캡션·버튼)
+  h6: 13,
+  caption: 13,
+  overline: 13,
+  label: 13,
+  button: 14,
+};
+
+/** 역할의 한글 하한까지 끌어올린 px. 하한이 없는 역할(h1~h4)은 그대로. */
+export function koreanFloorPx(name: TypographyScaleName, px: number): number {
+  const min = KOREAN_MIN_PX[name];
+  return min !== undefined && px < min ? min : px;
+}
+
 /** Flatten DesignTokens into a `--brand-*` CSS variable map. */
 export function tokensToCssVars(tokens: DesignTokens): CssVarMap {
   const vars: CssVarMap = {};
@@ -46,7 +77,7 @@ export function tokensToCssVars(tokens: DesignTokens): CssVarMap {
   for (const name of SCALE_KEYS) {
     const spec = tokens.typography.scales[name];
     if (!spec) continue;
-    vars[`--brand-${name}`] = `${spec.size.desktop}px`;
+    vars[`--brand-${name}`] = `${koreanFloorPx(name, spec.size.desktop)}px`;
     vars[`--brand-${name}-weight`] = String(spec.weight);
     vars[`--brand-${name}-line-height`] = String(spec.lineHeight);
     if (spec.letterSpacing !== undefined) {
@@ -107,7 +138,8 @@ export function tokensToCssVars(tokens: DesignTokens): CssVarMap {
   // getThemeTokens' projection, which now backfills, but the fallback keeps
   // this emit safe regardless). Consumed by the storefront header.
   vars['--brand-logo-height'] = `${tokens.header?.logoHeight ?? 40}px`;
-  vars['--brand-nav-font-size'] = `${tokens.header?.navFontSize ?? 14}px`;
+  // 한글 메뉴 라벨 하한 15px — 라틴 14px 과 같은 체감이 아니다.
+  vars['--brand-nav-font-size'] = `${Math.max(15, tokens.header?.navFontSize ?? 15)}px`;
   vars['--brand-nav-font-weight'] = `${tokens.header?.navFontWeight ?? 500}`;
 
   // Button design (shape → radius, padding, shadow). Consumed by ButtonElement.
@@ -152,12 +184,14 @@ export function tokensToCssText(tokens: DesignTokens, scope = ':root'): string {
     // desktop:42}), the mobile block was skipped and the tablet 56px leaked
     // onto phones (bigger on mobile than desktop). Emit mobile whenever it
     // differs from the tablet-effective value so it correctly restores it.
-    const tabletEff = spec.size.tablet ?? spec.size.desktop;
-    if (spec.size.mobile !== undefined && spec.size.mobile !== tabletEff) {
-      mobileLines.push(`  --brand-${name}: ${spec.size.mobile}px;`);
+    const deskEff = koreanFloorPx(name, spec.size.desktop);
+    const tabletEff = spec.size.tablet !== undefined ? koreanFloorPx(name, spec.size.tablet) : deskEff;
+    const mobileEff = spec.size.mobile !== undefined ? koreanFloorPx(name, spec.size.mobile) : undefined;
+    if (mobileEff !== undefined && mobileEff !== tabletEff) {
+      mobileLines.push(`  --brand-${name}: ${mobileEff}px;`);
     }
-    if (spec.size.tablet !== undefined && spec.size.tablet !== spec.size.desktop) {
-      tabletLines.push(`  --brand-${name}: ${spec.size.tablet}px;`);
+    if (spec.size.tablet !== undefined && tabletEff !== deskEff) {
+      tabletLines.push(`  --brand-${name}: ${tabletEff}px;`);
     }
   }
   if (tabletLines.length > 0) {

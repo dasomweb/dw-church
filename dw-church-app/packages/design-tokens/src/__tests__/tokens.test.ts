@@ -18,7 +18,9 @@ import {
   applySpacingPreset,
   detectFontSizePreset,
   detectSpacingPreset,
+  koreanFloorPx,
 } from '../index.js';
+import type { TypographyScaleName, FontSizePresetName, DesignTokens } from '../index.js';
 
 describe('designTokensSchema', () => {
   it('validates DEFAULT_DESIGN_TOKENS', () => {
@@ -69,7 +71,9 @@ describe('header tokens', () => {
     // And the css emit still produces the vars (no NaN/undefined).
     const vars = tokensToCssVars(tokens);
     expect(vars['--brand-logo-height']).toBe('40px');
-    expect(vars['--brand-nav-font-size']).toBe('14px');
+    // header 를 빠뜨면 스키머 기본값(16) 이 백필된다. 저장된 14 는
+    // to-css-vars 의 한글 하한에 의해 15px 로 붙는다(아래 클램프 테스트).
+    expect(vars['--brand-nav-font-size']).toBe('16px');
   });
 });
 
@@ -122,7 +126,7 @@ describe('tokensToCssVars', () => {
   it('emits typography family + per-scale size in px', () => {
     expect(vars['--brand-font-heading']).toContain('Pretendard');
     expect(vars['--brand-h1']).toBe('72px');
-    expect(vars['--brand-body']).toBe('16px');
+    expect(vars['--brand-body']).toBe('17px');
   });
 
   it('emits radius and container-max', () => {
@@ -137,7 +141,7 @@ describe('tokensToCssVars', () => {
 
   it('emits transform / letter-spacing for overline', () => {
     expect(vars['--brand-overline-transform']).toBe('uppercase');
-    expect(vars['--brand-overline-letter-spacing']).toBe('1.5px');
+    expect(vars['--brand-overline-letter-spacing']).toBe('0.6px');
   });
 
   it('passes a custom color through', () => {
@@ -358,5 +362,111 @@ describe('resolveColorToCss / resolveColorToHex', () => {
 
   it('falls back when token is unknown', () => {
     expect(resolveColorToHex({ token: 'unknown-slot' }, DEFAULT_DESIGN_TOKENS, '#000')).toBe('#000');
+  });
+});
+
+/**
+ * 한글 가독 하한 — globals.css / packages/blocks styles.css 의 --fs-* 래더와
+ * 같은 기준(본문 16px+, 보조 13px+). 토큰 기본값이 래더보다 작으면 운영자가
+ * 테마를 저장하는 순간 사이트 전체가 한 단계 줄어든다(yedam 에서 실제로 발생).
+ */
+describe('한글 타입 스케일 하한', () => {
+  const READING: TypographyScaleName[] = ['body'];
+  const SECONDARY: TypographyScaleName[] = ['caption', 'overline', 'label', 'button', 'h6'];
+
+  it('본문은 데스크톱·태블릿·모바일 모두 16px 이상', () => {
+    for (const name of READING) {
+      const s = DEFAULT_DESIGN_TOKENS.typography.scales[name]!.size;
+      for (const v of [s.desktop, s.tablet ?? s.desktop, s.mobile ?? s.desktop]) {
+        expect(v).toBeGreaterThanOrEqual(16);
+      }
+    }
+  });
+
+  it('본문 행간은 1.7 이상 (한글은 디센더 여유가 없다)', () => {
+    expect(DEFAULT_DESIGN_TOKENS.typography.scales.body!.lineHeight).toBeGreaterThanOrEqual(1.7);
+  });
+
+  it('보조 텍스트도 13px 아래로 내려가지 않는다', () => {
+    for (const name of SECONDARY) {
+      const s = DEFAULT_DESIGN_TOKENS.typography.scales[name]!.size;
+      for (const v of [s.desktop, s.tablet ?? s.desktop, s.mobile ?? s.desktop]) {
+        expect(v, `${name}`).toBeGreaterThanOrEqual(13);
+      }
+    }
+  });
+
+  it('모든 프리셋이 하한을 지킨다 — compact 도 포함', () => {
+    for (const [preset, sizes] of Object.entries(FONT_SIZE_PRESETS)) {
+      expect(sizes.body.desktop, `${preset}.body`).toBeGreaterThanOrEqual(16);
+      expect(sizes.body.mobile, `${preset}.body mobile`).toBeGreaterThanOrEqual(16);
+      expect(sizes.caption.desktop, `${preset}.caption`).toBeGreaterThanOrEqual(13);
+      expect(sizes.caption.mobile, `${preset}.caption mobile`).toBeGreaterThanOrEqual(13);
+    }
+  });
+
+  it('프리셋은 서로 구분 가능하다 (detectFontSizePreset 이 혼동하지 않는다)', () => {
+    const names = Object.keys(FONT_SIZE_PRESETS) as FontSizePresetName[];
+    for (const name of names) {
+      const t = applyFontSizePreset(DEFAULT_DESIGN_TOKENS, name);
+      expect(detectFontSizePreset(t)).toBe(name);
+    }
+  });
+
+  it('큰 제목만 자간을 줄인다 — 작은 스케일에 음수 자간이 없다', () => {
+    for (const [name, spec] of Object.entries(DEFAULT_DESIGN_TOKENS.typography.scales)) {
+      if (spec.letterSpacing !== undefined && spec.letterSpacing < 0) {
+        expect(spec.size.desktop, `${name}`).toBeGreaterThanOrEqual(19);
+      }
+    }
+  });
+});
+
+/**
+ * 한글 하한을 세우기 전에 저장된 스냅샷(구 compact: 본문 15 / 캡션 12)이 그대로
+ * 남아 있어 그 테넌트는 사이트 전체가 작게 렌더됐다 — yedam 에서 실제로 발생.
+ * 내보내는 쪽에서 하한을 걸어 데이터 마이그레이션 없이 복구한다.
+ */
+describe('koreanFloorPx / 하한 클램프', () => {
+  it('하한 미달 값을 하한까지 올린다', () => {
+    expect(koreanFloorPx('body', 15)).toBe(16);
+    expect(koreanFloorPx('caption', 12)).toBe(13);
+    expect(koreanFloorPx('overline', 11)).toBe(13);
+  });
+
+  it('하한을 넘는 값은 그대로 둔다 (large/xlarge 선택이 유지된다)', () => {
+    expect(koreanFloorPx('body', 19)).toBe(19);
+    expect(koreanFloorPx('caption', 16)).toBe(16);
+  });
+
+  it('큰 제목은 하한을 두지 않는다', () => {
+    expect(koreanFloorPx('h1', 40)).toBe(40);
+    expect(koreanFloorPx('h2', 24)).toBe(24);
+  });
+
+  const legacyCompact = (): DesignTokens => {
+    const t = JSON.parse(JSON.stringify(DEFAULT_DESIGN_TOKENS)) as DesignTokens;
+    t.typography.scales.body!.size = { desktop: 15, tablet: 15, mobile: 15 };
+    t.typography.scales.caption!.size = { desktop: 12, tablet: 12, mobile: 12 };
+    t.header!.navFontSize = 14;
+    return t;
+  };
+
+  it('구 스냅샷의 작은 본문이 CSS 변수에서 올라간다', () => {
+    const vars = tokensToCssVars(legacyCompact());
+    expect(vars['--brand-body']).toBe('16px');
+    expect(vars['--brand-caption']).toBe('13px');
+  });
+
+  it('모바일 override 도 하한 아래로 내려가지 않는다', () => {
+    const css = tokensToCssText(legacyCompact(), ':root');
+    const mobileBody = /--brand-body:\s*(\d+)px/g;
+    for (const m of css.matchAll(mobileBody)) {
+      expect(Number(m[1])).toBeGreaterThanOrEqual(16);
+    }
+  });
+
+  it('헤더 내비 라벨도 15px 아래로 내려가지 않는다', () => {
+    expect(tokensToCssVars(legacyCompact())['--brand-nav-font-size']).toBe('15px');
   });
 });
