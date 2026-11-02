@@ -16,6 +16,8 @@ import type {
   Book,
   ClientConfig,
   Column,
+  ColumnListParams,
+  ColumnCategories,
   Event,
   Verse,
   TranslationRow,
@@ -483,8 +485,15 @@ export class DWChurchClient {
   }
 
   // ─── Columns ────────────────────────────────────────────
-  async getColumns(params?: ListParams): Promise<PaginatedResponse<Column>> {
-    return this.api.get(`${this.namespace}/columns`, toQueryParams(params));
+  async getColumns(params?: ColumnListParams): Promise<PaginatedResponse<Column>> {
+    // toQueryParams 는 공통 키만 훑으므로 category 는 따로 얹는다(videos 와 같은 방식).
+    const query = { ...toQueryParams(params), category: params?.category };
+    return this.api.get(`${this.namespace}/columns`, query);
+  }
+
+  /** 저널 카테고리 선택지 — 사용 중인 값 + 기본 제안. */
+  async getColumnCategories(): Promise<ColumnCategories> {
+    return unwrapData(await this.api.get(`${this.namespace}/columns/categories`));
   }
 
   async getColumn(id: string): Promise<Column> {

@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { requireAuth, optionalAuth } from '../../middleware/auth.js';
 import { parsePagination, paginatedResponse } from '../../utils/pagination.js';
 import { getSchema } from '../../utils/get-schema.js';
-import { createColumnSchema, updateColumnSchema } from './schema.js';
+import { createColumnSchema, updateColumnSchema, COLUMN_CATEGORY_SUGGESTIONS } from './schema.js';
 import * as columnService from './service.js';
 
 export async function columnRoutes(app: FastifyInstance) {
@@ -11,13 +11,31 @@ export async function columnRoutes(app: FastifyInstance) {
     const { page, perPage } = parsePagination(query);
     const status = (query.status as string) || (request.user ? undefined : 'published');
     const search = query.search as string | undefined;
+    const category = (query.category as string) || undefined;
 
     // 비인증(스토어프론트)이면 예약 공개 기간 밖의 칼럼은 숨긴다.
     // 관리자(인증)는 예약·종료된 것까지 다 보여야 관리가 된다.
     const { data, total } = await columnService.listColumns(getSchema(request), {
-      page, perPage, search, status, activeOnly: !request.user,
+      page, perPage, search, status, category, activeOnly: !request.user,
     });
     return reply.send(paginatedResponse(data, total, page, perPage));
+  });
+
+  /**
+   * 저널 카테고리 목록. `:id` 보다 먼저 선언한다 — 'categories' 가 id 로 잡히면
+   * 404 가 된다.
+   *
+   * 실제 사용 중인 카테고리(글 많은 순)가 앞, 아직 안 쓴 기본 제안이 뒤.
+   * 관리자 입력창의 제안과 블록의 카테고리 선택지가 이걸 쓴다.
+   */
+  app.get('/columns/categories', { preHandler: [optionalAuth] }, async (request, reply) => {
+    const used = await columnService.listColumnCategories(getSchema(request), {
+      activeOnly: !request.user,
+    });
+    const usedNames = used.map((r) => r.category);
+    const lower = new Set(usedNames.map((n) => n.toLowerCase()));
+    const suggestions = COLUMN_CATEGORY_SUGGESTIONS.filter((n) => !lower.has(n.toLowerCase()));
+    return reply.send({ data: { used, categories: [...usedNames, ...suggestions] } });
   });
 
   app.get('/columns/:id', { preHandler: [optionalAuth] }, async (request, reply) => {

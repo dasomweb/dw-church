@@ -469,7 +469,7 @@ async function main(): Promise<void> {
     // 스키마별 버전 스탬프를 두고, 이미 현재 버전으로 반영된 스키마는 건너뛴다.
     // ⚠️ 아래 per-schema DDL 블록을 하나라도 바꾸면(테이블/컬럼 추가) SCHEMA_VERSION을
     //    올려라 → 기존 테넌트가 "다음 배포 때 한 번만" 다시 반영하고 이후 다시 건너뛴다.
-    const SCHEMA_VERSION = 20; // ↑20: online_bulletins 예약 공개(publish_at) / ↑19: online_bulletins 기본 상태 published / ↑18: columns_pastoral 예약 공개 열(publish_at / unpublish_at) / ↑17: books 열 개편(표지2장·미국/한국 링크·게시기간) / ↑16: books 테이블 추가(책 추천) / ↑15: notification_prefs 추가(푸시 수신 설정) / ↑14: push 구독 테이블 추가 / ↑13: sermon_notes 테이블 추가(설교노트 콘텐츠 모듈 — 주일별 회중별)
+    const SCHEMA_VERSION = 21; // ↑21: columns_pastoral.category(저널 카테고리) / ↑20: online_bulletins 예약 공개(publish_at) / ↑19: online_bulletins 기본 상태 published / ↑18: columns_pastoral 예약 공개 열(publish_at / unpublish_at) / ↑17: books 열 개편(표지2장·미국/한국 링크·게시기간) / ↑16: books 테이블 추가(책 추천) / ↑15: notification_prefs 추가(푸시 수신 설정) / ↑14: push 구독 테이블 추가 / ↑13: sermon_notes 테이블 추가(설교노트 콘텐츠 모듈 — 주일별 회중별)
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS public.tenant_schema_versions (
         "schema_name" TEXT PRIMARY KEY,
@@ -702,6 +702,21 @@ async function main(): Promise<void> {
         }
         await prisma.$executeRawUnsafe(
           `CREATE INDEX IF NOT EXISTS "columns_publish_idx" ON "${schema}".columns_pastoral ("status", "publish_at" DESC)`,
+        );
+        alterHits++;
+      } catch { /* skip on error */ }
+
+      // 0a-3. columns_pastoral.category — 저널 카테고리(교회이야기 / 시니어 /
+      //        Biblical Parenting / 일과 영성 …). 자유 텍스트다: enum 으로 박으면
+      //        교회마다 다른 연재 이름을 담을 수 없다. 운영자가 입력한 값이 곧
+      //        카테고리이고, GET /columns/categories 가 실제 사용값을 모아 준다.
+      try {
+        await prisma.$executeRawUnsafe(
+          `ALTER TABLE "${schema}".columns_pastoral ADD COLUMN IF NOT EXISTS "category" TEXT`,
+        ).catch(() => { /* 열이 이미 있으면 무시 */ });
+        // 카테고리별 목록이 기본 조회라 (category, status) 복합 인덱스를 둔다.
+        await prisma.$executeRawUnsafe(
+          `CREATE INDEX IF NOT EXISTS "columns_category_idx" ON "${schema}".columns_pastoral ("category", "status")`,
         );
         alterHits++;
       } catch { /* skip on error */ }

@@ -21,8 +21,27 @@ export const createColumnSchema = z.object({
   publishAt: z.string().max(40).optional().nullable(),
   unpublishAt: z.string().max(40).optional().nullable(),
 
+  /**
+   * 저널 카테고리 — 자유 텍스트. enum 으로 박지 않는 이유: 교회마다 연재 이름이
+   * 다르고(교회이야기·시니어·Biblical Parenting·일과 영성 …), 새 연재를 시작할 때
+   * 코드 배포를 기다리게 할 수 없다. 운영자가 입력한 값이 곧 카테고리이고,
+   * GET /columns/categories 가 실제 사용 중인 값 + 아래 기본 제안을 돌려준다.
+   */
+  category: z.string().max(80).optional().nullable(),
+
   status: z.enum(['draft', 'published']).default('published'),
 }).passthrough();
+
+/**
+ * 관리자 입력창에 띄우는 기본 제안 목록(강제 아님 — 자유 입력).
+ * 실제 사용 중인 카테고리가 앞에 오고, 여기 값들이 뒤에 붙는다.
+ */
+export const COLUMN_CATEGORY_SUGGESTIONS = [
+  '교회이야기',
+  '시니어',
+  'Biblical Parenting',
+  '일과 영성',
+] as const;
 
 export const updateColumnSchema = createColumnSchema.partial();
 

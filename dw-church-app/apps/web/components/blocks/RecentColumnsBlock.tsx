@@ -24,13 +24,23 @@ function truncate(text: string, max: number): string {
 
 export async function RecentColumnsBlock({ props, slug }: RecentColumnsBlockProps) {
   const limit = (props.limit as number) ?? 6;
-  const title = (props.title as string) || '목회칼럼';
+  const title = (props.title as string) || '저널';
   const variant = (props.variant as string) || 'grid-3';
   const columns = variant === 'grid-2' ? 2 : variant === 'grid-4' ? 4 : variant === 'list' ? 1 : 3;
+  // 카테고리를 지정하면 그 연재만 뽑는다 — 같은 페이지에 '교회이야기' 섹션과
+  // '시니어' 섹션을 따로 둘 수 있다(블록 설정 '카테고리').
+  const category = ((props.category as string) || '').trim() || undefined;
+  // 카드에 카테고리 라벨을 띄울지. 한 카테고리만 뽑는 섹션에서는 제목과 중복되므로
+  // 기본('')은 '카테고리 지정이 없을 때만' 띄운다. 'on'/'off' 로 강제할 수 있고,
+  // AI 빌더가 넣는 boolean 도 받는다.
+  const sc = props.showCategory;
+  const showCategory = sc === 'on' || sc === true ? true
+    : sc === 'off' || sc === false ? false
+      : !category;
 
   let data: any[] = [];
   try {
-    const result = await getColumns(slug, { perPage: limit });
+    const result = await getColumns(slug, { perPage: limit, category });
     data = Array.isArray(result) ? result : (result?.data ?? []);
   } catch {
     data = [];
@@ -41,7 +51,9 @@ export async function RecentColumnsBlock({ props, slug }: RecentColumnsBlockProp
       <DataSection props={props}>
         <div className="mx-auto max-w-7xl text-center">
           <h2 className="mb-4 text-2xl sm:text-3xl font-bold font-heading" style={getElementStyle(props, 'title')}>{title}</h2>
-          <p className="text-gray-400" style={koText('summary')}>등록된 칼럼이 없습니다.</p>
+          <p className="text-gray-400" style={koText('summary')}>
+            {category ? `'${category}' 글이 아직 없습니다.` : '등록된 글이 아직 없습니다.'}
+          </p>
         </div>
       </DataSection>
     );
@@ -140,6 +152,7 @@ export async function RecentColumnsBlock({ props, slug }: RecentColumnsBlockProp
             // 노출되면 성도에게는 날짜가 거꾸로 보인다.
             const date = col.publishAt ?? col.publish_at ?? col.createdAt ?? col.created_at ?? '';
             const id = col.id ?? '';
+            const cat = (col.category ?? '') as string;
 
             return (
               <Link
@@ -159,6 +172,9 @@ export async function RecentColumnsBlock({ props, slug }: RecentColumnsBlockProp
                   )}
                 </div>
                 <div className="p-5 flex flex-col flex-1">
+                  {showCategory && cat && (
+                    <p className="mb-2 text-[var(--dw-primary)]" style={koText('eyebrow')}>{cat}</p>
+                  )}
                   <h3 className="font-bold font-heading line-clamp-2 group-hover:text-[var(--dw-primary)] transition-colors" style={koText('cardTitle')}>
                     {colTitle}
                   </h3>

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import type { Column, ListParams, PostStatus } from '@dw-church/api-client';
+import type { Column, ColumnListParams, PostStatus } from '@dw-church/api-client';
 import {
   useColumns,
+  useColumnCategories,
   useCreateColumn,
   useUpdateColumn,
   useDeleteColumn,
@@ -23,6 +24,8 @@ interface ColumnFormData {
   /** 예약 공개 — 공개 시작일 / 종료일 (YYYY-MM-DD, 비우면 제한 없음) */
   publishAt: string;
   unpublishAt: string;
+  /** 저널 카테고리 — 자유 입력(목록의 제안에서 고르거나 새로 타이핑) */
+  category: string;
   status: PostStatus;
 }
 
@@ -32,13 +35,16 @@ const dayValue = (v?: string | null): string => (v || '').slice(0, 10);
 export default function ColumnManagement() {
   const [view, setView] = useState<'list' | 'edit'>('list');
   const [editingItem, setEditingItem] = useState<Column | null>(null);
-  const [params, setParams] = useState<ListParams>({ page: 1, perPage: 10, search: '' });
+  const [params, setParams] = useState<ColumnListParams>({ page: 1, perPage: 10, search: '' });
   const [deleteTarget, setDeleteTarget] = useState<{id: string; name: string} | null>(null);
 
   const { showToast } = useToast();
   const apiClient = useDWChurchClient();
   const uploadImage = async (file: File): Promise<string> => (await apiClient!.uploadFile(file, 'columns')).url;
   const { data, isLoading, error, refetch } = useColumns(params);
+  // 선택지 = 이 교회가 실제로 쓴 카테고리 + 아직 안 쓴 기본 제안(서버가 합쳐 준다).
+  const { data: categoryData } = useColumnCategories();
+  const categoryOptions = categoryData?.categories ?? [];
   const createMutation = useCreateColumn();
   const updateMutation = useUpdateColumn();
   const deleteMutation = useDeleteColumn();
@@ -56,6 +62,7 @@ export default function ColumnManagement() {
       thumbnailUrl: item.thumbnailUrl,
       publishAt: dayValue(item.publishAt),
       unpublishAt: dayValue(item.unpublishAt),
+      category: item.category ?? '',
       status: item.status,
     });
     setView('edit');
@@ -63,7 +70,7 @@ export default function ColumnManagement() {
 
   const handleCreate = () => {
     setEditingItem(null);
-    reset({ title: '', content: '', topImageUrl: '', bottomImageUrl: '', youtubeUrl: '', thumbnailUrl: '', publishAt: '', unpublishAt: '', status: 'published' });
+    reset({ title: '', content: '', topImageUrl: '', bottomImageUrl: '', youtubeUrl: '', thumbnailUrl: '', publishAt: '', unpublishAt: '', category: '', status: 'published' });
     setView('edit');
   };
 
@@ -119,6 +126,22 @@ export default function ColumnManagement() {
                   <option value="draft">임시저장</option>
                   <option value="archived">보관</option>
                 </select>
+              </FormField>
+            </FormRow>
+            {/* 카테고리는 자유 입력 + 제안 목록(datalist). select 로 고정하면 교회가
+                새 연재를 시작할 때 배포를 기다려야 한다. 한 번 입력하면 그 다음부터
+                제안에 자동으로 생긴다(서버가 사용값을 모아 준다). */}
+            <FormRow>
+              <FormField label="카테고리" help="교회이야기 · 시니어 · Biblical Parenting · 일과 영성 … 직접 입력도 됩니다. 비우면 분류 없음.">
+                <input
+                  {...register('category')}
+                  list="column-category-options"
+                  placeholder="예: 교회이야기"
+                  className={inputClass}
+                />
+                <datalist id="column-category-options">
+                  {categoryOptions.map((c) => <option key={c} value={c} />)}
+                </datalist>
               </FormField>
             </FormRow>
           </FormSection>
@@ -218,7 +241,7 @@ export default function ColumnManagement() {
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold">칼럼 관리</h2>
+        <h2 className="text-xl font-bold">저널 관리</h2>
         <div className="flex items-center gap-2">
           {bulk.count > 0 && (
             <button
@@ -229,17 +252,17 @@ export default function ColumnManagement() {
               선택 삭제 ({bulk.count})
             </button>
           )}
-          <ContentMigrationButton contentType="columns" label="칼럼" onDone={() => refetch()} />
+          <ContentMigrationButton contentType="columns" label="저널" onDone={() => refetch()} />
           <button
             onClick={handleCreate}
             className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"
           >
-            새 칼럼
+            새 저널 글
           </button>
         </div>
       </div>
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row">
         <input
           type="text"
           placeholder="검색..."
@@ -247,6 +270,20 @@ export default function ColumnManagement() {
           onChange={(e) => setParams((p) => ({ ...p, search: e.target.value, page: 1 }))}
           className="border rounded px-3 py-2 w-full sm:w-64"
         />
+        {/* 사용 중인 카테고리만 노출 — 아직 글이 없는 제안을 고르면 빈 목록이 된다. */}
+        {(categoryData?.used.length ?? 0) > 0 && (
+          <select
+            value={params.category || ''}
+            onChange={(e) => setParams((p) => ({ ...p, category: e.target.value || undefined, page: 1 }))}
+            className="border rounded px-3 py-2 w-full sm:w-48"
+            aria-label="카테고리로 좁히기"
+          >
+            <option value="">전체 카테고리</option>
+            {categoryData!.used.map((c) => (
+              <option key={c.category} value={c.category}>{c.category} ({c.count})</option>
+            ))}
+          </select>
+        )}
       </div>
 
       {isLoading && <TableSkeleton />}
@@ -255,9 +292,9 @@ export default function ColumnManagement() {
       {data && data.data.length === 0 && !isLoading && (
         <EmptyState
           icon="✍️"
-          title="등록된 칼럼이 없습니다"
-          description="새로운 칼럼을 추가해보세요."
-          actionLabel="칼럼 추가"
+          title="등록된 저널 글이 없습니다"
+          description="새로운 저널 글을 추가해보세요."
+          actionLabel="저널 글 추가"
           onAction={() => handleCreate()}
         />
       )}
@@ -272,6 +309,7 @@ export default function ColumnManagement() {
                     <input type="checkbox" checked={bulk.isAllSelected(data.data)} onChange={() => bulk.toggleAll(data.data)} aria-label="전체 선택" />
                   </th>
                   <th className="text-left px-4 py-3 text-sm font-medium">제목</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium">카테고리</th>
                   <th className="text-left px-4 py-3 text-sm font-medium">공개 일정</th>
                   <th className="text-left px-4 py-3 text-sm font-medium">공개 상태</th>
                   <th className="text-left px-4 py-3 text-sm font-medium">YouTube</th>
@@ -285,6 +323,13 @@ export default function ColumnManagement() {
                       <input type="checkbox" checked={bulk.has(item.id)} onChange={() => bulk.toggle(item.id)} aria-label={`${item.title} 선택`} />
                     </td>
                     <td className="px-4 py-3 text-sm font-medium">{item.title}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm">
+                      {item.category ? (
+                        <span className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700">{item.category}</span>
+                      ) : (
+                        <span className="text-xs text-gray-400">—</span>
+                      )}
+                    </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
                       {publishRangeText(item.publishAt, item.unpublishAt)}
                       <span className="ml-2 text-xs text-gray-400">등록 {dayValue(item.createdAt)}</span>

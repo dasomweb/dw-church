@@ -518,17 +518,33 @@ export async function getStaffMember(slug: string, id: string): Promise<any> {
 
 export async function getColumns(
   slug: string,
-  params?: { page?: number; perPage?: number; search?: string },
+  params?: { page?: number; perPage?: number; search?: string; category?: string },
 ): Promise<any> {
   const p = new URLSearchParams();
   if (params?.page) p.set('page', String(params.page));
   if (params?.perPage) p.set('perPage', String(params.perPage));
   if (params?.search) p.set('search', params.search);
+  // 저널 카테고리(교회이야기 / 시니어 / …)로 좁힌다. 블록 설정과 목록 페이지 탭이 쓴다.
+  if (params?.category) p.set('category', params.category);
   const qs = p.toString();
 
   // No cache for search results, 60s revalidation for regular lists
   const revalidate = params?.search ? false as const : 60;
   return apiFetch(slug, `/api/v1/columns${qs ? '?' + qs : ''}`, { revalidate });
+}
+
+/**
+ * 저널 카테고리 선택지. 비인증 호출이라 공개 중인 글의 카테고리만 돌아온다 —
+ * 탭에 글 없는 카테고리가 뜨면 눌러도 빈 화면이 된다.
+ */
+export async function getColumnCategories(slug: string): Promise<{ category: string; count: number }[]> {
+  try {
+    const res = await apiFetch(slug, '/api/v1/columns/categories', { revalidate: 60 });
+    const data = unwrap(res);
+    return Array.isArray(data?.used) ? data.used : [];
+  } catch {
+    return [];
+  }
 }
 
 export async function getColumn(slug: string, id: string): Promise<any> {

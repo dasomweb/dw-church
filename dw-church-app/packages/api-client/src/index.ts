@@ -12,6 +12,8 @@ export type {
   Sermon,
   SermonBodySection,
   Column,
+  ColumnListParams,
+  ColumnCategories,
   Album,
   Video,
   VideoCategory,
@@ -135,6 +137,7 @@ export {
   useRelatedSermons,
   // Columns
   useColumns,
+  useColumnCategories,
   useColumn,
   useCreateColumn,
   useUpdateColumn,

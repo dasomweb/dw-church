@@ -70,7 +70,7 @@ const BLOCK_CHOICES: { key: string; label: string }[] = [
   { key: 'bulletins', label: '주보' },
   { key: 'sermons', label: '설교' },
   { key: 'albums', label: '앨범' },
-  { key: 'columns', label: '칼럼' },
+  { key: 'columns', label: '저널' },
   { key: 'events', label: '행사' },
   { key: 'staff', label: '교역자' },
   { key: 'boards', label: '게시판' },

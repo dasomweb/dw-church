@@ -7,6 +7,8 @@ interface ListParams {
   perPage: number;
   search?: string;
   status?: string;
+  /** 저널 카테고리(교회이야기 / 시니어 / …). 비우면 전체. */
+  category?: string;
   /** true 면 예약 공개 기간 밖의 칼럼을 걸러낸다(스토어프론트). */
   activeOnly?: boolean;
 }
@@ -29,7 +31,7 @@ const IN_WINDOW = `(publish_at IS NULL OR publish_at <= ${TODAY}) AND (unpublish
 const ORDER = `ORDER BY COALESCE(publish_at, created_at::date) DESC, created_at DESC`;
 
 export async function listColumns(schema: string, params: ListParams) {
-  const { page, perPage, search, status, activeOnly } = params;
+  const { page, perPage, search, status, category, activeOnly } = params;
   const offset = (page - 1) * perPage;
 
   let whereClause = 'WHERE 1=1';
@@ -37,6 +39,12 @@ export async function listColumns(schema: string, params: ListParams) {
   let paramIndex = 1;
 
   if (status) { whereClause += ` AND status = $${paramIndex++}`; values.push(status); }
+  // 카테고리는 정확히 일치. 대소문자/공백 차이로 글이 사라지면 운영자가 원인을
+  // 못 찾으므로 양쪽을 trim + 소문자로 맞춰 비교한다('Biblical Parenting' 류 영문 때문).
+  if (category) {
+    whereClause += ` AND LOWER(TRIM(category)) = LOWER(TRIM($${paramIndex++}))`;
+    values.push(category);
+  }
   if (activeOnly) { whereClause += ` AND ${IN_WINDOW}`; }
   if (search) { whereClause += ` AND title ILIKE $${paramIndex++}`; values.push(`%${search}%`); }
 
@@ -71,8 +79,8 @@ export async function createColumn(schema: string, input: CreateColumnInput) {
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
     `INSERT INTO "${schema}".columns_pastoral
        (title, content, top_image_url, bottom_image_url, youtube_url, thumbnail_url,
-        publish_at, unpublish_at, status)
-     VALUES ($1, $2, $3, $4, $5, $6, $7::date, $8::date, $9)
+        publish_at, unpublish_at, category, status)
+     VALUES ($1, $2, $3, $4, $5, $6, $7::date, $8::date, $9, $10)
      RETURNING *`,
     input.title,
     input.content ?? null,
@@ -83,6 +91,8 @@ export async function createColumn(schema: string, input: CreateColumnInput) {
     // 빈 문자열은 NULL 로 — ''::date 는 Postgres 22007 로 죽는다(?? 가 아니라 ||).
     input.publishAt || null,
     input.unpublishAt || null,
+    // 빈 문자열은 NULL — '' 카테고리가 생기면 목록 필터에 빈 칸이 뜬다.
+    input.category?.trim() || null,
     input.status,
   );
   return rows[0];
@@ -101,6 +111,7 @@ export async function updateColumn(schema: string, id: string, input: UpdateColu
   if (input.thumbnailUrl !== undefined) { setClauses.push(`thumbnail_url = $${paramIndex++}`); values.push(input.thumbnailUrl); }
   if (input.publishAt !== undefined) { setClauses.push(`publish_at = $${paramIndex++}::date`); values.push(input.publishAt || null); }
   if (input.unpublishAt !== undefined) { setClauses.push(`unpublish_at = $${paramIndex++}::date`); values.push(input.unpublishAt || null); }
+  if (input.category !== undefined) { setClauses.push(`category = $${paramIndex++}`); values.push(input.category?.trim() || null); }
   if (input.status !== undefined) { setClauses.push(`status = $${paramIndex++}`); values.push(input.status); }
 
   if (setClauses.length === 0) return getColumn(schema, id);
@@ -119,4 +130,26 @@ export async function deleteColumn(schema: string, id: string) {
   );
   await prisma.$queryRawUnsafe(`DELETE FROM "${schema}".columns_pastoral WHERE id = $1::uuid`, id);
   if (rows[0]) await deleteUrlsFromR2([rows[0].top_image_url, rows[0].bottom_image_url, rows[0].thumbnail_url]);
+}
+
+/**
+ * 이 교회가 실제로 쓰고 있는 저널 카테고리 목록(글이 많은 순 → 이름 순).
+ *
+ * 관리자 입력창의 제안 목록과 블록의 카테고리 선택지를 여기서 받아 간다.
+ * enum 이 아니라 사용값을 모으는 방식이라, 운영자가 새 연재 이름을 한 번 쓰면
+ * 그 다음부터 선택지에 자동으로 생긴다(코드 배포 불필요).
+ *
+ * activeOnly 면 공개 중인 글의 카테고리만 — 스토어프론트 탭에 빈 카테고리가
+ * 뜨면 눌러도 아무것도 없는 화면이 된다.
+ */
+export async function listColumnCategories(schema: string, opts: { activeOnly?: boolean } = {}) {
+  const guard = opts.activeOnly ? `AND status = 'published' AND ${IN_WINDOW}` : '';
+  const rows = await prisma.$queryRawUnsafe<{ category: string; count: number }[]>(
+    `SELECT TRIM(category) AS category, COUNT(*)::int AS count
+       FROM "${schema}".columns_pastoral
+      WHERE category IS NOT NULL AND TRIM(category) <> '' ${guard}
+      GROUP BY TRIM(category)
+      ORDER BY COUNT(*) DESC, TRIM(category) ASC`,
+  );
+  return rows;
 }

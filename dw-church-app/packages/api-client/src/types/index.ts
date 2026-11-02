@@ -172,6 +172,8 @@ export interface Column {
   publishAt?: string | null;
   /** 공개 종료일 (YYYY-MM-DD). 비우면 계속 공개. */
   unpublishAt?: string | null;
+  /** 저널 카테고리(교회이야기 / 시니어 / Biblical Parenting / 일과 영성 …). 자유 텍스트. */
+  category?: string | null;
   status: PostStatus;
   createdAt: string;
   modifiedAt: string;
@@ -667,6 +669,19 @@ export interface ListParams {
   orderBy?: string;
   order?: 'asc' | 'desc';
   status?: PostStatus;
+}
+
+/** 저널(칼럼) 목록 — 카테고리로 좁힐 수 있다. */
+export interface ColumnListParams extends ListParams {
+  category?: string;
+}
+
+/** GET /columns/categories 응답 — 사용 중인 카테고리 + 아직 안 쓴 기본 제안. */
+export interface ColumnCategories {
+  /** 실제 사용 중(글 많은 순) */
+  used: { category: string; count: number }[];
+  /** 사용 중 + 기본 제안을 합친 선택지 */
+  categories: string[];
 }
 
 export interface SermonListParams extends ListParams {

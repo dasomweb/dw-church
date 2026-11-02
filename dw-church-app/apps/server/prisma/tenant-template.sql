@@ -123,11 +123,16 @@ CREATE TABLE tenant_template.columns_pastoral (
     -- 예약 공개: 이 기간에만 사이트에 노출(비우면 제한 없음). 스케줄러 없이 읽을 때 걸러낸다.
     publish_at          DATE,
     unpublish_at        DATE,
+    -- 저널 카테고리(교회이야기 / 시니어 / Biblical Parenting / 일과 영성 …).
+    -- 자유 텍스트 — enum 이면 교회마다 다른 연재 이름을 담을 수 없다.
+    category            TEXT,
     status              VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
     created_by          UUID,
     created_at          TIMESTAMPTZ DEFAULT NOW(),
     updated_at          TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE INDEX columns_category_idx ON tenant_template.columns_pastoral (category, status);
 
 -- ─── Album Categories ───────────────────────────────────────
 CREATE TABLE tenant_template.album_categories (

@@ -37,7 +37,7 @@ export function SingleColumnClient({ column, slug }: SingleColumnClientProps) {
         href="/columns"
         className="mb-8 inline-block text-sm text-[var(--dw-primary)] hover:underline"
       >
-        &larr; 칼럼 목록
+        &larr; 저널 목록
       </Link>
 
       <article>

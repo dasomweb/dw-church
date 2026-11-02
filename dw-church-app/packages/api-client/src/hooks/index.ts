@@ -10,6 +10,8 @@ import type {
   SermonNote,
   Sermon,
   Column,
+  ColumnListParams,
+  ColumnCategories,
   Album,
   Video,
   VideoCategory,
@@ -96,6 +98,7 @@ export const queryKeys = {
     list: (params?: ListParams) => ['columns', 'list', params] as const,
     detail: (id: string) => ['columns', 'detail', id] as const,
     related: (id: string) => ['columns', 'related', id] as const,
+    categories: ['columns', 'categories'] as const,
   },
   albums: {
     all: ['albums'] as const,
@@ -507,11 +510,25 @@ export function useRelatedSermons(
 }
 
 // ─── Column Hooks ───────────────────────────────────────────
-export function useColumns(params?: ListParams) {
+export function useColumns(params?: ColumnListParams) {
   const client = useDWChurchClient();
   return useQuery<PaginatedResponse<Column>>({
     queryKey: queryKeys.columns.list(params),
     queryFn: () => client!.getColumns(params),
+    enabled: !!client,
+    staleTime: STALE_TIME,
+  });
+}
+
+/**
+ * 저널 카테고리 선택지. 글을 저장하면 그 카테고리가 선택지에 생기므로,
+ * 저장 성공 시 queryKeys.columns.all 무효화에 함께 걸린다.
+ */
+export function useColumnCategories() {
+  const client = useDWChurchClient();
+  return useQuery<ColumnCategories>({
+    queryKey: queryKeys.columns.categories,
+    queryFn: () => client!.getColumnCategories(),
     enabled: !!client,
     staleTime: STALE_TIME,
   });

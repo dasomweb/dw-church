@@ -13,9 +13,9 @@ export async function generateMetadata({ params }: ColumnDetailProps): Promise<M
   const { slug, id } = await params;
   try {
     const column = await getColumn(slug, id);
-    return buildTenantMetadata(slug, column?.title ?? '목회칼럼');
+    return buildTenantMetadata(slug, column?.title ?? '저널');
   } catch {
-    return buildTenantMetadata(slug, '목회칼럼');
+    return buildTenantMetadata(slug, '저널');
   }
 }
 

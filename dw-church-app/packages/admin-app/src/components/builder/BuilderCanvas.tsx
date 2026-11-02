@@ -65,7 +65,7 @@ const DEVICE_LABEL: Record<Device, string> = { desktop: '데스크탑', tablet: 
 const CHURCH_BLOCK_LABELS: Record<string, string> = {
   recent_sermons: '설교 목록 (Data Block)',
   recent_bulletins: '주보 목록 (Data Block)',
-  recent_columns: '칼럼 목록 (Data Block)',
+  recent_columns: '저널 목록 (Data Block)',
   album_gallery: '앨범 (Data Block)',
   video_board: '영상 게시판 (Data Block)',
   schedule_board: '예배 및 모임 (Data Block)',
