@@ -54,6 +54,16 @@ export {
 export { Icon } from './utilities/Icon';
 export { FEED_SOURCE_LABELS, DEFAULT_FEED_SOURCES, parseFeedSources, plainExcerpt, type FeedSource } from './utilities/feed-sources';
 export { footerNavColumns, type FooterNavLink, type FooterNavColumn, type FooterNavSource } from './utilities/footer-nav';
+export {
+  KOREAN_TYPE,
+  KOREAN_TEXT_FLOOR_PX,
+  KOREAN_BODY_FLOOR_PX,
+  KOREAN_TIGHT_TRACKING_MIN_PX,
+  koText,
+  koreanTypeViolations,
+  type KoreanTextRole,
+  type KoreanTextSpec,
+} from './utilities/korean-type';
 export { ICONS, ICON_NAMES, isKnownIcon, type IconDef } from './icons/icons';
 
 // Element primitives — apps/web 측 데이터 블록 (ProductsShowcaseBlock 등)

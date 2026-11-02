@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { koText } from '@dw-church/blocks';
 
 /**
  * latest_feed 의 표시부 — 카테고리 탭 + 카드 그리드.
@@ -75,7 +76,7 @@ export function LatestFeedClient({ items, title, showTabs, allLabel, columns, mo
           gap: '12px 24px', borderBottom: `2px solid ${INK}`, paddingBottom: 14,
         }}
       >
-        <h2 style={{ ...SERIF, margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: '-0.03em', color: INK }}>{title}</h2>
+        <h2 style={{ ...SERIF, margin: 0, ...koText('sectionTitle'), color: INK }}>{title}</h2>
         {showTabs && tabs.length > 1 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px' }}>
             {[{ kind: '', label: allLabel }, ...tabs].map((t) => (
@@ -85,7 +86,7 @@ export function LatestFeedClient({ items, title, showTabs, allLabel, columns, mo
                 onClick={() => setActive(t.kind)}
                 style={{
                   background: 'none', border: 0, padding: 0, cursor: 'pointer',
-                  fontSize: 13, fontWeight: active === t.kind ? 700 : 500,
+                  ...koText('tab', { fontWeight: active === t.kind ? 700 : 500 }),
                   color: active === t.kind ? INK : MUTED,
                 }}
                 aria-pressed={active === t.kind}
@@ -112,15 +113,15 @@ export function LatestFeedClient({ items, title, showTabs, allLabel, columns, mo
                   />
                 )}
               </div>
-              <p style={{ margin: '12px 0 0', fontSize: 12, fontWeight: 600, color: OLIVE }}>
+              <p style={{ margin: '12px 0 0', ...koText('eyebrow'), color: OLIVE }}>
                 {[it.kindLabel, shortDate(it.date)].filter(Boolean).join(' · ')}
               </p>
-              <h3 style={{ ...SERIF, margin: '6px 0 0', fontSize: 19, fontWeight: 700, letterSpacing: '-0.025em', lineHeight: 1.35, color: INK }}>
+              <h3 style={{ ...SERIF, margin: '6px 0 0', ...koText('cardTitle'), color: INK }}>
                 {it.title}
               </h3>
               {it.sub && (
                 <p style={{
-                  margin: '6px 0 0', fontSize: 13, lineHeight: 1.6, color: MUTED,
+                  margin: '6px 0 0', ...koText('summary'), color: MUTED,
                   display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
                 }}>
                   {it.sub}
@@ -137,7 +138,7 @@ export function LatestFeedClient({ items, title, showTabs, allLabel, columns, mo
       </div>
 
       {moreLabel && moreUrl && (
-        <p style={{ margin: '28px 0 0', fontSize: 14, fontWeight: 600, borderTop: `1px solid ${RULE}`, paddingTop: 18 }}>
+        <p style={{ margin: '28px 0 0', ...koText('tab'), borderTop: `1px solid ${RULE}`, paddingTop: 18 }}>
           <Link href={moreUrl} style={{ color: OLIVE, textDecoration: 'none' }}>{moreLabel} ›</Link>
         </p>
       )}

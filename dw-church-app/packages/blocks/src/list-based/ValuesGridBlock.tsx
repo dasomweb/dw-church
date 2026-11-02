@@ -3,6 +3,7 @@ import { HeadingElement, TextBodyElement, EyebrowElement } from '../elements';
 import { sectionBgStyle } from '../utilities/section-bg';
 import { SectionShell } from '../utilities/SectionShell';
 import { SectionHeadingRule } from '../utilities/SectionHeadingRule';
+import { koText } from '../utilities/korean-type';
 
 interface ValuesGridBlockProps {
   props: Record<string, unknown>;
@@ -61,20 +62,20 @@ export function ValuesGridBlock({ props }: ValuesGridBlockProps) {
         defaultContentClass="mx-auto max-w-7xl px-4 sm:px-6"
       >
         <div style={{ borderTop: `3px double ${TEXT}`, paddingTop: 28, display: 'flex', flexWrap: 'wrap', gap: '24px 56px' }}>
-          {title && <p style={{ flex: '0 0 200px', margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: '.14em', color: SECONDARY }}>{title}</p>}
+          {title && <p style={{ flex: '0 0 200px', margin: 0, ...koText('eyebrow', { fontWeight: 700 }), color: SECONDARY }}>{title}</p>}
           <div style={{ flex: '1 1 420px', minWidth: 0 }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 10px' }}>
               {items.map((it, i) => {
                 const label = String(it.title ?? '');
                 if (!label) return null;
-                const chip = { fontSize: 14, fontWeight: 600, color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 999, padding: '8px 14px', textDecoration: 'none', display: 'inline-block' } as CSSProperties;
+                const chip = { ...koText('tab'), color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 999, padding: '8px 14px', textDecoration: 'none', display: 'inline-block' } as CSSProperties;
                 return it.href
                   ? <a key={i} href={it.href} style={chip}>{label}</a>
                   : <span key={i} style={chip}>{label}</span>;
               })}
             </div>
             {moreLabel && moreHref && (
-              <p style={{ margin: '18px 0 0', fontSize: 14, fontWeight: 600 }}>
+              <p style={{ margin: '18px 0 0', ...koText('tab') }}>
                 <a href={moreHref} style={{ color: PRIMARY, textDecoration: 'none' }}>{moreLabel} ›</a>
               </p>
             )}
@@ -102,7 +103,7 @@ export function ValuesGridBlock({ props }: ValuesGridBlockProps) {
     // 제목은 줄바꿈을 그대로 살린다 — 시안의 두 줄 제목(<br>) 을 운영자가 재현할 수 있게.
     const titleLines = String(title).split(/<br\s*\/?>|\n/).map((t) => t.trim()).filter(Boolean);
     const btn = (fill: boolean): CSSProperties => ({
-      display: 'inline-block', fontSize: 14, fontWeight: 600, textDecoration: 'none',
+      display: 'inline-block', ...koText('tab'), textDecoration: 'none',
       padding: '11px 20px', borderRadius: 2,
       background: fill ? INK : 'transparent', color: fill ? '#fff' : INK,
       border: `1px solid ${fill ? INK : RULE}`,
@@ -119,7 +120,7 @@ export function ValuesGridBlock({ props }: ValuesGridBlockProps) {
         <div style={{ display: 'grid', gap: '32px 48px', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
           <div style={{ minWidth: 0 }}>
             {eyebrow && (
-              <p style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: '.14em', color: SECONDARY }}>{eyebrow}</p>
+              <p style={{ margin: 0, ...koText('eyebrow', { fontWeight: 700 }), color: SECONDARY }}>{eyebrow}</p>
             )}
             {titleLines.length > 0 && (
               <h2 style={{
@@ -131,7 +132,7 @@ export function ValuesGridBlock({ props }: ValuesGridBlockProps) {
               </h2>
             )}
             {lead && (
-              <p style={{ margin: '16px 0 0', maxWidth: '34em', fontSize: 17, lineHeight: 1.75, color: BODY }}>{lead}</p>
+              <p style={{ margin: '16px 0 0', maxWidth: '34em', ...koText('lede'), color: BODY }}>{lead}</p>
             )}
             {(primaryUrl || secondaryUrl) && (
               <div style={{ marginTop: 22, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
@@ -143,7 +144,7 @@ export function ValuesGridBlock({ props }: ValuesGridBlockProps) {
 
           <div style={{ minWidth: 0 }}>
             {listTitle && (
-              <p style={{ margin: '0 0 6px', fontSize: 12, fontWeight: 700, letterSpacing: '.14em', color: SECONDARY }}>{listTitle}</p>
+              <p style={{ margin: '0 0 6px', ...koText('eyebrow', { fontWeight: 700 }), color: SECONDARY }}>{listTitle}</p>
             )}
             <div style={{ display: 'grid', gap: '0 28px', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
               {items.map((it, i) => {
@@ -152,7 +153,7 @@ export function ValuesGridBlock({ props }: ValuesGridBlockProps) {
                 const row: CSSProperties = {
                   display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10,
                   borderTop: `1px solid ${RULE}`, padding: '13px 0',
-                  fontSize: 15, fontWeight: 600, color: INK, textDecoration: 'none',
+                  ...koText('summary', { fontWeight: 600 }), color: INK, textDecoration: 'none',
                 };
                 return it.href
                   ? <a key={i} href={it.href} style={row}><span>{label}</span><span aria-hidden style={{ color: SECONDARY }}>›</span></a>
@@ -217,7 +218,7 @@ export function ValuesGridBlock({ props }: ValuesGridBlockProps) {
                   baseStyle={{ color: 'var(--brand-muted, var(--text-muted, #6b7280))' }}
                 />
                 {it.href && (
-                  <span style={{ marginTop: 'auto', paddingTop: '0.5rem', color: 'var(--dw-primary, var(--accent, currentColor))', fontWeight: 600, fontSize: '0.9rem' }}>
+                  <span style={{ marginTop: 'auto', paddingTop: '0.5rem', color: 'var(--dw-primary, var(--accent, currentColor))', ...koText('tab') }}>
                     {it.linkLabel || '자세히'} ›
                   </span>
                 )}

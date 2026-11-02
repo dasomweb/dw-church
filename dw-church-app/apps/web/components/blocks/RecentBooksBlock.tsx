@@ -1,5 +1,6 @@
 import { getBooks } from '@/lib/api';
 import { DataSection } from './DataSection';
+import { koText } from '@dw-church/blocks';
 import { titleAlignClass } from './title-align';
 import { getElementStyle } from '@/lib/element-style';
 
@@ -79,7 +80,7 @@ function Cover({ src, title }: { src?: string; title: string }) {
 function BuyLinks({ us, kr }: { us?: string; kr?: string }) {
   if (!us && !kr) return null;
   const linkStyle = {
-    fontSize: 14, fontWeight: 600, color: PRIMARY, textDecoration: 'none',
+    ...koText('tab'), color: PRIMARY, textDecoration: 'none',
     border: `1px solid ${BORDER}`, borderRadius: 2, padding: '7px 14px',
   } as const;
   return (
@@ -134,7 +135,7 @@ export async function RecentBooksBlock({ props, slug }: Props) {
     const secondaryLabel = String(props.secondaryLabel ?? '지난 책');
     const secondaryUrl = String(props.secondaryUrl ?? '').trim();
     const btn = (fill: boolean) => ({
-      display: 'inline-block', fontSize: 14, fontWeight: 600, textDecoration: 'none',
+      display: 'inline-block', ...koText('tab'), textDecoration: 'none',
       padding: '11px 20px', borderRadius: 2,
       background: fill ? INK : 'transparent', color: fill ? '#fff' : INK,
       border: `1px solid ${fill ? INK : BORDER}`,
@@ -147,15 +148,15 @@ export async function RecentBooksBlock({ props, slug }: Props) {
             <Cover src={covers(b)[0]} title={b.title} />
           </div>
           <div style={{ flex: '1 1 340px', minWidth: 0 }}>
-            {eyebrow && <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: PRIMARY }}>{eyebrow}</p>}
+            {eyebrow && <p style={{ margin: 0, ...koText('eyebrow'), color: PRIMARY }}>{eyebrow}</p>}
             <h2 style={{ ...SERIF, margin: '10px 0 0', fontSize: 'clamp(24px,3vw,34px)', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.25, color: INK }}>
               {b.title}
             </h2>
             {(b.author || b.publisher) && (
-              <p style={{ margin: '8px 0 0', fontSize: 14, color: MUTED }}>{[b.author, b.publisher].filter(Boolean).join(' · ')}</p>
+              <p style={{ margin: '8px 0 0', ...koText('meta'), color: MUTED }}>{[b.author, b.publisher].filter(Boolean).join(' · ')}</p>
             )}
             {b.recommendation && (
-              <p style={{ margin: '16px 0 0', maxWidth: '36em', fontSize: 16, lineHeight: 1.8, color: TEXT, whiteSpace: 'pre-line' }}>
+              <p style={{ margin: '16px 0 0', maxWidth: '36em', ...koText('body'), color: TEXT, whiteSpace: 'pre-line' }}>
                 {b.recommendation}
               </p>
             )}
@@ -191,7 +192,7 @@ export async function RecentBooksBlock({ props, slug }: Props) {
         {title}
       </h2>
       {description && (
-        <p className={`mb-8 ${titleAlignClass(props)}`} style={{ fontSize: 16, lineHeight: 1.75, color: MUTED, maxWidth: '34em' }}>
+        <p className={`mb-8 ${titleAlignClass(props)}`} style={{ ...koText('body'), color: MUTED, maxWidth: '34em' }}>
           {description}
         </p>
       )}
@@ -210,7 +211,7 @@ export async function RecentBooksBlock({ props, slug }: Props) {
             ))}
           </div>
           <div style={{ flex: '1 1 320px', minWidth: 0 }}>
-            <p style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: '.14em', color: PRIMARY }}>
+            <p style={{ margin: 0, ...koText('eyebrow', { fontWeight: 700 }), color: PRIMARY }}>
               {(featured.featuredPeriod ?? featured.featured_period) === 'week' ? '이번 주 추천도서' : '이달의 추천도서'}
               {featured.category ? ` · ${featured.category}` : ''}
             </p>
@@ -218,12 +219,12 @@ export async function RecentBooksBlock({ props, slug }: Props) {
               {featured.title}
             </h3>
             {(featured.author || featured.publisher) && (
-              <p style={{ margin: '6px 0 0', fontSize: 14, color: MUTED }}>
+              <p style={{ margin: '6px 0 0', ...koText('meta'), color: MUTED }}>
                 {[featured.author, featured.publisher].filter(Boolean).join(' · ')}
               </p>
             )}
             {featured.recommendation && (
-              <p style={{ margin: '16px 0 0', fontSize: 16, lineHeight: 1.85, color: TEXT, whiteSpace: 'pre-line' }}>
+              <p style={{ margin: '16px 0 0', ...koText('body'), color: TEXT, whiteSpace: 'pre-line' }}>
                 {featured.recommendation}
               </p>
             )}
@@ -238,15 +239,15 @@ export async function RecentBooksBlock({ props, slug }: Props) {
             <article key={b.id} style={{ minWidth: 0 }}>
               <Cover src={covers(b)[0]} title={b.title} />
               {b.category && (
-                <p style={{ margin: '12px 0 0', fontSize: 11, fontWeight: 700, letterSpacing: '.12em', color: PRIMARY }}>{b.category}</p>
+                <p style={{ margin: '12px 0 0', ...koText('eyebrow', { fontWeight: 700 }), color: PRIMARY }}>{b.category}</p>
               )}
-              <h3 style={{ ...SERIF, margin: '6px 0 0', fontSize: 17, fontWeight: 600, lineHeight: 1.45, color: TEXT }}>{b.title}</h3>
+              <h3 style={{ ...SERIF, margin: '6px 0 0', ...koText('cardTitle', { fontWeight: 600 }), color: TEXT }}>{b.title}</h3>
               {(b.author || b.publisher) && (
-                <p style={{ margin: '4px 0 0', fontSize: 13, color: MUTED }}>{[b.author, b.publisher].filter(Boolean).join(' · ')}</p>
+                <p style={{ margin: '4px 0 0', ...koText('meta'), color: MUTED }}>{[b.author, b.publisher].filter(Boolean).join(' · ')}</p>
               )}
               {b.recommendation && (
                 <p style={{
-                  margin: '8px 0 0', fontSize: 14, lineHeight: 1.75, color: MUTED,
+                  margin: '8px 0 0', ...koText('summary'), color: MUTED,
                   display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden',
                 }}>{b.recommendation}</p>
               )}

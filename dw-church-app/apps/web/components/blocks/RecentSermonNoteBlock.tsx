@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getLatestSermonNote, getColumns, getLatestOnlineBulletin } from '@/lib/api';
 import { DataSection } from './DataSection';
+import { koText } from '@dw-church/blocks';
 
 // 최근 설교노트 (recent_sermon_note) — 설교노트 모듈 최신 1건을 홈에 표시.
 // 대표 이미지(content.thumbnailUrl) + 제목 + 성경본문 + 본문 발췌 + 설교노트 보기 링크.
@@ -113,16 +114,16 @@ export async function RecentSermonNoteBlock({ props, slug }: Props) {
                   <img src={img} alt={title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
                 )}
               </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px 14px', margin: '14px 0 0', fontSize: 12, fontWeight: 600 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px 14px', margin: '14px 0 0', ...koText('eyebrow') }}>
                 <span style={{ background: INK, color: '#fff', padding: '4px 8px', letterSpacing: '.04em' }}>{tag}</span>
                 <span style={{ color: MUTED }}>{[date, scripture].filter(Boolean).join(' · ')}</span>
               </div>
               <h1 style={{ ...SERIF, margin: '14px 0 0', fontSize: 'clamp(30px,4vw,48px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.15, color: INK, textWrap: 'pretty' as const }}>
                 {title}
               </h1>
-              {lede && <p style={{ margin: '14px 0 0', maxWidth: '40em', fontSize: 17, lineHeight: 1.7, color: 'var(--dw-text, #55514a)' }}>{lede}</p>}
+              {lede && <p style={{ margin: '14px 0 0', maxWidth: '40em', ...koText('lede'), color: 'var(--dw-text, #55514a)' }}>{lede}</p>}
               {(author || body) && (
-                <p style={{ margin: '12px 0 0', fontSize: 13, color: MUTED }}>
+                <p style={{ margin: '12px 0 0', ...koText('meta'), color: MUTED }}>
                   {[author, `읽기 ${readMinutes(adult.text || '')}분`].filter(Boolean).join(' · ')}
                 </p>
               )}
@@ -133,15 +134,15 @@ export async function RecentSermonNoteBlock({ props, slug }: Props) {
           <aside className="lg:w-[340px] lg:shrink-0">
             {rail.map((it, i) => (
               <Link key={i} href={it.href || '#'} className="block" style={{ borderTop: `1px solid ${i === 0 ? INK : 'var(--border, #e8e4dc)'}`, padding: '16px 0 20px' }}>
-                {it.eyebrow && <span style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--dw-secondary, #5e6044)' }}>{it.eyebrow}</span>}
-                <span style={{ ...SERIF, display: 'block', margin: '6px 0 0', fontSize: 21, fontWeight: 700, letterSpacing: '-0.025em', lineHeight: 1.35, color: INK }}>{it.title}</span>
-                {it.summary && <span style={{ display: 'block', margin: '6px 0 0', fontSize: 14, lineHeight: 1.65, color: 'var(--dw-text, #55514a)' }}>{it.summary}</span>}
+                {it.eyebrow && <span style={{ display: 'block', ...koText('eyebrow'), color: 'var(--dw-secondary, #5e6044)' }}>{it.eyebrow}</span>}
+                <span style={{ ...SERIF, display: 'block', margin: '6px 0 0', ...koText('railTitle'), color: INK }}>{it.title}</span>
+                {it.summary && <span style={{ display: 'block', margin: '6px 0 0', ...koText('summary'), color: 'var(--dw-text, #55514a)' }}>{it.summary}</span>}
               </Link>
             ))}
             {worshipTime && (
               <div style={{ borderTop: '1px solid var(--border, #e8e4dc)', display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '10px 20px', padding: '16px 0 0' }}>
                 <span style={{ ...SERIF, fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em', color: INK }}>{worshipTime}</span>
-                <Link href={worshipHref} style={{ fontSize: 14, fontWeight: 600, color: 'var(--dw-secondary, #5e6044)' }}>{worshipLabel} ›</Link>
+                <Link href={worshipHref} style={{ ...koText('tab'), color: 'var(--dw-secondary, #5e6044)' }}>{worshipLabel} ›</Link>
               </div>
             )}
           </aside>
@@ -155,11 +156,11 @@ export async function RecentSermonNoteBlock({ props, slug }: Props) {
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
           <div className="min-w-0 lg:flex-1">
-            <p style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: '.14em', color: 'var(--dw-secondary, #5e6044)' }}>{eyebrow}</p>
+            <p style={{ margin: 0, ...koText('eyebrow', { fontWeight: 700 }), color: 'var(--dw-secondary, #5e6044)' }}>{eyebrow}</p>
             <h2 style={{ ...SERIF, margin: '12px 0 0', fontSize: 'clamp(26px,3.4vw,40px)', fontWeight: 600, letterSpacing: '-0.025em', lineHeight: 1.25, color: INK }}>{title}</h2>
-            <p style={{ margin: '12px 0 0', fontSize: 14, color: MUTED }}>{[date, scripture].filter(Boolean).join(' · ')}</p>
-            {body && <p style={{ margin: '18px 0 0', fontSize: 16, lineHeight: 1.95, color: 'var(--dw-text, #3a3129)' }}>{body}</p>}
-            <p style={{ margin: '22px 0 0', fontSize: 15, fontWeight: 600 }}>
+            <p style={{ margin: '12px 0 0', ...koText('meta'), color: MUTED }}>{[date, scripture].filter(Boolean).join(' · ')}</p>
+            {body && <p style={{ margin: '18px 0 0', ...koText('body'), color: 'var(--dw-text, #3a3129)' }}>{body}</p>}
+            <p style={{ margin: '22px 0 0', ...koText('tab') }}>
               <Link href={moreUrl} style={{ color: OLIVE }}>{moreLabel} ›</Link>
             </p>
           </div>

@@ -3,6 +3,7 @@ import { titleAlignClass } from './title-align';
 import { getElementStyle } from '@/lib/element-style';
 import { DataSection } from './DataSection';
 import Link from 'next/link';
+import { koText } from '@dw-church/blocks';
 
 interface RecentColumnsBlockProps {
   props: Record<string, unknown>;
@@ -40,7 +41,7 @@ export async function RecentColumnsBlock({ props, slug }: RecentColumnsBlockProp
       <DataSection props={props}>
         <div className="mx-auto max-w-7xl text-center">
           <h2 className="mb-4 text-2xl sm:text-3xl font-bold font-heading" style={getElementStyle(props, 'title')}>{title}</h2>
-          <p className="text-gray-400 text-sm">등록된 칼럼이 없습니다.</p>
+          <p className="text-gray-400" style={koText('summary')}>등록된 칼럼이 없습니다.</p>
         </div>
       </DataSection>
     );
@@ -67,9 +68,9 @@ export async function RecentColumnsBlock({ props, slug }: RecentColumnsBlockProp
     return (
       <DataSection props={props} defaultBg="var(--dw-text, #1a1a1a)">
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'space-between', gap: '10px 20px' }}>
-          <h2 style={{ fontFamily: 'var(--dw-font-heading)', margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: '-0.03em', color: ON_DARK }}>{title}</h2>
+          <h2 style={{ fontFamily: 'var(--dw-font-heading)', margin: 0, ...koText('sectionTitle'), color: ON_DARK }}>{title}</h2>
           {moreUrl && (
-            <Link href={moreUrl} style={{ fontSize: 13, fontWeight: 600, color: SAGE, textDecoration: 'none' }}>{moreLabel} ›</Link>
+            <Link href={moreUrl} style={{ ...koText('tab'), color: SAGE, textDecoration: 'none' }}>{moreLabel} ›</Link>
           )}
         </div>
 
@@ -82,14 +83,14 @@ export async function RecentColumnsBlock({ props, slug }: RecentColumnsBlockProp
                   <img src={img(lead)} alt={lead.title ?? ''} loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
                 )}
               </div>
-              <p style={{ margin: '14px 0 0', fontSize: 11, fontWeight: 600, letterSpacing: '.08em', color: SAGE }}>
+              <p style={{ margin: '14px 0 0', ...koText('eyebrow'), color: SAGE }}>
                 {formatDate(when(lead))}
               </p>
-              <h3 style={{ fontFamily: 'var(--dw-font-heading)', margin: '8px 0 0', fontSize: 24, fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1.3 }}>
+              <h3 style={{ fontFamily: 'var(--dw-font-heading)', margin: '8px 0 0', ...koText('sectionTitle', { fontWeight: 700 }) }}>
                 {lead.title ?? ''}
               </h3>
               {lead.content && (
-                <p style={{ margin: '10px 0 0', maxWidth: '38em', fontSize: 15, lineHeight: 1.7, color: 'rgba(255,255,255,.72)' }}>
+                <p style={{ margin: '10px 0 0', maxWidth: '38em', ...koText('summary'), color: 'rgba(255,255,255,.72)' }}>
                   {truncate(lead.content, 120)}
                 </p>
               )}
@@ -105,8 +106,8 @@ export async function RecentColumnsBlock({ props, slug }: RecentColumnsBlockProp
                   className="block"
                   style={{ borderTop: `1px solid ${DARK_RULE}`, padding: '14px 0 16px', color: ON_DARK, textDecoration: 'none' }}
                 >
-                  <span style={{ display: 'block', fontSize: 11, fontWeight: 600, letterSpacing: '.08em', color: SAGE }}>{formatDate(when(c))}</span>
-                  <span style={{ fontFamily: 'var(--dw-font-heading)', display: 'block', margin: '5px 0 0', fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.4 }}>
+                  <span style={{ display: 'block', ...koText('eyebrow'), color: SAGE }}>{formatDate(when(c))}</span>
+                  <span style={{ fontFamily: 'var(--dw-font-heading)', display: 'block', margin: '5px 0 0', ...koText('cardTitle') }}>
                     {c.title ?? ''}
                   </span>
                 </Link>
@@ -158,14 +159,14 @@ export async function RecentColumnsBlock({ props, slug }: RecentColumnsBlockProp
                   )}
                 </div>
                 <div className="p-5 flex flex-col flex-1">
-                  <h3 className="font-bold font-heading text-base leading-snug line-clamp-2 group-hover:text-[var(--dw-primary)] transition-colors">
+                  <h3 className="font-bold font-heading line-clamp-2 group-hover:text-[var(--dw-primary)] transition-colors" style={koText('cardTitle')}>
                     {colTitle}
                   </h3>
                   {content && (
-                    <p className="mt-2 text-sm text-gray-500 leading-relaxed line-clamp-2">{truncate(content, 110)}</p>
+                    <p className="mt-2 text-gray-500 line-clamp-2" style={koText('summary')}>{truncate(content, 110)}</p>
                   )}
                   {date && (
-                    <p className="mt-3 pt-3 border-t border-black/[0.05] text-xs text-gray-400">{formatDate(date)}</p>
+                    <p className="mt-3 pt-3 border-t border-black/[0.05] text-gray-400" style={koText('meta')}>{formatDate(date)}</p>
                   )}
                 </div>
               </Link>
