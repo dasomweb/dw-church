@@ -16,7 +16,10 @@ import { LatestFeedClient, type FeedItem } from './LatestFeedClient';
  *
  * props
  *   title      섹션 제목 (기본 '최신')
- *   sources    담을 모듈 — `키:라벨` 을 쉼표로. 라벨 생략 시 기본 이름.
+ *   sources    담을 모듈 — `키[@카테고리][:라벨]` 을 쉼표로. 라벨 생략 시
+ *              카테고리 이름(없으면 모듈 기본 이름). `@카테고리` 를 쓰면 같은
+ *              모듈을 연재별로 여러 줄 담을 수 있다 —
+ *              `column@교회이야기, column@시니어:시니어 라운지, column@일과 영성`
  *              키: sermon_note · column · online_bulletin · sermon · book ·
  *                  event · album · devotion
  *   showTabs   카테고리 탭 표시/숨김
@@ -71,7 +74,12 @@ const SOURCES: Record<string, { load: Loader }> = {
     }),
   },
   column: {
-    load: async (slug, perPage) => rows(await getColumns(slug, { perPage })).map((r) => ({
+    // opts.category 가 있으면 그 연재만. 저널 카테고리(교회이야기 · 시니어 ·
+    // Biblical Parenting · 일과 영성 …)별로 피드 줄을 따로 세울 때 쓴다.
+    load: async (slug, perPage, opts) => rows(await getColumns(slug, {
+      perPage,
+      ...(opts.category ? { category: opts.category } : {}),
+    })).map((r) => ({
       id: String(r.id ?? ''),
       kind: 'column',
       kindLabel: '',
@@ -185,10 +193,16 @@ export async function LatestFeedBlock({ props, slug }: Props) {
 
   // 모듈 하나가 죽어도 피드 전체가 사라지지 않도록 각각 독립적으로 삼킨다.
   const batches = await Promise.all(
-    sources.map(async ({ key, label }) => {
+    sources.map(async ({ key, label, category, id: sourceId }) => {
       try {
-        const got = await SOURCES[key]!.load(slug, perSource, opts);
-        return got.filter((it) => it.id && it.title).map((it) => ({ ...it, kindLabel: label }));
+        const got = await SOURCES[key]!.load(slug, perSource, {
+          ...opts,
+          ...(category ? { category } : {}),
+        });
+        // kind 를 소스 id(`키` 또는 `키@카테고리`)로 둔다 — 탭을 가르는 단위가
+        // 모듈이 아니라 소스 한 줄이어야 같은 모듈을 연재별로 나눠 담을 수 있다.
+        return got.filter((it) => it.id && it.title)
+          .map((it) => ({ ...it, kind: sourceId, kindLabel: label }));
       } catch {
         return [] as FeedItem[];
       }

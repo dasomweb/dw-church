@@ -16,11 +16,11 @@ describe('parseFeedSources', () => {
   });
 
   it('라벨을 생략하면 모듈 기본 이름', () => {
-    expect(parseFeedSources('column')).toEqual([{ key: 'column', label: '목회칼럼' }]);
+    expect(parseFeedSources('column')).toEqual([{ key: 'column', label: '저널', id: 'column' }]);
   });
 
-  it('키:라벨 로 라벨을 바꿀 수 있다 (예닮교회는 칼럼을 저널이라 부른다)', () => {
-    expect(parseFeedSources('column:저널')).toEqual([{ key: 'column', label: '저널' }]);
+  it('키:라벨 로 라벨을 바꿀 수 있다', () => {
+    expect(parseFeedSources('column:목회서신')).toEqual([{ key: 'column', label: '목회서신', id: 'column' }]);
   });
 
   it('적은 순서를 그대로 지킨다', () => {
@@ -39,7 +39,7 @@ describe('parseFeedSources', () => {
   });
 
   it('같은 모듈을 두 번 적어도 한 번만 담는다 (카드 중복 방지)', () => {
-    expect(parseFeedSources('column:저널, column:칼럼')).toEqual([{ key: 'column', label: '저널' }]);
+    expect(parseFeedSources('column:저널, column:칼럼')).toEqual([{ key: 'column', label: '저널', id: 'column' }]);
   });
 
   it('빈 값이면 아무 것도 담지 않는다 — 호출부가 기본값으로 대체한다', () => {
@@ -48,7 +48,7 @@ describe('parseFeedSources', () => {
   });
 
   it('로더가 있는 키만 받도록 호출부가 목록을 좁힐 수 있다', () => {
-    const only = { column: '목회칼럼' };
+    const only = { column: '저널' };
     expect(parseFeedSources('sermon_note, column', only).map((s) => s.key)).toEqual(['column']);
   });
 
@@ -67,6 +67,54 @@ describe('parseFeedSources', () => {
  * 카드 부제목은 본문에서 뽑는다. 마크다운 기호나 사진 주소가 그대로 새어 나오면
  * 홈에서 바로 보인다(설교노트·묵상 본문은 마크다운이다).
  */
+describe('카테고리별 소스 — `키@카테고리`', () => {
+  it('@카테고리 를 붙이면 그 연재만 담고, 라벨은 카테고리 이름이 된다', () => {
+    expect(parseFeedSources('column@교회이야기')).toEqual([
+      { key: 'column', label: '교회이야기', category: '교회이야기', id: 'column@교회이야기' },
+    ]);
+  });
+
+  it('카테고리와 라벨을 따로 줄 수 있다', () => {
+    expect(parseFeedSources('column@시니어:시니어 라운지')).toEqual([
+      { key: 'column', label: '시니어 라운지', category: '시니어', id: 'column@시니어' },
+    ]);
+  });
+
+  it('같은 모듈을 카테고리별로 여러 줄 담는다 (v6 홈 피드)', () => {
+    const got = parseFeedSources('column@교회이야기, column@시니어:시니어 라운지, column@일과 영성');
+    expect(got.map((x) => x.id)).toEqual(['column@교회이야기', 'column@시니어', 'column@일과 영성']);
+    expect(got.map((x) => x.label)).toEqual(['교회이야기', '시니어 라운지', '일과 영성']);
+  });
+
+  it('같은 키@카테고리 중복은 버린다 — 다른 카테고리는 남긴다', () => {
+    const got = parseFeedSources('column@시니어, column@시니어:중복, column@선교');
+    expect(got.map((x) => x.id)).toEqual(['column@시니어', 'column@선교']);
+  });
+
+  it('카테고리 없는 줄과 있는 줄이 섞여도 따로 담긴다', () => {
+    const got = parseFeedSources('column, column@교회이야기');
+    expect(got.map((x) => x.id)).toEqual(['column', 'column@교회이야기']);
+    expect(got[0]!.category).toBeUndefined();
+  });
+
+  it('영문 카테고리와 공백 있는 카테고리도 받는다', () => {
+    const got = parseFeedSources('column@Biblical Parenting:가정과 자녀, column@일과 영성');
+    expect(got[0]!.category).toBe('Biblical Parenting');
+    expect(got[0]!.label).toBe('가정과 자녀');
+    expect(got[1]!.category).toBe('일과 영성');
+  });
+
+  it('카테고리만 다르고 키가 오타면 버린다', () => {
+    expect(parseFeedSources('columns@시니어')).toEqual([]);
+  });
+
+  it('라벨에 콜론이 있어도 카테고리를 먼저 가른다', () => {
+    const got = parseFeedSources('column@시니어:라운지: 인생 후반')[0]!;
+    expect(got.category).toBe('시니어');
+    expect(got.label).toBe('라운지: 인생 후반');
+  });
+});
+
 describe('plainExcerpt', () => {
   it('제목·인용·목록 기호를 걷어낸다', () => {
     expect(plainExcerpt('## 1. 선한 목자\n> 나는 양의 문이라\n- 첫째')).toBe('1. 선한 목자 나는 양의 문이라 첫째');

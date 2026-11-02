@@ -13,7 +13,10 @@ import { koText } from '@dw-church/blocks';
  */
 export interface FeedItem {
   id: string;
-  /** 모듈 키 — sermon_note / column / online_bulletin ... */
+  /**
+   * 소스 키 — 모듈 키(`column`) 또는 모듈@카테고리(`column@시니어`).
+   * 피드 탭을 가르는 단위다(모듈이 아니라 소스 한 줄 기준).
+   */
   kind: string;
   /** 탭·메타에 표시할 라벨 (운영자가 모듈별로 바꿀 수 있다) */
   kindLabel: string;
