@@ -470,3 +470,67 @@ describe('koreanFloorPx / 하한 클램프', () => {
     expect(tokensToCssVars(legacyCompact())['--brand-nav-font-size']).toBe('15px');
   });
 });
+
+/**
+ * 타입 래더 배선 — globals.css 가 `:root` 에서 `var(--brand-*)` 를 파생하던 구조는
+ * 동작하지 않는다. 커스텀 속성의 var() 는 선언된 요소에서 치환되고, --brand-* 는
+ * `[data-tenant]` 에 주입되므로 :root 에는 없다 → 항상 폴백이 상속됐다(2026-11-02
+ * 라이브에서 측정: --brand-body 16px 인데 같은 요소 --fs-base 가 1.0625rem).
+ * 그래서 토큰과 같은 스코프로 같이 내보낸다.
+ */
+describe('타입 래더 테넌트 스코프 배선', () => {
+  it('--fs-* 텍스트 래더를 토큰과 같은 맵으로 내보낸다', () => {
+    const vars = tokensToCssVars(DEFAULT_DESIGN_TOKENS);
+    expect(vars['--fs-lg']).toBe('var(--brand-h5, 1.1875rem)');
+    expect(vars['--fs-base']).toBe('var(--brand-body, 1.0625rem)');
+    expect(vars['--fs-sm']).toBe('var(--brand-label, 0.9375rem)');
+    expect(vars['--fs-xs']).toBe('var(--brand-caption, 0.875rem)');
+  });
+
+  it('koText() 가 읽는 --ko-* 도 같은 스코프에서 파생된다', () => {
+    const vars = tokensToCssVars(DEFAULT_DESIGN_TOKENS);
+    expect(vars['--ko-eyebrow']).toBe('var(--fs-xs)');
+    expect(vars['--ko-meta']).toBe('var(--fs-sm)');
+    expect(vars['--ko-tab']).toBe('var(--fs-sm)');
+    expect(vars['--ko-body']).toBe('var(--fs-base)');
+    expect(vars['--ko-summary']).toBe('calc(var(--fs-base) - 1px)');
+  });
+
+  it('테넌트 스코프 CSS 안에 래더가 --brand-* 와 같은 규칙으로 들어간다', () => {
+    const css = tokensToCssText(DEFAULT_DESIGN_TOKENS, '[data-tenant="acme"]');
+    const firstRule = css.slice(0, css.indexOf('}'));
+    // 같은 규칙이어야 var() 가 테넌트 값으로 치환된다.
+    expect(firstRule).toContain('--brand-body:');
+    expect(firstRule).toContain('--fs-base: var(--brand-body');
+    expect(firstRule).toContain('--ko-body: var(--fs-base)');
+  });
+
+  it('제목 래더(--fs-h1~h4)는 배선하지 않는다 — 모바일 clamp 를 깨뜨린다', () => {
+    const vars = tokensToCssVars(DEFAULT_DESIGN_TOKENS);
+    for (const k of ['--fs-display', '--fs-h1', '--fs-h2', '--fs-h3', '--fs-h4']) {
+      expect(vars[k]).toBeUndefined();
+    }
+  });
+
+  it('래더는 미디어 블록에 중복되지 않는다 — --brand-* 재선언을 따라가므로', () => {
+    const t = JSON.parse(JSON.stringify(DEFAULT_DESIGN_TOKENS)) as DesignTokens;
+    t.typography.scales.body!.size = { desktop: 19, tablet: 18, mobile: 17 };
+    const css = tokensToCssText(t, '[data-tenant="acme"]');
+    const media = css.slice(css.indexOf('@media'));
+    expect(media).toContain('--brand-body:');
+    expect(media).not.toContain('--fs-base');
+    expect(media).not.toContain('--ko-body');
+  });
+
+  it('하한 클램프가 래더까지 전달된다 — 구 compact 스냅샷', () => {
+    const t = JSON.parse(JSON.stringify(DEFAULT_DESIGN_TOKENS)) as DesignTokens;
+    t.typography.scales.body!.size = { desktop: 15, tablet: 15, mobile: 15 };
+    t.typography.scales.caption!.size = { desktop: 12, tablet: 12, mobile: 12 };
+    const vars = tokensToCssVars(t);
+    // 래더는 --brand-* 를 가리키고, 그 --brand-* 가 이미 하한까지 올라가 있다.
+    expect(vars['--brand-body']).toBe('16px');
+    expect(vars['--brand-caption']).toBe('13px');
+    expect(vars['--fs-base']).toContain('--brand-body');
+    expect(vars['--fs-xs']).toContain('--brand-caption');
+  });
+});

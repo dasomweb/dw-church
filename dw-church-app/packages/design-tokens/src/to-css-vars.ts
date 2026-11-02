@@ -88,6 +88,36 @@ export function tokensToCssVars(tokens: DesignTokens): CssVarMap {
     }
   }
 
+  // ── Bridge typography tokens → the --fs-* / --ko-* vars blocks consume ──
+  // 왜 여기서 내보내야 하는가(중요). globals.css / blocks styles.css 는 이 래더를
+  // `:root { --fs-base: var(--brand-body, 1.0625rem) }` 처럼 선언했다. 그런데 CSS
+  // 커스텀 속성의 var() 는 **선언된 요소에서** 치환되고 그 결과가 자손에게 상속된다.
+  // --brand-* 는 BrandTokensStyle 이 `[data-tenant="slug"]` 에 주입하므로 :root 에는
+  // 없다 → :root 에서 치환될 때 항상 폴백이 쓰이고, 그 고정값이 테넌트 서브트리로
+  // 상속된다. 즉 테마의 글자 크기가 블록 타이포에 **전혀 닿지 않았다**(2026-11-02
+  // 라이브 측정: --brand-body 16px 인데 같은 요소의 --fs-base 가 1.0625rem 폴백).
+  // 간격 토큰(--section-py-* 아래)과 같은 방식으로 테넌트 스코프에 같이 내보내면
+  // 같은 규칙 안의 --brand-* 로 치환되어 해결된다. @media 의 --brand-* 재선언도
+  // 같은 요소에서 일어나므로 이 별칭들이 자동으로 따라간다(미디어 블록 중복 불필요).
+  //
+  // 제목 래더(--fs-display/h1~h4)는 의도적으로 제외한다. 토큰 h1~h4 는 데스크톱
+  // 목표값이고 globals.css 폴백은 유동 clamp() 라, 모바일 값이 없는 테넌트에서
+  // 고정 px 로 바꾸면 폰에서 제목이 커져 버린다. 그건 별도 작업.
+  const fsFrom = (name: TypographyScaleName, fallback: string): string =>
+    `var(--brand-${name}, ${fallback})`;
+  vars['--fs-lg'] = fsFrom('h5', '1.1875rem');
+  vars['--fs-base'] = fsFrom('body', '1.0625rem');
+  vars['--fs-sm'] = fsFrom('label', '0.9375rem');
+  vars['--fs-xs'] = fsFrom('caption', '0.875rem');
+  // 한글 역할 스케일 — blocks 의 koText() 가 읽는다. 위 --fs-* 와 같은 규칙에
+  // 선언되므로 여기서도 테넌트 값으로 치환된다. lede/*-title 은 globals.css 의
+  // 자립 clamp() 라(var() 의존 없음) 스코프 문제가 없어 손대지 않는다.
+  vars['--ko-eyebrow'] = 'var(--fs-xs)';
+  vars['--ko-meta'] = 'var(--fs-sm)';
+  vars['--ko-tab'] = 'var(--fs-sm)';
+  vars['--ko-summary'] = 'calc(var(--fs-base) - 1px)';
+  vars['--ko-body'] = 'var(--fs-base)';
+
   // Shadows.
   for (const [preset, value] of Object.entries(tokens.shadows)) {
     vars[`--brand-shadow-${preset}`] = value;

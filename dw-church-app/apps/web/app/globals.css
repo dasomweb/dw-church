@@ -14,6 +14,15 @@
  * the admin canvas looked correct. Per-tenant Theme overrides these via the
  * injected `--brand-*` vars (BrandTokensStyle) + `--dw-*` bridge on the
  * [data-tenant] wrapper; this layer is the fallback when a token is unset.
+ *
+ * ⚠ 스코프 함정 (2026-11-02 라이브 측정으로 확인). 아래 `var(--brand-*, fallback)`
+ * 파생은 **이 :root 선언에서 치환**되고 그 결과가 자손으로 상속된다. --brand-* 는
+ * BrandTokensStyle 이 `[data-tenant="slug"]` 에 주입하므로 :root 에는 없다 → 여기서
+ * 파생한 값은 테넌트 페이지에서도 항상 *폴백*이다. 즉 `--accent` 는 테마 primary 가
+ * 아니라 #2563eb 로 렌더된다(yedam: --brand-primary #1a1a1a, --accent #2563eb).
+ * 토큰을 실제로 반영해야 하는 별칭은 tokensToCssVars 가 테넌트 스코프로 함께
+ * 내보내야 한다(--section-py-*, --gap-grid, --fs-*/--ko-* 가 그 방식). 색/컨테이너
+ * 별칭은 아직 배선 안 됨 — 여기 값을 바꿔도 테넌트에는 닿지 않는다.
  */
 :root {
   /* ── surfaces / text / accent (design-token base) ──
