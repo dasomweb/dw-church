@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { koText } from '@dw-church/blocks';
 
@@ -51,9 +51,16 @@ interface Props {
   columns: 2 | 3 | 4;
   moreLabel?: string;
   moreUrl?: string;
+  /**
+   * 사이드 레일(variant `rail-left` / `rail-right`). 서버에서 그려 넘긴다 —
+   * 레일 내용은 상태가 없고 최신 글 날짜를 서버에서 채워야 하기 때문이다.
+   * 없으면 레일 칼럼 자체를 만들지 않는다(기존 전폭 레이아웃 그대로).
+   */
+  rail?: ReactNode;
+  railSide?: 'left' | 'right';
 }
 
-export function LatestFeedClient({ items, title, showTabs, allLabel, columns, moreLabel, moreUrl }: Props) {
+export function LatestFeedClient({ items, title, showTabs, allLabel, columns, moreLabel, moreUrl, rail, railSide = 'left' }: Props) {
   // 탭은 실제로 들어온 항목에서만 만든다 — 등록 안 한 모듈 탭을 눌러 빈 화면이
   // 나오면 사이트가 고장난 것처럼 보인다.
   const tabs = useMemo(() => {
@@ -71,7 +78,7 @@ export function LatestFeedClient({ items, title, showTabs, allLabel, columns, mo
       ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
       : 'grid-cols-2 lg:grid-cols-4';
 
-  return (
+  const body = (
     <>
       <div
         style={{
@@ -146,5 +153,20 @@ export function LatestFeedClient({ items, title, showTabs, allLabel, columns, mo
         </p>
       )}
     </>
+  );
+
+  if (!rail) return body;
+
+  // 레일 + 본문 2칼럼. 모바일에서는 한 줄로 쌓되 **본문이 먼저** 오게 한다 —
+  // 레일은 보조 안내라, 폰에서 카드보다 위에 오면 첫 화면이 안내문으로 찬다.
+  // 좌측 레일은 DOM 순서가 [레일, 본문] 이므로 flex-col-reverse 로 뒤집고,
+  // 우측 레일은 그대로 쌓으면 된다. sticky 는 items-start 가 있어야 동작한다.
+  const stack = railSide === 'left' ? 'flex-col-reverse' : 'flex-col';
+  const main = <div className="min-w-0 flex-1">{body}</div>;
+
+  return (
+    <div className={`flex ${stack} gap-10 lg:flex-row lg:items-start lg:gap-12`}>
+      {railSide === 'left' ? <>{rail}{main}</> : <>{main}{rail}</>}
+    </div>
   );
 }

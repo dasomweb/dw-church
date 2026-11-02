@@ -1875,7 +1875,12 @@ const RECENT_SERMON_NOTE = churchBlock(
 const LATEST_FEED = churchBlock(
   { title: '표시', fields: [
     { key: 'title', label: '제목', type: 'text', hint: '예: 최신' },
-    { key: 'sources', label: '담을 모듈', type: 'text', hint: '쉼표로 나열. 라벨을 바꾸려면 키:라벨 — 예) sermon_note:설교노트, column:저널, online_bulletin:주보, book:이달의 책 · 쓸 수 있는 키: sermon_note · column · online_bulletin · sermon · book · event · album · devotion' },
+    { key: 'variant', label: '레이아웃', type: 'select', choices: [
+      { value: 'cards', label: '카드 전폭' },
+      { value: 'rail-left', label: '사이드 레일 좌측' },
+      { value: 'rail-right', label: '사이드 레일 우측' },
+    ]},
+    { key: 'sources', label: '담을 모듈', type: 'text', hint: '쉼표로 나열. 키[@카테고리][:라벨] — 예) sermon_note:설교노트, column@교회이야기, column@시니어:시니어 라운지, book:이달의 책 · @카테고리를 붙이면 저널 연재별로 탭이 갈린다 · 쓸 수 있는 키: sermon_note · column · online_bulletin · sermon · book · event · album · devotion' },
     { key: 'limit', label: '카드 개수', type: 'number', hint: '기본 4' },
     { key: 'perSource', label: '모듈별 최대 개수', type: 'number', hint: '한 모듈이 피드를 독점하지 않게 제한. 기본 4' },
     { key: 'columns', label: '열 수', type: 'select', choices: [{ value: '2', label: '2열' }, { value: '3', label: '3열' }, { value: '4', label: '4열' }] },
@@ -1887,6 +1892,17 @@ const LATEST_FEED = churchBlock(
     { key: 'moreUrl', label: '더보기 주소', type: 'text' },
     { key: 'bookHref', label: '책 추천 연결 주소', type: 'text', hint: '책은 상세 페이지가 없어서 비우면 카드에 링크를 걸지 않는다' },
     { key: 'devotionHref', label: '말씀 묵상 연결 주소', type: 'text', hint: '묵상도 상세 페이지가 없어서 비우면 링크 없음' },
+  ]},
+  { title: '사이드 레일', fields: [
+    { key: 'railTitle', label: '레일 라벨', type: 'text', hint: '기본 THIS WEEK' },
+    { key: 'railLines', label: '레일 안내 줄', type: 'text', hint: "| 로 구분 — 예) 11월 첫째 주 | 주일예배 오전 11시" },
+    { key: 'railPrayerTitle', label: '기도제목 라벨', type: 'text', hint: '기본 기도제목' },
+    { key: 'railPrayerSource', label: '기도제목 가져오기', type: 'select', choices: [
+      { value: 'online_bulletin', label: '최신 온라인 주보에서 자동' },
+      { value: '', label: '직접 입력' },
+    ], hint: '주보에 적은 기도제목을 그대로 쓴다 — 주마다 레일을 고치지 않아도 된다' },
+    { key: 'railPrayerItems', label: '기도제목 직접 입력', type: 'text', hint: '| 로 구분. 위에서 자동을 골랐고 주보에 기도제목이 없으면 이 값으로 떨어진다' },
+    { key: 'railLinks', label: '레일 바로가기', type: 'text', hint: '키[:라벨] 쉼표 구분 — 모듈 키를 적으면 최신 글 날짜·주소가 자동으로 채워진다. 예) online_bulletin:온라인 주보, sermon_note:설교노트, book:이달의 책, /worship:예배 안내' },
   ]},
 );
 // 설교노트 목록 — 설교노트 모듈 전체를 대상 탭 + 카드 그리드로. 내용은 [설교노트 관리]에서.

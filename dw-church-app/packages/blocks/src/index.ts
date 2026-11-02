@@ -53,6 +53,7 @@ export {
 } from './utilities/dynamic-data';
 export { Icon } from './utilities/Icon';
 export { FEED_SOURCE_LABELS, DEFAULT_FEED_SOURCES, parseFeedSources, plainExcerpt, type FeedSource } from './utilities/feed-sources';
+export { parseRailLinks, splitRailLines, type RailLink } from './utilities/rail-links';
 export { footerNavColumns, type FooterNavLink, type FooterNavColumn, type FooterNavSource } from './utilities/footer-nav';
 export {
   KOREAN_TYPE,

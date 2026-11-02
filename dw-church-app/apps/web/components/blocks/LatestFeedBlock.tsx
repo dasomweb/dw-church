@@ -2,9 +2,13 @@ import {
   getSermonNotes, getColumns, getOnlineBulletins, getSermons,
   getBooks, getEvents, getAlbums, getDevotions,
 } from '@/lib/api';
-import { FEED_SOURCE_LABELS, DEFAULT_FEED_SOURCES, parseFeedSources, plainExcerpt } from '@dw-church/blocks';
+import {
+  FEED_SOURCE_LABELS, DEFAULT_FEED_SOURCES, parseFeedSources, plainExcerpt,
+  parseRailLinks, splitRailLines,
+} from '@dw-church/blocks';
 import { DataSection } from './DataSection';
 import { LatestFeedClient, type FeedItem } from './LatestFeedClient';
+import { LatestFeedRail, shortDate, type RailRow } from './LatestFeedRail';
 
 /**
  * latest_feed — 여러 **Content Module** 의 최신 글을 한 줄로 합쳐 보여주는
@@ -29,6 +33,13 @@ import { LatestFeedClient, type FeedItem } from './LatestFeedClient';
  *   columns    열 수 2 / 3 / 4
  *   bookHref / devotionHref  상세 라우트가 없는 모듈의 연결 주소(비우면 링크 없음)
  *   moreLabel / moreUrl      섹션 하단 더보기 링크
+ *
+ * variant `rail-left` / `rail-right` — 카드 옆에 좁은 안내 레일을 세운다.
+ *   railTitle / railLines          이번 주 안내 (라벨 + `|` 로 나눈 줄)
+ *   railPrayerTitle / railPrayerItems / railPrayerSource
+ *                                  기도제목 — source 가 online_bulletin 이면
+ *                                  최신 주보에 적은 기도제목을 자동으로 쓴다
+ *   railLinks                      바로가기 줄 — `키[:라벨]` (rail-links.ts 문법)
  */
 interface Props { props: Record<string, unknown>; slug: string }
 
@@ -172,6 +183,59 @@ const KNOWN = Object.fromEntries(
   Object.keys(SOURCES).map((k) => [k, FEED_SOURCE_LABELS[k] ?? k]),
 ) as Record<string, string>;
 
+/**
+ * 사이드 레일에 들어갈 값을 모은다.
+ *
+ * 바로가기 줄의 오른쪽 값·주소는 각 모듈의 **최신 글**에서 채운다(피드 카드와
+ * 같은 로더를 쓴다 — 상세 주소 규칙이 한 곳에만 있게). 기도제목은 최신 주보에
+ * 적은 것을 그대로 가져올 수 있다. 둘 다 주마다 손으로 고치지 않게 하려는 것이다.
+ */
+async function buildRail(slug: string, props: Record<string, unknown>, opts: Record<string, string>) {
+  const links = parseRailLinks(String(props.railLinks ?? ''), KNOWN);
+
+  const railRows: RailRow[] = await Promise.all(links.map(async (link) => {
+    // 운영자가 주소를 직접 적은 줄 — 날짜가 없으니 화살표만.
+    if (!link.key) return { id: link.id, label: link.label, value: '›', href: link.href };
+    try {
+      const [latest] = await SOURCES[link.key]!.load(slug, 1, opts);
+      return {
+        id: link.id,
+        label: link.label,
+        value: shortDate(latest?.date),
+        href: latest?.href || undefined,
+      };
+    } catch {
+      // 모듈 하나가 죽어도 레일 전체가 사라지지 않게 그 줄만 값 없이 둔다
+      // (링크도 걸지 않는다 — 죽은 링크보다 안 눌리는 줄이 낫다).
+      return { id: link.id, label: link.label, value: '' };
+    }
+  }));
+
+  let prayerItems = splitRailLines(props.railPrayerItems);
+  if (String(props.railPrayerSource ?? 'online_bulletin') === 'online_bulletin') {
+    try {
+      const [bulletin] = rows(await getOnlineBulletins(slug, { perPage: 1 }));
+      const content = (bulletin?.content ?? {}) as Record<string, any>;
+      const requests = Array.isArray(content.prayerRequests) ? content.prayerRequests : [];
+      const titles = requests.map((r: any) => String(r?.title ?? '').trim()).filter(Boolean);
+      // 220px 레일이라 길면 벽이 된다 — 앞쪽 몇 개만. 전체는 주보 상세에 있다.
+      if (titles.length > 0) prayerItems = titles.slice(0, 5);
+    } catch {
+      // 주보를 못 읽으면 운영자가 직접 적은 목록(railPrayerItems)으로 떨어진다.
+    }
+  }
+
+  return (
+    <LatestFeedRail
+      title={String(props.railTitle ?? 'THIS WEEK')}
+      lines={splitRailLines(props.railLines)}
+      prayerTitle={String(props.railPrayerTitle ?? '기도제목')}
+      prayerItems={prayerItems}
+      rows={railRows}
+    />
+  );
+}
+
 export async function LatestFeedBlock({ props, slug }: Props) {
   const title = String(props.title ?? '최신');
   const allLabel = String(props.allLabel ?? '전체');
@@ -182,6 +246,11 @@ export async function LatestFeedBlock({ props, slug }: Props) {
   const perSource = Number.isFinite(perRaw) && perRaw > 0 ? Math.min(12, Math.floor(perRaw)) : 4;
   const colRaw = String(props.columns ?? '4');
   const columns = colRaw === '2' ? 2 : colRaw === '3' ? 3 : 4;
+
+  // 사이드 레일 variant — 좌/우 두 가지. 레일을 안 쓰면 기존 전폭 레이아웃 그대로다.
+  const variant = String(props.variant ?? '');
+  const showRail = variant === 'rail-left' || variant === 'rail-right';
+  const railSide = variant === 'rail-right' ? 'right' : 'left';
 
   const sources = parseFeedSources(String(props.sources ?? '') || DEFAULT_FEED_SOURCES, KNOWN);
   if (sources.length === 0) return null;
@@ -219,6 +288,8 @@ export async function LatestFeedBlock({ props, slug }: Props) {
     <DataSection props={props} defaultBg="var(--dw-background, #fff)">
       <LatestFeedClient
         items={items}
+        rail={showRail ? await buildRail(slug, props, opts) : null}
+        railSide={railSide}
         title={title}
         showTabs={showTabs}
         allLabel={allLabel}
