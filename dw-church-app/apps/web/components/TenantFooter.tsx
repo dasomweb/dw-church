@@ -226,9 +226,13 @@ function NavColumns({
     <nav aria-label="풋터 메뉴" className={className}>
       {cols.map((col) => (
         <div key={col.id}>
-          <h3 className="mb-3 text-sm font-semibold" style={{ color: heading }}>
-            {col.label}
-          </h3>
+          {/* 평평한 메뉴를 열로 나눠 깔 때는 열 제목이 없다 — 빈 h3 가 공백만
+              만들지 않도록 라벨이 있을 때만 그린다. */}
+          {col.label && (
+            <h3 className="mb-3 text-sm font-semibold" style={{ color: heading }}>
+              {col.label}
+            </h3>
+          )}
           <ul className="space-y-2 text-sm">
             {col.children.map((child) => (
               <li key={child.id}>

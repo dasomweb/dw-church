@@ -17,6 +17,7 @@ import { HeaderTopBar } from '@/components/HeaderTopBar';
 import { TenantFooter, type FooterNavCol } from '@/components/TenantFooter';
 import { TenantHeader, type HeaderNavItem, type HeaderVariant } from '@/components/TenantHeader';
 import { DEFAULT_DESIGN_TOKENS, type DesignTokens } from '@dw-church/design-tokens';
+import { footerNavColumns } from '@dw-church/blocks';
 // Types inlined to avoid importing @dw-church/api-client in server components
 type ChurchSettings = Record<string, string>;
 type MenuItem = { id: string; label: string; labelEn?: string | null; pageId?: string; pageSlug?: string; externalUrl?: string; parentId?: string; sortOrder: number; isVisible: boolean; children?: MenuItem[] };
@@ -315,17 +316,18 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
     }));
   // Flat list for backward compat (only top-level shown in header)
   const sortedVisibleItems = topLevelItems;
-  // Footer link columns — the nav menu groups (교회소개/예배/교육/공동체 …)
-  // that have children. Rendered as footer columns when fc.showNav (tokens.footer).
-  const footerNavGroups = topLevelItems.filter((g) => (g.children?.length ?? 0) > 0);
-  // Resolve footer nav groups → serializable columns (label + children href)
-  // for the TenantFooter component (9 layout variants). navHref is the SAME
-  // resolver the header uses.
-  const footerNavCols: FooterNavCol[] = footerNavGroups.map((g) => ({
-    id: g.id,
-    label: g.label,
-    children: (g.children ?? []).map((c) => ({ id: c.id, label: c.label, href: navHref(c) })),
-  }));
+  // Footer link columns — nav menu groups (교회소개/예배/교육/공동체 …) become
+  // columns; a flat menu (no children anywhere) is split into two unlabeled
+  // columns instead of rendering nothing. navHref is the SAME resolver the
+  // header uses. 규칙과 경계값은 @dw-church/blocks footerNavColumns 에 있다.
+  const footerNavCols: FooterNavCol[] = footerNavColumns(
+    topLevelItems.map((item) => ({
+      id: item.id,
+      label: item.label,
+      href: navHref(item),
+      children: (item.children ?? []).map((c) => ({ id: c.id, label: c.label, href: navHref(c) })),
+    })),
+  );
   // 'history' footer variant "교회 연혁 보기 →" 링크 — 연혁 관련 메뉴가 있으면 그리로,
   // 없으면 관례적 /about-history. (없는 페이지 링크는 피하려 nav 우선 탐색)
   const historyHref =
