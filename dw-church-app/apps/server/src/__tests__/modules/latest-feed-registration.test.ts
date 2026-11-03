@@ -175,3 +175,42 @@ describe('latest_feed — 사이드 레일', () => {
     expect(line).toMatch(/variants: \[\{ id: 'cards'/);
   });
 });
+
+/**
+ * 매거진 그리드 — 균일한 카드 사이에 **전폭 피처 행**을 끼운다(시안 6).
+ * 지면 리듬이 목적이라 데이터·링크 규칙은 카드와 똑같아야 한다.
+ */
+describe('latest_feed — 피처 행 / 레일 그리드', () => {
+  const CLIENT = read('apps/web/components/blocks/LatestFeedClient.tsx');
+
+  it('0 이면 꺼진다 — 레일을 안 쓰는 기존 교회 피드는 그대로', () => {
+    expect(CLIENT).toContain('featureEvery = 0');
+    expect(CLIENT).toContain('featureEvery > 0 && i % featureEvery === 0');
+  });
+
+  it('피처 행은 한 행을 통째로 쓴다', () => {
+    expect(CLIENT).toContain("gridColumn: '1 / -1'");
+  });
+
+  it('레일이 붙으면 카드 최소폭으로 채운다 (고정 열 수로 눌리지 않게)', () => {
+    expect(CLIENT).toContain("'repeat(auto-fill, minmax(220px, 1fr))'");
+  });
+
+  it('피처 제목도 토큰 역할 스케일 (시안 22px 하드코딩 금지)', () => {
+    expect(CLIENT).toContain("koText('railTitle')");
+    expect(CLIENT).not.toContain('fontSize: 22');
+  });
+
+  it('운영자가 간격을 정할 수 있다 (두 편집기 모두)', () => {
+    expect(PAGE_EDITOR).toContain("key: 'featureEvery'");
+    expect(ELEMENT_REGISTRY).toContain("key: 'featureEvery'");
+  });
+
+  it('서버가 저장을 통과시킨다', () => {
+    const r = createSectionSchema.safeParse({
+      blockType: 'latest_feed',
+      props: { variant: 'rail-left', featureEvery: 6, sources: 'column@시니어' },
+    });
+    expect(r.success).toBe(true);
+  });
+});

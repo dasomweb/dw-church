@@ -40,6 +40,7 @@ import { LatestFeedRail, shortDate, type RailRow } from './LatestFeedRail';
  *                                  기도제목 — source 가 online_bulletin 이면
  *                                  최신 주보에 적은 기도제목을 자동으로 쓴다
  *   railLinks                      바로가기 줄 — `키[:라벨]` (rail-links.ts 문법)
+ *   featureEvery                   N번째마다 전폭 피처 행 (0 = 끔, 시안 6)
  */
 interface Props { props: Record<string, unknown>; slug: string }
 
@@ -246,6 +247,9 @@ export async function LatestFeedBlock({ props, slug }: Props) {
   const perSource = Number.isFinite(perRaw) && perRaw > 0 ? Math.min(12, Math.floor(perRaw)) : 4;
   const colRaw = String(props.columns ?? '4');
   const columns = colRaw === '2' ? 2 : colRaw === '3' ? 3 : 4;
+  // N번째마다 전폭 피처 행(0 = 끔). 시안은 6 — 0·6번째 카드가 큰 행이 된다.
+  const featureRaw = Number(props.featureEvery);
+  const featureEvery = Number.isFinite(featureRaw) && featureRaw > 0 ? Math.min(12, Math.floor(featureRaw)) : 0;
 
   // 사이드 레일 variant — 좌/우 두 가지. 레일을 안 쓰면 기존 전폭 레이아웃 그대로다.
   const variant = String(props.variant ?? '');
@@ -290,6 +294,7 @@ export async function LatestFeedBlock({ props, slug }: Props) {
         items={items}
         rail={showRail ? await buildRail(slug, props, opts) : null}
         railSide={railSide}
+        featureEvery={featureEvery}
         title={title}
         showTabs={showTabs}
         allLabel={allLabel}

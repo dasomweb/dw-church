@@ -1886,6 +1886,7 @@ const LATEST_FEED = churchBlock(
     { key: 'columns', label: '열 수', type: 'select', choices: [{ value: '2', label: '2열' }, { value: '3', label: '3열' }, { value: '4', label: '4열' }] },
     { key: 'showTabs', label: '카테고리 탭', type: 'select', choices: [{ value: 'show', label: '표시' }, { value: 'hide', label: '숨김' }] },
     { key: 'allLabel', label: "'전체' 탭 라벨", type: 'text', hint: '기본 전체' },
+    { key: 'featureEvery', label: '피처 행 간격', type: 'number', hint: 'N번째마다 카드 하나를 전폭 큰 행으로 — 0 이면 끔. 시안은 6(첫 카드와 7번째 카드가 큰 행)' },
   ]},
   { title: '링크', fields: [
     { key: 'moreLabel', label: '더보기 텍스트', type: 'text' },

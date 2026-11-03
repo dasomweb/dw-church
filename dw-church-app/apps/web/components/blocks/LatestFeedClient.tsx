@@ -58,9 +58,17 @@ interface Props {
    */
   rail?: ReactNode;
   railSide?: 'left' | 'right';
+  /**
+   * N번째마다 카드 하나를 **전폭 피처 행**으로 (0 = 끔).
+   * 균일한 카드 사이에 큰 행을 끼워 매거진 지면 같은 리듬을 준다 — 시안은 6.
+   */
+  featureEvery?: number;
 }
 
-export function LatestFeedClient({ items, title, showTabs, allLabel, columns, moreLabel, moreUrl, rail, railSide = 'left' }: Props) {
+export function LatestFeedClient({
+  items, title, showTabs, allLabel, columns, moreLabel, moreUrl,
+  rail, railSide = 'left', featureEvery = 0,
+}: Props) {
   // 탭은 실제로 들어온 항목에서만 만든다 — 등록 안 한 모듈 탭을 눌러 빈 화면이
   // 나오면 사이트가 고장난 것처럼 보인다.
   const tabs = useMemo(() => {
@@ -108,8 +116,16 @@ export function LatestFeedClient({ items, title, showTabs, allLabel, columns, mo
         )}
       </div>
 
-      <div className={`grid ${gridClass} gap-x-6 gap-y-9`} style={{ marginTop: 28 }}>
-        {shown.map((it) => {
+      <div
+        className={rail ? 'grid' : `grid ${gridClass} gap-x-6 gap-y-9`}
+        style={rail
+          // 레일이 붙으면 본문 폭이 그만큼 좁아진다 — 고정 4열로는 카드가 160px
+          // 까지 눌려 제목이 토막난다. 카드 최소폭을 정해 두고 들어가는 만큼만
+          // 채운다(시안의 auto-fill minmax(220px, 1fr)).
+          ? { marginTop: 28, gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '44px 28px' }
+          : { marginTop: 28 }}
+      >
+        {shown.map((it, i) => {
           const inner = (
             <>
               <div style={{ position: 'relative', aspectRatio: '4 / 3', background: IMG_BG, overflow: 'hidden' }}>
@@ -141,9 +157,48 @@ export function LatestFeedClient({ items, title, showTabs, allLabel, columns, mo
           );
           // 상세 페이지가 없는 모듈(책 추천 등)은 링크를 걸지 않는다 — 눌러도 아무
           // 일이 없는 카드보다 안 눌리는 카드가 낫다.
+          // 피처 행 — 사진을 옆에 크게 두고 발췌를 길게. 카드와 같은 데이터를
+          // 다르게 조판하는 것뿐이라, 모듈·링크 규칙은 그대로다.
+          const feature = featureEvery > 0 && i % featureEvery === 0;
+          const featureInner = (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 28, alignItems: 'center' }}>
+              <div style={{
+                flex: '0 1 420px', minWidth: 240, position: 'relative',
+                aspectRatio: '3 / 2', background: IMG_BG, overflow: 'hidden',
+              }}>
+                {it.image && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={it.image}
+                    alt={it.title}
+                    loading="lazy"
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                )}
+              </div>
+              <div style={{ flex: '1 1 260px', minWidth: 0 }}>
+                <p style={{ margin: 0, ...koText('eyebrow'), color: OLIVE }}>
+                  {[it.kindLabel, shortDate(it.date)].filter(Boolean).join(' · ')}
+                </p>
+                <h3 style={{ ...SERIF, margin: '8px 0 0', ...koText('railTitle'), color: INK }}>
+                  {it.title}
+                </h3>
+                {it.sub && (
+                  <p style={{ margin: '8px 0 0', maxWidth: '34em', ...koText('summary'), color: MUTED }}>
+                    {it.sub}
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+          const content = feature ? featureInner : inner;
+          const wrapStyle = {
+            minWidth: 0, color: 'inherit', textDecoration: 'none',
+            ...(feature ? { gridColumn: '1 / -1', borderBottom: `1px solid ${RULE}`, paddingBottom: 40 } : {}),
+          };
           return it.href
-            ? <Link key={`${it.kind}:${it.id}`} href={it.href} style={{ minWidth: 0, color: 'inherit', textDecoration: 'none' }}>{inner}</Link>
-            : <article key={`${it.kind}:${it.id}`} style={{ minWidth: 0 }}>{inner}</article>;
+            ? <Link key={`${it.kind}:${it.id}`} href={it.href} style={wrapStyle}>{content}</Link>
+            : <article key={`${it.kind}:${it.id}`} style={wrapStyle}>{content}</article>;
         })}
       </div>
 
