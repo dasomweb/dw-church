@@ -1,0 +1,40 @@
+{
+  "id": "dw.church-membership",
+  "name": "교적·스몰그룹·새가족 관리 (True Light)",
+  "version": "0.1.0",
+  "kind": "business-module",
+  "layer": "vertical",
+  "industries": ["church"],
+  "status": "experimental",
+  "extraction": "in-repo",
+  "summary": "교회 교인 관리 업무 모듈 — 교적(교인·가정·관계·출석·심방·성례·이명·직분), 스몰그룹·목장(조직·배치 대기열·모임 보고·과정), 새가족 등록·이력. 요금제 애드온으로 기능 게이트.",
+  "capabilities": [
+    "교적: members, households, member_relations, member_codes, CSV 가져오기, 통계 대시보드",
+    "출석·심방·성례·이명·직분 임명 기록과 장기 결석자 조회",
+    "스몰그룹: group_preset, groups, group_members, 배치 대기열, 모임 보고·출석, 과정·수강, 공지·자료",
+    "목장(cells)과 새가족 등록(newcomer_registrations, newcomer_history)",
+    "스태프 역할별 접근 범위(staff-access), requireFeature 로 애드온 게이트"
+  ],
+  "provides": {
+    "packages": [],
+    "apis": [
+      "/api/v1/members",
+      "/api/v1/households",
+      "/api/v1/member-relations",
+      "/api/v1/attendance",
+      "/api/v1/groups",
+      "/api/v1/group-members",
+      "/api/v1/cells",
+      "/api/v1/newcomers"
+    ],
+    "contracts": []
+  },
+  "depends_on": [],
+  "docs": [
+    "dw-church-app/apps/server/src/modules/membership",
+    "dw-church-app/apps/server/src/modules/smallgroup",
+    "dw-church-app/apps/server/src/modules/newcomers",
+    "dw-church-app/apps/server/src/modules/cells"
+  ],
+  "owner": "확인 필요"
+}
