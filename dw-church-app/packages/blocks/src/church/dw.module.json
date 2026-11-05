@@ -1,0 +1,31 @@
+{
+  "id": "dw.church-blocks",
+  "name": "교회 블록 세트 (True Light)",
+  "version": "0.1.0",
+  "kind": "block",
+  "layer": "vertical",
+  "industries": ["church"],
+  "status": "experimental",
+  "extraction": "in-repo",
+  "summary": "교회 사이트용 Static·Data 블록 묶음 — 담임목사 인사말·예배 시간·새가족 안내·헌금 안내와 최근 설교·주보·칼럼·교역자·연혁·앨범·온라인 주보·목장 블록. 블록 레지스트리(registry.json) 위에서 동작.",
+  "capabilities": [
+    "Static Block: pastor_message, worship_schedule, newcomer_info, giving_info, sermon_feature, newcomer_form",
+    "Data Block: recent_sermons, recent_bulletins, recent_columns, staff_grid, history_timeline, album_gallery, event_grid, schedule_board, online_bulletin, cell_grid, video_board, recent_books",
+    "블록 메타데이터(label·group·aiHint·useCases)로 AI 빌더가 교회 페이지를 조합",
+    "Data Block 은 교회 콘텐츠 모듈 API(/api/v1/{resource})에서 데이터를 읽음"
+  ],
+  "provides": {
+    "packages": ["@dw-church/blocks"],
+    "apis": [],
+    "contracts": []
+  },
+  "depends_on": ["dw.church-content-modules"],
+  "docs": [
+    "dw-church-app/packages/blocks/src/registry.json",
+    "dw-church-app/packages/blocks/src/church",
+    "dw-church-app/apps/web/components/blocks",
+    "dw-church-app/packages/ui-components/src/components",
+    "CLAUDE.md"
+  ],
+  "owner": "확인 필요"
+}
