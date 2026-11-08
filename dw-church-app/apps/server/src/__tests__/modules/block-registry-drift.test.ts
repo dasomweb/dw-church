@@ -162,6 +162,7 @@ describe('dw.module.json — DW-MCP 에 넘길 블록 목록이 코드와 같다
     summary: string;
     capabilities: string[];
     provides?: { packages?: string[] };
+    depends_on?: string[];
   };
 
   /**
@@ -189,6 +190,13 @@ describe('dw.module.json — DW-MCP 에 넘길 블록 목록이 코드와 같다
 `
         + `문제: ${extra.join(', ')}`,
     ).toEqual([]);
+  });
+
+  it('depends_on 은 모듈 id 문자열 배열이다 (객체·버전 범위는 스키마가 거부한다)', () => {
+    // 블록이 읽는 콘텐츠 모듈을 가리킨다. 자동 파생이 아니라 손으로 적는 값이므로
+    // 형식만 지킨다 — 오타 하나로 등록이 거부되는 것을 막는 가드다.
+    const bad = (manifest.depends_on ?? []).filter((d) => !/^dw\.[a-z0-9]+(-[a-z0-9]+)*$/.test(d));
+    expect(bad, `depends_on 항목이 모듈 id 패턴을 벗어났습니다: ${bad.join(', ')}`).toEqual([]);
   });
 
   it('packages 는 루트가 아니라 provides 안에 있다', () => {

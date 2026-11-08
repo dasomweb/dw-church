@@ -50,9 +50,9 @@
  *   - `generatedBy`·`generatedAt` 는 스키마에 없다. 그래서 "손으로 고치지 말라"
  *     표시는 루트 필드가 아니라 `capabilities` 한 줄로 싣는다. 날짜는 넣지 않는다
  *     (재생성마다 diff 가 흔들린다 — 신선도는 version 으로).
- *   - `extraction`·`depends_on`·`owner` 는 의미를 확인하지 못해 쓰지 않는다.
- *     특히 `depends_on` 은 항목 모양(모듈 id 문자열? 객체?)을 모르므로 지어내지
- *     않았다 — dw.church-content-modules 와의 짝 관계는 capabilities 문장에 있다.
+ *   - `depends_on` 은 **모듈 id 문자열 배열**이다(회신으로 확정). 항목은
+ *     `^dw\.[a-z0-9]+(-[a-z0-9]+)*$` 패턴이고 객체·버전 범위는 받지 않는다.
+ *   - `extraction`·`owner` 는 의미를 확인하지 못해 쓰지 않는다.
  *
  * Run (dw-church-app 에서):  node scripts/design-importer/gen-dw-module.ts
  */
@@ -152,6 +152,24 @@ function main(): void {
     provides: {
       packages: ['@dw-church/blocks', '@dw-church/ui-components'],
     },
+    /**
+     * Data Block 이 데이터를 읽어오는 모듈들. **추측이 아니라 코드로 확인한 것만**
+     * 적는다(모듈 id 문자열 배열 — 객체·버전 범위는 스키마가 받지 않는다):
+     *
+     *   dw.church-content-modules
+     *     recent_sermons·recent_bulletins·recent_columns·staff_grid·album_gallery·
+     *     event_grid·history_timeline·online_bulletin·recent_sermon_note·
+     *     sermon_magazine·verse_of_day·devotion_reader·recent_books·video_board 등이
+     *     /api/v1/{sermons,bulletins,columns,staff,albums,events,history,...} 를 읽는다.
+     *   dw.church-membership
+     *     cell_grid·cell_report 가 /api/v1/cells 를 읽는다
+     *     (apps/web/lib/api.ts:565 — 목장은 그 모듈의 cells 테이블).
+     *
+     * ⚠ 자동 파생이 아니다. 새 Data Block 이 **다른 모듈의** API 를 읽기 시작하면
+     * 여기에 손으로 더해야 한다 — 블록이 어느 모듈 소관인지는 코드에서 기계적으로
+     * 읽히지 않는다(라우트 경로와 모듈 경계가 1:1 이 아니다).
+     */
+    depends_on: ['dw.church-content-modules', 'dw.church-membership'],
     // ⚠ path(PUT_ARGS.path) 기준 **상대경로**다 — 레지스트리가 path 를 앞에 붙여
     // 렌더하므로 저장소 루트 기준으로 적으면 경로가 겹쳐 깨진다.
     docs: [

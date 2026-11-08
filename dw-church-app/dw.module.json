@@ -28,6 +28,10 @@
       "@dw-church/ui-components"
     ]
   },
+  "depends_on": [
+    "dw.church-content-modules",
+    "dw.church-membership"
+  ],
   "docs": [
     "packages/blocks/src/registry.json",
     "scripts/design-importer/CLAUDE-DESIGN-CATALOG.md",
