@@ -4,10 +4,10 @@
   "version": "0.2.0",
   "kind": "block",
   "layer": "vertical",
-  "status": "experimental",
   "industries": [
     "church"
   ],
+  "status": "experimental",
   "summary": "교회 사이트용 Static·Data 블록 묶음 — 담임목사 인사말·예배 시간·새가족 안내·헌금 안내부터 최근 설교·주보·저널·교역자·연혁·앨범·행사·온라인 주보·설교노트·설교매거진·통합 피드·말씀까지. 운영자가 페이지 편집기에서 놓을 수 있는 block_type 81개(정적 50 + 데이터 27 + 레이아웃 4), 블록 레지스트리(registry.json) 단일 메타데이터 위에서 동작.",
   "capabilities": [
     "registry.json 한 곳에서 블록 타입·그룹·defaultProps·variant·aiHint 관리 (어드민 팔레트·서버 Zod enum·AI 빌더·시안 카탈로그가 이를 derive)",
@@ -22,10 +22,12 @@
     "시안 작업용 카탈로그 scripts/design-importer/CLAUDE-DESIGN-CATALOG.md — palette/alias/importer 구분 + variants + 구조 제약 9개 (gen-catalog.ts 자동생성)",
     "이 목록은 저장소 코드(PageEditor BLOCK_DEFS + registry.json)에서 생성된다 — scripts/design-importer/gen-dw-module.ts 로 재생성할 것, 손으로 고치지 말 것"
   ],
-  "packages": [
-    "@dw-church/blocks",
-    "@dw-church/ui-components"
-  ],
+  "provides": {
+    "packages": [
+      "@dw-church/blocks",
+      "@dw-church/ui-components"
+    ]
+  },
   "docs": [
     "packages/blocks/src/registry.json",
     "scripts/design-importer/CLAUDE-DESIGN-CATALOG.md",

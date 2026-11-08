@@ -161,7 +161,43 @@ describe('dw.module.json — DW-MCP 에 넘길 블록 목록이 코드와 같다
   const manifest = JSON.parse(read('dw.module.json')) as {
     summary: string;
     capabilities: string[];
+    provides?: { packages?: string[] };
   };
+
+  /**
+   * DW Registry 매니페스트 스키마의 루트 허용 필드 14개 (DW MCP 세션 회신, 2026-11-08).
+   * 루트는 `additionalProperties: false` 라 이 밖의 필드를 넣으면 `dw_put_module` 이
+   * "(root) must NOT have additional properties" 로 **등록 자체를 거부한다**.
+   *
+   * 실제로 첫 등록 시도가 세 필드 때문에 거부됐다 — 내가 지어낸 generatedBy·
+   * generatedAt, 그리고 `packages`. packages·apis·contracts 는 루트가 아니라
+   * `provides` 안이다. `dw_get_module` 이 셋을 각각 한 줄로 렌더해서 루트 필드로
+   * 착각한 것이다 — **렌더 모양으로 스키마를 추정하면 틀린다.**
+   */
+  const SCHEMA_ROOT_FIELDS = [
+    'id', 'name', 'version', 'kind', 'layer', 'industries', 'status', 'extraction',
+    'summary', 'capabilities', 'provides', 'depends_on', 'docs', 'owner',
+  ];
+
+  it('루트에 스키마에 없는 필드가 없다 (있으면 dw_put_module 이 등록을 거부한다)', () => {
+    const extra = Object.keys(manifest).filter((k) => !SCHEMA_ROOT_FIELDS.includes(k)).sort();
+    expect(
+      extra,
+      `DW Registry 스키마에 없는 루트 필드 — 이대로는 등록이 거부됩니다.
+`
+        + `허용: ${SCHEMA_ROOT_FIELDS.join(', ')}
+`
+        + `문제: ${extra.join(', ')}`,
+    ).toEqual([]);
+  });
+
+  it('packages 는 루트가 아니라 provides 안에 있다', () => {
+    expect(manifest).not.toHaveProperty('packages');
+    expect(
+      manifest.provides?.packages,
+      'provides.packages 가 비었습니다 — packages·apis·contracts 는 provides 안에 둡니다.',
+    ).toContain('@dw-church/blocks');
+  });
   /** capabilities 문장에 적힌 block_type 을 전부 긁어낸다. */
   const listed = new Set(
     manifest.capabilities.flatMap((line) => line.split(/[^a-z_0-9]+/).filter((w) => /^[a-z][a-z_0-9]{3,}$/.test(w))),

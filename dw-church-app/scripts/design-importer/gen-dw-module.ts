@@ -24,26 +24,35 @@
  *     corporate|ai-content.
  *   - `layer`·`industries` 는 표준 문서의 "블록·UI 원칙" 이 요구하는 표시다 —
  *     블록 디자인은 업종군 안에서 재사용하므로 vertical + church.
- *   - **`docs` 는 모듈 `path` 기준 상대경로다.** 레지스트리가 `path` 를 그대로 앞에
- *     붙여 렌더하므로 저장소 루트 기준으로 적으면 경로가 겹쳐 깨진다. 실제로 기존
- *     등록이 그렇게 깨져 있었다 — `dw.church-content-modules` 의 docs 가
+ *   - **`docs` 는 모듈 `path` 기준 상대경로다** (확정 — 저장 시
+ *     `path.posix.join(path, doc)` 으로 붙인다고 회신받았다). 저장소 루트 기준으로
+ *     적으면 경로가 두 번 붙어 깨진다. 실제로 기존 등록이 그렇게 깨져 있다 —
+ *     `dw.church-content-modules` 의 docs 가
  *     `dw-church-app/apps/server/src/modules/dw-church-app/apps/server/prisma/...`
- *     로 렌더된다. 자매 모듈 `dw.b2b-site-blocks` 는 상대경로라 깨끗하다.
+ *     로 렌더되고, `dw.church-blocks` 는 5개 중 4개가 겹쳐 있다. 자매 모듈
+ *     `dw.b2b-site-blocks` 는 상대경로라 깨끗하다.
  *   - `summary` 는 "<무엇> 묶음 — <대표 항목 나열>. <동작 한 줄>" 이 이 레지스트리의
  *     집필 관례다(`dw.b2b-site-blocks`·`dw.church-content-modules` 동일). 그래서
  *     개수를 앞세우지 않고 관례 문장 안에 넣는다.
  *   - `capabilities` 는 짧은 구절의 배열. `dw.b2b-site-blocks` 는 구조 설명을 싣고
  *     기존 `dw.church-blocks` 는 타입 목록을 실었다 — 둘 다 허용되므로 **구조 설명 +
  *     전체 타입 목록**을 함께 싣는다(이 파일의 존재 이유가 목록 최신화다).
- *   - **루트는 `additionalProperties: false` 다.** 내가 지어낸 `generatedBy`·
- *     `generatedAt` 을 넣었더니 `dw_put_module` 이 "(root) must NOT have additional
- *     properties" 로 거부했다(2026-11-08 실측). 그래서 **기존 v0.1.0 등록이 실제로
- *     렌더한 11개 필드만** 쓴다 — id·name·version·kind·layer·status·industries·
- *     summary·capabilities·packages·docs. `apis`·`contracts` 는 이 모듈엔 없어서
- *     생략(비우면 "-" 로 렌더된다).
- *   - 그래서 "손으로 고치지 말라" 표시는 루트 필드가 아니라 `capabilities` 한 줄로
- *     싣는다 — 레지스트리를 읽는 쪽에도 "이 목록은 코드에서 생성됨" 이 유용하다.
- *     날짜는 넣지 않는다(재생성마다 diff 가 흔들린다 — 신선도는 version 으로).
+ *   - **루트는 `additionalProperties: false` 이고 허용 필드는 14개다** — DW MCP
+ *     세션 회신(2026-11-08)으로 확정:
+ *       id · name · version · kind · layer · industries · status · extraction ·
+ *       summary · capabilities · provides · depends_on · docs · owner
+ *     필수는 id·name·version·kind·layer·status·summary, 그리고 layer=vertical 이면
+ *     industries 도 1개 이상 필수.
+ *   - **`packages`·`apis`·`contracts` 는 루트가 아니라 `provides` 안이다.**
+ *     내 첫 시도가 거부된 3개 중 셋째가 바로 `packages` 였다(generatedBy·
+ *     generatedAt 가 둘, packages 가 셋째). `dw_get_module` 이 셋을 각각 한 줄로
+ *     렌더해서 루트 필드로 착각했다 — **렌더 모양으로 스키마를 추정하면 틀린다.**
+ *   - `generatedBy`·`generatedAt` 는 스키마에 없다. 그래서 "손으로 고치지 말라"
+ *     표시는 루트 필드가 아니라 `capabilities` 한 줄로 싣는다. 날짜는 넣지 않는다
+ *     (재생성마다 diff 가 흔들린다 — 신선도는 version 으로).
+ *   - `extraction`·`depends_on`·`owner` 는 의미를 확인하지 못해 쓰지 않는다.
+ *     특히 `depends_on` 은 항목 모양(모듈 id 문자열? 객체?)을 모르므로 지어내지
+ *     않았다 — dw.church-content-modules 와의 짝 관계는 capabilities 문장에 있다.
  *
  * Run (dw-church-app 에서):  node scripts/design-importer/gen-dw-module.ts
  */
@@ -115,8 +124,9 @@ function main(): void {
     version: '0.2.0',
     kind: 'block',
     layer: 'vertical',
-    status: 'experimental',
+    // layer=vertical 이면 industries 는 1개 이상 필수.
     industries: ['church'],
+    status: 'experimental',
     // 레지스트리 집필 관례: "<무엇> 묶음 — <대표 항목>. <동작 한 줄>".
     // 개수는 관례 문장 안에 넣는다(개수를 앞세우면 다른 모듈과 어조가 어긋난다).
     summary:
@@ -137,7 +147,11 @@ function main(): void {
       '시안 작업용 카탈로그 scripts/design-importer/CLAUDE-DESIGN-CATALOG.md — palette/alias/importer 구분 + variants + 구조 제약 9개 (gen-catalog.ts 자동생성)',
       '이 목록은 저장소 코드(PageEditor BLOCK_DEFS + registry.json)에서 생성된다 — scripts/design-importer/gen-dw-module.ts 로 재생성할 것, 손으로 고치지 말 것',
     ],
-    packages: ['@dw-church/blocks', '@dw-church/ui-components'],
+    // ⚠ packages·apis·contracts 는 루트가 아니라 provides 안이다 — 루트에 두면
+    // additionalProperties 로 거부된다(실측).
+    provides: {
+      packages: ['@dw-church/blocks', '@dw-church/ui-components'],
+    },
     // ⚠ path(PUT_ARGS.path) 기준 **상대경로**다 — 레지스트리가 path 를 앞에 붙여
     // 렌더하므로 저장소 루트 기준으로 적으면 경로가 겹쳐 깨진다.
     docs: [
