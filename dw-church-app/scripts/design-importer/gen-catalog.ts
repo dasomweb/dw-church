@@ -32,6 +32,7 @@ export interface RegBlock {
   defaultProps?: Record<string, unknown>;
   description?: string;
   aiHint?: string;
+  variants?: string[];
 }
 export interface Registry {
   version: number;
@@ -85,7 +86,7 @@ function trim(s: string | undefined, n = 200): string {
 export interface CatalogBlock {
   block_type: string; label: string; group: string;
   surface: 'palette' | 'importer' | 'alias'; aliasOf?: string;
-  keyProps: string[]; reproduces: string;
+  keyProps: string[]; variants: string[]; reproduces: string;
 }
 export interface Catalog {
   generatedAt: string;
@@ -104,15 +105,40 @@ export interface Catalog {
   blocks: CatalogBlock[];
 }
 
+/**
+ * 이 카탈로그가 다룰 **제품 범위**.
+ *
+ * registry.json 은 플랫폼 공용이라 b2bsmart 커머스 블록(`catalog_product_page`,
+ * `pricing_table`, `lookbook_slider` …)까지 들어 있다. 범위를 주지 않으면 그 전부가
+ * `palette` 로 나가고, Claude Design 은 **교회 운영자가 놓을 수도 없는 블록으로
+ * 화면을 그린다** — 모자란 것보다 이게 더 나쁘다(그려온 시안을 버려야 하므로).
+ */
+export interface CatalogScope {
+  /** 운영자가 블록 추가 목록에서 실제로 고를 수 있는 것 (PageEditor BLOCK_DEFS). */
+  placeable: Set<string>;
+  /** 이 제품에서 저장이 통과하는 것 (서버 zod enum). 그 밖은 다른 제품의 블록. */
+  known: Set<string>;
+}
+
 /** Pure: registry → catalog object (unit-testable). */
-export function buildCatalog(reg: Registry): Catalog {
-  const blocks: CatalogBlock[] = Object.entries(reg.blocks).map(([type, b]) => ({
+export function buildCatalog(reg: Registry, scope?: CatalogScope): Catalog {
+  const entries = Object.entries(reg.blocks).filter(([type]) => !scope || scope.known.has(type));
+  const blocks: CatalogBlock[] = entries.map(([type, b]) => ({
     block_type: type,
     label: b.label ?? '',
     group: b.group ?? '',
-    surface: b.flags?.isHidden ? 'importer' : b.flags?.isAlias ? 'alias' : 'palette',
+    // 범위를 받았으면, 저장은 되지만 팔레트에 없는 블록은 `importer` 로 내린다 —
+    // 마이그레이션 매핑 대상으로는 유효하지만 시안이 그걸로 그리면 안 된다.
+    surface: b.flags?.isHidden
+      ? 'importer'
+      : b.flags?.isAlias
+        ? 'alias'
+        : scope && !scope.placeable.has(type)
+          ? 'importer'
+          : 'palette',
     aliasOf: b.aliasOf,
     keyProps: Object.keys(b.defaultProps ?? {}),
+    variants: b.variants ?? [],
     reproduces: trim(b.aiHint || b.description),
   }));
   const palette = blocks.filter((b) => b.surface === 'palette').length;
@@ -137,6 +163,49 @@ export function buildCatalog(reg: Registry): Catalog {
 }
 
 /** Pure: catalog → the Markdown prompt attachment (unit-testable). */
+/**
+ * **구조 제약** — 블록 목록만으로는 막을 수 없는 오판을 막는다.
+ *
+ * 왜 필요한가: 카탈로그가 "어떤 블록이 있나"만 알려주면, 시안은 우리 시스템이
+ * **그릴 수 없는 형태**를 자유롭게 그린다. 실제 사례(예닮 v7):
+ *   - 340px 고정 사이드 레일을 `home_side_rail` 신규 블록으로 제안했다 → 우리
+ *     페이지는 섹션의 1차원 스택이라 **독립 블록을 다른 블록 옆에 놓을 수단이 없다.**
+ *   - '이달의 책'을 칼럼 카테고리로 보냈다 → `book` 모듈이 따로 있다.
+ * 둘 다 블록 이름을 다 알려줘도 생기는 오판이라, 제약을 따로 적어 보낸다.
+ */
+const STRUCTURAL_CONSTRAINTS = `
+## 우리 시스템이 그릴 수 없는 것 (설계 전에 읽을 것)
+
+블록 목록을 다 알아도 아래를 어기면 시안을 버려야 한다. 각 항목에 **이유**를 달았으니
+비슷한 경우에 적용하라.
+
+1. **페이지는 섹션의 1차원 수직 스택이다.** 섹션과 섹션 사이에 2칼럼·사이드바를 만들 수
+   없다. 2칼럼 레이아웃은 **블록 하나의 내부**에서만 가능하다.
+   - 사이드 레일이 필요하면 **신규 블록이 아니라 옆 블록의 variant** 로 그려라.
+     실제 예: 통합 피드 \`latest_feed\` 의 \`rail-left\` / \`rail-right\`.
+   - 레이아웃 컨테이너(\`layout_row\`·\`layout_columns\`·\`layout_section\`)에 자식 블록을
+     넣는 구성은 **운영자가 편집할 수 없으므로** 시안에서 쓰지 않는다.
+2. **헤더·푸터는 테마가 소유한다.** 페이지 블록으로 그리지 말고 \`dc-import\` 로 분리하라.
+   선택할 수 있는 것은 variant(헤더 12종·푸터 9종)뿐이다.
+3. **콘텐츠 폭은 전 블록 공통이다** — \`max-w-7xl\` + \`px-4 sm:px-6\`. 섹션마다 다른 폭을
+   쓰면 홈이 들쑥날쑥해진다.
+4. **개별 글을 지어내지 않는다.** 설교 한 편·칼럼 한 편·앨범 한 장은 Content Module 의
+   데이터다. 데이터 블록 자리만 두면 교회가 글을 올리는 만큼 채워지고, **글이 없으면
+   블록이 스스로 숨는다**(빈 섹션이 생기지 않는다).
+5. **같은 모듈을 연재별로 나눌 때 새 블록을 만들지 않는다.** 소스 문법
+   \`키[@카테고리][:라벨]\` 로 한 블록에 여러 줄을 담는다
+   (예: \`column@교회이야기, column@시니어:시니어 라운지\`). 칼럼 카테고리는 **한글 자유
+   텍스트**이므로 영문 슬러그를 새로 만들지 말 것.
+6. **이미 모듈이 있는 콘텐츠를 다른 모듈로 우회하지 않는다.** 아래 "Content modules" 표를
+   먼저 보라 (예: '이달의 책'은 \`book\` 모듈이 있다 — 칼럼 카테고리로 만들지 말 것).
+7. **variant 는 블록이 선언한 것만 쓴다.** 표의 variants 열에 없는 variant 를 쓰면 기본
+   모양이 나오고, 시안과 달라진다. 모양이 꼭 필요하면 \`NEEDS_VARIANT: <무엇>\` 으로 적어라.
+8. **상세 화면은 매핑하지 않는다.** 설교 한 편·게시글·앨범 상세는 모듈의 상세 라우트가
+   자동으로 그린다. 시안에 그릴 필요가 없다.
+9. **한글 조판**: 본문을 13px 아래로 내리지 말고, 넓은 자간(letter-spacing .1em 이상)은
+   라틴 대문자 라벨에만 쓴다 — 한글에 주면 음절이 흩어진다.
+`;
+
 export function renderCatalogMd(catalog: Catalog): string {
   const { blocks } = catalog;
   const palette = catalog.counts.palette;
@@ -153,7 +222,13 @@ export function renderCatalogMd(catalog: Catalog): string {
   md.push('> **교회 톤 (필수):** 밝고 따뜻한 배경. **검정/다크 배경 밴드 금지** — onDark 역할은 사진');
   md.push('> 위 히어로 오버레이 같은 곳에만 최소로. 콘텐츠는 한국어 우선.');
   md.push('');
-  md.push(`**Blocks:** ${blocks.length} total — ${palette} palette + ${importer} importer + ${alias} alias (all usable by the importer).`);
+  md.push(`**Blocks:** ${blocks.length} total — **${palette} palette** + ${importer} importer + ${alias} alias.`);
+  md.push('');
+  md.push('> **화면을 그릴 때 쓸 수 있는 것은 `palette` ' + palette + '개뿐이다.**');
+  md.push('> `alias` 는 레거시 이름이라 정식 이름을 써야 하고, `importer` 는 낡은 사이트를 옮겨올 때의');
+  md.push('> 매핑 대상이거나 레이아웃 컨테이너여서 시안이 직접 쓰지 않는다. 아래 표의 surface 열을 보라.');
+  md.push('');
+  md.push(STRUCTURAL_CONSTRAINTS.trim());
   md.push('');
   md.push('## Token roles (assign your palette to these)');
   md.push('');
@@ -189,10 +264,10 @@ export function renderCatalogMd(catalog: Catalog): string {
   const emitGroup = (label: string, g: string, list: typeof blocks) => {
     md.push(`### ${label} (\`${g}\`)`);
     md.push('');
-    md.push('| block_type | label | surface | key props | reproduces |');
-    md.push('|------------|-------|---------|-----------|------------|');
+    md.push('| block_type | label | surface | variants | key props | reproduces |');
+    md.push('|------------|-------|---------|----------|-----------|------------|');
     for (const b of list) {
-      md.push(`| \`${b.block_type}\` | ${b.label} | ${b.surface} | ${b.keyProps.slice(0, 8).map((p) => '`' + p + '`').join(' ') || '—'} | ${b.reproduces} |`);
+      md.push(`| \`${b.block_type}\` | ${b.label} | ${b.surface} | ${b.variants.map((v) => '`' + v + '`').join(' ') || '—'} | ${b.keyProps.slice(0, 8).map((p) => '`' + p + '`').join(' ') || '—'} | ${b.reproduces} |`);
     }
     md.push('');
   };
@@ -207,9 +282,30 @@ export function renderCatalogMd(catalog: Catalog): string {
   return md.join('\n');
 }
 
+const PAGE_EDITOR = join(HERE, '../../packages/admin-app/src/pages/PageEditor.tsx');
+const PAGES_SCHEMA = join(HERE, '../../apps/server/src/modules/pages/schema.ts');
+
+/**
+ * 제품 범위를 **코드에서** 읽는다 — 목록을 여기에 손으로 적으면 또 낡는다.
+ * (드리프트는 apps/server/src/__tests__/modules/block-registry-drift.test.ts 가 막는다.)
+ */
+function readScope(): CatalogScope {
+  const pe = readFileSync(PAGE_EDITOR, 'utf8');
+  const placeable = [...pe.matchAll(/^\s*\{ type: '([a-z_0-9]+)'/gm)].map((m) => m[1]!);
+
+  const sch = readFileSync(PAGES_SCHEMA, 'utf8');
+  const start = sch.indexOf('export const blockTypes = [');
+  const known = [...sch.slice(start, sch.indexOf('];', start)).matchAll(/'([a-z_0-9]+)'/g)].map((m) => m[1]!);
+
+  if (placeable.length < 60 || known.length < 60) {
+    throw new Error(`범위 파싱 실패 (placeable ${placeable.length}, known ${known.length}) — 소스 형태가 바뀐 것 같습니다.`);
+  }
+  return { placeable: new Set(placeable), known: new Set(known) };
+}
+
 function main(): void {
   const reg = JSON.parse(readFileSync(REGISTRY, 'utf8')) as Registry;
-  const catalog = buildCatalog(reg);
+  const catalog = buildCatalog(reg, readScope());
   writeFileSync(join(HERE, 'CLAUDE-DESIGN-CATALOG.json'), JSON.stringify(catalog, null, 2) + '\n');
   writeFileSync(join(HERE, 'CLAUDE-DESIGN-CATALOG.md'), renderCatalogMd(catalog));
   const { total, palette, importer, alias } = catalog.counts;
