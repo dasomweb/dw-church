@@ -8,23 +8,27 @@
   "industries": [
     "church"
   ],
-  "summary": "교회 사이트용 Static·Data 블록 세트. 운영자가 페이지 편집기에서 놓을 수 있는 block_type 81개 — 정적 블록 54개 + 데이터 블록 27개. Data Block 은 교회 콘텐츠 모듈 API(/api/v1/{resource})에서 데이터를 읽고, 등록된 글이 없으면 스스로 숨는다.",
+  "summary": "교회 사이트용 Static·Data 블록 묶음 — 담임목사 인사말·예배 시간·새가족 안내·헌금 안내부터 최근 설교·주보·저널·교역자·연혁·앨범·행사·온라인 주보·설교노트·설교매거진·통합 피드·말씀까지. 운영자가 페이지 편집기에서 놓을 수 있는 block_type 81개(정적 50 + 데이터 27 + 레이아웃 4), 블록 레지스트리(registry.json) 단일 메타데이터 위에서 동작.",
   "capabilities": [
-    "Static Block (54): address_info, bento_grid, button_group, call_to_action, cell_report, church_intro, contact_form, custom_form, dashboard_banner, detail_rows, directions_split, divider, features_grid, first_time_guide, giving_info, hero_banner, hero_image_slider, hero_overlap, hero_split, highlight_media, image_gallery, image_link_list, info_bar, info_columns, layout_columns, layout_row, layout_section, location_map, logo_title, map_embed, mission_vision, newcomer_info, news_split, newsletter_signup, notification_prefs, page_header, page_subnav, pastor_message, prose_image, push_subscribe, quick_links, quote_block, schedule_split, section_header, sermon_feature, steps_list, text_image, text_only, values_grid, video, visitor_welcome, week_schedule, worship_schedule, worship_times",
+    "registry.json 한 곳에서 블록 타입·그룹·defaultProps·variant·aiHint 관리 (어드민 팔레트·서버 Zod enum·AI 빌더·시안 카탈로그가 이를 derive)",
+    "Static Block (50): address_info, bento_grid, button_group, call_to_action, cell_report, church_intro, contact_form, custom_form, dashboard_banner, detail_rows, directions_split, features_grid, first_time_guide, giving_info, hero_banner, hero_image_slider, hero_overlap, hero_split, highlight_media, image_gallery, image_link_list, info_bar, info_columns, location_map, logo_title, map_embed, mission_vision, newcomer_info, news_split, newsletter_signup, notification_prefs, page_header, page_subnav, pastor_message, prose_image, push_subscribe, quick_links, quote_block, schedule_split, section_header, sermon_feature, steps_list, text_image, text_only, values_grid, video, visitor_welcome, week_schedule, worship_schedule, worship_times",
     "Data Block (27): album_gallery, banner_slider, board, cardnews, cell_grid, contact_info, devotion_reader, event_grid, featured_event, form_split, history_timeline, latest_feed, news_announcements, online_bulletin, online_bulletin_list, recent_books, recent_bulletins, recent_columns, recent_sermon_note, recent_sermons, schedule_board, sermon_magazine, sermon_meditation, sermon_note_list, staff_grid, verse_of_day, video_board",
-    "변형(variant)을 가진 블록 (49): address_info(cards|inline), album_gallery(grid-4|grid-3|grid-2), board(list|grid-2|grid-3), button_group(center|left), call_to_action(centered|split|banner), cardnews(carousel|grid|rail), cell_grid(grid-3|grid-2|grid-4), church_intro(with-image|text-only), contact_form(stacked|side-by-side|ruled), detail_rows(cards|ruled), devotion_reader(default|teaser), directions_split(map-left|map-right), divider(line|dots|gradient), event_grid(cards-4|cards-3|cards-2), features_grid(columns-3|columns-2|columns-4), first_time_guide(numbered|icons), hero_banner(centered|left|masthead), hero_image_slider(full|contained), hero_split(right|left), history_timeline(left|alternating), image_gallery(grid|masonry), info_columns(columns-3|columns-2|columns-4), latest_feed(cards|rail-left|rail-right), layout_columns(columns-2|columns-3|columns-4), location_map(default), logo_title(horizontal|center), map_embed(full|with-info), mission_vision(cards-4|cards-3|cards-2|list), newsletter_signup(inline|card), pastor_message(right|left), quick_links(card|tiles), quote_block(card|simple|highlight|verse), recent_books(grid-3|grid-2|grid-4|list|feature-row), recent_bulletins(list|grid-2|grid-3|grid-4|grid-5|grid-6), recent_columns(grid-3|grid-2|grid-4|list|feature-dark), recent_sermon_note(default|hero-split), recent_sermons(grid-4|grid-3|grid-2|list|featured|card), schedule_board(image-left|image-right|no-image), schedule_split(image-left|image-right), section_header(center|left), sermon_magazine(default|compact), staff_grid(grid-4|grid-3|grid-2|grouped), steps_list(left|center), text_image(right|left), text_only(left|center), values_grid(columns-3|columns-2|columns-4|chips|split-links), video_board(grid-1|grid-2|grid-3|grid-4), visitor_welcome(split|centered), worship_times(table)",
-    "페이지는 섹션의 1차원 수직 스택이다 — 2칼럼·사이드레일은 블록 내부에서만 가능하고, 독립 블록을 다른 블록 옆에 놓을 수단은 없다.",
-    "블록 메타데이터(label·group·aiHint·variants)로 AI 빌더가 교회 페이지를 조합한다.",
-    "Claude Design 시안용 카탈로그: scripts/design-importer/CLAUDE-DESIGN-CATALOG.md (gen-catalog.ts 자동생성)."
+    "Layout Block (4): divider, layout_columns, layout_row, layout_section — 행/열 컨테이너이지만 자식 중첩 편집 UI 가 비활성이라 운영자가 자식 블록을 넣을 수 없다",
+    "variant 기반 디자인 변형 — 변형을 가진 블록 49개: address_info(cards|inline), album_gallery(grid-4|grid-3|grid-2), board(list|grid-2|grid-3), button_group(center|left), call_to_action(centered|split|banner), cardnews(carousel|grid|rail), cell_grid(grid-3|grid-2|grid-4), church_intro(with-image|text-only), contact_form(stacked|side-by-side|ruled), detail_rows(cards|ruled), devotion_reader(default|teaser), directions_split(map-left|map-right), divider(line|dots|gradient), event_grid(cards-4|cards-3|cards-2), features_grid(columns-3|columns-2|columns-4), first_time_guide(numbered|icons), hero_banner(centered|left|masthead), hero_image_slider(full|contained), hero_split(right|left), history_timeline(left|alternating), image_gallery(grid|masonry), info_columns(columns-3|columns-2|columns-4), latest_feed(cards|rail-left|rail-right), layout_columns(columns-2|columns-3|columns-4), location_map(default), logo_title(horizontal|center), map_embed(full|with-info), mission_vision(cards-4|cards-3|cards-2|list), newsletter_signup(inline|card), pastor_message(right|left), quick_links(card|tiles), quote_block(card|simple|highlight|verse), recent_books(grid-3|grid-2|grid-4|list|feature-row), recent_bulletins(list|grid-2|grid-3|grid-4|grid-5|grid-6), recent_columns(grid-3|grid-2|grid-4|list|feature-dark), recent_sermon_note(default|hero-split), recent_sermons(grid-4|grid-3|grid-2|list|featured|card), schedule_board(image-left|image-right|no-image), schedule_split(image-left|image-right), section_header(center|left), sermon_magazine(default|compact), staff_grid(grid-4|grid-3|grid-2|grouped), steps_list(left|center), text_image(right|left), text_only(left|center), values_grid(columns-3|columns-2|columns-4|chips|split-links), video_board(grid-1|grid-2|grid-3|grid-4), visitor_welcome(split|centered), worship_times(table)",
+    "Data Block 은 교회 콘텐츠 모듈 API(/api/v1/{resource})에서 데이터를 읽고, 등록된 글이 없으면 스스로 숨는다 (dw.church-content-modules 와 짝)",
+    "페이지는 섹션의 1차원 수직 스택 — 2칼럼·사이드레일은 블록 내부에서만 가능하고, 독립 블록을 다른 블록 옆에 놓을 수단이 없다",
+    "디자인 토큰(CSS 변수) 기반 스타일 + 섹션별 배경·오버레이(props.blockStyle)",
+    "컴포넌트 두 뿌리: packages/blocks/src (registry.json 정본) · apps/web/components/blocks (BlockRenderer 매핑)",
+    "시안 작업용 카탈로그 scripts/design-importer/CLAUDE-DESIGN-CATALOG.md — palette/alias/importer 구분 + variants + 구조 제약 9개 (gen-catalog.ts 자동생성)",
+    "이 목록은 저장소 코드(PageEditor BLOCK_DEFS + registry.json)에서 생성된다 — scripts/design-importer/gen-dw-module.ts 로 재생성할 것, 손으로 고치지 말 것"
   ],
   "packages": [
-    "@dw-church/blocks"
+    "@dw-church/blocks",
+    "@dw-church/ui-components"
   ],
   "docs": [
-    "dw-church-app/packages/blocks/src/registry.json",
-    "dw-church-app/scripts/design-importer/CLAUDE-DESIGN-CATALOG.md",
-    "dw-church-app/scripts/design-importer/CLAUDE-DESIGN-IMPORT-GUIDE.md"
-  ],
-  "generatedBy": "dw-church-app/scripts/design-importer/gen-dw-module.ts",
-  "generatedAt": "2026-11-08"
+    "packages/blocks/src/registry.json",
+    "scripts/design-importer/CLAUDE-DESIGN-CATALOG.md",
+    "scripts/design-importer/CLAUDE-DESIGN-IMPORT-GUIDE.md"
+  ]
 }
