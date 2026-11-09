@@ -60,8 +60,14 @@ const TYPO_SCALES = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'body', 'caption', 'ove
 const FONT_ROLES = ['heading', 'body', 'korean'];
 
 // ── Content modules — apps/server/src/modules (data blocks fetch these live).
-//    Church modules (not b2b blog/catalog/product). ────────────────────────
-const MODULES: Array<[string, string, string]> = [
+//    Church modules (not b2b blog/catalog/product).
+//
+//    손으로 유지하는 목록이다(모듈 하나가 여러 파일에 걸쳐 있어 자동 파생이 어렵다).
+//    대신 **두 곳이 같은 목록을 쓴다** — 시안 카탈로그(이 파일)와 콘솔 임포트
+//    매핑 프롬프트(`gen-design-import-catalog.ts` → design-import/catalog.ts).
+//    그래서 export 한다; 사본을 하나 더 만들지 말 것.
+//    엔드포인트는 각 모듈 routes.ts 의 공개 GET 경로를 보고 적었다. ──────────
+export const MODULES: Array<[string, string, string]> = [
   ['sermons', 'sermons', '설교 — data blocks: recent_sermons, sermon_feature (+ sermon study fields → sermon_magazine).'],
   ['bulletins', 'bulletins', '주보(weekly bulletin, PDF cover) — data block: recent_bulletins.'],
   ['columns', 'columns_pastoral', '목회칼럼/묵상 — data block: recent_columns.'],
@@ -75,6 +81,13 @@ const MODULES: Array<[string, string, string]> = [
   ['schedules', 'schedules', '예배·모임 시간표 — data block: schedule_board (or static worship_schedule block).'],
   ['newcomers', 'newcomers', '새가족 — public FORM block: newcomer_form (+ static newcomer_info).'],
   ['forms', 'form_submissions', '일반 폼 — application_form_embed / form_split / contact_form.'],
+  ['videos', 'videos / video_categories', '영상(찬양·예배실황·간증) — data block: video_board (category 로 필터).'],
+  ['verses', 'verses', '오늘의 말씀 — data block: verse_of_day (GET /api/v1/verses/current).'],
+  ['books', 'books', '이달의 책/추천도서 — data block: recent_books. **칼럼 카테고리로 우회하지 말 것.**'],
+  ['sermon-notes', 'sermon_notes', '설교노트(양쪽 편집·나눔질문) — data blocks: recent_sermon_note, sermon_note_list.'],
+  ['online-bulletins', 'online_bulletins', '온라인 주보(스크롤형 예배순서) — 문서 주보(bulletins)와 별개. data blocks: online_bulletin, online_bulletin_list.'],
+  ['devotions', 'devotions', '묵상/큐티 — data blocks: devotion_reader, sermon_meditation.'],
+  ['cardnews', 'cardnews', '카드뉴스 — data block: cardnews (carousel/grid/rail).'],
 ];
 
 function trim(s: string | undefined, n = 200): string {

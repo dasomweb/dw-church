@@ -151,6 +151,57 @@ describe('Claude Design 카탈로그 — 교회 제품 범위와 맞는다', () 
 });
 
 /**
+ * 콘솔 임포트(LLM 매핑)가 쓰는 카탈로그 — **블록 목록 사본 다섯 번째.**
+ *
+ * 2026-11-08 에 사본 4개를 생성으로 고정했을 때 이 파일을 몰랐다. 머리말에
+ * "Auto-derived … Regenerate if blocks change" 라고 적혀 있었지만 **생성기가 없어서
+ * 손으로 유지돼 왔고**, 측정 당시 배치 가능한 81개 중 39개가 빠지고 배치할 수 없는
+ * 38개(b2bsmart 커머스·카탈로그)가 들어 있었다.
+ *
+ * 밀리면 조용히 깨진다 — `map.ts` 가 이 목록을 **두 번** 쓴다:
+ *   - 프롬프트 선택지(`CATALOG_STR`): LLM 이 고를 수 있는 블록
+ *   - 출력 검증 집합(`VALID_BLOCKS`): LLM 출력 통과 여부
+ * 그래서 LLM 이 `latest_feed` 를 골라도 유효하지 않은 블록으로 걸러졌다.
+ *
+ * 범위 규칙: **배치 가능한 것만.** 임포트가 심은 섹션은 운영자가 편집할 수 있어야
+ * 하므로, 서버 enum 에만 있는 블록은 넣지 않는다.
+ */
+describe('design-import 카탈로그 — 콘솔 임포트가 쓸 수 있는 블록과 맞는다', () => {
+  const GEN_IMPORT = 'node scripts/design-importer/gen-design-import-catalog.ts   (dw-church-app 에서)';
+  const src = read('apps/server/src/modules/design-import/catalog.ts');
+  const types = [...src.matchAll(/\{"t":"([a-z_0-9]+)"/g)].map((m) => m[1]!);
+
+  it('파싱이 깨지지 않았다', () => {
+    expect(types.length, 'catalog.ts 파싱 실패 — 생성 형식이 바뀐 것 같습니다').toBeGreaterThan(60);
+  });
+
+  it('운영자가 놓을 수 있는 블록이 전부 들어 있다 (빠지면 LLM 이 그 블록을 못 고른다)', () => {
+    const missing = placeable.filter((t) => !types.includes(t)).sort();
+    expect(
+      missing,
+      `임포트 카탈로그에 없는 블록 ${missing.length}개 — 매핑이 이 블록들을 모르고, 골라도 검증에서 걸립니다.\n`
+        + `재생성: ${GEN_IMPORT}\n`
+        + missing.join(', '),
+    ).toEqual([]);
+  });
+
+  it('운영자가 놓을 수 없는 블록은 들어 있지 않다 (심어도 편집할 수 없다)', () => {
+    const extra = types.filter((t) => !placeable.includes(t)).sort();
+    expect(
+      extra,
+      `운영자가 놓을 수 없는데 카탈로그가 제안하는 블록 ${extra.length}개 — 임포트가 심으면 편집 불가 섹션이 됩니다.\n`
+        + `재생성: ${GEN_IMPORT}\n`
+        + extra.join(', '),
+    ).toEqual([]);
+  });
+
+  it('손으로 고치지 말라는 표시가 남아 있다', () => {
+    expect(src).toContain('생성 파일 — 손으로 고치지 말 것');
+    expect(src).toContain('gen-design-import-catalog.ts');
+  });
+});
+
+/**
  * `dw.module.json` — DW-MCP 가 답하는 "교회 블록 세트에 뭐가 있나".
  *
  * 이 목록이 18개에 멈춰 있었고(2026-11-08 확인), 그 목록을 보고 일하는 쪽은 신규

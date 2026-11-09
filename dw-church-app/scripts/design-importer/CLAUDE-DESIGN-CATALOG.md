@@ -1,6 +1,6 @@
 # True Light / DW Church — Capabilities Catalog (for Claude Design import)
 
-> Auto-generated 2026-11-08 by `scripts/design-importer/gen-catalog.ts` from
+> Auto-generated 2026-11-09 by `scripts/design-importer/gen-catalog.ts` from
 > `packages/blocks/src/registry.json`. **Do not hand-edit.** Map every section of your
 > design to a `block_type` + a `variant` below; assign colors to the TOKEN ROLES (not free
 > hex); tag anything with no match as `NEEDS_BLOCK: <what>` so it goes to the dev queue.
@@ -88,6 +88,13 @@ System color slots — fill hex, roles are fixed (emitted as the CSS var; blocks
 | `schedules` | `schedules` | 예배·모임 시간표 — data block: schedule_board (or static worship_schedule block). |
 | `newcomers` | `newcomers` | 새가족 — public FORM block: newcomer_form (+ static newcomer_info). |
 | `forms` | `form_submissions` | 일반 폼 — application_form_embed / form_split / contact_form. |
+| `videos` | `videos / video_categories` | 영상(찬양·예배실황·간증) — data block: video_board (category 로 필터). |
+| `verses` | `verses` | 오늘의 말씀 — data block: verse_of_day (GET /api/v1/verses/current). |
+| `books` | `books` | 이달의 책/추천도서 — data block: recent_books. **칼럼 카테고리로 우회하지 말 것.** |
+| `sermon-notes` | `sermon_notes` | 설교노트(양쪽 편집·나눔질문) — data blocks: recent_sermon_note, sermon_note_list. |
+| `online-bulletins` | `online_bulletins` | 온라인 주보(스크롤형 예배순서) — 문서 주보(bulletins)와 별개. data blocks: online_bulletin, online_bulletin_list. |
+| `devotions` | `devotions` | 묵상/큐티 — data blocks: devotion_reader, sermon_meditation. |
+| `cardnews` | `cardnews` | 카드뉴스 — data block: cardnews (carousel/grid/rail). |
 
 ## Blocks (map your sections to these)
 
