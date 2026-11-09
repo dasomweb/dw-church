@@ -9,7 +9,7 @@
  */
 import { env } from '../../config/env.js';
 import { parseCanvas, splitScreensRaw, inferSlug, type ParsedScreen } from './canvas-parse.js';
-import { CATALOG_BLOCKS, CONTENT_MODULES } from './catalog.js';
+import { CATALOG_BLOCKS, CONTENT_MODULES, BLOCK_ALIASES, TYPOGRAPHY_WARN } from './catalog.js';
 
 const ANTHROPIC_BASE = 'https://api.anthropic.com/v1/messages';
 const MODEL = 'claude-sonnet-4-6';
@@ -128,13 +128,14 @@ const MAP_SYSTEM =
   '- Keep image src URLs as-is in props (they are re-hosted to R2 later).\n' +
   '- FIRST block of a page is usually hero_banner. Every page ENDS with call_to_action.\n' +
   '- Church tone: never a black/near-black section background.\n' +
-  '- PREFER these token-driven blocks (they honor the theme typography/colors): ' +
-  'hero_banner, text_image, text_only, features_grid, quote_block, cta_section, worship_schedule, ' +
-  'section_header, staff_grid, recent_sermons, board, album_gallery, event_grid, cell_grid, recent_columns, verse_of_day, news_announcements.\n' +
-  '- DO NOT use these blocks (they hardcode font sizes and ignore the theme) — use the replacement: ' +
-  'sermon_feature→text_image, hero_overlap→hero_banner, bento_grid→features_grid, news_split→features_grid, ' +
-  'dashboard_banner→hero_banner, info_columns→features_grid, quick_links→features_grid, ' +
-  'week_schedule→worship_schedule, schedule_board→worship_schedule, logo_bar→features_grid, steps_list→features_grid.';
+  // 2026-11-09: "이 블록들은 쓰지 말고 저걸 써라" 목록을 뺐다. 그 목록은 타이포가
+  // 하드코딩된 블록을 다른 블록으로 바꾸게 했는데, 그건 **시안의 구조를 버리는 일**이고
+  // schedule_board(Data Block) 의 경우 데이터 출처까지 없앴다. 타이포 결함은 우리 쪽
+  // 결함이므로 블록을 고쳐서 해결한다 — 매핑에서 숨기지 않고 경고로 올린다.
+  '- Keep the mockup STRUCTURE. Never swap a section for a different block type because another one ' +
+  'looks simpler or more generic — the structure is the thing we are importing.\n' +
+  '- If NO catalog block reproduces the section, emit your best-guess block_type anyway; it is flagged ' +
+  'for the dev queue rather than silently reshaped.';
 
 interface EmitSection { block_type?: string; blockType?: string; props?: Record<string, unknown> }
 
@@ -159,15 +160,21 @@ const EMIT_TOOL = {
 
 const VALID_BLOCKS = new Set(CATALOG_BLOCKS.map((b) => b.t));
 
-/** Hardcoded (Group-B) blocks that ignore theme typography → forced to their
- *  token-driven equivalent so the imported design's type scale actually shows.
- *  (Audited 2026-09-12; belt-and-suspenders vs the LLM ignoring the prompt steer.) */
-export const BLOCK_REPLACE: Record<string, string> = {
-  sermon_feature: 'text_image', hero_overlap: 'hero_banner', bento_grid: 'features_grid',
-  news_split: 'features_grid', dashboard_banner: 'hero_banner', info_columns: 'features_grid',
-  quick_links: 'features_grid', week_schedule: 'worship_schedule', schedule_board: 'worship_schedule',
-  logo_bar: 'features_grid', steps_list: 'features_grid',
-};
+/**
+ * `BLOCK_REPLACE` 는 **제거됐다** (2026-11-09 재감사).
+ *
+ * 하드코딩 타이포를 이유로 11개 블록을 다른 블록으로 강제 치환하던 표였다. 측정해 보니
+ * 처방이 틀렸다:
+ *   - `schedule_board`(Data Block, /api/v1/schedules) → `worship_schedule`(Static,
+ *     items 직접 입력): **데이터 출처가 사라져 빈 블록**이 된다. 게다가 schedule_board 는
+ *     고정 px 가 0 개여서 애초에 혐의가 없었다. `logo_bar` 도 0 개.
+ *   - 치환 대상이던 `features_grid`·`hero_banner`·`call_to_action` 자체도 고정 px 를
+ *     갖고 있다 — "토큰 구동 등가물" 이라는 전제가 성립하지 않았다.
+ *   - 무엇보다 치환은 **시안 구조를 버린다.** 임포트의 목적과 정면으로 충돌한다.
+ *
+ * 대신: 구조는 시안대로 두고, 타이포를 따르지 않는 블록은 `TYPOGRAPHY_WARN`(생성값)
+ * 으로 **경고에 올려** 운영자·개발 큐가 보게 한다. 이름 정규화만 `BLOCK_ALIASES` 로 한다.
+ */
 
 async function mapScreen(label: string, slug: string, screenHtml: string): Promise<{ sections: SectionSpec[]; warning?: string }> {
   const user =
@@ -192,7 +199,9 @@ async function mapScreen(label: string, slug: string, screenHtml: string): Promi
   for (const s of raw) {
     const rawBt = (s.block_type ?? s.blockType ?? '').trim();
     if (!rawBt) continue;
-    const bt = BLOCK_REPLACE[rawBt] ?? rawBt; // force hardcoded blocks → token-driven
+    // 놓을 수 없는 이름(예: 정식 이름 cta_section)을 운영자가 편집할 수 있는 이름으로
+    // 정규화한다. 구조를 다른 블록으로 바꾸지는 않는다 — 위 BLOCK_REPLACE 제거 사유 참고.
+    const bt = BLOCK_ALIASES[rawBt] ?? rawBt;
     if (!VALID_BLOCKS.has(bt)) { sections.push({ blockType: bt, props: { ...(s.props ?? {}), _unknownBlock: true } }); continue; }
     sections.push({ blockType: bt, props: s.props ?? {} });
   }
@@ -226,6 +235,14 @@ export async function mapCanvas(
     // guarantee a trailing CTA if the model forgot
     if (sections.length && !/call_to_action|cta_section/.test(sections[sections.length - 1]!.blockType)) {
       sections.push({ blockType: 'call_to_action', props: {} });
+    }
+    // 시안 구조는 그대로 두고, 테마 타이포를 따르지 않는 블록만 알린다 (치환하지 않는다).
+    const needsType = [...new Set(sections.map((s) => s.blockType))].filter((t) => TYPOGRAPHY_WARN[t]);
+    if (needsType.length) {
+      warnings.push(
+        `${screen.slug}: 아래 블록은 고정 글자 크기를 써서 테마 타이포를 일부 무시합니다 — `
+        + `${needsType.join(', ')}. 시안 구조는 유지했으니 블록 타이포 수정 대상입니다.`,
+      );
     }
     pages.push({ name: cleanName(screen.label), slug: screen.slug, sections, sortOrder: pages.length });
     done += 1;
