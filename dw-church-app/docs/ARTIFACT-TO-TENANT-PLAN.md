@@ -1,6 +1,7 @@
 # Claude Artifact → 테넌트 적용 계획
 
-작성 2026-11-08. **계획 문서다 — 아직 구현하지 않았다.** 승인 뒤 단계별로 진행한다.
+작성 2026-11-08. **단계 0 완료(2026-11-09, 커밋 `b663c30f`·`38c94c64`).**
+단계 1~5는 아직 구현하지 않았다.
 
 목표: Claude Artifact에서 디자인한 화면을 **연결된 테넌트에 반영**하고, 그 과정에서
 필요한 블록을 **기존 것으로 쓸지 / 변형을 더할지 / 새로 만들지**를 매번 같은 기준으로
@@ -36,11 +37,11 @@
 
 ---
 
-## 2. 지금 막고 있는 것 (측정값)
+## 2. 막고 있던 것 (측정값)
 
-이 세 개를 먼저 치우지 않으면 아래 단계 전부가 헛돈다.
+이 세 개를 먼저 치우지 않으면 아래 단계 전부가 헛돈다. **①② 해결, ③ 미해결.**
 
-### 막는 것 ① `design-import/catalog.ts` 가 낡았다 — **블록 목록 5번째 사본**
+### ✅ 막는 것 ① `design-import/catalog.ts` 가 낡았다 — **블록 목록 5번째 사본**
 
 2026-11-08 커밋 `71889080`에서 사본 4개를 코드 생성으로 고정했는데, **이 파일을 몰랐다.**
 머리말에 "Auto-derived from CLAUDE-DESIGN-CATALOG.json … Regenerate if blocks change"
@@ -68,7 +69,27 @@ catalog.ts 블록 수            80
 약속한다.** 예닮 v7 시안이 `home_side_rail` 을 지어낸 것과 같은 구조의 사고가
 콘솔 임포트에서도 그대로 일어난다.
 
-### 막는 것 ② `BLOCK_REPLACE` 가 매핑 결과를 구형 블록으로 격하한다
+**해결 (커밋 `b663c30f`)** — `scripts/design-importer/gen-design-import-catalog.ts`.
+
+- 범위 = `PageEditor` BLOCK_DEFS **81개**(배치 가능한 것만). 서버 enum 에만 있는 블록은
+  임포트가 심어도 **운영자가 편집할 수 없으므로** 넣지 않는다
+- 계획에 적었던 *"손으로 쓴 영문 설명을 보존하며"* 는 **틀린 가정이었다.** 역산해 보니
+  기존 80개가 전부 registry 파생값과 **정확히 일치**했다
+  (`d = (aiHint‖description) 공백정리 후 160자 컷`, `p = defaultProps 키`). 보존할
+  수작업 내용이 없어 생성으로 100% 대체됐다
+- 함께 생성: `BLOCK_ALIASES`(놓을 수 없는 이름 → 놓을 수 있는 이름 4건),
+  `TYPOGRAPHY_WARN`(고정 px 를 쓰는 블록 22개, 컴포넌트 소스 측정값)
+- 콘텐츠 모듈 13 → **20**: `videos`·`verses`·`books`·`sermon-notes`·
+  `online-bulletins`·`devotions`·`cardnews` 추가(각 `routes.ts` 공개 GET 경로로 확인).
+  목록은 `gen-catalog.ts` 에서 export 해 **두 생성기가 공유** — 사본을 늘리지 않았다
+- 드리프트 가드 4건 추가. `latest_feed` 를 지워 **가드가 실제로 실패하는지 확인**했다
+
+> 남은 사실 하나: `faq_accordion`·`testimonials`·`timeline`·`stats_counter` 는 서버
+> enum 에만 있고 BLOCK_DEFS 에 없어 **운영자가 놓을 수 없다.** 그래서 카탈로그에서도
+> 빠졌다. 시안에 FAQ·간증 섹션이 나오면 81개 안에서 대체하거나 BLOCK_DEFS 등록이
+> 필요하다 — 별건이라 여기서 손대지 않았다.
+
+### ✅ 막는 것 ② `BLOCK_REPLACE` 가 매핑 결과를 구형 블록으로 격하한다
 
 `map.ts:166`. 11건을 강제 치환한다.
 
@@ -82,16 +103,37 @@ steps_list     → features_grid
 ```
 
 주석의 사유는 "하드코딩된 Group-B 블록이 테마 타이포를 무시하므로 토큰 구동
-등가물로 강제한다 (2026-09-12 감사)". **그 뒤에 한글 타입 스케일 3계층
-(토큰 래더 / 렌더 클램프 / 블록 koText 역할 스케일)이 들어갔다.** 그러니 이 11개 중
-상당수는 이미 토큰을 따를 가능성이 높고, 그렇다면 이 표는 **이유 없이 디자인 충실도를
-깎고 있다.** 재감사 대상.
+등가물로 강제한다 (2026-09-12 감사)".
 
-### 막는 것 ③ LLM 매핑에 쓰는 Anthropic API 크레딧
+**재감사 결과 (커밋 `38c94c64`) — 처방이 틀렸다. 표를 제거했다.**
 
-마지막 확인(2026-09-12) 당시 **0** 이었다. 지금 상태는 재확인해야 한다. 0이면
-Lane B(콘솔 자가 임포트)와 마이그레이션 AI가 같이 멈춘다. 단계 2의 "결정적 1차 매칭"은
-이 의존을 줄이기 위한 것이다.
+계획에 적었던 가설(*"그 뒤에 한글 타입 스케일 3계층이 들어갔으니 이 블록들은 이미
+토큰을 따를 것"*)은 **틀렸다.** `koText` 를 쓰는 블록은 `ValuesGridBlock` **단 하나**다 —
+한글 역할 스케일은 만들어졌지만 이 블록들에 소급 적용되지 않았다. 제거 근거는 다른
+데서 나왔다(컴포넌트 소스 측정):
+
+| 측정 | 결과 |
+|---|---|
+| `schedule_board` 고정 px | **0개** — 혐의 없음. 그런데 `worship_schedule`(Static, `items` 직접 입력)로 치환되어 **데이터 출처가 사라져 빈 블록**이 됐다 (Data Block, `/api/v1/schedules`) |
+| `logo_bar` | **0개** — 혐의 없음 |
+| `steps_list` · `info_columns` · `week_schedule` | 1~4개 — 경미. 구조는 서로 전혀 다름 |
+| 치환 **대상**이던 `features_grid`(1) · `hero_banner`(1) · `call_to_action`(4) | **본인도 고정 px 를 쓴다** — "토큰 구동 등가물" 전제가 성립하지 않았다 |
+| 프롬프트 내부 모순 | 같은 프롬프트가 `depts→info_columns` 를 지시하면서 `info_columns` 를 금지했다 |
+
+무엇보다 치환은 **시안 구조를 버린다** — 임포트의 목적과 정면으로 충돌한다.
+그래서 구조는 시안대로 두고, 타이포 결함은 `TYPOGRAPHY_WARN`(생성 측정값)으로
+**미리보기 경고에 올려** 운영자·개발 큐가 보게 한다. 블록을 고치면 경고가 자동으로
+사라진다. 이름 정규화만 `BLOCK_ALIASES` 로 남겼다.
+
+### ⛔ 막는 것 ③ LLM 매핑에 쓰는 Anthropic API 크레딧 — **확인 못 했다**
+
+마지막 확인(2026-09-12) 당시 **0** 이었다. 지금 상태는 **내가 확인할 수 없다** — 로컬
+`.env` 의 키를 읽는 것이 권한 분류기에서 `[Credential Materialization]` 로 거부된다
+(우회하지 않는다). **대표님이 console.anthropic.com 결제 화면에서 확인해 주셔야 한다.**
+
+0이면 Lane B(콘솔 자가 임포트)의 LLM 매핑과 마이그레이션 AI가 같이 멈춘다. 단계 0의
+산출물(카탈로그·별칭·경고)은 **정적 데이터라 크레딧과 무관**하고, 단계 2의 "결정적 1차
+매칭" 은 이 의존 자체를 줄이기 위한 것이다.
 
 ---
 
@@ -174,7 +216,7 @@ Claude Artifact (URL)
 | 블록 컴포넌트 (`packages/blocks/src/…` 또는 `apps/web/components/blocks/…`) | `packages/blocks/src/registry.json` ← `gen-registry-entries.ts` |
 | `BlockRenderer.tsx` 매핑 | `CLAUDE-DESIGN-CATALOG.{md,json}` ← `gen-catalog.ts` |
 | `PageEditor.tsx` `BLOCK_DEFS` (운영자 팔레트 — **여기 없으면 못 쓴다**) | `dw.module.json` ← `gen-dw-module.ts` |
-| 서버 `pages/schema.ts` `blockTypes` enum (**여기 없으면 저장 400**) | `design-import/catalog.ts` ← 단계 0에서 만들 생성기 |
+| 서버 `pages/schema.ts` `blockTypes` enum (**여기 없으면 저장 400**) | `design-import/catalog.ts` ← `gen-design-import-catalog.ts` |
 | 블록 인스펙터(props 편집 UI) | |
 
 ### 게이트 4 — 거절
@@ -195,7 +237,7 @@ Claude Artifact (URL)
 
 | 단계 | 내용 | 산출물 | 검증 |
 |---|---|---|---|
-| **0** | 막는 것 ①②③ 치우기 | `gen-design-import-catalog.ts` (기존 영문 설명 보존하며 배치가능 81개로 범위 조정) · 드리프트 가드 추가 · `BLOCK_REPLACE` 11건 재감사 · 크레딧 확인 | 드리프트 테스트에 catalog.ts 검사 추가 → 빠짐 0 / 배치불가 0 |
+| **0 ✅** | 막는 것 ①②③ 치우기 | `gen-design-import-catalog.ts` 신규 · catalog.ts 생성(81개) · `BLOCK_ALIASES`·`TYPOGRAPHY_WARN` · 콘텐츠 모듈 20개 · `BLOCK_REPLACE` 제거 | **완료** — 드리프트 가드 4건 추가(빠짐 0 / 배치불가 0), `pnpm test` 1,251 PASS, 생성기 단위 테스트 9건. ③ 크레딧만 대표님 확인 대기 |
 | **1** | 아티팩트 수용 | `artifact-parse.ts` — HTML → `ImportSpec`. `:root` 커스텀 속성 → 토큰, 섹션 경계 → `SectionSpec` 후보, 이미지 수집 | 단위 테스트 (고정 HTML → 기대 스펙) |
 | **2** | 결정적 1차 매칭 | `match.ts` — 구조 지문(제목·그리드·항목 수·데이터 신호)으로 게이트 1·2 자동 판정. 남은 것만 LLM | 테스트: 알려진 섹션 → 기대 block_type. 크레딧 0에서도 통과 |
 | **3** | 적용 | 기존 `applyImport()` 재사용. 백업 먼저 · 이미지 R2 업로드(클라이언트 리사이즈 후) · 핫링크 금지 | `verify-live-unchanged.ts` 로 다른 테넌트 무변경 확인 |
